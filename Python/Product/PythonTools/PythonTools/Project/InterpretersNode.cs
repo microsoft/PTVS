@@ -27,6 +27,7 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
+using Clipboard = System.Windows.Forms.Clipboard;
 using MessageBox = System.Windows.Forms.MessageBox;
 using Task = System.Threading.Tasks.Task;
 using VsCommands = Microsoft.VisualStudio.VSConstants.VSStd97CmdID;
@@ -84,6 +85,14 @@ namespace Microsoft.PythonTools.Project {
                     }
                 }
             }
+        }
+
+        public override int MenuCommandId {
+            get { return PythonConstants.EnvironmentMenuId; }
+        }
+
+        public override Guid MenuGroupId {
+            get { return GuidList.guidPythonToolsCmdSet; }
         }
 
         private static ProjectElement ChooseElement(PythonProjectNode project, ProjectItem item) {
@@ -181,10 +190,6 @@ namespace Microsoft.PythonTools.Project {
             get { return PythonConstants.InterpreterItemTypeGuid; }
         }
 
-        public override int MenuCommandId {
-            get { return VsMenus.IDM_VS_CTXT_ITEMNODE; }
-        }
-
         internal override int ExecCommandOnNode(Guid cmdGroup, uint cmd, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
             if (cmdGroup == VsMenus.guidStandardCommandSet2K) {
                 switch((VsCommands2K)cmd) {
@@ -196,7 +201,9 @@ namespace Microsoft.PythonTools.Project {
                         });
                         return VSConstants.S_OK;
                 }
-            } else if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
+            }
+            
+            if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
                 switch (cmd) {
                     case PythonConstants.ActivateEnvironment:
                         return ProjectMgr.SetInterpreterFactory(_factory);
@@ -219,7 +226,26 @@ namespace Microsoft.PythonTools.Project {
                         }
                         return VSConstants.S_OK;
                 }
+            } 
+            
+            if (cmdGroup == ProjectMgr.SharedCommandGuid) {
+                switch ((SharedCommands)cmd) {
+                    case SharedCommands.OpenCommandPromptHere:
+                        var pyProj = ProjectMgr as PythonProjectNode;
+                        if (pyProj != null && _factory != null && _factory.Configuration != null) {
+                            return pyProj.OpenCommandPrompt(
+                                _factory.Configuration.PrefixPath,
+                                _factory,
+                                _factory.Description
+                            );
+                        }
+                        break;
+                    case SharedCommands.CopyFullPath:
+                        Clipboard.SetText(_factory.Configuration.InterpreterPath);
+                        return VSConstants.S_OK;
+                }
             }
+            
             return base.ExecCommandOnNode(cmdGroup, cmd, nCmdexecopt, pvaIn, pvaOut);
         }
 
@@ -367,14 +393,7 @@ namespace Microsoft.PythonTools.Project {
         /// Disable Copy/Cut/Paste commands on interpreter node.
         /// </summary>
         internal override int QueryStatusOnNode(Guid cmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result) {
-            if (cmdGroup == VsMenus.guidStandardCommandSet97) {
-                switch ((VsCommands)cmd) {
-                    case VsCommands.Copy:
-                    case VsCommands.Cut:
-                        result |= QueryStatusResult.SUPPORTED | QueryStatusResult.INVISIBLE;
-                        return VSConstants.S_OK;
-                }
-            } else if (cmdGroup == VsMenus.guidStandardCommandSet2K) {
+            if (cmdGroup == VsMenus.guidStandardCommandSet2K) {
                 switch ((VsCommands2K)cmd) {
                     case CommonConstants.OpenFolderInExplorerCmdId:
                         result = QueryStatusResult.SUPPORTED;
@@ -383,7 +402,9 @@ namespace Microsoft.PythonTools.Project {
                         }
                         return VSConstants.S_OK;
                 }
-            } else if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
+            }
+            
+            if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
                 switch (cmd) {
                     case PythonConstants.ActivateEnvironment:
                         result |= QueryStatusResult.SUPPORTED;
@@ -410,6 +431,21 @@ namespace Microsoft.PythonTools.Project {
                         return VSConstants.S_OK;
                 }
             }
+            
+            if (cmdGroup == ProjectMgr.SharedCommandGuid) {
+                switch ((SharedCommands)cmd) {
+                    case SharedCommands.OpenCommandPromptHere:
+                    case SharedCommands.CopyFullPath:
+                        result |= QueryStatusResult.SUPPORTED;
+                        if (_interpreters.IsAvailable(_factory) &&
+                            Directory.Exists(_factory.Configuration.PrefixPath) &&
+                            File.Exists(_factory.Configuration.InterpreterPath)) {
+                            result |= QueryStatusResult.ENABLED;
+                        }
+                        return VSConstants.S_OK;
+                }
+            }
+
             return base.QueryStatusOnNode(cmdGroup, cmd, pCmdText, ref result);
         }
 

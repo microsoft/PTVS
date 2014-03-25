@@ -464,4 +464,10 @@ The web.config file will be configured to resolve URIs matching this pattern to 
   <data name="ImportWizardGenericWebProjectCustomization" xml:space="preserve">
     <value>Generic Web Project</value>
   </data>
+  <data name="SelectFolderForSearchPath" xml:space="preserve">
+    <value>Select a folder to add to the Search Path</value>
+  </data>
+  <data name="SelectZipFileForSearchPath" xml:space="preserve">
+    <value>Select a .zip file to add to the Search Path</value>
+  </data>
 </root>

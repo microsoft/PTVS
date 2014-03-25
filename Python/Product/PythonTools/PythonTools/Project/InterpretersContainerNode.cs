@@ -55,7 +55,11 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public override int MenuCommandId {
-            get { return VsMenus.IDM_VS_CTXT_ITEMNODE; }
+            get { return PythonConstants.EnvironmentsContainerMenuId; }
+        }
+
+        public override Guid MenuGroupId {
+            get { return GuidList.guidPythonToolsCmdSet; }
         }
 
         /// <summary>
@@ -91,11 +95,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public override object GetIconHandle(bool open) {
-            if (open) {
-                return _projectNode.GetIconHandleByName(ProjectNode.ImageName.OpenFolder);
-            } else {
-                return _projectNode.GetIconHandleByName(PythonProjectImageName.InterpretersContainer);
-            }
+            return _projectNode.GetIconHandleByName(PythonProjectImageName.InterpretersContainer);
         }
 
         /// <summary>

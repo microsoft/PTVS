@@ -284,7 +284,7 @@ namespace Microsoft.PythonTools.Project.Web {
             yield return string.Format("{0}={1}", AD7Engine.VersionSetting, factory.Configuration.Version);
             yield return string.Format("{0}={1}",
                 AD7Engine.InterpreterOptions,
-                _project.GetProperty(CommonConstants.InterpreterArguments) ?? string.Empty
+                _project.GetProperty(PythonConstants.InterpreterArgumentsSetting) ?? string.Empty
             );
             var url = GetFullUrl();
             if (!String.IsNullOrWhiteSpace(url)) {

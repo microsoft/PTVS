@@ -57,11 +57,12 @@ namespace Microsoft.PythonTools {
         // Do not change below info without re-requesting PLK:
         internal const string ProjectSystemPackageGuid = "15490272-3C6B-4129-8E1D-795C8B6D8E9F"; //matches PLK
 
-        //IDs of the icons for product registration (see Resources.resx)
+        // IDs of the icons for product registration (see Resources.resx)
         internal const int IconIfForSplashScreen = 300;
         internal const int IconIdForAboutBox = 400;
         internal const int ResourceIdForReplImages = 407;
 
+        // Command IDs
         internal const int AddEnvironment = 0x4006;
         internal const int AddVirtualEnv = 0x4007;
         internal const int AddExistingVirtualEnv = 0x4008;
@@ -70,16 +71,31 @@ namespace Microsoft.PythonTools {
         internal const int OpenInteractiveForEnvironment = 0x4031;
         internal const int ViewAllEnvironments = 0x400B;
 
+        internal const int AddSearchPathCommandId = 0x4002;
         internal const int AddSearchPathZipCommandId = 0x4003;
         internal const int AddPythonPathToSearchPathCommandId = 0x4030;
 
-        //Custom (per-project) commands
+        // Context menu IDs
+        internal const int EnvironmentsContainerMenuId = 0x2006;
+        internal const int EnvironmentMenuId = 0x2007;
+        internal const int EnvironmentPackageMenuId = 0x2008;
+        internal const int SearchPathContainerMenuId = 0x2009;
+        internal const int SearchPathMenuId = 0x200A;
+
+        // Custom (per-project) commands
         internal const int FirstCustomCmdId = 0x4010;
         internal const int LastCustomCmdId = 0x402F;
         internal const int CustomProjectCommandsMenu = 0x2005;
 
         // Shows up before references
         internal const int InterpretersContainerNodeSortPriority = 200;
+
+        // Appears after references
+        internal const int SearchPathContainerNodeSortPriority = 400;
+
+        // Maximal sort priority for Search Path nodes
+        internal const int SearchPathNodeMaxSortPriority = 110;
+
 
         internal const string InterpreterId = "InterpreterId";
         internal const string InterpreterVersion = "InterpreterVersion";

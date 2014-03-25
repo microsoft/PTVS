@@ -41,16 +41,17 @@ namespace Microsoft.PythonTools.Project {
 
         /// <summary>
         /// Gets the default sort priority of this node.
-        /// By default returns HierarchyNode. 
         /// </summary>
         public override int SortPriority {
-            get {
-                return CommonConstants.SearchPathContainerNodeSortPriority;
-            }
+            get { return PythonConstants.SearchPathContainerNodeSortPriority; }
         }
 
         public override int MenuCommandId {
-            get { return VsMenus.IDM_VS_CTXT_ITEMNODE; }
+            get { return PythonConstants.SearchPathContainerMenuId; }
+        }
+
+        public override Guid MenuGroupId {
+            get { return GuidList.guidPythonToolsCmdSet; }
         }
 
         /// <summary>
@@ -106,7 +107,7 @@ namespace Microsoft.PythonTools.Project {
         internal override int QueryStatusOnNode(Guid cmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result) {
             if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
                 switch (cmd) {
-                    case CommonConstants.AddSearchPathCommandId:
+                    case PythonConstants.AddSearchPathCommandId:
                     case PythonConstants.AddSearchPathZipCommandId:
                         result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
                         return VSConstants.S_OK;
@@ -125,7 +126,7 @@ namespace Microsoft.PythonTools.Project {
         internal override int ExecCommandOnNode(Guid cmdGroup, uint cmd, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
             if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
                 switch (cmd) {
-                    case CommonConstants.AddSearchPathCommandId:
+                    case PythonConstants.AddSearchPathCommandId:
                         return _projectNode.AddSearchPath();
                     case PythonConstants.AddSearchPathZipCommandId:
                         return _projectNode.AddSearchPathZip();

@@ -13,10 +13,14 @@
  * ***************************************************************************/
 
 using System;
+using System.Diagnostics;
 using System.Drawing;
+using System.IO;
 using System.Reflection;
 using System.Windows.Forms;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.VisualStudio;
+using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project {
@@ -50,6 +54,21 @@ namespace Microsoft.PythonTools.Project {
             }
 
             return base.GetIconHandle(open);
+        }
+
+        internal override int ExecCommandOnNode(Guid cmdGroup, uint cmd, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
+            if (cmdGroup == ProjectMgr.SharedCommandGuid) {
+                switch ((SharedCommands)cmd) {
+                    case SharedCommands.OpenCommandPromptHere:
+                        var pyProj = ProjectMgr as PythonProjectNode;
+                        if (pyProj != null) {
+                            return pyProj.OpenCommandPrompt(FullPathToChildren);
+                        }
+                        break;
+                }
+            }
+
+            return base.ExecCommandOnNode(cmdGroup, cmd, nCmdexecopt, pvaIn, pvaOut);
         }
     }
 }

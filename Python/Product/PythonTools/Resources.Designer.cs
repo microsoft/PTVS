@@ -722,6 +722,24 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Select a folder to add to the Search Path.
+        /// </summary>
+        internal static string SelectFolderForSearchPath {
+            get {
+                return ResourceManager.GetString("SelectFolderForSearchPath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select a .zip file to add to the Search Path.
+        /// </summary>
+        internal static string SelectZipFileForSearchPath {
+            get {
+                return ResourceManager.GetString("SelectZipFileForSearchPath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to .
         /// </summary>
         internal static string SettingWorkDir {

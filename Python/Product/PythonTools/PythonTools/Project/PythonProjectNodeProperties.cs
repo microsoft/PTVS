@@ -38,7 +38,7 @@ namespace Microsoft.PythonTools.Project {
         [Browsable(false)]
         public string SearchPath {
             get {
-                return this.Node.ProjectMgr.GetProjectProperty(CommonConstants.SearchPath, true);
+                return this.Node.ProjectMgr.GetProjectProperty(PythonConstants.SearchPathSetting, true);
             }
         }
         
@@ -58,7 +58,7 @@ namespace Microsoft.PythonTools.Project {
         [Browsable(false)]
         public string InterpreterPath {
             get {
-                var res = this.Node.ProjectMgr.GetProjectProperty(CommonConstants.InterpreterPath, true);
+                var res = this.Node.ProjectMgr.GetProjectProperty(PythonConstants.InterpreterPathSetting, true);
                 if (!string.IsNullOrEmpty(res)) {
                     var proj = Node.ProjectMgr as CommonProjectNode;
                     if (proj != null) {

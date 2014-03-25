@@ -590,7 +590,7 @@ namespace Microsoft.PythonTools.Repl {
             get {
                 var startupProj = PythonToolsPackage.GetStartupProject();
                 if (startupProj != null) {
-                    return startupProj.GetProjectProperty(CommonConstants.SearchPath, true);
+                    return startupProj.GetProjectProperty(PythonConstants.SearchPathSetting, true);
                 }
 
                 return null;
@@ -601,7 +601,7 @@ namespace Microsoft.PythonTools.Repl {
             get {
                 var startupProj = PythonToolsPackage.GetStartupProject();
                 if (startupProj != null) {
-                    return startupProj.GetProjectProperty(CommonConstants.InterpreterArguments, true);
+                    return startupProj.GetProjectProperty(PythonConstants.InterpreterArgumentsSetting, true);
                 }
                 return null;
             }

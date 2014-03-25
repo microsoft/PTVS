@@ -23,6 +23,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using Microsoft.Build.Execution;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Commands;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Navigation;
@@ -486,6 +487,106 @@ namespace Microsoft.PythonTools.Project {
             }
             return null;
         }
+        /// <summary>
+        /// Parses SearchPath property into a list of distinct absolute paths, preserving the order.
+        /// </summary>
+        protected IList<string> ParseSearchPath() {
+            var searchPath = GetProjectProperty(PythonConstants.SearchPathSetting, true);
+            return ParseSearchPath(searchPath);
+        }
+
+        /// <summary>
+        /// Parses SearchPath string into a list of distinct absolute paths, preserving the order.
+        /// </summary>
+        protected IList<string> ParseSearchPath(string searchPath) {
+            var result = new List<string>();
+
+            if (!string.IsNullOrEmpty(searchPath)) {
+                var seen = new HashSet<string>();
+                foreach (var path in searchPath.Split(';')) {
+                    if (string.IsNullOrEmpty(path)) {
+                        continue;
+                    }
+
+                    var absPath = CommonUtils.GetAbsoluteFilePath(ProjectHome, path);
+                    if (seen.Add(absPath)) {
+                        result.Add(absPath);
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Saves list of paths back as SearchPath project property.
+        /// </summary>
+        private void SaveSearchPath(IList<string> value) {
+            var valueStr = string.Join(";", value.Select(path => {
+                var relPath = CommonUtils.GetRelativeFilePath(ProjectHome, path);
+                if (string.IsNullOrEmpty(relPath)) {
+                    relPath = ".";
+                }
+                return relPath;
+            }));
+            SetProjectProperty(PythonConstants.SearchPathSetting, valueStr);
+        }
+
+        /// <summary>
+        /// Adds new search path to the SearchPath project property.
+        /// </summary>
+        internal void AddSearchPathEntry(string newpath) {
+            Utilities.ArgumentNotNull("newpath", newpath);
+
+            var searchPath = ParseSearchPath();
+            var absPath = CommonUtils.GetAbsoluteFilePath(ProjectHome, newpath);
+            // Ignore the end separator when determining whether the path has
+            // already been added. Having both "C:\Fob" and "C:\Fob\" is not
+            // legal.
+            if (searchPath.Contains(CommonUtils.EnsureEndSeparator(absPath), StringComparer.OrdinalIgnoreCase) ||
+                searchPath.Contains(CommonUtils.TrimEndSeparator(absPath), StringComparer.OrdinalIgnoreCase)) {
+                return;
+            }
+            searchPath.Add(absPath);
+            SaveSearchPath(searchPath);
+        }
+
+        /// <summary>
+        /// Removes a given path from the SearchPath property.
+        /// </summary>
+        internal void RemoveSearchPathEntry(string path) {
+            var absPath = CommonUtils.TrimEndSeparator(CommonUtils.GetAbsoluteFilePath(ProjectHome, path));
+            var absPathWithEndSeparator = CommonUtils.EnsureEndSeparator(absPath);
+            var searchPath = ParseSearchPath();
+
+            var newSearchPath = searchPath
+                // Ignore the end separator when determining paths to remove.
+                .Where(p => !absPath.Equals(p, StringComparison.OrdinalIgnoreCase) &&
+                            !absPathWithEndSeparator.Equals(p, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            if (searchPath.Count != newSearchPath.Count) {
+                SaveSearchPath(newSearchPath);
+            }
+        }
+
+        /// <summary>
+        /// Executes Add Search Path menu command.
+        /// </summary>        
+        internal int AddSearchPath() {
+            string dirName = Dialogs.BrowseForDirectory(
+                IntPtr.Zero,
+                ProjectHome,
+                SR.GetString(SR.SelectFolderForSearchPath)
+            );
+
+            if (dirName != null) {
+                AddSearchPathEntry(CommonUtils.EnsureEndSeparator(dirName));
+            }
+
+            return VSConstants.S_OK;
+        }
+
 
         private void PythonProjectNode_OnProjectPropertyChanged(object sender, ProjectPropertyChangedArgs e) {
             switch (e.PropertyName) {
@@ -502,7 +603,7 @@ namespace Microsoft.PythonTools.Project {
                         genProp.WorkingDirectory = e.NewValue;
                     }
                     break;
-                case CommonConstants.SearchPath:
+                case PythonConstants.SearchPathSetting:
                     RefreshSearchPaths();
 
                     // we need to remove old files from the analyzer and add the new files
@@ -890,6 +991,42 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
+        internal int OpenCommandPrompt(string path, IPythonInterpreterFactory factory = null, string subtitle = null) {
+            var psi = new ProcessStartInfo(Path.Combine(Environment.SystemDirectory, "cmd.exe"));
+            psi.UseShellExecute = false;
+            psi.WorkingDirectory = path;
+
+            var config = (factory ?? GetInterpreterFactory()).Configuration;
+            if (config != null) {
+                psi.Arguments = string.Format("/K \"title {0} Command Prompt\"",
+                    string.IsNullOrEmpty(subtitle) ? Caption : subtitle
+                );
+
+                var paths = new List<string>();
+                if (File.Exists(config.InterpreterPath)) {
+                    paths.Add(Path.GetDirectoryName(config.InterpreterPath));
+                }
+                paths.Add(Path.Combine(config.PrefixPath, "Scripts"));
+                paths.AddRange(Environment.GetEnvironmentVariable("PATH").Split(Path.PathSeparator));
+
+                psi.EnvironmentVariables["PATH"] = string.Join(
+                    new string(Path.PathSeparator, 1),
+                    paths.Where(Directory.Exists).Distinct()
+                );
+
+                var searchPaths = this.GetSearchPaths().ToList();
+                searchPaths.Insert(0, GetWorkingDirectory());
+                psi.EnvironmentVariables[config.PathEnvironmentVariable] = string.Join(
+                    new string(Path.PathSeparator, 1),
+                    searchPaths.Where(Directory.Exists).Distinct()
+                );
+            }
+
+            Process.Start(psi);
+            return VSConstants.S_OK;
+
+        }
+
         internal override int ExecCommandOnNode(Guid cmdGroup, uint cmd, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
             if (cmdGroup == VsMenus.guidStandardCommandSet2K) {
                 switch ((VsCommands2K)cmd) {
@@ -902,24 +1039,62 @@ namespace Microsoft.PythonTools.Project {
                         return VSConstants.S_OK;
                 }
             }
+
+            if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
+                switch ((int)cmd) {
+                    case PythonConstants.OpenInteractiveForEnvironment:
+                        try {
+                            var window = ExecuteInReplCommand.EnsureReplWindow(GetInterpreterFactory(), this);
+                            var pane = window as ToolWindowPane;
+                            if (pane != null) {
+                                ErrorHandler.ThrowOnFailure(((IVsWindowFrame)pane.Frame).Show());
+                                window.Focus();
+                            }
+                        } catch (InvalidOperationException ex) {
+                            MessageBox.Show(
+                                string.Format("An error occurred opening this interactive window.{0}{0}{1}", Environment.NewLine, ex),
+                                SR.GetString(SR.PythonToolsForVisualStudio)
+                            );
+                        }
+                        return VSConstants.S_OK;
+                }
+            }
+
+            if (cmdGroup == ProjectMgr.SharedCommandGuid) {
+                switch ((SharedCommands)cmd) {
+                    case SharedCommands.OpenCommandPromptHere:
+                        return OpenCommandPrompt(FullPathToChildren);
+                }
+            }
+
             return base.ExecCommandOnNode(cmdGroup, cmd, nCmdexecopt, pvaIn, pvaOut);
         }
 
         internal override int QueryStatusOnNode(Guid cmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result) {
             if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
-                // Display the custom menu only on the Project node.
-                if (cmd == PythonConstants.CustomProjectCommandsMenu) {
-                    if (_customCommands != null && _customCommands.Any()) {
-                        result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
-                    } else {
-                        result |= QueryStatusResult.INVISIBLE;
-                    }
+                switch ((int)cmd) {
+                    case PythonConstants.OpenInteractiveForEnvironment:
+                        var factory = GetInterpreterFactory();
+                        if (Interpreters.IsAvailable(factory) && File.Exists(factory.Configuration.InterpreterPath)) {
+                            result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
+                        } else {
+                            result |= QueryStatusResult.INVISIBLE;
+                        }
+                        return VSConstants.S_OK;
+                    
+                    case PythonConstants.CustomProjectCommandsMenu:
+                        if (_customCommands != null && _customCommands.Any()) {
+                            result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
+                        } else {
+                            result |= QueryStatusResult.INVISIBLE;
+                        }
 
-                    if (pCmdText != IntPtr.Zero && NativeMethods.OLECMDTEXT.GetFlags(pCmdText) == NativeMethods.OLECMDTEXT.OLECMDTEXTF.OLECMDTEXTF_NAME) {
-                        NativeMethods.OLECMDTEXT.SetText(pCmdText, _customCommandsDisplayLabel);
-                    }
-                    return VSConstants.S_OK;
+                        if (pCmdText != IntPtr.Zero && NativeMethods.OLECMDTEXT.GetFlags(pCmdText) == NativeMethods.OLECMDTEXT.OLECMDTEXTF.OLECMDTEXTF_NAME) {
+                            NativeMethods.OLECMDTEXT.SetText(pCmdText, _customCommandsDisplayLabel);
+                        }
+                        return VSConstants.S_OK;
                 }
+
             }
             return base.QueryStatusOnNode(cmdGroup, cmd, pCmdText, ref result);
         }
@@ -1005,7 +1180,6 @@ namespace Microsoft.PythonTools.Project {
             if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
                 if (IsCurrentStateASuppressCommandsMode()) {
                     switch ((int)cmd) {
-                        case CommonConstants.AddSearchPathCommandId:
                         case CommonConstants.StartDebuggingCmdId:
                         case CommonConstants.StartWithoutDebuggingCmdId:
                             return true;
@@ -1014,6 +1188,7 @@ namespace Microsoft.PythonTools.Project {
                         case PythonConstants.AddExistingVirtualEnv:
                         case PythonConstants.AddVirtualEnv:
                         case PythonConstants.InstallPythonPackage:
+                        case PythonConstants.AddSearchPathCommandId:
                         case PythonConstants.AddSearchPathZipCommandId:
                         case PythonConstants.AddPythonPathToSearchPathCommandId:
                             return true;

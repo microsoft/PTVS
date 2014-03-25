@@ -150,6 +150,10 @@ namespace Microsoft.VisualStudioTools.Project {
             get { return VsMenus.IDM_VS_CTXT_NOCOMMANDS; }
         }
 
+        public virtual Guid MenuGroupId {
+            get { return VsMenus.guidSHLMainMenu; }
+        }
+
 
         /// <summary>
         /// Return an imageindex
@@ -1212,35 +1216,85 @@ namespace Microsoft.VisualStudioTools.Project {
                 return NativeMethods.OLECMDERR_E_NOTSUPPORTED;
             }
 
-            int idmxStoredMenu = 0;
+            int projectsSelected = 0;
+            int menuId = 0;
+            Guid menuGroup = Guid.Empty;
+
+            bool groupIsConsistent = false;
+            bool cmdidIsConsistent = false;
 
             foreach (HierarchyNode node in selectedNodes) {
+                var cmdId = node.MenuCommandId;
+                var grpId = node.MenuGroupId;
+                if (cmdId == VsMenus.IDM_VS_CTXT_PROJNODE) {
+                    projectsSelected += 1;
+                }
+                
                 // We check here whether we have a multiple selection of
                 // nodes of differing type.
-                if (idmxStoredMenu == 0) {
+                if (menuId == 0) {
                     // First time through or single node case
-                    idmxStoredMenu = node.MenuCommandId;
-                } else if (idmxStoredMenu != node.MenuCommandId) {
-                    // We have different node types. Check if any of the nodes is
-                    // the project node and set the menu accordingly.
-                    if (node.MenuCommandId == VsMenus.IDM_VS_CTXT_PROJNODE) {
-                        idmxStoredMenu = VsMenus.IDM_VS_CTXT_XPROJ_PROJITEM;
-                    } else {
-                        idmxStoredMenu = VsMenus.IDM_VS_CTXT_XPROJ_MULTIITEM;
+                    menuId = cmdId;
+                    cmdidIsConsistent = true;
+                    menuGroup = grpId;
+                    groupIsConsistent = true;
+                } else {
+                    if (menuGroup != grpId) {
+                        // We have very different node types. If a project is in
+                        // the selection, we will eventually display its context
+                        // menu. More likely, we will display nothing.
+                        groupIsConsistent = false;
+                    } else if (menuId != node.MenuCommandId) {
+                        // We have different node types.
+                        cmdidIsConsistent = false;
                     }
                 }
             }
 
-            object variant = Marshal.GetObjectForNativeVariant(pointerToVariant);
-            UInt32 pointsAsUint = (UInt32)variant;
-            short x = (short)(pointsAsUint & 0x0000ffff);
-            short y = (short)((pointsAsUint & 0xffff0000) / 0x10000);
+            if (groupIsConsistent && !cmdidIsConsistent) {
+                // The selected items agree on a menu group, but not the ID.
+                if (projectsSelected == 0) {
+                    // We will use IDM_VS_CTXT_XPROJ_MULTIITEM (0x0419) with
+                    // whatever group they agreed on. This allows people to create
+                    // multi-selection context menus in custom groups.
+                    menuId = VsMenus.IDM_VS_CTXT_XPROJ_MULTIITEM;
+                    cmdidIsConsistent = true;
+                } else {
+                    // One or more projects were selected, so we will use
+                    // IDM_VS_CTXT_XPROJ_PROJITEM (0x0417) with whatever group
+                    // they agreed on.
+                    menuId = VsMenus.IDM_VS_CTXT_XPROJ_PROJITEM;
+                    cmdidIsConsistent = true;
+                }
+            }
 
+            if (!groupIsConsistent) {
+                // The selected items could not agree on a group. If projects
+                // are selected, display the project context menu. Otherwise,
+                // show nothing.
+                if (projectsSelected > 0) {
+                    menuId = projectsSelected == 1 ?
+                        VsMenus.IDM_VS_CTXT_PROJNODE :
+                        VsMenus.IDM_VS_CTXT_XPROJ_PROJITEM;
+                    menuGroup = VsMenus.guidSHLMainMenu;
+                    groupIsConsistent = true;
+                    cmdidIsConsistent = true;
+                }
+            }
 
-            POINTS points = new POINTS();
-            points.x = x;
-            points.y = y;
-            return ShowContextMenu(idmxStoredMenu, VsMenus.guidSHLMainMenu, points);
+            if (groupIsConsistent && cmdidIsConsistent) {
+                object variant = Marshal.GetObjectForNativeVariant(pointerToVariant);
+                UInt32 pointsAsUint = (UInt32)variant;
+                short x = (short)(pointsAsUint & 0x0000ffff);
+                short y = (short)((pointsAsUint & 0xffff0000) / 0x10000);
+
+                POINTS points = new POINTS();
+                points.x = x;
+                points.y = y;
+                return ShowContextMenu(menuId, menuGroup, points);
+            } else {
+                return VSConstants.S_OK;
+            }
         }
 
         /// <summary>

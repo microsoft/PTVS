@@ -59,20 +59,11 @@ namespace Microsoft.VisualStudioTools {
         public const int ConsoleHorizontalScrollbar = 0;
         public const int ConsoleVerticalScrollbar = 1;
 
-        //Search Paths container node context menu
-        public const int AddSearchPathCommandId = 0x4002;
-
         //Start Without Debugging command
         public const int StartWithoutDebuggingCmdId = 0x4004;
 
         //Start Debugging command
         public const int StartDebuggingCmdId = 0x4005;
-
-        //Search Path project property
-        public const string SearchPath = "SearchPath";
-
-        //Interpreter Path project property
-        public const string InterpreterPath = "InterpreterPath";
 
         //Working Directory project property
         public const string WorkingDirectory = "WorkingDirectory";
@@ -84,13 +75,6 @@ namespace Microsoft.VisualStudioTools {
         //Sort priority for the Working Directory node
         //We want this node to be the first node in the Search Path subtree
         public const int WorkingDirectorySortPriority = 100;
-
-        //Sort priority for the Search Path container node
-        //We want this node to come after References, but before project home folders
-        public const int SearchPathContainerNodeSortPriority = 400;
-
-        //Maximal sort priority for Search Path nodes
-        public const int SearchPathNodeMaxSortPriority = 110;
 
         //Project Home project property
         public const string ProjectHome = "ProjectHome";
@@ -104,8 +88,6 @@ namespace Microsoft.VisualStudioTools {
         public const string IsWindowsApplication = "IsWindowsApplication";
 
         public const string PublishUrl = "PublishUrl";
-
-        public const string InterpreterArguments = "InterpreterArguments";
 
         //These are VS internal constants - don't change them
         public static Guid Std97CmdGroupGuid = typeof(VSConstants.VSStd97CmdID).GUID;

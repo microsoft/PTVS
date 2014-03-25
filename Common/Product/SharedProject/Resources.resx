@@ -156,12 +156,6 @@
   <data name="InterpreterPathDescription" xml:space="preserve">
     <value>The interpreter which is used to start the project.</value>
   </data>
-  <data name="SelectFolderForSearchPath" xml:space="preserve">
-    <value>Select a folder to add to the Search Path</value>
-  </data>
-  <data name="SelectZipFileForSearchPath" xml:space="preserve">
-    <value>Select a .zip file to add to the Search Path</value>
-  </data>
   <data name="WorkingDirectory" xml:space="preserve">
     <value>Working Directory</value>
   </data>

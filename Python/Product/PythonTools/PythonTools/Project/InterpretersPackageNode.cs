@@ -57,6 +57,14 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
+        public override int MenuCommandId {
+            get { return PythonConstants.EnvironmentPackageMenuId; }
+        }
+
+        public override Guid MenuGroupId {
+            get { return GuidList.guidPythonToolsCmdSet; }
+        }
+
         public override string Url {
             get { return _packageName; }
         }
@@ -126,10 +134,6 @@ namespace Microsoft.PythonTools.Project {
 
         public override Guid ItemTypeGuid {
             get { return PythonConstants.InterpretersPackageItemTypeGuid; }
-        }
-
-        public override int MenuCommandId {
-            get { return VsMenus.IDM_VS_CTXT_ITEMNODE; }
         }
 
         public new PythonProjectNode ProjectMgr {

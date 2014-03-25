@@ -623,7 +623,9 @@ namespace Microsoft.PythonTools.Interpreter {
         /// false for the same interpreter.
         /// </remarks>
         public bool IsAvailable(IPythonInterpreterFactory factory) {
-            return !(factory is NotFoundInterpreterFactory);
+            return factory != null &&
+                !(factory is NotFoundInterpreterFactory) &&
+                factory.Configuration != null;
         }
 
         /// <summary>

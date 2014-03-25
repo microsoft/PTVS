@@ -71,7 +71,7 @@ namespace Microsoft.PythonTools.Project {
             }
 
             string result;
-            result = (_project.GetProperty(CommonConstants.InterpreterPath) ?? string.Empty).Trim();
+            result = (_project.GetProperty(PythonConstants.InterpreterPathSetting) ?? string.Empty).Trim();
             if (!String.IsNullOrEmpty(result)) {
                 result = CommonUtils.GetAbsoluteFilePath(_project.ProjectDirectory, result);
 
@@ -98,7 +98,7 @@ namespace Microsoft.PythonTools.Project {
         /// </summary>
         public string CreateCommandLineNoDebug(string startupFile) {
             string cmdLineArgs = _project.GetProperty(CommonConstants.CommandLineArguments) ?? string.Empty;
-            string interpArgs = _project.GetProperty(CommonConstants.InterpreterArguments) ?? string.Empty;
+            string interpArgs = _project.GetProperty(PythonConstants.InterpreterArgumentsSetting) ?? string.Empty;
 
             return String.Format("{0} \"{1}\" {2}", interpArgs, startupFile, cmdLineArgs);
         }
@@ -189,7 +189,7 @@ namespace Microsoft.PythonTools.Project {
             dbgInfo.fSendStdoutToOutputWindow = 0;
 
             if (!enableNativeCodeDebugging) {
-                string interpArgs = _project.GetProperty(CommonConstants.InterpreterArguments);
+                string interpArgs = _project.GetProperty(PythonConstants.InterpreterArgumentsSetting);
                 dbgInfo.bstrOptions = AD7Engine.VersionSetting + "=" + _project.GetInterpreterFactory().GetLanguageVersion().ToString();
                 if (!isWindows) {
                     if (PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnAbnormalExit) {

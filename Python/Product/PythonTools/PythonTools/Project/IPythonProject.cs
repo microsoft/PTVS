@@ -170,7 +170,7 @@ namespace Microsoft.PythonTools.Project {
         /// Returns a sequence of absolute search paths for the provided project.
         /// </summary>
         public static IEnumerable<string> GetSearchPaths(this IPythonProject project) {
-            var paths = project.GetProperty(CommonConstants.SearchPath);
+            var paths = project.GetProperty(PythonConstants.SearchPathSetting);
             if (!string.IsNullOrEmpty(paths)) {
                 var seen = new HashSet<string>();
                 foreach (var path in paths.Split(';')) {

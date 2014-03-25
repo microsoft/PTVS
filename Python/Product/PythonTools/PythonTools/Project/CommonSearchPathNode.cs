@@ -34,8 +34,16 @@ namespace Microsoft.PythonTools.Project {
 
         public override int SortPriority {
             get {
-                return CommonConstants.SearchPathNodeMaxSortPriority + _index;
+                return PythonConstants.SearchPathNodeMaxSortPriority + _index;
             }
+        }
+
+        public override int MenuCommandId {
+            get { return PythonConstants.EnvironmentMenuId; }
+        }
+
+        public override Guid MenuGroupId {
+            get { return GuidList.guidPythonToolsCmdSet; }
         }
 
         public int Index {

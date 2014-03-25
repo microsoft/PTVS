@@ -34,6 +34,8 @@ namespace Microsoft.PythonTools.Project {
         public const string SearchPathProperties = "SearchPathProperties";
         public const string SearchPathsDescription = "SearchPathsDescription";
         public const string SearchPathRemoveConfirmation = "SearchPathRemoveConfirmation";
+        public const string SelectFolderForSearchPath = "SelectFolderForSearchPath";
+        public const string SelectZipFileForSearchPath = "SelectZipFileForSearchPath";
 
         public const string Environments = "Environments";
         public const string EnvironmentRemoveConfirmation = "EnvironmentRemoveConfirmation";

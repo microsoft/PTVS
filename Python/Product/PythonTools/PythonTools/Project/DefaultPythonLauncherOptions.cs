@@ -50,20 +50,20 @@ namespace Microsoft.PythonTools.Project {
         #region ILauncherOptionsControl Members
 
         public void SaveSettings() {
-            _properties.SetProperty(CommonConstants.SearchPath, SearchPaths);
+            _properties.SetProperty(PythonConstants.SearchPathSetting, SearchPaths);
             _properties.SetProperty(CommonConstants.CommandLineArguments, Arguments);
-            _properties.SetProperty(CommonConstants.InterpreterPath, InterpreterPath);
-            _properties.SetProperty(CommonConstants.InterpreterArguments, InterpreterArguments);
+            _properties.SetProperty(PythonConstants.InterpreterPathSetting, InterpreterPath);
+            _properties.SetProperty(PythonConstants.InterpreterArgumentsSetting, InterpreterArguments);
             _properties.SetProperty(PythonConstants.EnableNativeCodeDebugging, EnableNativeCodeDebugging.ToString());
             RaiseIsSaved();
         }
 
         public void LoadSettings() {
             _loadingSettings = true;
-            SearchPaths = _properties.GetUnevaluatedProperty(CommonConstants.SearchPath);
-            InterpreterPath = _properties.GetUnevaluatedProperty(CommonConstants.InterpreterPath);
+            SearchPaths = _properties.GetUnevaluatedProperty(PythonConstants.SearchPathSetting);
+            InterpreterPath = _properties.GetUnevaluatedProperty(PythonConstants.InterpreterPathSetting);
             Arguments = _properties.GetUnevaluatedProperty(CommonConstants.CommandLineArguments);
-            InterpreterArguments = _properties.GetUnevaluatedProperty(CommonConstants.InterpreterArguments);
+            InterpreterArguments = _properties.GetUnevaluatedProperty(PythonConstants.InterpreterArgumentsSetting);
 
             bool enableNativeCodeDebugging;
             bool.TryParse(_properties.GetUnevaluatedProperty(PythonConstants.EnableNativeCodeDebugging), out enableNativeCodeDebugging);
@@ -74,8 +74,8 @@ namespace Microsoft.PythonTools.Project {
 
         public void ReloadSetting(string settingName) {
             switch (settingName) {
-                case CommonConstants.SearchPath:
-                    SearchPaths = _properties.GetUnevaluatedProperty(CommonConstants.SearchPath);
+                case PythonConstants.SearchPathSetting:
+                    SearchPaths = _properties.GetUnevaluatedProperty(PythonConstants.SearchPathSetting);
                     break;
             }
         }
