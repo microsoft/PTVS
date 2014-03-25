@@ -790,6 +790,46 @@ class B(dict):
             AssertUtil.DoesntContain(completions, "bit_length");
         }
 
+        [TestMethod, Priority(0)]
+        public void HideAdvancedMembers() {
+            // No text - expect all non-advanced members
+            AssertUtil.ContainsExactly(HideAdvancedMembersHelper("", "a", "b", "__c__", "__d_e__", "_f_"),
+                "a", "b", "_f_"
+            );
+
+            // Matches one item, so we should only see that
+            AssertUtil.ContainsExactly(HideAdvancedMembersHelper("a", "a", "b", "__c__", "__d_e__", "_f_"),
+                "a"
+            );
+
+            // Matches one hidden item - expect all non-advanced members
+            AssertUtil.ContainsExactly(HideAdvancedMembersHelper("c", "a", "b", "__c__", "__d_e__", "_f_"),
+                "a", "b", "_f_"
+            );
+
+            // Matches one item and advanced members
+            AssertUtil.ContainsExactly(HideAdvancedMembersHelper("__", "a", "b", "__c__", "__d_e__", "_f_"),
+                "_f_",
+                "__c__",
+                "__d_e__"
+            );
+        }
+
+        private IEnumerable<string> HideAdvancedMembersHelper(string text, params string[] completions) {
+            var buffer = new MockTextBuffer(text);
+            var snapshot = buffer.CurrentSnapshot;
+            var set = new FuzzyCompletionSet(
+                "Test Completions",
+                "Test Completions",
+                snapshot.CreateTrackingSpan(0, snapshot.Length, SpanTrackingMode.EdgeInclusive),
+                completions.Select(c => new DynamicallyVisibleCompletion(c)),
+                new CompletionOptions { HideAdvancedMembers = true, IntersectMembers = false },
+                CompletionComparer.UnderscoresLast
+            );
+            set.Filter();
+            return set.Completions.Select(c => c.DisplayText);
+        }
+
         private static IEnumerable<string> GenerateText(int lines, int width, string prefix = "") {
             var rand = new Random();
             const string VALID_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.(),     '\"";

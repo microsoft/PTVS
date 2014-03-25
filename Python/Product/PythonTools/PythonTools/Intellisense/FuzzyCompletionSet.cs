@@ -232,9 +232,10 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var text = ApplicableTo.GetText(ApplicableTo.TextBuffer.CurrentSnapshot);
             if (text.Length > 0) {
+                bool hideAdvanced = _shouldHideAdvanced && !text.StartsWith("__");
                 bool anyVisible = false;
                 foreach (var c in _completions.Cast<DynamicallyVisibleCompletion>()) {
-                    if (_shouldHideAdvanced && IsAdvanced(c) && !text.StartsWith("__")) {
+                    if (hideAdvanced && IsAdvanced(c)) {
                         c.Visible = false;
                     } else if (_shouldFilter) {
                         c.Visible = _comparer.IsCandidateMatch(c.DisplayText, text);
