@@ -30,9 +30,7 @@ namespace Microsoft.PythonTools.TestAdapter {
     class TestDiscoverer : ITestDiscoverer {
         readonly IInterpreterOptionsService _interpreterService;
 
-        public TestDiscoverer() {
-            _interpreterService = InterpreterOptionsServiceProvider.GetService();
-        }
+        public TestDiscoverer() { }
 
         internal TestDiscoverer(IInterpreterOptionsService interpreterService) {
             _interpreterService = interpreterService;
@@ -44,64 +42,67 @@ namespace Microsoft.PythonTools.TestAdapter {
 
             var buildEngine = new MSBuild.ProjectCollection();
             try {
-                // Load all the test containers passed in (.pyproj msbuild files)
-                foreach (string source in sources) {
-                    buildEngine.LoadProject(source);
-                }
+                using (var app = VisualStudioApp.FromCommandLineArgs(Environment.GetCommandLineArgs())) {
+                    // Load all the test containers passed in (.pyproj msbuild files)
+                    foreach (string source in sources) {
+                        buildEngine.LoadProject(source);
+                    }
 
-                foreach (var proj in buildEngine.LoadedProjects) {
-                    using (var provider = new MSBuildProjectInterpreterFactoryProvider(_interpreterService, proj)) {
-                        try {
-                            provider.DiscoverInterpreters();
-                        } catch (InvalidDataException) {
-                            // This exception can be safely ignored here.
-                        }
-                        var factory = provider.ActiveInterpreter;
-                        if (factory == _interpreterService.NoInterpretersValue) {
-                            if (logger != null) {
-                                logger.SendMessage(TestMessageLevel.Warning, "No interpreters available for project " + proj.FullPath);
+                    var interpreterService = _interpreterService ?? InterpreterOptionsServiceProvider.GetService(app);
+
+                    foreach (var proj in buildEngine.LoadedProjects) {
+                        using (var provider = new MSBuildProjectInterpreterFactoryProvider(interpreterService, proj)) {
+                            try {
+                                provider.DiscoverInterpreters();
+                            } catch (InvalidDataException) {
+                                // This exception can be safely ignored here.
                             }
-                            continue;
-                        }
-
-                        var projectHome = Path.GetFullPath(Path.Combine(proj.DirectoryPath, proj.GetPropertyValue(PythonConstants.ProjectHomeSetting) ?? "."));
-
-                        // Do the analysis even if the database is not up to date. At
-                        // worst, we'll get no results.
-                        using (var analyzer = new TestAnalyzer(
-                            factory,
-                            ((MSBuild.Project)proj).FullPath,
-                            projectHome,
-                            TestExecutor.ExecutorUri
-                        )) {
-                            // Provide all files to the test analyzer
-                            foreach (var item in ((MSBuild.Project)proj).GetItems("Compile")) {
-                                string fileAbsolutePath = CommonUtils.GetAbsoluteFilePath(projectHome, item.EvaluatedInclude);
-                                string fullName;
-
-                                try {
-                                    fullName = ModulePath.FromFullPath(fileAbsolutePath).ModuleName;
-                                } catch (ArgumentException) {
-                                    if (logger != null) {
-                                        logger.SendMessage(TestMessageLevel.Warning, "File has an invalid module name: " + fileAbsolutePath);
-                                    }
-                                    continue;
+                            var factory = provider.ActiveInterpreter;
+                            if (factory == interpreterService.NoInterpretersValue) {
+                                if (logger != null) {
+                                    logger.SendMessage(TestMessageLevel.Warning, "No interpreters available for project " + proj.FullPath);
                                 }
+                                continue;
+                            }
 
-                                try {
-                                    using (var reader = new StreamReader(fileAbsolutePath)) {
-                                        analyzer.AddModule(fullName, fileAbsolutePath, reader);
+                            var projectHome = Path.GetFullPath(Path.Combine(proj.DirectoryPath, proj.GetPropertyValue(PythonConstants.ProjectHomeSetting) ?? "."));
+
+                            // Do the analysis even if the database is not up to date. At
+                            // worst, we'll get no results.
+                            using (var analyzer = new TestAnalyzer(
+                                factory,
+                                ((MSBuild.Project)proj).FullPath,
+                                projectHome,
+                                TestExecutor.ExecutorUri
+                            )) {
+                                // Provide all files to the test analyzer
+                                foreach (var item in ((MSBuild.Project)proj).GetItems("Compile")) {
+                                    string fileAbsolutePath = CommonUtils.GetAbsoluteFilePath(projectHome, item.EvaluatedInclude);
+                                    string fullName;
+
+                                    try {
+                                        fullName = ModulePath.FromFullPath(fileAbsolutePath).ModuleName;
+                                    } catch (ArgumentException) {
+                                        if (logger != null) {
+                                            logger.SendMessage(TestMessageLevel.Warning, "File has an invalid module name: " + fileAbsolutePath);
+                                        }
+                                        continue;
                                     }
-                                } catch (FileNotFoundException) {
-                                    // user deleted file, we send the test update, but the project
-                                    // isn't saved.
+
+                                    try {
+                                        using (var reader = new StreamReader(fileAbsolutePath)) {
+                                            analyzer.AddModule(fullName, fileAbsolutePath, reader);
+                                        }
+                                    } catch (FileNotFoundException) {
+                                        // user deleted file, we send the test update, but the project
+                                        // isn't saved.
 #if DEBUG
-                                } catch (Exception ex) {
-                                    if (logger != null) {
-                                        logger.SendMessage(TestMessageLevel.Warning, "Failed to discover tests in " + fileAbsolutePath);
-                                        logger.SendMessage(TestMessageLevel.Informational, ex.ToString());
+                                    } catch (Exception ex) {
+                                        if (logger != null) {
+                                            logger.SendMessage(TestMessageLevel.Warning, "Failed to discover tests in " + fileAbsolutePath);
+                                            logger.SendMessage(TestMessageLevel.Informational, ex.ToString());
+                                        }
                                     }
-                                }
 #else
                             } catch (Exception) {
                                 if (logger != null) {
@@ -109,11 +110,12 @@ namespace Microsoft.PythonTools.TestAdapter {
                                 }
                             }
 #endif
-                            }
+                                }
 
-                            // Send each discovered test case
-                            foreach (var testCase in analyzer.GetTestCases()) {
-                                discoverySink.SendTestCase(testCase);
+                                // Send each discovered test case
+                                foreach (var testCase in analyzer.GetTestCases()) {
+                                    discoverySink.SendTestCase(testCase);
+                                }
                             }
                         }
                     }

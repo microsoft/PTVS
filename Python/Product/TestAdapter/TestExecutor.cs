@@ -22,6 +22,7 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
+using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
@@ -38,8 +39,6 @@ namespace Microsoft.PythonTools.TestAdapter {
         private static readonly Guid PythonRemoteDebugPortSupplierUnsecuredId = new Guid("{FEB76325-D127-4E02-B59D-B16D93D46CF5}");
         private static readonly string TestLauncherPath = PythonToolsInstallPath.GetFile("visualstudio_py_testlauncher.py");
 
-        private readonly IInterpreterOptionsService _interpreterService = InterpreterOptionsServiceProvider.GetService();
-
         private readonly ManualResetEvent _cancelRequested = new ManualResetEvent(false);
 
         public void Cancel() {
@@ -54,14 +53,18 @@ namespace Microsoft.PythonTools.TestAdapter {
             _cancelRequested.Reset();
 
             var receiver = new TestReceiver();
-            var discoverer = new TestDiscoverer(_interpreterService);
-            discoverer.DiscoverTests(sources, null, null, receiver);
 
-            if (_cancelRequested.WaitOne(0)) {
-                return;
+            using (var app = VisualStudioApp.FromCommandLineArgs(Environment.GetCommandLineArgs())) {
+                var interpreterService = InterpreterOptionsServiceProvider.GetService(app);
+                var discoverer = new TestDiscoverer(interpreterService);
+                discoverer.DiscoverTests(sources, null, null, receiver);
+
+                if (_cancelRequested.WaitOne(0)) {
+                    return;
+                }
+
+                RunTestCases(app, interpreterService, receiver.Tests, runContext, frameworkHandle);
             }
-
-            RunTestCases(receiver.Tests, runContext, frameworkHandle);
         }
 
         public void RunTests(IEnumerable<TestCase> tests, IRunContext runContext, IFrameworkHandle frameworkHandle) {
@@ -71,89 +74,50 @@ namespace Microsoft.PythonTools.TestAdapter {
 
             _cancelRequested.Reset();
 
-            RunTestCases(tests, runContext, frameworkHandle);
+            using (var app = VisualStudioApp.FromCommandLineArgs(Environment.GetCommandLineArgs())) {
+                var interpreterService = InterpreterOptionsServiceProvider.GetService(app);
+                RunTestCases(app, interpreterService, tests, runContext, frameworkHandle);
+            }
         }
 
-        private void RunTestCases(IEnumerable<TestCase> tests, IRunContext runContext, IFrameworkHandle frameworkHandle) {
-            // May be null, but this is handled by RunTestCase if it matters.
-            // No VS instance just means no debugging, but everything else is
-            // okay.
-            using (var app = VisualStudioApp.FromCommandLineArgs(Environment.GetCommandLineArgs())) {
-                // .pyproj file path -> project settings
-                var sourceToSettings = new Dictionary<string, PythonProjectSettings>();
+        private void RunTestCases(
+            VisualStudioApp app,
+            IInterpreterOptionsService interpreterService,
+            IEnumerable<TestCase> tests,
+            IRunContext runContext,
+            IFrameworkHandle frameworkHandle
+        ) {
+            // .pyproj file path -> project settings
+            var sourceToSettings = new Dictionary<string, PythonProjectSettings>();
 
-                foreach (var test in tests) {
-                    if (_cancelRequested.WaitOne(0)) {
-                        break;
-                    }
+            foreach (var test in tests) {
+                if (_cancelRequested.WaitOne(0)) {
+                    break;
+                }
 
-                    try {
-                        RunTestCase(app, frameworkHandle, runContext, test, sourceToSettings);
-                    } catch (Exception ex) {
-                        frameworkHandle.SendMessage(TestMessageLevel.Error, ex.ToString());
-                    }
+                try {
+                    RunTestCase(app, interpreterService, frameworkHandle, runContext, test, sourceToSettings);
+                } catch (Exception ex) {
+                    frameworkHandle.SendMessage(TestMessageLevel.Error, ex.ToString());
                 }
             }
         }
 
-        private static int GetFreePort() {
-            return Enumerable.Range(new Random().Next(49152, 65536), 60000).Except(
-                from connection in IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpConnections()
-                select connection.LocalEndPoint.Port
-            ).First();
-        }
-
-        private static string GetWorkingDirectory(TestCase test, PythonProjectSettings settings) {
-            string testFile;
-            string testClass;
-            string testMethod;
-            TestAnalyzer.ParseFullyQualifiedTestName(test.FullyQualifiedName, out testFile, out testClass, out testMethod);
-
-            return Path.GetDirectoryName(CommonUtils.GetAbsoluteFilePath(settings.WorkingDir, testFile));
-        }
-
-        private static IEnumerable<string> GetInterpreterArgs(TestCase test) {
-            string testFile;
-            string testClass;
-            string testMethod;
-            TestAnalyzer.ParseFullyQualifiedTestName(test.FullyQualifiedName, out testFile, out testClass, out testMethod);
-
-            var moduleName = Path.GetFileNameWithoutExtension(testFile);
-
-            return new[] {
-                TestLauncherPath,
-                "-m", moduleName,
-                "-t", string.Format("{0}.{1}", testClass, testMethod)
-            };
-        }
-
-        private static IEnumerable<string> GetDebugArgs(PythonProjectSettings settings, out string secret, out int port) {
-            var secretBuffer = new byte[24];
-            RandomNumberGenerator.Create().GetNonZeroBytes(secretBuffer);
-            secret = Convert.ToBase64String(secretBuffer);
-
-            port = GetFreePort();
-
-            return new[] {
-                "-s", secret,
-                "-p", port.ToString()
-            };
-        }
-
-        private static string PtvsdSearchPath {
-            get {
-                return Path.GetDirectoryName(Path.GetDirectoryName(PythonToolsInstallPath.GetFile("ptvsd\\__init__.py")));
-            }
-        }
-
-        private void RunTestCase(VisualStudioApp app, IFrameworkHandle frameworkHandle, IRunContext runContext, TestCase test, Dictionary<string, PythonProjectSettings> sourceToSettings) {
+        private void RunTestCase(
+            VisualStudioApp app,
+            IInterpreterOptionsService interpreterService,
+            IFrameworkHandle frameworkHandle,
+            IRunContext runContext,
+            TestCase test,
+            Dictionary<string, PythonProjectSettings> sourceToSettings
+        ) {
             var testResult = new TestResult(test);
             frameworkHandle.RecordStart(test);
             testResult.StartTime = DateTimeOffset.Now;
 
             PythonProjectSettings settings;
             if (!sourceToSettings.TryGetValue(test.Source, out settings)) {
-                sourceToSettings[test.Source] = settings = LoadProjectSettings(test.Source);
+                sourceToSettings[test.Source] = settings = LoadProjectSettings(test.Source, interpreterService);
             }
             if (settings == null) {
                 frameworkHandle.SendMessage(
@@ -169,29 +133,12 @@ namespace Microsoft.PythonTools.TestAdapter {
                 return;
             }
 
-            var workingDir = GetWorkingDirectory(test, settings);
-            var args = GetInterpreterArgs(test);
-            var searchPath = settings.SearchPath;
+            bool usePtvsd = runContext.IsBeingDebugged && app != null;
 
-            if (!CommonUtils.IsSameDirectory(workingDir, settings.WorkingDir)) {
-                if (string.IsNullOrEmpty(searchPath)) {
-                    searchPath = settings.WorkingDir;
-                } else {
-                    searchPath = settings.WorkingDir + ";" + searchPath;
-                }
-            }
+            var testCase = new PythonTestCase(settings, test, usePtvsd);
 
-            string secret = null;
-            int port = 0;
-            if (runContext.IsBeingDebugged && app != null) {
-                if (string.IsNullOrEmpty(searchPath)) {
-                    searchPath = PtvsdSearchPath;
-                } else {
-                    searchPath += ";" + PtvsdSearchPath;
-                }
-
+            if (usePtvsd) {
                 app.DTE.Debugger.DetachAll();
-                args = args.Concat(GetDebugArgs(settings, out secret, out port));
             }
 
             if (!File.Exists(settings.Factory.Configuration.InterpreterPath)) {
@@ -200,15 +147,15 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
 
             var env = new Dictionary<string, string> {
-                { settings.Factory.Configuration.PathEnvironmentVariable ?? "PYTHONPATH", searchPath }
+                { settings.Factory.Configuration.PathEnvironmentVariable ?? "PYTHONPATH", testCase.SearchPaths }
             };
 
             using (var proc = ProcessOutput.Run(
                 !settings.IsWindowsApplication ? 
                     settings.Factory.Configuration.InterpreterPath :
                     settings.Factory.Configuration.WindowsInterpreterPath,
-                args,
-                workingDir,
+                testCase.Arguments,
+                testCase.WorkingDirectory,
                 env,
                 false,
                 null
@@ -216,8 +163,8 @@ namespace Microsoft.PythonTools.TestAdapter {
                 bool killed = false;
 
 #if DEBUG
-                frameworkHandle.SendMessage(TestMessageLevel.Informational, "cd " + workingDir);
-                frameworkHandle.SendMessage(TestMessageLevel.Informational, "set PYTHONPATH=" + searchPath);
+                frameworkHandle.SendMessage(TestMessageLevel.Informational, "cd " + testCase.WorkingDirectory);
+                frameworkHandle.SendMessage(TestMessageLevel.Informational, "set " + settings.Factory.Configuration.PathEnvironmentVariable + "=" + testCase.SearchPaths);
                 frameworkHandle.SendMessage(TestMessageLevel.Informational, proc.Arguments);
 #endif
 
@@ -235,7 +182,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                     }
 
                     try {
-                        while (!app.AttachToProcess(proc, PythonRemoteDebugPortSupplierUnsecuredId, secret, port)) {
+                        while (!app.AttachToProcess(proc, PythonRemoteDebugPortSupplierUnsecuredId, testCase.DebugSecret, testCase.DebugPort)) {
                             if (proc.Wait(TimeSpan.FromMilliseconds(500))) {
                                 break;
                             }
@@ -290,25 +237,28 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
         }
 
-        private PythonProjectSettings LoadProjectSettings(string projectFile) {
+        private PythonProjectSettings LoadProjectSettings(
+            string projectFile,
+            IInterpreterOptionsService interpreterService
+        ) {
             var buildEngine = new MSBuild.ProjectCollection();
             try {
                 var proj = buildEngine.LoadProject(projectFile);
-                var provider = new MSBuildProjectInterpreterFactoryProvider(_interpreterService, proj);
+                var provider = new MSBuildProjectInterpreterFactoryProvider(interpreterService, proj);
                 try {
                     provider.DiscoverInterpreters();
                 } catch (InvalidDataException) {
                     // Can safely ignore this exception here.
                 }
 
-                if (provider.ActiveInterpreter == _interpreterService.NoInterpretersValue) {
+                if (provider.ActiveInterpreter == interpreterService.NoInterpretersValue) {
                     return null;
                 }
 
-                var projectHome = Path.GetFullPath(Path.Combine(proj.DirectoryPath, proj.GetPropertyValue(PythonConstants.ProjectHomeSetting) ?? "."));
-
                 var projSettings = new PythonProjectSettings();
                 projSettings.Factory = provider.ActiveInterpreter;
+
+                projSettings.ProjectHome = Path.GetFullPath(Path.Combine(proj.DirectoryPath, proj.GetPropertyValue(PythonConstants.ProjectHomeSetting) ?? "."));
 
                 bool isWindowsApplication;
                 if (bool.TryParse(proj.GetPropertyValue(PythonConstants.IsWindowsApplicationSetting), out isWindowsApplication)) {
@@ -317,12 +267,13 @@ namespace Microsoft.PythonTools.TestAdapter {
                     projSettings.IsWindowsApplication = false;
                 }
 
-                projSettings.WorkingDir = Path.GetFullPath(Path.Combine(projectHome, proj.GetPropertyValue(PythonConstants.WorkingDirectorySetting) ?? "."));
-                projSettings.SearchPath = string.Join(";",
+                projSettings.WorkingDir = Path.GetFullPath(Path.Combine(projSettings.ProjectHome, proj.GetPropertyValue(PythonConstants.WorkingDirectorySetting) ?? "."));
+                projSettings.SearchPath.AddRange(
                     (proj.GetPropertyValue(PythonConstants.SearchPathSetting) ?? "")
                         .Split(';')
                         .Where(path => !string.IsNullOrEmpty(path))
-                        .Select(path => Path.GetFullPath(Path.Combine(projectHome, path))));
+                        .Select(path => Path.GetFullPath(Path.Combine(projSettings.ProjectHome, path)))
+                );
 
                 return projSettings;
             } finally {
@@ -367,14 +318,98 @@ namespace Microsoft.PythonTools.TestAdapter {
 
         class PythonProjectSettings {
             public PythonProjectSettings() {
-                SearchPath = String.Empty;
+                SearchPath = new List<string>();
                 WorkingDir = String.Empty;
+                ProjectHome = String.Empty;
             }
 
             public IPythonInterpreterFactory Factory { get; set; }
             public bool IsWindowsApplication { get; set; }
-            public string SearchPath { get; set; }
+            public List<string> SearchPath { get; private set; }
             public string WorkingDir { get; set; }
+            public string ProjectHome { get; set; }
+        }
+
+        class PythonTestCase {
+            public readonly PythonProjectSettings Settings;
+            public readonly TestCase TestCase;
+            public readonly ModulePath ModulePath;
+            public readonly string TestFilePath;
+            public readonly string TestFile;
+            public readonly string TestClass;
+            public readonly string TestMethod;
+
+            public readonly string DebugSecret;
+            public readonly int DebugPort;
+
+            public readonly string WorkingDirectory;
+            public readonly string SearchPaths;
+            public readonly IEnumerable<string> Arguments;
+
+            public PythonTestCase(PythonProjectSettings settings, TestCase testCase, bool usePtvsd) {
+                Settings = settings;
+                TestCase = testCase;
+
+                TestAnalyzer.ParseFullyQualifiedTestName(
+                    testCase.FullyQualifiedName,
+                    out TestFile,
+                    out TestClass,
+                    out TestMethod
+                );
+
+                TestFilePath = CommonUtils.GetAbsoluteFilePath(Settings.ProjectHome, TestFile);
+                ModulePath = ModulePath.FromFullPath(TestFilePath);
+
+                WorkingDirectory = Settings.WorkingDir;
+
+                var paths = settings.SearchPath.ToList();
+
+                paths.Insert(0, WorkingDirectory);
+                if (usePtvsd) {
+                    paths.Insert(0, PtvsdSearchPath);
+                }
+
+                SearchPaths = string.Join(
+                    ";", 
+                    paths.Where(Directory.Exists).Distinct(StringComparer.OrdinalIgnoreCase)
+                );
+
+                var arguments = new List<string> {
+                    TestLauncherPath,
+                    "-m", ModulePath.ModuleName,
+                    "--search", ModulePath.LibraryPath,
+                    "-t", string.Format("{0}.{1}", TestClass, TestMethod)
+                };
+
+                if (usePtvsd) {
+                    var secretBuffer = new byte[24];
+                    RandomNumberGenerator.Create().GetNonZeroBytes(secretBuffer);
+                    DebugSecret = Convert.ToBase64String(secretBuffer);
+
+                    DebugPort = GetFreePort();
+
+                    arguments.AddRange(new[] {
+                        "-s", DebugSecret,
+                        "-p", DebugPort.ToString()
+                    });
+                }
+
+                Arguments = arguments;
+            }
+
+            private static int GetFreePort() {
+                return Enumerable.Range(new Random().Next(49152, 65536), 60000).Except(
+                    from connection in IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpConnections()
+                    select connection.LocalEndPoint.Port
+                ).First();
+            }
+
+            private static string PtvsdSearchPath {
+                get {
+                    return Path.GetDirectoryName(Path.GetDirectoryName(PythonToolsInstallPath.GetFile("ptvsd\\__init__.py")));
+                }
+            }
+
         }
     }
 }

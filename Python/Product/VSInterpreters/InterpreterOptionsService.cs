@@ -269,7 +269,7 @@ namespace Microsoft.PythonTools.Interpreter {
             }
 
             foreach (var part in catalog) {
-                var container = new CompositionContainer(part);
+                var container = new CompositionContainer(part, serviceProviderProvider);
                 foreach (var provider in container.GetExports<IPythonInterpreterFactoryProvider>()) {
                     try {
                         if (provider.Value != null) {

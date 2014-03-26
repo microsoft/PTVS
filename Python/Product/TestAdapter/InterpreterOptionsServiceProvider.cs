@@ -26,19 +26,17 @@ using IOleServiceProvider = Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
 
 namespace Microsoft.PythonTools {
     static class InterpreterOptionsServiceProvider {
-        public static IInterpreterOptionsService GetService() {
+        public static IInterpreterOptionsService GetService(VisualStudioApp app) {
             var provider = new MockExportProvider();
             var container = new CompositionContainer(
                 new AssemblyCatalog(typeof(IInterpreterOptionsService).Assembly),
                 provider
             );
-            using (var app = VisualStudioApp.FromCommandLineArgs(Environment.GetCommandLineArgs())) {
-                if (app != null) {
-                    var sp = new ServiceProvider(app.DTE as IOleServiceProvider);
-                    provider.SetExport(typeof(SVsServiceProvider), () => sp);
-                }
-                return container.GetExportedValue<IInterpreterOptionsService>();
+            if (app != null) {
+                var sp = new ServiceProvider(app.DTE as IOleServiceProvider);
+                provider.SetExport(typeof(SVsServiceProvider), () => sp);
             }
+            return container.GetExportedValue<IInterpreterOptionsService>();
         }
     }
 }
