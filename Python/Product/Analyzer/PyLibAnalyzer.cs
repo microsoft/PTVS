@@ -24,6 +24,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using Microsoft.PythonTools.Analysis.Analyzer;
+using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -48,6 +49,7 @@ namespace Microsoft.PythonTools.Analysis {
         private readonly string _waitForAnalysis;
 
         private bool _all;
+        private bool _firstRun;
         private FileStream _pidMarkerFile;
 
         private readonly AnalyzerStatusUpdater _updater;
@@ -55,6 +57,7 @@ namespace Microsoft.PythonTools.Analysis {
         private TextWriter _listener;
         internal readonly List<List<ModulePath>> _scrapeFileGroups, _analyzeFileGroups;
         private IEnumerable<string> _callDepthOverrides;
+        private IEnumerable<string> _readModulePath;
 
         private int _progressOffset;
         private int _progressTotal;
@@ -150,16 +153,18 @@ namespace Microsoft.PythonTools.Analysis {
                     // Ensure that this code block matches the protected one
                     // below.
 
-                    inst.Prepare();
-                    inst.Scrape();
-                    inst.Analyze();
+                    while (inst.Prepare()) {
+                        inst.Scrape();
+                        inst.Analyze();
+                    }
                     inst.Epilogue();
                 } else {
 #endif
                     try {
-                        inst.Prepare();
-                        inst.Scrape();
-                        inst.Analyze();
+                        while (inst.Prepare()) {
+                            inst.Scrape();
+                            inst.Analyze();
+                        }
                         inst.Epilogue();
                     } catch (IdentifierInUseException) {
                         // Database is currently being analyzed
@@ -210,6 +215,7 @@ namespace Microsoft.PythonTools.Analysis {
             _all = rescanAll;
             _dryRun = dryRun;
             _waitForAnalysis = waitForAnalysis;
+            _firstRun = true;
 
             _scrapeFileGroups = new List<List<ModulePath>>();
             _analyzeFileGroups = new List<List<ModulePath>>();
@@ -420,8 +426,13 @@ namespace Microsoft.PythonTools.Analysis {
             TraceInformation("Start analysis");
         }
 
-        internal void Prepare() {
-            if (!string.IsNullOrEmpty(_waitForAnalysis)) {
+        internal bool Prepare() {
+            if (_dryRun && !_firstRun) {
+                // Never re-run in dry runs
+                return false;
+            }
+
+            if (_firstRun && !string.IsNullOrEmpty(_waitForAnalysis)) {
                 if (_updater != null) {
                     _updater.UpdateStatus(0, 0, "Waiting for another refresh to start.");
                 }
@@ -467,6 +478,10 @@ namespace Microsoft.PythonTools.Analysis {
                         .GroupBy(mp => mp.LibraryPath, StringComparer.OrdinalIgnoreCase)
                         .Select(group => group.ToList())
                         .ToList();
+
+                    foreach (var module in IncludeModulesFromModulePath) {
+                        AddModulesFromModulePath(module, fileGroups);
+                    }
                     break;
                 } catch (UnauthorizedAccessException ex) {
                     // May be a transient error, so try again shortly.
@@ -499,7 +514,11 @@ namespace Microsoft.PythonTools.Analysis {
             var databaseVer = Path.Combine(_outDir, "database.ver");
             var databasePid = Path.Combine(_outDir, "database.pid");
 
-            if (!PythonTypeDatabase.IsDatabaseVersionCurrent(_outDir)) {
+            if (!_firstRun) {
+                // We've already run once, so we only want to do a partial
+                // update.
+                _all = false;
+            } else if (!PythonTypeDatabase.IsDatabaseVersionCurrent(_outDir)) {
                 // Database is not the current version, so we have to
                 // refresh all modules.
                 _all = true;
@@ -518,7 +537,7 @@ namespace Microsoft.PythonTools.Analysis {
                     Directory.EnumerateFiles(_outDir, "*.idb", SearchOption.TopDirectoryOnly).Any()) {
                     filesInDatabase.UnionWith(Directory.EnumerateFiles(_outDir, "*.idb", SearchOption.AllDirectories));
                 }
-            } else {
+            } else if (_firstRun) {
                 Directory.CreateDirectory(_outDir);
 
                 try {
@@ -552,7 +571,9 @@ namespace Microsoft.PythonTools.Analysis {
                 } catch (NotSupportedException) {
                 } catch (UnauthorizedAccessException) {
                 }
+            }
 
+            if (!_dryRun) {
                 filesInDatabase.UnionWith(Directory.EnumerateFiles(_outDir, "*.idb", SearchOption.AllDirectories));
             }
 
@@ -581,6 +602,8 @@ namespace Microsoft.PythonTools.Analysis {
             _progressTotal = 0;
             _progressOffset = 0;
 
+            _scrapeFileGroups.Clear();
+            _analyzeFileGroups.Clear();
             var candidateScrapeFileGroups = new List<List<ModulePath>>();
             var candidateAnalyzeFileGroups = new List<List<ModulePath>>();
 
@@ -629,6 +652,29 @@ namespace Microsoft.PythonTools.Analysis {
             // Scale file removal by 10 because it's much quicker than analysis.
             _progressTotal += filesInDatabase.Count / 10;
             Clean(filesInDatabase, 10);
+
+            _firstRun = false;
+            return _scrapeFileGroups.Any() || _analyzeFileGroups.Any();
+        }
+
+        private void AddModulesFromModulePath(string moduleName, List<List<ModulePath>> fileGroups) {
+            List<string> extensionPaths;
+
+            using (var proc = ProcessOutput.RunHiddenAndCapture(
+                _interpreter,
+                "-c", string.Format("import {0}; print('\\n'.join({0}.__path__[1:]))", moduleName)
+            )) {
+                proc.Wait();
+                if (proc.ExitCode != 0) {
+                    return;
+                }
+
+                extensionPaths = proc.StandardOutputLines.ToList();
+            }
+
+            fileGroups.Add(
+                ModulePath.GetModulesInPath(extensionPaths, baseModule: moduleName + ".").ToList()
+            );
         }
 
         bool ShouldAnalyze(IEnumerable<ModulePath> group) {
@@ -759,6 +805,21 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
+        private IEnumerable<string> IncludeModulesFromModulePath {
+            get {
+                if (_readModulePath == null) {
+                    var values = ConfigurationManager.AppSettings.Get("IncludeModulesFromModulePath");
+                    if (string.IsNullOrEmpty(values)) {
+                        _readModulePath = Enumerable.Empty<string>();
+                    } else {
+                        TraceInformation("IncludeModulesFromModulePath = {0}", values);
+                        _readModulePath = values.Split(',', ';').Where(n => !string.IsNullOrWhiteSpace(n)).ToArray();
+                    }
+                }
+                return _readModulePath;
+            }
+        }
+
         internal void Scrape() {
             if (string.IsNullOrEmpty(_interpreter)) {
                 return;
@@ -829,15 +890,10 @@ namespace Microsoft.PythonTools.Analysis {
 
                     var prefixDir = Path.GetDirectoryName(_interpreter);
                     var pathVar = string.Format("{0};{1}", Environment.GetEnvironmentVariable("PATH"), prefixDir);
+                    var arguments = new [] { ExtensionScraperPath, "scrape", file.ModuleName, scrapePath, destFile };
+                    var env = new[] { new KeyValuePair<string, string>("PATH", pathVar) };
 
-                    using (var output = ProcessOutput.Run(
-                        _interpreter,
-                        new [] { ExtensionScraperPath, "scrape", file.ModuleName, scrapePath, destFile },
-                        prefixDir,
-                        new[] { new KeyValuePair<string, string>("PATH", pathVar) },
-                        false,
-                        null
-                    )) {
+                    using (var output = ProcessOutput.Run(_interpreter, arguments, prefixDir, env, false, null)) {
                         TraceInformation("Scraping {0}", file.ModuleName);
                         TraceInformation("Command: {0}", output.Arguments);
                         TraceInformation("environ['Path'] = {0}", pathVar);
@@ -858,6 +914,18 @@ namespace Microsoft.PythonTools.Analysis {
                             }
                         } else {
                             TraceVerbose("Scraped {0}", file.ModuleName);
+                        }
+                    }
+
+                    // Ensure that the output file exists, otherwise the DB will
+                    // never appear to be up to date.
+                    var expected = GetOutputFile(file);
+                    if (!File.Exists(expected)) {
+                        using (var writer = new FileStream(expected, FileMode.Create, FileAccess.ReadWrite)) {
+                            new Pickler(writer).Dump(new Dictionary<string, object> {
+                                { "members", new Dictionary<string, object>() },
+                                { "doc", "Could not import compiled module" }
+                            });
                         }
                     }
                 }
