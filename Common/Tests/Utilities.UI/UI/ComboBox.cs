@@ -53,9 +53,7 @@ namespace TestUtilities.UI {
 
             // On Win8, we need to move mouse onto the text, otherwise we cannot select the item 
             AutomationElement innerText = item.FindFirst(TreeScope.Children, new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Text));
-            var rect = innerText.Current.BoundingRectangle;
-            var pt = new System.Windows.Point((int)((rect.Left + rect.Right) / 2), (int)((rect.Top + rect.Bottom) / 2));
-            Mouse.MoveTo(pt);
+            Mouse.MoveTo(innerText.GetClickablePoint());
             Mouse.Click();
         }
 

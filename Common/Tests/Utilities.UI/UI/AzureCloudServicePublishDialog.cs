@@ -24,7 +24,7 @@ namespace TestUtilities.UI {
             : base(app, element) {
         }
 
-        public static AzureCloudServicePublishDialog Open(VisualStudioApp app) {
+        public static AzureCloudServicePublishDialog FromDte(VisualStudioApp app) {
             var publishDialogHandle = app.OpenDialogWithDteExecuteCommand("Build.PublishSelection");
             return new AzureCloudServicePublishDialog(app, AutomationElement.FromHandle(publishDialogHandle));
         }
@@ -54,13 +54,24 @@ namespace TestUtilities.UI {
         }
 
         public void ClickPublish() {
+            // Wait for the publish button to be enabled
+            // It will not be enabled until all combo boxes have a valid
+            // selection, such as the storage account combo box.
+            WaitFor(PublishButton, btn => btn.Element.Current.IsEnabled);
+
             WaitForInputIdle();
-            WaitForClosed(TimeSpan.FromSeconds(10.0), () => ClickButtonByAutomationId("PART_FinishCommandSource"));
+            WaitForClosed(TimeSpan.FromSeconds(10.0), () => PublishButton.Click());
         }
 
         public void ClickNext() {
             WaitForInputIdle();
             WaitForClosed(TimeSpan.FromSeconds(10.0), () => ClickButtonByAutomationId("PART_NextCommandSource"));
+        }
+
+        private Button PublishButton {
+            get {
+                return new Button(FindByAutomationId("PART_FinishCommandSource"));
+            }
         }
 
         private ComboBox AccountComboBox {

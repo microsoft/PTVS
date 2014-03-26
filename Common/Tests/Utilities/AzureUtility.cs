@@ -38,8 +38,9 @@ namespace TestUtilities {
 
         public static bool DeleteCloudServiceWithRetry(string subscriptionPublishSettingsFilePath, string serviceName) {
             for (int i = 0; i < 60; i++) {
-                if (DeleteCloudService(subscriptionPublishSettingsFilePath, serviceName))
+                if (DeleteCloudService(subscriptionPublishSettingsFilePath, serviceName)) {
                     return true;
+                }
                 Thread.Sleep(2000);
             }
 
@@ -48,8 +49,9 @@ namespace TestUtilities {
 
         public static bool DeleteWebSiteWithRetry(string subscriptionPublishSettingsFilePath, string webSiteName) {
             for (int i = 0; i < 5; i++) {
-                if (DeleteWebSite(subscriptionPublishSettingsFilePath, webSiteName))
+                if (DeleteWebSite(subscriptionPublishSettingsFilePath, webSiteName)) {
                     return true;
+                }
                 Thread.Sleep(2000);
             }
 

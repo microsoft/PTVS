@@ -21,7 +21,7 @@ namespace TestUtilities.UI {
             : base(app, element) {
         }
 
-        public static AzureWebSitePublishDialog Open(VisualStudioApp app) {
+        public static AzureWebSitePublishDialog FromDte(VisualStudioApp app) {
             var publishDialogHandle = app.OpenDialogWithDteExecuteCommand("Build.PublishSelection");
             return new AzureWebSitePublishDialog(app, AutomationElement.FromHandle(publishDialogHandle));
         }

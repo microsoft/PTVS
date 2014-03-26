@@ -31,7 +31,7 @@ namespace TestUtilities.UI {
             WaitFor(DatabaseComboBox, combobox => combobox.GetSelectedItemName() != null);
 
             WaitForInputIdle();
-            WaitForClosed(TimeSpan.FromSeconds(30.0), () => CreateButton.Click());
+            WaitForClosed(TimeSpan.FromSeconds(180.0), () => CreateButton.Click());
         }
 
         public string SiteName {

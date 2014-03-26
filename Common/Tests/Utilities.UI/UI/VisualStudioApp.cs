@@ -800,7 +800,7 @@ namespace TestUtilities.UI {
         }
 
         public Uri PublishToAzureCloudService(string serviceName, string subscriptionPublishSettingsFilePath) {
-            using (var publishDialog = AzureCloudServicePublishDialog.Open(this)) {
+            using (var publishDialog = AzureCloudServicePublishDialog.FromDte(this)) {
                 using (var manageSubscriptionsDialog = publishDialog.SelectManageSubscriptions()) {
                     LoadPublishSettings(manageSubscriptionsDialog, subscriptionPublishSettingsFilePath);
                     manageSubscriptionsDialog.Close();
@@ -821,7 +821,7 @@ namespace TestUtilities.UI {
         }
 
         public Uri PublishToAzureWebSite(string siteName, string subscriptionPublishSettingsFilePath) {
-            using (var publishDialog = AzureWebSitePublishDialog.Open(this)) {
+            using (var publishDialog = AzureWebSitePublishDialog.FromDte(this)) {
                 using (var importSettingsDialog = publishDialog.ClickImportSettings()) {
                     importSettingsDialog.ClickImportFromWindowsAzureWebSite();
 
