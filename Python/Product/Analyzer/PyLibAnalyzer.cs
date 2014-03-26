@@ -49,7 +49,6 @@ namespace Microsoft.PythonTools.Analysis {
         private readonly string _waitForAnalysis;
 
         private bool _all;
-        private bool _firstRun;
         private FileStream _pidMarkerFile;
 
         private readonly AnalyzerStatusUpdater _updater;
@@ -153,18 +152,16 @@ namespace Microsoft.PythonTools.Analysis {
                     // Ensure that this code block matches the protected one
                     // below.
 
-                    while (inst.Prepare()) {
-                        inst.Scrape();
-                        inst.Analyze();
-                    }
+                    inst.Prepare();
+                    inst.Scrape();
+                    inst.Analyze();
                     inst.Epilogue();
                 } else {
 #endif
                     try {
-                        while (inst.Prepare()) {
-                            inst.Scrape();
-                            inst.Analyze();
-                        }
+                        inst.Prepare();
+                        inst.Scrape();
+                        inst.Analyze();
                         inst.Epilogue();
                     } catch (IdentifierInUseException) {
                         // Database is currently being analyzed
@@ -215,7 +212,6 @@ namespace Microsoft.PythonTools.Analysis {
             _all = rescanAll;
             _dryRun = dryRun;
             _waitForAnalysis = waitForAnalysis;
-            _firstRun = true;
 
             _scrapeFileGroups = new List<List<ModulePath>>();
             _analyzeFileGroups = new List<List<ModulePath>>();
@@ -426,13 +422,8 @@ namespace Microsoft.PythonTools.Analysis {
             TraceInformation("Start analysis");
         }
 
-        internal bool Prepare() {
-            if (_dryRun && !_firstRun) {
-                // Never re-run in dry runs
-                return false;
-            }
-
-            if (_firstRun && !string.IsNullOrEmpty(_waitForAnalysis)) {
+        internal void Prepare() {
+            if (!string.IsNullOrEmpty(_waitForAnalysis)) {
                 if (_updater != null) {
                     _updater.UpdateStatus(0, 0, "Waiting for another refresh to start.");
                 }
@@ -514,11 +505,7 @@ namespace Microsoft.PythonTools.Analysis {
             var databaseVer = Path.Combine(_outDir, "database.ver");
             var databasePid = Path.Combine(_outDir, "database.pid");
 
-            if (!_firstRun) {
-                // We've already run once, so we only want to do a partial
-                // update.
-                _all = false;
-            } else if (!PythonTypeDatabase.IsDatabaseVersionCurrent(_outDir)) {
+            if (!PythonTypeDatabase.IsDatabaseVersionCurrent(_outDir)) {
                 // Database is not the current version, so we have to
                 // refresh all modules.
                 _all = true;
@@ -537,7 +524,7 @@ namespace Microsoft.PythonTools.Analysis {
                     Directory.EnumerateFiles(_outDir, "*.idb", SearchOption.TopDirectoryOnly).Any()) {
                     filesInDatabase.UnionWith(Directory.EnumerateFiles(_outDir, "*.idb", SearchOption.AllDirectories));
                 }
-            } else if (_firstRun) {
+            } else {
                 Directory.CreateDirectory(_outDir);
 
                 try {
@@ -571,9 +558,7 @@ namespace Microsoft.PythonTools.Analysis {
                 } catch (NotSupportedException) {
                 } catch (UnauthorizedAccessException) {
                 }
-            }
 
-            if (!_dryRun) {
                 filesInDatabase.UnionWith(Directory.EnumerateFiles(_outDir, "*.idb", SearchOption.AllDirectories));
             }
 
@@ -602,8 +587,6 @@ namespace Microsoft.PythonTools.Analysis {
             _progressTotal = 0;
             _progressOffset = 0;
 
-            _scrapeFileGroups.Clear();
-            _analyzeFileGroups.Clear();
             var candidateScrapeFileGroups = new List<List<ModulePath>>();
             var candidateAnalyzeFileGroups = new List<List<ModulePath>>();
 
@@ -652,9 +635,6 @@ namespace Microsoft.PythonTools.Analysis {
             // Scale file removal by 10 because it's much quicker than analysis.
             _progressTotal += filesInDatabase.Count / 10;
             Clean(filesInDatabase, 10);
-
-            _firstRun = false;
-            return _scrapeFileGroups.Any() || _analyzeFileGroups.Any();
         }
 
         private void AddModulesFromModulePath(string moduleName, List<List<ModulePath>> fileGroups) {
