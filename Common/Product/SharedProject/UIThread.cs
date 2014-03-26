@@ -71,7 +71,8 @@ namespace Microsoft.VisualStudioTools {
                 Debug.Fail("Invalid cross-thread call", new StackTrace().ToString());
 
                 if (throwInRelease) {
-                    throw new COMException("Invalid cross-thread call", VSConstants.RPC_E_WRONG_THREAD);
+                    // RPC_E_WRONG_THREAD = unchecked((int)0x8001010E)
+                    throw new COMException("Invalid cross-thread call", unchecked((int)0x8001010E));
                 }
             }
         }
