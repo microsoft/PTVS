@@ -107,6 +107,7 @@ namespace Microsoft.VisualStudioTools.Project {
         private ProcessWaitHandle _waitHandle;
         private readonly Redirector _redirector;
         private bool _isDisposed;
+        private bool _haveRaisedExitedEvent;
 
         private static readonly char[] EolChars = new[] { '\r', '\n' };
         private static readonly char[] _needToBeQuoted = new[] { ' ', '"' };
@@ -370,7 +371,14 @@ namespace Microsoft.VisualStudioTools.Project {
                 _process.ErrorDataReceived += OnErrorDataReceived;
             }
 
-            _process.Exited += OnExited;
+            if (!_process.StartInfo.RedirectStandardOutput && !_process.StartInfo.RedirectStandardError) {
+                // If we are receiving output events, we signal that the process
+                // has exited when one of them receives null. Otherwise, we have
+                // to listen for the Exited event.
+                // If we just listen for the Exited event, we may receive it
+                // before all the output has arrived.
+                _process.Exited += OnExited;
+            }
             _process.EnableRaisingEvents = true;
 
             try {
@@ -404,7 +412,9 @@ namespace Microsoft.VisualStudioTools.Project {
                 return;
             }
 
-            if (!string.IsNullOrEmpty(e.Data)) {
+            if (e.Data == null) {
+                OnExited(_process, EventArgs.Empty);
+            } else if (!string.IsNullOrEmpty(e.Data)) {
                 foreach (var line in SplitLines(e.Data)) {
                     if (_output != null) {
                         _output.Add(line);
@@ -421,7 +431,9 @@ namespace Microsoft.VisualStudioTools.Project {
                 return;
             }
 
-            if (!string.IsNullOrEmpty(e.Data)) {
+            if (e.Data == null) {
+                OnExited(_process, EventArgs.Empty);
+            } else if (!string.IsNullOrEmpty(e.Data)) {
                 foreach (var line in SplitLines(e.Data)) {
                     if (_error != null) {
                         _error.Add(line);
@@ -573,7 +585,7 @@ namespace Microsoft.VisualStudioTools.Project {
             if (_process == null) {
                 tcs.SetCanceled();
             } else {
-                _process.Exited += (s, e) => {
+                Exited += (s, e) => {
                     FlushAndCloseOutput();
                     tcs.TrySetResult(_process.ExitCode);
                 };
@@ -602,6 +614,10 @@ namespace Microsoft.VisualStudioTools.Project {
         public event EventHandler Exited;
 
         private void OnExited(object sender, EventArgs e) {
+            if (_isDisposed || _haveRaisedExitedEvent) {
+                return;
+            }
+            _haveRaisedExitedEvent = true;
             var evt = Exited;
             if (evt != null) {
                 evt(this, e);

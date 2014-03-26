@@ -27,7 +27,7 @@ using Microsoft.VisualStudioTools.Project;
 namespace Microsoft.PythonTools.Project {
     static class Pip {
         private static readonly Regex PackageNameRegex = new Regex(
-            "^(?<name>[a-z0-9_]+)(-.+)?",
+            "^(?!__pycache__)(?<name>[a-z0-9_]+)(-.+)?",
             RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
 
         private static readonly KeyValuePair<string, string>[] UnbufferedEnv = new[] { 
