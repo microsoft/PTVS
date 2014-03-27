@@ -48,6 +48,33 @@ namespace Microsoft.VisualStudioTools {
         #endregion
 
         internal CommonPackage() {
+#if DEBUG
+            AppDomain.CurrentDomain.UnhandledException += (sender, e) => {
+                if (e.IsTerminating) {
+                    var ex = e.ExceptionObject as Exception;
+                    if (ex != null) {
+                        Debug.Fail(
+                            string.Format("An unhandled exception is about to terminate the process:\n\n{0}", ex.Message),
+                            ex.ToString()
+                        );
+                    } else {
+                        Debug.Fail(string.Format(
+                            "An unhandled exception is about to terminate the process:\n\n{0}",
+                            e.ExceptionObject
+                        ));
+                    }
+                }
+            };
+            System.Threading.Tasks.TaskScheduler.UnobservedTaskException += (sender, e) => {
+                if (!e.Observed) {
+                    Debug.Fail(
+                        string.Format("An exception in a task was not observed:\n    {0}\n\nThis is not fatal - click 'Ignore' to continue running.", e.Exception.Message),
+                        e.Exception.ToString()
+                    );
+                    e.SetObserved();
+                }
+            };
+#endif
             IServiceContainer container = this as IServiceContainer;
             ServiceCreatorCallback callback = new ServiceCreatorCallback(CreateService);
             //container.AddService(GetLanguageServiceType(), callback, true);

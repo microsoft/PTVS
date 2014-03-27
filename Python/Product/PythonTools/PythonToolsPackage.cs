@@ -275,34 +275,6 @@ namespace Microsoft.PythonTools {
         /// initialization is the Initialize method.
         /// </summary>
         public PythonToolsPackage() {
-#if DEBUG
-            AppDomain.CurrentDomain.UnhandledException += (sender, e) => {
-                if (e.IsTerminating) {
-                    var ex = e.ExceptionObject as Exception;
-                    if (ex != null) {
-                        Debug.Fail(
-                            string.Format("An unhandled exception is about to terminate the process:\n\n{0}", ex.Message),
-                            ex.ToString()
-                        );
-                    } else {
-                        Debug.Fail(string.Format(
-                            "An unhandled exception is about to terminate the process:\n\n{0}",
-                            e.ExceptionObject
-                        ));
-                    }
-                }
-            };
-            System.Threading.Tasks.TaskScheduler.UnobservedTaskException += (sender, e) => {
-                if (!e.Observed) {
-                    Debug.Fail(
-                        string.Format("An exception in a task was not observed:\n    {0}\n\nThis is not fatal - click 'Ignore' to continue running.", e.Exception.Message),
-                        e.Exception.ToString()
-                    );
-                    e.SetObserved();
-                }
-            };
-#endif
-
             Trace.WriteLine(string.Format(CultureInfo.CurrentCulture, "Entering constructor for: {0}", this.ToString()));
             Instance = this;
 
