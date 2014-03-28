@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
      xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
-  <?define InstallerGuid=7EC607B4-6699-409F-9FF2-F7AC8007C1C8?>
   <?define InstallerUpgradeGuid=3A433B16-7486-48A3-86A7-A56C742A634B?>
 
-  <Product Id="$(var.InstallerGuid)" Name="!(loc.ProductName)" Language="1033" Version="$(var.MsiVersion)" Manufacturer="Microsoft Corporation" UpgradeCode="$(var.InstallerUpgradeGuid)">
+  <Product Id="*" Name="!(loc.ProductName)" Language="1033" Version="$(var.MsiVersion)" Manufacturer="Microsoft Corporation" UpgradeCode="$(var.InstallerUpgradeGuid)">
     <Package InstallerVersion="300" Compressed="yes"  />
 
     <MajorUpgrade AllowDowngrades="no" AllowSameVersionUpgrades="yes" DowngradeErrorMessage="!(loc.DowngradeErrorMessage)" />
