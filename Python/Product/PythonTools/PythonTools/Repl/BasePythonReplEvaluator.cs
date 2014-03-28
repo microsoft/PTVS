@@ -1146,13 +1146,15 @@ namespace Microsoft.PythonTools.Repl {
             EnsureConnected();
 
             string startupFilename, startupDir, extraArgs = null;
-            VsProjectAnalyzer analyzer;
-            if (PythonToolsPackage.TryGetStartupFileAndDirectory(out startupFilename, out startupDir, out analyzer)) {
-                var startupProj = PythonToolsPackage.GetStartupProject();
-                if (startupProj != null) {
-                    extraArgs = startupProj.GetProjectProperty(CommonConstants.CommandLineArguments, true);
+            UIThread.Invoke(() => {
+                VsProjectAnalyzer analyzer;
+                if (PythonToolsPackage.TryGetStartupFileAndDirectory(out startupFilename, out startupDir, out analyzer)) {
+                    var startupProj = PythonToolsPackage.GetStartupProject();
+                    if (startupProj != null) {
+                        extraArgs = startupProj.GetProjectProperty(CommonConstants.CommandLineArguments, true);
+                    }
                 }
-            }
+            });
 
             if (_curListener != null) {
                 _curListener.ExecuteFile(filename, extraArgs, ExecuteFileEx_Script);
@@ -1199,13 +1201,13 @@ namespace Microsoft.PythonTools.Repl {
             return Reset(false);
         }
 
-        public Task<ExecutionResult> Reset(bool quiet) {
+        public async Task<ExecutionResult> Reset(bool quiet) {
             // suppress reporting "failed to launch repl" process
             if (_curListener == null) {
                 if (!quiet) {
                     _window.WriteError("Interactive window is not yet started." + Environment.NewLine);
                 }
-                return ExecutionResult.Succeeded;
+                return ExecutionResult.Success;
             }
 
             if (!quiet) {
@@ -1216,7 +1218,7 @@ namespace Microsoft.PythonTools.Repl {
             _curListener._exitedIsExpected = quiet;
 
             Close();
-            Connect();
+            await UIThread.InvokeAsync(Connect).ConfigureAwait(false);
 
             BufferParser parser = null;
 
@@ -1236,7 +1238,7 @@ namespace Microsoft.PythonTools.Repl {
                 parser.Requeue();
             }
 
-            return ExecutionResult.Succeeded;
+            return ExecutionResult.Success;
         }
 
         private static bool TruePredicate(ITextBuffer buffer) {

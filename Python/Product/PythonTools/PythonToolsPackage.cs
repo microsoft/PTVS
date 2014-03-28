@@ -59,6 +59,7 @@ using Microsoft.VisualStudioTools.Navigation;
 using Microsoft.VisualStudioTools.Project;
 using Microsoft.Win32;
 using NativeMethods = Microsoft.VisualStudioTools.Project.NativeMethods;
+using SR = Microsoft.PythonTools.Project.SR;
 
 namespace Microsoft.PythonTools {
     /// <summary>
@@ -1076,7 +1077,9 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             options.Project = project as PythonProjectNode;
             options._workingDir = workingDir;
             options._envVars = new Dictionary<string, string>(envVars);
-            evaluator.Reset(quiet: true);
+            evaluator.Reset(quiet: true)
+                .HandleAllExceptions(SR.GetString(SR.PythonToolsForVisualStudio), GetType())
+                .DoNotWait();
 
             return window;
         }

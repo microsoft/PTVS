@@ -23,6 +23,14 @@ using Task = System.Threading.Tasks.Task;
 namespace Microsoft.VisualStudioTools {
     static class TaskExtensions {
         /// <summary>
+        /// Suppresses warnings about unawaited tasks and ensures that unhandled
+        /// errors will cause the process to terminate.
+        /// </summary>
+        public static async void DoNotWait(this Task task) {
+            await task;
+        }
+        
+        /// <summary>
         /// Waits for a task to complete. If an exception occurs, the exception
         /// will be raised without being wrapped in a
         /// <see cref="AggregateException"/>.
