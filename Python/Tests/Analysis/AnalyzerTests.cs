@@ -54,7 +54,8 @@ namespace AnalysisTests {
                     null,
                     false,
                     false,
-                    null
+                    null,
+                    1
                 )) {
                     analyzer.StartTraceListener();
                     analyzer.TraceError(TEST);
@@ -192,7 +193,7 @@ namespace AnalysisTests {
             using (var analyzer = libDb.Analyzer) {
                 libDb.TouchLibrary(LastWeek, files);
                 libDb.TouchDatabase(Yesterday, files);
-                analyzer.Prepare();
+                Assert.IsFalse(analyzer.Prepare(true));
 
                 Assert.AreEqual(files.Count(), libDb.FilesInDatabase.Count());
                 Assert.AreEqual(0, analyzer._analyzeFileGroups.Count);
@@ -207,7 +208,7 @@ namespace AnalysisTests {
             using (var libDb = new TemporaryLibAndDB(files))
             using (var analyzer = libDb.Analyzer) {
                 libDb.TouchLibrary(files);
-                analyzer.Prepare();
+                Assert.IsTrue(analyzer.Prepare(true));
 
                 Assert.AreEqual(0, libDb.FilesInDatabase.Count());
                 Assert.AreEqual(2, analyzer._analyzeFileGroups.Count);
@@ -224,7 +225,7 @@ namespace AnalysisTests {
             using (var analyzer = libDb.Analyzer) {
                 libDb.DeleteLibrary("a.py");
 
-                analyzer.Prepare();
+                Assert.IsFalse(analyzer.Prepare(true));
 
                 // This is the result we'd expect.
                 //Assert.AreEqual(files.Count() - 1, libDb.FilesInDatabase.Count())
@@ -247,7 +248,7 @@ namespace AnalysisTests {
             using (var analyzer = libDb.Analyzer) {
                 libDb.DeleteLibrary("site-packages\\B\\b.py");
 
-                analyzer.Prepare();
+                Assert.IsFalse(analyzer.Prepare(true));
 
                 Assert.AreEqual(files.Count() - 1, libDb.FilesInDatabase.Count());
                 Assert.AreEqual(0, analyzer._analyzeFileGroups.Count);
@@ -262,7 +263,7 @@ namespace AnalysisTests {
             using (var analyzer = libDb.Analyzer) {
                 libDb.TouchLibrary("a.py");
 
-                analyzer.Prepare();
+                Assert.IsTrue(analyzer.Prepare(true));
 
                 Assert.AreEqual(0, libDb.FilesInDatabase.Count());
                 Assert.AreEqual(2, analyzer._analyzeFileGroups.Count);
@@ -279,7 +280,7 @@ namespace AnalysisTests {
             using (var analyzer = libDb.Analyzer) {
                 libDb.TouchLibrary("site-packages\\B\\__init__.py");
 
-                analyzer.Prepare();
+                Assert.IsTrue(analyzer.Prepare(true));
 
                 Assert.AreEqual(files.Count() - 2, libDb.FilesInDatabase.Count());
                 Assert.AreEqual(1, analyzer._analyzeFileGroups.Count);
@@ -295,7 +296,7 @@ namespace AnalysisTests {
             using (var analyzer = libDb.Analyzer) {
                 libDb.DeleteDatabase("a.py");
 
-                analyzer.Prepare();
+                Assert.IsTrue(analyzer.Prepare(true));
 
                 Assert.AreEqual(0, libDb.FilesInDatabase.Count());
                 Assert.AreEqual(2, analyzer._analyzeFileGroups.Count);
@@ -312,7 +313,7 @@ namespace AnalysisTests {
             using (var analyzer = libDb.Analyzer) {
                 libDb.DeleteDatabase("site-packages\\B\\__init__.py");
 
-                analyzer.Prepare();
+                Assert.IsTrue(analyzer.Prepare(true));
 
                 Assert.AreEqual(files.Count() - 2, libDb.FilesInDatabase.Count());
                 Assert.AreEqual(1, analyzer._analyzeFileGroups.Count);
@@ -331,7 +332,7 @@ namespace AnalysisTests {
                 File.WriteAllText(Path.Combine(path, "__init__.py"), "Not a real .py file");
                 File.WriteAllText(Path.Combine(path, "newMod.py"), "Not a real .py file");
 
-                analyzer.Prepare();
+                Assert.IsTrue(analyzer.Prepare(true));
 
                 // Nothing deleted, and only one analysis group queued.
                 Assert.AreEqual(files.Count(), libDb.FilesInDatabase.Count());
@@ -349,7 +350,7 @@ namespace AnalysisTests {
                 var path = Path.Combine(libDb.Library, "site-packages", "B");
                 Directory.Delete(path, true);
 
-                analyzer.Prepare();
+                Assert.IsFalse(analyzer.Prepare(true));
 
                 // Two files deleted and nothing queued.
                 Assert.AreEqual(files.Count() - 2, libDb.FilesInDatabase.Count());
@@ -371,7 +372,7 @@ namespace AnalysisTests {
             using (var analyzer = libDb.Analyzer) {
                 libDb.DeleteDatabase(files);
 
-                analyzer.Prepare();
+                Assert.IsTrue(analyzer.Prepare(true));
 
                 Assert.AreEqual(0, analyzer._analyzeFileGroups.Count);
                 Assert.AreEqual(1, analyzer._scrapeFileGroups.Count);
@@ -391,7 +392,7 @@ namespace AnalysisTests {
             using (var analyzer = libDb.Analyzer) {
                 Assert.IsTrue(analyzer.SkipUnchanged);
 
-                analyzer.Prepare();
+                Assert.IsTrue(analyzer.Prepare(true));
 
                 Assert.IsFalse(analyzer.SkipUnchanged);
                 Assert.AreEqual(3, analyzer._analyzeFileGroups.Count);
@@ -411,7 +412,7 @@ namespace AnalysisTests {
                 libDb.AddFileToLibrary("site-packages\\self.pth", ".");
 
                 using (var analyzer = libDb.Analyzer) {
-                    analyzer.Prepare();
+                    Assert.IsTrue(analyzer.Prepare(true));
 
                     // Expect four groups, whereas if self.pth was allowed we'd
                     // only see three.
@@ -497,7 +498,8 @@ namespace AnalysisTests {
                         null,
                         false,
                         false,
-                        null
+                        null,
+                        1
                     );
                 }
             }

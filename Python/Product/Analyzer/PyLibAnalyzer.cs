@@ -47,6 +47,7 @@ namespace Microsoft.PythonTools.Analysis {
         private readonly string _logPrivate, _logGlobal, _logDiagnostic;
         private readonly bool _dryRun;
         private readonly string _waitForAnalysis;
+        private readonly int _repeatCount;
 
         private bool _all;
         private FileStream _pidMarkerFile;
@@ -88,6 +89,7 @@ namespace Microsoft.PythonTools.Analysis {
             Console.WriteLine(" /dryrun                        - don't analyze, but write out list of files that " +
                               "would have been analyzed.");
             Console.WriteLine(" /wait       [identifier]       - wait for the specified analysis to complete.");
+            Console.WriteLine(" /repeat     [count]            - repeat up to count times if needen (default 3).");
         }
 
         private static IEnumerable<KeyValuePair<string, string>> ParseArguments(IEnumerable<string> args) {
@@ -152,16 +154,18 @@ namespace Microsoft.PythonTools.Analysis {
                     // Ensure that this code block matches the protected one
                     // below.
 
-                    inst.Prepare();
-                    inst.Scrape();
-                    inst.Analyze();
+                    for (int i = 0; i < inst._repeatCount && inst.Prepare(i == 0); ++i) {
+                        inst.Scrape();
+                        inst.Analyze();
+                    }
                     inst.Epilogue();
                 } else {
 #endif
                     try {
-                        inst.Prepare();
-                        inst.Scrape();
-                        inst.Analyze();
+                        for (int i = 0; i < inst._repeatCount && inst.Prepare(i == 0); ++i) {
+                            inst.Scrape();
+                            inst.Analyze();
+                        }
                         inst.Epilogue();
                     } catch (IdentifierInUseException) {
                         // Database is currently being analyzed
@@ -198,7 +202,8 @@ namespace Microsoft.PythonTools.Analysis {
             string logDiagnostic,
             bool rescanAll,
             bool dryRun,
-            string waitForAnalysis
+            string waitForAnalysis,
+            int repeatCount
         ) {
             _id = id;
             _version = langVersion;
@@ -212,6 +217,7 @@ namespace Microsoft.PythonTools.Analysis {
             _all = rescanAll;
             _dryRun = dryRun;
             _waitForAnalysis = waitForAnalysis;
+            _repeatCount = repeatCount;
 
             _scrapeFileGroups = new List<List<ModulePath>>();
             _analyzeFileGroups = new List<List<ModulePath>>();
@@ -300,6 +306,7 @@ namespace Microsoft.PythonTools.Analysis {
             List<string> baseDb;
             string logPrivate, logGlobal, logDiagnostic;
             bool rescanAll, dryRun;
+            int repeatCount;
 
             if (!options.TryGetValue("id", out value)) {
                 id = Guid.Empty;
@@ -393,6 +400,13 @@ namespace Microsoft.PythonTools.Analysis {
             rescanAll = options.ContainsKey("all");
             dryRun = options.ContainsKey("dryrun");
 
+            if (!options.TryGetValue("repeat", out value) || !int.TryParse(value, out repeatCount)) {
+                repeatCount = 3;
+            }
+            if (dryRun) {
+                repeatCount = 1;
+            }
+
             return new PyLibAnalyzer(
                 id,
                 version,
@@ -405,7 +419,8 @@ namespace Microsoft.PythonTools.Analysis {
                 logDiagnostic,
                 rescanAll,
                 dryRun,
-                waitForAnalysis
+                waitForAnalysis, 
+                repeatCount
             );
         }
 
@@ -422,8 +437,8 @@ namespace Microsoft.PythonTools.Analysis {
             TraceInformation("Start analysis");
         }
 
-        internal void Prepare() {
-            if (!string.IsNullOrEmpty(_waitForAnalysis)) {
+        internal bool Prepare(bool firstRun) {
+            if (firstRun && !string.IsNullOrEmpty(_waitForAnalysis)) {
                 if (_updater != null) {
                     _updater.UpdateStatus(0, 0, "Waiting for another refresh to start.");
                 }
@@ -505,7 +520,11 @@ namespace Microsoft.PythonTools.Analysis {
             var databaseVer = Path.Combine(_outDir, "database.ver");
             var databasePid = Path.Combine(_outDir, "database.pid");
 
-            if (!PythonTypeDatabase.IsDatabaseVersionCurrent(_outDir)) {
+            if (!firstRun) {
+                // We've already run once, so we only want to do a partial
+                // update.
+                _all = false;
+            } else if (!PythonTypeDatabase.IsDatabaseVersionCurrent(_outDir)) {
                 // Database is not the current version, so we have to
                 // refresh all modules.
                 _all = true;
@@ -524,7 +543,7 @@ namespace Microsoft.PythonTools.Analysis {
                     Directory.EnumerateFiles(_outDir, "*.idb", SearchOption.TopDirectoryOnly).Any()) {
                     filesInDatabase.UnionWith(Directory.EnumerateFiles(_outDir, "*.idb", SearchOption.AllDirectories));
                 }
-            } else {
+            } else if (firstRun) {
                 Directory.CreateDirectory(_outDir);
 
                 try {
@@ -558,7 +577,9 @@ namespace Microsoft.PythonTools.Analysis {
                 } catch (NotSupportedException) {
                 } catch (UnauthorizedAccessException) {
                 }
+            }
 
+            if (!_dryRun) {
                 filesInDatabase.UnionWith(Directory.EnumerateFiles(_outDir, "*.idb", SearchOption.AllDirectories));
             }
 
@@ -570,9 +591,14 @@ namespace Microsoft.PythonTools.Analysis {
                 var builtinModulePaths = GetBuiltinModuleOutputFiles().ToArray();
                 if (builtinModulePaths.Any()) {
                     var interpreterTime = File.GetLastWriteTimeUtc(_interpreter);
-                    if (builtinModulePaths.All(p => File.Exists(p) && File.GetLastWriteTimeUtc(p) > interpreterTime)) {
+                    var outOfDate = builtinModulePaths.Where(p => !File.Exists(p) || File.GetLastWriteTimeUtc(p) <= interpreterTime);
+                    if (!outOfDate.Any()) {
                         filesToKeep.UnionWith(builtinModulePaths);
                     } else {
+                        TraceVerbose(
+                            "Adding /all because the following built-in modules needed updating: {0}",
+                            string.Join(";", outOfDate)
+                        );
                         _all = true;
                     }
                 } else {
@@ -587,6 +613,8 @@ namespace Microsoft.PythonTools.Analysis {
             _progressTotal = 0;
             _progressOffset = 0;
 
+            _scrapeFileGroups.Clear();
+            _analyzeFileGroups.Clear();
             var candidateScrapeFileGroups = new List<List<ModulePath>>();
             var candidateAnalyzeFileGroups = new List<List<ModulePath>>();
 
@@ -595,9 +623,10 @@ namespace Microsoft.PythonTools.Analysis {
                 var toScrape = fileGroup.Where(mp => mp.IsCompiled && seen.Add(mp.ModuleName)).ToList();
                 var toAnalyze = fileGroup.Where(mp => seen.Add(mp.ModuleName)).ToList();
 
-                if (ShouldAnalyze(fileGroup)) {
+                if (ShouldAnalyze(toScrape.Concat(toAnalyze))) {
                     if (!_all && (builtinGroups.Contains(fileGroup) || stdLibGroups.Contains(fileGroup))) {
                         _all = true;
+                        TraceVerbose("Adding /all because the above module is builtin or stdlib");
                         // Include all the file groups we've already seen.
                         _scrapeFileGroups.InsertRange(0, candidateScrapeFileGroups);
                         _analyzeFileGroups.InsertRange(0, candidateAnalyzeFileGroups);
@@ -635,6 +664,8 @@ namespace Microsoft.PythonTools.Analysis {
             // Scale file removal by 10 because it's much quicker than analysis.
             _progressTotal += filesInDatabase.Count / 10;
             Clean(filesInDatabase, 10);
+
+            return _scrapeFileGroups.Any() || _analyzeFileGroups.Any();
         }
 
         private void AddModulesFromModulePath(string moduleName, List<List<ModulePath>> fileGroups) {
@@ -666,6 +697,7 @@ namespace Microsoft.PythonTools.Analysis {
                 var destPath = GetOutputFile(file);
                 if (!File.Exists(destPath) ||
                     File.GetLastWriteTimeUtc(file.SourceFile) > File.GetLastWriteTimeUtc(destPath)) {
+                    TraceVerbose("Including {0} because {1} needs updating", file.LibraryPath, file.FullName);
                     return true;
                 }
             }
