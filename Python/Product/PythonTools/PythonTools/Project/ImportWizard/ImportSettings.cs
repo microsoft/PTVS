@@ -444,7 +444,15 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
             imports.AddProperty("VSToolsPath", @"$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)")
                 .Condition = " '$(VSToolsPath)' == '' ";
 
-            (customization ?? DefaultProjectCustomization.Instance).Process(project, globals);
+            (customization ?? DefaultProjectCustomization.Instance).Process(
+                project,
+                new Dictionary<string, ProjectPropertyGroupElement> {
+                    { "Globals", globals },
+                    { "Imports", imports },
+                    { "Debug", debugGroup },
+                    { "Release", releaseGroup }
+                }
+            );
 
             project.Save(writer);
         }

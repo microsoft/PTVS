@@ -26,7 +26,10 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
             return DisplayName;
         }
 
-        public abstract void Process(ProjectRootElement project, ProjectPropertyGroupElement globals);
+        public abstract void Process(
+            ProjectRootElement project,
+            Dictionary<string, ProjectPropertyGroupElement> groups
+        );
 
         protected static void AddOrSetProperty(ProjectRootElement project, string name, string value) {
             bool anySet = false;
@@ -63,9 +66,17 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
                 return SR.GetString(SR.ImportWizardDefaultProjectCustomization);
             }
         }
-        
-        public override void Process(ProjectRootElement project, ProjectPropertyGroupElement globals) {
-            project.AddProperty("PtvsTargetsFile", @"$(VSToolsPath)\Python Tools\Microsoft.PythonTools.targets");
+
+        public override void Process(
+            ProjectRootElement project,
+            Dictionary<string, ProjectPropertyGroupElement> groups
+        ) {
+            ProjectPropertyGroupElement imports;
+            if (!groups.TryGetValue("Imports", out imports)) {
+                imports = project.AddPropertyGroup();
+            }
+
+            AddOrSetProperty(imports, "PtvsTargetsFile", @"$(VSToolsPath)\Python Tools\Microsoft.PythonTools.targets");
             project.AddImport("$(PtvsTargetsFile)").Condition = "Exists($(PtvsTargetsFile))";
             project.AddImport(@"$(MSBuildToolsPath)\Microsoft.Common.targets").Condition = "!Exists($(PtvsTargetsFile))";
         }
@@ -82,7 +93,15 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
             }
         }
 
-        public override void Process(ProjectRootElement project, ProjectPropertyGroupElement globals) {
+        public override void Process(
+            ProjectRootElement project,
+            Dictionary<string, ProjectPropertyGroupElement> groups
+        ) {
+            ProjectPropertyGroupElement globals;
+            if (!groups.TryGetValue("Globals", out globals)) {
+                globals = project.AddPropertyGroup();
+            }
+
             AddOrSetProperty(globals, "ProjectTypeGuids", "{e614c764-6d9e-4607-9337-b7073809a0bd};{1b580a1a-fdb3-4b32-83e1-6407eb2722e6};{349c5851-65df-11da-9384-00065b846f21};{888888a0-9f3d-457c-b088-3a5042f75d52}");
             AddOrSetProperty(globals, "LaunchProvider", PythonConstants.WebLauncherName);
 
@@ -110,8 +129,16 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
                 return SR.GetString(SR.ImportWizardDjangoProjectCustomization);
             }
         }
-        
-        public override void Process(ProjectRootElement project, ProjectPropertyGroupElement globals) {
+
+        public override void Process(
+            ProjectRootElement project,
+            Dictionary<string, ProjectPropertyGroupElement> groups
+        ) {
+            ProjectPropertyGroupElement globals;
+            if (!groups.TryGetValue("Globals", out globals)) {
+                globals = project.AddPropertyGroup();
+            }
+
             AddOrSetProperty(globals, "StartupFile", "manage.py");
             AddOrSetProperty(globals, "ProjectTypeGuids", "{5F0BE9CA-D677-4A4D-8806-6076C0FAAD37};{349c5851-65df-11da-9384-00065b846f21};{888888a0-9f3d-457c-b088-3a5042f75d52}");
             AddOrSetProperty(globals, "LaunchProvider", "Django launcher");
@@ -150,8 +177,16 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
                 return SR.GetString(SR.ImportWizardFlaskProjectCustomization);
             }
         }
-        
-        public override void Process(ProjectRootElement project, ProjectPropertyGroupElement globals) {
+
+        public override void Process(
+            ProjectRootElement project,
+            Dictionary<string, ProjectPropertyGroupElement> groups
+        ) {
+            ProjectPropertyGroupElement globals;
+            if (!groups.TryGetValue("Globals", out globals)) {
+                globals = project.AddPropertyGroup();
+            }
+
             AddOrSetProperty(globals, "ProjectTypeGuids", "{789894c7-04a9-4a11-a6b5-3f4435165112};{1b580a1a-fdb3-4b32-83e1-6407eb2722e6};{349c5851-65df-11da-9384-00065b846f21};{888888a0-9f3d-457c-b088-3a5042f75d52}");
             AddOrSetProperty(globals, "LaunchProvider", PythonConstants.WebLauncherName);
 
@@ -180,7 +215,15 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
             }
         }
 
-        public override void Process(ProjectRootElement project, ProjectPropertyGroupElement globals) {
+        public override void Process(
+            ProjectRootElement project,
+            Dictionary<string, ProjectPropertyGroupElement> groups
+        ) {
+            ProjectPropertyGroupElement globals;
+            if (!groups.TryGetValue("Globals", out globals)) {
+                globals = project.AddPropertyGroup();
+            }
+
             AddOrSetProperty(globals, "ProjectTypeGuids", "{1b580a1a-fdb3-4b32-83e1-6407eb2722e6};{349c5851-65df-11da-9384-00065b846f21};{888888a0-9f3d-457c-b088-3a5042f75d52}");
             AddOrSetProperty(globals, "LaunchProvider", PythonConstants.WebLauncherName);
 
