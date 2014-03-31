@@ -458,9 +458,7 @@ namespace Microsoft.VisualStudio.Repl {
                 PredefinedTextViewRoles.Analyzable,
                 PredefinedTextViewRoles.Editable,
                 PredefinedTextViewRoles.Interactive,
-                PredefinedTextViewRoles.PrimaryDocument,
                 PredefinedTextViewRoles.Zoomable,
-                PredefinedTextViewRoles.Document,
                 ReplConstants.ReplTextViewRole
             );
         }
