@@ -35,6 +35,9 @@ namespace Microsoft.VisualStudioTools {
         private static ThreadHelper _invoker;
         private static readonly object _invokerLock = new object();
         private static bool _invokerSet;
+#if DEV10
+        private static Thread _uiThread;
+#endif
 
         private static bool CanInvoke {
             get {
@@ -45,7 +48,12 @@ namespace Microsoft.VisualStudioTools {
                             try {
                                 _invoker = ThreadHelper.Generic;
                                 // Test the invoker to make sure it is available
-                                _invoker.Invoke(() => { });
+                                _invoker.Invoke(() => {
+#if DEV10
+                                    Debug.Assert(_uiThread == null);
+                                    _uiThread = Thread.CurrentThread;
+#endif
+                                });
                             } catch (InvalidOperationException) {
                                 // Not running within VS
                                 _invoker = null;
@@ -61,7 +69,11 @@ namespace Microsoft.VisualStudioTools {
         internal static bool InvokeRequired {
             get {
                 // Must check CanInvoke() first or we may crash in unit tests
+#if DEV10
+                return CanInvoke && Thread.CurrentThread != _uiThread;
+#else
                 return CanInvoke && !ThreadHelper.CheckAccess();
+#endif
             }
         }
 
@@ -121,7 +133,7 @@ namespace Microsoft.VisualStudioTools {
 #if DEV10
                 // VS 2010 does not have BeginInvoke, so use the thread pool
                 // to run it asynchronously.
-                ThreadPool.QueueUserWorkItem(() => {
+                ThreadPool.QueueUserWorkItem(_ => {
                     _invoker.Invoke(() => InvokeAsyncHelper(action, tcs));
                 });
 #else
@@ -148,7 +160,7 @@ namespace Microsoft.VisualStudioTools {
 #if DEV10
                 // VS 2010 does not have BeginInvoke, so use the thread pool
                 // to run it asynchronously.
-                ThreadPool.QueueUserWorkItem(() => {
+                ThreadPool.QueueUserWorkItem(_ => {
                     _invoker.Invoke(() => InvokeAsyncHelper(func, tcs));
                 });
 #else
@@ -176,7 +188,7 @@ namespace Microsoft.VisualStudioTools {
 #if DEV10
                 // VS 2010 does not have BeginInvoke, so use the thread pool
                 // to run it asynchronously.
-                ThreadPool.QueueUserWorkItem(() => {
+                ThreadPool.QueueUserWorkItem(_ => {
                     _invoker.Invoke(() => InvokeTaskHelper(func, tcs));
                 });
 #else
@@ -204,7 +216,7 @@ namespace Microsoft.VisualStudioTools {
 #if DEV10
                 // VS 2010 does not have BeginInvoke, so use the thread pool
                 // to run it asynchronously.
-                ThreadPool.QueueUserWorkItem(() => {
+                ThreadPool.QueueUserWorkItem(_ => {
                     _invoker.Invoke(() => InvokeTaskHelper(func, tcs));
                 });
 #else
@@ -313,11 +325,10 @@ namespace Microsoft.VisualStudioTools {
                     return VSConstants.E_FAIL;
                 }
 
-                object service;
-                int hr = _provider.QueryService(guidService, out service);
-                if (ErrorHandler.Failed(hr)) {
+                object service = _provider.GetService(guidService);
+                if (service == null) {
                     ppvObject = IntPtr.Zero;
-                    return hr;
+                    return VSConstants.E_FAIL;
                 }
 
                 ppvObject = Marshal.GetIUnknownForObject(service);
