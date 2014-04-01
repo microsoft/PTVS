@@ -377,7 +377,10 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             for (; ; ) {
                 while (!_requests.TryDequeue(out request)) {
                     if (_identifier == null && _period.TotalDays < 1) {
-                        _requestAdded.WaitOne(_period);
+                        if (!_requestAdded.WaitOne(_period)) {
+                            request = Request.Send;
+                            break;
+                        }
                     } else {
                         _requestAdded.WaitOne();
                     }
