@@ -102,7 +102,7 @@ namespace PythonToolsTests {
             var python = PythonPaths.Python27 ?? PythonPaths.Python27_x64 ?? PythonPaths.Python26 ?? PythonPaths.Python26_x64;
             python.AssertInstalled();
             var provider = new SimpleFactoryProvider(python.InterpreterPath, python.InterpreterPath);
-            return new PythonReplEvaluator(provider.GetInterpreterFactories().First(), null, new ReplTestReplOptions());
+            return new PythonReplEvaluator(provider.GetInterpreterFactories().First(), new ReplTestReplOptions());
         }
 
         class SimpleFactoryProvider : IPythonInterpreterFactoryProvider {
@@ -202,7 +202,7 @@ namespace PythonToolsTests {
                     Description = "Test Interpreter"
                 }
             );
-            var replEval = new PythonReplEvaluator(emptyFact, null, new ReplTestReplOptions());
+            var replEval = new PythonReplEvaluator(emptyFact, new ReplTestReplOptions());
             var replWindow = new MockReplWindow(replEval);
             replEval.Initialize(replWindow);
             var execute = replEval.ExecuteText("42");
@@ -223,7 +223,7 @@ namespace PythonToolsTests {
                     InterpreterPath = "C:\\Does\\Not\\Exist\\Some\\Interpreter.exe"
                 }
             );
-            var replEval = new PythonReplEvaluator(emptyFact, null, new ReplTestReplOptions());
+            var replEval = new PythonReplEvaluator(emptyFact, new ReplTestReplOptions());
             var replWindow = new MockReplWindow(replEval);
             replEval.Initialize(replWindow);
             var execute = replEval.ExecuteText("42");

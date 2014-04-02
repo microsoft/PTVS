@@ -224,7 +224,7 @@ namespace Microsoft.PythonTools {
                 return null;
             }
 
-            var entry = analyzer.GetAnalysisFromFile(path);
+            var entry = analyzer.GetEntryFromFile(path);
             if (entry == null) {
                 return null;
             }
@@ -250,28 +250,28 @@ namespace Microsoft.PythonTools {
             }
         }
 
-        internal static bool TryGetAnalysis(this ITextBuffer buffer, out IProjectEntry analysis) {
-            return buffer.Properties.TryGetProperty<IProjectEntry>(typeof(IProjectEntry), out analysis);
+        internal static bool TryGetProjectEntry(this ITextBuffer buffer, out IProjectEntry entry) {
+            return buffer.Properties.TryGetProperty<IProjectEntry>(typeof(IProjectEntry), out entry);
         }
 
-        internal static bool TryGetPythonAnalysis(this ITextBuffer buffer, out IPythonProjectEntry analysis) {
-            IProjectEntry entry;
-            if (buffer.TryGetAnalysis(out entry) && (analysis = entry as IPythonProjectEntry) != null) {
+        internal static bool TryGetPythonProjectEntry(this ITextBuffer buffer, out IPythonProjectEntry entry) {
+            IProjectEntry e;
+            if (buffer.TryGetProjectEntry(out e) && (entry = e as IPythonProjectEntry) != null) {
                 return true;
             }
-            analysis = null;
+            entry = null;
             return false;
         }
 
-        internal static IProjectEntry GetAnalysis(this ITextBuffer buffer) {
+        internal static IProjectEntry GetProjectEntry(this ITextBuffer buffer) {
             IProjectEntry res;
-            buffer.TryGetAnalysis(out res);
+            buffer.TryGetProjectEntry(out res);
             return res;
         }
 
-        internal static IPythonProjectEntry GetPythonAnalysis(this ITextBuffer buffer) {
+        internal static IPythonProjectEntry GetPythonProjectEntry(this ITextBuffer buffer) {
             IPythonProjectEntry res;
-            buffer.TryGetPythonAnalysis(out res);
+            buffer.TryGetPythonProjectEntry(out res);
             return res;
         }
 

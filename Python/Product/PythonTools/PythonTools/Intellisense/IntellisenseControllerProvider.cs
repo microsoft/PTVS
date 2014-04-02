@@ -82,7 +82,7 @@ namespace Microsoft.PythonTools.Intellisense {
             _hookedCloseEvents.Remove(textView);
 
             if (tuple.Item1.AttachedViews == 0) {
-                tuple.Item2.StopMonitoringTextBuffer(tuple.Item1);
+                tuple.Item2.StopMonitoringTextBuffer(tuple.Item1, textView);
             }
         }
 

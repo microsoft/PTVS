@@ -379,18 +379,19 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         internal static void WalkComprehension(ExpressionEvaluator ee, Comprehension comp, int start = 1) {
-            for (int i = start; i < comp.Iterators.Count; i++) {
-                ComprehensionFor compFor = comp.Iterators[i] as ComprehensionFor;
-                if (compFor != null) {
-                    foreach (var listType in ee.Evaluate(compFor.List)) {
+            foreach (var compFor in comp.Iterators.OfType<ComprehensionFor>()) {
+                var listTypes = ee.Evaluate(compFor.List);
+                if (listTypes.Any()) {
+                    foreach (var listType in listTypes) {
                         ee.AssignTo(comp, compFor.Left, listType.GetEnumeratorTypes(comp, ee._unit));
                     }
+                } else {
+                    ee.AssignTo(comp, compFor.Left, AnalysisSet.Empty);
                 }
+            }
 
-                ComprehensionIf compIf = comp.Iterators[i] as ComprehensionIf;
-                if (compIf != null) {
-                    ee.EvaluateMaybeNull(compIf.Test);
-                }
+            foreach (var compIf in comp.Iterators.OfType<ComprehensionIf>()) {
+                ee.EvaluateMaybeNull(compIf.Test);
             }
         }
 

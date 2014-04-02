@@ -604,4 +604,8 @@ Run Visual Studio with the /Log option and check ActivityLog.xml for more detail
   <data name="UpgradeNotRequired" xml:space="preserve">
     <value>No upgrade required for project.</value>
   </data>
+  <data name="UnhandledException" xml:space="preserve">
+    <value>Unhandled exception in {3} ({1}:{2})
+{0}</value>
+  </data>
 </root>

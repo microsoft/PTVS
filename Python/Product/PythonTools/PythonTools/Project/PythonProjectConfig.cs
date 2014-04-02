@@ -26,12 +26,10 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public override int DebugLaunch(uint flags) {
-            if (_project.ErrorFiles.Count > 0) {
-                if (StartWithErrorsDialog.ShouldShow) {
-                    var res = new StartWithErrorsDialog().ShowDialog();
-                    if (res == DialogResult.No) {
-                        return VSConstants.S_OK;
-                    }
+            if (_project.ShouldWarnOnLaunch && StartWithErrorsDialog.ShouldShow) {
+                var res = new StartWithErrorsDialog().ShowDialog();
+                if (res == DialogResult.No) {
+                    return VSConstants.S_OK;
                 }
             }
 

@@ -541,8 +541,8 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             return new VsProjectAnalyzer(
                 defaultFactory.CreateInterpreter(),
                 defaultFactory,
-                interpreterService.Interpreters.ToArray(),
-                ComponentModel.GetService<IErrorProviderFactory>());
+                interpreterService.Interpreters.ToArray()
+            );
         }
 
         /// <summary>

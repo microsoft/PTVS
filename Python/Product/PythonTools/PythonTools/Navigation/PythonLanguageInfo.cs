@@ -100,7 +100,7 @@ namespace Microsoft.PythonTools.Navigation {
             var service = model.GetService<IVsEditorAdaptersFactoryService>();
             var buffer = service.GetDataBuffer(pBuffer);
             IPythonProjectEntry projEntry;
-            if (buffer.TryGetPythonAnalysis(out projEntry)) {
+            if (buffer.TryGetPythonProjectEntry(out projEntry)) {
                 var tree = projEntry.Tree;
                 var name = FindNodeInTree(tree, tree.Body as SuiteStatement, iLine);
                 if (name != null) {

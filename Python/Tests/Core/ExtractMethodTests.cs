@@ -1670,7 +1670,7 @@ def f(x):
 
         private void ExtractMethodTest(string input, Func<Span> extract, TestResult expected, string scopeName = null, string targetName = "g", Version version = null, params string[] parameters) {
             var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version ?? new Version(2, 7));
-            using (var analyzer = new VsProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory())) {
+            using (var analyzer = new VsProjectAnalyzer(fact, new[] { fact })) {
                 var buffer = new MockTextBuffer(input);
                 var view = new MockTextView(buffer);
                 buffer.AddProperty(typeof(VsProjectAnalyzer), analyzer);

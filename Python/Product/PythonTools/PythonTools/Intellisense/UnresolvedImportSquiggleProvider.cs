@@ -28,34 +28,46 @@ using Microsoft.VisualStudio.Text.Tagging;
 
 namespace Microsoft.PythonTools.Intellisense {
     sealed class UnresolvedImportSquiggleProvider {
-        private readonly PythonAnalyzer _analyzer;
-        private readonly SimpleTagger<ErrorTag> _squiggles;
-        private readonly Dispatcher _dispatcher;
+        // Allows test cases to skip checking user options
+        internal static bool _alwaysCreateSquiggle;
 
-        public UnresolvedImportSquiggleProvider(
-            PythonAnalyzer analyzer,
-            SimpleTagger<ErrorTag> squiggles,
-            Dispatcher dispatcher
-        ) {
-            _analyzer = analyzer;
-            _squiggles = squiggles;
-            _dispatcher = dispatcher;
+        private readonly Lazy<TaskProvider> _taskProvider;
+
+        public UnresolvedImportSquiggleProvider(Lazy<TaskProvider> taskProvider) {
+            _taskProvider = taskProvider;
         }
 
         public void ListenForNextNewAnalysis(IPythonProjectEntry entry) {
-            entry.OnNewAnalysis += OnNewAnalysis;
+            if (entry != null && !string.IsNullOrEmpty(entry.FilePath)) {
+                entry.OnNewAnalysis += OnNewAnalysis;
+            }
+        }
+
+        public void StopListening(IPythonProjectEntry entry) {
+            if (entry != null) {
+                entry.OnNewAnalysis -= OnNewAnalysis;
+            }
         }
 
         private void OnNewAnalysis(object sender, EventArgs e) {
-            var entry = sender as IPythonProjectEntry;
-            if (entry == null) {
+            if (!_alwaysCreateSquiggle &&
+                PythonToolsPackage.Instance != null &&
+                !PythonToolsPackage.Instance.GeneralOptionsPage.UnresolvedImportWarning
+            ) {
                 return;
             }
-            entry.OnNewAnalysis -= OnNewAnalysis;
 
-            if (string.IsNullOrEmpty(entry.ModuleName) || string.IsNullOrEmpty(entry.FilePath)) {
+            var entry = sender as IPythonProjectEntry;
+            if (entry == null ||
+                entry.Analysis == null ||
+                entry.Analysis.ProjectState == null ||
+                string.IsNullOrEmpty(entry.ModuleName) ||
+                string.IsNullOrEmpty(entry.FilePath)
+            ) {
                 return;
             }
+
+            var analyzer = entry.Analysis.ProjectState;
 
             PythonAst ast;
             IAnalysisCookie cookie;
@@ -65,48 +77,22 @@ namespace Microsoft.PythonTools.Intellisense {
                 return;
             }
 
-            var walker = new ImportStatementWalker(entry, _analyzer);
+            var walker = new ImportStatementWalker(entry, analyzer);
             ast.Walk(walker);
 
-            var tags = walker.Imports.Select(t => Tuple.Create(
-                t.Item2.GetSpan(ast),
-                new ErrorTag(PredefinedErrorTypeNames.Warning, GetToolTip(t.Item1))
-            )).ToArray();
+            if (walker.Imports.Any()) {
+                var f = new TaskProviderItemFactory(snapshotCookie.Snapshot);
 
-            if (_dispatcher == null) {
-                DoUpdate(snapshotCookie.Snapshot, tags);
-            } else {
-                _dispatcher.BeginInvoke(
-                    (Action)(() => DoUpdate(snapshotCookie.Snapshot, tags))
+                _taskProvider.Value.ReplaceItems(
+                    entry,
+                    VsProjectAnalyzer.UnresolvedImportMoniker,
+                    walker.Imports.Select(t => f.FromUnresolvedImport(
+                        analyzer.InterpreterFactory as IPythonInterpreterFactoryWithDatabase,
+                        t.Item1,
+                        t.Item2.GetSpan(ast)
+                    )).ToList()
                 );
             }
-        }
-
-        private void DoUpdate(ITextSnapshot snapshot, IEnumerable<Tuple<SourceSpan, ErrorTag>> tags) {
-            foreach (var tag in tags) {
-                _squiggles.CreateTagSpan(
-                    CreateSpan(snapshot, tag.Item1),
-                    tag.Item2
-                );
-            }
-        }
-
-        private static ITrackingSpan CreateSpan(ITextSnapshot snapshot, SourceSpan span) {
-            Debug.Assert(span.Start.Index >= 0);
-            var newSpan = new Span(
-                span.Start.Index,
-                Math.Min(span.End.Index - span.Start.Index, Math.Max(snapshot.Length - span.Start.Index, 0))
-            );
-            Debug.Assert(newSpan.End <= snapshot.Length);
-            return snapshot.CreateTrackingSpan(newSpan, SpanTrackingMode.EdgeInclusive);
-        }
-
-        private object GetToolTip(string module) {
-            var factory = _analyzer.InterpreterFactory as IPythonInterpreterFactoryWithDatabase;
-            if (factory != null && !factory.IsCurrent) {
-                return SR.GetString(SR.UnresolvedModuleTooltipRefreshing, module);
-            }
-            return SR.GetString(SR.UnresolvedModuleTooltip, module);
         }
 
         class ImportStatementWalker : PythonWalker {

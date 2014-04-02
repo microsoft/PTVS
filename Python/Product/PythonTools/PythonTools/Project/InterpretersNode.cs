@@ -123,7 +123,8 @@ namespace Microsoft.PythonTools.Project {
 
         private void CheckPackages(object arg) {
             UIThread.InvokeTask(() => CheckPackagesAsync())
-                .WaitAndHandleAllExceptions(SR.GetString(SR.PythonToolsForVisualStudio), GetType());
+                .HandleAllExceptions(SR.GetString(SR.PythonToolsForVisualStudio), GetType())
+                .DoNotWait();
         }
 
         private async Task CheckPackagesAsync() {

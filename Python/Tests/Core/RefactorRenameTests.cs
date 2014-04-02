@@ -2379,7 +2379,7 @@ def g(a, b, c):
             var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version ?? new Version(2, 6));
             var classifierProvider = new PythonClassifierProvider(new MockContentTypeRegistryService());
             classifierProvider._classificationRegistry = new MockClassificationTypeRegistryService();
-            using (var analyzer = new VsProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory())) {
+            using (var analyzer = new VsProjectAnalyzer(fact, new[] { fact })) {
                 for (int loops = 0; loops < 2; loops++) {
                     MockTextBuffer[] buffers = new MockTextBuffer[inputs.Length];
                     MockTextView[] views = new MockTextView[inputs.Length];
@@ -2398,7 +2398,10 @@ def g(a, b, c):
 
                     // test runs twice, one w/ original buffer, once w/ re-analyzed buffers.
                     if (loops == 1) {
-                        Debug.WriteLine("Running w/ re-anlyzed buffers");
+                        using (new DebugTimer("Waiting for previous analysis before raising change events")) {
+                            analyzer.WaitForCompleteAnalysis(x => true);
+                        }
+                        Console.WriteLine("Running w/ re-anlyzed buffers");
                         // do it again w/ a changed buffer
                         foreach (var buffer in buffers) {
                             buffer.RaiseChangedLowPriority();
@@ -2420,14 +2423,14 @@ def g(a, b, c):
                         Assert.AreEqual(error, extractInput.Failure);
                         return;
                     }
-                    Assert.AreEqual(null, extractInput.Failure);
+                    Assert.IsNull(extractInput.Failure, "Unexpected error message: " + (extractInput.Failure ?? ""));
                     Assert.AreEqual(preview, previewChangesService.Previewed, preview ? "Changes were not previewed" : "Changes were previewed");
                     for (int i = 0; i < buffers.Length; i++) {
                         Assert.AreEqual(inputs[i].Output, buffers[i].CurrentSnapshot.GetText());
                     }
                     
                     foreach (var monitored in analysis) {
-                        analyzer.StopMonitoringTextBuffer(monitored.BufferParser);
+                        analyzer.StopMonitoringTextBuffer(monitored.BufferParser, monitored.TextView);
                     }
                 }
 

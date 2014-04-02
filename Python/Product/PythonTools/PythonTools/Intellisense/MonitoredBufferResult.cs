@@ -13,14 +13,17 @@
  * ***************************************************************************/
 
 using Microsoft.PythonTools.Analysis;
+using Microsoft.VisualStudio.Text.Editor;
 
 namespace Microsoft.PythonTools.Intellisense {
     struct MonitoredBufferResult {
         public readonly BufferParser BufferParser;
+        public readonly ITextView TextView;
         public readonly IProjectEntry ProjectEntry;
 
-        public MonitoredBufferResult(BufferParser bufferParser, IProjectEntry projectEntry) {
+        public MonitoredBufferResult(BufferParser bufferParser, ITextView textView, IProjectEntry projectEntry) {
             BufferParser = bufferParser;
+            TextView = textView;
             ProjectEntry = projectEntry;
         }
     }

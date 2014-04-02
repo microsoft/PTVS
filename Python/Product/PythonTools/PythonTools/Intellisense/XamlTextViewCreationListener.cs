@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.ComponentModel.Composition;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Text.Editor;
@@ -36,11 +37,21 @@ namespace Microsoft.PythonTools.Intellisense {
             if (textView != null) {
                 var analyzer = textView.GetAnalyzer();
                 if (analyzer != null) {
-                    var entry = analyzer.MonitorTextBuffer(textView, textView.TextBuffer);
-
-                    textView.Closed += (sender, args) => analyzer.StopMonitoringTextBuffer(entry.BufferParser);
+                    var monitorResult = analyzer.MonitorTextBuffer(textView, textView.TextBuffer);
+                    textView.Closed += TextView_Closed;
                 }
             }
+        }
+
+        private void TextView_Closed(object sender, EventArgs e) {
+            var textView = (ITextView)sender;
+
+            BufferParser bufferParser;
+            if (textView.Properties.TryGetProperty<BufferParser>(typeof(BufferParser), out bufferParser)) {
+                textView.GetAnalyzer().StopMonitoringTextBuffer(bufferParser, textView);
+            }
+
+            textView.Closed -= TextView_Closed;
         }
     }
 }

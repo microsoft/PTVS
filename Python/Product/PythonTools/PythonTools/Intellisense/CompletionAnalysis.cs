@@ -102,8 +102,10 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal ModuleAnalysis GetAnalysisEntry() {
-            var entry = (IPythonProjectEntry)TextBuffer.GetAnalysis(); 
-            return entry != null ? entry.Analysis : null;
+            IPythonProjectEntry entry;
+            return TextBuffer.TryGetPythonProjectEntry(out entry) && entry != null ?
+                entry.Analysis :
+                null;
         }
 
         private static Stopwatch MakeStopWatch() {

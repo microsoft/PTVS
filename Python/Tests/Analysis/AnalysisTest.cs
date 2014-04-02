@@ -2616,6 +2616,53 @@ from baz import abc2 as abc";
         }
 
         [TestMethod, Priority(0)]
+        public void ReferencesGenerators() {
+            var text = @"
+[f for f in x]
+[x for x in f]
+(g for g in y)
+(y for y in g)
+";
+            var entry = ProcessText(text, PythonLanguageVersion.V33);
+            VerifyReferences(entry.GetVariablesByIndex("f", text.IndexOf("f for")),
+                new VariableLocation(2, 2, VariableType.Reference),
+                new VariableLocation(2, 8, VariableType.Definition)
+            );
+            VerifyReferences(entry.GetVariablesByIndex("x", text.IndexOf("x for")),
+                new VariableLocation(3, 2, VariableType.Reference),
+                new VariableLocation(3, 8, VariableType.Definition)
+            );
+            VerifyReferences(entry.GetVariablesByIndex("g", text.IndexOf("g for")),
+                new VariableLocation(4, 2, VariableType.Reference),
+                new VariableLocation(4, 8, VariableType.Definition)
+            );
+            VerifyReferences(entry.GetVariablesByIndex("y", text.IndexOf("y for")),
+                new VariableLocation(5, 2, VariableType.Reference),
+                new VariableLocation(5, 8, VariableType.Definition)
+            );
+
+            entry = ProcessText(text, PythonLanguageVersion.V27);
+            // Index variable leaks out of list comprehension
+            VerifyReferences(entry.GetVariablesByIndex("f", text.IndexOf("f for")),
+                new VariableLocation(2, 2, VariableType.Reference),
+                new VariableLocation(2, 8, VariableType.Definition),
+                new VariableLocation(3, 13, VariableType.Reference)
+            );
+            VerifyReferences(entry.GetVariablesByIndex("x", text.IndexOf("x for")),
+                new VariableLocation(3, 2, VariableType.Reference),
+                new VariableLocation(3, 8, VariableType.Definition)
+            );
+            VerifyReferences(entry.GetVariablesByIndex("g", text.IndexOf("g for")),
+                new VariableLocation(4, 2, VariableType.Reference),
+                new VariableLocation(4, 8, VariableType.Definition)
+            );
+            VerifyReferences(entry.GetVariablesByIndex("y", text.IndexOf("y for")),
+                new VariableLocation(5, 2, VariableType.Reference),
+                new VariableLocation(5, 8, VariableType.Definition)
+            );
+        }
+
+        [TestMethod, Priority(0)]
         public void SignatureDefaults() {
             var entry = ProcessText(@"
 def f(x = None): pass

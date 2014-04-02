@@ -29,7 +29,7 @@ namespace Microsoft.PythonTools.Refactoring {
         public void FormatCode(SnapshotSpan span, bool selectResult) {
             var snapshot = _view.TextBuffer.CurrentSnapshot;
 
-            var ast = _view.GetAnalyzer().ParseFile(snapshot);
+            var ast = _view.GetAnalyzer().ParseSnapshot(snapshot);
 
             var walker = new EnclosingNodeWalker(ast, span.Start, span.End);
             ast.Walk(walker);

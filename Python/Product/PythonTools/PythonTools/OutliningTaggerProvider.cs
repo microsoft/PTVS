@@ -78,15 +78,15 @@ namespace Microsoft.PythonTools {
             #region ITagger<IOutliningRegionTag> Members
 
             public IEnumerable<ITagSpan<IOutliningRegionTag>> GetTags(NormalizedSnapshotSpanCollection spans) {
-                IPythonProjectEntry classifier;
-                if (_enabled && _buffer.TryGetPythonAnalysis(out classifier)) {
+                IPythonProjectEntry entry;
+                if (_enabled && _buffer.TryGetPythonProjectEntry(out entry)) {
                     if (!_eventHooked) {
-                        classifier.OnNewParseTree += OnNewParseTree;
+                        entry.OnNewParseTree += OnNewParseTree;
                         _eventHooked = true;
                     }
                     PythonAst ast;
                     IAnalysisCookie cookie;
-                    classifier.GetTreeAndCookie(out ast, out cookie);
+                    entry.GetTreeAndCookie(out ast, out cookie);
                     SnapshotCookie snapCookie = cookie as SnapshotCookie;
 
                     if (ast != null && 
@@ -100,8 +100,8 @@ namespace Microsoft.PythonTools {
             }
 
             private void OnNewParseTree(object sender, EventArgs e) {
-                IPythonProjectEntry classifier;
-                if (_buffer.TryGetPythonAnalysis(out classifier)) {                    
+                IPythonProjectEntry entry;
+                if (_buffer.TryGetPythonProjectEntry(out entry)) {
                     _timer.Change(300, Timeout.Infinite);
                 }
             }
@@ -118,7 +118,7 @@ namespace Microsoft.PythonTools {
             private IEnumerable<ITagSpan<IOutliningRegionTag>> ProcessSuite(NormalizedSnapshotSpanCollection spans, PythonAst ast, SuiteStatement suite, ITextSnapshot snapshot, bool isTopLevel) {
                 if (suite != null) {
                     // TODO: Binary search the statements?  The perf of this seems fine for the time being
-                    // w/ a 5000+ line file though.                    
+                    // w/ a 5000+ line file though.
                     foreach (var statement in suite.Statements) {
                         SnapshotSpan? span = ShouldInclude(statement, spans);
                         if (span == null) {

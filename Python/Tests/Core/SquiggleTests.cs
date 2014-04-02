@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 using IronPython.Hosting;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Analysis;
@@ -45,23 +46,62 @@ namespace PythonToolsTests {
             PythonTestData.Deploy(includeTestData: false);
         }
 
-        private static VsProjectAnalyzer AnalyzeTextBuffer(
+        [TestInitialize]
+        public void TestInitialize() {
+            UnresolvedImportSquiggleProvider._alwaysCreateSquiggle = true;
+        }
+
+        [TestCleanup]
+        public void TestCleanup() {
+            UnresolvedImportSquiggleProvider._alwaysCreateSquiggle = false;
+        }
+
+        private static IEnumerable<TrackingTagSpan<ErrorTag>> AnalyzeTextBuffer(
+            MockTextBuffer buffer,
+            PythonLanguageVersion version = PythonLanguageVersion.V27
+        ) {
+            return AnalyzeTextBufferAsync(buffer, version).GetAwaiter().GetResult();
+        }
+
+        private static async Task<IEnumerable<TrackingTagSpan<ErrorTag>>> AnalyzeTextBufferAsync(
             MockTextBuffer buffer,
             PythonLanguageVersion version = PythonLanguageVersion.V27
         ) {
             var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version.ToVersion());
-            var analyzer = new VsProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory());
-            buffer.AddProperty(typeof(VsProjectAnalyzer), analyzer);
-            var classifierProvider = new PythonClassifierProvider(new MockContentTypeRegistryService());
-            classifierProvider._classificationRegistry = new MockClassificationTypeRegistryService();
-            classifierProvider.GetClassifier(buffer);
-            var monitoredBuffer = analyzer.MonitorTextBuffer(new MockTextView(buffer), buffer);
-            analyzer.WaitForCompleteAnalysis(x => true);
-            while (((IPythonProjectEntry)buffer.GetAnalysis()).Analysis == null) {
-                Thread.Sleep(500);
+            var errorProvider = new MockErrorProviderFactory();
+            var taskProvider = new TaskProvider(null, errorProvider);
+            var originalTaskProvider = VsProjectAnalyzer.ReplaceTaskProviderForTests(new Lazy<TaskProvider>(() => {
+                return taskProvider;
+            }));
+
+            try {
+                var analyzer = new VsProjectAnalyzer(fact, new[] { fact });
+                buffer.AddProperty(typeof(VsProjectAnalyzer), analyzer);
+                var classifierProvider = new PythonClassifierProvider(new MockContentTypeRegistryService());
+                classifierProvider._classificationRegistry = new MockClassificationTypeRegistryService();
+                classifierProvider.GetClassifier(buffer);
+                var textView = new MockTextView(buffer);
+                var monitoredBuffer = analyzer.MonitorTextBuffer(textView, buffer);
+
+                var tcs = new TaskCompletionSource<object>();
+                buffer.GetPythonProjectEntry().OnNewAnalysis += (s, e) => tcs.SetResult(null);
+                await tcs.Task;
+
+                var squiggles = errorProvider.GetErrorTagger(buffer);
+                var snapshot = buffer.CurrentSnapshot;
+                
+                // Ensure all tasks have been updated
+                var time = await taskProvider.FlushAsync();
+                Console.WriteLine("TaskProvider.FlushAsync took {0}ms", time.TotalMilliseconds);
+
+                var spans = squiggles.GetTaggedSpans(new SnapshotSpan(snapshot, 0, snapshot.Length));
+
+                analyzer.StopMonitoringTextBuffer(monitoredBuffer.BufferParser, textView);
+
+                return spans;
+            } finally {
+                VsProjectAnalyzer.ReplaceTaskProviderForTests(originalTaskProvider);
             }
-            analyzer.StopMonitoringTextBuffer(monitoredBuffer.BufferParser);
-            return analyzer;
         }
 
         private static string FormatErrorTag(TrackingTagSpan<ErrorTag> tag) {
@@ -80,23 +120,16 @@ namespace PythonToolsTests {
         }
 
 
-        private static IEnumerable<TrackingTagSpan<ErrorTag>> GetErrorSquiggles(ITextBuffer buffer) {
-            var analyzer = buffer.Properties.GetProperty<VsProjectAnalyzer>(typeof(VsProjectAnalyzer));
-            Assert.IsNotNull(analyzer, "Analyzer property was not set on text buffer");
-            Assert.IsNotNull(analyzer._errorProvider, "No error provider was set");
-            var squiggles = analyzer._errorProvider.GetErrorTagger(buffer);
-            var snapshot = buffer.CurrentSnapshot;
-
-            return squiggles.GetTaggedSpans(new SnapshotSpan(snapshot, 0, snapshot.Length));
-        }
-
         [TestMethod, Priority(0)]
         public void UnresolvedImportSquiggle() {
             var buffer = new MockTextBuffer("import fob, oar\r\nfrom baz import *\r\nfrom .spam import eggs", "C:\\name.py");
-            buffer.Properties.AddProperty("Microsoft.PythonTools.Intellisense.VsProjectAnalyzer.UnresolvedImportWarning", true);
-            var analyzer = AnalyzeTextBuffer(buffer);
+            var squiggles = AnalyzeTextBuffer(buffer).Select(FormatErrorTag).ToArray();
 
-            var squiggles = GetErrorSquiggles(buffer).Select(FormatErrorTag).ToArray();
+            Console.WriteLine(" Squiggles found:");
+            foreach (var actual in squiggles) {
+                Console.WriteLine(actual);
+            }
+            Console.WriteLine(" Found {0} squiggle(s)", squiggles.Length);
 
             int i = 0;
             foreach (var expected in new[] {

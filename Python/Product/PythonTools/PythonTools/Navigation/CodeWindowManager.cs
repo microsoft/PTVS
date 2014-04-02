@@ -95,8 +95,8 @@ namespace Microsoft.PythonTools.Navigation {
                 }
             }
 
-            var pythonProjectEntry = _textBuffer.GetAnalysis() as IPythonProjectEntry;
-            if (pythonProjectEntry == null) {
+            IPythonProjectEntry pythonProjectEntry;
+            if (!_textBuffer.TryGetPythonProjectEntry(out pythonProjectEntry)) {
                 return VSConstants.E_FAIL;
             }
 

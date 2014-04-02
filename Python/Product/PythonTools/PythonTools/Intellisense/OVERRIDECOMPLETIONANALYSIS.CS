@@ -99,7 +99,7 @@ namespace Microsoft.PythonTools.Intellisense {
             int lineStart = line.Start.Position;
             int defIndent = line.GetText().IndexOf("def");
             
-            var pyAnalysis = TextBuffer.GetPythonAnalysis();
+            var pyAnalysis = TextBuffer.GetPythonProjectEntry();
             PythonAst ast;
             IAnalysisCookie cookie;
             pyAnalysis.GetTreeAndCookie(out ast, out cookie);

@@ -34,7 +34,6 @@ namespace Microsoft.PythonTools.Repl {
     [Export(typeof(IReplEvaluatorProvider))]
     class PythonReplEvaluatorProvider : IReplEvaluatorProvider {
         readonly IInterpreterOptionsService _interpreterService;
-        readonly IErrorProviderFactory _errorProviderFactory;
         readonly IServiceProvider _serviceProvider;
 
         private const string _replGuid = "FAEC7F47-85D8-4899-8D7B-0B855B732CC8";
@@ -44,13 +43,10 @@ namespace Microsoft.PythonTools.Repl {
         [ImportingConstructor]
         public PythonReplEvaluatorProvider(
             [Import] IInterpreterOptionsService interpreterService,
-            [Import] IErrorProviderFactory errorProviderFactory,
             [Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider
         ) {
             Debug.Assert(interpreterService != null);
-            Debug.Assert(errorProviderFactory != null);
             _interpreterService = interpreterService;
-            _errorProviderFactory = errorProviderFactory;
             _serviceProvider = serviceProvider;
         }
 
@@ -63,7 +59,6 @@ namespace Microsoft.PythonTools.Repl {
                     return PythonReplEvaluator.Create(
                         components[1],
                         components[2],
-                        _errorProviderFactory,
                         _interpreterService
                     );
                 }
@@ -72,7 +67,6 @@ namespace Microsoft.PythonTools.Repl {
             } else if (replId.StartsWith(_configurable2Guid, StringComparison.OrdinalIgnoreCase)) {
                 return new PythonReplEvaluatorDontPersist(
                     null,
-                    _errorProviderFactory,
                     new ConfigurablePythonReplOptions(),
                     _interpreterService
                 );
@@ -118,7 +112,6 @@ namespace Microsoft.PythonTools.Repl {
                 if (replOptions.InterpreterFactory != null) {
                     return new PythonReplEvaluatorDontPersist(
                         replOptions.InterpreterFactory,
-                        _errorProviderFactory,
                         replOptions,
                         _interpreterService
                     );

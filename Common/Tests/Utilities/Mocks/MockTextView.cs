@@ -229,8 +229,8 @@ namespace TestUtilities.Mocks {
         }
 
         public event EventHandler<BackgroundBrushChangedEventArgs> BackgroundBrushChanged {
-			add { }
-			remove { }
+            add { }
+            remove { }
         }
 
         public Microsoft.VisualStudio.Text.Formatting.IFormattedLineSource FormattedLineSource {
@@ -271,8 +271,8 @@ namespace TestUtilities.Mocks {
         }
 
         public event EventHandler<ZoomLevelChangedEventArgs> ZoomLevelChanged {
-			add { }
-			remove { }
+            add { }
+            remove { }
         }
 
         #endregion

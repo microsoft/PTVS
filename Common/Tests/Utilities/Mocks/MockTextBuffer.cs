@@ -22,6 +22,10 @@ namespace TestUtilities.Mocks {
         private readonly string _filename, _contentType;
         internal MockTextSnapshot _snapshot;
         private MockTextEdit _edit;
+
+        /// <summary>
+        /// Do not access this field. Use <see cref="Properties"/> instead.
+        /// </summary>
         private PropertyCollection _properties;
 
         public MockTextBuffer(string content, string filename = "C:\\fob.py", string contentType = "Python") {
@@ -162,23 +166,14 @@ namespace TestUtilities.Mocks {
             get {
                 if (_properties == null) {
                     _properties = new PropertyCollection();
-
-                    InitProperties();
+                    _properties.AddProperty(typeof(ITextDocument), new MockTextDocument(_filename));
                 }
-
                 return _properties;
             }
         }
 
-        private void InitProperties() {
-            _properties.AddProperty(typeof(ITextDocument), new MockTextDocument(_filename));
-        }
-
         public void AddProperty(object key, object value) {
-            if (_properties == null) {
-                _properties = new PropertyCollection();
-            }
-            _properties.AddProperty(key, value);
+            Properties.AddProperty(key, value);
         }
     }
 }

@@ -43,20 +43,18 @@ namespace Microsoft.PythonTools.Repl {
     [ReplRole("Execution")]
     [ReplRole("Reset")]
     internal class PythonReplEvaluator : BasePythonReplEvaluator {
-        private readonly IErrorProviderFactory _errorProviderFactory;
         private IPythonInterpreterFactory _interpreter;
         private readonly IInterpreterOptionsService _interpreterService;
         private VsProjectAnalyzer _replAnalyzer;
         private bool _ownsAnalyzer, _enableAttach, _supportsMultipleCompleteStatementInputs;
 
-        public PythonReplEvaluator(IPythonInterpreterFactory interpreter, IErrorProviderFactory errorProviderFactory, IInterpreterOptionsService interpreterService = null) 
-            : this(interpreter, errorProviderFactory, new DefaultPythonReplEvaluatorOptions(() => PythonToolsPackage.Instance.InteractiveOptionsPage.GetOptions(interpreter)), interpreterService) {
+        public PythonReplEvaluator(IPythonInterpreterFactory interpreter, IInterpreterOptionsService interpreterService = null) 
+            : this(interpreter, new DefaultPythonReplEvaluatorOptions(() => PythonToolsPackage.Instance.InteractiveOptionsPage.GetOptions(interpreter)), interpreterService) {
         }
 
-        public PythonReplEvaluator(IPythonInterpreterFactory interpreter, IErrorProviderFactory errorProviderFactory, PythonReplEvaluatorOptions options, IInterpreterOptionsService interpreterService = null)
+        public PythonReplEvaluator(IPythonInterpreterFactory interpreter, PythonReplEvaluatorOptions options, IInterpreterOptionsService interpreterService = null)
             : base(options) {
             _interpreter = interpreter;
-            _errorProviderFactory = errorProviderFactory;
             _interpreterService = interpreterService;
             if (_interpreterService != null) {
                 _interpreterService.InterpretersChanged += InterpretersChanged;
@@ -77,7 +75,6 @@ namespace Microsoft.PythonTools.Repl {
         public static IPythonReplEvaluator Create(
             string id,
             string version,
-            IErrorProviderFactory errorProviderFactory,
             IInterpreterOptionsService interpreterService
         ) {
             var factory = interpreterService != null ? interpreterService.FindInterpreter(id, version) : null;
@@ -88,7 +85,7 @@ namespace Microsoft.PythonTools.Repl {
                     return null;
                 }
             }
-            return new PythonReplEvaluator(factory, errorProviderFactory, interpreterService);
+            return new PythonReplEvaluator(factory, interpreterService);
         }
 
         async void InterpretersChanged(object sender, EventArgs e) {
@@ -129,7 +126,7 @@ namespace Microsoft.PythonTools.Repl {
         internal VsProjectAnalyzer ReplAnalyzer {
             get {
                 if (_replAnalyzer == null && Interpreter != null && _interpreterService != null) {
-                    _replAnalyzer = new VsProjectAnalyzer(Interpreter, _interpreterService.Interpreters.ToArray(), _errorProviderFactory);
+                    _replAnalyzer = new VsProjectAnalyzer(Interpreter, _interpreterService.Interpreters.ToArray());
                     _ownsAnalyzer = true;
                 }
                 return _replAnalyzer;
@@ -351,8 +348,8 @@ namespace Microsoft.PythonTools.Repl {
 
     [ReplRole("DontPersist")]
     class PythonReplEvaluatorDontPersist : PythonReplEvaluator {
-        public PythonReplEvaluatorDontPersist(IPythonInterpreterFactory interpreter, IErrorProviderFactory errorProviderFactory, PythonReplEvaluatorOptions options, IInterpreterOptionsService interpreterService) :
-            base(interpreter, errorProviderFactory, options, interpreterService) {
+        public PythonReplEvaluatorDontPersist(IPythonInterpreterFactory interpreter, PythonReplEvaluatorOptions options, IInterpreterOptionsService interpreterService) :
+            base(interpreter, options, interpreterService) {
         }
     }
 

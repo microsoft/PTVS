@@ -56,21 +56,22 @@ namespace Microsoft.PythonTools.Navigation {
             if (IsNonMemberItem(task.ModuleID.Hierarchy, task.ModuleID.ItemID)) {
                 return;
             }
-            IProjectEntry item;
-            if (task.TextBuffer != null) {
-                item = task.TextBuffer.GetAnalysis();
-            } else {                
-                item = task.ModuleID.Hierarchy.GetProject().GetPythonProject().GetAnalyzer().AnalyzeFile(task.FileName);
+            IPythonProjectEntry item;
+            if (task.TextBuffer == null || !task.TextBuffer.TryGetPythonProjectEntry(out item)) {
+                item = task.ModuleID.Hierarchy
+                    .GetProject()
+                    .GetPythonProject()
+                    .GetAnalyzer()
+                    .AnalyzeFile(task.FileName) as IPythonProjectEntry;
             }
 
-            IPythonProjectEntry pyCode;
-            if (item != null && (pyCode = item as IPythonProjectEntry) != null) {
+            if (item != null) {
                 // We subscribe to OnNewAnalysis here instead of OnNewParseTree so that 
                 // in the future we can use the analysis to include type information in the
                 // object browser (for example we could include base type information with
                 // links elsewhere in the object browser).
-                pyCode.OnNewAnalysis += (sender, args) => {
-                    FileParsed(task, new AstScopeNode(pyCode.Tree, pyCode));
+                item.OnNewAnalysis += (sender, args) => {
+                    FileParsed(task, new AstScopeNode(item.Tree, item));
                 };
             }
         }

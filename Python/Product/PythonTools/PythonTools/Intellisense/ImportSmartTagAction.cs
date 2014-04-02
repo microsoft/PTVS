@@ -54,7 +54,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public override void Invoke() {
             var analyzer = _buffer.GetAnalyzer();
-            var curAst = analyzer.ParseFile(_buffer.CurrentSnapshot);
+            var curAst = analyzer.ParseSnapshot(_buffer.CurrentSnapshot);
 
             SuiteStatement suiteBody = curAst.Body as SuiteStatement;
             Statement insertBefore = null;

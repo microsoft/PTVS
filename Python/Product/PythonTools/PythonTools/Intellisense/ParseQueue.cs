@@ -407,5 +407,11 @@ namespace Microsoft.PythonTools.Intellisense {
             return mixedChanges;
         }
 
+
+        internal ITextDocument Document {
+            get {
+                return _document;
+            }
+        }
     }
 }

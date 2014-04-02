@@ -94,7 +94,7 @@ namespace Microsoft.PythonTools.Designer {
 
         private ClassDefinition GetClassForEvents(out PythonAst ast) {
             ast = null;
-            var analysis = _pythonFileNode.GetAnalysis() as IPythonProjectEntry;
+            var analysis = _pythonFileNode.GetProjectEntry() as IPythonProjectEntry;
 
             if (analysis != null) {
                 // TODO: Wait for up to date analysis

@@ -51,6 +51,7 @@ namespace Microsoft.VisualStudioTools {
             var elapsed = _timer.ElapsedMilliseconds - _start;
             if (elapsed >= _minReportTime) {
                 Debug.WriteLine(String.Format("{0}: {1}ms elapsed", _description, elapsed));
+                Console.WriteLine(String.Format("{0}: {1}ms elapsed", _description, elapsed));
             }
 #endif
         }

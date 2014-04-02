@@ -147,7 +147,10 @@ namespace Microsoft.PythonTools.Project {
         private bool IsWebProjectSupported {
             get {
                 var shell = (IVsShell)Site.GetService(typeof(SVsShell));
-                Utilities.CheckNotNull(shell);
+                if (shell == null) {
+                    // Outside of VS, so we're probably only here for tests.
+                    return true;
+                }
                 object obj;
                 ErrorHandler.ThrowOnFailure(shell.GetProperty((int)__VSSPROPID2.VSSPROPID_SKUEdition, out obj));
                 var sku = (obj as int?) ?? 0;

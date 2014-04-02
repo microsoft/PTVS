@@ -13,13 +13,14 @@
  * ***************************************************************************/
 
 using System;
+using Microsoft.PythonTools.Analysis;
 
 namespace Microsoft.PythonTools.Intellisense {
-    class FileEventArgs : EventArgs {
-        public readonly string Filename;
+    class EntryEventArgs : EventArgs {
+        public readonly IProjectEntry Entry;
 
-        public FileEventArgs(string filename) {
-            Filename = filename;
+        public EntryEventArgs(IProjectEntry entry) {
+            Entry = entry;
         }
     }
 }

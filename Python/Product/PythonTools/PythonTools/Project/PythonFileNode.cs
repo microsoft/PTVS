@@ -138,7 +138,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public override void Remove(bool removeFromStorage) {
-            ((PythonProjectNode)ProjectMgr).GetAnalyzer().UnloadFile(GetAnalysis());
+            ((PythonProjectNode)ProjectMgr).GetAnalyzer().UnloadFile(GetProjectEntry());
             base.Remove(removeFromStorage);
         }
 
@@ -160,22 +160,22 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        public IProjectEntry GetAnalysis() {
+        public IProjectEntry GetProjectEntry() {
             var textBuffer = GetTextBuffer();
 
-            IProjectEntry analysis;
-            if (textBuffer != null && textBuffer.TryGetAnalysis(out analysis)) {
-                return analysis;
+            IProjectEntry entry;
+            if (textBuffer != null && textBuffer.TryGetProjectEntry(out entry)) {
+                return entry;
             }
 
-            return ((PythonProjectNode)this.ProjectMgr).GetAnalyzer().GetAnalysisFromFile(Url);
+            return ((PythonProjectNode)this.ProjectMgr).GetAnalyzer().GetEntryFromFile(Url);
         }
 
         internal override FileNode RenameFileNode(string oldFileName, string newFileName) {
             var res = base.RenameFileNode(oldFileName, newFileName);
             if (res != null) {
                 var analyzer = ((PythonProjectNode)this.ProjectMgr).GetAnalyzer();
-                var analysis = GetAnalysis();
+                var analysis = GetProjectEntry();
                 if (analysis != null) {
                     analyzer.UnloadFile(analysis);
                 }
@@ -200,7 +200,7 @@ namespace Microsoft.PythonTools.Project {
 
         internal override int ExcludeFromProject() {
             var analyzer = ((PythonProjectNode)this.ProjectMgr).GetAnalyzer();
-            var analysis = GetAnalysis();
+            var analysis = GetProjectEntry();
             if (analysis != null) {
                 analyzer.UnloadFile(analysis);
             }

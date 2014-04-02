@@ -29,7 +29,7 @@ namespace Microsoft.PythonTools.Refactoring {
             _view = textView;
             var snapshot = _view.TextBuffer.CurrentSnapshot;
 
-            _ast = _view.GetAnalyzer().ParseFile(snapshot);
+            _ast = _view.GetAnalyzer().ParseSnapshot(snapshot);
         }
 
         public bool ExtractMethod(IExtractMethodInput input) {
