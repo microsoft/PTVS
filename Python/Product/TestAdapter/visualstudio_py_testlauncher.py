@@ -23,7 +23,6 @@ if __name__ == '__main__':
     parser.add_option('-p', '--port', type='int', metavar = '<port>', help = 'listen for debugger connections on <port>')
     parser.add_option('-t', '--test', type='str', dest = 'tests', action = 'append', help = 'specifies a test to run')
     parser.add_option('-m', '--module', type='str', help = 'name of the module to import the tests from')
-    parser.add_option('--search', type='str', action='append')
     
     (opts, _) = parser.parse_args()
     
@@ -37,16 +36,8 @@ if __name__ == '__main__':
         enable_attach(opts.secret, ('127.0.0.1', getattr(opts, 'port', DEFAULT_PORT)), redirect_output = True)
         wait_for_attach()
     
-    # Temporarily insert --search values at the start of sys.path while we are
-    # importing the test. Then we remove them while we run tests. This allows us
-    # to import load tests from packages without affecting tests that want to
-    # import from explicit search paths.
-    sys.path[:0] = opts.search
-    try:
-        __import__(opts.module)
-    finally:
-        del sys.path[:len(opts.search)]
-    module = sys.modules.pop(opts.module)
+    __import__(opts.module)
+    module = sys.modules[opts.module]
     test = unittest.defaultTestLoader.loadTestsFromNames(opts.tests, module)
     runner = unittest.TextTestRunner(verbosity=0)
     

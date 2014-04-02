@@ -978,12 +978,21 @@ namespace Microsoft.PythonTools.Project {
                     paths.Where(Directory.Exists).Distinct()
                 );
 
-                var searchPaths = this.GetSearchPaths().ToList();
-                searchPaths.Insert(0, GetWorkingDirectory());
-                psi.EnvironmentVariables[config.PathEnvironmentVariable] = string.Join(
-                    new string(Path.PathSeparator, 1),
-                    searchPaths.Where(Directory.Exists).Distinct()
-                );
+                if (!string.IsNullOrWhiteSpace(config.PathEnvironmentVariable)) {
+                    var searchPaths = this.GetSearchPaths().ToList();
+                    searchPaths.Insert(0, GetWorkingDirectory());
+
+                    if (!PythonToolsPackage.Instance.GeneralOptionsPage.ClearGlobalPythonPath) {
+                        searchPaths.AddRange(
+                            Environment.GetEnvironmentVariable(config.PathEnvironmentVariable).Split(';')
+                        );
+                    }
+
+                    psi.EnvironmentVariables[config.PathEnvironmentVariable] = string.Join(
+                        new string(Path.PathSeparator, 1),
+                        searchPaths.Where(Directory.Exists).Distinct()
+                    );
+                }
             }
 
             Process.Start(psi);
@@ -1222,12 +1231,12 @@ namespace Microsoft.PythonTools.Project {
 
         internal bool IsPythonPathSet() {
             return !string.IsNullOrEmpty(
-                Environment.GetEnvironmentVariable(GetInterpreterFactory().Configuration.PathEnvironmentVariable)
+                Environment.GetEnvironmentVariable(GetInterpreterFactory().Configuration.PathEnvironmentVariable ?? "")
             );
         }
 
         internal int AddPythonPathToSearchPath() {
-            var value = Environment.GetEnvironmentVariable(GetInterpreterFactory().Configuration.PathEnvironmentVariable);
+            var value = Environment.GetEnvironmentVariable(GetInterpreterFactory().Configuration.PathEnvironmentVariable ?? "");
             if (string.IsNullOrEmpty(value)) {
                 return VSConstants.S_OK;
             }

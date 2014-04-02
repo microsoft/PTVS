@@ -251,15 +251,19 @@ namespace Microsoft.PythonTools.Repl {
                 }
             }
 
-            string pathEnvVar = Interpreter.Configuration.PathEnvironmentVariable;
-            if (processInfo.EnvironmentVariables.ContainsKey(pathEnvVar)) {
-                processInfo.EnvironmentVariables.Remove(pathEnvVar);
-            }
+            string pathEnvVar = Interpreter.Configuration.PathEnvironmentVariable ?? "";
 
-            var searchPaths = CurrentOptions.SearchPaths;
-            if (searchPaths != null) {
-                if (!string.IsNullOrEmpty(searchPaths) && !String.IsNullOrWhiteSpace(pathEnvVar)) {
+            if (!string.IsNullOrWhiteSpace(pathEnvVar)) {
+                var searchPaths = CurrentOptions.SearchPaths;
+
+                if (string.IsNullOrEmpty(searchPaths)) {
+                    if (PythonToolsPackage.Instance.GeneralOptionsPage.ClearGlobalPythonPath) {
+                        processInfo.EnvironmentVariables[pathEnvVar] = "";
+                    }
+                } else if (PythonToolsPackage.Instance.GeneralOptionsPage.ClearGlobalPythonPath) {
                     processInfo.EnvironmentVariables[pathEnvVar] = searchPaths;
+                } else {
+                    processInfo.EnvironmentVariables[pathEnvVar] = searchPaths + ";" + Environment.GetEnvironmentVariable(pathEnvVar);
                 }
             }
 

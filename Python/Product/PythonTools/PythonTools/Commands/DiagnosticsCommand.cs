@@ -56,6 +56,8 @@ namespace Microsoft.PythonTools.Commands {
                 res.AppendLine("WARNING: IpyTools is installed on this machine.  Having both IpyTools and Python Tools for Visual Studio installed will break Python editing.");
             }
 
+            var pythonPathIsMasked = PythonToolsPackage.Instance.GeneralOptionsPage.ClearGlobalPythonPath ? " (masked)" : "";
+
             var interpreterService = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
 
             var dte = (EnvDTE.DTE)PythonToolsPackage.GetGlobalService(typeof(EnvDTE.DTE));
@@ -122,7 +124,11 @@ namespace Microsoft.PythonTools.Commands {
                                 res.AppendLine("            Path: " + factory.Configuration.InterpreterPath ?? "(null)");
                                 res.AppendLine("            Windows Path: " + factory.Configuration.WindowsInterpreterPath ?? "(null)");
                                 res.AppendLine("            Lib Path: " + factory.Configuration.LibraryPath ?? "(null)");
-                                res.AppendLine("            Path Env: " + factory.Configuration.PathEnvironmentVariable ?? "(null)");
+                                res.AppendLine(string.Format("            Path Env: {0}={1}{2}",
+                                    factory.Configuration.PathEnvironmentVariable ?? "(null)",
+                                    Environment.GetEnvironmentVariable(factory.Configuration.PathEnvironmentVariable ?? ""),
+                                    pythonPathIsMasked
+                                ));
                             }
                         }
                     }

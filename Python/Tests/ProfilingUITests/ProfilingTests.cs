@@ -39,12 +39,23 @@ namespace ProfilingUITests {
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
             PythonTestData.Deploy();
+        }
+
+        bool _waitOnNormalExit, _waitOnAbnormalExit;
+
+        [TestInitialize]
+        public void TestInitialize() {
+            _waitOnNormalExit = PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnNormalExit;
+            _waitOnAbnormalExit = PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnAbnormalExit;
             PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnNormalExit = false;
             PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnAbnormalExit = false;
         }
 
         [TestCleanup]
         public void DeleteVspFiles() {
+            PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnNormalExit = _waitOnNormalExit;
+            PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnAbnormalExit = _waitOnAbnormalExit;
+
             try {
                 foreach (var file in Directory.EnumerateFiles(Path.GetTempPath(), "*.vsp", SearchOption.TopDirectoryOnly)) {
                     try {
@@ -142,6 +153,9 @@ namespace ProfilingUITests {
                     Assert.Fail("Task did not fault");
                 } catch (AggregateException) {
                 }
+            } else {
+                // Ensure the exception is observed
+                var ex = task.Exception;
             }
             Assert.IsNotNull(session, "Session was not correctly initialized");
             return session;
@@ -405,6 +419,122 @@ namespace ProfilingUITests {
                     VerifyReport(report, true, "Program.f", "time.sleep");
                 } finally {
                     profiling.RemoveSession(session, true);
+                }
+            }
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void LaunchProjectWithSearchPath() {
+            var profiling = (IPythonProfiling)VsIdeTestHostContext.Dte.GetObject("PythonProfiling");
+
+            // no sessions yet
+            Assert.IsNull(profiling.GetSession(1));
+
+            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenProject(@"TestData\ProfileTestSysPath.sln");
+
+                var session = LaunchProject(app, profiling, project, TestData.GetPath(@"TestData\ProfileTestSysPath"), false);
+                try {
+                    while (profiling.IsProfiling) {
+                        Thread.Sleep(100);
+                    }
+
+                    var report = session.GetReport(1);
+                    var filename = report.Filename;
+                    Assert.IsTrue(filename.Contains("HelloWorld"));
+
+                    Assert.IsNull(session.GetReport(2));
+
+                    Assert.IsNotNull(session.GetReport(report.Filename));
+
+                    VerifyReport(report, true, "A.mod.func");
+                } finally {
+                    profiling.RemoveSession(session, true);
+                }
+            }
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void LaunchProjectWithPythonPathSet() {
+            var profiling = (IPythonProfiling)VsIdeTestHostContext.Dte.GetObject("PythonProfiling");
+
+            // no sessions yet
+            Assert.IsNull(profiling.GetSession(1));
+
+            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenProject(@"TestData\ProfileTestSysPath.sln");
+
+                IPythonProfileSession session = null;
+                var oldPythonPath = Environment.GetEnvironmentVariable("PYTHONPATH");
+                var oldClearPythonPath = PythonToolsPackage.Instance.GeneralOptionsPage.ClearGlobalPythonPath;
+                try {
+                    Environment.SetEnvironmentVariable("PYTHONPATH", TestData.GetPath(@"TestData\ProfileTestSysPath\B"));
+                    PythonToolsPackage.Instance.GeneralOptionsPage.ClearGlobalPythonPath = false;
+                    session = LaunchProject(app, profiling, project, TestData.GetPath(@"TestData\ProfileTestSysPath"), false);
+
+                    while (profiling.IsProfiling) {
+                        Thread.Sleep(100);
+                    }
+
+                    var report = session.GetReport(1);
+                    var filename = report.Filename;
+                    Assert.IsTrue(filename.Contains("HelloWorld"));
+
+                    Assert.IsNull(session.GetReport(2));
+
+                    Assert.IsNotNull(session.GetReport(report.Filename));
+
+                    VerifyReport(report, true, "B.mod2.func");
+                } finally {
+                    PythonToolsPackage.Instance.GeneralOptionsPage.ClearGlobalPythonPath = oldClearPythonPath;
+                    Environment.SetEnvironmentVariable("PYTHONPATH", oldPythonPath);
+                    if (session != null) {
+                        profiling.RemoveSession(session, true);
+                    }
+                }
+            }
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void LaunchProjectWithPythonPathClear() {
+            var profiling = (IPythonProfiling)VsIdeTestHostContext.Dte.GetObject("PythonProfiling");
+
+            // no sessions yet
+            Assert.IsNull(profiling.GetSession(1));
+
+            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenProject(@"TestData\ProfileTestSysPath.sln");
+
+                IPythonProfileSession session = null;
+                var oldPythonPath = Environment.GetEnvironmentVariable("PYTHONPATH");
+                var oldClearPythonPath = PythonToolsPackage.Instance.GeneralOptionsPage.ClearGlobalPythonPath;
+                try {
+                    Environment.SetEnvironmentVariable("PYTHONPATH", TestData.GetPath(@"TestData\ProfileTestSysPath\B"));
+                    PythonToolsPackage.Instance.GeneralOptionsPage.ClearGlobalPythonPath = true;
+                    session = LaunchProject(app, profiling, project, TestData.GetPath(@"TestData\ProfileTestSysPath"), false);
+
+                    while (profiling.IsProfiling) {
+                        Thread.Sleep(100);
+                    }
+
+                    var report = session.GetReport(1);
+                    var filename = report.Filename;
+                    Assert.IsTrue(filename.Contains("HelloWorld"));
+
+                    Assert.IsNull(session.GetReport(2));
+
+                    Assert.IsNotNull(session.GetReport(report.Filename));
+
+                    VerifyReport(report, true, "A.mod.func");
+                } finally {
+                    PythonToolsPackage.Instance.GeneralOptionsPage.ClearGlobalPythonPath = oldClearPythonPath;
+                    Environment.SetEnvironmentVariable("PYTHONPATH", oldPythonPath);
+                    if (session != null) {
+                        profiling.RemoveSession(session, true);
+                    }
                 }
             }
         }

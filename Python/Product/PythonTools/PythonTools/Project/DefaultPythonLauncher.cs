@@ -262,8 +262,12 @@ namespace Microsoft.PythonTools.Project {
         /// </summary>
         private void SetupEnvironment(StringDictionary environment) {
             string pathEnvVar = _project.GetInterpreterFactory().Configuration.PathEnvironmentVariable;
-            if (!String.IsNullOrWhiteSpace(pathEnvVar)) {
-                environment[pathEnvVar] = string.Join(";", _project.GetSearchPaths());
+            if (!string.IsNullOrWhiteSpace(pathEnvVar)) {
+                var pythonPath = string.Join(";", _project.GetSearchPaths());
+                if (!PythonToolsPackage.Instance.GeneralOptionsPage.ClearGlobalPythonPath) {
+                    pythonPath += ";" + Environment.GetEnvironmentVariable(pathEnvVar);
+                }
+                environment[pathEnvVar] = pythonPath;
             }
         }
 

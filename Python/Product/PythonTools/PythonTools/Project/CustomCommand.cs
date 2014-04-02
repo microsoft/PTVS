@@ -509,8 +509,14 @@ namespace Microsoft.PythonTools.Project {
 
             // Fill PYTHONPATH from interpreter settings before we load values from Environment metadata item,
             // so that commands can explicitly override it if they want to.
-            var pythonPathVarName = project.GetInterpreterFactory().Configuration.PathEnvironmentVariable ?? "PYTHONPATH";
-            startInfo.EnvironmentVariables[pythonPathVarName] = string.Join(";", project.GetSearchPaths());
+            var pythonPathVarName = project.GetInterpreterFactory().Configuration.PathEnvironmentVariable;
+            if (!string.IsNullOrWhiteSpace(pythonPathVarName)) {
+                var pythonPath = string.Join(";", project.GetSearchPaths());
+                if (!PythonToolsPackage.Instance.GeneralOptionsPage.ClearGlobalPythonPath) {
+                    pythonPath += ";" + Environment.GetEnvironmentVariable(pythonPathVarName);
+                }
+                startInfo.EnvironmentVariables[pythonPathVarName] = pythonPath;
+            }
 
             var environment = item.GetMetadata(BuildTasks.CreatePythonCommandItem.EnvironmentKey);
             foreach (var line in environment.Split('\r', '\n')) {

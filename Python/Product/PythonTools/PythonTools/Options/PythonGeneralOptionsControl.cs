@@ -37,6 +37,7 @@ namespace Microsoft.PythonTools.Options {
             _autoAnalysis.Checked = PythonToolsPackage.Instance.DebuggingOptionsPage.AutoAnalyzeStandardLibrary;
             _updateSearchPathsForLinkedFiles.Checked = PythonToolsPackage.Instance.DebuggingOptionsPage.UpdateSearchPathsWhenAddingLinkedFiles;
             _unresolvedImportWarning.Checked = PythonToolsPackage.Instance.GeneralOptionsPage.UnresolvedImportWarning;
+            _clearGlobalPythonPath.Checked = PythonToolsPackage.Instance.GeneralOptionsPage.ClearGlobalPythonPath;
 
             switch (PythonToolsPackage.Instance.DebuggingOptionsPage.IndentationInconsistencySeverity) {
                 case Severity.Error: _indentationInconsistentCombo.SelectedIndex = ErrorIndex; break;
@@ -95,6 +96,10 @@ namespace Microsoft.PythonTools.Options {
 
         private void _unresolvedImportWarning_CheckedChanged(object sender, EventArgs e) {
             PythonToolsPackage.Instance.GeneralOptionsPage.UnresolvedImportWarning = _unresolvedImportWarning.Checked;
+        }
+
+        private void _clearGlobalPythonPath_CheckedChanged(object sender, EventArgs e) {
+            PythonToolsPackage.Instance.GeneralOptionsPage.ClearGlobalPythonPath = _clearGlobalPythonPath.Checked;
         }
     }
 }

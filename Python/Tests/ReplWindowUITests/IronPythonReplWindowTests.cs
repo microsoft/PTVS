@@ -124,7 +124,7 @@ namespace ReplWindowUITests {
 
         [TestMethod, Priority(0)]
         public void IronPythonModuleName() {
-            var replEval = new PythonReplEvaluator(IronPythonInterpreter, null, new ReplTestReplOptions());
+            var replEval = new PythonReplEvaluator(IronPythonInterpreter, new ReplTestReplOptions());
             var replWindow = new MockReplWindow(replEval);
             replEval.Initialize(replWindow).Wait();
             replWindow.ClearScreen();
@@ -137,7 +137,7 @@ namespace ReplWindowUITests {
 
         [TestMethod, Priority(0)]
         public void IronPythonSignatures() {
-            var replEval = new PythonReplEvaluator(IronPythonInterpreter, null, new ReplTestReplOptions());
+            var replEval = new PythonReplEvaluator(IronPythonInterpreter, new ReplTestReplOptions());
             var replWindow = new MockReplWindow(replEval);
             replEval.Initialize(replWindow).Wait();
             var execute = replEval.ExecuteText("from System import Array");
@@ -152,7 +152,7 @@ namespace ReplWindowUITests {
         [TestMethod, Priority(0)]
         public void IronPythonCommentInput() {
             // http://pytools.codeplex.com/workitem/649
-            var replEval = new PythonReplEvaluator(IronPythonInterpreter, null, new ReplTestReplOptions());
+            var replEval = new PythonReplEvaluator(IronPythonInterpreter, new ReplTestReplOptions());
             var replWindow = new MockReplWindow(replEval);
             replEval.Initialize(replWindow).Wait();
             var execute = replEval.ExecuteText("#fob\n1+2");
@@ -163,7 +163,7 @@ namespace ReplWindowUITests {
         [TestMethod, Priority(0)]
         public void ConsoleWriteLineTest() {
             // http://pytools.codeplex.com/workitem/649
-            var replEval = new PythonReplEvaluator(IronPythonInterpreter, null, new ReplTestReplOptions());
+            var replEval = new PythonReplEvaluator(IronPythonInterpreter, new ReplTestReplOptions());
             var replWindow = new MockReplWindow(replEval);
             replEval.Initialize(replWindow).Wait();
             var execute = replEval.ExecuteText("import System");
@@ -190,7 +190,7 @@ namespace ReplWindowUITests {
         public void GenericMethodCompletions() {
             // http://pytools.codeplex.com/workitem/661
             var fact = IronPythonInterpreter;
-            var replEval = new PythonReplEvaluator(fact, null, new ReplTestReplOptions());
+            var replEval = new PythonReplEvaluator(fact, new ReplTestReplOptions());
             var replWindow = new MockReplWindow(replEval);
             replEval.Initialize(replWindow).Wait();
             var execute = replEval.ExecuteText("from System.Threading.Tasks import Task");
@@ -208,7 +208,7 @@ namespace ReplWindowUITests {
             execute.Wait();
             Assert.AreEqual(execute.Result, ExecutionResult.Success);
 
-            using (var analyzer = new VsProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory())) {
+            using (var analyzer = new VsProjectAnalyzer(fact, new[] { fact })) {
                 replWindow.TextView.TextBuffer.Properties.AddProperty(typeof(VsProjectAnalyzer), analyzer);
 
                 var names = replEval.GetMemberNames("t");
@@ -221,7 +221,7 @@ namespace ReplWindowUITests {
         [TestMethod, Priority(0)]
         public void NoTraceFunction() {
             // http://pytools.codeplex.com/workitem/662
-            var replEval = new PythonReplEvaluator(IronPythonInterpreter, null, new ReplTestReplOptions());
+            var replEval = new PythonReplEvaluator(IronPythonInterpreter, new ReplTestReplOptions());
             var replWindow = new MockReplWindow(replEval);
             replEval.Initialize(replWindow).Wait();
             var execute = replEval.ExecuteText("import sys");
@@ -238,7 +238,7 @@ namespace ReplWindowUITests {
         [TestMethod, Priority(0)]
         public void CommentFollowedByBlankLine() {
             // http://pytools.codeplex.com/workitem/659
-            var replEval = new PythonReplEvaluator(IronPythonInterpreter, null, new ReplTestReplOptions());
+            var replEval = new PythonReplEvaluator(IronPythonInterpreter, new ReplTestReplOptions());
             var replWindow = new MockReplWindow(replEval);
             replEval.Initialize(replWindow).Wait();
             var execute = replEval.ExecuteText("# fob\r\n\r\n    \r\n\t\t\r\na = 42");
@@ -252,7 +252,7 @@ namespace ReplWindowUITests {
         [TestMethod, Priority(0)]
         public void AttachSupportMultiThreaded() {
             // http://pytools.codeplex.com/workitem/663
-            var replEval = new PythonReplEvaluator(IronPythonInterpreter, null, new ReplTestReplOptions());
+            var replEval = new PythonReplEvaluator(IronPythonInterpreter, new ReplTestReplOptions());
             var replWindow = new MockReplWindow(replEval);
             replEval.Initialize(replWindow).Wait();
             var code = new[] {

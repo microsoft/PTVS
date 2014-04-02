@@ -24,6 +24,8 @@ using System.Text;
 using System.Threading;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.VisualStudio.Settings;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
@@ -146,9 +148,25 @@ namespace Microsoft.PythonTools.TestAdapter {
                 return;
             }
 
-            var env = new Dictionary<string, string> {
-                { settings.Factory.Configuration.PathEnvironmentVariable ?? "PYTHONPATH", testCase.SearchPaths }
-            };
+            var env = new Dictionary<string, string>();
+            var pythonPathVar = settings.Factory.Configuration.PathEnvironmentVariable;
+            var pythonPath = testCase.SearchPaths;
+            if (!string.IsNullOrWhiteSpace(pythonPathVar)) {
+                if (app != null) {
+                    var settingsManager = SettingsManagerCreator.GetSettingsManager(app.DTE);
+                    if (settingsManager != null) {
+                        var store = settingsManager.GetReadOnlySettingsStore(SettingsScope.UserSettings);
+                        if (store != null && store.CollectionExists(@"PythonTools\Options\General")) {
+                            var settingStr = store.GetString(@"PythonTools\Options\General", "ClearGlobalPythonPath", "True");
+                            bool settingBool;
+                            if (bool.TryParse(settingStr, out settingBool) && !settingBool) {
+                                pythonPath += ";" + Environment.GetEnvironmentVariable(pythonPathVar);
+                            }
+                        }
+                    }
+                }
+                env[pythonPathVar] = pythonPath;
+            }
 
             using (var proc = ProcessOutput.Run(
                 !settings.IsWindowsApplication ? 
@@ -164,7 +182,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
 #if DEBUG
                 frameworkHandle.SendMessage(TestMessageLevel.Informational, "cd " + testCase.WorkingDirectory);
-                frameworkHandle.SendMessage(TestMessageLevel.Informational, "set " + settings.Factory.Configuration.PathEnvironmentVariable + "=" + testCase.SearchPaths);
+                frameworkHandle.SendMessage(TestMessageLevel.Informational, "set " + (pythonPathVar ?? "") + "=" + (pythonPath ?? ""));
                 frameworkHandle.SendMessage(TestMessageLevel.Informational, proc.Arguments);
 #endif
 
@@ -364,6 +382,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
                 var paths = settings.SearchPath.ToList();
 
+                paths.Insert(0, ModulePath.LibraryPath);
                 paths.Insert(0, WorkingDirectory);
                 if (usePtvsd) {
                     paths.Insert(0, PtvsdSearchPath);
@@ -377,7 +396,6 @@ namespace Microsoft.PythonTools.TestAdapter {
                 var arguments = new List<string> {
                     TestLauncherPath,
                     "-m", ModulePath.ModuleName,
-                    "--search", ModulePath.LibraryPath,
                     "-t", string.Format("{0}.{1}", TestClass, TestMethod)
                 };
 

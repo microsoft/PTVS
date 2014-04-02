@@ -19,6 +19,7 @@ using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Windows;
@@ -27,6 +28,7 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Profiling {
@@ -229,6 +231,10 @@ namespace Microsoft.PythonTools.Profiling {
             var model = (IComponentModel)(GetGlobalService(typeof(SComponentModel)));
             var interpreterService = model.GetService<IInterpreterOptionsService>();
 
+            var projectHome = CommonUtils.GetAbsoluteDirectoryPath(
+                Path.GetDirectoryName(projectToProfile.FullName),
+                (string)projectToProfile.Properties.Item("ProjectHome").Value
+            );
             var interpreterProvider = (MSBuildProjectInterpreterFactoryProvider)projectToProfile.Properties.Item("InterpreterFactoryProvider").Value;
             var args = (string)projectToProfile.Properties.Item("CommandLineArguments").Value;
             var interpreterPath = (string)projectToProfile.Properties.Item("InterpreterPath").Value;
@@ -241,7 +247,7 @@ namespace Microsoft.PythonTools.Profiling {
             }
 
             var arch = interpreter.Configuration.Architecture;
-            var searchPathEnvVarName = interpreter.Configuration.PathEnvironmentVariable;
+            var pathEnvVarName = interpreter.Configuration.PathEnvironmentVariable;
 
             if (String.IsNullOrWhiteSpace(interpreterPath)) {
                 interpreterPath = interpreter.Configuration.InterpreterPath;
@@ -262,8 +268,19 @@ namespace Microsoft.PythonTools.Profiling {
             }
 
             var env = new Dictionary<string, string>();
-            if (!String.IsNullOrWhiteSpace(searchPath) && !String.IsNullOrWhiteSpace(searchPathEnvVarName)) {
-                env[searchPathEnvVarName] = searchPath;
+            if (!String.IsNullOrWhiteSpace(pathEnvVarName)) {
+                var searchPaths = searchPath.Split(';').ToList();
+
+                if (!PythonToolsPackage.Instance.GeneralOptionsPage.ClearGlobalPythonPath) {
+                    searchPaths.AddRange(Environment.GetEnvironmentVariable(pathEnvVarName).Split(';'));
+                }
+
+                env[pathEnvVarName] = string.Join(";", searchPaths
+                    .Where(CommonUtils.IsValidPath)
+                    .Select(p => CommonUtils.GetAbsoluteDirectoryPath(projectHome, p))
+                    .Where(Directory.Exists)
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                );
             }
             RunProfiler(session, interpreterPath, startupFile, args, workingDir, env, openReport, arch);
         }

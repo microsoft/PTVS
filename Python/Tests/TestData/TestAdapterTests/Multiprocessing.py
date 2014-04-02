@@ -9,10 +9,10 @@ class Multiprocessing(unittest.TestCase):
 
         pool = Pool()
         
-        asyncresults = [pool.apply_async(square, [t]) for t in range(10)]
+        asyncresults = [pool.apply_async(square, [t]) for t in range(2)]
     
         results = [r.get() for r in asyncresults]
-        expected = [t*t for t in range(10)]
+        expected = [t*t for t in range(2)]
         pool.close()
 
         self.assertListEqual(expected, results)

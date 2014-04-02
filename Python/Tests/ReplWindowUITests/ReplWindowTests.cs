@@ -61,7 +61,6 @@ namespace ReplWindowUITests {
                 InterpFactory.GetInterpreterFactories()
                     .Where(fact => fact.Configuration.Version == new Version(2, 7))
                     .First(fact => fact.Id == PythonPaths.CPythonGuid || fact.Id == PythonPaths.CPython64Guid),
-                null,
                 new ReplTestReplOptions()
             );
 
@@ -81,7 +80,6 @@ namespace ReplWindowUITests {
                 InterpFactory.GetInterpreterFactories()
                     .Where(fact => fact.Configuration.Version == new Version(2, 7))
                     .First(fact => fact.Id == PythonPaths.CPythonGuid || fact.Id == PythonPaths.CPython64Guid),
-                null,
                 new ReplTestReplOptions()
             );
 

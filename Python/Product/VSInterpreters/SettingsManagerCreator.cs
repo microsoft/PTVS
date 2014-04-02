@@ -19,9 +19,14 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.Win32;
 using Microsoft.VisualStudio.Settings;
 using Microsoft.VisualStudio.Shell.Settings;
+using IOleServiceProvider = Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
 
-namespace Microsoft {
+namespace Microsoft.VisualStudioTools {
     static class SettingsManagerCreator {
+        public static SettingsManager GetSettingsManager(DTE dte) {
+            return GetSettingsManager(new ServiceProvider(((IOleServiceProvider)dte)));
+        }
+        
         public static SettingsManager GetSettingsManager(IServiceProvider provider) {
             SettingsManager settings = null;
             string devenvPath = null;

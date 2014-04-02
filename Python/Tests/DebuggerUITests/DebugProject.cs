@@ -14,21 +14,16 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
-using System.Windows.Automation;
 using EnvDTE;
 using EnvDTE90;
 using EnvDTE90a;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Options;
-using Microsoft.PythonTools.Parsing;
 using Microsoft.TC.TestHostAdapters;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.Python;
@@ -85,6 +80,7 @@ namespace DebuggerUITests {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
                 app.OpenProject(TestData.GetPath(@"TestData\SysPath.sln"));
 
+                ClearOutputWindowDebugPaneText();
                 VsIdeTestHostContext.Dte.ExecuteCommand("Debug.Start");
                 WaitForMode(app, dbgDebugMode.dbgDesignMode);
 
@@ -93,6 +89,45 @@ namespace DebuggerUITests {
                 // Note: backslashes are escaped in the output
                 string testDataPath = TestData.GetPath("TestData\\SysPath\\Sub'").Replace("\\", "\\\\");
                 WaitForDebugOutput(text => text.Contains(testDataPath));
+            }
+        }
+
+        /// <summary>
+        /// Debugs a project with and without a process-wide PYTHONPATH value.
+        /// If <see cref="DebugPythonProjectSubFolderStartupFileSysPath"/> fails
+        /// this test may also fail.
+        /// </summary>
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void DebugPythonProjectWithAndWithoutClearingPythonPath() {
+            var origPythonPath = Environment.GetEnvironmentVariable("PYTHONPATH");
+            string testDataPath = TestData.GetPath("TestData\\HelloWorld").Replace("\\", "\\\\");
+            Environment.SetEnvironmentVariable("PYTHONPATH", testDataPath);
+            try {
+                using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                    app.OpenProject(TestData.GetPath(@"TestData\SysPath.sln"));
+
+                    PythonToolsPackage.Instance.GeneralOptionsPage.ClearGlobalPythonPath = false;
+                    try {
+                        ClearOutputWindowDebugPaneText();
+                        VsIdeTestHostContext.Dte.ExecuteCommand("Debug.Start");
+                        WaitForMode(app, dbgDebugMode.dbgDesignMode);
+
+                        WaitForDebugOutput(text => text.Contains(testDataPath));
+                    } finally {
+                        PythonToolsPackage.Instance.GeneralOptionsPage.ClearGlobalPythonPath = true;
+                    }
+
+                    ClearOutputWindowDebugPaneText();
+                    VsIdeTestHostContext.Dte.ExecuteCommand("Debug.Start");
+                    WaitForMode(app, dbgDebugMode.dbgDesignMode);
+
+                    WaitForDebugOutput(text => text.Contains("DONE"));
+                    var outputWindowText = GetOutputWindowDebugPaneText();
+                    Assert.IsFalse(outputWindowText.Contains(testDataPath), outputWindowText);
+                }
+            } finally {
+                Environment.SetEnvironmentVariable("PYTHONPATH", origPythonPath);
             }
         }
 
@@ -796,6 +831,12 @@ namespace DebuggerUITests {
 
         private static Project OpenDebuggerProjectAndBreak(VisualStudioApp app, string startItem, int lineNo, bool setStartupItem = true) {
             return OpenProjectAndBreak(app, @"TestData\DebuggerProject.sln", startItem, lineNo);
+        }
+
+        private static void ClearOutputWindowDebugPaneText() {
+            OutputWindow window = ((EnvDTE80.DTE2)VsIdeTestHostContext.Dte).ToolWindows.OutputWindow;
+            OutputWindowPane debugPane = window.OutputWindowPanes.Item("Debug");
+            debugPane.Clear();
         }
 
         private static string GetOutputWindowDebugPaneText() {
