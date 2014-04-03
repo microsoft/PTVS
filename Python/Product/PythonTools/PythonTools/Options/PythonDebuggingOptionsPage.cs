@@ -161,6 +161,12 @@ namespace Microsoft.PythonTools.Options {
             _debugStdLib = false;
         }
 
+        internal void ResetGeneralSettings() {
+            _autoAnalysis = true;
+            _updateSearchPathsWhenAddingLinkedFiles = true;
+            _indentationInconsistencySeverity = Severity.Warning;
+        }
+
         private const string DontPromptBeforeRunningWithBuildErrorSetting = "DontPromptBeforeRunningWithBuildError";
         private const string IndentationInconsistencySeveritySetting = "IndentationInconsistencySeverity";
         private const string WaitOnAbnormalExitSetting = "WaitOnAbnormalExit";
@@ -192,6 +198,12 @@ namespace Microsoft.PythonTools.Options {
             }
         }
 
+        internal void LoadGeneralSettingsFromStorage() {
+            _autoAnalysis = LoadBool(AutoAnalysisSetting) ?? true;
+            _updateSearchPathsWhenAddingLinkedFiles = LoadBool(UpdateSearchPathsWhenAddingLinkedFilesSetting) ?? true;
+            _indentationInconsistencySeverity = LoadEnum<Severity>(IndentationInconsistencySeveritySetting) ?? Severity.Warning;
+        }
+
         public override void SaveSettingsToStorage() {
             SaveBool(DontPromptBeforeRunningWithBuildErrorSetting, !_promptBeforeRunningWithBuildError);
             SaveBool(WaitOnAbnormalExitSetting, _waitOnAbnormalExit);
@@ -208,6 +220,12 @@ namespace Microsoft.PythonTools.Options {
                 SaveString(CrossModuleAnalysisLimitSetting, "-");
             }
 
+        }
+
+        internal void SaveGeneralSettingsToStorage() {
+            SaveBool(AutoAnalysisSetting, _autoAnalysis);
+            SaveBool(UpdateSearchPathsWhenAddingLinkedFilesSetting, _updateSearchPathsWhenAddingLinkedFiles);
+            SaveEnum(IndentationInconsistencySeveritySetting, _indentationInconsistencySeverity);
         }
 
     }

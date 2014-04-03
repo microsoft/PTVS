@@ -18,6 +18,8 @@ using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Options {
     public partial class PythonGeneralOptionsControl : UserControl {
+        private readonly PythonGeneralOptionsPage _options;
+        
         private const int ErrorIndex = 0;
         private const int WarningIndex = 1;
         private const int DontIndex = 2;
@@ -28,18 +30,20 @@ namespace Microsoft.PythonTools.Options {
         private const int SurveyNewsOnceMonthIndex = 3;
 
         public PythonGeneralOptionsControl() {
+            _options = PythonToolsPackage.Instance.GeneralOptionsPage;
+
             InitializeComponent();
 
-            _showOutputWindowForVirtualEnvCreate.Checked = PythonToolsPackage.Instance.GeneralOptionsPage.ShowOutputWindowForVirtualEnvCreate;
-            _showOutputWindowForPackageInstallation.Checked = PythonToolsPackage.Instance.GeneralOptionsPage.ShowOutputWindowForPackageInstallation;
-            _elevatePip.Checked = PythonToolsPackage.Instance.GeneralOptionsPage.ElevatePip;
-            _elevateEasyInstall.Checked = PythonToolsPackage.Instance.GeneralOptionsPage.ElevateEasyInstall;
-            _autoAnalysis.Checked = PythonToolsPackage.Instance.DebuggingOptionsPage.AutoAnalyzeStandardLibrary;
-            _updateSearchPathsForLinkedFiles.Checked = PythonToolsPackage.Instance.DebuggingOptionsPage.UpdateSearchPathsWhenAddingLinkedFiles;
-            _unresolvedImportWarning.Checked = PythonToolsPackage.Instance.GeneralOptionsPage.UnresolvedImportWarning;
-            _clearGlobalPythonPath.Checked = PythonToolsPackage.Instance.GeneralOptionsPage.ClearGlobalPythonPath;
+            _showOutputWindowForVirtualEnvCreate.Checked = _options.ShowOutputWindowForVirtualEnvCreate;
+            _showOutputWindowForPackageInstallation.Checked = _options.ShowOutputWindowForPackageInstallation;
+            _elevatePip.Checked = _options.ElevatePip;
+            _elevateEasyInstall.Checked = _options.ElevateEasyInstall;
+            _autoAnalysis.Checked = _options.AutoAnalyzeStandardLibrary;
+            _updateSearchPathsForLinkedFiles.Checked = _options.UpdateSearchPathsWhenAddingLinkedFiles;
+            _unresolvedImportWarning.Checked = _options.UnresolvedImportWarning;
+            _clearGlobalPythonPath.Checked = _options.ClearGlobalPythonPath;
 
-            switch (PythonToolsPackage.Instance.DebuggingOptionsPage.IndentationInconsistencySeverity) {
+            switch (_options.IndentationInconsistencySeverity) {
                 case Severity.Error: _indentationInconsistentCombo.SelectedIndex = ErrorIndex; break;
                 case Severity.Warning: _indentationInconsistentCombo.SelectedIndex = WarningIndex; break;
                 default: _indentationInconsistentCombo.SelectedIndex = DontIndex; break;
@@ -54,52 +58,52 @@ namespace Microsoft.PythonTools.Options {
         }
 
         private void _showOutputWindowForVirtualEnvCreate_CheckedChanged(object sender, EventArgs e) {
-            PythonToolsPackage.Instance.GeneralOptionsPage.ShowOutputWindowForVirtualEnvCreate = _showOutputWindowForVirtualEnvCreate.Checked;
+            _options.ShowOutputWindowForVirtualEnvCreate = _showOutputWindowForVirtualEnvCreate.Checked;
         }
 
         private void _showOutputWindowForPackageInstallation_CheckedChanged(object sender, EventArgs e) {
-            PythonToolsPackage.Instance.GeneralOptionsPage.ShowOutputWindowForPackageInstallation = _showOutputWindowForPackageInstallation.Checked;
+            _options.ShowOutputWindowForPackageInstallation = _showOutputWindowForPackageInstallation.Checked;
         }
 
         private void _elevatePip_CheckedChanged(object sender, EventArgs e) {
-            PythonToolsPackage.Instance.GeneralOptionsPage.ElevatePip = _elevatePip.Checked;
+            _options.ElevatePip = _elevatePip.Checked;
         }
 
         private void _elevateEasyInstall_CheckedChanged(object sender, EventArgs e) {
-            PythonToolsPackage.Instance.GeneralOptionsPage.ElevateEasyInstall = _elevateEasyInstall.Checked;
+            _options.ElevateEasyInstall = _elevateEasyInstall.Checked;
         }
 
         private void _autoAnalysis_CheckedChanged(object sender, EventArgs e) {
-            PythonToolsPackage.Instance.DebuggingOptionsPage.AutoAnalyzeStandardLibrary = _autoAnalysis.Checked;
+            _options.AutoAnalyzeStandardLibrary = _autoAnalysis.Checked;
         }
 
         private void _updateSearchPathsForLinkedFiles_CheckedChanged(object sender, EventArgs e) {
-            PythonToolsPackage.Instance.DebuggingOptionsPage.UpdateSearchPathsWhenAddingLinkedFiles = _updateSearchPathsForLinkedFiles.Checked;
+            _options.UpdateSearchPathsWhenAddingLinkedFiles = _updateSearchPathsForLinkedFiles.Checked;
         }
 
         private void _indentationInconsistentCombo_SelectedIndexChanged(object sender, EventArgs e) {
             switch (_indentationInconsistentCombo.SelectedIndex) {
-                case ErrorIndex: PythonToolsPackage.Instance.DebuggingOptionsPage.IndentationInconsistencySeverity = Severity.Error; break;
-                case WarningIndex: PythonToolsPackage.Instance.DebuggingOptionsPage.IndentationInconsistencySeverity = Severity.Warning; break;
-                case DontIndex: PythonToolsPackage.Instance.DebuggingOptionsPage.IndentationInconsistencySeverity = Severity.Ignore; break;
+                case ErrorIndex: _options.IndentationInconsistencySeverity = Severity.Error; break;
+                case WarningIndex: _options.IndentationInconsistencySeverity = Severity.Warning; break;
+                case DontIndex: _options.IndentationInconsistencySeverity = Severity.Ignore; break;
             }
         }
 
         private void _surveyNewsCheckCombo_SelectedIndexChanged(object sender, EventArgs e) {
             switch (_surveyNewsCheckCombo.SelectedIndex) {
-                case SurveyNewsNeverIndex: PythonToolsPackage.Instance.GeneralOptionsPage.SurveyNewsCheck = SurveyNewsPolicy.Disabled; break;
-                case SurveyNewsOnceDayIndex: PythonToolsPackage.Instance.GeneralOptionsPage.SurveyNewsCheck = SurveyNewsPolicy.CheckOnceDay; break;
-                case SurveyNewsOnceWeekIndex: PythonToolsPackage.Instance.GeneralOptionsPage.SurveyNewsCheck = SurveyNewsPolicy.CheckOnceWeek; break;
-                case SurveyNewsOnceMonthIndex: PythonToolsPackage.Instance.GeneralOptionsPage.SurveyNewsCheck = SurveyNewsPolicy.CheckOnceMonth; break;
+                case SurveyNewsNeverIndex: _options.SurveyNewsCheck = SurveyNewsPolicy.Disabled; break;
+                case SurveyNewsOnceDayIndex: _options.SurveyNewsCheck = SurveyNewsPolicy.CheckOnceDay; break;
+                case SurveyNewsOnceWeekIndex: _options.SurveyNewsCheck = SurveyNewsPolicy.CheckOnceWeek; break;
+                case SurveyNewsOnceMonthIndex: _options.SurveyNewsCheck = SurveyNewsPolicy.CheckOnceMonth; break;
             }
         }
 
         private void _unresolvedImportWarning_CheckedChanged(object sender, EventArgs e) {
-            PythonToolsPackage.Instance.GeneralOptionsPage.UnresolvedImportWarning = _unresolvedImportWarning.Checked;
+            _options.UnresolvedImportWarning = _unresolvedImportWarning.Checked;
         }
 
         private void _clearGlobalPythonPath_CheckedChanged(object sender, EventArgs e) {
-            PythonToolsPackage.Instance.GeneralOptionsPage.ClearGlobalPythonPath = _clearGlobalPythonPath.Checked;
+            _options.ClearGlobalPythonPath = _clearGlobalPythonPath.Checked;
         }
     }
 }

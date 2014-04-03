@@ -14,6 +14,7 @@
 
 using System;
 using System.Runtime.InteropServices;
+using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Options {
     [ComVisible(true)]
@@ -30,8 +31,19 @@ namespace Microsoft.PythonTools.Options {
         private bool _unresolvedImportWarning;
         private bool _clearGlobalPythonPath;
 
+        private PythonDebuggingOptionsPage _debugOptions;
+
         public PythonGeneralOptionsPage()
             : base("General") {
+        }
+
+        private PythonDebuggingOptionsPage DebugOptions {
+            get {
+                if (_debugOptions == null) {
+                    _debugOptions = PythonToolsPackage.Instance.DebuggingOptionsPage;
+                }
+                return _debugOptions;
+            }
         }
 
         // replace the default UI of the dialog page w/ our own UI.
@@ -135,6 +147,53 @@ namespace Microsoft.PythonTools.Options {
         }
 
         /// <summary>
+        /// True to start analyzing an environment when it is used and has no
+        /// database. Default is true.
+        /// </summary>
+        /// <remarks>
+        /// This option lives in <see cref="PythonDebugOptionsPage"/> for
+        /// backwards-compatibility.
+        /// </remarks>
+        public bool AutoAnalyzeStandardLibrary {
+            get { return DebugOptions.AutoAnalyzeStandardLibrary; }
+            set { DebugOptions.AutoAnalyzeStandardLibrary = value; }
+        }
+
+        /// <summary>
+        /// True to update search paths when adding linked files. Default is
+        /// true.
+        /// </summary>
+        /// <remarks>
+        /// This option lives in <see cref="PythonDebugOptionsPage"/> for
+        /// backwards-compatibility.
+        /// </remarks>
+        public bool UpdateSearchPathsWhenAddingLinkedFiles {
+            get { return DebugOptions.UpdateSearchPathsWhenAddingLinkedFiles; }
+            set { DebugOptions.UpdateSearchPathsWhenAddingLinkedFiles = value; }
+        }
+
+        /// <summary>
+        /// The severity to apply to inconsistent indentation. Default is warn.
+        /// </summary>
+        /// <remarks>
+        /// This option lives in <see cref="PythonDebugOptionsPage"/> for
+        /// backwards-compatibility.
+        /// </remarks>
+        public Severity IndentationInconsistencySeverity {
+            get { return DebugOptions.IndentationInconsistencySeverity; }
+            set { DebugOptions.IndentationInconsistencySeverity = value; }
+        }
+
+        public event EventHandler IndentationInconsistencyChanged {
+            add {
+                DebugOptions.IndentationInconsistencyChanged += value;
+            }
+            remove {
+                DebugOptions.IndentationInconsistencyChanged -= value;
+            }
+        }
+
+        /// <summary>
         /// Resets settings back to their defaults. This should be followed by
         /// a call to <see cref="SaveSettingsToStorage"/> to commit the new
         /// values.
@@ -150,6 +209,7 @@ namespace Microsoft.PythonTools.Options {
             _elevateEasyInstall = false;
             _unresolvedImportWarning = true;
             _clearGlobalPythonPath = true;
+            DebugOptions.ResetGeneralSettings();
         }
 
         private const string DefaultSurveyNewsFeedUrl = "http://go.microsoft.com/fwlink/?LinkId=303967";
@@ -177,6 +237,7 @@ namespace Microsoft.PythonTools.Options {
             _elevateEasyInstall = LoadBool(ElevateEasyInstallSetting) ?? false;
             _unresolvedImportWarning = LoadBool(UnresolvedImportWarningSetting) ?? true;
             _clearGlobalPythonPath = LoadBool(ClearGlobalPythonPathSetting) ?? true;
+            DebugOptions.LoadGeneralSettingsFromStorage();
         }
 
         public override void SaveSettingsToStorage() {
@@ -188,6 +249,7 @@ namespace Microsoft.PythonTools.Options {
             SaveBool(ElevateEasyInstallSetting, _elevateEasyInstall);
             SaveBool(UnresolvedImportWarningSetting, _unresolvedImportWarning);
             SaveBool(ClearGlobalPythonPathSetting, _clearGlobalPythonPath);
+            DebugOptions.SaveGeneralSettingsToStorage();
         }
     }
 }
