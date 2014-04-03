@@ -296,7 +296,8 @@ namespace PythonToolsTests {
         private void ImportWizardVirtualEnvWorker(
             PythonVersion python,
             string venvModuleName,
-            string expectedFile
+            string expectedFile,
+            bool brokenBaseInterpreter
         ) {
             var mockService = new MockInterpreterOptionsService();
             mockService.AddProvider(new MockPythonInterpreterFactoryProvider("Test Provider",
@@ -315,6 +316,22 @@ namespace PythonToolsTests {
                     p.Wait();
                     Console.WriteLine(string.Join(Environment.NewLine, p.StandardOutputLines.Concat(p.StandardErrorLines)));
                     Assert.AreEqual(0, p.ExitCode);
+                }
+
+                if (brokenBaseInterpreter) {
+                    var cfgPath = Path.Combine(sourcePath, "env", "Lib", "orig-prefix.txt");
+                    if (File.Exists(cfgPath)) {
+                        File.WriteAllText(cfgPath, string.Format("C:\\{0:N}", Guid.NewGuid()));
+                    } else if (File.Exists((cfgPath = Path.Combine(sourcePath, "env", "pyvenv.cfg")))) {
+                        File.WriteAllLines(cfgPath, File.ReadAllLines(cfgPath)
+                            .Select(line => {
+                                if (line.StartsWith("home = ")) {
+                                    return string.Format("home = C:\\{0:N}", Guid.NewGuid());
+                                }
+                                return line;
+                            })
+                        );
+                    }
                 }
 
                 Console.WriteLine("All files:");
@@ -346,13 +363,21 @@ namespace PythonToolsTests {
 
                 var env = proj.Descendant("Interpreter");
                 Assert.AreEqual("env\\", env.Attribute("Include").Value);
-                Assert.AreEqual("env (Test Python)", env.Descendant("Description").Value);
-                Assert.AreEqual("scripts\\python.exe", env.Descendant("InterpreterPath").Value, true);
-                // The mock configuration uses python.exe for both paths.
-                Assert.AreEqual("scripts\\python.exe", env.Descendant("WindowsInterpreterPath").Value, true);
                 Assert.AreEqual("lib\\", env.Descendant("LibraryPath").Value, true);
-                Assert.AreEqual(python.Id.ToString("B"), env.Descendant("BaseInterpreter").Value, true);
-                Assert.AreEqual("PYTHONPATH", env.Descendant("PathEnvironmentVariable").Value, true);
+                if (brokenBaseInterpreter) {
+                    Assert.AreEqual("env", env.Descendant("Description").Value);
+                    Assert.AreEqual("", env.Descendant("InterpreterPath").Value);
+                    Assert.AreEqual("", env.Descendant("WindowsInterpreterPath").Value);
+                    Assert.AreEqual(Guid.Empty.ToString("B"), env.Descendant("BaseInterpreter").Value);
+                    Assert.AreEqual("", env.Descendant("PathEnvironmentVariable").Value);
+                } else {
+                    Assert.AreEqual("env (Test Python)", env.Descendant("Description").Value);
+                    Assert.AreEqual("scripts\\python.exe", env.Descendant("InterpreterPath").Value, true);
+                    // The mock configuration uses python.exe for both paths.
+                    Assert.AreEqual("scripts\\python.exe", env.Descendant("WindowsInterpreterPath").Value, true);
+                    Assert.AreEqual(python.Id.ToString("B"), env.Descendant("BaseInterpreter").Value, true);
+                    Assert.AreEqual("PYTHONPATH", env.Descendant("PathEnvironmentVariable").Value, true);
+                }
             }
         }
 
@@ -366,7 +391,7 @@ namespace PythonToolsTests {
                 pv.Version != PythonLanguageVersion.V33
             );
 
-            ImportWizardVirtualEnvWorker(python, "virtualenv", "lib\\orig-prefix.txt");
+            ImportWizardVirtualEnvWorker(python, "virtualenv", "lib\\orig-prefix.txt", false);
         }
 
         [TestMethod, Priority(0)]
@@ -375,7 +400,29 @@ namespace PythonToolsTests {
                 pv.IsCPython && File.Exists(Path.Combine(pv.LibPath, "venv", "__main__.py"))
             );
 
-            ImportWizardVirtualEnvWorker(python, "venv", "pyvenv.cfg");
+            ImportWizardVirtualEnvWorker(python, "venv", "pyvenv.cfg", false);
+        }
+
+        [TestMethod, Priority(0)]
+        public void ImportWizardBrokenVirtualEnv() {
+            var python = PythonPaths.Versions.LastOrDefault(pv =>
+                pv.IsCPython &&
+                File.Exists(Path.Combine(pv.LibPath, "site-packages", "virtualenv.py")) &&
+                    // CPython 3.3.4 does not work correctly with virtualenv, so
+                    // skip testing on 3.3 to avoid false failures
+                pv.Version != PythonLanguageVersion.V33
+            );
+
+            ImportWizardVirtualEnvWorker(python, "virtualenv", "lib\\orig-prefix.txt", true);
+        }
+
+        [TestMethod, Priority(0)]
+        public void ImportWizardBrokenVEnv() {
+            var python = PythonPaths.Versions.LastOrDefault(pv =>
+                pv.IsCPython && File.Exists(Path.Combine(pv.LibPath, "venv", "__main__.py"))
+            );
+
+            ImportWizardVirtualEnvWorker(python, "venv", "pyvenv.cfg", true);
         }
 
         private static void ImportWizardCustomizationsWorker(ProjectCustomization customization, Action<XDocument> verify) {

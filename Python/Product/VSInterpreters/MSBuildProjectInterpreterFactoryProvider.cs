@@ -205,7 +205,8 @@ namespace Microsoft.PythonTools.Interpreter {
                     fact = new NotFoundInterpreterFactory(
                         id,
                         ver,
-                        string.Format("{0} (unavailable)", description)
+                        string.Format("{0} (unavailable)", description),
+                        Directory.Exists(dir) ? dir : null
                     );
                 } else if (baseInterp != null) {
                     MigrateOldDerivedInterpreterFactoryDatabase(id, baseInterp.Configuration.Version, dir);
@@ -250,7 +251,6 @@ namespace Microsoft.PythonTools.Interpreter {
                     factories[fact] = new FactoryInfo(item, true);
                     anyChange = true;
                 }
-
             }
 
             // <InterpreterReference Include="{guid};{version}" />
@@ -470,7 +470,8 @@ namespace Microsoft.PythonTools.Interpreter {
                         { InterpreterPathKey, CommonUtils.GetRelativeFilePath(rootPath, derived.Configuration.InterpreterPath) },
                         { WindowsPathKey, CommonUtils.GetRelativeFilePath(rootPath, derived.Configuration.WindowsInterpreterPath) },
                         { LibraryPathKey, CommonUtils.GetRelativeDirectoryPath(rootPath, derived.Configuration.LibraryPath) },
-                        { PathEnvVarKey, derived.Configuration.PathEnvironmentVariable }
+                        { PathEnvVarKey, derived.Configuration.PathEnvironmentVariable },
+                        { ArchitectureKey, derived.Configuration.Architecture.ToString() }
                     }).FirstOrDefault();
             } else if (_service.FindInterpreter(factory.Id, factory.Configuration.Version) != null) {
                 // The interpreter exists globally, so add a reference.
@@ -790,9 +791,22 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         internal class NotFoundInterpreterFactory : IPythonInterpreterFactory {
-            public NotFoundInterpreterFactory(Guid id, Version version, string description = null) {
+            public NotFoundInterpreterFactory(
+                Guid id,
+                Version version,
+                string description = null,
+                string prefixPath = null
+            ) {
                 Id = id;
-                Configuration = new InterpreterConfiguration(null, null, null, null, null, ProcessorArchitecture.None, version);
+                Configuration = new InterpreterConfiguration(
+                    prefixPath,
+                    null,
+                    null,
+                    null,
+                    null,
+                    ProcessorArchitecture.None,
+                    version
+                );
                 Description = string.IsNullOrEmpty(description) ? string.Format("Unknown Python {0}", version) : description;
             }
 

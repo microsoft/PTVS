@@ -124,10 +124,19 @@ namespace Microsoft.PythonTools.Interpreter {
         /// </summary>
         public string ArchitectureString {
             get {
-                return Architecture == ProcessorArchitecture.Amd64 ? "x64" : "x86";
+                switch(Architecture) {
+                    case ProcessorArchitecture.Amd64:
+                        return "x64";
+                    case ProcessorArchitecture.X86:
+                        return "x86";
+                    default:
+                        return string.Empty;
+                }
             }
             set {
-                if (!string.IsNullOrEmpty(value) && value.Equals("x64", StringComparison.InvariantCultureIgnoreCase)) {
+                if (string.IsNullOrEmpty(value)) {
+                    Architecture = ProcessorArchitecture.None;
+                } else if (value.Equals("x64", StringComparison.InvariantCultureIgnoreCase)) {
                     Architecture = ProcessorArchitecture.Amd64;
                 } else {
                     Architecture = ProcessorArchitecture.X86;

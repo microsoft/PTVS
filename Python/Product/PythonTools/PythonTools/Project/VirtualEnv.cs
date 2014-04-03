@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Interpreter;
@@ -258,37 +259,51 @@ namespace Microsoft.PythonTools.Project {
             IInterpreterOptionsService service,
             IPythonInterpreterFactory baseInterpreter = null
         ) {
-
             var result = new InterpreterFactoryCreationOptions();
 
             var libPath = FindLibPath(prefixPath);
 
-            if (baseInterpreter == null) {
-                baseInterpreter = FindBaseInterpreterFromVirtualEnv(prefixPath, libPath, service);
-                if (baseInterpreter == null) {
-                    return null;
-                }
-            }
-
-            // The interpreter name should be the same as the base interpreter.
-            var interpExe = Path.GetFileName(baseInterpreter.Configuration.InterpreterPath);
-            result.InterpreterPath = FindFile(prefixPath, interpExe);
-            interpExe = Path.GetFileName(baseInterpreter.Configuration.WindowsInterpreterPath);
-            result.WindowInterpreterPath = FindFile(prefixPath, interpExe);
-
             result.PrefixPath = prefixPath;
             result.LibraryPath = libPath;
-            result.Description = string.Format(
-                "{0} ({1})",
-                Path.GetFileName(CommonUtils.TrimEndSeparator(prefixPath)),
-                baseInterpreter.Description
-            );
 
-            result.Id = baseInterpreter.Id;
-            result.LanguageVersion = baseInterpreter.Configuration.Version;
-            result.Architecture = baseInterpreter.Configuration.Architecture;
-            result.PathEnvironmentVariableName = baseInterpreter.Configuration.PathEnvironmentVariable;
-            result.WatchLibraryForNewModules = true;
+            if (baseInterpreter == null) {
+                baseInterpreter = FindBaseInterpreterFromVirtualEnv(prefixPath, libPath, service);
+            }
+
+            string interpExe, winterpExe;
+
+            if (baseInterpreter != null) {
+                // The interpreter name should be the same as the base interpreter.
+                interpExe = Path.GetFileName(baseInterpreter.Configuration.InterpreterPath);
+                winterpExe = Path.GetFileName(baseInterpreter.Configuration.WindowsInterpreterPath);
+                result.InterpreterPath = FindFile(prefixPath, interpExe);
+                result.WindowInterpreterPath = FindFile(prefixPath, winterpExe);
+                result.PathEnvironmentVariableName = baseInterpreter.Configuration.PathEnvironmentVariable;
+            } else {
+                result.InterpreterPath = string.Empty;
+                result.WindowInterpreterPath = string.Empty;
+                result.PathEnvironmentVariableName = string.Empty;
+            }
+
+            if (baseInterpreter != null) {
+                result.Description = string.Format(
+                    "{0} ({1})",
+                    Path.GetFileName(CommonUtils.TrimEndSeparator(prefixPath)),
+                    baseInterpreter.Description
+                );
+
+                result.Id = baseInterpreter.Id;
+                result.LanguageVersion = baseInterpreter.Configuration.Version;
+                result.Architecture = baseInterpreter.Configuration.Architecture;
+                result.WatchLibraryForNewModules = true;
+            } else {
+                result.Description = Path.GetFileName(CommonUtils.TrimEndSeparator(prefixPath));
+
+                result.Id = Guid.Empty;
+                result.LanguageVersion = new Version(0, 0);
+                result.Architecture = ProcessorArchitecture.None;
+                result.WatchLibraryForNewModules = false;
+            }
 
             return result;
         }

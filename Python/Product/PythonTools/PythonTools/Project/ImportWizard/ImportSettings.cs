@@ -428,8 +428,7 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
                 );
             }
             if (virtualEnvPaths != null && virtualEnvPaths.Any() && service != null) {
-                foreach (var prefixPath in virtualEnvPaths) {
-                    var options = VirtualEnv.FindInterpreterOptions(prefixPath, service);
+                foreach (var options in virtualEnvPaths.Select(p => VirtualEnv.FindInterpreterOptions(p, service))) {
                     AddVirtualEnvironment(project, sourcePath, options);
 
                     if (string.IsNullOrEmpty(interpreterId.Value)) {
@@ -462,10 +461,16 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
             string sourcePath,
             InterpreterFactoryCreationOptions options
         ) {
-            var prefixPath = options.PrefixPath;
-            var interpreterPath = CommonUtils.GetRelativeFilePath(prefixPath, options.InterpreterPath);
-            var windowInterpreterPath = CommonUtils.GetRelativeFilePath(prefixPath, options.WindowInterpreterPath);
-            var libraryPath = CommonUtils.GetRelativeDirectoryPath(prefixPath, options.LibraryPath);
+            var prefixPath = options.PrefixPath ?? string.Empty;
+            var interpreterPath = string.IsNullOrEmpty(options.InterpreterPath) ?
+                string.Empty :
+                CommonUtils.GetRelativeFilePath(prefixPath, options.InterpreterPath);
+            var windowInterpreterPath = string.IsNullOrEmpty(options.WindowInterpreterPath) ?
+                string.Empty :
+                CommonUtils.GetRelativeFilePath(prefixPath, options.WindowInterpreterPath);
+            var libraryPath = string.IsNullOrEmpty(options.LibraryPath) ?
+                string.Empty :
+                CommonUtils.GetRelativeDirectoryPath(prefixPath, options.LibraryPath);
             prefixPath = CommonUtils.GetRelativeDirectoryPath(sourcePath, prefixPath);
 
             return project.AddItem(

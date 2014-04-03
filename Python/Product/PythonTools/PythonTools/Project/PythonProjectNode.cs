@@ -1330,7 +1330,7 @@ namespace Microsoft.PythonTools.Project {
             }
 
             var options = VirtualEnv.FindInterpreterOptions(path, service, baseInterp);
-            if (options == null) {
+            if (options == null || !File.Exists(options.InterpreterPath)) {
                 throw new InvalidOperationException("Unable to add virtual environment");
             }
             if (!create) {

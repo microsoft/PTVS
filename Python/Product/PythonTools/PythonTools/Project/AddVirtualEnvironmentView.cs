@@ -215,7 +215,7 @@ namespace Microsoft.PythonTools.Project {
                 WillCreateVirtualEnv = false;
 
                 var options = VirtualEnv.FindInterpreterOptions(path, _interpreterService);
-                if (options != null) {
+                if (options != null && File.Exists(options.InterpreterPath)) {
                     var baseInterp = _interpreterService.FindInterpreter(options.Id, options.LanguageVersion);
                     BaseInterpreter = baseInterp != null ?
                         Interpreters.FirstOrDefault(iv => iv.Interpreter == baseInterp) :

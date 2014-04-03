@@ -49,11 +49,13 @@ namespace Microsoft.PythonTools.Project {
         private bool _checkedItems, _checkingItems, _disposed;
         private bool _installingPackage;
 
-        public InterpretersNode(PythonProjectNode project,
-                                ProjectItem item,
-                                IPythonInterpreterFactory factory,
-                                bool isInterpreterReference,
-                                bool canDelete)
+        public InterpretersNode(
+            PythonProjectNode project,
+            ProjectItem item,
+            IPythonInterpreterFactory factory,
+            bool isInterpreterReference,
+            bool canDelete
+        )
             : base(project, ChooseElement(project, item)) {
             ExcludeNodeFromScc = true;
 
