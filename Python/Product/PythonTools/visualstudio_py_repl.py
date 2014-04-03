@@ -1034,6 +1034,8 @@ class DebugReplBackend(BasicReplBackend):
         sys.stderr = _ReplOutput(self, is_stdout = False, old_out = sys.stderr)
         if sys.platform == 'cli':
             import System
+            self.old_cli_stdout = System.Console.Out
+            self.old_cli_stderr = System.Console.Error
             System.Console.SetOut(DotNetOutput(self, True, System.Console.Out))
             System.Console.SetError(DotNetOutput(self, False, System.Console.Error))
 
@@ -1049,8 +1051,10 @@ class DebugReplBackend(BasicReplBackend):
         sys.stdout = sys.stdout.old_out
         sys.stderr = sys.stderr.old_out
         if sys.platform == 'cli':
-            System.Console.SetOut(System.Console.Out.old_out)
-            System.Console.SetError(System.Console.Error.old_out)
+            System.Console.SetOut(self.old_cli_stdout)
+            System.Console.SetError(self.old_cli_stderr)
+            del self.old_cli_stdout
+            del self.old_cli_stderr
 
         # this tells both _repl_loop and execution_loop, each 
         # running on its own worker thread, to exit

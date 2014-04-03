@@ -420,33 +420,40 @@ namespace Microsoft.PythonTools.Repl {
 
                 // TODO: Surround in SocketUnlock
                 var debugTarget = new VsDebugTargetInfo2();
-                debugTarget.guidLaunchDebugEngine = AD7Engine.DebugEngineGuid;
-                debugTarget.dwDebugEngineCount = 1;
+                IntPtr pDebugInfo = IntPtr.Zero, pDebugEngines = IntPtr.Zero;
+                try {
+                    debugTarget.guidLaunchDebugEngine = AD7Engine.DebugEngineGuid;
+                    debugTarget.dwDebugEngineCount = 1;
 
-                debugTarget.dlo = (uint)DEBUG_LAUNCH_OPERATION.DLO_Custom;
-                debugTarget.bstrExe = debugProcess.ProcessGuid.ToString();
-                debugTarget.cbSize = (uint)System.Runtime.InteropServices.Marshal.SizeOf(typeof(VsDebugTargetInfo));
-                debugTarget.bstrCurDir = "";
-                debugTarget.guidPortSupplier = new Guid("{708C1ECA-FF48-11D2-904F-00C04FA302A1}");     // local port supplier
-                debugTarget.LaunchFlags = (uint)__VSDBGLAUNCHFLAGS.DBGLAUNCH_WaitForAttachComplete | (uint)__VSDBGLAUNCHFLAGS5.DBGLAUNCH_BreakOneProcess;
-                debugTarget.bstrOptions = AD7Engine.AttachRunning + "=True";
-                debugTarget.pDebugEngines = Marshal.AllocCoTaskMem(Marshal.SizeOf(typeof(Guid)));
-                Marshal.StructureToPtr(AD7Engine.DebugEngineGuid, debugTarget.pDebugEngines, false);
-                IntPtr memory = Marshal.AllocCoTaskMem(Marshal.SizeOf(typeof(VsDebugTargetInfo2)));
-                Marshal.StructureToPtr(debugTarget, memory, false);
-                var debugger = (IVsDebugger2)PythonToolsPackage.GetGlobalService(typeof(SVsShellDebugger));
+                    debugTarget.dlo = (uint)DEBUG_LAUNCH_OPERATION.DLO_Custom;
+                    debugTarget.bstrExe = debugProcess.ProcessGuid.ToString();
+                    debugTarget.cbSize = (uint)Marshal.SizeOf(typeof(VsDebugTargetInfo2));
+                    debugTarget.bstrCurDir = "";
+                    debugTarget.guidPortSupplier = new Guid("{708C1ECA-FF48-11D2-904F-00C04FA302A1}");     // local port supplier
+                    debugTarget.LaunchFlags = (uint)__VSDBGLAUNCHFLAGS.DBGLAUNCH_WaitForAttachComplete | (uint)__VSDBGLAUNCHFLAGS5.DBGLAUNCH_BreakOneProcess;
+                    debugTarget.bstrOptions = AD7Engine.AttachRunning + "=True";
+                    debugTarget.pDebugEngines = pDebugEngines = Marshal.AllocCoTaskMem(Marshal.SizeOf(typeof(Guid)));
+                    Marshal.StructureToPtr(AD7Engine.DebugEngineGuid, debugTarget.pDebugEngines, false);
+                    pDebugInfo = Marshal.AllocCoTaskMem(Marshal.SizeOf(typeof(VsDebugTargetInfo2)));
+                    Marshal.StructureToPtr(debugTarget, pDebugInfo, false);
+                    
+                    var debugger = (IVsDebugger2)PythonToolsPackage.GetGlobalService(typeof(SVsShellDebugger));
+                    int hr = debugger.LaunchDebugTargets2(1, pDebugInfo);
 
-                int hr = debugger.LaunchDebugTargets2(1, memory);
-                if (ErrorHandler.Failed(hr)) {
-                    var uiShell = (IVsUIShell)PythonToolsPackage.GetGlobalService(typeof(SVsUIShell));
-                    string errorText;
-                    uiShell.GetErrorInfo(out errorText);
-                    if (String.IsNullOrWhiteSpace(errorText)) {
-                        errorText = "Unknown Error: " + hr;
+                    if (ErrorHandler.Failed(hr)) {
+                        var uiShell = (IVsUIShell)PythonToolsPackage.GetGlobalService(typeof(SVsUIShell));
+                        string errorText;
+                        uiShell.GetErrorInfo(out errorText);
+                        if (String.IsNullOrWhiteSpace(errorText)) {
+                            errorText = "Unknown Error: " + hr;
+                        }
+                        return errorText;
+                    } else {
+                        _eval._attached = true;
                     }
-                    return errorText;
-                } else {
-                    _eval._attached = true;
+                } finally {
+                    Marshal.FreeCoTaskMem(pDebugInfo);
+                    Marshal.FreeCoTaskMem(pDebugEngines);
                 }
 
                 GC.KeepAlive(debugProcess);
