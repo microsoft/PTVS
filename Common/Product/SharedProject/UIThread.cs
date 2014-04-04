@@ -45,19 +45,26 @@ namespace Microsoft.VisualStudioTools {
                     lock (_invokerLock) {
                         if (!_invokerSet) {
                             _invokerSet = true;
-                            try {
-                                _invoker = ThreadHelper.Generic;
-                                // Test the invoker to make sure it is available
+                            _invoker = ThreadHelper.Generic;
+                            // Test the invoker to make sure it is available.
+                            // We run it from a separate thread to ensure the
+                            // helper can find its way back to the original
+                            // thread. This affects unit tests running outside
+                            // the IDE, since Invoke sometimes detects that it
+                            // is on the 'UI' thread and succeeds here.
+                            Task.Run(() => {
                                 _invoker.Invoke(() => {
 #if DEV10
                                     Debug.Assert(_uiThread == null);
                                     _uiThread = Thread.CurrentThread;
 #endif
                                 });
-                            } catch (InvalidOperationException) {
-                                // Not running within VS
-                                _invoker = null;
-                            }
+                            }).ContinueWith(t => {
+                                if (t.Exception != null) {
+                                    // Not running within VS
+                                    _invoker = null;
+                                }
+                            }).Wait(); ;
                         }
                     }
                 }
