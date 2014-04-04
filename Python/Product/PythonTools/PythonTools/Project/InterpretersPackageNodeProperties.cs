@@ -27,7 +27,7 @@ namespace Microsoft.PythonTools.Project {
             : base(node) { }
 
         [SRCategoryAttribute(SR.Misc)]
-        [LocDisplayName(SR.PackageFullName)]
+        [SRDisplayName(SR.PackageFullName)]
         [SRDescriptionAttribute(SR.PackageFullNameDescription)]
         [AutomationBrowsable(true)]
         public string FullPath {

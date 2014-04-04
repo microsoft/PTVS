@@ -46,19 +46,10 @@ namespace Microsoft.PythonTools.Commands {
                     return;
                 }
             } catch (UnauthorizedAccessException) {
-                MessageBox.Show(
-                    SR.GetString(SR.ErrorImportWizardUnauthorizedAccess),
-                    SR.GetString(SR.PythonToolsForVisualStudio)
-                );
+                MessageBox.Show(SR.GetString(SR.ErrorImportWizardUnauthorizedAccess), SR.ProductName);
             } catch (Exception ex) {
-                ActivityLog.LogError(
-                    SR.GetString(SR.PythonToolsForVisualStudio),
-                    ex.ToString()
-                );
-                MessageBox.Show(
-                    SR.GetString(SR.ErrorImportWizardException, ex.GetType().Name),
-                    SR.GetString(SR.PythonToolsForVisualStudio)
-                );
+                ActivityLog.LogError(SR.ProductName, ex.ToString());
+                MessageBox.Show(SR.GetString(SR.ErrorImportWizardException, ex.GetType().Name), SR.ProductName);
             }
             statusBar.SetText(SR.GetString(SR.StatusImportWizardError));
         }

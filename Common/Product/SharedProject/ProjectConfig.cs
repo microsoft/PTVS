@@ -516,7 +516,7 @@ namespace Microsoft.VisualStudioTools.Project {
 
 
             if (pages.Length == 0) {
-                throw new ArgumentException(SR.GetString(SR.InvalidParameter, CultureInfo.CurrentUICulture), "pages");
+                throw new ArgumentException(SR.GetString(SR.InvalidParameter), "pages");
             }
 
             // Retrive the list of guids from hierarchy properties.

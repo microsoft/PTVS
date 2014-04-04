@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System.Collections.Generic;
+using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
@@ -61,7 +62,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     !session.TextView.GetAnalyzer().InterpreterFactory.IsAnalysisCurrent()) {
                     // no completions, inform the user via the status bar that the analysis is not yet complete.
                     var statusBar = (IVsStatusbar)CommonPackage.GetGlobalService(typeof(SVsStatusbar));
-                    statusBar.SetText(Resources.WarningAnalysisNotCurrent);
+                    statusBar.SetText(SR.GetString(SR.WarningAnalysisNotCurrent));
                 }
                 return;
             }

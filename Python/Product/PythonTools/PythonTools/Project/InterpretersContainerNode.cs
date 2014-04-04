@@ -157,10 +157,7 @@ namespace Microsoft.PythonTools.Project {
                             Debug.WriteLine("Failed to add virtual environment.\r\n{0}", ex.InnerException ?? ex);
 
                             try {
-                                ActivityLog.LogError(
-                                    SR.GetString(SR.PythonToolsForVisualStudio),
-                                    (ex.InnerException ?? ex).ToString()
-                                );
+                                ActivityLog.LogError(SR.ProductName, (ex.InnerException ?? ex).ToString());
                             } catch (InvalidOperationException) {
                                 // Activity log may be unavailable
                             }

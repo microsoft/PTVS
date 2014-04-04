@@ -47,7 +47,8 @@ namespace Microsoft.PythonTools.Project {
         private readonly FileSystemWatcher _fileWatcher;
         private readonly Timer _timer;
         private bool _checkedItems, _checkingItems, _disposed;
-        private bool _installingPackage;
+        private readonly SemaphoreSlim _installingPackage;
+        private int _waitingToInstallPackage;
 
         public InterpretersNode(
             PythonProjectNode project,
@@ -63,6 +64,7 @@ namespace Microsoft.PythonTools.Project {
             _factory = factory;
             _isReference = isInterpreterReference;
             _canDelete = canDelete;
+            _installingPackage = new SemaphoreSlim(1);
 
             if (Directory.Exists(_factory.Configuration.LibraryPath)) {
                 // TODO: Need to handle watching for creation
@@ -106,13 +108,13 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public override void Close() {
-            lock (this) {
-                if (!_disposed && _fileWatcher != null) {
-                    _fileWatcher.Dispose();
-                    _timer.Dispose();
-                }
-                _disposed = true;
+            _installingPackage.Wait();
+
+            if (!_disposed && _fileWatcher != null) {
+                _fileWatcher.Dispose();
+                _timer.Dispose();
             }
+            _disposed = true;
 
             base.Close();
         }
@@ -125,7 +127,7 @@ namespace Microsoft.PythonTools.Project {
 
         private void CheckPackages(object arg) {
             UIThread.InvokeTask(() => CheckPackagesAsync())
-                .HandleAllExceptions(SR.GetString(SR.PythonToolsForVisualStudio), GetType())
+                .HandleAllExceptions(SR.ProductName, GetType())
                 .DoNotWait();
         }
 
@@ -222,10 +224,7 @@ namespace Microsoft.PythonTools.Project {
                                 window.Focus();
                             }
                         } catch (InvalidOperationException ex) {
-                            MessageBox.Show(
-                                string.Format("An error occurred opening this interactive window.{0}{0}{1}", Environment.NewLine, ex),
-                                SR.GetString(SR.PythonToolsForVisualStudio)
-                            );
+                            MessageBox.Show(SR.GetString(SR.ErrorOpeningInteractiveWindow, ex), SR.ProductName);
                         }
                         return VSConstants.S_OK;
                 }
@@ -252,25 +251,23 @@ namespace Microsoft.PythonTools.Project {
             return base.ExecCommandOnNode(cmdGroup, cmd, nCmdexecopt, pvaIn, pvaOut);
         }
 
-        internal void BeginPackageChange() {
-            lock (this) {
-                Debug.Assert(!_installingPackage);
-                _installingPackage = true;
-                if (!_disposed && _fileWatcher != null) {
-                    _fileWatcher.EnableRaisingEvents = false;
-                }
+        internal async Task BeginPackageChange() {
+            Interlocked.Increment(ref _waitingToInstallPackage);
+            await _installingPackage.WaitAsync();
+
+            if (!_disposed && _fileWatcher != null) {
+                _fileWatcher.EnableRaisingEvents = false;
             }
         }
 
         internal void PackageChangeDone() {
-            lock (this) {
-                Debug.Assert(_installingPackage);
-                _installingPackage = false;
+            if (Interlocked.Decrement(ref _waitingToInstallPackage) == 0) {
                 if (!_disposed && _fileWatcher != null) {
                     _fileWatcher.EnableRaisingEvents = true;
                     ThreadPool.QueueUserWorkItem(CheckPackages);
                 }
             }
+            _installingPackage.Release();
         }
 
         public new PythonProjectNode ProjectMgr {
@@ -280,7 +277,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         internal override bool CanDeleteItem(__VSDELETEITEMOPERATION deleteOperation) {
-            if (_installingPackage) {
+            if (_waitingToInstallPackage != 0) {
                 return false;
             }
 
@@ -301,7 +298,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private void Remove(bool removeFromStorage, bool showPrompt) {
-            if (_installingPackage) {
+            if (_waitingToInstallPackage != 0) {
                 // Prevent the environment from being deleting while installing.
                 // This situation should not occur through the UI, but might be
                 // invocable through DTE.
@@ -413,22 +410,24 @@ namespace Microsoft.PythonTools.Project {
                         result |= QueryStatusResult.SUPPORTED;
                         if (_interpreters.IsAvailable(_factory) &&
                             _interpreters.ActiveInterpreter != _factory &&
-                            Directory.Exists(_factory.Configuration.PrefixPath)) {
+                            Directory.Exists(_factory.Configuration.PrefixPath)
+                        ) {
                             result |= QueryStatusResult.ENABLED;
                         }
                         return VSConstants.S_OK;
                     case PythonConstants.InstallPythonPackage:
                         result |= QueryStatusResult.SUPPORTED;
                         if (_interpreters.IsAvailable(_factory) &&
-                            Directory.Exists(_factory.Configuration.PrefixPath) &&
-                            !_installingPackage) {
+                            Directory.Exists(_factory.Configuration.PrefixPath)
+                        ) {
                             result |= QueryStatusResult.ENABLED;
                         }
                         return VSConstants.S_OK;
                     case PythonConstants.OpenInteractiveForEnvironment:
                         result |= QueryStatusResult.SUPPORTED;
                         if (_interpreters.IsAvailable(_factory) &&
-                            File.Exists(_factory.Configuration.InterpreterPath)) {
+                            File.Exists(_factory.Configuration.InterpreterPath)
+                        ) {
                             result |= QueryStatusResult.ENABLED;
                         }
                         return VSConstants.S_OK;

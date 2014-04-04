@@ -190,7 +190,7 @@ namespace Microsoft.VisualStudioTools.Project {
         internal void ObserveItem(string fileName, uint id) {
             #region Input validation
             if (String.IsNullOrEmpty(fileName)) {
-                throw new ArgumentException(SR.GetString(SR.InvalidParameter, CultureInfo.CurrentUICulture), "fileName");
+                throw new ArgumentException(SR.GetString(SR.InvalidParameter), "fileName");
             }
             #endregion
 
@@ -217,7 +217,7 @@ namespace Microsoft.VisualStudioTools.Project {
         internal void IgnoreItemChanges(string fileName, bool ignore) {
             #region Input validation
             if (String.IsNullOrEmpty(fileName)) {
-                throw new ArgumentException(SR.GetString(SR.InvalidParameter, CultureInfo.CurrentUICulture), "fileName");
+                throw new ArgumentException(SR.GetString(SR.InvalidParameter), "fileName");
             }
             #endregion
 
@@ -235,7 +235,7 @@ namespace Microsoft.VisualStudioTools.Project {
         internal void StopObservingItem(string fileName) {
             #region Input validation
             if (String.IsNullOrEmpty(fileName)) {
-                throw new ArgumentException(SR.GetString(SR.InvalidParameter, CultureInfo.CurrentUICulture), "fileName");
+                throw new ArgumentException(SR.GetString(SR.InvalidParameter), "fileName");
             }
             #endregion
 

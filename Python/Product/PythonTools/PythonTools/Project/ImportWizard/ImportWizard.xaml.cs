@@ -102,7 +102,7 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
             if (ImportSettings.ProjectFileExists) {
                 if (MessageBoxResult.Cancel == MessageBox.Show(
                     SR.GetString(SR.ImportWizardProjectExists),
-                    SR.GetString(SR.PythonToolsForVisualStudio),
+                    SR.ProductName,
                     MessageBoxButton.OKCancel
                 )) {
                     return;

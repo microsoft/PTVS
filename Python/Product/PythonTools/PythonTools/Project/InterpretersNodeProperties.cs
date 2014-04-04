@@ -18,9 +18,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudioTools;
-using AutomationBrowsableAttribute = Microsoft.VisualStudioTools.Project.AutomationBrowsableAttribute;
-using HierarchyNode = Microsoft.VisualStudioTools.Project.HierarchyNode;
-using NodeProperties = Microsoft.VisualStudioTools.Project.NodeProperties;
+using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project {
     [ComVisible(true)]
@@ -42,8 +40,8 @@ namespace Microsoft.PythonTools.Project {
 
         // TODO: Expose interpreter configuration through properties
 
-        [SRCategoryAttribute(SR.Misc)]
-        [LocDisplayName(SR.FolderName)]
+        [SRCategory(SR.Misc)]
+        [SRDisplayName(SR.FolderName)]
         [SRDescriptionAttribute(SR.FolderNameDescription)]
         [AutomationBrowsable(false)]
         public string FolderName {
@@ -53,7 +51,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         [SRCategoryAttribute(SR.Misc)]
-        [LocDisplayName(SR.FullPath)]
+        [SRDisplayName(SR.FullPath)]
         [SRDescriptionAttribute(SR.FullPathDescription)]
         [AutomationBrowsable(true)]
         public string FullPath {
@@ -64,7 +62,7 @@ namespace Microsoft.PythonTools.Project {
 
 #if DEBUG
         [SRCategory(SR.Misc)]
-        [LocDisplayName(SR.EnvironmentIdDisplayName)]
+        [SRDisplayName(SR.EnvironmentIdDisplayName)]
         [SRDescription(SR.EnvironmentIdDescription)]
         [AutomationBrowsable(true)]
         public string Id {
@@ -76,7 +74,7 @@ namespace Microsoft.PythonTools.Project {
 #endif
 
         [SRCategory(SR.Misc)]
-        [LocDisplayName(SR.EnvironmentVersionDisplayName)]
+        [SRDisplayName(SR.EnvironmentVersionDisplayName)]
         [SRDescription(SR.EnvironmentVersionDescription)]
         [AutomationBrowsable(true)]
         public string Version {
@@ -113,7 +111,7 @@ namespace Microsoft.PythonTools.Project {
     [Guid(PythonConstants.InterpretersWithBaseInterpreterPropertiesGuid)]
     public class InterpretersNodeWithBaseInterpreterProperties : InterpretersNodeProperties {
         [SRCategory(SR.Misc)]
-        [LocDisplayName(SR.BaseInterpreterDisplayName)]
+        [SRDisplayName(SR.BaseInterpreterDisplayName)]
         [SRDescription(SR.BaseInterpreterDescription)]
         [AutomationBrowsable(true)]
         public string BaseInterpreter {

@@ -430,7 +430,7 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
         private void ShowCircularReferenceErrorMessage() {
-            string message = String.Format(CultureInfo.CurrentCulture, SR.GetString(SR.ProjectContainsCircularReferences, CultureInfo.CurrentUICulture), this.referencedProjectName);
+            string message = SR.GetString(SR.ProjectContainsCircularReferences, this.referencedProjectName);
             string title = string.Empty;
             OLEMSGICON icon = OLEMSGICON.OLEMSGICON_CRITICAL;
             OLEMSGBUTTON buttons = OLEMSGBUTTON.OLEMSGBUTTON_OK;

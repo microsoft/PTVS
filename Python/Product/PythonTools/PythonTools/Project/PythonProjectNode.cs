@@ -926,7 +926,7 @@ namespace Microsoft.PythonTools.Project {
 
         protected override string AddReferenceExtensions {
             get {
-                return "Python Extension Modules (*.dll;*.pyd)\0*.dll;*.pyd\0All Files (*.*)\0*.*\0";
+                return SR.GetString(SR.AddReferenceExtensions);
             }
         }
 
@@ -999,10 +999,7 @@ namespace Microsoft.PythonTools.Project {
                                 window.Focus();
                             }
                         } catch (InvalidOperationException ex) {
-                            MessageBox.Show(
-                                string.Format("An error occurred opening this interactive window.{0}{0}{1}", Environment.NewLine, ex),
-                                SR.GetString(SR.PythonToolsForVisualStudio)
-                            );
+                            MessageBox.Show(SR.GetString(SR.ErrorOpeningInteractiveWindow, ex), SR.ProductName);
                         }
                         return VSConstants.S_OK;
                 }
@@ -1111,7 +1108,7 @@ namespace Microsoft.PythonTools.Project {
                                             command.DisplayLabelWithoutAccessKeys,
                                             ex.Message
                                         ),
-                                        SR.GetString(SR.PythonToolsForVisualStudio)
+                                        SR.ProductName
                                     );
                                 }
                             }
@@ -1339,13 +1336,10 @@ namespace Microsoft.PythonTools.Project {
                 var t = Task.Run(() => {
                     Directory.Delete(path, true);
                     return true;
-                }).HandleAllExceptions(SR.GetString(SR.PythonToolsForVisualStudio), GetType());
+                }).HandleAllExceptions(SR.ProductName, GetType());
 
                 if (!await t) {
-                    MessageBox.Show(
-                        SR.GetString(SR.EnvironmentDeleteError, path),
-                        SR.GetString(SR.PythonToolsForVisualStudio)
-                    );
+                    MessageBox.Show(SR.GetString(SR.EnvironmentDeleteError, path), SR.ProductName);
                 }
             }
         }

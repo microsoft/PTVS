@@ -14,33 +14,50 @@
 
 using System;
 using System.ComponentModel;
-using System.Diagnostics;
-using System.Globalization;
 
 namespace Microsoft.VisualStudioTools.Project {
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Property | AttributeTargets.Field, Inherited = false, AllowMultiple = false)]
-    internal sealed class LocDisplayNameAttribute : DisplayNameAttribute {
-        #region fields
-        string name;
-        #endregion
+    internal sealed class SRDisplayNameAttribute : DisplayNameAttribute {
+        string _name;
 
-        #region ctors
-        public LocDisplayNameAttribute(string name) {
-            this.name = name;
+        public SRDisplayNameAttribute(string name) {
+            _name = name;
         }
-        #endregion
 
-        #region properties
         public override string DisplayName {
             get {
-                string result = SR.GetString(this.name, CultureInfo.CurrentUICulture);
-                if (result == null) {
-                    Debug.Assert(false, "String resource '" + this.name + "' is missing");
-                    result = this.name;
-                }
-                return result;
+                return SR.GetString(_name);
             }
         }
-        #endregion
+    }
+
+    [AttributeUsage(AttributeTargets.All)]
+    internal sealed class SRDescriptionAttribute : DescriptionAttribute {
+        private bool _replaced;
+
+        public SRDescriptionAttribute(string description)
+            : base(description) {
+        }
+
+        public override string Description {
+            get {
+                if (!_replaced) {
+                    _replaced = true;
+                    DescriptionValue = SR.GetString(base.Description);
+                }
+                return base.Description;
+            }
+        }
+    }
+
+    [AttributeUsage(AttributeTargets.All)]
+    internal sealed class SRCategoryAttribute : CategoryAttribute {
+        public SRCategoryAttribute(string category)
+            : base(category) {
+        }
+
+        protected override string GetLocalizedString(string value) {
+            return SR.GetString(value);
+        }
     }
 }

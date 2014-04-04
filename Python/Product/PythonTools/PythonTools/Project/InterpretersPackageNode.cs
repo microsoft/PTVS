@@ -77,20 +77,20 @@ namespace Microsoft.PythonTools.Project {
             }
 
             var name = view.Name;
+            var statusBar = (IVsStatusbar)parent.ProjectMgr.Site.GetService(typeof(SVsStatusbar));
 
             // don't process events while we're installing, we'll
             // rescan once we're done
-            parent.BeginPackageChange();
-
-            var redirector = OutputWindowRedirector.GetGeneral(parent.ProjectMgr.Site);
-            var statusBar = (IVsStatusbar)parent.ProjectMgr.Site.GetService(typeof(SVsStatusbar));
-            statusBar.SetText(SR.GetString(SR.PackageInstallingSeeOutputWindow, name));
-
-            var task = view.InstallUsingPip ?
-                Pip.Install(parent._factory, name, parent.ProjectMgr.Site, view.InstallElevated, redirector) :
-                EasyInstall.Install(parent._factory, name, parent.ProjectMgr.Site, view.InstallElevated, redirector);
+            await parent.BeginPackageChange();
 
             try {
+                var redirector = OutputWindowRedirector.GetGeneral(parent.ProjectMgr.Site);
+                statusBar.SetText(SR.GetString(SR.PackageInstallingSeeOutputWindow, name));
+
+                var task = view.InstallUsingPip ?
+                    Pip.Install(parent._factory, name, parent.ProjectMgr.Site, view.InstallElevated, redirector) :
+                    EasyInstall.Install(parent._factory, name, parent.ProjectMgr.Site, view.InstallElevated, redirector);
+
                 bool success = await task;
                 statusBar.SetText(SR.GetString(
                     success ? SR.PackageInstallSucceeded : SR.PackageInstallFailed,
@@ -107,17 +107,18 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public static async Task UninstallPackage(InterpretersNode parent, string name) {
+            var statusBar = (IVsStatusbar)parent.ProjectMgr.Site.GetService(typeof(SVsStatusbar));
+
             // don't process events while we're installing, we'll
             // rescan once we're done
-            parent.BeginPackageChange();
-
-            var redirector = OutputWindowRedirector.GetGeneral(parent.ProjectMgr.Site);
-            var statusBar = (IVsStatusbar)parent.ProjectMgr.Site.GetService(typeof(SVsStatusbar));
-            statusBar.SetText(SR.GetString(SR.PackageUninstallingSeeOutputWindow, name));
-
-            bool elevate = PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ElevatePip;
+            await parent.BeginPackageChange();
 
             try {
+                var redirector = OutputWindowRedirector.GetGeneral(parent.ProjectMgr.Site);
+                statusBar.SetText(SR.GetString(SR.PackageUninstallingSeeOutputWindow, name));
+
+                bool elevate = PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ElevatePip;
+
                 bool success = await Pip.Uninstall(parent._factory, name, elevate, redirector);
                 statusBar.SetText(SR.GetString(
                     success ? SR.PackageUninstallSucceeded : SR.PackageUninstallFailed,
@@ -147,31 +148,42 @@ namespace Microsoft.PythonTools.Project {
             return _canUninstall && deleteOperation == __VSDELETEITEMOPERATION.DELITEMOP_RemoveFromProject;
         }
 
-        public override void Remove(bool removeFromStorage) {
-            if (_canUninstall && !Utilities.IsInAutomationFunction(ProjectMgr.Site)) {
-                string message = SR.GetString(SR.UninstallPackage,
-                    Caption,
-                    Parent._factory.Description,
-                    Parent._factory.Configuration.PrefixPath);
-                int res = VsShellUtilities.ShowMessageBox(
+        protected internal override void ShowDeleteMessage(IList<HierarchyNode> nodes, __VSDELETEITEMOPERATION action, out bool cancel, out bool useStandardDialog) {
+            if (nodes.All(n => n is InterpretersPackageNode) &&
+                nodes.Cast<InterpretersPackageNode>().All(n => n.Parent == Parent)) {
+                string message;
+                if (nodes.Count == 1) {
+                    message = SR.GetString(
+                        SR.UninstallPackage,
+                        Caption,
+                        Parent._factory.Description,
+                        Parent._factory.Configuration.PrefixPath
+                    );
+                } else {
+                    message = SR.GetString(
+                        SR.UninstallPackages,
+                        string.Join(Environment.NewLine, nodes.Select(n => n.Caption)),
+                        Parent._factory.Description,
+                        Parent._factory.Configuration.PrefixPath
+                    );
+                }
+                useStandardDialog = false;
+                cancel = VsShellUtilities.ShowMessageBox(
                     ProjectMgr.Site,
                     string.Empty,
                     message,
                     OLEMSGICON.OLEMSGICON_WARNING,
                     OLEMSGBUTTON.OLEMSGBUTTON_OKCANCEL,
-                    OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
-                if (res != 1) {
-                    return;
-                }
+                    OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST
+                ) != NativeMethods.IDOK;
+            } else {
+                useStandardDialog = false;
+                cancel = true;
             }
-            var task = UninstallPackage(Parent, Url);
         }
 
-        private void RemoveSelf() {
-            Parent.RemoveChild(this);
-            ProjectMgr.OnInvalidateItems(Parent);
-
-            Parent.PackageChangeDone();
+        public override void Remove(bool removeFromStorage) {
+            var task = UninstallPackage(Parent, Url);
         }
 
         public new InterpretersNode Parent {

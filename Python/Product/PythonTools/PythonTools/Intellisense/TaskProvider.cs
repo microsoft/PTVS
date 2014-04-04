@@ -454,7 +454,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private void Refresh() {
             Debug.Assert(UIThread.InvokeRequired, "Refresh must not be called from the UI thread");
-            RefreshAsync().WaitAndHandleAllExceptions(SR.GetString(SR.PythonToolsForVisualStudio), GetType());
+            RefreshAsync().WaitAndHandleAllExceptions(SR.ProductName, GetType());
         }
 
         private async Task RefreshAsync() {
@@ -521,7 +521,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 if (!_hasWorker) {
                     _hasWorker = true;
                     Task.Run(() => Worker())
-                        .HandleAllExceptions(SR.GetString(SR.PythonToolsForVisualStudio), GetType())
+                        .HandleAllExceptions(SR.ProductName, GetType())
                         .DoNotWait();
                 }
             }

@@ -170,7 +170,7 @@ namespace Microsoft.VisualStudioTools.Project {
             Utilities.ArgumentNotNull("pages", pages);
 
             if (pages.Length == 0) {
-                throw new ArgumentException(SR.GetString(SR.InvalidParameter, CultureInfo.CurrentUICulture), "pages");
+                throw new ArgumentException(SR.GetString(SR.InvalidParameter), "pages");
             }
 
             // Only the project should show the property page the rest should show the project properties.
@@ -233,7 +233,7 @@ namespace Microsoft.VisualStudioTools.Project {
 
 
         [SRCategoryAttribute(SR.Misc)]
-        [LocDisplayName(SR.FileName)]
+        [SRDisplayName(SR.FileName)]
         [SRDescriptionAttribute(SR.FileNameDescription)]
         public virtual string FileName {
             get {
@@ -245,7 +245,7 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
         [SRCategoryAttribute(SR.Misc)]
-        [LocDisplayName(SR.FullPath)]
+        [SRDisplayName(SR.FullPath)]
         [SRDescriptionAttribute(SR.FullPathDescription)]
         public string FullPath {
             get {
@@ -287,7 +287,7 @@ namespace Microsoft.VisualStudioTools.Project {
         #endregion
 
         public override string GetClassName() {
-            return SR.GetString(SR.FileProperties, CultureInfo.CurrentUICulture);
+            return SR.GetString(SR.FileProperties);
         }
     }
 
@@ -298,7 +298,7 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
         [SRCategoryAttribute(SR.Advanced)]
-        [LocDisplayName(SR.BuildAction)]
+        [SRDisplayName(SR.BuildAction)]
         [SRDescriptionAttribute(SR.BuildActionDescription)]
         [TypeConverter(typeof(BuildActionTypeConverter))]
         public prjBuildAction BuildAction {
@@ -318,7 +318,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// Specifies the build action as a string so the user can configure it to any value.
         /// </summary>
         [SRCategoryAttribute(SR.Advanced)]
-        [LocDisplayName(SR.BuildAction)]
+        [SRDisplayName(SR.BuildAction)]
         [SRDescriptionAttribute(SR.BuildActionDescription)]
         [TypeConverter(typeof(BuildActionStringConverter))]
         public string ItemType {
@@ -349,7 +349,7 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
         [SRCategoryAttribute(SR.Advanced)]
-        [LocDisplayName(SR.Publish)]
+        [SRDisplayName(SR.Publish)]
         [SRDescriptionAttribute(SR.PublishDescription)]
         public bool Publish {
             get {
@@ -386,7 +386,7 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
         [SRCategoryAttribute(SR.Misc)]
-        [LocDisplayName(SR.FileName)]
+        [SRDisplayName(SR.FileName)]
         [SRDescriptionAttribute(SR.FileNameDescription)]
         [ReadOnly(true)]
         public override string FileName {
@@ -405,7 +405,7 @@ namespace Microsoft.VisualStudioTools.Project {
         #region properties
 
         [SRCategoryAttribute(SR.Misc)]
-        [LocDisplayName(SR.FileName)]
+        [SRDisplayName(SR.FileName)]
         [SRDescriptionAttribute(SR.FileNameDescription)]
         public virtual string FileName {
             get {
@@ -414,7 +414,7 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
         [SRCategoryAttribute(SR.Misc)]
-        [LocDisplayName(SR.FullPath)]
+        [SRDisplayName(SR.FullPath)]
         [SRDescriptionAttribute(SR.FullPathDescription)]
         public string FullPath {
             get {
@@ -431,7 +431,7 @@ namespace Microsoft.VisualStudioTools.Project {
         #endregion
 
         public override string GetClassName() {
-            return SR.GetString(SR.FileProperties, CultureInfo.CurrentUICulture);
+            return SR.GetString(SR.FileProperties);
         }
     }
 
@@ -538,7 +538,7 @@ namespace Microsoft.VisualStudioTools.Project {
     public class ProjectNodeProperties : NodeProperties, EnvDTE80.IInternalExtenderProvider {
         #region properties
         [SRCategoryAttribute(SR.Misc)]
-        [LocDisplayName(SR.ProjectFolder)]
+        [SRDisplayName(SR.ProjectFolder)]
         [SRDescriptionAttribute(SR.ProjectFolderDescription)]
         [AutomationBrowsable(false)]
         public string ProjectFolder {
@@ -548,7 +548,7 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
         [SRCategoryAttribute(SR.Misc)]
-        [LocDisplayName(SR.ProjectFile)]
+        [SRDisplayName(SR.ProjectFile)]
         [SRDescriptionAttribute(SR.ProjectFileDescription)]
         [AutomationBrowsable(false)]
         public string ProjectFile {
@@ -635,7 +635,7 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
         public override string GetClassName() {
-            return SR.GetString(SR.ProjectProperties, CultureInfo.CurrentUICulture);
+            return SR.GetString(SR.ProjectProperties);
         }
 
         #endregion
@@ -672,7 +672,7 @@ namespace Microsoft.VisualStudioTools.Project {
     public class FolderNodeProperties : NodeProperties {
         #region properties
         [SRCategoryAttribute(SR.Misc)]
-        [LocDisplayName(SR.FolderName)]
+        [SRDisplayName(SR.FolderName)]
         [SRDescriptionAttribute(SR.FolderNameDescription)]
         public string FolderName {
             get {
@@ -704,7 +704,7 @@ namespace Microsoft.VisualStudioTools.Project {
         [Browsable(true)]
         [AutomationBrowsable(true)]
         [SRCategoryAttribute(SR.Misc)]
-        [LocDisplayName(SR.FullPath)]
+        [SRDisplayName(SR.FullPath)]
         [SRDescriptionAttribute(SR.FullPathDescription)]
         public string FullPath {
             get {
@@ -722,7 +722,7 @@ namespace Microsoft.VisualStudioTools.Project {
         #endregion
 
         public override string GetClassName() {
-            return SR.GetString(SR.FolderProperties, CultureInfo.CurrentUICulture);
+            return SR.GetString(SR.FolderProperties);
         }
     }
 
@@ -730,7 +730,7 @@ namespace Microsoft.VisualStudioTools.Project {
     public class ReferenceNodeProperties : NodeProperties {
         #region properties
         [SRCategoryAttribute(SR.Misc)]
-        [LocDisplayName(SR.RefName)]
+        [SRDisplayName(SR.RefName)]
         [SRDescriptionAttribute(SR.RefNameDescription)]
         [Browsable(true)]
         [AutomationBrowsable(true)]
@@ -741,7 +741,7 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
         [SRCategoryAttribute(SR.Misc)]
-        [LocDisplayName(SR.CopyToLocal)]
+        [SRDisplayName(SR.CopyToLocal)]
         [SRDescriptionAttribute(SR.CopyToLocalDescription)]
         public bool CopyToLocal {
             get {
@@ -756,7 +756,7 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
         [SRCategoryAttribute(SR.Misc)]
-        [LocDisplayName(SR.FullPath)]
+        [SRDisplayName(SR.FullPath)]
         [SRDescriptionAttribute(SR.FullPathDescription)]
         public virtual string FullPath {
             get {
@@ -773,7 +773,7 @@ namespace Microsoft.VisualStudioTools.Project {
 
         #region overridden methods
         public override string GetClassName() {
-            return SR.GetString(SR.ReferenceProperties, CultureInfo.CurrentUICulture);
+            return SR.GetString(SR.ReferenceProperties);
         }
         #endregion
     }

@@ -379,7 +379,7 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
                     }
                         // We want to be consistent in the error message and exception we throw. fileName could be for example #¤&%"¤&"%  and that would trigger an ArgumentException on Path.IsRooted.
                     catch (ArgumentException ex) {
-                        throw new InvalidOperationException(String.Format(SR.GetString(SR.ErrorInvalidFileName, CultureInfo.CurrentUICulture), fileName), ex);
+                        throw new InvalidOperationException(SR.GetString(SR.ErrorInvalidFileName, fileName), ex);
                     }
 
                     // It might be redundant but we validate the file and the full path of the file being valid. The SaveAs would also validate the path.

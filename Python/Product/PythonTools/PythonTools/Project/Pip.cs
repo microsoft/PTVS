@@ -86,7 +86,7 @@ namespace Microsoft.PythonTools.Project {
                 .Select(name => PackageNameRegex.Match(name))
                 .Where(match => match.Success)
                 .Select(match => match.Groups["name"].Value)
-            )).HandleAllExceptions(SR.GetString(SR.PythonToolsForVisualStudio), typeof(Pip));
+            )).HandleAllExceptions(SR.ProductName, typeof(Pip));
 
             return result ?? new HashSet<string>();
         }

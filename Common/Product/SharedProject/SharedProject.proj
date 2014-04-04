@@ -462,10 +462,6 @@
       <Link>SharedProject\ReferenceNode.cs</Link>
       <Visible>true</Visible>
     </Compile>
-    <Compile Include="$(_ProjectSystemFilesLocation)\Resources.cs">
-      <Link>SharedProject\Resources.cs</Link>
-      <Visible>true</Visible>
-    </Compile>
     <Compile Include="$(_ProjectSystemFilesLocation)\SolutionListener.cs">
       <Link>SharedProject\SolutionListener.cs</Link>
       <Visible>true</Visible>
@@ -628,11 +624,6 @@
     <EmbeddedResource Include="$(_ProjectSystemFilesLocation)\ProjectResources.resx">
       <Link>SharedProject\ProjectResources.resx</Link>
       <ManifestResourceName>Microsoft.VisualStudio.Project</ManifestResourceName>
-      <Visible>true</Visible>
-    </EmbeddedResource>
-    <EmbeddedResource Include="$(_ProjectSystemFilesLocation)\Resources.resx">
-      <Link>SharedProject\Resources.resx</Link>
-      <ManifestResourceName>Microsoft.VisualStudioTools.SharedProject</ManifestResourceName>
       <Visible>true</Visible>
     </EmbeddedResource>
     <EmbeddedResource Include="$(_ProjectSystemFilesLocation)\WebPiComponentPickerControl.resx">

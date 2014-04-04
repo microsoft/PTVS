@@ -13,14 +13,18 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 using OleConstants = Microsoft.VisualStudio.OLE.Interop.Constants;
 using VsCommands = Microsoft.VisualStudio.VSConstants.VSStd97CmdID;
+using VsMenus = Microsoft.VisualStudioTools.Project.VsMenus;
 
 namespace Microsoft.PythonTools.Project {
     /// <summary>
@@ -123,7 +127,7 @@ namespace Microsoft.PythonTools.Project {
                         result |= QueryStatusResult.SUPPORTED | QueryStatusResult.INVISIBLE;
                         return VSConstants.S_OK;
                 }
-            } else if (cmdGroup == Microsoft.VisualStudioTools.Project.VsMenus.guidStandardCommandSet2K) {
+            } else if (cmdGroup == VsMenus.guidStandardCommandSet2K) {
                 switch ((VSConstants.VSStd2KCmdID)cmd) {
                     case VSConstants.VSStd2KCmdID.EXCLUDEFROMPROJECT:
                         result |= QueryStatusResult.NOTSUPPORTED | QueryStatusResult.INVISIBLE;
@@ -155,6 +159,12 @@ namespace Microsoft.PythonTools.Project {
 
         protected override NodeProperties CreatePropertiesObject() {
             return new CommonSearchPathNodeProperties(this);
+        }
+
+        protected internal override void ShowDeleteMessage(IList<HierarchyNode> nodes, __VSDELETEITEMOPERATION action, out bool cancel, out bool useStandardDialog) {
+            // Don't prompt if all the nodes are search paths
+            useStandardDialog = !nodes.All(n => n is BaseSearchPathNode);
+            cancel = false;
         }
     }
 }

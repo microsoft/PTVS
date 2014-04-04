@@ -175,10 +175,7 @@ namespace Microsoft.PythonTools.Project {
                 var rm = new System.Resources.ResourceManager(ns, asm);
                 return rm.GetString(key, CultureInfo.CurrentUICulture) ?? key;
             } catch (Exception ex) {
-                ActivityLog.LogError(
-                    SR.GetString(SR.PythonToolsForVisualStudio),
-                    SR.GetString(SR.FailedToReadResource, assembly, ns, key, ex)
-                );
+                ActivityLog.LogError(SR.ProductName, SR.GetString(SR.FailedToReadResource, assembly, ns, key, ex));
                 return key;
             }
         }
@@ -290,10 +287,7 @@ namespace Microsoft.PythonTools.Project {
                     }
 
                     // Log error to the ActivityLog.
-                    ActivityLog.LogError(
-                        SR.GetString(SR.PythonToolsForVisualStudio),
-                        SR.GetString(SR.ErrorRunningCustomCommand, _target, ex.ToString())
-                    );
+                    ActivityLog.LogError(SR.ProductName, SR.GetString(SR.ErrorRunningCustomCommand, _target, ex));
                 }
             });
 
@@ -652,10 +646,7 @@ namespace Microsoft.PythonTools.Project {
                         pyEvaluator.Close();
                     }
                 } catch (Exception ex) {
-                    ActivityLog.LogError(
-                        SR.GetString(SR.PythonToolsForVisualStudio),
-                        SR.GetString(SR.ErrorRunningCustomCommand, _label, ex)
-                    );
+                    ActivityLog.LogError(SR.ProductName, SR.GetString(SR.ErrorRunningCustomCommand, _label, ex));
                     var outWindow = OutputWindowRedirector.GetGeneral(project.Site);
                     if (outWindow != null) {
                         outWindow.WriteErrorLine(SR.GetString(SR.ErrorRunningCustomCommand, _label, ex));

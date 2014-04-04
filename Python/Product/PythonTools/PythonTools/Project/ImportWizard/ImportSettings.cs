@@ -25,7 +25,9 @@ using Microsoft.Build.Construction;
 using Microsoft.Build.Evaluation;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.Language.Intellisense;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudioTools;
+using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.Project.ImportWizard {
     internal class ImportSettings : DependencyObject {
@@ -214,14 +216,8 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
                 }
 
                 try {
-                    Microsoft.VisualStudio.Shell.ActivityLog.LogError(
-                        SR.GetString(SR.PythonToolsForVisualStudio),
-                        ex.ToString()
-                    );
-                    MessageBox.Show(
-                        SR.GetString(SR.ErrorImportWizardException, ex.GetType().Name),
-                        SR.GetString(SR.PythonToolsForVisualStudio)
-                    );
+                    ActivityLog.LogError(SR.ProductName, ex.ToString());
+                    MessageBox.Show(SR.GetString(SR.ErrorImportWizardException, ex.GetType().Name), SR.ProductName);
                     return;
                 } catch (InvalidOperationException) {
                     // No ActivityLog service means we're not in a UI context

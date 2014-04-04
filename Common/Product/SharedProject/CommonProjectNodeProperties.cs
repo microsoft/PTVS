@@ -34,7 +34,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// Returns/Sets the StartupFile project property
         /// </summary>
         [SRCategoryAttribute(SR.General)]
-        [LocDisplayName(SR.StartupFile)]
+        [SRDisplayName(SR.StartupFile)]
         [SRDescriptionAttribute(SR.StartupFileDescription)]
         public string StartupFile {
             get {
@@ -63,7 +63,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// Returns/Sets the WorkingDirectory project property
         /// </summary>
         [SRCategoryAttribute(SR.General)]
-        [LocDisplayName(SR.WorkingDirectory)]
+        [SRDisplayName(SR.WorkingDirectory)]
         [SRDescriptionAttribute(SR.WorkingDirectoryDescription)]
         public string WorkingDirectory {
             get {
@@ -111,7 +111,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// Gets the home directory for the project.
         /// </summary>
         [SRCategoryAttribute(SR.Misc)]
-        [LocDisplayName(SR.ProjectHome)]
+        [SRDisplayName(SR.ProjectHome)]
         [SRDescriptionAttribute(SR.ProjectHomeDescription)]
         public string ProjectHome {
             get {

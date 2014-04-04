@@ -181,7 +181,7 @@ namespace Microsoft.PythonTools.Project {
     public class WebPiReferenceNodeProperties : NodeProperties {
         #region properties
         [SRCategoryAttribute(SR.Misc)]
-        [LocDisplayName(SR.RefName)]
+        [SRDisplayName(SR.RefName)]
         [SRDescriptionAttribute(SR.RefNameDescription)]
         [Browsable(true)]
         [AutomationBrowsable(true)]
@@ -192,7 +192,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         [SRCategoryAttribute(SR.Misc)]
-        [LocDisplayName(SR.WebPiFeed)]
+        [SRDisplayName(SR.WebPiFeed)]
         [SRDescriptionAttribute(SR.WebPiFeedDescription)]
         [Browsable(true)]
         public string Feed {
@@ -202,7 +202,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         [SRCategoryAttribute(SR.Misc)]
-        [LocDisplayName(SR.WebPiProduct)]
+        [SRDisplayName(SR.WebPiProduct)]
         [SRDescriptionAttribute(SR.WebPiProductDescription)]
         [Browsable(true)]
         public virtual string ProductId {
@@ -212,7 +212,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         [SRCategoryAttribute(SR.Advanced)]
-        [LocDisplayName(SR.BuildAction)]
+        [SRDisplayName(SR.BuildAction)]
         [SRDescriptionAttribute(SR.BuildActionDescription)]
         [TypeConverter(typeof(BuildActionTypeConverter))]
         public prjBuildAction BuildAction {
@@ -231,7 +231,7 @@ namespace Microsoft.PythonTools.Project {
 
         #region overridden methods
         public override string GetClassName() {
-            return SR.GetString(SR.WebPiReferenceProperties, CultureInfo.CurrentUICulture);
+            return SR.GetString(SR.WebPiReferenceProperties);
         }
         #endregion
     }

@@ -331,10 +331,7 @@ namespace Microsoft.PythonTools.InterpreterList {
             try {
                 window = ExecuteInReplCommand.EnsureReplWindow(interp, view.Project);
             } catch (InvalidOperationException ex) {
-                MessageBox.Show(
-                    string.Format("An error occurred opening this interactive window.{0}{0}{1}", Environment.NewLine, ex),
-                    SR.GetString(SR.PythonToolsForVisualStudio)
-                );
+                MessageBox.Show(SR.GetString(SR.ErrorOpeningInteractiveWindow, ex), SR.ProductName);
                 return;
             }
             if (window != null) {

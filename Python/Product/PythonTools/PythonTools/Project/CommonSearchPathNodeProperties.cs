@@ -25,7 +25,7 @@ namespace Microsoft.PythonTools.Project {
     public class CommonSearchPathNodeProperties : NodeProperties {
         #region properties
         [SRCategoryAttribute(SR.Misc)]
-        [LocDisplayName(SR.FolderName)]
+        [SRDisplayName(SR.FolderName)]
         [SRDescriptionAttribute(SR.FolderNameDescription)]
         [AutomationBrowsable(false)]
         public string FolderName {
@@ -35,7 +35,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         [SRCategoryAttribute(SR.Misc)]
-        [LocDisplayName(SR.FullPath)]
+        [SRDisplayName(SR.FullPath)]
         [SRDescriptionAttribute(SR.FullPathDescription)]
         [AutomationBrowsable(true)]
         public string FullPath {

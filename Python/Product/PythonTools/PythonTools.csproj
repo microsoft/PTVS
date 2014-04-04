@@ -262,6 +262,7 @@
     <Compile Include="..\Analysis\Interpreter\PythonInterpreterFactoryExtensions.cs">
       <Link>PythonInterpreterFactoryExtensions.cs</Link>
     </Compile>
+    <Compile Include="Legacy\ObsoleteResources.cs" />
     <Compile Include="NoInterpretersException.cs" />
     <Compile Include="ProvideLanguageTemplatesAttribute.cs" />
     <Compile Include="PythonToolsInstallPath.cs" />
@@ -282,6 +283,7 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="PythonTools\Project\Attributes.cs" />
+    <Compile Include="PythonTools\Project\ProjectResources.cs" />
     <Compile Include="ProvideComponentPickerPropertyPageAttribute.cs" />
     <Compile Include="ProvideDiffSupportedContentTypeAttribute.cs" />
     <Compile Include="ProvideEditorExtension2Attribute.cs" />
@@ -525,7 +527,6 @@
     <Compile Include="PythonTools\Intellisense\MonitoredBufferResult.cs" />
     <Compile Include="PythonTools\Intellisense\ParseQueue.cs" />
     <Compile Include="PythonTools\ISnapshotTextReader.cs" />
-    <Compile Include="PythonTools\Navigation\Resources.Designer.cs" />
     <Compile Include="PythonTools\PythonAutomation.cs" />
     <Compile Include="PythonTools\Options\InterpreterOptions.cs" />
     <Compile Include="PythonTools\Options\IPythonOptions.cs" />
@@ -879,6 +880,9 @@
     <EmbeddedResource Include="..\Icons\Dev$(VSTarget)\PythonImageList.png" Condition="'$(VSTarget)' != '10.0'" />
     <Resource Include="..\Icons\Dev$(VSTarget)\PyFile.png" />
     <Resource Include="..\Icons\Dev$(VSTarget)\PyProjectBig.png" />
+    <EmbeddedResource Include="Legacy\ObsoleteResources.resx">
+      <ManifestResourceName>Microsoft.VisualStudioTools.SharedProject</ManifestResourceName>
+    </EmbeddedResource>
     <EmbeddedResource Include="PythonTools\Commands\DiagnosticsForm.resx">
       <DependentUpon>DiagnosticsForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -931,7 +935,6 @@
     <EmbeddedResource Include="PythonTools\Project\StartWithErrorsDialog.resx">
       <DependentUpon>StartWithErrorsDialog.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="PythonTools\Navigation\Resources.resx" />
     <EmbeddedResource Include="PythonTools\Options\PythonInterpreterOptionsControl.resx">
       <DependentUpon>PythonInterpreterOptionsControl.cs</DependentUpon>
     </EmbeddedResource>
@@ -955,12 +958,6 @@
       <CustomToolNamespace>Microsoft.PythonTools</CustomToolNamespace>
       <ManifestResourceName>Microsoft.VSPackage</ManifestResourceName>
     </ConditionalEmbeddedResource>
-    <Compile Include="Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resources.resx</DependentUpon>
-      <Visible>true</Visible>
-    </Compile>
     <EmbeddedResource Include="PythonTools\WebProject\PythonWebPropertyPageControl.resx">
       <DependentUpon>PythonWebPropertyPageControl.cs</DependentUpon>
     </EmbeddedResource>
@@ -968,11 +965,10 @@
       <DependentUpon>PythonWebLauncherOptions.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
       <MergeWithCTO>true</MergeWithCTO>
       <CustomToolNamespace>Microsoft.PythonTools</CustomToolNamespace>
+      <ManifestResourceName>Microsoft.PythonTools.Resources</ManifestResourceName>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>

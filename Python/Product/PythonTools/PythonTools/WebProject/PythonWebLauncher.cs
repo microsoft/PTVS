@@ -221,29 +221,22 @@ namespace Microsoft.PythonTools.Project.Web {
                 return p.Substring(1, p.Length - 2);
             }
 
-            public void Validate() {
+            public string Validate() {
                 if (!Directory.Exists(UnquotePath(Info.bstrCurDir))) {
-                    // TODO: Use resource string
-                    throw new Exception(string.Format("Working directory \"{0}\" does not exist.", Info.bstrCurDir));
+                    return SR.GetString(SR.DebugLaunchWorkingDirectoryMissing, Info.bstrCurDir);
                 }
                 
                 if (!File.Exists(UnquotePath(Info.bstrExe))) {
-                    // TODO: Use resource string
-                    throw new Exception(string.Format("Interpreter \"{0}\" does not exist.", Info.bstrExe));
+                    return SR.GetString(SR.DebugLaunchInterpreterMissing, Info.bstrExe);
                 }
+
+                return null;
             }
 
             public void Launch(IServiceProvider provider) {
-                try {
-                    Validate();
-                } catch (Exception ex) {
-                    if (ex.IsCriticalException()) {
-                        throw;
-                    }
-                    MessageBox.Show(
-                        ex.Message,
-                        SR.GetString(SR.PythonToolsForVisualStudio)
-                    );
+                var error = Validate();
+                if (!string.IsNullOrEmpty(error)) {
+                    MessageBox.Show(error, SR.ProductName);
                     return;
                 }
 

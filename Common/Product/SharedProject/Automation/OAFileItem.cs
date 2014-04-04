@@ -134,7 +134,7 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
                             }
                         } catch (FormatException) {
                             // Not a valid guid
-                            throw new ArgumentException(SR.GetString(SR.ParameterMustBeAValidGuid, CultureInfo.CurrentUICulture), "viewKind");
+                            throw new ArgumentException(SR.GetString(SR.ParameterMustBeAValidGuid), "viewKind");
                         }
 
                         uint itemid;
@@ -210,7 +210,7 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
                 }
             } catch (FormatException) {
                 // Not a valid guid
-                throw new ArgumentException(SR.GetString(SR.ParameterMustBeAValidGuid, CultureInfo.CurrentUICulture), "viewKind");
+                throw new ArgumentException(SR.GetString(SR.ParameterMustBeAValidGuid), "viewKind");
             }
 
             bool isOpen = false;

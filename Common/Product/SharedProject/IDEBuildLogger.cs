@@ -44,8 +44,8 @@ namespace Microsoft.VisualStudioTools.Project {
 
         private int currentIndent;
         private IVsOutputWindowPane outputWindowPane;
-        private string errorString = SR.GetString(SR.Error, CultureInfo.CurrentUICulture);
-        private string warningString = SR.GetString(SR.Warning, CultureInfo.CurrentUICulture);
+        private string errorString = SR.GetString(SR.Error);
+        private string warningString = SR.GetString(SR.Warning);
         private TaskProvider taskProvider;
         private IVsHierarchy hierarchy;
         private IServiceProvider serviceProvider;

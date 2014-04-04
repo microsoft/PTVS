@@ -326,7 +326,7 @@ namespace Microsoft.VisualStudioTools.Project {
             Utilities.ArgumentNotNull("site", site);
 
             if (String.IsNullOrEmpty(caption)) {
-                throw new ArgumentException(SR.GetString(SR.ParameterCannotBeNullOrEmpty, CultureInfo.CurrentUICulture), "caption");
+                throw new ArgumentException(SR.GetString(SR.ParameterCannotBeNullOrEmpty), "caption");
             }
 
             IVsUIShell uiShell = site.GetService(typeof(SVsUIShell)) as IVsUIShell;
@@ -364,11 +364,11 @@ namespace Microsoft.VisualStudioTools.Project {
             Utilities.ArgumentNotNull("site", site);
 
             if (String.IsNullOrEmpty(oldName)) {
-                throw new ArgumentException(SR.GetString(SR.ParameterCannotBeNullOrEmpty, CultureInfo.CurrentUICulture), "oldName");
+                throw new ArgumentException(SR.GetString(SR.ParameterCannotBeNullOrEmpty), "oldName");
             }
 
             if (String.IsNullOrEmpty(newName)) {
-                throw new ArgumentException(SR.GetString(SR.ParameterCannotBeNullOrEmpty, CultureInfo.CurrentUICulture), "newName");
+                throw new ArgumentException(SR.GetString(SR.ParameterCannotBeNullOrEmpty), "newName");
             }
 
             if (newItemId == VSConstants.VSITEMID_NIL) {

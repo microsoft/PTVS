@@ -13,8 +13,10 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.Permissions;
 using System.Text;
@@ -144,6 +146,12 @@ namespace Microsoft.VisualStudioTools.Project {
             }
 
             return base.ExecCommandOnNode(cmdGroup, cmd, nCmdexecopt, pvaIn, pvaOut);
+        }
+
+        protected internal override void ShowDeleteMessage(IList<HierarchyNode> nodes, __VSDELETEITEMOPERATION action, out bool cancel, out bool useStandardDialog) {
+            // Don't prompt if all the nodes are references
+            useStandardDialog = !nodes.All(n => n is ReferenceNode);
+            cancel = false;
         }
 
         #endregion

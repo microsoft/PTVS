@@ -350,7 +350,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <returns></returns>
         public virtual void CreateDirectory(string newName) {
             if (String.IsNullOrEmpty(newName)) {
-                throw new ArgumentException(SR.GetString(SR.ParameterCannotBeNullOrEmpty, CultureInfo.CurrentUICulture), "newName");
+                throw new ArgumentException(SR.GetString(SR.ParameterCannotBeNullOrEmpty), "newName");
             }
 
             // on a new dir && enter, we get called with the same name (so do nothing if name is the same
@@ -358,7 +358,7 @@ namespace Microsoft.VisualStudioTools.Project {
 
             if (!CommonUtils.IsSameDirectory(this.Url, strNewDir)) {
                 if (Directory.Exists(strNewDir)) {
-                    throw new InvalidOperationException(SR.GetString(SR.DirectoryExistError, CultureInfo.CurrentUICulture));
+                    throw new InvalidOperationException(SR.GetString(SR.DirectoryExistError));
                 }
                 Directory.CreateDirectory(strNewDir);
             }
@@ -459,7 +459,7 @@ namespace Microsoft.VisualStudioTools.Project {
         private int ShowFileOrFolderAlreadyExistsErrorMessage(string newPath) {
             //A file or folder with the name '{0}' already exists on disk at this location. Please choose another name.
             //If this file or folder does not appear in the Solution Explorer, then it is not currently part of your project. To view files which exist on disk, but are not in the project, select Show All Files from the Project menu.
-            string errorMessage = (String.Format(CultureInfo.CurrentCulture, SR.GetString(SR.FileOrFolderAlreadyExists, CultureInfo.CurrentUICulture), newPath));
+            string errorMessage = SR.GetString(SR.FileOrFolderAlreadyExists, newPath);
             if (!Utilities.IsInAutomationFunction(this.ProjectMgr.Site)) {
                 string title = null;
                 OLEMSGICON icon = OLEMSGICON.OLEMSGICON_CRITICAL;

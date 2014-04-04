@@ -274,7 +274,7 @@ namespace Microsoft.VisualStudioTools.Project {
             }
 
             // Prompt to save if there are dirty docs
-            string message = SR.GetString(SR.SaveModifiedDocuments, CultureInfo.CurrentUICulture);
+            string message = SR.GetString(SR.SaveModifiedDocuments);
             string title = string.Empty;
             OLEMSGICON icon = OLEMSGICON.OLEMSGICON_WARNING;
             OLEMSGBUTTON buttons = OLEMSGBUTTON.OLEMSGBUTTON_YESNOCANCEL;

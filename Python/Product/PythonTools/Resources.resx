@@ -123,27 +123,8 @@
   <data name="BaseInterpreterDisplayName" xml:space="preserve">
     <value>Base Interpreter</value>
   </data>
-  <data name="CanNotCreateWindow" xml:space="preserve">
-    <value>Can not create tool window.</value>
-  </data>
-  <data name="ExecutingStartupScript" xml:space="preserve">
-    <value />
-  </data>
-  <data name="InitializingFromProject" xml:space="preserve">
-    <value />
-  </data>
   <data name="InstallPip" xml:space="preserve">
     <value>To install your Python package, we will install the pip package manager.
-
-Continue?</value>
-  </data>
-  <data name="InstallVirtualEnv" xml:space="preserve">
-    <value>To create your virtual environment, we will install the virtualenv package.
-
-Continue?</value>
-  </data>
-  <data name="InstallVirtualEnvAndPip" xml:space="preserve">
-    <value>To create a virtual environment, we will install the pip package manager and the virtualenv package.
 
 Continue?</value>
   </data>
@@ -175,9 +156,6 @@ No files will be deleted from disk.</value>
   </data>
   <data name="EnvironmentVersionDisplayName" xml:space="preserve">
     <value>Version</value>
-  </data>
-  <data name="MissingStartupScript" xml:space="preserve">
-    <value />
   </data>
   <data name="NoSurveyNewsAvailable" xml:space="preserve">
     <value>There are no surveys or news available at this time.  Please check again later.</value>
@@ -218,9 +196,6 @@ No files will be deleted from disk.</value>
   <data name="PackageUninstallSucceeded" xml:space="preserve">
     <value>'{0}' was uninstalled successfully.</value>
   </data>
-  <data name="PipInstallFailed" xml:space="preserve">
-    <value>'pip' failed to install.</value>
-  </data>
   <data name="PipInstallFailedExitCode" xml:space="preserve">
     <value>'pip' failed to install. Exit code: {0}</value>
   </data>
@@ -236,26 +211,14 @@ No files will be deleted from disk.</value>
   <data name="ReferencesNodeName" xml:space="preserve">
     <value>References</value>
   </data>
-  <data name="SearchPathRemoveConfirmation" xml:space="preserve">
-    <value>'{0}' will be removed from the project's search path.</value>
-  </data>
   <data name="SearchPaths" xml:space="preserve">
     <value>Search Paths</value>
   </data>
   <data name="SearchPathsDescription" xml:space="preserve">
     <value>The list of directories to search for modules and files.</value>
   </data>
-  <data name="SettingWorkDir" xml:space="preserve">
-    <value />
-  </data>
-  <data name="ToolWindowTitle" xml:space="preserve">
-    <value>Python Command Line</value>
-  </data>
   <data name="UninstallPackage" xml:space="preserve">
     <value>'{0}' will be uninstalled from {1} ({2}).</value>
-  </data>
-  <data name="UpdatingSearchPath" xml:space="preserve">
-    <value />
   </data>
   <data name="VirtualEnvCreating" xml:space="preserve">
     <value>Virtual environment is being created at '{0}'</value>
@@ -469,5 +432,24 @@ The web.config file will be configured to resolve URIs matching this pattern to 
   </data>
   <data name="SelectZipFileForSearchPath" xml:space="preserve">
     <value>Select a .zip file to add to the Search Path</value>
+  </data>
+  <data name="AddReferenceExtensions" xml:space="preserve">
+    <value>Python Extension Modules (*.dll;*.pyd)|*.dll;*.pyd|All Files (*.*)|*.*</value>
+  </data>
+  <data name="UninstallPackages" xml:space="preserve">
+    <value>The following packages will be uninstalled from {1} ({2}):
+
+{0}</value>
+  </data>
+  <data name="DebugLaunchInterpreterMissing" xml:space="preserve">
+    <value>The specified interpreter "{0}" does not exist.</value>
+  </data>
+  <data name="DebugLaunchWorkingDirectoryMissing" xml:space="preserve">
+    <value>The specified working directory "{0}" does not exist.</value>
+  </data>
+  <data name="ErrorOpeningInteractiveWindow" xml:space="preserve">
+    <value>An error occurred opening this interactive window:
+
+{0}</value>
   </data>
 </root>

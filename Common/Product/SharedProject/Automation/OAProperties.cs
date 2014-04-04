@@ -119,7 +119,7 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
                 }
             }
 
-            throw new ArgumentException(SR.GetString(SR.InvalidParameter, CultureInfo.CurrentUICulture), "index");
+            throw new ArgumentException(SR.GetString(SR.InvalidParameter), "index");
         }
         /// <summary>
         /// Gets the immediate parent object of a Properties collection.

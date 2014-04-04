@@ -285,11 +285,11 @@ namespace Microsoft.VisualStudioTools.Project {
 
             // Validate the filename. 
             if (String.IsNullOrEmpty(label)) {
-                throw new InvalidOperationException(String.Format(CultureInfo.CurrentCulture, SR.GetString(SR.ErrorInvalidFileName, CultureInfo.CurrentUICulture), label));
+                throw new InvalidOperationException(SR.GetString(SR.ErrorInvalidFileName, label));
             } else if (label.Length > NativeMethods.MAX_PATH) {
-                throw new InvalidOperationException(String.Format(CultureInfo.CurrentCulture, SR.GetString(SR.PathTooLong, CultureInfo.CurrentUICulture), label));
+                throw new InvalidOperationException(SR.GetString(SR.PathTooLong, label));
             } else if (Utilities.IsFileNameInvalid(label)) {
-                throw new InvalidOperationException(String.Format(CultureInfo.CurrentCulture, SR.GetString(SR.ErrorInvalidFileName, CultureInfo.CurrentUICulture), label));
+                throw new InvalidOperationException(SR.GetString(SR.ErrorInvalidFileName, label));
             }
 
             for (HierarchyNode n = this.Parent.FirstChild; n != null; n = n.NextSibling) {
@@ -297,7 +297,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 if (n != this && String.Equals(n.Caption, label, StringComparison.OrdinalIgnoreCase)) {
                     //A file or folder with the name '{0}' already exists on disk at this location. Please choose another name.
                     //If this file or folder does not appear in the Solution Explorer, then it is not currently part of your project. To view files which exist on disk, but are not in the project, select Show All Files from the Project menu.
-                    throw new InvalidOperationException(String.Format(CultureInfo.CurrentCulture, SR.GetString(SR.FileOrFolderAlreadyExists, CultureInfo.CurrentUICulture), label));
+                    throw new InvalidOperationException(SR.GetString(SR.FileOrFolderAlreadyExists, label));
                 }
             }
 
@@ -308,7 +308,7 @@ namespace Microsoft.VisualStudioTools.Project {
             if (!Utilities.IsInAutomationFunction(this.ProjectMgr.Site) &&
                 !String.Equals(Path.GetExtension(strRelPath), Path.GetExtension(label), StringComparison.OrdinalIgnoreCase)) {
                 // Prompt to confirm that they really want to change the extension of the file
-                string message = String.Format(CultureInfo.CurrentCulture, SR.GetString(SR.ConfirmExtensionChange, CultureInfo.CurrentUICulture), label);
+                string message = SR.GetString(SR.ConfirmExtensionChange, label);
                 IVsUIShell shell = this.ProjectMgr.Site.GetService(typeof(SVsUIShell)) as IVsUIShell;
 
                 Utilities.CheckNotNull(shell, "Could not get the UI shell from the project");
@@ -371,9 +371,9 @@ namespace Microsoft.VisualStudioTools.Project {
                 if (IsFileOnDisk(newName)
                     && (IsFileOnDisk(this.Url)
                     || !String.Equals(Path.GetFileName(newName), Path.GetFileName(this.Url), StringComparison.OrdinalIgnoreCase))) {
-                    throw new InvalidOperationException(String.Format(CultureInfo.CurrentCulture, SR.GetString(SR.FileCannotBeRenamedToAnExistingFile, CultureInfo.CurrentUICulture), label));
+                    throw new InvalidOperationException(SR.GetString(SR.FileCannotBeRenamedToAnExistingFile, label));
                 } else if (newName.Length > NativeMethods.MAX_PATH) {
-                    throw new InvalidOperationException(String.Format(CultureInfo.CurrentCulture, SR.GetString(SR.PathTooLong, CultureInfo.CurrentUICulture), label));
+                    throw new InvalidOperationException(SR.GetString(SR.PathTooLong, label));
                 }
             }
 
@@ -523,7 +523,6 @@ namespace Microsoft.VisualStudioTools.Project {
             //Identify if Path or FileName are the same for old and new file
             string newDirectoryName = CommonUtils.NormalizeDirectoryPath(Path.GetDirectoryName(newFilePath));
             string oldDirectoryName = CommonUtils.NormalizeDirectoryPath(Path.GetDirectoryName(this.GetMkDocument()));
-            string errorMessage = String.Empty;
             bool isSamePath = CommonUtils.IsSameDirectory(newDirectoryName, oldDirectoryName);
             bool isSameFile = CommonUtils.IsSamePath(newFilePath, this.Url);
 
@@ -543,8 +542,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 targetContainer = this.ProjectMgr.FindNodeByFullPath(newDirectoryName);
                 if (targetContainer != null && (targetContainer is FileNode)) {
                     // We already have a file node with this name in the hierarchy.
-                    errorMessage = String.Format(CultureInfo.CurrentCulture, SR.GetString(SR.FileAlreadyExistsAndCannotBeRenamed, CultureInfo.CurrentUICulture), Path.GetFileName(newFilePath));
-                    throw new InvalidOperationException(errorMessage);
+                    throw new InvalidOperationException(SR.GetString(SR.FileAlreadyExistsAndCannotBeRenamed, Path.GetFileName(newFilePath)));
                 }
             }
 
@@ -641,7 +639,7 @@ namespace Microsoft.VisualStudioTools.Project {
             bool fileExist = IsFileOnDisk(this.Url);
 
             if (!fileExist && showMessage && !Utilities.IsInAutomationFunction(this.ProjectMgr.Site)) {
-                string message = String.Format(CultureInfo.CurrentCulture, SR.GetString(SR.ItemDoesNotExistInProjectDirectory, CultureInfo.CurrentUICulture), this.Caption);
+                string message = SR.GetString(SR.ItemDoesNotExistInProjectDirectory, Caption);
                 string title = string.Empty;
                 OLEMSGICON icon = OLEMSGICON.OLEMSGICON_CRITICAL;
                 OLEMSGBUTTON buttons = OLEMSGBUTTON.OLEMSGBUTTON_OK;

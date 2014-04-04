@@ -12,6 +12,15 @@
  *
  * ***************************************************************************/
 
+//
+// These resources should not be used in PTVS any more. They are here because
+// they were public API in earlier versions.
+//
+// For PTVS-specific strings, use Resources.resx and PythonTools\Project\Attributes.cs
+//
+// For shared strings, use SharedProject\ProjectResources.resx and ProjectResources.cs
+//
+
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -25,6 +34,7 @@ namespace Microsoft.VisualStudioTools.Project {
     /// First looks up the name in local string resources than falls back to MPFProj resources.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Property | AttributeTargets.Field, Inherited = false, AllowMultiple = false)]
+    [Obsolete]
     public class LocalizableDisplayNameAttribute : DisplayNameAttribute {
         private string _name;
 
@@ -47,6 +57,7 @@ namespace Microsoft.VisualStudioTools.Project {
         }
     }
 
+    [Obsolete]
     public class DynamicProjectSR {
         public const string InterpreterPath = "InterpreterPath";
         public const string InterpreterPathDescription = "InterpreterPathDescription";

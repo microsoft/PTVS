@@ -529,7 +529,7 @@ namespace Microsoft.VisualStudioTools.Project {
             Utilities.ArgumentNotNull("platforms", platforms);
             if (names == null) {
                 if (actual == null || actual.Length == 0) {
-                    throw new ArgumentException(SR.GetString(SR.InvalidParameter, CultureInfo.CurrentUICulture), "actual");
+                    throw new ArgumentException(SR.GetString(SR.InvalidParameter), "actual");
                 }
 
                 actual[0] = (uint)platforms.Length;

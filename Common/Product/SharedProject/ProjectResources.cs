@@ -16,43 +16,15 @@ using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
+using System.Linq;
 using System.Resources;
 using System.Runtime.CompilerServices;
 using System.Threading;
 
 namespace Microsoft.VisualStudioTools.Project {
-    [AttributeUsage(AttributeTargets.All)]
-    internal sealed class SRDescriptionAttribute : DescriptionAttribute {
-        private bool replaced;
-
-        public SRDescriptionAttribute(string description)
-            : base(description) {
-        }
-
-        public override string Description {
-            get {
-                if (!replaced) {
-                    replaced = true;
-                    DescriptionValue = SR.GetString(base.Description, CultureInfo.CurrentUICulture);
-                }
-                return base.Description;
-            }
-        }
-    }
-
-    [AttributeUsage(AttributeTargets.All)]
-    internal sealed class SRCategoryAttribute : CategoryAttribute {
-
-        public SRCategoryAttribute(string category)
-            : base(category) {
-        }
-
-        protected override string GetLocalizedString(string value) {
-            return SR.GetString(value, CultureInfo.CurrentUICulture);
-        }
-    }
     internal class SR {
         internal const string AddReferenceDialogTitle = "AddReferenceDialogTitle";
+        internal const string AddReferenceExtensions = "AddReferenceExtensions";
         internal const string AddToNullProjectError = "AddToNullProjectError";
         internal const string Advanced = "Advanced";
         internal const string AttributeLoad = "AttributeLoad";
@@ -192,96 +164,54 @@ namespace Microsoft.VisualStudioTools.Project {
         internal const string UpgradeCannotCheckOutProject = "UpgradeCannotCheckOutProject";
         internal const string UpgradeCannotLoadProject = "UpgradeCannotLoadProject";
 
-        static SR loader;
-        ResourceManager resources;
+        private static readonly Lazy<ResourceManager> _manager = new Lazy<ResourceManager>(
+            () => new ResourceManager("Microsoft.VisualStudio.Project", typeof(SR).Assembly),
+            LazyThreadSafetyMode.ExecutionAndPublication
+        );
 
-        private static Object s_InternalSyncObject;
-        private static Object InternalSyncObject {
+        private static ResourceManager Manager {
             get {
-                if (s_InternalSyncObject == null) {
-                    Object o = new Object();
-                    Interlocked.CompareExchange(ref s_InternalSyncObject, o, null);
-                }
-                return s_InternalSyncObject;
+                return _manager.Value;
             }
         }
 
-        internal SR() {
-            resources = new System.Resources.ResourceManager("Microsoft.VisualStudio.Project", this.GetType().Assembly);
+#if DEBUG
+        // Detect incorrect calls
+        [Obsolete]
+        internal static string GetString(string value, CultureInfo c) {
+            return null;
         }
+#endif
 
-        private static SR GetLoader() {
-            if (loader == null) {
-                lock (InternalSyncObject) {
-                    if (loader == null) {
-                        loader = new SR();
-                    }
-                }
-            }
 
-            return loader;
-        }
-
-        private static CultureInfo Culture {
-            get { return null/*use ResourceManager default, CultureInfo.CurrentUICulture*/; }
-        }
-
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        public static ResourceManager Resources {
-            get {
-                return GetLoader().resources;
-            }
-        }
-
-        public static string GetString(string name, params object[] args) {
-            SR sys = GetLoader();
-            if (sys == null)
+        protected static string GetStringInternal(ResourceManager manager, string value, object[] args) {
+            string result = manager.GetString(value, CultureInfo.CurrentUICulture);
+            if (result == null) {
                 return null;
-            string res = sys.resources.GetString(name, SR.Culture);
-
-            if (string.IsNullOrEmpty(res)) {
-                Debug.Assert(false, "String resource '" + name + "' is missing");
-                res = name;
             }
 
-            if (args != null && args.Length > 0) {
-                return String.Format(CultureInfo.CurrentCulture, res, args);
-            } else {
-                return res;
+            if (args.Length == 0) {
+                Debug.Assert(result.IndexOf("{0}") < 0, "Resource string '" + value + "' requires format arguments.");
+                return result;
             }
+
+            Debug.WriteLineIf(
+                Enumerable.Range(0, args.Length).Any(i => result.IndexOf(string.Format("{{{0}}}", i)) >= 0),
+                string.Format("Resource string '{0}' does not use all {1} arguments", value, args.Length)
+            );
+            Debug.WriteLineIf(
+                result.IndexOf(string.Format("{{{0}}}", args.Length)) >= 0,
+                string.Format("Resource string '{0}' requires more than {1} argument(s)", value, args.Length)
+            );
+
+
+            return string.Format(CultureInfo.CurrentUICulture, result, args);
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        public static string GetString(string name) {
-            SR sys = GetLoader();
-            if (sys == null)
-                return null;
-            var res = sys.resources.GetString(name, SR.Culture);
-            if (string.IsNullOrEmpty(res)) {
-                Debug.Assert(false, "String resource '" + name + "' is missing");
-                res = name;
-            }
-            return res;
-        }
-
-        public static string GetString(string name, CultureInfo culture) {
-            SR sys = GetLoader();
-            if (sys == null)
-                return null;
-            var res = sys.resources.GetString(name, culture);
-            if (string.IsNullOrEmpty(res)) {
-                Debug.Assert(false, "String resource '" + name + "' is missing");
-                res = name;
-            }
-            return res;
-        }
-
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        public static object GetObject(string name) {
-            SR sys = GetLoader();
-            if (sys == null)
-                return null;
-            return sys.resources.GetObject(name, SR.Culture);
+        public static string GetString(string value, params object[] args) {
+            var result = GetStringInternal(Manager, value, args);
+            Debug.Assert(result != null, "String resource '" + value + "' is missing");
+            return result ?? value;
         }
 
         private const string UnhandledException = "UnhandledException";

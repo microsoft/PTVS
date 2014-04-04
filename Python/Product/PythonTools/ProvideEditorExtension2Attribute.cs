@@ -62,7 +62,7 @@ namespace Microsoft.PythonTools {
             else if (factoryType is Guid)
                 this._factory = (Guid)factoryType;
             else
-                throw new ArgumentException(string.Format(Resources.Culture, "invalid factory type", factoryType));
+                throw new ArgumentException(string.Format("invalid factory type {0}", factoryType), "factoryType");
 
             _extension = extension;
             _priority = priority;

@@ -1579,6 +1579,11 @@ namespace Microsoft.VisualStudioTools.Project {
 
         }
 
+        protected internal virtual void ShowDeleteMessage(IList<HierarchyNode> nodes, __VSDELETEITEMOPERATION action, out bool cancel, out bool useStandardDialog) {
+            useStandardDialog = true;
+            cancel = true;
+        }
+
         #endregion
 
         #region public methods

@@ -1051,7 +1051,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             options._workingDir = workingDir;
             options._envVars = new Dictionary<string, string>(envVars);
             evaluator.Reset(quiet: true)
-                .HandleAllExceptions(SR.GetString(SR.PythonToolsForVisualStudio), GetType())
+                .HandleAllExceptions(SR.ProductName, GetType())
                 .DoNotWait();
 
             return window;

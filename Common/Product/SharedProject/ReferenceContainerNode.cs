@@ -77,7 +77,7 @@ namespace Microsoft.VisualStudioTools.Project {
 
         public override string Caption {
             get {
-                return SR.GetString(SR.ReferencesNodeName, CultureInfo.CurrentUICulture);
+                return SR.GetString(SR.ReferencesNodeName);
             }
         }
 
@@ -117,10 +117,7 @@ namespace Microsoft.VisualStudioTools.Project {
 
 
         public override object GetIconHandle(bool open) {
-            return this.ProjectMgr.GetIconHandleByName(open ?
-                ProjectNode.ImageName.OpenReferenceFolder :
-                ProjectNode.ImageName.ReferenceFolder
-            );
+            return this.ProjectMgr.GetIconHandleByName(ProjectNode.ImageName.ReferenceFolder);
         }
 
 
