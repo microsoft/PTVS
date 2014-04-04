@@ -14,6 +14,7 @@
 
 using System;
 using System.IO;
+using Microsoft.VisualStudio;
 using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project {
@@ -49,14 +50,16 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        protected override object CreateServices(Type serviceType) {
-            object service = null;
-            if (XamlDesignerSupport.DesignerContextType == serviceType) {
-                service = this.DesignerContext;
-            } else {
-                return base.CreateServices(serviceType);
+        public override int QueryService(ref Guid guidService, out object result) {
+            if (XamlDesignerSupport.DesignerContextType != null &&
+                guidService == XamlDesignerSupport.DesignerContextType.GUID &&
+                Path.GetExtension(Url).Equals(".xaml", StringComparison.OrdinalIgnoreCase)) {
+                // Create a DesignerContext for the XAML designer for this file
+                result = DesignerContext;
+                return VSConstants.S_OK;
             }
-            return service;
+
+            return base.QueryService(ref guidService, out result);
         }
     }
 }

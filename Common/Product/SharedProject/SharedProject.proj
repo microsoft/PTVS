@@ -306,6 +306,10 @@
       <Link>SharedProject\HierarchyNode.cs</Link>
       <Visible>true</Visible>
     </Compile>
+    <Compile Include="$(_ProjectSystemFilesLocation)\HierarchyIdMap.cs">
+      <Link>SharedProject\HierarchyIdMap.cs</Link>
+      <Visible>true</Visible>
+    </Compile>
     <Compile Include="$(_ProjectSystemFilesLocation)\IDEBuildLogger.cs">
       <Link>SharedProject\IDEBuildLogger.cs</Link>
       <Visible>true</Visible>
@@ -613,12 +617,12 @@
       <Link>SharedProject\Wpf\Dialogs.cs</Link>
       <Visible>true</Visible>
     </Compile>
-    <Resource Include="$(_ProjectSystemFilesLocation)\Wpf\Controls.xaml">
+    <Page Include="$(_ProjectSystemFilesLocation)\Wpf\Controls.xaml">
       <Link>SharedProject\Wpf\Controls.xaml</Link>
       <Visible>true</Visible>
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
-    </Resource>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="$(_ProjectSystemFilesLocation)\ProjectResources.resx">

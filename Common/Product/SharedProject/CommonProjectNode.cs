@@ -83,7 +83,6 @@ namespace Microsoft.VisualStudioTools.Project {
 
             _package = package;
             CanFileNodesHaveChilds = true;
-            OleServiceProvider.AddService(typeof(VSLangProj.VSProject), new OleServiceProvider.ServiceCreatorCallback(CreateServices), false);
             SupportsProjectDesigner = true;
             _imageList = imageList;
 
@@ -97,6 +96,15 @@ namespace Microsoft.VisualStudioTools.Project {
 
             _uiSync = new UIThreadSynchronizer();
             package.OnIdle += OnIdle;
+        }
+
+        public override int QueryService(ref Guid guidService, out object result) {
+            if (guidService == typeof(VSLangProj.VSProject).GUID) {
+                result = VSProject;
+                return VSConstants.S_OK;
+            }
+
+            return base.QueryService(ref guidService, out result);
         }
 
         #region abstract methods
@@ -240,15 +248,7 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
         internal override int QueryStatusOnNode(Guid cmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result) {
-            if (cmdGroup == CommonConstants.Std97CmdGroupGuid) {
-                switch ((VSConstants.VSStd97CmdID)cmd) {
-                    case VSConstants.VSStd97CmdID.BuildCtx:
-                    case VSConstants.VSStd97CmdID.RebuildCtx:
-                    case VSConstants.VSStd97CmdID.CleanCtx:
-                        result = QueryStatusResult.SUPPORTED | QueryStatusResult.INVISIBLE;
-                        return VSConstants.S_OK;
-                }
-            } else if (cmdGroup == Microsoft.VisualStudioTools.Project.VsMenus.guidStandardCommandSet2K) {
+            if (cmdGroup == Microsoft.VisualStudioTools.Project.VsMenus.guidStandardCommandSet2K) {
                 switch ((VsCommands2K)cmd) {
                     case VsCommands2K.ECMD_PUBLISHSELECTION:
                         if (pCmdText != IntPtr.Zero && NativeMethods.OLECMDTEXT.GetFlags(pCmdText) == NativeMethods.OLECMDTEXT.OLECMDTEXTF.OLECMDTEXTF_NAME) {
@@ -616,6 +616,7 @@ namespace Microsoft.VisualStudioTools.Project {
                     if (_watcher != null) {
                         _watcher.EnableRaisingEvents = true;
                     }
+                    _project.BoldStartupItem();
                     return false;
                 }
 
@@ -986,7 +987,7 @@ namespace Microsoft.VisualStudioTools.Project {
                         }
 #if DEBUG
                     } catch (Exception ex) {
-                        Debug.Fail("Unexpected exception while processing change: {0}", ex.ToString());
+                        Debug.Fail("Unexpected exception while processing change", ex.ToString());
                         throw;
                     }
 #endif
@@ -1034,9 +1035,7 @@ namespace Microsoft.VisualStudioTools.Project {
                     case WatcherChangeTypes.Deleted:
                         ChildDeleted(child);
                         break;
-                    case WatcherChangeTypes.Created:
-                        ChildCreated(child);
-                        break;
+                    case WatcherChangeTypes.Created: ChildCreated(child); break;
                     case WatcherChangeTypes.Changed:
                         // we only care about the attributes
                         if (_project.IsFileHidden(_path)) {
@@ -1078,6 +1077,13 @@ namespace Microsoft.VisualStudioTools.Project {
                     // actually exists ignore the event.
                     if ((!File.Exists(child.Url) && !Directory.Exists(child.Url)) ||
                         _project.IsFileHidden(child.Url)) {
+
+                        if (child.ItemNode == null) {
+                            // nodes should all have ItemNodes, the project is special.
+                            Debug.Assert(child is ProjectNode);
+                            return;
+                        }
+
                         if (child.ItemNode.IsExcluded) {
                             RemoveAllFilesChildren(child);
                             // deleting a show all files item, remove the node.
@@ -1140,6 +1146,9 @@ namespace Microsoft.VisualStudioTools.Project {
 
                     } else if (File.Exists(_path)) { // rapid changes can arrive out of order, make sure the file still exists
                         _project.AddAllFilesFile(parent, _path);
+                        if (String.Equals(_project.GetStartupFile(), _path, StringComparison.OrdinalIgnoreCase)) {
+                            _project.BoldStartupItem();
+                    }
                     }
 
                     parent.ExpandItem(wasExpanded ? EXPANDFLAGS.EXPF_ExpandFolder : EXPANDFLAGS.EXPF_CollapseFolder);
@@ -1426,8 +1435,9 @@ namespace Microsoft.VisualStudioTools.Project {
         public override FileNode CreateFileNode(ProjectElement item) {
             Utilities.ArgumentNotNull("item", item);
 
+            string url = item.Url;
             CommonFileNode newNode;
-            if (IsCodeFile(item.GetFullPathForElement())) {
+            if (IsCodeFile(url)) {
                 newNode = CreateCodeFileNode(item);
             } else {
                 newNode = CreateNonCodeFileNode(item);
@@ -1435,18 +1445,13 @@ namespace Microsoft.VisualStudioTools.Project {
 
             string link = item.GetMetadata(ProjectFileConstants.Link);
             if (!String.IsNullOrWhiteSpace(link) ||
-                !CommonUtils.IsSubpathOf(ProjectHome, item.GetFullPathForElement())) {
+                !CommonUtils.IsSubpathOf(ProjectHome, url)) {
                 newNode.SetIsLinkFile(true);
             }
 
-            newNode.OleServiceProvider.AddService(typeof(EnvDTE.Project),
-                new OleServiceProvider.ServiceCreatorCallback(CreateServices), false);
-            newNode.OleServiceProvider.AddService(typeof(EnvDTE.ProjectItem), newNode.ServiceCreator, false);
-
-            newNode.OleServiceProvider.AddService(typeof(VSLangProj.VSProject),
-                new OleServiceProvider.ServiceCreatorCallback(CreateServices), false);
             return newNode;
         }
+
 
         /// <summary>
         /// Create a file node based on absolute file name.
@@ -1484,19 +1489,6 @@ namespace Microsoft.VisualStudioTools.Project {
             }
 
             return VSConstants.S_OK;
-        }
-
-        public override DependentFileNode CreateDependentFileNode(MsBuildProjectElement item) {
-            DependentFileNode node = base.CreateDependentFileNode(item);
-            if (null != node) {
-                string include = item.GetMetadata(ProjectFileConstants.Include);
-                if (IsCodeFile(include)) {
-                    node.OleServiceProvider.AddService(
-                        typeof(SVSMDCodeDomProvider), new OleServiceProvider.ServiceCreatorCallback(CreateServices), false);
-                }
-            }
-
-            return node;
         }
 
         /// <summary>

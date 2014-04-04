@@ -19,6 +19,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
@@ -320,7 +321,7 @@ namespace Microsoft.VisualStudioTools.Project {
         [LocDisplayName(SR.BuildAction)]
         [SRDescriptionAttribute(SR.BuildActionDescription)]
         [TypeConverter(typeof(BuildActionStringConverter))]
-        public string BuildActionString {
+        public string ItemType {
             get {
                 return HierarchyNode.ItemNode.ItemTypeName;
             }
@@ -328,7 +329,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 HierarchyNode.ItemNode.ItemTypeName = value;
             }
         }
-
+        
         /// <summary>
         /// Specifies the build action as a projBuildAction so that automation can get the
         /// expected enum value.
@@ -522,7 +523,14 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
         public override StandardValuesCollection GetStandardValues(ITypeDescriptorContext context) {
-            return new StandardValuesCollection(new[] { "None", "Compile", "Content" });
+            FileNodeProperties nodeProps = context.Instance as FileNodeProperties;
+            IEnumerable<string> itemNames;
+            if (nodeProps != null) {
+                itemNames = nodeProps.HierarchyNode.ProjectMgr.GetAvailableItemNames();
+            } else {
+                itemNames = new[] { "None", "Compile", "Content" };
+            }
+            return new StandardValuesCollection(itemNames.ToArray());
         }
     }
 

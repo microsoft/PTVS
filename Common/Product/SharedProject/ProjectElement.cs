@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.IO;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio;
 
@@ -124,12 +125,22 @@ namespace Microsoft.VisualStudioTools.Project {
         /// For non-file system based project, it may make sense to override.
         /// </summary>
         /// <returns>FullPath</returns>
-        public string GetFullPathForElement() {
-            string path = this.GetMetadata(ProjectFileConstants.Include);
+        public virtual string Url {
+            get {
+                string path = this.GetMetadata(ProjectFileConstants.Include);
 
-            path = CommonUtils.GetAbsoluteFilePath(_itemProject.ProjectHome, path);
+                // we use Path.GetFileName and reverse it because it's much faster 
+                // than Path.GetDirectoryName
+                string filename = Path.GetFileName(path);
+                if (path.IndexOf('.', 0, path.Length - filename.Length) != -1) {
+                    // possibly non-canonical form...
+                    return CommonUtils.GetAbsoluteFilePath(_itemProject.ProjectHome, path);
+                }
 
-            return path;
+                // fast path, we know ProjectHome is canonical, and with no dots
+                // in the directory name, so is path.
+                return Path.Combine(_itemProject.ProjectHome, path);
+            }
         }
 
         /// <summary>

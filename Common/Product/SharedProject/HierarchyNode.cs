@@ -27,6 +27,7 @@ using Microsoft.VisualStudio.Shell.Interop;
 using OleConstants = Microsoft.VisualStudio.OLE.Interop.Constants;
 using VsCommands = Microsoft.VisualStudio.VSConstants.VSStd97CmdID;
 using VsCommands2K = Microsoft.VisualStudio.VSConstants.VSStd2KCmdID;
+using IOleServiceProvider = Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
 
 namespace Microsoft.VisualStudioTools.Project {
     /// <summary>
@@ -35,7 +36,8 @@ namespace Microsoft.VisualStudioTools.Project {
     /// </summary>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1506:AvoidExcessiveClassCoupling")]
     internal abstract class HierarchyNode :
-        IDisposable {
+        IDisposable,
+        IOleServiceProvider {
         public static readonly Guid SolutionExplorer = new Guid(EnvDTE.Constants.vsWindowKindSolutionExplorer);
         public const int NoImage = -1;
 #if DEBUG
@@ -58,14 +60,6 @@ namespace Microsoft.VisualStudioTools.Project {
         private HierarchyNodeFlags flags;
 
         private NodeProperties nodeProperties;
-        private OleServiceProvider oleServiceProvider = new OleServiceProvider();
-
-        /// <summary>
-        /// Has the object been disposed.
-        /// </summary>
-        /// <devremark>We will not specify a property for isDisposed, rather it is expected that the a private flag is defined
-        /// on all subclasses. We do not want get in a situation where the base class's dipose is not called because a child sets the flag through the property.</devremark>
-        private bool isDisposed;
 
         #region abstract properties
         /// <summary>
@@ -243,12 +237,6 @@ namespace Microsoft.VisualStudioTools.Project {
             }
         }
 
-        public OleServiceProvider OleServiceProvider {
-            get {
-                return this.oleServiceProvider;
-            }
-        }
-
         [System.ComponentModel.BrowsableAttribute(false)]
         public ProjectNode ProjectMgr {
             get {
@@ -370,7 +358,6 @@ namespace Microsoft.VisualStudioTools.Project {
             }
         }
 
-
         [System.ComponentModel.BrowsableAttribute(false)]
         public ProjectElement ItemNode {
             get {
@@ -379,25 +366,6 @@ namespace Microsoft.VisualStudioTools.Project {
             set {
                 itemNode = value;
             }
-        }
-
-        protected string GetAbsoluteUrlFromMsbuild() {
-            string path = this.ItemNode.GetMetadata(ProjectFileConstants.Include);
-            if (String.IsNullOrEmpty(path)) {
-                return String.Empty;
-            }
-
-            // we use Path.GetFileName and reverse it because it's much faster 
-            // than Path.GetDirectoryName
-            string filename = Path.GetFileName(path);
-            if (path.Substring(0, path.Length - filename.Length).IndexOf('.') != -1) {
-                // possibly non-canonical form...
-                return CommonUtils.GetAbsoluteFilePath(this.ProjectMgr.ProjectHome, path);
-            }
-
-            // fast path, we know ProjectHome is canonical, and with no dots
-            // in the directory name, so is path.
-            return Path.Combine(ProjectMgr.ProjectHome, path);
         }
 
         [System.ComponentModel.BrowsableAttribute(false)]
@@ -477,7 +445,6 @@ namespace Microsoft.VisualStudioTools.Project {
             this.projectMgr = root;
             this.itemNode = element;
             this.hierarchyId = this.projectMgr.ItemIdMap.Add(this);
-            this.OleServiceProvider.AddService(typeof(IVsHierarchy), root, false);
             IsVisible = true;
         }
 
@@ -491,7 +458,6 @@ namespace Microsoft.VisualStudioTools.Project {
             this.projectMgr = root;
             this.itemNode = new VirtualProjectElement(this.projectMgr);
             this.hierarchyId = this.projectMgr.ItemIdMap.Add(this);
-            this.OleServiceProvider.AddService(typeof(IVsHierarchy), root, false);
             IsVisible = true;
         }
         #endregion
@@ -1486,19 +1452,6 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         /// <param name="disposing">Is the Dispose called by some internal member, or it is called by from GC.</param>
         protected virtual void Dispose(bool disposing) {
-            if (this.isDisposed) {
-                return;
-            }
-
-            if (disposing) {
-                // This will dispose any subclassed project node that implements IDisposable.
-                if (this.OleServiceProvider != null) {
-                    // Dispose the ole service provider object.
-                    this.OleServiceProvider.Dispose();
-                }
-            }
-
-            this.isDisposed = true;
         }
 
         /// <summary>
@@ -1683,21 +1636,17 @@ namespace Microsoft.VisualStudioTools.Project {
         public void AddChild(HierarchyNode node) {
             Utilities.ArgumentNotNull("node", node);
 
-            // make sure the node is in the map.
-            Object nodeWithSameID = this.projectMgr.ItemIdMap[node.hierarchyId];
-            if (!Object.ReferenceEquals(node, nodeWithSameID as HierarchyNode)) {
-                if (nodeWithSameID == null && node.ID <= this.ProjectMgr.ItemIdMap.Count) { // reuse our hierarchy id if possible.
-                    this.projectMgr.ItemIdMap.SetAt(node.hierarchyId, this);
-                } else {
-                    throw new InvalidOperationException();
-                }
-            }
+            Debug.Assert(ProjectMgr.ItemIdMap[node.hierarchyId] == null || ProjectMgr.ItemIdMap[node.hierarchyId] == node);
 
             HierarchyNode previous = null;
+            HierarchyNode previousVisible = null;
             if (this.lastChild != null && this.ProjectMgr.CompareNodes(node, this.lastChild) < 0) {
                 // we can add the node at the end of the list quickly:
                 previous = this.lastChild;
                 previous.nextSibling = node;
+                if (previous.IsVisible) {
+                    previousVisible = previous;
+                }
 
                 this.lastChild = node;
                 node.nextSibling = null;
@@ -1707,6 +1656,9 @@ namespace Microsoft.VisualStudioTools.Project {
                     if (this.ProjectMgr.CompareNodes(node, n) > 0)
                         break;
                     previous = n;
+                    if (previous.IsVisible) {
+                        previousVisible = previous;
+                    }
                 }
                 // insert "node" after "previous".
                 if (previous != null) {
@@ -1722,7 +1674,7 @@ namespace Microsoft.VisualStudioTools.Project {
             }
 
             node.parentNode = this;
-            ProjectMgr.OnItemAdded(this, node);
+            ProjectMgr.OnItemAdded(this, node, previousVisible);
 #if DEV10
             // Dev10 won't check the IsHiddenItem flag when we add an item, and it'll just
             // make it visible no matter what.  So we turn around and invalidate our parent
@@ -1868,5 +1820,52 @@ namespace Microsoft.VisualStudioTools.Project {
         };
         #endregion
 
+        #region IOleServiceProvider
+
+        int IOleServiceProvider.QueryService(ref Guid guidService, ref Guid riid, out IntPtr ppvObject) {
+            object obj;
+            int hr = QueryService(ref guidService, out obj);
+            if (ErrorHandler.Succeeded(hr)) {
+                if (riid.Equals(NativeMethods.IID_IUnknown)) {
+                    ppvObject = Marshal.GetIUnknownForObject(obj);
+                    return VSConstants.S_OK;
+                } 
+
+                IntPtr pUnk = IntPtr.Zero;
+                try {
+                    pUnk = Marshal.GetIUnknownForObject(obj);
+                    return Marshal.QueryInterface(pUnk, ref riid, out ppvObject);
+                } finally {
+                    if (pUnk != IntPtr.Zero) {
+                        Marshal.Release(pUnk);
+                    }
+                }
+            }
+
+            ppvObject = IntPtr.Zero;
+            return hr;
+        }
+
+        /// <summary>
+        /// Provides services for this hierarchy node.  These services are proffered to consumers
+        /// via IVsProject.GetItemContext.  When a service provider is requested we hand out
+        /// the hierarchy node which implements IServiceProvider directly.  Nodes can override
+        /// this function to provide the underlying object which implements the service.
+        /// 
+        /// By default we support handing out the parent project when IVsHierarchy is requested.
+        /// Project nodes support handing their own automation object out, and other services
+        /// such as the Xaml designer context type can also be provided.
+        /// </summary>
+        public virtual int QueryService(ref Guid guidService, out object result) {
+            if (guidService == typeof(IVsHierarchy).GUID) {
+                result = ProjectMgr;
+                return VSConstants.S_OK;
+            }
+
+            result = null;
+            return VSConstants.E_FAIL;
+        }
+
+        #endregion
     }
 }

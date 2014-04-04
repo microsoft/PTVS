@@ -23,8 +23,6 @@ using System.Windows.Markup;
 using System.Windows.Media.Imaging;
 using Microsoft.VisualStudio.Shell;
 
-[assembly: XmlnsDefinition("http://schemas.microsoft.com/vstools/2013/wpf", "Microsoft.VisualStudioTools.Wpf")]
-
 namespace Microsoft.VisualStudioTools.Wpf {
     public static class Controls {
         public static readonly object BackgroundKey = VsBrushes.WindowKey;

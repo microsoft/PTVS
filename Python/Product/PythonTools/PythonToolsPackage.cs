@@ -320,22 +320,13 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
         }
 
         internal static void NavigateTo(string filename, Guid docViewGuidType, int line, int col) {
-            IVsTextView viewAdapter;
-            IVsWindowFrame pWindowFrame;
-            OpenDocument(filename, out viewAdapter, out pWindowFrame);
-
-            ErrorHandler.ThrowOnFailure(pWindowFrame.Show());
-
-            // Set the cursor at the beginning of the declaration.            
-            ErrorHandler.ThrowOnFailure(viewAdapter.SetCaretPos(line, col));
-            // Make sure that the text is visible.
-            viewAdapter.CenterLines(line, 1);
+            VsUtilities.NavigateTo(Instance, filename, docViewGuidType, line, col);
         }
 
         internal static void NavigateTo(string filename, Guid docViewGuidType, int pos) {
             IVsTextView viewAdapter;
             IVsWindowFrame pWindowFrame;
-            OpenDocument(filename, out viewAdapter, out pWindowFrame);
+            VsUtilities.OpenDocument(Instance, filename, out viewAdapter, out pWindowFrame);
 
             ErrorHandler.ThrowOnFailure(pWindowFrame.Show());
 
@@ -350,7 +341,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
         internal static ITextBuffer GetBufferForDocument(string filename) {
             IVsTextView viewAdapter;
             IVsWindowFrame frame;
-            OpenDocument(filename, out viewAdapter, out frame);
+            VsUtilities.OpenDocument(Instance, filename, out viewAdapter, out frame);
 
             IVsTextLines lines;
             ErrorHandler.ThrowOnFailure(viewAdapter.GetBuffer(out lines));
@@ -379,24 +370,6 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             return (defaultLaunchProvider != null) ?
                 UIThread.Invoke<IProjectLauncher>(() => defaultLaunchProvider.CreateLauncher(project)) :
                 null;
-        }
-
-        private static void OpenDocument(string filename, out IVsTextView viewAdapter, out IVsWindowFrame pWindowFrame) {
-            IVsTextManager textMgr = (IVsTextManager)Instance.GetService(typeof(SVsTextManager));
-
-            IVsUIShellOpenDocument uiShellOpenDocument = Instance.GetService(typeof(SVsUIShellOpenDocument)) as IVsUIShellOpenDocument;
-            IVsUIHierarchy hierarchy;
-            uint itemid;
-
-
-            VsShellUtilities.OpenDocument(
-                Instance,
-                filename,
-                Guid.Empty,
-                out hierarchy,
-                out itemid,
-                out pWindowFrame,
-                out viewAdapter);
         }
 
         internal void ShowInterpreterList() {

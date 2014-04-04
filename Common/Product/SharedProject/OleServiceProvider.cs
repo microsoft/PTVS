@@ -20,6 +20,9 @@ using Microsoft.VisualStudio;
 using IOleServiceProvider = Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
 
 namespace Microsoft.VisualStudioTools.Project {
+    // This class is No longer used by project system, retained for backwards for languages
+    // which have already shipped this public type.
+#if SHAREDPROJECT_OLESERVICEPROVIDER    
     public class OleServiceProvider : IOleServiceProvider, IDisposable {
         #region Public Types
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1034:NestedTypesShouldNotBeVisible")]
@@ -223,4 +226,5 @@ namespace Microsoft.VisualStudioTools.Project {
         #endregion
 
     }
+#endif
 }

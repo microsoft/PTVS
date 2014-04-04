@@ -336,9 +336,28 @@ namespace Microsoft.VisualStudioTools.Project {
 
         #region task queue
 
+        class NavigableErrorTask : ErrorTask {
+            private readonly IServiceProvider _serviceProvider;
+
+            public NavigableErrorTask(IServiceProvider serviceProvider) {
+                _serviceProvider = serviceProvider;
+            }
+
+            protected override void OnNavigate(EventArgs e) {
+                VsUtilities.NavigateTo(
+                    _serviceProvider,
+                    Document,
+                    Guid.Empty,
+                    Line,
+                    Column - 1
+                );
+                base.OnNavigate(e);
+            }
+        }
+
         protected void QueueTaskEvent(BuildEventArgs errorEvent) {
             this.taskQueue.Enqueue(() => {
-                ErrorTask task = new ErrorTask();
+                var task = new NavigableErrorTask(serviceProvider);
 
                 if (errorEvent is BuildErrorEventArgs) {
                     BuildErrorEventArgs errorArgs = (BuildErrorEventArgs)errorEvent;

@@ -247,21 +247,6 @@ namespace Microsoft.PythonTools.Project {
             return new PythonFolderNode(this, element);
         }
 
-        public override FileNode CreateFileNode(ProjectElement item) {
-            var newNode = base.CreateFileNode(item);
-            string include = item.GetMetadata(ProjectFileConstants.Include);
-
-            if (XamlDesignerSupport.DesignerContextType != null &&
-                newNode is CommonFileNode &&
-                !string.IsNullOrEmpty(include) &&
-                Path.GetExtension(include).Equals(".xaml", StringComparison.OrdinalIgnoreCase)) {
-                //Create a DesignerContext for the XAML designer for this file
-                newNode.OleServiceProvider.AddService(XamlDesignerSupport.DesignerContextType, ((CommonFileNode)newNode).ServiceCreator, false);
-            }
-
-            return newNode;
-        }
-
         protected override bool FilterItemTypeToBeAddedToHierarchy(string itemType) {
             if (MSBuildProjectInterpreterFactoryProvider.InterpreterReferenceItem.Equals(itemType, StringComparison.Ordinal) ||
                 MSBuildProjectInterpreterFactoryProvider.InterpreterItem.Equals(itemType, StringComparison.Ordinal)) {
@@ -270,23 +255,13 @@ namespace Microsoft.PythonTools.Project {
             return base.FilterItemTypeToBeAddedToHierarchy(itemType);
         }
 
-        public override void Load(string filename, string location, string name, uint flags, ref Guid iidProject, out int canceled) {
-            base.Load(filename, location, name, flags, ref iidProject, out canceled);
-
-            if (XamlDesignerSupport.DesignerContextType != null) {
-                //If this is a WPFFlavor-ed project, then add a project-level DesignerContext service to provide
-                //event handler generation (EventBindingProvider) for the XAML designer.
-                OleServiceProvider.AddService(XamlDesignerSupport.DesignerContextType, new OleServiceProvider.ServiceCreatorCallback(this.CreateServices), false);
+        public override int QueryService(ref Guid guidService, out object result) {
+            if (XamlDesignerSupport.DesignerContextType != null &&
+                guidService == XamlDesignerSupport.DesignerContextType.GUID) {
+                result = DesignerContext;
+                return VSConstants.S_OK;
             }
-        }
-
-        protected override object CreateServices(Type serviceType) {
-            if (XamlDesignerSupport.DesignerContextType == serviceType) {
-                return DesignerContext;
-            }
-
-            var res = base.CreateServices(serviceType);
-            return res;
+            return base.QueryService(ref guidService, out result);
         }
 
         protected override void Reload() {

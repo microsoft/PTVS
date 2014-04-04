@@ -239,7 +239,7 @@ namespace Microsoft.VisualStudioTools.Project {
 
         public override string Url {
             get {
-                return CommonUtils.EnsureEndSeparator(GetAbsoluteUrlFromMsbuild());
+                return CommonUtils.EnsureEndSeparator(ItemNode.Url);
             }
         }
 

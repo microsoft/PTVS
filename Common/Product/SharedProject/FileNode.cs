@@ -169,9 +169,10 @@ namespace Microsoft.VisualStudioTools.Project {
 
         public override string Url {
             get {
-                return GetAbsoluteUrlFromMsbuild();
+                return ItemNode.Url;
             }
         }
+
         #endregion
 
         #region ctor
@@ -413,6 +414,18 @@ namespace Microsoft.VisualStudioTools.Project {
             return new FileDocumentManager(this);
         }
 
+        public override int QueryService(ref Guid guidService, out object result) {
+            if (guidService == typeof(EnvDTE.Project).GUID) {
+                result = ProjectMgr.GetAutomationObject();
+                return VSConstants.S_OK;
+            } else if (guidService == typeof(EnvDTE.ProjectItem).GUID) {
+                result = GetAutomationObject();
+                return VSConstants.S_OK;
+            }
+
+            return base.QueryService(ref guidService, out result);
+        }
+        
         /// <summary>
         /// Called by the drag&drop implementation to ask the node
         /// which is being dragged/droped over which nodes should

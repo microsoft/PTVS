@@ -64,6 +64,7 @@ namespace Microsoft.VisualStudioTools.Project {
         public const string DependentUpon = "DependentUpon";
         public const string Link = "Link";
         public const string Compile = "Compile";
+        public const string None = "None";
         public const string ReferencePath = "ReferencePath";
         public const string ResolvedProjectReferencePaths = "ResolvedProjectReferencePaths";
         public const string Configuration = "Configuration";

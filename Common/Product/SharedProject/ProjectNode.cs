@@ -173,7 +173,7 @@ namespace Microsoft.VisualStudioTools.Project {
         private volatile static object BuildLock = new object();
 
         /// <summary>Maps integer ids to project item instances</summary>
-        private EventSinkCollection itemIdMap = new EventSinkCollection();
+        private HierarchyIdMap itemIdMap = new HierarchyIdMap();
 
         /// <summary>A service provider call back object provided by the IDE hosting the project manager</summary>
         private ServiceProvider site;
@@ -598,7 +598,7 @@ namespace Microsoft.VisualStudioTools.Project {
 
         protected virtual Stream ProjectIconsImageStripStream {
             get {
-                return typeof(ProjectNode).Assembly.GetManifestResourceStream("Microsoft.VisualStudioTools.Project.Resources.imagelis.bmp");
+                return typeof(ProjectNode).Assembly.GetManifestResourceStream("Microsoft.VisualStudioTools.Resources.Icons.SharedProjectImageList.bmp");
             }
         }
 
@@ -708,7 +708,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <summary>
         /// Gets a collection of integer ids that maps to project item instances
         /// </summary>
-        internal EventSinkCollection ItemIdMap {
+        internal HierarchyIdMap ItemIdMap {
             get {
                 return this.itemIdMap;
             }
@@ -1214,6 +1214,19 @@ namespace Microsoft.VisualStudioTools.Project {
         #endregion
 
         #region virtual methods
+
+        public virtual IEnumerable<string> GetAvailableItemNames() {
+            IEnumerable<string> itemTypes = new[] { 
+                ProjectFileConstants.None,
+                ProjectFileConstants.Compile,
+                ProjectFileConstants.Content
+            };
+
+            var items = this.buildProject.GetItems("AvailableItemName");
+            itemTypes = itemTypes.Union(items.Select(x => x.EvaluatedInclude));            
+
+            return itemTypes;
+        }
 
         /// <summary>
         /// Creates a reference node for the given file returning the node, or returns null
@@ -2947,9 +2960,9 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <summary>
         /// Used to sort nodes in the hierarchy.
         /// </summary>
-        protected internal virtual int CompareNodes(HierarchyNode node1, HierarchyNode node2) {
-            Utilities.ArgumentNotNull("node1", node1);
-            Utilities.ArgumentNotNull("node2", node2);
+        internal int CompareNodes(HierarchyNode node1, HierarchyNode node2) {
+            Debug.Assert(node1 != null);
+            Debug.Assert(node2 != null);
 
             if (node1.SortPriority == node2.SortPriority) {
                 return String.Compare(node2.Caption, node1.Caption, true, CultureInfo.CurrentCulture);
@@ -4211,11 +4224,8 @@ If the files in the existing folder have the same names as files in the folder y
 
 
         public virtual int GetItemContext(uint itemId, out Microsoft.VisualStudio.OLE.Interop.IServiceProvider psp) {
-            psp = null;
-            HierarchyNode child = this.NodeFromItemId(itemId);
-            if (child != null) {
-                psp = child.OleServiceProvider as IOleServiceProvider;
-            }
+            // the as cast isn't necessary, but makes it obvious via Find all refs how this is being used
+            psp = this.NodeFromItemId(itemId) as Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
             return VSConstants.S_OK;
         }
 
@@ -4696,7 +4706,7 @@ If the files in the existing folder have the same names as files in the folder y
         /// <param name="projectTypeGuids">Semi colon separated list of Guids. Typically, the last GUID would be the GUID of the base project factory</param>
         /// <returns>HResult</returns>
         public int GetAggregateProjectTypeGuids(out string projectTypeGuids) {
-            projectTypeGuids = this.GetProjectProperty(ProjectFileConstants.ProjectTypeGuids);
+            projectTypeGuids = this.GetProjectProperty(ProjectFileConstants.ProjectTypeGuids, false);
             // In case someone manually removed this from our project file, default to our project without flavors
             if (String.IsNullOrEmpty(projectTypeGuids))
                 projectTypeGuids = this.ProjectGuid.ToString("B");
@@ -4796,7 +4806,7 @@ If the files in the existing folder have the same names as files in the folder y
             // TODO: when adding support for User files, we need to update this method
             propertyValue = null;
             if (string.IsNullOrEmpty(configName)) {
-                propertyValue = this.GetProjectProperty(propertyName);
+                propertyValue = this.GetProjectProperty(propertyName, false);
             } else {
                 IVsCfg configurationInterface;
                 int platformStart;
@@ -4998,10 +5008,10 @@ If the files in the existing folder have the same names as files in the folder y
         /// Sets the scc info from the project file.
         /// </summary>
         private void InitSccInfo() {
-            this.sccProjectName = this.GetProjectProperty(ProjectFileConstants.SccProjectName);
-            this.sccLocalPath = this.GetProjectProperty(ProjectFileConstants.SccLocalPath);
-            this.sccProvider = this.GetProjectProperty(ProjectFileConstants.SccProvider);
-            this.sccAuxPath = this.GetProjectProperty(ProjectFileConstants.SccAuxPath);
+            this.sccProjectName = this.GetProjectProperty(ProjectFileConstants.SccProjectName, false);
+            this.sccLocalPath = this.GetProjectProperty(ProjectFileConstants.SccLocalPath, false);
+            this.sccProvider = this.GetProjectProperty(ProjectFileConstants.SccProvider, false);
+            this.sccAuxPath = this.GetProjectProperty(ProjectFileConstants.SccAuxPath, false);
         }
 
         internal void OnAfterProjectOpen() {
@@ -5027,7 +5037,7 @@ If the files in the existing folder have the same names as files in the folder y
         /// Sets the project guid from the project file. If no guid is found a new one is created and assigne for the instance project guid.
         /// </summary>
         private void SetProjectGuidFromProjectFile() {
-            string projectGuid = this.GetProjectProperty(ProjectFileConstants.ProjectGuid);
+            string projectGuid = this.GetProjectProperty(ProjectFileConstants.ProjectGuid, false);
             if (String.IsNullOrEmpty(projectGuid)) {
                 this.projectIdGuid = Guid.NewGuid();
             } else {
@@ -5549,7 +5559,7 @@ If the files in the existing folder have the same names as files in the folder y
 
         #region Hierarchy change notification
 
-        internal void OnItemAdded(HierarchyNode parent, HierarchyNode child) {
+        internal void OnItemAdded(HierarchyNode parent, HierarchyNode child, HierarchyNode previousVisible = null) {
             Utilities.ArgumentNotNull("parent", parent);
             Utilities.ArgumentNotNull("child", child);
 
@@ -5566,7 +5576,7 @@ If the files in the existing folder have the same names as files in the folder y
 
             ExtensibilityEventsDispatcher.FireItemAdded(child);
 
-            HierarchyNode prev = child.PreviousVisibleSibling;
+            HierarchyNode prev = previousVisible ?? child.PreviousVisibleSibling;
             uint prevId = (prev != null) ? prev.HierarchyId : VSConstants.VSITEMID_NIL;
             foreach (IVsHierarchyEvents sink in _hierarchyEventSinks) {
                 int result = sink.OnItemAdded(parent.HierarchyId, prevId, child.HierarchyId);

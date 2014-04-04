@@ -43,7 +43,7 @@
     <StartAction>Program</StartAction>
     <StartProgram>$(DevEnvDir)devenv.exe</StartProgram>
     <StartArguments>/rootSuffix Exp /Log</StartArguments>
-    <DefineConstants>$(DefineConstants);$(SignedSym)</DefineConstants>
+    <DefineConstants>$(DefineConstants);$(SignedSym);SHAREDPROJECT_OLESERVICEPROVIDER</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">

@@ -417,6 +417,11 @@ namespace TestUtilities.UI {
         }
 
         [DebuggerStepThrough]
+        public static TogglePattern GetTogglePattern(this AutomationElement node) {
+            return node.Pattern<TogglePattern>(TogglePattern.Pattern);
+        }
+
+        [DebuggerStepThrough]
         public static ValuePattern GetValuePattern(this AutomationElement node) {
             return node.Pattern<ValuePattern>(ValuePattern.Pattern);
         }

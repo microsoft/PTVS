@@ -15,14 +15,16 @@
 using System;
 using System.Diagnostics;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudio.TextManager.Interop;
 
 namespace Microsoft.VisualStudioTools.Project {
     /// <summary>
     ///This class provides some useful static shell based methods. 
     /// </summary>
 
-    public static class UIHierarchyUtilities {
+    internal static class UIHierarchyUtilities {
         /// <summary>
         /// Get reference to IVsUIHierarchyWindow interface from guid persistence slot.
         /// </summary>
@@ -50,6 +52,38 @@ namespace Microsoft.VisualStudioTools.Project {
             }
 
             return null;
+        }
+    }
+
+    internal static class VsUtilities {
+        internal static void NavigateTo(IServiceProvider serviceProvider, string filename, Guid docViewGuidType, int line, int col) {
+            IVsTextView viewAdapter;
+            IVsWindowFrame pWindowFrame;
+            OpenDocument(serviceProvider, filename, out viewAdapter, out pWindowFrame);
+
+            ErrorHandler.ThrowOnFailure(pWindowFrame.Show());
+
+            // Set the cursor at the beginning of the declaration.            
+            ErrorHandler.ThrowOnFailure(viewAdapter.SetCaretPos(line, col));
+            // Make sure that the text is visible.
+            viewAdapter.CenterLines(line, 1);
+        }
+
+        internal static void OpenDocument(IServiceProvider serviceProvider, string filename, out IVsTextView viewAdapter, out IVsWindowFrame pWindowFrame) {
+            IVsTextManager textMgr = (IVsTextManager)serviceProvider.GetService(typeof(SVsTextManager));
+
+            IVsUIShellOpenDocument uiShellOpenDocument = serviceProvider.GetService(typeof(SVsUIShellOpenDocument)) as IVsUIShellOpenDocument;
+            IVsUIHierarchy hierarchy;
+            uint itemid;
+
+            VsShellUtilities.OpenDocument(
+                serviceProvider,
+                filename,
+                Guid.Empty,
+                out hierarchy,
+                out itemid,
+                out pWindowFrame,
+                out viewAdapter);
         }
     }
 }

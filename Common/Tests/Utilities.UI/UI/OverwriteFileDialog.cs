@@ -33,6 +33,25 @@ namespace TestUtilities.UI {
             Invoke(FindButton("_cancel"));
         }
 
+
+        public bool AllItems {
+            get {
+                return FindByAutomationId("_allItems").GetTogglePattern().Current.ToggleState == ToggleState.On;
+            }
+            set {
+                if (AllItems) {
+                    if (!value) {
+                        FindByAutomationId("_allItems").GetTogglePattern().Toggle();
+                    }
+                } else {
+                    if (value) {
+                        FindByAutomationId("_allItems").GetTogglePattern().Toggle();
+                    }
+                }
+            }
+        }
+
+
         public string Text {
             get {
                 var message = (ValuePattern)GetMessageTextBlock().GetCurrentPattern(ValuePattern.Pattern);

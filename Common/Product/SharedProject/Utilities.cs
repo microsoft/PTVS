@@ -252,6 +252,7 @@ namespace Microsoft.VisualStudioTools.Project {
             ImageList ilist = new ImageList();
 
             if (imageStream == null) {
+                Debug.Fail("ImageStream was null.");
                 return ilist;
             }
             ilist.ColorDepth = ColorDepth.Depth24Bit;

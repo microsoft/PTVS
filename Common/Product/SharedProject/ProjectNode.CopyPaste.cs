@@ -503,14 +503,22 @@ namespace Microsoft.VisualStudioTools.Project {
                 }
 
                 bool result = true;
+                bool? overwrite = null;
                 foreach (var addition in additions) {
-                    addition.DoAddition();
+                    try {
+                        addition.DoAddition(ref overwrite);
+                    } catch (CancelPasteException) {
+                        return false;
+                    }
                     if (addition is SkipOverwriteAddition) {
                         result = false;
                     }
                 }
 
                 return result;
+            }
+
+            sealed class CancelPasteException : Exception {
             }
 
             /// <summary>
@@ -769,7 +777,7 @@ folder you are copying, do you want to replace the existing files?", Path.GetFil
                     DropEffect = dropEffect;
                 }
 
-                public override void DoAddition() {
+                public override void DoAddition(ref bool? overwrite) {
                     bool wasExpanded = false;
                     HierarchyNode newNode;
                     var sourceFolder = Project.FindNodeByFullPath(SourceFolder) as FolderNode;
@@ -787,7 +795,7 @@ folder you are copying, do you want to replace the existing files?", Path.GetFil
                     }
 
                     foreach (var addition in Additions) {
-                        addition.DoAddition();
+                        addition.DoAddition(ref overwrite);
                     }
 
                     if (sourceFolder != null) {
@@ -974,12 +982,8 @@ folder you are copying, do you want to replace the existing files?", Path.GetFil
                         bool? overwrite = OverwriteAllItems;
 
                         if (overwrite == null) {
-                            var dialog = new OverwriteFileDialog(String.Format("A file with the name '{0}' already exists.  Do you want to replace it?", Path.GetFileName(moniker)), true);
-                            dialog.Owner = Application.Current.MainWindow;
-                            bool? dialogResult = dialog.ShowDialog();
-
-                            if (dialogResult != null && !dialogResult.Value) {
-                                // user cancelled
+                            OverwriteFileDialog dialog;
+                            if (!PromptOverwriteFile(moniker, out dialog)) {
                                 return null;
                             }
 
@@ -1021,6 +1025,24 @@ folder you are copying, do you want to replace the existing files?", Path.GetFil
                 return null;
             }
 
+            /// <summary>
+            /// Prompts if the file should be overwriten.  Returns false if the user cancels, true if the user answered yes/no
+            /// </summary>
+            /// <param name="filename"></param>
+            /// <param name="dialog"></param>
+            /// <returns></returns>
+            private static bool PromptOverwriteFile(string filename, out OverwriteFileDialog dialog) {
+                dialog = new OverwriteFileDialog(String.Format("A file with the name '{0}' already exists.  Do you want to replace it?", Path.GetFileName(filename)), true);
+                dialog.Owner = Application.Current.MainWindow;
+                bool? dialogResult = dialog.ShowDialog();
+
+                if (dialogResult != null && !dialogResult.Value) {
+                    // user cancelled
+                    return false;
+                }
+                return true;
+            }
+
             private bool IsBadMove(string targetFolder, string moniker, bool file) {
                 if (TargetNode.GetMkDocument() == moniker) {
                     // we are moving the file onto it's self.  If it's a single file via mouse
@@ -1059,7 +1081,7 @@ folder you are copying, do you want to replace the existing files?", Path.GetFil
             }
 
             abstract class Addition {
-                public abstract void DoAddition();
+                public abstract void DoAddition(ref bool? overwrite);
             }
 
             /// <summary>
@@ -1074,7 +1096,7 @@ folder you are copying, do you want to replace the existing files?", Path.GetFil
             class SkipOverwriteAddition : Addition {
                 internal static SkipOverwriteAddition Instance = new SkipOverwriteAddition();
 
-                public override void DoAddition() {
+                public override void DoAddition(ref bool? overwrite) {
                 }
             }
 
@@ -1089,7 +1111,7 @@ folder you are copying, do you want to replace the existing files?", Path.GetFil
                     Moniker = moniker;
                 }
 
-                public override void DoAddition() {
+                public override void DoAddition(ref bool? overwrite) {
                     var existing = Project.FindNodeByFullPath(Moniker);
                     Project.OnItemDeleted(existing);
                     existing.Parent.RemoveChild(existing);
@@ -1134,7 +1156,7 @@ folder you are copying, do you want to replace the existing files?", Path.GetFil
                     NewFileName = newFileName;
                 }
 
-                public override void DoAddition() {
+                public override void DoAddition(ref bool? overwrite) {
                     string newPath = Path.Combine(TargetFolder, NewFileName);
                     if (DropEffect == DropEffect.Move && Utilities.IsSameComObject(Project, SourceHierarchy)) {
                         // we are doing a move, we need to remove the old item, and add the new.
@@ -1146,12 +1168,47 @@ folder you are copying, do you want to replace the existing files?", Path.GetFil
                         var fileNode = Project.FindNodeByFullPath(SourceMoniker);
                         Debug.Assert(fileNode is FileNode);
 
+                        Project.ItemsDraggedOrCutOrCopied.Remove(fileNode); // we don't need to remove the file after Paste                        
+
+                        if (File.Exists(newPath)) {
+                            // we checked before starting the copy, but somehow a file has snuck in.  Could be a race,
+                            // or the user could have cut and pasted 2 files from different folders into the same folder.
+                            bool shouldOverwrite;
+                            if (overwrite == null) {
+                                OverwriteFileDialog dialog;
+                                if (!PromptOverwriteFile(Path.GetFileName(newPath), out dialog)) {
+                                    // user cancelled
+                                    fileNode.ExpandItem(EXPANDFLAGS.EXPF_UnCutHighlightItem);
+                                    throw new CancelPasteException();
+                                }
+
+                                if (dialog.AllItems) {
+                                    overwrite = dialog.ShouldOverwrite;
+                                }
+
+                                shouldOverwrite = dialog.ShouldOverwrite;
+                            } else {
+                                shouldOverwrite = overwrite.Value;
+                            }
+
+                            if (!shouldOverwrite) {
+                                fileNode.ExpandItem(EXPANDFLAGS.EXPF_UnCutHighlightItem);
+                                return;
+                            }
+
+                            var existingNode = Project.FindNodeByFullPath(newPath);
+                            if (existingNode != null) {
+                                existingNode.Remove(true);
+                            } else {
+                                File.Delete(newPath);
+                            }
+                        }
+
                         FileNode file = fileNode as FileNode;
                         file.RenameInStorage(fileNode.Url, newPath);
                         file.RenameFileNode(fileNode.Url, newPath);
 
                         Project.Tracker.OnItemRenamed(SourceMoniker, newPath, VSRENAMEFILEFLAGS.VSRENAMEFILEFLAGS_NoFlags);
-                        Project.ItemsDraggedOrCutOrCopied.Remove(fileNode); // we don't need to remove the file after Paste
                     } else {
                         // we are copying and adding a new file node
                         File.Copy(SourceMoniker, newPath, true);
@@ -1206,7 +1263,7 @@ folder you are copying, do you want to replace the existing files?", Path.GetFil
                     : base(project, targetFolder, dropEffect, sourceMoniker, newFileName, sourceHierarchy) {
                 }
 
-                public override void DoAddition() {
+                public override void DoAddition(ref bool? overwrite) {
                     if (DropEffect == DropEffect.Move) {
                         // File.Move won't overwrite, do it now.
                         File.Delete(Path.Combine(TargetFolder, Path.GetFileName(NewFileName)));
@@ -1218,7 +1275,7 @@ folder you are copying, do you want to replace the existing files?", Path.GetFil
                             existingNode.Remove(true);
                         }
                     }
-                    base.DoAddition();
+                    base.DoAddition(ref overwrite);
                 }
             }
         }

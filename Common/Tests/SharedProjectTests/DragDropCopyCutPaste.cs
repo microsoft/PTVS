@@ -12,12 +12,14 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Input;
 using Microsoft.TC.TestHostAdapters;
+using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.SharedProject;
@@ -909,6 +911,355 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void MoveReverseCrossHierarchyMouse() {
             MoveReverseCrossHierarchy(MoveByMouse);
+        }
+       
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void MoveDuplicateFileNameOverwriteKeyboard() {
+            MoveDuplicateFileNameOverwrite(MoveByKeyboard);
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void MoveDuplicateFileNameOverwriteMouse() {
+            MoveDuplicateFileNameOverwrite(MoveByMouse);
+        }
+
+        /// <summary>
+        /// Cuts 2 files with the same name, answers yes to overwrite them, and
+        /// makes sure only one file is left.
+        /// </summary>
+        /// <param name="mover"></param>
+        private void MoveDuplicateFileNameOverwrite(MoveDelegate mover) {
+            foreach (var projectType in ProjectTypes) {
+                var project = new ProjectDefinition(
+                    "DragDropCopyCutPaste",
+                    projectType,
+                    ItemGroup(
+                        Folder("A"),
+                        Folder("B"),
+                        Content("quox.txt", "top-level"),
+                        Content("A\\quox.txt", "A")
+                    )
+                );
+
+                using (var solution = project.Generate().ToVs()) {
+                    mover(
+                        solution.WaitForItem("DragDropCopyCutPaste", "B"),
+                        solution.WaitForItem("DragDropCopyCutPaste", "A", "quox.txt"),
+                        solution.WaitForItem("DragDropCopyCutPaste", "quox.txt")
+                    );
+
+                    var dialog = new OverwriteFileDialog(solution.App.WaitForDialog());
+                    Assert.IsTrue(dialog.Text.Contains("A file with the name 'quox.txt' already exists."), "wrong text");
+                    dialog.Yes();
+
+                    solution.AssertFileExists("DragDropCopyCutPaste", "B", "quox.txt");
+                    solution.AssertFileDoesntExist("DragDropCopyCutPaste", "quox.txt");
+                    solution.AssertFileDoesntExist("DragDropCopyCutPaste", "A", "quox.txt");
+
+                    Assert.AreEqual(1, solution.Project.ProjectItems.Item("B").ProjectItems.Count);
+                }
+            }
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void MoveDuplicateFileNameOverwriteAllItemsKeyboard() {
+            MoveDuplicateFileNameOverwriteAllItems(MoveByKeyboard);
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void MoveDuplicateFileNameOverwriteAllItemsMouse() {
+            MoveDuplicateFileNameOverwriteAllItems(MoveByMouse);
+        }
+
+        /// <summary>
+        /// Cuts 3 files with the same name, answers yes to overwrite them and
+        /// checks do this for all items, and makes sure only one file is left.
+        /// </summary>
+        /// <param name="mover"></param>
+        private void MoveDuplicateFileNameOverwriteAllItems(MoveDelegate mover) {
+            foreach (var projectType in ProjectTypes) {
+                var project = new ProjectDefinition(
+                    "DragDropCopyCutPaste",
+                    projectType,
+                    ItemGroup(
+                        Folder("A"),
+                        Folder("B"),
+                        Folder("C"),
+                        Content("quox.txt", "top-level"),
+                        Content("A\\quox.txt", "A"),
+                        Content("C\\quox.txt", "C")
+                    )
+                );
+
+                using (var solution = project.Generate().ToVs()) {
+                    mover(
+                        solution.WaitForItem("DragDropCopyCutPaste", "B"),
+                        solution.WaitForItem("DragDropCopyCutPaste", "A", "quox.txt"),
+                        solution.WaitForItem("DragDropCopyCutPaste", "C", "quox.txt"),
+                        solution.WaitForItem("DragDropCopyCutPaste", "quox.txt")
+                    );
+
+                    var dialog = new OverwriteFileDialog(solution.App.WaitForDialog());
+                    Assert.IsTrue(dialog.Text.Contains("A file with the name 'quox.txt' already exists."), "wrong text");
+                    dialog.AllItems = true;
+                    dialog.Yes();
+
+                    solution.AssertFileExists("DragDropCopyCutPaste", "B", "quox.txt");
+                    solution.AssertFileDoesntExist("DragDropCopyCutPaste", "quox.txt");
+                    solution.AssertFileDoesntExist("DragDropCopyCutPaste", "A", "quox.txt");
+                    solution.AssertFileDoesntExist("DragDropCopyCutPaste", "C", "quox.txt");
+
+                    Assert.AreEqual(1, solution.Project.ProjectItems.Item("B").ProjectItems.Count);
+                }
+            }
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void MoveDuplicateFileNameDontOverwriteKeyboard() {
+            MoveDuplicateFileNameDontOverwrite(MoveByKeyboard);
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void MoveDuplicateFileNameDontOverwriteMouse() {
+            MoveDuplicateFileNameDontOverwrite(MoveByMouse);
+        }
+
+        /// <summary>
+        /// Cuts 2 files with the same name, pastes them to a folder, and makes
+        /// sure we get prompted to overwrite.  Answers no to overwriting, both
+        /// files should still be in the project.
+        /// </summary>
+        /// <param name="mover"></param>
+        private void MoveDuplicateFileNameDontOverwrite(MoveDelegate mover) {
+            foreach (var projectType in ProjectTypes) {
+                var project = new ProjectDefinition(
+                    "DragDropCopyCutPaste",
+                    projectType,
+                    ItemGroup(
+                        Folder("A"),
+                        Folder("B"),
+                        Content("quox.txt", "top-level"),
+                        Content("A\\quox.txt", "A")
+                    )
+                );
+
+                using (var solution = project.Generate().ToVs()) {
+                    mover(
+                        solution.WaitForItem("DragDropCopyCutPaste", "B"),
+                        solution.WaitForItem("DragDropCopyCutPaste", "A", "quox.txt"),
+                        solution.WaitForItem("DragDropCopyCutPaste", "quox.txt")
+                    );
+
+                    var dialog = new OverwriteFileDialog(solution.App.WaitForDialog());
+                    Assert.IsTrue(dialog.Text.Contains("A file with the name 'quox.txt' already exists."), "wrong text");
+                    dialog.No();
+
+                    solution.AssertFileExists("DragDropCopyCutPaste", "B", "quox.txt");
+                    // one of the fils should still exist...
+                    try {
+                        solution.AssertFileExists("DragDropCopyCutPaste", "quox.txt");
+                    } catch (AssertFailedException) {
+                        solution.AssertFileExists("DragDropCopyCutPaste", "A", "quox.txt");
+                    }
+
+                    Assert.AreEqual(1, solution.Project.ProjectItems.Item("B").ProjectItems.Count);
+                }
+            }
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void MoveDuplicateFileNameDontOverwrite2Keyboard() {
+            MoveDuplicateFileNameDontOverwrite2(MoveByKeyboard);
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void MoveDuplicateFileNameDontOverwrite2Mouse() {
+            MoveDuplicateFileNameDontOverwrite2(MoveByMouse);
+        }
+
+        /// <summary>
+        /// Cuts 3 files with the same name, pastes them to a folder, and makes
+        /// sure that we get multiple prompts to overwrite.  Answers no to all of them, and
+        /// all the files should still exist somewhere.
+        /// </summary>
+        /// <param name="mover"></param>
+        private void MoveDuplicateFileNameDontOverwrite2(MoveDelegate mover) {
+            foreach (var projectType in ProjectTypes) {
+                var project = new ProjectDefinition(
+                    "DragDropCopyCutPaste",
+                    projectType,
+                    ItemGroup(
+                        Folder("A"),
+                        Folder("B"),
+                        Folder("C"),
+                        Content("quox.txt", "top-level"),
+                        Content("A\\quox.txt", "A"),
+                        Content("C\\quox.txt", "C")
+                    )
+                );
+
+                using (var solution = project.Generate().ToVs()) {
+                    mover(
+                        solution.WaitForItem("DragDropCopyCutPaste", "B"),
+                        solution.WaitForItem("DragDropCopyCutPaste", "A", "quox.txt"),
+                        solution.WaitForItem("DragDropCopyCutPaste", "C", "quox.txt"),
+                        solution.WaitForItem("DragDropCopyCutPaste", "quox.txt")
+                    );
+
+                    var dialog = new OverwriteFileDialog(solution.App.WaitForDialog());
+                    Assert.IsTrue(dialog.Text.Contains("A file with the name 'quox.txt' already exists."), "wrong text");                    
+                    dialog.No();
+
+                    System.Threading.Thread.Sleep(1000);
+
+                    dialog = new OverwriteFileDialog(solution.App.WaitForDialog());
+                    Assert.IsTrue(dialog.Text.Contains("A file with the name 'quox.txt' already exists."), "wrong text");
+                    dialog.No();
+
+                    solution.AssertFileExists("DragDropCopyCutPaste", "B", "quox.txt");
+                    int totalCount = solution.Project.ProjectItems.Item("A").ProjectItems.Count +
+                        solution.Project.ProjectItems.Item("B").ProjectItems.Count +
+                        solution.Project.ProjectItems.Item("C").ProjectItems.Count +
+                        solution.Project.ProjectItems.Cast<EnvDTE.ProjectItem>().Where(IsFile).Count();
+
+                    Assert.AreEqual(3, totalCount);
+                    Assert.AreEqual(1, solution.Project.ProjectItems.Item("B").ProjectItems.Count);
+                }
+            }
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void MoveDuplicateFileNameDontOverwriteAllItemsKeyboard() {
+            MoveDuplicateFileNameDontOverwriteAllItems(MoveByKeyboard);
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void MoveDuplicateFileNameDontOverwriteAllItemsMouse() {
+            MoveDuplicateFileNameDontOverwriteAllItems(MoveByMouse);
+        }
+
+        /// <summary>
+        /// Cuts 3 files with the same name, pastes them to a folder, checks
+        /// do this for all items, and makes sure all the files still exist somewhere.
+        /// </summary>
+        /// <param name="mover"></param>
+        private void MoveDuplicateFileNameDontOverwriteAllItems(MoveDelegate mover) {
+            foreach (var projectType in ProjectTypes) {
+                var project = new ProjectDefinition(
+                    "DragDropCopyCutPaste",
+                    projectType,
+                    ItemGroup(
+                        Folder("A"),
+                        Folder("B"),
+                        Folder("C"),
+                        Content("quox.txt", "top-level"),
+                        Content("A\\quox.txt", "A"),
+                        Content("C\\quox.txt", "C")
+                    )
+                );
+
+                using (var solution = project.Generate().ToVs()) {
+                    mover(
+                        solution.WaitForItem("DragDropCopyCutPaste", "B"),
+                        solution.WaitForItem("DragDropCopyCutPaste", "A", "quox.txt"),
+                        solution.WaitForItem("DragDropCopyCutPaste", "C", "quox.txt"),
+                        solution.WaitForItem("DragDropCopyCutPaste", "quox.txt")
+                    );
+
+                    var dialog = new OverwriteFileDialog(solution.App.WaitForDialog());
+                    Assert.IsTrue(dialog.Text.Contains("A file with the name 'quox.txt' already exists."), "wrong text");
+                    dialog.AllItems = true;
+                    dialog.No();
+
+                    solution.App.WaitForDialogDismissed();
+
+                    solution.AssertFileExists("DragDropCopyCutPaste", "B", "quox.txt");
+                    int totalCount = solution.Project.ProjectItems.Item("A").ProjectItems.Count +
+                        solution.Project.ProjectItems.Item("B").ProjectItems.Count +
+                        solution.Project.ProjectItems.Item("C").ProjectItems.Count +
+                        solution.Project.ProjectItems.Cast<EnvDTE.ProjectItem>().Where(IsFile).Count();
+
+                    Assert.AreEqual(3, totalCount);
+                    Assert.AreEqual(1, solution.Project.ProjectItems.Item("B").ProjectItems.Count);
+                }
+            }
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void MoveDuplicateFileNameCancelKeyboard() {
+            MoveDuplicateFileNameCancel(MoveByKeyboard);
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void MoveDuplicateFileNameCancelMouse() {
+            MoveDuplicateFileNameCancel(MoveByMouse);
+        }
+
+        /// <summary>
+        /// Cuts 3 files with the same name, pastes them to a folder, and makes sure
+        /// we get a prompt to overwrite.  Cancels on the 1st prompt and ensures all
+        /// of the files are still there.
+        /// </summary>
+        /// <param name="mover"></param>
+        private void MoveDuplicateFileNameCancel(MoveDelegate mover) {
+            foreach (var projectType in ProjectTypes) {
+                var project = new ProjectDefinition(
+                    "DragDropCopyCutPaste",
+                    projectType,
+                    ItemGroup(
+                        Folder("A"),
+                        Folder("B"),
+                        Folder("C"),
+                        Content("quox.txt", "top-level"),
+                        Content("A\\quox.txt", "A"),
+                        Content("C\\quox.txt", "C")
+                    )
+                );
+
+                using (var solution = project.Generate().ToVs()) {
+                    mover(
+                        solution.WaitForItem("DragDropCopyCutPaste", "B"),
+                        solution.WaitForItem("DragDropCopyCutPaste", "A", "quox.txt"),
+                        solution.WaitForItem("DragDropCopyCutPaste", "C", "quox.txt"),
+                        solution.WaitForItem("DragDropCopyCutPaste", "quox.txt")
+                    );
+
+                    var dialog = new OverwriteFileDialog(solution.App.WaitForDialog());
+                    Assert.IsTrue(dialog.Text.Contains("A file with the name 'quox.txt' already exists."), "wrong text");
+                    dialog.Cancel();
+
+                    solution.App.WaitForDialogDismissed();
+
+                    solution.AssertFileExists("DragDropCopyCutPaste", "B", "quox.txt");
+                    int totalCount = solution.Project.ProjectItems.Item("A").ProjectItems.Count +
+                        solution.Project.ProjectItems.Item("B").ProjectItems.Count +
+                        solution.Project.ProjectItems.Item("C").ProjectItems.Count +
+                        solution.Project.ProjectItems.Cast<EnvDTE.ProjectItem>().Where(IsFile).Count();
+
+                    Assert.AreEqual(3, totalCount);
+                    Assert.AreEqual(1, solution.Project.ProjectItems.Item("B").ProjectItems.Count);
+                }
+            }
+        }
+
+        private static bool IsFile(EnvDTE.ProjectItem projectItem) {
+            Guid guid;
+            if (Guid.TryParse(projectItem.Kind, out guid)) {
+                return guid == VSConstants.GUID_ItemType_PhysicalFile;
+            }
+            return false;
         }
 
         /// <summary>

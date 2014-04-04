@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Windows.Forms;
@@ -45,7 +46,22 @@ namespace Microsoft.PythonTools.ImportWizard {
                 MessageBox.Show("Unable to start wizard: no automation object available.", "Python Tools for Visual Studio");
             } else {
                 System.Threading.Tasks.Task.Factory.StartNew(() => {
-                    object inObj = null, outObj = null;
+                    string projName = replacementsDictionary["$projectname$"];
+                    string solnName = replacementsDictionary["$specifiedsolutionname$"];
+                    string directory;
+                    if (String.IsNullOrWhiteSpace(solnName)) {
+                        // Create directory is unchecked, destinationdirectory is the
+                        // directory name the user entered plus the project name, we want
+                        // to remove the project name.
+                        directory = Path.GetDirectoryName(replacementsDictionary["$destinationdirectory$"]);
+                    } else {
+                        // Create directory is checked, the destinationdirectory is the
+                        // directory the user entered plus the project name plus the
+                        // solution name - we want to remove both extra folders
+                        directory = Path.GetDirectoryName(Path.GetDirectoryName(replacementsDictionary["$destinationdirectory$"]));
+                    }
+
+                    object inObj = projName + "|" + directory, outObj = null; 
                     dte.Commands.Raise(GuidList.guidPythonToolsCmdSet.ToString("B"), (int)PkgCmdIDList.cmdidImportWizard, ref inObj, ref outObj);
                 });
             }

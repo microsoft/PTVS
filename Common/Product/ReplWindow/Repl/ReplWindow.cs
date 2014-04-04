@@ -2395,7 +2395,7 @@ namespace Microsoft.VisualStudio.Repl {
                     _pendingSubmissions.Clear();
                 }
             }
-
+            _addedLineBreakOnLastOutput = false;
             PrepareForInput();
         }
 

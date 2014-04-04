@@ -352,11 +352,9 @@ namespace Microsoft.VisualStudioTools.Project {
                         }
                     }
                 }
-                    // If we are not in a cut or copy mode then disable the paste command
-                else if (!this.AllowPasteCommand()) {
-                    if (commandGroup == VsMenus.guidStandardCommandSet97 && (VsCommands)command == VsCommands.Paste) {
-                        return true;
-                    }
+                // If we are not in a cut or copy mode then disable the paste command
+                else if (commandGroup == VsMenus.guidStandardCommandSet97 && (VsCommands)command == VsCommands.Paste) {
+                    return !this.AllowPasteCommand();
                 }
             }
 

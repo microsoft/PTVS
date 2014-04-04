@@ -125,16 +125,12 @@ namespace Microsoft.VisualStudioTools {
                     foreach (var command in commands) {
                         var beforeQueryStatus = command.BeforeQueryStatus;
                         CommandID toolwndCommandID = new CommandID(cmdSet, command.CommandId);
-                        if (beforeQueryStatus == null) {
-                            MenuCommand menuToolWin = new MenuCommand(command.DoCommand, toolwndCommandID);
-                            mcs.AddCommand(menuToolWin);
-                            _commands[command] = menuToolWin;
-                        } else {
-                            OleMenuCommand menuToolWin = new OleMenuCommand(command.DoCommand, toolwndCommandID);
+                        OleMenuCommand menuToolWin = new OleMenuCommand(command.DoCommand, toolwndCommandID);
+                        if (beforeQueryStatus != null) {
                             menuToolWin.BeforeQueryStatus += beforeQueryStatus;
-                            mcs.AddCommand(menuToolWin);
-                            _commands[command] = menuToolWin;
                         }
+                        mcs.AddCommand(menuToolWin);
+                        _commands[command] = menuToolWin;
                     }
                 }
             }

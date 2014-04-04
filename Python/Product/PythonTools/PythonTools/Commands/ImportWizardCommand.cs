@@ -68,6 +68,23 @@ namespace Microsoft.PythonTools.Commands {
             statusBar.SetText(SR.GetString(SR.StatusImportWizardStarting));
 
             var dlg = new Microsoft.PythonTools.Project.ImportWizard.ImportWizard();
+
+            Microsoft.VisualStudio.Shell.OleMenuCmdEventArgs oleArgs = args as Microsoft.VisualStudio.Shell.OleMenuCmdEventArgs;
+            if (oleArgs != null) {
+                string projectArgs = oleArgs.InValue as string;
+                if (projectArgs != null) {
+                    var argItems = projectArgs.Split('|');
+                    if (argItems.Length == 2) {
+                        dlg.ImportSettings.ProjectPath = CommonUtils.GetAvailableFilename(
+                            argItems[1],
+                            argItems[0],
+                            ".pyproj"
+                        );
+                        dlg.ImportSettings.SourcePath = argItems[1];
+                    }
+                }
+            } 
+            
             if (dlg.ShowModal() ?? false) {
                 CreateProjectAndHandleErrors(statusBar, dlg);
             } else {

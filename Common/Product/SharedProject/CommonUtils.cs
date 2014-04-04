@@ -106,10 +106,10 @@ namespace Microsoft.VisualStudioTools {
             }
 
             Uri uri1, uri2;
-            return
+            return 
                 TryMakeUri(path1, true, UriKind.Absolute, out uri1) &&
                 TryMakeUri(path2, true, UriKind.Absolute, out uri2) &&
-                uri1 == uri2;
+                uri1 == uri2;            
         }
 
         /// <summary>
@@ -392,6 +392,24 @@ namespace Microsoft.VisualStudioTools {
         public static bool IsValidPath(string path) {
             return !string.IsNullOrEmpty(path) &&
                 path.IndexOfAny(InvalidPathChars) < 0;
+        }
+
+        /// <summary>
+        /// Gets a filename in the specified location with the specified name and extension.
+        /// If the file already exist it will calculate a name with a number in it.
+        /// </summary>
+        public static string GetAvailableFilename(string location, string basename, string extension) {
+            var newPath = Path.Combine(location, basename);
+            int index = 0;
+            if (File.Exists(newPath + extension)) {
+                string candidateNewPath;
+                do {
+                    candidateNewPath = string.Format("{0}{1}", newPath, ++index);
+                } while (File.Exists(candidateNewPath + extension));
+                newPath = candidateNewPath;
+            }
+            string final = newPath + extension;
+            return final;
         }
     }
 }

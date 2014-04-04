@@ -23,21 +23,11 @@ namespace Microsoft.VisualStudioTools.Project.Automation
     /// It should be used inside a "using" directive to define the scope of the
     /// automation function and make sure that the ExitAutomation method is called.
     /// </summary>
-    internal class AutomationScope : IDisposable
+    internal sealed class AutomationScope : IDisposable
     {
         private IVsExtensibility3 extensibility;
         private bool inAutomation;
-        private static volatile object Mutex;
         private bool isDisposed;
-
-        /// <summary>
-        /// Initializes the <see cref="AutomationScope"/> class.
-        /// </summary>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1810:InitializeReferenceTypeStaticFieldsInline")]
-        static AutomationScope()
-        {
-            Mutex = new object();
-        }
 
         /// <summary>
         /// Defines the beginning of the scope of an automation function. This constuctor
@@ -92,15 +82,12 @@ namespace Microsoft.VisualStudioTools.Project.Automation
         {
             if (!this.isDisposed)
             {
-                lock (Mutex)
+                if (disposing)
                 {
-                    if (disposing)
-                    {
-                        ExitAutomation();
-                    }
-
-                    this.isDisposed = true;
+                    ExitAutomation();
                 }
+
+                this.isDisposed = true;
             }
         }
         #endregion
