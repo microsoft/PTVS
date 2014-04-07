@@ -611,4 +611,9 @@ Run Visual Studio with the /Log option and check ActivityLog.xml for more detail
   <data name="AddReferenceExtensions" xml:space="preserve">
     <value>Dynamic Link Libraries (*.dll)|*.dll|All Files (*.*)|*.*</value>
   </data>
+  <data name="WebPiFeedError" xml:space="preserve">
+    <value>Unable to get feed "{0}".
+
+{1}</value>
+  </data>
 </root>

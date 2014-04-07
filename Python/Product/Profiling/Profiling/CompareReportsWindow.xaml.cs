@@ -14,6 +14,7 @@
 
 using System;
 using System.Windows;
+using System.Windows.Input;
 using Microsoft.VisualStudio.PlatformUI;
 using Microsoft.Win32;
 
@@ -65,6 +66,14 @@ namespace Microsoft.PythonTools.Profiling {
             if (!string.IsNullOrEmpty(newFile)) {
                 _viewModel.ComparisonFile = newFile;
             }
+        }
+
+        private void Browse_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+            Microsoft.VisualStudioTools.Wpf.Commands.CanExecute(this, sender, e);
+        }
+
+        private void Browse_Executed(object sender, ExecutedRoutedEventArgs e) {
+            Microsoft.VisualStudioTools.Wpf.Commands.Executed(this, sender, e);
         }
     }
 }

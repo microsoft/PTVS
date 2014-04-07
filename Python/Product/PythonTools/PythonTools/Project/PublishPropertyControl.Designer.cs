@@ -25,9 +25,9 @@
         private void InitializeComponent() {
             this._publishLocationGroupBox = new System.Windows.Forms.GroupBox();
             this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
-            this._pubNowButton = new System.Windows.Forms.Button();
             this._publishLocationLabel = new System.Windows.Forms.Label();
             this._pubUrl = new System.Windows.Forms.TextBox();
+            this._pubNowButton = new System.Windows.Forms.Button();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this._publishLocationGroupBox.SuspendLayout();
             this.tableLayoutPanel2.SuspendLayout();
@@ -44,7 +44,7 @@
             this._publishLocationGroupBox.Margin = new System.Windows.Forms.Padding(6, 8, 6, 8);
             this._publishLocationGroupBox.Name = "_publishLocationGroupBox";
             this._publishLocationGroupBox.Padding = new System.Windows.Forms.Padding(6, 8, 6, 8);
-            this._publishLocationGroupBox.Size = new System.Drawing.Size(438, 232);
+            this._publishLocationGroupBox.Size = new System.Drawing.Size(341, 113);
             this._publishLocationGroupBox.TabIndex = 0;
             this._publishLocationGroupBox.TabStop = false;
             this._publishLocationGroupBox.Text = "Publish Location";
@@ -67,22 +67,8 @@
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel2.Size = new System.Drawing.Size(426, 201);
+            this.tableLayoutPanel2.Size = new System.Drawing.Size(329, 82);
             this.tableLayoutPanel2.TabIndex = 0;
-            // 
-            // _pubNowButton
-            // 
-            this._pubNowButton.AutoSize = true;
-            this._pubNowButton.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this._pubNowButton.Location = new System.Drawing.Point(314, 169);
-            this._pubNowButton.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
-            this._pubNowButton.Name = "_pubNowButton";
-            this._pubNowButton.Padding = new System.Windows.Forms.Padding(12, 3, 12, 3);
-            this._pubNowButton.Size = new System.Drawing.Size(106, 29);
-            this._pubNowButton.TabIndex = 2;
-            this._pubNowButton.Text = "&Publish Now";
-            this._pubNowButton.UseVisualStyleBackColor = true;
-            this._pubNowButton.Click += new System.EventHandler(this._pubNowButton_Click);
             // 
             // _publishLocationLabel
             // 
@@ -105,34 +91,52 @@
             this._pubUrl.Location = new System.Drawing.Point(6, 22);
             this._pubUrl.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
             this._pubUrl.Name = "_pubUrl";
-            this._pubUrl.Size = new System.Drawing.Size(414, 22);
+            this._pubUrl.Size = new System.Drawing.Size(317, 22);
             this._pubUrl.TabIndex = 1;
             this._pubUrl.TextChanged += new System.EventHandler(this._pubUrl_TextChanged);
+            // 
+            // _pubNowButton
+            // 
+            this._pubNowButton.AutoSize = true;
+            this._pubNowButton.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this._pubNowButton.Location = new System.Drawing.Point(217, 50);
+            this._pubNowButton.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
+            this._pubNowButton.Name = "_pubNowButton";
+            this._pubNowButton.Padding = new System.Windows.Forms.Padding(12, 3, 12, 3);
+            this._pubNowButton.Size = new System.Drawing.Size(106, 29);
+            this._pubNowButton.TabIndex = 2;
+            this._pubNowButton.Text = "&Publish Now";
+            this._pubNowButton.UseVisualStyleBackColor = true;
+            this._pubNowButton.Click += new System.EventHandler(this._pubNowButton_Click);
             // 
             // tableLayoutPanel1
             // 
             this.tableLayoutPanel1.AutoSize = true;
+            this.tableLayoutPanel1.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.tableLayoutPanel1.ColumnCount = 1;
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel1.Controls.Add(this._publishLocationGroupBox, 0, 0);
+            this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             this.tableLayoutPanel1.RowCount = 2;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 90F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(450, 268);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(353, 149);
             this.tableLayoutPanel1.TabIndex = 0;
             // 
             // PublishPropertyControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoSize = true;
+            this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.Controls.Add(this.tableLayoutPanel1);
             this.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.Margin = new System.Windows.Forms.Padding(6, 8, 6, 8);
             this.Name = "PublishPropertyControl";
-            this.Size = new System.Drawing.Size(452, 273);
+            this.Size = new System.Drawing.Size(353, 149);
             this._publishLocationGroupBox.ResumeLayout(false);
             this._publishLocationGroupBox.PerformLayout();
             this.tableLayoutPanel2.ResumeLayout(false);

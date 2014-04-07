@@ -21,17 +21,44 @@ using System.Windows.Input;
 using System.Windows.Interop;
 
 namespace Microsoft.VisualStudioTools.Wpf {
-    static class Commands {
-        public static readonly RoutedCommand BrowseFolder = new RoutedCommand();
-        public static readonly RoutedCommand BrowseOpenFile = new RoutedCommand();
-        public static readonly RoutedCommand BrowseSaveFile = new RoutedCommand();
+    /// <summary>
+    /// Infrastructure class.
+    /// </summary>
+    public static class Commands {
+        private static readonly RoutedCommand _browseFolder = new RoutedCommand();
+        private static readonly RoutedCommand _browseOpenFile = new RoutedCommand();
+        private static readonly RoutedCommand _browseSaveFile = new RoutedCommand();
 
+        /// <summary>
+        /// Displays UI to browse for a single folder and sets the TextBox that
+        /// is specified as the CommandTarget to the selected path.
+        /// </summary>
+        public static RoutedCommand BrowseFolder { get { return _browseFolder; } }
+        /// <summary>
+        /// Displays UI to open a single file using the filter in
+        /// CommandParameter and sets the TextBox that is specified as the
+        /// CommandTarget to the selected path.
+        /// </summary>
+        public static RoutedCommand BrowseOpenFile { get { return _browseOpenFile; } }
+        /// <summary>
+        /// Displays UI to save a single file using the filter in
+        /// CommandParameter and sets the TextBox that is specified as the
+        /// CommandTarget to the selected path.
+        /// </summary>
+        public static RoutedCommand BrowseSaveFile { get { return _browseSaveFile; } }
+
+        /// <summary>
+        /// Handles the CanExecute event for all commands defined in this class.
+        /// </summary>
         public static void CanExecute(Window window, object sender, CanExecuteRoutedEventArgs e) {
             if (e.Command == BrowseFolder || e.Command == BrowseOpenFile || e.Command == BrowseSaveFile) {
                 e.CanExecute = e.OriginalSource is TextBox;
             }
         }
 
+        /// <summary>
+        /// Handles the Executed event for all commands defined in this class.
+        /// </summary>
         public static void Executed(Window window, object sender, ExecutedRoutedEventArgs e) {
             if (e.Command == BrowseFolder) {
                 BrowseFolderExecute(window, e);

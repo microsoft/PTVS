@@ -13,20 +13,13 @@
     TextOptions.TextFormattingMode="Display"
     ResizeMode="CanResizeWithGrip">
     <Window.Resources>
-        <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="pack://application:,,,/Microsoft.PythonTools;component/SharedProject/Wpf/Controls.xaml" />
-
-                <ResourceDictionary>
-                    <Style x:Key="BrowseButtonStyle" TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Type Button}}">
-                        <Setter Property="Content" Value="Browse..." />
-                        <Setter Property="Margin" Value="8 1 0 1" />
-                        <Setter Property="Padding" Value="11 2" />
-                    </Style>
-                </ResourceDictionary>
-            </ResourceDictionary.MergedDictionaries>
-        </ResourceDictionary>
+        <ResourceDictionary Source="pack://application:,,,/Microsoft.PythonTools;component/SharedProject/Wpf/Controls.xaml" />
     </Window.Resources>
+    <Window.CommandBindings>
+        <CommandBinding Command="{x:Static wpf:Commands.BrowseOpenFile}"
+                        CanExecute="Browse_CanExecute"
+                        Executed="Browse_Executed" />
+    </Window.CommandBindings>
     
     <Grid Margin="12 4 12 12">
         <Grid.RowDefinitions>
@@ -42,11 +35,14 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="auto" />
             </Grid.ColumnDefinitions>
-            <TextBox Grid.Column="0"
+            <TextBox Grid.Column="0" Name="BaselineFile"
                      Text="{Binding BaselineFile,UpdateSourceTrigger=PropertyChanged}"
                      VerticalContentAlignment="Center"
                      AutomationProperties.AutomationId="BaselineFile" />
-            <Button Grid.Column="1" Click="BaselineBrowseClick" Style="{StaticResource BrowseButtonStyle}" />
+            <Button Grid.Column="1"
+                    Style="{StaticResource BrowseOpenFileButton}"
+                    CommandTarget="{Binding ElementName=BaselineFile}"
+                    CommandParameter="{Binding PerformanceFileFilter}"/>
         </Grid>
 
         <Label Grid.Row="2" Content="Co_mparison File:" />
@@ -55,22 +51,26 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="auto" />
             </Grid.ColumnDefinitions>
-            <TextBox Grid.Column="0"
+            <TextBox Grid.Column="0" Name="ComparisonFile"
                      Text="{Binding ComparisonFile,UpdateSourceTrigger=PropertyChanged}"
                      VerticalContentAlignment="Center"
                      AutomationProperties.AutomationId="ComparisonFile" />
-            <Button Grid.Column="1" Click="CompareBrowseClick" Style="{StaticResource BrowseButtonStyle}" />
+            <Button Grid.Column="1"
+                    Style="{StaticResource BrowseOpenFileButton}"
+                    CommandTarget="{Binding ElementName=ComparisonFile}"
+                    CommandParameter="{Binding PerformanceFileFilter}"/>
         </Grid>
 
         <StackPanel Grid.Row="4" Orientation="Horizontal" 
                     HorizontalAlignment="Right" VerticalAlignment="Bottom"
                     Margin="0 12 0 0">
             <Button IsDefault="True" Click="OkClick" IsEnabled="{Binding IsValid}"
-                    MinWidth="86" MinHeight="24" Margin="0 0 9 0"
+                    MinWidth="86" MinHeight="24" Margin="3 3 9 3"
                     AutomationProperties.AutomationId="Ok">
                 _OK
             </Button>
-            <Button IsCancel="True" Click="CancelClick" MinWidth="86" MinHeight="24"
+            <Button IsCancel="True" Click="CancelClick"
+                    MinWidth="86" MinHeight="24" Margin="9 3 3 3"
                     AutomationProperties.AutomationId="Cancel">
                 _Cancel
             </Button>

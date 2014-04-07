@@ -97,11 +97,12 @@
         </Grid>
         <StackPanel Orientation="Horizontal" Grid.Row="4" Grid.Column="1" HorizontalAlignment="Right" Margin="0 12 0 0">
             <Button IsDefault="True" Click="OkClick" IsEnabled="{Binding IsValid}"
-                    MinWidth="86" MinHeight="24" Margin="0 0 9 0"
+                    MinWidth="86" MinHeight="24" Margin="3 3 9 3"
                     AutomationProperties.AutomationId="Ok">
                 _OK
             </Button>
-            <Button IsCancel="True" Click="CancelClick" MinWidth="86" MinHeight="24"
+            <Button IsCancel="True" Click="CancelClick"
+                    MinWidth="86" MinHeight="24" Margin="9 3 3 3"
                     AutomationProperties.AutomationId="Cancel">
                 _Cancel
             </Button>

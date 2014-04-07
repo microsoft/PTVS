@@ -157,6 +157,7 @@ namespace Microsoft.VisualStudioTools.Project {
         internal const string WebPiFeed = "WebPiFeed";
         internal const string WebPiProduct = "WebPiProduct";
         internal const string WebPiFeedDescription = "WebPiFeedDescription";
+        internal const string WebPiFeedError = "WebPiFeedError";
         internal const string WebPiProductDescription = "WebPiProductDescription";
         internal const string WebPiReferenceProperties = "WebPiReferenceProperties";
         internal const string UnexpectedUpgradeError = "UnexpectedUpgradeError";

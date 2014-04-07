@@ -87,7 +87,7 @@ namespace Microsoft.VisualStudioTools {
 
         public static void MustBeCalledFromUIThread(bool throwInRelease = false) {
             if (InvokeRequired) {
-                Debug.Fail("Invalid cross-thread call", new StackTrace().ToString());
+                Debug.Fail("Invalid cross-thread call");
 
                 if (throwInRelease) {
                     // RPC_E_WRONG_THREAD = unchecked((int)0x8001010E)
