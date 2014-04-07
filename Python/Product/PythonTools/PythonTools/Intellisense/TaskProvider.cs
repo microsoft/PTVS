@@ -465,6 +465,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 lock (_buffers) {
                     foreach (var kv in _buffers) {
                         List<TaskProviderItem> items;
+                        buffers.Add(kv.Value);
                         
                         lock (_itemsLock) {
                             if (!_items.TryGetValue(kv.Key, out items)) {
@@ -477,7 +478,6 @@ namespace Microsoft.PythonTools.Intellisense {
                                 kv.Value,
                                 functions
                             ));
-                            buffers.Add(kv.Value);
                         }
                     }
                 }
@@ -506,6 +506,14 @@ namespace Microsoft.PythonTools.Intellisense {
                         foreach (var func in t.Item2) {
                             func(tagger);
                         }
+                    }
+                }
+
+                if (_errorProvider != null && buffers.Any()) {
+                    // Clear tags for any remaining buffers.
+                    foreach (var buffer in buffers) {
+                        var tagger = _errorProvider.GetErrorTagger(buffer);
+                        tagger.RemoveTagSpans(_ => true);
                     }
                 }
             });
