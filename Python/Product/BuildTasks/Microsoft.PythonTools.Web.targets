@@ -48,8 +48,8 @@
        be dependencies of ResolvePythonWsgiHandler to set the value of
        $(PythonWsgiHandler) at build time.
        
-       Alternatively, the value of $(PythonWsgiHandler) can be set directly if
-       it does not depend on any build-time variables such as $(StartupModule).
+       Alternatively, the value of $(PythonWsgiHandler) can be set directly,
+       using {StartupModule} to refer to the importable name of the start file.
   -->
   <PropertyGroup>
     <ResolvePythonWsgiHandlerDependsOnTargets>
@@ -57,7 +57,11 @@
     </ResolvePythonWsgiHandlerDependsOnTargets>
   </PropertyGroup>
 
-  <Target Name="ResolvePythonWsgiHandler" DependsOnTargets="$(ResolvePythonWsgiHandlerDependsOnTargets)" />
+  <Target Name="ResolvePythonWsgiHandler" DependsOnTargets="$(ResolvePythonWsgiHandlerDependsOnTargets)">
+    <PropertyGroup Condition="'$(PythonWsgiHandler)' != ''">
+      <PythonWsgiHandler>$(PythonWsgiHandler.Replace(`{StartupModule}`, $(StartupModule)))</PythonWsgiHandler>
+    </PropertyGroup>
+  </Target>
 
   <!-- *************************************************************************
        The Build target is invoked as part of the Publish phase.
@@ -154,7 +158,7 @@
     <VirtualEnvIsVEnv>false</VirtualEnvIsVEnv>
   </PropertyGroup>
   
-  <Target Name="ResolvePythonInterpreterPath" DependsOnTargets="ResolveQualifiedProjectHome">
+  <Target Name="ResolvePythonInterpreterPath">
     <ResolveEnvironment>
       <Output TaskParameter="PrefixPath" PropertyName="PythonPrefixPath" />
       <Output TaskParameter="ProjectRelativePrefixPath" PropertyName="PythonPrefixSubPath" />
@@ -316,7 +320,6 @@
   <Target Name="ResolveVirtualEnvSettings" DependsOnTargets="ResolvePythonInterpreterPath;_ResolveVirtualEnvSettings" />
 
   <Target Name="_GetPythonVirtualEnvProxyForEmulator"
-          DependsOnTargets="ResolveQualifiedProjectHome"
           Condition="'$(_PythonDeploymentMethod)' == 'CloudServiceDeploy'">
     <ItemGroup Condition="$(VirtualEnvEnabled)">
       <_PythonVirtualEnvProxyForEmulator Include="$(QualifiedProjectHome)bin\ptvs_virtualenv_proxy.py">
@@ -617,7 +620,6 @@
   <Target Name="CreatePythonAzureSetupConfig" DependsOnTargets="ResolvePythonDeploymentMethod;_CreatePythonAzureSetupConfig" />
 
   <Target Name="_GetPythonAzureSetupConfigOutput"
-          DependsOnTargets="ResolveQualifiedProjectHome"
           Condition="'$(_PythonDeploymentMethod)' == 'CloudServiceDeploy'">
     <ItemGroup>
       <_PythonAzureSetupConfig Include="$(IntermediateOutputPath)AzureSetup.cfg" />
@@ -794,7 +796,6 @@ interpreter_path_emulated=$(PythonInterpreterPath)
 
   <Target Name="PythonRunWebServerCommand"
           Label="resource:Microsoft.PythonTools;Microsoft.Resources;RunWebServerLabel"
-          DependsOnTargets="ResolveStartupPath"
           Returns="@(Commands)">
     <PropertyGroup>
       <PythonRunWebServerCommand Condition="'$(PythonRunWebServerCommand)' == ''">$(StartupPath)</PythonRunWebServerCommand>
@@ -805,6 +806,11 @@ interpreter_path_emulated=$(PythonInterpreterPath)
         SERVER_PORT=$(WebBrowserPort)
         $(PythonRunWebServerCommandEnvironment)
       </PythonRunWebServerCommandEnvironment>
+      
+      <PythonRunWebServerCommand>$(PythonRunWebServerCommand.Replace(`{StartupModule}`, $(StartupModule)))</PythonRunWebServerCommand>
+      <PythonRunWebServerCommandArguments>$(PythonRunWebServerCommandArguments.Replace(`{StartupModule}`, $(StartupModule)))</PythonRunWebServerCommandArguments>
+      <PythonRunWebServerArguments>$(PythonRunWebServerArguments.Replace(`{StartupModule}`, $(StartupModule)))</PythonRunWebServerArguments>
+      <PythonRunWebServerCommandEnvironment>$(PythonRunWebServerCommandEnvironment.Replace(`{StartupModule}`, $(StartupModule)))</PythonRunWebServerCommandEnvironment>
     </PropertyGroup>
     <!-- 'console' and 'consolepause' are the only valid ExecuteIn values for this command. -->
     <CreatePythonCommandItem Target="$(PythonRunWebServerCommand)"
@@ -819,7 +825,6 @@ interpreter_path_emulated=$(PythonInterpreterPath)
 
   <Target Name="PythonDebugWebServerCommand"
           Label="resource:Microsoft.PythonTools;Microsoft.Resources;DebugWebServerLabel"
-          DependsOnTargets="ResolveStartupPath"
           Returns="@(Commands)">
     <PropertyGroup>
       <PythonDebugWebServerCommand Condition="'$(PythonDebugWebServerCommand)' == ''">$(StartupPath)</PythonDebugWebServerCommand>
@@ -830,6 +835,11 @@ interpreter_path_emulated=$(PythonInterpreterPath)
         SERVER_PORT=$(WebBrowserPort)
         $(PythonDebugWebServerCommandEnvironment)
       </PythonDebugWebServerCommandEnvironment>
+
+      <PythonDebugWebServerCommand>$(PythonDebugWebServerCommand.Replace(`{StartupModule}`, $(StartupModule)))</PythonDebugWebServerCommand>
+      <PythonDebugWebServerCommandArguments>$(PythonDebugWebServerCommandArguments.Replace(`{StartupModule}`, $(StartupModule)))</PythonDebugWebServerCommandArguments>
+      <PythonDebugWebServerArguments>$(PythonDebugWebServerArguments.Replace(`{StartupModule}`, $(StartupModule)))</PythonDebugWebServerArguments>
+      <PythonDebugWebServerCommandEnvironment>$(PythonDebugWebServerCommandEnvironment.Replace(`{StartupModule}`, $(StartupModule)))</PythonDebugWebServerCommandEnvironment>
     </PropertyGroup>
     <!-- 'console' and 'consolepause' are the only valid ExecuteIn values for this command. -->
     <CreatePythonCommandItem Target="$(PythonDebugWebServerCommand)"

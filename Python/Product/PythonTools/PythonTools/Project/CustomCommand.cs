@@ -24,6 +24,8 @@ using System.Threading.Tasks;
 using System.Windows.Threading;
 using Microsoft.Build.Construction;
 using Microsoft.Build.Execution;
+using Microsoft.Build.Framework;
+using Microsoft.Build.Logging;
 using Microsoft.PythonTools.BuildTasks;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Navigation;
@@ -443,32 +445,39 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        public CommandStartInfo GetStartInfo(IPythonProject2 project) {
+        private static IDictionary<string, TargetResult> BuildTarget(IPythonProject2 project, string target) {
             var config = project.GetMSBuildProjectInstance();
             if (config == null) {
                 throw new ArgumentException("Project does not support MSBuild", "project");
             }
 
-            IDictionary<string, Microsoft.Build.Execution.TargetResult> outputs;
+            IDictionary<string, TargetResult> outputs;
 
             var logger = new StringLogger();
-            if (!config.Build(
-                new[] { _target },
 #if DEBUG
-                new Microsoft.Build.Framework.ILogger[] { new TraceLogger(), logger },
+            var loggers = new ILogger[] { new TraceLogger(), logger };
 #else
-                new Microsoft.Build.Framework.ILogger[] { logger },
+            var loggers = new ILogger[] { logger };
 #endif
-                Enumerable.Empty<Microsoft.Build.Logging.ForwardingLoggerRecord>(),
-                out outputs
-            )) {
-                var outputWindow = OutputWindowRedirector.Get(project.Site, VSConstants.OutputWindowPaneGuid.BuildOutputPane_guid, "Build");
-                outputWindow.WriteErrorLine(SR.GetString(SR.ErrorBuildingCustomCommand, _target));
+
+            if (!config.Build(new[] { target }, loggers, Enumerable.Empty<ForwardingLoggerRecord>(), out outputs)) {
+                var outputWindow = OutputWindowRedirector.Get(
+                    project.Site,
+                    VSConstants.OutputWindowPaneGuid.BuildOutputPane_guid,
+                    "Build"
+                );
+                outputWindow.WriteErrorLine(SR.GetString(SR.ErrorBuildingCustomCommand, target));
                 foreach (var line in logger.Lines) {
                     outputWindow.WriteErrorLine(line.TrimEnd('\r', '\n'));
                 }
-                throw new InvalidOperationException(SR.GetString(SR.ErrorBuildingCustomCommand, _target));
+                throw new InvalidOperationException(SR.GetString(SR.ErrorBuildingCustomCommand, target));
             }
+
+            return outputs;
+        }
+
+        public CommandStartInfo GetStartInfo(IPythonProject2 project) {
+            var outputs = BuildTarget(project, _target);
 
             var item = outputs.Values
                 .SelectMany(result => result.Items)

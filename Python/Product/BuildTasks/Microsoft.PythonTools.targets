@@ -118,34 +118,20 @@
              TaskName="ValidateRegexPattern" />
   
   <!-- Gets the fully qualified path to the project home.  -->
-  <Target Name="ResolveQualifiedProjectHome">
-    <CombinePath BasePath="$(MSBuildProjectDirectory)" Paths="$(ProjectHome)" Condition="'$(ProjectHome)' != ''">
-      <Output TaskParameter="CombinedPaths" PropertyName="QualifiedProjectHome"/>
-    </CombinePath>
-    <PropertyGroup Condition="'$(ProjectHome)' == ''">
-      <QualifiedProjectHome>$(MSBuildProjectDirectory)</QualifiedProjectHome>
-    </PropertyGroup>
-    <PropertyGroup>
-      <QualifiedProjectHome Condition="!HasTrailingSlash('$(QualifiedProjectHome)')">$(QualifiedProjectHome)\</QualifiedProjectHome>
-    </PropertyGroup>
-    <Message Importance="low" Text="QualifiedProjectHome: $(QualifiedProjectHome)" />
-  </Target>
+  <PropertyGroup>
+    <QualifiedProjectHome Condition="'$(ProjectHome)' != ''">$([System.IO.Path]::Combine($(MSBuildProjectDirectory), $(ProjectHome)))</QualifiedProjectHome>
+    <QualifiedProjectHome>$([System.IO.Path]::GetFullPath($(QualifiedProjectHome)))</QualifiedProjectHome>
+    <QualifiedProjectHome Condition="!HasTrailingSlash('$(QualifiedProjectHome)')">$(QualifiedProjectHome)\</QualifiedProjectHome>
 
-  <!-- Gets the full path and module name of the startup file -->
-  <Target Name="ResolveStartupPath"
-          DependsOnTargets="ResolveQualifiedProjectHome"
-          AfterTargets="_CheckForInvalidConfigurationAndPlatform"
-          Condition="'$(StartupFile)' != ''">
-    <CombinePath BasePath="$(QualifiedProjectHome)" Paths="$(StartupFile)">
-      <Output TaskParameter="CombinedPaths" PropertyName="StartupPath" />
-    </CombinePath>
+    <StartupPath Condition="'$(StartupPath)' == '' and '$(StartupFile)' != ''">$([System.IO.Path]::Combine($(QualifiedProjectHome), $(StartupFile)))</StartupPath>
+  </PropertyGroup>
 
-    <Message Importance="low" Text="StartupPath: $(StartupPath)" />
-
+  <!-- Gets the full path module name of the startup file -->
+  <Target Name="ResolveStartupModule" AfterTargets="_CheckForInvalidConfigurationAndPlatform">
     <ConvertPathToModuleName Paths="$(StartupPath)" PathLimit="$(QualifiedProjectHome)">
       <Output TaskParameter="ModuleNames" PropertyName="StartupModule" />
     </ConvertPathToModuleName>
-
+    
     <Message Importance="low" Text="StartupModule: $(StartupModule)" />
   </Target>
 
@@ -160,7 +146,6 @@
 
   <Target Name="PythonRunPyLintCommand"
           Label="Run PyLint"
-          DependsOnTargets="ResolveStartupPath"
           Returns="@(Commands)">
     <CreatePythonCommandItem Target="pylint.lint"
                              TargetType="module"

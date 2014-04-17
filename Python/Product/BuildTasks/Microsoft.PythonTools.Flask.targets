@@ -16,27 +16,8 @@
     <PythonDebugWebServerCommandArguments Condition="'$(PythonDebugWebServerCommandArguments)' == ''">$(CommandLineArguments)</PythonDebugWebServerCommandArguments>
     <PythonWebFrameworkPackage Condition="'$(PythonWebFrameworkPackage)' == ''">flask</PythonWebFrameworkPackage>
     <PythonWebFrameworkPackageDisplayName Condition="'$(PythonWebFrameworkPackageDisplayName)' == ''">Flask</PythonWebFrameworkPackageDisplayName>
+    <PythonWsgiHandler Condition="'$(PythonWsgiHandler)' == ''">{StartupModule}.wsgi_app</PythonWsgiHandler>
   </PropertyGroup>
 
   <Import Project="Microsoft.PythonTools.Web.targets"/>
-
-  <!-- *************************************************************************
-       Because the WSGI handler name depends on the startup module, we can't set
-       it until we've started building. If it has not been set by this point, we
-       will set it to the default 'app'.
-  -->
-  <PropertyGroup>
-    <ResolvePythonWsgiHandlerDependsOnTargets>
-      $(ResolvePythonWsgiHandlerDependsOnTargets);
-      GetFlaskWsgiHandler
-    </ResolvePythonWsgiHandlerDependsOnTargets>
-  </PropertyGroup>
-  
-  <Target Name="GetFlaskWsgiHandler"
-          DependsOnTargets="ResolveStartupPath"
-          Condition="'$(PythonWsgiHandler)' == ''">
-    <PropertyGroup>
-      <PythonWsgiHandler>$(StartupModule).wsgi_app</PythonWsgiHandler>
-    </PropertyGroup>
-  </Target>
 </Project>

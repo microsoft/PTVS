@@ -72,9 +72,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
-        public void WebProjectCommandLineArgs() {
+        private static void CheckCommandLineArgs(string setValue, string expectedValue = null) {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
                 var project = app.OpenProject(@"TestData\CheckCommandLineArgs.sln");
 
@@ -90,10 +88,8 @@ namespace PythonToolsUITests {
                         File.Delete(outFile);
                     }
 
-                    var outData = Guid.NewGuid().ToString("N");
-
                     UIThread.Invoke(() => {
-                        proj.SetProperty("CommandLineArguments", outData + " \"" + outFile + "\"");
+                        proj.SetProperty("CommandLineArguments", string.Format("\"{0}\" \"{1}\"", setValue, outFile));
                         proj.FindCommand(cmdName).Execute(proj);
                     });
 
@@ -101,9 +97,21 @@ namespace PythonToolsUITests {
                         Thread.Sleep(100);
                     }
 
-                    Assert.AreEqual(outData, File.ReadAllText(outFile).Trim());
+                    Assert.AreEqual(expectedValue ?? setValue, File.ReadAllText(outFile).Trim());
                 }
             }
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void WebProjectCommandLineArgs() {
+            CheckCommandLineArgs(Guid.NewGuid().ToString("N"));
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void WebProjectStartupModuleArgs() {
+            CheckCommandLineArgs("{StartupModule}", "CheckCommandLineArgs");
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]

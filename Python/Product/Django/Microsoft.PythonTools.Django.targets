@@ -58,7 +58,7 @@
        Looks up the STATIC_URL setting in the Django project so that we can
        ensure they are served directly.
    -->
-  <Target Name="ResolveStaticUrlSetting" DependsOnTargets="ResolvePythonInterpreterPath;ResolveQualifiedProjectHome">
+  <Target Name="ResolveStaticUrlSetting" DependsOnTargets="ResolvePythonInterpreterPath">
     <RunPythonCommand Target="import $(DjangoSettingsModule) as settings; print(settings.STATIC_URL)"
                       TargetType="code"
                       ExecuteIn="none"
@@ -89,7 +89,7 @@
        This target is unconditional, to ensure we add the trailing slash if the
        user has provided their own value.
   -->
-  <Target Name="DetectStaticRootPath" DependsOnTargets="ResolvePythonInterpreterPath;ResolveQualifiedProjectHome">
+  <Target Name="DetectStaticRootPath" DependsOnTargets="ResolvePythonInterpreterPath">
     <RunPythonCommand Target="import $(DjangoSettingsModule) as settings; print(settings.STATIC_ROOT or '')"
                       TargetType="code"
                       ExecuteIn="none"
@@ -113,7 +113,7 @@
           Condition="'$(DisableStaticFiles)' != 'true'" />
 
   <Target Name="_DjangoCollectStaticFiles"
-          DependsOnTargets="ResolvePythonInterpreterPath;ResolveQualifiedProjectHome;SetStartupPathOrManagePy"
+          DependsOnTargets="ResolvePythonInterpreterPath;SetStartupPathOrManagePy"
           Condition="'$(DjangoStaticRootSetting)' != ''">
     <RunPythonCommand Target="$(StartupPathOrManagePy)"
                       TargetType="script"
@@ -139,13 +139,12 @@
 
   <PropertyGroup>
     <PythonCommands>DjangoShellCommand;DjangoValidateAppCommand;DjangoSyncDbCommand;DjangoCollectStaticCommand;$(PythonCommands)</PythonCommands>
+
+    <StartupPathOrManagePy>$(QualifiedProjectHome)manage.py</StartupPathOrManagePy>
+    <StartupPathOrManagePy Condition="Exists($(StartupPath))">$(StartupPath)</StartupPathOrManagePy>
   </PropertyGroup>
 
-  <Target Name="SetStartupPathOrManagePy" DependsOnTargets="ResolveStartupPath" Outputs="$(StartupPathOrManagePy)">
-    <PropertyGroup>
-      <StartupPathOrManagePy>$(QualifiedProjectHome)manage.py</StartupPathOrManagePy>
-      <StartupPathOrManagePy Condition="Exists($(StartupPath))">$(StartupPath)</StartupPathOrManagePy>
-    </PropertyGroup>
+  <Target Name="SetStartupPathOrManagePy" Outputs="$(StartupPathOrManagePy)">
     <Message Importance="low" Text="Management commands are run with $(StartupPathOrManagePy)" />
   </Target>
 
