@@ -201,7 +201,7 @@
 
   <Target Name="_HostDeployDetectTarget" BeforeTargets="GenerateGlobalPublishSetting">
     <PropertyGroup>
-      <!-- We are deploying via web deploy to Windows Azure Web Sites -->
+      <!-- We are deploying via web deploy to Microsoft Azure Web Sites -->
       <_PythonDeploymentMethod>WebDeploy</_PythonDeploymentMethod>
     </PropertyGroup>
   </Target>
@@ -215,8 +215,8 @@
   </Target>
 
   <Target Name="ResolveDeploymentSettings" DependsOnTargets="ResolvePythonDeploymentMethod">
-    <!-- Set the deployment locations assuming deployment to WAWS, user could
-         override these in the project file
+    <!-- Set the deployment locations assuming deployment to Web Sites, user
+         could override these in the project file
     -->
     <PropertyGroup Condition="'$(_PythonDeploymentMethod)' == 'WebDeploy'">
       <DeployedPythonInterpreterPath Condition="'$(DeployedPythonInterpreterPath)' == ''">D:\Python27\python.exe</DeployedPythonInterpreterPath>
@@ -466,7 +466,7 @@
 
   <!-- *************************************************************************
        CollectPythonWebSitesFiles deploys and includes extra files required for
-       Windows Azure Web Sites.
+       Microsoft Azure Web Sites.
   -->
   <ItemGroup>
     <!--<_WebSitesFiles />-->
@@ -700,7 +700,9 @@ interpreter_path_emulated=$(PythonInterpreterPath)
 
     <PropertyGroup>
       <_RegenerateWebConfig>true</_RegenerateWebConfig>
-      <_RegenerateWebConfig Condition="Exists('@(_OutWebConfig)') and !$(AlwaysRegenerateWebConfig)">$(_CurrentWebConfigCode.Contains('Generated web.config for Windows Azure.'))</_RegenerateWebConfig>
+      <_RegenerateWebConfig Condition="Exists('@(_OutWebConfig)') and !$(AlwaysRegenerateWebConfig) and
+          !$(_CurrentWebConfigCode.Contains('Generated web.config for Windows Azure.')) and
+          !$(_CurrentWebConfigCode.Contains('Generated web.config for Microsoft Azure.'))">false</_RegenerateWebConfig>
     </PropertyGroup>
 
     <Message Text="Using existing web.config file" Condition="!$(_RegenerateWebConfig) and !$(BuildingForUpToDateCheck)"/>
@@ -763,7 +765,7 @@ interpreter_path_emulated=$(PythonInterpreterPath)
     <!-- We need to build CreateWebConfig in a separate instance. This will
          ensure that the web.config file exists for the Cloud Service emulator,
          while also allowing us to rebuild it later if we determine that we
-         really wanted a WAWS web.config.
+         really wanted a Web Sites web.config.
          
          The DependsOnTargets attribute is not useful here, since running the
          targets that way will prevent us from reevaluating them later in the

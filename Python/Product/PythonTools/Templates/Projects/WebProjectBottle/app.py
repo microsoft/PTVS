@@ -21,7 +21,7 @@ def example(name):
 
 def wsgi_app():
     # Returns the application to make available through wfastcgi. This is used
-    # when the site is published to Windows Azure.
+    # when the site is published to Microsoft Azure.
     return bottle.default_app()
 
 if __name__ == '__main__':
