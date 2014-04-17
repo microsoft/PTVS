@@ -264,6 +264,10 @@ wstring VsPyProf::GetClassNameFromFrame(PyFrameObject* frameObj, PyObject *codeO
 
 wstring VsPyProf::GetClassNameFromSelf(PyObject* self, PyObject *codeObj) {
     wstring res;
+    if (self == nullptr) {
+        return res;
+    }
+
     auto mro = (PyTupleObject*)self->ob_type->tp_mro;
     if (PyInstance_Type != nullptr && self->ob_type == PyInstance_Type) {
         GetName(((PyInstanceObject*)self)->in_class->cl_name, res);

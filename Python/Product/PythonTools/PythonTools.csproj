@@ -96,7 +96,7 @@
       <Project>{20BB6FAC-44D2-4D76-ABFE-0C1E163A1A4F}</Project>
       <Name Condition="'$(InteractiveWindow)' == ''">Microsoft.VisualStudio.ReplWindow</Name>
       <Name Condition="'$(InteractiveWindow)' != ''">Microsoft.VisualStudio.InteractiveWindow</Name>
-      <Private>False</Private>
+      <Private>True</Private>
     </ProjectReference>
     <Content Include="$(OutputPath)PyDebugAttach.dll">
       <Link>PyDebugAttach.dll</Link>

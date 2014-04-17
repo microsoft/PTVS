@@ -500,7 +500,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         }
 
                         if (buffers.Remove(t.Item1)) {
-                            tagger.RemoveTagSpans(_ => true);
+                            tagger.RemoveTagSpans(span => span.Span.TextBuffer == t.Item1);
                         }
 
                         foreach (var func in t.Item2) {
@@ -513,7 +513,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     // Clear tags for any remaining buffers.
                     foreach (var buffer in buffers) {
                         var tagger = _errorProvider.GetErrorTagger(buffer);
-                        tagger.RemoveTagSpans(_ => true);
+                        tagger.RemoveTagSpans(span => span.Span.TextBuffer == buffer);
                     }
                 }
             });

@@ -75,6 +75,8 @@ namespace Microsoft.VisualStudioTools {
                 }
             };
 #endif
+            UIThread.MustBeCalledFromUIThread();
+
             IServiceContainer container = this as IServiceContainer;
             ServiceCreatorCallback callback = new ServiceCreatorCallback(CreateService);
             //container.AddService(GetLanguageServiceType(), callback, true);
