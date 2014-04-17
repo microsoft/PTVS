@@ -2091,8 +2091,6 @@ namespace Microsoft.PythonTools.Parsing {
             }
 
             public static bool operator ==(State left, State right) {
-                if (left == null) return right == null;
-
                 return left.BraceLevel == right.BraceLevel &&
                        left.BracketLevel == right.BracketLevel &&
                        left.IndentLevel == right.IndentLevel &&
