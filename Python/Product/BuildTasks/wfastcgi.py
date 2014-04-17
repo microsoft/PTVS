@@ -702,6 +702,7 @@ def main():
                     log('wfastcgi.py %s initializing' % __version__)
 
                     os.chdir(response.physical_path)
+                    sys.path[0] = '.'
 
                     # Initialization errors should be treated as fatal.
                     response.fatal_errors = True
