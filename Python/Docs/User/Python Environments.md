@@ -89,7 +89,7 @@ Alternatively, an existing virtual environment can be added by right-clicking th
 
 Once a virtual environment is added to your project, it can be activated like any other environment, and packages can be installed or uninstalled. Right-clicking it and selecting 'Remove' will allow you to either remove the reference to the environment, or delete the environment and all the files on disk.
 
-RC Caveats
-==========
+Beta Caveats
+============
 * Changing the active environment may cause VS to freeze briefly as the IntelliSense database is loaded. Environments with lots of packages may freeze for longer.
 * While the system-site-packages option will be respected, there is no way to set or change this from within VS.

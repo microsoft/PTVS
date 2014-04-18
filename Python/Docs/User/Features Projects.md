@@ -22,9 +22,16 @@ Project Types
 
 This is a basic application that is a good starting point for any Python project. With the default settings, your project will run and be debugged with the console interpreter (typically `python.exe`) of your default environment. After creation, you can choose another environment or create a virtual environment, add new modules and packages, choose to run with the windowed interpreter (`pythonw.exe`), or use mixed-mode (C++/Python) debugging.
 
-### Django Project
+### Django Web Project
 
-This project is based on the standard Django template. You can add new apps to the project, create virtual environments, edit page templates, interactively debug both code and template files, and publish to Windows Azure. See our [Django tutorial](http://www.windowsazure.com/en-us/develop/python/tutorials/django-with-python-tools-for-visual-studio-20/) for a walkthrough on creating and deploying a Django project.
+This project is based on the standard Django template.
+You can add new apps to the project, create virtual environments, edit page templates, interactively debug both code and template files, and publish to Windows Azure.
+See our [Django tutorial](http://www.windowsazure.com/en-us/develop/python/tutorials/django-with-python-tools-for-visual-studio-20/) for a walkthrough on creating and deploying a Django project.
+
+### Other Web Projects (Bottle, Flask, etc.)
+
+These projects are web servers using various frameworks.
+See the [wiki:"Web Projects" Features Web Project] documentation for more details.
 
 ### Python MPI Application
 

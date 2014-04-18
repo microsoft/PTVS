@@ -11,7 +11,7 @@
     <OutputPath>.</OutputPath>
     <Name>PythonDocs</Name>
     <RootNamespace>PythonDocs</RootNamespace>
-    <InterpreterId>{2af0f10d-7135-4994-9156-5d01c9c11b7e}</InterpreterId>
+    <InterpreterId>{9a7a9026-48c1-4688-9d5d-e5699d47d074}</InterpreterId>
     <InterpreterVersion>3.3</InterpreterVersion>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
     <CommandLineArguments>--site pytools --doc-root Python\Docs --dir User</CommandLineArguments>
@@ -67,6 +67,8 @@
     <Content Include="User\Features Browsing.md" />
     <Content Include="User\Features Debugging.md" />
     <Content Include="User\Features Matrix.md" />
+    <Content Include="User\Features Web Project.md" />
+    <Content Include="User\Images\NewProjectWeb.png" />
     <Content Include="User\Images\PyLintCommand.png" />
     <Content Include="User\Images\PyLintErrorList.png" />
     <Content Include="User\Features Editor.md" />
@@ -180,13 +182,17 @@
     <Content Include="User\Images\StartWithDebugging.png" />
     <Content Include="User\Images\StepCommands.png" />
     <Content Include="User\Images\WatchWindow.png" />
+    <Content Include="User\Images\WebConvertMenu.png" />
+    <Content Include="User\Images\WebLauncherProperties.png" />
     <Content Include="User\Images\WebPIComponents.png" />
+    <Content Include="User\Images\WebPublishMenu.png" />
     <Content Include="User\PyLint.md" />
     <Content Include="User\Python Environments.md" />
     <Content Include="User\Where is PTVS installed%253f.md" />
   </ItemGroup>
   <ItemGroup>
     <InterpreterReference Include="{2af0f10d-7135-4994-9156-5d01c9c11b7e}\3.3" />
+    <InterpreterReference Include="{9a7a9026-48c1-4688-9d5d-e5699d47d074}\3.3" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
 </Project>

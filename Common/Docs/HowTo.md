@@ -138,7 +138,7 @@ Requirements are:
 * Python 3.3
 * markdown2 (`pip install markdown2`)
 * Pygments (`pip install pygments`)
-* Pillow with JPEG and PNG codecs (`pip install --use-wheel Pillow`)
+* Pillow with JPEG and PNG codecs (`pip install Pillow`)
 
 The first time the script is run, it will generate a file `maps.cache`, which contains all of the mappings used for the `src` and `file` links. This file should be deleted when source files are added, removed, moved or renamed, but will significantly speed up later refresh times.
 

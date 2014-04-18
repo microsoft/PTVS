@@ -39,6 +39,7 @@ Features in Depth
  * [wiki:"Search Paths" Features Projects#search-paths]
  * [wiki:"References" Features Projects#references]
  * [wiki:"Python Environments" Python Environments]
+* [wiki:"Web Projects" Features Web Project]
 * [wiki:"Unit Tests" Unit Tests]
 * [wiki:"PyLint" PyLint]
 * [wiki:"Overview of Django, IPython notebook and Azure cloud computing" PTVS Django Support]
