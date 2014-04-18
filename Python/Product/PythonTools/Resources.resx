@@ -452,4 +452,9 @@ The web.config file will be configured to resolve URIs matching this pattern to 
 
 {0}</value>
   </data>
+  <data name="ErrorStartingInteractiveProcess" xml:space="preserve">
+    <value>Failed to start interactive process:
+{0}
+</value>
+  </data>
 </root>

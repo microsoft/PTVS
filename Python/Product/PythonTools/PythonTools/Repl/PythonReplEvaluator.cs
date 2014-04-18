@@ -19,8 +19,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
-using System.Reflection;
-using System.Threading.Tasks;
 using System.Windows;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
@@ -28,8 +26,6 @@ using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.Repl;
-using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 using SR = Microsoft.PythonTools.Project.SR;
@@ -197,10 +193,7 @@ namespace Microsoft.PythonTools.Repl {
                 _interpreter = configurableOptions.InterpreterFactory ?? _interpreter;
             }
 
-            if (Interpreter == null) {
-                Window.WriteError("The interpreter is not available.");
-                return;
-            } else if (Interpreter is UnavailableFactory) {
+            if (Interpreter == null || Interpreter is UnavailableFactory) {
                 Window.WriteError(SR.GetString(SR.ReplEvaluatorInterpreterNotFound));
                 return;
             } else if (String.IsNullOrWhiteSpace(Interpreter.Configuration.InterpreterPath)) {
@@ -330,15 +323,9 @@ namespace Microsoft.PythonTools.Repl {
 
                 Win32Exception wex = e as Win32Exception;
                 if (wex != null && wex.NativeErrorCode == Microsoft.VisualStudioTools.Project.NativeMethods.ERROR_FILE_NOT_FOUND) {
-                    Window.WriteError(
-                        String.Format(
-                            "Failed to start interactive process, the interpreter could not be found: {0}{1}",
-                            Interpreter.Configuration.InterpreterPath,
-                            Environment.NewLine
-                        )
-                    );
+                    Window.WriteError(SR.GetString(SR.ReplEvaluatorInterpreterNotFound));
                 } else {
-                    Window.WriteError(String.Format("Failed to start interactive process: {0}{1}{2}", Environment.NewLine, e.ToString(), Environment.NewLine));
+                    Window.WriteError(SR.GetString(SR.ErrorStartingInteractiveProcess, e.ToString()));
                 }
                 return;
             }
@@ -467,7 +454,15 @@ namespace Microsoft.PythonTools.Repl {
 
         public PythonProjectNode Project {
             get { return _project; }
-            set { _project = value; }
+            set {
+                _project = value;
+                if (_workingDir == null) {
+                    _workingDir = _project.GetWorkingDirectory();
+                }
+                if (_searchPaths == null) {
+                    _searchPaths = string.Join(";", _project.GetSearchPaths());
+                }
+            }
         }
 
         public override string InterpreterOptions {
@@ -589,9 +584,9 @@ namespace Microsoft.PythonTools.Repl {
 
         public override string SearchPaths {
             get {
-                var startupProj = PythonToolsPackage.GetStartupProject();
+                var startupProj = PythonToolsPackage.GetStartupProject() as IPythonProject;
                 if (startupProj != null) {
-                    return startupProj.GetProjectProperty(PythonConstants.SearchPathSetting, true);
+                    return string.Join(";", startupProj.GetSearchPaths());
                 }
 
                 return null;

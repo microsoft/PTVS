@@ -1443,21 +1443,26 @@ namespace Microsoft.PythonTools.Repl {
             return _curListener.DoDebugAttach();
         }
 
-        internal IEnumerable<string> SplitCode(string code) {
+        internal IEnumerable<string> SplitCode(IEnumerable<string> lines) {
             if (SupportsMultipleCompleteStatementInputs) {
-                yield return code;
-            } else {
-                var lines = code.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
-                StringBuilder temp = new StringBuilder();
-                string prevText = null;
-                ParseResult? prevParseResult = null;
-                for (int i = 0; i < lines.Length; i++) {
-                    var line = lines[i];
+                yield return string.Join(Environment.NewLine, lines);
+                yield break;
+            }
+            
+            StringBuilder temp = new StringBuilder();
+            string prevText = null;
+            ParseResult? prevParseResult = null;
 
-                    if (i == lines.Length - 1) {
-                        temp.Append(line);
-                    } else {
+            using (var e = new PeekableEnumerator<string>(lines)) {
+                bool skipNextMoveNext = false;
+                while (skipNextMoveNext || e.MoveNext()) {
+                    skipNextMoveNext = false;
+                    var line = e.Current;
+
+                    if (e.HasNext) {
                         temp.AppendLine(line);
+                    } else {
+                        temp.Append(line);
                     }
                     string newCode = temp.ToString();
 
@@ -1492,17 +1497,25 @@ namespace Microsoft.PythonTools.Repl {
                         temp.Clear();
 
                         // reparse this line so our state remains consistent as if we just started out.
-                        i--;
+                        skipNextMoveNext = true;
                         prevParseResult = null;
                         prevText = null;
                     } else {
                         prevParseResult = result;
                     }
                 }
+            }
 
-                if (temp.Length > 0) {
-                    yield return FixEndingNewLine(temp.ToString());
-                }
+            if (temp.Length > 0) {
+                yield return FixEndingNewLine(temp.ToString());
+            }
+        }
+
+        internal IEnumerable<string> SplitCode(string code) {
+            if (SupportsMultipleCompleteStatementInputs) {
+                return Enumerable.Repeat(code, 1);
+            } else {
+                return SplitCode(code.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None));
             }
         }
 

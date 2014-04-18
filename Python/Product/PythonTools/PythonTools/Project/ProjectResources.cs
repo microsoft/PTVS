@@ -99,6 +99,7 @@ namespace Microsoft.PythonTools.Project {
         public const string ReplEvaluatorInterpreterNotFound = "ReplEvaluatorInterpreterNotFound";
         public const string ReplEvaluatorInterpreterNotConfigured = "ReplEvaluatorInterpreterNotConfigured";
         public const string ErrorOpeningInteractiveWindow = "ErrorOpeningInteractiveWindow";
+        public const string ErrorStartingInteractiveProcess = "ErrorStartingInteractiveProcess";
 
         public const string DefaultLauncherName = "DefaultLauncherName";
         public const string DefaultLauncherDescription = "DefaultLauncherDescription";
