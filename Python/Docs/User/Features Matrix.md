@@ -9,7 +9,7 @@ PTVS can be installed in the following editions of Visual Studio:
 * Visual Studio 2012 Pro or higher
 * Visual Studio 2010 Pro or higher - Service Pack 1 required and .NET 4.5 required.
 
-Below is a feature matrix for the supported editions of Visual Studio.  Features that are not available are <mark>highlighted</mark>.
+Below is a feature matrix for the supported editions of Visual Studio.
 
 || **Python Support**                            || **2010 Pro+**    || **2012 Pro+**    || **2013 Pro+**    || **2013 Web**     || **2013 Desktop** ||
 || &nbsp;Multi interpreters management           || yes              || yes              || yes              || yes              || yes              ||
@@ -21,7 +21,7 @@ Below is a feature matrix for the supported editions of Visual Studio.  Features
 || &nbsp;New project from existing code          || yes              || yes              || yes              || yes              || yes              ||
 || &nbsp;Show all files                          || yes              || yes              || yes              || yes              || yes              ||
 || &nbsp;Source control                          || yes              || yes              || yes              || yes              || yes              ||
-|| &nbsp;Git integration                         || <mark>no</mark>  || yes <sup>1</sup> || yes              || yes              || yes              ||
+|| &nbsp;Git integration                         || no               || yes <sup>1</sup> || yes              || yes              || yes              ||
 || **Editing**                                   || **2010 Pro+**    || **2012 Pro+**    || **2013 Pro+**    || **2013 Web**     || **2013 Desktop** ||
 || &nbsp;Syntax highlighting                     || yes              || yes              || yes              || yes              || yes              ||
 || &nbsp;Completions                             || yes              || yes              || yes              || yes              || yes              ||
@@ -46,30 +46,30 @@ Below is a feature matrix for the supported editions of Visual Studio.  Features
 || &nbsp;IronPython WPF (with XAML designer)     || yes              || yes              || yes              || yes              || yes              ||
 || &nbsp;IronPython Windows Forms                || yes              || yes              || yes              || yes              || yes              ||
 || **Web**                                       || **2010 Pro+**    || **2012 Pro+**    || **2013 Pro+**    || **2013 Web**     || **2013 Desktop** ||
-|| &nbsp;Django web project                      || yes              || yes              || yes              || yes              || <mark>no</mark>  ||
-|| &nbsp;Bottle web project <sup>new</sup>       || yes              || yes              || yes              || yes              || <mark>no</mark>  ||
-|| &nbsp;Flask web project <sup>new</sup>        || yes              || yes              || yes              || yes              || <mark>no</mark>  ||
-|| &nbsp;Generic web project <sup>new</sup>      || yes              || yes              || yes              || yes              || <mark>no</mark>  ||
-|| &nbsp;Web Deploy to Azure Web Site            || yes <sup>2</sup> || yes              || yes              || yes              || <mark>no</mark>  ||
-|| &nbsp;Web Deploy to Azure Web Role            || yes <sup>2</sup> || yes <sup>3</sup> || yes <sup>4</sup> || yes <sup>4</sup> || <mark>no</mark>  ||
-|| &nbsp;Run in Azure emulator                   || yes <sup>2</sup> || yes <sup>3</sup> || yes <sup>4</sup> || yes <sup>4</sup> || <mark>no</mark>  ||
+|| &nbsp;Django web project                      || yes              || yes              || yes              || yes              || no               ||
+|| &nbsp;Bottle web project <sup>new</sup>       || yes              || yes              || yes              || yes              || no               ||
+|| &nbsp;Flask web project <sup>new</sup>        || yes              || yes              || yes              || yes              || no               ||
+|| &nbsp;Generic web project <sup>new</sup>      || yes              || yes              || yes              || yes              || no               ||
+|| &nbsp;Web Deploy to Azure Web Site            || yes <sup>2</sup> || yes              || yes              || yes              || no               ||
+|| &nbsp;Web Deploy to Azure Web Role            || yes <sup>2</sup> || yes <sup>3</sup> || yes <sup>4</sup> || yes <sup>4</sup> || no               ||
+|| &nbsp;Run in Azure emulator                   || yes <sup>2</sup> || yes <sup>3</sup> || yes <sup>4</sup> || yes <sup>4</sup> || no               ||
 || **Django Templates**                          || **2010 Pro+**    || **2012 Pro+**    || **2013 Pro+**    || **2013 Web**     || **2013 Desktop** ||
-|| &nbsp;Debugging                               || yes              || yes              || yes              || yes              || <mark>no</mark>  ||
-|| &nbsp;Completions                             || yes              || yes              || yes <sup>5</sup> || yes <sup>5</sup> || <mark>no</mark>  ||
-|| &nbsp;Completions for CSS, JS <sup>new</sup>  || <mark>no</mark>  || <mark>no</mark>  || yes <sup>5</sup> || yes <sup>5</sup> || <mark>no</mark>  ||
+|| &nbsp;Debugging                               || yes              || yes              || yes              || yes              || no               ||
+|| &nbsp;Completions                             || yes              || yes              || yes <sup>5</sup> || yes <sup>5</sup> || no               ||
+|| &nbsp;Completions for CSS, JS <sup>new</sup>  || no               || no               || yes <sup>5</sup> || yes <sup>5</sup> || no               ||
 || **Debugging**                                 || **2010 Pro+**    || **2012 Pro+**    || **2013 Pro+**    || **2013 Web**     || **2013 Desktop** ||
 || &nbsp;Debugging                               || yes              || yes              || yes              || yes              || yes              ||
 || &nbsp;Debugging without a project             || yes              || yes              || yes              || yes              || yes              ||
-|| &nbsp;Debugging - Attach to existing          || yes              || yes              || yes              || <mark>no</mark>  || yes              ||
-|| &nbsp;Mixed-Mode debugging                    || <mark>no</mark>  || yes              || yes              || <mark>no</mark>  || yes              ||
-|| &nbsp;Remote debugging (Windows/Linux/Mac)    || yes              || yes              || yes              || <mark>no</mark>  || yes              ||
+|| &nbsp;Debugging - Attach to existing          || yes              || yes              || yes              || no               || yes              ||
+|| &nbsp;Mixed-Mode debugging                    || no               || yes              || yes              || no               || yes              ||
+|| &nbsp;Remote debugging (Windows/Linux/Mac)    || yes              || yes              || yes              || no               || yes              ||
 || &nbsp;Debug interactive window                || yes              || yes              || yes              || yes              || yes              ||
 || **Profiling**                                 || **2010 Pro+**    || **2012 Pro+**    || **2013 Pro+**    || **2013 Web**     || **2013 Desktop** ||
-|| &nbsp;Profiling                               || yes              || yes              || yes              || <mark>no</mark>  || <mark>no</mark>  ||
+|| &nbsp;Profiling                               || yes              || yes              || yes              || no               || no               ||
 || **Test**                                      || **2010 Pro+**    || **2012 Pro+**    || **2013 Pro+**    || **2013 Web**     || **2013 Desktop** ||
-|| &nbsp;Test explorer                           || <mark>no</mark>  || yes              || yes              || yes              || yes              ||
-|| &nbsp;Run test                                || <mark>no</mark>  || yes              || yes              || yes              || yes              ||
-|| &nbsp;Debug test                              || <mark>no</mark>  || yes              || yes              || yes              || yes              ||
+|| &nbsp;Test explorer                           || no               || yes              || yes              || yes              || yes              ||
+|| &nbsp;Run test                                || no               || yes              || yes              || yes              || yes              ||
+|| &nbsp;Debug test                              || no               || yes              || yes              || yes              || yes              ||
 
 1. Git support for VS 2012 is available in the Visual Studio Tools for Git extension, available on the [Visual Studio Gallery](http://visualstudiogallery.msdn.microsoft.com/abafc7d6-dcaa-40f4-8a5e-d6724bdb980c).
 

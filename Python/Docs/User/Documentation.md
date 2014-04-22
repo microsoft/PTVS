@@ -4,8 +4,8 @@ Python Tools for Visual Studio Documentation
 Getting Started
 ---------------
 
-[wiki:"Installation Instructions" PTVS Installation]
-[wiki:"Feature Matrix" Features Matrix]
+ * [wiki:"Installation Instructions" PTVS Installation]
+ * [wiki:"Feature Matrix" Features Matrix]
 
 Features in Depth
 -----------------
