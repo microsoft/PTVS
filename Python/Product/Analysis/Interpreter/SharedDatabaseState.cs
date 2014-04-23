@@ -387,9 +387,10 @@ namespace Microsoft.PythonTools.Interpreter {
             var stopwatch = new Stopwatch();
             stopwatch.Start();
 #endif
-            bool needUnlock = true;
+            bool needUnlock = false;
             try {
-                if (!Monitor.TryEnter(_moduleLoadLock, millisecondsTimeout)) {
+                Monitor.TryEnter(_moduleLoadLock, millisecondsTimeout, ref needUnlock);
+                if (!needUnlock) {
                     return false;
                 }
 #if DEBUG
