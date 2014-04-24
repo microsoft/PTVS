@@ -12,11 +12,14 @@
  *
  * ***************************************************************************/
 
+extern alias analysis;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Build.Construction;
 using Microsoft.Build.Evaluation;
 using Microsoft.Build.Execution;
 using Microsoft.Build.Framework;
@@ -26,6 +29,7 @@ using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.Python;
+using CommonUtils = analysis::Microsoft.VisualStudioTools.CommonUtils;
 
 namespace PythonToolsTests {
     [TestClass]
@@ -34,6 +38,47 @@ namespace PythonToolsTests {
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
             PythonTestData.Deploy();
+        }
+
+        [TestMethod, Priority(0)]
+        public void TestResolveProjectHome() {
+            var proj = ProjectRootElement.Create();
+            var g = proj.AddPropertyGroup();
+            var projectHome = g.AddProperty("ProjectHome", "");
+            var expected = g.AddProperty("Expected", "");
+            g.AddProperty("StartupFile", "app.py");
+            g.AddProperty("_PythonToolsPath", TestData.GetPath(""));
+
+            proj.AddImport(TestData.GetPath("Microsoft.PythonTools.targets"));
+            
+            var target = proj.AddTarget("TestOutput");
+            foreach (var variable in new[] { "ProjectHome", "QualifiedProjectHome", "StartupFile", "StartupPath", "Expected" }) {
+                var task = target.AddTask("Message");
+                task.SetParameter("Importance", "high");
+                task.SetParameter("Text", string.Format("{0} = $({0})", variable));
+            }
+            var errTask = target.AddTask("Error");
+            errTask.Condition = "$(Expected) != $(QualifiedProjectHome)";
+            errTask.SetParameter("Text", "Expected did not match QualifiedProjectHome");
+
+            
+            var loc = CommonUtils.EnsureEndSeparator(TestData.GetTempPath(randomSubPath: true));
+            proj.Save(Path.Combine(loc, string.Format("test.proj")));
+
+            foreach(var test in new [] {
+                new { ProjectHome="", Expected=loc },
+                new { ProjectHome=".", Expected=loc },
+                new { ProjectHome="..", Expected=CommonUtils.EnsureEndSeparator(Path.GetDirectoryName(Path.GetDirectoryName(loc))) },
+                new { ProjectHome="\\", Expected=Directory.GetDirectoryRoot(loc) },
+                new { ProjectHome="abc", Expected=loc + @"abc\" },
+                new { ProjectHome=@"a\b\c", Expected=loc + @"a\b\c\" },
+                new { ProjectHome=@"a\b\..\c", Expected=loc + @"a\c\" },
+            }) {
+                projectHome.Value = test.ProjectHome;
+                expected.Value = test.Expected;
+                var inst = new ProjectInstance(proj);
+                Assert.IsTrue(inst.Build("TestOutput", new ILogger[] { new ConsoleLogger(LoggerVerbosity.Detailed) }));
+            }
         }
 
         [TestMethod, Priority(0)]

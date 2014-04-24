@@ -105,6 +105,10 @@
       <Name>Analysis</Name>
       <Aliases>global,analysis</Aliases>
     </ProjectReference>
+    <ProjectReference Include="..\..\Product\BuildTasks\BuildTasks.csproj">
+      <Project>{89d51398-a003-44ba-b1b2-cfc6f8396d7e}</Project>
+      <Name>BuildTasks</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Product\Debugger\Debugger.csproj">
       <Project>{DECC7971-FA58-4DB0-9561-BFFADD393BBD}</Project>
       <Name>Debugger</Name>

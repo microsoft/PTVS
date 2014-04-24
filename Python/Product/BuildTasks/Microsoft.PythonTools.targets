@@ -119,15 +119,15 @@
   
   <!-- Gets the fully qualified path to the project home.  -->
   <PropertyGroup>
-    <QualifiedProjectHome Condition="'$(ProjectHome)' != ''">$([System.IO.Path]::Combine($(MSBuildProjectDirectory), $(ProjectHome)))</QualifiedProjectHome>
-    <QualifiedProjectHome>$([System.IO.Path]::GetFullPath($(QualifiedProjectHome)))</QualifiedProjectHome>
+    <QualifiedProjectHome>$(MSBuildProjectDirectory)</QualifiedProjectHome>
+    <QualifiedProjectHome Condition="'$(ProjectHome)' != '' and '$(ProjectHome)' != '.'">$([System.IO.Path]::GetFullPath($([System.IO.Path]::Combine($(MSBuildProjectDirectory), $(ProjectHome)))))</QualifiedProjectHome>
     <QualifiedProjectHome Condition="!HasTrailingSlash('$(QualifiedProjectHome)')">$(QualifiedProjectHome)\</QualifiedProjectHome>
 
     <StartupPath Condition="'$(StartupPath)' == '' and '$(StartupFile)' != ''">$([System.IO.Path]::Combine($(QualifiedProjectHome), $(StartupFile)))</StartupPath>
   </PropertyGroup>
 
   <!-- Gets the full path module name of the startup file -->
-  <Target Name="ResolveStartupModule" AfterTargets="_CheckForInvalidConfigurationAndPlatform">
+  <Target Name="ResolveStartupModule" AfterTargets="_CheckForInvalidConfigurationAndPlatform" Condition="'$(StartupPath)' != ''">
     <ConvertPathToModuleName Paths="$(StartupPath)" PathLimit="$(QualifiedProjectHome)">
       <Output TaskParameter="ModuleNames" PropertyName="StartupModule" />
     </ConvertPathToModuleName>
