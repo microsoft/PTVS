@@ -1391,11 +1391,9 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public void Dispose() {
             if (TaskProvider.IsValueCreated) {
-                lock (_openFiles) {
-                    foreach (var entry in _openFiles.Values) {
-                        TaskProvider.Value.Clear(entry, ParserTaskMoniker);
-                        TaskProvider.Value.Clear(entry, UnresolvedImportMoniker);
-                    }
+                foreach (var entry in _projectFiles.Values) {
+                    TaskProvider.Value.Clear(entry, ParserTaskMoniker);
+                    TaskProvider.Value.Clear(entry, UnresolvedImportMoniker);
                 }
             }
 
