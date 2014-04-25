@@ -2289,7 +2289,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod,  Priority(0), Timeout(5 * 60 * 1000)]
+        [TestMethod,  Priority(0), Timeout(10 * 60 * 1000)]
         public void StdLib() {
             foreach (var curVersion in PythonPaths.Versions) {
                 Debug.WriteLine("Running: {0}", curVersion.Version);

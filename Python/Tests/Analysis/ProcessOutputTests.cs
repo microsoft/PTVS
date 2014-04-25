@@ -94,7 +94,7 @@ namespace AnalysisTests {
         public void RunInterpreterOutput() {
             foreach (var fact in Factories) {
                 using (var output = fact.Run("-c", "import sys; print(sys.version)")) {
-                    Assert.IsTrue(output.Wait(TimeSpan.FromSeconds(10)));
+                    Assert.IsTrue(output.Wait(TimeSpan.FromSeconds(30)), "Running " + fact.Description + " exceeded timeout");
 
                     foreach (var line in output.StandardOutputLines) {
                         Console.WriteLine(line);
@@ -117,11 +117,11 @@ namespace AnalysisTests {
             foreach(var fact in Factories) {
                 using (var output = fact.Run("-c", "assert False")) {
                     Console.WriteLine(output.Arguments);
-                    Assert.IsTrue(output.Wait(TimeSpan.FromSeconds(10)));
+                    Assert.IsTrue(output.Wait(TimeSpan.FromSeconds(30)), "Running " + fact.Description + " exceeded timeout");
 
-                    Assert.AreEqual(0, output.StandardOutputLines.Count());
+                    Assert.AreEqual(0, output.StandardOutputLines.Count(), "Expected no standard output");
                     var error = output.StandardErrorLines.ToList();
-                    Assert.AreEqual(3, error.Count);
+                    Assert.AreEqual(3, error.Count, "Expected 3 lines on standard error");
                     Assert.AreEqual("Traceback (most recent call last):", error[0]);
                     Assert.AreEqual("  File \"<string>\", line 1, in <module>", error[1]);
                     Assert.AreEqual("AssertionError", error[2]);

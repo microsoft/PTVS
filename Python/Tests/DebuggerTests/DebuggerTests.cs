@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Threading;
 using Microsoft.PythonTools.Debugger;
@@ -1194,16 +1195,23 @@ namespace DebuggerTests {
 
             AutoResetEvent bpHit = new AutoResetEvent(false);
 
-            process.BreakpointHit += (sender, args) => {
-                Assert.AreNotEqual(args.Thread, thread, "breakpoint shouldn't be on main thread");
+            ExceptionDispatchInfo exc = null;
 
-                foreach (var frame in thread.Frames) {
-                    Console.WriteLine(frame.FileName);
-                    Console.WriteLine(frame.LineNo);
+            process.BreakpointHit += (sender, args) => {
+                try {
+                    Assert.AreNotEqual(args.Thread, thread, "breakpoint shouldn't be on main thread");
+
+                    foreach (var frame in thread.Frames) {
+                        Console.WriteLine(frame.FileName);
+                        Console.WriteLine(frame.LineNo);
+                    }
+                    Assert.IsTrue(thread.Frames.Count > 1, "expected more than one frame");
+                    process.Continue();
+                } catch (Exception ex) {
+                    exc = ExceptionDispatchInfo.Capture(ex);
+                } finally {
+                    bpHit.Set();
                 }
-                Assert.IsTrue(thread.Frames.Count > 1, "expected more than one frame");
-                process.Continue();
-                bpHit.Set();
             };
 
             process.Start();
@@ -1211,6 +1219,9 @@ namespace DebuggerTests {
             try {
                 if (!bpHit.WaitOne(10000)) {
                     Assert.Fail("Failed to hit breakpoint");
+                }
+                if (exc != null) {
+                    exc.Throw();
                 }
             } finally {
                 TerminateProcess(process);
