@@ -797,7 +797,7 @@ interpreter_path_emulated=$(PythonInterpreterPath)
   </PropertyGroup>
 
   <Target Name="PythonRunWebServerCommand"
-          Label="resource:Microsoft.PythonTools;Microsoft.Resources;RunWebServerLabel"
+          Label="resource:Microsoft.PythonTools;Microsoft.PythonTools.Resources;RunWebServerLabel"
           Returns="@(Commands)">
     <PropertyGroup>
       <PythonRunWebServerCommand Condition="'$(PythonRunWebServerCommand)' == ''">$(StartupPath)</PythonRunWebServerCommand>
@@ -826,7 +826,7 @@ interpreter_path_emulated=$(PythonInterpreterPath)
   </Target>
 
   <Target Name="PythonDebugWebServerCommand"
-          Label="resource:Microsoft.PythonTools;Microsoft.Resources;DebugWebServerLabel"
+          Label="resource:Microsoft.PythonTools;Microsoft.PythonTools.Resources;DebugWebServerLabel"
           Returns="@(Commands)">
     <PropertyGroup>
       <PythonDebugWebServerCommand Condition="'$(PythonDebugWebServerCommand)' == ''">$(StartupPath)</PythonDebugWebServerCommand>
@@ -855,7 +855,7 @@ interpreter_path_emulated=$(PythonInterpreterPath)
   </Target>
 
   <Target Name="PythonUpgradeWebFrameworkCommand"
-          Label="resource:Microsoft.PythonTools;Microsoft.Resources;UpgradeWebFrameworkLabel"
+          Label="resource:Microsoft.PythonTools;Microsoft.PythonTools.Resources;UpgradeWebFrameworkLabel"
           Returns="@(Commands)">
     <!-- 'pip' is a special TargetType that will also install pip if required. -->
     <CreatePythonCommandItem Target="$(PythonWebFrameworkPackage)"
