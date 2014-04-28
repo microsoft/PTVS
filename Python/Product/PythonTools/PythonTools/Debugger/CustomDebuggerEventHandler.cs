@@ -21,6 +21,7 @@ using Microsoft.PythonTools.DkmDebugger;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Debugger.Interop;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 using NativeMethods = Microsoft.VisualStudioTools.Project.NativeMethods;
 
@@ -45,41 +46,25 @@ namespace Microsoft.PythonTools.Debugger {
                 "Python/native mixed-mode debugging requires symbol files for the Python interpreter that is being debugged. Please add the folder " +
                 "containing those symbol files to your symbol search path, and force a reload of symbols for {0}.";
 
-            var buttons = new[] {
-                new TASKDIALOG_BUTTON { nButtonID = 1, pszButtonText = "Open symbol settings dialog" },
-                new TASKDIALOG_BUTTON { nButtonID = 2, pszButtonText = "Download symbols for my interpreter" }
-            };
+            var dialog = new TaskDialog(PythonToolsPackage.Instance);
 
-            var pButtons = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(TASKDIALOG_BUTTON)) * 2);
-            for (int i = 0; i < buttons.Length; ++i) {
-                Marshal.StructureToPtr(buttons[i], pButtons + Marshal.SizeOf(typeof(TASKDIALOG_BUTTON)) * i, false);
-            }
+            var openSymbolSettings = new TaskDialogButton("Open symbol settings dialog");
+            var downloadSymbols = new TaskDialogButton("Download symbols for my interpreter");
+            dialog.Buttons.Add(openSymbolSettings);
+            dialog.Buttons.Add(downloadSymbols);
 
-            var taskDialogConfig = new TASKDIALOGCONFIG {
-                cbSize = (uint)Marshal.SizeOf(typeof(TASKDIALOGCONFIG)),
-                dwFlags = TASKDIALOG_FLAGS.TDF_USE_COMMAND_LINKS,
-                dwCommonButtons = TASKDIALOG_COMMON_BUTTON_FLAGS.TDCBF_CLOSE_BUTTON,
-                pszWindowTitle = "Python Symbols Required",
-                pszContent = string.Format(content, moduleName),
-                cButtons = (uint)buttons.Length,
-                pButtons = pButtons
-            };
+            dialog.Buttons.Add(TaskDialogButton.Close);
+            dialog.UseCommandLinks = true;
+            dialog.Title = "Python Symbols Required";
+            dialog.Content = string.Format(content, moduleName);
+            dialog.Width = 0;
 
-            var uiShell = (IVsUIShell)PythonToolsPackage.GetGlobalService(typeof(SVsUIShell));
-            uiShell.GetDialogOwnerHwnd(out taskDialogConfig.hwndParent);
-            uiShell.EnableModeless(0);
+            dialog.ShowModal();
 
-            int nButton, nRadioButton;
-            bool fVerificationFlagChecked;
-            NativeMethods.TaskDialogIndirect(ref taskDialogConfig, out nButton, out nRadioButton, out fVerificationFlagChecked);
-
-            uiShell.EnableModeless(1);
-            Marshal.FreeHGlobal(pButtons);
-
-            if (nButton == 1) {
+            if (dialog.SelectedButton == openSymbolSettings) {
                 var cmdId = new CommandID(VSConstants.GUID_VSStandardCommandSet97, VSConstants.cmdidToolsOptions);
                 PythonToolsPackage.Instance.GlobalInvoke(cmdId,  "1F5E080F-CBD2-459C-8267-39fd83032166");
-            } else if (nButton == 2) {
+            } else if (dialog.SelectedButton == downloadSymbols) {
                 PythonToolsPackage.OpenWebBrowser(
                     string.Format("http://go.microsoft.com/fwlink/?LinkId=308954&clcid=0x{0:X}", CultureInfo.CurrentCulture.LCID));
             }

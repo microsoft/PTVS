@@ -43,6 +43,7 @@ using Microsoft.PythonTools.Project;
 using Microsoft.PythonTools.Project.Web;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Debugger;
 using Microsoft.VisualStudio.Debugger.Interop;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.OLE.Interop;
@@ -667,6 +668,9 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             // Register custom debug event service
             var customDebuggerEventHandler = new CustomDebuggerEventHandler();
             ((IServiceContainer)this).AddService(customDebuggerEventHandler.GetType(), customDebuggerEventHandler, promote: true);
+
+            // Enable the mixed-mode debugger UI context
+            UIContext.FromUIContextGuid(DkmEngineId.NativeEng).IsActive = true;
 #endif
 
             // Add our command handlers for menu (commands must exist in the .vsct file)
@@ -696,10 +700,8 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
 
             RegisterProjectFactory(new PythonWebProjectFactory(this));
 
-            var monitorSel = (IVsMonitorSelection)GetService(typeof(SVsShellMonitorSelection));
-            guid = AD7Engine.DebugEngineGuid;
-            ErrorHandler.ThrowOnFailure(monitorSel.GetCmdUIContextCookie(ref guid, out cookie));
-            ErrorHandler.ThrowOnFailure(monitorSel.SetCmdUIContext(cookie, 1));
+            // Enable the Python debugger UI context
+            UIContext.FromUIContextGuid(AD7Engine.DebugEngineGuid).IsActive = true;
 
             var interpreterService = ComponentModel.GetService<IInterpreterOptionsService>();
             interpreterService.InterpretersChanged += RefreshReplCommands;

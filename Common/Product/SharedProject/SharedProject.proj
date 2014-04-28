@@ -23,6 +23,10 @@
       <Link>SharedProject\ProcessOutput.cs</Link>
       <Visible>true</Visible>
     </Compile>
+    <Compile Include="$(_ProjectSystemFilesLocation)\TaskDialog.cs">
+      <Link>SharedProject\TaskDialog.cs</Link>
+      <Visible>true</Visible>
+    </Compile>
     <Compile Include="$(_ProjectSystemFilesLocation)\OverwriteFileDialog.xaml.cs">
       <DependentUpon>OverwriteFileDialog.xaml</DependentUpon>
       <Link>SharedProject\OverwriteFileDialog.xaml.cs</Link>
