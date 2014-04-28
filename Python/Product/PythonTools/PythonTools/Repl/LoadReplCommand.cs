@@ -43,7 +43,7 @@ namespace Microsoft.VisualStudio.Repl {
             var eval = window.Evaluator as BasePythonReplEvaluator;
             if (eval != null && eval.CurrentOptions != null) {
                 finder.Search(eval.CurrentOptions.WorkingDirectory);
-                finder.SearchAll(eval.CurrentOptions.SearchPaths.Split(';'));
+                finder.SearchAll(eval.CurrentOptions.SearchPaths, ';');
             }
 
             finder.ThrowIfNotFound();
@@ -151,6 +151,27 @@ namespace Microsoft.VisualStudio.Repl {
                 return false;
             }
 
+            /// <summary>
+            /// Searches each path in the list of paths as if they had been
+            /// passed to <see cref="Search"/> individually.
+            /// </summary>
+            public bool SearchAll(string paths, char separator) {
+                if (Found) {
+                    // File was found, but not in this path
+                    return false;
+                }
+
+                if (string.IsNullOrEmpty(paths)) {
+                    return false;
+                }
+
+                return SearchAll(paths.Split(separator));
+            }
+
+            /// <summary>
+            /// Searches each path in the sequence as if they had been passed
+            /// to <see cref="Search"/> individually.
+            /// </summary>
             public bool SearchAll(IEnumerable<string> paths) {
                 if (Found) {
                     // File was found, but not in this path
