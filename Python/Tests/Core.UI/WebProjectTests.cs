@@ -160,12 +160,18 @@ namespace PythonToolsUITests {
 
         #region EndToEndTest
 
+        private static void EndToEndLog(string format, params object[] args) {
+            Console.Write("[{0:o}] ", DateTime.Now);
+            Console.WriteLine(format, args);
+        }
+
         private void EndToEndTest(
             string templateName,
             string moduleName,
             string textInResponse,
             string pythonVersion
         ) {
+            EndToEndLog("Starting {0} {1}", templateName, pythonVersion);
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
                 var pyProj = app.CreateProject(
                     PythonVisualStudioApp.TemplateLanguageName,
@@ -174,11 +180,17 @@ namespace PythonToolsUITests {
                     TestContext.TestName
                 ).GetPythonProject();
 
+                EndToEndLog("Created project {0}", pyProj.ProjectFile);
+
                 Assert.IsInstanceOfType(pyProj.GetLauncher(), typeof(PythonWebLauncher));
 
                 var factory = CreateVirtualEnvironment(pythonVersion, app, pyProj);
 
+                EndToEndLog("Created virtual environment {0}", factory.Description);
+
                 InstallWebFramework(moduleName, pyProj, factory);
+
+                EndToEndLog("Installed framework {0}", moduleName);
 
                 // Wait for analysis to complete so we don't have too many
                 // python.exe processes floating around.
@@ -186,48 +198,68 @@ namespace PythonToolsUITests {
                     Thread.Sleep(1000);
                 }
 
+                EndToEndLog("Completed analysis");
+
                 UIThread.Invoke(() => {
                     pyProj.SetProjectProperty("WebBrowserPort", "23457");
                 });
+                EndToEndLog("Set WebBrowserPort to 23457");
                 LaunchAndVerifyNoDebug(app, 23457, textInResponse);
+                EndToEndLog("Verified without debugging");
 
                 UIThread.Invoke(() => {
                     pyProj.SetProjectProperty("WebBrowserPort", "23456");
                 });
+                EndToEndLog("Set WebBrowserPort to 23456");
                 LaunchAndVerifyDebug(app, 23456, textInResponse);
+                EndToEndLog("Verified with debugging");
             }
         }
 
 
         private static void LaunchAndVerifyDebug(VisualStudioApp app, int port, string textInResponse) {
+            EndToEndLog("Building");
             app.Dte.Solution.SolutionBuild.Build(true);
+            EndToEndLog("Starting debugging");
             app.Dte.Debugger.Go(false);
+            EndToEndLog("Debugging started");
             
             string text = string.Empty;
+            int retries;
             try {
-                for (int i = 100;
-                    i > 0 &&
+                for (retries = 100;
+                    retries > 0 &&
                         (app.Dte.Debugger.CurrentMode != EnvDTE.dbgDebugMode.dbgRunMode ||
                         !IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners().Any(p => p.Port == port));
-                    --i) {
+                    --retries) {
                     Thread.Sleep(300);
                 }
 
+                if (retries > 0) {
+                    EndToEndLog("Active at http://localhost:{0}/", port);
+                } else {
+                    EndToEndLog("Timed out waiting for http://localhost:{0}/", port);
+                }
                 text = WebDownloadUtility.GetString(new Uri(string.Format("http://localhost:{0}/", port)));
             } finally {
                 app.Dte.Debugger.Stop();
             }
 
-            Console.WriteLine("Response from http://localhost:{0}/", port);
-            Console.WriteLine(text);
+            EndToEndLog("Response from http://localhost:{0}/", port);
+            EndToEndLog(text);
             Assert.IsTrue(text.Contains(textInResponse), text);
 
-            for (int i = 10;
-                i > 0 &&
+            for (retries = 10;
+                retries > 0 &&
                     (app.Dte.Debugger.CurrentMode != EnvDTE.dbgDebugMode.dbgRunMode ||
                     !IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners().All(p => p.Port != port));
-                --i) {
+                --retries) {
                 Thread.Sleep(500);
+            }
+            if (retries > 0) {
+                EndToEndLog("Debugging stopped");
+            } else {
+                EndToEndLog("Timed out waiting for debugging to stop");
             }
         }
 
@@ -239,16 +271,22 @@ namespace PythonToolsUITests {
             var pythonProcesses = Process.GetProcessesByName("python");
             Process[] newProcesses;
             bool prevNormal = true, prevAbnormal = true;
+            int retries;
 
             try {
+                EndToEndLog("Transitioning to UI thread to build");
                 UIThread.Invoke(() => {
+                    EndToEndLog("Building");
                     app.Dte.Solution.SolutionBuild.Build(true);
+                    EndToEndLog("Updating settings");
                     prevNormal = PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnNormalExit;
                     prevAbnormal = PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnAbnormalExit;
                     PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnNormalExit = false;
                     PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnAbnormalExit = false;
 
+                    EndToEndLog("Starting running");
                     app.Dte.Solution.SolutionBuild.Run();
+                    EndToEndLog("Running");
                 });
 
                 newProcesses = new Process[0];
@@ -258,26 +296,24 @@ namespace PythonToolsUITests {
                     Thread.Sleep(500);
                 }
                 Assert.IsTrue(newProcesses.Any(), "Did not find new Python process");
+                EndToEndLog("Found new processes with IDs {0}", string.Join(", ", newProcesses.Select(p => p.Id.ToString())));
 
-                for (int i = 100;
-                    i > 0 &&
+                for (retries = 100;
+                    retries > 0 &&
                         !IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners().Any(p => p.Port == port);
-                    --i) {
+                    --retries) {
                     Thread.Sleep(300);
                 }
+                EndToEndLog("Active at http://localhost:{0}/", port);
             } finally {
                 UIThread.Invoke(() => {
                     PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnNormalExit = prevNormal;
                     PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnAbnormalExit = prevAbnormal;
                 });
             }
-            string text;
-            var req = HttpWebRequest.CreateHttp(new Uri(string.Format("http://localhost:{0}/", port)));
-            using (var resp = req.GetResponse()) {
-                text = new StreamReader(resp.GetResponseStream()).ReadToEnd();
-            }
+            var text = WebDownloadUtility.GetString(new Uri(string.Format("http://localhost:{0}/", port)));
 
-            for (int i = 10; i >= 0; --i) {
+            for (retries = 10; retries >= 0; --retries) {
                 bool allKilled = true;
                 for (int j = 0; j < newProcesses.Length; ++j) {
                     try {
@@ -288,9 +324,8 @@ namespace PythonToolsUITests {
                             newProcesses[j] = null;
                         }
                     } catch (Exception ex) {
-                        Console.WriteLine("Failed to kill {0}", newProcesses[j]);
-                        Console.WriteLine(ex);
-                        Console.WriteLine();
+                        EndToEndLog("Failed to kill {0}", newProcesses[j]);
+                        EndToEndLog(ex.ToString() + Environment.NewLine);
                         allKilled = false;
                     }
                 }
@@ -298,17 +333,22 @@ namespace PythonToolsUITests {
                     break;
                 }
                 Thread.Sleep(100);
-                Assert.AreNotEqual(0, i, "Failed to kill process.");
+                Assert.AreNotEqual(0, retries, "Failed to kill process.");
             }
 
-            Console.WriteLine("Response from http://localhost:{0}/", port);
-            Console.WriteLine(text);
+            EndToEndLog("Response from http://localhost:{0}/", port);
+            EndToEndLog(text);
             Assert.IsTrue(text.Contains(textInResponse), text);
 
-            for (int i = 10;
-                i > 0 && !IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners().All(p => p.Port != port);
-                --i) {
+            for (retries = 10;
+                retries > 0 && !IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners().All(p => p.Port != port);
+                --retries) {
                 Thread.Sleep(500);
+            }
+            if (retries > 0) {
+                EndToEndLog("Process ended");
+            } else {
+                EndToEndLog("Timed out waiting for process to exit");
             }
         }
 
