@@ -270,7 +270,7 @@ namespace PythonToolsUITests {
 
                 app.OpenSolutionExplorer().FindChildOfProject(project, SR.GetString(SR.Environments)).Select();
 
-                using (var createVenv = AutomationDialog.FromDte(app, "Project.AddVirtualEnvironment")) {
+                using (var createVenv = AutomationDialog.FromDte(app, "ProjectandSolutionContextMenus.PythonEnvironments.AddVirtualEnvironment")) {
                     var baseInterp = new ComboBox(createVenv.FindByAutomationId("BaseInterpreter")).GetSelectedItemName();
 
                     Assert.AreEqual("Python 2.7", baseInterp);
@@ -286,7 +286,7 @@ namespace PythonToolsUITests {
 
                 app.OpenSolutionExplorer().FindChildOfProject(project, SR.GetString(SR.Environments)).Select();
 
-                using (var createVenv = AutomationDialog.FromDte(app, "Project.AddVirtualEnvironment")) {
+                using (var createVenv = AutomationDialog.FromDte(app, "ProjectandSolutionContextMenus.PythonEnvironments.AddVirtualEnvironment")) {
                     var baseInterp = new ComboBox(createVenv.FindByAutomationId("BaseInterpreter")).GetSelectedItemName();
 
                     Assert.AreEqual("Python 3.3", baseInterp);

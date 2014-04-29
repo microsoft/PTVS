@@ -271,7 +271,7 @@ namespace TestUtilities.UI.Python {
             );
             environmentsNode.Select();
 
-            using (var createVenv = AutomationDialog.FromDte(this, "Project.AddVirtualEnvironment")) {
+            using (var createVenv = AutomationDialog.FromDte(this, "ProjectandSolutionContextMenus.PythonEnvironments.AddVirtualEnvironment")) {
                 envPath = new TextBox(createVenv.FindByAutomationId("VirtualEnvPath")).GetValue();
                 var baseInterp = new ComboBox(createVenv.FindByAutomationId("BaseInterpreter")).GetSelectedItemName();
 
@@ -305,7 +305,7 @@ namespace TestUtilities.UI.Python {
             );
             environmentsNode.Select();
 
-            using (var createVenv = AutomationDialog.FromDte(this, "Project.AddVirtualEnvironment")) {
+            using (var createVenv = AutomationDialog.FromDte(this, "ProjectandSolutionContextMenus.PythonEnvironments.AddVirtualEnvironment")) {
                 new TextBox(createVenv.FindByAutomationId("VirtualEnvPath")).SetValue(envPath);
                 var baseInterp = new ComboBox(createVenv.FindByAutomationId("BaseInterpreter")).GetSelectedItemName();
 
