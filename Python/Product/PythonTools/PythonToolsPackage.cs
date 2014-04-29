@@ -700,8 +700,10 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
 
             RegisterProjectFactory(new PythonWebProjectFactory(this));
 
+#if DEV11_OR_LATER
             // Enable the Python debugger UI context
             UIContext.FromUIContextGuid(AD7Engine.DebugEngineGuid).IsActive = true;
+#endif
 
             var interpreterService = ComponentModel.GetService<IInterpreterOptionsService>();
             interpreterService.InterpretersChanged += RefreshReplCommands;
