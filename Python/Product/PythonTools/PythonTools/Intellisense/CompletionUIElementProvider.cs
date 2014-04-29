@@ -30,6 +30,7 @@ namespace Microsoft.PythonTools.Intellisense {
         [ImportMany]
         internal List<Lazy<IUIElementProvider<CompletionSet, ICompletionSession>, IOrderableContentTypeMetadata>> UnOrderedCompletionSetUIElementProviders { get; set; }
         private static bool _isPreSp1 = CheckPreSp1();
+        private bool _gettingUIElement;
 
         private static bool CheckPreSp1() {
             var attrs = typeof(VSConstants).Assembly.GetCustomAttributes(typeof(AssemblyFileVersionAttribute), false);
@@ -46,29 +47,37 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public UIElement GetUIElement(CompletionSet itemToRender, ICompletionSession context, UIElementType elementType) {
-            var orderedProviders = Orderer.Order(UnOrderedCompletionSetUIElementProviders);
-            foreach (var presenterProviderExport in orderedProviders) {
+            if (_gettingUIElement) {
+                return null;
+            }
+            _gettingUIElement = true;
+            try {
+                var orderedProviders = Orderer.Order(UnOrderedCompletionSetUIElementProviders);
+                foreach (var presenterProviderExport in orderedProviders) {
 
-                foreach (var contentType in presenterProviderExport.Metadata.ContentTypes) {
-                    if (PythonToolsPackage.Instance.ContentType.IsOfType(contentType)) {
-                        if (presenterProviderExport.Value.GetType() == typeof(CompletionUIElementProvider)) {
-                            // don't forward to ourselves...
-                            continue;
-                        }
-
-                        var res = presenterProviderExport.Value.GetUIElement(itemToRender, context, elementType);
-                        if (res != null) {
-                            if (_isPreSp1) {
-                                return res;
+                    foreach (var contentType in presenterProviderExport.Metadata.ContentTypes) {
+                        if (PythonToolsPackage.Instance.ContentType.IsOfType(contentType)) {
+                            if (presenterProviderExport.Value.GetType() == typeof(CompletionUIElementProvider)) {
+                                // don't forward to ourselves...
+                                continue;
                             }
 
-                            return new CompletionControl(res, context);
+                            var res = presenterProviderExport.Value.GetUIElement(itemToRender, context, elementType);
+                            if (res != null) {
+                                if (_isPreSp1) {
+                                    return res;
+                                }
+
+                                return new CompletionControl(res, context);
+                            }
                         }
                     }
                 }
-            }
 
-            return null;
+                return null;
+            } finally {
+                _gettingUIElement = false;
+            }
         }
     }
 }
