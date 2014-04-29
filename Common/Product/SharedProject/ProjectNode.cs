@@ -4238,6 +4238,10 @@ If the files in the existing folder have the same names as files in the folder y
             found = 0;
             itemId = 0;
 
+            // Debugger will pass in non-normalized paths for remote Linux debugging (produced by concatenating a local Windows-style path
+            // with a portion of the remote Unix-style path) - need to normalize to look it up.
+            mkDoc = CommonUtils.NormalizePath(mkDoc);
+
             // If it is the project file just return.
             if (CommonUtils.IsSamePath(mkDoc, this.GetMkDocument())) {
                 found = 1;

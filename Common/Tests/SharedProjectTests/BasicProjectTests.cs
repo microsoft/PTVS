@@ -1537,5 +1537,35 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                 }
             }
         }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void IsDocumentInProject() {
+            foreach (var projectType in ProjectTypes) {
+                var proj = new ProjectDefinition(
+                    "HelloWorld",
+                    projectType,
+                    Compile("file1"),
+                    Folder("folder"),
+                    Compile("folder\\file2")
+                );
+                using (var solution = proj.Generate().ToVs()) {
+                    var project = (IVsProject)((dynamic)solution.Project).Project;
+                    foreach (var item in proj.Items.OfType<CompileItem>()) {
+                        foreach (var name in new[] { item.Name, item.Name.Replace('\\', '/') }) {
+                            string fullName = Path.Combine(solution.Directory, proj.Name, name) + projectType.CodeExtension; 
+                            Console.WriteLine(fullName);
+
+                            int found = 0;
+                            var priority = new VSDOCUMENTPRIORITY[1];
+                            uint itemid;
+
+                            UIThread.Invoke(() => ErrorHandler.ThrowOnFailure(project.IsDocumentInProject(fullName, out found, priority, out itemid)));
+                            Assert.AreNotEqual(0, found);
+                        }
+                    }
+                }
+            }
+        }
     }
 }
