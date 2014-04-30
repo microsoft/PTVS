@@ -28,10 +28,10 @@ namespace Microsoft.VisualStudioTools.Project {
 
     public abstract class ProjectFactory : Microsoft.VisualStudio.Shell.Flavor.FlavoredProjectFactoryBase,
 #if DEV11_OR_LATER
- IVsAsynchronousProjectCreate,
+        IVsAsynchronousProjectCreate,
         IVsProjectUpgradeViaFactory4,
 #endif
- IVsProjectUpgradeViaFactory {
+        IVsProjectUpgradeViaFactory {
         #region fields
         private Microsoft.VisualStudio.Shell.Package package;
         private System.IServiceProvider site;

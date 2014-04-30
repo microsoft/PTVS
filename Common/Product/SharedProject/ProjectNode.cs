@@ -597,10 +597,8 @@ namespace Microsoft.VisualStudioTools.Project {
             }
         }
 
-        protected virtual Stream ProjectIconsImageStripStream {
-            get {
-                return typeof(ProjectNode).Assembly.GetManifestResourceStream("Microsoft.VisualStudioTools.Resources.Icons.SharedProjectImageList.bmp");
-            }
+        protected abstract Stream ProjectIconsImageStripStream {
+            get;
         }
 
         /// <summary>

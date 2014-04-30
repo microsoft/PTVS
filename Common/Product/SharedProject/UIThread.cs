@@ -84,16 +84,16 @@ namespace Microsoft.VisualStudioTools {
             }
         }
 
-
-        public static void MustBeCalledFromUIThread(bool throwInRelease = false) {
+        public static void MustBeCalledFromUIThreadOrThrow() {
             if (InvokeRequired) {
-                Debug.Fail("Invalid cross-thread call");
-
-                if (throwInRelease) {
-                    // RPC_E_WRONG_THREAD = unchecked((int)0x8001010E)
-                    throw new COMException("Invalid cross-thread call", unchecked((int)0x8001010E));
-                }
+                const int RPC_E_WRONG_THREAD = unchecked((int)0x8001010E);
+                throw new COMException("Invalid cross-thread call", RPC_E_WRONG_THREAD);
             }
+        }
+
+        [Conditional("DEBUG")]
+        public static void MustBeCalledFromUIThread() {
+            Debug.Assert(!InvokeRequired, "Invalid cross-thread call");
         }
 
         /// <summary>
