@@ -23,6 +23,7 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Logging;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudioTools;
+using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Commands {
     /// <summary>
@@ -64,7 +65,6 @@ namespace Microsoft.PythonTools.Commands {
             res.AppendLine("Projects: ");
 
             var projects = dte.Solution.Projects;
-            var pyProjectKind = ("{" + PythonConstants.ProjectFactoryGuid + "}").ToLower();
             var interestingDteProperties = new[] { "InterpreterId", "InterpreterVersion", "StartupFile", "WorkingDirectory", "PublishUrl", "SearchPath", "CommandLineArguments", "InterpreterPath" };
             var interestingProjectProperties = new[] { "ClusterRunEnvironment", "ClusterPublishBeforeRun", "ClusterWorkingDir", "ClusterMpiExecCommand", "ClusterAppCommand", "ClusterAppArguments", "ClusterDeploymentDir", "ClusterTargetPlatform" };
 
@@ -80,7 +80,7 @@ namespace Microsoft.PythonTools.Commands {
                     }
                     bool isPythonProject = false;
                     try {
-                        isPythonProject = project.Kind.ToLower() == pyProjectKind;
+                        isPythonProject = Utilities.GuidEquals(PythonConstants.ProjectFactoryGuid, project.Kind);
                     } catch (Exception ex2) {
                         if (ex2.IsCriticalException()) {
                             throw;
@@ -97,7 +97,7 @@ namespace Microsoft.PythonTools.Commands {
                 }
                 res.AppendLine("    Project: " + name);
 
-                if (project.Kind.ToLower() == pyProjectKind) {
+                if (Utilities.GuidEquals(PythonConstants.ProjectFactoryGuid, project.Kind)) {
                     res.AppendLine("        Kind: Python");
 
                     foreach (var prop in interestingDteProperties) {

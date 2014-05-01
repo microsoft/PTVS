@@ -27,6 +27,7 @@ using EnvDTE80;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Options;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -895,6 +896,29 @@ namespace PythonToolsUITests {
                 }
             }
             return null;
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void CProjectReference() {
+            var python = PythonPaths.Versions.LastOrDefault(p => p.Version.Is3x() && !p.Isx64);
+            python.AssertInstalled();
+
+            var vcproj = TestData.GetPath(@"TestData\ProjectReference\NativeModule\NativeModule.vcxproj");
+            File.WriteAllText(vcproj, File.ReadAllText(vcproj)
+                .Replace("$(PYTHON_INCLUDE)", Path.Combine(python.PrefixPath, "include"))
+                .Replace("$(PYTHON_LIB)", Path.Combine(python.PrefixPath, "libs"))
+            );
+
+            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte))
+            using (app.SelectDefaultInterpreter(python)) {
+                var project = app.OpenProject(@"TestData\ProjectReference\CProjectReference.sln", projectName: "PythonApplication2", expectedProjects: 2);
+
+                app.Dte.Solution.SolutionBuild.Clean(true);
+                app.Dte.Solution.SolutionBuild.Build(true);
+
+                Assert.IsTrue(File.Exists(TestData.GetPath(@"TestData\ProjectReference\Debug\native_module.pyd")), ".pyd was not created");
+            }
         }
 
         /// <summary>

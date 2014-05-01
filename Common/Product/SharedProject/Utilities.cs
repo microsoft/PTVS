@@ -122,6 +122,16 @@ namespace Microsoft.VisualStudioTools.Project {
             return guids.ToArray();
         }
 
+        internal static bool GuidEquals(string x, string y) {
+            Guid gx, gy;
+            return Guid.TryParse(x, out gx) && Guid.TryParse(y, out gy) && gx == gy;
+        }
+
+        internal static bool GuidEquals(Guid x, string y) {
+            Guid gy;
+            return Guid.TryParse(y, out gy) && x == gy;
+        }
+
         internal static void CheckNotNull(object value, string message = null) {
             if (value == null) {
                 throw new InvalidOperationException(message);

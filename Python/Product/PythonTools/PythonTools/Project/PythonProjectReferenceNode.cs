@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.IO;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -26,7 +27,7 @@ namespace Microsoft.PythonTools.Project {
         private string _observing;
         private AssemblyName _asmName;
         private bool _failedToAnalyze;
-        private ProjectAssemblyReference _curReference;
+        private ProjectReference _curReference;
 
         public PythonProjectReferenceNode(ProjectNode root, ProjectElement element)
             : base(root, element) {
@@ -42,20 +43,29 @@ namespace Microsoft.PythonTools.Project {
 
         private void Initialize() {
             PythonToolsPackage.Instance.SolutionEvents.ActiveSolutionConfigurationChanged += EventListener_AfterActiveSolutionConfigurationChange;
+            PythonToolsPackage.Instance.SolutionEvents.BuildCompleted += EventListener_BuildCompleted;
             _fileChangeListener.FileChangedOnDisk += FileChangedOnDisk;
             PythonToolsPackage.Instance.SolutionEvents.ProjectLoaded += PythonProjectReferenceNode_ProjectLoaded;
             InitializeFileChangeListener();
             AddAnalyzedAssembly(((PythonProjectNode)ProjectMgr).GetInterpreter() as IPythonInterpreterWithProjectReferences);
         }
 
+        private void EventListener_BuildCompleted(object sender, EventArgs e) {
+            InitializeFileChangeListener();
+            AddAnalyzedAssembly(((PythonProjectNode)ProjectMgr).GetInterpreter() as IPythonInterpreterWithProjectReferences);
+            ProjectMgr.OnInvalidateItems(Parent);
+        }
+
         private void PythonProjectReferenceNode_ProjectLoaded(object sender, ProjectEventArgs e) {
             InitializeFileChangeListener();
             AddAnalyzedAssembly(((PythonProjectNode)ProjectMgr).GetInterpreter() as IPythonInterpreterWithProjectReferences);
+            ProjectMgr.OnInvalidateItems(Parent);
         }
 
         private void EventListener_AfterActiveSolutionConfigurationChange(object sender, EventArgs e) {
             InitializeFileChangeListener();
             AddAnalyzedAssembly(((PythonProjectNode)ProjectMgr).GetInterpreter() as IPythonInterpreterWithProjectReferences);
+            ProjectMgr.OnInvalidateItems(Parent);
         }
 
         private void InitializeFileChangeListener() {
@@ -89,18 +99,34 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        private void AddAnalyzedAssembly(IPythonInterpreterWithProjectReferences interp) {
+        private async void AddAnalyzedAssembly(IPythonInterpreterWithProjectReferences interp) {
             if (interp != null) {
                 var asmName = AssemblyName;
-                if (asmName != null) {
-                    _failedToAnalyze = false;
+                var outFile = ReferencedProjectOutputPath;
+                _failedToAnalyze = false;
+                _curReference = null;
+
+                if (!string.IsNullOrEmpty(asmName)) {
                     _asmName = new AssemblyName(asmName);
                     _curReference = new ProjectAssemblyReference(_asmName, ReferencedProjectOutputPath);
-                    var task = interp.AddReferenceAsync(_curReference);
+                } else if (File.Exists(outFile)) {
+                    _asmName = null;
+                    _curReference = new ProjectReference(outFile, ProjectReferenceKind.ExtensionModule);
+                } else {
+                    if (ReferencedProjectObject == null ||
+                        !Utilities.GuidEquals(PythonConstants.ProjectFactoryGuid, ReferencedProjectObject.Kind)) {
+                        // Only failed if the reference isn't to another Python
+                        // project.
+                        _failedToAnalyze = true;
+                    }
+                }
 
-                    task.ContinueWith(new TaskFailureHandler(TaskScheduler.FromCurrentSynchronizationContext(), this).HandleAddRefFailure);
-                } else if(!(ReferencedProjectObject is Microsoft.VisualStudioTools.Project.Automation.OAProject)) {
-                    _failedToAnalyze = true;
+                if (_curReference != null) {
+                    try {
+                        await interp.AddReferenceAsync(_curReference);
+                    } catch (Exception) {
+                        _failedToAnalyze = true;
+                    }
                 }
             }
         }
@@ -113,34 +139,11 @@ namespace Microsoft.PythonTools.Project {
             return base.CanShowDefaultIcon();
         }
 
-        class TaskFailureHandler {
-            private readonly TaskScheduler _uiScheduler;
-            private readonly PythonProjectReferenceNode _node;
-
-            public TaskFailureHandler(TaskScheduler uiScheduler, PythonProjectReferenceNode refNode) {
-                _uiScheduler = uiScheduler;
-                _node = refNode;
-            }
-
-            public void HandleAddRefFailure(Task task) {
-                if (task.Exception != null) {
-                    Task.Factory.StartNew(MarkFailed, default(CancellationToken), TaskCreationOptions.None, _uiScheduler);
-                }
-            }
-
-            public void MarkFailed() {
-                _node._failedToAnalyze = true;
-            }
-        }
-
-        public override void Remove(bool removeFromStorage) {
-            base.Remove(removeFromStorage);
-        }
-
         protected override void Dispose(bool disposing) {
             base.Dispose(disposing);
 
             PythonToolsPackage.Instance.SolutionEvents.ActiveSolutionConfigurationChanged -= EventListener_AfterActiveSolutionConfigurationChange;
+            PythonToolsPackage.Instance.SolutionEvents.BuildCompleted -= EventListener_BuildCompleted;
             PythonToolsPackage.Instance.SolutionEvents.ProjectLoaded -= PythonProjectReferenceNode_ProjectLoaded;
 
             _fileChangeListener.FileChangedOnDisk -= FileChangedOnDisk;

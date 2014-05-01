@@ -92,6 +92,8 @@ namespace Microsoft.PythonTools.Intellisense {
                         t.Item2.GetSpan(ast)
                     )).ToList()
                 );
+            } else {
+                _taskProvider.Value.Clear(entry, VsProjectAnalyzer.UnresolvedImportMoniker);
             }
         }
 

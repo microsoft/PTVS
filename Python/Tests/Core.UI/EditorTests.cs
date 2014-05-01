@@ -15,10 +15,13 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using EnvDTE;
 using Microsoft.PythonTools;
+using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.TC.TestHostAdapters;
@@ -32,6 +35,7 @@ using Microsoft.VisualStudio.Text.Tagging;
 using TestUtilities;
 using TestUtilities.Python;
 using TestUtilities.UI;
+using TestUtilities.UI.Python;
 
 namespace PythonToolsUITests {
     [TestClass]
@@ -647,61 +651,164 @@ x\
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void IndentationInconsistencyWarning() {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var options = (IPythonOptions)VsIdeTestHostContext.Dte.GetObject("VsPython");
+            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var options = app.Options;
                 var severity = options.IndentationInconsistencySeverity;
                 options.IndentationInconsistencySeverity = Severity.Warning;
-                try {
-                    var project = app.OpenProject(@"TestData\InconsistentIndentation.sln");
+                app.OnDispose(() => options.IndentationInconsistencySeverity = severity);
 
-                    var items = app.WaitForErrorListItems(1);
-                    Assert.AreEqual(1, items.Count);
+                var project = app.OpenProject(@"TestData\InconsistentIndentation.sln");
 
-                    VSTASKPRIORITY[] pri = new VSTASKPRIORITY[1];
-                    ErrorHandler.ThrowOnFailure(items[0].get_Priority(pri));
-                    Assert.AreEqual(VSTASKPRIORITY.TP_NORMAL, pri[0]);
-                } finally {
-                    options.IndentationInconsistencySeverity = severity;
-                }
+                var items = app.WaitForErrorListItems(1);
+                Assert.AreEqual(1, items.Count);
+
+                VSTASKPRIORITY[] pri = new VSTASKPRIORITY[1];
+                ErrorHandler.ThrowOnFailure(items[0].get_Priority(pri));
+                Assert.AreEqual(VSTASKPRIORITY.TP_NORMAL, pri[0]);
             }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void IndentationInconsistencyError() {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var options = (IPythonOptions)VsIdeTestHostContext.Dte.GetObject("VsPython");
+            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var options = app.Options;
                 var severity = options.IndentationInconsistencySeverity;
                 options.IndentationInconsistencySeverity = Severity.Error;
-                try {
-                    var project = app.OpenProject(@"TestData\InconsistentIndentation.sln");
+                app.OnDispose(() => options.IndentationInconsistencySeverity = severity);
 
-                    var items = app.WaitForErrorListItems(1);
-                    Assert.AreEqual(1, items.Count);
+                var project = app.OpenProject(@"TestData\InconsistentIndentation.sln");
 
-                    VSTASKPRIORITY[] pri = new VSTASKPRIORITY[1];
-                    ErrorHandler.ThrowOnFailure(items[0].get_Priority(pri));
-                    Assert.AreEqual(VSTASKPRIORITY.TP_HIGH, pri[0]);
-                } finally {
-                    options.IndentationInconsistencySeverity = severity;
-                }
+                var items = app.WaitForErrorListItems(1);
+                Assert.AreEqual(1, items.Count);
+
+                VSTASKPRIORITY[] pri = new VSTASKPRIORITY[1];
+                ErrorHandler.ThrowOnFailure(items[0].get_Priority(pri));
+                Assert.AreEqual(VSTASKPRIORITY.TP_HIGH, pri[0]);
             }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void IndentationInconsistencyIgnore() {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var options = (IPythonOptions)VsIdeTestHostContext.Dte.GetObject("VsPython");
+            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var options = app.Options;
                 var severity = options.IndentationInconsistencySeverity;
                 options.IndentationInconsistencySeverity = Severity.Ignore;
-                try {
-                    var project = app.OpenProject(@"TestData\InconsistentIndentation.sln");
+                app.OnDispose(() => options.IndentationInconsistencySeverity = severity);
 
-                    List<IVsTaskItem> items = app.WaitForErrorListItems(0);
+                var project = app.OpenProject(@"TestData\InconsistentIndentation.sln");
+
+                List<IVsTaskItem> items = app.WaitForErrorListItems(0);
+                Assert.AreEqual(0, items.Count);
+            }
+        }
+
+        private static void SquiggleShowHide(string document, Action<PythonVisualStudioApp> test) {
+            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+                UnresolvedImportSquiggleProvider._alwaysCreateSquiggle = true;
+                app.OnDispose(() => UnresolvedImportSquiggleProvider._alwaysCreateSquiggle = false);
+
+
+                var project = app.OpenProject(@"TestData\MissingImport.sln");
+
+                var editorWindows = app.Dte.Windows
+                    .OfType<EnvDTE.Window>()
+                    .Where(w => w.Kind == "Editor")
+                    .ToArray();
+                foreach (var w in editorWindows) {
+                    w.Close(vsSaveChanges.vsSaveChangesNo);
+                }
+
+                var wnd = project.ProjectItems.Item(document).Open();
+                wnd.Activate();
+                try {
+                    test(app);
+                } finally {
+                    wnd.Close();
+                }
+            }
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core"), TestCategory("Squiggle")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void ImportPresent() {
+            SquiggleShowHide("ImportPresent.py", app => {
+                var items = app.WaitForErrorListItems(0);
+                Assert.AreEqual(0, items.Count);
+            });
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core"), TestCategory("Squiggle")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void ImportSelf() {
+            SquiggleShowHide("ImportSelf.py", app => {
+                var items = app.WaitForErrorListItems(0);
+                Assert.AreEqual(0, items.Count);
+            });
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core"), TestCategory("Squiggle")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void ImportMissingThenAddThenExcludeFile() {
+            SquiggleShowHide("ImportMissing.py", app => {
+                string text;
+                var items = app.WaitForErrorListItems(1);
+                Assert.AreEqual(1, items.Count);
+                Assert.AreEqual(0, items[0].get_Text(out text));
+                Assert.IsTrue(text.Contains("AbsentModule"), text);
+
+                var sln2 = (EnvDTE80.Solution2)app.Dte.Solution;
+                var project = app.Dte.Solution.Projects.Item(1);
+                project.ProjectItems.AddFromFile(TestData.GetPath(@"TestData\MissingImport\AbsentModule.py"));
+
+                items = app.WaitForErrorListItems(0);
+                Assert.AreEqual(0, items.Count);
+
+                project.ProjectItems.Item("AbsentModule.py").Remove();
+                items = app.WaitForErrorListItems(1);
+                Assert.AreEqual(1, items.Count);
+                Assert.AreEqual(0, items[0].get_Text(out text));
+                Assert.IsTrue(text.Contains("AbsentModule"), text);
+            });
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core"), TestCategory("Squiggle")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void ImportPresentThenAddThenRemoveReference() {
+            var python = PythonPaths.Versions.LastOrDefault(p => p.Version.Is3x() && !p.Isx64);
+            python.AssertInstalled();
+
+            var vcproj = TestData.GetPath(@"TestData\ProjectReference\NativeModule\NativeModule.vcxproj");
+            File.WriteAllText(vcproj, File.ReadAllText(vcproj)
+                .Replace("$(PYTHON_INCLUDE)", Path.Combine(python.PrefixPath, "include"))
+                .Replace("$(PYTHON_LIB)", Path.Combine(python.PrefixPath, "libs"))
+            );
+
+            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte))
+            using (app.SelectDefaultInterpreter(python)) {
+                var project = app.OpenProject(@"TestData\ProjectReference\CProjectReference.sln", projectName: "PythonApplication2", expectedProjects: 2);
+
+                var wnd = project.ProjectItems.Item("Program.py").Open();
+                wnd.Activate();
+                try {
+                    app.Dte.Solution.SolutionBuild.Clean(true);
+
+                    string text;
+                    var items = app.WaitForErrorListItems(1);
+                    Assert.AreEqual(1, items.Count);
+                    Assert.AreEqual(0, items[0].get_Text(out text));
+                    Assert.IsTrue(text.Contains("native_module"), text);
+
+                    app.Dte.Solution.SolutionBuild.Build(true);
+
+                    items = app.WaitForErrorListItems(0);
+                    for (int retries = 5; retries > 0 && items.Count > 0; --retries) {
+                        items = app.WaitForErrorListItems(0);
+                    }
                     Assert.AreEqual(0, items.Count);
                 } finally {
-                    options.IndentationInconsistencySeverity = severity;
+                    wnd.Close();
                 }
             }
         }

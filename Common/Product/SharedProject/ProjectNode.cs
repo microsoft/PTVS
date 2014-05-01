@@ -5667,10 +5667,15 @@ If the files in the existing folder have the same names as files in the folder y
             }
 
             foreach (IVsHierarchyEvents sink in _hierarchyEventSinks) {
+                bool wasExpanded = parent.GetIsExpanded();
                 int result = sink.OnInvalidateItems(parent.HierarchyId);
 
                 if (ErrorHandler.Failed(result) && result != VSConstants.E_NOTIMPL) {
                     ErrorHandler.ThrowOnFailure(result);
+                }
+
+                if (wasExpanded) {
+                    parent.ExpandItem(EXPANDFLAGS.EXPF_ExpandFolder);
                 }
             }
         }

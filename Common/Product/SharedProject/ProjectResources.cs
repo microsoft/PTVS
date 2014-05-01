@@ -197,7 +197,7 @@ namespace Microsoft.VisualStudioTools.Project {
             }
 
             Debug.WriteLineIf(
-                Enumerable.Range(0, args.Length).Any(i => result.IndexOf(string.Format("{{{0}}}", i)) >= 0),
+                Enumerable.Range(0, args.Length).Any(i => result.IndexOf(string.Format("{{{0}}}", i)) < 0),
                 string.Format("Resource string '{0}' does not use all {1} arguments", value, args.Length)
             );
             Debug.WriteLineIf(

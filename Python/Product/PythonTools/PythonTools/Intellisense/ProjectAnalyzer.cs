@@ -862,9 +862,6 @@ namespace Microsoft.PythonTools.Intellisense {
             } else if (TaskProvider.IsValueCreated) {
                 TaskProvider.Value.Clear(entry, ParserTaskMoniker);
             }
-
-            // Add a handler for the next complete analysis
-            _unresolvedSquiggles.ListenForNextNewAnalysis(entry as IPythonProjectEntry);
         }
 
         #region Implementation Details

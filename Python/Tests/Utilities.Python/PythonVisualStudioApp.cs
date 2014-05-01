@@ -21,6 +21,7 @@ using System.Windows.Input;
 using System.Windows.Interop;
 using EnvDTE;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.ComponentModelHost;
@@ -86,6 +87,7 @@ namespace TestUtilities.UI.Python {
         public const string BottleWebProjectTemplate = "WebProjectBottle.zip";
         public const string FlaskWebProjectTemplate = "WebProjectFlask.zip";
         public const string DjangoWebProjectTemplate = "DjangoProject.zip";
+        public const string EmptyFileTemplate = "EmptyPyFile.zip";
 
         /// <summary>
         /// Opens and activates the solution explorer window.
@@ -321,6 +323,12 @@ namespace TestUtilities.UI.Python {
                 SR.GetString(SR.Environments),
                 envName
             );
+        }
+
+        public IPythonOptions Options {
+            get {
+                return (IPythonOptions)Dte.GetObject("VsPython");
+            }
         }
 
     }

@@ -393,8 +393,9 @@ namespace Microsoft.PythonTools.Intellisense {
             var lastUpdateTime = DateTime.Now;
 
             try {
-                // Give queue up to 1 second to have a message in it before exiting loop
-                cts.CancelAfter(1000);
+                // First time through, we don't want to abort the queue. There
+                // should be at least one message or the worker would not have
+                // been started.
 
                 foreach (var msg in _workerQueue.GetConsumingEnumerable(cts.Token)) {
                     // Prevent timeouts while processing the message
