@@ -162,7 +162,11 @@ namespace PythonToolsUITests {
 
         private static void EndToEndLog(string format, params object[] args) {
             Console.Write("[{0:o}] ", DateTime.Now);
-            Console.WriteLine(format, args);
+            if (args != null && args.Length > 0) {
+                Console.WriteLine(format, args);
+            } else {
+                Console.WriteLine(format);
+            }
         }
 
         private void EndToEndTest(
