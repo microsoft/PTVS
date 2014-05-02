@@ -59,21 +59,24 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var entry = sender as IPythonProjectEntry;
             if (entry == null ||
-                entry.Analysis == null ||
-                entry.Analysis.ProjectState == null ||
                 string.IsNullOrEmpty(entry.ModuleName) ||
                 string.IsNullOrEmpty(entry.FilePath)
             ) {
                 return;
             }
 
-            var analyzer = entry.Analysis.ProjectState;
+            var analysis = entry.Analysis;
+            var analyzer = analysis != null ? analysis.ProjectState : null;
+            if (analyzer == null) {
+                return;
+            }
 
             PythonAst ast;
             IAnalysisCookie cookie;
             entry.GetTreeAndCookie(out ast, out cookie);
             var snapshotCookie = cookie as SnapshotCookie;
-            if (snapshotCookie == null) {
+            var snapshot = snapshotCookie != null ? snapshotCookie.Snapshot : null;
+            if (ast == null || snapshot == null) {
                 return;
             }
 
@@ -81,7 +84,7 @@ namespace Microsoft.PythonTools.Intellisense {
             ast.Walk(walker);
 
             if (walker.Imports.Any()) {
-                var f = new TaskProviderItemFactory(snapshotCookie.Snapshot);
+                var f = new TaskProviderItemFactory(snapshot);
 
                 _taskProvider.Value.ReplaceItems(
                     entry,
