@@ -52,6 +52,11 @@
       $(PipelineCollectFilesPhaseDependsOn);
       DjangoCollectStaticFiles;
     </PipelineCollectFilesPhaseDependsOn>
+    <CreatePythonAzureSetupConfigDependsOnTargets>
+      $(CreatePythonAzureSetupConfigDependsOnTargets);
+      ResolvePythonInterpreterPath;
+      EnsureDjangoWebPiReference
+    </CreatePythonAzureSetupConfigDependsOnTargets>
   </PropertyGroup>
 
   <!-- *************************************************************************
@@ -129,6 +134,33 @@
         <FromTarget>DjangoCollectStaticFiles</FromTarget>
         <Category>Run</Category>
       </FilesForPackagingFromProject>
+    </ItemGroup>
+  </Target>
+
+  <!-- *************************************************************************
+       For back-compat, ensure Django is installed for 2.7 unless a
+       virtual environment is being used.
+  -->
+  <ItemGroup>
+    <_DjangoWebPiReference Include="https://www.microsoft.com/web/webpi/4.0/toolsproductlist.xml%3fDjango">
+      <Feed>https://www.microsoft.com/web/webpi/4.0/toolsproductlist.xml</Feed>
+      <ProductId>Django</ProductId>
+      <FriendlyName>Django 1.4</FriendlyName>
+    </_DjangoWebPiReference>
+    <_DjangoWebPiReferenceIncompatibilities Include="https://www.microsoft.com/web/webpi/3.0/toolsproductlist.xml%3fDjango" />
+  </ItemGroup>
+
+  <Target Name="EnsureDjangoWebPiReference"
+          Condition="!$(SuppressGenerateWebPiReference) and !$(VirtualEnvEnabled) and $(PythonVersion) == '2.7'">
+    <ItemGroup>
+      <_FilteredWebPiReference Remove="@(_FilteredWebPiReference)" />
+    </ItemGroup>
+    <RemoveDuplicates Inputs="@(WebPiReference);@(_DjangoWebPiReference)">
+      <Output TaskParameter="Filtered" ItemName="_FilteredWebPiReference"/>
+    </RemoveDuplicates>
+    <ItemGroup>
+      <WebPiReference Remove="@(WebPiReference)" />
+      <WebPiReference Include="@(_FilteredWebPiReference)" Exclude="@(_DjangoWebPiReferenceIncompatibilities)" />
     </ItemGroup>
   </Target>
 

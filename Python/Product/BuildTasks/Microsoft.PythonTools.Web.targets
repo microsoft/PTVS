@@ -167,10 +167,16 @@
       <Output TaskParameter="Description" PropertyName="PythonInterpreterDescription" />
       <Output TaskParameter="MajorVersion" PropertyName="PythonMajorVersion" />
       <Output TaskParameter="MinorVersion" PropertyName="PythonMinorVersion" />
+      <Output TaskParameter="Architecture" PropertyName="PythonArchitecture" />
+      <Output TaskParameter="PathEnvironmentVariable" PropertyName="PythonPathEnvironmentVariable" />
     </ResolveEnvironment>
 
     <Error Text="Unable to resolve local Python environment" Condition="'$(PythonInterpreterPath)'==''" />
 
+    <PropertyGroup>
+      <PythonVersion>$(PythonMajorVersion).$(PythonMinorVersion)</PythonVersion>
+    </PropertyGroup>
+    
     <PropertyGroup Condition="'$(PythonPrefixSubPath)' == ''">
       <VirtualEnvEnabled>false</VirtualEnvEnabled>
       <VirtualEnvIsVEnv>false</VirtualEnvIsVEnv>
@@ -262,7 +268,7 @@
       <WsgiAppSettings>
         <![CDATA[$(WsgiAppSettings)
     <add key="WSGI_HANDLER" value="$(PythonWsgiHandler)"/>
-    <add key="PYTHONPATH" value="@(_AbsoluteSearchPaths->'%(Identity)', '%3b')"/>]]>
+    <add key="$(PythonPathEnvironmentVariable)" value="@(_AbsoluteSearchPaths->'%(Identity)', '%3b')"/>]]>
       </WsgiAppSettings>
       <WsgiAppSettings Condition="'$(WsgiLogPath)' != ''">
         <![CDATA[$(WsgiAppSettings)
@@ -322,7 +328,7 @@
   <Target Name="_GetPythonVirtualEnvProxyForEmulator"
           Condition="'$(_PythonDeploymentMethod)' == 'CloudServiceDeploy'">
     <ItemGroup Condition="$(VirtualEnvEnabled)">
-      <_PythonVirtualEnvProxyForEmulator Include="$(QualifiedProjectHome)bin\ptvs_virtualenv_proxy.py">
+      <_PythonVirtualEnvProxyForEmulator Include="$(QualifiedProjectHome)ptvs_virtualenv_proxy.py">
         <SourceFile>$(_AzureSupportPath)ptvs_virtualenv_proxy.py</SourceFile>
       </_PythonVirtualEnvProxyForEmulator>
     </ItemGroup>
@@ -617,7 +623,30 @@
        CreatePythonAzureSetupConfig generates the AzureSetup.cfg used for cloud
        service deployments.
   -->
-  <Target Name="CreatePythonAzureSetupConfig" DependsOnTargets="ResolvePythonDeploymentMethod;_CreatePythonAzureSetupConfig" />
+  <PropertyGroup>
+    <CreatePythonAzureSetupConfigDependsOnTargets>
+      ResolvePythonInterpreterPath;
+      ResolvePythonDeploymentMethod;
+      _EnsurePython27WebPiReference;
+      _ValidatePythonVersion
+    </CreatePythonAzureSetupConfigDependsOnTargets>
+
+    <!-- This property should be set to true if WebPI references should not be
+         added for cloud service deployments. -->
+    <SuppressGenerateWebPiReference Condition="'$(SuppressGenerateWebPiReference)' != 'true'">false</SuppressGenerateWebPiReference>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- This item group is added to WebPiReference if the active environment is 2.7 -->
+    <_Python27WebPiReference Include="https://www.microsoft.com/web/webpi/4.0/toolsproductlist.xml%3fPython27">
+      <Feed>https://www.microsoft.com/web/webpi/4.0/toolsproductlist.xml</Feed>
+      <ProductId>Python27</ProductId>
+      <FriendlyName>Python 2.7</FriendlyName>
+    </_Python27WebPiReference>
+    <_Python27WebPiReferenceIncompatibilities Include="https://www.microsoft.com/web/webpi/3.0/toolsproductlist.xml%3fPython27" />
+  </ItemGroup>
+
+  <Target Name="CreatePythonAzureSetupConfig" DependsOnTargets="$(CreatePythonAzureSetupConfigDependsOnTargets);_CreatePythonAzureSetupConfig" />
 
   <Target Name="_GetPythonAzureSetupConfigOutput"
           Condition="'$(_PythonDeploymentMethod)' == 'CloudServiceDeploy'">
@@ -625,6 +654,26 @@
       <_PythonAzureSetupConfig Include="$(IntermediateOutputPath)AzureSetup.cfg" />
       <_PythonAzureSetupConfigForEmulator Include="$(QualifiedProjectHome)bin\AzureSetup.cfg" />
       <_PythonAzureSetupConfigOutput Include="@(_PythonAzureSetupConfig);@(_PythonAzureSetupConfigForEmulator)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_ValidatePythonVersion"
+          Condition="!$(SuppressGenerateWebPiReference) and '@(WebPiReference)' == ''"
+          DependsOnTargets="_EnsurePython27WebPiReference">
+    <Warning Text="$(PythonInterpreterDescription) is not natively supported on Microsoft Azure. Add a WebPI reference to install this environment or add the 'SuppressGenerateWebPiReference' property to $(MSBuildProjectName) and set it to true." />
+  </Target>
+  
+  <Target Name="_EnsurePython27WebPiReference"
+          Condition="!$(SuppressGenerateWebPiReference) and $(PythonVersion) == '2.7' and $(PythonArchitecture) == 'x86'">
+    <ItemGroup>
+      <_FilteredWebPiReference Remove="@(_FilteredWebPiReference)" />
+    </ItemGroup>
+    <RemoveDuplicates Inputs="@(WebPiReference);@(_Python27WebPiReference)">
+      <Output TaskParameter="Filtered" ItemName="_FilteredWebPiReference"/>
+    </RemoveDuplicates>
+    <ItemGroup>
+      <WebPiReference Remove="@(WebPiReference)" />
+      <WebPiReference Include="@(_FilteredWebPiReference)" Exclude="@(_Python27WebPiReferenceIncompatibilities)" />
     </ItemGroup>
   </Target>
 
