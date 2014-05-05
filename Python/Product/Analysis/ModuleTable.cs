@@ -38,10 +38,48 @@ namespace Microsoft.PythonTools.Analysis {
             _analyzer = analyzer;
             _interpreter = interpreter;
         }
+
+        public bool Contains(string name) {
+            return _modules.ContainsKey(name);
+        }
+
+        /// <summary>
+        /// Gets a reference to a module that has already been imported. You
+        /// probably want to use <see cref="TryImport"/>.
+        /// </summary>
+        /// <returns>
+        /// True if an attempt to import the module was made during the analysis
+        /// that used this module table. The reference may be null, or the
+        /// module within the reference may be null, even if this function
+        /// returns true.
+        /// </returns>
+        /// <remarks>
+        /// This exists for inspecting the results of an analysis (for example,
+        /// <see cref="SaveAnalysis"/>). To get access to a module while
+        /// analyzing code, even (especially!) if the module may not exist,
+        /// you should call <see cref="TryImport"/>.
+        /// </remarks>
+        internal bool TryGetImportedModule(string name, out ModuleReference res) {
+            return _modules.TryGetValue(name, out res);
+        }
         
-        public bool TryGetValue(string name, out ModuleReference res) {
+        /// <summary>
+        /// Gets a reference to a module.
+        /// </summary>
+        /// <param name="name">The full import name of the module.</param>
+        /// <param name="res">The module reference object.</param>
+        /// <returns>
+        /// True if the module is available. This means that <c>res.Module</c>
+        /// is not null. If this function returns false, <paramref name="res"/>
+        /// may be valid and should not be replaced, but it is an unresolved
+        /// reference.
+        /// </returns>
+        public bool TryImport(string name, out ModuleReference res) {
             if (!_modules.TryGetValue(name, out res) || res == null) {
-                res = new ModuleReference(GetBuiltinModule(_interpreter.ImportModule(name)));
+                _modules[name] = res = new ModuleReference(GetBuiltinModule(_interpreter.ImportModule(name)));
+            }
+            if (res != null && res.Module == null) {
+                res.Module = GetBuiltinModule(_interpreter.ImportModule(name));
             }
             return res != null && res.Module != null;
         }
@@ -53,7 +91,7 @@ namespace Microsoft.PythonTools.Analysis {
         public ModuleReference this[string name] {
             get {
                 ModuleReference res;
-                if (!TryGetValue(name, out res)) {
+                if (!TryImport(name, out res)) {
                     throw new KeyNotFoundException(name);
                 }
                 return res;
@@ -88,6 +126,9 @@ namespace Microsoft.PythonTools.Analysis {
 
                         BuiltinModule removedModule;
                         _builtinModuleTable.TryRemove(builtinModule.InterpreterModule, out removedModule);
+                        foreach (var child in builtinModule.InterpreterModule.GetChildrenModules()) {
+                            _modules.TryRemove(builtinModule.Name + "." + child, out dummy);
+                        }
                     } else {
                         // this module was replaced with a new module
                         var newModule = _interpreter.ImportModule(name);
@@ -95,6 +136,7 @@ namespace Microsoft.PythonTools.Analysis {
                             BuiltinModule removedModule;
                             _builtinModuleTable.TryRemove(builtinModule.InterpreterModule, out removedModule);
                             moduleRef.Module = GetBuiltinModule(newModule);
+                            ImportChildren(newModule);
                         }
                     }
                 }
@@ -110,6 +152,24 @@ namespace Microsoft.PythonTools.Analysis {
                 _builtinModuleTable[attr] = res = new BuiltinModule(attr, _analyzer);
             }
             return res;
+        }
+
+        internal void ImportChildren(IPythonModule interpreterModule) {
+            BuiltinModule module = null;
+            foreach (var child in interpreterModule.GetChildrenModules()) {
+                module = module ?? GetBuiltinModule(interpreterModule);
+                ModuleReference modRef;
+                var fullname = module.Name + "." + child;
+                if (!_modules.TryGetValue(fullname, out modRef) || modRef == null || modRef.Module == null)  {
+                    IAnalysisSet value;
+                    if (module.TryGetMember(child, out value)) {
+                        var mod = value as IModule;
+                        if (mod != null) {
+                            _modules[fullname] = new ModuleReference(mod);
+                        }
+                    }
+                }
+            }
         }
 
         #region IEnumerable<KeyValuePair<string,ModuleReference>> Members
@@ -173,7 +233,7 @@ namespace Microsoft.PythonTools.Analysis {
             public override AnalysisValue Module {
                 get {
                     ModuleReference res;
-                    if (_moduleTable.TryGetValue(_name, out res)) {
+                    if (_moduleTable.TryImport(_name, out res)) {
                         return res.AnalysisModule;
                     }
                     return null;

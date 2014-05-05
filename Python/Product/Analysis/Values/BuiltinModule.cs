@@ -19,7 +19,7 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
-    internal sealed class BuiltinModule : BuiltinNamespace<IPythonModule>, IReferenceableContainer, IModule {
+    internal class BuiltinModule : BuiltinNamespace<IPythonModule>, IReferenceableContainer, IModule {
         private readonly MemberReferences _references = new MemberReferences();
         private readonly IPythonModule _interpreterModule;
 
@@ -156,7 +156,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public void AddDependency(AnalysisUnit unit) {
-            InterpreterModule.Imported(unit.DeclaringModule.InterpreterContext);
+            Imported(unit);
         }
 
         public override ILocatedMember GetLocatedMember() {
@@ -166,7 +166,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public IAnalysisSet GetModuleMember(Node node, AnalysisUnit unit, string name, bool addRef = true, InterpreterScope linkedScope = null, string linkedName = null) {
             var res = GetMember(node, unit, name);
-            InterpreterModule.Imported(unit.DeclaringModule.InterpreterContext);
+            Imported(unit);
             return res;
         }
 
@@ -177,6 +177,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public void Imported(AnalysisUnit unit) {
             InterpreterModule.Imported(unit.DeclaringModule.InterpreterContext);
+            unit.ProjectState.Modules.ImportChildren(InterpreterModule);
         }
     }
 }

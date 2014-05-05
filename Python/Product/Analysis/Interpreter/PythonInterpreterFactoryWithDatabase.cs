@@ -46,6 +46,7 @@ namespace Microsoft.PythonTools.Interpreter {
         private FileSystemWatcher _libWatcher;
         private readonly object _libWatcherLock = new object();
         private FileSystemWatcher _verWatcher;
+        private readonly FileSystemWatcher _verDirWatcher;
         private readonly object _verWatcherLock = new object();
 
         public PythonInterpreterFactoryWithDatabase(
@@ -60,33 +61,14 @@ namespace Microsoft.PythonTools.Interpreter {
 
             if (watchLibraryForChanges && Directory.Exists(_config.LibraryPath)) {
                 _refreshIsCurrentTrigger = new Timer(RefreshIsCurrentTimer_Elapsed);
-                try {
-                    _libWatcher = new FileSystemWatcher {
-                        IncludeSubdirectories = true,
-                        Path = _config.LibraryPath,
-                        NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.LastWrite
-                    };
-                    _libWatcher.Created += OnChanged;
-                    _libWatcher.Deleted += OnChanged;
-                    _libWatcher.Changed += OnChanged;
-                    _libWatcher.Renamed += OnRenamed;
-                    _libWatcher.EnableRaisingEvents = true;
-                } catch (IOException) {
-                    // Raced with directory deletion. We normally handle the
-                    // library being deleted by disposing the watcher, but this
-                    // occurs in response to an event from the watcher. Because
-                    // we never got to start watching, we will just dispose
-                    // immediately.
-                    _libWatcher.Dispose();
-                    _libWatcher = null;
-                } catch (ArgumentException ex) {
-                    Debug.WriteLine("Error starting FileSystemWatcher:\r\n{0}", ex);
-                }
+
+                _libWatcher = CreateLibraryWatcher();
 
                 _isCheckingDatabase = true;
                 _refreshIsCurrentTrigger.Change(1000, Timeout.Infinite);
 
                 _verWatcher = CreateDatabaseVerWatcher();
+                _verDirWatcher = CreateDatabaseDirectoryWatcher();
             }
 
             // Assume the database is valid if the directory exists, then switch
@@ -575,12 +557,16 @@ namespace Microsoft.PythonTools.Interpreter {
         protected virtual void Dispose(bool disposing) {
             if (!_disposed) {
                 _disposed = true;
-                if (_verWatcher != null) {
+                if (_verWatcher != null || _verDirWatcher != null) {
                     lock (_verWatcherLock) {
                         if (_verWatcher != null) {
                             _verWatcher.EnableRaisingEvents = false;
                             _verWatcher.Dispose();
                             _verWatcher = null;
+                        }
+                        if (_verDirWatcher != null) {
+                            _verDirWatcher.EnableRaisingEvents = false;
+                            _verDirWatcher.Dispose();
                         }
                     }
                 }
@@ -606,7 +592,79 @@ namespace Microsoft.PythonTools.Interpreter {
 
         #endregion
 
-        #region Database.ver watcher
+        #region Directory watchers
+
+        private FileSystemWatcher CreateLibraryWatcher() {
+            FileSystemWatcher watcher = null;
+            try {
+                watcher = new FileSystemWatcher {
+                    IncludeSubdirectories = true,
+                    Path = _config.LibraryPath,
+                    NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.LastWrite
+                };
+                watcher.Created += OnChanged;
+                watcher.Deleted += OnChanged;
+                watcher.Changed += OnChanged;
+                watcher.Renamed += OnRenamed;
+                watcher.EnableRaisingEvents = true;
+            } catch (IOException) {
+                // Raced with directory deletion. We normally handle the
+                // library being deleted by disposing the watcher, but this
+                // occurs in response to an event from the watcher. Because
+                // we never got to start watching, we will just dispose
+                // immediately.
+                if (watcher != null) {
+                    watcher.Dispose();
+                }
+            } catch (ArgumentException ex) {
+                if (watcher != null) {
+                    watcher.Dispose();
+                }
+                Debug.WriteLine("Error starting FileSystemWatcher:\r\n{0}", ex);
+            }
+            return watcher;
+        }
+
+        private FileSystemWatcher CreateDatabaseDirectoryWatcher() {
+            FileSystemWatcher watcher = null;
+
+            lock (_verWatcherLock) {
+                var dir = DatabasePath;
+
+                var dirName = Path.GetFileName(CommonUtils.TrimEndSeparator(dir));
+                while (CommonUtils.IsValidPath(dir) && !Directory.Exists(dir)) {
+                    dir = Path.GetDirectoryName(dir);
+                }
+
+                if (Directory.Exists(dir)) {
+                    try {
+                        watcher = new FileSystemWatcher {
+                            IncludeSubdirectories = true,
+                            Path = dir,
+                            Filter = dirName,
+                            NotifyFilter = NotifyFilters.DirectoryName
+                        };
+                    } catch (ArgumentException ex) {
+                        Debug.WriteLine("Error starting database directory FileSystemWatcher:\r\n{0}", ex);
+                        return null;
+                    }
+
+                    watcher.Created += OnDatabaseFolderChanged;
+                    watcher.Deleted += OnDatabaseFolderChanged;
+
+                    try {
+                        watcher.EnableRaisingEvents = true;
+                        return watcher;
+                    } catch (IOException) {
+                        // Raced with directory deletion
+                        watcher.Dispose();
+                        watcher = null;
+                    }
+                }
+
+                return null;
+            }
+        }
 
         private FileSystemWatcher CreateDatabaseVerWatcher() {
             FileSystemWatcher watcher = null;
@@ -641,48 +699,17 @@ namespace Microsoft.PythonTools.Interpreter {
                     }
                 }
 
-                var dirName = Path.GetFileName(CommonUtils.TrimEndSeparator(dir));
-                while (CommonUtils.IsValidPath(dir) && !Directory.Exists(dir)) {
-                    dir = Path.GetDirectoryName(dir);
-                }
-
-                if (Directory.Exists(dir)) {
-                    try {
-                        watcher = new FileSystemWatcher {
-                            IncludeSubdirectories = true,
-                            Path = dir,
-                            Filter = dirName,
-                            NotifyFilter = NotifyFilters.DirectoryName
-                        };
-                    } catch (ArgumentException ex) {
-                        Debug.WriteLine("Error starting database directory FileSystemWatcher:\r\n{0}", ex);
-                        return null;
-                    }
-
-                    watcher.Created += OnDatabaseFolderCreated;
-
-                    try {
-                        watcher.EnableRaisingEvents = true;
-                        return watcher;
-                    } catch (IOException) {
-                        // Raced with directory deletion
-                        watcher.Dispose();
-                        watcher = null;
-                    }
-                }
-
                 return null;
             }
         }
 
-        private void OnDatabaseFolderCreated(object sender, FileSystemEventArgs e) {
-            var watcher = CreateDatabaseVerWatcher();
-            if (watcher != null) {
-                lock (_verWatcherLock) {
+        private void OnDatabaseFolderChanged(object sender, FileSystemEventArgs e) {
+            lock (_verWatcherLock) {
+                if (_verWatcher != null) {
                     _verWatcher.EnableRaisingEvents = false;
                     _verWatcher.Dispose();
-                    _verWatcher = watcher;
                 }
+                _verWatcher = CreateDatabaseVerWatcher();
             }
         }
 

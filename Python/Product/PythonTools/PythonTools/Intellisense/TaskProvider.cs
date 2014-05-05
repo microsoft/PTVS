@@ -258,11 +258,11 @@ namespace Microsoft.PythonTools.Intellisense {
             public override bool Apply(Dictionary<EntryKey, List<TaskProviderItem>> items, object itemsLock) {
                 lock (itemsLock) {
                     if (_key.Entry != null) {
-                        return items.Remove(_key);
+                        items.Remove(_key);
                     } else {
                         items.Clear();
-                        return true;
                     }
+                    return true;
                 }
             }
         }

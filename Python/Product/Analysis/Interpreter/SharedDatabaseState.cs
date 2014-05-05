@@ -506,10 +506,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
             for (int i = 1; i < names.Length - 1; ++i) {
                 if ((module = member as IPythonModule) != null) {
-                    member = GetModule(module.Name + "." + names[i]);
-                    if (member == null) {
-                        member = module.GetMember(null, names[i]);
-                    }
+                    member = GetModule(module.Name + "." + names[i]) ?? module.GetMember(null, names[i]);
                 } else if ((container = member as IMemberContainer) != null) {
                     member = container.GetMember(null, names[i]);
                 }

@@ -426,6 +426,35 @@ def m(x = math.atan2(1, 0)): pass
             }
         }
 
+        [TestMethod, Priority(0)]
+        public void ChildModuleThroughSysModules() {
+            var code = @"# This is what the os module does
+
+import test_import_1
+import test_import_2
+import sys
+
+sys.modules['test.imported'] = test_import_1
+sys.modules['test.imported'] = test_import_2
+";
+
+            using (var newPs = SaveLoad(PythonLanguageVersion.V27,
+                new AnalysisModule("test", "test.py", code),
+                new AnalysisModule("test_import_1", "test_import_1.py", "n = 1"),
+                new AnalysisModule("test_import_2", "test_import_2.py", "f = 3.1415")
+            )) {
+                var entry = newPs.NewModule("test2", "import test.imported as p");
+                var p = entry.Analysis.GetValuesByIndex("p", 0).ToList();
+                Assert.AreEqual(2, p.Count);
+                Assert.IsInstanceOfType(p[0], typeof(BuiltinModule));
+                Assert.IsInstanceOfType(p[1], typeof(BuiltinModule));
+                AssertUtil.ContainsExactly(p.Select(m => m.Name), "test_import_1", "test_import_2");
+
+                AssertUtil.ContainsExactly(entry.Analysis.GetTypeIdsByIndex("p.n", 0), BuiltinTypeId.Int);
+                AssertUtil.ContainsExactly(entry.Analysis.GetTypeIdsByIndex("p.f", 0), BuiltinTypeId.Float);
+            }
+        }
+
         private SaveLoadResult SaveLoad(PythonLanguageVersion version, params AnalysisModule[] modules) {
             IPythonProjectEntry[] entries = new IPythonProjectEntry[modules.Length];
 

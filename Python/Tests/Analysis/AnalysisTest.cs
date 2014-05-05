@@ -6053,6 +6053,60 @@ def update_wrapper(wrapper, wrapped, assigned, updated):
             );
         }
 
+        [TestMethod, Priority(0)]
+        public void SysModulesSetSpecialization() {
+            var code = @"import sys
+modules = sys.modules
+
+modules['name_in_modules'] = None
+";
+            code += string.Join(
+                Environment.NewLine,
+                Enumerable.Range(0, 100).Select(i => string.Format("sys.modules['name{0}'] = None", i))
+            );
+
+            var entry = ProcessText(code);
+
+            var sysObj = entry.GetValuesByIndex("sys", 0).Single();
+            Assert.IsInstanceOfType(sysObj, typeof(SysModuleInfo));
+            var sys = sysObj as SysModuleInfo;
+
+            var modules = entry.GetValuesByIndex("modules", 0).Single();
+            Assert.IsInstanceOfType(modules, typeof(SysModuleInfo.SysModulesDictionaryInfo));
+
+            AssertUtil.ContainsExactly(
+                sys.Modules.Keys,
+                Enumerable.Range(0, 100).Select(i => string.Format("name{0}", i))
+                    .Concat(new[] { "name_in_modules" })
+            );
+        }
+
+        [TestMethod, Priority(0)]
+        public void SysModulesGetSpecialization() {
+            var code = @"import sys
+modules = sys.modules
+
+modules['value_in_modules'] = 'abc'
+modules['value_in_modules'] = 123
+value_in_modules = modules['value_in_modules']
+builtins = modules['__builtin__']
+builtins2 = modules.get('__builtin__')
+builtins3 = modules.pop('__builtin__')
+";
+
+            var entry = ProcessText(code);
+
+            AssertUtil.ContainsExactly(
+                entry.GetTypeIdsByIndex("value_in_modules", 0),
+                BuiltinTypeId.Int
+                // Not BuiltinTypeId_Str because it only keeps the last value
+            );
+
+            AssertUtil.ContainsExactly(entry.GetValuesByIndex("builtins", 0).Select(av => av.Name), "__builtin__");
+            AssertUtil.ContainsExactly(entry.GetValuesByIndex("builtins2", 0).Select(av => av.Name), "__builtin__");
+            AssertUtil.ContainsExactly(entry.GetValuesByIndex("builtins3", 0).Select(av => av.Name), "__builtin__");
+        }
+
         #endregion
 
         #region Helpers

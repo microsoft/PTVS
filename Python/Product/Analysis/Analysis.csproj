@@ -150,6 +150,7 @@
     <Compile Include="Analyzer\OverviewWalker.cs" />
     <Compile Include="SingleDict.cs" />
     <Compile Include="Values\PartialFunctionInfo.cs" />
+    <Compile Include="Values\SysModuleInfo.cs" />
     <Compile Include="VariableDef.cs" />
     <Compile Include="Interpreter\Default\CPythonFunctionOverload.cs" />
     <Compile Include="Interpreter\Default\CPythonMethodDescriptor.cs" />

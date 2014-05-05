@@ -35,7 +35,7 @@ namespace Microsoft.PythonTools.Interpreter {
         /// <summary>
         /// Gets the version of the analysis format that this class reads.
         /// </summary>
-        public static readonly int CurrentVersion = 24;
+        public static readonly int CurrentVersion = 25;
 
         private static string _completionDatabasePath;
         private static string _referencesDatabasePath;

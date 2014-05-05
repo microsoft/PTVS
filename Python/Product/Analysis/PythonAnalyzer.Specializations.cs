@@ -66,14 +66,14 @@ namespace Microsoft.PythonTools.Analysis {
 
             int lastDot;
             string realModName = null;
-            if (Modules.TryGetValue(moduleName, out module)) {
+            if (Modules.TryImport(moduleName, out module)) {
                 IModule mod = module.Module as IModule;
                 if (mod != null) {
                     mod.SpecializeFunction(name, callable, mergeOriginalAnalysis);
                     return;
                 }
             } else if ((lastDot = moduleName.LastIndexOf('.')) != -1 &&
-                Modules.TryGetValue(realModName = moduleName.Substring(0, lastDot), out module)) {
+                Modules.TryImport(realModName = moduleName.Substring(0, lastDot), out module)) {
 
                 IModule mod = module.Module as IModule;
                 if (mod != null) {
@@ -387,7 +387,7 @@ namespace Microsoft.PythonTools.Analysis {
 
             return unit.Scope.GetOrMakeNodeValue(node, n => {
                 ModuleReference modRef;
-                if (!Modules.TryGetValue("functools", out modRef)) {
+                if (!Modules.TryImport("functools", out modRef)) {
                     return AnalysisSet.Empty;
                 }
                 IAnalysisSet updateWrapper;

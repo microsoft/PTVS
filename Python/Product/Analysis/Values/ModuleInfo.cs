@@ -104,11 +104,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
             set { _parentPackage = value; }
         }
 
-        public void AddChildPackage(ModuleInfo childPackage, AnalysisUnit curUnit) {
-            string realName = childPackage.Name;
+        public void AddChildPackage(ModuleInfo childPackage, AnalysisUnit curUnit, string realName = null) {
+            realName = realName ?? childPackage.Name;
             int lastDot;
-            if ((lastDot = childPackage.Name.LastIndexOf('.')) != -1) {
-                realName = childPackage.Name.Substring(lastDot + 1);
+            if ((lastDot = realName.LastIndexOf('.')) != -1) {
+                realName = realName.Substring(lastDot + 1);
             }
 
             childPackage.ParentPackage = this;

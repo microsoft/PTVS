@@ -145,9 +145,13 @@ namespace Microsoft.PythonTools.Analysis {
                 Parse(enqueueOnly, cancel);
             }
 
-            var newAnalysis = OnNewAnalysis;
-            if (newAnalysis != null) {
-                newAnalysis(this, EventArgs.Empty);
+            RaiseOnNewAnalysis();
+        }
+
+        internal void RaiseOnNewAnalysis() {
+            var evt = OnNewAnalysis;
+            if (evt != null) {
+                evt(this, EventArgs.Empty);
             }
         }
 

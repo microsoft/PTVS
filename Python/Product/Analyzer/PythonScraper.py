@@ -126,7 +126,7 @@ import types
 #
 # To update the baseline DB, see Python\Product\PythonTools\RefreshDefaultDB.py
 #
-CURRENT_DATABASE_VERSION = '24'
+CURRENT_DATABASE_VERSION = '25'
 
 
 # The values in KNOWN_METHOD_TYPES and KNOWN_FUNCTION_TYPES are used when

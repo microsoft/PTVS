@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using Microsoft.PythonTools.Analysis.Analyzer;
@@ -25,8 +26,19 @@ namespace Microsoft.PythonTools.Analysis.Values {
     sealed class MultipleMemberInfo : AnalysisValue, IModule {
         private readonly AnalysisValue[] _members;
 
-        public MultipleMemberInfo(IEnumerable<AnalysisValue> members) {
-            _members = members.Where(m => m != null).ToArray();
+        public static IAnalysisSet Create(params IEnumerable<AnalysisValue>[] members) {
+            var allMembers = members.SelectMany().Where(m => m != null).ToArray();
+            if (allMembers.Length == 0) {
+                return AnalysisSet.Empty;
+            } else if (allMembers.Length == 1) {
+                return allMembers[0];
+            } else {
+                return new MultipleMemberInfo(allMembers);
+            }
+        }
+
+        private MultipleMemberInfo(AnalysisValue[] members) {
+            _members = members;
         }
 
         public AnalysisValue[] Members {
@@ -92,9 +104,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     if (res.TryGetValue(keyValue.Key, out existing)) {
                         MultipleMemberInfo existingMultiMember = existing as MultipleMemberInfo;
                         if (existingMultiMember != null) {
-                            res[keyValue.Key] = new MultipleMemberInfo(existingMultiMember._members.Concat(keyValue.Value));
+                            res[keyValue.Key] = MultipleMemberInfo.Create(existingMultiMember._members, keyValue.Value);
                         } else {
-                            res[keyValue.Key] = new MultipleMemberInfo(existing.Concat(keyValue.Value));
+                            res[keyValue.Key] = MultipleMemberInfo.Create(existing, keyValue.Value);
                         }
                     } else {
                         res[keyValue.Key] = keyValue.Value;
@@ -226,11 +238,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override IEnumerable<LocationInfo> Locations {
             get {
-                foreach (var member in _members) {
-                    foreach (var loc in member.Locations) {
-                        yield return loc;
-                    }
-                }
+                return _members.SelectMany(m => m.Locations);
             }
         }
 
@@ -243,13 +251,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 }
             }
 
-            if (children.Count == 0) {
-                return null;
-            } else if (children.Count == 1) {
-                return (IModule)children[0];
-            } else {
-                return (IModule)new MultipleMemberInfo(children);
-            }
+            return MultipleMemberInfo.Create(children) as IModule;
         }
 
         IEnumerable<KeyValuePair<string, AnalysisValue>> IModule.GetChildrenPackages(IModuleContext context) {
@@ -286,6 +288,15 @@ namespace Microsoft.PythonTools.Analysis.Values {
             foreach (var member in _members.OfType<IModule>()) {
                 member.Imported(unit);
             }
+        }
+
+        public override bool Equals(object obj) {
+            var other = obj as MultipleMemberInfo;
+            return other != null && !_members.Except(other._members).Any();
+        }
+
+        public override int GetHashCode() {
+            return _members.Aggregate(6451, (a, m) => a ^ m.GetHashCode());
         }
     }
 }

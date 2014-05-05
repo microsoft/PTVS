@@ -102,7 +102,7 @@ namespace Microsoft.PythonTools.Analysis {
 
         private void LoadKnownTypes() {
             ModuleReference moduleRef;
-            if (Modules.TryGetValue(_builtinName, out moduleRef)) {
+            if (Modules.TryImport(_builtinName, out moduleRef)) {
                 _builtinModule = (BuiltinModule)moduleRef.Module;
             } else {
                 var fallbackDb = PythonTypeDatabase.CreateDefaultTypeDatabase(LanguageVersion.ToVersion());
@@ -121,6 +121,14 @@ namespace Microsoft.PythonTools.Analysis {
             });
 
             AddBuiltInSpecializations();
+
+            ModuleReference sysModule;
+            if (_modules.TryImport("sys", out sysModule)) {
+                var bm = sysModule.AnalysisModule as BuiltinModule;
+                if (bm != null) {
+                    sysModule.Module = new SysModuleInfo(bm);
+                }
+            }
         }
 
         /// <summary>
@@ -221,7 +229,7 @@ namespace Microsoft.PythonTools.Analysis {
         public IEnumerable<IPythonProjectEntry> GetEntriesThatImportModule(string moduleName, bool includeUnresolved) {
             ModuleReference modRef;
             var entries = new List<IPythonProjectEntry>();
-            if (_modules.TryGetValue(moduleName, out modRef) && modRef.HasReferences) {
+            if (_modules.TryImport(moduleName, out modRef) && modRef.HasReferences) {
                 entries.AddRange(modRef.References.Select(m => m.ProjectEntry).OfType<IPythonProjectEntry>());
             }
 
@@ -268,14 +276,15 @@ namespace Microsoft.PythonTools.Analysis {
         /// Returns true if a module has been imported.
         /// </summary>
         /// <param name="importFrom">
-        /// The full name of the module doing the import.
+        /// The entry of the module doing the import. If null, the module name
+        /// is resolved as an absolute name.
         /// </param>
         /// <param name="relativeModuleName">
         /// The absolute or relative name of the module. If a relative name is 
         /// passed here, <paramref name="importFrom"/> must be provided.
         /// </param>
         /// <param name="absoluteImports">
-        /// True if Python 3.x style imports should be used.
+        /// True if Python 2.6/3.x style imports should be used.
         /// </param>
         /// <returns>
         /// True if the module was imported during analysis; otherwise, false.
@@ -283,11 +292,7 @@ namespace Microsoft.PythonTools.Analysis {
         public bool IsModuleResolved(IPythonProjectEntry importFrom, string relativeModuleName, bool absoluteImports) {
             ModuleReference moduleRef;
             return ResolvePotentialModuleNames(importFrom, relativeModuleName, absoluteImports)
-                .Any(m =>
-                    Modules.TryGetValue(m, out moduleRef) &&
-                    moduleRef != null &&
-                    moduleRef.Module != null
-                );
+                .Any(m => Modules.TryImport(m, out moduleRef));
         }
 
         /// <summary>
@@ -531,7 +536,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// <returns></returns>
         public MemberResult[] GetModuleMembers(IModuleContext moduleContext, string[] names, bool includeMembers = false) {
             ModuleReference moduleRef;
-            if (Modules.TryGetValue(names[0], out moduleRef) && moduleRef.Module != null) {
+            if (Modules.TryImport(names[0], out moduleRef)) {
                 var module = moduleRef.Module as IModule;
                 if (module != null) {
                     return GetModuleMembers(moduleContext, names, includeMembers, module);
@@ -744,13 +749,9 @@ namespace Microsoft.PythonTools.Analysis {
             } else if (attr is IPythonMultipleMembers) {
                 IPythonMultipleMembers multMembers = (IPythonMultipleMembers)attr;
                 var members = multMembers.Members;
-                return GetCached(attr, () => {
-                    AnalysisValue[] nses = new AnalysisValue[members.Count];
-                    for (int i = 0; i < members.Count; i++) {
-                        nses[i] = GetAnalysisValueFromObjects(members[i]);
-                    }
-                    return new MultipleMemberInfo(nses);
-                }
+                return GetCached(attr, () => 
+                    MultipleMemberInfo.Create(members.Select(GetAnalysisValueFromObjects)).FirstOrDefault() ??
+                        GetBuiltinType(Types[BuiltinTypeId.NoneType]).Instance
                 );
             } else {
                 var pyAttrType = GetTypeFromObject(attr);
@@ -832,7 +833,11 @@ namespace Microsoft.PythonTools.Analysis {
             if (cancel.IsCancellationRequested) {
                 return;
             }
-            new DDG().Analyze(Queue, cancel, _reportQueueSize, _reportQueueInterval);
+            var ddg = new DDG();
+            ddg.Analyze(Queue, cancel, _reportQueueSize, _reportQueueInterval);
+            foreach (var entry in ddg.AnalyzedEntries) {
+                entry.RaiseOnNewAnalysis();
+            }
         }
 
         #endregion

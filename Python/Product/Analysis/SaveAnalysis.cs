@@ -39,52 +39,56 @@ namespace Microsoft.PythonTools.Analysis {
             _curAnalyzer = state;
             foreach (var modKeyValue in state.Modules) {
                 string name = modKeyValue.Key;
-                var moduleInfo = modKeyValue.Value.Module as ModuleInfo;
 
-                if (moduleInfo != null) {
+                ModuleInfo moduleInfo;
+                if ((moduleInfo = modKeyValue.Value.Module as ModuleInfo) != null) {
                     _curModule = moduleInfo;
-
                     var info = SerializeModule(moduleInfo);
-                    
-                    for (int i = 0; i < 10; i++) {
-                        try {
-                            using (var writer = new FileStream(Path.Combine(outDir, name + ".idb"), FileMode.Create, FileAccess.ReadWrite)) {
-                                new Pickler(writer).Dump(info);
-                            }
-                            break;
-                        } catch (IOException ex) {
-                            // race with a reader, retry... http://pytools.codeplex.com/workitem/570
-                            Console.WriteLine("Could not access {0} {1}", name + ".idb", ex);
-                            Thread.Sleep(1000);
-                        }
-                    }
-
-                    for (int i = 0; i < 10; i++) {
-                        try {
-                            using (var writer = new StreamWriter(new FileStream(Path.Combine(outDir, name + ".idb.$memlist"), FileMode.Create, FileAccess.ReadWrite))) {
-                                object membersObj;
-                                Dictionary<string, object> members;
-                                if (!info.TryGetValue("members", out membersObj) ||
-                                    (members = membersObj as Dictionary<string, object>) == null) {
-                                        members = moduleInfo.Scope.Variables.ToDictionary(kv => kv.Key, kv => (object)null);
-                                }
-                                foreach (var memberName in members.Keys) {
-                                    writer.WriteLine(memberName);
-                                }
-                            }
-                            break;
-                        } catch (IOException ex) {
-                            // race with a reader, retry... http://pytools.codeplex.com/workitem/570
-                            Console.WriteLine("Could not access {0} {1}", name + ".idb.$memlist", ex);
-                            Thread.Sleep(1000);
-                        }
-                    }
+                    WriteModule(outDir, name, info, moduleInfo.Scope.Variables.Keys);
                 }
             }
 
-            if (_errors.Count > 0) {
-                foreach (var error in _errors) {
-                    Console.WriteLine(error);
+            foreach (var error in _errors) {
+                Console.WriteLine(error);
+            }
+        }
+
+        private void WriteModule(string outDir, string name, Dictionary<string, object> info, IEnumerable<string> globals) {
+            for (int i = 0; i < 10; i++) {
+                try {
+                    using (var writer = new FileStream(Path.Combine(outDir, name + ".idb"), FileMode.Create, FileAccess.ReadWrite)) {
+                        new Pickler(writer).Dump(info);
+                    }
+                    break;
+                } catch (IOException ex) {
+                    // race with a reader, retry... http://pytools.codeplex.com/workitem/570
+                    Console.WriteLine("Could not access {0} {1}", name + ".idb", ex);
+                    Thread.Sleep(1000);
+                }
+            }
+
+            for (int i = 0; i < 10; i++) {
+                try {
+                    using (var writer = new StreamWriter(new FileStream(Path.Combine(outDir, name + ".idb.$memlist"), FileMode.Create, FileAccess.ReadWrite))) {
+                        object membersObj;
+                        Dictionary<string, object> members;
+                        if (!info.TryGetValue("members", out membersObj) ||
+                            (members = membersObj as Dictionary<string, object>) == null) {
+                            if (globals != null) {
+                                members = globals.ToDictionary(k => k, _ => (object)null);
+                            } else {
+                                members = new Dictionary<string, object>();
+                            }
+                        }
+                        foreach (var memberName in members.Keys) {
+                            writer.WriteLine(memberName);
+                        }
+                    }
+                    break;
+                } catch (IOException ex) {
+                    // race with a reader, retry... http://pytools.codeplex.com/workitem/570
+                    Console.WriteLine("Could not access {0} {1}", name + ".idb.$memlist", ex);
+                    Thread.Sleep(1000);
                 }
             }
         }
@@ -126,18 +130,33 @@ namespace Microsoft.PythonTools.Analysis {
                     { "kind", "moduleref" },
                     { "value", GetModuleName(moduleInfo.Name + "." + child) }
                 };
+                ModuleReference modTableRef;
+                if (!moduleInfo.ProjectEntry.ProjectState.Modules.TryGetImportedModule(moduleInfo.Name + "." + child, out modTableRef) ||
+                    !(modTableRef.Module is ModuleInfo)) {
+                    // Not a real module, so don't make a reference to it
+                    modRef = null;
+                }
                 object existing;
-                if (res.TryGetValue(child, out existing) && IsValidMember(existing) && !AreSameModuleRef(existing, modRef)) {
+                if (res.TryGetValue(child, out existing) && IsValidMember(existing)) {
                     var members = GetMultipleMembersOrDefault(existing);
                     if (members == null) {
-                        members = new[] { existing, modRef };
-                    } else {
+                        if (modRef == null || AreSameModuleRef(existing, modRef)) {
+                            members = new[] { existing };
+                        } else {
+                            members = new[] { existing, modRef };
+                        }
+                    } else if (modRef != null && !members.Any(m => AreSameModuleRef(m, modRef))) {
                         members = members.Concat(Enumerable.Repeat(modRef, 1)).ToArray();
                     }
-                    res[child] = new Dictionary<string, object> {
-                        { "kind", "multiple" },
-                        { "value", new Dictionary<string, object> { { "members", members } } }
-                    };
+
+                    if (members.Length > 1) {
+                        res[child] = new Dictionary<string, object> {
+                            { "kind", "multiple" },
+                            { "value", new Dictionary<string, object> { { "members", members } } }
+                        };
+                    } else if (members.Length == 1) {
+                        res[child] = members[0];
+                    }
                 } else {
                     res[child] = modRef;
                 }

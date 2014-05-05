@@ -176,7 +176,10 @@ namespace Microsoft.PythonTools.Project {
 
             ProjectMgr.OnInvalidateItems(this);
             if (!prevChecked) {
-                ProjectMgr.OnPropertyChanged(this, (int)__VSHPROPID.VSHPROPID_Expandable, 0);
+                if (anyChanges) {
+                    ProjectMgr.OnPropertyChanged(this, (int)__VSHPROPID.VSHPROPID_Expandable, 0);
+                }
+                ExpandItem(EXPANDFLAGS.EXPF_CollapseFolder);
             }
 
             if (prevChecked && anyChanges) {

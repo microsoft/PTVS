@@ -174,6 +174,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         }
 
         public void Imported(IModuleContext context) {
+            EnsureLoaded();
         }
 
         public string Documentation {

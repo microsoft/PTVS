@@ -44,8 +44,12 @@ namespace Microsoft.PythonTools.Analysis.Browser {
                 yield return RawView.FromFile(_idbPath);
             }
 
-            CPythonModule cpm;
-            if ((cpm = _module as CPythonModule) != null && cpm._hiddenMembers != null) {
+            var cpm = _module as CPythonModule;
+            if (cpm != null) {
+                cpm.EnsureLoaded();
+            }
+
+            if (cpm != null && cpm._hiddenMembers != null) {
                 foreach (var keyValue in cpm._hiddenMembers) {
                     yield return MemberView.Make(_context, keyValue.Key, keyValue.Value);
                 }

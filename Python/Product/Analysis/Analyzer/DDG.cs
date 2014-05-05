@@ -26,6 +26,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         internal AnalysisUnit _unit;
         internal ExpressionEvaluator _eval;
         private SuiteStatement _curSuite;
+        public readonly HashSet<ProjectEntry> AnalyzedEntries = new HashSet<ProjectEntry>();
 
         public void Analyze(Deque<AnalysisUnit> queue, CancellationToken cancel, Action<int> reportQueueSize = null, int reportQueueInterval = 1) {
             if (cancel.IsCancellationRequested) {
@@ -68,6 +69,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
                     _unit.IsInQueue = false;
                     SetCurrentUnit(_unit);
+                    AnalyzedEntries.Add(_unit.ProjectEntry);
                     _unit.Analyze(this, cancel);
                 }
 
@@ -80,6 +82,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 }
             } finally {
                 AnalysisLog.Flush();
+                AnalyzedEntries.Remove(null);
             }
         }
 
@@ -109,9 +112,13 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             ModuleReference existingRef;
             Debug.Assert(node == _unit.Ast);
 
-            if (!ProjectState.Modules.TryGetValue(_unit.DeclaringModule.Name, out existingRef)) {
+            if (!ProjectState.Modules.TryImport(_unit.DeclaringModule.Name, out existingRef)) {
                 // publish our module ref now so that we don't collect dependencies as we'll be fully processed
-                ProjectState.Modules[_unit.DeclaringModule.Name] = new ModuleReference(_unit.DeclaringModule);
+                if (existingRef == null) {
+                    ProjectState.Modules[_unit.DeclaringModule.Name] = new ModuleReference(_unit.DeclaringModule);
+                } else {
+                    existingRef.Module = _unit.DeclaringModule;
+                }
             }
 
             return base.Walk(node);
@@ -270,7 +277,18 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             }
 
             foreach (var name in PythonAnalyzer.ResolvePotentialModuleNames(_unit.ProjectEntry, modName, forceAbsolute)) {
-                if (ProjectState.Modules.TryGetValue(name, out moduleRef)) {
+                foreach (var part in ModulePath.GetParents(name, includeFullName: false)) {
+                    ModuleReference parentRef;
+                    if (ProjectState.Modules.TryImport(part, out parentRef)) {
+                        var bi = parentRef.Module as BuiltinModule;
+                        if (bi == null) {
+                            break;
+                        }
+                        bi.Imported(_unit);
+                    }
+                }
+                
+                if (ProjectState.Modules.TryImport(name, out moduleRef)) {
                     return true;
                 }
             }

@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudioTools;
@@ -428,6 +429,24 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             return new ModulePath(fullName, path, remainder);
+        }
+
+        internal static IEnumerable<string> GetParents(string name, bool includeFullName = true) {
+            if (string.IsNullOrEmpty(name)) {
+                yield break;
+            }
+
+            var sb = new StringBuilder();
+            var parts = name.Split('.');
+            if (!includeFullName && parts.Length > 0) {
+                parts[parts.Length - 1] = null;
+            }
+
+            foreach (var bit in parts.TakeWhile(s => !string.IsNullOrEmpty(s))) {
+                sb.Append(bit);
+                yield return sb.ToString();
+                sb.Append('.');
+            }
         }
     }
 }

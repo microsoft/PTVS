@@ -78,7 +78,6 @@ namespace Microsoft.PythonTools.Interpreter.Default {
 
         public IList<IMember> Members {
             get {
-                Debug.Assert(_members != null, "Cannot retrieve members until loading has completed");
                 return _members;
             }
         }

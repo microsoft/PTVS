@@ -200,7 +200,14 @@ namespace Microsoft.PythonTools.Intellisense {
         internal void ReAnalyzeTextBuffers(BufferParser bufferParser) {
             ITextBuffer[] buffers = bufferParser.Buffers;
             if (buffers.Length > 0) {
+                TaskProvider.Value.UnregisterTextBuffer(bufferParser._currentProjEntry, ParserTaskMoniker);
+                TaskProvider.Value.UnregisterTextBuffer(bufferParser._currentProjEntry, UnresolvedImportMoniker);
+                _unresolvedSquiggles.StopListening(bufferParser._currentProjEntry as IPythonProjectEntry);
+
                 var projEntry = CreateProjectEntry(buffers[0], new SnapshotCookie(buffers[0].CurrentSnapshot));
+
+                _unresolvedSquiggles.ListenForNextNewAnalysis(projEntry as IPythonProjectEntry);
+
                 foreach (var buffer in buffers) {
                     buffer.Properties.RemoveProperty(typeof(IProjectEntry));
                     buffer.Properties.AddProperty(typeof(IProjectEntry), projEntry);
@@ -209,8 +216,10 @@ namespace Microsoft.PythonTools.Intellisense {
                     if (classifier != null) {
                         classifier.NewVersion();
                     }
-                }
 
+                    TaskProvider.Value.RegisterTextBuffer(projEntry, ParserTaskMoniker, buffer);
+                    TaskProvider.Value.RegisterTextBuffer(projEntry, UnresolvedImportMoniker, buffer);
+                }
                 bufferParser._currentProjEntry = _openFiles[bufferParser] = projEntry;
                 bufferParser._parser = this;
 
