@@ -14,6 +14,7 @@
 
 #if DEV12_OR_LATER
 
+using System;
 using System.Collections.Generic;
 using Microsoft.Html.Editor;
 using Microsoft.Html.Editor.ContainedLanguage;
@@ -28,6 +29,13 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
 
         protected override BufferGenerator CreateBufferGenerator() {
             return new TemplateBufferGenerator(EditorTree, LanguageBlocks);
+        }
+
+        protected override void OnUpdateCompleted(object sender, HtmlTreeUpdatedEventArgs e) {
+            base.OnUpdateCompleted(sender, e);
+            if (e.FullParse) {
+                UpdateBuffer(force: true);
+            }
         }
     }
 }

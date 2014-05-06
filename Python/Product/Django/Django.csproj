@@ -196,9 +196,12 @@
     </Compile>
     <Compile Include="Debugger\DjangoLauncherProvider.cs" />
     <Compile Include="DialogWindowVersioningWorkaround.cs" />
+    <Compile Include="Formatting\TemplateHtmlCommandFactory.cs" />
     <Compile Include="Intellisense\DjangoCompletionSource.cs" />
     <Compile Include="Intellisense\ProjectBlockCompletionContext.cs" />
     <Compile Include="Intellisense\ProjectBlockCompletionContextBase.cs" />
+    <Compile Include="Formatting\TemplateFormatDocumentCommandHandler.cs" />
+    <Compile Include="Formatting\TemplateFormatSelectionCommandHandler.cs" />
     <Compile Include="Intellisense\TextBufferExtensions.cs" />
     <Compile Include="Legacy\DjangoEditorFactory.cs" />
     <Compile Include="Legacy\Intellisense\DjangoCompletionSource.cs" />
@@ -283,6 +286,7 @@
     <Compile Include="TemplateParsing\TemplateClassifier.cs" />
     <Compile Include="TemplateParsing\TemplateClassifierProviderBase.cs" />
     <Compile Include="TemplateParsing\TemplateClassifierProvider.cs" />
+    <Compile Include="Formatting\TemplateEditorFormatterProvider.cs" />
     <Compile Include="TemplateParsing\TemplateRegion.cs" />
     <Compile Include="TemplateParsing\TemplateToken.cs" />
     <Compile Include="TemplateParsing\TemplateTokenizer.cs" />
