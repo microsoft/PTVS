@@ -158,6 +158,12 @@
     </CreatePythonCommandItem>
   </Target>
 
+  <!-- Build system compatibility -->
+
+  <PropertyGroup>
+    <TargetFrameworkVersion Condition="'$(TargetFrameworkVersion)' == ''">v4.5.1</TargetFrameworkVersion>
+  </PropertyGroup>
+  
   <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
 
   <!-- We don't have an intermediate assembly, but the common targets will set
@@ -174,5 +180,64 @@
     <MakeDir Directories="$(OutDir);@(CreateDirectory)" ContinueOnError="True"/>
   </Target>
 
+  <Target Name="BuiltProjectOutputGroupDependencies" Returns=""  />
+
+  <Target Name="GetTargetFrameworkVersion" Returns="$(TargetFrameworkVersion)" />
+  <Target Name="GetTargetFrameworkDirectories" Returns="" />
+  <Target Name="GetTargetFrameworkMoniker" Returns="" />
+  <Target Name="GetTargetFrameworkMonikerDisplayName" Returns="" />
+
+  <Target Name="GenerateManifests" Returns="" />
+  <Target Name="AddDatabasesToSourceManifest" Returns="" />
+  <Target Name="CreateManifestResourceNames" />
   <Target Name="_CopyAppConfigFile" />
+
+  <Target Name="BuiltProjectOutputGroup"
+          Returns="@(BuiltProjectOutputGroupOutput)"
+          DependsOnTargets="$(BuiltProjectOutputGroupDependsOn)">
+    <ItemGroup>
+      <BuiltProjectOutputGroupOutput Remove="@(BuiltProjectOutputGroupOutput)" />
+    </ItemGroup>
+
+    <AssignTargetPath RootFolder="$(QualifiedProjectHome)" Files="@(Compile);@(Content);$(MSBuildProjectFile)">
+      <Output TaskParameter="AssignedFiles" ItemName="BuiltProjectOutputGroupOutput" />
+    </AssignTargetPath>
+  </Target>
+
+  <Target Name="SourceFilesProjectOutputGroup"
+          Returns="@(SourceFilesProjectOutputGroupOutput)"
+          DependsOnTargets="$(SourceFilesProjectOutputGroupDependsOn)">
+    <ItemGroup>
+      <SourceFilesProjectOutputGroupOutput Remove="@(SourceFilesProjectOutputGroupOutput)" />
+    </ItemGroup>
+
+    <AssignTargetPath RootFolder="$(QualifiedProjectHome)" Files="@(Compile);@(Content);$(MSBuildProjectFile)">
+      <Output TaskParameter="AssignedFiles" ItemName="SourceFilesProjectOutputGroupOutput" />
+    </AssignTargetPath>
+  </Target>
+
+  <Target Name="DebugSymbolsProjectOutputGroup"
+          Returns="@(DebugSymbolsProjectOutputGroupOutput)"
+          DependsOnTargets="$(DebugSymbolsProjectOutputGroupDependsOn)">
+    <ItemGroup>
+      <DebugSymbolsProjectOutputGroupOutput Remove="@(DebugSymbolsProjectOutputGroupOutput)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="DocumentationProjectOutputGroup"
+          Returns="@(DocumentationProjectOutputGroupOutput)"
+          DependsOnTargets="$(DocumentationProjectOutputGroupDependsOn)">
+    <ItemGroup>
+      <DocumentationProjectOutputGroupOutput Remove="@(DocumentationProjectOutputGroupOutput)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="SatelliteDllsProjectOutputGroup"
+          Returns="@(SatelliteDllsProjectOutputGroupOutput)"
+          DependsOnTargets="$(SatelliteDllsProjectOutputGroupDependsOn)">
+    <ItemGroup>
+      <SatelliteDllsProjectOutputGroupOutput Remove="@(SatelliteDllsProjectOutputGroupOutput)" />
+    </ItemGroup>
+  </Target>
+
 </Project>
