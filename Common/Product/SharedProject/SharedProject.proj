@@ -565,6 +565,10 @@
       <Link>SharedProject\Debugger\ProvideDebugExceptionAttribute.cs</Link>
       <Visible>true</Visible>
     </Compile>
+    <Compile Include="$(_ProjectSystemFilesLocation)\WebSocketStream.cs">
+      <Link>SharedProject\Debugger\WebSocketStream.cs</Link>
+      <Visible>true</Visible>
+    </Compile>
     <Compile Include="$(_ProjectSystemFilesLocation)\ProvideDebugLanguageAttribute.cs">
       <Link>SharedProject\ProvideDebugLanguageAttribute.cs</Link>
       <Visible>true</Visible>

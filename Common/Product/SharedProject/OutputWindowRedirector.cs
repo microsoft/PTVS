@@ -21,15 +21,31 @@ namespace Microsoft.VisualStudioTools.Project {
         private static readonly Guid OutputWindowGuid = new Guid("{34E76E81-EE4A-11D0-AE2E-00A0C90FFFC3}");
         static OutputWindowRedirector _generalPane;
 
+        /// <summary>
+        /// Gets or creates the specified output pane.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">The output pane could
+        /// not be found or created.</exception>
         public static OutputWindowRedirector Get(IServiceProvider provider, Guid id, string title) {
-            IVsOutputWindow outputWindow = provider.GetService(typeof(SVsOutputWindow)) as IVsOutputWindow;
+            var outputWindow = provider.GetService(typeof(SVsOutputWindow)) as IVsOutputWindow;
+            if (outputWindow == null) {
+                throw new InvalidOperationException("Unable to get output window service");
+            }
+
             IVsOutputWindowPane pane;
             if (ErrorHandler.Failed(outputWindow.GetPane(id, out pane)) || pane == null) {
-                ErrorHandler.ThrowOnFailure(outputWindow.CreatePane(id, title, 1, 0));
+                if (ErrorHandler.Failed(outputWindow.CreatePane(id, title, 1, 0))) {
+                    throw new InvalidOperationException("Unable to create output pane");
+                }
             }
             return new OutputWindowRedirector(provider, id);
         }
 
+        /// <summary>
+        /// Gets or creates the "General" output pane.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">The "General" pane could
+        /// not be found or created.</exception>
         public static OutputWindowRedirector GetGeneral(IServiceProvider provider) {
             if (_generalPane == null) {
                 _generalPane = Get(provider, VSConstants.OutputWindowPaneGuid.GeneralPane_guid, "General");
@@ -42,6 +58,19 @@ namespace Microsoft.VisualStudioTools.Project {
 
         public IVsOutputWindowPane Pane { get { return _pane; } }
 
+        /// <summary>
+        /// Creates a redirector to the specified output pane.
+        /// </summary>
+        /// <param name="provider">
+        /// An active service provider.
+        /// </param>
+        /// <param name="paneGuid">
+        /// The ID of the pane to direct output to.
+        /// </param>
+        /// <exception cref="InvalidOperationException">
+        /// The pane could not be found or the Output Window service is not
+        /// available.
+        /// </exception>
         public OutputWindowRedirector(IServiceProvider provider, Guid paneGuid) {
             var shell = provider.GetService(typeof(SVsUIShell)) as IVsUIShell;
             if (shell != null) {
@@ -50,10 +79,26 @@ namespace Microsoft.VisualStudioTools.Project {
                 var windowGuid = OutputWindowGuid;
                 shell.FindToolWindow(0, ref windowGuid, out _window);
             }
-            IVsOutputWindow outputWindow = provider.GetService(typeof(SVsOutputWindow)) as IVsOutputWindow;
-            ErrorHandler.ThrowOnFailure(outputWindow.GetPane(paneGuid, out _pane));
+            var outputWindow = provider.GetService(typeof(SVsOutputWindow)) as IVsOutputWindow;
+            if (outputWindow == null) {
+                throw new InvalidOperationException("Unable to get output window service");
+            }
+            if (ErrorHandler.Failed(outputWindow.GetPane(paneGuid, out _pane))) {
+                throw new InvalidOperationException("Unable to get output pane");
+            }
         }
 
+        /// <summary>
+        /// Creates a redirector to the specified output pane.
+        /// </summary>
+        /// <param name="window">
+        /// The window containing the pane. Optional, but if omitted then the
+        /// <see cref="Show"/> and <see cref="ShowAndActivate"/> methods become
+        /// no-ops.
+        /// </param>
+        /// <param name="pane">
+        /// The pane to direct output to.
+        /// </param>
         public OutputWindowRedirector(IVsWindowFrame window, IVsOutputWindowPane pane) {
             _window = window;
             if (pane == null) {

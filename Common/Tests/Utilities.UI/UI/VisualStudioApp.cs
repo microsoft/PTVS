@@ -636,9 +636,15 @@ namespace TestUtilities.UI {
                                     AutomationElement.ClassNameProperty,
                                     "GenericPane"
                                 ),
-                                new PropertyCondition(
-                                    AutomationElement.NameProperty,
-                                    "Windows Azure Activity Log"
+                                new OrCondition(
+                                    new PropertyCondition(
+                                        AutomationElement.NameProperty,
+                                        "Microsoft Azure Activity Log"
+                                    ),
+                                    new PropertyCondition(
+                                        AutomationElement.NameProperty,
+                                        "Windows Azure Activity Log"
+                                    )
                                 )
                             )
                         );
