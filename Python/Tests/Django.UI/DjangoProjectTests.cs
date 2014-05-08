@@ -180,7 +180,7 @@ namespace DjangoUITests {
                 app.SolutionExplorerTreeView.SelectProject(project);
 
                 var newItem = new NewItemDialog(app.OpenDialogWithDteExecuteCommand("Project.AddNewItem")); 
-                AutomationWrapper.Select(newItem.ProjectTypes.FindItem("Django HTML Template"));
+                AutomationWrapper.Select(newItem.ProjectTypes.FindItem("HTML Page"));
                 newItem.FileName = "NewPage.html";
                 newItem.ClickOK();
 

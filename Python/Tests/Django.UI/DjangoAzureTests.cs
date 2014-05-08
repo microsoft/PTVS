@@ -20,6 +20,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.Python;
 using TestUtilities.UI;
+using TestUtilities.UI.Python;
 
 namespace DjangoUITests {
     [TestClass]
@@ -34,23 +35,13 @@ namespace DjangoUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void AddCloudProject() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var newProjDialog = app.FileNewProject();
-
-                newProjDialog.FocusLanguageNode();
-
-                var djangoApp = newProjDialog.ProjectTypes.FindItem("Django Web Project");
-                djangoApp.Select();
-
-                newProjDialog.Location = TestData.GetTempPath();
-                newProjDialog.OK();
-
-                // wait for new solution to load...
-                var projItem = app.SolutionExplorerTreeView.WaitForItem(
-                    "Solution '" + app.Dte.Solution.Projects.Item(1).Name + "' (1 project)",
-                    app.Dte.Solution.Projects.Item(1).Name
+                var project = app.CreateProject(
+                    PythonVisualStudioApp.TemplateLanguageName,
+                    PythonVisualStudioApp.DjangoWebProjectTemplate,
+                    TestData.GetTempPath(),
+                    "AddCloudProject"
                 );
-                AutomationWrapper.Select(projItem);
-                System.Threading.Thread.Sleep(1000);
+                app.SolutionExplorerTreeView.SelectProject(project);
 
                 Exception exception = null;
                 ThreadPool.QueueUserWorkItem(x => {
