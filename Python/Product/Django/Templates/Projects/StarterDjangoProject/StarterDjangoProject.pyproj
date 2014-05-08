@@ -1,0 +1,125 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <PropertyGroup>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
+    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+  </PropertyGroup>
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>$guid1$</ProjectGuid>
+    <ProjectHome>.</ProjectHome>
+    <ProjectTypeGuids>{5F0BE9CA-D677-4A4D-8806-6076C0FAAD37};{349c5851-65df-11da-9384-00065b846f21};{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
+    <StartupFile>manage.py</StartupFile>
+    <SearchPath>
+    </SearchPath>
+    <WorkingDirectory>.</WorkingDirectory>
+    <LaunchProvider>Django launcher</LaunchProvider>
+    <OutputPath>.</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DebugSymbols>true</DebugSymbols>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugSymbols>true</DebugSymbols>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="djangoapp\forms.py" />
+    <Compile Include="djangoapp\models.py" />
+    <Compile Include="djangoapp\tests.py" />
+    <Compile Include="djangoapp\views.py" />
+    <Compile Include="djangoapp\__init__.py" />
+    <Compile Include="manage.py" />
+    <Compile Include="$safeprojectname$\__init__.py" />
+    <Compile Include="$safeprojectname$\settings.py" />
+    <Compile Include="$safeprojectname$\urls.py" />
+    <Compile Include="$safeprojectname$\wsgi.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="djangoapp\" />
+    <Folder Include="djangoapp\static\" />
+    <Folder Include="djangoapp\static\djangoapp\" />
+    <Folder Include="djangoapp\static\djangoapp\content\" />
+    <Folder Include="djangoapp\static\djangoapp\fonts\" />
+    <Folder Include="djangoapp\static\djangoapp\scripts\" />
+    <Folder Include="djangoapp\templates\" />
+    <Folder Include="djangoapp\templates\djangoapp\" />
+    <Folder Include="$safeprojectname$\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="readme.txt" />
+    <Content Include="requirements.txt" />
+    <Content Include="db.sqlite3" />
+    <Content Include="djangoapp\static\djangoapp\content\bootstrap.css" />
+    <Content Include="djangoapp\static\djangoapp\content\bootstrap.min.css" />
+    <Content Include="djangoapp\static\djangoapp\content\site.css" />
+    <Content Include="djangoapp\static\djangoapp\fonts\glyphicons-halflings-regular.eot" />
+    <Content Include="djangoapp\static\djangoapp\fonts\glyphicons-halflings-regular.svg" />
+    <Content Include="djangoapp\static\djangoapp\fonts\glyphicons-halflings-regular.ttf" />
+    <Content Include="djangoapp\static\djangoapp\fonts\glyphicons-halflings-regular.woff" />
+    <Content Include="djangoapp\static\djangoapp\scripts\bootstrap.js" />
+    <Content Include="djangoapp\static\djangoapp\scripts\bootstrap.min.js" />
+    <Content Include="djangoapp\static\djangoapp\scripts\jquery-1.10.2.intellisense.js" />
+    <Content Include="djangoapp\static\djangoapp\scripts\jquery-1.10.2.js" />
+    <Content Include="djangoapp\static\djangoapp\scripts\jquery-1.10.2.min.js" />
+    <Content Include="djangoapp\static\djangoapp\scripts\jquery-1.10.2.min.map" />
+    <Content Include="djangoapp\static\djangoapp\scripts\jquery.validate-vsdoc.js" />
+    <Content Include="djangoapp\static\djangoapp\scripts\jquery.validate.js" />
+    <Content Include="djangoapp\static\djangoapp\scripts\jquery.validate.min.js" />
+    <Content Include="djangoapp\static\djangoapp\scripts\jquery.validate.unobtrusive.js" />
+    <Content Include="djangoapp\static\djangoapp\scripts\jquery.validate.unobtrusive.min.js" />
+    <Content Include="djangoapp\static\djangoapp\scripts\modernizr-2.6.2.js" />
+    <Content Include="djangoapp\static\djangoapp\scripts\respond.js" />
+    <Content Include="djangoapp\static\djangoapp\scripts\respond.min.js" />
+    <Content Include="djangoapp\static\djangoapp\scripts\_references.js" />
+    <Content Include="djangoapp\templates\djangoapp\about.html" />
+    <Content Include="djangoapp\templates\djangoapp\contact.html" />
+    <Content Include="djangoapp\templates\djangoapp\index.html" />
+    <Content Include="djangoapp\templates\djangoapp\layout.html" />
+    <Content Include="djangoapp\templates\djangoapp\login.html" />
+    <Content Include="djangoapp\templates\djangoapp\loginpartial.html" />
+  </ItemGroup>
+  <Import Project="$(VSToolsPath)\Python Tools\Microsoft.PythonTools.Django.targets" />
+  <!-- Specify pre- and post-build commands in the BeforeBuild and 
+       AfterBuild targets below. -->
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+
+  <ProjectExtensions>
+    <VisualStudio>
+      <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}">
+        <WebProjectProperties>
+          <AutoAssignPort>True</AutoAssignPort>
+          <UseCustomServer>True</UseCustomServer>
+          <CustomServerUrl>http://localhost</CustomServerUrl>
+          <SaveServerSettingsInUserFile>False</SaveServerSettingsInUserFile>
+        </WebProjectProperties>
+      </FlavorProperties>
+      <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}" User="">
+        <WebProjectProperties>
+          <StartPageUrl>
+          </StartPageUrl>
+          <StartAction>CurrentPage</StartAction>
+          <AspNetDebugging>True</AspNetDebugging>
+          <SilverlightDebugging>False</SilverlightDebugging>
+          <NativeDebugging>False</NativeDebugging>
+          <SQLDebugging>False</SQLDebugging>
+          <ExternalProgram>
+          </ExternalProgram>
+          <StartExternalURL>
+          </StartExternalURL>
+          <StartCmdLineArguments>
+          </StartCmdLineArguments>
+          <StartWorkingDirectory>
+          </StartWorkingDirectory>
+          <EnableENC>False</EnableENC>
+          <AlwaysStartWebServerOnDebug>False</AlwaysStartWebServerOnDebug>
+        </WebProjectProperties>
+      </FlavorProperties>
+    </VisualStudio>
+  </ProjectExtensions>
+</Project>

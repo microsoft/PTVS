@@ -45,7 +45,9 @@
 
   <DirectoryRef Id="Dir_$(var.key)Templates">
     <Directory Id="Dir_$(var.key)AllProjectTemplates" Name="ProjectTemplates">
-      <Directory Id="Dir_$(var.key)ProjectTemplates" Name="Python" />
+      <Directory Id="Dir_$(var.key)ProjectTemplates" Name="Python">
+        <Directory Id="Dir_$(var.key)WebProjectTemplates" Name="Web" />
+      </Directory>
     </Directory>
     <Directory Id="Dir_$(var.key)AllItemTemplates" Name="ItemTemplates">
       <Directory Id="Dir_$(var.key)ItemTemplates" Name="Python" />

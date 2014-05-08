@@ -695,45 +695,68 @@
   <ItemDefinitionGroup>
     <ZipProject>
       <Language>Python</Language>
+      <OutputSubPath>Web</OutputSubPath>
     </ZipProject>
     <ZipItem>
       <Language>Python</Language>
     </ZipItem>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <!-- VSIX -->
-    <Content Include="NoSurveyNewsFeed.html">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <Content Include="NoInterpreters.html">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <Content Include="ptvsd\attach_server.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <None Include="RefreshDefaultDB.py" />
-    <ZipProject Include="Templates\Projects\WebProjectBottle\app.py" />
-    <ZipProject Include="Templates\Projects\WebProjectFlask\app.py" />
-    <ZipProject Include="Templates\Projects\FromExistingCode\FromExistingCode.pyproj" />
-    <ZipProject Include="Templates\Projects\FromExistingCode\FromExistingCode.vstemplate">
+    <!-- Item Templates -->
+    <ZipItem Include="Templates\Files\EmptyPackage\__init__.py" />
+    <ZipItem Include="Templates\Files\EmptyPyFile\empty.py" />
+    <ZipItem Include="Templates\Files\EmptyPackage\package.vstemplate" />
+    <ZipItem Include="Templates\Files\PyClass\class.py" />
+    <ZipItem Include="Templates\Files\EmptyPyFile\empty.vstemplate">
       <SubType>Designer</SubType>
-    </ZipProject>
-    <Content Include="ptvsd\__init__.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="ptvsd\__main__.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    </ZipItem>
+    <ZipItem Include="Templates\Files\PyClass\class.vstemplate" />
     <ZipItem Include="Templates\Files\UnitTestFile\test.vstemplate">
       <SubType>Designer</SubType>
     </ZipItem>
     <ZipItem Include="Templates\Files\UnitTestFile\test.py" />
-    <Content Include="pip_downloader.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
+    <ZipItem Include="Templates\Files\TextFile\textfile.txt" />
+    <ZipItem Include="Templates\Files\TextFile\textfile.vstemplate" />
+    <ZipItem Include="Templates\Files\Stylesheet\Stylesheet.css" />
+    <ZipItem Include="Templates\Files\Stylesheet\Stylesheet.vstemplate">
+      <SubType>Designer</SubType>
+    </ZipItem>
+    <ZipItem Include="Templates\Files\JavaScript\JavaScript.js" />
+    <ZipItem Include="Templates\Files\JavaScript\JavaScript.vstemplate">
+      <SubType>Designer</SubType>
+    </ZipItem>
+    <ZipItem Include="Templates\Files\HtmlFile\HtmlFile.html" />
+    <ZipItem Include="Templates\Files\HtmlFile\HtmlFile.vstemplate" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Project Templates -->
+    <ZipProject Include="Templates\Projects\ConsoleAppProject\PythonApp.pyproj">
+      <OutputSubPath>
+      </OutputSubPath>
+    </ZipProject>
+    <ZipProject Include="Templates\Projects\ConsoleAppProject\Program.py">
+      <OutputSubPath>
+      </OutputSubPath>
+    </ZipProject>
+    <ZipProject Include="Templates\Projects\ConsoleAppProject\PythonConsoleApp.vstemplate">
+      <OutputSubPath>
+      </OutputSubPath>
+      <SubType>Designer</SubType>
+    </ZipProject>
+    <ZipProject Include="Templates\Projects\FromExistingCode\FromExistingCode.pyproj">
+      <OutputSubPath>
+      </OutputSubPath>
+    </ZipProject>
+    <ZipProject Include="Templates\Projects\FromExistingCode\FromExistingCode.vstemplate">
+      <OutputSubPath>
+      </OutputSubPath>
+      <SubType>Designer</SubType>
+    </ZipProject>
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Web Project Templates -->
+    <ZipProject Include="Templates\Projects\WebProjectBottle\app.py" />
+    <ZipProject Include="Templates\Projects\WebProjectFlask\app.py" />
     <ZipProject Include="Templates\Projects\EmptyWebProject\EmptyWebProject.pyproj">
       <SubType>Designer</SubType>
     </ZipProject>
@@ -752,16 +775,142 @@
     <ZipProject Include="Templates\Projects\WebProjectBottle\WebProjectBottle.vstemplate">
       <SubType>Designer</SubType>
     </ZipProject>
-    <ZipItem Include="Templates\Files\Stylesheet\Stylesheet.css" />
-    <ZipItem Include="Templates\Files\Stylesheet\Stylesheet.vstemplate">
+    <ZipProject Include="Templates\Projects\StarterBottleProject\app.py" />
+    <ZipProject Include="Templates\Projects\StarterBottleProject\routes.py" />
+    <ZipProject Include="Templates\Projects\StarterBottleProject\bootstrap.css" />
+    <ZipProject Include="Templates\Projects\StarterBottleProject\bootstrap.min.css" />
+    <ZipProject Include="Templates\Projects\StarterBottleProject\site.css" />
+    <ZipProject Include="Templates\Projects\StarterBottleProject\glyphicons-halflings-regular.svg" />
+    <ZipProject Include="Templates\Projects\StarterBottleProject\bootstrap.js" />
+    <ZipProject Include="Templates\Projects\StarterBottleProject\bootstrap.min.js" />
+    <ZipProject Include="Templates\Projects\StarterBottleProject\jquery-1.10.2.intellisense.js" />
+    <ZipProject Include="Templates\Projects\StarterBottleProject\jquery-1.10.2.js" />
+    <ZipProject Include="Templates\Projects\StarterBottleProject\jquery-1.10.2.min.js" />
+    <ZipProject Include="Templates\Projects\StarterBottleProject\jquery.validate-vsdoc.js" />
+    <ZipProject Include="Templates\Projects\StarterBottleProject\jquery.validate.js" />
+    <ZipProject Include="Templates\Projects\StarterBottleProject\jquery.validate.min.js" />
+    <ZipProject Include="Templates\Projects\StarterBottleProject\jquery.validate.unobtrusive.js" />
+    <ZipProject Include="Templates\Projects\StarterBottleProject\jquery.validate.unobtrusive.min.js" />
+    <ZipProject Include="Templates\Projects\StarterBottleProject\modernizr-2.6.2.js" />
+    <ZipProject Include="Templates\Projects\StarterBottleProject\respond.js" />
+    <ZipProject Include="Templates\Projects\StarterBottleProject\respond.min.js" />
+    <ZipProject Include="Templates\Projects\StarterBottleProject\_references.js" />
+    <ZipProject Include="Templates\Projects\StarterBottleProject\glyphicons-halflings-regular.eot" />
+    <ZipProject Include="Templates\Projects\StarterBottleProject\glyphicons-halflings-regular.ttf" />
+    <ZipProject Include="Templates\Projects\StarterBottleProject\glyphicons-halflings-regular.woff" />
+    <ZipProject Include="Templates\Projects\StarterBottleProject\jquery-1.10.2.min.map" />
+    <ZipProject Include="Templates\Projects\StarterBottleProject\about.tpl" />
+    <ZipProject Include="Templates\Projects\StarterBottleProject\contact.tpl" />
+    <ZipProject Include="Templates\Projects\StarterBottleProject\index.tpl" />
+    <ZipProject Include="Templates\Projects\StarterBottleProject\layout.tpl" />
+    <ZipProject Include="Templates\Projects\StarterBottleProject\requirements.txt" />
+    <ZipProject Include="Templates\Projects\StarterBottleProject\readme.txt" />
+    <ZipProject Include="Templates\Projects\StarterBottleProject\StarterBottleProject.png" />
+    <ZipProject Include="Templates\Projects\StarterBottleProject\StarterBottleProject.pyproj">
       <SubType>Designer</SubType>
-    </ZipItem>
-    <ZipItem Include="Templates\Files\JavaScript\JavaScript.js" />
-    <ZipItem Include="Templates\Files\JavaScript\JavaScript.vstemplate">
+    </ZipProject>
+    <ZipProject Include="Templates\Projects\StarterBottleProject\StarterBottleProject.vstemplate">
       <SubType>Designer</SubType>
-    </ZipItem>
-    <ZipItem Include="Templates\Files\HtmlFile\HtmlFile.html" />
-    <ZipItem Include="Templates\Files\HtmlFile\HtmlFile.vstemplate" />
+    </ZipProject>
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\app.py" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\routes.py" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\bootstrap.css" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\bootstrap.min.css" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\site.css" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\glyphicons-halflings-regular.svg" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\bootstrap.js" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\bootstrap.min.js" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\jquery-1.10.2.intellisense.js" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\jquery-1.10.2.js" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\jquery-1.10.2.min.js" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\jquery.validate-vsdoc.js" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\jquery.validate.js" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\jquery.validate.min.js" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\jquery.validate.unobtrusive.js" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\jquery.validate.unobtrusive.min.js" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\modernizr-2.6.2.js" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\respond.js" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\respond.min.js" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\_references.js" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\glyphicons-halflings-regular.eot" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\glyphicons-halflings-regular.ttf" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\glyphicons-halflings-regular.woff" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\jquery-1.10.2.min.map" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\about.html" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\contact.html" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\index.html" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\layout.html" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\readme.txt" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\requirements.txt" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\StarterFlaskProject.png" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\StarterFlaskProject.pyproj">
+      <SubType>Designer</SubType>
+    </ZipProject>
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\StarterFlaskProject.vstemplate">
+      <SubType>Designer</SubType>
+    </ZipProject>
+    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\app.py" />
+    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\routes.py" />
+    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\bootstrap.css" />
+    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\bootstrap.min.css" />
+    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\site.css" />
+    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\glyphicons-halflings-regular.svg" />
+    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\bootstrap.js" />
+    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\bootstrap.min.js" />
+    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\jquery-1.10.2.intellisense.js" />
+    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\jquery-1.10.2.js" />
+    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\jquery-1.10.2.min.js" />
+    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\jquery.validate-vsdoc.js" />
+    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\jquery.validate.js" />
+    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\jquery.validate.min.js" />
+    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\jquery.validate.unobtrusive.js" />
+    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\jquery.validate.unobtrusive.min.js" />
+    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\modernizr-2.6.2.js" />
+    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\respond.js" />
+    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\respond.min.js" />
+    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\_references.js" />
+    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\glyphicons-halflings-regular.eot" />
+    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\glyphicons-halflings-regular.ttf" />
+    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\glyphicons-halflings-regular.woff" />
+    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\jquery-1.10.2.min.map" />
+    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\about.jade" />
+    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\contact.jade" />
+    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\index.jade" />
+    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\layout.jade" />
+    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\readme.txt" />
+    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\requirements.txt" />
+    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\StarterFlaskJadeProject.png" />
+    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\StarterFlaskJadeProject.pyproj">
+      <SubType>Designer</SubType>
+    </ZipProject>
+    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\StarterFlaskJadeProject.vstemplate">
+      <SubType>Designer</SubType>
+    </ZipProject>
+  </ItemGroup>
+  <ItemGroup>
+    <!-- VSIX -->
+    <Content Include="NoSurveyNewsFeed.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="NoInterpreters.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="ptvsd\attach_server.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="RefreshDefaultDB.py" />
+    <Content Include="ptvsd\__init__.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="ptvsd\__main__.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="pip_downloader.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
     <Content Include="visualstudio_py_debugger.py">
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -808,8 +957,6 @@
       <VSIXSubPath>.</VSIXSubPath>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <ZipItem Include="Templates\Files\TextFile\textfile.txt" />
-    <ZipItem Include="Templates\Files\TextFile\textfile.vstemplate" />
     <Content Include="Templates\NewItem\class.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
@@ -872,7 +1019,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <!-- Templates -->
     <Content Include="visualstudio_py_launcher.py">
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -917,19 +1063,6 @@
     <EmbeddedResource Include="..\Icons\Dev$(VSTarget)\imagelis.bmp">
       <Link>PythonTools\Project\Resources\imagelis.bmp</Link>
     </EmbeddedResource>
-    <ZipItem Include="Templates\Files\EmptyPackage\__init__.py" />
-    <ZipItem Include="Templates\Files\EmptyPyFile\empty.py" />
-    <ZipItem Include="Templates\Files\EmptyPackage\package.vstemplate" />
-    <ZipItem Include="Templates\Files\PyClass\class.py" />
-    <ZipItem Include="Templates\Files\EmptyPyFile\empty.vstemplate">
-      <SubType>Designer</SubType>
-    </ZipItem>
-    <ZipItem Include="Templates\Files\PyClass\class.vstemplate" />
-    <ZipProject Include="Templates\Projects\ConsoleAppProject\PythonApp.pyproj" />
-    <ZipProject Include="Templates\Projects\ConsoleAppProject\Program.py" />
-    <ZipProject Include="Templates\Projects\ConsoleAppProject\PythonConsoleApp.vstemplate">
-      <SubType>Designer</SubType>
-    </ZipProject>
   </ItemGroup>
   <ItemGroup>
     <!-- Resources -->

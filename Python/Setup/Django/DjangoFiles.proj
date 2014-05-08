@@ -14,9 +14,6 @@
     <ItemTemplate>
       <IncludeInWD>false</IncludeInWD>
     </ItemTemplate>
-    <ProjectTemplate>
-      <IncludeInWD>false</IncludeInWD>
-    </ProjectTemplate>
   </ItemDefinitionGroup>
 
   <ItemGroup>
@@ -33,7 +30,8 @@
 
     <!-- Templates -->
     <ItemTemplate Include="ItemTemplates\Python\DjangoNewAppFiles14.zip" />
-    <ProjectTemplate Include="ProjectTemplates\Python\DjangoProject.zip" />
+    <WebProjectTemplate Include="ProjectTemplates\Python\Web\DjangoProject.zip;
+                                 ProjectTemplates\Python\Web\StarterDjangoProject.zip" />
 
     <!-- Targets -->
     <MSBuildFile Include="Microsoft.PythonTools.Django.targets" />

@@ -1,0 +1,58 @@
+<VSTemplate Version="2.0.0" Type="Project" xmlns="http://schemas.microsoft.com/developer/vstemplate/2005">
+  <TemplateData>
+    <Name>Django Web Project</Name>
+    <Description>A project for creating an application using the Django web framework. It features sample pages that use the Twitter Bootstrap framework for responsive web design.</Description>
+    <Icon Package="{a8637c34-aa55-46e2-973c-9c3e09afc17b}" ID="410" />
+    <ProjectType>Python</ProjectType>
+    <SortOrder>62</SortOrder>
+    <NumberOfParentCategoriesToRollUp>2</NumberOfParentCategoriesToRollUp>
+    <CreateNewFolder>true</CreateNewFolder>
+    <DefaultName>DjangoWebProject</DefaultName>
+    <ProvideDefaultName>true</ProvideDefaultName>
+    <PreviewImage>StarterDjangoProject.png</PreviewImage>
+  </TemplateData>
+  <TemplateContent>
+    <Project File="StarterDjangoProject.pyproj" ReplaceParameters="true">
+      <ProjectItem ReplaceParameters="false" OpenInEditor="true" TargetFileName="readme.txt">readme.txt</ProjectItem>
+      <ProjectItem ReplaceParameters="false" OpenInEditor="false" TargetFileName="requirements.txt">requirements.txt</ProjectItem>
+      <ProjectItem ReplaceParameters="true" OpenInEditor="false" TargetFileName="manage.py">manage.py</ProjectItem>
+      <ProjectItem ReplaceParameters="true" OpenInEditor="false" TargetFileName="$safeprojectname$\__init__.py">project-__init__.py</ProjectItem>
+      <ProjectItem ReplaceParameters="true" OpenInEditor="false" TargetFileName="$safeprojectname$\settings.py">project-settings.py</ProjectItem>
+      <ProjectItem ReplaceParameters="true" OpenInEditor="false" TargetFileName="$safeprojectname$\urls.py">project-urls.py</ProjectItem>
+      <ProjectItem ReplaceParameters="true" OpenInEditor="false" TargetFileName="$safeprojectname$\wsgi.py">project-wsgi.py</ProjectItem>
+      <ProjectItem ReplaceParameters="true" OpenInEditor="false" TargetFileName="djangoapp\__init__.py">app-__init__.py</ProjectItem>
+      <ProjectItem ReplaceParameters="true" OpenInEditor="false" TargetFileName="djangoapp\forms.py">app-forms.py</ProjectItem>
+      <ProjectItem ReplaceParameters="true" OpenInEditor="false" TargetFileName="djangoapp\models.py">app-models.py</ProjectItem>
+      <ProjectItem ReplaceParameters="true" OpenInEditor="false" TargetFileName="djangoapp\tests.py">app-tests.py</ProjectItem>
+      <ProjectItem ReplaceParameters="true" OpenInEditor="false" TargetFileName="djangoapp\views.py">app-views.py</ProjectItem>
+      <ProjectItem ReplaceParameters="false" OpenInEditor="false" TargetFileName="djangoapp\static\djangoapp\content\bootstrap.css">bootstrap.css</ProjectItem>
+      <ProjectItem ReplaceParameters="false" OpenInEditor="false" TargetFileName="djangoapp\static\djangoapp\content\bootstrap.min.css">bootstrap.min.css</ProjectItem>
+      <ProjectItem ReplaceParameters="false" OpenInEditor="false" TargetFileName="djangoapp\static\djangoapp\content\site.css">site.css</ProjectItem>
+      <ProjectItem ReplaceParameters="false" OpenInEditor="false" TargetFileName="djangoapp\static\djangoapp\fonts\glyphicons-halflings-regular.eot">glyphicons-halflings-regular.eot</ProjectItem>
+      <ProjectItem ReplaceParameters="false" OpenInEditor="false" TargetFileName="djangoapp\static\djangoapp\fonts\glyphicons-halflings-regular.svg">glyphicons-halflings-regular.svg</ProjectItem>
+      <ProjectItem ReplaceParameters="false" OpenInEditor="false" TargetFileName="djangoapp\static\djangoapp\fonts\glyphicons-halflings-regular.ttf">glyphicons-halflings-regular.ttf</ProjectItem>
+      <ProjectItem ReplaceParameters="false" OpenInEditor="false" TargetFileName="djangoapp\static\djangoapp\fonts\glyphicons-halflings-regular.woff">glyphicons-halflings-regular.woff</ProjectItem>
+      <ProjectItem ReplaceParameters="false" OpenInEditor="false" TargetFileName="djangoapp\static\djangoapp\scripts\_references.js">_references.js</ProjectItem>
+      <ProjectItem ReplaceParameters="false" OpenInEditor="false" TargetFileName="djangoapp\static\djangoapp\scripts\bootstrap.js">bootstrap.js</ProjectItem>
+      <ProjectItem ReplaceParameters="false" OpenInEditor="false" TargetFileName="djangoapp\static\djangoapp\scripts\bootstrap.min.js">bootstrap.min.js</ProjectItem>
+      <ProjectItem ReplaceParameters="false" OpenInEditor="false" TargetFileName="djangoapp\static\djangoapp\scripts\jquery.validate.js">jquery.validate.js</ProjectItem>
+      <ProjectItem ReplaceParameters="false" OpenInEditor="false" TargetFileName="djangoapp\static\djangoapp\scripts\jquery.validate.min.js">jquery.validate.min.js</ProjectItem>
+      <ProjectItem ReplaceParameters="false" OpenInEditor="false" TargetFileName="djangoapp\static\djangoapp\scripts\jquery.validate.unobtrusive.js">jquery.validate.unobtrusive.js</ProjectItem>
+      <ProjectItem ReplaceParameters="false" OpenInEditor="false" TargetFileName="djangoapp\static\djangoapp\scripts\jquery.validate.unobtrusive.min.js">jquery.validate.unobtrusive.min.js</ProjectItem>
+      <ProjectItem ReplaceParameters="false" OpenInEditor="false" TargetFileName="djangoapp\static\djangoapp\scripts\jquery.validate-vsdoc.js">jquery.validate-vsdoc.js</ProjectItem>
+      <ProjectItem ReplaceParameters="false" OpenInEditor="false" TargetFileName="djangoapp\static\djangoapp\scripts\jquery-1.10.2.intellisense.js">jquery-1.10.2.intellisense.js</ProjectItem>
+      <ProjectItem ReplaceParameters="false" OpenInEditor="false" TargetFileName="djangoapp\static\djangoapp\scripts\jquery-1.10.2.js">jquery-1.10.2.js</ProjectItem>
+      <ProjectItem ReplaceParameters="false" OpenInEditor="false" TargetFileName="djangoapp\static\djangoapp\scripts\jquery-1.10.2.min.js">jquery-1.10.2.min.js</ProjectItem>
+      <ProjectItem ReplaceParameters="false" OpenInEditor="false" TargetFileName="djangoapp\static\djangoapp\scripts\jquery-1.10.2.min.map">jquery-1.10.2.min.map</ProjectItem>
+      <ProjectItem ReplaceParameters="false" OpenInEditor="false" TargetFileName="djangoapp\static\djangoapp\scripts\modernizr-2.6.2.js">modernizr-2.6.2.js</ProjectItem>
+      <ProjectItem ReplaceParameters="false" OpenInEditor="false" TargetFileName="djangoapp\static\djangoapp\scripts\respond.js">respond.js</ProjectItem>
+      <ProjectItem ReplaceParameters="false" OpenInEditor="false" TargetFileName="djangoapp\static\djangoapp\scripts\respond.min.js">respond.min.js</ProjectItem>
+      <ProjectItem ReplaceParameters="false" OpenInEditor="false" TargetFileName="djangoapp\templates\djangoapp\about.html">about.html</ProjectItem>
+      <ProjectItem ReplaceParameters="false" OpenInEditor="false" TargetFileName="djangoapp\templates\djangoapp\contact.html">contact.html</ProjectItem>
+      <ProjectItem ReplaceParameters="false" OpenInEditor="false" TargetFileName="djangoapp\templates\djangoapp\index.html">index.html</ProjectItem>
+      <ProjectItem ReplaceParameters="false" OpenInEditor="false" TargetFileName="djangoapp\templates\djangoapp\layout.html">layout.html</ProjectItem>
+      <ProjectItem ReplaceParameters="false" OpenInEditor="false" TargetFileName="djangoapp\templates\djangoapp\login.html">login.html</ProjectItem>
+      <ProjectItem ReplaceParameters="false" OpenInEditor="false" TargetFileName="djangoapp\templates\djangoapp\loginpartial.html">loginpartial.html</ProjectItem>
+    </Project>
+  </TemplateContent>
+</VSTemplate>

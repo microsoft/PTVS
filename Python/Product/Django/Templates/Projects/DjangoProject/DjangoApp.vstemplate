@@ -1,11 +1,11 @@
 <VSTemplate Version="2.0.0" Type="Project" xmlns="http://schemas.microsoft.com/developer/vstemplate/2005">
   <TemplateData>
-    <Name>Django Web Project</Name>
+    <Name>Blank Django Web Project</Name>
     <Description>A project for creating a Django project</Description>
     <Icon Package="{a8637c34-aa55-46e2-973c-9c3e09afc17b}" ID="410" />
     <ProjectType>Python</ProjectType>
-    <SortOrder>62</SortOrder>
-    <NumberOfParentCategoriesToRollUp>2</NumberOfParentCategoriesToRollUp>
+    <SortOrder>72</SortOrder>
+    <NumberOfParentCategoriesToRollUp>0</NumberOfParentCategoriesToRollUp>
     <CreateNewFolder>true</CreateNewFolder>
     <DefaultName>DjangoWebProject</DefaultName>
     <ProvideDefaultName>true</ProvideDefaultName>

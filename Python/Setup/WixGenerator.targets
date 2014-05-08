@@ -22,6 +22,10 @@
       <_SourceFiles Include="@(ProjectTemplate)">
         <InstallDirectory>ProjectTemplates</InstallDirectory>
       </_SourceFiles>
+      <_SourceFiles Include="@(WebProjectTemplate)">
+        <InstallDirectory>WebProjectTemplates</InstallDirectory>
+        <IncludeInWD>false</IncludeInWD>
+      </_SourceFiles>
       <_SourceFiles Include="@(ItemTemplate)">
         <InstallDirectory>ItemTemplates</InstallDirectory>
       </_SourceFiles>

@@ -1,11 +1,11 @@
 <VSTemplate Version="2.0.0" Type="Project" xmlns="http://schemas.microsoft.com/developer/vstemplate/2005">
   <TemplateData>
-    <Name>Flask Web Project</Name>
+    <Name>Blank Flask Web Project</Name>
     <Description>A project for creating a Flask web project</Description>
     <Icon Package="{6dbd7c1e-1f1b-496d-ac7c-c55dae66c783}" ID="406" />
     <ProjectType>Python</ProjectType>
-    <SortOrder>63</SortOrder>
-    <NumberOfParentCategoriesToRollUp>2</NumberOfParentCategoriesToRollUp>
+    <SortOrder>73</SortOrder>
+    <NumberOfParentCategoriesToRollUp>0</NumberOfParentCategoriesToRollUp>
     <CreateNewFolder>true</CreateNewFolder>
     <DefaultName>FlaskWebProject</DefaultName>
     <ProvideDefaultName>true</ProvideDefaultName>

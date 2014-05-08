@@ -72,11 +72,12 @@
     </ItemTemplate>
     <ProjectTemplate Include="ProjectTemplates\Python\ConsoleAppProject.zip;
                               ProjectTemplates\Python\FromExistingCode.zip" />
-    <ProjectTemplate Include="ProjectTemplates\Python\EmptyWebProject.zip;
-                              ProjectTemplates\Python\WebProjectBottle.zip;
-                              ProjectTemplates\Python\WebProjectFlask.zip">
-      <IncludeInWD>false</IncludeInWD>
-    </ProjectTemplate>
+    <WebProjectTemplate Include="ProjectTemplates\Python\Web\EmptyWebProject.zip;
+                                 ProjectTemplates\Python\Web\StarterBottleProject.zip;
+                                 ProjectTemplates\Python\Web\StarterFlaskJadeProject.zip;
+                                 ProjectTemplates\Python\Web\StarterFlaskProject.zip;
+                                 ProjectTemplates\Python\Web\WebProjectBottle.zip;
+                                 ProjectTemplates\Python\Web\WebProjectFlask.zip" />
 
     <!-- Default Completion DB -->
     <File Include="$(SourceDir)CompletionDB\*.idb">

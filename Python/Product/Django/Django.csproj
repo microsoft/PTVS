@@ -182,11 +182,84 @@
   <ItemDefinitionGroup>
     <ZipProject>
       <Language>Python</Language>
+      <OutputSubPath>Web</OutputSubPath>
     </ZipProject>
     <ZipItem>
       <Language>Python</Language>
     </ZipItem>
   </ItemDefinitionGroup>
+  <ItemGroup>
+    <!-- Item Templates -->
+    <ZipItem Include="Templates\Files\DjangoNewAppFiles14\DjangoNewAppFiles.vstemplate">
+      <SubType>Designer</SubType>
+    </ZipItem>
+    <ZipItem Include="Templates\Files\DjangoNewAppFiles14\DjangoTemplate.html" />
+    <ZipItem Include="Templates\Files\DjangoNewAppFiles14\models.py" />
+    <ZipItem Include="Templates\Files\DjangoNewAppFiles14\tests.py" />
+    <ZipItem Include="Templates\Files\DjangoNewAppFiles14\views.py" />
+    <ZipItem Include="Templates\Files\DjangoNewAppFiles14\__init__.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Web Project Templates -->
+    <ZipProject Include="Templates\Projects\DjangoProject\settings.py" />
+    <ZipProject Include="Templates\Projects\DjangoProject\urls.py" />
+    <ZipProject Include="Templates\Projects\DjangoProject\wsgi.py" />
+    <ZipProject Include="Templates\Projects\DjangoProject\__init__.py" />
+    <ZipProject Include="Templates\Projects\DjangoProject\manage.py" />
+    <ZipProject Include="Templates\Projects\DjangoProject\DjangoApp.pyproj">
+      <SubType>Designer</SubType>
+    </ZipProject>
+    <ZipProject Include="Templates\Projects\DjangoProject\DjangoApp.vstemplate">
+      <SubType>Designer</SubType>
+    </ZipProject>
+    <ZipProject Include="Templates\Projects\StarterDjangoProject\manage.py" />
+    <ZipProject Include="Templates\Projects\StarterDjangoProject\app-__init__.py" />
+    <ZipProject Include="Templates\Projects\StarterDjangoProject\app-forms.py" />
+    <ZipProject Include="Templates\Projects\StarterDjangoProject\app-models.py" />
+    <ZipProject Include="Templates\Projects\StarterDjangoProject\app-tests.py" />
+    <ZipProject Include="Templates\Projects\StarterDjangoProject\app-views.py" />
+    <ZipProject Include="Templates\Projects\StarterDjangoProject\project-__init__.py" />
+    <ZipProject Include="Templates\Projects\StarterDjangoProject\project-settings.py" />
+    <ZipProject Include="Templates\Projects\StarterDjangoProject\project-urls.py" />
+    <ZipProject Include="Templates\Projects\StarterDjangoProject\project-wsgi.py" />
+    <ZipProject Include="Templates\Projects\StarterDjangoProject\bootstrap.css" />
+    <ZipProject Include="Templates\Projects\StarterDjangoProject\bootstrap.min.css" />
+    <ZipProject Include="Templates\Projects\StarterDjangoProject\site.css" />
+    <ZipProject Include="Templates\Projects\StarterDjangoProject\glyphicons-halflings-regular.svg" />
+    <ZipProject Include="Templates\Projects\StarterDjangoProject\bootstrap.js" />
+    <ZipProject Include="Templates\Projects\StarterDjangoProject\bootstrap.min.js" />
+    <ZipProject Include="Templates\Projects\StarterDjangoProject\jquery-1.10.2.intellisense.js" />
+    <ZipProject Include="Templates\Projects\StarterDjangoProject\jquery-1.10.2.js" />
+    <ZipProject Include="Templates\Projects\StarterDjangoProject\jquery-1.10.2.min.js" />
+    <ZipProject Include="Templates\Projects\StarterDjangoProject\jquery.validate-vsdoc.js" />
+    <ZipProject Include="Templates\Projects\StarterDjangoProject\jquery.validate.js" />
+    <ZipProject Include="Templates\Projects\StarterDjangoProject\jquery.validate.min.js" />
+    <ZipProject Include="Templates\Projects\StarterDjangoProject\jquery.validate.unobtrusive.js" />
+    <ZipProject Include="Templates\Projects\StarterDjangoProject\jquery.validate.unobtrusive.min.js" />
+    <ZipProject Include="Templates\Projects\StarterDjangoProject\modernizr-2.6.2.js" />
+    <ZipProject Include="Templates\Projects\StarterDjangoProject\respond.js" />
+    <ZipProject Include="Templates\Projects\StarterDjangoProject\respond.min.js" />
+    <ZipProject Include="Templates\Projects\StarterDjangoProject\_references.js" />
+    <ZipProject Include="Templates\Projects\StarterDjangoProject\glyphicons-halflings-regular.eot" />
+    <ZipProject Include="Templates\Projects\StarterDjangoProject\glyphicons-halflings-regular.ttf" />
+    <ZipProject Include="Templates\Projects\StarterDjangoProject\glyphicons-halflings-regular.woff" />
+    <ZipProject Include="Templates\Projects\StarterDjangoProject\jquery-1.10.2.min.map" />
+    <ZipProject Include="Templates\Projects\StarterDjangoProject\about.html" />
+    <ZipProject Include="Templates\Projects\StarterDjangoProject\contact.html" />
+    <ZipProject Include="Templates\Projects\StarterDjangoProject\index.html" />
+    <ZipProject Include="Templates\Projects\StarterDjangoProject\layout.html" />
+    <ZipProject Include="Templates\Projects\StarterDjangoProject\login.html" />
+    <ZipProject Include="Templates\Projects\StarterDjangoProject\loginpartial.html" />
+    <ZipProject Include="Templates\Projects\StarterDjangoProject\readme.txt" />
+    <ZipProject Include="Templates\Projects\StarterDjangoProject\requirements.txt" />
+    <ZipProject Include="Templates\Projects\StarterDjangoProject\StarterDjangoProject.png" />
+    <ZipProject Include="Templates\Projects\StarterDjangoProject\StarterDjangoProject.pyproj">
+      <SubType>Designer</SubType>
+    </ZipProject>
+    <ZipProject Include="Templates\Projects\StarterDjangoProject\StarterDjangoProject.vstemplate">
+      <SubType>Designer</SubType>
+    </ZipProject>
+  </ItemGroup>
   <ItemGroup>
     <Compile Include="$(BuildRoot)\Common\Product\SharedProject\SolutionListener.cs">
       <Link>Project\SolutionListener.cs</Link>
@@ -305,25 +378,6 @@
     <Resource Include="FastCgiTutorial\images\handler mappings.jpg" />
     <Resource Include="FastCgiTutorial\images\PyFastCgiMapping.png" />
     <Resource Include="FastCgiTutorial\images\AddModuleMapping.jpg" />
-    <ZipProject Include="Templates\Projects\DjangoProject\settings.py" />
-    <ZipProject Include="Templates\Projects\DjangoProject\urls.py" />
-    <ZipProject Include="Templates\Projects\DjangoProject\wsgi.py" />
-    <ZipProject Include="Templates\Projects\DjangoProject\__init__.py" />
-    <ZipItem Include="Templates\Files\DjangoNewAppFiles14\DjangoNewAppFiles.vstemplate">
-      <SubType>Designer</SubType>
-    </ZipItem>
-    <ZipItem Include="Templates\Files\DjangoNewAppFiles14\DjangoTemplate.html" />
-    <ZipItem Include="Templates\Files\DjangoNewAppFiles14\models.py" />
-    <ZipItem Include="Templates\Files\DjangoNewAppFiles14\tests.py" />
-    <ZipItem Include="Templates\Files\DjangoNewAppFiles14\views.py" />
-    <ZipItem Include="Templates\Files\DjangoNewAppFiles14\__init__.py" />
-    <ZipProject Include="Templates\Projects\DjangoProject\manage.py" />
-    <ZipProject Include="Templates\Projects\DjangoProject\DjangoApp.pyproj">
-      <SubType>Designer</SubType>
-    </ZipProject>
-    <ZipProject Include="Templates\Projects\DjangoProject\DjangoApp.vstemplate">
-      <SubType>Designer</SubType>
-    </ZipProject>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Project\DjangoPropertyPageControl.resx">
