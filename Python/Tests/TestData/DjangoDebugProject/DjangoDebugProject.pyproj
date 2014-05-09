@@ -18,7 +18,7 @@
     <RootNamespace>DjangoDebugProject</RootNamespace>
     <UseIISExpress>false</UseIISExpress>
     <IsWindowsApplication>False</IsWindowsApplication>
-    <InterpreterId>2af0f10d-7135-4994-9156-5d01c9c11b7e</InterpreterId>
+    <InterpreterId>{2af0f10d-7135-4994-9156-5d01c9c11b7e}</InterpreterId>
     <InterpreterVersion>2.7</InterpreterVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -30,14 +30,15 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="DjangoDebugProject\settings.py" />
+    <Compile Include="DjangoDebugProject\urls.py" />
+    <Compile Include="DjangoDebugProject\wsgi.py" />
+    <Compile Include="DjangoDebugProject\__init__.py" />
     <Compile Include="TestApp\models.py" />
     <Compile Include="TestApp\tests.py" />
     <Compile Include="TestApp\views.py" />
     <Compile Include="TestApp\__init__.py" />
-    <Compile Include="__init__.py" />
     <Compile Include="manage.py" />
-    <Compile Include="settings.py" />
-    <Compile Include="urls.py" />
   </ItemGroup>
   <ItemGroup>
     <WebPiReference Include="https://www.microsoft.com/web/webpi/3.0/toolsproductlist.xml%3fDjango">
@@ -47,6 +48,7 @@
     </WebPiReference>
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="DjangoDebugProject\" />
     <Folder Include="TestApp\" />
     <Folder Include="TestApp\Templates\" />
   </ItemGroup>

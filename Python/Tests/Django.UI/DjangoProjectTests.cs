@@ -94,14 +94,17 @@ namespace DjangoUITests {
                 }
 
                 using (var dis = new DefaultInterpreterSetter(envWithDjango)) {
-                    var project = app.OpenProject("TestData\\DjangoApplication.sln");
+                    var project = app.OpenProject("TestData\\DjangoApplication1\\DjangoApplication1.sln");
                     app.SolutionExplorerTreeView.SelectProject(project);
 
                     app.Dte.ExecuteCommand("Project.CollectStaticFiles");
 
                     var console = app.GetInteractiveWindow("Django Management Console - " + project.Name);
                     Assert.IsNotNull(console);
-                    console.WaitForTextEnd("0 static files copied.", "The Python REPL process has exited", ">>> ");
+
+                    console.WaitForTextEnd("The Python REPL process has exited", ">>> ");
+
+                    Assert.IsTrue(console.Text.Contains("0 static files copied"));
                 }
             }
         }
