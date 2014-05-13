@@ -15,6 +15,7 @@
   <String Id="VSPrerelease">A pre-release version of !(loc.VSProductName) was detected.  This version of Python Tools is not supported on pre-release builds of !(loc.VSProductName).  Please upgrade to !(loc.VSProductName).</String>
   <String Id="IronPythonToolsInstalled">The IronPython Tools feature of IronPython 2.7 must be uninstalled.  Python Tools replaces IronPython Tools and supports all the same features and more.</String>
   <String Id="PTVS15PerUserInstalled">Python Tools 1.5 was installed per-user.  Python Tools 1.5 must be uninstalled via Add\Remove Programs before continuing installation.</String>
+  <String Id="NetFx45NotInstalled">The Microsoft .NET Framework 4.5 is required. Please install it from http://go.microsoft.com/fwlink/?LinkId=398711</String>
   <String Id="DevEnvSetup">Registering extension in !(loc.VSProductName)...</String>
   <String Id="DevEnvSetup_Rollback">Removing extension from !(loc.VSProductName)...</String>
   <String Id="WDExpresSetup">Registering extension in !(loc.WDProductName)...</String>

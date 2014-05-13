@@ -20,6 +20,7 @@
     <PropertyRef Id="PTVS_15_PERUSER"/>
     <PropertyRef Id="IPYTOOLS_INSTALLED"/>
     <PropertyRef Id="VS2013_PRERELEASE"/>
+    <PropertyRef Id="NETFRAMEWORK45"/>
     
     <PropertyRef Id="VSINSTALLPATH"/>
     <PropertyRef Id="WDINSTALLPATH"/>
@@ -32,6 +33,7 @@
     <Condition Message="!(loc.PTVS15PerUserInstalled)">NOT PTVS_15_PERUSER OR Installed</Condition>
     <Condition Message="!(loc.IronPythonToolsInstalled)">NOT IPYTOOLS_INSTALLED OR REMOVE ~= "ALL"</Condition>
     <Condition Message="!(loc.VSPrerelease)"> NOT VS2013_PRERELEASE OR Installed </Condition>
+    <Condition Message="!(loc.NetFx45NotInstalled)"> NETFRAMEWORK45 OR Installed </Condition>
 
     <!-- At least one installation path means some version is installed. -->
     <Condition Message="!(loc.NoInstallPath)">

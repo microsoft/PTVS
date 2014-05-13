@@ -34,6 +34,10 @@
       <HintPath>WixDependencyExtension</HintPath>
       <Name>WixDependencyExtension</Name>
     </WixExtension>
+    <WixExtension Include="WixNetFxExtension">
+      <HintPath>WixNetFxExtension</HintPath>
+      <Name>WixNetFxExtension</Name>
+    </WixExtension>
     <BindInputPaths Include="$(OutDir)">
       <Visible>false</Visible>
     </BindInputPaths>
