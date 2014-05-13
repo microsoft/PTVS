@@ -131,6 +131,9 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
             return UIThread.Invoke<EnvDTE.ProjectItem>(() => {
                 var existingChild = this.NodeWithItems.FindImmediateChildByName(name);
                 if (existingChild != null) {
+                    if (existingChild.IsNonMemberItem && ErrorHandler.Succeeded(existingChild.IncludeInProject(false))) {
+                        return existingChild.GetAutomationObject() as ProjectItem;
+                    }
                     throw new ArgumentException(String.Format(CultureInfo.CurrentCulture, "Folder already exists with the name '{0}'", name));
                 }
 
