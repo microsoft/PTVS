@@ -9,7 +9,6 @@ def home():
         'index.jade',
         title = 'Home Page',
         year = datetime.now().year,
-        content = 'hello template'
     )
 
 @app.route('/contact')
