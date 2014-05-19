@@ -41,7 +41,10 @@ try:
     os.chdir(setuptools_temp_dir)
     print('Downloading setuptools from ' + SETUPTOOLS_SOURCE)
     sys.stdout.flush()
-    setuptools_package, _ = urlretrieve(SETUPTOOLS_SOURCE, 'setuptools.tar.gz')
+    if os.path.exists('setuptools.tar.gz'):
+        setuptools_package = 'setuptools.tar.gz'
+    else:
+        setuptools_package, _ = urlretrieve(SETUPTOOLS_SOURCE, 'setuptools.tar.gz')
 
     package = tarfile.open(setuptools_package)
     try:
@@ -63,7 +66,10 @@ try:
     os.chdir(pip_temp_dir)
     print('Downloading pip from ' + PIP_SOURCE)
     sys.stdout.flush()
-    pip_package, _ = urlretrieve(PIP_SOURCE, 'pip.tar.gz')
+    if os.path.exists('pip.tar.gz'):
+        pip_package = 'pip.tar.gz'
+    else:
+        pip_package, _ = urlretrieve(PIP_SOURCE, 'pip.tar.gz')
 
     package = tarfile.open(pip_package)
     try:

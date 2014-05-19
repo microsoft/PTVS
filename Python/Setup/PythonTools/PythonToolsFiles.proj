@@ -67,9 +67,15 @@
                            ItemTemplates\Python\TextFile.zip" />
     <ItemTemplate Include="ItemTemplates\Python\HTMLFile.zip;
                            ItemTemplates\Python\JavaScript.zip;
-                           ItemTemplates\Python\Stylesheet.zip">
+                           ItemTemplates\Python\Stylesheet.zip;
+                           ItemTemplates\Python\AzureCSWebRole.zip">
       <IncludeInWD>false</IncludeInWD>
     </ItemTemplate>
+    <ItemTemplate Condition="$(VSTarget) != '10.0'"
+                  Include="ItemTemplates\Python\AzureCSWorkerRole.zip">
+      <IncludeInWD>false</IncludeInWD>
+    </ItemTemplate>
+    
     <ProjectTemplate Include="ProjectTemplates\Python\ConsoleAppProject.zip;
                               ProjectTemplates\Python\FromExistingCode.zip" />
     <WebProjectTemplate Include="ProjectTemplates\Python\Web\EmptyWebProject.zip;
@@ -78,6 +84,8 @@
                                  ProjectTemplates\Python\Web\StarterFlaskProject.zip;
                                  ProjectTemplates\Python\Web\WebProjectBottle.zip;
                                  ProjectTemplates\Python\Web\WebProjectFlask.zip" />
+    <WebProjectTemplate Condition="$(VSTarget) != '10.0'"
+                        Include="ProjectTemplates\Python\Web\WorkerRoleProject.zip" />
 
     <!-- Default Completion DB -->
     <File Include="$(SourceDir)CompletionDB\*.idb">
@@ -88,6 +96,7 @@
     <File Include="Microsoft.PythonTools.BuildTasks.dll" />
     <MSBuildFile Include="Microsoft.PythonTools.targets;
                           Microsoft.PythonTools.Web.targets;
+                          Microsoft.PythonTools.Worker.targets;
                           Microsoft.PythonTools.Bottle.targets;
                           Microsoft.PythonTools.Flask.targets;
                           wfastcgi.py;
@@ -95,12 +104,7 @@
                           ptvs_virtualenv_proxy.py;
                           Microsoft.PythonTools.WebRole.dll;
                           Microsoft.PythonTools.AzureSetup.exe;
-                          Microsoft.PythonTools.AzureSetup.exe.config;
-                          WebpiCmdLine\Microsoft.Web.Deployment.dll;
-                          WebpiCmdLine\Microsoft.Web.PlatformInstaller.dll;
-                          WebpiCmdLine\Microsoft.Web.PlatformInstaller.UI.dll;
-                          WebpiCmdLine\WebPICmdLine.exe;
-                          WebpiCmdLine\WebPICmdLine.exe.config" />
+                          Microsoft.PythonTools.AzureSetup.exe.config" />
     
     <!-- Mixed-mode Debugging -->
     <File Condition="$(VSTarget) != '10.0'"

@@ -15,28 +15,27 @@
 extern alias analysis;
 extern alias util;
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Net.NetworkInformation;
+using System.Text.RegularExpressions;
 using System.Threading;
+using EnvDTE;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project;
 using Microsoft.PythonTools.Project.Web;
 using Microsoft.TC.TestHostAdapters;
-using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
-using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools;
-using Microsoft.VisualStudioTools.Project;
 using TestUtilities;
 using TestUtilities.Python;
 using TestUtilities.UI;
 using TestUtilities.UI.Python;
 using InterpreterExt = analysis::Microsoft.PythonTools.Interpreter.PythonInterpreterFactoryExtensions;
+using Process = System.Diagnostics.Process;
+using Thread = System.Threading.Thread;
 using UIThread = util::Microsoft.VisualStudioTools.UIThread;
 
 namespace PythonToolsUITests {
@@ -125,7 +124,7 @@ namespace PythonToolsUITests {
                     "WebProjectStaticUri"
                 );
 
-                var proj = project.GetCommonProject() ;
+                var proj = project.GetCommonProject();
                 Assert.IsNotNull(proj);
 
                 UIThread.Invoke(() => {
@@ -141,7 +140,7 @@ namespace PythonToolsUITests {
                 });
                 app.ExecuteCommand("Build.RebuildSolution");
                 app.WaitForOutputWindowText("Build", "1 succeeded");
-                
+
                 var webConfig = File.ReadAllText(Path.Combine(Path.GetDirectoryName(project.FullName), "web.config"));
                 if (!webConfig.Contains(@"<add input=""{REQUEST_URI}"" pattern=""^/static/.*$"" ignoreCase=""true"" negate=""true"" />")) {
                     Assert.Fail(string.Format("Did not find rewrite condition in:{0}{0}{1}",
@@ -155,6 +154,136 @@ namespace PythonToolsUITests {
                 });
                 app.ExecuteCommand("Build.RebuildSolution");
                 app.WaitForOutputWindowText("Build", "1 failed");
+            }
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void WebProjectBuildWarnings() {
+            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte))
+            using (app.SelectDefaultInterpreter(PythonPaths.Python33 ?? PythonPaths.Python33_x64)) {
+                var project = app.CreateProject(
+                    PythonVisualStudioApp.TemplateLanguageName,
+                    PythonVisualStudioApp.EmptyWebProjectTemplate,
+                    TestData.GetTempPath(),
+                    "WebProjectBuildWarnings"
+                );
+
+                var proj = project.GetCommonProject();
+                Assert.IsNotNull(proj);
+
+                for (int iteration = 0; iteration <= 2; ++iteration) {
+                    var warnings = UIThread.Invoke(() => {
+                        var buildPane = app.GetOutputWindow("Build");
+                        buildPane.Clear();
+
+                        project.DTE.Solution.SolutionBuild.Clean(true);
+                        project.DTE.Solution.SolutionBuild.Build(true);
+
+                        var text = app.GetOutputWindowText("Build");
+                        return text.Split('\r', '\n')
+                            .Select(s => Regex.Match(s, @"warning\s*:\s*(?<msg>.+)"))
+                            .Where(m => m.Success)
+                            .Select(m => m.Groups["msg"].Value)
+                            .ToList();
+                    });
+
+                    Console.WriteLine("Warnings:{0}{1}", Environment.NewLine, string.Join(Environment.NewLine, warnings));
+                    if (iteration < 2) {
+                        Assert.IsNotNull(
+                            warnings.FirstOrDefault(s => Regex.IsMatch(s, @"Python( 64-bit)? 3\.3 is not natively supported.+")),
+                            "Missing \"not natively supported\" warning"
+                        );
+                    } else {
+                        // Third time through, we've fixed this warning.
+                        Assert.IsNull(
+                            warnings.FirstOrDefault(s => Regex.IsMatch(s, @"Python( 64-bit)? 3\.3 is not natively supported.+")),
+                            "Still recieved \"not natively supported\" warning"
+                        );
+                    }
+
+                    if (iteration < 1) {
+                        Assert.IsNotNull(
+                            warnings.FirstOrDefault(s => Regex.IsMatch(s, "Using old configuration tools.+")),
+                            "Missing \"old configuration tools\" warning"
+                        );
+                    } else {
+                        // Second time through, we've fixed this warning.
+                        Assert.IsNull(
+                            warnings.FirstOrDefault(s => Regex.IsMatch(s, "Using old configuration tools.+")),
+                            "Still received \"old configuration tools\" warning"
+                        );
+                    }
+
+
+                    switch (iteration) {
+                        case 0:
+                            app.AddItem(project, PythonVisualStudioApp.TemplateLanguageName, PythonVisualStudioApp.WebRoleSupportTemplate, "bin");
+                            break;
+                        case 1:
+                            var model = app.GetService<IComponentModel>(typeof(SComponentModel));
+                            var interpreterService = model.GetService<IInterpreterOptionsService>();
+                            var newInterpreter = interpreterService.FindInterpreter(PythonPaths.CPythonGuid, "3.4")
+                                ?? interpreterService.FindInterpreter(PythonPaths.CPythonGuid, "2.7");
+                            Assert.IsNotNull(newInterpreter);
+                            interpreterService.DefaultInterpreter = newInterpreter;
+                            break;
+                    }
+                }
+            }
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void WebProjectAddSupportFiles() {
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.CreateProject(
+                    PythonVisualStudioApp.TemplateLanguageName,
+                    PythonVisualStudioApp.EmptyWebProjectTemplate,
+                    TestData.GetTempPath(),
+                    "WebProjectAddSupportFiles"
+                );
+
+                var proj = project.GetCommonProject();
+                Assert.IsNotNull(proj);
+
+                var previousItems = project.ProjectItems.Cast<ProjectItem>().Select(p => p.Name).ToSet(StringComparer.CurrentCultureIgnoreCase);
+
+                // Add the items
+                app.AddItem(project, PythonVisualStudioApp.TemplateLanguageName, PythonVisualStudioApp.WebRoleSupportTemplate, "bin");
+
+                var newItems = project.ProjectItems.Cast<ProjectItem>().Where(p => !previousItems.Contains(p.Name)).ToList();
+                AssertUtil.ContainsExactly(newItems.Select(i => i.Name), "bin");
+
+                var children = newItems[0].ProjectItems.Cast<ProjectItem>().Select(i => i.Name).ToSet(StringComparer.CurrentCultureIgnoreCase);
+                AssertUtil.ContainsExactly(children, "ConfigureCloudService.ps1", "ps.cmd", "Readme.txt");
+            }
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void WorkerProjectAddSupportFiles() {
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.CreateProject(
+                    PythonVisualStudioApp.TemplateLanguageName,
+                    PythonVisualStudioApp.PythonApplicationTemplate,
+                    TestData.GetTempPath(),
+                    "WorkerProjectAddSupportFiles"
+                );
+
+                // Ensure the bin directory already exists
+                Directory.CreateDirectory(Path.Combine(Path.GetDirectoryName(project.FullName), "bin"));
+
+                var previousItems = project.ProjectItems.Cast<ProjectItem>().Select(p => p.Name).ToSet(StringComparer.CurrentCultureIgnoreCase);
+
+                // Add the items
+                app.AddItem(project, PythonVisualStudioApp.TemplateLanguageName, PythonVisualStudioApp.WorkerRoleSupportTemplate, "bin");
+
+                var newItems = project.ProjectItems.Cast<ProjectItem>().Where(p => !previousItems.Contains(p.Name)).ToList();
+                AssertUtil.ContainsExactly(newItems.Select(i => i.Name), "bin");
+
+                var children = newItems[0].ProjectItems.Cast<ProjectItem>().Select(i => i.Name).ToSet(StringComparer.CurrentCultureIgnoreCase);
+                AssertUtil.ContainsExactly(children, "ConfigureCloudService.ps1", "LaunchWorker.ps1", "ps.cmd", "Readme.txt");
             }
         }
 
@@ -227,7 +356,7 @@ namespace PythonToolsUITests {
             EndToEndLog("Starting debugging");
             app.Dte.Debugger.Go(false);
             EndToEndLog("Debugging started");
-            
+
             string text = string.Empty;
             int retries;
             try {

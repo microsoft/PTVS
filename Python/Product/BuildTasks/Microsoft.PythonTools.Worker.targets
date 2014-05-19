@@ -1,0 +1,48 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<!--
+  Copyright (c) Microsoft Corporation.
+
+  This source code is subject to terms and conditions of the Apache License, Version 2.0. A
+  copy of the license can be found in the License.html file at the root of this distribution. If
+  you cannot locate the Apache License, Version 2.0, please send an email to
+  vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound
+  by the terms of the Apache License, Version 2.0.
+ 
+  You must not remove this notice, or any other, from this software.
+-->
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <!-- *************************************************************************
+       Azure worker-role publishing support.
+  -->
+  <PropertyGroup>
+    <RoleType Condition="'$(RoleType)' == ''">Worker</RoleType>
+    <_IgnorePythonWebCommands>true</_IgnorePythonWebCommands>
+    <_IgnorePythonWebConfig>true</_IgnorePythonWebConfig>
+    <_RegenerateWebConfig>false</_RegenerateWebConfig>
+  </PropertyGroup>
+
+  <Import Project="Microsoft.PythonTools.Web.targets"/>
+
+  <!-- Worker role requires more settings in AzureSetup.cfg -->
+  <PropertyGroup>
+    <CreatePythonAzureSetupConfigDependsOn>
+      _AddWorkerRoleToAzureSetupConfig;
+      $(CreatePythonAzureSetupConfigDependsOn)
+    </CreatePythonAzureSetupConfigDependsOn>
+  </PropertyGroup>
+
+  <Target Name="_AddWorkerRoleToAzureSetupConfig" Condition="$(RoleType) == 'Worker'">
+    <PropertyGroup>
+      <_CloudServiceAzureSetupConfig>
+        <![CDATA[
+$(_CloudServiceAzureSetupConfig)
+worker_command="$(StartupFile)" $(CommandLineArguments)
+worker_directory=$(WorkingDirectory)
+        ]]>
+      </_CloudServiceAzureSetupConfig>
+    </PropertyGroup>
+  </Target>
+  
+  <!-- TargetPath has to include our project directory -->
+  <Target Name="GetTargetPath" Returns="$(MSBuildProjectDirectory)\" />
+</Project>

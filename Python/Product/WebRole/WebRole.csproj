@@ -45,6 +45,7 @@
   <PropertyGroup>
     <!-- This typically defaults to True, but unless we're going to completely
          sign this assembly, we'd prefer it wasn't delay signed. -->
+    <SignAssembly>false</SignAssembly>
     <SignAssembly Condition="'$(ReleaseBuild)' != ''">$(ReleaseBuild)</SignAssembly>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">

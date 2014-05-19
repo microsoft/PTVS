@@ -1,0 +1,25 @@
+<VSTemplate Version="2.0.0" Type="Project" xmlns="http://schemas.microsoft.com/developer/vstemplate/2005">
+  <TemplateData>
+    <Name>Empty Worker Project</Name>
+    <Description>A project for creating a worker role for an Azure Cloud Service.</Description>
+    <Icon Package="{6dbd7c1e-1f1b-496d-ac7c-c55dae66c783}" ID="408" />
+    <ProjectType>Python</ProjectType>
+    <SortOrder>65</SortOrder>
+    <NumberOfParentCategoriesToRollUp>1</NumberOfParentCategoriesToRollUp>
+    <CreateNewFolder>true</CreateNewFolder>
+    <DefaultName>WorkerProject</DefaultName>
+    <ProvideDefaultName>true</ProvideDefaultName>
+  </TemplateData>
+  <TemplateContent>
+    <Project File="WorkerRoleProject.pyproj" ReplaceParameters="true">
+      <ProjectItem>worker.py</ProjectItem>
+      <ProjectItem>requirements.txt</ProjectItem>
+      <ProjectItem OpenInEditor="true">readme.txt</ProjectItem>
+      <Folder Name="Bin">
+        <ProjectItem>ConfigureCloudService.ps1</ProjectItem>
+        <ProjectItem>LaunchWorker.ps1</ProjectItem>
+        <ProjectItem>ps.cmd</ProjectItem>
+      </Folder>
+    </Project>
+  </TemplateContent>
+</VSTemplate>

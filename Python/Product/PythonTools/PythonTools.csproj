@@ -911,6 +911,29 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
+    <SharedTemplateFile Include="Templates\SharedFiles\ConfigureCloudService.ps1">
+      <IncludeInWebRoleTemplates>true</IncludeInWebRoleTemplates>
+      <IncludeInWorkerRoleTemplates>true</IncludeInWorkerRoleTemplates>
+    </SharedTemplateFile>
+    <SharedTemplateFile Include="Templates\SharedFiles\ps.cmd">
+      <IncludeInWebRoleTemplates>true</IncludeInWebRoleTemplates>
+      <IncludeInWorkerRoleTemplates>true</IncludeInWorkerRoleTemplates>
+    </SharedTemplateFile>
+    <SharedTemplateFile Include="Templates\SharedFiles\LaunchWorker.ps1">
+      <IncludeInWebRoleTemplates>false</IncludeInWebRoleTemplates>
+      <IncludeInWorkerRoleTemplates>true</IncludeInWorkerRoleTemplates>
+    </SharedTemplateFile>
+    <ZipProject Include="Templates\Projects\WorkerRoleProject\Readme.txt" />
+    <ZipProject Include="Templates\Projects\WorkerRoleProject\requirements.txt" />
+    <ZipProject Include="Templates\Projects\WorkerRoleProject\WorkerRoleProject.vstemplate" />
+    <ZipProject Include="Templates\Projects\WorkerRoleProject\worker.py" />
+    <ZipProject Include="Templates\Projects\WorkerRoleProject\WorkerRoleProject.pyproj" />
+    <ZipItem Include="Templates\Files\AzureCSWorkerRole\AzureCSWorkerRole.vstemplate" />
+    <ZipItem Include="Templates\Files\AzureCSWebRole\AzureCSWebRole.vstemplate">
+      <SubType>Designer</SubType>
+    </ZipItem>
+    <ZipItem Include="Templates\Files\AzureCSWebRole\WebRoleConfiguration.txt" />
+    <ZipItem Include="Templates\Files\AzureCSWorkerRole\WorkerRoleConfiguration.txt" />
     <Content Include="visualstudio_py_debugger.py">
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -1203,6 +1226,56 @@
       <VSIXSourceItem Include="@(PTVSDFiles)">
         <VSIXSubPath>ptvsd</VSIXSubPath>
       </VSIXSourceItem>
+    </ItemGroup>
+  </Target>
+  <Target Name="_CalculateSharedTemplateFiles">
+    <ItemGroup>
+      <!-- Currently no web projects include the deployment files. Users can
+           add them manually, or when the Cloud project notification is added
+           we will do it automatically.
+      <_Templates Include="">
+        <IsWeb>true</IsWeb>
+        <IsWorker>false</IsWorker>
+        <Type>Project</Type>
+      </_Templates>-->
+      <_Templates Include="Templates\Files\AzureCSWebRole">
+        <IsWeb>true</IsWeb>
+        <IsWorker>false</IsWorker>
+        <Type>Item</Type>
+      </_Templates>
+      <_Templates Include="Templates\Projects\WorkerRoleProject">
+        <IsWeb>false</IsWeb>
+        <IsWorker>true</IsWorker>
+        <Type>Project</Type>
+      </_Templates>
+      <_Templates Include="Templates\Files\AzureCSWorkerRole">
+        <IsWeb>false</IsWeb>
+        <IsWorker>true</IsWorker>
+        <Type>Item</Type>
+      </_Templates>
+    </ItemGroup>
+    <ItemGroup>
+      <_SharedTemplateFiles Include="@(_Templates)">
+        <SourceFile>%(SharedTemplateFile.FullPath)</SourceFile>
+        <IncludeInWeb Condition="%(SharedTemplateFile.IncludeInWebRoleTemplates) != ''">%(SharedTemplateFile.IncludeInWebRoleTemplates)</IncludeInWeb>
+        <IncludeInWorker Condition="%(SharedTemplateFile.IncludeInWorkerRoleTemplates) != ''">%(SharedTemplateFile.IncludeInWorkerRoleTemplates)</IncludeInWorker>
+        <TargetFileName>%(SharedTemplateFile.Filename)%(SharedTemplateFile.Extension)</TargetFileName>
+      </_SharedTemplateFiles>
+      <SharedTemplateFiles Include="%(_SharedTemplateFiles.Identity)\%(_SharedTemplateFiles.TargetFileName)" Condition="(%(_SharedTemplateFiles.IsWeb) and %(_SharedTemplateFiles.IncludeInWeb)) or (%(_SharedTemplateFiles.IsWorker) and %(_SharedTemplateFiles.IncludeInWorker))">
+        <SourceFile>%(_SharedTemplateFiles.SourceFile)</SourceFile>
+        <Type>%(_SharedTemplateFiles.Type)</Type>
+      </SharedTemplateFiles>
+    </ItemGroup>
+  </Target>
+  <Target Name="_CopySharedTemplateFiles" BeforeTargets="GetZipFilesFromVSTemplates" Inputs="%(SharedTemplateFiles.SourceFile)" Outputs="@(SharedTemplateFiles)">
+    <Copy SourceFiles="%(SharedTemplateFiles.SourceFile)" DestinationFiles="%(SharedTemplateFiles.FullPath)" OverwriteReadOnlyFiles="true">
+      <Output TaskParameter="CopiedFiles" ItemName="FileWrites" />
+    </Copy>
+  </Target>
+  <Target Name="CopySharedTemplateFiles" BeforeTargets="GetZipFilesFromVSTemplates" DependsOnTargets="_CalculateSharedTemplateFiles;_CopySharedTemplateFiles">
+    <ItemGroup>
+      <ZipProject Include="%(SharedTemplateFiles.FullPath)" Condition="%(SharedTemplateFiles.Type) == 'Project'" />
+      <ZipItem Include="%(SharedTemplateFiles.FullPath)" Condition="%(SharedTemplateFiles.Type) == 'Item'" />
     </ItemGroup>
   </Target>
 </Project>

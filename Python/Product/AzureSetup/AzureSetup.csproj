@@ -33,7 +33,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Microsoft.PythonTools.AzureSetup</RootNamespace>
     <AssemblyName>Microsoft.PythonTools.AzureSetup</AssemblyName>
-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <SccProjectName>SAK</SccProjectName>
     <SccLocalPath>SAK</SccLocalPath>
@@ -45,6 +45,7 @@
   <PropertyGroup>
     <!-- This typically defaults to True, but unless we're going to completely
          sign this assembly, we'd prefer it wasn't delay signed. -->
+    <SignAssembly>false</SignAssembly>
     <SignAssembly Condition="'$(ReleaseBuild)' != ''">$(ReleaseBuild)</SignAssembly>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">

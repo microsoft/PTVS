@@ -264,6 +264,15 @@ namespace Microsoft.PythonTools.Project {
             return base.QueryService(ref guidService, out result);
         }
 
+        public override int GenerateUniqueItemName(uint itemIdLoc, string ext, string suggestedRoot, out string itemName) {
+            if ("bin".Equals(suggestedRoot, StringComparison.OrdinalIgnoreCase) && string.IsNullOrEmpty(ext)) {
+                // This item should not have a number added to the name.
+                itemName = (suggestedRoot ?? "") + (ext ?? "").Trim();
+                return VSConstants.S_OK;
+            }
+            return base.GenerateUniqueItemName(itemIdLoc, ext, suggestedRoot, out itemName);
+        }
+
         protected override void Reload() {
             _searchPathContainer = new CommonSearchPathContainerNode(this);
             this.AddChild(_searchPathContainer);

@@ -16,6 +16,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Net;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
@@ -25,7 +27,7 @@ using Microsoft.Win32;
 
 namespace AzureSetup {
     class Program {
-        static readonly string[] SystemPackages = new [] {
+        static readonly string[] SystemPackages = new[] {
             "IIS-WebServerRole",
             "IIS-WebServer",
             "IIS-CommonHttpFeatures",
@@ -48,7 +50,7 @@ namespace AzureSetup {
             "WAS-ConfigurationAPI",
             "IIS-CGI"
         };
-        
+
         static void Main(string[] args) {
             try {
                 ConfigureFastCgi();
@@ -88,9 +90,9 @@ namespace AzureSetup {
             // If dism.exe exists, we will use that; otherwise, we will fall
             // back on pkgmgr.exe. The feature names are identical between the
             // two programs, though the command lines differ slightly.
-            var dismPath = Path.Combine(Environment.GetEnvironmentVariable("windir"), "System32\\dism.exe");
-            var pkgMgrPath = Path.Combine(Environment.GetEnvironmentVariable("windir"), "System32\\PkgMgr.exe");
-            
+            var dismPath = Path.Combine(Environment.GetEnvironmentVariable("windir"), "System32", "dism.exe");
+            var pkgMgrPath = Path.Combine(Environment.GetEnvironmentVariable("windir"), "System32", "PkgMgr.exe");
+
             // enable FastCGI in IIS
             if (File.Exists(dismPath)) {
                 psi.FileName = dismPath;
@@ -147,10 +149,9 @@ namespace AzureSetup {
 
             string interpreter = null, interpreterEmulated = null;
             if (physicalDir != null) {
-                string fastCgiPath = "\"" + Path.Combine(physicalDir, "bin\\wfastcgi.py") + "\"";
-                string webpiCmdLinePath = Path.Combine(physicalDir, "bin\\WebPICmdLine.exe");
+                string fastCgiPath = "\"" + Path.Combine(physicalDir, "bin", "wfastcgi.py") + "\"";
                 string settingsName = null, pythonPath = null;
-                string setupCfg = Path.Combine(physicalDir, "bin\\AzureSetup.cfg");
+                string setupCfg = Path.Combine(physicalDir, "bin", "AzureSetup.cfg");
                 List<string> webpiInstalls = new List<string>();
                 if (File.Exists(setupCfg)) {
                     try {
@@ -204,7 +205,7 @@ namespace AzureSetup {
                     }
                 }
 
-                InstallWebPiProducts(webpiCmdLinePath, webpiInstalls);
+                InstallWebPiProducts(physicalDir, webpiInstalls);
 
                 if (interpreterEmulated != null && IsEmulated()) {
                     interpreter = interpreterEmulated;
@@ -214,7 +215,8 @@ namespace AzureSetup {
                     // TODO: Better discovery....
                     interpreter = Path.Combine(
                         Environment.GetEnvironmentVariable("SystemDrive") + "\\",
-                        "Python27\\python.exe"
+                        "Python27",
+                        "python.exe"
                     );
                 }
 
@@ -237,10 +239,62 @@ namespace AzureSetup {
             }
         }
 
+        private static string GetWebPICommand(string physicalDir) {
+            string webpiSetup, webpiCmdName, webpiMsiName;
+            if (Environment.Is64BitOperatingSystem) {
+                webpiSetup = "https://go.microsoft.com/fwlink/?linkid=226239";
+                webpiCmdName = "webpicmd-x64.exe";
+                webpiMsiName = "WebPlatformInstaller_amd64_en-US.msi";
+            } else {
+                webpiSetup = "https://go.microsoft.com/fwlink/?linkid=226238";
+                webpiCmdName = "webpicmd.exe";
+                webpiMsiName = "WebPlatformInstaller_x86_en-US.msi";
+            }
+
+            string path = Path.Combine(physicalDir, "bin", "WebPICmdLine.exe");
+            if (File.Exists(path)) {
+                return path;
+            }
+            path = Path.Combine(physicalDir, "bin", webpiCmdName);
+
+            path = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
+                "Microsoft",
+                "Web Platform Installer",
+                webpiCmdName
+            );
+            if (File.Exists(path)) {
+                return path;
+            }
+
+            var webpiMsi = Path.Combine(physicalDir, webpiMsiName);
+            if (!File.Exists(webpiMsi)) {
+                webpiMsi = Path.Combine(physicalDir, "bin", webpiMsiName);
+                if (!File.Exists(webpiMsi)) {
+                    var req = WebRequest.Create(webpiSetup);
+                    var resp = req.GetResponse();
+                    var stream = resp.GetResponseStream();
+                    using (var msi = File.OpenWrite(webpiMsi)) {
+                        var buffer = new byte[4096];
+                        int bytesRead;
+                        while ((bytesRead = stream.Read(buffer, 0, buffer.Length)) > 0) {
+                            msi.Write(buffer, 0, bytesRead);
+                        }
+                    }
+                }
+            }
+
+            using (var p = Process.Start("msiexec", "/quiet /i \"" + webpiMsi + "\" ADDLOCAL=ALL")) {
+                p.WaitForExit();
+            }
+
+            return File.Exists(path) ? path : null;
+        }
+
         private static void UpdateIISAppCmd(string interpreter, string physicalDir, bool isDebug, string fastCgiPath) {
             var appCmd = Environment.GetEnvironmentVariable("APPCMD");
             if (String.IsNullOrEmpty(appCmd)) {
-                appCmd = Path.Combine(Environment.GetEnvironmentVariable("WINDIR"), "System32\\inetsrv\\appcmd.exe");
+                appCmd = Path.Combine(Environment.GetEnvironmentVariable("WINDIR"), "System32", "inetsrv", "appcmd.exe");
             }
             interpreter = Escape(interpreter);
             fastCgiPath = Escape(fastCgiPath);
@@ -343,9 +397,16 @@ namespace AzureSetup {
             File.WriteAllText(webConfig, newText);
         }
 
-        private static void InstallWebPiProducts(string webpiCmdLinePath, List<string> webpiInstalls) {
-            if (IsEmulated()) {
+        private static void InstallWebPiProducts(string physicalDir, List<string> webpiInstalls) {
+            if (IsEmulated() || webpiInstalls.Count == 0) {
                 // Don't run installs in the emulator
+                return;
+            }
+
+            // Get WebPI. This may download and install it if it is not already
+            // available.
+            string webpiCmdLinePath = GetWebPICommand(physicalDir);
+            if (!File.Exists(webpiCmdLinePath)) {
                 return;
             }
 
@@ -376,31 +437,19 @@ namespace AzureSetup {
                 key.SetValue(localAppData, dir);
                 try {
 
-                    // setup any installed products via WebPI...                
+                    // setup any installed products via WebPI...
                     foreach (var install in webpiInstalls) {
                         var paths = install.Split(new[] { ';' }, 2);
                         if (paths.Length == 2) {
-                            var psi = new ProcessStartInfo(
+                            using (var p = Process.Start(
                                 webpiCmdLinePath,
+                                "/Install " +
                                 "/AcceptEula " +
                                 "/Feeds:\"" + paths[0] + "\" " +
                                 "/Products:" + paths[1]
-                            );
-                            psi.UseShellExecute = false;
-                            psi.RedirectStandardOutput = true;
-                            psi.RedirectStandardError = true;
-                            var args = psi.Arguments;
-                            var process = Process.Start(psi);
-                            string output = "";
-                            process.OutputDataReceived += (sender, oargs) => {
-                                output += oargs.Data + Environment.NewLine;
-                            };
-                            process.ErrorDataReceived += (sender, oargs) => {
-                                output += oargs.Data + Environment.NewLine;
-                            };
-                            process.BeginErrorReadLine();
-                            process.BeginOutputReadLine();
-                            process.WaitForExit();
+                            )) {
+                                p.WaitForExit();
+                            }
                         }
                     }
                 } finally {

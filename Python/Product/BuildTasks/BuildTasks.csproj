@@ -77,8 +77,8 @@
     <Content Include="TestTargets\README.txt" />
     <Content Include="Microsoft.PythonTools.Web.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <SubType>Designer</SubType>
       <IncludeInVsix>true</IncludeInVsix>
+      <SubType>Designer</SubType>
     </Content>
     <Content Include="Microsoft.PythonTools.Flask.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -100,11 +100,17 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVsix>true</IncludeInVsix>
     </Content>
+    <Content Include="Microsoft.PythonTools.Worker.targets">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVsix>true</IncludeInVsix>
+      <SubType>Designer</SubType>
+    </Content>
     <None Include="TestTargets\Microsoft.PythonTools.Bottle.targets" />
     <None Include="TestTargets\Microsoft.PythonTools.Flask.targets" />
     <None Include="TestTargets\Microsoft.PythonTools.Django.targets" />
     <None Include="TestTargets\Microsoft.PythonTools.targets" />
     <None Include="TestTargets\Microsoft.PythonTools.Web.targets" />
+    <None Include="TestTargets\Microsoft.PythonTools.Worker.targets" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Analysis\Analysis.csproj">
@@ -115,8 +121,6 @@
       <Project>{815db0cd-c0dd-4997-b43c-abee4dbeffe7}</Project>
       <Name>Microsoft.PythonTools.VSInterpreters</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\AzureSetup\AzureSetup.csproj">
       <Project>{b6905758-81d9-4287-be59-5d4e2f336414}</Project>
       <Name>AzureSetup</Name>

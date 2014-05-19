@@ -109,7 +109,16 @@ namespace Microsoft.PythonTools.Project {
         [Browsable(false)]
         public uint TargetFramework {
             get {
-                return 0x40000;
+                // Cloud Service projects inspect this value to determine which
+                // OS to deploy.
+                switch(UIThread.Invoke(() => Node.GetProjectProperty("TargetFrameworkVersion"))) {
+                    case "v4.0":
+                        return 0x40000;
+                    case "v4.5":
+                        return 0x40005;
+                    default:
+                        return 0x40105;
+                }
             }
         }
     }

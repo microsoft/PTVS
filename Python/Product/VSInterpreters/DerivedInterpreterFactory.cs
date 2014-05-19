@@ -17,10 +17,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 
 namespace Microsoft.PythonTools.Interpreter {
     class DerivedInterpreterFactory : PythonInterpreterFactoryWithDatabase {
         readonly PythonInterpreterFactoryWithDatabase _base;
+        bool _deferRefreshIsCurrent;
 
         string _description;
 
@@ -49,6 +51,13 @@ namespace Microsoft.PythonTools.Interpreter {
             _base.NewDatabaseAvailable += Base_NewDatabaseAvailable;
 
             _description = options.Description;
+
+            if (Volatile.Read(ref _deferRefreshIsCurrent)) {
+                // This rare race condition is due to a design flaw that is in
+                // shipped public API and cannot be fixed without breaking
+                // compatibility with 3rd parties.
+                RefreshIsCurrent();
+            }
         }
 
         private void Base_NewDatabaseAvailable(object sender, EventArgs e) {
@@ -212,6 +221,13 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         public override void RefreshIsCurrent() {
+            if (_base == null) {
+                // This rare race condition is due to a design flaw that is in
+                // shipped public API and cannot be fixed without breaking
+                // compatibility with 3rd parties.
+                Volatile.Write(ref _deferRefreshIsCurrent, true);
+                return;
+            }
             _base.RefreshIsCurrent();
             base.RefreshIsCurrent();
         }

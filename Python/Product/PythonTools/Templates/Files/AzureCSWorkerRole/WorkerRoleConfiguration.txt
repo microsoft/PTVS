@@ -1,0 +1,25 @@
+﻿To finish configuring your woker role, ensure the following items have been
+added to your ServiceDefinition.csdef file.
+
+    <Startup>
+      <Task commandLine="bin\ps.cmd ConfigureCloudService.ps1" executionContext="elevated" taskType="simple">
+        <Environment>
+          <Variable name="EMULATED">
+            <RoleInstanceValue xpath="/RoleEnvironment/Deployment/@emulated"/>
+          </Variable>
+        </Environment>
+      </Task>
+    </Startup>
+    <Runtime>
+      <Environment>
+        <Variable name="EMULATED">
+          <RoleInstanceValue xpath="/RoleEnvironment/Deployment/@emulated"/>
+        </Variable>
+      </Environment>
+      <EntryPoint>
+        <ProgramEntryPoint commandLine="bin\ps.cmd LaunchWorker.ps1" setReadyOnProcessStart="true" />
+      </EntryPoint>
+    </Runtime>
+
+
+This file can be safely deleted once your configuration has been updated.

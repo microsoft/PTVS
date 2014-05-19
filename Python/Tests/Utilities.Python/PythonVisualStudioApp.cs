@@ -87,7 +87,11 @@ namespace TestUtilities.UI.Python {
         public const string BottleWebProjectTemplate = "WebProjectBottle.zip";
         public const string FlaskWebProjectTemplate = "WebProjectFlask.zip";
         public const string DjangoWebProjectTemplate = "DjangoProject.zip";
+        public const string WorkerRoleProjectTemplate = "WorkerRoleProject.zip";
+        
         public const string EmptyFileTemplate = "EmptyPyFile.zip";
+        public const string WebRoleSupportTemplate = "AzureCSWebRole.zip";
+        public const string WorkerRoleSupportTemplate = "AzureCSWorkerRole.zip";
 
         /// <summary>
         /// Opens and activates the solution explorer window.

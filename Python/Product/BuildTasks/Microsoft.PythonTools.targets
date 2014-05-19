@@ -197,11 +197,16 @@
           DependsOnTargets="$(BuiltProjectOutputGroupDependsOn)">
     <ItemGroup>
       <BuiltProjectOutputGroupOutput Remove="@(BuiltProjectOutputGroupOutput)" />
+      <_BuiltProjectOutputGroupOutput Remove="@(_BuiltProjectOutputGroupOutput)" />
     </ItemGroup>
 
     <AssignTargetPath RootFolder="$(QualifiedProjectHome)" Files="@(Compile);@(Content);$(MSBuildProjectFile)">
-      <Output TaskParameter="AssignedFiles" ItemName="BuiltProjectOutputGroupOutput" />
+      <Output TaskParameter="AssignedFiles" ItemName="_BuiltProjectOutputGroupOutput" />
     </AssignTargetPath>
+
+    <ItemGroup>
+      <BuiltProjectOutputGroupOutput Include="@(_BuiltProjectOutputGroupOutput->'%(FullPath)')" />
+    </ItemGroup>
   </Target>
 
   <Target Name="SourceFilesProjectOutputGroup"
@@ -209,11 +214,16 @@
           DependsOnTargets="$(SourceFilesProjectOutputGroupDependsOn)">
     <ItemGroup>
       <SourceFilesProjectOutputGroupOutput Remove="@(SourceFilesProjectOutputGroupOutput)" />
+      <_SourceFilesProjectOutputGroupOutput Remove="@(_SourceFilesProjectOutputGroupOutput)" />
     </ItemGroup>
 
     <AssignTargetPath RootFolder="$(QualifiedProjectHome)" Files="@(Compile);@(Content);$(MSBuildProjectFile)">
-      <Output TaskParameter="AssignedFiles" ItemName="SourceFilesProjectOutputGroupOutput" />
+      <Output TaskParameter="AssignedFiles" ItemName="_SourceFilesProjectOutputGroupOutput" />
     </AssignTargetPath>
+
+    <ItemGroup>
+      <SourceFilesProjectOutputGroupOutput Include="@(_SourceFilesProjectOutputGroupOutput->'%(FullPath)')" />
+    </ItemGroup>
   </Target>
 
   <Target Name="DebugSymbolsProjectOutputGroup"

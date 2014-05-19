@@ -899,5 +899,10 @@ namespace TestUtilities.UI {
             }
             return allItems;
         }
+
+        internal ProjectItem AddItem(Project project, string language, string template, string filename) {
+            var fullTemplate = ((Solution2)project.DTE.Solution).GetProjectItemTemplate(template, language);
+            return project.ProjectItems.AddFromTemplate(fullTemplate, filename);
+        }
     }
 }

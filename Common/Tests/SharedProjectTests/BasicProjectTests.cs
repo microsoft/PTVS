@@ -1243,8 +1243,6 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CopyFullPath() {
-            var existing = System.Diagnostics.Process.GetProcesses().Select(x => x.Id).ToSet();
-
             foreach (var projectType in ProjectTypes) {
                 var def = new ProjectDefinition(
                     "HelloWorld",
@@ -1373,6 +1371,32 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                 VsIdeTestHostContext.Dte.Solution.Close();
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
+            }
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void ProjectAddExistingExcludedFolder() {
+            foreach (var projectType in ProjectTypes) {
+                var def = new ProjectDefinition(
+                    "HelloWorld",
+                    projectType,
+                    Folder("Folder", isExcluded: true)
+                );
+
+                using (var solution = def.Generate().ToVs()) {
+                    try {
+                        solution.Project.ProjectItems.Item("Folder");
+                        Assert.Fail("Expected ArgumentException");
+                    } catch (ArgumentException ex) {
+                        Console.WriteLine("Handled {0}", ex);
+                    }
+
+                    // This should no longer fail
+                    var item = solution.Project.ProjectItems.AddFolder("Folder");
+
+                    Assert.AreEqual(item.FileNames[0], solution.Project.ProjectItems.Item("Folder").FileNames[0]);
+                }
             }
         }
 

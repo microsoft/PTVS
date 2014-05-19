@@ -32,7 +32,8 @@ namespace Microsoft.PythonTools.Project {
         // either incompatible or don't really exist (e.g. telemetry markers).
         private static readonly HashSet<Guid> IgnoredProjectTypeGuids = new HashSet<Guid> {
             new Guid("{789894C7-04A9-4A11-A6B5-3F4435165112}"), // Flask Web Project marker
-            new Guid("{E614C764-6D9E-4607-9337-B7073809A0BD}")  // Bottle Web Project marker
+            new Guid("{E614C764-6D9E-4607-9337-B7073809A0BD}"), // Bottle Web Project marker
+            new Guid("{725071E1-96AE-4405-9303-1BA64EFF6EBD}")  // Worker Role Project marker
         };
 
         public PythonProjectFactory(PythonProjectPackage/*!*/ package)

@@ -1,0 +1,14 @@
+﻿To finish configuring your web role, ensure the following item has been added to
+your ServiceDefinition.csdef file.
+
+    <Startup>
+      <Task commandLine="ps.cmd ConfigureCloudService.ps1" executionContext="elevated" taskType="simple">
+        <Environment>
+          <Variable name="EMULATED">
+            <RoleInstanceValue xpath="/RoleEnvironment/Deployment/@emulated"/>
+          </Variable>
+        </Environment>
+      </Task>
+    </Startup>
+
+This file can be safely deleted once your configuration has been updated.
