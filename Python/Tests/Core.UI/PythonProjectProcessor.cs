@@ -25,8 +25,7 @@ namespace Microsoft.Nodejs.Tests.UI {
             project.SetProperty("WorkingDirectory", ".");
 
             project.Xml.AddProperty("VisualStudioVersion", "11.0").Condition = "'$(VisualStudioVersion)' == ''";
-            project.Xml.AddProperty("VSToolsPath", "$(MSBuildExtensionsPath32)\\Microsoft\\VisualStudio\\v$(VisualStudioVersion)").Condition = "'$(VSToolsPath)' == ''";
-            project.Xml.AddProperty("PtvsTargetsFile", "$(VSToolsPath)\\Python Tools\\Microsoft.PythonTools.targets");
+            project.Xml.AddProperty("PtvsTargetsFile", "$(MSBuildExtensionsPath32)\\Microsoft\\VisualStudio\\v$(VisualStudioVersion)\\Python Tools\\Microsoft.PythonTools.targets");
 
             var import1 = project.Xml.AddImport("$(PtvsTargetsFile)");
             import1.Condition = "Exists($(PtvsTargetsFile))";

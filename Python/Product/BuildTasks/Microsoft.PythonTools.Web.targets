@@ -31,7 +31,7 @@
   <Target Name="WatGetTargetFrameworkMonikerDisplayName" Returns=""  />
 
   <Import Project="Microsoft.PythonTools.targets"/>
-  <Import Project="$(VSToolsPath)\WebApplications\Microsoft.WebApplication.targets" />
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\WebApplications\Microsoft.WebApplication.targets" />
 
 
   <!-- *************************************************************************

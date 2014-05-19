@@ -450,11 +450,6 @@ namespace PythonToolsTests {
             ImportWizardCustomizationsWorker(DefaultProjectCustomization.Instance, proj => {
                 Assert.AreEqual("Program.py", proj.Descendant("StartupFile").Value);
                 Assert.IsTrue(proj.Descendants(proj.GetName("Import")).Any(d => d.Attribute("Project").Value == "$(PtvsTargetsFile)"));
-                // Ensure the order of the properties is correct
-                AssertUtil.ArrayEquals(
-                    proj.Descendants().Select(d => d.Name.LocalName).Where(n => n == "PtvsTargetsFile" || n == "VSToolsPath").ToArray(),
-                    new[] { "VSToolsPath", "PtvsTargetsFile" }
-                );
             });
             ImportWizardCustomizationsWorker(BottleProjectCustomization.Instance, proj => {
                 Assert.AreNotEqual(-1, proj.Descendant("ProjectTypeGuids").Value.IndexOf("e614c764-6d9e-4607-9337-b7073809a0bd", StringComparison.OrdinalIgnoreCase));

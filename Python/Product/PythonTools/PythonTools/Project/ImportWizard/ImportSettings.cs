@@ -427,8 +427,6 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
 
             var imports = project.AddPropertyGroup();
             imports.AddProperty("VisualStudioVersion", "10.0").Condition = " '$(VisualStudioVersion)' == '' ";
-            imports.AddProperty("VSToolsPath", @"$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)")
-                .Condition = " '$(VSToolsPath)' == '' ";
 
             (customization ?? DefaultProjectCustomization.Instance).Process(
                 project,

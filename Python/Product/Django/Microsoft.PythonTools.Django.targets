@@ -13,7 +13,6 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
-    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -39,7 +38,7 @@
     </PropertyGroup>
   </Target>
 
-  <Import Project="$(VSToolsPath)\Python Tools\Microsoft.PythonTools.Web.targets" />
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.Web.targets" />
 
   <!-- Extend the standard Python web targets with our Django specific ones. -->
   <PropertyGroup>
