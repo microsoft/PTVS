@@ -565,7 +565,7 @@ namespace Microsoft.PythonTools.Analysis {
                     }
                     foreach (var keyValue in module.GetAllMembers(moduleContext)) {
                         bool anyModules = false;
-                        foreach(var ns in keyValue.Value.OfType<MultipleMemberInfo>()) {
+                        foreach (var ns in keyValue.Value.OfType<MultipleMemberInfo>()) {
                             if (ns.Members.OfType<IModule>().Any(mod => !(mod is MultipleMemberInfo))) {
                                 anyModules = true;
                                 break;
@@ -639,7 +639,7 @@ namespace Microsoft.PythonTools.Analysis {
         internal IKnownPythonTypes Types {
             get;
             private set;
-            }
+        }
 
         internal IKnownClasses ClassInfos {
             get;
@@ -711,7 +711,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
             return GetAnalysisValueFromObjects(attr);
         }
-        
+
         internal AnalysisValue GetAnalysisValueFromObjects(object attr) {
             if (attr == null) {
                 return _noneInst;
@@ -749,7 +749,7 @@ namespace Microsoft.PythonTools.Analysis {
             } else if (attr is IPythonMultipleMembers) {
                 IPythonMultipleMembers multMembers = (IPythonMultipleMembers)attr;
                 var members = multMembers.Members;
-                return GetCached(attr, () => 
+                return GetCached(attr, () =>
                     MultipleMemberInfo.Create(members.Select(GetAnalysisValueFromObjects)).FirstOrDefault() ??
                         GetBuiltinType(Types[BuiltinTypeId.NoneType]).Instance
                 );

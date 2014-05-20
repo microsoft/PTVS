@@ -120,8 +120,9 @@ namespace Microsoft.PythonTools.Project {
     }
 
     /// <summary>
-    /// Extends <see cref="IPythonProject"/> with members required for managing
-    /// and invoking custom commands.
+    /// Extends <see cref="IPythonProject"/>
+    /// 
+    /// New in 2.1.
     /// </summary>
     public interface IPythonProject2 : IPythonProject {
         /// <summary>
@@ -162,6 +163,14 @@ namespace Microsoft.PythonTools.Project {
         /// The action to execute. The parameter is <paramref name="key"/>.
         /// </param>
         void AddActionOnClose(object key, Action<object> action);
+
+        /// <summary>
+        /// Raised when the analyzer for the project is about to change. The
+        /// new analyzer is not yet ready for use when this event is raised.
+        /// Handlers should only modify internal state or add specializations
+        /// (which will be resolved later).
+        /// </summary>
+        event EventHandler<AnalyzerChangingEventArgs> ProjectAnalyzerChanging;
     }
 
 

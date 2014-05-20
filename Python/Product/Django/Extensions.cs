@@ -23,8 +23,8 @@ using Microsoft.VisualStudioTools.Project.Automation;
 
 namespace Microsoft.PythonTools.Django {
     static class Extensions {
-        internal static IPythonProject GetPythonProject(this EnvDTE.Project project) {
-            return project.GetCommonProject() as IPythonProject;
+        internal static IPythonProject2 GetPythonProject(this EnvDTE.Project project) {
+            return project.GetCommonProject() as IPythonProject2;
         }
 
         internal static EnvDTE.Project GetProject(this IVsHierarchy hierarchy) {

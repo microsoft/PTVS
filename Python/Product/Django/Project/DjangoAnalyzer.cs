@@ -25,15 +25,15 @@ using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Django.Project {
     partial class DjangoAnalyzer : IDisposable {
-        internal Dictionary<string, TagInfo> _tags = new Dictionary<string, TagInfo>();
-        internal Dictionary<string, TagInfo> _filters = new Dictionary<string, TagInfo>();
-        internal Dictionary<string, TemplateVariables> _templateFiles = new Dictionary<string, TemplateVariables>(StringComparer.OrdinalIgnoreCase);
+        internal readonly Dictionary<string, TagInfo> _tags = new Dictionary<string, TagInfo>();
+        internal readonly Dictionary<string, TagInfo> _filters = new Dictionary<string, TagInfo>();
+        internal readonly Dictionary<string, TemplateVariables> _templateFiles = new Dictionary<string, TemplateVariables>(StringComparer.OrdinalIgnoreCase);
         private ConditionalWeakTable<Node, ContextMarker> _contextTable = new ConditionalWeakTable<Node, ContextMarker>();
         private ConditionalWeakTable<Node, DeferredDecorator> _decoratorTable = new ConditionalWeakTable<Node, DeferredDecorator>();
         private readonly Dictionary<string, GetTemplateAnalysisValue> _templateAnalysis = new Dictionary<string, GetTemplateAnalysisValue>();
         private PythonAnalyzer _analyzer;
-        internal static Dictionary<string, string> _knownTags = MakeKnownTagsTable();
-        internal static Dictionary<string, string> _knownFilters = MakeKnownFiltersTable();
+        internal static readonly Dictionary<string, string> _knownTags = MakeKnownTagsTable();
+        internal static readonly Dictionary<string, string> _knownFilters = MakeKnownFiltersTable();
 
         public DjangoAnalyzer() {
             foreach (var tagName in DjangoCompletionSource._nestedEndTags) {
@@ -48,6 +48,10 @@ namespace Microsoft.PythonTools.Django.Project {
 
             _tags.Clear();
             _filters.Clear();
+            _templateAnalysis.Clear();
+            _templateFiles.Clear();
+            _contextTable = new ConditionalWeakTable<Node, ContextMarker>();
+            _decoratorTable = new ConditionalWeakTable<Node, DeferredDecorator>();
 
             foreach (var keyValue in _knownTags) {
                 _tags[keyValue.Key] = new TagInfo(keyValue.Value);

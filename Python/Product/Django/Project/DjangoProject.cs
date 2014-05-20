@@ -93,9 +93,8 @@ namespace Microsoft.PythonTools.Django.Project {
 
             var pyProj = _innerVsHierarchy.GetProject().GetPythonProject();
             if (pyProj != null) {
-                OnProjectAnalyzerChanged(pyProj, EventArgs.Empty);
-
-                pyProj.ProjectAnalyzerChanged += OnProjectAnalyzerChanged;
+                _analyzer.OnNewAnalyzer(pyProj.GetProjectAnalyzer().Project);
+                pyProj.ProjectAnalyzerChanging += OnProjectAnalyzerChanging;
             }
 
             object extObject;
@@ -122,10 +121,10 @@ namespace Microsoft.PythonTools.Django.Project {
 
         #endregion
 
-        private void OnProjectAnalyzerChanged(object sender, EventArgs e) {
+        private void OnProjectAnalyzerChanging(object sender, AnalyzerChangingEventArgs e) {
             var pyProj = sender as IPythonProject;
             if (pyProj != null) {
-                _analyzer.OnNewAnalyzer(pyProj.GetProjectAnalyzer().Project);
+                _analyzer.OnNewAnalyzer(e.New);
             }
         }
 

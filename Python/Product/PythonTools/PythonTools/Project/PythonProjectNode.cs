@@ -669,6 +669,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public event EventHandler ProjectAnalyzerChanged;
+        public event EventHandler<AnalyzerChangingEventArgs> ProjectAnalyzerChanging;
 
         public override IProjectLauncher GetLauncher() {
             return PythonToolsPackage.GetLauncher(this);
@@ -851,6 +852,14 @@ namespace Microsoft.PythonTools.Project {
                 UnHookErrorsAndWarnings(_analyzer);
             }
             var analyzer = CreateAnalyzer();
+
+            var analyzerChanging = ProjectAnalyzerChanging;
+            if (analyzerChanging != null) {
+                analyzerChanging(this, new AnalyzerChangingEventArgs(
+                    _analyzer != null ? _analyzer.Project : null,
+                    analyzer != null ? analyzer.Project : null
+                ));
+            }
 
             Reanalyze(this, analyzer);
             if (_analyzer != null) {
