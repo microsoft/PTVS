@@ -23,6 +23,7 @@
     <Compile Include="worker.py" />
     <Content Include="bin\ConfigureCloudService.ps1" />
     <Content Include="bin\LaunchWorker.ps1" />
+    <Content Include="bin\ps.cmd" />
     <None Include="Readme.txt" />
     <Content Include="requirements.txt" />
   </ItemGroup>
