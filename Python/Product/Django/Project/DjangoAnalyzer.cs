@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Django.Intellisense;
@@ -28,10 +29,11 @@ namespace Microsoft.PythonTools.Django.Project {
         internal Dictionary<string, TagInfo> _filters = new Dictionary<string, TagInfo>();
         internal Dictionary<string, TemplateVariables> _templateFiles = new Dictionary<string, TemplateVariables>(StringComparer.OrdinalIgnoreCase);
         private ConditionalWeakTable<Node, ContextMarker> _contextTable = new ConditionalWeakTable<Node, ContextMarker>();
+        private ConditionalWeakTable<Node, DeferredDecorator> _decoratorTable = new ConditionalWeakTable<Node, DeferredDecorator>();
         private readonly Dictionary<string, GetTemplateAnalysisValue> _templateAnalysis = new Dictionary<string, GetTemplateAnalysisValue>();
         private PythonAnalyzer _analyzer;
-        private static Dictionary<string, string> _knownTags = MakeKnownTagsTable();
-        private static Dictionary<string, string> _knownFilters = MakeKnownFiltersTable();
+        internal static Dictionary<string, string> _knownTags = MakeKnownTagsTable();
+        internal static Dictionary<string, string> _knownFilters = MakeKnownFiltersTable();
 
         public DjangoAnalyzer() {
             foreach (var tagName in DjangoCompletionSource._nestedEndTags) {
@@ -78,11 +80,15 @@ namespace Microsoft.PythonTools.Django.Project {
 
             analyzer.SpecializeFunction("django.template.loader", "get_template", GetTemplateProcessor, true);
             analyzer.SpecializeFunction("django.template.context", "Context", ContextClassProcessor, true);
+            analyzer.SpecializeFunction("django.template", "RequestContext", RequestContextClassProcessor, true);
+            analyzer.SpecializeFunction("django.template.context", "RequestContext", RequestContextClassProcessor, true);
             analyzer.SpecializeFunction("django.template.base.Template", "render", TemplateRenderProcessor, true);
 
             // View specializers
             analyzer.SpecializeFunction("django.views.generic.detail.DetailView", "as_view", DetailViewProcessor, true);
+            analyzer.SpecializeFunction("django.views.generic.DetailView", "as_view", DetailViewProcessor, true);
             analyzer.SpecializeFunction("django.views.generic.list.ListView", "as_view", ListViewProcessor, true);
+            analyzer.SpecializeFunction("django.views.generic.ListView", "as_view", ListViewProcessor, true);
         }
 
         private IAnalysisSet ParseProcessor(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
@@ -130,65 +136,44 @@ namespace Microsoft.PythonTools.Django.Project {
         }
 
         private IAnalysisSet ViewProcessor(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames, string defaultTemplateNameSuffix) {
-            IAnalysisSet model = null;
-            HashSet<string> templateNames = new HashSet<string>();
-            HashSet<string> templateNameSuffix = new HashSet<string>();
-            HashSet<string> contextObjName = new HashSet<string>();
-            for (int i = 0; i < keywordArgNames.Length; i++) {
-                switch (keywordArgNames[i].Name) {
-                    case "queryset":
-                        // TODO: Support this (this requires some analyis improvements as currently we 
-                        // typically don't get useful values for queryset
-                        break;
-                    case "model":
-                        model = args[args.Length - keywordArgNames.Length + i];
-                        break;
-                    case "template_name":
-                        GetStringArguments(templateNames, args[args.Length - keywordArgNames.Length + i]);
-                        break;
-                    case "template_name_suffix":
-                        GetStringArguments(templateNameSuffix, args[args.Length - keywordArgNames.Length + i]);
-                        break;
-                    case "context_object_name":
-                        GetStringArguments(contextObjName, args[args.Length - keywordArgNames.Length + i]);
-                        break;
+            var templateNames = GetArg(args, keywordArgNames, "template_name", -1, AnalysisSet.Empty)
+                .Select(v => v.GetConstantValueAsString())
+                .Where(s => !string.IsNullOrEmpty(s))
+                .ToList();
+            var templateNameSuffix = GetArg(args, keywordArgNames, "template_name_suffix", -1, AnalysisSet.Empty)
+                .Select(v => v.GetConstantValueAsString())
+                .Where(s => !string.IsNullOrEmpty(s))
+                .ToList();
+            var contextObjName = GetArg(args, keywordArgNames, "context_object_name", -1, AnalysisSet.Empty)
+                .Select(v => v.GetConstantValueAsString())
+                .Where(s => !string.IsNullOrEmpty(s))
+                .ToList();
+            var model = GetArg(args, keywordArgNames, "model", -1);
+
+            // TODO: Support this (this requires some analyis improvements as currently we 
+            // typically don't get useful values for queryset
+            // Right now, queryset only flows into the template if template_name
+            // is also specified.
+            var querySet = GetArg(args, keywordArgNames, "queryset", -1);
+
+            if (templateNames.Any()) {
+                foreach (var templateName in templateNames) {
+                    AddViewTemplate(unit, model, querySet, contextObjName, templateName);
                 }
-            }
+            } else if (model != null) {
+                // template name is [app]/[modelname]_[template_name_suffix]
+                string appName;
+                int firstDot = unit.Project.ModuleName.IndexOf('.');
+                if (firstDot != -1) {
+                    appName = unit.Project.ModuleName.Substring(0, firstDot);
+                } else {
+                    appName = unit.Project.ModuleName;
+                }
 
-            if (model != null) {
-                if (templateNames.Count > 0) {
-                    foreach (var templateName in templateNames) {
-                        AddViewTemplate(unit, model, contextObjName, templateName);
-                    }
-                } else if (model != null) {
-                    // template name is [app]/[modelname]_[template_name_suffix]
-                    string appName;
-                    int firstDot = unit.Project.ModuleName.IndexOf('.');
-                    if (firstDot != -1) {
-                        appName = unit.Project.ModuleName.Substring(0, firstDot);
-                    } else {
-                        appName = unit.Project.ModuleName;
-                    }
-
-                    foreach (var modelInst in model) {
-                        string baseName = appName + "/" + modelInst.Name.ToLower();
-                        if (templateNameSuffix.Count > 0) {
-                            foreach (var suffix in templateNameSuffix) {
-                                AddViewTemplate(
-                                    unit,
-                                    model,
-                                    contextObjName,
-                                    baseName + templateNameSuffix
-                                );
-                            }
-                        } else {
-                            AddViewTemplate(
-                                unit,
-                                model,
-                                contextObjName,
-                                baseName + defaultTemplateNameSuffix
-                            );
-                        }
+                foreach (var modelInst in model) {
+                    string baseName = appName + "/" + modelInst.Name.ToLower();
+                    foreach (var suffix in templateNameSuffix.DefaultIfEmpty(defaultTemplateNameSuffix)) {
+                        AddViewTemplate(unit, model, querySet, contextObjName, baseName + suffix);
                     }
                 }
             }
@@ -196,17 +181,25 @@ namespace Microsoft.PythonTools.Django.Project {
             return AnalysisSet.Empty;
         }
 
-        private void AddViewTemplate(AnalysisUnit unit, IAnalysisSet model, HashSet<string> contextObjName, string templateName) {
+        private void AddViewTemplate(
+            AnalysisUnit unit,
+            IAnalysisSet model,
+            IAnalysisSet querySet,
+            IEnumerable<string> contextObjName,
+            string templateName
+        ) {
             TemplateVariables tags;
             if (!_templateFiles.TryGetValue(templateName, out tags)) {
                 _templateFiles[templateName] = tags = new TemplateVariables();
             }
 
-            foreach (var modelInst in model) {
-                if (contextObjName.Count == 0) {
-                    tags.UpdateVariable(modelInst.Name.ToLower(), unit, modelInst.GetInstanceType());
-                } else {
-                    foreach (var name in contextObjName) {
+            if (querySet != null) {
+                foreach (var name in contextObjName) {
+                    tags.UpdateVariable(name, unit, AnalysisSet.Empty);
+                }
+            } else if (model != null) {
+                foreach (var modelInst in model) {
+                    foreach (var name in contextObjName.DefaultIfEmpty(modelInst.Name.ToLower())) {
                         tags.UpdateVariable(name, unit, modelInst.GetInstanceType());
                     }
                 }
@@ -223,16 +216,31 @@ namespace Microsoft.PythonTools.Django.Project {
         }
 
         private IAnalysisSet FilterProcessor(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
-            ProcessTags(node, unit, args, keywordArgNames, _filters);
-            return AnalysisSet.Empty;
+            return ProcessTags(node, unit, args, keywordArgNames, _filters);
         }
 
         private IAnalysisSet TagProcessor(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
-            ProcessTags(node, unit, args, keywordArgNames, _tags);
-            return AnalysisSet.Empty;
+            return ProcessTags(node, unit, args, keywordArgNames, _tags);
         }
 
-        private static void ProcessTags(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames, Dictionary<string, TagInfo> tags) {
+        class DeferredDecorator : AnalysisValue {
+            private readonly DjangoAnalyzer _analyzer;
+            private readonly IAnalysisSet _name;
+            private readonly Dictionary<string, TagInfo> _tags;
+
+            public DeferredDecorator(DjangoAnalyzer analyzer, IAnalysisSet name, Dictionary<string, TagInfo> tags) {
+                _analyzer = analyzer;
+                _name = name;
+                _tags = tags;
+            }
+
+            public override IAnalysisSet Call(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
+                _analyzer.ProcessTags(node, unit, new[] { AnalysisSet.Empty, _name, args[0] }, NameExpression.EmptyArray, _tags);
+                return AnalysisSet.Empty;
+            }
+        }
+
+        private IAnalysisSet ProcessTags(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames, Dictionary<string, TagInfo> tags) {
             if (args.Length >= 3) {
                 // library.filter(name, value)
                 foreach (var name in args[1]) {
@@ -249,13 +257,10 @@ namespace Microsoft.PythonTools.Django.Project {
                     }
                 }
                 foreach (var func in args[2]) {
-                    if (func.Name != null) {
-                        RegisterTag(tags, func.Name, func.Documentation);
-                    }
                     // TODO: Find a better node
                     var parser = unit.FindAnalysisValueByName(node, "django.template.base.Parser");
                     if (parser != null) {
-                        func.Call(node, unit, new[] { parser, null }, null);
+                        func.Call(node, unit, new[] { parser, AnalysisSet.Empty }, NameExpression.EmptyArray);
                     }
                 }
             } else if (args.Length >= 2) {
@@ -268,18 +273,28 @@ namespace Microsoft.PythonTools.Django.Project {
                     if (name.MemberType != PythonMemberType.Constant) {
                         var parser = unit.FindAnalysisValueByName(node, "django.template.base.Parser");
                         if (parser != null) {
-                            name.Call(node, unit, new[] { parser, null }, NameExpression.EmptyArray);
+                            name.Call(node, unit, new[] { parser, AnalysisSet.Empty }, NameExpression.EmptyArray);
                         }
                     }
                 }
             } else if (args.Length == 1) {
-                // library.filter(value)
                 foreach (var name in args[0]) {
-                    if (name.Name != null) {
+                    if (name.MemberType == PythonMemberType.Constant) {
+                        // library.filter('name')
+                        DeferredDecorator dec;
+                        if (!_decoratorTable.TryGetValue(node, out dec)) {
+                            dec = new DeferredDecorator(this, name, tags);
+                            _decoratorTable.Add(node, dec);
+                        }
+                        return dec;
+                    } else if (name.Name != null) {
+                        // library.filter
                         RegisterTag(tags, name.Name, name.Documentation);
                     }
                 }
             }
+
+            return AnalysisSet.Empty;
         }
 
         private static void RegisterTag(Dictionary<string, TagInfo> tags, string name, string documentation = null) {
@@ -290,41 +305,52 @@ namespace Microsoft.PythonTools.Django.Project {
         }
 
         private IAnalysisSet RenderToStringProcessor(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
-            if (args.Length == 2) {
-                foreach (var name in args[0]) {
-                    var strName = name.GetConstantValueAsString();
-                    if (strName != null) {
-                        var dictArgs = args[1];
+            var names = GetArg(args, keywordArgNames, "template_name", 0);
+            var context = GetArg(args, keywordArgNames, "context_instance", 2);
+            var dictArgs = context == null ? GetArg(args, keywordArgNames, "dictionary", 1) : null;
 
-                        AddTemplateMapping(unit, strName, dictArgs);
-                    }
+            if (dictArgs != null || context != null) {
+                foreach (var name in names.Select(n => n.GetConstantValueAsString()).Where(n => !string.IsNullOrEmpty(n))) {
+                    AddTemplateMapping(unit, name, dictArgs, context);
                 }
             }
             return AnalysisSet.Empty;
         }
 
         private IAnalysisSet RenderProcessor(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
-            if (args.Length == 3) {
-                foreach (var name in args[1]) {
-                    var strName = name.GetConstantValueAsString();
-                    if (strName != null) {
-                        var dictArgs = args[2];
+            var names = GetArg(args, keywordArgNames, "template_name", 1);
+            var context = GetArg(args, keywordArgNames, "context_instance", 3);
+            var dictArgs = context == null ? GetArg(args, keywordArgNames, "dictionary", 2) : null;
 
-                        AddTemplateMapping(unit, strName, dictArgs);
-                    }
+            if (dictArgs != null || context != null) {
+                foreach (var name in names.Select(n => n.GetConstantValueAsString()).Where(n => !string.IsNullOrEmpty(n))) {
+                    AddTemplateMapping(unit, name, dictArgs, context);
                 }
             }
             return AnalysisSet.Empty;
         }
 
-        private void AddTemplateMapping(AnalysisUnit unit, string filename, IEnumerable<AnalysisValue> dictArgs) {
+        private void AddTemplateMapping(
+            AnalysisUnit unit,
+            string filename,
+            IEnumerable<AnalysisValue> dictArgs,
+            IEnumerable<AnalysisValue> context
+        ) {
             TemplateVariables tags;
             if (!_templateFiles.TryGetValue(filename, out tags)) {
                 _templateFiles[filename] = tags = new TemplateVariables();
             }
 
-            foreach (var dict in dictArgs) {
-                foreach (var keyValue in dict.GetItems()) {
+            IEnumerable<KeyValuePair<IAnalysisSet, IAnalysisSet>> items = null;
+            if (context != null) {
+                items = context.OfType<ContextMarker>()
+                    .SelectMany(ctxt => ctxt.Arguments.SelectMany(v => v.GetItems()));
+            } else if (dictArgs != null) {
+                items = dictArgs.SelectMany(v => v.GetItems());
+            }
+
+            if (items != null) {
+                foreach (var keyValue in items) {
                     foreach (var key in keyValue.Key) {
                         var keyName = key.GetConstantValueAsString();
                         if (keyName != null) {
@@ -363,17 +389,8 @@ namespace Microsoft.PythonTools.Django.Project {
 
             public override IAnalysisSet Call(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
                 if (args.Length == 1) {
-                    foreach (var contextArg in args[0]) {
-                        var context = contextArg as ContextMarker;
-
-                        if (context != null) {
-                            // we now have the template and the context
-
-                            string filename = GetTemplateValue.Filename;
-
-                            GetTemplateValue.Analyzer.AddTemplateMapping(unit, filename, context.Arguments);
-                        }
-                    }
+                    string filename = GetTemplateValue.Filename;
+                    GetTemplateValue.Analyzer.AddTemplateMapping(unit, filename, null, args[0]);
                 }
                 return base.Call(node, unit, args, keywordArgNames);
             }
@@ -407,7 +424,8 @@ namespace Microsoft.PythonTools.Django.Project {
         }
 
         private IAnalysisSet ContextClassProcessor(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
-            if (args.Length == 1) {
+            var dict = GetArg(args, keywordArgNames, "dict_", 0);
+            if (dict != null && dict.Any()) {
                 ContextMarker contextValue;
 
                 if (!_contextTable.TryGetValue(node, out contextValue)) {
@@ -416,35 +434,51 @@ namespace Microsoft.PythonTools.Django.Project {
                     _contextTable.Add(node, contextValue);
                 }
 
-                contextValue.Arguments.UnionWith(args[0]);
+                contextValue.Arguments.UnionWith(dict);
                 return contextValue;
             }
 
             return AnalysisSet.Empty;
         }
 
+        private IAnalysisSet RequestContextClassProcessor(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
+            var dict = GetArg(args, keywordArgNames, "dict_", 1);
+            if (dict != null) {
+                return ContextClassProcessor(node, unit, new[] { dict }, NameExpression.EmptyArray);
+            }
+            return AnalysisSet.Empty;
+        }
+
         private IAnalysisSet TemplateRenderProcessor(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
             if (args.Length == 2) {
-                foreach (var selfArg in args[0]) {
-                    var templateValue = selfArg as GetTemplateAnalysisValue;
-
-                    if (templateValue != null) {
-                        foreach (var contextArg in args[1]) {
-                            var context = contextArg as ContextMarker;
-
-                            if (context != null) {
-                                // we now have the template and the context
-
-                                string filename = templateValue.Filename;
-
-                                AddTemplateMapping(unit, filename, context.Arguments);
-                            }
-                        }
-                    }
+                foreach (var templateValue in args[0].OfType<GetTemplateAnalysisValue>()) {
+                    AddTemplateMapping(unit, templateValue.Filename, null, args[1]);
                 }
             }
 
             return AnalysisSet.Empty;
+        }
+
+        private static IAnalysisSet GetArg(
+            IAnalysisSet[] args,
+            NameExpression[] keywordArgNames,
+            string name,
+            int index,
+            IAnalysisSet defaultValue = null
+        ) {
+            for (int i = 0, j = args.Length - keywordArgNames.Length;
+                i < keywordArgNames.Length && j < args.Length;
+                ++i, ++j) {
+                if (keywordArgNames[i].Name == name) {
+                    return args[j];
+                }
+            }
+
+            if (0 <= index && index < args.Length) {
+                return args[index];
+            }
+
+            return defaultValue;
         }
 
         public Dictionary<string, HashSet<AnalysisValue>> GetVariablesForTemplateFile(string filename) {
