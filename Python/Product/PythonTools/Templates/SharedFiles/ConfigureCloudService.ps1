@@ -132,7 +132,7 @@ if (-not $is_emulated) {
             if (-not $msi) {
                 $req = Invoke-WebRequest $webpisetup -UseBasicParsing -EA Stop
                 [System.IO.File]::WriteAllBytes("$(Get-Location)\bin\$webpimsiname", $req.Content)
-                $msi = gi "$(Get-Location)\bin\WebPI.msi" -EA Stop
+                $msi = gi "$(Get-Location)\bin\$webpimsiname" -EA Stop
             }
             Start-Process -wait (gcm msiexec).Path -ArgumentList /quiet, /i, $msi, ADDLOCAL=ALL
             $webpicmd = (gi "${env:ProgramFiles}\Microsoft\Web Platform Installer\$webpicmdname" -EA Stop).FullName
