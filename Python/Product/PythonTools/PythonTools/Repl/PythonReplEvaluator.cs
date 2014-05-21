@@ -250,10 +250,10 @@ namespace Microsoft.PythonTools.Repl {
                 var searchPaths = CurrentOptions.SearchPaths;
 
                 if (string.IsNullOrEmpty(searchPaths)) {
-                    if (PythonToolsPackage.Instance.GeneralOptionsPage.ClearGlobalPythonPath) {
+                    if (PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ClearGlobalPythonPath) {
                         processInfo.EnvironmentVariables[pathEnvVar] = "";
                     }
-                } else if (PythonToolsPackage.Instance.GeneralOptionsPage.ClearGlobalPythonPath) {
+                } else if (PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ClearGlobalPythonPath) {
                     processInfo.EnvironmentVariables[pathEnvVar] = searchPaths;
                 } else {
                     processInfo.EnvironmentVariables[pathEnvVar] = searchPaths + ";" + Environment.GetEnvironmentVariable(pathEnvVar);
@@ -330,7 +330,7 @@ namespace Microsoft.PythonTools.Repl {
                 return;
             }
 
-            CreateCommandProcessor(conn, null, processInfo.RedirectStandardOutput, process);
+            CreateCommandProcessor(conn, processInfo.RedirectStandardOutput, process);
         }
 
         const int ERROR_FILE_NOT_FOUND = 2;

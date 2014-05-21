@@ -101,6 +101,7 @@
                           Microsoft.PythonTools.Flask.targets;
                           wfastcgi.py;
                           web_config.xml;
+                          web_debug_config.xml;
                           ptvs_virtualenv_proxy.py;
                           Microsoft.PythonTools.WebRole.dll;
                           Microsoft.PythonTools.AzureSetup.exe;

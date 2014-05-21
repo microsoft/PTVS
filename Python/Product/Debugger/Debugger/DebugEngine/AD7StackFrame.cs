@@ -76,6 +76,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                         funcName = Path.GetFileNameWithoutExtension(_stackFrame.FileName) + " module";
                     } else if (_stackFrame.FileName.EndsWith("<string>")) {
                         funcName = "<exec or eval>";
+                    } else if (_stackFrame.FileName.EndsWith("<stdin>")) {
+                        funcName = "<REPL input>";
                     } else {
                         funcName = _stackFrame.FileName + " unknown code";
                     }
@@ -117,6 +119,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                     frameInfo.m_bstrModule = Path.GetFileNameWithoutExtension(this._stackFrame.FileName);
                 } else if (_stackFrame.FileName.EndsWith("<string>")) {
                     frameInfo.m_bstrModule = "<exec/eval>";
+                } else if (_stackFrame.FileName.EndsWith("<stdin>")) {
+                    frameInfo.m_bstrModule = "<REPL>";
                 } else {
                     frameInfo.m_bstrModule = "<unknown>";
                 }

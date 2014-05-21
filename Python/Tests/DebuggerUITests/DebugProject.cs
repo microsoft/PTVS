@@ -868,6 +868,7 @@ namespace DebuggerUITests {
 
             WaitForMode(app, dbgDebugMode.dbgBreakMode);
 
+            Assert.IsNotNull(app.Dte.Debugger.BreakpointLastHit);
             Assert.AreEqual(lineNo, app.Dte.Debugger.BreakpointLastHit.FileLine);
             return project;
         }

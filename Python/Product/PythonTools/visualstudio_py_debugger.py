@@ -699,7 +699,7 @@ class Thread(object):
                     self.stepping = STEPPING_OVER
                     self.block_maybe_attach()
 
-        if frame.f_code.co_name == '<module>' and frame.f_code.co_filename != '<string>':
+        if frame.f_code.co_name == '<module>' and frame.f_code.co_filename not in ['<string>', '<stdin>']:
             probe_stack()
             code, module = new_module(frame)
             if not DETACHED:

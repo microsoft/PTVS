@@ -92,6 +92,11 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVsix>true</IncludeInVsix>
     </Content>
+    <Content Include="web_debug_config.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVsix>true</IncludeInVsix>
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="wfastcgi.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVsix>true</IncludeInVsix>

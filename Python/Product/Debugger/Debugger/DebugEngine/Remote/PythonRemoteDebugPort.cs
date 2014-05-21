@@ -19,34 +19,18 @@ using Microsoft.VisualStudio.Debugger.Interop;
 namespace Microsoft.PythonTools.Debugger.Remote {
     internal class PythonRemoteDebugPort : IDebugPort2 {
         private readonly PythonRemoteDebugPortSupplier _supplier;
+        private readonly IDebugPortRequest2 _request;
         private readonly Guid _guid = Guid.NewGuid();
-        private readonly string _hostName;
-        private readonly ushort _portNumber;
-        private readonly string _secret;
-        private readonly bool _useSsl;
+        private readonly Uri _uri;
 
-        public PythonRemoteDebugPort(PythonRemoteDebugPortSupplier supplier, string hostName, ushort portNumber, string secret, bool useSsl) {
-            this._supplier = supplier;
-            this._hostName = hostName;
-            this._portNumber = portNumber;
-            this._secret = secret;
-            this._useSsl = useSsl;
+        public PythonRemoteDebugPort(PythonRemoteDebugPortSupplier supplier, IDebugPortRequest2 request, Uri uri) {
+            _supplier = supplier;
+            _request = request;
+            _uri = uri;
         }
 
-        public string HostName {
-            get { return _hostName; }
-        }
-
-        public ushort PortNumber {
-            get { return _portNumber; }
-        }
-
-        public string Secret {
-            get { return _secret; }
-        }
-
-        public bool UseSsl {
-            get { return _useSsl; }
+        public Uri Uri {
+            get { return _uri; }
         }
 
         public int EnumProcesses(out IEnumDebugProcesses2 ppEnum) {
@@ -66,19 +50,18 @@ namespace Microsoft.PythonTools.Debugger.Remote {
         }
 
         public int GetPortName(out string pbstrName) {
-            pbstrName = _hostName + ":" + _portNumber;
-            if (_secret != "") {
-                pbstrName = _secret + "@" + pbstrName;
-            }
+            pbstrName = _uri.ToString();
             return VSConstants.S_OK;
         }
 
         public int GetPortRequest(out IDebugPortRequest2 ppRequest) {
-            throw new NotImplementedException();
+            ppRequest = _request;
+            return VSConstants.S_OK;
         }
 
         public int GetPortSupplier(out IDebugPortSupplier2 ppSupplier) {
-            throw new NotImplementedException();
+            ppSupplier = _supplier;
+            return VSConstants.S_OK;
         }
 
         public int GetProcess(AD_PROCESS_ID ProcessId, out IDebugProcess2 ppProcess) {

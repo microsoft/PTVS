@@ -13,34 +13,17 @@
  * ***************************************************************************/
 
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Security.Authentication;
 using System.Text;
 using System.Windows.Forms;
+using Microsoft.PythonTools.Debugger.Transports;
 using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Debugger.Remote {
-
-    /// <summary>
-    /// Specifies how <see cref="PythonRemoteProcess.TryConnect"/> should handle SSL certificate errors.
-    /// </summary>
-    internal enum SslErrorHandling {
-        /// <summary>
-        /// Fail and return <see cref="ConnErrorMessages.RemoteSslError"/>.
-        /// </summary>
-        Fail,
-        /// <summary>
-        /// Ignore any errors and proceed with connection.
-        /// </summary>
-        Ignore,
-        /// <summary>
-        /// Prompt the user whether to ignore the error or to fail.
-        /// </summary>
-        PromptUser
-    }
-
     internal class PythonRemoteProcess : PythonProcess {
         public const byte DebuggerProtocolVersion = 3; // must be kept in sync with PTVSDBG_VER in attach_server.py
         public const string DebuggerSignature = "PTVSDBG";
@@ -51,89 +34,48 @@ namespace Microsoft.PythonTools.Debugger.Remote {
         public static readonly byte[] AttachCommandBytes = Encoding.ASCII.GetBytes("ATCH");
         public static readonly byte[] ReplCommandBytes = Encoding.ASCII.GetBytes("REPL");
 
-        private readonly string _hostName;
-        private readonly ushort _portNumber;
-        private readonly string _secret;
-        private readonly bool _useSsl;
-
-        private PythonRemoteProcess(int pid, string hostName, ushort portNumber, string secret, bool useSsl, PythonLanguageVersion langVer)
+        private PythonRemoteProcess(int pid, Uri uri, PythonLanguageVersion langVer)
             : base(pid, langVer) {
-            _hostName = hostName;
-            _portNumber = portNumber;
-            _secret = secret;
-            _useSsl = useSsl;
+            Uri = uri;
         }
 
-        public string HostName {
-            get { return _hostName; }
-        }
-
-        public ushort PortNumber {
-            get { return _portNumber; }
-        }
-
-        public string Secret {
-            get { return _secret; }
-        }
+        public Uri Uri { get; private set; }
 
         /// <summary>
-        /// Performs the initial handshake with the remote debugging server, verifying signature and version number and setting up SSL,
-        /// and returns the opened socket and the SSL stream for that socket.
+        /// Connects to and performs the initial handshake with the remote debugging server, verifying protocol signature and version number,
+        /// and returns the opened stream in a state ready to receive further ptvsd commands (e.g. attach).
         /// </summary>
-        /// <param name="hostName">Name of the host to connect to.</param>
-        /// <param name="portNumber">Port number to connect to.</param>
-        /// <param name="secret">Secret to authenticate with.</param>
-        /// <param name="useSsl">Whether to use SSL for this connection.</param>
-        /// <param name="sslErrorHandling">If using SSL, specifies how SSL certificate errors should be handled.</param>
-        /// <param name="socket">Opened socket to the remote debugging server. The returned socket is owned by <paramref name="stream"/>.</param>
-        /// <param name="stream">Opened SSL network stream to the remote debugging server. This stream owns the <paramref name="socket"/>, and will automatically close it.</param>
-        /// <returns>Error code.</returns>
-        /// <remarks><paramref name="socket"/> should not be used to send or receive data, since it is wrapped in a stream, and is owned by that stream.
-        /// It is exposed solely to enable querying it for endpoint information and connectivity status.</remarks>
-        public static ConnErrorMessages TryConnect(string hostName, ushort portNumber, string secret, bool useSsl, SslErrorHandling sslErrorHandling, out Socket socket, out Stream stream) {
-            stream = null;
-            socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        public static Stream Connect(Uri uri, bool warnAboutAuthenticationErrors) {
+            var transport = DebuggerTransportFactory.Get(uri);
+            if (transport == null) {
+                throw new ConnectionException(ConnErrorMessages.RemoteInvalidUri);
+            }
+
+            Stream stream = null;
+            do {
+                try {
+                    stream = transport.Connect(uri, warnAboutAuthenticationErrors);
+                } catch (AuthenticationException ex) {
+                    if (!warnAboutAuthenticationErrors) {
+                        // This should never happen, but if it does, we don't want to keep trying.
+                        throw new ConnectionException(ConnErrorMessages.RemoteSslError, ex);
+                    }
+
+                    string errText = ex.Message + "\nConnect anyway?";
+                    var dlgRes = MessageBox.Show(errText, null, MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                    if (dlgRes == DialogResult.Yes) {
+                        warnAboutAuthenticationErrors = false;
+                    } else {
+                        throw new ConnectionException(ConnErrorMessages.RemoteSslError, ex);
+                    }
+                }
+            } while (stream == null);
+
             bool connected = false;
             try {
-                socket.Connect(hostName, portNumber);
-                var rawStream = new NetworkStream(socket, ownsSocket: true);
-                if (useSsl) {
-                    var sslStream = new SslStream(rawStream, false, (sender, cert, chain, errs) => {
-                        if (errs == SslPolicyErrors.None || sslErrorHandling == SslErrorHandling.Ignore) {
-                            return true;
-                        } else if (sslErrorHandling == SslErrorHandling.Fail) {
-                            return false;
-                        }
-
-                        string errText = string.Format("Could not establish secure connection to {0}:{1} because of the following SSL issues:\n\n", hostName, portNumber);
-                        if ((errs & SslPolicyErrors.RemoteCertificateNotAvailable) != 0) {
-                            errText += "- no remote certificate provided\n";
-                        }
-                        if ((errs & SslPolicyErrors.RemoteCertificateNameMismatch) != 0) {
-                            errText += "- remote certificate name does not match hostname\n";
-                        }
-                        if ((errs & SslPolicyErrors.RemoteCertificateChainErrors) != 0) {
-                            errText += "- remote certificate is not trusted\n";
-                        }
-
-                        errText += "\nConnect anyway?";
-
-                        var dlgRes = MessageBox.Show(errText, null, MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
-                        return dlgRes == DialogResult.Yes;
-                    });
-                    try {
-                        sslStream.AuthenticateAsClient(hostName);
-                    } catch (AuthenticationException) {
-                        return ConnErrorMessages.RemoteSslError;
-                    }
-                    stream = sslStream;
-                } else {
-                    stream = rawStream;
-                }
-
                 string sig = stream.ReadAsciiString(DebuggerSignature.Length);
                 if (sig != DebuggerSignature) {
-                    return ConnErrorMessages.RemoteUnsupportedServer;
+                    throw new ConnectionException(ConnErrorMessages.RemoteUnsupportedServer);
                 }
 
                 long ver = stream.ReadInt64();
@@ -144,88 +86,68 @@ namespace Microsoft.PythonTools.Debugger.Remote {
                 stream.WriteInt64(DebuggerProtocolVersion);
 
                 if (ver != DebuggerProtocolVersion) {
-                    return ConnErrorMessages.RemoteUnsupportedServer;
+                    throw new ConnectionException(ConnErrorMessages.RemoteUnsupportedServer);
                 }
 
-                stream.WriteString(secret);
+                stream.WriteString(uri.UserInfo);
                 string secretResp = stream.ReadAsciiString(Accepted.Length);
                 if (secretResp != Accepted) {
-                    return ConnErrorMessages.RemoteSecretMismatch;
+                    throw new ConnectionException(ConnErrorMessages.RemoteSecretMismatch);
                 }
 
                 connected = true;
-            } catch (IOException) {
-                return ConnErrorMessages.RemoteNetworkError;
-            } catch (SocketException) {
-                return ConnErrorMessages.RemoteNetworkError;
+                return stream;
+            } catch (IOException ex) {
+                throw new ConnectionException(ConnErrorMessages.RemoteNetworkError, ex);
+            } catch (SocketException ex) {
+                throw new ConnectionException(ConnErrorMessages.RemoteNetworkError, ex);
             } finally {
                 if (!connected) {
                     if (stream != null) {
                         stream.Close();
                     }
-                    socket.Close();
-                    socket = null;
-                    stream = null;
                 }
             }
-
-            return ConnErrorMessages.None;
         }
 
         /// <summary>
-        /// Same as the static version of this method, but uses the same <c>hostName</c>, <c>portNumber</c> and <c>secret</c> values
-        /// that were originally used to create this instance of <see cref="PythonRemoteProcess"/>.
+        /// Same as the static version of this method, but uses the same <c>uri</c>
+        /// that was originally used to create this instance of <see cref="PythonRemoteProcess"/>.
         /// </summary>
-        public ConnErrorMessages TryConnect(SslErrorHandling sslErrorHandling, out Socket socket, out Stream stream) {
-            return TryConnect(_hostName, _portNumber, _secret, _useSsl, sslErrorHandling, out socket, out stream);
+        public Stream Connect(bool warnAboutAuthenticationErrors) {
+            return Connect(Uri, warnAboutAuthenticationErrors);
         }
 
-        public static ConnErrorMessages TryAttach(string hostName, ushort portNumber, string secret, bool useSsl, SslErrorHandling sslErrorHandling, out PythonProcess process) {
-            process = null;
+        public static PythonProcess Attach(Uri uri, bool warnAboutAuthenticationErrors) {
+            var stream = Connect(uri, warnAboutAuthenticationErrors);
+            try {
+                stream.Write(AttachCommandBytes);
 
-            Socket socket;
-            Stream stream;
-            ConnErrorMessages err = TryConnect(hostName, portNumber, secret, useSsl, sslErrorHandling, out socket, out stream);
-            if (err == ConnErrorMessages.None) {
-                bool attached = false;
-                PythonLanguageVersion langVer;
-                int pid;
-                try {
-                    stream.Write(AttachCommandBytes);
-
-                    string attachResp = stream.ReadAsciiString(Accepted.Length);
-                    if (attachResp != Accepted) {
-                        return ConnErrorMessages.RemoteAttachRejected;
-                    }
-
-                    pid = stream.ReadInt32();
-                    int langMajor = stream.ReadInt32();
-                    int langMinor = stream.ReadInt32();
-                    int langMicro = stream.ReadInt32();
-                    langVer = (PythonLanguageVersion)((langMajor << 8) | langMinor);
-                    if (!Enum.IsDefined(typeof(PythonLanguageVersion), langVer)) {
-                        langVer = PythonLanguageVersion.None;
-                    }
-
-                    attached = true;
-                } catch (IOException) {
-                    return ConnErrorMessages.RemoteNetworkError;
-                } finally {
-                    if (!attached) {
-                        if (stream != null) {
-                            stream.Close();
-                        }
-                        socket.Close();
-                        socket = null;
-                        stream = null;
-                    }
+                string attachResp = stream.ReadAsciiString(Accepted.Length);
+                if (attachResp != Accepted) {
+                    throw new ConnectionException(ConnErrorMessages.RemoteAttachRejected);
                 }
 
-                process = new PythonRemoteProcess(pid, hostName, portNumber, secret, useSsl, langVer);
-                process.Connected(socket, stream);
-            }
+                int pid = stream.ReadInt32();
+                int langMajor = stream.ReadInt32();
+                int langMinor = stream.ReadInt32();
+                int langMicro = stream.ReadInt32();
+                var langVer = (PythonLanguageVersion)((langMajor << 8) | langMinor);
+                if (!Enum.IsDefined(typeof(PythonLanguageVersion), langVer)) {
+                    langVer = PythonLanguageVersion.None;
+                }
 
-            return err;
+                var process = new PythonRemoteProcess(pid, uri, langVer);
+                process.Connected(stream);
+                stream = null;
+                return process;
+            } catch (IOException ex) {
+                throw new ConnectionException(ConnErrorMessages.RemoteNetworkError, ex);
+            } finally {
+                if (stream != null) {
+                    stream.Close();
+                }
+            }
         }
     }
 }

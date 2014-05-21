@@ -390,11 +390,11 @@ namespace AzureSetup {
                 readFrom = webConfig;
             }
 
-            var text = File.ReadAllText(readFrom);
-            string newText = text.Replace("%WFASTCGIPATH%", fastCgiPath.Replace("\"", "&quot;"))
-                             .Replace("%INTERPRETERPATH%", interpreter)
-                             .Replace("%RootDir%", physicalDir);
-            File.WriteAllText(webConfig, newText);
+            var text = File.ReadAllText(readFrom);            
+            text = Regex.Replace(text, "%WFASTCGIPATH%", fastCgiPath.Replace("\"", "&quot;"), RegexOptions.IgnoreCase);
+            text = Regex.Replace(text, "%INTERPRETERPATH%", interpreter, RegexOptions.IgnoreCase);
+            text = Regex.Replace(text, "%ROOTDIR%", physicalDir, RegexOptions.IgnoreCase);
+            File.WriteAllText(webConfig, text);
         }
 
         private static void InstallWebPiProducts(string physicalDir, List<string> webpiInstalls) {

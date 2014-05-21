@@ -80,7 +80,8 @@ $is_debug = (Select-Xml -Xml $rolemodel -Namespace $ns -XPath "/sd:RoleModel/sd:
 $is_emulated = $env:EMULATED -eq "true"
 
 if ($is_web) {
-    $env:RootDir = (gi "${env:RoleRoot}\$((Select-Xml -Xml $rolemodel -Namespace $ns -XPath "/sd:RoleModel/sd:Sites/sd:Site")[0].Node.physicalDirectory)").FullName
+	cd "${env:RoleRoot}\"
+    $env:RootDir = (gi $((Select-Xml -Xml $rolemodel -Namespace $ns -XPath "/sd:RoleModel/sd:Sites/sd:Site")[0].Node.physicalDirectory)).FullName
 } else {
     $env:RootDir = (gi "$($MyInvocation.MyCommand.Path)\..\..").FullName
 }

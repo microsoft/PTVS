@@ -16,6 +16,7 @@ using System;
 using System.IO;
 using System.Net.Sockets;
 using System.Windows.Forms;
+using Microsoft.PythonTools.Debugger.Transports;
 using Microsoft.VisualStudio.Debugger.Interop;
 
 namespace Microsoft.PythonTools.Debugger.Remote {
@@ -134,8 +135,12 @@ namespace Microsoft.PythonTools.Debugger.Remote {
             return 0; // S_OK = true, S_FALSE = false
         }
 
+        // AzureExplorerAttachDebuggerCommand looks up remote processes by name, and has to be updated if the format of this property changes.
         private string BaseName {
-            get { return Path.GetFileName(_exe) + " @ " + _port.HostName + ":" + _port.PortNumber; }
+            get {
+                // Strip out the secret to avoid showing it in the process list.
+                return Path.GetFileName(_exe) + " @ " + new UriBuilder(_port.Uri) { UserName = null };
+            }
         }
 
         private string Title {
@@ -148,12 +153,17 @@ namespace Microsoft.PythonTools.Debugger.Remote {
             // Connect to the remote debugging server and obtain process information. If any errors occur, display an error dialog, and keep
             // trying for as long as user clicks "Retry".
             while (true) {
-                Socket socket;
-                Stream stream;
-                // Process information is not sensitive, so ignore any SSL certificate errors, rather than bugging the user with warning dialogs.
-                var err = PythonRemoteProcess.TryConnect(port.HostName, port.PortNumber, port.Secret, port.UseSsl, SslErrorHandling.Ignore, out socket, out stream);
+                Stream stream = null;
+                ConnectionException connEx = null;
+                try {
+                    // Process information is not sensitive, so ignore any SSL certificate errors, rather than bugging the user with warning dialogs.
+                    stream = PythonRemoteProcess.Connect(port.Uri, false);
+                } catch (ConnectionException ex) {
+                    connEx = ex;
+                }
+
                 using (stream) {
-                    if (err == ConnErrorMessages.None) {
+                    if (stream != null) {
                         try {
                             stream.Write(PythonRemoteProcess.InfoCommandBytes);
                             int pid = stream.ReadInt32();
@@ -162,25 +172,32 @@ namespace Microsoft.PythonTools.Debugger.Remote {
                             string version = stream.ReadString();
                             process = new PythonRemoteDebugProcess(port, pid, exe, username, version);
                             break;
-                        } catch (IOException) {
-                            err = ConnErrorMessages.RemoteNetworkError;
+                        } catch (IOException ex) {
+                            connEx = new ConnectionException(ConnErrorMessages.RemoteNetworkError, ex);
                         }
                     }
 
-                    if (err != ConnErrorMessages.None) {
+                    if (connEx != null) {
                         string errText;
-                        switch (err) {
+                        switch (connEx.Error) {
                             case ConnErrorMessages.RemoteUnsupportedServer:
-                                errText = string.Format("Remote server at '{0}:{1}' is not a Python Tools for Visual Studio remote debugging server, or its version is not supported.", port.HostName, port.PortNumber);
+                                errText = string.Format("Remote server at {0} is not a Python Tools for Visual Studio remote debugging server, or its version is not supported.", port.Uri);
                                 break;
                             case ConnErrorMessages.RemoteSecretMismatch:
-                                errText = string.Format("Secret '{0}' did not match the server secret at '{1}:{2}'. Make sure that the secret is specified correctly in the Qualifier textbox, e.g. 'secret@localhost:5678'.", port.Secret, port.HostName, port.PortNumber);
+                                errText = string.Format("Secret '{0}' did not match the server secret at {1}. Make sure that the secret is specified correctly in the Qualifier textbox, e.g. tcp://secret@localhost.",
+                                    port.Uri.UserInfo, new UriBuilder(port.Uri) { UserName = null, Password = null }.Uri);
                                 break;
                             case ConnErrorMessages.RemoteSslError:
                                 // User has already got a warning dialog and clicked "Cancel" on that, so no further prompts are needed.
                                 return null;
                             default:
-                                errText = string.Format("Could not connect to remote Python process at '{0}:{1}'. Make sure that the process is running, and has called ptvsd.enable_attach()", port.HostName, port.PortNumber);
+                                errText = string.Format("Could not connect to remote Python process at {0}. Make sure that the process is running, and has called ptvsd.enable_attach().", port.Uri);
+                                if (connEx.InnerException != null) {
+                                    errText += "\r\n\r\nAdditional information:";
+                                    for (var ex = connEx.InnerException; ex != null; ex = ex.InnerException) {
+                                        errText += "\r\n" + ex.Message;
+                                    }
+                                }
                                 break;
                         }
 

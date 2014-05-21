@@ -594,28 +594,24 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         protected override void Connect() {
-            Socket socket;
             var remoteProcess = _process as PythonRemoteProcess;
             if (remoteProcess == null) {
+                Socket listenerSocket;
                 int portNum;
-                CreateConnection(out socket, out portNum);
+                CreateConnection(out listenerSocket, out portNum);
                 Process proc = System.Diagnostics.Process.GetProcessById(_process.Id);
-                CreateCommandProcessor(socket, null, false, proc);
+                CreateCommandProcessor(listenerSocket, false, proc);
                 _process.ConnectRepl(portNum);
             } else {
-                Stream stream;
                 // Ignore SSL errors, since user was already prompted about them and chose to ignore them when he attached to this process.
-                if (remoteProcess.TryConnect(SslErrorHandling.Ignore, out socket, out stream) != ConnErrorMessages.None) {
-                    throw new InvalidOperationException();
-                }
-
+                var stream = remoteProcess.Connect(false);
                 bool connected = false;
                 try {
                     stream.Write(PythonRemoteProcess.ReplCommandBytes);
 
                     string attachResp = stream.ReadAsciiString(PythonRemoteProcess.Accepted.Length);
                     if (attachResp != PythonRemoteProcess.Accepted) {
-                        throw new InvalidOperationException();
+                        throw new ConnectionException(ConnErrorMessages.RemoteAttachRejected);
                     }
 
                     connected = true;
@@ -624,13 +620,11 @@ namespace Microsoft.PythonTools.Repl {
                         if (stream != null) {
                             stream.Close();
                         }
-                        socket.Close();
-                        socket = null;
                         stream = null;
                     }
                 }
 
-                CreateCommandProcessor(socket, stream, false, null);
+                CreateCommandProcessor(stream, false, null);
             }
         }
 

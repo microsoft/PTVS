@@ -1732,12 +1732,7 @@ namespace DebuggerTests {
                     AutoResetEvent attached = new AutoResetEvent(false);
                     AutoResetEvent breakpointHit = new AutoResetEvent(false);
 
-                    PythonProcess proc;
-                    ConnErrorMessages errReason;
-                    if ((errReason = PythonProcess.TryAttach(p.Id, out proc)) != ConnErrorMessages.None) {
-                        Assert.Fail("Failed to attach {0}", errReason);
-                    }
-
+                    var proc = PythonProcess.Attach(p.Id);
                     try {
                         proc.ProcessLoaded += (sender, args) => {
                             attached.Set();
@@ -1800,11 +1795,7 @@ namespace DebuggerTests {
                     for (int i = 0; i < 10; i++) {
                         Console.WriteLine(i);
 
-                        PythonProcess proc;
-                        ConnErrorMessages errReason;
-                        if ((errReason = PythonProcess.TryAttach(p.Id, out proc)) != ConnErrorMessages.None) {
-                            Assert.Fail("Failed to attach {0}", errReason);
-                        }
+                        var proc = PythonProcess.Attach(p.Id);
 
                         proc.ProcessLoaded += (sender, args) => {
                             attached.Set();
@@ -1846,11 +1837,7 @@ namespace DebuggerTests {
 
                     AutoResetEvent attached = new AutoResetEvent(false);
 
-                    PythonProcess proc;
-                    ConnErrorMessages errReason;
-                    if ((errReason = PythonProcess.TryAttach(p.Id, out proc)) != ConnErrorMessages.None) {
-                        Assert.Fail("Failed to attach {0}", errReason);
-                    }
+                    var proc = PythonProcess.Attach(p.Id);
 
                     try {
                         proc.ProcessLoaded += (sender, args) => {
@@ -1885,11 +1872,7 @@ namespace DebuggerTests {
 
                     AutoResetEvent attached = new AutoResetEvent(false);
 
-                    PythonProcess proc;
-                    ConnErrorMessages errReason;
-                    if ((errReason = PythonProcess.TryAttach(p.Id, out proc)) != ConnErrorMessages.None) {
-                        Assert.Fail("Failed to attach {0}", errReason);
-                    }
+                    var proc = PythonProcess.Attach(p.Id);
                     try {
                         proc.ProcessLoaded += (sender, args) => {
                             attached.Set();
@@ -1943,11 +1926,7 @@ namespace DebuggerTests {
                     for (int i = 0; i < 10; i++) {
                         Console.WriteLine(i);
 
-                        PythonProcess proc;
-                        ConnErrorMessages errReason;
-                        if ((errReason = PythonProcess.TryAttach(p.Id, out proc)) != ConnErrorMessages.None) {
-                            Assert.Fail("Failed to attach {0}", errReason);
-                        }
+                        var proc = PythonProcess.Attach(p.Id);
 
                         proc.ProcessLoaded += (sender, args) => {
                             attached.Set();
@@ -1979,11 +1958,7 @@ namespace DebuggerTests {
                     for (int i = 0; i < 10; i++) {
                         Console.WriteLine(i);
 
-                        PythonProcess proc;
-                        ConnErrorMessages errReason;
-                        if ((errReason = PythonProcess.TryAttach(p.Id, out proc)) != ConnErrorMessages.None) {
-                            Assert.Fail("Failed to attach {0}", errReason);
-                        }
+                        var proc = PythonProcess.Attach(p.Id);
 
                         proc.ProcessLoaded += (sender, args) => {
                             attached.Set();
@@ -2137,14 +2112,8 @@ void main()
 
                 AutoResetEvent attached = new AutoResetEvent(false);
                 AutoResetEvent bpHit = new AutoResetEvent(false);
-                PythonProcess proc;
-                ConnErrorMessages errReason;
-                if ((errReason = PythonProcess.TryAttach(p.Id, out proc)) != ConnErrorMessages.None) {
-                    Assert.Fail("Failed to attach {0}", errReason);
-                } else {
-                    Console.WriteLine("Attached");
-                }
 
+                var proc = PythonProcess.Attach(p.Id);
                 try {
                     proc.ProcessLoaded += (sender, args) => {
                         Console.WriteLine("Process loaded");
@@ -2273,14 +2242,8 @@ void main()
 
                 AutoResetEvent attached = new AutoResetEvent(false);
                 AutoResetEvent bpHit = new AutoResetEvent(false);
-                PythonProcess proc;
-                ConnErrorMessages errReason;
-                if ((errReason = PythonProcess.TryAttach(p.Id, out proc)) != ConnErrorMessages.None) {
-                    Assert.Fail("Failed to attach {0}", errReason);
-                } else {
-                    Console.WriteLine("Attached");
-                }
 
+                var proc = PythonProcess.Attach(p.Id);
                 try {
                     proc.ProcessLoaded += (sender, args) => {
                         Console.WriteLine("Process loaded");
@@ -2373,12 +2336,8 @@ int main(int argc, char* argv[]) {
             try {
                 // start the attach with the GIL held
                 AutoResetEvent attached = new AutoResetEvent(false);
-                PythonProcess proc;
-                ConnErrorMessages errReason;
-                if ((errReason = PythonProcess.TryAttach(p.Id, out proc)) != ConnErrorMessages.None) {
-                    Assert.Fail("Failed to attach {0}", errReason);
-                }
 
+                var proc = PythonProcess.Attach(p.Id);
                 try {
                     bool isAttached = false;
                     proc.ProcessLoaded += (sender, args) => {

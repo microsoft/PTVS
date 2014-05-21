@@ -1,0 +1,27 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>PTVS remote debugging proxy for Microsoft Azure Web Sites</title>
+    <style type="text/css">
+        * {
+            font-family: sans-serif;
+        }
+        .secret {
+            font-style: italic;
+            color: GrayText;
+        }
+    </style>
+</head>
+<body>
+    <h1>PTVS remote debugging proxy for Microsoft Azure Web Sites</h1>
+    Python remote debugging is enabled for this Microsoft Azure web site, and it can be attached to using
+    <a href='http://go.microsoft.com/fwlink/?LinkID=290972'>Python Tools for Visual Studio</a>. To attach, go to
+    Debug → Attach to Process, switch Transport to "Python remote debugging", and enter the following
+    URL in the Qualifier textbox:
+    <p>
+    <strong>{{WS_URI}}</strong>
+    <p>
+    where <span class="secret">secret</span> is the value of <code>WSGI_PTVSD_SECRET</code> in web.debug.config
+    of the project from which this web site was deployed. 
+</body>
+</html>

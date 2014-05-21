@@ -23,7 +23,6 @@ using System.Windows.Forms;
 using Microsoft.PythonTools.Debugger.Remote;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Debugger;
 using Microsoft.VisualStudio.Debugger.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -294,15 +293,15 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
                 // Check if we're attaching remotely using the Python remote debugging transport
                 var remoteProgram = program as PythonRemoteDebugProgram;
-                ConnErrorMessages attachRes;
-                if (remoteProgram != null) {
-                    var remotePort = remoteProgram.DebugProcess.DebugPort;
-                    attachRes = PythonRemoteProcess.TryAttach(remotePort.HostName, remotePort.PortNumber, remotePort.Secret, remotePort.UseSsl, SslErrorHandling.PromptUser, out _process);
-                } else {
-                    attachRes = PythonProcess.TryAttach(processId, out _process);
-                }
-                if (attachRes != ConnErrorMessages.None) {
-                    MessageBox.Show("Failed to attach debugger:\n" + attachRes.GetErrorMessage(), null, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                try {
+                    if (remoteProgram != null) {
+                        var remotePort = remoteProgram.DebugProcess.DebugPort;
+                        _process = PythonRemoteProcess.Attach(remotePort.Uri, true);
+                    } else {
+                        _process = PythonProcess.Attach(processId);
+                    }
+                } catch (ConnectionException ex) {
+                    MessageBox.Show("Failed to attach debugger:\r\n" + ex.Message, null, MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return VSConstants.E_FAIL;
                 }
                     

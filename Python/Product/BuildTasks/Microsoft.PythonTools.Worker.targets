@@ -19,6 +19,7 @@
     <_IgnorePythonWebCommands>true</_IgnorePythonWebCommands>
     <_IgnorePythonWebConfig>true</_IgnorePythonWebConfig>
     <_RegenerateWebConfig>false</_RegenerateWebConfig>
+    <_RegenerateWebDebugConfig>false</_RegenerateWebDebugConfig>
   </PropertyGroup>
 
   <Import Project="Microsoft.PythonTools.Web.targets"/>

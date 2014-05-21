@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.Collections.Generic;
 
 namespace Microsoft.PythonTools.Debugger {
@@ -34,7 +35,8 @@ namespace Microsoft.PythonTools.Debugger {
         RemoteSslError,
         RemoteUnsupportedServer,
         RemoteSecretMismatch,
-        RemoteAttachRejected
+        RemoteAttachRejected,
+        RemoteInvalidUri,
     };
 
     static class ConnErrorExtensions {
@@ -56,7 +58,8 @@ namespace Microsoft.PythonTools.Debugger {
             { ConnErrorMessages.RemoteSslError, "Could not establish a secure SSL connection to remote debugging server" },
             { ConnErrorMessages.RemoteUnsupportedServer, "Remote server is not a supported Python Tools for Visual Studio debugging server" },
             { ConnErrorMessages.RemoteSecretMismatch, "Secret specified in the Qualifier string did not match the remote secret" },
-            { ConnErrorMessages.RemoteAttachRejected, "Remote debugging server rejected request to attach" }
+            { ConnErrorMessages.RemoteAttachRejected, "Remote debugging server rejected request to attach" },
+            { ConnErrorMessages.RemoteInvalidUri, "Invalid remote debugging endpoint URI" }
         };
 
         internal static string GetErrorMessage(this ConnErrorMessages attachRes) {
@@ -65,6 +68,23 @@ namespace Microsoft.PythonTools.Debugger {
                 msg = "Unknown error";
             }
             return msg;
+        }
+    }
+
+    public class ConnectionException : Exception {
+        public ConnectionException(ConnErrorMessages error) {
+            Error = error;
+        }
+
+        public ConnectionException(ConnErrorMessages error, Exception innerException)
+            : base(null, innerException) {
+            Error = error;
+        }
+
+        public ConnErrorMessages Error { get; private set; }
+
+        public override string Message {
+            get { return Error.GetErrorMessage(); }
         }
     }
 }

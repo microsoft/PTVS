@@ -54,5 +54,7 @@ namespace Microsoft.PythonTools
         public const uint cmdidShowPythonView = 0x400D;
         public const uint cmdidShowNativePythonFrames = 0x400E;
         public const uint cmdidUsePythonStepping = 0x400F;
+
+        public const uint cmdidAzureExplorerAttachPythonDebugger = 0x4032;
     };
 }

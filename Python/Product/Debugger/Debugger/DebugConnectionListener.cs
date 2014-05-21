@@ -91,7 +91,7 @@ namespace Microsoft.PythonTools.Debugger {
                 return;
             }
 
-            var stream = new NetworkStream(socket, ownsSocket: false);
+            var stream = new NetworkStream(socket, ownsSocket: true);
             try {
                 socket.Blocking = true;
                 string debugId = stream.ReadString();
@@ -107,7 +107,7 @@ namespace Microsoft.PythonTools.Debugger {
                         (targetProcess = weakProcess.Target as PythonProcess) != null) {
 
                         if (result == ConnErrorMessages.None) {
-                            targetProcess.Connected(socket, stream);
+                            targetProcess.Connected(stream);
                             stream = null;
                             socket = null;
                         } else {

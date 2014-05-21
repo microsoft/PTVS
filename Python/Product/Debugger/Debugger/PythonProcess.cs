@@ -44,11 +44,10 @@ namespace Microsoft.PythonTools.Debugger {
         private readonly Guid _processGuid = Guid.NewGuid();
         private readonly List<string[]> _dirMapping;
         private readonly bool _delayUnregister;
-        private readonly object _socketLock = new object();
+        private readonly object _streamLock = new object();
 
         private int _pid;
         private bool _sentExited, _startedProcess;
-        private Socket _socket;
         private Stream _stream;
         private int _breakpointCounter;
         private bool _setLineResult;                    // contains result of attempting to set the current line of a frame
@@ -74,12 +73,12 @@ namespace Microsoft.PythonTools.Debugger {
 
             using (var result = DebugAttach.AttachAD7(pid, DebugConnectionListener.ListenerPort, _processGuid)) {
                 if (result.Error != ConnErrorMessages.None) {
-                    throw new AttachException(result.Error);
+                    throw new ConnectionException(result.Error);
                 }
 
                 _langVersion = (PythonLanguageVersion)result.LanguageVersion;
                 if (!result.AttachDone.WaitOne(20000)) {
-                    throw new AttachException(ConnErrorMessages.TimeOut);
+                    throw new ConnectionException(ConnErrorMessages.TimeOut);
                 }
             }
         }
@@ -145,32 +144,12 @@ namespace Microsoft.PythonTools.Debugger {
             _process.Exited += new EventHandler(_process_Exited);
         }
 
-        public static ConnErrorMessages TryAttach(int pid, out PythonProcess process) {
-            try {
-                process = new PythonProcess(pid);
-                return ConnErrorMessages.None;
-            } catch (AttachException ex) {
-                process = null;
-                return ex.Error;
-            }
+        public static PythonProcess Attach(int pid) {
+            return new PythonProcess(pid);
         }
 
         public static PythonProcess AttachRepl(Stream stream, int pid, PythonLanguageVersion version) {
             return new PythonProcess(stream, pid, version);
-        }
-
-        class AttachException : Exception {
-            private readonly ConnErrorMessages _error;
-
-            public AttachException(ConnErrorMessages error) {
-                _error = error;
-            }
-
-            public ConnErrorMessages Error {
-                get {
-                    return _error;
-                }
-            }
         }
 
         #region Public Process API
@@ -208,18 +187,9 @@ namespace Microsoft.PythonTools.Debugger {
             DebugConnectionListener.UnregisterProcess(_processGuid);
 
             if (disposing) {
-                lock (_socketLock) {
+                lock (_streamLock) {
                     if (_stream != null) {
                         _stream.Dispose();
-                    }
-                    if (_socket != null) {
-                        try {
-                            _socket.Disconnect(false);
-                        } catch (ObjectDisposedException) {
-                        } catch (SocketException) {
-                        }
-                        _socket.Dispose();
-                        _socket = null;
                     }
                 }
             }
@@ -270,10 +240,6 @@ namespace Microsoft.PythonTools.Debugger {
             if (_stream != null) {
                 _stream.Dispose();
             }
-            if (_socket != null) {
-                _socket.Dispose();
-                _socket = null;
-            }
         }
 
         public bool HasExited {
@@ -287,7 +253,7 @@ namespace Microsoft.PythonTools.Debugger {
         /// </summary>
         public void Break() {
             DebugWriteCommand("BreakAll");
-            lock(_socketLock) {
+            lock(_streamLock) {
                 _stream.Write(BreakAllCommandBytes);
             }
         }
@@ -303,7 +269,7 @@ namespace Microsoft.PythonTools.Debugger {
 
             _stoppedForException = false;
             DebugWriteCommand("ResumeAll");
-            lock (_socketLock) {
+            lock (_streamLock) {
                 if (_stream != null) {
                     _stream.Write(ResumeAllCommandBytes);
                 }
@@ -388,7 +354,7 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         private void SendExceptionInfo(int defaultBreakOnMode, IEnumerable<KeyValuePair<string, int>> breakOn) {
-            lock (_socketLock) {
+            lock (_streamLock) {
                 _stream.Write(SetExceptionInfoCommandBytes);
                 _stream.WriteInt32(defaultBreakOnMode);
                 _stream.WriteInt32(breakOn.Count());
@@ -403,11 +369,10 @@ namespace Microsoft.PythonTools.Debugger {
 
         #region Debuggee Communcation
 
-        internal void Connected(Socket socket, Stream stream) {
+        internal void Connected(Stream stream) {
             Debug.WriteLine("Process Connected: " + _processGuid);
 
             lock (this) {
-                _socket = socket;
                 _stream = stream;
                 if (_breakOn != null) {
                     SendExceptionInfo(_defaultBreakMode, _breakOn);
@@ -598,7 +563,7 @@ namespace Microsoft.PythonTools.Debugger {
             Debug.WriteLine("Exception handlers requested for: " + filename);
             var statements = GetHandledExceptionRanges(filename);
 
-            lock (_socketLock) {
+            lock (_streamLock) {
                 stream.Write(SetExceptionHandlerInfoCommandBytes);
                 stream.WriteString(filename);
 
@@ -895,14 +860,14 @@ namespace Microsoft.PythonTools.Debugger {
 
         private void HandleLast(Stream stream) {
             DebugWriteCommand("LAST ack");
-            lock (_socketLock) {
+            lock (_streamLock) {
                 stream.Write(LastAckCommandBytes);
             }
         }
 
         internal void SendStepOut(long threadId) {
             DebugWriteCommand("StepOut");
-            lock (_socketLock) {
+            lock (_streamLock) {
                 _stream.Write(StepOutCommandBytes);
                 _stream.WriteInt64(threadId);
             }
@@ -910,7 +875,7 @@ namespace Microsoft.PythonTools.Debugger {
 
         internal void SendStepOver(long threadId) {
             DebugWriteCommand("StepOver");
-            lock (_socketLock) {
+            lock (_streamLock) {
                 _stream.Write(StepOverCommandBytes);
                 _stream.WriteInt64(threadId);
             }
@@ -918,7 +883,7 @@ namespace Microsoft.PythonTools.Debugger {
 
         internal void SendStepInto(long threadId) {
             DebugWriteCommand("StepInto");
-            lock (_socketLock) {
+            lock (_streamLock) {
                 _stream.Write(StepIntoCommandBytes);
                 _stream.WriteInt64(threadId);
             }
@@ -927,7 +892,7 @@ namespace Microsoft.PythonTools.Debugger {
         public void SendResumeThread(long threadId) {
             _stoppedForException = false;
             DebugWriteCommand("ResumeThread");
-            lock (_socketLock) {
+            lock (_streamLock) {
                 // race w/ removing the breakpoint, let the thread continue
                 _stream.Write(ResumeThreadCommandBytes);
                 _stream.WriteInt64(threadId);
@@ -937,7 +902,7 @@ namespace Microsoft.PythonTools.Debugger {
         public void SendAutoResumeThread(long threadId) {
             _stoppedForException = false;
             DebugWriteCommand("AutoResumeThread");
-            lock (_socketLock) {
+            lock (_streamLock) {
                 _stream.Write(AutoResumeThreadCommandBytes);
                 _stream.WriteInt64(threadId);
             }
@@ -945,7 +910,7 @@ namespace Microsoft.PythonTools.Debugger {
 
     public void SendClearStepping(long threadId) {
             DebugWriteCommand("ClearStepping");
-            lock (_socketLock) {
+            lock (_streamLock) {
                 // race w/ removing the breakpoint, let the thread continue
                 _stream.Write(ClearSteppingCommandBytes);
                 _stream.WriteInt64(threadId);
@@ -955,7 +920,7 @@ namespace Microsoft.PythonTools.Debugger {
         public void Detach() {
             DebugWriteCommand("Detach");
             try {
-                lock (_socketLock) {
+                lock (_streamLock) {
                     _stream.Write(DetachCommandBytes);
                 }
             } catch (IOException) {
@@ -969,7 +934,7 @@ namespace Microsoft.PythonTools.Debugger {
         internal void BindBreakpoint(PythonBreakpoint breakpoint) {
             DebugWriteCommand(String.Format("Bind Breakpoint IsDjango: {0}", breakpoint.IsDjangoBreakpoint));
 
-            lock (_socketLock) {
+            lock (_streamLock) {
                 if (breakpoint.IsDjangoBreakpoint) {
                     _stream.Write(AddDjangoBreakPointCommandBytes);
                 } else {
@@ -1033,7 +998,7 @@ namespace Microsoft.PythonTools.Debugger {
 
         internal void SetBreakPointCondition(PythonBreakpoint breakpoint) {
             DebugWriteCommand("Set BP Condition");
-            lock (_socketLock) {
+            lock (_streamLock) {
                 _stream.Write(SetBreakPointConditionCommandBytes);
                 _stream.WriteInt32(breakpoint.Id);
                 SendCondition(breakpoint);
@@ -1047,7 +1012,7 @@ namespace Microsoft.PythonTools.Debugger {
                 _pendingExecutes[executeId] = new CompletionInfo(completion, text, pythonStackFrame);
             }
 
-            lock (_socketLock) {
+            lock (_streamLock) {
                 _stream.Write(ExecuteTextCommandBytes);
                 _stream.WriteString(text);
                 _stream.WriteInt64(pythonStackFrame.Thread.Id);
@@ -1064,7 +1029,7 @@ namespace Microsoft.PythonTools.Debugger {
                 _pendingChildEnums[executeId] = new ChildrenInfo(completion, text, pythonStackFrame);
             }
 
-            lock (_socketLock) {
+            lock (_streamLock) {
                 _stream.Write(GetChildrenCommandBytes);
                 _stream.WriteString(text);
                 _stream.WriteInt64(pythonStackFrame.Thread.Id);
@@ -1082,9 +1047,9 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         internal void DisableBreakPoint(PythonBreakpoint unboundBreakpoint) {
-            if (_stream != null && _socket.Connected) {
+            if (_stream != null) {
                 DebugWriteCommand("Disable Breakpoint");
-                lock (_socketLock) {
+                lock (_streamLock) {
                     if (unboundBreakpoint.IsDjangoBreakpoint) {
                         _stream.Write(RemoveDjangoBreakPointCommandBytes);
                     } else {
@@ -1101,7 +1066,7 @@ namespace Microsoft.PythonTools.Debugger {
 
         internal void ConnectRepl(int portNum) {
             DebugWriteCommand("Connect Repl");
-            lock (_socketLock) {
+            lock (_streamLock) {
                 _stream.Write(ConnectReplCommandBytes);
                 _stream.WriteInt32(portNum);
             }
@@ -1109,7 +1074,7 @@ namespace Microsoft.PythonTools.Debugger {
 
         internal void DisconnectRepl() {
             DebugWriteCommand("Disconnect Repl");
-            lock (_socketLock) {
+            lock (_streamLock) {
                 if (_stream == null) {
                     return;
                 }
@@ -1129,7 +1094,7 @@ namespace Microsoft.PythonTools.Debugger {
             }
 
             DebugWriteCommand("Set Line Number");
-            lock (_socketLock) {
+            lock (_streamLock) {
                 _setLineResult = false;
                 _stream.Write(SetLineNumberCommand);
                 _stream.WriteInt64(pythonStackFrame.Thread.Id);
@@ -1138,7 +1103,7 @@ namespace Microsoft.PythonTools.Debugger {
             }
 
             // wait up to 2 seconds for line event...
-            for (int i = 0; i < 20 && _socket.Connected && WaitForSingleObject(_lineEvent.SafeWaitHandle, 100) != 0; i++) {
+            for (int i = 0; i < 20 && _stream != null && WaitForSingleObject(_lineEvent.SafeWaitHandle, 100) != 0; i++) {
             }
 
             return _setLineResult;

@@ -164,42 +164,71 @@ namespace Microsoft.PythonTools.Repl {
             portNum = ((IPEndPoint)socket.LocalEndPoint).Port;
         }
 
-        // If stream is null, creates a command processor that will listen for incoming connections on the socket (used for regular REPL and for local debugging REPL).
-        // If stream is not null, creates a command processor that will use that stream as the REPL connection (used for remote debugging REPL).
-        protected void CreateCommandProcessor(Socket socket, Stream stream, bool redirectStdOutput, Process process) {
-            _curListener = new CommandProcessorThread(this, socket, stream, redirectStdOutput, process);
+        // Creates a command processor that will listen for incoming connections on the socket (used for regular REPL and for local debugging REPL).
+        protected void CreateCommandProcessor(Socket listenerSocket, bool redirectStdOutput, Process process) {
+            _curListener = new CommandProcessorThread(this, listenerSocket, redirectStdOutput, process);
+        }
+
+        // Creates a command processor that will use the provided stream as the REPL connection (used for remote debugging REPL).
+        protected void CreateCommandProcessor(Stream stream, bool redirectStdOutput, Process process) {
+            _curListener = new CommandProcessorThread(this, stream, redirectStdOutput, process);
         }
 
         class CommandProcessorThread {
             private readonly BasePythonReplEvaluator _eval;
-            private readonly object _socketLock = new object();
-            private readonly Process _process;
-            internal bool _connected;
-            private Socket _socket;
+
+            // Of the following two, only one is non-null at any given time.
+            // If _listenerSocket is not null, then the thread is waiting for an incoming debugger connection.
+            // If _stream is not null, then it is attached to the debuggee.
+            // If both are null, the thread is shutting down after detaching.
+            private Socket _listenerSocket;
             private Stream _stream;
+
+            // All access to _stream should be done while holding this lock. Don't lock this directly - use StreamLock instead.
+            private readonly object _streamLock = new object();
+
             private TaskCompletionSource<ExecutionResult> _completion;
-            private string _executionText, _executionFile, _executionExtraArgs, _executionFileType;
+            private readonly object _completionLock = new object();
+
+            private Action _deferredExecute;
+
+            private readonly Process _process;
             private AutoResetEvent _completionResultEvent = new AutoResetEvent(false);
             private OverloadDoc[] _overloads;
             private Dictionary<string, string> _fileToModuleName;
             private Dictionary<string, bool> _allModules;
-            internal bool _exitedIsExpected;
             private StringBuilder _preConnectionOutput;
             internal string _currentScope = "__main__";
             private MemberResults _memberResults;
             internal string _prompt1 = ">>> ", _prompt2 = "... ";
-#if DEBUG
-            private Thread _socketLockedThread;
-#endif
 
-            public CommandProcessorThread(BasePythonReplEvaluator evaluator, Socket socket, Stream stream, bool redirectOutput, Process process) {
+            public CommandProcessorThread(BasePythonReplEvaluator evaluator, Stream stream, bool redirectOutput, Process process) {
                 _eval = evaluator;
-                _socket = socket;
                 _stream = stream;
                 _process = process;
+                StartOutputThread(redirectOutput);
+            }
 
+            public CommandProcessorThread(BasePythonReplEvaluator evaluator, Socket listenerSocket, bool redirectOutput, Process process) {
+                _eval = evaluator;
+                _listenerSocket = listenerSocket;
+                _process = process;
+                StartOutputThread(redirectOutput);
+            }
+
+            public bool IsConnected {
+                get {
+                    using (new StreamLock(this, throwIfDisconnected: false)) {
+                        return _stream == null;
+                    }
+                }
+            }
+
+            public bool IsProcessExpectedToExit { get; set; }
+
+            private void StartOutputThread(bool redirectOutput) {
                 var outputThread = new Thread(OutputThread);
-                outputThread.Name = "PythonReplEvaluator: " + evaluator.DisplayName;
+                outputThread.Name = "PythonReplEvaluator: " + _eval.DisplayName;
                 outputThread.Start();
 
                 if (redirectOutput) {
@@ -215,21 +244,25 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             private void ProcessExited(object sender, EventArgs e) {
-                _connected = false;
+                using (new StreamLock(this, throwIfDisconnected: false)) {
+                    _stream = null;
+                }
+
                 if (_preConnectionOutput != null) {
                     lock (_preConnectionOutput) {
                         Window.WriteError(FixNewLines(_preConnectionOutput.ToString()));
                     }
                 }
-                if (!_exitedIsExpected) {
+
+                if (!IsProcessExpectedToExit) {
                     Window.WriteError("The Python REPL process has exited\r\n");
                 }
-                _exitedIsExpected = false;
+                IsProcessExpectedToExit = false;
             }
 
             private void StdErrReceived(object sender, DataReceivedEventArgs e) {
                 if (e.Data != null) {
-                    if (!_connected) {
+                    if (_stream == null) {
                         AppendPreConnectionOutput(e);
                     } else {
                         Window.WriteError(e.Data + Environment.NewLine);
@@ -239,7 +272,7 @@ namespace Microsoft.PythonTools.Repl {
 
             private void StdOutReceived(object sender, DataReceivedEventArgs e) {
                 if (e.Data != null) {
-                    if (!_connected) {
+                    if (_stream == null) {
                         AppendPreConnectionOutput(e);
                     } else {
                         Window.WriteOutput(FixNewLines(e.Data) + Environment.NewLine);
@@ -257,41 +290,36 @@ namespace Microsoft.PythonTools.Repl {
                 }
             }
 
-            public void OutputThread() {
+            private void OutputThread() {
                 try {
-                    if (_stream == null) {
-                        _socket = _socket.Accept();
-                        _stream = new NetworkStream(_socket, ownsSocket: true);
-                    }
-                    using (new SocketLock(this)) {
-                        _connected = true;
+                    using (new StreamLock(this, throwIfDisconnected: false)) {
+                        if (_stream == null) {
+                            var socket = _listenerSocket.Accept();
+                            _listenerSocket = null;
+                            _stream = new NetworkStream(socket, ownsSocket: true);
+                        }
                     }
 
                     _eval.OnConnected();
 
-                    using (new SocketLock(this)) {
-                        if (_executionFile != null) {
-                            SendExecuteFile(_executionFile, _executionExtraArgs, _executionFileType);
-                            _executionFile = null;
-                            _executionExtraArgs = null;
-                        }
-
-                        if (_executionText != null) {
-                            Trace.TraceInformation("Executing delayed text: " + _executionText);
-                            SendExecuteText(_executionText);
-                            _executionText = null;
+                    using (new StreamLock(this, throwIfDisconnected: true)) {
+                        if (_deferredExecute != null) {
+                            _deferredExecute();
+                            _deferredExecute = null;
                         }
                     }
 
                     while (true) {
-                        Stream stream = _stream;
-                        if (stream == null) {
-                            break;
+                        Stream stream;
+                        using (new StreamLock(this, throwIfDisconnected: true)) {
+                            stream = _stream;
                         }
 
+                        // Release the lock while waiting for response, so that the main thread can issue commands etc.
+                        // If the stream goes away, we'll get an IOException from this which we will catch below.
                         string cmd = stream.ReadAsciiString(4);
 
-                        using (new SocketLock(this)) {
+                        using (new StreamLock(this, throwIfDisconnected: true)) {
                             Trace.TraceInformation("Repl {0} received command: {1}", _eval.DisplayName, cmd);
                             switch (cmd) {
                                 case "DONE": HandleExecutionDone(); break;
@@ -308,23 +336,23 @@ namespace Microsoft.PythonTools.Repl {
                                 case "PRPC": HandlePromptChanged(); break;
                                 case "RDLN": HandleReadLine(); break;
                                 case "DETC": HandleDebuggerDetach(); break;
-                                case "DPNG": DisplayPng(); break;
+                                case "DPNG": HandleDisplayPng(); break;
                                 case "EXIT":
                                     // REPL has exited
-                                    Stream.Write(ExitCommandBytes);
+                                    _stream.Write(ExitCommandBytes);
                                     return;
                             }
                         }
                     }
                 } catch (IOException) {
-                    _stream = null;
                 } catch (SocketException) {
-                    _stream = null;
-                } catch (DisconnectedException) {
-                } catch (NullReferenceException) {
+                } finally {
+                    using (new StreamLock(this, throwIfDisconnected: false)) {
+                        _stream = null;
+                    }
                 }
 
-                lock (this) {
+                lock (_completionLock) {
                     if (_completion != null) {
                         bool success = _completion.TrySetCanceled();
                         Debug.Assert(success);
@@ -333,39 +361,15 @@ namespace Microsoft.PythonTools.Repl {
                 }
             }
 
-            private Stream Stream {
-                get {
-                    var socket = Socket; // for Socket.get state checks
-                    var res = _stream;
-                    if (res == null) {
-                        throw new DisconnectedException("The interactive window has become disconnected from the remote process.  Please reset the window.");
-                    }
-                    return res;
-                }
-            }
-
-            private Socket Socket {
-                get {
-#if DEBUG
-                    Debug.Assert(_socketLockedThread == Thread.CurrentThread);
-#endif
-                    for (int i = 0; i < 40 && !_connected; i++) {
-                        // wait for connection...
-                        System.Threading.Thread.Sleep(100);
-                    }
-
-                    var res = _socket;
-                    if (res == null) {
-                        throw new DisconnectedException("The interactive window has become disconnected from the remote process.  Please reset the window.");
-                    }
-
-                    return res;
-                }
-            }
-
-            class DisconnectedException : Exception {
+            private class DisconnectedException : IOException {
                 public DisconnectedException(string message)
                     : base(message) {
+                }
+            }
+
+            private void ThrowIfDisconnected() {
+                if (_stream == null) {
+                    throw new DisconnectedException("The interactive window has become disconnected from the remote process. Please reset the window.");
                 }
             }
 
@@ -376,16 +380,11 @@ namespace Microsoft.PythonTools.Repl {
                     string input = Window.ReadStandardInput();
                     input = input != null ? UnfixNewLines(input) : "\n";
                     try {
-                        using (new SocketLock(this)) {
-                            if (Stream != null) {
-                                Stream.Write(InputLineCommandBytes);
-                                SendString(input);
-                            }
+                        using (new StreamLock(this, throwIfDisconnected: true)) {
+                            _stream.Write(InputLineCommandBytes);
+                            SendString(input);
                         }
                     } catch (IOException) {
-                    } catch (SocketException) {
-                    } catch (DisconnectedException) {
-                    } catch (NullReferenceException) {
                     }
                 });
             }
@@ -394,13 +393,15 @@ namespace Microsoft.PythonTools.Repl {
                 _eval._attached = false;
             }
 
-            private void DisplayPng() {
-                int len = Stream.ReadInt32();
+            private void HandleDisplayPng() {
+                Debug.Assert(Monitor.IsEntered(_streamLock));
+
+                int len = _stream.ReadInt32();
                 byte[] buffer = new byte[len];
                 if (len != 0) {
                     int bytesRead = 0;
                     do {
-                        bytesRead += Stream.Read(buffer, bytesRead, len - bytesRead);
+                        bytesRead += _stream.Read(buffer, bytesRead, len - bytesRead);
                     } while (bytesRead != len);
                 }
 
@@ -413,12 +414,11 @@ namespace Microsoft.PythonTools.Repl {
                 }
 
                 PythonProcess debugProcess;
-                using (new SocketLock(this)) {
-                    Stream.Write(DebugAttachCommandBytes);
-                    debugProcess = PythonProcess.AttachRepl(Stream, _process.Id, _eval.AnalyzerProjectLanguageVersion);
+                using (new StreamLock(this, throwIfDisconnected: true)) {
+                    _stream.Write(DebugAttachCommandBytes);
+                    debugProcess = PythonProcess.AttachRepl(_stream, _process.Id, _eval.AnalyzerProjectLanguageVersion);
                 }
 
-                // TODO: Surround in SocketUnlock
                 var debugTarget = new VsDebugTargetInfo2();
                 IntPtr pDebugInfo = IntPtr.Zero, pDebugEngines = IntPtr.Zero;
                 try {
@@ -436,7 +436,7 @@ namespace Microsoft.PythonTools.Repl {
                     Marshal.StructureToPtr(AD7Engine.DebugEngineGuid, debugTarget.pDebugEngines, false);
                     pDebugInfo = Marshal.AllocCoTaskMem(Marshal.SizeOf(typeof(VsDebugTargetInfo2)));
                     Marshal.StructureToPtr(debugTarget, pDebugInfo, false);
-                    
+
                     var debugger = (IVsDebugger2)PythonToolsPackage.GetGlobalService(typeof(SVsShellDebugger));
                     int hr = debugger.LaunchDebugTargets2(1, pDebugInfo);
 
@@ -477,14 +477,16 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             private void HandlePromptChanged() {
+                Debug.Assert(Monitor.IsEntered(_streamLock));
+
                 // prompt change
                 Trace.TraceInformation("Old prompts: \"{0}\" \"{1}\"", _prompt1, _prompt2);
-                _prompt1 = Stream.ReadString();
-                _prompt2 = Stream.ReadString();
-                bool updateAll = Stream.ReadInt32() == 1;
+                _prompt1 = _stream.ReadString();
+                _prompt2 = _stream.ReadString();
+                bool updateAll = _stream.ReadInt32() == 1;
                 Trace.TraceInformation("New prompts: \"{0}\" \"{1}\" updateAll={2}", _prompt1, _prompt2, updateAll);
                 if (Window != null) {
-                    using (new SocketUnlock(this)) {
+                    using (new StreamUnlock(this)) {
                         _eval.UpdatePrompts(updateAll);
                     }
                 }
@@ -492,7 +494,7 @@ namespace Microsoft.PythonTools.Repl {
 
             private void HandleModulesChanged() {
                 // modules changed
-                using (new SocketUnlock(this)) {
+                using (new StreamUnlock(this)) {
                     var curScopesChanged = _eval.AvailableScopesChanged;
                     if (curScopesChanged != null) {
                         curScopesChanged(this, EventArgs.Empty);
@@ -501,7 +503,9 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             private void HandleImageDisplay() {
-                string filename = Stream.ReadString();
+                Debug.Assert(Monitor.IsEntered(_streamLock));
+
+                string filename = _stream.ReadString();
                 try {
                     DisplayImage(File.ReadAllBytes(filename));
                 } catch (IOException) {
@@ -512,7 +516,7 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             private void DisplayImage(byte[] bytes) {
-                using (new SocketUnlock(this)) {
+                using (new StreamUnlock(this)) {
                     ((System.Windows.UIElement)Window.TextView).Dispatcher.BeginInvoke((Action)(() => {
                         try {
                             var imageSrc = new BitmapImage();
@@ -528,12 +532,14 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             private void HandleModuleList() {
-                int moduleCount = Stream.ReadInt32();
+                Debug.Assert(Monitor.IsEntered(_streamLock));
+
+                int moduleCount = _stream.ReadInt32();
                 Dictionary<string, string> moduleNames = new Dictionary<string, string>();
                 Dictionary<string, bool> allModules = new Dictionary<string, bool>();
                 for (int i = 0; i < moduleCount; i++) {
-                    string name = Stream.ReadString();
-                    string filename = Stream.ReadString();
+                    string name = _stream.ReadString();
+                    string filename = _stream.ReadString();
                     if (!String.IsNullOrWhiteSpace(filename)) {
                         moduleNames[filename] = name;
                         allModules[name] = true;
@@ -552,15 +558,17 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             private void HandleSigResult() {
-                int overloadCount = Stream.ReadInt32();
+                Debug.Assert(Monitor.IsEntered(_streamLock));
+
+                int overloadCount = _stream.ReadInt32();
                 OverloadDoc[] docs = new OverloadDoc[overloadCount];
                 for (int i = 0; i < overloadCount; i++) {
-                    string doc = Stream.ReadString();
-                    int paramCount = Stream.ReadInt32();
+                    string doc = _stream.ReadString();
+                    int paramCount = _stream.ReadInt32();
 
                     ParameterResult[] parameters = new ParameterResult[paramCount];
                     for (int curParam = 0; curParam < paramCount; curParam++) {
-                        string name = Stream.ReadString();
+                        string name = _stream.ReadString();
                         int equals = name.IndexOf('=');
                         if (equals < 0) {
                             parameters[curParam] = new ParameterResult(name);
@@ -586,8 +594,9 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             private void HandleMemberResult() {
-                string typeName = Stream.ReadString();
+                Debug.Assert(Monitor.IsEntered(_streamLock));
 
+                string typeName = _stream.ReadString();
                 var instDict = ReadMemberDict();
                 var typeDict = ReadMemberDict();
                 _memberResults = new MemberResults(typeName, instDict, typeDict);
@@ -601,26 +610,30 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             private void HandleOutput() {
-                string data = Stream.ReadString();
+                Debug.Assert(Monitor.IsEntered(_streamLock));
+
+                string data = _stream.ReadString();
                 if (data != null) {
                     Trace.TraceInformation("Data = \"{0}\"", FixNewLines(data).Replace("\r\n", "\\r\\n"));
-                    using (new SocketUnlock(this)) {
+                    using (new StreamUnlock(this)) {
                         Window.WriteOutput(FixNewLines(data));
                     }
                 }
             }
 
             private void HandleError() {
-                string data = Stream.ReadString();
+                Debug.Assert(Monitor.IsEntered(_streamLock));
+
+                string data = _stream.ReadString();
                 Trace.TraceInformation("Data = \"{0}\"", FixNewLines(data).Replace("\r\n", "\\r\\n"));
-                using (new SocketUnlock(this)) {
+                using (new StreamUnlock(this)) {
                     Window.WriteError(FixNewLines(data));
                 }
             }
 
             private void HandleExecutionError() {
-                // DONE command
-                lock (this) {
+                // ERRE command
+                lock (_completionLock) {
                     if (_completion != null) {
                         _completion.SetResult(ExecutionResult.Failure);
                         _completion = null;
@@ -630,7 +643,7 @@ namespace Microsoft.PythonTools.Repl {
 
             private void HandleExecutionDone() {
                 // DONE command
-                lock (this) {
+                lock (_completionLock) {
                     if (_completion != null) {
                         _completion.SetResult(ExecutionResult.Success);
                         _completion = null;
@@ -639,133 +652,128 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             static readonly string _noReplProcess = "Current interactive window is disconnected - please reset the process." + Environment.NewLine;
+
+            [DllImport("user32", CallingConvention = CallingConvention.Winapi)]
+            static extern bool AllowSetForegroundWindow(int dwProcessId);
+
             public Task<ExecutionResult> ExecuteText(string text) {
                 if (text.StartsWith("$")) {
                     _eval._window.WriteError(String.Format("Unknown command '{0}', use \"$help\" for help" + Environment.NewLine, text.Substring(1).Trim()));
                     return ExecutionResult.Failed;
                 }
 
-                Trace.TraceInformation("Executing text: {0}", text);
-                using (new SocketLock(this)) {
-                    if (!_connected) {
-                        // delay executing the text until we're connected
-                        Trace.TraceInformation("Delayed executing text");
-                        _completion = new TaskCompletionSource<ExecutionResult>();
-                        _executionText = text;
-                        return _completion.Task;
+                Action send = () => {
+                    if (_process != null) {
+                        AllowSetForegroundWindow(_process.Id);
                     }
 
-                    try {
-                        if (!Socket.Connected) {
+                    _stream.Write(RunCommandBytes);
+
+                    // normalize line endings to \n which is all older versions of CPython can handle.
+                    text = text.Replace("\r\n", "\n");
+                    text = text.Replace("\r", "\n");
+                    text = text.TrimEnd(' ');
+                    SendString(text);
+                };
+
+                Trace.TraceInformation("Executing text: {0}", text);
+                using (new StreamLock(this, throwIfDisconnected: false)) {
+                    if (_stream == null) {
+                        // If we're still waiting for debuggee to connect to us, postpone the actual execution until we have the command stream.
+                        if (_listenerSocket != null) {
+                            Trace.TraceInformation("Deferred executing text because connection is not fully established yet.");
+                            _deferredExecute = send;
+                            _completion = new TaskCompletionSource<ExecutionResult>();
+                            return _completion.Task;
+                        } else {
                             _eval._window.WriteError(_noReplProcess);
                             return ExecutionResult.Failed;
                         }
+                    }
 
-                        _completion = new TaskCompletionSource<ExecutionResult>();
-
-                        SendExecuteText(text);
-                    } catch (DisconnectedException) {
-                        _eval._window.WriteError(_noReplProcess);
-                        return ExecutionResult.Failed;
+                    try {
+                        send();
                     } catch (IOException) {
                         _eval._window.WriteError(_noReplProcess);
                         return ExecutionResult.Failed;
-                    } catch (SocketException) {
-                        _eval._window.WriteError(_noReplProcess);
-                        return ExecutionResult.Failed;
-                    }
-
-                    return _completion.Task;
-                }
-            }
-
-            [DllImport("user32", CallingConvention = CallingConvention.Winapi)]
-            static extern bool AllowSetForegroundWindow(int dwProcessId);
-
-            private void SendExecuteText(string text) {
-                if (_process != null) {
-                    AllowSetForegroundWindow(_process.Id);
-                }
-
-                Stream.Write(RunCommandBytes);
-
-                // normalize line endings to \n which is all older versions of CPython can handle.
-                text = text.Replace("\r\n", "\n");
-                text = text.Replace("\r", "\n");
-                text = text.TrimEnd(' ');
-                SendString(text);
-            }
-
-            public bool IsConnected {
-                get {
-                    using (new SocketLock(this)) {
-                        return _connected && _socket != null && _socket.Connected && _stream != null;
                     }
                 }
-            }
 
-            public Task<ExecutionResult> ExecuteFile(string filename, string extraArgs, string fileType) {
-                using (new SocketLock(this)) {
-                    if (!_connected) {
-                        // delay executing the text until we're connected
-                        _executionFile = filename;
-                        _executionExtraArgs = extraArgs;
-                        _executionFileType = fileType;
-                        _completion = new TaskCompletionSource<ExecutionResult>();
-                        return _completion.Task;
-                    } else if (!Socket.Connected) {
-                        _eval._window.WriteError(_noReplProcess);
-                        return ExecutionResult.Failed;
-                    }
-
-                    SendExecuteFile(filename, extraArgs, fileType);
+                lock (_completionLock) {
                     _completion = new TaskCompletionSource<ExecutionResult>();
                     return _completion.Task;
                 }
             }
 
-            private void SendExecuteFile(string filename, string extraArgs, string fileType) {
-                if (_process != null) {
-                    AllowSetForegroundWindow(_process.Id);
+            public Task<ExecutionResult> ExecuteFile(string filename, string extraArgs, string fileType) {
+                Action send = () => {
+                    if (_process != null) {
+                        AllowSetForegroundWindow(_process.Id);
+                    }
+
+                    if (fileType == ExecuteFileEx_Script) {
+                        _stream.Write(ExecuteFileCommandBytes);
+                    } else {
+                        _stream.Write(ExecuteFileExCommandBytes);
+                        SendString(fileType);
+                    }
+                    SendString(filename);
+                    SendString(extraArgs ?? String.Empty);
+                };
+
+                using (new StreamLock(this, throwIfDisconnected: true)) {
+                    if (_stream == null) {
+                        // If we're still waiting for debuggee to connect to us, postpone the actual execution until we have the command stream.
+                        if (_listenerSocket != null) {
+                            _deferredExecute = send;
+                            _completion = new TaskCompletionSource<ExecutionResult>();
+                            return _completion.Task;
+                        } else {
+                            _eval._window.WriteError(_noReplProcess);
+                            return ExecutionResult.Failed;
+                        }
+                    }
+
+                    try {
+                        send();
+                    } catch (IOException) {
+                        _eval._window.WriteError(_noReplProcess);
+                        return ExecutionResult.Failed;
+                    }
                 }
 
-                if (fileType == ExecuteFileEx_Script) {
-                    Stream.Write(ExecuteFileCommandBytes);
-                } else {
-                    Stream.Write(ExecuteFileExCommandBytes);
-                    SendString(fileType);
+                lock (_completionLock) {
+                    _completion = new TaskCompletionSource<ExecutionResult>();
+                    return _completion.Task;
                 }
-                SendString(filename);
-                SendString(extraArgs ?? String.Empty);
+
             }
 
             public void AbortCommand() {
-                using (new SocketLock(this)) {
-                    Stream.Write(AbortCommandBytes);
+                using (new StreamLock(this, throwIfDisconnected: true)) {
+                    _stream.Write(AbortCommandBytes);
                 }
             }
 
             public void SetThreadAndFrameCommand(long thread, int frame, FrameKind frameKind) {
-                using (new SocketLock(this)) {
-                    Stream.Write(SetThreadAndFrameCommandBytes);
-                    Stream.WriteInt64(thread);
-                    Stream.WriteInt32(frame);
-                    Stream.WriteInt32((int)frameKind);
+                using (new StreamLock(this, throwIfDisconnected: true)) {
+                    _stream.Write(SetThreadAndFrameCommandBytes);
+                    _stream.WriteInt64(thread);
+                    _stream.WriteInt32(frame);
+                    _stream.WriteInt32((int)frameKind);
                     _currentScope = "<CurrentFrame>";
                 }
             }
 
             public OverloadDoc[] GetSignatureDocumentation(string text) {
-                using (new SocketLock(this)) {
-                    if (!Socket.Connected || !_connected) {
+                using (new StreamLock(this, throwIfDisconnected: false)) {
+                    if (_stream == null) {
                         return new OverloadDoc[0];
                     }
                     try {
-                        Stream.Write(GetSignaturesCommandBytes);
+                        _stream.Write(GetSignaturesCommandBytes);
                         SendString(text);
                     } catch (IOException) {
-                        return new OverloadDoc[0];
-                    } catch (SocketException) {
                         return new OverloadDoc[0];
                     }
                 }
@@ -782,16 +790,14 @@ namespace Microsoft.PythonTools.Repl {
                 _completionResultEvent.Reset();
                 _memberResults = null;
 
-                using (new SocketLock(this)) {
-                    if (!Socket.Connected || !_connected) {
+                using (new StreamLock(this, throwIfDisconnected: false)) {
+                    if (_stream == null) {
                         return new MemberResult[0];
                     }
                     try {
-                        Stream.Write(GetMembersCommandBytes);
+                        _stream.Write(GetMembersCommandBytes);
                         SendString(text);
                     } catch (IOException) {
-                        return new MemberResult[0];
-                    } catch (SocketException) {
                         return new MemberResult[0];
                     }
                 }
@@ -824,9 +830,9 @@ namespace Microsoft.PythonTools.Repl {
 
             public void SetScope(string scopeName) {
                 try {
-                    using (new SocketLock(this)) {
+                    using (new StreamLock(this, throwIfDisconnected: true)) {
                         if (!String.IsNullOrWhiteSpace(scopeName)) {
-                            Stream.Write(SetModuleCommandBytes);
+                            _stream.Write(SetModuleCommandBytes);
                             SendString(scopeName);
                             _currentScope = scopeName;
 
@@ -835,67 +841,71 @@ namespace Microsoft.PythonTools.Repl {
                             _eval._window.WriteLine(_currentScope);
                         }
                     }
+                } catch (DisconnectedException) {
+                    _eval._window.WriteError("Cannot change module, interactive window is disconnected.");
                 } catch (IOException) {
-                    _eval._window.WriteError("Cannot change module, interactive window is disconnected.");
-                } catch (SocketException) {
-                    _eval._window.WriteError("Cannot change module, interactive window is disconnected.");
                 }
             }
 
             public IEnumerable<string> GetAvailableUserScopes() {
-                if (_connected) {   // if startup's taking a long time we won't be connected yet
-                    try {
-                        using (new SocketLock(this)) {
-                            Stream.Write(GetModulesListCommandBytes);
-                        }
-
+                try {
+                    using (new StreamLock(this, throwIfDisconnected: true)) {
+                        _stream.Write(GetModulesListCommandBytes);
                         _completionResultEvent.WaitOne(1000);
-
                         if (_fileToModuleName != null) {
                             return _fileToModuleName.Values;
                         }
-                    } catch (DisconnectedException) {
                     }
+                } catch (IOException) {
                 }
+
                 return new string[0];
             }
 
             public IEnumerable<KeyValuePair<string, bool>> GetAvailableScopesAndKind() {
-                if (_connected) {   // if startup's taking a long time we won't be connected yet
-                    using (new SocketLock(this)) {
-                        Stream.Write(GetModulesListCommandBytes);
+                try {
+                    using (new StreamLock(this, throwIfDisconnected: true)) {
+                        _stream.Write(GetModulesListCommandBytes);
+                        _completionResultEvent.WaitOne(1000);
+                        if (_allModules != null) {
+                            return _allModules;
+                        }
                     }
-
-                    _completionResultEvent.WaitOne(1000);
-
-                    if (_allModules != null) {
-                        return _allModules;
-                    }
+                } catch (IOException) {
                 }
+
                 return new KeyValuePair<string, bool>[0];
             }
 
             public void Close() {
-                // try and exit gracefully first, but if we're wedged don't both...
-                if (Monitor.TryEnter(_socketLock, 200)) {
-                    try {
-                        using (new SocketLock(this)) {
-                            if (_stream != null && _socket.Connected) {
-                                var stream = Stream;
-                                _stream = null;
+                var stream = Volatile.Read(ref _stream);
 
+                // There is a potential race where ith a different thread doing _stream = null, but even if that happens
+                // we do have our own reference and can dispose the object.
+
+                if (stream != null) {
+                    // Try and close the connection gracefully, but don't block on it indefinitely - if we're stuck waiting
+                    // for too long, just drop it
+                    if (Monitor.TryEnter(_streamLock, 200)) {
+                        try {
+                            _stream = null;
+                            using (stream) {
                                 try {
-                                    stream.Write(ExitCommandBytes);
-                                    stream.Close();
+                                    var ar = stream.BeginWrite(ExitCommandBytes, 0, ExitCommandBytes.Length, null, null);
+                                    using (ar.AsyncWaitHandle) {
+                                        ar.AsyncWaitHandle.WaitOne(200);
+                                    }
+                                    stream.EndWrite(ar);
                                 } catch (IOException) {
-                                } catch (SocketException) {
                                 }
                             }
+
+                        } finally {
+                            Monitor.Exit(_streamLock);
                         }
-                    } finally {
-                        Monitor.Exit(_socketLock);
                     }
                 }
+
 
                 if (_process != null && !_process.HasExited) {
                     try {
@@ -906,7 +916,7 @@ namespace Microsoft.PythonTools.Repl {
                     }
                 }
 
-                lock (this) {
+                lock (_completionLock) {
                     if (_completion != null) {
                         bool success = _completion.TrySetResult(ExecutionResult.Failure);
                         Debug.Assert(success);
@@ -917,16 +927,16 @@ namespace Microsoft.PythonTools.Repl {
 
             private void SendString(string text) {
                 byte[] bytes = System.Text.Encoding.UTF8.GetBytes(text);
-                Stream.WriteInt32(bytes.Length);
-                Stream.Write(bytes);
+                _stream.WriteInt32(bytes.Length);
+                _stream.Write(bytes);
             }
 
             private Dictionary<string, string> ReadMemberDict() {
-                int memCount = Stream.ReadInt32();
+                int memCount = _stream.ReadInt32();
                 var dict = new Dictionary<string, string>(memCount);
                 for (int i = 0; i < memCount; i++) {
-                    string memName = Stream.ReadString();
-                    string typeName = Stream.ReadString();
+                    string memName = _stream.ReadString();
+                    string typeName = _stream.ReadString();
                     dict[memName] = typeName;
                 }
 
@@ -941,53 +951,43 @@ namespace Microsoft.PythonTools.Repl {
 
             /// <summary>
             /// Helper struct for locking and tracking the current holding thread.  This allows
-            /// us to assert that our socket is always accessed while the lock is held.  The lock
+            /// us to assert that our stream is always accessed while the lock is held.  The lock
             /// needs to be held so that requests from the UI (switching scopes, getting module lists,
             /// executing text, etc...) won't become interleaved with interactions from the repl process 
             /// (output, execution completing, etc...).
             /// </summary>
-            struct SocketLock : IDisposable {
+            struct StreamLock : IDisposable {
                 private readonly CommandProcessorThread _evaluator;
 
-                public SocketLock(CommandProcessorThread evaluator) {
-                    Monitor.Enter(evaluator._socketLock);
-#if DEBUG
-                    Debug.Assert(evaluator._socketLockedThread == null);
-                    evaluator._socketLockedThread = Thread.CurrentThread;
-#endif
+                public StreamLock(CommandProcessorThread evaluator, bool throwIfDisconnected) {
+                    Monitor.Enter(evaluator._streamLock);
+                    if (throwIfDisconnected) {
+                        evaluator.ThrowIfDisconnected();
+                    }
                     _evaluator = evaluator;
                 }
 
                 public void Dispose() {
-#if DEBUG
-                    _evaluator._socketLockedThread = null;
-#endif
-                    Monitor.Exit(_evaluator._socketLock);
+                    Monitor.Exit(_evaluator._streamLock);
                 }
             }
 
             /// <summary>
-            /// Releases the socket lock and re-acquires it when finished.  This enables
+            /// Releases the stream lock and re-acquires it when finished.  This enables
             /// calling back into the repl window which could potentially call back to do
             /// work w/ the evaluator that we don't want to deadlock.
             /// </summary>
-            struct SocketUnlock : IDisposable {
+            struct StreamUnlock : IDisposable {
                 private readonly CommandProcessorThread _evaluator;
 
-                public SocketUnlock(CommandProcessorThread evaluator) {
-#if DEBUG
-                    Debug.Assert(evaluator._socketLockedThread == Thread.CurrentThread);
-                    evaluator._socketLockedThread = null;
-#endif
+                public StreamUnlock(CommandProcessorThread evaluator) {
+                    Debug.Assert(Monitor.IsEntered(evaluator._streamLock));
                     _evaluator = evaluator;
-                    Monitor.Exit(evaluator._socketLock);
+                    Monitor.Exit(evaluator._streamLock);
                 }
 
                 public void Dispose() {
-                    Monitor.Enter(_evaluator._socketLock);
-#if DEBUG
-                    _evaluator._socketLockedThread = Thread.CurrentThread;
-#endif
+                    Monitor.Enter(_evaluator._streamLock);
                 }
             }
 
@@ -1221,8 +1221,7 @@ namespace Microsoft.PythonTools.Repl {
                 _window.WriteLine("Resetting execution engine");
             }
 
-            _curListener._connected = true;
-            _curListener._exitedIsExpected = quiet;
+            _curListener.IsProcessExpectedToExit = quiet;
 
             Close();
             await UIThread.InvokeAsync(Connect).ConfigureAwait(false);
@@ -1439,7 +1438,6 @@ namespace Microsoft.PythonTools.Repl {
 
         internal string AttachDebugger() {
             EnsureConnected();
-
             return _curListener.DoDebugAttach();
         }
 
@@ -1448,7 +1446,7 @@ namespace Microsoft.PythonTools.Repl {
                 yield return string.Join(Environment.NewLine, lines);
                 yield break;
             }
-            
+
             StringBuilder temp = new StringBuilder();
             string prevText = null;
             ParseResult? prevParseResult = null;

@@ -87,6 +87,9 @@
     <Compile Include="..\..\..\Common\Product\SharedProject\CommonUtils.cs">
       <Link>CommonUtils.cs</Link>
     </Compile>
+    <Compile Include="..\..\..\Common\Product\SharedProject\WebSocketStream.cs">
+      <Link>Debugger\Transports\WebSocketStream.cs</Link>
+    </Compile>
     <Compile Include="..\PythonTools\PythonToolsInstallPath.cs">
       <Link>PythonToolsInstallPath.cs</Link>
     </Compile>
@@ -138,6 +141,10 @@
     <Compile Include="Debugger\DebugEngine\Remote\PythonRemoteEnumDebugPrograms.cs" />
     <Compile Include="Debugger\ThreadEventArgs.cs" />
     <Compile Include="Debugger\PythonBreakpoint.cs" />
+    <Compile Include="Debugger\Transports\DebuggerTransport.cs" />
+    <Compile Include="Debugger\Transports\TcpsTransport.cs" />
+    <Compile Include="Debugger\Transports\WebSocketTransport.cs" />
+    <Compile Include="Debugger\Transports\TcpTransport.cs" />
     <Compile Include="Debugger\TryHandlerWalker.cs" />
     <Compile Include="Debugger\FrameKind.cs" />
     <Compile Include="DkmDebugger\ComPtr.cs" />
@@ -204,7 +211,7 @@
     <None Include="DkmDebugger\LocalComponent.vsdconfigxml">
       <SubType>Designer</SubType>
     </None>
-    <None Include="DkmDebugger\PythonDkm.natvis"/>
+    <None Include="DkmDebugger\PythonDkm.natvis" />
     <None Include="DkmDebugger\RemoteComponent.vsdconfigxml">
       <SubType>Designer</SubType>
     </None>

@@ -228,7 +228,10 @@ namespace PythonToolsTests {
             replEval.Initialize(replWindow);
             var execute = replEval.ExecuteText("42");
             var errorText = replWindow.Error;
-            const string expected = "Failed to start interactive process, the interpreter could not be found: C:\\Does\\Not\\Exist\\Some\\Interpreter.exe";
+            const string expected = 
+                "The interactive window could not be started because the associated Python environment could not be found.\r\n" +
+                "If this version of Python has recently been uninstalled, you can close this window.\r\n" +
+                "Current interactive window is disconnected.";
 
             if (!errorText.Contains(expected)) {
                 Assert.Fail(string.Format(

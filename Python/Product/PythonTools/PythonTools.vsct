@@ -891,8 +891,23 @@
         </Strings>
       </Button>
 
-    </Buttons>
+      <!--================================================================================================================-->
+      <!--========================================== Server Explorer context menu ========================================-->
+      <!--================================================================================================================-->
 
+      <Button guid="guidPythonToolsCmdSet" id="cmdidAzureExplorerAttachPythonDebugger" priority="0x0110" type="Button">
+        <Parent guid="guidAzureExplorerCmdId" id="groupAzureDiagnostics"/>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <Strings>
+          <ButtonText>Attach Debugger (&amp;Python)</ButtonText>
+          <MenuText>Attach Debugger (&amp;Python)</MenuText>
+          <ToolTipText>Attach the Python debugger to the remote Microsoft Azure site</ToolTipText>
+          <CommandName>Attach Python Debugger</CommandName>
+        </Strings>
+      </Button>
+
+    </Buttons>
 
     <!--The bitmaps section is used to define the bitmaps that are used for the commands.-->
     <Bitmaps>
@@ -1129,6 +1144,8 @@
       <IDSymbol name="cmdIdAddPythonPathToSearchPath" value="0x4030" />
       <IDSymbol name="cmdidOpenInteractiveForEnvironment" value="0x4031" />
 
+      <IDSymbol name="cmdidAzureExplorerAttachPythonDebugger" value="0x4032" />
+
       <!-- Groups -->
       <IDSymbol name="EditorContextGroup" value="0x1010" />
       <IDSymbol name="EditMenuGroup" value="0x1011" />
@@ -1181,6 +1198,9 @@
       <IDSymbol name="imgSortUsings" value="2" />
     </GuidSymbol>
 
+    <GuidSymbol name="guidAzureExplorerCmdId" value="{2F32C14E-B908-42E6-AE7E-B8B3E2DED633}">
+      <IDSymbol name="groupAzureDiagnostics" value="400" />
+    </GuidSymbol>
   </Symbols>
 
   <UsedCommands>

@@ -67,6 +67,7 @@
       CollectPythonCloudServiceFiles;
       CollectVirtualEnvFiles;
       CreateWebConfig;
+      CreateWebDebugConfig;
       $(CoreCompileDependsOn)
     </CoreCompileDependsOn>
 
@@ -95,6 +96,7 @@
     <BuiltProjectOutputGroupDependsOn>
       _BuildingForUpToDateCheck;
       _DetectWebConfig;
+      _DetectWebDebugConfig;
       _GetPythonWebSitesFiles;
       _GetPythonCloudServiceFiles;
       _GetPythonVirtualEnvFiles;
@@ -103,6 +105,7 @@
     </BuiltProjectOutputGroupDependsOn>
     <SourceFilesProjectOutputGroupDependsOn>
       _DetectWebConfig;
+      _DetectWebDebugConfig;
       $(SourceFilesProjectOutputGroupDependsOn)
     </SourceFilesProjectOutputGroupDependsOn>
 
@@ -124,6 +127,7 @@
     </ItemGroup>
 
     <AssignTargetPath RootFolder="$(QualifiedProjectHome)" Files="
+      @(_PythonWebCommonFiles);
       @(_PythonWebSitesFiles);
       @(_PythonCloudServiceFiles);
       @(_PythonVirtualEnvFiles);@(PyVEnvCfg);
@@ -160,6 +164,7 @@
          it, we need to exclude it from our source files. -->
     <ItemGroup>
       <_SourceFilesProjectOutputGroupOutput Remove="**\web.config" Condition="$(_RegenerateWebConfig)" />
+      <_SourceFilesProjectOutputGroupOutput Remove="**\web.debug.config" Condition="$(_RegenerateWebDebugConfig)" />
       <SourceFilesProjectOutputGroupOutput Include="@(_SourceFilesProjectOutputGroupOutput->'%(FullPath)')" />
     </ItemGroup>
   </Target>
@@ -181,7 +186,7 @@
     <VirtualEnvEnabled>false</VirtualEnvEnabled>
     <VirtualEnvIsVEnv>false</VirtualEnvIsVEnv>
   </PropertyGroup>
-
+  
   <Target Name="ResolvePythonInterpreterPath">
     <ResolveEnvironment>
       <Output TaskParameter="PrefixPath" PropertyName="PythonPrefixPath" />
@@ -201,7 +206,7 @@
       <PythonVersion>$(PythonMajorVersion).$(PythonMinorVersion)</PythonVersion>
       <VirtualEnvEnabled>false</VirtualEnvEnabled>
     </PropertyGroup>
-
+    
     <PropertyGroup Condition="'$(PythonPrefixSubPath)' == ''">
       <VirtualEnvIsVEnv>false</VirtualEnvIsVEnv>
     </PropertyGroup>
@@ -216,24 +221,24 @@
            Condition="$(VirtualEnvEnabled) and '$(VirtualEnvIsVenv)' == ''" />
   </Target>
 
-  <PropertyGroup>
+    <PropertyGroup>
     <!-- Setup default deployment values if none have yet been provided. These
          values will be replaced either before or after deployment.
     -->
     <DeployedPythonInterpreterPath Condition="'$(DeployedPythonInterpreterPath)' == ''">%INTERPRETERPATH%</DeployedPythonInterpreterPath>
     <DeployedSiteRoot Condition="'$(DeployedSiteRoot)' == ''">%ROOTDIR%</DeployedSiteRoot>
     <DeployedWFastCgiPath Condition="'$(DeployedWFastCgiPath)' == ''">%WFASTCGIPATH%</DeployedWFastCgiPath>
-  </PropertyGroup>
+    </PropertyGroup>
 
   <!-- *************************************************************************
        When the ImportParametersFiles target is executed (which only occurs for
        Web Sites), we create and include a file containing replacements for the
        environment variables in our generated web.config. These will be applied
        when the file is deployed.
-       
+
        We also remove deployment items specific to Cloud Service, since there is
        no need to deploy them to Web Sites.
-  -->
+    -->
   <Target Name="_SuppressGenerateWebPiReferencesForWebSites" DependsOnTargets="ResolvePythonInterpreterPath" BeforeTargets="GenerateGlobalPublishSetting">
     <PropertyGroup>
       <SuppressGenerateWebPiReference>true</SuppressGenerateWebPiReference>
@@ -336,12 +341,12 @@
        directs requests to WFastCGI. URIs that match the pattern will be
        resolved to a file system path.
   -->
-
+  
   <Target Name="AddStaticUriSetting"
           Condition="'$(StaticUriPattern)' != ''">
     <ValidateRegexPattern Pattern="$(StaticUriPattern)"
                           Message="Invalid static URI pattern: {0}" />
-
+    
     <PropertyGroup>
       <FastCgiRewriteConditions>
         <![CDATA[$(FastCgiRewriteConditions)
@@ -349,7 +354,7 @@
       </FastCgiRewriteConditions>
     </PropertyGroup>
   </Target>
-
+  
   <!-- *************************************************************************
        Virtual environments are handled in three targets.
        
@@ -398,7 +403,6 @@
           SkipUnchangedFiles="true"
           Condition="$(VirtualEnvEnabled) and $(RoleType) == 'Web'">
       <Output TaskParameter="CopiedFiles" ItemName="FileWrites"/>
-      <Output TaskParameter="CopiedFiles" ItemName="Content"/>
       <Output TaskParameter="CopiedFiles" ItemName="_PythonVirtualEnvProxy"/>
     </Copy>
 
@@ -449,7 +453,7 @@
 
     <ItemGroup>
       <FileWrites Include="@(PyVEnvCfg)" />
-
+      
       <FilesForPackagingFromProject Include="@(_PythonVirtualEnvFiles)">
         <DestinationRelativePath>$(PythonPrefixSubPath)%(RecursiveDir)%(Filename)%(Extension)</DestinationRelativePath>
         <FromTarget>CollectVirtualEnvFiles</FromTarget>
@@ -474,7 +478,7 @@
     </ItemGroup>
     <PropertyGroup>
       <_ExistingCfgText Condition="Exists($(PyVEnvCfg))">$([System.IO.File]::ReadAllText($(PyVEnvCfg)))</_ExistingCfgText>
-
+      
       <TargetPythonPrefix Condition="$(TargetPythonPrefix) == ''">D:\Python$(PythonMajorVersion)$(PythonMinorVersion)</TargetPythonPrefix>
       <_PyVEnvCfgText>
         $([System.Text.RegularExpressions.Regex]::Replace(
@@ -506,17 +510,72 @@
       </FilesForPackagingFromProject>
     </ItemGroup>
   </Target>
+  
+  
+  <!-- *****************************************************************************
+       CollectPythonWebCommonFiles deploys and includes extra files that are used
+       by both web sites and web role cloud services.
+  -->
+  
+  <Target Name="CollectPythonWebCommonFiles"
+          Condition="'$(RoleType)' == 'Web'"
+          DependsOnTargets="_GetPythonWebCommonFiles;_DeployPythonWebCommonFiles;_CollectPythonWebCommonFiles"/>
 
+  <Target Name="_GetPythonWebCommonSourceFiles">
+    <ItemGroup>
+      <_WebCommonFiles Include="$(_AzureSupportPath)Microsoft.PythonTools.WebRole.dll" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_GetPythonWebCommonFiles"
+          DependsOnTargets="_GetPythonWebCommonSourceFiles"
+          Returns="@(_WebCommonFiles)">
+    <ItemGroup Condition="'@(_WebCommonFiles)' != ''">
+      <_WebCommonFilesWithTargetPath Include="@(_WebCommonFiles)">
+        <SourceFile>%(FullPath)</SourceFile>
+        <TargetPath>$(QualifiedProjectHome)bin\%(Filename)%(Extension)</TargetPath>
+        <TargetPath Condition="'%(_WebCommonFiles.TargetPath)' != ''">%(_WebCommonFiles.TargetPath)</TargetPath>
+      </_WebCommonFilesWithTargetPath>
+
+      <_PythonWebCommonFiles Include="@(_WebCommonFilesWithTargetPath->'%(TargetPath)')" />
+    </ItemGroup>
+  </Target>
+  
+  <Target Name="_DeployPythonWebCommonFiles"
+          DependsOnTargets="_GetPythonWebCommonFiles">
+    <Error Text="Should not be invoked during up-to-date check" Condition="$(BuildingForUpToDateCheck)" />
+
+    <Copy SourceFiles="@(_PythonWebCommonFiles->'%(SourceFile)')"
+          DestinationFiles="@(_PythonWebCommonFiles->'%(TargetPath)')"
+          SkipUnchangedFiles="true">
+      <Output TaskParameter="CopiedFiles" ItemName="FileWrites"/>
+    </Copy>
+  </Target>
+
+  <Target Name="_CollectPythonWebCommonFiles"
+          DependsOnTargets="_GetPythonWebCommonFiles">
+    <ItemGroup>
+      <FilesForPackagingFromProject Include="@(_PythonWebCommonFiles->'%(TargetPath)')">
+        <DestinationRelativePath>bin\%(FileName)%(Extension)</DestinationRelativePath>
+        <FromTarget>CollectPythonWebCommonFiles</FromTarget>
+        <Category>Run</Category>
+      </FilesForPackagingFromProject>
+    </ItemGroup>
+  </Target>
+  
+  
   <!-- *************************************************************************
        CollectPythonWebSitesFiles deploys and includes extra files required for
        Microsoft Azure Web Sites.
   -->
-  <ItemGroup>
-    <!--<_WebSitesFiles />-->
+  <ItemGroup Condition="'$(Configuration)' == 'Debug'">
+    <_WebSitesFiles Include="$(_PythonToolsPath)ptvsd\*.py">
+      <DestinationRelativeDir>ptvsd\</DestinationRelativeDir>
+    </_WebSitesFiles>
   </ItemGroup>
 
   <Target Name="CollectPythonWebSitesFiles"
-          DependsOnTargets="_CollectPythonWebSitesFiles"
+          DependsOnTargets="CollectPythonWebCommonFiles;_CollectPythonWebSitesFiles"
           Condition="'@(_WebSitesFiles)' != ''"/>
 
   <Target Name="_GetPythonWebSitesFiles"
@@ -542,12 +601,13 @@
 
     <ItemGroup>
       <FilesForPackagingFromProject Include="@(_PythonWebSitesFiles->'%(FullPath)')">
-        <DestinationRelativePath>%(FileName)%(Extension)</DestinationRelativePath>
+        <DestinationRelativePath>%(_PythonWebSitesFiles.DestinationRelativeDir)%(FileName)%(Extension)</DestinationRelativePath>
         <FromTarget>CollectPythonWebSitesFiles</FromTarget>
         <Category>Run</Category>
       </FilesForPackagingFromProject>
     </ItemGroup>
   </Target>
+
 
   <!-- *************************************************************************
        CollectPythonCloudServiceFiles deploys extra files for cloud services.
@@ -568,8 +628,7 @@
                                $(_AzureSupportPath)Microsoft.PythonTools.AzureSetup.exe.config" />
 
     <!-- Web Role files -->
-    <_WebRoleFiles Include="$(_AzureSupportPath)Microsoft.PythonTools.WebRole.dll;
-                            $(_AzureSupportPath)wfastcgi.py" />
+    <_WebRoleFiles Include="$(_AzureSupportPath)wfastcgi.py" />
   </ItemGroup>
 
   <PropertyGroup>
@@ -577,7 +636,8 @@
   </PropertyGroup>
 
   <Target Name="CollectPythonCloudServiceFiles"
-          DependsOnTargets="CreatePythonAzureSetupConfig;
+          DependsOnTargets="CollectPythonWebCommonFiles;
+                            CreatePythonAzureSetupConfig;
                             _GetPythonCloudServiceFiles;
                             _DeployPythonCloudServiceFiles;
                             _CollectPythonCloudServiceFiles"
@@ -634,14 +694,7 @@
     </ItemGroup>
   </Target>
 
-  <Target Name="_UncollectPythonCloudServiceFiles"
-          DependsOnTargets="_GetPythonCloudServiceFiles"
-          Condition="'@(_PythonCloudServiceFiles)' != ''">
-    <ItemGroup>
-      <FilesForPackagingFromProject Remove="@(_PythonCloudServiceFiles->'%(TargetPath)')" />
-    </ItemGroup>
-  </Target>
-
+  
   <!-- *************************************************************************
        CreatePythonAzureSetupConfig generates the AzureSetup.cfg used for cloud
        service deployments.
@@ -693,7 +746,7 @@
     <Warning Text="$(PythonInterpreterDescription) is not natively supported on Microsoft Azure. Add a WebPI reference to install this environment or add the 'SuppressGenerateWebPiReference' property to $(MSBuildProjectName) and set it to true."
              Condition="'@(WebPiReference)' == ''"/>
   </Target>
-
+  
   <Target Name="_EnsurePythonWebPiReference"
           Condition="!$(SuppressGenerateWebPiReference) and $(PythonArchitecture) == 'x86'">
     <ItemGroup>
@@ -849,6 +902,85 @@ $(_CloudServiceAzureSetupConfig)
     </ItemGroup>
   </Target>
 
+  <!-- **********************************************************************************
+       CreateWebDebugConfig will generate a web.debug.config file if the project does not
+       specify one as a <Content> or <Include> item.
+  -->
+  <PropertyGroup>
+    <CreateWebDebugConfigDependsOnTargets>
+      $(CreateWebDebugConfigDependsOnTargets);
+      ResolvePythonInterpreterPath;
+      ResolvePythonWsgiHandler;
+      ResolveFastCgiHandler;
+      AddStaticUriSetting;
+      ResolveWsgiAppSettings;
+      ResolveVirtualEnvSettings;
+    </CreateWebDebugConfigDependsOnTargets>
+
+    <AlwaysRegenerateWebDebugConfig Condition="'$(AlwaysRegenerateWebDebugConfig)' == ''">false</AlwaysRegenerateWebDebugConfig>
+  </PropertyGroup>
+
+  <Target Name="CreateWebDebugConfig" DependsOnTargets="_DetectWebDebugConfig;_CreateWebDebugConfig" Condition="!$(_IgnorePythonWebConfig)" />
+
+  <Target Name="_DetectWebDebugConfig" Condition="!$(_IgnorePythonWebConfig)">
+    <ItemGroup>
+      <_OutWebDebugConfig Include="$(QualifiedProjectHome)web.debug.config"/>
+      <_WebDebugConfigInContent Include="@(Content)" Condition="'%(Content.Identity)' == 'web.debug.config'" />
+    </ItemGroup>
+
+    <ReadLinesFromFile File="@(_OutWebDebugConfig)" Condition="Exists('@(_OutWebDebugConfig)')">
+      <Output TaskParameter="Lines" PropertyName="_CurrentWebDebugConfigCode"/>
+    </ReadLinesFromFile>
+
+    <PropertyGroup>
+      <_RegenerateWebDebugConfig>true</_RegenerateWebDebugConfig>
+      <_RegenerateWebDebugConfig Condition="Exists('@(_OutWebDebugConfig)') and !$(AlwaysRegenerateWebDebugConfig) and
+          !$(_CurrentWebDebugConfigCode.Contains('Generated web.debug.config for Microsoft Azure.'))">false</_RegenerateWebDebugConfig>
+    </PropertyGroup>
+
+    <Message Text="Using existing web.debug.config file" Condition="!$(_RegenerateWebDebugConfig) and !$(BuildingForUpToDateCheck)"/>
+  </Target>
+
+  <PropertyGroup>
+    <!-- The generated secret will have 22 random characters from an alphabet of 32 (lowercase letters and numbers 0-5),
+         using a cryptographically secure random number generator. -->
+    <PtvsdSecret Condition="'$(PtvsdSecret)' == ''">$([System.IO.Path]::GetRandomFileName().Replace('.', ''))</PtvsdSecret>
+  </PropertyGroup>
+
+  <Target Name="_CreateWebDebugConfig"
+          DependsOnTargets="$(CreateWebDebugConfigDependsOnTargets)"
+          Condition="$(_RegenerateWebDebugConfig) and !$(_IgnorePythonWebConfig)">
+    <Message Text="Regenerating web.debug.config" />
+    <Error Text="Should not be invoked during up-to-date check" Condition="$(BuildingForUpToDateCheck)" />
+    <Error Text="No WSGI handler specified" Condition="'$(PythonWsgiHandler)' == ''" />
+
+    <ItemGroup>
+      <_TempWebDebugConfig Include="$(IntermediateOutputPath)web.debug.config" />
+    </ItemGroup>
+
+    <Copy SourceFiles="$(_AzureSupportPath)web_debug_config.xml"
+          DestinationFiles="@(_TempWebDebugConfig)">
+      <Output TaskParameter="CopiedFiles" ItemName="FileWrites"/>
+    </Copy>
+
+    <Message Text="Updating ptvsd secret in web.debug.config" />
+    <XmlPoke XmlInputPath="@(_TempWebDebugConfig)"
+             Query="/configuration/appSettings/add[@key='WSGI_PTVSD_SECRET']/@value"
+             Value="$(PtvsdSecret)" />
+
+    <Copy SourceFiles="@(_TempWebDebugConfig)" DestinationFiles="@(_OutWebDebugConfig)" />
+
+    <Delete Files="@(_TempWebDebugConfig)" Condition="'$(BuildingForGetTargetPath)' == 'True'" />
+
+    <ItemGroup>
+      <FilesForPackagingFromProject Include="web.debug.config" Condition="'@(_WebDebugConfigInContent)' == ''">
+        <DestinationRelativePath>web.debug.config</DestinationRelativePath>
+        <FromTarget>CreateWebDebugConfig</FromTarget>
+        <Category>Run</Category>
+      </FilesForPackagingFromProject>
+    </ItemGroup>
+  </Target>
+
   <!-- *************************************************************************
        GetTargetPath is invoked by Microsoft.WindowsAzure.targets when it is
        collecting web role files. It returns one item that is our WebRole.dll.
@@ -891,7 +1023,7 @@ $(_CloudServiceAzureSetupConfig)
         SERVER_PORT=$(WebBrowserPort)
         $(PythonRunWebServerCommandEnvironment)
       </PythonRunWebServerCommandEnvironment>
-
+      
       <PythonRunWebServerCommand>$(PythonRunWebServerCommand.Replace(`{StartupModule}`, $(StartupModule)))</PythonRunWebServerCommand>
       <PythonRunWebServerCommandArguments>$(PythonRunWebServerCommandArguments.Replace(`{StartupModule}`, $(StartupModule)))</PythonRunWebServerCommandArguments>
       <PythonRunWebServerArguments>$(PythonRunWebServerArguments.Replace(`{StartupModule}`, $(StartupModule)))</PythonRunWebServerArguments>
