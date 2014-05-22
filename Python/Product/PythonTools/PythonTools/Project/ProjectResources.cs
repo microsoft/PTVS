@@ -140,6 +140,16 @@ namespace Microsoft.PythonTools.Project {
         public const string ProjectRequiresVWDExpress = "ProjectRequiresVWDExpress";
         public const string AddWebRoleSupportFiles = "AddWebRoleSupportFiles";
 
+        public const string FunctionClassificationType = "FunctionClassificationType";
+        public const string ParameterClassificationType = "ParameterClassificationType";
+        public const string ClassClassificationType = "ClassClassificationType";
+        public const string ModuleClassificationType = "ModuleClassificationType";
+        public const string OperatorClassificationType = "OperatorClassificationType";
+        public const string GroupingClassificationType = "GroupingClassificationType";
+        public const string CommaClassificationType = "CommaClassificationType";
+        public const string DotClassificationType = "DotClassificationType";
+        public const string BuiltinClassificationType = "BuiltinClassificationType";
+
         private static readonly Lazy<ResourceManager> _manager = new Lazy<ResourceManager>(
             () => new System.Resources.ResourceManager("Microsoft.PythonTools.Resources", typeof(SR).Assembly),
             LazyThreadSafetyMode.ExecutionAndPublication

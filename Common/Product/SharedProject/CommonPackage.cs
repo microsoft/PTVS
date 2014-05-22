@@ -67,10 +67,14 @@ namespace Microsoft.VisualStudioTools {
             };
             System.Threading.Tasks.TaskScheduler.UnobservedTaskException += (sender, e) => {
                 if (!e.Observed) {
-                    Debug.Fail(
-                        string.Format("An exception in a task was not observed:\n    {0}\n\nThis is not fatal - click 'Ignore' to continue running.", e.Exception.Message),
-                        e.Exception.ToString()
-                    );
+                    try {
+                        ActivityLog.LogError(
+                            "UnobservedTaskException",
+                            string.Format("An exception in a task was not observed: {0}", e.Exception.ToString())
+                        );
+                    } catch (InvalidOperationException) {
+                    }
+                    Debug.Fail("An exception in a task was not observed. See ActivityLog.xml for more details.", e.Exception.ToString());
                     e.SetObserved();
                 }
             };

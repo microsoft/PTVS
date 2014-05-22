@@ -35,5 +35,30 @@ namespace Microsoft.PythonTools {
         /// Classification used for all other operators
         /// </summary>
         public const string Operator = "Python operator";
+
+        /// <summary>
+        /// Classification used for classes/types.
+        /// </summary>
+        public const string Class = "Python class";
+
+        /// <summary>
+        /// Classification used for imported modules.
+        /// </summary>
+        public const string Module = "Python module";
+
+        /// <summary>
+        /// Classification used for functions.
+        /// </summary>
+        public const string Function = "Python function";
+
+        /// <summary>
+        /// Classification used for parameters.
+        /// </summary>
+        public const string Parameter = "Python parameter";
+
+        /// <summary>
+        /// Classification used for builtins.
+        /// </summary>
+        public const string Builtin = "Python builtin";
     }
 }

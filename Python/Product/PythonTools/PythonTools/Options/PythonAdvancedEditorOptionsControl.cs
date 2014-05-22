@@ -26,6 +26,7 @@ namespace Microsoft.PythonTools.Options {
             _newLineAfterCompleteCompletion.Checked = PythonToolsPackage.Instance.AdvancedEditorOptionsPage.AddNewLineAtEndOfFullyTypedWord;
             _outliningOnOpen.Checked = PythonToolsPackage.Instance.AdvancedEditorOptionsPage.EnterOutliningModeOnOpen;
             _pasteRemovesReplPrompts.Checked = PythonToolsPackage.Instance.AdvancedEditorOptionsPage.PasteRemovesReplPrompts;
+            _colorNames.Checked = PythonToolsPackage.Instance.AdvancedEditorOptionsPage.ColorNames;
         }
 
         private void _enterCommits_CheckedChanged(object sender, EventArgs e) {
@@ -54,6 +55,10 @@ namespace Microsoft.PythonTools.Options {
 
         private void _pasteRemovesReplPrompts_CheckedChanged(object sender, EventArgs e) {
             PythonToolsPackage.Instance.AdvancedEditorOptionsPage.PasteRemovesReplPrompts = _pasteRemovesReplPrompts.Checked;
+        }
+
+        private void _colorNames_CheckedChanged(object sender, EventArgs e) {
+            PythonToolsPackage.Instance.AdvancedEditorOptionsPage.ColorNames = _colorNames.Checked;
         }
     }
 }

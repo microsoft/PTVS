@@ -145,7 +145,9 @@ namespace Microsoft.PythonTools.Analysis {
                 Parse(enqueueOnly, cancel);
             }
 
-            RaiseOnNewAnalysis();
+            if (!enqueueOnly) {
+                RaiseOnNewAnalysis();
+            }
         }
 
         internal void RaiseOnNewAnalysis() {
@@ -167,7 +169,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        private void Parse(bool enqueOnly, CancellationToken cancel) {
+        private void Parse(bool enqueueOnly, CancellationToken cancel) {
             PythonAst tree;
             IAnalysisCookie cookie;
             GetTreeAndCookie(out tree, out cookie);
@@ -238,7 +240,7 @@ namespace Microsoft.PythonTools.Analysis {
 
             _unit.Enqueue();
 
-            if (!enqueOnly) {
+            if (!enqueueOnly) {
                 _projectState.AnalyzeQueuedEntries(cancel);
             }
 

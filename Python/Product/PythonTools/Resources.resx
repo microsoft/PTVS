@@ -460,4 +460,31 @@ The web.config file will be configured to resolve URIs matching this pattern to 
   <data name="AddWebRoleSupportFiles" xml:space="preserve">
     <value>To ensure your project will deploy correctly to Microsoft Azure Cloud Service, add the Web Role Support Files item to your project through the Add New Item dialog and follow the instructions provided.</value>
   </data>
+  <data name="ClassClassificationType" xml:space="preserve">
+    <value>Python Class</value>
+  </data>
+  <data name="CommaClassificationType" xml:space="preserve">
+    <value>Python Comma</value>
+  </data>
+  <data name="DotClassificationType" xml:space="preserve">
+    <value>Python Dot</value>
+  </data>
+  <data name="FunctionClassificationType" xml:space="preserve">
+    <value>Python Function</value>
+  </data>
+  <data name="GroupingClassificationType" xml:space="preserve">
+    <value>Python Grouping</value>
+  </data>
+  <data name="ModuleClassificationType" xml:space="preserve">
+    <value>Python Module</value>
+  </data>
+  <data name="OperatorClassificationType" xml:space="preserve">
+    <value>Python Operator</value>
+  </data>
+  <data name="ParameterClassificationType" xml:space="preserve">
+    <value>Python Parameter</value>
+  </data>
+  <data name="BuiltinClassificationType" xml:space="preserve">
+    <value>Python Builtins</value>
+  </data>
 </root>

@@ -23,6 +23,7 @@ namespace Microsoft.PythonTools.Options {
         private string _completionCommittedBy;
         private const string _defaultCompletionChars = "{}[]().,:;+-*/%&|^~=<>#'\"\\";
         private bool _filterCompletions;
+        private bool _colorNames, _colorNamesWithAnalysis;
         private FuzzyMatchMode _searchMode;
 
         public PythonAdvancedEditorOptionsPage()
@@ -79,6 +80,16 @@ namespace Microsoft.PythonTools.Options {
             set { _completionCommittedBy = value; } 
         }
 
+        public bool ColorNames {
+            get { return _colorNames; }
+            set { _colorNames = value; }
+        }
+
+        public bool ColorNamesWithAnalysis {
+            get { return _colorNamesWithAnalysis; }
+            set { _colorNamesWithAnalysis = value; }
+        }
+
         public override void ResetSettings() {
             _enterCommitsIntellisense = true;
             _intersectMembers = true;
@@ -88,6 +99,8 @@ namespace Microsoft.PythonTools.Options {
             _pasteRemovesReplPrompts = true;
             _filterCompletions = true;
             _searchMode = FuzzyMatchMode.Default;
+            _colorNames = true;
+            _colorNamesWithAnalysis = true;
         }
 
         private const string EnterCommitsSetting = "EnterCommits";
@@ -98,6 +111,8 @@ namespace Microsoft.PythonTools.Options {
         private const string PasteRemovesReplPromptsSetting = "PasteRemovesReplPrompts";
         private const string FilterCompletionsSetting = "FilterCompletions";
         private const string SearchModeSetting = "SearchMode";
+        private const string ColorNamesSetting = "ColorNames";
+        private const string ColorNamesWithAnalysisSetting = "ColorNamesWithAnalysis";
 
         public override void LoadSettingsFromStorage() {
             _enterCommitsIntellisense = LoadBool(EnterCommitsSetting) ?? true;
@@ -108,6 +123,8 @@ namespace Microsoft.PythonTools.Options {
             _pasteRemovesReplPrompts = LoadBool(PasteRemovesReplPromptsSetting) ?? true;
             _filterCompletions = LoadBool(FilterCompletionsSetting) ?? true;
             _searchMode = LoadEnum<FuzzyMatchMode>(SearchModeSetting) ?? FuzzyMatchMode.Default;
+            _colorNames = LoadBool(ColorNamesSetting) ?? true;
+            _colorNamesWithAnalysis = LoadBool(ColorNamesWithAnalysisSetting) ?? true;
         }
 
         public override void SaveSettingsToStorage() {
@@ -119,6 +136,8 @@ namespace Microsoft.PythonTools.Options {
             SaveBool(PasteRemovesReplPromptsSetting, _pasteRemovesReplPrompts);
             SaveBool(FilterCompletionsSetting, _filterCompletions);
             SaveEnum(SearchModeSetting, _searchMode);
+            SaveBool(ColorNamesSetting, _colorNames);
+            SaveBool(ColorNamesWithAnalysisSetting, _colorNamesWithAnalysis);
         }
     }
 }

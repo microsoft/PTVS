@@ -103,6 +103,11 @@ namespace Microsoft.PythonTools.Parsing {
         /// </summary>
         IncompleteMultiLineStringLiteral,
 
+        /// <summary>
+        /// Special identifier that is built into the language.
+        /// </summary>
+        BuiltinIdentifier,
+
         LanguageDefined = 0x100
     }
 }

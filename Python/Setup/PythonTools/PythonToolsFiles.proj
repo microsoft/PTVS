@@ -17,6 +17,8 @@
     <!-- Registration files -->
     <File Include="$(ObjDir)\extension.vsixmanifest" />
     <File Include="Microsoft.PythonTools.pkgdef" />
+    <File Condition="$(VSTarget) != '10.0'"
+          Include="Dev11OrLater\Microsoft.PythonTools.theme.pkgdef" />
 
     <!-- Core extension -->
     <File Include="Microsoft.PythonTools.dll;

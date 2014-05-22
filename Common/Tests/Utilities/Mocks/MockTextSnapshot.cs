@@ -20,6 +20,7 @@ using Microsoft.VisualStudio.Text;
 namespace TestUtilities.Mocks {
     public class MockTextSnapshot : ITextSnapshot {
         private readonly string _text;
+        private string[] _lines;
         private readonly MockTextBuffer _buffer;
         private readonly MockTextVersion _version;
 
@@ -69,7 +70,7 @@ namespace TestUtilities.Mocks {
         }
 
         private string[] GetLines() {
-            return _text.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
+            return _lines = _lines ?? _text.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
         }
 
         public ITextSnapshotLine GetLineFromLineNumber(int lineNumber) {

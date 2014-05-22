@@ -37,6 +37,7 @@
             this.tableLayoutPanel4 = new System.Windows.Forms.TableLayoutPanel();
             this._outliningOnOpen = new System.Windows.Forms.CheckBox();
             this._pasteRemovesReplPrompts = new System.Windows.Forms.CheckBox();
+            this._colorNames = new System.Windows.Forms.CheckBox();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this._selectionInCompletionGroupBox.SuspendLayout();
             this.tableLayoutPanel3.SuspendLayout();
@@ -198,7 +199,7 @@
             this._miscOptionsGroupBox.Location = new System.Drawing.Point(6, 184);
             this._miscOptionsGroupBox.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
             this._miscOptionsGroupBox.Name = "_miscOptionsGroupBox";
-            this._miscOptionsGroupBox.Size = new System.Drawing.Size(476, 65);
+            this._miscOptionsGroupBox.Size = new System.Drawing.Size(476, 88);
             this._miscOptionsGroupBox.TabIndex = 2;
             this._miscOptionsGroupBox.TabStop = false;
             this._miscOptionsGroupBox.Text = "Miscellaneous Options";
@@ -212,14 +213,16 @@
             this.tableLayoutPanel4.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 20F));
             this.tableLayoutPanel4.Controls.Add(this._outliningOnOpen, 0, 0);
             this.tableLayoutPanel4.Controls.Add(this._pasteRemovesReplPrompts, 0, 1);
+            this.tableLayoutPanel4.Controls.Add(this._colorNames, 0, 2);
             this.tableLayoutPanel4.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel4.Location = new System.Drawing.Point(3, 16);
             this.tableLayoutPanel4.Name = "tableLayoutPanel4";
-            this.tableLayoutPanel4.RowCount = 2;
+            this.tableLayoutPanel4.RowCount = 3;
+            this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-            this.tableLayoutPanel4.Size = new System.Drawing.Size(470, 46);
+            this.tableLayoutPanel4.Size = new System.Drawing.Size(470, 69);
             this.tableLayoutPanel4.TabIndex = 0;
             // 
             // _outliningOnOpen
@@ -248,8 +251,23 @@
             this._pasteRemovesReplPrompts.UseVisualStyleBackColor = true;
             this._pasteRemovesReplPrompts.CheckedChanged += new System.EventHandler(this._pasteRemovesReplPrompts_CheckedChanged);
             // 
+            // _colorNames
+            // 
+            this._colorNames.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this._colorNames.AutoSize = true;
+            this._colorNames.Location = new System.Drawing.Point(6, 49);
+            this._colorNames.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
+            this._colorNames.Name = "_colorNames";
+            this._colorNames.Size = new System.Drawing.Size(159, 17);
+            this._colorNames.TabIndex = 1;
+            this._colorNames.Text = "Color &names based on types";
+            this._colorNames.UseVisualStyleBackColor = true;
+            this._colorNames.CheckedChanged += new System.EventHandler(this._colorNames_CheckedChanged);
+            // 
             // tableLayoutPanel1
             // 
+            this.tableLayoutPanel1.AutoSize = true;
+            this.tableLayoutPanel1.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.tableLayoutPanel1.ColumnCount = 1;
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel1.Controls.Add(this._completionResultsGroupBox, 0, 0);
@@ -264,17 +282,19 @@
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 22F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(488, 270);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(488, 297);
             this.tableLayoutPanel1.TabIndex = 0;
             // 
             // PythonAdvancedEditorOptionsControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoSize = true;
+            this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.Controls.Add(this.tableLayoutPanel1);
             this.Margin = new System.Windows.Forms.Padding(6, 8, 6, 8);
             this.Name = "PythonAdvancedEditorOptionsControl";
-            this.Size = new System.Drawing.Size(488, 270);
+            this.Size = new System.Drawing.Size(488, 297);
             this._selectionInCompletionGroupBox.ResumeLayout(false);
             this._selectionInCompletionGroupBox.PerformLayout();
             this.tableLayoutPanel3.ResumeLayout(false);
@@ -290,6 +310,7 @@
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -310,5 +331,6 @@
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel4;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.CheckBox _filterCompletions;
+        private System.Windows.Forms.CheckBox _colorNames;
     }
 }

@@ -26,7 +26,6 @@ namespace Microsoft.VisualStudio.Repl {
     [Export(typeof(EditorFormatDefinition))]
     [ClassificationType(ClassificationTypeNames = Name)]
     [Name(Name)]
-    [DisplayName(Name)]    
     [UserVisible(true)]
     internal class InteractiveBlackFormatDefinition : ClassificationFormatDefinition {
 #if NTVS_FEATURE_INTERACTIVEWINDOW
@@ -43,13 +42,14 @@ namespace Microsoft.VisualStudio.Repl {
         internal static ClassificationTypeDefinition Definition = null; // Set via MEF
         
         public InteractiveBlackFormatDefinition() {
+            DisplayName = Name;
+            ForegroundColor = Colors.Black;
         }
     }
 
     [Export(typeof(EditorFormatDefinition))]
     [ClassificationType(ClassificationTypeNames = Name)]
     [Name(Name)]
-    [DisplayName(Name)]
     [UserVisible(true)]
     internal class InteractiveDarkRedFormatDefinition : ClassificationFormatDefinition {
 #if NTVS_FEATURE_INTERACTIVEWINDOW
@@ -65,6 +65,7 @@ namespace Microsoft.VisualStudio.Repl {
         internal static ClassificationTypeDefinition Definition = null; // Set via MEF
         
         public InteractiveDarkRedFormatDefinition() {
+            DisplayName = Name;
             ForegroundColor = Color.FromRgb(0x7f, 0, 0);
         }
     }
@@ -72,7 +73,6 @@ namespace Microsoft.VisualStudio.Repl {
     [Export(typeof(EditorFormatDefinition))]
     [ClassificationType(ClassificationTypeNames = Name)]
     [Name(Name)]
-    [DisplayName(Name)]
     [UserVisible(true)]
     internal class InteractiveDarkGreenFormatDefinition : ClassificationFormatDefinition {
 #if NTVS_FEATURE_INTERACTIVEWINDOW
@@ -88,6 +88,7 @@ namespace Microsoft.VisualStudio.Repl {
         internal static ClassificationTypeDefinition Definition = null; // Set via MEF
         
         public InteractiveDarkGreenFormatDefinition() {
+            DisplayName = Name;
             ForegroundColor = Color.FromRgb(0x00, 0x7f, 0);
         }
     }
@@ -95,7 +96,6 @@ namespace Microsoft.VisualStudio.Repl {
     [Export(typeof(EditorFormatDefinition))]
     [ClassificationType(ClassificationTypeNames = Name)]
     [Name(Name)]
-    [DisplayName(Name)]
     [UserVisible(true)]
     internal class InteractiveDarkYellowFormatDefinition : ClassificationFormatDefinition {
 #if NTVS_FEATURE_INTERACTIVEWINDOW
@@ -111,6 +111,7 @@ namespace Microsoft.VisualStudio.Repl {
         internal static ClassificationTypeDefinition Definition = null; // Set via MEF
         
         public InteractiveDarkYellowFormatDefinition() {
+            DisplayName = Name;
             ForegroundColor = Color.FromRgb(0x7f, 0x7f, 0);
         }
     }
@@ -118,7 +119,6 @@ namespace Microsoft.VisualStudio.Repl {
     [Export(typeof(EditorFormatDefinition))]
     [ClassificationType(ClassificationTypeNames = Name)]
     [Name(Name)]
-    [DisplayName(Name)]
     [UserVisible(true)]
     internal class InteractiveDarkBlueFormatDefinition : ClassificationFormatDefinition {
 #if NTVS_FEATURE_INTERACTIVEWINDOW
@@ -133,6 +133,7 @@ namespace Microsoft.VisualStudio.Repl {
         internal static ClassificationTypeDefinition Definition = null; // Set via MEF
         
         public InteractiveDarkBlueFormatDefinition() {
+            DisplayName = Name;
             ForegroundColor = Color.FromRgb(0x00, 0x00, 0x7f);
         }
     }
@@ -140,7 +141,6 @@ namespace Microsoft.VisualStudio.Repl {
     [Export(typeof(EditorFormatDefinition))]
     [ClassificationType(ClassificationTypeNames = Name)]
     [Name(Name)]
-    [DisplayName(Name)]
     [UserVisible(true)]
     internal class InteractiveDarkMagentaFormatDefinition : ClassificationFormatDefinition {        
 #if NTVS_FEATURE_INTERACTIVEWINDOW
@@ -154,6 +154,7 @@ namespace Microsoft.VisualStudio.Repl {
         internal static ClassificationTypeDefinition Definition = null; // Set via MEF
         
         public InteractiveDarkMagentaFormatDefinition() {
+            DisplayName = Name;
             ForegroundColor = Color.FromRgb(0x7f, 0x00, 0x7f);
         }
     }
@@ -161,7 +162,6 @@ namespace Microsoft.VisualStudio.Repl {
     [Export(typeof(EditorFormatDefinition))]
     [ClassificationType(ClassificationTypeNames = Name)]
     [Name(Name)]
-    [DisplayName(Name)]
     [UserVisible(true)]
     internal class InteractiveDarkCyanFormatDefinition : ClassificationFormatDefinition {        
 #if NTVS_FEATURE_INTERACTIVEWINDOW
@@ -175,6 +175,7 @@ namespace Microsoft.VisualStudio.Repl {
         internal static ClassificationTypeDefinition Definition = null; // Set via MEF
         
         public InteractiveDarkCyanFormatDefinition() {
+            DisplayName = Name;
             ForegroundColor = Color.FromRgb(0x00, 0x7f, 0x7f);
         }
     }
@@ -184,7 +185,6 @@ namespace Microsoft.VisualStudio.Repl {
     [Export(typeof(EditorFormatDefinition))]
     [ClassificationType(ClassificationTypeNames = Name)]
     [Name(Name)]
-    [DisplayName(Name)]
     [UserVisible(true)]
     internal class InteractiveGrayFormatDefinition : ClassificationFormatDefinition {        
 #if NTVS_FEATURE_INTERACTIVEWINDOW
@@ -197,6 +197,7 @@ namespace Microsoft.VisualStudio.Repl {
         [BaseDefinition(PredefinedClassificationTypeNames.NaturalLanguage)]
         internal static ClassificationTypeDefinition Definition = null; // Set via MEF
         public InteractiveGrayFormatDefinition() {
+            DisplayName = Name;
             ForegroundColor = Color.FromRgb(0xC0, 0xC0, 0xC0);
         }
     }
@@ -204,7 +205,6 @@ namespace Microsoft.VisualStudio.Repl {
     [Export(typeof(EditorFormatDefinition))]
     [ClassificationType(ClassificationTypeNames = Name)]
     [Name(Name)]
-    [DisplayName(Name)]
     [UserVisible(true)]
     internal class InteractiveDarkGrayFormatDefinition : ClassificationFormatDefinition {        
 #if NTVS_FEATURE_INTERACTIVEWINDOW
@@ -218,6 +218,7 @@ namespace Microsoft.VisualStudio.Repl {
         internal static ClassificationTypeDefinition Definition = null; // Set via MEF
 
         public InteractiveDarkGrayFormatDefinition() {
+            DisplayName = Name;
             ForegroundColor = Color.FromRgb(0x7f, 0x7f, 0x7f);
         }
     }
@@ -225,7 +226,6 @@ namespace Microsoft.VisualStudio.Repl {
     [Export(typeof(EditorFormatDefinition))]
     [ClassificationType(ClassificationTypeNames = Name)]
     [Name(Name)]
-    [DisplayName(Name)]
     [UserVisible(true)]
     internal class InteractiveRedFormatDefinition : ClassificationFormatDefinition {        
 #if NTVS_FEATURE_INTERACTIVEWINDOW
@@ -239,6 +239,7 @@ namespace Microsoft.VisualStudio.Repl {
         internal static ClassificationTypeDefinition Definition = null; // Set via MEF
         
         public InteractiveRedFormatDefinition() {
+            DisplayName = Name;
             ForegroundColor = Color.FromRgb(0xff, 0, 0);
         }
     }
@@ -246,7 +247,6 @@ namespace Microsoft.VisualStudio.Repl {
     [Export(typeof(EditorFormatDefinition))]
     [ClassificationType(ClassificationTypeNames = Name)]
     [Name(Name)]
-    [DisplayName(Name)]
     [UserVisible(true)]
     internal class InteractiveGreenFormatDefinition : ClassificationFormatDefinition {        
 #if NTVS_FEATURE_INTERACTIVEWINDOW
@@ -260,6 +260,7 @@ namespace Microsoft.VisualStudio.Repl {
         internal static ClassificationTypeDefinition Definition = null; // Set via MEF
         
         public InteractiveGreenFormatDefinition() {
+            DisplayName = Name;
             ForegroundColor = Color.FromRgb(0x00, 0xff, 0);
         }
     }
@@ -267,7 +268,6 @@ namespace Microsoft.VisualStudio.Repl {
     [Export(typeof(EditorFormatDefinition))]
     [ClassificationType(ClassificationTypeNames = Name)]
     [Name(Name)]
-    [DisplayName(Name)]
     [UserVisible(true)]
     internal class InteractiveYellowFormatDefinition : ClassificationFormatDefinition {        
 #if NTVS_FEATURE_INTERACTIVEWINDOW
@@ -281,6 +281,7 @@ namespace Microsoft.VisualStudio.Repl {
         internal static ClassificationTypeDefinition Definition = null; // Set via MEF
 
         public InteractiveYellowFormatDefinition() {
+            DisplayName = Name;
             ForegroundColor = Color.FromRgb(0xff, 0xff, 0);
         }
     }
@@ -288,7 +289,6 @@ namespace Microsoft.VisualStudio.Repl {
     [Export(typeof(EditorFormatDefinition))]
     [ClassificationType(ClassificationTypeNames = Name)]
     [Name(Name)]
-    [DisplayName(Name)]
     [UserVisible(true)]
     [Order(After = Priority.Default, Before = Priority.High)]
     internal class InteractiveBlueFormatDefinition : ClassificationFormatDefinition {        
@@ -303,6 +303,7 @@ namespace Microsoft.VisualStudio.Repl {
         internal static ClassificationTypeDefinition Definition = null; // Set via MEF
         
         public InteractiveBlueFormatDefinition() {
+            DisplayName = Name;
             ForegroundColor = Color.FromRgb(0x00, 0x00, 0xff);
         }
     }
@@ -310,7 +311,6 @@ namespace Microsoft.VisualStudio.Repl {
     [Export(typeof(EditorFormatDefinition))]
     [ClassificationType(ClassificationTypeNames = Name)]
     [Name(Name)]
-    [DisplayName(Name)]
     [UserVisible(true)]
     internal class InteractiveMagentaFormatDefinition : ClassificationFormatDefinition {        
 #if NTVS_FEATURE_INTERACTIVEWINDOW
@@ -324,6 +324,7 @@ namespace Microsoft.VisualStudio.Repl {
         internal static ClassificationTypeDefinition Definition = null; // Set via MEF
         
         public InteractiveMagentaFormatDefinition() {
+            DisplayName = Name;
             ForegroundColor = Color.FromRgb(0xff, 0x00, 0xff);
         }
     }
@@ -331,7 +332,6 @@ namespace Microsoft.VisualStudio.Repl {
     [Export(typeof(EditorFormatDefinition))]
     [ClassificationType(ClassificationTypeNames = Name)]
     [Name(Name)]
-    [DisplayName(Name)]
     [UserVisible(true)]
     internal class InteractiveCyanFormatDefinition : ClassificationFormatDefinition {        
 #if NTVS_FEATURE_INTERACTIVEWINDOW
@@ -345,6 +345,7 @@ namespace Microsoft.VisualStudio.Repl {
         internal static ClassificationTypeDefinition Definition = null; // Set via MEF
 
         public InteractiveCyanFormatDefinition() {
+            DisplayName = Name;
             ForegroundColor = Color.FromRgb(0x00, 0xff, 0xff);
         }
     }
@@ -352,7 +353,6 @@ namespace Microsoft.VisualStudio.Repl {
     [Export(typeof(EditorFormatDefinition))]
     [ClassificationType(ClassificationTypeNames = Name)]
     [Name(Name)]
-    [DisplayName(Name)]
     [UserVisible(true)]
     internal class InteractiveWhiteFormatDefinition : ClassificationFormatDefinition {        
 #if NTVS_FEATURE_INTERACTIVEWINDOW
@@ -366,8 +366,8 @@ namespace Microsoft.VisualStudio.Repl {
         internal static ClassificationTypeDefinition Definition = null; // Set via MEF
         
         public InteractiveWhiteFormatDefinition() {
-            // not really white by default so the user can actually see "white" text.
-            ForegroundColor = Color.FromRgb(0x7f, 0x7f, 0x7f);
+            DisplayName = Name;
+            ForegroundColor = Color.FromRgb(0xff, 0xff, 0xff);
         }
     }
 }

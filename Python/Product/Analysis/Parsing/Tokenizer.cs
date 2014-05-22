@@ -242,7 +242,11 @@ namespace Microsoft.PythonTools.Parsing {
                     break;
 
                 case TokenKind.Name:
-                    result.Category = TokenCategory.Identifier;
+                    if ("True".Equals(token.Value) || "False".Equals(token.Value)) {
+                        result.Category = TokenCategory.BuiltinIdentifier;
+                    } else {
+                        result.Category = TokenCategory.Identifier;
+                    }
                     break;
 
                 case TokenKind.Error:
@@ -254,7 +258,13 @@ namespace Microsoft.PythonTools.Parsing {
                     break;
 
                 case TokenKind.Constant:
-                    result.Category = (token.Value is string || token.Value is AsciiString) ? TokenCategory.StringLiteral : TokenCategory.NumericLiteral;
+                    if (token == Tokens.NoneToken) {
+                        result.Category = TokenCategory.BuiltinIdentifier;
+                    } else if (token.Value is string || token.Value is AsciiString) {
+                        result.Category = TokenCategory.StringLiteral;
+                    } else {
+                        result.Category = TokenCategory.NumericLiteral;
+                    }
                     break;
 
                 case TokenKind.LeftParenthesis:
@@ -296,6 +306,11 @@ namespace Microsoft.PythonTools.Parsing {
                 case TokenKind.NewLine:
                 case TokenKind.NLToken:
                     result.Category = TokenCategory.WhiteSpace;
+                    break;
+
+                case TokenKind.KeywordTrue:
+                case TokenKind.KeywordFalse:
+                    result.Category = TokenCategory.Keyword;
                     break;
 
                 default:

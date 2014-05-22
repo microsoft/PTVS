@@ -349,6 +349,8 @@
     <Compile Include="PythonTools\Project\PythonProjectImageName.cs" />
     <Compile Include="PythonTools\Project\VirtualEnv.cs" />
     <Compile Include="PythonTools\Project\XamlDesignerSupport.cs" />
+    <Compile Include="PythonTools\PythonAnalysisClassifier.cs" />
+    <Compile Include="PythonTools\PythonAnalysisClassifierProvider.cs" />
     <Compile Include="PythonTools\PythonInterpreterFactoryExtensions.cs" />
     <Compile Include="PythonTools\PeekableEnumerator.cs" />
     <Compile Include="PythonTools\WebProject\PythonWebPropertyPageControl.cs">
@@ -901,6 +903,10 @@
   </ItemGroup>
   <ItemGroup>
     <!-- VSIX -->
+    <Content Include="Dev11OrLater\Microsoft.PythonTools.theme.pkgdef">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
     <Content Include="NoSurveyNewsFeed.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
@@ -912,6 +918,10 @@
     <Content Include="ptvsd\attach_server.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="Dev11OrLater\dark.vstheme">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="Dev11OrLater\make_theme_pkgdef.py" />
     <None Include="RefreshDefaultDB.py" />
     <Content Include="ptvsd\__init__.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

@@ -206,7 +206,10 @@ namespace Microsoft.PythonTools.Intellisense {
 
                 var projEntry = CreateProjectEntry(buffers[0], new SnapshotCookie(buffers[0].CurrentSnapshot));
 
-                _unresolvedSquiggles.ListenForNextNewAnalysis(projEntry as IPythonProjectEntry);
+                bool doSquiggles = !buffers[0].Properties.ContainsProperty(typeof(IReplEvaluator));
+                if (doSquiggles) {
+                    _unresolvedSquiggles.ListenForNextNewAnalysis(projEntry as IPythonProjectEntry);
+                }
 
                 foreach (var buffer in buffers) {
                     buffer.Properties.RemoveProperty(typeof(IProjectEntry));
@@ -218,7 +221,9 @@ namespace Microsoft.PythonTools.Intellisense {
                     }
 
                     TaskProvider.Value.RegisterTextBuffer(projEntry, ParserTaskMoniker, buffer);
-                    TaskProvider.Value.RegisterTextBuffer(projEntry, UnresolvedImportMoniker, buffer);
+                    if (doSquiggles) {
+                        TaskProvider.Value.RegisterTextBuffer(projEntry, UnresolvedImportMoniker, buffer);
+                    }
                 }
                 bufferParser._currentProjEntry = _openFiles[bufferParser] = projEntry;
                 bufferParser._parser = this;
@@ -255,8 +260,10 @@ namespace Microsoft.PythonTools.Intellisense {
             IProjectEntry projEntry = CreateProjectEntry(buffer, new SnapshotCookie(buffer.CurrentSnapshot));
 
             TaskProvider.Value.RegisterTextBuffer(projEntry, ParserTaskMoniker, buffer);
-            TaskProvider.Value.RegisterTextBuffer(projEntry, UnresolvedImportMoniker, buffer);
-            _unresolvedSquiggles.ListenForNextNewAnalysis(projEntry as IPythonProjectEntry);
+            if (!buffer.Properties.ContainsProperty(typeof(IReplEvaluator))) {
+                TaskProvider.Value.RegisterTextBuffer(projEntry, UnresolvedImportMoniker, buffer);
+                _unresolvedSquiggles.ListenForNextNewAnalysis(projEntry as IPythonProjectEntry);
+            }
 
             // kick off initial processing on the buffer
             lock (_openFiles) {

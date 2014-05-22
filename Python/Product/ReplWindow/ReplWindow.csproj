@@ -172,6 +172,15 @@
     <None Include="source.extension.vsixmanifest">
       <SubType>Designer</SubType>
     </None>
+    <None Include="Theme\blue.vstheme" />
+    <None Include="Theme\contrast.vstheme">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="Theme\dark.vstheme">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="Theme\light.vstheme" />
+    <None Include="Theme\make_theme_pkgdef.py" />
   </ItemGroup>
   <ItemGroup>
     <VSCTCompile Include="ReplWindow.vsct">
@@ -181,6 +190,12 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Resources\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Theme\Microsoft.VisualStudio.ReplWindow.theme.pkgdef">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
   </ItemGroup>
   <PropertyGroup>
     <UseCodebase>true</UseCodebase>

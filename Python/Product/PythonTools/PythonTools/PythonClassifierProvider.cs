@@ -16,6 +16,7 @@ using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Windows.Media;
 using Microsoft.PythonTools.Parsing;
+using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
@@ -80,6 +81,11 @@ namespace Microsoft.PythonTools {
 #endif
         internal static ClassificationTypeDefinition OperatorClassificationDefinition = null; // Set via MEF
 
+        [Export]
+        [Name(PythonPredefinedClassificationTypeNames.Builtin)]
+        [BaseDefinition(PredefinedClassificationTypeNames.Identifier)]
+        internal static ClassificationTypeDefinition BuiltinClassificationDefinition = null; // Set via MEF
+
         #endregion
 
         #region IDlrClassifierProvider
@@ -143,7 +149,7 @@ namespace Microsoft.PythonTools {
             categoryMap[TokenCategory.DocComment] = _comment = registry.GetClassificationType(PredefinedClassificationTypeNames.Comment);
             categoryMap[TokenCategory.LineComment] = registry.GetClassificationType(PredefinedClassificationTypeNames.Comment);
             categoryMap[TokenCategory.Comment] = registry.GetClassificationType(PredefinedClassificationTypeNames.Comment);
-            categoryMap[TokenCategory.NumericLiteral] = registry.GetClassificationType(PredefinedClassificationTypeNames.Literal);
+            categoryMap[TokenCategory.NumericLiteral] = registry.GetClassificationType(PredefinedClassificationTypeNames.Number);
             categoryMap[TokenCategory.CharacterLiteral] = registry.GetClassificationType(PredefinedClassificationTypeNames.Character);
             categoryMap[TokenCategory.StringLiteral] = _stringLiteral = registry.GetClassificationType(PredefinedClassificationTypeNames.String);
             categoryMap[TokenCategory.Keyword] = _keyword = registry.GetClassificationType(PredefinedClassificationTypeNames.Keyword);
@@ -154,6 +160,7 @@ namespace Microsoft.PythonTools {
             categoryMap[TokenCategory.Grouping] = registry.GetClassificationType(PythonPredefinedClassificationTypeNames.Operator);
             categoryMap[TokenCategory.WhiteSpace] = registry.GetClassificationType(PredefinedClassificationTypeNames.WhiteSpace);
             categoryMap[TokenCategory.RegularExpressionLiteral] = registry.GetClassificationType(PredefinedClassificationTypeNames.Literal);
+            categoryMap[TokenCategory.BuiltinIdentifier] = registry.GetClassificationType(PythonPredefinedClassificationTypeNames.Builtin);
             _groupingClassification = registry.GetClassificationType(PythonPredefinedClassificationTypeNames.Grouping);
             _commaClassification = registry.GetClassificationType(PythonPredefinedClassificationTypeNames.Comma);
             _dotClassification = registry.GetClassificationType(PythonPredefinedClassificationTypeNames.Dot);
@@ -167,41 +174,66 @@ namespace Microsoft.PythonTools {
     [Export(typeof(EditorFormatDefinition))]
     [ClassificationType(ClassificationTypeNames = PythonPredefinedClassificationTypeNames.Operator)]
     [Name(PythonPredefinedClassificationTypeNames.Operator)]
-    [DisplayName(PythonPredefinedClassificationTypeNames.Operator)]
     [UserVisible(true)]
     [Order(After = LanguagePriority.NaturalLanguage, Before = LanguagePriority.FormalLanguage)]
     internal sealed class OperatorFormat : ClassificationFormatDefinition {
-        public OperatorFormat() { }
+        public OperatorFormat() {
+            DisplayName = SR.GetString(SR.OperatorClassificationType);
+            // Matches "Operator"
+            ForegroundColor = Colors.Black;
+        }
     }
 
     [Export(typeof(EditorFormatDefinition))]
     [ClassificationType(ClassificationTypeNames = PythonPredefinedClassificationTypeNames.Grouping)]
     [Name(PythonPredefinedClassificationTypeNames.Grouping)]
-    [DisplayName(PythonPredefinedClassificationTypeNames.Grouping)]
     [UserVisible(true)]
     [Order(After = LanguagePriority.NaturalLanguage, Before = LanguagePriority.FormalLanguage)]
     internal sealed class GroupingFormat : ClassificationFormatDefinition {
-        public GroupingFormat() { }
+        public GroupingFormat() {
+            DisplayName = SR.GetString(SR.GroupingClassificationType);
+            // Matches "Operator"
+            ForegroundColor = Colors.Black;
+        }
     }
 
     [Export(typeof(EditorFormatDefinition))]
     [ClassificationType(ClassificationTypeNames = PythonPredefinedClassificationTypeNames.Comma)]
     [Name(PythonPredefinedClassificationTypeNames.Comma)]
-    [DisplayName(PythonPredefinedClassificationTypeNames.Comma)]
     [UserVisible(true)]
     [Order(After = LanguagePriority.NaturalLanguage, Before = LanguagePriority.FormalLanguage)]
     internal sealed class CommaFormat : ClassificationFormatDefinition {
-        public CommaFormat() { }
+        public CommaFormat() {
+            DisplayName = SR.GetString(SR.CommaClassificationType);
+            // Matches "Operator"
+            ForegroundColor = Colors.Black;
+        }
     }
 
     [Export(typeof(EditorFormatDefinition))]
     [ClassificationType(ClassificationTypeNames = PythonPredefinedClassificationTypeNames.Dot)]
     [Name(PythonPredefinedClassificationTypeNames.Dot)]
-    [DisplayName(PythonPredefinedClassificationTypeNames.Dot)]
     [UserVisible(true)]
     [Order(After = LanguagePriority.NaturalLanguage, Before = LanguagePriority.FormalLanguage)]
     internal sealed class DotFormat : ClassificationFormatDefinition {
-        public DotFormat() { }
+        public DotFormat() {
+            DisplayName = SR.GetString(SR.DotClassificationType);
+            // Matches "Operator"
+            ForegroundColor = Colors.Black;
+        }
+    }
+
+    [Export(typeof(EditorFormatDefinition))]
+    [ClassificationType(ClassificationTypeNames = PythonPredefinedClassificationTypeNames.Builtin)]
+    [Name(PythonPredefinedClassificationTypeNames.Builtin)]
+    [UserVisible(true)]
+    [Order(After = LanguagePriority.NaturalLanguage, Before = LanguagePriority.FormalLanguage)]
+    internal sealed class BuiltinFormat : ClassificationFormatDefinition {
+        public BuiltinFormat() {
+            DisplayName = SR.GetString(SR.BuiltinClassificationType);
+            // Matches "Number"
+            ForegroundColor = Colors.Black;
+        }
     }
 
     #endregion

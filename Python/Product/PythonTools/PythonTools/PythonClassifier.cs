@@ -367,7 +367,7 @@ namespace Microsoft.PythonTools {
         #endregion
     }
 
-    internal static class ClassifierExtensions {
+    internal static partial class ClassifierExtensions {
         public static PythonClassifier GetPythonClassifier(this ITextBuffer buffer) {
             PythonClassifier res;
             if (buffer.Properties.TryGetProperty<PythonClassifier>(typeof(PythonClassifier), out res)) {

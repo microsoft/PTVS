@@ -33,7 +33,7 @@
   <Content>
     <VsPackage>|%CurrentProject%;PkgdefProjectOutputGroup|</VsPackage>
     <MefComponent>|%CurrentProject%|</MefComponent>
-    <Assembly AssemblyName="|%CurrentProject%;AssemblyName|">|%CurrentProject%|</Assembly>
+    <Assembly AssemblyName="|%CurrentProject%;_GetAssemblyName|">|%CurrentProject%|</Assembly>
   </Content>
 
 </Vsix>

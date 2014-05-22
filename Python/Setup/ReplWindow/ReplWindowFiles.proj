@@ -12,6 +12,8 @@
     <!-- Registration files -->
     <File Include="$(ObjDir)\extension.vsixmanifest" />
     <File Include="Microsoft.VisualStudio.ReplWindow.pkgdef" />
+    <File Condition="$(VSTarget) != '10.0'"
+          Include="Theme\Microsoft.VisualStudio.Replwindow.theme.pkgdef" />
 
     <!-- Core extension -->
     <File Include="Microsoft.VisualStudio.ReplWindow.dll" />
