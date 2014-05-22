@@ -351,7 +351,6 @@
     <Compile Include="PythonTools\Project\XamlDesignerSupport.cs" />
     <Compile Include="PythonTools\PythonInterpreterFactoryExtensions.cs" />
     <Compile Include="PythonTools\PeekableEnumerator.cs" />
-    <Compile Include="PythonTools\WebProject\AzureSolutionListener.cs" />
     <Compile Include="PythonTools\WebProject\PythonWebPropertyPageControl.cs">
       <SubType>UserControl</SubType>
     </Compile>

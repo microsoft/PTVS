@@ -457,4 +457,7 @@ The web.config file will be configured to resolve URIs matching this pattern to 
 {0}
 </value>
   </data>
+  <data name="AddWebRoleSupportFiles" xml:space="preserve">
+    <value>To ensure your project will deploy correctly to Microsoft Azure Cloud Service, add the Web Role Support Files item to your project through the Add New Item dialog and follow the instructions provided.</value>
+  </data>
 </root>

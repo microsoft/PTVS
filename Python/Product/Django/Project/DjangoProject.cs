@@ -19,16 +19,12 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Xml;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Flavor;
 using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.TextManager.Interop;
 
 namespace Microsoft.PythonTools.Django.Project {
     [Guid("564253E9-EF07-4A40-89CF-790E61F53368")]
@@ -633,33 +629,33 @@ namespace Microsoft.PythonTools.Django.Project {
         int IOleCommandTarget.Exec(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
             if (pguidCmdGroup == GuidList.guidWebPackgeCmdId) {
                 if (nCmdID == 0x101 /*  EnablePublishToWindowsAzureMenuItem*/) {
+                    var shell = (IVsShell)((System.IServiceProvider)this).GetService(typeof(SVsShell));
+                    var webPublishPackageGuid = GuidList.guidWebPackageGuid;
+                    IVsPackage package;
 
-                    // We need to forward the command to the web publish package and let it handle it, while
-                    // we listen for the project which is going to get added.  After the command succeds
-                    // we can then go and update the newly added project so that it is setup appropriately for
-                    // Python...
-                    using (var listener = new DjangoAzureSolutionListener(this)) {
-                        listener.Init();
+                    int res = shell.LoadPackage(ref webPublishPackageGuid, out package);
+                    if (!ErrorHandler.Succeeded(res)) {
+                        return res;
+                    }
 
-                        var shell = (IVsShell)((System.IServiceProvider)this).GetService(typeof(SVsShell));
-                        Guid webPublishPackageGuid = GuidList.guidWebPackageGuid;
-                        IVsPackage package;
-
-                        if (ErrorHandler.Succeeded(shell.LoadPackage(ref webPublishPackageGuid, out package))) {
-                            var managedPack = package as IOleCommandTarget;
-                            if (managedPack != null) {
-                                int res = managedPack.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
-                                if (ErrorHandler.Succeeded(res)) {
-                                    // update the users service definition file to include import...
-                                    foreach (var project in listener.OpenedHierarchies) {
-                                        UpdateAzureDeploymentProject(project);
-                                    }
-                                }
-
-
-                                return res;
+                    var cmdTarget = package as IOleCommandTarget;
+                    if (cmdTarget != null) {
+                        res = cmdTarget.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
+                        if (ErrorHandler.Succeeded(res)) {
+                            // TODO: Check flag to see if we were notified
+                            // about being added as a web role.
+                            if (!AddWebRoleSupportFiles()) {
+                                VsShellUtilities.ShowMessageBox(
+                                    PythonToolsPackage.Instance,
+                                    Resources.AddWebRoleSupportFiles,
+                                    null,
+                                    OLEMSGICON.OLEMSGICON_INFO,
+                                    OLEMSGBUTTON.OLEMSGBUTTON_OK,
+                                    OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST
+                                );
                             }
                         }
+                        return res;
                     }
                 }
             }
@@ -667,175 +663,33 @@ namespace Microsoft.PythonTools.Django.Project {
             return ((IOleCommandTarget)_menuService).Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
         }
 
-        private void UpdateAzureDeploymentProject(IVsHierarchy project) {
-            object projKind;
-            if (!ErrorHandler.Succeeded(project.GetProperty(VSConstants.VSITEMID_ROOT, (int)__VSHPROPID.VSHPROPID_TypeName, out projKind)) ||
-                !(projKind is string) ||
-                (string)projKind != "CloudComputingProjectType") {
-                return;
+        private bool AddWebRoleSupportFiles() {
+            var uiShell = (IVsUIShell)((System.IServiceProvider)this).GetService(typeof(SVsUIShell));
+            var emptyGuid = Guid.Empty;
+            var result = new[] { VSADDRESULT.ADDRESULT_Failure };
+            IntPtr dlgOwner;
+            if (ErrorHandler.Failed(uiShell.GetDialogOwnerHwnd(out dlgOwner))) {
+                dlgOwner = IntPtr.Zero;
             }
 
-            // first try and update the file through the RDT.  If it's open we want to make sure
-            // that VS is aware of the change.
-            // https://nodejstools.codeplex.com/workitem/480
-            IVsRunningDocumentTable rdt = PythonToolsPackage.GetGlobalService(typeof(SVsRunningDocumentTable)) as IVsRunningDocumentTable;
-            IEnumRunningDocuments enumDocs;
-            ErrorHandler.ThrowOnFailure(rdt.GetRunningDocumentsEnum(out enumDocs));
-            uint[] doc = new uint[1];
-            uint fetched;
-            while (ErrorHandler.Succeeded(enumDocs.Next(1, doc, out fetched)) && fetched == 1) {
-                uint flags;
-                uint readLocks, editLocks, itemid;
-                string filename;
-                IVsHierarchy hierarchy;
-                IntPtr docData;
+            var fullTemplate = ((EnvDTE80.Solution2)_package.DTE.Solution).GetProjectItemTemplate(
+                "AzureCSWebRole.zip",
+                PythonConstants.LanguageName
+            );
 
-                ErrorHandler.ThrowOnFailure(
-                    rdt.GetDocumentInfo(
-                        doc[0],
-                        out flags,
-                        out readLocks,
-                        out editLocks,
-                        out filename,
-                        out hierarchy,
-                        out itemid,
-                        out docData
-                    )
-                );
-                try {
-                    if (hierarchy == project && docData != IntPtr.Zero) {
-                        if (String.Equals(Path.GetFileName(filename), "ServiceDefinition.csdef", StringComparison.OrdinalIgnoreCase)) {
-                            var adapterFactory = PythonToolsPackage.ComponentModel.GetService<IVsEditorAdaptersFactoryService>();
-                            var obj = System.Runtime.InteropServices.Marshal.GetObjectForIUnknown(docData);
-                            var vsTextBuffer = obj as IVsTextBuffer;
-                            if (vsTextBuffer != null) {
-                                var textBuffer = adapterFactory.GetDocumentBuffer(vsTextBuffer);
-                                using (var edit = textBuffer.CreateEdit()) {
-                                    if (textBuffer != null) {
-                                        edit.Replace(
-                                            new Span(0, textBuffer.CurrentSnapshot.Length),
-                                            UpdateServiceDefinition(textBuffer.CurrentSnapshot.GetText())
-                                        );
-                                        edit.Apply();
-                                    }
-
-                                    string newDoc;
-                                    int fCancelled;
-                                    if (ErrorHandler.Succeeded(
-                                        ((IVsPersistDocData)vsTextBuffer).SaveDocData(
-                                            VSSAVEFLAGS.VSSAVE_SilentSave,
-                                            out newDoc,
-                                            out fCancelled
-                                            )
-                                    )) {
-                                        // we've successfully updated the file via the RDT
-                                        return;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                } finally {
-                    if (docData != IntPtr.Zero) {
-                        Marshal.Release(docData);
-                    }
-                }
-            }
-
-            // didn't find the file in the RDT, update it on disk the old fashioned way
-            var dteProject = project.GetProject();
-            var serviceDef = dteProject.ProjectItems.Item("ServiceDefinition.csdef");
-            if (serviceDef != null && serviceDef.FileCount == 1) {
-                string filename = serviceDef.FileNames[0];
-                string tmpFile = filename + ".tmp";
-                File.WriteAllText(tmpFile, UpdateServiceDefinition(File.ReadAllText(filename)));
-                File.Delete(filename);
-                File.Move(tmpFile, filename);
-            }
-        }
-
-        private static string UpdateServiceDefinition(string input) {
-            List<string> elements = new List<string>();
-            XmlWriterSettings settings = new XmlWriterSettings() { Indent = true, IndentChars = " ", NewLineHandling = NewLineHandling.Entitize };
-            var strWriter = new StringWriter();
-            using (var reader = XmlReader.Create(new StringReader(input))) {
-                using (var writer = XmlWriter.Create(strWriter, settings)) {
-                    while (reader.Read()) {
-                        switch (reader.NodeType) {
-                            case XmlNodeType.Element:
-                                // TODO: Switch to the code below when we can successfully install our module...
-                                if (reader.Name == "Imports" &&
-                                        elements.Count == 2 &&
-                                        elements[0] == "ServiceDefinition" &&
-                                        elements[1] == "WebRole") {
-                                    // insert our Imports node
-                                    writer.WriteStartElement("Startup");
-                                    writer.WriteStartElement("Task");
-                                    writer.WriteAttributeString("commandLine", "Microsoft.PythonTools.AzureSetup.exe");
-                                    writer.WriteAttributeString("executionContext", "elevated");
-                                    writer.WriteAttributeString("taskType", "simple");
-
-                                    writer.WriteStartElement("Environment");
-                                    writer.WriteStartElement("Variable");
-                                    writer.WriteAttributeString("name", "EMULATED");
-                                    writer.WriteStartElement("RoleInstanceValue");
-                                    writer.WriteAttributeString("xpath", "/RoleEnvironment/Deployment/@emulated");
-
-                                    writer.WriteEndElement(); // RoleInstanceValue
-                                    writer.WriteEndElement(); // Variable
-                                    writer.WriteEndElement(); // Environment
-                                    writer.WriteEndElement(); // Task
-                                    writer.WriteEndElement(); // Startup
-                                }
-                                writer.WriteStartElement(reader.Prefix, reader.Name, reader.NamespaceURI);
-                                writer.WriteAttributes(reader, true);
-
-                                if (!reader.IsEmptyElement) {
-                                    /*
-                                    if (reader.Name == "Imports" &&
-                                        elements.Count == 2 &&
-                                        elements[0] == "ServiceDefinition" &&
-                                        elements[1] == "WebRole") {
-
-                                        writer.WriteStartElement("Import");
-                                        writer.WriteAttributeString("moduleName", "PythonTools");
-                                        writer.WriteEndElement();
-                                    }*/
-
-                                    elements.Add(reader.Name);
-                                } else {
-                                    writer.WriteEndElement();
-                                }
-                                break;
-                            case XmlNodeType.Text:
-                                writer.WriteString(reader.Value);
-                                break;
-                            case XmlNodeType.EndElement:
-                                writer.WriteFullEndElement();
-                                elements.RemoveAt(elements.Count - 1);
-                                break;
-                            case XmlNodeType.XmlDeclaration:
-                            case XmlNodeType.ProcessingInstruction:
-                                writer.WriteProcessingInstruction(reader.Name, reader.Value);
-                                break;
-                            case XmlNodeType.SignificantWhitespace:
-                                writer.WriteWhitespace(reader.Value);
-                                break;
-                            case XmlNodeType.Attribute:
-                                writer.WriteAttributes(reader, true);
-                                break;
-                            case XmlNodeType.CDATA:
-                                writer.WriteCData(reader.Value);
-                                break;
-                            case XmlNodeType.Comment:
-                                writer.WriteComment(reader.Value);
-                                break;
-                        }
-                    }
-                }
-            }
-
-            return strWriter.ToString();
+            return ErrorHandler.Succeeded(_innerProject3.AddItemWithSpecific(
+                (uint)VSConstants.VSITEMID.Root,
+                VSADDITEMOPERATION.VSADDITEMOP_RUNWIZARD,
+                "bin",
+                1,
+                new[] { fullTemplate },
+                dlgOwner,
+                0u,
+                ref emptyGuid,
+                string.Empty,
+                ref emptyGuid,
+                result
+            )) && result[0] == VSADDRESULT.ADDRESULT_Success;
         }
 
         int IOleCommandTarget.QueryStatus(ref Guid pguidCmdGroup, uint cCmds, OLECMD[] prgCmds, IntPtr pCmdText) {

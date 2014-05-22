@@ -18,7 +18,7 @@ using Microsoft.VisualStudioTools;
 namespace Microsoft.PythonTools {
     public static class PythonConstants {
         //Language name
-        internal const string LanguageName = "Python";
+        public const string LanguageName = "Python";
         internal const string TextEditorSettingsRegistryKey = LanguageName;
         internal const string FileExtension = ".py";
         internal const string ProjectFileFilter = "Python Project File (*.pyproj)\n*.pyproj\nAll Files (*.*)\n*.*\n";

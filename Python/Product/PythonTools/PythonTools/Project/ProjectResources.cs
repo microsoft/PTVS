@@ -138,6 +138,7 @@ namespace Microsoft.PythonTools.Project {
         public const string UpgradedUserToolsVersion = "UpgradedUserToolsVersion";
 
         public const string ProjectRequiresVWDExpress = "ProjectRequiresVWDExpress";
+        public const string AddWebRoleSupportFiles = "AddWebRoleSupportFiles";
 
         private static readonly Lazy<ResourceManager> _manager = new Lazy<ResourceManager>(
             () => new System.Resources.ResourceManager("Microsoft.PythonTools.Resources", typeof(SR).Assembly),

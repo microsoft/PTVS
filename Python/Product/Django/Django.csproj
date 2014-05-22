@@ -305,7 +305,6 @@
     <Compile Include="Legacy\Intellisense\DjangoIntellisenseController.cs" />
     <Compile Include="Legacy\Intellisense\DjangoIntellisenseControllerProvider.cs" />
     <Compile Include="Intellisense\DjangoPredefinedClassificationTypeNames.cs" />
-    <Compile Include="Project\DjangoAzureSolutionListener.cs" />
     <Compile Include="Project\DjangoProjectFactory.cs" />
     <Compile Include="Project\DjangoProject.cs" />
     <Compile Include="Project\NewAppDialog.xaml.cs">
