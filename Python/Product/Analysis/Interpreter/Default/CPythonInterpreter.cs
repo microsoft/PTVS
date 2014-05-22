@@ -14,11 +14,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Interpreter.Default {
     class CPythonInterpreter : IPythonInterpreter, IPythonInterpreterWithProjectReferences, IDisposable {
@@ -34,7 +34,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             _factory.NewDatabaseAvailable += OnNewDatabaseAvailable;
         }
 
-        private void OnNewDatabaseAvailable(object sender, EventArgs e) {
+        private async void OnNewDatabaseAvailable(object sender, EventArgs e) {
             _typeDb = _factory.GetCurrentDatabase();
             
             if (_references != null) {
@@ -43,10 +43,36 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                     string modName;
                     try {
                         modName = Path.GetFileNameWithoutExtension(reference.Name);
-                    } catch (Exception) {
+                    } catch (ArgumentException) {
                         continue;
                     }
-                    _typeDb.LoadExtensionModuleAsync(modName, reference.Name).Wait();
+                    try {
+                        await _typeDb.LoadExtensionModuleAsync(modName, reference.Name);
+                    } catch (Exception ex) {
+                        try {
+                            Directory.CreateDirectory(_factory.DatabasePath);
+                        } catch (IOException) {
+                        } catch (UnauthorizedAccessException) {
+                        }
+                        if (Directory.Exists(_factory.DatabasePath)) {
+                            var analysisLog = Path.Combine(_factory.DatabasePath, "AnalysisLog.txt");
+                            for (int retries = 10; retries > 0; --retries) {
+                                try {
+                                    File.AppendAllText(analysisLog, string.Format(
+                                        "Exception while loading extension module {0}{1}{2}{1}",
+                                        reference.Name,
+                                        Environment.NewLine,
+                                        ex
+                                    ));
+                                    break;
+                                } catch (Exception ex2) {
+                                    if (ex2.IsCriticalException()) {
+                                        throw;
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
             
