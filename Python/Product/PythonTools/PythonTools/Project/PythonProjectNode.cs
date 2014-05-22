@@ -1273,22 +1273,22 @@ namespace Microsoft.PythonTools.Project {
         /// <summary>
         /// Executes Add Interpreter menu command.
         /// </summary>
-        internal Task ShowAddVirtualEnvironment(bool browseForExisting) {
+        internal async Task ShowAddVirtualEnvironment(bool browseForExisting) {
             var service = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
 
             var data = AddVirtualEnvironment.ShowDialog(this, service, browseForExisting);
 
             if (data == null) {
-                var tcs = new TaskCompletionSource<object>();
-                tcs.SetCanceled();
-                return tcs.Task;
+                throw new OperationCanceledException();
             }
+
+            await data.WaitForReady();
 
             var doCreate = data.WillCreateVirtualEnv;
             var path = data.VirtualEnvPath;
             var baseInterp = data.BaseInterpreter.Interpreter;
 
-            return CreateOrAddVirtualEnvironment(
+            await CreateOrAddVirtualEnvironment(
                 service,
                 data.WillCreateVirtualEnv,
                 data.VirtualEnvPath,
