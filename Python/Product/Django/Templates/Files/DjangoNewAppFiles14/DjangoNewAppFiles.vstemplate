@@ -2,7 +2,7 @@
   <TemplateData>
     <Name>Django 1.4 App</Name>
     <Description>An empty Django app</Description>
-    <Icon Package="{A2FE74E1-B743-11d0-AE1A-00A0C90FFFC3}" ID="4536" />
+    <Icon Package="{a8637c34-aa55-46e2-973c-9c3e09afc17b}" ID="409" />
     <ProjectType>Python</ProjectType>
     <DefaultName>MyApp</DefaultName>
     <SortOrder>100</SortOrder>

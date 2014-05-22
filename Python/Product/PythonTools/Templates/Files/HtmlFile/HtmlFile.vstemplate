@@ -2,7 +2,7 @@
   <TemplateData>
     <Name>HTML Page</Name>
     <Description>An HTML page that can include client-side code.</Description>
-    <Icon Package="{A2FE74E1-B743-11d0-AE1A-00A0C90FFFC3}" ID="4536" />
+    <Icon Package="{6dbd7c1e-1f1b-496d-ac7c-c55dae66c783}" ID="409" />
     <ProjectType>Python</ProjectType>
     <DefaultName>WebPage.html</DefaultName>
     <SortOrder>100</SortOrder>
