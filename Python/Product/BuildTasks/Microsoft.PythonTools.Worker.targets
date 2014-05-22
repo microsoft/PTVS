@@ -28,6 +28,7 @@
   <PropertyGroup>
     <CreatePythonAzureSetupConfigDependsOn>
       _AddWorkerRoleToAzureSetupConfig;
+      _GetDeployedPythonInterpreterPath;
       $(CreatePythonAzureSetupConfigDependsOn)
     </CreatePythonAzureSetupConfigDependsOn>
   </PropertyGroup>
@@ -43,7 +44,13 @@ worker_directory=$(WorkingDirectory)
       </_CloudServiceAzureSetupConfig>
     </PropertyGroup>
   </Target>
-  
+
+  <Target Name="_GetDeployedPythonInterpreterPath" DependsOnTargets="ResolveVirtualEnvSettings">
+    <PropertyGroup>
+      <DeployedPythonInterpreterPath Condition="$(VirtualEnvEnabled) and '$(DeployedPythonInterpreterPath)' == ''">$(DeployedVirtualEnvPath)$(PythonPrefixSubPath)Scripts\$([System.IO.Path]::GetFileName($(PythonInterpreterPath)))</DeployedPythonInterpreterPath>
+    </PropertyGroup>
+  </Target>
+
   <!-- TargetPath has to include our project directory -->
   <Target Name="GetTargetPath" Returns="$(MSBuildProjectDirectory)\" />
 </Project>

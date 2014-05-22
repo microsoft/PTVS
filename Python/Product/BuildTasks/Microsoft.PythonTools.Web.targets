@@ -124,21 +124,26 @@
     <ItemGroup>
       <BuiltProjectOutputGroupOutput Remove="@(BuiltProjectOutputGroupOutput)" />
       <_BuiltProjectOutputGroupOutput Remove="@(_BuiltProjectOutputGroupOutput)" />
+
+      <_BuiltProjectOutputGroupInput Include="
+        @(_PythonWebCommonFiles);
+        @(_PythonWebSitesFiles);
+        @(_PythonCloudServiceFiles);
+        @(_PythonVirtualEnvFiles);@(PyVEnvCfg);
+        @(_PythonAzureSetupConfigOutput);
+        @(Compile);@(Content);$(MSBuildProjectFile)
+      "/>
+      <_BuiltProjectOutputGroupInputWithTargetPath Include="@(_BuiltProjectOutputGroupInput)" Condition="'%(_BuiltProjectOutputGroupInput.TargetPath)' != ''" />
+      <_BuiltProjectOutputGroupInputWithoutTargetPath Include="@(_BuiltProjectOutputGroupInput)" Condition="'%(_BuiltProjectOutputGroupInput.TargetPath)' == ''" />
     </ItemGroup>
 
-    <AssignTargetPath RootFolder="$(QualifiedProjectHome)" Files="
-      @(_PythonWebCommonFiles);
-      @(_PythonWebSitesFiles);
-      @(_PythonCloudServiceFiles);
-      @(_PythonVirtualEnvFiles);@(PyVEnvCfg);
-      @(_PythonAzureSetupConfigOutput);
-      @(Compile);@(Content);$(MSBuildProjectFile)
-    ">
+    <AssignTargetPath RootFolder="$(QualifiedProjectHome)" Files="@(_BuiltProjectOutputGroupInputWithoutTargetPath)">
       <Output TaskParameter="AssignedFiles" ItemName="_BuiltProjectOutputGroupOutput" />
     </AssignTargetPath>
 
     <ItemGroup>
-      <BuiltProjectOutputGroupOutput Include="@(_BuiltProjectOutputGroupOutput->'%(FullPath)')" />
+      <BuiltProjectOutputGroupOutput Include="@(_BuiltProjectOutputGroupOutput->'%(FullPath)');
+                                              @(_BuiltProjectOutputGroupInputWithTargetPath->'%(FullPath)')" />
     </ItemGroup>
 
     <!-- Finished checking, so reset this flag in case whoever is building us
@@ -368,7 +373,7 @@
   <Target Name="_ResolveVirtualEnvSettings"
           DependsOnTargets="ResolvePythonWsgiHandler"
           Condition="$(VirtualEnvEnabled)">
-    <Error Text="No WSGI handler specified" Condition="'$(PythonWsgiHandler)' == ''" />
+    <Error Text="No WSGI handler specified" Condition="'$(RoleType)' == 'Web' and '$(PythonWsgiHandler)' == ''" />
 
     <PropertyGroup>
       <!-- Setup for when a virtualenv is used in a project. We use a bootstrap
@@ -785,9 +790,10 @@
       <!-- AzureSetup.cfg variables are written out here so we can switch on
            them in AzureSetup.exe based upon whether we're emulated or not.
       -->
+      <DeployedPythonInterpreterPath Condition="'$(DeployedPythonInterpreterPath)' == ''">%SystemDrive%\Python$(PythonMajorVersion)$(PythonMinorVersion)\python.exe</DeployedPythonInterpreterPath>
       <_CloudServiceAzureSetupConfig>
         <![CDATA[
-interpreter_path=%SystemDrive%\Python$(PythonMajorVersion)$(PythonMinorVersion)\python.exe
+interpreter_path=$(DeployedPythonInterpreterPath)
 interpreter_path_emulated=$(PythonInterpreterPath)
 interpreter_version=$(PythonMajorVersion).$(PythonMinorVersion)
 python_path_variable=$(PythonPathEnvironmentVariable)
