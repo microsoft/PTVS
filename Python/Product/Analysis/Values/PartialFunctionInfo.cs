@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Microsoft.PythonTools.Interpreter;
@@ -41,6 +42,19 @@ namespace Microsoft.PythonTools.Analysis.Values {
             var newKwArgs = _keywordArgNames.Concat(keywordArgNames).ToArray();
 
             return _function.Call(node, unit, newArgs, newKwArgs);
+        }
+
+        public override IEnumerable<OverloadResult> Overloads {
+            get {
+                int skipCount = _args.Length - _keywordArgNames.Length;
+                var skipNames = new HashSet<string>(_keywordArgNames.Select(n => n.Name));
+
+                foreach (var overload in _function.SelectMany(f => f.Overloads)) {
+                    yield return overload.WithNewParameters(
+                        overload.Parameters.Skip(skipCount).Where(p => !skipNames.Contains(p.Name)).ToArray()
+                    );
+                }
+            }
         }
 
         public override string ShortDescription {

@@ -143,6 +143,16 @@ namespace Microsoft.PythonTools.Analysis {
 
             foreach (var ns in allVars) {
                 var nsType = ns.MemberType;
+
+                var ci = ns as ConstantInfo;
+                if (ci != null) {
+                    if (ci.ClassInfo == ci.ProjectState.ClassInfos[BuiltinTypeId.Function]) {
+                        nsType = PythonMemberType.Function;
+                    } else if (ci.ClassInfo == ci.ProjectState.ClassInfos[BuiltinTypeId.Type]) {
+                        nsType = PythonMemberType.Class;
+                    }
+                }
+
                 if (ns.TypeId == BuiltinTypeId.NoneType) {
                     includesNone = true;
                 } else if (result == PythonMemberType.Unknown) {

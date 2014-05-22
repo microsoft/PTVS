@@ -38,6 +38,10 @@ namespace Microsoft.PythonTools.Analysis {
         public virtual ParameterResult[] Parameters {
             get { return _parameters; }
         }
+
+        internal virtual OverloadResult WithNewParameters(ParameterResult[] newParameters) {
+            return new OverloadResult(newParameters, _name);
+        }
     }
 
     class SimpleOverloadResult : OverloadResult {
@@ -51,6 +55,10 @@ namespace Microsoft.PythonTools.Analysis {
             get {
                 return _documentation;
             }
+        }
+
+        internal override OverloadResult WithNewParameters(ParameterResult[] newParameters) {
+            return new SimpleOverloadResult(newParameters, Name, _documentation);
         }
     }
 
@@ -88,6 +96,17 @@ namespace Microsoft.PythonTools.Analysis {
             _fallbackDoc = fallbackDoc;
 
             CalculateDocumentation();
+        }
+
+        internal override OverloadResult WithNewParameters(ParameterResult[] newParameters) {
+            return new BuiltinFunctionOverloadResult(
+                _projectState,
+                Name,
+                _overload,
+                0,
+                _fallbackDoc,
+                newParameters
+            );
         }
 
         public override string Documentation {

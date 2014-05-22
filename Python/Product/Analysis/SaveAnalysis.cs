@@ -108,14 +108,22 @@ namespace Microsoft.PythonTools.Analysis {
 
             // Add any child built-in modules as well. This will include the modules that are part of the package,
             // but which do not participate in analysis (e.g. native modules).
-            res.UnionWith(
+            foreach (var child in
                 from moduleName in moduleInfo.ProjectEntry.ProjectState.Interpreter.GetModuleNames()
                 let lastDot = moduleName.LastIndexOf('.')
                 where lastDot >= 0
                 let packageName = moduleName.Substring(0, lastDot)
                 where packageName == moduleInfo.Name
                 select moduleName.Substring(lastDot + 1)
-            );
+            ) {
+                // Only include the child if it is actually importable. As a
+                // side-effect, we really import the child, which means that
+                // GenerateMembers will not exclude it.
+                ModuleReference modTableRef;
+                if (moduleInfo.ProjectEntry.ProjectState.Modules.TryImport(moduleInfo.Name + "." + child, out modTableRef)) {
+                    res.Add(child);
+                }
+            }
 
             return res.ToList();
         }
@@ -126,29 +134,41 @@ namespace Microsoft.PythonTools.Analysis {
                 res[keyValue.Key] = GenerateMember(keyValue.Value, moduleInfo);
             }
             foreach (var child in children.OfType<string>()) {
-                var modRef = new Dictionary<string, object> {
-                    { "kind", "moduleref" },
-                    { "value", GetModuleName(moduleInfo.Name + "." + child) }
-                };
+                object modRef = null;
                 ModuleReference modTableRef;
-                if (!moduleInfo.ProjectEntry.ProjectState.Modules.TryGetImportedModule(moduleInfo.Name + "." + child, out modTableRef) ||
-                    !(modTableRef.Module is ModuleInfo)) {
-                    // Not a real module, so don't make a reference to it
-                    modRef = null;
+                if (moduleInfo.ProjectEntry.ProjectState.Modules.TryGetImportedModule(moduleInfo.Name + "." + child, out modTableRef) &&
+                    modTableRef != null &&
+                    modTableRef.Module != null
+                ) {
+                    MultipleMemberInfo mmi;
+                    if (modTableRef.Module is ModuleInfo || modTableRef.Module is BuiltinModule) {
+                        modRef = new Dictionary<string, object> {
+                            { "kind", "moduleref" },
+                            { "value", GetModuleName(moduleInfo.Name + "." + child) }
+                        };
+                    } else if ((mmi = modTableRef.Module as MultipleMemberInfo) != null) {
+                        modRef = new Dictionary<string, object> {
+                            { "kind", "multiple" },
+                            { "value", new Dictionary<string, object> {
+                                {
+                                    "members",
+                                    mmi.Members
+                                        .Select(m => m.Name)
+                                        .Where(n => !string.IsNullOrEmpty(n))
+                                        .Select(GetModuleName)
+                                        .ToArray<object>()
+                                }
+                            } }
+                        };
+                    }
                 }
+
                 object existing;
                 if (res.TryGetValue(child, out existing) && IsValidMember(existing)) {
-                    var members = GetMultipleMembersOrDefault(existing);
-                    if (members == null) {
-                        if (modRef == null || AreSameModuleRef(existing, modRef)) {
-                            members = new[] { existing };
-                        } else {
-                            members = new[] { existing, modRef };
-                        }
-                    } else if (modRef != null && !members.Any(m => AreSameModuleRef(m, modRef))) {
-                        members = members.Concat(Enumerable.Repeat(modRef, 1)).ToArray();
-                    }
-
+                    var members1 = GetMultipleMembersOrDefault(existing) ?? new object[] { existing };
+                    var members2 = GetMultipleMembersOrDefault(modRef) ?? new object[] { modRef };
+                    var members = members1.Concat(members2).Distinct(ModuleReferenceComparer.Instance).ToArray();
+                    
                     if (members.Length > 1) {
                         res[child] = new Dictionary<string, object> {
                             { "kind", "multiple" },
@@ -164,30 +184,59 @@ namespace Microsoft.PythonTools.Analysis {
             return res;
         }
 
-        private static bool AreSameModuleRef(object info1, object info2) {
-            var asDict1 = info1 as Dictionary<string, object>;
-            var asDict2 = info2 as Dictionary<string, object>;
-            if (asDict1 == null || asDict2 == null) {
-                return false;
+        private class ModuleReferenceComparer : IEqualityComparer<object> {
+            public static readonly IEqualityComparer<object> Instance = new ModuleReferenceComparer();
+
+            private ModuleReferenceComparer() { }
+
+            public new bool Equals(object x, object y) {
+                if (object.ReferenceEquals(x, y)) {
+                    return true;
+                }
+                
+                var asDict1 = x as Dictionary<string, object>;
+                var asDict2 = y as Dictionary<string, object>;
+                if (asDict1 == null || asDict2 == null) {
+                    return false;
+                }
+
+                object obj;
+                if (!asDict1.TryGetValue("kind", out obj) || (obj as string) != "moduleref") {
+                    return false;
+                }
+                if (!asDict2.TryGetValue("kind", out obj) || (obj as string) != "moduleref") {
+                    return false;
+                }
+
+                object[] modref1, modref2;
+                if (!asDict1.TryGetValue("value", out obj) || (modref1 = obj as object[]) == null) {
+                    return false;
+                }
+                if (!asDict2.TryGetValue("value", out obj) || (modref2 = obj as object[]) == null) {
+                    return false;
+                }
+
+                return modref1.SequenceEqual(modref2);
             }
 
-            object obj;
-            if (!asDict1.TryGetValue("kind", out obj) || (obj as string) != "moduleref") {
-                return false;
-            }
-            if (!asDict2.TryGetValue("kind", out obj) || (obj as string) != "moduleref") {
-                return false;
-            }
+            public int GetHashCode(object obj) {
+                var asDict = obj as Dictionary<string, object>;
+                if (asDict == null) {
+                    return 0;
+                }
 
-            object[] modref1, modref2;
-            if (!asDict1.TryGetValue("value", out obj) || (modref1 = obj as object[]) == null) {
-                return false;
-            }
-            if (!asDict2.TryGetValue("value", out obj) || (modref2 = obj as object[]) == null) {
-                return false;
-            }
+                object o;
+                if (!asDict.TryGetValue("kind", out o) || (o as string) != "moduleref") {
+                    return 0;
+                }
 
-            return modref1.SequenceEqual(modref2);
+                object[] modref;
+                if (!asDict.TryGetValue("value", out o) || (modref = o as object[]) == null) {
+                    return 0;
+                }
+
+                return modref.Aggregate(48527, (a, n) => a ^ (n != null ? n.GetHashCode() : 0));
+            }
         }
 
         private static bool IsValidMember(object info) {

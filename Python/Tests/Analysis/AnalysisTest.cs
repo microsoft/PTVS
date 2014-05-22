@@ -4683,6 +4683,21 @@ a = X(2)
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("value", text.IndexOf(" = value")), BuiltinTypeId.Int);
         }
 
+        [TestMethod, Priority(0)]
+        public void InstanceCall() {
+            var text = @"
+class X:
+    def __call__(self, value):
+        return value
+
+x = X()
+
+a = x(2)
+";
+            var entry = ProcessText(text);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("a", -1), BuiltinTypeId.Int);
+        }
+
         /// <summary>
         /// Verifies that regardless of how we get to imports/function return values that
         /// we properly understand the imported value.

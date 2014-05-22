@@ -45,13 +45,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return base.GetInstanceType();
         }
 
-        public override IEnumerable<OverloadResult> Overloads {
-            get {
-                // TODO: look for __call__ and return overloads
-                return base.Overloads;
-            }
-        }
-
         public override string Description {
             get {
                 return _klass._type.Name;
@@ -132,6 +125,40 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 return res;
             }
             return AnalysisSet.Empty;
+        }
+
+        public override IEnumerable<OverloadResult> Overloads {
+            get {
+                IAnalysisSet callRes;
+                if (_klass.GetAllMembers(ProjectState._defaultContext).TryGetValue("__call__", out callRes)) {
+                    foreach (var overload in callRes.SelectMany(av => av.Overloads)) {
+                        yield return overload.WithNewParameters(
+                            overload.Parameters.Skip(1).ToArray()
+                        );
+                    }
+                }
+
+                foreach (var overload in base.Overloads) {
+                    yield return overload;
+                }
+            }
+        }
+
+        public override IAnalysisSet Call(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
+            var res = base.Call(node, unit, args, keywordArgNames);
+
+            if (Push()) {
+                try {
+                    var callRes = GetMember(node, unit, "__call__");
+                    if (callRes.Any()) {
+                        res = res.Union(callRes.Call(node, unit, args, keywordArgNames));
+                    }
+                } finally {
+                    Pop();
+                }
+            }
+            
+            return res;
         }
 
         internal override bool IsOfType(IAnalysisSet klass) {

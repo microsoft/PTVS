@@ -348,6 +348,7 @@ namespace PythonToolsTests {
                 SkipUnchanged = true,
                 OnExit = tcs.SetResult
             };
+            Console.WriteLine("OutputPath: {0}", request.OutputPath);
 
 #pragma warning disable 618
             PythonTypeDatabase.Generate(request);
@@ -367,6 +368,7 @@ namespace PythonToolsTests {
 
                 // Kill the process
                 foreach (var p in proc) {
+                    Console.WriteLine("Killing process {0}", p.Id);
                     p.Kill();
                 }
 

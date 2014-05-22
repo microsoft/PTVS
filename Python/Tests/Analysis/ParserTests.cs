@@ -2311,7 +2311,7 @@ namespace AnalysisTests {
                 var errors = new Dictionary<string, CollectingErrorSink>();
                 foreach (var file in files) {
                     string filename = Path.GetFileName(file);
-                    if (skippedFiles.Contains(filename) || filename.StartsWith("badsyntax_") || file.IndexOf("\\lib2to3\\tests\\") != -1) {
+                    if (skippedFiles.Contains(filename) || filename.StartsWith("badsyntax_") || filename.StartsWith("bad_coding") || file.IndexOf("\\lib2to3\\tests\\") != -1) {
                         continue;
                     }
                     using (var parser = Parser.CreateParser(new StreamReader(file), curVersion.Version, new ParserOptions() { ErrorSink = errorSink })) {

@@ -161,6 +161,7 @@ namespace Microsoft.PythonTools.Analysis {
             SpecializeFunction("ntpath", "expandvars", ReturnsString);
             SpecializeFunction("idlelib.EditorWindow.EditorWindow", "__init__", Nop);
             SpecializeFunction("_functools", "partial", PartialFunction);
+            SpecializeFunction("functools", "partial", PartialFunction);
             SpecializeFunction("functools", "update_wrapper", UpdateWrapperFunction);
             SpecializeFunction("functools", "wraps", WrapsFunction);
 

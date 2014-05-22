@@ -266,8 +266,11 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             try {
                 _worker.Start();
             } catch (Exception ex) {
+                // Thread failed to start
                 _pending = ExceptionDispatchInfo.Capture(ex);
                 _disposed = true;
+                _requestAdded.Dispose();
+                _workerStarted.Dispose();
             }
         }
 
@@ -279,8 +282,11 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             try {
                 _worker.Start();
             } catch (Exception ex) {
+                // Thread failed to start
                 _pending = ExceptionDispatchInfo.Capture(ex);
                 _disposed = true;
+                _requestAdded.Dispose();
+                _workerStarted.Dispose();
             }
         }
 
@@ -290,7 +296,12 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         /// this function before <see cref="ThrowPendingExceptions"/>.
         /// </summary>
         public void WaitForWorkerStarted() {
-            _workerStarted.WaitOne();
+            if (!_disposed) {
+                try {
+                    _workerStarted.WaitOne();
+                } catch (ObjectDisposedException) {
+                }
+            }
         }
 
         /// <summary>
@@ -304,7 +315,14 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             }
         }
 
+        private void ThrowObjectDisposedException() {
+            if (_disposed) {
+                throw new ObjectDisposedException(GetType().Name);
+            }
+        }
+
         protected void UpdateStatusImplementation(int progress, int maximum, string message) {
+            ThrowObjectDisposedException();
             if (_identifier == null) {
                 throw new InvalidOperationException("Cannot update status without providing an identifier");
             }
@@ -328,6 +346,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         protected void RequestUpdateImplementation() {
+            ThrowObjectDisposedException();
             if (_identifier != null) {
                 throw new InvalidOperationException("Cannot request updates when an identifier has been provided");
             }
@@ -336,6 +355,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         protected void RequestCancellationImplementation(string identifier) {
+            ThrowObjectDisposedException();
             if (_identifier != null) {
                 throw new InvalidOperationException("Cannot request cancellation when an identifier has been provided");
             }
@@ -349,8 +369,13 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         /// thread has ended.</para>
         /// </summary>
         public void Abort() {
-            _requests.Enqueue(Request.Abort);
-            _requestAdded.Set();
+            if (!_disposed) {
+                _requests.Enqueue(Request.Abort);
+                try {
+                    _requestAdded.Set();
+                } catch (ObjectDisposedException) {
+                }
+            }
         }
 
         void ThreadProc() {
@@ -613,9 +638,11 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         /// </summary>
         public void Dispose() {
             if (!_disposed) {
-                _disposed = true;
                 Abort();
+                _disposed = true;
                 _worker.Join(LOCK_TIMEOUT);
+                _workerStarted.Dispose();
+                _requestAdded.Dispose();
             }
         }
 

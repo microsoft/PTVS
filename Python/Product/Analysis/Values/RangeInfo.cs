@@ -22,7 +22,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override IAnalysisSet GetEnumeratorTypes(Node node, AnalysisUnit unit) {
-            return ProjectState.ClassInfos[BuiltinTypeId.Int].SelfSet;
+            return ProjectState.ClassInfos[BuiltinTypeId.Int].Instance;
         }
 
         public override IAnalysisSet GetIndex(Node node, AnalysisUnit unit, IAnalysisSet index) {
@@ -34,7 +34,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 return _indexTypes[constIndex.Value];
             }*/
 
-            return ProjectState.ClassInfos[BuiltinTypeId.Int].SelfSet;
+            return ProjectState.ClassInfos[BuiltinTypeId.Int].Instance;
         }
     }
 }

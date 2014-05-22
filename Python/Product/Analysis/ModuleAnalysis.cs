@@ -290,13 +290,23 @@ namespace Microsoft.PythonTools.Analysis {
                     }
                     var lookup = eval.Evaluate(expr);
 
+                    lookup = AnalysisSet.Create(lookup.Where(av => !(av is MultipleMemberInfo)).Concat(
+                        lookup.OfType<MultipleMemberInfo>().SelectMany(mmi => mmi.Members)
+                    ));
+
                     var result = new HashSet<OverloadResult>(OverloadResultComparer.Instance);
 
                     // TODO: Include relevant type info on the parameter...
-                    foreach (var ns in lookup) {
-                        if (ns.Overloads != null) {
-                            result.UnionWith(ns.Overloads);
-                        }
+                    result.UnionWith(lookup
+                        // Exclude constant values first time through
+                        .Where(av => av.MemberType != PythonMemberType.Constant)
+                        .SelectMany(av => av.Overloads ?? Enumerable.Empty<OverloadResult>())
+                    );
+
+                    if (!result.Any()) {
+                        result.UnionWith(lookup
+                            .Where(av => av.MemberType == PythonMemberType.Constant)
+                            .SelectMany(av => av.Overloads ?? Enumerable.Empty<OverloadResult>()));
                     }
 
                     return result;

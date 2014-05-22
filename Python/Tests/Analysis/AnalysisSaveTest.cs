@@ -443,7 +443,13 @@ sys.modules['test.imported'] = test_import_2
                 new AnalysisModule("test_import_1", "test_import_1.py", "n = 1"),
                 new AnalysisModule("test_import_2", "test_import_2.py", "f = 3.1415")
             )) {
-                var entry = newPs.NewModule("test2", "import test.imported as p");
+                var entry = newPs.NewModule("test2", "import test as t; import test.imported as p");
+                AssertUtil.ContainsExactly(
+                    entry.Analysis.GetMemberNamesByIndex("t", 0),
+                    "test_import_1",
+                    "test_import_2",
+                    "imported"
+                );
                 var p = entry.Analysis.GetValuesByIndex("p", 0).ToList();
                 Assert.AreEqual(2, p.Count);
                 Assert.IsInstanceOfType(p[0], typeof(BuiltinModule));

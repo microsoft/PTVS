@@ -56,7 +56,6 @@ namespace Microsoft.PythonTools.Analysis {
         private readonly CancellationToken _cancel;
         private TextWriter _listener;
         internal readonly List<List<ModulePath>> _scrapeFileGroups, _analyzeFileGroups;
-        private IEnumerable<string> _callDepthOverrides;
         private IEnumerable<string> _readModulePath;
 
         private int _progressOffset;
@@ -802,19 +801,35 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        private IEnumerable<string> CallDepthOverrides {
-            get {
-                if (_callDepthOverrides == null) {
-                    var values = ConfigurationManager.AppSettings.Get("NoCallSiteAnalysis");
-                    if (string.IsNullOrEmpty(values)) {
-                        _callDepthOverrides = Enumerable.Empty<string>();
+        private Dictionary<string, int> GetCallDepthOverrides() {
+            var res = new Dictionary<string, int>();
+
+            var values = ConfigurationManager.AppSettings.Get("NoCallSiteAnalysis");
+            if (!string.IsNullOrEmpty(values)) {
+                TraceInformation("NoCallSiteAnalysis = {0}", values);
+                foreach (var value in values.Split(',', ';').Where(n => !string.IsNullOrWhiteSpace(n))) {
+                    res[value] = 0;
+                }
+            }
+
+            var r = new Regex(@"^(?<module>[\w\.]+)\.CallDepth", RegexOptions.IgnoreCase);
+            Match m;
+            foreach (var key in ConfigurationManager.AppSettings.AllKeys) {
+                if ((m = r.Match(key)).Success) {
+                    int depth;
+                    if (int.TryParse(ConfigurationManager.AppSettings[key], out depth)) {
+                        res[m.Groups["module"].Value] = depth;
                     } else {
-                        TraceInformation("NoCallSiteAnalysis = {0}", values);
-                        _callDepthOverrides = values.Split(',', ';').Where(n => !string.IsNullOrWhiteSpace(n)).ToArray();
+                        TraceWarning("Failed to parse \"{0}={1}\" from config file", key, ConfigurationManager.AppSettings[key]);
                     }
                 }
-                return _callDepthOverrides;
             }
+
+            foreach (var keyValue in res.OrderBy(kv => kv.Key)) {
+                TraceInformation("{0}.CallDepth = {1}", keyValue.Key, keyValue.Value);
+            }
+
+            return res;
         }
 
         private IEnumerable<string> IncludeModulesFromModulePath {
@@ -961,6 +976,8 @@ namespace Microsoft.PythonTools.Analysis {
                 }
             }
 
+            var callDepthOverrides = GetCallDepthOverrides();
+
             foreach (var files in _analyzeFileGroups) {
                 if (_cancel.IsCancellationRequested) {
                     break;
@@ -1041,9 +1058,13 @@ namespace Microsoft.PythonTools.Analysis {
 
                         item.Entry = projectState.AddModule(item.ModuleName, item.SourceFile);
 
-                        if (CallDepthOverrides.Any(n => item.ModuleName == n || item.ModuleName.StartsWith(n + "."))) {
-                            TraceVerbose("Set CallDepthLimit to 0 for {0}", item.ModuleName);
-                            item.Entry.Properties[AnalysisLimits.CallDepthKey] = 0;
+                        foreach (var name in ModulePath.GetParents(item.ModuleName, includeFullName: true)) {
+                            int depth;
+                            if (callDepthOverrides.TryGetValue(name, out depth)) {
+                                TraceVerbose("Set CallDepthLimit to 0 for {0}", item.ModuleName);
+                                item.Entry.Properties[AnalysisLimits.CallDepthKey] = depth;
+                                break;
+                            }
                         }
                     }
 

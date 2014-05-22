@@ -93,6 +93,40 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
+        public override IEnumerable<OverloadResult> Overloads {
+            get {
+                IAnalysisSet callRes;
+                if (_classInfo.GetAllMembers(ProjectState._defaultContext).TryGetValue("__call__", out callRes)) {
+                    foreach (var overload in callRes.SelectMany(av => av.Overloads)) {
+                        yield return overload.WithNewParameters(
+                            overload.Parameters.Skip(1).ToArray()
+                        );
+                    }
+                }
+
+                foreach (var overload in base.Overloads) {
+                    yield return overload;
+                }
+            }
+        }
+
+        public override IAnalysisSet Call(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
+            var res = base.Call(node, unit, args, keywordArgNames);
+
+            if (Push()) {
+                try {
+                    var callRes = GetMember(node, unit, "__call__");
+                    if (callRes.Any()) {
+                        res = res.Union(callRes.Call(node, unit, args, keywordArgNames));
+                    }
+                } finally {
+                    Pop();
+                }
+            }
+
+            return res;
+        }
+
         public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
             // Must unconditionally call the base implementation of GetMember
             var ignored = base.GetMember(node, unit, name);

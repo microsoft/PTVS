@@ -112,8 +112,8 @@ namespace AnalyzerStatusTests {
         public void LotsOfUpdaters() {
             var updaters = new List<AnalyzerStatusUpdater>();
 
-            // We should stop creating new entries well before 1000
-            for (int j = 0; j < 1000; ++j) {
+            // We should stop creating new entries well before 10000
+            for (int j = 0; j < 10000; ++j) {
                 Console.WriteLine("Creating S{0}", j);
                 var newUpdater = new AnalyzerStatusUpdater("S" + j.ToString());
                 updaters.Add(newUpdater);
@@ -128,11 +128,12 @@ namespace AnalyzerStatusTests {
                 foreach (var u in updaters) {
                     u.ThrowPendingExceptions();
                 }
-                Assert.Fail("Should not have been able to create 1000 updaters");
+                Assert.Fail("Should not have been able to create 10000 updaters");
             } catch (InvalidOperationException) {
-            }
-            foreach (var u in updaters) {
-                u.Dispose();
+            } finally {
+                foreach (var u in updaters) {
+                    u.Dispose();
+                }
             }
             updaters.Clear();
         }
