@@ -165,10 +165,16 @@ namespace Microsoft.PythonTools.Commands {
                 res.AppendLine();
             }
 
-            res.AppendLine("Logged events/stats:");
-            var inMemLogger = PythonToolsPackage.ComponentModel.GetService<InMemoryLogger>();
-            res.AppendLine(inMemLogger.ToString());
-            res.AppendLine();
+            try {
+                res.AppendLine("Logged events/stats:");
+                var inMemLogger = PythonToolsPackage.ComponentModel.GetService<InMemoryLogger>();
+                res.AppendLine(inMemLogger.ToString());
+                res.AppendLine();
+            } catch (System.ComponentModel.Composition.CompositionException ex) {
+                res.AppendLine("  Failed to access event log.");
+                res.AppendLine(ex.ToString());
+                res.AppendLine();
+            }
 
             res.AppendLine("Loaded assemblies:");
             foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies().OrderBy(assem => assem.FullName)) {

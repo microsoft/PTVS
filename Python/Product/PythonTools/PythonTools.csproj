@@ -147,7 +147,7 @@
           <HintPath>$(DevEnvDir)Extensions\Microsoft\Windows Azure Tools\Common\Microsoft.VisualStudio.WindowsAzure.CommonAzureTools.Contracts.1.1.dll</HintPath>
         </Reference>
         <Reference Include="Microsoft.VisualStudio.Web.WindowsAzure.Contracts, Version=2.3.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-          <SpecificVersion>False</SpecificVersion>
+          <SpecificVersion>True</SpecificVersion>
           <HintPath>$(DevEnvDir)PrivateAssemblies\Microsoft.VisualStudio.Web.WindowsAzure.Contracts.dll</HintPath>
         </Reference>
       </ItemGroup>
