@@ -903,10 +903,6 @@
   </ItemGroup>
   <ItemGroup>
     <!-- VSIX -->
-    <Content Include="Dev11OrLater\Microsoft.PythonTools.theme.pkgdef">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
     <Content Include="NoSurveyNewsFeed.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
@@ -918,9 +914,8 @@
     <Content Include="ptvsd\attach_server.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <None Include="Dev11OrLater\dark.vstheme">
-      <SubType>Designer</SubType>
-    </None>
+    <None Include="Dev11OrLater\Microsoft.PythonTools.theme.pkgdef" />
+    <None Include="Dev11OrLater\dark.vstheme" />
     <None Include="Dev11OrLater\make_theme_pkgdef.py" />
     <None Include="RefreshDefaultDB.py" />
     <Content Include="ptvsd\__init__.py">
@@ -1247,6 +1242,19 @@
       <PTVSDFiles Include="$(OutputPath)ptvsd\*.py" />
       <VSIXSourceItem Include="@(PTVSDFiles)">
         <VSIXSubPath>ptvsd</VSIXSubPath>
+      </VSIXSourceItem>
+    </ItemGroup>
+  </Target>
+  <Target Name="DeployThemePkgdef" BeforeTargets="GetVsixSourceItems"
+          Inputs="Dev11OrLater\Microsoft.PythonTools.theme.pkgdef"
+          Outputs="$(OutputPath)Microsoft.PythonTools.theme.pkgdef"
+          Condition="'$(VSTarget)' != '10.0'">
+    <Copy SourceFiles="Dev11OrLater\Microsoft.PythonTools.theme.pkgdef"
+          DestinationFiles="$(OutputPath)Microsoft.PythonTools.theme.pkgdef"
+          OverwriteReadOnlyFiles="true" />
+    <ItemGroup>
+      <VSIXSourceItem Include="$(OutputPath)Microsoft.PythonTools.theme.pkgdef">
+        <VSIXSubPath></VSIXSubPath>
       </VSIXSourceItem>
     </ItemGroup>
   </Target>
