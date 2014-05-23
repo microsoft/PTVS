@@ -18,6 +18,7 @@ using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Web;
@@ -100,16 +101,25 @@ namespace Microsoft.PythonTools.Project {
             string cmdLineArgs = _project.GetProperty(CommonConstants.CommandLineArguments) ?? string.Empty;
             string interpArgs = _project.GetProperty(PythonConstants.InterpreterArgumentsSetting) ?? string.Empty;
 
-            return String.Format("{0} \"{1}\" {2}", interpArgs, startupFile, cmdLineArgs);
+            return string.Join(" ", new[] {
+                interpArgs,
+                ProcessOutput.QuoteSingleArgument(startupFile),
+                cmdLineArgs
+            }.Where(s => !string.IsNullOrEmpty(s)));
         }
 
         /// <summary>
         /// Creates language specific command line for starting the project with debigging.
         /// </summary>
-        public string CreateCommandLineDebug(string startupFile) {
+        public string CreateCommandLineDebug(string startupFile, bool includeInterpreterArgs) {
+            string interpArgs = includeInterpreterArgs ? _project.GetProperty(PythonConstants.InterpreterArgumentsSetting) : null;
             string cmdLineArgs = _project.GetProperty(CommonConstants.CommandLineArguments) ?? string.Empty;
 
-            return String.Format("\"{0}\" {1}", startupFile, cmdLineArgs);
+            return string.Join(" ", new[] {
+                interpArgs,
+                ProcessOutput.QuoteSingleArgument(startupFile),
+                cmdLineArgs
+            }.Where(s => !string.IsNullOrEmpty(s)));
         }
 
         /// <summary>
@@ -182,9 +192,10 @@ namespace Microsoft.PythonTools.Project {
             if (string.IsNullOrEmpty(interpreterPath)) {
                 return;
             }
+
             dbgInfo.bstrExe = interpreterPath;
             dbgInfo.bstrCurDir = _project.GetWorkingDirectory();
-            dbgInfo.bstrArg = CreateCommandLineDebug(startupFile);
+            dbgInfo.bstrArg = CreateCommandLineDebug(startupFile, enableNativeCodeDebugging);
             dbgInfo.bstrRemoteMachine = null;
             dbgInfo.fSendStdoutToOutputWindow = 0;
 
