@@ -353,10 +353,18 @@
                           Message="Invalid static URI pattern: {0}" />
     
     <PropertyGroup>
-      <FastCgiRewriteConditions>
+      <FastCgiRewriteConditions Condition="'$(StaticUriRewrite)' == ''">
         <![CDATA[$(FastCgiRewriteConditions)
             <add input="{REQUEST_URI}" pattern="$(StaticUriPattern)" ignoreCase="true" negate="true"/>]]>
       </FastCgiRewriteConditions>
+      <_StaticFilesRewriteConditions Condition="'$(StaticUriRewrite)' != ''">
+        <![CDATA[<match url="$(StaticUriPattern)" ignoreCase="true" />
+            <action type="Rewrite" url="$(StaticUriRewrite)" appendQueryString="true" />]]>
+      </_StaticFilesRewriteConditions>
+      <!-- A false condition prevents this rule from blocking later ones -->
+      <_StaticFilesRewriteConditions Condition="'$(StaticUriRewrite)' == ''">
+        <![CDATA[<conditions><add input="true" pattern="false" /></conditions>]]>
+      </_StaticFilesRewriteConditions>
     </PropertyGroup>
   </Target>
   
@@ -889,6 +897,10 @@ $(_CloudServiceAzureSetupConfig)
              Query="/configuration/system.webServer/rewrite/rules/rule[@name='Configure Python']/conditions"
              Value="$(FastCgiRewriteConditions)"
              Condition="'$(FastCgiRewriteConditions)' != ''"/>
+    <XmlPoke XmlInputPath="@(_TempWebConfig)"
+             Query="/configuration/system.webServer/rewrite/rules/rule[@name='Static Files']"
+             Value="$(_StaticFilesRewriteConditions)"
+             Condition="'$(_StaticFilesRewriteConditions)' != ''"/>
 
     <Message Text="Updating FastCGI handlers in web.config" />
     <XmlPoke XmlInputPath="@(_TempWebConfig)"

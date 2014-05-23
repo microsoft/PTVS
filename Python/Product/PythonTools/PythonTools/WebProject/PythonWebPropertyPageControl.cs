@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Project;
@@ -22,15 +23,34 @@ using Microsoft.VisualStudioTools.Project;
 namespace Microsoft.PythonTools.Project.Web {
     public partial class PythonWebPropertyPageControl : UserControl {
         private readonly PythonWebPropertyPage _properties;
+        private readonly Timer _validateStaticPatternTimer;
 
         private PythonWebPropertyPageControl() {
             InitializeComponent();
 
-            _toolTip.SetToolTip(_staticUri, SR.GetString(SR.StaticUriHelp));
-            _toolTip.SetToolTip(_staticUriLabel, SR.GetString(SR.StaticUriHelp));
+            _validateStaticPatternTimer = new Timer();
+            _validateStaticPatternTimer.Tick += ValidateStaticPattern;
+            _validateStaticPatternTimer.Interval = 500;
+
+            _toolTip.SetToolTip(_staticPattern, SR.GetString(SR.StaticPatternHelp));
+            _toolTip.SetToolTip(_staticPatternLabel, SR.GetString(SR.StaticPatternHelp));
+
+            _toolTip.SetToolTip(_staticRewrite, SR.GetString(SR.StaticRewriteHelp));
+            _toolTip.SetToolTip(_staticRewriteLabel, SR.GetString(SR.StaticRewriteHelp));
 
             _toolTip.SetToolTip(_wsgiHandler, SR.GetString(SR.WsgiHandlerHelp));
             _toolTip.SetToolTip(_wsgiHandlerLabel, SR.GetString(SR.WsgiHandlerHelp));
+        }
+
+        private void ValidateStaticPattern(object sender, EventArgs e) {
+            _validateStaticPatternTimer.Enabled = false;
+
+            try {
+                new Regex(_staticPattern.Text);
+                _errorProvider.SetError(_staticPattern, null);
+            } catch (ArgumentException) {
+                _errorProvider.SetError(_staticPattern, SR.GetString(SR.StaticPatternError));
+            }
         }
 
         internal PythonWebPropertyPageControl(PythonWebPropertyPage properties)
@@ -39,8 +59,13 @@ namespace Microsoft.PythonTools.Project.Web {
         }
 
         public string StaticUriPattern {
-            get { return _staticUri.Text; }
-            set { _staticUri.Text = value; }
+            get { return _staticPattern.Text; }
+            set { _staticPattern.Text = value; }
+        }
+
+        public string StaticUriRewrite {
+            get { return _staticRewrite.Text; }
+            set { _staticRewrite.Text = value; }
         }
 
         public string WsgiHandler {
@@ -51,6 +76,10 @@ namespace Microsoft.PythonTools.Project.Web {
         private void Setting_TextChanged(object sender, EventArgs e) {
             if (_properties != null) {
                 _properties.IsDirty = true;
+            }
+            if (sender == _staticPattern) {
+                _validateStaticPatternTimer.Enabled = false;
+                _validateStaticPatternTimer.Enabled = true;
             }
         }
     }
