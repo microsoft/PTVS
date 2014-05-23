@@ -279,6 +279,25 @@ namespace Microsoft.PythonTools {
             Trace.WriteLine(string.Format(CultureInfo.CurrentCulture, "Entering constructor for: {0}", this.ToString()));
             Instance = this;
 
+#if DEBUG
+            System.Threading.Tasks.TaskScheduler.UnobservedTaskException += (sender, e) => {
+                if (!e.Observed) {
+                    var str = e.Exception.ToString();
+                    if (str.Contains("Python")) {
+                        try {
+                            ActivityLog.LogError(
+                                "UnobservedTaskException",
+                                string.Format("An exception in a task was not observed: {0}", e.Exception.ToString())
+                            );
+                        } catch (InvalidOperationException) {
+                        }
+                        Debug.Fail("An exception in a task was not observed. See ActivityLog.xml for more details.", e.Exception.ToString());
+                    }
+                    e.SetObserved();
+                }
+            };
+#endif
+
             if (IsIpyToolsInstalled()) {
                 MessageBox.Show(
                     @"WARNING: Both Python Tools for Visual Studio and IronPython Tools are installed.

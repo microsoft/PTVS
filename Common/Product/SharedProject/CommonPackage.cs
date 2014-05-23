@@ -65,19 +65,6 @@ namespace Microsoft.VisualStudioTools {
                     }
                 }
             };
-            System.Threading.Tasks.TaskScheduler.UnobservedTaskException += (sender, e) => {
-                if (!e.Observed) {
-                    try {
-                        ActivityLog.LogError(
-                            "UnobservedTaskException",
-                            string.Format("An exception in a task was not observed: {0}", e.Exception.ToString())
-                        );
-                    } catch (InvalidOperationException) {
-                    }
-                    Debug.Fail("An exception in a task was not observed. See ActivityLog.xml for more details.", e.Exception.ToString());
-                    e.SetObserved();
-                }
-            };
 #endif
             UIThread.MustBeCalledFromUIThread();
 
