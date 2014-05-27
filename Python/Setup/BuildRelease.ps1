@@ -186,7 +186,7 @@ if ($name) {
 $signedbuild = $release -or $mockrelease
 if ($signedbuild) {
     $signedbuildText = "true"
-    $approvers = "smortaz", "dinov", "stevdo", "pminaev", "arturl", "gilbertw", "huvalo"
+    $approvers = "smortaz", "dinov", "stevdo", "pminaev", "gilbertw", "huvalo", "jinglou", "sitani"
     $approvers = @($approvers | Where-Object {$_ -ne $env:USERNAME})
     $symbol_contacts = "$env:username;dinov;smortaz;stevdo;gilbertw"
     
