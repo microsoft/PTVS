@@ -170,7 +170,10 @@ namespace Microsoft.PythonTools.Commands {
                 var inMemLogger = PythonToolsPackage.ComponentModel.GetService<InMemoryLogger>();
                 res.AppendLine(inMemLogger.ToString());
                 res.AppendLine();
-            } catch (System.ComponentModel.Composition.CompositionException ex) {
+            } catch (Exception ex) {
+                if (ex.IsCriticalException()) {
+                    throw;
+                }
                 res.AppendLine("  Failed to access event log.");
                 res.AppendLine(ex.ToString());
                 res.AppendLine();
