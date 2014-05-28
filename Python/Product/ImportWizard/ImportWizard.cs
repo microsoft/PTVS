@@ -12,6 +12,12 @@
  *
  * ***************************************************************************/
 
+
+// This assembly is no longer being used for new wizards and is maintained for
+// backwards compatibility until we can merge ImportWizard into the main DLL.
+//
+// All new wizards should be added to Microsoft.PythonTools.ProjectWizards.
+
 using System;
 using System.Collections.Generic;
 using System.IO;

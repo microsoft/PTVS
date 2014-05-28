@@ -89,8 +89,12 @@
       <Name>Microsoft.PythonTools.Debugger</Name>
     </ProjectReference>
     <ProjectReference Include="..\ImportWizard\ImportWizard.csproj">
-      <Project>{3814d9db-10e6-4478-bd98-6c5840612af8}</Project>
+      <Project>{A5E475F4-8D1F-401A-83D8-92D053E8FBFA}</Project>
       <Name>Microsoft.PythonTools.ImportWizard</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ProjectWizards\ProjectWizards.csproj">
+      <Project>{3814d9db-10e6-4478-bd98-6c5840612af8}</Project>
+      <Name>Microsoft.PythonTools.ProjectWizards</Name>
     </ProjectReference>
     <ProjectReference Include="..\ReplWindow\ReplWindow.csproj">
       <Project>{20BB6FAC-44D2-4D76-ABFE-0C1E163A1A4F}</Project>
@@ -769,137 +773,135 @@
   </ItemGroup>
   <ItemGroup>
     <!-- Web Project Templates -->
-    <ZipProject Include="Templates\Projects\WebProjectBottle\app.py" />
-    <ZipProject Include="Templates\Projects\WebProjectFlask\app.py" />
-    <ZipProject Include="Templates\Projects\EmptyWebProject\EmptyWebProject.pyproj">
-      <SubType>Designer</SubType>
-    </ZipProject>
-    <ZipProject Include="Templates\Projects\EmptyWebProject\EmptyWebProject.vstemplate">
-      <SubType>Designer</SubType>
-    </ZipProject>
-    <ZipProject Include="Templates\Projects\WebProjectFlask\WebProjectFlask.pyproj">
-      <SubType>Designer</SubType>
-    </ZipProject>
-    <ZipProject Include="Templates\Projects\WebProjectFlask\WebProjectFlask.vstemplate">
-      <SubType>Designer</SubType>
-    </ZipProject>
-    <ZipProject Include="Templates\Projects\WebProjectBottle\WebProjectBottle.pyproj">
-      <SubType>Designer</SubType>
-    </ZipProject>
-    <ZipProject Include="Templates\Projects\WebProjectBottle\WebProjectBottle.vstemplate">
-      <SubType>Designer</SubType>
-    </ZipProject>
+    <ZipProject Include="Templates\Projects\CloudService\CloudService.ccproj" />
+    <ZipProject Include="Templates\Projects\CloudService\cloudservice.ico" />
+    <ZipProject Include="Templates\Projects\CloudService\CloudService.vstemplate" />
+    <ZipProject Include="Templates\Projects\CloudService\ServiceConfiguration.Cloud.cscfg" />
+    <ZipProject Include="Templates\Projects\CloudService\ServiceConfiguration.Local.cscfg" />
+    <ZipProject Include="Templates\Projects\CloudService\ServiceDefinition.csdef" />
+    <ZipProject Include="Templates\Projects\EmptyWebProject\EmptyWebProject.pyproj" />
+    <ZipProject Include="Templates\Projects\EmptyWebProject\EmptyWebProject.vstemplate" />
+    <ZipProject Include="Templates\Projects\EmptyWebRole\EmptyWebRole.pyproj" />
+    <ZipProject Include="Templates\Projects\EmptyWebRole\EmptyWebRole.vstemplate" />
+    <ZipProject Include="Templates\Projects\EmptyWebRole\requirements.txt" />
+    <ZipProject Include="Templates\Projects\StarterBottleProject\_references.js" />
+    <ZipProject Include="Templates\Projects\StarterBottleProject\about.tpl" />
     <ZipProject Include="Templates\Projects\StarterBottleProject\app.py" />
-    <ZipProject Include="Templates\Projects\StarterBottleProject\routes.py" />
     <ZipProject Include="Templates\Projects\StarterBottleProject\bootstrap.css" />
-    <ZipProject Include="Templates\Projects\StarterBottleProject\bootstrap.min.css" />
-    <ZipProject Include="Templates\Projects\StarterBottleProject\site.css" />
-    <ZipProject Include="Templates\Projects\StarterBottleProject\glyphicons-halflings-regular.svg" />
     <ZipProject Include="Templates\Projects\StarterBottleProject\bootstrap.js" />
+    <ZipProject Include="Templates\Projects\StarterBottleProject\bootstrap.min.css" />
     <ZipProject Include="Templates\Projects\StarterBottleProject\bootstrap.min.js" />
-    <ZipProject Include="Templates\Projects\StarterBottleProject\jquery-1.10.2.intellisense.js" />
-    <ZipProject Include="Templates\Projects\StarterBottleProject\jquery-1.10.2.js" />
-    <ZipProject Include="Templates\Projects\StarterBottleProject\jquery-1.10.2.min.js" />
-    <ZipProject Include="Templates\Projects\StarterBottleProject\jquery.validate-vsdoc.js" />
+    <ZipProject Include="Templates\Projects\StarterBottleProject\contact.tpl" />
+    <ZipProject Include="Templates\Projects\StarterBottleProject\glyphicons-halflings-regular.eot" />
+    <ZipProject Include="Templates\Projects\StarterBottleProject\glyphicons-halflings-regular.svg" />
+    <ZipProject Include="Templates\Projects\StarterBottleProject\glyphicons-halflings-regular.ttf" />
+    <ZipProject Include="Templates\Projects\StarterBottleProject\glyphicons-halflings-regular.woff" />
+    <ZipProject Include="Templates\Projects\StarterBottleProject\index.tpl" />
     <ZipProject Include="Templates\Projects\StarterBottleProject\jquery.validate.js" />
     <ZipProject Include="Templates\Projects\StarterBottleProject\jquery.validate.min.js" />
     <ZipProject Include="Templates\Projects\StarterBottleProject\jquery.validate.unobtrusive.js" />
     <ZipProject Include="Templates\Projects\StarterBottleProject\jquery.validate.unobtrusive.min.js" />
+    <ZipProject Include="Templates\Projects\StarterBottleProject\jquery.validate-vsdoc.js" />
+    <ZipProject Include="Templates\Projects\StarterBottleProject\jquery-1.10.2.intellisense.js" />
+    <ZipProject Include="Templates\Projects\StarterBottleProject\jquery-1.10.2.js" />
+    <ZipProject Include="Templates\Projects\StarterBottleProject\jquery-1.10.2.min.js" />
+    <ZipProject Include="Templates\Projects\StarterBottleProject\jquery-1.10.2.min.map" />
+    <ZipProject Include="Templates\Projects\StarterBottleProject\layout.tpl" />
     <ZipProject Include="Templates\Projects\StarterBottleProject\modernizr-2.6.2.js" />
+    <ZipProject Include="Templates\Projects\StarterBottleProject\readme.txt" />
+    <ZipProject Include="Templates\Projects\StarterBottleProject\requirements.txt" />
     <ZipProject Include="Templates\Projects\StarterBottleProject\respond.js" />
     <ZipProject Include="Templates\Projects\StarterBottleProject\respond.min.js" />
-    <ZipProject Include="Templates\Projects\StarterBottleProject\_references.js" />
-    <ZipProject Include="Templates\Projects\StarterBottleProject\glyphicons-halflings-regular.eot" />
-    <ZipProject Include="Templates\Projects\StarterBottleProject\glyphicons-halflings-regular.ttf" />
-    <ZipProject Include="Templates\Projects\StarterBottleProject\glyphicons-halflings-regular.woff" />
-    <ZipProject Include="Templates\Projects\StarterBottleProject\jquery-1.10.2.min.map" />
-    <ZipProject Include="Templates\Projects\StarterBottleProject\about.tpl" />
-    <ZipProject Include="Templates\Projects\StarterBottleProject\contact.tpl" />
-    <ZipProject Include="Templates\Projects\StarterBottleProject\index.tpl" />
-    <ZipProject Include="Templates\Projects\StarterBottleProject\layout.tpl" />
-    <ZipProject Include="Templates\Projects\StarterBottleProject\requirements.txt" />
-    <ZipProject Include="Templates\Projects\StarterBottleProject\readme.txt" />
+    <ZipProject Include="Templates\Projects\StarterBottleProject\routes.py" />
+    <ZipProject Include="Templates\Projects\StarterBottleProject\site.css" />
     <ZipProject Include="Templates\Projects\StarterBottleProject\StarterBottleProject.png" />
-    <ZipProject Include="Templates\Projects\StarterBottleProject\StarterBottleProject.pyproj">
-      <SubType>Designer</SubType>
-    </ZipProject>
-    <ZipProject Include="Templates\Projects\StarterBottleProject\StarterBottleProject.vstemplate">
-      <SubType>Designer</SubType>
-    </ZipProject>
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\app.py" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\routes.py" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\bootstrap.css" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\bootstrap.min.css" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\site.css" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\glyphicons-halflings-regular.svg" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\bootstrap.js" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\bootstrap.min.js" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\jquery-1.10.2.intellisense.js" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\jquery-1.10.2.js" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\jquery-1.10.2.min.js" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\jquery.validate-vsdoc.js" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\jquery.validate.js" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\jquery.validate.min.js" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\jquery.validate.unobtrusive.js" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\jquery.validate.unobtrusive.min.js" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\modernizr-2.6.2.js" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\respond.js" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\respond.min.js" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\_references.js" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\glyphicons-halflings-regular.eot" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\glyphicons-halflings-regular.ttf" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\glyphicons-halflings-regular.woff" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\jquery-1.10.2.min.map" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\about.html" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\contact.html" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\index.html" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\layout.html" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\readme.txt" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\requirements.txt" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\StarterFlaskProject.png" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\StarterFlaskProject.pyproj">
-      <SubType>Designer</SubType>
-    </ZipProject>
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\StarterFlaskProject.vstemplate">
-      <SubType>Designer</SubType>
-    </ZipProject>
+    <ZipProject Include="Templates\Projects\StarterBottleProject\StarterBottleProject.pyproj" />
+    <ZipProject Include="Templates\Projects\StarterBottleProject\StarterBottleProject.vstemplate" />
+    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\_references.js" />
+    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\about.jade" />
     <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\app.py" />
-    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\routes.py" />
     <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\bootstrap.css" />
-    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\bootstrap.min.css" />
-    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\site.css" />
-    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\glyphicons-halflings-regular.svg" />
     <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\bootstrap.js" />
+    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\bootstrap.min.css" />
     <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\bootstrap.min.js" />
-    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\jquery-1.10.2.intellisense.js" />
-    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\jquery-1.10.2.js" />
-    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\jquery-1.10.2.min.js" />
-    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\jquery.validate-vsdoc.js" />
+    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\contact.jade" />
+    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\glyphicons-halflings-regular.eot" />
+    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\glyphicons-halflings-regular.svg" />
+    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\glyphicons-halflings-regular.ttf" />
+    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\glyphicons-halflings-regular.woff" />
+    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\index.jade" />
     <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\jquery.validate.js" />
     <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\jquery.validate.min.js" />
     <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\jquery.validate.unobtrusive.js" />
     <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\jquery.validate.unobtrusive.min.js" />
-    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\modernizr-2.6.2.js" />
-    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\respond.js" />
-    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\respond.min.js" />
-    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\_references.js" />
-    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\glyphicons-halflings-regular.eot" />
-    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\glyphicons-halflings-regular.ttf" />
-    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\glyphicons-halflings-regular.woff" />
+    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\jquery.validate-vsdoc.js" />
+    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\jquery-1.10.2.intellisense.js" />
+    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\jquery-1.10.2.js" />
+    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\jquery-1.10.2.min.js" />
     <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\jquery-1.10.2.min.map" />
-    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\about.jade" />
-    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\contact.jade" />
-    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\index.jade" />
     <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\layout.jade" />
+    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\modernizr-2.6.2.js" />
     <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\readme.txt" />
     <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\requirements.txt" />
+    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\respond.js" />
+    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\respond.min.js" />
+    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\routes.py" />
+    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\site.css" />
     <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\StarterFlaskJadeProject.png" />
-    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\StarterFlaskJadeProject.pyproj">
-      <SubType>Designer</SubType>
-    </ZipProject>
-    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\StarterFlaskJadeProject.vstemplate">
-      <SubType>Designer</SubType>
-    </ZipProject>
+    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\StarterFlaskJadeProject.pyproj" />
+    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\StarterFlaskJadeProject.vstemplate" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\_references.js" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\about.html" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\app.py" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\bootstrap.css" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\bootstrap.js" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\bootstrap.min.css" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\bootstrap.min.js" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\contact.html" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\glyphicons-halflings-regular.eot" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\glyphicons-halflings-regular.svg" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\glyphicons-halflings-regular.ttf" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\glyphicons-halflings-regular.woff" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\index.html" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\jquery.validate.js" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\jquery.validate.min.js" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\jquery.validate.unobtrusive.js" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\jquery.validate.unobtrusive.min.js" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\jquery.validate-vsdoc.js" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\jquery-1.10.2.intellisense.js" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\jquery-1.10.2.js" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\jquery-1.10.2.min.js" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\jquery-1.10.2.min.map" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\layout.html" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\modernizr-2.6.2.js" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\readme.txt" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\requirements.txt" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\respond.js" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\respond.min.js" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\routes.py" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\site.css" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\StarterFlaskProject.png" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\StarterFlaskProject.pyproj" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\StarterFlaskProject.vstemplate" />
+    <ZipProject Include="Templates\Projects\WebProjectBottle\app.py" />
+    <ZipProject Include="Templates\Projects\WebProjectBottle\WebProjectBottle.pyproj" />
+    <ZipProject Include="Templates\Projects\WebProjectBottle\WebProjectBottle.vstemplate" />
+    <ZipProject Include="Templates\Projects\WebProjectFlask\app.py" />
+    <ZipProject Include="Templates\Projects\WebProjectFlask\WebProjectFlask.pyproj" />
+    <ZipProject Include="Templates\Projects\WebProjectFlask\WebProjectFlask.vstemplate" />
+    <ZipProject Include="Templates\Projects\WebRoleBottle\app.py" />
+    <ZipProject Include="Templates\Projects\WebRoleBottle\requirements.txt" />
+    <ZipProject Include="Templates\Projects\WebRoleBottle\WebRoleBottle.pyproj" />
+    <ZipProject Include="Templates\Projects\WebRoleBottle\WebRoleBottle.vstemplate" />
+    <ZipProject Include="Templates\Projects\WebRoleFlask\app.py" />
+    <ZipProject Include="Templates\Projects\WebRoleFlask\requirements.txt" />
+    <ZipProject Include="Templates\Projects\WebRoleFlask\WebRoleFlask.pyproj" />
+    <ZipProject Include="Templates\Projects\WebRoleFlask\WebRoleFlask.vstemplate" />
+    <ZipProject Include="Templates\Projects\WorkerRoleProject\Readme.txt" />
+    <ZipProject Include="Templates\Projects\WorkerRoleProject\requirements.txt" />
+    <ZipProject Include="Templates\Projects\WorkerRoleProject\worker.py" />
+    <ZipProject Include="Templates\Projects\WorkerRoleProject\WorkerRoleProject.pyproj" />
+    <ZipProject Include="Templates\Projects\WorkerRoleProject\WorkerRoleProject.vstemplate" />
   </ItemGroup>
   <ItemGroup>
     <!-- VSIX -->
@@ -940,17 +942,47 @@
       <IncludeInWebRoleTemplates>false</IncludeInWebRoleTemplates>
       <IncludeInWorkerRoleTemplates>true</IncludeInWorkerRoleTemplates>
     </SharedTemplateFile>
-    <ZipProject Include="Templates\Projects\WorkerRoleProject\Readme.txt" />
-    <ZipProject Include="Templates\Projects\WorkerRoleProject\requirements.txt" />
-    <ZipProject Include="Templates\Projects\WorkerRoleProject\WorkerRoleProject.vstemplate" />
-    <ZipProject Include="Templates\Projects\WorkerRoleProject\worker.py" />
-    <ZipProject Include="Templates\Projects\WorkerRoleProject\WorkerRoleProject.pyproj" />
     <ZipItem Include="Templates\Files\AzureCSWorkerRole\AzureCSWorkerRole.vstemplate" />
     <ZipItem Include="Templates\Files\AzureCSWebRole\AzureCSWebRole.vstemplate">
       <SubType>Designer</SubType>
     </ZipItem>
-    <ZipItem Include="Templates\Files\AzureCSWebRole\WebRoleConfiguration.txt" />
+    <SharedTemplateFile Include="Templates\SharedFiles\WebRoleConfiguration.txt">
+      <IncludeInWebRoleTemplates>true</IncludeInWebRoleTemplates>
+      <IncludeInWorkerRoleTemplates>false</IncludeInWorkerRoleTemplates>
+    </SharedTemplateFile>
     <ZipItem Include="Templates\Files\AzureCSWorkerRole\WorkerRoleConfiguration.txt" />
+    <ZipItem Include="Templates\Files\CloudServiceBottleWebRole\CloudServiceBottleWebRole.vstemplate">
+      <OutputSubPath>NETFramework4\Web Role\Python</OutputSubPath>
+      <Language>CloudService</Language>
+    </ZipItem>
+    <ZipItem Include="Templates\Files\CloudServiceBottleWebRole\roletemplatedata.xml">
+      <OutputSubPath>NETFramework4\Web Role\Python</OutputSubPath>
+      <Language>CloudService</Language>
+    </ZipItem>
+    <ZipItem Include="Templates\Files\CloudServiceFlaskWebRole\CloudServiceFlaskWebRole.vstemplate">
+      <OutputSubPath>NETFramework4\Web Role\Python</OutputSubPath>
+      <Language>CloudService</Language>
+    </ZipItem>
+    <ZipItem Include="Templates\Files\CloudServiceFlaskWebRole\roletemplatedata.xml">
+      <OutputSubPath>NETFramework4\Web Role\Python</OutputSubPath>
+      <Language>CloudService</Language>
+    </ZipItem>
+    <ZipItem Include="Templates\Files\CloudServiceWorkerRole\roletemplatedata.xml">
+      <OutputSubPath>NETFramework4\Worker Role\Python</OutputSubPath>
+      <Language>CloudService</Language>
+    </ZipItem>
+    <ZipItem Include="Templates\Files\CloudServiceWorkerRole\WorkerRole.vstemplate">
+      <OutputSubPath>NETFramework4\Worker Role\Python</OutputSubPath>
+      <Language>CloudService</Language>
+    </ZipItem>
+    <ZipItem Include="Templates\Files\CloudServiceEmptyWebRole\CloudServiceEmptyWebRole.vstemplate">
+      <OutputSubPath>NETFramework4\Web Role\Python</OutputSubPath>
+      <Language>CloudService</Language>
+    </ZipItem>
+    <ZipItem Include="Templates\Files\CloudServiceEmptyWebRole\roletemplatedata.xml">
+      <OutputSubPath>NETFramework4\Web Role\Python</OutputSubPath>
+      <Language>CloudService</Language>
+    </ZipItem>
     <Content Include="visualstudio_py_debugger.py">
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -1245,30 +1277,23 @@
       </VSIXSourceItem>
     </ItemGroup>
   </Target>
-  <Target Name="DeployThemePkgdef" BeforeTargets="GetVsixSourceItems"
-          Inputs="Dev11OrLater\Microsoft.PythonTools.theme.pkgdef"
-          Outputs="$(OutputPath)Microsoft.PythonTools.theme.pkgdef"
-          Condition="'$(VSTarget)' != '10.0'">
-    <Copy SourceFiles="Dev11OrLater\Microsoft.PythonTools.theme.pkgdef"
-          DestinationFiles="$(OutputPath)Microsoft.PythonTools.theme.pkgdef"
-          OverwriteReadOnlyFiles="true" />
+  <Target Name="DeployThemePkgdef" BeforeTargets="GetVsixSourceItems" Inputs="Dev11OrLater\Microsoft.PythonTools.theme.pkgdef" Outputs="$(OutputPath)Microsoft.PythonTools.theme.pkgdef" Condition="'$(VSTarget)' != '10.0'">
+    <Copy SourceFiles="Dev11OrLater\Microsoft.PythonTools.theme.pkgdef" DestinationFiles="$(OutputPath)Microsoft.PythonTools.theme.pkgdef" OverwriteReadOnlyFiles="true" />
     <ItemGroup>
       <VSIXSourceItem Include="$(OutputPath)Microsoft.PythonTools.theme.pkgdef">
-        <VSIXSubPath></VSIXSubPath>
+        <VSIXSubPath>
+        </VSIXSubPath>
       </VSIXSourceItem>
     </ItemGroup>
   </Target>
   <Target Name="_CalculateSharedTemplateFiles">
     <ItemGroup>
-      <!-- Currently no web projects include the deployment files. Users can
-           add them manually, or when the Cloud project notification is added
-           we will do it automatically.
-      <_Templates Include="">
+      <_Templates Include="Templates\Projects\EmptyWebRole;Templates\Projects\WebRoleBottle;Templates\Projects\WebRoleFlask">
         <IsWeb>true</IsWeb>
         <IsWorker>false</IsWorker>
         <Type>Project</Type>
-      </_Templates>-->
-      <_Templates Include="Templates\Files\AzureCSWebRole">
+      </_Templates>
+      <_Templates Include="Templates\Files\AzureCSWebRole;Templates\Files\CloudServiceBottleWebRole\bin;Templates\Files\CloudServiceFlaskWebRole\bin">
         <IsWeb>true</IsWeb>
         <IsWorker>false</IsWorker>
         <Type>Item</Type>
@@ -1298,6 +1323,7 @@
     </ItemGroup>
   </Target>
   <Target Name="_CopySharedTemplateFiles" BeforeTargets="GetZipFilesFromVSTemplates" Inputs="%(SharedTemplateFiles.SourceFile)" Outputs="@(SharedTemplateFiles)">
+    <MakeDir Directories="%(SharedTemplateFiles.RootDir)%(SharedTemplateFiles.Directory)" />
     <Copy SourceFiles="%(SharedTemplateFiles.SourceFile)" DestinationFiles="%(SharedTemplateFiles.FullPath)" OverwriteReadOnlyFiles="true">
       <Output TaskParameter="CopiedFiles" ItemName="FileWrites" />
     </Copy>

@@ -1,0 +1,27 @@
+<VSTemplate Version="2.0.0" Type="Project" xmlns="http://schemas.microsoft.com/developer/vstemplate/2005">
+  <TemplateData>
+    <Name>Django Web Role</Name>
+    <Description>A blank Django Web Role</Description>
+    <Hidden>true</Hidden>
+    <Icon Package="{a8637c34-aa55-46e2-973c-9c3e09afc17b}" ID="410" />
+    <ProjectType>Python</ProjectType>
+    <SortOrder>72</SortOrder>
+    <NumberOfParentCategoriesToRollUp>0</NumberOfParentCategoriesToRollUp>
+    <CreateNewFolder>true</CreateNewFolder>
+    <DefaultName>WebRole</DefaultName>
+    <ProvideDefaultName>true</ProvideDefaultName>
+  </TemplateData>
+  <TemplateContent>
+    <Project File="DjangoWebRole.pyproj" ReplaceParameters="true">
+      <ProjectItem OpenInEditor="true" TargetFileName="readme.txt">Readme.txt</ProjectItem>
+      <ProjectItem OpenInEditor="false" TargetFileName="bin\ConfigureCloudService.ps1">ConfigureCloudService.ps1</ProjectItem>
+      <ProjectItem OpenInEditor="false" TargetFileName="bin\ps.cmd">ps.cmd</ProjectItem>
+      <ProjectItem OpenInEditor="false" TargetFileName="requirements.txt">requirements.txt</ProjectItem>
+      <ProjectItem ReplaceParameters="true" OpenInEditor="false" TargetFileName="manage.py">manage.py</ProjectItem>
+      <ProjectItem ReplaceParameters="true" OpenInEditor="false" TargetFileName="$safeprojectname$\__init__.py">__init__.py</ProjectItem>
+      <ProjectItem ReplaceParameters="true" OpenInEditor="false" TargetFileName="$safeprojectname$\urls.py">urls.py</ProjectItem>
+      <ProjectItem ReplaceParameters="true" OpenInEditor="false" TargetFileName="$safeprojectname$\settings.py">settings.py</ProjectItem>
+      <ProjectItem ReplaceParameters="true" OpenInEditor="false" TargetFileName="$safeprojectname$\wsgi.py">wsgi.py</ProjectItem>
+    </Project>
+  </TemplateContent>
+</VSTemplate>

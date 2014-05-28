@@ -32,6 +32,7 @@
     <Assembly AssemblyName="|Microsoft.PythonTools.BuildTasks;_GetAssemblyName|">|Microsoft.PythonTools.BuildTasks;_GetTargetPath|</Assembly>
     <Assembly AssemblyName="|Microsoft.PythonTools.Debugger;AssemblyName|">|Microsoft.PythonTools.Debugger|</Assembly>
     <Assembly AssemblyName="|Microsoft.PythonTools.ImportWizard;AssemblyName|">|Microsoft.PythonTools.ImportWizard|</Assembly>
+    <Assembly AssemblyName="|Microsoft.PythonTools.ProjectWizards;AssemblyName|">|Microsoft.PythonTools.ProjectWizards|</Assembly>
     <Assembly AssemblyName="|Microsoft.PythonTools.VSInterpreters;AssemblyName|">|Microsoft.PythonTools.VSInterpreters|</Assembly>
     <MefComponent>|%CurrentProject%|</MefComponent>
     <MefComponent>|Microsoft.PythonTools.Analysis|</MefComponent>

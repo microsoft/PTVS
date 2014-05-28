@@ -24,6 +24,7 @@
     <File Include="Microsoft.PythonTools.dll;
                    Microsoft.PythonTools.Analysis.dll;
                    Microsoft.PythonTools.ImportWizard.dll;
+                   Microsoft.PythonTools.ProjectWizards.dll;
                    Microsoft.PythonTools.VSInterpreters.dll;
                    pip_downloader.py" />
 
@@ -69,12 +70,12 @@
                            ItemTemplates\Python\TextFile.zip" />
     <ItemTemplate Include="ItemTemplates\Python\HTMLFile.zip;
                            ItemTemplates\Python\JavaScript.zip;
-                           ItemTemplates\Python\Stylesheet.zip;
-                           ItemTemplates\Python\AzureCSWebRole.zip">
+                           ItemTemplates\Python\Stylesheet.zip">
       <IncludeInWD>false</IncludeInWD>
     </ItemTemplate>
     <ItemTemplate Condition="$(VSTarget) != '10.0'"
-                  Include="ItemTemplates\Python\AzureCSWorkerRole.zip">
+                  Include="ItemTemplates\Python\AzureCSWorkerRole.zip;
+                           ItemTemplates\Python\AzureCSWebRole.zip">
       <IncludeInWD>false</IncludeInWD>
     </ItemTemplate>
     
@@ -87,7 +88,25 @@
                                  ProjectTemplates\Python\Web\WebProjectBottle.zip;
                                  ProjectTemplates\Python\Web\WebProjectFlask.zip" />
     <WebProjectTemplate Condition="$(VSTarget) != '10.0'"
-                        Include="ProjectTemplates\Python\Web\WorkerRoleProject.zip" />
+                        Include="ProjectTemplates\Python\Web\CloudService.zip;
+                                 ProjectTemplates\Python\Web\WorkerRoleProject.zip;
+                                 ProjectTemplates\Python\Web\EmptyWebRole.zip;
+                                 ProjectTemplates\Python\Web\WebRoleBottle.zip;
+                                 ProjectTemplates\Python\Web\WebRoleFlask.zip" />
+
+    <File Condition="$(VSTarget) != '10.0'"
+          Include="ItemTemplates\CloudService\NETFramework4\Web Role\Python\CloudServiceBottleWebRole.zip;
+                   ItemTemplates\CloudService\NETFramework4\Web Role\Python\CloudServiceEmptyWebRole.zip;
+                   ItemTemplates\CloudService\NETFramework4\Web Role\Python\CloudServiceFlaskWebRole.zip">
+      <InstallDirectory>ItemTemplates_CloudService_WebRole</InstallDirectory>
+      <IncludeInWD>false</IncludeInWD>
+    </File>
+
+    <File Condition="$(VSTarget) != '10.0'"
+          Include="ItemTemplates\CloudService\NETFramework4\Worker Role\Python\CloudServiceWorkerRole.zip">
+      <InstallDirectory>ItemTemplates_CloudService_WorkerRole</InstallDirectory>
+      <IncludeInWD>false</IncludeInWD>
+    </File>
 
     <!-- Default Completion DB -->
     <File Include="$(SourceDir)CompletionDB\*.idb">

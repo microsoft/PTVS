@@ -198,6 +198,19 @@
     <ZipItem Include="Templates\Files\DjangoNewAppFiles14\tests.py" />
     <ZipItem Include="Templates\Files\DjangoNewAppFiles14\views.py" />
     <ZipItem Include="Templates\Files\DjangoNewAppFiles14\__init__.py" />
+    <ZipItem Include="Templates\Files\CloudServiceDjangoWebRole\CloudServiceDjangoWebRole.vstemplate">
+      <OutputSubPath>NETFramework4\Web Role\Python</OutputSubPath>
+      <Language>CloudService</Language>
+    </ZipItem>
+    <ZipItem Include="Templates\Files\CloudServiceDjangoWebRole\roletemplatedata.xml">
+      <OutputSubPath>NETFramework4\Web Role\Python</OutputSubPath>
+      <Language>CloudService</Language>
+      <SubType>Designer</SubType>
+    </ZipItem>
+    <ZipItem Include="Templates\Files\CloudServiceDjangoWebRole\webrole_py.ico">
+      <OutputSubPath>NETFramework4\Web Role\Python</OutputSubPath>
+      <Language>CloudService</Language>
+    </ZipItem>
   </ItemGroup>
   <ItemGroup>
     <!-- Web Project Templates -->
@@ -397,6 +410,17 @@
     <None Include="source.extension.vsixmanifest">
       <SubType>Designer</SubType>
     </None>
+    <ZipProject Include="Templates\Projects\DjangoWebRole\DjangoWebRole.vstemplate" />
+    <ZipProject Include="Templates\Projects\DjangoWebRole\DjangoWebRole.pyproj" />
+    <ZipProject Include="Templates\Projects\DjangoWebRole\requirements.txt" />
+    <ZipProject Include="Templates\Projects\DjangoWebRole\Readme.txt" />
+    <ZipProject Include="Templates\Projects\DjangoWebRole\manage.py" />
+    <ZipProject Include="Templates\Projects\DjangoWebRole\settings.py" />
+    <ZipProject Include="Templates\Projects\DjangoWebRole\urls.py" />
+    <ZipProject Include="Templates\Projects\DjangoWebRole\wsgi.py" />
+    <ZipProject Include="Templates\Projects\DjangoWebRole\__init__.py" />
+    <ZipProject Include="Templates\Projects\DjangoWebRole\ps.cmd" />
+    <ZipProject Include="Templates\Projects\DjangoWebRole\ConfigureCloudService.ps1" />
   </ItemGroup>
   <ItemGroup>
     <VSCTCompile Include="Django.vsct">

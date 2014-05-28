@@ -17,6 +17,9 @@
 
     <ProjectFile Include="TestAdapter\TestAdapter.csproj" Condition="'$(VSTarget)' != '10.0'"/>
 
+    <ProjectFile Include="ImportWizard\ImportWizard.csproj"/>
+    <ProjectFile Include="ProjectWizards\ProjectWizards.csproj"/>
+
     <ProjectFile Include="ReplWindow\ReplWindow.csproj"/>
     <ProjectFile Include="PythonTools\PythonTools.csproj"/>
 

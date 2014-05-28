@@ -32,6 +32,13 @@
     <ItemTemplate Include="ItemTemplates\Python\DjangoNewAppFiles14.zip" />
     <WebProjectTemplate Include="ProjectTemplates\Python\Web\DjangoProject.zip;
                                  ProjectTemplates\Python\Web\StarterDjangoProject.zip" />
+    
+    <File Condition="$(VSTarget) != '10.0'"
+          Include="ItemTemplates\CloudService\NETFramework4\Web Role\Python\CloudServiceDjangoWebRole.zip">
+      <InstallDirectory>ItemTemplates_CloudService_WebRole</InstallDirectory>
+    </File>
+    <WebProjectTemplate Condition="$(VSTarget) != '10.0'"
+                        Include="ProjectTemplates\Python\Web\DjangoWebRole.zip" />
 
     <!-- Targets -->
     <MSBuildFile Include="Microsoft.PythonTools.Django.targets" />

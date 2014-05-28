@@ -51,6 +51,16 @@
     </Directory>
     <Directory Id="Dir_$(var.key)AllItemTemplates" Name="ItemTemplates">
       <Directory Id="Dir_$(var.key)ItemTemplates" Name="Python" />
+      <Directory Id="Dir_$(var.key)ItemTemplates_CloudService" Name="CloudService">
+        <Directory Id="Dir_$(var.key)ItemTemplates_CloudService_NETFramework4" Name="NETFramework4">
+          <Directory Id="Dir_$(var.key)ItemTemplates_CloudService_NETFramework4_WebRole" Name="Web Role">
+            <Directory Id="Dir_$(var.key)ItemTemplates_CloudService_WebRole" Name="Python" />
+          </Directory>
+          <Directory Id="Dir_$(var.key)ItemTemplates_CloudService_NETFramework4_WorkerRole" Name="Worker Role">
+            <Directory Id="Dir_$(var.key)ItemTemplates_CloudService_WorkerRole" Name="Python" />
+          </Directory>
+        </Directory>
+      </Directory>
     </Directory>
   </DirectoryRef>
 

@@ -30,11 +30,12 @@ namespace Microsoft.VisualStudioTools {
             _provider = provider;
             _buttons = new List<TaskDialogButton>();
             _radioButtons = new List<TaskDialogButton>();
+            UseCommandLinks = true;
         }
 
         public TaskDialogButton ShowModal() {
-            var config = new TASKDIALOGCONFIG();
-            config.cbSize = (uint)Marshal.SizeOf(typeof(TASKDIALOGCONFIG));
+            var config = new NativeMethods.TASKDIALOGCONFIG();
+            config.cbSize = (uint)Marshal.SizeOf(typeof(NativeMethods.TASKDIALOGCONFIG));
             config.pButtons = IntPtr.Zero;
             config.pRadioButtons = IntPtr.Zero;
 
@@ -53,16 +54,16 @@ namespace Microsoft.VisualStudioTools {
                     customButtons.Add(button);
                 }
             }
-            
+
             try {
                 if (customButtons.Any()) {
                     config.cButtons = (uint)customButtons.Count;
-                    var ptr = config.pButtons = Marshal.AllocHGlobal(customButtons.Count * Marshal.SizeOf(typeof(TASKDIALOG_BUTTON)));
+                    var ptr = config.pButtons = Marshal.AllocHGlobal(customButtons.Count * Marshal.SizeOf(typeof(NativeMethods.TASKDIALOG_BUTTON)));
                     for (int i = 0; i < customButtons.Count; ++i) {
-                        TASKDIALOG_BUTTON data;
+                        NativeMethods.TASKDIALOG_BUTTON data;
                         data.nButtonID = GetButtonId(null, null, i);
                         data.pszButtonText = customButtons[i].Text;
-                        Marshal.StructureToPtr(data, ptr + i * Marshal.SizeOf(typeof(TASKDIALOG_BUTTON)), false);
+                        Marshal.StructureToPtr(data, ptr + i * Marshal.SizeOf(typeof(NativeMethods.TASKDIALOG_BUTTON)), false);
                     }
                 } else {
                     config.cButtons = 0;
@@ -77,12 +78,12 @@ namespace Microsoft.VisualStudioTools {
 
                 if (_radioButtons.Any()) {
                     config.cRadioButtons = (uint)_radioButtons.Count;
-                    var ptr = config.pRadioButtons = Marshal.AllocHGlobal(_radioButtons.Count * Marshal.SizeOf(typeof(TASKDIALOG_BUTTON)));
+                    var ptr = config.pRadioButtons = Marshal.AllocHGlobal(_radioButtons.Count * Marshal.SizeOf(typeof(NativeMethods.TASKDIALOG_BUTTON)));
                     for (int i = 0; i < _radioButtons.Count; ++i) {
-                        TASKDIALOG_BUTTON data;
+                        NativeMethods.TASKDIALOG_BUTTON data;
                         data.nButtonID = GetRadioId(null, null, i);
                         data.pszButtonText = _radioButtons[i].Text;
-                        Marshal.StructureToPtr(data, ptr + i * Marshal.SizeOf(typeof(TASKDIALOG_BUTTON)), false);
+                        Marshal.StructureToPtr(data, ptr + i * Marshal.SizeOf(typeof(NativeMethods.TASKDIALOG_BUTTON)), false);
                     }
 
                     if (SelectedRadioButton != null) {
@@ -103,31 +104,31 @@ namespace Microsoft.VisualStudioTools {
                 if (Width.HasValue) {
                     config.cxWidth = (uint)Width.Value;
                 } else {
-                    config.dwFlags |= TASKDIALOG_FLAGS.TDF_SIZE_TO_CONTENT;
+                    config.dwFlags |= NativeMethods.TASKDIALOG_FLAGS.TDF_SIZE_TO_CONTENT;
                 }
                 if (EnableHyperlinks) {
-                    config.dwFlags |= TASKDIALOG_FLAGS.TDF_ENABLE_HYPERLINKS;
+                    config.dwFlags |= NativeMethods.TASKDIALOG_FLAGS.TDF_ENABLE_HYPERLINKS;
                 }
                 if (AllowCancellation) {
-                    config.dwFlags |= TASKDIALOG_FLAGS.TDF_ALLOW_DIALOG_CANCELLATION;
+                    config.dwFlags |= NativeMethods.TASKDIALOG_FLAGS.TDF_ALLOW_DIALOG_CANCELLATION;
                 }
                 if (UseCommandLinks) {
-                    config.dwFlags |= TASKDIALOG_FLAGS.TDF_USE_COMMAND_LINKS;
+                    config.dwFlags |= NativeMethods.TASKDIALOG_FLAGS.TDF_USE_COMMAND_LINKS;
                 }
                 if (!string.IsNullOrEmpty(ExpandedInformation)) {
-                    config.dwFlags |= TASKDIALOG_FLAGS.TDF_EXPAND_FOOTER_AREA;
+                    config.dwFlags |= NativeMethods.TASKDIALOG_FLAGS.TDF_EXPAND_FOOTER_AREA;
                 }
                 if (ExpandedByDefault) {
-                    config.dwFlags |= TASKDIALOG_FLAGS.TDF_EXPANDED_BY_DEFAULT;
+                    config.dwFlags |= NativeMethods.TASKDIALOG_FLAGS.TDF_EXPANDED_BY_DEFAULT;
                 }
                 if (SelectedVerified) {
-                    config.dwFlags |= TASKDIALOG_FLAGS.TDF_VERIFICATION_FLAG_CHECKED;
+                    config.dwFlags |= NativeMethods.TASKDIALOG_FLAGS.TDF_VERIFICATION_FLAG_CHECKED;
                 }
                 if (CanMinimize) {
-                    config.dwFlags |= TASKDIALOG_FLAGS.TDF_CAN_BE_MINIMIZED;
+                    config.dwFlags |= NativeMethods.TASKDIALOG_FLAGS.TDF_CAN_BE_MINIMIZED;
                 }
 
-                config.dwFlags |= TASKDIALOG_FLAGS.TDF_POSITION_RELATIVE_TO_WINDOW;
+                config.dwFlags |= NativeMethods.TASKDIALOG_FLAGS.TDF_POSITION_RELATIVE_TO_WINDOW;
 
                 int selectedButton, selectedRadioButton;
                 bool verified;
@@ -146,13 +147,13 @@ namespace Microsoft.VisualStudioTools {
 
                 if (config.pButtons != IntPtr.Zero) {
                     for (int i = 0; i < customButtons.Count; ++i) {
-                        Marshal.DestroyStructure(config.pButtons + i * Marshal.SizeOf(typeof(TASKDIALOG_BUTTON)), typeof(TASKDIALOG_BUTTON));
+                        Marshal.DestroyStructure(config.pButtons + i * Marshal.SizeOf(typeof(NativeMethods.TASKDIALOG_BUTTON)), typeof(NativeMethods.TASKDIALOG_BUTTON));
                     }
                     Marshal.FreeHGlobal(config.pButtons);
                 }
                 if (config.pRadioButtons != IntPtr.Zero) {
                     for (int i = 0; i < _radioButtons.Count; ++i) {
-                        Marshal.DestroyStructure(config.pRadioButtons + i * Marshal.SizeOf(typeof(TASKDIALOG_BUTTON)), typeof(TASKDIALOG_BUTTON));
+                        Marshal.DestroyStructure(config.pRadioButtons + i * Marshal.SizeOf(typeof(NativeMethods.TASKDIALOG_BUTTON)), typeof(NativeMethods.TASKDIALOG_BUTTON));
                     }
                     Marshal.FreeHGlobal(config.pRadioButtons);
                 }
@@ -198,19 +199,19 @@ namespace Microsoft.VisualStudioTools {
         public bool SelectedVerified { get; set; }
 
 
-        private static TASKDIALOG_COMMON_BUTTON_FLAGS GetButtonFlag(TaskDialogButton button) {
+        private static NativeMethods.TASKDIALOG_COMMON_BUTTON_FLAGS GetButtonFlag(TaskDialogButton button) {
             if (button == TaskDialogButton.OK) {
-                return TASKDIALOG_COMMON_BUTTON_FLAGS.TDCBF_OK_BUTTON;
+                return NativeMethods.TASKDIALOG_COMMON_BUTTON_FLAGS.TDCBF_OK_BUTTON;
             } else if (button == TaskDialogButton.Cancel) {
-                return TASKDIALOG_COMMON_BUTTON_FLAGS.TDCBF_CANCEL_BUTTON;
+                return NativeMethods.TASKDIALOG_COMMON_BUTTON_FLAGS.TDCBF_CANCEL_BUTTON;
             } else if (button == TaskDialogButton.Yes) {
-                return TASKDIALOG_COMMON_BUTTON_FLAGS.TDCBF_YES_BUTTON;
+                return NativeMethods.TASKDIALOG_COMMON_BUTTON_FLAGS.TDCBF_YES_BUTTON;
             } else if (button == TaskDialogButton.No) {
-                return TASKDIALOG_COMMON_BUTTON_FLAGS.TDCBF_NO_BUTTON;
+                return NativeMethods.TASKDIALOG_COMMON_BUTTON_FLAGS.TDCBF_NO_BUTTON;
             } else if (button == TaskDialogButton.Retry) {
-                return TASKDIALOG_COMMON_BUTTON_FLAGS.TDCBF_RETRY_BUTTON;
+                return NativeMethods.TASKDIALOG_COMMON_BUTTON_FLAGS.TDCBF_RETRY_BUTTON;
             } else if (button == TaskDialogButton.Close) {
-                return TASKDIALOG_COMMON_BUTTON_FLAGS.TDCBF_CLOSE_BUTTON;
+                return NativeMethods.TASKDIALOG_COMMON_BUTTON_FLAGS.TDCBF_CLOSE_BUTTON;
             } else {
                 return 0;
             }
@@ -288,6 +289,98 @@ namespace Microsoft.VisualStudioTools {
             }
 
             return null;
+        }
+
+        private static class NativeMethods {
+            internal const int IDOK = 1;
+            internal const int IDCANCEL = 2;
+            internal const int IDABORT = 3;
+            internal const int IDRETRY = 4;
+            internal const int IDIGNORE = 5;
+            internal const int IDYES = 6;
+            internal const int IDNO = 7;
+            internal const int IDCLOSE = 8;
+
+            internal enum TASKDIALOG_FLAGS {
+                TDF_ENABLE_HYPERLINKS = 0x0001,
+                TDF_USE_HICON_MAIN = 0x0002,
+                TDF_USE_HICON_FOOTER = 0x0004,
+                TDF_ALLOW_DIALOG_CANCELLATION = 0x0008,
+                TDF_USE_COMMAND_LINKS = 0x0010,
+                TDF_USE_COMMAND_LINKS_NO_ICON = 0x0020,
+                TDF_EXPAND_FOOTER_AREA = 0x0040,
+                TDF_EXPANDED_BY_DEFAULT = 0x0080,
+                TDF_VERIFICATION_FLAG_CHECKED = 0x0100,
+                TDF_SHOW_PROGRESS_BAR = 0x0200,
+                TDF_SHOW_MARQUEE_PROGRESS_BAR = 0x0400,
+                TDF_CALLBACK_TIMER = 0x0800,
+                TDF_POSITION_RELATIVE_TO_WINDOW = 0x1000,
+                TDF_RTL_LAYOUT = 0x2000,
+                TDF_NO_DEFAULT_RADIO_BUTTON = 0x4000,
+                TDF_CAN_BE_MINIMIZED = 0x8000,
+                TDF_SIZE_TO_CONTENT = 0x01000000
+            }
+
+            internal enum TASKDIALOG_COMMON_BUTTON_FLAGS {
+                TDCBF_OK_BUTTON = 0x0001,
+                TDCBF_YES_BUTTON = 0x0002,
+                TDCBF_NO_BUTTON = 0x0004,
+                TDCBF_CANCEL_BUTTON = 0x0008,
+                TDCBF_RETRY_BUTTON = 0x0010,
+                TDCBF_CLOSE_BUTTON = 0x0020
+            }
+
+            [DllImport("comctl32.dll", SetLastError = true)]
+            internal static extern int TaskDialogIndirect(
+                ref TASKDIALOGCONFIG pTaskConfig,
+                out int pnButton,
+                out int pnRadioButton,
+                [MarshalAs(UnmanagedType.Bool)] out bool pfverificationFlagChecked);
+
+            internal delegate int PFTASKDIALOGCALLBACK(IntPtr hwnd, uint uNotification, UIntPtr wParam, IntPtr lParam, IntPtr lpRefData);
+
+            [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+            internal struct TASKDIALOG_BUTTON {
+                public int nButtonID;
+                [MarshalAs(UnmanagedType.LPWStr)]
+                public string pszButtonText;
+            }
+
+            [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+            internal struct TASKDIALOGCONFIG {
+                public uint cbSize;
+                public IntPtr hwndParent;
+                public IntPtr hInstance;
+                public TASKDIALOG_FLAGS dwFlags;
+                public TASKDIALOG_COMMON_BUTTON_FLAGS dwCommonButtons;
+                [MarshalAs(UnmanagedType.LPWStr)]
+                public string pszWindowTitle;
+                public IntPtr hMainIcon;
+                [MarshalAs(UnmanagedType.LPWStr)]
+                public string pszMainInstruction;
+                [MarshalAs(UnmanagedType.LPWStr)]
+                public string pszContent;
+                public uint cButtons;
+                public IntPtr pButtons;
+                public int nDefaultButton;
+                public uint cRadioButtons;
+                public IntPtr pRadioButtons;
+                public int nDefaultRadioButton;
+                [MarshalAs(UnmanagedType.LPWStr)]
+                public string pszVerificationText;
+                [MarshalAs(UnmanagedType.LPWStr)]
+                public string pszExpandedInformation;
+                [MarshalAs(UnmanagedType.LPWStr)]
+                public string pszExpandedControlText;
+                [MarshalAs(UnmanagedType.LPWStr)]
+                public string pszCollapsedControlText;
+                public IntPtr hFooterIcon;
+                [MarshalAs(UnmanagedType.LPWStr)]
+                public string pszFooter;
+                public PFTASKDIALOGCALLBACK pfCallback;
+                public IntPtr lpCallbackData;
+                public uint cxWidth;
+            }
         }
     }
 

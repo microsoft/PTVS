@@ -454,6 +454,7 @@ try {
                     "Microsoft.PythonTools.IronPython.Interpreter.dll", 
                     "Microsoft.PythonTools.MpiShim.exe", 
                     "Microsoft.PythonTools.Profiling.dll", 
+                    "Microsoft.PythonTools.ProjectWizards.dll", 
                     "Microsoft.VisualStudio.ReplWindow.dll",
                     "Microsoft.PythonTools.WebRole.dll",
                     "Microsoft.PythonTools.Django.dll",

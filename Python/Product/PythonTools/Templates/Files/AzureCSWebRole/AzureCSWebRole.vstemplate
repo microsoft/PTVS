@@ -4,7 +4,7 @@
     <Description>Support files necessary to deploy and run a Python web project on Microsoft Azure Cloud Service.
 
 These files should be added as 'bin' to ensure correct operation.</Description>
-    <Icon Package="{6dbd7c1e-1f1b-496d-ac7c-c55dae66c783}" ID="404" />
+    <Icon Package="{6dbd7c1e-1f1b-496d-ac7c-c55dae66c783}" ID="406" />
     <ProjectType>Python</ProjectType>
     <DefaultName>bin</DefaultName>
     <ProvideDefaultName>true</ProvideDefaultName>
