@@ -12,7 +12,6 @@
  *
  * ***************************************************************************/
 
-extern alias util;
 using System;
 using System.IO;
 using System.Linq;
@@ -28,7 +27,7 @@ using TestUtilities.Python;
 using TestUtilities.UI;
 using TestUtilities.UI.Python;
 using TestUtilities.UI.Python.Django;
-using UIThread = util::Microsoft.VisualStudioTools.UIThread;
+using UIThread = Microsoft.VisualStudioTools.UIThread;
 
 namespace DjangoUITests {
     [TestClass]

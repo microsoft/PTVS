@@ -44,7 +44,6 @@
 
   <Target Name="ImportFromSearchPathCommand"
           Label="Import From Search Path"
-          DependsOnTargets="ResolveStartupPath"
           Returns="@(Commands)">
     <CreatePythonCommandItem Target="import sys; print([i for i in sys.path if 'TestData' in i])"
                              TargetType="code"

@@ -12,7 +12,6 @@
  *
  * ***************************************************************************/
 
-extern alias util;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -41,7 +40,7 @@ using TestUtilities.UI.Python;
 using VSLangProj;
 using MessageBoxButton = TestUtilities.UI.MessageBoxButton;
 using Thread = System.Threading.Thread;
-using UIThread = util::Microsoft.VisualStudioTools.UIThread;
+using UIThread = Microsoft.VisualStudioTools.UIThread;
 
 namespace PythonToolsUITests {
     [TestClass]

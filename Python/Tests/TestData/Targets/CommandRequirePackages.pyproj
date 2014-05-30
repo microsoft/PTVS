@@ -54,7 +54,6 @@ except:
 
   <Target Name="CommandRequirePackages"
           Label="Require Packages"
-          DependsOnTargets="ResolveStartupPath"
           Returns="@(Commands)">
     <CreatePythonCommandItem Target="$(VerifyPackagesPresent)"
                              TargetType="code"

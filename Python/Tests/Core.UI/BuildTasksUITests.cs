@@ -26,6 +26,7 @@ using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudioTools;
 using TestUtilities;
 using TestUtilities.Python;
 using TestUtilities.UI;
@@ -47,18 +48,14 @@ namespace PythonToolsUITests {
 
         internal void Execute(PythonProjectNode projectNode, string commandName) {
             Console.WriteLine("Executing command {0}", commandName);
-            projectNode._uiSync.Invoke((Action)(() => {
+            UIThread.Invoke(() => {
                 projectNode._customCommands.First(cc => cc.DisplayLabel == commandName).Execute(projectNode);
-            }));
+            });
         }
 
         internal Task ExecuteAsync(PythonProjectNode projectNode, string commandName) {
-            Task task = null;
             Console.WriteLine("Executing command {0} asynchronously", commandName);
-            projectNode._uiSync.Invoke((Action)(() => {
-                task = projectNode._customCommands.First(cc => cc.DisplayLabel == commandName).ExecuteAsync(projectNode);
-            }));
-            return task;
+            return UIThread.InvokeTask(() => projectNode._customCommands.First(cc => cc.DisplayLabel == commandName).ExecuteAsync(projectNode));
         }
 
         internal void OpenProject(VisualStudioApp app, string slnName, out PythonProjectNode projectNode, out EnvDTE.Project dteProject) {
@@ -319,7 +316,7 @@ namespace PythonToolsUITests {
                     Assert.AreEqual(expectedItem.Category, (__VSERRORCATEGORY)category);
                 }
 
-                node._uiSync.Invoke((Action)delegate { items[0].NavigateTo(); });
+                UIThread.Invoke((Action)delegate { items[0].NavigateTo(); });
 
                 var doc = app.Dte.ActiveDocument;
                 Assert.IsNotNull(doc);
@@ -344,7 +341,7 @@ namespace PythonToolsUITests {
                 var env = app.CreateVirtualEnvironment(proj, out envName);
 
                 env.Select();
-                app.Dte.ExecuteCommand("Project.ActivateEnvironment");
+                app.Dte.ExecuteCommand("ProjectandSolutionContextMenus.PythonEnvironment.ActivateEnvironment");
                 // Ensure that no error dialog appears
                 app.WaitForNoDialog(TimeSpan.FromSeconds(5.0));
 

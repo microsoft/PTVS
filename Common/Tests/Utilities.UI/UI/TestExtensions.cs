@@ -22,6 +22,7 @@ using System.Threading.Tasks;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Language.Intellisense;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
@@ -52,7 +53,7 @@ namespace TestUtilities.UI {
         public static bool GetNodeState(this EnvDTE.Project project, string item, __VSHIERARCHYITEMSTATE state) {
             IVsHierarchy hier = null;
             uint id = 0;
-            UIThread.Invoke((Action)(() => {
+            ThreadHelper.Generic.Invoke((Action)(() => {
                 hier = ((dynamic)project).Project as IVsHierarchy;
                 object projectDir;
                 ErrorHandler.ThrowOnFailure(

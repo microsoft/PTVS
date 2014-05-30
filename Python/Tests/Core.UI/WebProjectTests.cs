@@ -13,7 +13,6 @@
  * ***************************************************************************/
 
 extern alias analysis;
-extern alias util;
 using System;
 using System.IO;
 using System.Linq;
@@ -36,7 +35,6 @@ using TestUtilities.UI.Python;
 using InterpreterExt = analysis::Microsoft.PythonTools.Interpreter.PythonInterpreterFactoryExtensions;
 using Process = System.Diagnostics.Process;
 using Thread = System.Threading.Thread;
-using UIThread = util::Microsoft.VisualStudioTools.UIThread;
 
 namespace PythonToolsUITests {
     [TestClass]

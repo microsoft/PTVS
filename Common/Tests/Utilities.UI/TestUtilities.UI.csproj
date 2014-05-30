@@ -91,9 +91,6 @@
     <Compile Include="..\..\Product\SharedProject\ExceptionExtensions.cs">
       <Link>ExceptionExtensions.cs</Link>
     </Compile>
-    <Compile Include="..\..\Product\SharedProject\UIThread.cs">
-      <Link>UIThread.cs</Link>
-    </Compile>
     <Compile Include="..\..\Product\SharedProject\VSShellUtilities.cs">
       <Link>VSShellUtilities.cs</Link>
     </Compile>

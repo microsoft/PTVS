@@ -122,7 +122,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private void InterpreterFactoriesChanged(object sender, EventArgs e) {
-            RefreshInterpreters();
+            UIThread.Invoke(() => RefreshInterpreters());
         }
 
         internal MSBuildProjectInterpreterFactoryProvider Interpreters {
@@ -383,11 +383,6 @@ namespace Microsoft.PythonTools.Project {
 
         private void RefreshInterpreters(bool alwaysCollapse = false) {
             if (IsClosed) {
-                return;
-            }
-
-            if (_uiSync.InvokeRequired) {
-                _uiSync.BeginInvoke((Action<bool>)RefreshInterpreters, alwaysCollapse);
                 return;
             }
 
@@ -842,10 +837,10 @@ namespace Microsoft.PythonTools.Project {
                 return;
             }
 
-            if (_uiSync.InvokeRequired) {
-                _uiSync.BeginInvoke((EventHandler)ActiveInterpreterChanged, sender, e);
-                return;
-            }
+            UIThread.Invoke(UpdateActiveInterpreter);
+        }
+
+        private void UpdateActiveInterpreter() {
             RefreshInterpreters();
 
             if (_analyzer != null) {

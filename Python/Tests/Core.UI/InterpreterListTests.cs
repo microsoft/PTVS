@@ -224,7 +224,7 @@ namespace PythonToolsUITests {
                     "Python 2.7"));
                 python27Env.Select();
                 python27Env.SetFocus();
-                app.Dte.ExecuteCommand("Project.ActivateEnvironment");
+                app.Dte.ExecuteCommand("ProjectandSolutionContextMenus.PythonEnvironment.ActivateEnvironment");
 
                 // Check that the activate button for the virtual environment is now enabled and the interpreter
                 // id has been changed to something else

@@ -23,6 +23,7 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.ComponentModelHost;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
@@ -1264,7 +1265,7 @@ namespace DjangoUITests {
         private static bool SetBraceCompletion(VisualStudioApp app, bool value) {
             bool oldValue = false;
 #if DEV12_OR_LATER
-            app.Invoke(() => {
+            ThreadHelper.Generic.Invoke(() => {
                 Microsoft.Html.Editor.HtmlSettings.InsertMatchingBraces = false;
                 Microsoft.Html.Editor.HtmlSettings.InsertEndTags = false;
             });

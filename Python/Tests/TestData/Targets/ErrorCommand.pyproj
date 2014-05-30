@@ -53,7 +53,6 @@ print('>>>(5): error ERR0003: This is an error with an invalid path.')
 
   <Target Name="ProduceErrorsCommand"
           Label="Produce Errors"
-          DependsOnTargets="ResolveStartupPath"
           Returns="@(Commands)">
     <CreatePythonCommandItem Target="$(ProduceErrorsCommand)"
                              TargetType="code"

@@ -342,7 +342,7 @@ namespace Microsoft.PythonTools.Project {
                 return;
             }
 
-            _ready.Wait();
+            await _ready.WaitAsync();
 
             try {
                 WillInstallPipAndVirtualEnv = false;

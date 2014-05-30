@@ -33,53 +33,64 @@ namespace Microsoft.VisualStudioTools {
     /// </remarks>
     internal static class UIThread {
         private static ThreadHelper _invoker;
-        private static readonly object _invokerLock = new object();
-        private static bool _invokerSet;
 #if DEV10
         private static Thread _uiThread;
 #endif
 
-        private static bool CanInvoke {
-            get {
-                if (!_invokerSet) {
-                    lock (_invokerLock) {
-                        if (!_invokerSet) {
-                            _invokerSet = true;
-                            _invoker = ThreadHelper.Generic;
-                            // Test the invoker to make sure it is available.
-                            // We run it from a separate thread to ensure the
-                            // helper can find its way back to the original
-                            // thread. This affects unit tests running outside
-                            // the IDE, since Invoke sometimes detects that it
-                            // is on the 'UI' thread and succeeds here.
-                            Task.Run(() => {
-                                _invoker.Invoke(() => {
-#if DEV10
-                                    Debug.Assert(_uiThread == null);
-                                    _uiThread = Thread.CurrentThread;
-#endif
-                                });
-                            }).ContinueWith(t => {
-                                if (t.Exception != null) {
-                                    // Not running within VS
-                                    _invoker = null;
-                                }
-                            }).Wait(); ;
-                        }
-                    }
-                }
+        private static bool? _tryToInvoke;
 
-                return _invokerSet && _invoker != null;
+        /// <summary>
+        /// This function is called from the UI thread as early as possible. It
+        /// will mark this class as active and future calls to the invoke
+        /// methods will attempt to marshal to the UI thread.
+        /// </summary>
+        /// <remarks>
+        /// If <see cref="InitializeAndNeverInvoke"/> has already been called,
+        /// this method has no effect.
+        /// 
+        /// If neither Initialize method is called, attempting to call any other
+        /// method on this class will terminate the process immediately.
+        /// </remarks>
+        public static void InitializeAndAlwaysInvokeToCurrentThread() {
+            if (!_tryToInvoke.HasValue) {
+                _invoker = ThreadHelper.Generic;
+                _tryToInvoke = true;
+#if DEV10
+                Debug.Assert(_uiThread == null);
+                _uiThread = Thread.CurrentThread;
+#endif
             }
+        }
+
+        /// <summary>
+        /// This function may be called from any thread and will prevent future
+        /// calls to methods on this class from trying to marshal to another
+        /// thread.
+        /// </summary>
+        /// <remarks>
+        /// If neither Initialize method is called, attempting to call any other
+        /// method on this class will terminate the process immediately.
+        /// </remarks>
+        public static void InitializeAndNeverInvoke() {
+            _tryToInvoke = false;
         }
 
         internal static bool InvokeRequired {
             get {
-                // Must check CanInvoke() first or we may crash in unit tests
+                if (!_tryToInvoke.HasValue) {
+                    // One of the initialize methods needs to be called before
+                    // attempting to marshal to the UI thread.
+                    Debug.Fail("Neither UIThread.Initialize method has been called");
+                    throw new CriticalException("Neither UIThread.Initialize method has been called");
+                }
+
+                if (_tryToInvoke == false) {
+                    return false;
+                }
 #if DEV10
-                return CanInvoke && Thread.CurrentThread != _uiThread;
+                return Thread.CurrentThread != _uiThread;
 #else
-                return CanInvoke && !ThreadHelper.CheckAccess();
+                return !ThreadHelper.CheckAccess();
 #endif
             }
         }
@@ -98,7 +109,9 @@ namespace Microsoft.VisualStudioTools {
 
         [Conditional("DEBUG")]
         public static void MustNotBeCalledFromUIThread() {
-            Debug.Assert(!CanInvoke || InvokeRequired, "Invalid UI-thread call");
+            if (_tryToInvoke != false) {
+                Debug.Assert(InvokeRequired, "Invalid UI-thread call");
+            }
         }
 
         /// <summary>
@@ -148,8 +161,10 @@ namespace Microsoft.VisualStudioTools {
                 ThreadPool.QueueUserWorkItem(_ => {
                     _invoker.Invoke(() => InvokeAsyncHelper(action, tcs));
                 });
-#else
+#elif DEV11
                 _invoker.BeginInvoke(() => InvokeAsyncHelper(action, tcs));
+#else
+                _invoker.InvokeAsync(() => InvokeAsyncHelper(action, tcs));
 #endif
             } else {
                 // Action is run synchronously, but we still return the task.
@@ -175,8 +190,10 @@ namespace Microsoft.VisualStudioTools {
                 ThreadPool.QueueUserWorkItem(_ => {
                     _invoker.Invoke(() => InvokeAsyncHelper(func, tcs));
                 });
-#else
+#elif DEV11
                 _invoker.BeginInvoke(() => InvokeAsyncHelper(func, tcs));
+#else
+                _invoker.InvokeAsync(() => InvokeAsyncHelper(func, tcs));
 #endif
             } else {
                 // Function is run synchronously, but we still return the task.
@@ -203,8 +220,10 @@ namespace Microsoft.VisualStudioTools {
                 ThreadPool.QueueUserWorkItem(_ => {
                     _invoker.Invoke(() => InvokeTaskHelper(func, tcs));
                 });
-#else
+#elif DEV11
                 _invoker.BeginInvoke(() => InvokeTaskHelper(func, tcs));
+#else
+                _invoker.InvokeAsync(() => InvokeTaskHelper(func, tcs));
 #endif
             } else {
                 // Function is run synchronously, but we still return the task.
@@ -231,8 +250,10 @@ namespace Microsoft.VisualStudioTools {
                 ThreadPool.QueueUserWorkItem(_ => {
                     _invoker.Invoke(() => InvokeTaskHelper(func, tcs));
                 });
-#else
+#elif DEV11
                 _invoker.BeginInvoke(() => InvokeTaskHelper(func, tcs));
+#else
+                _invoker.InvokeAsync(() => InvokeTaskHelper(func, tcs));
 #endif
             } else {
                 // Function is run synchronously, but we still return the task.

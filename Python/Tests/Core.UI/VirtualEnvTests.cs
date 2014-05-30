@@ -33,7 +33,7 @@ using TestUtilities.Python;
 using TestUtilities.UI;
 using TestUtilities.UI.Python;
 using Path = System.IO.Path;
-using UIThread = util::Microsoft.VisualStudioTools.UIThread;
+using UIThread = Microsoft.VisualStudioTools.UIThread;
 
 namespace PythonToolsUITests {
     [TestClass]
@@ -150,13 +150,13 @@ namespace PythonToolsUITests {
 
                 env1.Select();
                 try {
-                    app.Dte.ExecuteCommand("Project.ActivateEnvironment");
+                    app.Dte.ExecuteCommand("ProjectandSolutionContextMenus.PythonEnvironment.ActivateEnvironment");
                     Assert.Fail("First env should already be active");
                 } catch (COMException) {
                 }
 
                 env2.Select();
-                app.Dte.ExecuteCommand("Project.ActivateEnvironment");
+                app.Dte.ExecuteCommand("ProjectandSolutionContextMenus.PythonEnvironment.ActivateEnvironment");
 
                 var id2 = Guid.Parse((string)project.Properties.Item("InterpreterId").Value);
                 Assert.AreNotEqual(id0, id2);
@@ -173,7 +173,7 @@ namespace PythonToolsUITests {
                     SR.GetString(SR.Environments),
                     envName1
                 ).Select();
-                app.Dte.ExecuteCommand("Project.ActivateEnvironment");
+                app.Dte.ExecuteCommand("ProjectandSolutionContextMenus.PythonEnvironment.ActivateEnvironment");
 
                 var id1b = Guid.Parse((string)project.Properties.Item("InterpreterId").Value);
                 Assert.AreEqual(id1, id1b);
@@ -266,7 +266,7 @@ namespace PythonToolsUITests {
                     SR.GetString(SR.Environments),
                     "Python 2.7"
                 ).Select();
-                app.Dte.ExecuteCommand("Project.ActivateEnvironment");
+                app.Dte.ExecuteCommand("ProjectandSolutionContextMenus.PythonEnvironment.ActivateEnvironment");
 
                 app.OpenSolutionExplorer().FindChildOfProject(project, SR.GetString(SR.Environments)).Select();
 
@@ -282,7 +282,7 @@ namespace PythonToolsUITests {
                     SR.GetString(SR.Environments),
                     "Python 3.3"
                 ).Select();
-                app.Dte.ExecuteCommand("Project.ActivateEnvironment");
+                app.Dte.ExecuteCommand("ProjectandSolutionContextMenus.PythonEnvironment.ActivateEnvironment");
 
                 app.OpenSolutionExplorer().FindChildOfProject(project, SR.GetString(SR.Environments)).Select();
 

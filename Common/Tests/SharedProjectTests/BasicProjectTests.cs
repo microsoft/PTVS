@@ -12,7 +12,6 @@
  *
  * ***************************************************************************/
 
-extern alias util;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -23,13 +22,13 @@ using System.Windows;
 using EnvDTE;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.SharedProject;
 using TestUtilities.UI;
 using VSLangProj;
-using UIThread = util::Microsoft.VisualStudioTools.UIThread;
 
 namespace Microsoft.VisualStudioTools.SharedProjectTests {
     [TestClass]
@@ -1277,8 +1276,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             Console.WriteLine("Checking CopyFullPath on:{0}", expected);
             AutomationWrapper.Select(element);
             VsIdeTestHostContext.Dte.ExecuteCommand("Project.CopyFullPath");
-            
-            UIThread.Invoke(() => clipboardText = System.Windows.Clipboard.GetText());
+
+            ThreadHelper.Generic.Invoke(() => clipboardText = System.Windows.Clipboard.GetText());
 
             Assert.AreEqual(expected, clipboardText);
         }
@@ -1584,7 +1583,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                             var priority = new VSDOCUMENTPRIORITY[1];
                             uint itemid;
 
-                            UIThread.Invoke(() => ErrorHandler.ThrowOnFailure(project.IsDocumentInProject(fullName, out found, priority, out itemid)));
+                            ThreadHelper.Generic.Invoke(() => ErrorHandler.ThrowOnFailure(project.IsDocumentInProject(fullName, out found, priority, out itemid)));
                             Assert.AreNotEqual(0, found);
                         }
                     }

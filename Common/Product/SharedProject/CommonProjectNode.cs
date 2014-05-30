@@ -65,7 +65,6 @@ namespace Microsoft.VisualStudioTools.Project {
         private readonly Dictionary<string, FileSystemEventHandler> _fileChangedHandlers = new Dictionary<string, FileSystemEventHandler>();
         private Queue<FileSystemChange> _fileSystemChanges = new Queue<FileSystemChange>();
         private object _fileSystemChangesLock = new object();
-        internal UIThreadSynchronizer _uiSync;
         private MSBuild.Project _userBuildProject;
         private readonly Dictionary<string, FileSystemWatcher> _symlinkWatchers = new Dictionary<string, FileSystemWatcher>();
         private DiskMerger _currentMerger;
@@ -94,7 +93,6 @@ namespace Microsoft.VisualStudioTools.Project {
 
             InitializeCATIDs();
 
-            _uiSync = new UIThreadSynchronizer();
             package.OnIdle += OnIdle;
         }
 
@@ -919,7 +917,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         private void TriggerIdle() {
             if (Interlocked.CompareExchange(ref _idleTriggered, 1, 0) == 0) {
-                _uiSync.BeginInvoke(Nop);
+                UIThread.InvokeAsync(Nop).DoNotWait();
             }
         }
 

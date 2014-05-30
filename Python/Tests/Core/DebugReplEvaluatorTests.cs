@@ -22,6 +22,7 @@ using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 using TestUtilities;
 using TestUtilities.Mocks;
@@ -44,6 +45,11 @@ namespace PythonToolsTests {
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
             PythonTestData.Deploy();
+            // This function is necessary to avoid crashing since we're running
+            // outside of devenv.exe. Its effects will last for the rest of
+            // this test assembly, which is fine since we are never running in
+            // VS in these tests.
+            UIThread.InitializeAndNeverInvoke();
         }
 
         internal virtual string DebuggerTestPath {

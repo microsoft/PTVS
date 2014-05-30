@@ -18,6 +18,7 @@ using System.Linq;
 using System.Windows.Automation;
 using System.Windows.Input;
 using Microsoft.TC.TestHostAdapters;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities.SharedProject;
 
@@ -38,7 +39,7 @@ namespace TestUtilities.UI {
             _app = new VisualStudioApp(VsIdeTestHostContext.Dte);
             Project = _app.OpenProject(solution.Filename);
 
-            App.Invoke(Keyboard.Reset);
+            ThreadHelper.Generic.Invoke(Keyboard.Reset);
             SolutionExplorer = _app.OpenSolutionExplorer();
             SelectSolutionNode();
         }

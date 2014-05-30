@@ -804,10 +804,6 @@ namespace TestUtilities.UI {
             }
         }
 
-        internal void Invoke(Action action) {
-            UIThread.Invoke(action);
-        }
-
         public Uri PublishToAzureCloudService(string serviceName, string subscriptionPublishSettingsFilePath) {
             using (var publishDialog = AzureCloudServicePublishDialog.FromDte(this)) {
                 using (var manageSubscriptionsDialog = publishDialog.SelectManageSubscriptions()) {
