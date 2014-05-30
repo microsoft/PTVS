@@ -5,7 +5,7 @@
     <Icon Package="{6dbd7c1e-1f1b-496d-ac7c-c55dae66c783}" ID="410" />
     <ProjectType>Python</ProjectType>
     <DefaultName>Stylesheet.css</DefaultName>
-    <SortOrder>110</SortOrder>
+    <SortOrder>50</SortOrder>
   </TemplateData>
   <TemplateContent>
     <ProjectItem TargetFileName="$fileinputname$.$fileinputextension$">Stylesheet.css</ProjectItem>

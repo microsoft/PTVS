@@ -13,15 +13,17 @@
   </TemplateData>
   <TemplateContent>
     <Project File="DjangoWebRole.pyproj" ReplaceParameters="true">
-      <ProjectItem OpenInEditor="true" TargetFileName="readme.txt">Readme.txt</ProjectItem>
-      <ProjectItem OpenInEditor="false" TargetFileName="bin\ConfigureCloudService.ps1">ConfigureCloudService.ps1</ProjectItem>
-      <ProjectItem OpenInEditor="false" TargetFileName="bin\ps.cmd">ps.cmd</ProjectItem>
-      <ProjectItem OpenInEditor="false" TargetFileName="requirements.txt">requirements.txt</ProjectItem>
-      <ProjectItem ReplaceParameters="true" OpenInEditor="false" TargetFileName="manage.py">manage.py</ProjectItem>
-      <ProjectItem ReplaceParameters="true" OpenInEditor="false" TargetFileName="$safeprojectname$\__init__.py">__init__.py</ProjectItem>
-      <ProjectItem ReplaceParameters="true" OpenInEditor="false" TargetFileName="$safeprojectname$\urls.py">urls.py</ProjectItem>
-      <ProjectItem ReplaceParameters="true" OpenInEditor="false" TargetFileName="$safeprojectname$\settings.py">settings.py</ProjectItem>
-      <ProjectItem ReplaceParameters="true" OpenInEditor="false" TargetFileName="$safeprojectname$\wsgi.py">wsgi.py</ProjectItem>
+      <ProjectItem OpenInWebBrowser="true" TargetFileName="Readme.mht">WebRoleConfiguration.mht</ProjectItem>
+      <Folder Name="Bin">
+        <ProjectItem>ConfigureCloudService.ps1</ProjectItem>
+        <ProjectItem>ps.cmd</ProjectItem>
+      </Folder>
+      <ProjectItem>requirements.txt</ProjectItem>
+      <ProjectItem>manage.py</ProjectItem>
+      <ProjectItem ReplaceParameters="true" TargetFileName="$safeprojectname$\__init__.py">__init__.py</ProjectItem>
+      <ProjectItem ReplaceParameters="true" TargetFileName="$safeprojectname$\urls.py">urls.py</ProjectItem>
+      <ProjectItem ReplaceParameters="true" TargetFileName="$safeprojectname$\settings.py">settings.py</ProjectItem>
+      <ProjectItem ReplaceParameters="true" TargetFileName="$safeprojectname$\wsgi.py">wsgi.py</ProjectItem>
     </Project>
   </TemplateContent>
 </VSTemplate>

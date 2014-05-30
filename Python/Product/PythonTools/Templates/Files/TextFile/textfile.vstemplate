@@ -5,6 +5,7 @@
     <Icon Package="{FAE04EC1-301F-11d3-BF4B-00C04F79EFBC}" ID="4536" />
     <ProjectType>Python</ProjectType>
     <DefaultName>TextFile.txt</DefaultName>
+    <SortOrder>50</SortOrder>
   </TemplateData>
   <TemplateContent>
     <ProjectItem>TextFile.txt</ProjectItem>

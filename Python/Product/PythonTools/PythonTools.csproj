@@ -808,7 +808,6 @@
     <ZipProject Include="Templates\Projects\StarterBottleProject\jquery-1.10.2.min.map" />
     <ZipProject Include="Templates\Projects\StarterBottleProject\layout.tpl" />
     <ZipProject Include="Templates\Projects\StarterBottleProject\modernizr-2.6.2.js" />
-    <ZipProject Include="Templates\Projects\StarterBottleProject\readme.txt" />
     <ZipProject Include="Templates\Projects\StarterBottleProject\requirements.txt" />
     <ZipProject Include="Templates\Projects\StarterBottleProject\respond.js" />
     <ZipProject Include="Templates\Projects\StarterBottleProject\respond.min.js" />
@@ -841,7 +840,6 @@
     <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\jquery-1.10.2.min.map" />
     <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\layout.jade" />
     <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\modernizr-2.6.2.js" />
-    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\readme.txt" />
     <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\requirements.txt" />
     <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\respond.js" />
     <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\respond.min.js" />
@@ -874,7 +872,6 @@
     <ZipProject Include="Templates\Projects\StarterFlaskProject\jquery-1.10.2.min.map" />
     <ZipProject Include="Templates\Projects\StarterFlaskProject\layout.html" />
     <ZipProject Include="Templates\Projects\StarterFlaskProject\modernizr-2.6.2.js" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\readme.txt" />
     <ZipProject Include="Templates\Projects\StarterFlaskProject\requirements.txt" />
     <ZipProject Include="Templates\Projects\StarterFlaskProject\respond.js" />
     <ZipProject Include="Templates\Projects\StarterFlaskProject\respond.min.js" />
@@ -897,11 +894,12 @@
     <ZipProject Include="Templates\Projects\WebRoleFlask\requirements.txt" />
     <ZipProject Include="Templates\Projects\WebRoleFlask\WebRoleFlask.pyproj" />
     <ZipProject Include="Templates\Projects\WebRoleFlask\WebRoleFlask.vstemplate" />
-    <ZipProject Include="Templates\Projects\WorkerRoleProject\Readme.txt" />
     <ZipProject Include="Templates\Projects\WorkerRoleProject\requirements.txt" />
     <ZipProject Include="Templates\Projects\WorkerRoleProject\worker.py" />
     <ZipProject Include="Templates\Projects\WorkerRoleProject\WorkerRoleProject.pyproj" />
-    <ZipProject Include="Templates\Projects\WorkerRoleProject\WorkerRoleProject.vstemplate" />
+    <ZipProject Include="Templates\Projects\WorkerRoleProject\WorkerRoleProject.vstemplate">
+      <SubType>Designer</SubType>
+    </ZipProject>
   </ItemGroup>
   <ItemGroup>
     <!-- VSIX -->
@@ -930,6 +928,10 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
+    <ZipProject Include="Templates\Projects\StarterBottleProject\Readme.mht" />
+    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\Readme.mht" />
+    <ZipProject Include="Templates\Projects\StarterFlaskProject\Readme.mht" />
+    <None Include="Templates\SharedFiles\Readme\WorkerRoleConfiguration.html" />
     <SharedTemplateFile Include="Templates\SharedFiles\ConfigureCloudService.ps1">
       <IncludeInWebRoleTemplates>true</IncludeInWebRoleTemplates>
       <IncludeInWorkerRoleTemplates>true</IncludeInWorkerRoleTemplates>
@@ -946,11 +948,10 @@
     <ZipItem Include="Templates\Files\AzureCSWebRole\AzureCSWebRole.vstemplate">
       <SubType>Designer</SubType>
     </ZipItem>
-    <SharedTemplateFile Include="Templates\SharedFiles\WebRoleConfiguration.txt">
+    <SharedTemplateFile Include="Templates\SharedFiles\WebRoleConfiguration.mht">
       <IncludeInWebRoleTemplates>true</IncludeInWebRoleTemplates>
       <IncludeInWorkerRoleTemplates>false</IncludeInWorkerRoleTemplates>
     </SharedTemplateFile>
-    <ZipItem Include="Templates\Files\AzureCSWorkerRole\WorkerRoleConfiguration.txt" />
     <ZipItem Include="Templates\Files\CloudServiceBottleWebRole\CloudServiceBottleWebRole.vstemplate">
       <OutputSubPath>NETFramework4\Web Role\Python</OutputSubPath>
       <Language>CloudService</Language>
@@ -983,6 +984,42 @@
       <OutputSubPath>NETFramework4\Web Role\Python</OutputSubPath>
       <Language>CloudService</Language>
     </ZipItem>
+    <SharedTemplateFile Include="Templates\SharedFiles\WorkerRoleConfiguration.mht">
+      <IncludeInWebRoleTemplates>false</IncludeInWebRoleTemplates>
+      <IncludeInWorkerRoleTemplates>true</IncludeInWorkerRoleTemplates>
+    </SharedTemplateFile>
+    <None Include="Templates\SharedFiles\Readme\ServiceDefinition.png" />
+    <None Include="Templates\SharedFiles\Readme\WebRoleConfiguration.html" />
+    <None Include="Templates\Projects\StarterBottleProject\Readme\readme.html" />
+    <None Include="Templates\Projects\StarterBottleProject\Readme\AddRemoveEnvironment.png" />
+    <None Include="Templates\Projects\StarterBottleProject\Readme\AddRemoveEnvironmentDialog.png" />
+    <None Include="Templates\Projects\StarterBottleProject\Readme\AddVirtualEnvironment.png" />
+    <None Include="Templates\Projects\StarterBottleProject\Readme\AddVirtualEnvironmentDialog.png" />
+    <None Include="Templates\Projects\StarterBottleProject\Readme\CopyFullPath.png" />
+    <None Include="Templates\Projects\StarterBottleProject\Readme\EnvironmentAdded.png" />
+    <None Include="Templates\Projects\StarterBottleProject\Readme\InstallPythonPackage.png" />
+    <None Include="Templates\Projects\StarterBottleProject\Readme\InstallPythonPackageDialog.png" />
+    <None Include="Templates\Projects\StarterBottleProject\Readme\VirtualEnvironmentCreated.png" />
+    <None Include="Templates\Projects\StarterFlaskJadeProject\Readme\AddRemoveEnvironment.png" />
+    <None Include="Templates\Projects\StarterFlaskJadeProject\Readme\AddRemoveEnvironmentDialog.png" />
+    <None Include="Templates\Projects\StarterFlaskJadeProject\Readme\AddVirtualEnvironment.png" />
+    <None Include="Templates\Projects\StarterFlaskJadeProject\Readme\AddVirtualEnvironmentDialog.png" />
+    <None Include="Templates\Projects\StarterFlaskJadeProject\Readme\CopyFullPath.png" />
+    <None Include="Templates\Projects\StarterFlaskJadeProject\Readme\EnvironmentAdded.png" />
+    <None Include="Templates\Projects\StarterFlaskJadeProject\Readme\InstallPythonPackage.png" />
+    <None Include="Templates\Projects\StarterFlaskJadeProject\Readme\InstallPythonPackageDialog.png" />
+    <None Include="Templates\Projects\StarterFlaskJadeProject\Readme\readme.html" />
+    <None Include="Templates\Projects\StarterFlaskJadeProject\Readme\VirtualEnvironmentCreated.png" />
+    <None Include="Templates\Projects\StarterFlaskProject\Readme\AddRemoveEnvironment.png" />
+    <None Include="Templates\Projects\StarterFlaskProject\Readme\AddRemoveEnvironmentDialog.png" />
+    <None Include="Templates\Projects\StarterFlaskProject\Readme\AddVirtualEnvironment.png" />
+    <None Include="Templates\Projects\StarterFlaskProject\Readme\AddVirtualEnvironmentDialog.png" />
+    <None Include="Templates\Projects\StarterFlaskProject\Readme\CopyFullPath.png" />
+    <None Include="Templates\Projects\StarterFlaskProject\Readme\EnvironmentAdded.png" />
+    <None Include="Templates\Projects\StarterFlaskProject\Readme\InstallPythonPackage.png" />
+    <None Include="Templates\Projects\StarterFlaskProject\Readme\InstallPythonPackageDialog.png" />
+    <None Include="Templates\Projects\StarterFlaskProject\Readme\readme.html" />
+    <None Include="Templates\Projects\StarterFlaskProject\Readme\VirtualEnvironmentCreated.png" />
     <Content Include="visualstudio_py_debugger.py">
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -1293,7 +1330,7 @@
         <IsWorker>false</IsWorker>
         <Type>Project</Type>
       </_Templates>
-      <_Templates Include="Templates\Files\AzureCSWebRole;Templates\Files\CloudServiceBottleWebRole\bin;Templates\Files\CloudServiceFlaskWebRole\bin">
+      <_Templates Include="Templates\Files\AzureCSWebRole">
         <IsWeb>true</IsWeb>
         <IsWorker>false</IsWorker>
         <Type>Item</Type>

@@ -32,7 +32,9 @@
     <Content Include="bin\ps.cmd" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="bin\readme.txt" />
+    <None Include="bin\Readme.mht">
+      <SubType>WebBrowser</SubType>
+    </None>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.Bottle.targets" />
   <!-- Specify pre- and post-build commands in the BeforeBuild and 

@@ -11,7 +11,7 @@ These files should be added as 'bin' to ensure correct operation.</Description>
     <SortOrder>100</SortOrder>
   </TemplateData>
   <TemplateContent>
-    <ProjectItem ReplaceParameters="true" TargetFileName="$fileinputname$\Readme.txt">WebRoleConfiguration.txt</ProjectItem>
+    <ProjectItem ReplaceParameters="true" SubType="WebBrowser" OpenInWebBrowser="true" TargetFileName="$fileinputname$\Readme.mht">WebRoleConfiguration.mht</ProjectItem>
     <ProjectItem ReplaceParameters="true" TargetFileName="$fileinputname$\ConfigureCloudService.ps1">ConfigureCloudService.ps1</ProjectItem>
     <ProjectItem ReplaceParameters="true" TargetFileName="$fileinputname$\ps.cmd">ps.cmd</ProjectItem>
   </TemplateContent>

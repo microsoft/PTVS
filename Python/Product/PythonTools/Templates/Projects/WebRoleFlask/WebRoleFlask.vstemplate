@@ -16,7 +16,7 @@
       <ProjectItem>app.py</ProjectItem>
       <ProjectItem>requirements.txt</ProjectItem>
       <Folder Name="Bin">
-        <ProjectItem OpenInEditor="true" TargetFileName="readme.txt">WebRoleConfiguration.txt</ProjectItem>
+        <ProjectItem OpenInWebBrowser="true" TargetFileName="Readme.mht">WebRoleConfiguration.mht</ProjectItem>
         <ProjectItem>ConfigureCloudService.ps1</ProjectItem>
         <ProjectItem>ps.cmd</ProjectItem>
       </Folder>

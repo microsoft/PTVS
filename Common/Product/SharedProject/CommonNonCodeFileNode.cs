@@ -27,6 +27,11 @@ namespace Microsoft.VisualStudioTools.Project {
         /// Open a file depending on the SubType property associated with the file item in the project file
         /// </summary>
         protected override void DoDefaultAction() {
+            if ("WebBrowser".Equals(SubType, StringComparison.OrdinalIgnoreCase)) {
+                CommonPackage.OpenVsWebBrowser(Url);
+                return;
+            }
+
             FileDocumentManager manager = this.GetDocumentManager() as FileDocumentManager;
             Utilities.CheckNotNull(manager, "Could not get the FileDocumentManager");
 

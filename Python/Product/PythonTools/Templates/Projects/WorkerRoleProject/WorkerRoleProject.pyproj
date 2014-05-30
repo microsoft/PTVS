@@ -24,8 +24,12 @@
     <Content Include="bin\ConfigureCloudService.ps1" />
     <Content Include="bin\LaunchWorker.ps1" />
     <Content Include="bin\ps.cmd" />
-    <None Include="Readme.txt" />
     <Content Include="requirements.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Readme.mht">
+      <SubType>WebBrowser</SubType>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="bin" />

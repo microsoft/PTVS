@@ -376,6 +376,15 @@ namespace Microsoft.VisualStudioTools.Project {
             }
         }
 
+        [Browsable(false)]
+        public string SubType {
+            get {
+                return this.HierarchyNode.ItemNode.GetMetadata("SubType");
+            }
+            set {
+                this.HierarchyNode.ItemNode.SetMetadata("SubType", value.ToString());
+            }
+        }
     }
 
     [ComVisible(true)]

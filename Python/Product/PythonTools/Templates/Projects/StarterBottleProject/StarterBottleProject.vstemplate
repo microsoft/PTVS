@@ -4,7 +4,7 @@
     <Description>A project for creating an application using the Bottle web framework. It features sample pages that use the Twitter Bootstrap framework for responsive web design.</Description>
     <Icon Package="{6dbd7c1e-1f1b-496d-ac7c-c55dae66c783}" ID="406" />
     <ProjectType>Python</ProjectType>
-    <SortOrder>61</SortOrder>
+    <SortOrder>41</SortOrder>
     <NumberOfParentCategoriesToRollUp>2</NumberOfParentCategoriesToRollUp>
     <CreateNewFolder>true</CreateNewFolder>
     <DefaultName>BottleWebProject</DefaultName>
@@ -13,36 +13,46 @@
   </TemplateData>
   <TemplateContent>
     <Project File="StarterBottleProject.pyproj" ReplaceParameters="true">
-      <ProjectItem ReplaceParameters="false" OpenInEditor="true" TargetFileName="readme.txt">readme.txt</ProjectItem>
-      <ProjectItem ReplaceParameters="false" OpenInEditor="false" TargetFileName="requirements.txt">requirements.txt</ProjectItem>
-      <ProjectItem ReplaceParameters="false" OpenInEditor="false" TargetFileName="app.py">app.py</ProjectItem>
-      <ProjectItem ReplaceParameters="false" OpenInEditor="false" TargetFileName="routes.py">routes.py</ProjectItem>
-      <ProjectItem ReplaceParameters="false" OpenInEditor="false" TargetFileName="static\content\bootstrap.css">bootstrap.css</ProjectItem>
-      <ProjectItem ReplaceParameters="false" OpenInEditor="false" TargetFileName="static\content\bootstrap.min.css">bootstrap.min.css</ProjectItem>
-      <ProjectItem ReplaceParameters="false" OpenInEditor="false" TargetFileName="static\content\site.css">site.css</ProjectItem>
-      <ProjectItem ReplaceParameters="false" OpenInEditor="false" TargetFileName="static\fonts\glyphicons-halflings-regular.eot">glyphicons-halflings-regular.eot</ProjectItem>
-      <ProjectItem ReplaceParameters="false" OpenInEditor="false" TargetFileName="static\fonts\glyphicons-halflings-regular.svg">glyphicons-halflings-regular.svg</ProjectItem>
-      <ProjectItem ReplaceParameters="false" OpenInEditor="false" TargetFileName="static\fonts\glyphicons-halflings-regular.ttf">glyphicons-halflings-regular.ttf</ProjectItem>
-      <ProjectItem ReplaceParameters="false" OpenInEditor="false" TargetFileName="static\fonts\glyphicons-halflings-regular.woff">glyphicons-halflings-regular.woff</ProjectItem>
-      <ProjectItem ReplaceParameters="false" OpenInEditor="false" TargetFileName="static\scripts\_references.js">_references.js</ProjectItem>
-      <ProjectItem ReplaceParameters="false" OpenInEditor="false" TargetFileName="static\scripts\bootstrap.js">bootstrap.js</ProjectItem>
-      <ProjectItem ReplaceParameters="false" OpenInEditor="false" TargetFileName="static\scripts\bootstrap.min.js">bootstrap.min.js</ProjectItem>
-      <ProjectItem ReplaceParameters="false" OpenInEditor="false" TargetFileName="static\scripts\jquery.validate.js">jquery.validate.js</ProjectItem>
-      <ProjectItem ReplaceParameters="false" OpenInEditor="false" TargetFileName="static\scripts\jquery.validate.min.js">jquery.validate.min.js</ProjectItem>
-      <ProjectItem ReplaceParameters="false" OpenInEditor="false" TargetFileName="static\scripts\jquery.validate.unobtrusive.js">jquery.validate.unobtrusive.js</ProjectItem>
-      <ProjectItem ReplaceParameters="false" OpenInEditor="false" TargetFileName="static\scripts\jquery.validate.unobtrusive.min.js">jquery.validate.unobtrusive.min.js</ProjectItem>
-      <ProjectItem ReplaceParameters="false" OpenInEditor="false" TargetFileName="static\scripts\jquery.validate-vsdoc.js">jquery.validate-vsdoc.js</ProjectItem>
-      <ProjectItem ReplaceParameters="false" OpenInEditor="false" TargetFileName="static\scripts\jquery-1.10.2.intellisense.js">jquery-1.10.2.intellisense.js</ProjectItem>
-      <ProjectItem ReplaceParameters="false" OpenInEditor="false" TargetFileName="static\scripts\jquery-1.10.2.js">jquery-1.10.2.js</ProjectItem>
-      <ProjectItem ReplaceParameters="false" OpenInEditor="false" TargetFileName="static\scripts\jquery-1.10.2.min.js">jquery-1.10.2.min.js</ProjectItem>
-      <ProjectItem ReplaceParameters="false" OpenInEditor="false" TargetFileName="static\scripts\jquery-1.10.2.min.map">jquery-1.10.2.min.map</ProjectItem>
-      <ProjectItem ReplaceParameters="false" OpenInEditor="false" TargetFileName="static\scripts\modernizr-2.6.2.js">modernizr-2.6.2.js</ProjectItem>
-      <ProjectItem ReplaceParameters="false" OpenInEditor="false" TargetFileName="static\scripts\respond.js">respond.js</ProjectItem>
-      <ProjectItem ReplaceParameters="false" OpenInEditor="false" TargetFileName="static\scripts\respond.min.js">respond.min.js</ProjectItem>
-      <ProjectItem ReplaceParameters="false" OpenInEditor="false" TargetFileName="views\about.tpl">about.tpl</ProjectItem>
-      <ProjectItem ReplaceParameters="false" OpenInEditor="false" TargetFileName="views\contact.tpl">contact.tpl</ProjectItem>
-      <ProjectItem ReplaceParameters="false" OpenInEditor="false" TargetFileName="views\index.tpl">index.tpl</ProjectItem>
-      <ProjectItem ReplaceParameters="false" OpenInEditor="false" TargetFileName="views\layout.tpl">layout.tpl</ProjectItem>
+      <ProjectItem OpenInWebBrowser="true">readme.mht</ProjectItem>
+      <ProjectItem>requirements.txt</ProjectItem>
+      <ProjectItem>app.py</ProjectItem>
+      <ProjectItem>routes.py</ProjectItem>
+      <Folder Name="static">
+        <Folder Name="content">
+          <ProjectItem>bootstrap.css</ProjectItem>
+          <ProjectItem>bootstrap.min.css</ProjectItem>
+          <ProjectItem>site.css</ProjectItem>
+        </Folder>
+        <Folder Name="fonts">
+          <ProjectItem>glyphicons-halflings-regular.eot</ProjectItem>
+          <ProjectItem>glyphicons-halflings-regular.svg</ProjectItem>
+          <ProjectItem>glyphicons-halflings-regular.ttf</ProjectItem>
+          <ProjectItem>glyphicons-halflings-regular.woff</ProjectItem>
+        </Folder>
+        <Folder Name="scripts">
+          <ProjectItem>_references.js</ProjectItem>
+          <ProjectItem>bootstrap.js</ProjectItem>
+          <ProjectItem>bootstrap.min.js</ProjectItem>
+          <ProjectItem>jquery.validate.js</ProjectItem>
+          <ProjectItem>jquery.validate.min.js</ProjectItem>
+          <ProjectItem>jquery.validate.unobtrusive.js</ProjectItem>
+          <ProjectItem>jquery.validate.unobtrusive.min.js</ProjectItem>
+          <ProjectItem>jquery.validate-vsdoc.js</ProjectItem>
+          <ProjectItem>jquery-1.10.2.intellisense.js</ProjectItem>
+          <ProjectItem>jquery-1.10.2.js</ProjectItem>
+          <ProjectItem>jquery-1.10.2.min.js</ProjectItem>
+          <ProjectItem>jquery-1.10.2.min.map</ProjectItem>
+          <ProjectItem>modernizr-2.6.2.js</ProjectItem>
+          <ProjectItem>respond.js</ProjectItem>
+          <ProjectItem>respond.min.js</ProjectItem>
+        </Folder>
+      </Folder>
+      <Folder Name="views">
+        <ProjectItem>about.tpl</ProjectItem>
+        <ProjectItem>contact.tpl</ProjectItem>
+        <ProjectItem>index.tpl</ProjectItem>
+        <ProjectItem>layout.tpl</ProjectItem>
+      </Folder>
     </Project>
   </TemplateContent>
 </VSTemplate>

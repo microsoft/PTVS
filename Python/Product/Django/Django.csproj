@@ -207,10 +207,6 @@
       <Language>CloudService</Language>
       <SubType>Designer</SubType>
     </ZipItem>
-    <ZipItem Include="Templates\Files\CloudServiceDjangoWebRole\webrole_py.ico">
-      <OutputSubPath>NETFramework4\Web Role\Python</OutputSubPath>
-      <Language>CloudService</Language>
-    </ZipItem>
   </ItemGroup>
   <ItemGroup>
     <!-- Web Project Templates -->
@@ -263,7 +259,6 @@
     <ZipProject Include="Templates\Projects\StarterDjangoProject\layout.html" />
     <ZipProject Include="Templates\Projects\StarterDjangoProject\login.html" />
     <ZipProject Include="Templates\Projects\StarterDjangoProject\loginpartial.html" />
-    <ZipProject Include="Templates\Projects\StarterDjangoProject\readme.txt" />
     <ZipProject Include="Templates\Projects\StarterDjangoProject\requirements.txt" />
     <ZipProject Include="Templates\Projects\StarterDjangoProject\StarterDjangoProject.png" />
     <ZipProject Include="Templates\Projects\StarterDjangoProject\StarterDjangoProject.pyproj">
@@ -378,6 +373,17 @@
     <Compile Include="TemplateParsing\TemplateTokenKind.cs" />
     <Compile Include="Utilities.cs" />
     <Compile Include="VsMenus.cs" />
+    <None Include="Templates\Projects\StarterDjangoProject\Readme\AddRemoveEnvironment.png" />
+    <None Include="Templates\Projects\StarterDjangoProject\Readme\AddRemoveEnvironmentDialog.png" />
+    <None Include="Templates\Projects\StarterDjangoProject\Readme\AddVirtualEnvironment.png" />
+    <None Include="Templates\Projects\StarterDjangoProject\Readme\AddVirtualEnvironmentDialog.png" />
+    <None Include="Templates\Projects\StarterDjangoProject\Readme\CopyFullPath.png" />
+    <None Include="Templates\Projects\StarterDjangoProject\Readme\EnvironmentAdded.png" />
+    <None Include="Templates\Projects\StarterDjangoProject\Readme\InstallPythonPackage.png" />
+    <None Include="Templates\Projects\StarterDjangoProject\Readme\InstallPythonPackageDialog.png" />
+    <None Include="Templates\Projects\StarterDjangoProject\Readme\VirtualEnvironmentCreated.png" />
+    <ZipProject Include="Templates\Projects\StarterDjangoProject\readme.mht" />
+    <None Include="Templates\Projects\StarterDjangoProject\Readme\readme.html" />
     <Resource Include="Legacy\ReadMe.txt" />
     <Content Include="Microsoft.PythonTools.Django.targets">
       <IncludeInVSIX>true</IncludeInVSIX>
@@ -413,14 +419,11 @@
     <ZipProject Include="Templates\Projects\DjangoWebRole\DjangoWebRole.vstemplate" />
     <ZipProject Include="Templates\Projects\DjangoWebRole\DjangoWebRole.pyproj" />
     <ZipProject Include="Templates\Projects\DjangoWebRole\requirements.txt" />
-    <ZipProject Include="Templates\Projects\DjangoWebRole\Readme.txt" />
     <ZipProject Include="Templates\Projects\DjangoWebRole\manage.py" />
     <ZipProject Include="Templates\Projects\DjangoWebRole\settings.py" />
     <ZipProject Include="Templates\Projects\DjangoWebRole\urls.py" />
     <ZipProject Include="Templates\Projects\DjangoWebRole\wsgi.py" />
     <ZipProject Include="Templates\Projects\DjangoWebRole\__init__.py" />
-    <ZipProject Include="Templates\Projects\DjangoWebRole\ps.cmd" />
-    <ZipProject Include="Templates\Projects\DjangoWebRole\ConfigureCloudService.ps1" />
   </ItemGroup>
   <ItemGroup>
     <VSCTCompile Include="Django.vsct">
@@ -480,4 +483,30 @@
   <Target Name="AfterBuild">
   </Target>
   -->
+  <ItemGroup>
+    <SharedTemplateFiles Include="..\PythonTools\Templates\SharedFiles\WebRoleConfiguration.mht">
+      <Link>Templates\SharedFiles\WebRoleConfiguration.mht</Link>
+      <Type>Project</Type>
+      <TargetPath>Templates\Projects\DjangoWebRole\WebRoleConfiguration.mht</TargetPath>
+    </SharedTemplateFiles>
+    <SharedTemplateFiles Include="..\PythonTools\Templates\SharedFiles\ConfigureCloudService.ps1">
+      <Link>Templates\SharedFiles\ConfigureCloudService.ps1</Link>
+      <Type>Project</Type>
+      <TargetPath>Templates\Projects\DjangoWebRole\ConfigureCloudService.ps1</TargetPath>
+    </SharedTemplateFiles>
+    <SharedTemplateFiles Include="..\PythonTools\Templates\SharedFiles\ps.cmd">
+      <Link>Templates\SharedFiles\ps.cmd</Link>
+      <Type>Project</Type>
+      <TargetPath>Templates\Projects\DjangoWebRole\ps.cmd</TargetPath>
+    </SharedTemplateFiles>
+  </ItemGroup>
+  <Target Name="_CopySharedTemplateFiles" BeforeTargets="GetZipFilesFromVSTemplates" Inputs="@(SharedTemplateFiles)" Outputs="%(SharedTemplateFiles.TargetPath)">
+    <Copy SourceFiles="@(SharedTemplateFiles)" DestinationFiles="%(SharedTemplateFiles.TargetPath)" OverwriteReadOnlyFiles="true">
+      <Output TaskParameter="CopiedFiles" ItemName="FileWrites" />
+    </Copy>
+    <ItemGroup>
+      <ZipProject Include="%(SharedTemplateFiles.TargetPath)" Condition="%(SharedTemplateFiles.Type) == 'Project'" />
+      <ZipItem Include="%(SharedTemplateFiles.TargetPath)" Condition="%(SharedTemplateFiles.Type) == 'Item'" />
+    </ItemGroup>
+  </Target>
 </Project>
