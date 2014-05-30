@@ -231,7 +231,7 @@ def enable_attach(secret, address = ('0.0.0.0', DEFAULT_PORT), certfile = None, 
                     write_string(client, version)
 
                     # Don't just drop the connection - let the debugger close it after it finishes reading.
-                    client.recv(0)
+                    client.recv(1)
 
                 elif response == ATCH:
                     if vspd.DETACHED:
