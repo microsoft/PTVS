@@ -258,7 +258,7 @@ namespace Microsoft.VisualStudioTools.Project {
 #if DEBUG
                             foreach (var line in SplitLines(ex.ToString())) {
                                 redirector.WriteErrorLine(line);
-                        }
+                            }
 #else
                             Trace.TraceError("Failed to obtain standard output from elevated process.");
                             Trace.TraceError(ex.ToString());
@@ -277,7 +277,7 @@ namespace Microsoft.VisualStudioTools.Project {
 #if DEBUG
                             foreach (var line in SplitLines(ex.ToString())) {
                                 redirector.WriteErrorLine(line);
-                        }
+                            }
 #else
                             Trace.TraceError("Failed to obtain standard error from elevated process.");
                             Trace.TraceError(ex.ToString());
@@ -377,7 +377,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 // to listen for the Exited event.
                 // If we just listen for the Exited event, we may receive it
                 // before all the output has arrived.
-            _process.Exited += OnExited;
+                _process.Exited += OnExited;
             }
             _process.EnableRaisingEvents = true;
 
@@ -392,7 +392,7 @@ namespace Microsoft.VisualStudioTools.Project {
                         _redirector.WriteErrorLine(line);
                     }
                 } else if (_error != null) {
-                _error.AddRange(SplitLines(ex.ToString()));
+                    _error.AddRange(SplitLines(ex.ToString()));
                 }
                 _process = null;
             }
@@ -509,10 +509,18 @@ namespace Microsoft.VisualStudioTools.Project {
             }
 
             if (_process.StartInfo.RedirectStandardOutput) {
-                _process.CancelOutputRead();
+                try {
+                    _process.CancelOutputRead();
+                } catch (InvalidOperationException) {
+                    // Reader has already been cancelled
+                }
             }
             if (_process.StartInfo.RedirectStandardError) {
-                _process.CancelErrorRead();
+                try {
+                    _process.CancelErrorRead();
+                } catch (InvalidOperationException) {
+                    // Reader has already been cancelled
+                }
             }
         }
 
@@ -581,7 +589,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         public TaskAwaiter<int> GetAwaiter() {
             var tcs = new TaskCompletionSource<int>();
-            
+
             if (_process == null) {
                 tcs.SetCanceled();
             } else {
@@ -589,10 +597,10 @@ namespace Microsoft.VisualStudioTools.Project {
                     FlushAndCloseOutput();
                     tcs.TrySetResult(_process.ExitCode);
                 };
-            if (_process.HasExited) {
+                if (_process.HasExited) {
                     FlushAndCloseOutput();
-                tcs.TrySetResult(_process.ExitCode);
-            }
+                    tcs.TrySetResult(_process.ExitCode);
+                }
             }
 
             return tcs.Task.GetAwaiter();
