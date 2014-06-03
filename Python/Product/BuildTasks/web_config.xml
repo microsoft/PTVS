@@ -24,7 +24,11 @@
     <handlers></handlers>
     <rewrite>
       <rules>
-        <rule name="Static Files" stopProcessing="true" />
+        <rule name="Static Files" stopProcessing="true">
+          <conditions>
+            <add input="true" pattern="false" />
+          </conditions>
+        </rule>
         <rule name="Configure Python" stopProcessing="true">
           <match url="(.*)" ignoreCase="false" />
           <conditions></conditions>

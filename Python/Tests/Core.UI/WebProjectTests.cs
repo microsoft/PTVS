@@ -134,13 +134,21 @@ namespace PythonToolsUITests {
                 app.ExecuteCommand("Build.RebuildSolution");
                 app.WaitForOutputWindowText("Build", "1 succeeded");
 
+                var webConfig = File.ReadAllText(Path.Combine(Path.GetDirectoryName(project.FullName), "web.config"));
+                if (!webConfig.Contains(@"<add input=""true"" pattern=""false"" />")) {
+                    Assert.Fail(string.Format("Did not find Static Files condition in:{0}{0}{1}",
+                        Environment.NewLine,
+                        webConfig
+                    ));
+                }
+
                 UIThread.Invoke(() => {
                     proj.SetProjectProperty("StaticUriPattern", "^static/.*$");
                 });
                 app.ExecuteCommand("Build.RebuildSolution");
                 app.WaitForOutputWindowText("Build", "1 succeeded");
 
-                var webConfig = File.ReadAllText(Path.Combine(Path.GetDirectoryName(project.FullName), "web.config"));
+                webConfig = File.ReadAllText(Path.Combine(Path.GetDirectoryName(project.FullName), "web.config"));
                 if (!webConfig.Contains(@"<add input=""{REQUEST_URI}"" pattern=""^static/.*$"" ignoreCase=""true"" negate=""true"" />")) {
                     Assert.Fail(string.Format("Did not find rewrite condition in:{0}{0}{1}",
                         Environment.NewLine,
@@ -169,6 +177,12 @@ namespace PythonToolsUITests {
                 }
                 if (!webConfig.Contains(@"<action type=""Rewrite"" url=""static_files/{R:1}"" appendQueryString=""true"" />")) {
                     Assert.Fail(string.Format("Did not find rewrite action in:{0}{0}{1}",
+                        Environment.NewLine,
+                        webConfig
+                    ));
+                }
+                if (webConfig.Contains(@"<add input=""true"" pattern=""false"" />")) {
+                    Assert.Fail(string.Format("Should not have found Static Files condition in:{0}{0}{1}",
                         Environment.NewLine,
                         webConfig
                     ));

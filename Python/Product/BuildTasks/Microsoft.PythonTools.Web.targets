@@ -73,7 +73,8 @@
 
     <PipelineCollectFilesPhaseDependsOn>
       $(PipelineCollectFilesPhaseDependsOn);
-      CoreCompile
+      CoreCompile;
+      _ValidatePythonVersion
     </PipelineCollectFilesPhaseDependsOn>
   </PropertyGroup>
 
@@ -347,23 +348,21 @@
        resolved to a file system path.
   -->
   
-  <Target Name="AddStaticUriSetting"
-          Condition="'$(StaticUriPattern)' != ''">
+  <Target Name="AddStaticUriSetting">
     <ValidateRegexPattern Pattern="$(StaticUriPattern)"
+                          Condition="'$(StaticUriPattern)' != ''"
                           Message="Invalid static URI pattern: {0}" />
     
     <PropertyGroup>
-      <FastCgiRewriteConditions Condition="'$(StaticUriRewrite)' == ''">
+      <!-- Add the bypass if only a pattern has been specified -->
+      <FastCgiRewriteConditions Condition="'$(StaticUriPattern)' != '' and '$(StaticUriRewrite)' == ''">
         <![CDATA[$(FastCgiRewriteConditions)
             <add input="{REQUEST_URI}" pattern="$(StaticUriPattern)" ignoreCase="true" negate="true"/>]]>
       </FastCgiRewriteConditions>
-      <_StaticFilesRewriteConditions Condition="'$(StaticUriRewrite)' != ''">
+      <!-- Replace the condition if both a pattern and rewrite are set -->
+      <_StaticFilesRewriteConditions Condition="'$(StaticUriPattern)' != '' and '$(StaticUriRewrite)' != ''">
         <![CDATA[<match url="$(StaticUriPattern)" ignoreCase="true" />
             <action type="Rewrite" url="$(StaticUriRewrite)" appendQueryString="true" />]]>
-      </_StaticFilesRewriteConditions>
-      <!-- A false condition prevents this rule from blocking later ones -->
-      <_StaticFilesRewriteConditions Condition="'$(StaticUriRewrite)' == ''">
-        <![CDATA[<conditions><add input="true" pattern="false" /></conditions>]]>
       </_StaticFilesRewriteConditions>
     </PropertyGroup>
   </Target>
@@ -716,7 +715,6 @@
     <CreatePythonAzureSetupConfigDependsOn>
       ResolvePythonInterpreterPath;
       _EnsurePythonWebPiReference;
-      _ValidatePythonVersion;
       $(CreatePythonAzureSetupConfigDependsOn)
     </CreatePythonAzureSetupConfigDependsOn>
 
@@ -758,6 +756,15 @@
           DependsOnTargets="_EnsurePythonWebPiReference">
     <Warning Text="$(PythonInterpreterDescription) is not natively supported on Microsoft Azure. Add a WebPI reference to install this environment or add the 'SuppressGenerateWebPiReference' property to $(MSBuildProjectName) and set it to true."
              Condition="'@(WebPiReference)' == ''"/>
+    
+    <!-- Old projects need to retain the old AzureSetup.exe, but once the new
+       deployment script has been added, we will stop using it.-->
+    <ItemGroup>
+      <_ConfigureCloudService Remove="@(_ConfigureCloudService)" />
+      <_ConfigureCloudService Include="@(Content);@(None)" Condition="'%(Filename)%(Extension)' == 'ConfigureCloudService.ps1'" />
+    </ItemGroup>
+    <Warning Text="Using old configuration tools. Add the $(RoleType) Role support files to your project to use the updated deployment tools."
+             Condition="'@(_ConfigureCloudService)' == ''" />
   </Target>
   
   <Target Name="_EnsurePythonWebPiReference"
@@ -782,15 +789,6 @@
           DependsOnTargets="ResolvePythonInterpreterPath;_GetPythonAzureSetupConfigOutput"
           Condition="!$(SuppressCollectPythonCloudServiceFiles)">
     <Error Text="Should not be invoked during up-to-date check" Condition="$(BuildingForUpToDateCheck)" />
-
-    <!-- Old projects need to retain the old AzureSetup.exe, but once the new
-       deployment script has been added, we will stop using it.-->
-    <ItemGroup>
-      <_ConfigureCloudService Remove="@(_ConfigureCloudService)" />
-      <_ConfigureCloudService Include="@(Content);@(None)" Condition="'%(Filename)%(Extension)' == 'ConfigureCloudService.ps1'" />
-    </ItemGroup>
-    <Warning Text="Using old configuration tools. Add the $(RoleType) Role support files to your project to use the updated deployment tools."
-             Condition="'@(_ConfigureCloudService)' == ''" />
 
     <MakeDir Directories="@(_PythonAzureSetupConfig->'%(RootDir)%(Directory)')" />
 
