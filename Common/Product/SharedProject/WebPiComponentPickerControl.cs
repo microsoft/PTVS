@@ -29,7 +29,7 @@ namespace Microsoft.VisualStudioTools.Project {
     [Guid("B7773A32-2EE5-4844-9630-F14768A5D03C")]
     partial class WebPiComponentPickerControl : UserControl {
         private readonly List<PackageInfo> _packages = new List<PackageInfo>();
-        private const string _defaultFeeds = "https://www.microsoft.com/web/webpi/4.0/toolsproductlist.xml";
+        private const string _defaultFeeds = "https://www.microsoft.com/web/webpi/5.0/webproductlist.xml";
         private ListViewSorter _sorter = new ListViewSorter();
 
         public WebPiComponentPickerControl() {
