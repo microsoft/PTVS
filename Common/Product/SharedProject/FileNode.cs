@@ -692,7 +692,7 @@ namespace Microsoft.VisualStudioTools.Project {
 
             ProjectMgr.ReDrawNode(this, UIHierarchyElement.Caption);
 
-            this.ProjectMgr.ExtensibilityEventsDispatcher.FireItemRenamed(this, Path.GetFileName(newFileName));
+            this.ProjectMgr.ExtensibilityEventsDispatcher.FireItemRenamed(this, oldFileName);
 
             //Update the new document in the RDT.
             DocumentManager.RenameDocument(this.ProjectMgr.Site, oldFileName, newFileName, ID);
