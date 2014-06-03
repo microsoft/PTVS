@@ -1,15 +1,15 @@
 From: "Saved by Internet Explorer 11"
 Subject: Flask Web App Configuration
-Date: Thu, 29 May 2014 16:42:01 -0700
+Date: Mon, 2 Jun 2014 12:05:46 -0700
 MIME-Version: 1.0
 Content-Type: multipart/related;
 	type="text/html";
-	boundary="----=_NextPart_000_000A_01CF7B5C.EA90CE80"
+	boundary="----=_NextPart_000_008E_01CF7E5A.FC5D19B0"
 X-MimeOLE: Produced By Microsoft MimeOLE V6.3.9600.16384
 
 This is a multi-part message in MIME format.
 
-------=_NextPart_000_000A_01CF7B5C.EA90CE80
+------=_NextPart_000_008E_01CF7E5A.FC5D19B0
 Content-Type: text/html;
 	charset="utf-8"
 Content-Transfer-Encoding: quoted-printable
@@ -36,72 +36,10 @@ content=3D"IE=3D11.0000"=20
 http-equiv=3D"X-UA-Compatible">
     =20
 <META charset=3D"utf-8">     <TITLE>Flask Web App Configuration</TITLE>  =
-  =20
-<STYLE type=3D"text/css">=0A=
-        body {=0A=
-            font-family: 'Segoe UI', Arial, Helvetica, sans-serif;=0A=
-            font-weight: 200;=0A=
-            font-size: 11pt;=0A=
-        }=0A=
-=0A=
-        p, h1, h2 {=0A=
-            margin: 0;=0A=
-            padding: 0;=0A=
-        }=0A=
-=0A=
-        h1 {=0A=
-            font-size: 20pt;=0A=
-            font-weight: bold;=0A=
-            padding-top: 1em;=0A=
-        }=0A=
-=0A=
-        h1.top {=0A=
-            padding-top: 0em;=0A=
-        }=0A=
-=0A=
-        h2 {=0A=
-            font-size: 16pt;=0A=
-            font-weight: 300;=0A=
-            padding-top: 0.5em;=0A=
-            padding-left: 0em;=0A=
-        }=0A=
-=0A=
-        p {=0A=
-            padding-left: 0.5em;=0A=
-            padding-bottom: 0.5em;=0A=
-        }=0A=
-=0A=
-        strong {=0A=
-            font-weight: 600;=0A=
-        }=0A=
-=0A=
-        p.hint {=0A=
-            color: #666666;=0A=
-        }=0A=
-=0A=
-        code {=0A=
-            font-family: Consolas, 'Lucida Console', monospace;=0A=
-        }=0A=
-=0A=
-        ol {=0A=
-            margin-top: 0;=0A=
-            padding-top: 0;=0A=
-        }=0A=
-=0A=
-        ol > li {=0A=
-            padding-top: 1.5em;=0A=
-        }=0A=
-=0A=
-        li > p {=0A=
-            padding: 0;=0A=
-        }=0A=
-=0A=
-        li > img {=0A=
-            vertical-align: middle;=0A=
-        }=0A=
-=0A=
-    </STYLE>
-=20
+   <LINK=20
+href=3D"file:///D:/PTVS/Main/Python/Product/PythonTools/ReadmeStyle.css" =
+rel=3D"stylesheet"=20
+type=3D"text/css">=20
 <META name=3D"GENERATOR" content=3D"MSHTML 11.00.9600.17107"></HEAD>=20
 <BODY>
 <H1 class=3D"top">Two more things...</H1>
@@ -186,7 +124,7 @@ src=3D"file:///D:/PTVS/Main/Python/Product/PythonTools/Templates/Projects=
 /StarterFlaskProject/Readme/EnvironmentAdded.png">=20
           </LI></OL></BODY></HTML>
 
-------=_NextPart_000_000A_01CF7B5C.EA90CE80
+------=_NextPart_000_008E_01CF7E5A.FC5D19B0
 Content-Type: image/png
 Content-Transfer-Encoding: base64
 Content-Location: file:///D:/PTVS/Main/Python/Product/PythonTools/Templates/Projects/StarterFlaskProject/Readme/AddVirtualEnvironment.png
@@ -465,7 +403,7 @@ AgBKAOJEFB98Q0KcAIASgDgRxQffkBAnAKAEIE5E8cE3JMQJACgBiBNRfPANCXECAEoA4kQUH3xD
 QpwAgBKAOBHFB9+QECcAoAQgTkTxwTckxAkAKAGIE1F2vOMd/x/D4h+4gNvoCAAAAABJRU5ErkJg
 gg==
 
-------=_NextPart_000_000A_01CF7B5C.EA90CE80
+------=_NextPart_000_008E_01CF7E5A.FC5D19B0
 Content-Type: image/png
 Content-Transfer-Encoding: base64
 Content-Location: file:///D:/PTVS/Main/Python/Product/PythonTools/Templates/Projects/StarterFlaskProject/Readme/AddVirtualEnvironmentDialog.png
@@ -623,7 +561,7 @@ JAf1ZwVKzdO+zfw64WnfZn7tmPrK8NO+zfwK8dO+zfzaMfU1k62+oQDWulp9Qw+mvmac+hfPnDL1
 9bahh1Pvni6fu3DxEt77F8+/f/bMe4Yezpx9//xFmvkvXwL9L168YOgBBb+EM/9l4JKhj8uXL1/+
 fwd7zz0vBAVBAAAAAElFTkSuQmCC
 
-------=_NextPart_000_000A_01CF7B5C.EA90CE80
+------=_NextPart_000_008E_01CF7E5A.FC5D19B0
 Content-Type: image/png
 Content-Transfer-Encoding: base64
 Content-Location: file:///D:/PTVS/Main/Python/Product/PythonTools/Templates/Projects/StarterFlaskProject/Readme/VirtualEnvironmentCreated.png
@@ -687,7 +625,7 @@ JyL5kZJI0jSVlM0eYoKiyVmzqYruH7/Vq8NOWexbA4si5tsxWcpkS4VK2kiSrWAadspi3xrcRON/
 srRpiaGSQyT7Yacs9q38iBK1I8LmpSWGSvyfkFIREzTUlMW+1T8iXyTAxGtOIZlUMpnaSrJh0ZLl
 evgpi31rMIhOtApEURWIoioQRVUgiqpAFFGz+T+FLulviM9pWAAAAABJRU5ErkJggg==
 
-------=_NextPart_000_000A_01CF7B5C.EA90CE80
+------=_NextPart_000_008E_01CF7E5A.FC5D19B0
 Content-Type: image/png
 Content-Transfer-Encoding: base64
 Content-Location: file:///D:/PTVS/Main/Python/Product/PythonTools/Templates/Projects/StarterFlaskProject/Readme/CopyFullPath.png
@@ -774,7 +712,7 @@ GG2e7KKtS09ASjtlhrylacbhem28um2pic+/2Yb7mVkhzZP2OSEALgPxgbKyZsTnGjYRm/DWq60N
 ANeB+EBZgfhGRJb4/K1O3NQCygvEB8oKxDciksTHny+aW68AlA2ID5QViA8AkAuID5QViA8AkAuI
 D5QViA8AkAuID5QTse7/seYeNZLw3L8AAAAASUVORK5CYII=
 
-------=_NextPart_000_000A_01CF7B5C.EA90CE80
+------=_NextPart_000_008E_01CF7E5A.FC5D19B0
 Content-Type: image/png
 Content-Transfer-Encoding: base64
 Content-Location: file:///D:/PTVS/Main/Python/Product/PythonTools/Templates/Projects/StarterFlaskProject/Readme/InstallPythonPackage.png
@@ -990,7 +928,7 @@ LCcnfTcb9l+Wsd+fVLuyz8Y5jL52AHRAhMAkV4SE/Id6K/1yweBXNnh/QHlAhMBkjAjLAgNt2eD9
 AeUBEQITiBBsB7w/oDwgQmCyuyIEAIBxQITABCIEACwFiBCYQIQAgKUAEQITiBAAsBTyRfiBD/x/
 7tdkXnrC2OIAAAAASUVORK5CYII=
 
-------=_NextPart_000_000A_01CF7B5C.EA90CE80
+------=_NextPart_000_008E_01CF7E5A.FC5D19B0
 Content-Type: image/png
 Content-Transfer-Encoding: base64
 Content-Location: file:///D:/PTVS/Main/Python/Product/PythonTools/Templates/Projects/StarterFlaskProject/Readme/InstallPythonPackageDialog.png
@@ -1108,7 +1046,7 @@ Qd+fdNmPld+ndNmPld+7gr4zZct+rPwOlS37sfJ7V9D3rGr6IQdS1q30Q34U9D0r0X9w93bQd6fZ
 /d6d1bX7Dx5y7j9Y/+De3fdDfnT33gfrD2Tl33wI/g8e3A/5EYE/5Mq/CT0M+dPm5ubm/wPeQFFl
 BdnmGwAAAABJRU5ErkJggg==
 
-------=_NextPart_000_000A_01CF7B5C.EA90CE80
+------=_NextPart_000_008E_01CF7E5A.FC5D19B0
 Content-Type: image/png
 Content-Transfer-Encoding: base64
 Content-Location: file:///D:/PTVS/Main/Python/Product/PythonTools/Templates/Projects/StarterFlaskProject/Readme/AddRemoveEnvironment.png
@@ -1373,7 +1311,7 @@ H2+A9EB26EVHW530Gd9Pf/pTAKI89o1/rd8kvWjysf/5D9W//eC56spzL9YB7eX6dfVK9eqrP69+
 LCA9AEBRQHogJ5AeAKAoID2QE0gPAFAUkB7ICaQHACgKSA/kBNIDABQFpAdyAukBAIoC0gM5gfQA
 AEUB6YGcQHoAgKKA9EBOID0AQFFAeiAf1Rv+P96XhPVWn+8OAAAAAElFTkSuQmCC
 
-------=_NextPart_000_000A_01CF7B5C.EA90CE80
+------=_NextPart_000_008E_01CF7E5A.FC5D19B0
 Content-Type: image/png
 Content-Transfer-Encoding: base64
 Content-Location: file:///D:/PTVS/Main/Python/Product/PythonTools/Templates/Projects/StarterFlaskProject/Readme/AddRemoveEnvironmentDialog.png
@@ -1533,7 +1471,7 @@ lBSQJJZbXnm2LN/ElZ+WAgAAfZKTkpeSm5KfkqOSp52wDUEr5FZXninLN2/lp6Tkx5EBAECf5KTk
 peRmeFTcCdiwyAYdtoEkMgAA6IszM2RpHa39JRQAAADj1FFaL5/61P8DZHdkaH8Lk30AAAAASUVO
 RK5CYII=
 
-------=_NextPart_000_000A_01CF7B5C.EA90CE80
+------=_NextPart_000_008E_01CF7E5A.FC5D19B0
 Content-Type: image/png
 Content-Transfer-Encoding: base64
 Content-Location: file:///D:/PTVS/Main/Python/Product/PythonTools/Templates/Projects/StarterFlaskProject/Readme/EnvironmentAdded.png
@@ -1596,4 +1534,52 @@ OLLG5kXIt0OylMqWSipJI062ItOkUxZH1vgWGv6TpU5LTCoZRPw66ZTFkTU8olBRRLRZaYlJJfxP
 SK6wiTTRlMWRNToiWyCAxGssIV5UvJgiJd4oaHG4nnzK4sgaD6JMK0fkVY7IqxyRVzkij7rd/wFu
 6uCYgV3haAAAAABJRU5ErkJggg==
 
-------=_NextPart_000_000A_01CF7B5C.EA90CE80--
+------=_NextPart_000_008E_01CF7E5A.FC5D19B0
+Content-Type: text/css;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Location: file:///D:/PTVS/Main/Python/Product/PythonTools/ReadmeStyle.css
+
+body {
+	font-family: "Segoe UI", Arial, Helvetica, sans-serif; font-size: 11pt; =
+font-weight: 200;
+}
+p {
+	margin: 0px; padding: 0px;
+}
+h1 {
+	margin: 0px; padding: 0px;
+}
+h2 {
+	margin: 0px; padding: 0px;
+}
+h1 {
+	padding-top: 1em; font-size: 20pt; font-weight: bold;
+}
+h1.top {
+	padding-top: 0em;
+}
+h2 {
+	padding-top: 0.5em; padding-left: 0em; font-size: 16pt; font-weight: =
+300;
+}
+p {
+	padding-bottom: 0.5em; padding-left: 0.5em;
+}
+p.hint {
+	color: rgb(102, 102, 102);
+}
+code {
+	font-family: Consolas, "Lucida Console", monospace;
+}
+ol {
+	padding-top: 0px; margin-top: 0px;
+}
+ol > li {
+	padding-top: 1.5em;
+}
+li > img {
+	vertical-align: middle;
+}
+
+------=_NextPart_000_008E_01CF7E5A.FC5D19B0--

@@ -15,61 +15,7 @@
 <head>
     <meta charset="utf-8" />
     <title>Python Worker Role Configuration</title>
-    <style type="text/css">
-        body {
-            font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
-            font-weight: 200;
-            font-size: 11pt;
-        }
-
-        p, h1, h2 {
-            margin: 0;
-            padding: 0;
-        }
-
-        h1 {
-            font-size: 20pt;
-            font-weight: bold;
-            padding-top: 1em;
-        }
-
-            h1.top {
-                padding-top: 0em;
-            }
-
-        h2 {
-            font-size: 16pt;
-            font-weight: 300;
-            padding-top: 0.5em;
-            padding-left: 0em;
-        }
-
-        p {
-            padding-left: 0.5em;
-            padding-bottom: 0.5em;
-        }
-
-        p.hint {
-            color: #666666;
-        }
-
-        code {
-            font-family: Consolas, 'Lucida Console', monospace;
-        }
-
-        ol {
-            margin-top: 0;
-            padding-top: 0;
-        }
-
-            ol > li {
-                padding-top: 1.5em;
-            }
-
-        li > img {
-            vertical-align: middle;
-        }
-    </style>
+    <link rel="stylesheet" href="../../../ReadmeStyle.css" type="text/css" />
 </head>
 <body>
     <h1 class="top">One more thing...</h1>
@@ -83,27 +29,27 @@
             <li>Copy and paste the XML below as a child of the <code>workerrole</code> element.</li>
         </ol>
 
-        <textarea contenteditable="false" cols="75" rows="25" autofocus="autofocus">
-&lt;startup&gt;
-    &lt;task commandline="bin\ps.cmd ConfigureCloudService.ps1" executioncontext="elevated" tasktype="simple"&gt;
-        &lt;environment&gt;
-            &lt;variable name="EMULATED"&gt;
-                &lt;roleinstancevalue xpath="/RoleEnvironment/Deployment/@emulated" /&gt;
-            &lt;/variable&gt;
-        &lt;/environment&gt;
-    &lt;/task&gt;
-&lt;/startup&gt;
-&lt;runtime&gt;
-    &lt;environment&gt;
-        &lt;variable name="EMULATED"&gt;
-            &lt;roleinstancevalue xpath="/RoleEnvironment/Deployment/@emulated" /&gt;
-        &lt;/variable&gt;
-    &lt;/environment&gt;
-    &lt;entrypoint&gt;
-        &lt;programentrypoint commandline="bin\ps.cmd LaunchWorker.ps1" setreadyonprocessstart="true" /&gt;
-    &lt;/entrypoint&gt;
-&lt;/runtime&gt;
-        </textarea>
+        <textarea contenteditable="false" cols="75" rows="25">
+&lt;Startup&gt;
+  &lt;Task commandLine="bin\ps.cmd ConfigureCloudService.ps1" executionContext="elevated" taskType="simple"&gt;
+    &lt;Environment&gt;
+      &lt;Variable name="EMULATED"&gt;
+        &lt;RoleInstanceValue xpath="/RoleEnvironment/Deployment/@emulated" /&gt;
+      &lt;/Variable&gt;
+    &lt;/Environment&gt;
+  &lt;/Task&gt;
+&lt;/Startup&gt;
+&lt;Runtime&gt;
+  &lt;Environment&gt;
+    &lt;Variable name="EMULATED"&gt;
+      &lt;RoleInstanceValue xpath="/RoleEnvironment/Deployment/@emulated" /&gt;
+    &lt;/Variable&gt;
+  &lt;/Environment&gt;
+  &lt;EntryPoint&gt;
+    &lt;ProgramEntryPoint commandLine="bin\ps.cmd LaunchWorker.ps1" setReadyOnProcessStart="true" /&gt;
+  &lt;/EntryPoint&gt;
+&lt;/Runtime&gt;
+</textarea>
     </div>
     <p class="hint">This file may be deleted once your configuration has been updated.</p>
 

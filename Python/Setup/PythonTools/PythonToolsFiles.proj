@@ -50,8 +50,8 @@
 
     <!-- Resources -->
     <File Include="Python Tools for VS License.rtf;
-                   NoInterpreters.html;
-                   NoSurveyNewsFeed.html" />
+                   NoInterpreters.mht;
+                   NoSurveyNewsFeed.mht" />
     <File Include="PythonFile.ico;
                    PythonProject.ico;
                    PythonProjectBig.ico" />

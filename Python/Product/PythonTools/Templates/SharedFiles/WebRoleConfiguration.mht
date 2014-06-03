@@ -1,19 +1,19 @@
 From: "Saved by Internet Explorer 11"
 Subject: Python Web Role Configuration
-Date: Thu, 29 May 2014 14:50:06 -0700
+Date: Mon, 2 Jun 2014 11:55:17 -0700
 MIME-Version: 1.0
 Content-Type: multipart/related;
 	type="text/html";
-	boundary="----=_NextPart_000_0005_01CF7B4D.47F17B20"
+	boundary="----=_NextPart_000_0015_01CF7E59.85C05FC0"
 X-MimeOLE: Produced By Microsoft MimeOLE V6.3.9600.16384
 
 This is a multi-part message in MIME format.
 
-------=_NextPart_000_0005_01CF7B4D.47F17B20
+------=_NextPart_000_0015_01CF7E59.85C05FC0
 Content-Type: text/html;
 	charset="utf-8"
 Content-Transfer-Encoding: quoted-printable
-Content-Location: file://D:\PTVS\Main\Python\Product\PythonTools\Templates\SharedFiles\WebRoleConfiguration.html
+Content-Location: file://D:\PTVS\Main\Python\Product\PythonTools\Templates\SharedFiles\Readme\WebRoleConfiguration.html
 
 =EF=BB=BF<!DOCTYPE HTML>
 <!DOCTYPE html PUBLIC "" ""><!--=0A=
@@ -37,63 +37,10 @@ http-equiv=3D"X-UA-Compatible">
     =20
 <META charset=3D"utf-8">     <TITLE>Python Web Role =
 Configuration</TITLE>    =20
-<STYLE type=3D"text/css">=0A=
-        body {=0A=
-            font-family: 'Segoe UI', Arial, Helvetica, sans-serif;=0A=
-            font-weight: 200;=0A=
-            font-size: 11pt;=0A=
-        }=0A=
-=0A=
-        p, h1, h2 {=0A=
-            margin: 0;=0A=
-            padding: 0;=0A=
-        }=0A=
-=0A=
-        h1 {=0A=
-            font-size: 20pt;=0A=
-            font-weight: bold;=0A=
-            padding-top: 1em;=0A=
-        }=0A=
-=0A=
-        h1.top {=0A=
-            padding-top: 0em;=0A=
-        }=0A=
-=0A=
-        h2 {=0A=
-            font-size: 16pt;=0A=
-            font-weight: 300;=0A=
-            padding-top: 0.5em;=0A=
-            padding-left: 0em;=0A=
-        }=0A=
-=0A=
-        p {=0A=
-            padding-left: 0.5em;=0A=
-            padding-bottom: 0.5em;=0A=
-        }=0A=
-=0A=
-        p.hint {=0A=
-            color: #666666;=0A=
-        }=0A=
-=0A=
-        code {=0A=
-            font-family: Consolas, 'Lucida Console', monospace;=0A=
-        }=0A=
-=0A=
-        ol {=0A=
-            margin-top: 0;=0A=
-            padding-top: 0;=0A=
-        }=0A=
-=0A=
-        ol > li {=0A=
-            padding-top: 1.5em;=0A=
-        }=0A=
-=0A=
-        li > img {=0A=
-            vertical-align: middle;=0A=
-        }=0A=
-=0A=
-    </STYLE>
-=20
+<LINK =
+href=3D"file:///D:/PTVS/Main/Python/Product/PythonTools/ReadmeStyle.css" =
+
+rel=3D"stylesheet" type=3D"text/css">=20
 <META name=3D"GENERATOR" content=3D"MSHTML 11.00.9600.17107"></HEAD>=20
 <BODY>
 <H1 class=3D"top">One more thing...</H1>
@@ -102,25 +49,25 @@ Configuration</TITLE>    =20
 <OL>
   <LI>Open your ServiceDefinition.csdef file: <IMG =
 src=3D"file:///D:/PTVS/Main/Python/Product/PythonTools/Templates/SharedFi=
-les/ServiceDefinition.png"></LI>
+les/Readme/ServiceDefinition.png"></LI>
   <LI>Find your new <CODE>&lt;webrole role=3D"{your project =
 name}"&gt;</CODE>=20
   element.</LI>
   <LI>Copy and paste the XML below as a child of the =
 <CODE>workerrole</CODE>=20
-  element.</LI></OL><TEXTAREA autofocus=3D"autofocus" =
-contenteditable=3D"false" rows=3D"14" cols=3D"75">&lt;startup&gt;=0A=
-    &lt;task commandline=3D"ps.cmd ConfigureCloudService.ps1" =
-executioncontext=3D"elevated" tasktype=3D"simple"&gt;=0A=
-        &lt;environment&gt;=0A=
-            &lt;variable name=3D"EMULATED"&gt;=0A=
-                &lt;roleinstancevalue =
+  element.</LI></OL><TEXTAREA contenteditable=3D"false" rows=3D"14" =
+cols=3D"75">&lt;Startup&gt;=0A=
+  &lt;Task commandLine=3D"ps.cmd ConfigureCloudService.ps1" =
+executionContext=3D"elevated" taskType=3D"simple"&gt;=0A=
+    &lt;Environment&gt;=0A=
+      &lt;Variable name=3D"EMULATED"&gt;=0A=
+        &lt;RoleInstanceValue =
 xpath=3D"/RoleEnvironment/Deployment/@emulated" /&gt;=0A=
-            &lt;/variable&gt;=0A=
-        &lt;/environment&gt;=0A=
-    &lt;/task&gt;=0A=
-&lt;/startup&gt;=0A=
-        </TEXTAREA>=20
+      &lt;/Variable&gt;=0A=
+    &lt;/Environment&gt;=0A=
+  &lt;/Task&gt;=0A=
+&lt;/Startup&gt;=0A=
+</TEXTAREA>=20
     </DIV>
 <P class=3D"hint">This file may be deleted once your configuration has =
 been=20
@@ -206,10 +153,10 @@ href=3D"http://go.microsoft.com/fwlink/?LinkId=3D293415">our=20
   discussion forum</A>            for further help.        =20
 </LI></OL></BODY></HTML>
 
-------=_NextPart_000_0005_01CF7B4D.47F17B20
+------=_NextPart_000_0015_01CF7E59.85C05FC0
 Content-Type: image/png
 Content-Transfer-Encoding: base64
-Content-Location: file:///D:/PTVS/Main/Python/Product/PythonTools/Templates/SharedFiles/ServiceDefinition.png
+Content-Location: file:///D:/PTVS/Main/Python/Product/PythonTools/Templates/SharedFiles/Readme/ServiceDefinition.png
 
 iVBORw0KGgoAAAANSUhEUgAAASYAAABbCAIAAABRbb8mAAAABGdBTUEAALGPC/xhBQAAAAlwSFlz
 AAAOwgAADsIBFShKgAAAABZ0RVh0U29mdHdhcmUAcGFpbnQubmV0IDQuMDvo9WkAABc2SURBVHhe
@@ -319,4 +266,52 @@ XyS7dJtOZ/hoZ5TqCqSTycGSxVOdCeZYCBi4e84U5PdeBlnW+hk0KKrLR3dN2agYE7GUyxhhlOte
 yZQhVrpLLOUyhqWclWykh1CukLCUs5KNWMpljHhSzkqxiKVcxrCUs5KNuJSzkr4Yk2jFSvoiKWfF
 ipUCyXOv/j9FmrG1Vlw4sQAAAABJRU5ErkJggg==
 
-------=_NextPart_000_0005_01CF7B4D.47F17B20--
+------=_NextPart_000_0015_01CF7E59.85C05FC0
+Content-Type: text/css;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Location: file:///D:/PTVS/Main/Python/Product/PythonTools/ReadmeStyle.css
+
+body {
+	font-family: "Segoe UI", Arial, Helvetica, sans-serif; font-size: 11pt; =
+font-weight: 200;
+}
+p {
+	margin: 0px; padding: 0px;
+}
+h1 {
+	margin: 0px; padding: 0px;
+}
+h2 {
+	margin: 0px; padding: 0px;
+}
+h1 {
+	padding-top: 1em; font-size: 20pt; font-weight: bold;
+}
+h1.top {
+	padding-top: 0em;
+}
+h2 {
+	padding-top: 0.5em; padding-left: 0em; font-size: 16pt; font-weight: =
+300;
+}
+p {
+	padding-bottom: 0.5em; padding-left: 0.5em;
+}
+p.hint {
+	color: rgb(102, 102, 102);
+}
+code {
+	font-family: Consolas, "Lucida Console", monospace;
+}
+ol {
+	padding-top: 0px; margin-top: 0px;
+}
+ol > li {
+	padding-top: 1.5em;
+}
+li > img {
+	vertical-align: middle;
+}
+
+------=_NextPart_000_0015_01CF7E59.85C05FC0--

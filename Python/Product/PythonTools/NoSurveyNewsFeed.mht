@@ -1,0 +1,111 @@
+From: "Saved by Internet Explorer 11"
+Subject: Python Tools for Visual Studio
+Date: Mon, 2 Jun 2014 12:13:16 -0700
+MIME-Version: 1.0
+Content-Type: multipart/related;
+	type="text/html";
+	boundary="----=_NextPart_000_00D3_01CF7E5C.08E59B70"
+X-MimeOLE: Produced By Microsoft MimeOLE V6.3.9600.16384
+
+This is a multi-part message in MIME format.
+
+------=_NextPart_000_00D3_01CF7E5C.08E59B70
+Content-Type: text/html;
+	charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+Content-Location: file://D:\PTVS\Main\Python\Product\PythonTools\NoSurveyNewsFeed.html
+
+=EF=BB=BF<!DOCTYPE HTML>
+<!DOCTYPE html PUBLIC "" ""><!--=0A=
+ Copyright (c) Microsoft Corporation.=0A=
+=0A=
+ This source code is subject to terms and conditions of the Apache =
+License, Version 2.0. A =0A=
+ copy of the license can be found in the License.html file at the root =
+of this distribution. If =0A=
+ you cannot locate the Apache License, Version 2.0, please send an email =
+to =0A=
+ vspython@microsoft.com. By using this source code in any fashion, you =
+are agreeing to be bound =0A=
+ by the terms of the Apache License, Version 2.0.=0A=
+=0A=
+ You must not remove this notice, or any other, from this software.=0A=
+--><HTML=20
+lang=3D"en" xmlns=3D"http://www.w3.org/1999/xhtml"><HEAD><META =
+content=3D"IE=3D11.0000"=20
+http-equiv=3D"X-UA-Compatible">
+    =20
+<META charset=3D"utf-8">     <TITLE>Python Tools for Visual =
+Studio</TITLE>    =20
+<LINK =
+href=3D"file:///D:/PTVS/Main/Python/Product/PythonTools/ReadmeStyle.css" =
+
+rel=3D"stylesheet" type=3D"text/css">=20
+<META name=3D"GENERATOR" content=3D"MSHTML 11.00.9600.17107"></HEAD>=20
+<BODY>
+<H1 class=3D"top">We couldn't contact the survey/news server</H1>
+<P>        There was a problem contacting the Python Tools for Visual =
+Studio    =20
+    survey/news server.     </P>
+<P>        Please make sure your internet connection is available.     =
+</P>
+<H2><A href=3D"http://go.microsoft.com/fwlink/?LinkId=3D309204">         =
+   Still=20
+stuck?         </A>     </H2>
+<P>        There may be a problem with our server.          Visit our =
+discussion=20
+forum and we'll be able to help you.     </P>
+<P class=3D"hint">        This link will take you to our homepage, where =
+you can=20
+find more         documentation, discussion forums, and updates.    =20
+</P></BODY></HTML>
+
+------=_NextPart_000_00D3_01CF7E5C.08E59B70
+Content-Type: text/css;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Location: file:///D:/PTVS/Main/Python/Product/PythonTools/ReadmeStyle.css
+
+body {
+	font-family: "Segoe UI", Arial, Helvetica, sans-serif; font-size: 11pt; =
+font-weight: 200;
+}
+p {
+	margin: 0px; padding: 0px;
+}
+h1 {
+	margin: 0px; padding: 0px;
+}
+h2 {
+	margin: 0px; padding: 0px;
+}
+h1 {
+	padding-top: 1em; font-size: 20pt; font-weight: bold;
+}
+h1.top {
+	padding-top: 0em;
+}
+h2 {
+	padding-top: 0.5em; padding-left: 0em; font-size: 16pt; font-weight: =
+300;
+}
+p {
+	padding-bottom: 0.5em; padding-left: 0.5em;
+}
+p.hint {
+	color: rgb(102, 102, 102);
+}
+code {
+	font-family: Consolas, "Lucida Console", monospace;
+}
+ol {
+	padding-top: 0px; margin-top: 0px;
+}
+ol > li {
+	padding-top: 1.5em;
+}
+li > img {
+	vertical-align: middle;
+}
+
+------=_NextPart_000_00D3_01CF7E5C.08E59B70--

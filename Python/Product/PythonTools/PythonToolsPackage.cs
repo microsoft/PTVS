@@ -406,7 +406,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
         }
 
         internal static void OpenNoInterpretersHelpPage() {
-            OpenVsWebBrowser(PythonToolsInstallPath.GetFile("NoInterpreters.html"));
+            OpenVsWebBrowser(PythonToolsInstallPath.GetFile("NoInterpreters.mht"));
         }
 
         public static string InterpreterHelpUrl {
@@ -783,18 +783,18 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             List<OpenReplCommand> replCommands = new List<OpenReplCommand>();
             lock (CommandsLock) {
                 foreach (var keyValue in Commands) {
-                var command = keyValue.Key;
-                OpenReplCommand openRepl = command as OpenReplCommand;
-                if (openRepl != null) {
-                    replCommands.Add(openRepl);
+                    var command = keyValue.Key;
+                    OpenReplCommand openRepl = command as OpenReplCommand;
+                    if (openRepl != null) {
+                        replCommands.Add(openRepl);
 
-                    mcs.RemoveCommand(keyValue.Value);
+                        mcs.RemoveCommand(keyValue.Value);
+                    }
                 }
-            }
 
-            foreach (var command in replCommands) {
+                foreach (var command in replCommands) {
                     Commands.Remove(command);
-            }
+                }
 
                 RegisterCommands(GetReplCommands(), GuidList.guidPythonToolsCmdSet);
             }
@@ -1170,10 +1170,10 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
                 if (available != null && available.Count > 0) {
                     BrowseSurveyNews(available[0]);
                 } else if (warnIfNoneAvailable) {
-                        if (available != null) {
+                    if (available != null) {
                         BrowseSurveyNews(GeneralOptionsPage.SurveyNewsIndexUrl);
-                        } else {
-                        BrowseSurveyNews(PythonToolsInstallPath.GetFile("NoSurveyNewsFeed.html"));
+                    } else {
+                        BrowseSurveyNews(PythonToolsInstallPath.GetFile("NoSurveyNewsFeed.mht"));
                     }
                 }
 
