@@ -21,11 +21,11 @@
       <ProjectItem ReplaceParameters="true" TargetFileName="$safeprojectname$\urls.py">project-urls.py</ProjectItem>
       <ProjectItem ReplaceParameters="true" TargetFileName="$safeprojectname$\wsgi.py">project-wsgi.py</ProjectItem>
       <Folder Name="djangoapp">
-        <ProjectItem ReplaceParameters="true">app-__init__.py</ProjectItem>
-        <ProjectItem ReplaceParameters="true">app-forms.py</ProjectItem>
-        <ProjectItem ReplaceParameters="true">app-models.py</ProjectItem>
-        <ProjectItem ReplaceParameters="true">app-tests.py</ProjectItem>
-        <ProjectItem ReplaceParameters="true">app-views.py</ProjectItem>
+        <ProjectItem ReplaceParameters="true" TargetFileName="__init__.py">app-__init__.py</ProjectItem>
+        <ProjectItem ReplaceParameters="true" TargetFileName="forms.py">app-forms.py</ProjectItem>
+        <ProjectItem ReplaceParameters="true" TargetFileName="models.py">app-models.py</ProjectItem>
+        <ProjectItem ReplaceParameters="true" TargetFileName="tests.py">app-tests.py</ProjectItem>
+        <ProjectItem ReplaceParameters="true" TargetFileName="views.py">app-views.py</ProjectItem>
         <Folder Name="static">
           <Folder Name="djangoapp">
             <Folder Name="content">
