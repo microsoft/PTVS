@@ -41,13 +41,19 @@ namespace Microsoft.PythonTools.Interpreter {
         private bool _generating, _isValid, _isCheckingDatabase, _disposed;
         private string[] _missingModules;
         private string _isCurrentException;
-        private readonly object _isCurrentLock = new object();
         private readonly Timer _refreshIsCurrentTrigger;
         private FileSystemWatcher _libWatcher;
         private readonly object _libWatcherLock = new object();
         private FileSystemWatcher _verWatcher;
         private readonly FileSystemWatcher _verDirWatcher;
         private readonly object _verWatcherLock = new object();
+
+        // Only one thread can be updating our current state
+        private readonly SemaphoreSlim _isCurrentSemaphore = new SemaphoreSlim(1);
+
+        // Only four threads can be updating any state. This is to prevent I/O
+        // saturation when multiple threads refresh simultaneously.
+        private static readonly SemaphoreSlim _sharedIsCurrentSemaphore = new SemaphoreSlim(4);
 
         public PythonInterpreterFactoryWithDatabase(
             Guid id,
@@ -318,11 +324,23 @@ namespace Microsoft.PythonTools.Interpreter {
         /// raised, regardless of whether the values were changed.
         /// </summary>
         public virtual void RefreshIsCurrent() {
-            lock (_isCurrentLock) {
-                try {
-                    _isCheckingDatabase = true;
-                    OnIsCurrentChanged();
+            if (!_isCurrentSemaphore.Wait(0)) {
+                // Another thread is working on our state, so we will wait for
+                // them to finish and return, since the value is up to date.
+                _isCurrentSemaphore.Wait();
+                _isCurrentSemaphore.Release();
+                return;
+            }
+            try {
+                _isCheckingDatabase = true;
+                OnIsCurrentChanged();
 
+                // Wait for a slot that will allow us to scan the disk. This
+                // prevents too many threads from updating at once and causing
+                // I/O saturation.
+                _sharedIsCurrentSemaphore.Wait();
+
+                try {
                     _generating = PythonTypeDatabase.IsDatabaseRegenerating(DatabasePath);
                     WatchingLibrary = !_generating;
 
@@ -382,13 +400,16 @@ namespace Microsoft.PythonTools.Interpreter {
                         }
                     }
                     _isCurrentException = null;
-                } catch (Exception ex) {
-                    // Report the exception text as the reason.
-                    _isCurrentException = ex.ToString();
-                    _missingModules = null;
                 } finally {
-                    _isCheckingDatabase = false;
+                    _sharedIsCurrentSemaphore.Release();
                 }
+            } catch (Exception ex) {
+                // Report the exception text as the reason.
+                _isCurrentException = ex.ToString();
+                _missingModules = null;
+            } finally {
+                _isCheckingDatabase = false;
+                _isCurrentSemaphore.Release();
             }
 
             OnIsCurrentChanged();
@@ -710,6 +731,7 @@ namespace Microsoft.PythonTools.Interpreter {
                     _verWatcher.Dispose();
                 }
                 _verWatcher = CreateDatabaseVerWatcher();
+                RefreshIsCurrent();
             }
         }
 
