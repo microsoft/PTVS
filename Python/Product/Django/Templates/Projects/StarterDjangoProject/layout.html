@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ title }} - My Django Application</title>
     {% load staticfiles %}
-    <link rel="stylesheet" type="text/css" href="{% static 'djangoapp/content/bootstrap.min.css' %}" />
-    <link rel="stylesheet" type="text/css" href="{% static 'djangoapp/content/site.css' %}" />
-    <script src="{% static 'djangoapp/scripts/modernizr-2.6.2.js' %}"></script>
+    <link rel="stylesheet" type="text/css" href="{% static 'app/content/bootstrap.min.css' %}" />
+    <link rel="stylesheet" type="text/css" href="{% static 'app/content/site.css' %}" />
+    <script src="{% static 'app/scripts/modernizr-2.6.2.js' %}"></script>
 </head>
 
 <body>
@@ -27,7 +27,7 @@
                     <li><a href="{% url 'about' %}">About</a></li>
                     <li><a href="{% url 'contact' %}">Contact</a></li>
                 </ul>
-                {% include 'djangoapp/loginpartial.html' %}
+                {% include 'app/loginpartial.html' %}
             </div>
         </div>
     </div>
@@ -40,9 +40,9 @@
         </footer>
     </div>
 
-    <script src="{% static 'djangoapp/scripts/jquery-1.10.2.js' %}"></script>
-    <script src="{% static 'djangoapp/scripts/bootstrap.js' %}"></script>
-    <script src="{% static 'djangoapp/scripts/respond.js' %}"></script>
+    <script src="{% static 'app/scripts/jquery-1.10.2.js' %}"></script>
+    <script src="{% static 'app/scripts/bootstrap.js' %}"></script>
+    <script src="{% static 'app/scripts/respond.js' %}"></script>
 {% block scripts %}{% endblock %}
 
 </body>

@@ -8,7 +8,7 @@ def home(request):
     assert isinstance(request, HttpRequest)
     return render(
         request,
-        'djangoapp/index.html',
+        'app/index.html',
         RequestContext(request,
         {
             'title':'Home Page',
@@ -20,7 +20,7 @@ def contact(request):
     assert isinstance(request, HttpRequest)
     return render(
         request,
-        'djangoapp/contact.html',
+        'app/contact.html',
         RequestContext(request,
         {
             'title':'Contact',
@@ -33,7 +33,7 @@ def about(request):
     assert isinstance(request, HttpRequest)
     return render(
         request,
-        'djangoapp/about.html',
+        'app/about.html',
         RequestContext(request,
         {
             'title':'About',

@@ -1,6 +1,6 @@
 from datetime import datetime
 from django.conf.urls import patterns, include, url
-from djangoapp.forms import BootstrapAuthenticationForm
+from app.forms import BootstrapAuthenticationForm
 
 # Uncomment the next two lines to enable the admin:
 # from django.contrib import admin
@@ -8,13 +8,13 @@ from djangoapp.forms import BootstrapAuthenticationForm
 
 urlpatterns = patterns('',
     # Examples:
-    url(r'^$', 'djangoapp.views.home', name='home'),
-    url(r'^contact$', 'djangoapp.views.contact', name='contact'),
-    url(r'^about', 'djangoapp.views.about', name='about'),
+    url(r'^$', 'app.views.home', name='home'),
+    url(r'^contact$', 'app.views.contact', name='contact'),
+    url(r'^about', 'app.views.about', name='about'),
     url(r'^login/$',
         'django.contrib.auth.views.login',
         {
-            'template_name': 'djangoapp/login.html',
+            'template_name': 'app/login.html',
             'authentication_form': BootstrapAuthenticationForm,
             'extra_context':
             {
