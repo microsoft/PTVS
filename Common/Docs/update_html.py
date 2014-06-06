@@ -189,6 +189,9 @@ HTML_PATTERNS = [
     # Provide >> syntax for a div floated to the right
     (r' *<blockquote>\s+<blockquote>', '<div style="float: right; padding: 0.5em">'),
     (r' *</blockquote>\s+</blockquote>', '</div>'),
+
+    # Provide << syntax for a div floated to the left
+    (r' *(?P<tag>\<.*?\>)&lt;&lt;(?P<rest>.*)', '<div style="float: left; padding: 0.5em">\g<tag>\g<rest></div>'),
     
     # Remove p tags when the entire contents is an img, an empty anchor, or an empty p tag
     (r'\<p\>(?P<img>\<img.+?\/\s*\>)\<\/p\>', r'\g<img>'),

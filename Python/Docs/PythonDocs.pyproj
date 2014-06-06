@@ -65,10 +65,13 @@
     <Content Include="User\Documentation.md" />
     <Content Include="User\AzureSDK.md" />
     <Content Include="User\Features Browsing.md" />
+    <Content Include="User\Features Cloud Project.md" />
     <Content Include="User\Features Debugging.md" />
     <Content Include="User\Features Matrix.md" />
     <Content Include="User\Features Web Project.md" />
+    <Content Include="User\Images\AzureCloudProject.png" />
     <Content Include="User\Images\NewProjectWeb.png" />
+    <Content Include="User\Images\PublishCloudProject.png" />
     <Content Include="User\Images\PyLintCommand.png" />
     <Content Include="User\Images\PyLintErrorList.png" />
     <Content Include="User\Features Editor.md" />
@@ -186,6 +189,7 @@
     <Content Include="User\Images\WebLauncherProperties.png" />
     <Content Include="User\Images\WebPIComponents.png" />
     <Content Include="User\Images\WebPublishMenu.png" />
+    <Content Include="User\Images\WorkerRoleSupportFiles.png" />
     <Content Include="User\PyLint.md" />
     <Content Include="User\Python Environments.md" />
     <Content Include="User\Where is PTVS installed%253f.md" />

@@ -76,17 +76,14 @@ These settings will launch the app using the installed `bottle` module.
 **Run Server**
 
 * Command: `bottle` (module)
-* Arguments: `--bind=%SERVER_HOST%:%SERVER_PORT% <startup module name>:app`
+* Arguments: `--bind=%SERVER_HOST%:%SERVER_PORT% {StartupModule}:app`
 
 **Debug Server**
 
 * Command: `bottle` (module)
-* Arguments: `--debug --bind=%SERVER_HOST%:%SERVER_PORT% <startup module name>:app`
+* Arguments: `--debug --bind=%SERVER_HOST%:%SERVER_PORT% {StartupModule}:app`
 
 (The `--reload` option is not recommended when using PTVS for debugging.)
-
-**Note:** There is a [issue:"known issue" 2322] with PTVS 2.1 Beta that prevents the use of `$(StartupModule)` and `$(StartupPath)`.
-To work around this, specify the importable name of your startup file manually.
 
 #### Pyramid
 
@@ -120,10 +117,10 @@ Publishing to Microsoft Azure
 
 Web projects can be published in a variety of ways.
 Deployment from source control can be used in the same way as for other languages.
-See the [documentation on Azure.com](http://azure.microsoft.com/en-us/documentation/articles/web-sites-publish-source-control/) for information on source control deployment.
+See the [Azure documentation](http://azure.microsoft.com/en-us/documentation/articles/web-sites-publish-source-control/) for information on source control deployment.
 
 Deploying to an Azure Web Site or Cloud Service requires the [Azure SDK Tools for VS 2013](http://go.microsoft.com/fwlink/p/?linkid=323510) (or for [VS 2012](http://go.microsoft.com/fwlink/p/?linkid=323511)), obtainable through the [Web Platform Installer](http://www.microsoft.com/web/downloads/platform.aspx).
-With these tools installed, Python projects will gain two commands in the Project menu and the context menu in Solution Explorer:
+With these tools installed, Python projects will display a Publish command in the Project menu:
 
 ![Publish command](Images/WebPublishMenu.png)
 
@@ -138,9 +135,5 @@ The "Convert to Windows Azure Cloud Service Project" command will add a Cloud Se
 This project includes the deployment settings and configuration for the virtual machines and services to be used.
 You should use the Publish command on the cloud project to deploy to Cloud Service; the Publish command on the Python project will still deploy to Web Sites.
 
-See the [documentation on Azure.com](http://azure.microsoft.com/en-us/documentation/services/cloud-services/) for more information on creating and deploying to Cloud Service.
-
-[wiki:"WebPI references" Features Project#webpi-projects] can be used when deploying to Cloud Service to automatically install dependencies.
-A custom feed can be used to define your own dependencies, other than the ones included in the default feed.
-See the [documentation on TechNet](http://technet.microsoft.com/en-us/library/ee424350(v=ws.10).aspx) for information on the WebPI feed schema.
+See our [wiki:"Cloud Service Projects" Features Cloud Project] page for more information on Microsoft Azure Cloud Service.
 
