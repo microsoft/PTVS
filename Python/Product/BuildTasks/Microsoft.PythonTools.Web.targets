@@ -227,14 +227,14 @@
            Condition="$(VirtualEnvEnabled) and '$(VirtualEnvIsVenv)' == ''" />
   </Target>
 
-    <PropertyGroup>
+  <PropertyGroup>
     <!-- Setup default deployment values if none have yet been provided. These
          values will be replaced either before or after deployment.
     -->
     <DeployedPythonInterpreterPath Condition="'$(DeployedPythonInterpreterPath)' == ''">%INTERPRETERPATH%</DeployedPythonInterpreterPath>
     <DeployedSiteRoot Condition="'$(DeployedSiteRoot)' == ''">%ROOTDIR%</DeployedSiteRoot>
     <DeployedWFastCgiPath Condition="'$(DeployedWFastCgiPath)' == ''">%WFASTCGIPATH%</DeployedWFastCgiPath>
-    </PropertyGroup>
+  </PropertyGroup>
 
   <!-- *************************************************************************
        When the ImportParametersFiles target is executed (which only occurs for
@@ -249,8 +249,11 @@
     <PropertyGroup>
       <SuppressGenerateWebPiReference>true</SuppressGenerateWebPiReference>
       <SuppressCollectPythonCloudServiceFiles>true</SuppressCollectPythonCloudServiceFiles>
+      <SuppressWebSitesVirtualEnvError Condition="'$(SuppressWebSitesVirtualEnvError)' == ''">false</SuppressWebSitesVirtualEnvError>
     </PropertyGroup>
 
+    <Error Text="A virtual environment is required to deploy dependencies to Microsoft Azure Web Sites. Add &lt;SuppressWebSitesVirtualEnvError&gt;true&lt;/SuppressWebSitesVirtualEnvError&gt; to your project if you have no dependencies other than the Python standard library."
+           Condition="!$(SuppressWebSitesVirtualEnvError) and !$(VirtualEnvEnabled)" />
     <Error Text="$(PythonInterpreterDescription) is not supported on Web Sites. Please select Python 2.7 or 3.4."
            Condition="$(PythonVersion) != '2.7' and $(PythonVersion) != '3.4'" />
     <Warning Text="Only 32-bit environments are supported on Web Sites. Your site will use the 32-bit version of $(PythonInterpreterDescription)."
@@ -1051,7 +1054,8 @@ $(_CloudServiceAzureSetupConfig)
                              Arguments="$(PythonRunWebServerCommandArguments)"
                              Environment="$(PythonRunWebServerCommandEnvironment)"
                              WorkingDirectory="$(WorkingDirectory)"
-                             ExecuteIn="console">
+                             ExecuteIn="console"
+                             Condition="'$(PythonRunWebServerCommand)' != ''">
       <Output TaskParameter="Command" ItemName="Commands" />
     </CreatePythonCommandItem>
   </Target>
@@ -1080,7 +1084,8 @@ $(_CloudServiceAzureSetupConfig)
                              Arguments="$(PythonDebugWebServerCommandArguments)"
                              Environment="$(PythonDebugWebServerCommandEnvironment)"
                              WorkingDirectory="$(WorkingDirectory)"
-                             ExecuteIn="console">
+                             ExecuteIn="console"
+                             Condition="'$(PythonDebugWebServerCommand)' != ''">
       <Output TaskParameter="Command" ItemName="Commands" />
     </CreatePythonCommandItem>
   </Target>

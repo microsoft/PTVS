@@ -36,6 +36,15 @@ namespace Microsoft.PythonTools.Project {
             new Guid("{725071E1-96AE-4405-9303-1BA64EFF6EBD}")  // Worker Role Project marker
         };
 
+        // These targets files existed in PTVS 2.1 Beta but were removed. We
+        // want to replace them with some properties and Web.targets.
+        // Some intermediate builds of PTVS have different paths that will not
+        // be upgraded automatically.
+        private const string Ptvs21BetaBottleTargets = @"$(VSToolsPath)\Python Tools\Microsoft.PythonTools.Bottle.targets";
+        private const string Ptvs21BetaFlaskTargets = @"$(VSToolsPath)\Python Tools\Microsoft.PythonTools.Flask.targets";
+
+        private const string WebTargets = @"$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.Web.targets";
+
         public PythonProjectFactory(PythonProjectPackage/*!*/ package)
             : base(package) {
         }
@@ -89,6 +98,13 @@ namespace Microsoft.PythonTools.Project {
             }
 #endif
 
+            // Importing a targets file from 2.1 Beta
+            if (projectXml.Imports.Any(p =>
+                p.Project.Equals(Ptvs21BetaBottleTargets, StringComparison.OrdinalIgnoreCase) ||
+                p.Project.Equals(Ptvs21BetaFlaskTargets, StringComparison.OrdinalIgnoreCase))) {
+                return ProjectUpgradeState.SafeRepair;
+            }
+
             // ToolsVersion less than 4.0 (or unspecified) is not supported, so
             // set it to 4.0.
             if (!Version.TryParse(projectXml.ToolsVersion, out version) ||
@@ -123,6 +139,30 @@ namespace Microsoft.PythonTools.Project {
                 projectXml.ToolsVersion = "4.0";
                 log(__VSUL_ERRORLEVEL.VSUL_INFORMATIONAL, SR.GetString(SR.UpgradedToolsVersion));
             }
+
+            // Importing a targets file from 2.1 Beta
+            var bottleImports = projectXml.Imports.Where(p => p.Project.Equals(Ptvs21BetaBottleTargets, StringComparison.OrdinalIgnoreCase)).ToList();
+            var flaskImports = projectXml.Imports.Where(p => p.Project.Equals(Ptvs21BetaFlaskTargets, StringComparison.OrdinalIgnoreCase)).ToList();
+            foreach (var import in bottleImports.Concat(flaskImports)) {
+                import.Project = WebTargets;
+            }
+
+            if (bottleImports.Any()) {
+                var globals = projectXml.PropertyGroups.FirstOrDefault() ?? projectXml.AddPropertyGroup();
+                AddOrSetProperty(globals, "PythonDebugWebServerCommandArguments", "--debug $(CommandLineArguments)");
+                AddOrSetProperty(globals, "PythonWebFrameworkPackage", "bottle");
+                AddOrSetProperty(globals, "PythonWebFrameworkPackageDisplayName", "Bottle");
+                AddOrSetProperty(globals, "PythonWsgiHandler", "{StartupModule}.wsgi_app()");
+                log(__VSUL_ERRORLEVEL.VSUL_INFORMATIONAL, SR.GetString(SR.UpgradedBottleImports));
+            }
+            if (flaskImports.Any()) {
+                var globals = projectXml.PropertyGroups.FirstOrDefault() ?? projectXml.AddPropertyGroup();
+                AddOrSetProperty(globals, "PythonWebFrameworkPackage", "flask");
+                AddOrSetProperty(globals, "PythonWebFrameworkPackageDisplayName", "Flask");
+                AddOrSetProperty(globals, "PythonWsgiHandler", "{StartupModule}.wsgi_app");
+                log(__VSUL_ERRORLEVEL.VSUL_INFORMATIONAL, SR.GetString(SR.UpgradedFlaskImports));
+            }
+
 
 #if !DEV12_OR_LATER
             if (userProjectXml != null) {
@@ -168,5 +208,16 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
+        private static void AddOrSetProperty(ProjectPropertyGroupElement group, string name, string value) {
+            bool anySet = false;
+            foreach (var prop in group.Properties.Where(p => p.Name == name)) {
+                prop.Value = value;
+                anySet = true;
+            }
+
+            if (!anySet) {
+                group.AddProperty(name, value);
+            }
+        }
     }
 }

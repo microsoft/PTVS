@@ -425,6 +425,10 @@ namespace Microsoft.PythonTools.Django.Project {
             public ContextMarker() {
                 Arguments = new HashSet<AnalysisValue>();
             }
+
+            public override IEnumerable<KeyValuePair<IAnalysisSet, IAnalysisSet>> GetItems() {
+                return Arguments.SelectMany(av => av.GetItems());
+            }
         }
 
         private IAnalysisSet ContextClassProcessor(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {

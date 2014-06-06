@@ -933,6 +933,7 @@
     <ZipProject Include="Templates\Projects\StarterBottleProject\Readme.mht" />
     <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\Readme.mht" />
     <ZipProject Include="Templates\Projects\StarterFlaskProject\Readme.mht" />
+    <None Include="Templates\Projects\CloudService\Readme.mht" />
     <None Include="Templates\SharedFiles\Readme\WorkerRoleConfiguration.html" />
     <SharedTemplateFile Include="Templates\SharedFiles\ConfigureCloudService.ps1">
       <IncludeInWebRoleTemplates>true</IncludeInWebRoleTemplates>
@@ -1023,6 +1024,11 @@
     <None Include="Templates\Projects\StarterFlaskProject\Readme\readme.html" />
     <None Include="Templates\Projects\StarterFlaskProject\Readme\VirtualEnvironmentCreated.png" />
     <Content Include="ReadmeStyle.css" />
+    <Content Include="Templates\Projects\CloudService\Readme\AddNewWebRole.png" />
+    <Content Include="Templates\Projects\CloudService\Readme\AddNewWorkerRole.png" />
+    <Content Include="Templates\Projects\CloudService\Readme\NewWebRoleDialog.png" />
+    <Content Include="Templates\Projects\CloudService\Readme\NewWorkerRoleDialog.png" />
+    <Content Include="Templates\Projects\CloudService\Readme\readme.html" />
     <Content Include="visualstudio_py_debugger.py">
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

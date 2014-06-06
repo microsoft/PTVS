@@ -402,7 +402,10 @@ namespace Microsoft.PythonTools.TestAdapter {
                 if (usePtvsd) {
                     var secretBuffer = new byte[24];
                     RandomNumberGenerator.Create().GetNonZeroBytes(secretBuffer);
-                    DebugSecret = Convert.ToBase64String(secretBuffer);
+                    DebugSecret = Convert.ToBase64String(secretBuffer)
+                        .Replace('+', '-')
+                        .Replace('/', '_')
+                        .TrimEnd('=');
 
                     DebugPort = GetFreePort();
 

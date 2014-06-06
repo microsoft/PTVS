@@ -59,5 +59,52 @@ namespace Microsoft.PythonTools.ProjectWizards.Properties {
                 resourceCulture = value;
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to These are a free download for your version of Visual Studio.
+        ///
+        ///After installation, you will need to restart Visual Studio..
+        /// </summary>
+        internal static string AzureToolsInstallInstructions {
+            get {
+                return ResourceManager.GetString("AzureToolsInstallInstructions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This project type requires the Azure Tools for Visual Studio..
+        /// </summary>
+        internal static string AzureToolsRequired {
+            get {
+                return ResourceManager.GetString("AzureToolsRequired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Download and install now.
+        /// </summary>
+        internal static string DownloadAndInstall {
+            get {
+                return ResourceManager.GetString("DownloadAndInstall", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to start wizard: no automation object available..
+        /// </summary>
+        internal static string ErrorNoDte {
+            get {
+                return ResourceManager.GetString("ErrorNoDte", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Python Tools for Visual Studio.
+        /// </summary>
+        internal static string PythonToolsForVisualStudio {
+            get {
+                return ResourceManager.GetString("PythonToolsForVisualStudio", resourceCulture);
+            }
+        }
     }
 }

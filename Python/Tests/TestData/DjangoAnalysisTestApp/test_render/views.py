@@ -11,6 +11,9 @@ def test_render_to_response_view(request):
 def test_RequestContext_view(request):
     return render(request, 'test_RequestContext.html', context_instance=RequestContext(request, {'content': 'data'}))
 
+def test_RequestContext2_view(request):
+    return render(request, 'test_RequestContext2.html', RequestContext(request, {'content': 'data'}))
+
 @register.filter
 def test_filter(f):
     """this is my filter"""

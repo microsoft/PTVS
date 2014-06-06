@@ -80,10 +80,6 @@
       <IncludeInVsix>true</IncludeInVsix>
       <SubType>Designer</SubType>
     </Content>
-    <Content Include="Microsoft.PythonTools.Flask.targets">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVsix>true</IncludeInVsix>
-    </Content>
     <Content Include="ptvs_virtualenv_proxy.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVsix>true</IncludeInVsix>
@@ -101,17 +97,11 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVsix>true</IncludeInVsix>
     </Content>
-    <Content Include="Microsoft.PythonTools.Bottle.targets">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVsix>true</IncludeInVsix>
-    </Content>
     <Content Include="Microsoft.PythonTools.Worker.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVsix>true</IncludeInVsix>
       <SubType>Designer</SubType>
     </Content>
-    <None Include="TestTargets\Microsoft.PythonTools.Bottle.targets" />
-    <None Include="TestTargets\Microsoft.PythonTools.Flask.targets" />
     <None Include="TestTargets\Microsoft.PythonTools.Django.targets" />
     <None Include="TestTargets\Microsoft.PythonTools.targets" />
     <None Include="TestTargets\Microsoft.PythonTools.Web.targets" />

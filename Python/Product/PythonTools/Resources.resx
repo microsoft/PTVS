@@ -494,4 +494,13 @@ The web.config file will be configured to resolve URIs matching this pattern to 
     <value>A rewrite pattern to apply to URIs matching the static URI pattern, for example 'static_files/{R:1}' for a pattern '^static/(.*)'
 By default, URIs matching the pattern are mapped directly to a file system path.</value>
   </data>
+  <data name="UpgradedBottleImports" xml:space="preserve">
+    <value>This Bottle project has been upgraded and will no longer work with PTVS 2.1 Beta.</value>
+  </data>
+  <data name="UpgradedFlaskImports" xml:space="preserve">
+    <value>This Flask project has been upgraded and will no longer work with PTVS 2.1 Beta.</value>
+  </data>
+  <data name="NoStartupFileAvailable" xml:space="preserve">
+    <value>Your project needs a Python script marked as the startup file to perform this operation.</value>
+  </data>
 </root>

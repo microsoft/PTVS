@@ -325,7 +325,7 @@ namespace Microsoft.PythonTools.Project {
             string startupFile = _project.GetStartupFile();
             if (string.IsNullOrEmpty(startupFile)) {
                 //TODO: need to start active file then
-                throw new ApplicationException("No startup file is defined for the startup project.");
+                throw new InvalidOperationException(SR.GetString(SR.NoStartupFileAvailable));
             }
             return startupFile;
         }

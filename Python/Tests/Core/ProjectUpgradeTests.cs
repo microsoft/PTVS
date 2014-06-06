@@ -162,6 +162,68 @@ namespace PythonToolsTests {
             }
         }
 
+        [TestMethod, Priority(1)]
+        public void OldWebProjectUpgrade() {
+            // PTVS 2.1 Beta 1 shipped with separate .targets files for Bottle
+            // and Flask. In PTVS 2.1 Beta 2 these were removed. This test
+            // ensures that we upgrade projects created in 2.1 Beta 1.
+            var factory = new PythonProjectFactory(null);
+            var sp = new MockServiceProvider();
+            sp.Services["SVsQueryEditQuerySave"] = null;
+            sp.Services["SVsActivityLog"] = new MockActivityLog();
+            factory.Site = sp;
+
+            var upgrade = (IVsProjectUpgradeViaFactory)factory;
+            foreach (var testCase in new[] {
+                new { Name = "OldBottleProject.pyproj", Expected = 1 },
+                new { Name = "OldFlaskProject.pyproj", Expected = 1 }
+            }) {
+                int actual;
+                Guid factoryGuid;
+                string newLocation;
+
+                // Use a copy of the project so we don't interfere with other
+                // tests using them.
+                var origProject = Path.Combine("TestData", "ProjectUpgrade", testCase.Name);
+                var tempProject = Path.Combine(TestData.GetTempPath("ProjectUpgrade"), testCase.Name);
+                File.Copy(origProject, tempProject);
+
+                var hr = upgrade.UpgradeProject(
+                    tempProject,
+                    0u,  // no backups
+                    null,
+                    out newLocation,
+                    null,
+                    out actual,
+                    out factoryGuid
+                );
+
+                Assert.AreEqual(0, hr, string.Format("Wrong HR for {0}", testCase.Name));
+                Assert.AreEqual(testCase.Expected, actual, string.Format("Wrong result for {0}", testCase.Name));
+                Assert.AreEqual(tempProject, newLocation, string.Format("Wrong location for {0}", testCase.Name));
+                if (testCase.Expected != 0) {
+                    Assert.IsFalse(
+                        File.ReadAllText(tempProject).Contains("<Import Project=\"$(VSToolsPath)"),
+                        string.Format("Upgraded {0} should not import from $(VSToolsPath)", testCase.Name)
+                    );
+                    Assert.IsTrue(
+                        File.ReadAllText(tempProject).Contains("Microsoft.PythonTools.Web.targets"),
+                        string.Format("Upgraded {0} should import Web.targets", testCase.Name)
+                    );
+                    Assert.IsTrue(
+                        File.ReadAllText(tempProject).Contains("<PythonWsgiHandler>"),
+                        string.Format("Upgraded {0} should contain <PythonWsgiHandler>", testCase.Name)
+                    );
+                } else {
+                    Assert.IsTrue(
+                        File.ReadAllText(tempProject) == File.ReadAllText(origProject),
+                        string.Format("Non-upgraded {0} has different content to original", testCase.Name)
+                    );
+                }
+                Assert.AreEqual(typeof(PythonProjectFactory).GUID, factoryGuid);
+            }
+        }
+
 #if DEV12_OR_LATER
         [TestMethod, Priority(0)]
         public void WebProjectCompatibility() {

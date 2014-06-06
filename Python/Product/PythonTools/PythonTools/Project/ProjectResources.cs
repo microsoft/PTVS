@@ -83,6 +83,7 @@ namespace Microsoft.PythonTools.Project {
         public const string PythonMenuLabel = "PythonMenuLabel";
 
         public const string NoInterpretersAvailable = "NoInterpretersAvailable";
+        public const string NoStartupFileAvailable = "NoStartupFileAvailable";
         
         public const string ErrorImportWizardUnauthorizedAccess = "ErrorImportWizardUnauthorizedAccess";
         public const string ErrorImportWizardException = "ErrorImportWizardException";
@@ -138,6 +139,8 @@ namespace Microsoft.PythonTools.Project {
 
         public const string UpgradedToolsVersion = "UpgradedToolsVersion";
         public const string UpgradedUserToolsVersion = "UpgradedUserToolsVersion";
+        public const string UpgradedBottleImports = "UpgradedBottleImports";
+        public const string UpgradedFlaskImports = "UpgradedFlaskImports";
 
         public const string ProjectRequiresVWDExpress = "ProjectRequiresVWDExpress";
         public const string AddWebRoleSupportFiles = "AddWebRoleSupportFiles";

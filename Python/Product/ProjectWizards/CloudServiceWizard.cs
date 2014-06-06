@@ -20,6 +20,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Windows.Forms;
+using Microsoft.PythonTools.ProjectWizards.Properties;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -44,7 +45,8 @@ namespace Microsoft.PythonTools.ProjectWizards {
 
         public CloudServiceWizard() {
             try {
-                // If we fail to 
+                // If we fail to find the wizard, we will redirect the user to
+                // the WebPI download.
                 var asm = Assembly.Load("Microsoft.VisualStudio.CloudService.Wizard,Version=1.0.0.0,Culture=neutral,PublicKeyToken=b03f5f7f11d50a3a");
                 var type = asm.GetType("Microsoft.VisualStudio.CloudService.Wizard.CloudServiceWizard");
                 _wizard = type.InvokeMember(null, BindingFlags.CreateInstance, null, null, new object[0]) as IWizard;
@@ -97,7 +99,7 @@ namespace Microsoft.PythonTools.ProjectWizards {
                 }
             }
             if (dte == null) {
-                MessageBox.Show("Unable to start wizard: no automation object available.", "Python Tools for Visual Studio");
+                MessageBox.Show(Resources.ErrorNoDte, Resources.PythonToolsForVisualStudio);
                 return;
             }
             if (provider == null) {
@@ -113,11 +115,12 @@ namespace Microsoft.PythonTools.ProjectWizards {
                 }
 
                 var dlg = new TaskDialog(provider) {
-                    Title = "Python Tools for Visual Studio",
-                    Content = "This project type requires the Azure Tools for Visual Studio.",
+                    Title = Resources.PythonToolsForVisualStudio,
+                    MainInstruction = Resources.AzureToolsRequired,
+                    Content = Resources.AzureToolsInstallInstructions,
                     AllowCancellation = true
                 };
-                var download = new TaskDialogButton("Download and install now");
+                var download = new TaskDialogButton(Resources.DownloadAndInstall);
                 dlg.Buttons.Add(download);
                 dlg.Buttons.Add(TaskDialogButton.Cancel);
 

@@ -100,13 +100,33 @@ namespace Microsoft.PythonTools.Project.Web {
                 return VSConstants.S_OK;
             }
 
-            CommandStartInfo startInfo;
+            CommandStartInfo startInfo = null;
             var project2 = _project as IPythonProject2;
             if (customCmd != null && project2 != null) {
                 // We have one of our own commands, so let's use the actual
                 // start info.
-                startInfo = customCmd.GetStartInfo(project2);
-            } else {
+                try {
+                    startInfo = customCmd.GetStartInfo(project2);
+                } catch (InvalidOperationException ex) {
+                    var target = _project.GetProperty(debug ? 
+                        DebugWebServerTargetProperty :
+                        RunWebServerTargetProperty
+                    );
+                    if (string.IsNullOrEmpty(target) && !File.Exists(_project.GetStartupFile())) {
+                        // The exception was raised because no startup file
+                        // is set.
+                        throw new InvalidOperationException(SR.GetString(SR.NoStartupFileAvailable), ex);
+                    } else {
+                        throw;
+                    }
+                }
+            } 
+            
+            if (startInfo == null) {
+                if (!File.Exists(_project.GetStartupFile())) {
+                    throw new InvalidOperationException(SR.GetString(SR.NoStartupFileAvailable));
+                }
+
                 // No command, so set up a startInfo that looks like the default
                 // launcher.
                 startInfo = new CommandStartInfo {

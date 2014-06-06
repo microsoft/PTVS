@@ -58,6 +58,7 @@ namespace DjangoTests {
         [TestMethod, Priority(0), TestCategory("Core")]
         public void TestRequestContext() {
             TestSingleRenderVariable("test_RequestContext.html");
+            TestSingleRenderVariable("test_RequestContext2.html");
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]

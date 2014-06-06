@@ -118,8 +118,6 @@
     <MSBuildFile Include="Microsoft.PythonTools.targets;
                           Microsoft.PythonTools.Web.targets;
                           Microsoft.PythonTools.Worker.targets;
-                          Microsoft.PythonTools.Bottle.targets;
-                          Microsoft.PythonTools.Flask.targets;
                           wfastcgi.py;
                           web_config.xml;
                           web_debug_config.xml;

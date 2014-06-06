@@ -104,8 +104,12 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
 
             AddOrSetProperty(globals, "ProjectTypeGuids", "{e614c764-6d9e-4607-9337-b7073809a0bd};{1b580a1a-fdb3-4b32-83e1-6407eb2722e6};{349c5851-65df-11da-9384-00065b846f21};{888888a0-9f3d-457c-b088-3a5042f75d52}");
             AddOrSetProperty(globals, "LaunchProvider", PythonConstants.WebLauncherName);
+            AddOrSetProperty(globals, "PythonDebugWebServerCommandArguments", "--debug $(CommandLineArguments)");
+            AddOrSetProperty(globals, "PythonWebFrameworkPackage", "bottle");
+            AddOrSetProperty(globals, "PythonWebFrameworkPackageDisplayName", "Bottle");
+            AddOrSetProperty(globals, "PythonWsgiHandler", "{StartupModule}.wsgi_app()");
 
-            project.AddImport(@"$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.Bottle.targets");
+            project.AddImport(@"$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.Web.targets");
         }
     }
 
@@ -159,8 +163,11 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
 
             AddOrSetProperty(globals, "ProjectTypeGuids", "{789894c7-04a9-4a11-a6b5-3f4435165112};{1b580a1a-fdb3-4b32-83e1-6407eb2722e6};{349c5851-65df-11da-9384-00065b846f21};{888888a0-9f3d-457c-b088-3a5042f75d52}");
             AddOrSetProperty(globals, "LaunchProvider", PythonConstants.WebLauncherName);
+            AddOrSetProperty(globals, "PythonWebFrameworkPackage", "flask");
+            AddOrSetProperty(globals, "PythonWebFrameworkPackageDisplayName", "Flask");
+            AddOrSetProperty(globals, "PythonWsgiHandler", "{StartupModule}.wsgi_app");
 
-            project.AddImport(@"$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.Flask.targets");
+            project.AddImport(@"$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.Web.targets");
         }
     }
 

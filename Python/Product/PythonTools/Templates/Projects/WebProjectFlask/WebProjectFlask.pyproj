@@ -11,6 +11,9 @@
     <WorkingDirectory>.</WorkingDirectory>
     <LaunchProvider>Web launcher</LaunchProvider>
     <OutputPath>.</OutputPath>
+    <PythonWebFrameworkPackage>flask</PythonWebFrameworkPackage>
+    <PythonWebFrameworkPackageDisplayName>Flask</PythonWebFrameworkPackageDisplayName>
+    <PythonWsgiHandler>{StartupModule}.wsgi_app</PythonWsgiHandler>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -23,7 +26,7 @@
   <ItemGroup>
     <Compile Include="app.py" />
   </ItemGroup>
-  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.Flask.targets" />
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.Web.targets" />
   <!-- Specify pre- and post-build commands in the BeforeBuild and 
        AfterBuild targets below. -->
   <Target Name="BeforeBuild">

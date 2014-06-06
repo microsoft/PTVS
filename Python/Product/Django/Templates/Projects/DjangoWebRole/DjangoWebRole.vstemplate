@@ -5,7 +5,7 @@
     <Hidden>true</Hidden>
     <Icon Package="{a8637c34-aa55-46e2-973c-9c3e09afc17b}" ID="410" />
     <ProjectType>Python</ProjectType>
-    <SortOrder>72</SortOrder>
+    <SortOrder>71</SortOrder>
     <NumberOfParentCategoriesToRollUp>0</NumberOfParentCategoriesToRollUp>
     <CreateNewFolder>true</CreateNewFolder>
     <DefaultName>WebRole</DefaultName>

@@ -144,7 +144,8 @@ namespace Microsoft.VisualStudioTools {
             if (transport == null) {
                 return false;
             }
-            var processes = debugger3.GetProcesses(transport, string.Format("{0}@localhost:{1}", secret, port));
+
+            var processes = debugger3.GetProcesses(transport, string.Format("tcp://{0}@localhost:{1}", secret, port));
             if (processes.Count < 1) {
                 return false;
             }
