@@ -933,7 +933,7 @@
     <ZipProject Include="Templates\Projects\StarterBottleProject\Readme.mht" />
     <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\Readme.mht" />
     <ZipProject Include="Templates\Projects\StarterFlaskProject\Readme.mht" />
-    <None Include="Templates\Projects\CloudService\Readme.mht" />
+    <ZipProject Include="Templates\Projects\CloudService\Readme.mht" />
     <None Include="Templates\SharedFiles\Readme\WorkerRoleConfiguration.html" />
     <SharedTemplateFile Include="Templates\SharedFiles\ConfigureCloudService.ps1">
       <IncludeInWebRoleTemplates>true</IncludeInWebRoleTemplates>

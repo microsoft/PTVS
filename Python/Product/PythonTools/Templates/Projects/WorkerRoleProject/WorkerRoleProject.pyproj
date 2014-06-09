@@ -27,7 +27,7 @@
     <Content Include="requirements.txt" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="bin\Readme.mht">
+    <None Include="Readme.mht">
       <SubType>WebBrowser</SubType>
     </None>
   </ItemGroup>
