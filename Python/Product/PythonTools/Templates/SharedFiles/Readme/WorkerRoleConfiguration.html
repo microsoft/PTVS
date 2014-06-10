@@ -25,11 +25,11 @@
         </p>
         <ol>
             <li>Open your ServiceDefinition.csdef file: <img src="ServiceDefinition.png" /></li>
-            <li>Find your new <code>&lt;workerrole role="{your project name}"&gt;</code> element.</li>
-            <li>Copy and paste the XML below as a child of the <code>workerrole</code> element.</li>
+            <li>Find your new <code>&lt;WorkerRole role="{your project name}"&gt;</code> element.</li>
+            <li>Copy and paste the XML below as a child of the <code>WorkerRole</code> element.</li>
         </ol>
 
-        <textarea contenteditable="false" cols="75" rows="25">
+        <textarea contenteditable="false" cols="75" rows="23">
 &lt;Startup&gt;
   &lt;Task commandLine="bin\ps.cmd ConfigureCloudService.ps1" executionContext="elevated" taskType="simple"&gt;
     &lt;Environment&gt;
@@ -51,7 +51,6 @@
 &lt;/Runtime&gt;
 </textarea>
     </div>
-    <p class="hint">This readme file may be deleted once your configuration has been updated.</p>
 
     <h1>Configuring Deployment</h1>
 
@@ -137,5 +136,8 @@
             for further help.
         </li>
     </ol>
+    
+    <hr/>
+    <p class="hint">This readme file may be deleted when you no longer need it.</p>
 </body>
 </html>

@@ -1,15 +1,15 @@
 From: "Saved by Internet Explorer 11"
 Subject: Python Worker Role Configuration
-Date: Fri, 6 Jun 2014 09:22:29 -0700
+Date: Tue, 10 Jun 2014 07:55:47 -0700
 MIME-Version: 1.0
 Content-Type: multipart/related;
 	type="text/html";
-	boundary="----=_NextPart_000_006B_01CF8168.D6C6FA20"
+	boundary="----=_NextPart_000_0007_01CF8481.63A48E10"
 X-MimeOLE: Produced By Microsoft MimeOLE V6.3.9600.16384
 
 This is a multi-part message in MIME format.
 
-------=_NextPart_000_006B_01CF8168.D6C6FA20
+------=_NextPart_000_0007_01CF8481.63A48E10
 Content-Type: text/html;
 	charset="utf-8"
 Content-Transfer-Encoding: quoted-printable
@@ -50,12 +50,12 @@ rel=3D"stylesheet" type=3D"text/css">=20
   <LI>Open your ServiceDefinition.csdef file: <IMG =
 src=3D"file:///D:/PTVS/Main/Python/Product/PythonTools/Templates/SharedFi=
 les/Readme/ServiceDefinition.png"></LI>
-  <LI>Find your new <CODE>&lt;workerrole role=3D"{your project =
+  <LI>Find your new <CODE>&lt;WorkerRole role=3D"{your project =
 name}"&gt;</CODE>=20
   element.</LI>
   <LI>Copy and paste the XML below as a child of the =
-<CODE>workerrole</CODE>=20
-  element.</LI></OL><TEXTAREA contenteditable=3D"false" rows=3D"25" =
+<CODE>WorkerRole</CODE>=20
+  element.</LI></OL><TEXTAREA contenteditable=3D"false" rows=3D"23" =
 cols=3D"75">&lt;Startup&gt;=0A=
   &lt;Task commandLine=3D"bin\ps.cmd ConfigureCloudService.ps1" =
 executionContext=3D"elevated" taskType=3D"simple"&gt;=0A=
@@ -81,9 +81,6 @@ setReadyOnProcessStart=3D"true" /&gt;=0A=
 &lt;/Runtime&gt;=0A=
 </TEXTAREA>=20
     </DIV>
-<P class=3D"hint">This readme file may be deleted once your =
-configuration has been=20
-updated.</P>
 <H1>Configuring Deployment</H1>
 <P>        While the code above and the included PowerShell scripts may =
 be=20
@@ -159,10 +156,14 @@ Python=20
   program.             </P></LI>
   <LI>            Start a discussion at             <A =
 href=3D"http://go.microsoft.com/fwlink/?LinkId=3D293415">our=20
-  discussion forum</A>            for further help.        =20
-</LI></OL></BODY></HTML>
+  discussion forum</A>            for further help.         </LI></OL>
+<HR>
 
-------=_NextPart_000_006B_01CF8168.D6C6FA20
+<P class=3D"hint">This readme file may be deleted when you no longer =
+need=20
+it.</P></BODY></HTML>
+
+------=_NextPart_000_0007_01CF8481.63A48E10
 Content-Type: image/png
 Content-Transfer-Encoding: base64
 Content-Location: file:///D:/PTVS/Main/Python/Product/PythonTools/Templates/SharedFiles/Readme/ServiceDefinition.png
@@ -275,7 +276,7 @@ XyS7dJtOZ/hoZ5TqCqSTycGSxVOdCeZYCBi4e84U5PdeBlnW+hk0KKrLR3dN2agYE7GUyxhhlOte
 yZQhVrpLLOUyhqWclWykh1CukLCUs5KNWMpljHhSzkqxiKVcxrCUs5KNuJSzkr4Yk2jFSvoiKWfF
 ipUCyXOv/j9FmrG1Vlw4sQAAAABJRU5ErkJggg==
 
-------=_NextPart_000_006B_01CF8168.D6C6FA20
+------=_NextPart_000_0007_01CF8481.63A48E10
 Content-Type: text/css;
 	charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
@@ -323,4 +324,4 @@ li > img {
 	vertical-align: middle;
 }
 
-------=_NextPart_000_006B_01CF8168.D6C6FA20--
+------=_NextPart_000_0007_01CF8481.63A48E10--

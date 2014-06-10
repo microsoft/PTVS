@@ -1,15 +1,15 @@
 From: "Saved by Internet Explorer 11"
 Subject: Python Web Role Configuration
-Date: Fri, 6 Jun 2014 09:22:46 -0700
+Date: Tue, 10 Jun 2014 07:55:56 -0700
 MIME-Version: 1.0
 Content-Type: multipart/related;
 	type="text/html";
-	boundary="----=_NextPart_000_0072_01CF8168.E09C1120"
+	boundary="----=_NextPart_000_0000_01CF8481.690CFC20"
 X-MimeOLE: Produced By Microsoft MimeOLE V6.3.9600.16384
 
 This is a multi-part message in MIME format.
 
-------=_NextPart_000_0072_01CF8168.E09C1120
+------=_NextPart_000_0000_01CF8481.690CFC20
 Content-Type: text/html;
 	charset="utf-8"
 Content-Transfer-Encoding: quoted-printable
@@ -50,13 +50,13 @@ rel=3D"stylesheet" type=3D"text/css">=20
   <LI>Open your ServiceDefinition.csdef file: <IMG =
 src=3D"file:///D:/PTVS/Main/Python/Product/PythonTools/Templates/SharedFi=
 les/Readme/ServiceDefinition.png"></LI>
-  <LI>Find your new <CODE>&lt;webrole role=3D"{your project =
+  <LI>Find your new <CODE>&lt;WebRole role=3D"{your project =
 name}"&gt;</CODE>=20
   element.</LI>
   <LI>Copy and paste the XML below as a child of the =
-<CODE>workerrole</CODE>=20
-  element.</LI></OL><TEXTAREA contenteditable=3D"false" rows=3D"14" =
-cols=3D"75">&lt;Startup&gt;=0A=
+<CODE>WebRole</CODE>=20
+  element.</LI></OL><TEXTAREA id=3D"code" contenteditable=3D"false" =
+rows=3D"12" cols=3D"75">&lt;Startup&gt;=0A=
   &lt;Task commandLine=3D"ps.cmd ConfigureCloudService.ps1" =
 executionContext=3D"elevated" taskType=3D"simple"&gt;=0A=
     &lt;Environment&gt;=0A=
@@ -69,23 +69,20 @@ xpath=3D"/RoleEnvironment/Deployment/@emulated" /&gt;=0A=
 &lt;/Startup&gt;=0A=
 </TEXTAREA>=20
     </DIV>
-<P class=3D"hint">This readme file may be deleted once your =
-configuration has been=20
-updated.</P>
 <H1>Configuring Deployment</H1>
 <P>        While the code above and the included PowerShell scripts may =
 be=20
 edited        freely, it is possible to set most configuration options =
 through=20
 your        Python project.     </P>
-<P>        To specify the version of Python your worker should run with, =
-make it=20
-       the active environment for your project. (Ensure that you have a =
-WebPI   =20
-    reference or startup task to install this version on the instance - =
-see     =20
-  the documentation in <CODE>ConfigureCloudService.ps1</CODE> for more   =
-    =20
+<P>        To specify the version of Python your web should run with, =
+make it   =20
+    the active environment for your project. (Ensure that you have a =
+WebPI      =20
+ reference or startup task to install this version on the instance - see =
+      =20
+the documentation in <CODE>ConfigureCloudService.ps1</CODE> for more     =
+  =20
 details.)     </P>
 <P>        If your version of Python cannot be detected using the =
 CPython=20
@@ -102,7 +99,7 @@ project.=20
     </P>
 <P>        To set <CODE>PYTHONPATH</CODE> (or equivalent) before running =
 the    =20
-   worker, add the necessary Search Paths to your project.     </P>
+   web, add the necessary Search Paths to your project.     </P>
 <P>        To specify your main handler script, make it the startup file =
 in your=20
        project. Alternatively, you can set the full importable name of =
@@ -146,10 +143,14 @@ on the=20
 </LI></UL></LI>
   <LI>            Start a discussion at             <A =
 href=3D"http://go.microsoft.com/fwlink/?LinkId=3D293415">our=20
-  discussion forum</A>            for further help.        =20
-</LI></OL></BODY></HTML>
+  discussion forum</A>            for further help.         </LI></OL>
+<HR>
 
-------=_NextPart_000_0072_01CF8168.E09C1120
+<P class=3D"hint">This readme file may be deleted when you no longer =
+need=20
+it.</P></BODY></HTML>
+
+------=_NextPart_000_0000_01CF8481.690CFC20
 Content-Type: image/png
 Content-Transfer-Encoding: base64
 Content-Location: file:///D:/PTVS/Main/Python/Product/PythonTools/Templates/SharedFiles/Readme/ServiceDefinition.png
@@ -262,7 +263,7 @@ XyS7dJtOZ/hoZ5TqCqSTycGSxVOdCeZYCBi4e84U5PdeBlnW+hk0KKrLR3dN2agYE7GUyxhhlOte
 yZQhVrpLLOUyhqWclWykh1CukLCUs5KNWMpljHhSzkqxiKVcxrCUs5KNuJSzkr4Yk2jFSvoiKWfF
 ipUCyXOv/j9FmrG1Vlw4sQAAAABJRU5ErkJggg==
 
-------=_NextPart_000_0072_01CF8168.E09C1120
+------=_NextPart_000_0000_01CF8481.690CFC20
 Content-Type: text/css;
 	charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
@@ -310,4 +311,4 @@ li > img {
 	vertical-align: middle;
 }
 
-------=_NextPart_000_0072_01CF8168.E09C1120--
+------=_NextPart_000_0000_01CF8481.690CFC20--
