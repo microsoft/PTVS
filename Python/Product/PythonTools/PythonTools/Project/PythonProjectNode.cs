@@ -28,6 +28,7 @@ using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Navigation;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Azure;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text.Adornments;
@@ -40,7 +41,7 @@ using VsMenus = Microsoft.VisualStudioTools.Project.VsMenus;
 
 namespace Microsoft.PythonTools.Project {
     [Guid(PythonConstants.ProjectNodeGuid)]
-    internal class PythonProjectNode : CommonProjectNode, IPythonProject2 {
+    internal class PythonProjectNode : CommonProjectNode, IPythonProject2, IAzureRoleProject {
         // For files that are analyzed because they were directly or indirectly referenced in the search path, store the information
         // about the directory from the search path that referenced them in IProjectEntry.Properties[_searchPathEntryKey], so that
         // they can be located and removed when that directory is removed from the path.
@@ -1369,6 +1370,12 @@ namespace Microsoft.PythonTools.Project {
             int hr = base.ShowAllFiles();
             BoldActiveEnvironment();
             return hr;
+        }
+
+        public void AddedAsRole(object azureProjectHierarchy, string roleType) {
+            var hier = azureProjectHierarchy as IVsHierarchy;
+            Debug.Assert(hier != null);
+            // TODO: modify the service definition appropriately
         }
     }
 }

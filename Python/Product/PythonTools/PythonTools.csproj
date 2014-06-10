@@ -281,6 +281,7 @@
     <Compile Include="NoInterpretersException.cs" />
     <Compile Include="ProvideLanguageTemplatesAttribute.cs" />
     <Compile Include="PythonToolsInstallPath.cs" />
+    <Compile Include="PythonTools\AzureToolsContracts.cs" />
     <Compile Include="PythonTools\Commands\AzureExplorerAttachDebuggerCommand.cs" />
     <Compile Include="PythonTools\Intellisense\EntryEventArgs.cs" />
     <Compile Include="PythonTools\Intellisense\TaskProvider.cs" />
