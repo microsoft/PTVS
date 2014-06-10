@@ -49,9 +49,9 @@ namespace TestUtilities.Mocks {
 
                 while (changesStack.Count > 0) {
                     foreach (var change in changesStack.Pop()) {
-                        if (change.NewPosition < newStart) {
+                        if (change.NewPosition <= newStart) {
                             newStart -= change.Delta;
-                        } else if (change.NewPosition < newStart + newLength) {
+                        } else if (change.NewPosition <= newStart + newLength) {
                             newLength -= change.Delta;
                         }
                     }

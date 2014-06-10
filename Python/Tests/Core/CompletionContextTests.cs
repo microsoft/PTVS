@@ -31,6 +31,7 @@ using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Utilities;
+using Microsoft.VisualStudioTools;
 using TestUtilities;
 using TestUtilities.Mocks;
 using TestUtilities.Python;
@@ -43,6 +44,7 @@ namespace PythonToolsTests {
 
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
+            UIThread.InitializeAndNeverInvoke();
             AssertListener.Initialize();
             PythonTestData.Deploy();
         }
@@ -939,13 +941,6 @@ def func(a):
             }
         }
 
-        private static void WaitForNewAnalysis(VsProjectAnalyzer analyzer, ITextBuffer buffer) {
-            analyzer.WaitForCompleteAnalysis(x => true);
-            var tcs = new TaskCompletionSource<object>();
-            buffer.GetPythonProjectEntry().OnNewAnalysis += (s, e) => tcs.SetResult(null);
-            tcs.Task.GetAwaiter().GetResult();
-        }
-
         private static HashSet<string> EditAndGetCompletions(
             string code,
             string editText,
@@ -966,7 +961,13 @@ def func(a):
 
                 var textView = new MockTextView(buffer);
                 var monitoredBuffer = analyzer.MonitorTextBuffer(textView, buffer);
-                WaitForNewAnalysis(analyzer, buffer);
+
+                var tcs = new TaskCompletionSource<object>();
+                ((IPythonProjectEntry)monitoredBuffer.ProjectEntry).OnNewAnalysis += (s, e) => tcs.SetResult(null);
+                
+                analyzer.WaitForCompleteAnalysis(x => true);
+                
+                tcs.Task.GetAwaiter().GetResult();
                 analyzer.StopMonitoringTextBuffer(monitoredBuffer.BufferParser, textView);
 
                 var edit = buffer.CreateEdit();
