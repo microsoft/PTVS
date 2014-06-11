@@ -20,6 +20,8 @@ using Microsoft.Build.Evaluation;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.VisualStudio.ComponentModelHost;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.BuildTasks {
@@ -94,22 +96,22 @@ namespace Microsoft.PythonTools.BuildTasks {
                 }
             }
 
-            AssemblyCatalog catalog = null;
-            CompositionContainer container = null;
             MSBuildProjectInterpreterFactoryProvider provider = null;
             ProjectCollection collection = null;
             Project project = null;
 
-            try {
-                project = ProjectCollection.GlobalProjectCollection.GetLoadedProjects(_projectPath).Single();
-            } catch (InvalidOperationException) {
-                // Could not get exactly one project matching the path.
+            var service = ServiceHolder.Create();
+            if (service == null) {
+                _log.LogError("Unable to obtain interpreter service.");
+                return false;
             }
 
             try {
-                catalog = new AssemblyCatalog(typeof(IInterpreterOptionsService).Assembly);
-                container = new CompositionContainer(catalog);
-                var service = container.GetExportedValue<IInterpreterOptionsService>();
+                try {
+                    project = ProjectCollection.GlobalProjectCollection.GetLoadedProjects(_projectPath).Single();
+                } catch (InvalidOperationException) {
+                    // Could not get exactly one project matching the path.
+                }
 
                 if (project == null) {
                     collection = new ProjectCollection();
@@ -130,7 +132,7 @@ namespace Microsoft.PythonTools.BuildTasks {
                     SearchPaths = new string[0];
                 }
 
-                provider = new MSBuildProjectInterpreterFactoryProvider(service, project);
+                provider = new MSBuildProjectInterpreterFactoryProvider(service.Service, project);
                 try {
                     provider.DiscoverInterpreters();
                 } catch (InvalidDataException ex) {
@@ -150,7 +152,7 @@ namespace Microsoft.PythonTools.BuildTasks {
                         factory.Description
                     );
                     return false;
-                } else if (factory == service.NoInterpretersValue) {
+                } else if (factory == service.Service.NoInterpretersValue) {
                     _log.LogError(
                         "No Python environments are configured. Please install or configure an environment and try " +
                         "again. See http://go.microsoft.com/fwlink/?LinkID=299429 for information on setting up a " +
@@ -190,12 +192,7 @@ namespace Microsoft.PythonTools.BuildTasks {
                     collection.UnloadAllProjects();
                     collection.Dispose();
                 }
-                if (container != null) {
-                    container.Dispose();
-                }
-                if (catalog != null) {
-                    catalog.Dispose();
-                }
+                service.Dispose();
             }
 
             _log.LogError("Unable to resolve environment");
@@ -204,6 +201,61 @@ namespace Microsoft.PythonTools.BuildTasks {
 
         public IBuildEngine BuildEngine { get; set; }
         public ITaskHost HostObject { get; set; }
+
+        private sealed class ServiceHolder : IDisposable {
+            private readonly AssemblyCatalog _catalog;
+            private readonly CompositionContainer _container;
+            private readonly IInterpreterOptionsService _service;
+
+            private static ServiceHolder FromInProc() {
+                if (ServiceProvider.GlobalProvider != null) {
+                    var model = ServiceProvider.GlobalProvider.GetService(typeof(SComponentModel)) as IComponentModel;
+                    if (model != null) {
+                        var service = model.GetService<IInterpreterOptionsService>();
+                        if (service != null) {
+                            return new ServiceHolder(null, null, service);
+                        }
+                    }
+                }
+                return null;
+            }
+
+            private static ServiceHolder FromOutOfProc() {
+                var catalog = new AssemblyCatalog(typeof(IInterpreterOptionsService).Assembly);
+                var container = new CompositionContainer(catalog);
+                var service = container.GetExportedValue<IInterpreterOptionsService>();
+                if (service != null) {
+                    return new ServiceHolder(catalog, container, service);
+                }
+                return null;
+            }
+
+            public static ServiceHolder Create() {
+                return FromInProc() ?? FromOutOfProc();
+            }
+
+            private ServiceHolder(
+                AssemblyCatalog catalog,
+                CompositionContainer container,
+                IInterpreterOptionsService service
+            ) {
+                _catalog = catalog;
+                _container = container;
+                _service = service;
+            }
+
+            public IInterpreterOptionsService Service { get { return _service; } }
+
+            public void Dispose() {
+                if (_container != null) {
+                    _container.Dispose();
+                }
+                if (_catalog != null) {
+                    _catalog.Dispose();
+                }
+            }
+        }
+
     }
 
     /// <summary>
