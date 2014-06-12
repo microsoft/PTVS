@@ -5,46 +5,130 @@
     <Property Id="UpgradeVersionsDummyProperty" Value="0" />
     <?if "$(var.VSTargetVersion)" = "12.0" ?>
     <Upgrade Id="{6C78F23C-355A-4970-9713-6B2351B3CEFF}">
-      <UpgradeVersion Property="REMOVE_TEMPLATE_1028" Minimum="0.0.0.0" IncludeMinimum="yes" Maximum="$(var.MsiVersion)" IncludeMaximum="no" ExcludeLanguages="yes"/>
+      <UpgradeVersion Property="REMOVE_TEMPLATE_1028" Minimum="0.0.0.0" Maximum="$(var.MsiVersion)" ExcludeLanguages="yes"/>
     </Upgrade>
     <Upgrade Id="{5CD9EC74-44C9-460D-B8E2-86E99468A0A4}">
-      <UpgradeVersion Property="REMOVE_TEMPLATE_1029" Minimum="0.0.0.0" IncludeMinimum="yes" Maximum="$(var.MsiVersion)" IncludeMaximum="no" ExcludeLanguages="yes"/>
+      <UpgradeVersion Property="REMOVE_TEMPLATE_1029" Minimum="0.0.0.0" Maximum="$(var.MsiVersion)" ExcludeLanguages="yes"/>
     </Upgrade>
     <Upgrade Id="{5E237850-4FBB-4822-AAFD-8CDFC1E9434E}">
-      <UpgradeVersion Property="REMOVE_TEMPLATE_1031" Minimum="0.0.0.0" IncludeMinimum="yes" Maximum="$(var.MsiVersion)" IncludeMaximum="no" ExcludeLanguages="yes"/>
+      <UpgradeVersion Property="REMOVE_TEMPLATE_1031" Minimum="0.0.0.0" Maximum="$(var.MsiVersion)" ExcludeLanguages="yes"/>
     </Upgrade>
     <Upgrade Id="{313AF19A-99DE-48F4-A9F5-65D932487E77}">
-      <UpgradeVersion Property="REMOVE_TEMPLATE_1033" Minimum="0.0.0.0" IncludeMinimum="yes" Maximum="$(var.MsiVersion)" IncludeMaximum="no" ExcludeLanguages="yes"/>
+      <UpgradeVersion Property="REMOVE_TEMPLATE_1033" Minimum="0.0.0.0" Maximum="$(var.MsiVersion)" ExcludeLanguages="yes"/>
     </Upgrade>
     <Upgrade Id="{3FA526E1-28FE-448D-A2BE-EBB8B9A50DB6}">
-      <UpgradeVersion Property="REMOVE_TEMPLATE_1036" Minimum="0.0.0.0" IncludeMinimum="yes" Maximum="$(var.MsiVersion)" IncludeMaximum="no" ExcludeLanguages="yes"/>
+      <UpgradeVersion Property="REMOVE_TEMPLATE_1036" Minimum="0.0.0.0" Maximum="$(var.MsiVersion)" ExcludeLanguages="yes"/>
     </Upgrade>
     <Upgrade Id="{E59FBD1A-8B36-40E5-9659-9A30DD1B910E}">
-      <UpgradeVersion Property="REMOVE_TEMPLATE_1040" Minimum="0.0.0.0" IncludeMinimum="yes" Maximum="$(var.MsiVersion)" IncludeMaximum="no" ExcludeLanguages="yes"/>
+      <UpgradeVersion Property="REMOVE_TEMPLATE_1040" Minimum="0.0.0.0" Maximum="$(var.MsiVersion)" ExcludeLanguages="yes"/>
     </Upgrade>
     <Upgrade Id="{7A666A19-D8F7-426C-9500-8D8D8AA9E1F5}">
-      <UpgradeVersion Property="REMOVE_TEMPLATE_1041" Minimum="0.0.0.0" IncludeMinimum="yes" Maximum="$(var.MsiVersion)" IncludeMaximum="no" ExcludeLanguages="yes"/>
+      <UpgradeVersion Property="REMOVE_TEMPLATE_1041" Minimum="0.0.0.0" Maximum="$(var.MsiVersion)" ExcludeLanguages="yes"/>
     </Upgrade>
     <Upgrade Id="{A79C8B74-DF77-4F09-A11F-034B80AE05CF}">
-      <UpgradeVersion Property="REMOVE_TEMPLATE_1042" Minimum="0.0.0.0" IncludeMinimum="yes" Maximum="$(var.MsiVersion)" IncludeMaximum="no" ExcludeLanguages="yes"/>
+      <UpgradeVersion Property="REMOVE_TEMPLATE_1042" Minimum="0.0.0.0" Maximum="$(var.MsiVersion)" ExcludeLanguages="yes"/>
     </Upgrade>
     <Upgrade Id="{0D572245-F033-45CF-9238-4C1D57F42925}">
-      <UpgradeVersion Property="REMOVE_TEMPLATE_1045" Minimum="0.0.0.0" IncludeMinimum="yes" Maximum="$(var.MsiVersion)" IncludeMaximum="no" ExcludeLanguages="yes"/>
+      <UpgradeVersion Property="REMOVE_TEMPLATE_1045" Minimum="0.0.0.0" Maximum="$(var.MsiVersion)" ExcludeLanguages="yes"/>
     </Upgrade>
     <Upgrade Id="{6EC39190-263F-4DB6-B5F6-7978DCC0332B}">
-      <UpgradeVersion Property="REMOVE_TEMPLATE_1046" Minimum="0.0.0.0" IncludeMinimum="yes" Maximum="$(var.MsiVersion)" IncludeMaximum="no" ExcludeLanguages="yes"/>
+      <UpgradeVersion Property="REMOVE_TEMPLATE_1046" Minimum="0.0.0.0" Maximum="$(var.MsiVersion)" ExcludeLanguages="yes"/>
     </Upgrade>
     <Upgrade Id="{5A5A68B0-7F9B-43AC-90AE-44EDE6833804}">
-      <UpgradeVersion Property="REMOVE_TEMPLATE_1049" Minimum="0.0.0.0" IncludeMinimum="yes" Maximum="$(var.MsiVersion)" IncludeMaximum="no" ExcludeLanguages="yes"/>
+      <UpgradeVersion Property="REMOVE_TEMPLATE_1049" Minimum="0.0.0.0" Maximum="$(var.MsiVersion)" ExcludeLanguages="yes"/>
     </Upgrade>
     <Upgrade Id="{EBBCBAA5-0453-48C4-B19C-610AA6EA3758}">
-      <UpgradeVersion Property="REMOVE_TEMPLATE_1055" Minimum="0.0.0.0" IncludeMinimum="yes" Maximum="$(var.MsiVersion)" IncludeMaximum="no" ExcludeLanguages="yes"/>
+      <UpgradeVersion Property="REMOVE_TEMPLATE_1055" Minimum="0.0.0.0" Maximum="$(var.MsiVersion)" ExcludeLanguages="yes"/>
     </Upgrade>
     <Upgrade Id="{2C6BBFE4-B39B-4489-AC99-92F9798E67DD}">
-      <UpgradeVersion Property="REMOVE_TEMPLATE_2052" Minimum="0.0.0.0" IncludeMinimum="yes" Maximum="$(var.MsiVersion)" IncludeMaximum="no" ExcludeLanguages="yes"/>
+      <UpgradeVersion Property="REMOVE_TEMPLATE_2052" Minimum="0.0.0.0" Maximum="$(var.MsiVersion)" ExcludeLanguages="yes"/>
     </Upgrade>
     <Upgrade Id="{AC009493-D585-4FAF-99D7-84BB2183D77E}">
-      <UpgradeVersion Property="REMOVE_TEMPLATE_3082" Minimum="0.0.0.0" IncludeMinimum="yes" Maximum="$(var.MsiVersion)" IncludeMaximum="no" ExcludeLanguages="yes"/>
+      <UpgradeVersion Property="REMOVE_TEMPLATE_3082" Minimum="0.0.0.0" Maximum="$(var.MsiVersion)" ExcludeLanguages="yes"/>
+    </Upgrade>
+    <Upgrade Id="{8DE929D5-E9F5-4948-A941-B83F88C2D1F6}">
+      <UpgradeVersion Property="REMOVE_WDEXPRESS_TEMPLATE_1028" Minimum="0.0.0.0" Maximum="$(var.MsiVersion)" ExcludeLanguages="yes"/>
+    </Upgrade>
+    <Upgrade Id="{3F891A3D-B6CE-4189-A882-00EB879C916C}">
+      <UpgradeVersion Property="REMOVE_WDEXPRESS_TEMPLATE_1029" Minimum="0.0.0.0" Maximum="$(var.MsiVersion)" ExcludeLanguages="yes"/>
+    </Upgrade>
+    <Upgrade Id="{BC2EFA4D-3E06-493C-8E5F-7C716AF56FFB}">
+      <UpgradeVersion Property="REMOVE_WDEXPRESS_TEMPLATE_1031" Minimum="0.0.0.0" Maximum="$(var.MsiVersion)" ExcludeLanguages="yes"/>
+    </Upgrade>
+    <Upgrade Id="{09418860-A56B-4265-9311-37E96662CB08}">
+      <UpgradeVersion Property="REMOVE_WDEXPRESS_TEMPLATE_1033" Minimum="0.0.0.0" Maximum="$(var.MsiVersion)" ExcludeLanguages="yes"/>
+    </Upgrade>
+    <Upgrade Id="{28F0B3D0-332A-4E7F-BD92-42C563F6F1DA}">
+      <UpgradeVersion Property="REMOVE_WDEXPRESS_TEMPLATE_1036" Minimum="0.0.0.0" Maximum="$(var.MsiVersion)" ExcludeLanguages="yes"/>
+    </Upgrade>
+    <Upgrade Id="{46F4B80E-13B6-40CF-9E10-ADA79C822CEB}">
+      <UpgradeVersion Property="REMOVE_WDEXPRESS_TEMPLATE_1040" Minimum="0.0.0.0" Maximum="$(var.MsiVersion)" ExcludeLanguages="yes"/>
+    </Upgrade>
+    <Upgrade Id="{7D3995F2-C553-4EA7-B65D-B941148B8A74}">
+      <UpgradeVersion Property="REMOVE_WDEXPRESS_TEMPLATE_1041" Minimum="0.0.0.0" Maximum="$(var.MsiVersion)" ExcludeLanguages="yes"/>
+    </Upgrade>
+    <Upgrade Id="{77A5D8BB-B2FB-4F6F-ACBC-9A7584585C27}">
+      <UpgradeVersion Property="REMOVE_WDEXPRESS_TEMPLATE_1042" Minimum="0.0.0.0" Maximum="$(var.MsiVersion)" ExcludeLanguages="yes"/>
+    </Upgrade>
+    <Upgrade Id="{931CF9DD-EDEB-4C69-9B27-7CC2569056B9}">
+      <UpgradeVersion Property="REMOVE_WDEXPRESS_TEMPLATE_1045" Minimum="0.0.0.0" Maximum="$(var.MsiVersion)" ExcludeLanguages="yes"/>
+    </Upgrade>
+    <Upgrade Id="{842B3EBA-0F53-46EE-A091-DBC90DC71893}">
+      <UpgradeVersion Property="REMOVE_WDEXPRESS_TEMPLATE_1046" Minimum="0.0.0.0" Maximum="$(var.MsiVersion)" ExcludeLanguages="yes"/>
+    </Upgrade>
+    <Upgrade Id="{B0C3594B-77F1-40F5-BA24-9D3FEC25C3E9}">
+      <UpgradeVersion Property="REMOVE_WDEXPRESS_TEMPLATE_1049" Minimum="0.0.0.0" Maximum="$(var.MsiVersion)" ExcludeLanguages="yes"/>
+    </Upgrade>
+    <Upgrade Id="{4E382C0D-A811-492C-A6F2-933C5EE52222}">
+      <UpgradeVersion Property="REMOVE_WDEXPRESS_TEMPLATE_1055" Minimum="0.0.0.0" Maximum="$(var.MsiVersion)" ExcludeLanguages="yes"/>
+    </Upgrade>
+    <Upgrade Id="{339667EC-0B84-40DA-B25E-941113C09E71}">
+      <UpgradeVersion Property="REMOVE_WDEXPRESS_TEMPLATE_2052" Minimum="0.0.0.0" Maximum="$(var.MsiVersion)" ExcludeLanguages="yes"/>
+    </Upgrade>
+    <Upgrade Id="{35FA6D85-307A-4ABB-A323-D0D86A3FD01D}">
+      <UpgradeVersion Property="REMOVE_WDEXPRESS_TEMPLATE_3082" Minimum="0.0.0.0" Maximum="$(var.MsiVersion)" ExcludeLanguages="yes"/>
+    </Upgrade>
+    <Upgrade Id="{A09E40F0-3584-4106-B047-790673434AB9}">
+      <UpgradeVersion Property="REMOVE_VWDEXPRESS_TEMPLATE_1028" Minimum="0.0.0.0" Maximum="$(var.MsiVersion)" ExcludeLanguages="yes"/>
+    </Upgrade>
+    <Upgrade Id="{C331B9A5-3753-40F3-AA43-DDBDFCBC20E3}">
+      <UpgradeVersion Property="REMOVE_VWDEXPRESS_TEMPLATE_1029" Minimum="0.0.0.0" Maximum="$(var.MsiVersion)" ExcludeLanguages="yes"/>
+    </Upgrade>
+    <Upgrade Id="{260E4C1B-EA05-4466-8910-7AB7F4252C81}">
+      <UpgradeVersion Property="REMOVE_VWDEXPRESS_TEMPLATE_1031" Minimum="0.0.0.0" Maximum="$(var.MsiVersion)" ExcludeLanguages="yes"/>
+    </Upgrade>
+    <Upgrade Id="{8F9691AE-31B9-49D1-8B9B-903D33D3A39A}">
+      <UpgradeVersion Property="REMOVE_VWDEXPRESS_TEMPLATE_1033" Minimum="0.0.0.0" Maximum="$(var.MsiVersion)" ExcludeLanguages="yes"/>
+    </Upgrade>
+    <Upgrade Id="{1821D8E4-0336-473E-B884-B18EDAF67291}">
+      <UpgradeVersion Property="REMOVE_VWDEXPRESS_TEMPLATE_1036" Minimum="0.0.0.0" Maximum="$(var.MsiVersion)" ExcludeLanguages="yes"/>
+    </Upgrade>
+    <Upgrade Id="{AC51D32B-964E-4E0B-BBAF-B8C2B91C959A}">
+      <UpgradeVersion Property="REMOVE_VWDEXPRESS_TEMPLATE_1040" Minimum="0.0.0.0" Maximum="$(var.MsiVersion)" ExcludeLanguages="yes"/>
+    </Upgrade>
+    <Upgrade Id="{BB5F84C8-338E-4E40-BE50-CBAF1D480CA3}">
+      <UpgradeVersion Property="REMOVE_VWDEXPRESS_TEMPLATE_1041" Minimum="0.0.0.0" Maximum="$(var.MsiVersion)" ExcludeLanguages="yes"/>
+    </Upgrade>
+    <Upgrade Id="{0ABC6F31-B583-424E-A76B-532FB2B109EF}">
+      <UpgradeVersion Property="REMOVE_VWDEXPRESS_TEMPLATE_1042" Minimum="0.0.0.0" Maximum="$(var.MsiVersion)" ExcludeLanguages="yes"/>
+    </Upgrade>
+    <Upgrade Id="{09FDE353-9A01-4744-A998-2070E0521236}">
+      <UpgradeVersion Property="REMOVE_VWDEXPRESS_TEMPLATE_1045" Minimum="0.0.0.0" Maximum="$(var.MsiVersion)" ExcludeLanguages="yes"/>
+    </Upgrade>
+    <Upgrade Id="{D81127FE-B5AE-4DFE-9D20-29D563C37B6B}">
+      <UpgradeVersion Property="REMOVE_VWDEXPRESS_TEMPLATE_1046" Minimum="0.0.0.0" Maximum="$(var.MsiVersion)" ExcludeLanguages="yes"/>
+    </Upgrade>
+    <Upgrade Id="{6BE35BC0-374F-46EE-84CA-9A96976B0499}">
+      <UpgradeVersion Property="REMOVE_VWDEXPRESS_TEMPLATE_1049" Minimum="0.0.0.0" Maximum="$(var.MsiVersion)" ExcludeLanguages="yes"/>
+    </Upgrade>
+    <Upgrade Id="{D1BBEE3D-DC65-48C6-84C5-EEFD667C1CF1}">
+      <UpgradeVersion Property="REMOVE_VWDEXPRESS_TEMPLATE_1055" Minimum="0.0.0.0" Maximum="$(var.MsiVersion)" ExcludeLanguages="yes"/>
+    </Upgrade>
+    <Upgrade Id="{0DEA6903-6642-42D0-9A1E-B6DBFCBF9CD6}">
+      <UpgradeVersion Property="REMOVE_VWDEXPRESS_TEMPLATE_2052" Minimum="0.0.0.0" Maximum="$(var.MsiVersion)" ExcludeLanguages="yes"/>
+    </Upgrade>
+    <Upgrade Id="{83F0FB87-0860-4EA7-9F35-2D6665DF3122}">
+      <UpgradeVersion Property="REMOVE_VWDEXPRESS_TEMPLATE_3082" Minimum="0.0.0.0" Maximum="$(var.MsiVersion)" ExcludeLanguages="yes"/>
     </Upgrade>
     <?endif?>
   </Fragment>
