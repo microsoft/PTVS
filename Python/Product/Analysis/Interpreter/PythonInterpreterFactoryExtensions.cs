@@ -56,13 +56,20 @@ namespace Microsoft.PythonTools.Interpreter {
         internal static HashSet<string> FindModules(this IPythonInterpreterFactory factory, params string[] moduleNames) {
             var expected = new HashSet<string>(moduleNames);
             var result = new HashSet<string>();
-            foreach (var mp in ModulePath.GetModulesInLib(factory)) {
-                if (expected.Count == 0) {
-                    break;
-                }
+            var withDb = factory as PythonInterpreterFactoryWithDatabase;
+            if (withDb != null && withDb.IsCurrent) {
+                var db = withDb.GetCurrentDatabase();
+                var set = new HashSet<string>(moduleNames.Where(m => db.GetModule(m) != null));
+                return set;
+            } else {
+                foreach (var mp in ModulePath.GetModulesInLib(factory)) {
+                    if (expected.Count == 0) {
+                        break;
+                    }
 
-                if (expected.Remove(mp.ModuleName)) {
-                    result.Add(mp.ModuleName);
+                    if (expected.Remove(mp.ModuleName)) {
+                        result.Add(mp.ModuleName);
+                    }
                 }
             }
             return result;

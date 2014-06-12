@@ -155,6 +155,19 @@ namespace Microsoft.PythonTools.Project {
         public const string DotClassificationType = "DotClassificationType";
         public const string BuiltinClassificationType = "BuiltinClassificationType";
 
+        public const string RequirementsTxtExists = "RequirementsTxtExists";
+        public const string RequirementsTxtExistsQuestion = "RequirementsTxtExistsQuestion";
+        public const string RequirementsTxtContentCollapsed = "RequirementsTxtContentCollapsed";
+        public const string RequirementsTxtContentExpanded = "RequirementsTxtContentExpanded";
+        public const string RequirementsTxtReplace = "RequirementsTxtReplace";
+        public const string RequirementsTxtRefresh = "RequirementsTxtRefresh";
+        public const string RequirementsTxtUpdate = "RequirementsTxtUpdate";
+        public const string RequirementsTxtInstalling = "RequirementsTxtInstalling";
+
+        public const string RequirementsTxtFailedToRead = "RequirementsTxtFailedToRead";
+        public const string RequirementsTxtFailedToWrite = "RequirementsTxtFailedToWrite";
+        public const string RequirementsTxtFailedToAddToProject = "RequirementsTxtFailedToAddToProject";
+
         private static readonly Lazy<ResourceManager> _manager = new Lazy<ResourceManager>(
             () => new System.Resources.ResourceManager("Microsoft.PythonTools.Resources", typeof(SR).Assembly),
             LazyThreadSafetyMode.ExecutionAndPublication

@@ -34,7 +34,9 @@ namespace Microsoft.VisualStudioTools.Project {
         internal const string BuildVerbosity = "BuildVerbosity";
         internal const string BuildVerbosityDescription = "BuildVerbosityDescription";
         internal const string BuildEventError = "BuildEventError";
+        internal const string Cancel = "Cancel";
         internal const string CancelQueryEdit = "CancelQueryEdit";
+        internal const string CancelQueryEditMultiple = "CancelQueryEditMultiple";
         internal const string CannotAddFileThatIsOpenInEditor = "CannotAddFileThatIsOpenInEditor";
         internal const string CanNotSaveFileNotOpeneInEditor = "CanNotSaveFileNotOpeneInEditor";
         internal const string cli1 = "cli1";
@@ -60,6 +62,7 @@ namespace Microsoft.VisualStudioTools.Project {
         internal const string EditorViewError = "EditorViewError";
         internal const string EmbeddedResource = "EmbeddedResource";
         internal const string Error = "Error";
+        internal const string ErrorDetail = "ErrorDetail";
         internal const string ErrorInvalidFileName = "ErrorInvalidFileName";
         internal const string ErrorInvalidLaunchUrl = "ErrorInvalidLaunchUrl";
         internal const string ErrorInvalidProjectName = "ErrorInvalidProjectName";
@@ -127,6 +130,7 @@ namespace Microsoft.VisualStudioTools.Project {
         internal const string RefName = "RefName";
         internal const string RefNameDescription = "RefNameDescription";
         internal const string RenameFolder = "RenameFolder";
+        internal const string Retry = "Retry";
         internal const string RTL = "RTL";
         internal const string SaveCaption = "SaveCaption";
         internal const string SaveModifiedDocuments = "SaveModifiedDocuments";

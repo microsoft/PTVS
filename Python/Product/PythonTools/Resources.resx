@@ -503,4 +503,38 @@ By default, URIs matching the pattern are mapped directly to a file system path.
   <data name="NoStartupFileAvailable" xml:space="preserve">
     <value>Your project needs a Python script marked as the startup file to perform this operation.</value>
   </data>
+  <data name="RequirementsTxtContentCollapsed" xml:space="preserve">
+    <value>View e&amp;xisting requirements.txt</value>
+  </data>
+  <data name="RequirementsTxtContentExpanded" xml:space="preserve">
+    <value>Hide e&amp;xisting requirements.txt</value>
+  </data>
+  <data name="RequirementsTxtExists" xml:space="preserve">
+    <value>A file named requirements.txt already exists</value>
+  </data>
+  <data name="RequirementsTxtExistsQuestion" xml:space="preserve">
+    <value>Would you like to update or replace this file?</value>
+  </data>
+  <data name="RequirementsTxtRefresh" xml:space="preserve">
+    <value>Re&amp;fresh existing entries</value>
+  </data>
+  <data name="RequirementsTxtReplace" xml:space="preserve">
+    <value>&amp;Replace entire file</value>
+  </data>
+  <data name="RequirementsTxtUpdate" xml:space="preserve">
+    <value>Update and &amp;add entries</value>
+  </data>
+  <data name="RequirementsTxtFailedToAddToProject" xml:space="preserve">
+    <value>An error occurred adding requirements.txt to your project.</value>
+  </data>
+  <data name="RequirementsTxtFailedToRead" xml:space="preserve">
+    <value>An error occurred reading from the existing requirements.txt file.</value>
+  </data>
+  <data name="RequirementsTxtFailedToWrite" xml:space="preserve">
+    <value>An error occurred writing to requirements.txt.</value>
+  </data>
+  <data name="RequirementsTxtInstalling" xml:space="preserve">
+    <value>Installing packages from {0}</value>
+    <comment>{0} is a full path to a user's file</comment>
+  </data>
 </root>

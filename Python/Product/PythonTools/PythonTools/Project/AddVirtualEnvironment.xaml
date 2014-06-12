@@ -92,6 +92,7 @@
             <RowDefinition Height="auto" />
             <RowDefinition Height="auto" />
             <RowDefinition Height="auto" />
+            <RowDefinition Height="auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="auto" />
         </Grid.RowDefinitions>
@@ -181,17 +182,49 @@
             </Button>
         </wpf:LabelledControl>
 
-        <Label Grid.Row="3">
+        <wpf:LabelledControl Grid.Row="3"
+                             Visibility="{Binding CanInstallRequirementsTxt,Converter={StaticResource BoolToVisibleOrCollapsed}}"
+                             Title="We found a requirements.txt file.">
+            <wpf:LabelledControl.HelpText>
+                This file contains external packages that are required by your
+                project. We can use pip to download and install these
+                dependencies automatically.
+            </wpf:LabelledControl.HelpText>
+            <CheckBox IsChecked="{Binding WillInstallRequirementsTxt}">
+                Download and _install packages
+            </CheckBox>
+        </wpf:LabelledControl>
+
+        <Label Grid.Row="4">
             Actions we will perform:
         </Label>
 
-        <StackPanel Grid.Row="4" Margin="12 3" Orientation="Vertical">
-            <Label Visibility="{Binding WillInstallPipAndVirtualEnv,Converter={StaticResource BoolToVisibleOrCollapsed}}"
-                   Style="{StaticResource BulletedLabel}">
+        <StackPanel Grid.Row="5" Margin="12 3" Orientation="Vertical">
+            <Label Style="{StaticResource BulletedLabel}">
+                <Label.Visibility>
+                    <MultiBinding Converter="{StaticResource BoolToVisibleOrCollapsed}">
+                        <Binding Path="WillInstallPip" />
+                        <Binding Path="WillInstallVirtualEnv" />
+                    </MultiBinding>
+                </Label.Visibility>
                 Install pip and virtualenv packages
             </Label>
-            <Label Visibility="{Binding WillInstallVirtualEnv,Converter={StaticResource BoolToVisibleOrCollapsed}}"
-                   Style="{StaticResource BulletedLabel}">
+            <Label Style="{StaticResource BulletedLabel}">
+                <Label.Visibility>
+                    <MultiBinding Converter="{StaticResource BoolToVisibleOrCollapsed}">
+                        <Binding Path="WillInstallPip" />
+                        <Binding Path="WillInstallVirtualEnv" Converter="{StaticResource BoolNot}" />
+                    </MultiBinding>
+                </Label.Visibility>
+                Install pip
+            </Label>
+            <Label Style="{StaticResource BulletedLabel}">
+                <Label.Visibility>
+                    <MultiBinding Converter="{StaticResource BoolToVisibleOrCollapsed}">
+                        <Binding Path="WillInstallPip" Converter="{StaticResource BoolNot}" />
+                        <Binding Path="WillInstallVirtualEnv" />
+                    </MultiBinding>
+                </Label.Visibility>
                 Install the virtualenv package
             </Label>
             <Label Visibility="{Binding WillAddVirtualEnv,Converter={StaticResource BoolToVisibleOrCollapsed}}"
@@ -216,6 +249,10 @@
                 </Label.Visibility>
                 Create a virtual environment using venv
             </Label>
+            <Label Visibility="{Binding WillInstallRequirementsTxt,Converter={StaticResource BoolToVisibleOrCollapsed}}"
+                   Style="{StaticResource BulletedLabel}">
+                Install packages from requirements.txt
+            </Label>
             <Label Visibility="{Binding CannotCreateVirtualEnv,Converter={StaticResource BoolToVisibleOrCollapsed}}"
                    Style="{StaticResource BulletedLabel}">
                 No action will be taken.
@@ -227,7 +264,7 @@
             </Label>
         </StackPanel>
 
-        <StackPanel Grid.Row="5"
+        <StackPanel Grid.Row="6"
                     Orientation="Horizontal"
                     HorizontalAlignment="Right"
                     Margin="0 12 0 0">

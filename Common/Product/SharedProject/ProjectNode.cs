@@ -3099,14 +3099,7 @@ namespace Microsoft.VisualStudioTools.Project {
             return folderNode;
         }
 
-        /// <summary>
-        /// Verify if the file can be written to.
-        /// Return false if the file is read only and/or not checked out
-        /// and the user did not give permission to change it.
-        /// Note that exact behavior can also be affected based on the SCC
-        /// settings under Tools->Options.
-        /// </summary>
-        internal bool QueryEditProjectFile(bool suppressUI) {
+        internal bool QueryEditFiles(bool suppressUI, params string[] files) {
             bool result = true;
             if (this.site == null) {
                 // We're already zombied. Better return FALSE.
@@ -3115,9 +3108,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 return true;
             } else {
                 IVsQueryEditQuerySave2 queryEditQuerySave = this.GetService(typeof(SVsQueryEditQuerySave)) as IVsQueryEditQuerySave2;
-                if (queryEditQuerySave != null) {   // Project path dependends on server/client project
-                    string path = this.filename;
-
+                if (queryEditQuerySave != null) {
                     tagVSQueryEditFlags qef = tagVSQueryEditFlags.QEF_AllowInMemoryEdits;
                     if (suppressUI)
                         qef |= tagVSQueryEditFlags.QEF_SilentMode;
@@ -3129,23 +3120,24 @@ namespace Microsoft.VisualStudioTools.Project {
 
                     uint verdict;
                     uint moreInfo;
-                    string[] files = new string[1];
-                    files[0] = path;
-                    uint[] flags = new uint[1];
-                    VSQEQS_FILE_ATTRIBUTE_DATA[] attributes = new VSQEQS_FILE_ATTRIBUTE_DATA[1];
+                    uint[] flags = new uint[files.Length];
+                    VSQEQS_FILE_ATTRIBUTE_DATA[] attributes = new VSQEQS_FILE_ATTRIBUTE_DATA[files.Length];
                     int hr = queryEditQuerySave.QueryEditFiles(
-                                    (uint)qef,
-                                    1, // 1 file
-                                    files, // array of files
-                                    flags, // no per file flags
-                                    attributes, // no per file file attributes
-                                    out verdict,
-                                    out moreInfo /* ignore additional results */);
+                        (uint)qef,
+                        files.Length, // 1 file
+                        files, // array of files
+                        flags, // no per file flags
+                        attributes, // no per file file attributes
+                        out verdict,
+                        out moreInfo // ignore additional results
+                    );
 
                     tagVSQueryEditResult qer = (tagVSQueryEditResult)verdict;
                     if (ErrorHandler.Failed(hr) || (qer != tagVSQueryEditResult.QER_EditOK)) {
                         if (!suppressUI && !Utilities.IsInAutomationFunction(this.Site)) {
-                            string message = SR.GetString(SR.CancelQueryEdit, path);
+                            string message = files.Length == 1 ?
+                                SR.GetString(SR.CancelQueryEdit, files[0]) :
+                                SR.GetString(SR.CancelQueryEditMultiple);
                             string title = string.Empty;
                             OLEMSGICON icon = OLEMSGICON.OLEMSGICON_CRITICAL;
                             OLEMSGBUTTON buttons = OLEMSGBUTTON.OLEMSGBUTTON_OK;
@@ -3157,6 +3149,17 @@ namespace Microsoft.VisualStudioTools.Project {
                 }
             }
             return result;
+        }
+
+        /// <summary>
+        /// Verify if the file can be written to.
+        /// Return false if the file is read only and/or not checked out
+        /// and the user did not give permission to change it.
+        /// Note that exact behavior can also be affected based on the SCC
+        /// settings under Tools->Options.
+        /// </summary>
+        internal bool QueryEditProjectFile(bool suppressUI) {
+            return QueryEditFiles(suppressUI, filename);
         }
 
         internal bool QueryFolderAdd(HierarchyNode targetFolder, string path) {

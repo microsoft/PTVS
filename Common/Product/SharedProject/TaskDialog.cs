@@ -33,6 +33,88 @@ namespace Microsoft.VisualStudioTools {
             UseCommandLinks = true;
         }
 
+        public static void CallWithRetry(
+            Action<int> action,
+            IServiceProvider provider,
+            string title,
+            string failedText,
+            string expandControlText,
+            string retryButtonText,
+            string cancelButtonText,
+            Func<Exception, bool> canRetry = null
+        ) {
+            for (int retryCount = 1; ; ++retryCount) {
+                try {
+                    action(retryCount);
+                    return;
+                } catch (Exception ex) {
+                    if (ex.IsCriticalException()) {
+                        throw;
+                    }
+                    if (canRetry != null && !canRetry(ex)) {
+                        throw;
+                    }
+
+                    var td = new TaskDialog(provider) {
+                        Title = title,
+                        MainInstruction = failedText,
+                        Content = ex.Message,
+                        CollapsedControlText = expandControlText,
+                        ExpandedControlText = expandControlText,
+                        ExpandedInformation = ex.ToString()
+                    };
+                    var retry = new TaskDialogButton(retryButtonText);
+                    td.Buttons.Add(retry);
+                    td.Buttons.Add(new TaskDialogButton(cancelButtonText));
+                    var button = td.ShowModal();
+                    if (button != retry) {
+                        throw new OperationCanceledException();
+                    }
+                }
+            }
+        }
+
+        public static T CallWithRetry<T>(
+            Func<int, T> func,
+            IServiceProvider provider,
+            string title,
+            string failedText,
+            string expandControlText,
+            string retryButtonText,
+            string cancelButtonText,
+            Func<Exception, bool> canRetry = null
+        ) {
+            for (int retryCount = 1; ; ++retryCount) {
+                try {
+                    return func(retryCount);
+                } catch (Exception ex) {
+                    if (ex.IsCriticalException()) {
+                        throw;
+                    }
+                    if (canRetry != null && !canRetry(ex)) {
+                        throw;
+                    }
+
+                    var td = new TaskDialog(provider) {
+                        Title = title,
+                        MainInstruction = failedText,
+                        Content = ex.Message,
+                        CollapsedControlText = expandControlText,
+                        ExpandedControlText = expandControlText,
+                        ExpandedInformation = ex.ToString()
+                    };
+                    var retry = new TaskDialogButton(retryButtonText);
+                    var cancel = new TaskDialogButton(cancelButtonText);
+                    td.Buttons.Add(retry);
+                    td.Buttons.Add(cancel);
+                    var button = td.ShowModal();
+                    if (button == cancel) {
+                        throw new OperationCanceledException();
+                    }
+                }
+            }
+        }
+
         public TaskDialogButton ShowModal() {
             var config = new NativeMethods.TASKDIALOGCONFIG();
             config.cbSize = (uint)Marshal.SizeOf(typeof(NativeMethods.TASKDIALOGCONFIG));

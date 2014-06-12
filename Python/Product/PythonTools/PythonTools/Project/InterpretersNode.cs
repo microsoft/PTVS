@@ -18,6 +18,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using System.Threading;
 using Microsoft.Build.Evaluation;
 using Microsoft.PythonTools.Commands;
@@ -212,7 +213,20 @@ namespace Microsoft.PythonTools.Project {
                     case PythonConstants.ActivateEnvironment:
                         return ProjectMgr.SetInterpreterFactory(_factory);
                     case PythonConstants.InstallPythonPackage:
-                        var task = InterpretersPackageNode.InstallNewPackage(this);
+                        InterpretersPackageNode.InstallNewPackage(this).HandleAllExceptions(SR.ProductName).DoNotWait();
+                        return VSConstants.S_OK;
+                    case PythonConstants.InstallRequirementsTxt:
+                        InterpretersPackageNode.InstallNewPackage(
+                            this,
+                            "-r " + ProcessOutput.QuoteSingleArgument(
+                                CommonUtils.GetAbsoluteFilePath(ProjectMgr.ProjectHome, "requirements.txt")
+                            ),
+                            true,
+                            false
+                        ).HandleAllExceptions(SR.ProductName).DoNotWait();
+                        return VSConstants.S_OK;
+                    case PythonConstants.GenerateRequirementsTxt:
+                        GenerateRequirementsTxt().HandleAllExceptions(SR.ProductName).DoNotWait();
                         return VSConstants.S_OK;
                     case PythonConstants.OpenInteractiveForEnvironment:
                         try {
@@ -248,6 +262,154 @@ namespace Microsoft.PythonTools.Project {
             }
             
             return base.ExecCommandOnNode(cmdGroup, cmd, nCmdexecopt, pvaIn, pvaOut);
+        }
+
+        private async Task GenerateRequirementsTxt() {
+            var projectHome = ProjectMgr.ProjectHome;
+            var txt = CommonUtils.GetAbsoluteFilePath(projectHome, "requirements.txt");
+
+            string[] existing = null;
+            bool addNew = false;
+            if (File.Exists(txt)) {
+                try {
+                    existing = TaskDialog.CallWithRetry(
+                        _ => File.ReadAllLines(txt),
+                        ProjectMgr.Site,
+                        SR.ProductName,
+                        SR.GetString(SR.RequirementsTxtFailedToRead),
+                        SR.GetString(SR.ErrorDetail),
+                        SR.GetString(SR.Retry),
+                        SR.GetString(SR.Cancel)
+                    );
+                } catch (OperationCanceledException) {
+                    return;
+                }
+
+                var td = new TaskDialog(ProjectMgr.Site) {
+                    Title = SR.ProductName,
+                    MainInstruction = SR.GetString(SR.RequirementsTxtExists),
+                    Content = SR.GetString(SR.RequirementsTxtExistsQuestion),
+                    AllowCancellation = true,
+                    CollapsedControlText = SR.GetString(SR.RequirementsTxtContentCollapsed),
+                    ExpandedControlText = SR.GetString(SR.RequirementsTxtContentExpanded),
+                    ExpandedInformation = string.Join(Environment.NewLine, existing)
+                };
+                var replace = new TaskDialogButton(SR.GetString(SR.RequirementsTxtReplace));
+                var refresh = new TaskDialogButton(SR.GetString(SR.RequirementsTxtRefresh));
+                var update = new TaskDialogButton(SR.GetString(SR.RequirementsTxtUpdate));
+                td.Buttons.Add(replace);
+                td.Buttons.Add(refresh);
+                td.Buttons.Add(update);
+                td.Buttons.Add(TaskDialogButton.Cancel);
+                var selection = td.ShowModal();
+                if (selection == TaskDialogButton.Cancel) {
+                    return;
+                } else if (selection == replace) {
+                    existing = null;
+                } else if (selection == update) {
+                    addNew = true;
+                }
+            }
+            
+            var items = await Pip.Freeze(_factory);
+
+            if (File.Exists(txt) && !ProjectMgr.QueryEditFiles(false, txt)) {
+                return;
+            }
+
+            try {
+                TaskDialog.CallWithRetry(
+                    _ => {
+                        if (items.Any()) {
+                            File.WriteAllLines(txt, MergeRequirements(existing, items, addNew));
+                        } else {
+                            File.WriteAllText(txt, "");
+                        }
+                    },
+                    ProjectMgr.Site, 
+                    SR.ProductName,
+                    SR.GetString(SR.RequirementsTxtFailedToWrite),
+                    SR.GetString(SR.ErrorDetail),
+                    SR.GetString(SR.Retry),
+                    SR.GetString(SR.Cancel)
+                );
+            } catch (OperationCanceledException) {
+                return;
+            }
+
+            var existingNode = ProjectMgr.FindNodeByFullPath(txt);
+            if (existingNode == null || existingNode.IsNonMemberItem) {
+                if (!ProjectMgr.QueryEditProjectFile(false)) {
+                    return;
+                }
+                try {
+                    existingNode = TaskDialog.CallWithRetry(
+                        _ => {
+                            ErrorHandler.ThrowOnFailure(ProjectMgr.AddItem(
+                                ProjectMgr.ID,
+                                VSADDITEMOPERATION.VSADDITEMOP_LINKTOFILE,
+                                Path.GetFileName(txt),
+                                1,
+                                new[] { txt },
+                                IntPtr.Zero,
+                                new VSADDRESULT[1]
+                            ));
+
+                            return ProjectMgr.FindNodeByFullPath(txt);
+                        },
+                        ProjectMgr.Site,
+                        SR.ProductName,
+                        SR.GetString(SR.RequirementsTxtFailedToAddToProject),
+                        SR.GetString(SR.ErrorDetail),
+                        SR.GetString(SR.Retry),
+                        SR.GetString(SR.Cancel)
+                    );
+                } catch (OperationCanceledException) {
+                }
+            }
+        }
+
+        internal static IEnumerable<string> MergeRequirements(
+            IEnumerable<string> original,
+            IEnumerable<string> updates,
+            bool addNew
+        ) {
+            if (original == null) {
+                foreach (var req in updates.OrderBy(r => r)) {
+                    yield return req;
+                }
+                yield break;
+            }
+
+            var findRequirement = new Regex("^\\s*(?<spec>(?<name>[^\\s#=]+)(==(?<ver>[^\\s#]+))?)");
+            var existing = new Dictionary<string, string>();
+            foreach (var req in updates) {
+                var m = findRequirement.Match(req);
+                if (m.Success) {
+                    existing[m.Groups["name"].Value] = req;
+                }
+            }
+
+            foreach (var line in original) {
+                var m = findRequirement.Match(line);
+                if (m.Success) {
+                    string newReq;
+                    if (existing.TryGetValue(m.Groups["name"].Value, out newReq)) {
+                        existing.Remove(m.Groups["name"].Value);
+                        yield return findRequirement.Replace(line, newReq);
+                    } else {
+                        yield return line;
+                    }
+                } else {
+                    yield return line;
+                }
+            }
+
+            if (addNew) {
+                foreach (var req in existing.Values.OrderBy(v => v)) {
+                    yield return req;
+                }
+            }
         }
 
         internal async Task BeginPackageChange() {
@@ -419,6 +581,18 @@ namespace Microsoft.PythonTools.Project {
                         if (_interpreters.IsAvailable(_factory) &&
                             Directory.Exists(_factory.Configuration.PrefixPath)
                         ) {
+                            result |= QueryStatusResult.ENABLED;
+                        }
+                        return VSConstants.S_OK;
+                    case PythonConstants.InstallRequirementsTxt:
+                        result |= QueryStatusResult.SUPPORTED;
+                        if (File.Exists(CommonUtils.GetAbsoluteFilePath(ProjectMgr.ProjectHome, "requirements.txt"))) {
+                            result |= QueryStatusResult.ENABLED;
+                        }
+                        return VSConstants.S_OK;
+                    case PythonConstants.GenerateRequirementsTxt:
+                        result |= QueryStatusResult.SUPPORTED;
+                        if (_interpreters.IsAvailable(_factory)) {
                             result |= QueryStatusResult.ENABLED;
                         }
                         return VSConstants.S_OK;

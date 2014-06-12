@@ -76,7 +76,10 @@ namespace Microsoft.PythonTools.Project {
                 throw new OperationCanceledException();
             }
 
-            var name = view.Name;
+            await InstallNewPackage(parent, view.Name, view.InstallUsingPip, view.InstallElevated);
+        }
+
+        public static async Task InstallNewPackage(InterpretersNode parent, string name, bool withPip, bool elevated) {
             var statusBar = (IVsStatusbar)parent.ProjectMgr.Site.GetService(typeof(SVsStatusbar));
 
             // don't process events while we're installing, we'll
@@ -87,9 +90,9 @@ namespace Microsoft.PythonTools.Project {
                 var redirector = OutputWindowRedirector.GetGeneral(parent.ProjectMgr.Site);
                 statusBar.SetText(SR.GetString(SR.PackageInstallingSeeOutputWindow, name));
 
-                var task = view.InstallUsingPip ?
-                    Pip.Install(parent._factory, name, parent.ProjectMgr.Site, view.InstallElevated, redirector) :
-                    EasyInstall.Install(parent._factory, name, parent.ProjectMgr.Site, view.InstallElevated, redirector);
+                var task = withPip ?
+                    Pip.Install(parent._factory, name, parent.ProjectMgr.Site, elevated, redirector) :
+                    EasyInstall.Install(parent._factory, name, parent.ProjectMgr.Site, elevated, redirector);
 
                 bool success = await task;
                 statusBar.SetText(SR.GetString(

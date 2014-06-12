@@ -68,6 +68,9 @@ namespace Microsoft.PythonTools.Project {
                 venvName = "env" + i.ToString();
             }
             VirtualEnvName = venvName;
+
+            CanInstallRequirementsTxt = File.Exists(CommonUtils.GetAbsoluteFilePath(_projectHome, "requirements.txt"));
+            WillInstallRequirementsTxt = CanInstallRequirementsTxt;
         }
 
         private void OnInterpretersChanged(object sender, EventArgs e) {
@@ -327,6 +330,31 @@ namespace Microsoft.PythonTools.Project {
             await aiv.UpdateInterpreter(e.NewValue as InterpreterView);
         }
 
+
+        public bool CanInstallRequirementsTxt {
+            get { return (bool)GetValue(CanInstallRequirementsTxtProperty); }
+            set { SetValue(CanInstallRequirementsTxtProperty, value); }
+        }
+
+        public static readonly DependencyProperty CanInstallRequirementsTxtProperty =
+            DependencyProperty.Register("CanInstallRequirementsTxt",
+                typeof(bool),
+                typeof(AddVirtualEnvironmentView),
+                new PropertyMetadata(false));
+
+        public bool WillInstallRequirementsTxt {
+            get { return (bool)GetValue(WillInstallRequirementsTxtProperty); }
+            set { SetValue(WillInstallRequirementsTxtProperty, value); }
+        }
+
+        public static readonly DependencyProperty WillInstallRequirementsTxtProperty =
+            DependencyProperty.Register("WillInstallRequirementsTxt",
+                typeof(bool),
+                typeof(AddVirtualEnvironmentView),
+                new PropertyMetadata(false));
+
+
+
         /// <summary>
         /// Waits for any background processing to complete. Properties of this
         /// object may be invalid while processing is ongoing.
@@ -345,7 +373,7 @@ namespace Microsoft.PythonTools.Project {
             await _ready.WaitAsync();
 
             try {
-                WillInstallPipAndVirtualEnv = false;
+                WillInstallPip = false;
                 WillInstallVirtualEnv = false;
                 WillInstallElevated = false;
                 MayNotSupportVirtualEnv = false;
@@ -370,18 +398,19 @@ namespace Microsoft.PythonTools.Project {
                         interp.FindModules("pip", "virtualenv", "venv")
                     )).ConfigureAwait(true);
 
+                    WillInstallPip = WillInstallRequirementsTxt && !installed.Contains("pip");
+
                     if (installed.Contains("venv") || installed.Contains("virtualenv")) {
-                        WillInstallPipAndVirtualEnv = false;
                         WillInstallVirtualEnv = false;
-                        WillInstallElevated = false;
                         UseVEnv = !installed.Contains("virtualenv");
                     } else {
-                        WillInstallPipAndVirtualEnv = !installed.Contains("pip");
-                        WillInstallVirtualEnv = !WillInstallPipAndVirtualEnv;
-                        WillInstallElevated = PythonToolsPackage.Instance != null &&
-                            PythonToolsPackage.Instance.GeneralOptionsPage.ElevatePip;
+                        WillInstallPip = !installed.Contains("pip");
+                        WillInstallVirtualEnv = true;
                         UseVEnv = false;
                     }
+                    WillInstallElevated = (WillInstallPip || WillInstallVirtualEnv) &&
+                        PythonToolsPackage.Instance != null &&
+                        PythonToolsPackage.Instance.GeneralOptionsPage.ElevatePip;
                 }
             } finally {
                 _ready.Release();
@@ -402,18 +431,18 @@ namespace Microsoft.PythonTools.Project {
         public static readonly DependencyProperty MayNotSupportVirtualEnvProperty =
             MayNotSupportVirtualEnvPropertyKey.DependencyProperty;
 
-        public bool WillInstallPipAndVirtualEnv {
-            get { return (bool)GetValue(WillInstallPipAndVirtualEnvProperty); }
-            private set { SafeSetValue(WillInstallPipAndVirtualEnvPropertyKey, value); }
+        public bool WillInstallPip {
+            get { return (bool)GetValue(WillInstallPipProperty); }
+            private set { SafeSetValue(WillInstallPipPropertyKey, value); }
         }
 
-        private static readonly DependencyPropertyKey WillInstallPipAndVirtualEnvPropertyKey =
-            DependencyProperty.RegisterReadOnly("WillInstallPipAndVirtualEnv",
+        private static readonly DependencyPropertyKey WillInstallPipPropertyKey =
+            DependencyProperty.RegisterReadOnly("WillInstallPip",
                 typeof(bool),
                 typeof(AddVirtualEnvironmentView),
                 new PropertyMetadata(false));
-        public static readonly DependencyProperty WillInstallPipAndVirtualEnvProperty =
-            WillInstallPipAndVirtualEnvPropertyKey.DependencyProperty;
+        public static readonly DependencyProperty WillInstallPipProperty =
+            WillInstallPipPropertyKey.DependencyProperty;
 
         public bool WillInstallVirtualEnv {
             get { return (bool)GetValue(WillInstallVirtualEnvProperty); }

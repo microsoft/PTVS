@@ -77,7 +77,7 @@ namespace PythonToolsUITests {
                 var env = app.CreateVirtualEnvironment(project, out envName);
                 env.Select();
 
-                using (var installPackage = AutomationDialog.FromDte(app, "Project.InstallPythonPackage")) {
+                using (var installPackage = AutomationDialog.FromDte(app, "ProjectandSolutionContextMenus.PythonEnvironment.InstallPythonPackage")) {
                     var packageName = new TextBox(installPackage.FindByAutomationId("Name"));
                     packageName.SetValue("azure==0.6.2");
                     installPackage.ClickButtonAndClose("OK", nameIsAutomationId: true);
@@ -102,6 +102,71 @@ namespace PythonToolsUITests {
                     envName,
                     "azure (0.6.2)"
                 );
+            }
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void CreateInstallRequirementsTxt() {
+            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte))
+            using (var dis = Init(app)) {
+                var project = CreateTemporaryProject(app);
+
+                var projectHome = project.GetPythonProject().ProjectHome;
+                File.WriteAllText(Path.Combine(projectHome, "requirements.txt"), "azure==0.6.2");
+
+                string envName;
+                var env = app.CreateVirtualEnvironment(project, out envName);
+                env.Select();
+
+                app.SolutionExplorerTreeView.WaitForChildOfProject(
+                    project,
+                    SR.GetString(SR.Environments),
+                    envName,
+                    "azure (0.6.2)"
+                );
+            }
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void InstallGenerateRequirementsTxt() {
+            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte))
+            using (var dis = Init(app)) {
+                var project = CreateTemporaryProject(app);
+
+                string envName;
+                var env = app.CreateVirtualEnvironment(project, out envName);
+                env.Select();
+
+                try {
+                    app.ExecuteCommand("ProjectandSolutionContextMenus.PythonEnvironment.Installfromrequirements.txt", timeout: 5000);
+                    Assert.Fail("Command should not have executed");
+                } catch (AggregateException) {
+                }
+
+                var requirementsTxt = Path.Combine(Path.GetDirectoryName(project.FullName), "requirements.txt");
+                File.WriteAllText(requirementsTxt, "azure==0.6.2");
+
+                app.ExecuteCommand("ProjectandSolutionContextMenus.PythonEnvironment.Installfromrequirements.txt");
+
+                app.SolutionExplorerTreeView.WaitForChildOfProject(
+                    project,
+                    SR.GetString(SR.Environments),
+                    envName,
+                    "azure (0.6.2)"
+                );
+
+                File.Delete(requirementsTxt);
+
+                app.ExecuteCommand("ProjectandSolutionContextMenus.PythonEnvironment.Generaterequirements.txt");
+
+                app.SolutionExplorerTreeView.WaitForChildOfProject(
+                    project,
+                    "requirements.txt"
+                );
+                
+                Assert.AreEqual("azure==0.6.2", File.ReadAllText(requirementsTxt).Trim());
             }
         }
 
@@ -385,7 +450,7 @@ namespace PythonToolsUITests {
                         provider.DiscoverInterpreters();
                         Assert.Fail("Expected InvalidDataException in DiscoverInterpreters");
                     } catch (InvalidDataException ex) {
-                        AssertUtil.Equals(ex.Message
+                        AssertUtil.AreEqual(ex.Message
                             .Replace(TestData.GetPath("TestData\\Environments\\"), "$")
                             .Split('\r', '\n')
                             .Where(s => !string.IsNullOrEmpty(s))
@@ -414,7 +479,7 @@ namespace PythonToolsUITests {
                         );
                     }
 
-                    AssertUtil.Equals(factories.Select(f => f.Description),
+                    AssertUtil.AreEqual(factories.Select(f => f.Description),
                         "Absent BaseInterpreter (unavailable)",
                         "Invalid BaseInterpreter (unavailable)",
                         "Invalid InterpreterPath (unavailable)",

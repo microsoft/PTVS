@@ -1147,6 +1147,8 @@ namespace Microsoft.PythonTools.Project {
                         case PythonConstants.AddExistingVirtualEnv:
                         case PythonConstants.AddVirtualEnv:
                         case PythonConstants.InstallPythonPackage:
+                        case PythonConstants.InstallRequirementsTxt:
+                        case PythonConstants.GenerateRequirementsTxt:
                         case PythonConstants.AddSearchPathCommandId:
                         case PythonConstants.AddSearchPathZipCommandId:
                         case PythonConstants.AddPythonPathToSearchPathCommandId:
@@ -1284,13 +1286,28 @@ namespace Microsoft.PythonTools.Project {
             var path = data.VirtualEnvPath;
             var baseInterp = data.BaseInterpreter.Interpreter;
 
-            await CreateOrAddVirtualEnvironment(
+            var factory = await CreateOrAddVirtualEnvironment(
                 service,
                 data.WillCreateVirtualEnv,
                 data.VirtualEnvPath,
                 data.BaseInterpreter.Interpreter,
                 data.UseVEnv
             );
+
+            if (factory != null && data.WillInstallRequirementsTxt) {
+                var txt = CommonUtils.GetAbsoluteFilePath(ProjectHome, "requirements.txt");
+                if (File.Exists(txt)) {
+                    var redirector = OutputWindowRedirector.GetGeneral(Site);
+                    redirector.WriteLine(SR.GetString(SR.RequirementsTxtInstalling, txt));
+                    bool elevate = PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ElevatePip;
+                    await Pip.Install(
+                        factory,
+                        "-r " + ProcessOutput.QuoteSingleArgument(txt),
+                        elevate,
+                        redirector
+                    );
+                }
+            }
         }
 
         internal async Task<IPythonInterpreterFactory> CreateOrAddVirtualEnvironment(

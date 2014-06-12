@@ -784,6 +784,30 @@
         </Strings>
       </Button>
 
+      <Button guid="guidPythonToolsCmdSet" id="cmdidInstallRequirementsTxt" priority="0x0450" type="Button">
+        <Parent guid="guidPythonToolsCmdSet" id="EnvironmentCommandsGroup"/>
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <Strings>
+          <ButtonText>Ins&amp;tall from requirements.txt</ButtonText>
+          <MenuText>Ins&amp;tall from requirements.txt</MenuText>
+          <ToolTipText>Install from requirements.txt</ToolTipText>
+          <CommandName>Install from requirements.txt</CommandName>
+        </Strings>
+      </Button>
+
+      <Button guid="guidPythonToolsCmdSet" id="cmdidGenerateRequirementsTxt" priority="0x0460" type="Button">
+        <Parent guid="guidPythonToolsCmdSet" id="EnvironmentCommandsGroup"/>
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <Strings>
+          <ButtonText>&amp;Generate requirements.txt</ButtonText>
+          <MenuText>&amp;Generate requirements.txt</MenuText>
+          <ToolTipText>Generate requirements.txt</ToolTipText>
+          <CommandName>Generate requirements.txt</CommandName>
+        </Strings>
+      </Button>
+
       <Button guid="guidPythonToolsCmdSet" id="cmdidOpenInteractiveForEnvironment" priority="0x0302" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="EnvironmentCommandsGroup"/>
         <Icon guid="guidImages" id="pyReplPic" />
@@ -1145,6 +1169,9 @@
       <IDSymbol name="cmdidOpenInteractiveForEnvironment" value="0x4031" />
 
       <IDSymbol name="cmdidAzureExplorerAttachPythonDebugger" value="0x4032" />
+
+      <IDSymbol name="cmdidInstallRequirementsTxt" value="0x4033" />
+      <IDSymbol name="cmdidGenerateRequirementsTxt" value="0x4034" />
 
       <!-- Groups -->
       <IDSymbol name="EditorContextGroup" value="0x1010" />

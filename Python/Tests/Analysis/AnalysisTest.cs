@@ -719,11 +719,11 @@ class D(C):
 ";
             entry = ProcessText(code);
 
-            AssertUtil.Equals(
+            AssertUtil.AreEqual(
                 entry.GetSignaturesByIndex("self.f", code.IndexOf("self.f")).First().Parameters.Select(x => x.Name),
                 "_C__A"
             );
-            AssertUtil.Equals(
+            AssertUtil.AreEqual(
                 entry.GetSignaturesByIndex("self.f", code.IndexOf("marker")).First().Parameters.Select(x => x.Name),
                 "_C__A"
             );

@@ -616,4 +616,17 @@ Run Visual Studio with the /Log option and check ActivityLog.xml for more detail
 
 {1}</value>
   </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>&amp;Cancel</value>
+  </data>
+  <data name="CancelQueryEditMultiple" xml:space="preserve">
+    <value>The command you are attempting cannot be completed because the files that must be modified cannot be changed. If these files are under source control, you may want to check them out; if the files are read-only on disk, you may want to change their attributes.</value>
+    <comment>MsgBox</comment>
+  </data>
+  <data name="ErrorDetail" xml:space="preserve">
+    <value>Error &amp;details</value>
+  </data>
+  <data name="Retry" xml:space="preserve">
+    <value>T&amp;ry again</value>
+  </data>
 </root>

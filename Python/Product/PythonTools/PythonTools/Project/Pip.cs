@@ -134,6 +134,9 @@ namespace Microsoft.PythonTools.Project {
             bool elevate,
             Redirector output = null
         ) {
+            if (!factory.FindModules("pip").Any()) {
+                await InstallPip(factory, elevate, output);
+            }
             using (var proc = Run(factory, output, elevate, "install", GetInsecureArg(factory, output), package)) {
                 await proc;
             }
@@ -146,11 +149,15 @@ namespace Microsoft.PythonTools.Project {
             bool elevate,
             Redirector output = null
         ) {
-            if (site != null && !ModulePath.GetModulesInLib(factory).Any(mp => mp.ModuleName == "pip")) {
-                try {
-                    await QueryInstallPip(factory, site, SR.GetString(SR.InstallPip), elevate, output);
-                } catch (OperationCanceledException) {
-                    return false;
+            if (!factory.FindModules("pip").Any()) {
+                if (site != null) {
+                    try {
+                        await QueryInstallPip(factory, site, SR.GetString(SR.InstallPip), elevate, output);
+                    } catch (OperationCanceledException) {
+                        return false;
+                    }
+                } else {
+                    await InstallPip(factory, elevate, output);
                 }
             }
 
@@ -238,7 +245,7 @@ namespace Microsoft.PythonTools.Project {
                 null,
                 false,
                 output,
-                elevate: PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ElevatePip
+                elevate: elevate
             )) {
                 var exitCode = await proc;
                 if (output != null) {
