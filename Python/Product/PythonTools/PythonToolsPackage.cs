@@ -757,6 +757,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
 
             _logger.LogEvent(PythonLogEvent.InstalledInterpreters, installed);
             _logger.LogEvent(PythonLogEvent.ConfiguredInterpreters, configured);
+            _logger.LogEvent(PythonLogEvent.SurveyNewsFrequency, GeneralOptionsPage.SurveyNewsCheck);
         }
 
         internal SolutionEventsListener SolutionEvents {

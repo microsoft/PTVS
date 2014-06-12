@@ -33,6 +33,12 @@ namespace Microsoft.PythonTools.Logging {
         /// 
         /// Data is an int indicating the number of interpreters.
         /// </summary>
-        ConfiguredInterpreters
+        ConfiguredInterpreters,
+        /// <summary>
+        /// Logs the frequency at which users check for new Survey\News
+        /// 
+        /// Data is an int enum mapping to SurveyNews* setting
+        /// </summary>
+        SurveyNewsFrequency
     }
 }
