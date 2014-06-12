@@ -317,9 +317,9 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             AD7EngineCreateEvent.Send(this);
 
             lock (_syncLock) {
+                AD7ProgramCreateEvent.Send(this);
                 _programCreated = true;
                 
-
                 if (_processLoadedThread != null) {
                     SendLoadComplete(_processLoadedThread);
                 }
@@ -331,8 +331,6 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
         private void SendLoadComplete(AD7Thread thread) {
             Debug.WriteLine("Sending load complete" + GetHashCode());
-
-            AD7ProgramCreateEvent.Send(this);
 
             if (_startModule != null) {
                 SendModuleLoaded(_startModule);

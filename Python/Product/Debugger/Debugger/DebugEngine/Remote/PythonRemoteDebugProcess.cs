@@ -14,9 +14,9 @@
 
 using System;
 using System.IO;
-using System.Net.Sockets;
+using System.Net;
+using System.Net.WebSockets;
 using System.Windows.Forms;
-using Microsoft.PythonTools.Debugger.Transports;
 using Microsoft.VisualStudio.Debugger.Interop;
 
 namespace Microsoft.PythonTools.Debugger.Remote {
@@ -191,14 +191,28 @@ namespace Microsoft.PythonTools.Debugger.Remote {
                                 // User has already got a warning dialog and clicked "Cancel" on that, so no further prompts are needed.
                                 return null;
                             default:
-                                errText = string.Format("Could not connect to remote Python process at {0}. Make sure that the process is running, and has called ptvsd.enable_attach().", port.Uri);
-                                if (connEx.InnerException != null) {
-                                    errText += "\r\n\r\nAdditional information:";
-                                    for (var ex = connEx.InnerException; ex != null; ex = ex.InnerException) {
-                                        errText += "\r\n" + ex.Message;
+                                {
+                                    // Azure uses HTTP 503 (Service Unavailable) to indicate that websocket connections are not supported. Show a special error message for that.
+                                    var wsEx = connEx.InnerException as WebSocketException;
+                                    if (wsEx != null) {
+                                        var webEx = wsEx.InnerException as WebException;
+                                        if (webEx != null) {
+                                            var httpResponse = webEx.Response as HttpWebResponse;
+                                            if (httpResponse != null && httpResponse.StatusCode == HttpStatusCode.ServiceUnavailable) {
+                                                errText = string.Format("Could not connect to remote Python process at {0}. Make sure that web sockets are enabled for the corresponding web site in Azure portal.", port.Uri);
+                                                break;
+                                            }
+                                        }
                                     }
+
+                                    errText = string.Format("Could not connect to remote Python process at {0}. Make sure that the process is running, and has called ptvsd.enable_attach().", port.Uri);
+                                    for (var ex = connEx.InnerException; ex != null; ex = ex.InnerException) {
+                                        if (ex.InnerException == null) {
+                                            errText += "\r\n\r\nAdditional information:\r\n" + ex.Message;
+                                        }
+                                    }
+                                    break;
                                 }
-                                break;
                         }
 
                         DialogResult dlgRes = MessageBox.Show(errText, null, MessageBoxButtons.RetryCancel, MessageBoxIcon.Error);

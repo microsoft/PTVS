@@ -438,19 +438,7 @@ namespace Microsoft.PythonTools.Debugger {
                         case "LAST": HandleLast(stream); break;
                     }
                 }
-            } catch (IOException ioExc) {
-                var sockExc = ioExc.InnerException as SocketException;
-                if (sockExc != null) {
-                    // Treat non-recoverable socket errors as an indication that the debuggee process has been terminated.
-                    switch (sockExc.SocketErrorCode) {
-                        case SocketError.ConnectionAborted:
-                        case SocketError.ConnectionReset:
-                            if (!_startedProcess) { // if we started the process wait until we receive the process exited event
-                                _process_Exited(this, EventArgs.Empty);
-                            }
-                            break;
-                    }
-                }
+            } catch (IOException) {
             } catch (ObjectDisposedException ex) {
                 // Socket or stream have been disposed
                 Debug.Assert(
@@ -458,6 +446,13 @@ namespace Microsoft.PythonTools.Debugger {
                     ex.ObjectName == typeof(Socket).FullName,
                     "Accidentally handled ObjectDisposedException(" + ex.ObjectName + ")"
                 );
+            }
+
+            // If the event thread ends, and the process is not controlled by the debugger (e.g. in remote scenarios, where there's no process),
+            // make sure that we report ProcessExited event. If the thread has ended gracefully, we have already done this when handling DETC,
+            // so it's a no-op. But if connection broke down unexpectedly, no-one knows yet, so we need to tell them.
+            if (!_startedProcess) {
+                _process_Exited(this, EventArgs.Empty);
             }
         }
 
@@ -637,13 +632,19 @@ namespace Microsoft.PythonTools.Debugger {
             int execId = stream.ReadInt32();
             CompletionInfo completion;
             lock (_pendingExecutes) {
-                completion = _pendingExecutes[execId];
-
-                _pendingExecutes.Remove(execId);
-                _ids.Free(execId);
+                if (_pendingExecutes.TryGetValue(execId, out completion)) {
+                    _pendingExecutes.Remove(execId);
+                    _ids.Free(execId);
+                } else {
+                    Debug.Fail("Received REPL execution result with unknown execution ID " + execId);
+                }
             }
+
             Debug.WriteLine("Received execution request {0}", execId);
-            completion.Completion(ReadPythonObject(stream, completion.Text, null, completion.Frame));
+            var evalResult = ReadPythonObject(stream, completion.Text, null, completion.Frame);
+            if (completion != null) {
+                completion.Completion(evalResult);
+            }
         }
 
         private void HandleEnumChildren(Stream stream) {

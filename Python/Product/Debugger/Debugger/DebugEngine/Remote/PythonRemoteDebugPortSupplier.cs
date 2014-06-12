@@ -13,12 +13,10 @@
  * ***************************************************************************/
 
 using System;
-using System.Collections.Generic;
-using System.ComponentModel.Composition;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text.RegularExpressions;
+using System.Windows.Forms;
 using Microsoft.PythonTools.Debugger.Transports;
+using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Debugger.Interop;
 
 namespace Microsoft.PythonTools.Debugger.Remote {
@@ -52,7 +50,8 @@ namespace Microsoft.PythonTools.Debugger.Remote {
             var uri = new Uri(name, UriKind.Absolute);
             var transport = DebuggerTransportFactory.Get(uri);
             if (transport == null) {
-                return new FormatException().HResult;
+                MessageBox.Show(string.Format("Unrecognized remote debugging transport '{0}'.", uri.Scheme), null, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return VSConstants.E_FAIL;
             }
 
             var validationError = transport.Validate(uri);
@@ -72,34 +71,35 @@ namespace Microsoft.PythonTools.Debugger.Remote {
             }
 
             ppPort = port;
-            return 0;
+            return VSConstants.S_OK;
         }
 
         public int CanAddPort() {
-            return 0; // S_OK = true, S_FALSE = false
+            return VSConstants.S_OK; // S_OK = true, S_FALSE = false
         }
 
         public int EnumPorts(out IEnumDebugPorts2 ppEnum) {
             ppEnum = null;
-            return 0;
+            return VSConstants.S_OK;
         }
 
         public int GetPort(ref Guid guidPort, out IDebugPort2 ppPort) {
-            throw new NotImplementedException();
+            ppPort = null;
+            return VSConstants.E_NOTIMPL;
         }
 
         public int GetPortSupplierId(out Guid pguidPortSupplier) {
             pguidPortSupplier = PortSupplierGuid;
-            return 0;
+            return VSConstants.S_OK;
         }
 
         public int GetPortSupplierName(out string pbstrName) {
             pbstrName = "Python remote debugging";
-            return 0;
+            return VSConstants.S_OK;
         }
 
         public int RemovePort(IDebugPort2 pPort) {
-            return 0;
+            return VSConstants.S_OK;
         }
 
         public int GetDescription(enum_PORT_SUPPLIER_DESCRIPTION_FLAGS[] pdwFlags, out string pbstrText) {
@@ -107,7 +107,7 @@ namespace Microsoft.PythonTools.Debugger.Remote {
                 "Allows debugging a Python process on a remote machine running any OS, if it can be connected to via TCP, " +
                 "and remote debugging has been enabled by using the 'ptvsd' module. " +
                 "Specify the secret, hostname and port to connect to in the 'Qualifier' textbox, e.g. 'tcp://secret@localhost:5678'. ";
-            return 0;
+            return VSConstants.S_OK;
         }
     }
 }

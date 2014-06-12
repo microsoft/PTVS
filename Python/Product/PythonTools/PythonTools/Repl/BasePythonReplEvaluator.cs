@@ -346,6 +346,7 @@ namespace Microsoft.PythonTools.Repl {
                     }
                 } catch (IOException) {
                 } catch (SocketException) {
+                } catch (ObjectDisposedException) {
                 } finally {
                     using (new StreamLock(this, throwIfDisconnected: false)) {
                         _stream = null;

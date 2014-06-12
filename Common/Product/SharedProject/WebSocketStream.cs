@@ -12,8 +12,6 @@
  *
  * ***************************************************************************/
 
-#if DEV11_OR_LATER
-
 using System;
 using System.IO;
 using System.Net.WebSockets;
@@ -101,5 +99,3 @@ namespace Microsoft.VisualStudioTools {
         }
     }
 }
-
-#endif

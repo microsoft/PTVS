@@ -48,10 +48,8 @@ namespace Microsoft.PythonTools.Debugger.Transports {
         private static readonly Dictionary<string, Func<IDebuggerTransport>> _factories = new Dictionary<string, Func<IDebuggerTransport>> {
             { "tcp", () => new TcpTransport() },
             { "tcps", () => new TcpsTransport() },
-#if DEV11_OR_LATER
             { "ws", () => new WebSocketTransport() },
             { "wss", () => new WebSocketTransport() },
-#endif
         };
                                                                                             
 

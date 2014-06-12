@@ -670,7 +670,7 @@ ConnectionInfo GetConnectionInfo() {
     return ConnectionInfo((MemoryBuffer*)pBuf, hMapFile);
 }
 
-// Error messages - ust be kept in sync w/ PythonAttach.cs
+// Error messages - must be kept in sync with PythonAttach.cs
 enum ConnErrorMessages {
     ConnError_None,
     ConnError_InterpreterNotInitialized,
@@ -685,7 +685,14 @@ enum ConnErrorMessages {
     ConnError_SysNotFound,
     ConnError_SysSetTraceNotFound,
     ConnError_SysGetTraceNotFound,
-    ConnError_PyDebugAttachNotFound
+    ConnError_PyDebugAttachNotFound,
+	ConnError_RemoteNetworkError,
+	ConnError_RemoteSslError,
+	ConnError_RemoteUnsupportedServer,
+	ConnError_RemoteSecretMismatch,
+	ConnError_RemoteAttachRejected,
+	ConnError_RemoteInvalidUri,
+	ConnError_RemoteUnsupportedTransport
 };
 
 // Ensures handles are closed when they go out of scope

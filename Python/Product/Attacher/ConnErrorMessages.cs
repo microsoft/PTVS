@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 
 namespace Microsoft.PythonTools.Debugger {
+    // Error messages - must be kept in sync with PyDebugAttach.cpp
     public enum ConnErrorMessages {
         None,
         InterpreterNotInitialized,
@@ -37,6 +38,7 @@ namespace Microsoft.PythonTools.Debugger {
         RemoteSecretMismatch,
         RemoteAttachRejected,
         RemoteInvalidUri,
+        RemoteUnsupportedTransport,
     };
 
     static class ConnErrorExtensions {
@@ -59,7 +61,8 @@ namespace Microsoft.PythonTools.Debugger {
             { ConnErrorMessages.RemoteUnsupportedServer, "Remote server is not a supported Python Tools for Visual Studio debugging server" },
             { ConnErrorMessages.RemoteSecretMismatch, "Secret specified in the Qualifier string did not match the remote secret" },
             { ConnErrorMessages.RemoteAttachRejected, "Remote debugging server rejected request to attach" },
-            { ConnErrorMessages.RemoteInvalidUri, "Invalid remote debugging endpoint URI" }
+            { ConnErrorMessages.RemoteInvalidUri, "Invalid remote debugging endpoint URI" },
+            { ConnErrorMessages.RemoteUnsupportedTransport, "This remote debugging transport is not supported by this version of Windows." },
         };
 
         internal static string GetErrorMessage(this ConnErrorMessages attachRes) {
