@@ -94,7 +94,14 @@ namespace Microsoft.PythonTools.Django {
             );
 
             var res = new VSITEMSELECTION();
-            res.itemid = (uint)((IntPtr)parent).ToInt32();
+            var i = parent as int?;
+            if (i.HasValue) {
+                res.itemid = (uint)i.GetValueOrDefault();
+            } else {
+                var ip = parent as IntPtr?;
+                res.itemid = (uint)ip.GetValueOrDefault().ToInt32();
+            }
+            
             res.pHier = vsItemSelection.pHier;
             return res;
         }
