@@ -398,9 +398,8 @@ namespace Microsoft.PythonTools.Project {
                         interp.FindModules("pip", "virtualenv", "venv")
                     )).ConfigureAwait(true);
 
-                    WillInstallPip = WillInstallRequirementsTxt && !installed.Contains("pip");
-
                     if (installed.Contains("venv") || installed.Contains("virtualenv")) {
+                        WillInstallPip = false;
                         WillInstallVirtualEnv = false;
                         UseVEnv = !installed.Contains("virtualenv");
                     } else {

@@ -128,7 +128,7 @@ namespace Microsoft.PythonTools.Project {
             return null;
         }
 
-        public static async Task Install(
+        public static async Task<bool> Install(
             IPythonInterpreterFactory factory,
             string package,
             bool elevate,
@@ -139,6 +139,7 @@ namespace Microsoft.PythonTools.Project {
             }
             using (var proc = Run(factory, output, elevate, "install", GetInsecureArg(factory, output), package)) {
                 await proc;
+                return proc.ExitCode == 0;
             }
         }
 
@@ -263,7 +264,7 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        public static async Task QueryInstall(
+        public static async Task<bool> QueryInstall(
             IPythonInterpreterFactory factory,
             string package,
             IServiceProvider site,
@@ -284,7 +285,7 @@ namespace Microsoft.PythonTools.Project {
                 throw new OperationCanceledException();
             }
 
-            await Install(factory, package, elevate, output);
+            return await Install(factory, package, elevate, output);
         }
 
         public static async Task QueryInstallPip(

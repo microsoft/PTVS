@@ -17,11 +17,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
+using NativeMethods = Microsoft.VisualStudioTools.Project.NativeMethods;
 using OleConstants = Microsoft.VisualStudio.OLE.Interop.Constants;
 using Task = System.Threading.Tasks.Task;
 using VsCommands = Microsoft.VisualStudio.VSConstants.VSStd97CmdID;
@@ -106,6 +108,43 @@ namespace Microsoft.PythonTools.Project {
                 statusBar.SetText(SR.GetString(SR.PackageInstallFailed, name));
             } finally {
                 parent.PackageChangeDone();
+            }
+        }
+
+        public static async Task InstallNewPackage(
+            IPythonInterpreterFactory factory,
+            IServiceProvider provider,
+            string name,
+            bool withPip,
+            bool elevated
+        ) {
+            var statusBar = (IVsStatusbar)provider.GetService(typeof(SVsStatusbar));
+
+            try {
+                var redirector = OutputWindowRedirector.GetGeneral(provider);
+                statusBar.SetText(SR.GetString(SR.PackageInstallingSeeOutputWindow, name));
+
+                var task = withPip ?
+                    Pip.Install(factory, name, provider, elevated, redirector) :
+                    EasyInstall.Install(factory, name, provider, elevated, redirector);
+
+                bool success = await task;
+                statusBar.SetText(SR.GetString(
+                    success ? SR.PackageInstallSucceeded : SR.PackageInstallFailed,
+                    name
+                ));
+
+                if (success) {
+                    var withDb = factory as IPythonInterpreterFactoryWithDatabase;
+                    if (withDb != null) {
+                        withDb.GenerateDatabase(GenerateDatabaseOptions.SkipUnchanged);
+                    }
+                }
+            } catch (Exception ex) {
+                if (ex.IsCriticalException()) {
+                    throw;
+                }
+                statusBar.SetText(SR.GetString(SR.PackageInstallFailed, name));
             }
         }
 

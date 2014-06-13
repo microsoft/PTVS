@@ -12,11 +12,16 @@
   </TemplateData>
   <TemplateContent>
     <Project File="DjangoApp.pyproj" ReplaceParameters="true">
-      <ProjectItem ReplaceParameters="true" OpenInEditor="false" TargetFileName="manage.py">manage.py</ProjectItem>
-      <ProjectItem ReplaceParameters="true" OpenInEditor="false" TargetFileName="$safeprojectname$\__init__.py">__init__.py</ProjectItem>
-      <ProjectItem ReplaceParameters="true" OpenInEditor="false" TargetFileName="$safeprojectname$\urls.py">urls.py</ProjectItem>
+      <ProjectItem ReplaceParameters="true" TargetFileName="manage.py">manage.py</ProjectItem>
+      <ProjectItem ReplaceParameters="true" TargetFileName="$safeprojectname$\__init__.py">__init__.py</ProjectItem>
+      <ProjectItem ReplaceParameters="true" TargetFileName="$safeprojectname$\urls.py">urls.py</ProjectItem>
       <ProjectItem ReplaceParameters="true" OpenInEditor="true" TargetFileName="$safeprojectname$\settings.py">settings.py</ProjectItem>
-      <ProjectItem ReplaceParameters="true" OpenInEditor="false" TargetFileName="$safeprojectname$\wsgi.py">wsgi.py</ProjectItem>
+      <ProjectItem ReplaceParameters="true" TargetFileName="$safeprojectname$\wsgi.py">wsgi.py</ProjectItem>
+      <ProjectItem>requirements.txt</ProjectItem>
     </Project>
   </TemplateContent>
+  <WizardExtension>
+    <Assembly>Microsoft.PythonTools.ProjectWizards, Version=2.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</Assembly>
+    <FullClassName>Microsoft.PythonTools.ProjectWizards.InstallRequirementsWizard</FullClassName>
+  </WizardExtension>
 </VSTemplate>

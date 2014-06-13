@@ -15,8 +15,6 @@
     <OutputPath>.</OutputPath>
     <StaticUriPattern>^/static/.*</StaticUriPattern>
     <PythonDebugWebServerCommandArguments>--debug $(CommandLineArguments)</PythonDebugWebServerCommandArguments>
-    <PythonWebFrameworkPackage>bottle</PythonWebFrameworkPackage>
-    <PythonWebFrameworkPackageDisplayName>Bottle</PythonWebFrameworkPackageDisplayName>
     <PythonWsgiHandler>{StartupModule}.wsgi_app()</PythonWsgiHandler>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -66,11 +64,6 @@
     <Content Include="views\contact.tpl" />
     <Content Include="views\index.tpl" />
     <Content Include="views\layout.tpl" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="readme.mht">
-      <SubType>WebBrowser</SubType>
-    </None>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.Web.targets" />
   <!-- Specify pre- and post-build commands in the BeforeBuild and 

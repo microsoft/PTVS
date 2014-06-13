@@ -14,8 +14,6 @@
     <LaunchProvider>Web launcher</LaunchProvider>
     <OutputPath>.</OutputPath>
     <StaticUriPattern>^/static/.*</StaticUriPattern>
-    <PythonWebFrameworkPackage>flask</PythonWebFrameworkPackage>
-    <PythonWebFrameworkPackageDisplayName>Flask</PythonWebFrameworkPackageDisplayName>
     <PythonWsgiHandler>{StartupModule}.wsgi_app</PythonWsgiHandler>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -65,11 +63,6 @@
     <Content Include="templates\contact.html" />
     <Content Include="templates\index.html" />
     <Content Include="templates\layout.html" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="readme.mht">
-      <SubType>WebBrowser</SubType>
-    </None>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.Web.targets" />
   <!-- Specify pre- and post-build commands in the BeforeBuild and 

@@ -77,6 +77,13 @@ namespace Microsoft.PythonTools.Project {
         }
 
         [Browsable(false)]
+        public string InterpreterDescription {
+            get {
+                return ((PythonProjectNode)this.Node).Interpreters.ActiveInterpreter.Description;
+            }
+        }
+
+        [Browsable(false)]
         public MSBuildProjectInterpreterFactoryProvider InterpreterFactoryProvider {
             get {
                 return ((PythonProjectNode)this.Node).Interpreters;

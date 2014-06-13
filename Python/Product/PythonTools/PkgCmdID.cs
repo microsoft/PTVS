@@ -16,10 +16,8 @@
 // MUST match PkgCmdID.h
 using System;
 
-namespace Microsoft.PythonTools
-{
-    static class PkgCmdIDList
-    {        
+namespace Microsoft.PythonTools {
+    static class PkgCmdIDList {
         public const uint cmdidExecuteFileInRepl = 0x102;
         public const uint cmdidSendToRepl = 0x103;
         public const uint cmdidSendToDefiningModule = 0x104;
@@ -56,5 +54,15 @@ namespace Microsoft.PythonTools
         public const uint cmdidUsePythonStepping = 0x400F;
 
         public const uint cmdidAzureExplorerAttachPythonDebugger = 0x4032;
+
+        public const uint cmdidAddEnvironment = 0x4006;
+        public const uint cmdidAddVirtualEnv = 0x4007;
+        public const uint cmdidAddExistingVirtualEnv = 0x4008;
+        public const uint cmdidActivateEnvironment = 0x4009;
+        public const uint cmdidInstallPythonPackage = 0x400A;
+        public const uint cmdidViewAllEnvironments = 0x400B;
+
+        public const uint cmdidInstallRequirementsTxt = 0x4033;
+        public const uint cmdidGenerateRequirementsTxt = 0x4034;
     };
 }

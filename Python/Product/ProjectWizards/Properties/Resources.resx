@@ -125,11 +125,49 @@ After installation, you will need to restart Visual Studio.</value>
   <data name="AzureToolsRequired" xml:space="preserve">
     <value>This project type requires the Azure Tools for Visual Studio.</value>
   </data>
+  <data name="DefaultInterpreterDescription" xml:space="preserve">
+    <value>your default environment</value>
+    <comment>Used with InstallRequirementsIntoGlobalEnv if no description can be obtained from the project.</comment>
+  </data>
   <data name="DownloadAndInstall" xml:space="preserve">
     <value>Download and install now</value>
   </data>
   <data name="ErrorNoDte" xml:space="preserve">
     <value>Unable to start wizard: no automation object available.</value>
+  </data>
+  <data name="InstallRequirementsFailed" xml:space="preserve">
+    <value>Your packages may not have been installed.</value>
+  </data>
+  <data name="InstallRequirementsFooter" xml:space="preserve">
+    <value>&lt;a href="https://pytools.codeplex.com/workitem/2446"&gt;What do you think about this dialog?&lt;/a&gt;</value>
+  </data>
+  <data name="InstallRequirementsHeading" xml:space="preserve">
+    <value>This project requires external packages</value>
+  </data>
+  <data name="InstallRequirementsHidePackages" xml:space="preserve">
+    <value>Hide required &amp;packages</value>
+  </data>
+  <data name="InstallRequirementsIntoGlobalEnv" xml:space="preserve">
+    <value>&amp;Install into {0}</value>
+    <comment>{0} is the localized (and/or user-provided) title of the destination environment</comment>
+  </data>
+  <data name="InstallRequirementsIntoGlobalEnvTip" xml:space="preserve">
+    <value>Packages will be shared by all projects</value>
+  </data>
+  <data name="InstallRequirementsIntoVirtualEnv" xml:space="preserve">
+    <value>Install into a &amp;virtual environment...</value>
+  </data>
+  <data name="InstallRequirementsIntoVirtualEnvTip" xml:space="preserve">
+    <value>Packages will only be available for this project (recommended)</value>
+  </data>
+  <data name="InstallRequirementsMessage" xml:space="preserve">
+    <value>We can download and install these packages for you automatically, but we need to know whether you want to install them for just this project or for all your projects.</value>
+  </data>
+  <data name="InstallRequirementsNowhere" xml:space="preserve">
+    <value>I will install them &amp;myself</value>
+  </data>
+  <data name="InstallRequirementsShowPackages" xml:space="preserve">
+    <value>Show required &amp;packages</value>
   </data>
   <data name="PythonToolsForVisualStudio" xml:space="preserve">
     <value>Python Tools for Visual Studio</value>

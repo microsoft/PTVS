@@ -19,14 +19,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
-using System.Windows.Forms;
 using Microsoft.PythonTools.ProjectWizards.Properties;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TemplateWizard;
 using Microsoft.VisualStudioTools;
-using DTE = EnvDTE.DTE;
 using IVsExtensibility = EnvDTE.IVsExtensibility;
 using Project = EnvDTE.Project;
 using ProjectItem = EnvDTE.ProjectItem;
@@ -89,22 +84,7 @@ namespace Microsoft.PythonTools.ProjectWizards {
         }
 
         public void RunStarted(object automationObject, Dictionary<string, string> replacementsDictionary, WizardRunKind runKind, object[] customParams) {
-            IServiceProvider provider = null;
-            var dte = automationObject as DTE;
-            if (dte == null) {
-                var oleProvider = automationObject as Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
-                if (provider != null) {
-                    provider = new ServiceProvider(oleProvider);
-                    dte = provider.GetService(typeof(DTE)) as DTE;
-                }
-            }
-            if (dte == null) {
-                MessageBox.Show(Resources.ErrorNoDte, Resources.PythonToolsForVisualStudio);
-                return;
-            }
-            if (provider == null) {
-                provider = new ServiceProvider(dte as Microsoft.VisualStudio.OLE.Interop.IServiceProvider);
-            }
+            var provider = WizardHelpers.GetProvider(automationObject);
 
             if (_wizard == null) {
                 try {
@@ -137,12 +117,20 @@ namespace Microsoft.PythonTools.ProjectWizards {
             // suppress UI to avoid the dialog that does not include our
             // projects.
             var extensibility = provider.GetService(typeof(IVsExtensibility)) as IVsExtensibility;
+            var dte = WizardHelpers.GetDTE(automationObject);
             extensibility.EnterAutomationFunction();
-            dte.SuppressUI = true;
             try {
-                _wizard.RunStarted(automationObject, replacementsDictionary, runKind, customParams);
+                if (dte != null) {
+                    dte.SuppressUI = true;
+                }
+                try {
+                    _wizard.RunStarted(automationObject, replacementsDictionary, runKind, customParams);
+                } finally {
+                    if (dte != null) {
+                        dte.SuppressUI = false;
+                    }
+                }
             } finally {
-                dte.SuppressUI = false;
                 extensibility.ExitAutomationFunction();
             }
         }

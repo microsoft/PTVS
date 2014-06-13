@@ -82,12 +82,14 @@
       <Link>PkgCmdID.cs</Link>
     </Compile>
     <Compile Include="CloudServiceWizard.cs" />
+    <Compile Include="InstallRequirementsWizard.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="WizardHelpers.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\Resources.resx">

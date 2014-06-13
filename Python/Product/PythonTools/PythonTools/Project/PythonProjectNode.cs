@@ -31,7 +31,6 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Azure;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 using NativeMethods = Microsoft.VisualStudioTools.Project.NativeMethods;
@@ -64,6 +63,17 @@ namespace Microsoft.PythonTools.Project {
 
             Type projectNodePropsType = typeof(PythonProjectNodeProperties);
             AddCATIDMapping(projectNodePropsType, projectNodePropsType.GUID);
+        }
+
+        private static KeyValuePair<string, string>[] outputGroupNames = {
+                                             // Name                     ItemGroup (MSBuild)
+            new KeyValuePair<string, string>("Built",                 "BuiltProjectOutputGroupFast"),
+            new KeyValuePair<string, string>("ContentFiles",          "ContentFilesProjectOutputGroup"),
+            new KeyValuePair<string, string>("SourceFiles",           "SourceFilesProjectOutputGroup"),
+        };
+
+        protected internal override IList<KeyValuePair<string, string>> GetOutputGroupNames() {
+            return outputGroupNames.ToList();
         }
 
         protected override void NewBuildProject(Build.Evaluation.Project project) {
@@ -838,7 +848,7 @@ namespace Microsoft.PythonTools.Project {
                 return;
             }
 
-            UIThread.Invoke(UpdateActiveInterpreter);
+            UIThread.InvokeAsync(UpdateActiveInterpreter).DoNotWait();
         }
 
         private void UpdateActiveInterpreter() {
@@ -1094,6 +1104,11 @@ namespace Microsoft.PythonTools.Project {
                     // All unspecified custom commands are hidden
                     return QueryStatusResult.INVISIBLE | QueryStatusResult.NOTSUPPORTED;
                 }
+
+                if ((int)cmd == PythonConstants.InstallRequirementsTxt) {
+                    return base.QueryStatusSelectionOnNodes(selectedNodes, cmdGroup, cmd, pCmdText) |
+                        QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
+                }
             }
 
             return base.QueryStatusSelectionOnNodes(selectedNodes, cmdGroup, cmd, pCmdText);
@@ -1130,9 +1145,59 @@ namespace Microsoft.PythonTools.Project {
                     }
                     return VSConstants.S_OK;
                 }
+
+                handled = true;
+                switch((int)cmdId) {
+                    case PythonConstants.AddEnvironment:
+                        ShowAddInterpreter();
+                        return VSConstants.S_OK;
+                    case PythonConstants.AddExistingVirtualEnv:
+                    case PythonConstants.AddVirtualEnv:
+                        ShowAddVirtualEnvironmentWithErrorHandling((int)cmdId == PythonConstants.AddExistingVirtualEnv);
+                        return VSConstants.S_OK;
+                    case PythonConstants.ViewAllEnvironments:
+                        PythonToolsPackage.Instance.ShowInterpreterList();
+                        return VSConstants.S_OK;
+                    default:
+                        handled = false;
+                        break;
+                }
             }
 
             return base.ExecCommandIndependentOfSelection(cmdGroup, cmdId, cmdExecOpt, vaIn, vaOut, commandOrigin, out handled);
+        }
+
+        protected override int ExecCommandThatDependsOnSelectedNodes(Guid cmdGroup, uint cmdId, uint cmdExecOpt, IntPtr vaIn, IntPtr vaOut, CommandOrigin commandOrigin, IList<HierarchyNode> selectedNodes, out bool handled) {
+            if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
+                if ((int)cmdId == PythonConstants.InstallRequirementsTxt) {
+                    var txt = CommonUtils.GetAbsoluteFilePath(ProjectHome, "requirements.txt");
+                    if (_interpretersContainer != null && 
+                        File.Exists(txt) &&
+                        !selectedNodes.Any(n => {
+                        var status = QueryStatusResult.NOTSUPPORTED;
+                        return ErrorHandler.Succeeded(n.QueryStatusOnNode(cmdGroup, cmdId, IntPtr.Zero, ref status)) &&
+                            status.HasFlag(QueryStatusResult.SUPPORTED);
+                    })) {
+                        // No nodes support this command, so run it for the
+                        // current active environment.
+                        var active = _interpreters.ActiveInterpreter;
+                        var node = _interpretersContainer.AllChildren.OfType<InterpretersNode>().FirstOrDefault(n => n._factory == active);
+                        var name = "-r " + ProcessOutput.QuoteSingleArgument(txt);
+                        var elevate = PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ElevatePip;
+                        if (node == null) {
+                            InterpretersPackageNode.InstallNewPackage(active, Site, name, true, elevate)
+                                .HandleAllExceptions(SR.ProductName).DoNotWait();
+                        } else {
+                            InterpretersPackageNode.InstallNewPackage(node, name, true, elevate)
+                                .HandleAllExceptions(SR.ProductName).DoNotWait();
+                        }
+                        handled = true;
+                        return VSConstants.S_OK;
+                    }
+                }
+            }
+            
+            return base.ExecCommandThatDependsOnSelectedNodes(cmdGroup, cmdId, cmdExecOpt, vaIn, vaOut, commandOrigin, selectedNodes, out handled);
         }
 
         protected override bool DisableCmdInCurrentMode(Guid cmdGroup, uint cmd) {
@@ -1268,10 +1333,31 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
+        private async void ShowAddVirtualEnvironmentWithErrorHandling(bool browseForExisting) {
+            try {
+                await ShowAddVirtualEnvironment(browseForExisting);
+            } catch (Exception ex) {
+                if (ex.IsCriticalException()) {
+                    throw;
+                }
+
+                var statusBar = (IVsStatusbar)GetService(typeof(SVsStatusbar));
+                statusBar.SetText(SR.GetString(SR.VirtualEnvAddFailed));
+
+                Debug.WriteLine("Failed to add virtual environment.\r\n{0}", ex.InnerException ?? ex);
+
+                try {
+                    ActivityLog.LogError(SR.ProductName, (ex.InnerException ?? ex).ToString());
+                } catch (InvalidOperationException) {
+                    // Activity log may be unavailable
+                }
+            }
+        }
+
         /// <summary>
         /// Executes Add Interpreter menu command.
         /// </summary>
-        internal async Task ShowAddVirtualEnvironment(bool browseForExisting) {
+        private async Task ShowAddVirtualEnvironment(bool browseForExisting) {
             var service = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
 
             var data = AddVirtualEnvironment.ShowDialog(this, service, browseForExisting);
@@ -1299,13 +1385,16 @@ namespace Microsoft.PythonTools.Project {
                 if (File.Exists(txt)) {
                     var redirector = OutputWindowRedirector.GetGeneral(Site);
                     redirector.WriteLine(SR.GetString(SR.RequirementsTxtInstalling, txt));
-                    bool elevate = PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ElevatePip;
-                    await Pip.Install(
+                    if (await Pip.Install(
                         factory,
                         "-r " + ProcessOutput.QuoteSingleArgument(txt),
-                        elevate,
+                        false,  // never elevate for a virtual environment
                         redirector
-                    );
+                    )) {
+                        redirector.WriteLine(SR.GetString(SR.PackageInstallSucceeded, Path.GetFileName(txt)));
+                    } else {
+                        redirector.WriteErrorLine(SR.GetString(SR.PackageInstallFailed, Path.GetFileName(txt)));
+                    }
                 }
             }
         }
@@ -1334,7 +1423,7 @@ namespace Microsoft.PythonTools.Project {
 
             var options = VirtualEnv.FindInterpreterOptions(path, service, baseInterp);
             if (options == null || !File.Exists(options.InterpreterPath)) {
-                throw new InvalidOperationException("Unable to add virtual environment");
+                throw new InvalidOperationException(SR.GetString(SR.VirtualEnvAddFailed));
             }
             if (!create) {
                 baseInterp = service.FindInterpreter(options.Id, options.LanguageVersion);

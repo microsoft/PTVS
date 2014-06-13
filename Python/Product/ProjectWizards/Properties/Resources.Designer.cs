@@ -81,6 +81,15 @@ namespace Microsoft.PythonTools.ProjectWizards.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to your default environment.
+        /// </summary>
+        internal static string DefaultInterpreterDescription {
+            get {
+                return ResourceManager.GetString("DefaultInterpreterDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Download and install now.
         /// </summary>
         internal static string DownloadAndInstall {
@@ -95,6 +104,105 @@ namespace Microsoft.PythonTools.ProjectWizards.Properties {
         internal static string ErrorNoDte {
             get {
                 return ResourceManager.GetString("ErrorNoDte", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Your packages may not have been installed..
+        /// </summary>
+        internal static string InstallRequirementsFailed {
+            get {
+                return ResourceManager.GetString("InstallRequirementsFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;a href=&quot;https://pytools.codeplex.com/workitem/2446&quot;&gt;What do you think about this dialog?&lt;/a&gt;.
+        /// </summary>
+        internal static string InstallRequirementsFooter {
+            get {
+                return ResourceManager.GetString("InstallRequirementsFooter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This project requires external packages.
+        /// </summary>
+        internal static string InstallRequirementsHeading {
+            get {
+                return ResourceManager.GetString("InstallRequirementsHeading", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Hide required &amp;packages.
+        /// </summary>
+        internal static string InstallRequirementsHidePackages {
+            get {
+                return ResourceManager.GetString("InstallRequirementsHidePackages", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &amp;Install into {0}.
+        /// </summary>
+        internal static string InstallRequirementsIntoGlobalEnv {
+            get {
+                return ResourceManager.GetString("InstallRequirementsIntoGlobalEnv", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Packages will be shared by all projects.
+        /// </summary>
+        internal static string InstallRequirementsIntoGlobalEnvTip {
+            get {
+                return ResourceManager.GetString("InstallRequirementsIntoGlobalEnvTip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Install into a &amp;virtual environment....
+        /// </summary>
+        internal static string InstallRequirementsIntoVirtualEnv {
+            get {
+                return ResourceManager.GetString("InstallRequirementsIntoVirtualEnv", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Packages will only be available for this project (recommended).
+        /// </summary>
+        internal static string InstallRequirementsIntoVirtualEnvTip {
+            get {
+                return ResourceManager.GetString("InstallRequirementsIntoVirtualEnvTip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to We can download and install these packages for you automatically, but we need to know whether you want to install them for just this project or for all your projects..
+        /// </summary>
+        internal static string InstallRequirementsMessage {
+            get {
+                return ResourceManager.GetString("InstallRequirementsMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to I will install them &amp;myself.
+        /// </summary>
+        internal static string InstallRequirementsNowhere {
+            get {
+                return ResourceManager.GetString("InstallRequirementsNowhere", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Show required &amp;packages.
+        /// </summary>
+        internal static string InstallRequirementsShowPackages {
+            get {
+                return ResourceManager.GetString("InstallRequirementsShowPackages", resourceCulture);
             }
         }
         

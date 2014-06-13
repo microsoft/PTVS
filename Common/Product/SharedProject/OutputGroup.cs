@@ -95,19 +95,18 @@ namespace Microsoft.VisualStudioTools.Project {
             _project.SetConfiguration(_projectCfg.ConfigName);
 
             // Generate dependencies if such a task exist
-            const string generateDependencyList = "AllProjectOutputGroups";
-            if (_project.BuildProject.Targets.ContainsKey(generateDependencyList)) {
+            if (_project.BuildProject.Targets.ContainsKey(_targetName)) {
                 bool succeeded = false;
-                _project.BuildTarget(generateDependencyList, out succeeded);
+                _project.BuildTarget(_targetName, out succeeded);
                 if (!succeeded) {
-                    Debug.WriteLine("Failed to build target {0}", generateDependencyList);
+                    Debug.WriteLine("Failed to build target {0}", _targetName);
                     this._outputs.Clear();
                     return;
                 }
             }
 
             // Rebuild the content of our list of output
-            string outputType = this._targetName + "Output";
+            string outputType = _targetName + "Output";
             this._outputs.Clear();
 
             if (_project.CurrentConfig != null) {

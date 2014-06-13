@@ -39,16 +39,21 @@ namespace PythonToolsTests {
             AssertUtil.AreEqual(
                 InterpretersNode.MergeRequirements(new [] {
                     "a # with a comment",
-                    "b==0.2",
-                    "# just a comment"
+                    "B==0.2",
+                    "# just a comment B==01234",
+                    "",
+                    "d==1.0 e==2.0 f==3.0"
                 }, new [] {
                     "b==0.1",
                     "a==0.2",
-                    "c==0.3"
+                    "c==0.3",
+                    "e==4.0",
                 }, false),
                 "a==0.2 # with a comment",
                 "b==0.1",
-                "# just a comment"
+                "# just a comment B==01234",
+                "",
+                "d==1.0 e==4.0 f==3.0"
             );
 
             // addNew is true, so the c==0.3 should be added.
@@ -56,23 +61,23 @@ namespace PythonToolsTests {
                 InterpretersNode.MergeRequirements(new[] {
                     "a # with a comment",
                     "b==0.2",
-                    "# just a comment"
+                    "# just a comment B==01234"
                 }, new[] {
-                    "b==0.1",
+                    "B==0.1",   // case is updated
                     "a==0.2",
                     "c==0.3"
                 }, true),
                 "a==0.2 # with a comment",
-                "b==0.1",
-                "# just a comment",
+                "B==0.1",
+                "# just a comment B==01234",
                 "c==0.3"
             );
 
             // No existing entries, so the new ones are sorted and returned.
             AssertUtil.AreEqual(
                 InterpretersNode.MergeRequirements(null, new[] {
-                    "b==0.1",
-                    "a==0.2",
+                    "b==0.2",
+                    "a==0.1",
                     "c==0.3"
                 }, false),
                 "a==0.1",

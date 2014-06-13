@@ -19,6 +19,8 @@ using System.Linq;
 using System.Net.NetworkInformation;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
+using System.Windows.Automation;
 using EnvDTE;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Interpreter;
@@ -65,7 +67,6 @@ namespace PythonToolsUITests {
                 Assert.IsNotNull(ccp);
                 Assert.IsNotNull(ccp.FindCommand("PythonRunWebServerCommand"), "No PythonRunWebServerCommand");
                 Assert.IsNotNull(ccp.FindCommand("PythonDebugWebServerCommand"), "No PythonDebugWebServerCommand");
-                Assert.IsNull(ccp.FindCommand("PythonUpgradeWebFrameworkCommand"), "Unexpected PythonUpgradeWebFrameworkCommand");
             }
         }
 
@@ -326,6 +327,93 @@ namespace PythonToolsUITests {
             }
         }
 
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void WebProjectCreateVirtualEnvOnNew() {
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var t = Task.Run(() => app.CreateProject(
+                    PythonVisualStudioApp.TemplateLanguageName,
+                    PythonVisualStudioApp.FlaskWebProjectTemplate,
+                    TestData.GetTempPath(),
+                    "WebProjectCreateVirtualEnvOnNew",
+                    suppressUI: false
+                ));
+
+                using (var dlg = new AutomationDialog(app, AutomationElement.FromHandle(app.WaitForDialog(t)))) {
+                    // Create a virtual environment
+                    dlg.ClickButtonAndClose("CommandLink_1000", nameIsAutomationId: true);
+                }
+
+                using (var dlg = new AutomationDialog(app, AutomationElement.FromHandle(app.WaitForDialog(t)))) {
+                    dlg.ClickButtonAndClose("Create", nameIsAutomationId: true);
+                }
+                
+                t.WaitAndUnwrapExceptions();
+                var project = t.Result;
+
+                var provider = project.Properties.Item("InterpreterFactoryProvider").Value as MSBuildProjectInterpreterFactoryProvider;
+                for (int retries = 20; retries > 0; --retries) {
+                    if (provider.IsProjectSpecific(provider.ActiveInterpreter)) {
+                        break;
+                    }
+                    Thread.Sleep(1000);
+                }
+                Assert.IsTrue(provider.IsProjectSpecific(provider.ActiveInterpreter), "Did not have virtualenv");
+                
+                for (int retries = 60; retries > 0; --retries) {
+                    if (InterpreterExt.FindModules(provider.ActiveInterpreter, "flask").Any()) {
+                        break;
+                    }
+                    Thread.Sleep(1000);
+                }
+                AssertUtil.ContainsExactly(
+                    InterpreterExt.FindModules(provider.ActiveInterpreter, "flask"),
+                    "flask"
+                );
+            }
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void WebProjectInstallOnNew() {
+            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+                Pip.Uninstall(app.InterpreterService.DefaultInterpreter, "bottle", false).WaitAndUnwrapExceptions();
+
+                var t = Task.Run(() => app.CreateProject(
+                    PythonVisualStudioApp.TemplateLanguageName,
+                    PythonVisualStudioApp.BottleWebProjectTemplate,
+                    TestData.GetTempPath(),
+                    "WebProjectInstallOnNew",
+                    suppressUI: false
+                ));
+
+                using (var dlg = new AutomationDialog(app, AutomationElement.FromHandle(app.WaitForDialog(t)))) {
+                    // Install to active environment
+                    dlg.ClickButtonAndClose("CommandLink_1001", nameIsAutomationId: true);
+                }
+
+                t.WaitAndUnwrapExceptions();
+                var project = t.Result;
+
+                var provider = project.Properties.Item("InterpreterFactoryProvider").Value as MSBuildProjectInterpreterFactoryProvider;
+
+                Assert.AreSame(app.InterpreterService.DefaultInterpreter, provider.ActiveInterpreter);
+
+                for (int retries = 60; retries > 0; --retries) {
+                    if (InterpreterExt.FindModules(provider.ActiveInterpreter, "bottle").Any()) {
+                        break;
+                    }
+                    Thread.Sleep(1000);
+                }
+                AssertUtil.ContainsExactly(
+                    InterpreterExt.FindModules(provider.ActiveInterpreter, "bottle"),
+                    "bottle"
+                );
+
+                Pip.Uninstall(app.InterpreterService.DefaultInterpreter, "bottle", false).WaitAndUnwrapExceptions();
+            }
+        }
+
         #region EndToEndTest
 
         private static void EndToEndLog(string format, params object[] args) {
@@ -341,7 +429,8 @@ namespace PythonToolsUITests {
             string templateName,
             string moduleName,
             string textInResponse,
-            string pythonVersion
+            string pythonVersion,
+            string packageName = null
         ) {
             EndToEndLog("Starting {0} {1}", templateName, pythonVersion);
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
@@ -360,7 +449,7 @@ namespace PythonToolsUITests {
 
                 EndToEndLog("Created virtual environment {0}", factory.Description);
 
-                InstallWebFramework(moduleName, pyProj, factory);
+                InstallWebFramework(moduleName, packageName ?? moduleName, factory);
 
                 EndToEndLog("Installed framework {0}", moduleName);
 
@@ -393,7 +482,9 @@ namespace PythonToolsUITests {
             EndToEndLog("Building");
             app.Dte.Solution.SolutionBuild.Build(true);
             EndToEndLog("Starting debugging");
-            app.Dte.Debugger.Go(false);
+            if (!System.Threading.Tasks.Task.Run(() => app.Dte.Debugger.Go(false)).Wait(TimeSpan.FromSeconds(10))) {
+                Assert.Fail("Run was interrupted by dialog");
+            }
             EndToEndLog("Debugging started");
 
             string text = string.Empty;
@@ -532,7 +623,7 @@ namespace PythonToolsUITests {
                 true,
                 Path.Combine(pyProj.ProjectHome, "env"),
                 service.FindInterpreter(PythonPaths.CPythonGuid, pythonVersion),
-                pythonVersion == "3.3"
+                Version.Parse(pythonVersion) >= new Version(3, 3)
             );
             task.Wait();
             var factory = task.Result;
@@ -540,16 +631,8 @@ namespace PythonToolsUITests {
             return factory;
         }
 
-        internal static void InstallWebFramework(string moduleName, PythonProjectNode pyProj, IPythonInterpreterFactory factory) {
-            // Ensure pip is installed so we don't have to click through the
-            // dialog.
-            Pip.InstallPip(factory, false).Wait();
-
-            UIThread.Invoke(() => {
-                var cmd = ((IPythonProject2)pyProj).FindCommand("PythonUpgradeWebFrameworkCommand");
-                cmd.Execute(null);
-            });
-
+        internal static void InstallWebFramework(string moduleName, string packageName, IPythonInterpreterFactory factory) {
+            Pip.Install(factory, packageName, false).WaitAndUnwrapExceptions();
             Assert.AreEqual(1, InterpreterExt.FindModules(factory, moduleName).Count);
         }
 
@@ -557,8 +640,8 @@ namespace PythonToolsUITests {
 
         [TestMethod, Priority(0), TestCategory("Core"), Timeout(10 * 60 * 1000)]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
-        public void FlaskEndToEndV33() {
-            EndToEndTest(PythonVisualStudioApp.FlaskWebProjectTemplate, "flask", "Hello World!", "3.3");
+        public void FlaskEndToEndV34() {
+            EndToEndTest(PythonVisualStudioApp.FlaskWebProjectTemplate, "flask", "Hello World!", "3.4");
         }
 
         [TestMethod, Priority(0), TestCategory("Core"), Timeout(10 * 60 * 1000)]
@@ -569,8 +652,8 @@ namespace PythonToolsUITests {
 
         [TestMethod, Priority(0), TestCategory("Core"), Timeout(10 * 60 * 1000)]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
-        public void BottleEndToEndV33() {
-            EndToEndTest(PythonVisualStudioApp.BottleWebProjectTemplate, "bottle", "<b>Hello world</b>!", "3.3");
+        public void BottleEndToEndV34() {
+            EndToEndTest(PythonVisualStudioApp.BottleWebProjectTemplate, "bottle", "<b>Hello world</b>!", "3.4");
         }
 
         [TestMethod, Priority(0), TestCategory("Core"), Timeout(10 * 60 * 1000)]
@@ -592,12 +675,12 @@ namespace PythonToolsUITests {
 
         [TestMethod, Priority(0), TestCategory("Core"), Timeout(10 * 60 * 1000)]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
-        public void DjangoEndToEndV33() {
+        public void DjangoEndToEndV34() {
             EndToEndTest(
                 PythonVisualStudioApp.DjangoWebProjectTemplate,
                 "django",
                 "Congratulations on your first Django-powered page.",
-                "3.3"
+                "3.4"
             );
         }
     }

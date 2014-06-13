@@ -373,15 +373,8 @@
     <Compile Include="TemplateParsing\TemplateTokenKind.cs" />
     <Compile Include="Utilities.cs" />
     <Compile Include="VsMenus.cs" />
-    <None Include="Templates\Projects\StarterDjangoProject\Readme\AddRemoveEnvironment.png" />
-    <None Include="Templates\Projects\StarterDjangoProject\Readme\AddRemoveEnvironmentDialog.png" />
-    <None Include="Templates\Projects\StarterDjangoProject\Readme\AddVirtualEnvironment.png" />
-    <None Include="Templates\Projects\StarterDjangoProject\Readme\AddVirtualEnvironmentDialog.png" />
-    <None Include="Templates\Projects\StarterDjangoProject\Readme\CopyFullPath.png" />
-    <None Include="Templates\Projects\StarterDjangoProject\Readme\EnvironmentAdded.png" />
-    <None Include="Templates\Projects\StarterDjangoProject\Readme\InstallPythonPackage.png" />
-    <None Include="Templates\Projects\StarterDjangoProject\Readme\InstallPythonPackageDialog.png" />
-    <None Include="Templates\Projects\StarterDjangoProject\Readme\VirtualEnvironmentCreated.png" />
+    <ZipProject Include="Templates\Projects\DjangoProject\requirements.txt" />
+    <Resource Include="Templates\Projects\StarterDjangoProject\Readme\SyncDB.png" />
     <ZipProject Include="Templates\Projects\StarterDjangoProject\readme.mht" />
     <None Include="Templates\Projects\StarterDjangoProject\Readme\readme.html" />
     <Resource Include="Legacy\ReadMe.txt" />

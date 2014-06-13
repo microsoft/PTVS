@@ -14,11 +14,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.VisualStudioTools {
     sealed class TaskDialog {
@@ -31,6 +31,28 @@ namespace Microsoft.VisualStudioTools {
             _buttons = new List<TaskDialogButton>();
             _radioButtons = new List<TaskDialogButton>();
             UseCommandLinks = true;
+        }
+
+        public static TaskDialog ForException(IServiceProvider provider, Exception exception, string message = null) {
+            const string suffix = "Please press Ctrl+C to copy the contents of this dialog and report this error " +
+                "to our <a href=\"http://go.microsoft.com/fwlink/?LinkId=402428\">issue tracker</a>.";
+
+            if (string.IsNullOrEmpty(message)) {
+                message = suffix;
+            } else {
+                message += Environment.NewLine + Environment.NewLine + suffix;
+            }
+            
+            var td = new TaskDialog(provider) {
+                MainInstruction = "An unexpected error occurred",
+                Content = message,
+                EnableHyperlinks = true,
+                CollapsedControlText = "Show &details",
+                ExpandedControlText = "Hide &details",
+                ExpandedInformation = exception.ToString()
+            };
+            td.Buttons.Add(TaskDialogButton.Close);
+            return td;
         }
 
         public static void CallWithRetry(
@@ -144,7 +166,11 @@ namespace Microsoft.VisualStudioTools {
                     for (int i = 0; i < customButtons.Count; ++i) {
                         NativeMethods.TASKDIALOG_BUTTON data;
                         data.nButtonID = GetButtonId(null, null, i);
-                        data.pszButtonText = customButtons[i].Text;
+                        if (string.IsNullOrEmpty(customButtons[i].Subtext)) {
+                            data.pszButtonText = customButtons[i].Text;
+                        } else {
+                            data.pszButtonText = string.Format("{0}\n{1}", customButtons[i].Text, customButtons[i].Subtext);
+                        }
                         Marshal.StructureToPtr(data, ptr + i * Marshal.SizeOf(typeof(NativeMethods.TASKDIALOG_BUTTON)), false);
                     }
                 } else {
@@ -181,6 +207,7 @@ namespace Microsoft.VisualStudioTools {
                 config.pszExpandedInformation = ExpandedInformation;
                 config.pszExpandedControlText = ExpandedControlText;
                 config.pszCollapsedControlText = CollapsedControlText;
+                config.pszFooter = Footer;
                 config.pfCallback = Callback;
 
                 if (Width.HasValue) {
@@ -197,7 +224,7 @@ namespace Microsoft.VisualStudioTools {
                 if (UseCommandLinks) {
                     config.dwFlags |= NativeMethods.TASKDIALOG_FLAGS.TDF_USE_COMMAND_LINKS;
                 }
-                if (!string.IsNullOrEmpty(ExpandedInformation)) {
+                if (!ShowExpandedInformationInContent) {
                     config.dwFlags |= NativeMethods.TASKDIALOG_FLAGS.TDF_EXPAND_FOOTER_AREA;
                 }
                 if (ExpandedByDefault) {
@@ -245,7 +272,47 @@ namespace Microsoft.VisualStudioTools {
         }
 
         private int Callback(IntPtr hwnd, uint uNotification, UIntPtr wParam, IntPtr lParam, IntPtr lpRefData) {
-            return VSConstants.S_OK;
+            try {
+                switch ((NativeMethods.TASKDIALOG_NOTIFICATION)uNotification) {
+                    case NativeMethods.TASKDIALOG_NOTIFICATION.TDN_CREATED:
+                        break;
+                    case NativeMethods.TASKDIALOG_NOTIFICATION.TDN_NAVIGATED:
+                        break;
+                    case NativeMethods.TASKDIALOG_NOTIFICATION.TDN_BUTTON_CLICKED:
+                        break;
+                    case NativeMethods.TASKDIALOG_NOTIFICATION.TDN_HYPERLINK_CLICKED:
+                        var url = Marshal.PtrToStringUni(lParam);
+                        var hevt = HyperlinkClicked;
+                        if (hevt != null) {
+                            hevt(this, new TaskDialogHyperlinkClickedEventArgs(url));
+                        } else {
+                            Process.Start(new ProcessStartInfo { FileName = url, UseShellExecute = true });
+                        }
+                        break;
+                    case NativeMethods.TASKDIALOG_NOTIFICATION.TDN_TIMER:
+                        break;
+                    case NativeMethods.TASKDIALOG_NOTIFICATION.TDN_DESTROYED:
+                        break;
+                    case NativeMethods.TASKDIALOG_NOTIFICATION.TDN_RADIO_BUTTON_CLICKED:
+                        break;
+                    case NativeMethods.TASKDIALOG_NOTIFICATION.TDN_DIALOG_CONSTRUCTED:
+                        break;
+                    case NativeMethods.TASKDIALOG_NOTIFICATION.TDN_VERIFICATION_CLICKED:
+                        break;
+                    case NativeMethods.TASKDIALOG_NOTIFICATION.TDN_HELP:
+                        break;
+                    case NativeMethods.TASKDIALOG_NOTIFICATION.TDN_EXPANDO_BUTTON_CLICKED:
+                        break;
+                    default:
+                        break;
+                }
+                return VSConstants.S_OK;
+            } catch (Exception ex) {
+                if (ex.IsCriticalException()) {
+                    throw;
+                }
+                return Marshal.GetHRForException(ex);
+            }
         }
 
         public string Title { get; set; }
@@ -253,8 +320,10 @@ namespace Microsoft.VisualStudioTools {
         public string Content { get; set; }
         public string VerificationText { get; set; }
         public string ExpandedInformation { get; set; }
+        public string Footer { get; set; }
 
         public bool ExpandedByDefault { get; set; }
+        public bool ShowExpandedInformationInContent { get; set; }
         public string ExpandedControlText { get; set; }
         public string CollapsedControlText { get; set; }
 
@@ -263,6 +332,13 @@ namespace Microsoft.VisualStudioTools {
         public bool AllowCancellation { get; set; }
         public bool UseCommandLinks { get; set; }
         public bool CanMinimize { get; set; }
+
+        /// <summary>
+        /// Raised when a hyperlink in the dialog is clicked. If no event
+        /// handlers are added, the default behavior is to open an external
+        /// browser.
+        /// </summary>
+        public event EventHandler<TaskDialogHyperlinkClickedEventArgs> HyperlinkClicked;
 
         public List<TaskDialogButton> Buttons {
             get {
@@ -412,6 +488,20 @@ namespace Microsoft.VisualStudioTools {
                 TDCBF_CLOSE_BUTTON = 0x0020
             }
 
+            internal enum TASKDIALOG_NOTIFICATION : uint {
+                TDN_CREATED = 0,
+                TDN_NAVIGATED = 1,
+                TDN_BUTTON_CLICKED = 2,     // wParam = Button ID
+                TDN_HYPERLINK_CLICKED = 3,  // lParam = (LPCWSTR)pszHREF
+                TDN_TIMER = 4,              // wParam = Milliseconds since dialog created or timer reset
+                TDN_DESTROYED = 5,
+                TDN_RADIO_BUTTON_CLICKED = 6,   // wParam = Radio Button ID
+                TDN_DIALOG_CONSTRUCTED = 7,
+                TDN_VERIFICATION_CLICKED = 8,   // wParam = 1 if checkbox checked, 0 if not, lParam is unused and always 0
+                TDN_HELP = 9,
+                TDN_EXPANDO_BUTTON_CLICKED = 10 // wParam = 0 (dialog is now collapsed), wParam != 0 (dialog is now expanded)
+            };
+
             [DllImport("comctl32.dll", SetLastError = true)]
             internal static extern int TaskDialogIndirect(
                 ref TASKDIALOGCONFIG pTaskConfig,
@@ -468,10 +558,22 @@ namespace Microsoft.VisualStudioTools {
 
     class TaskDialogButton {
         public TaskDialogButton(string text) {
+            int i = text.IndexOfAny(Environment.NewLine.ToCharArray());
+            if (i < 0) {
+                Text = text;
+            } else {
+                Text = text.Remove(i);
+                Subtext = text.Substring(i).TrimStart();
+            }
+        }
+
+        public TaskDialogButton(string text, string subtext) {
             Text = text;
+            Subtext = subtext;
         }
 
         public string Text { get; set; }
+        public string Subtext { get; set; }
 
         private TaskDialogButton() { }
         public static readonly TaskDialogButton OK = new TaskDialogButton();
@@ -480,5 +582,15 @@ namespace Microsoft.VisualStudioTools {
         public static readonly TaskDialogButton No = new TaskDialogButton();
         public static readonly TaskDialogButton Retry = new TaskDialogButton();
         public static readonly TaskDialogButton Close = new TaskDialogButton();
+    }
+
+    sealed class TaskDialogHyperlinkClickedEventArgs : EventArgs {
+        private readonly string _url;
+
+        public TaskDialogHyperlinkClickedEventArgs(string url) {
+            _url = url;
+        }
+
+        public string Url { get { return _url; } }
     }
 }

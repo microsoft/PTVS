@@ -12,8 +12,6 @@
     <LaunchProvider>Web launcher</LaunchProvider>
     <OutputPath>.</OutputPath>
     <PythonDebugWebServerCommandArguments>--debug $(CommandLineArguments)</PythonDebugWebServerCommandArguments>
-    <PythonWebFrameworkPackage>bottle</PythonWebFrameworkPackage>
-    <PythonWebFrameworkPackageDisplayName>Bottle</PythonWebFrameworkPackageDisplayName>
     <PythonWsgiHandler>{StartupModule}.wsgi_app()</PythonWsgiHandler>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">

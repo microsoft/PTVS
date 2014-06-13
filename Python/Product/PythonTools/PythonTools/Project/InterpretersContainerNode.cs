@@ -134,46 +134,6 @@ namespace Microsoft.PythonTools.Project {
             return base.QueryStatusOnNode(cmdGroup, cmd, pCmdText, ref result);
         }
 
-        internal override int ExecCommandOnNode(Guid cmdGroup, uint cmd, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
-            if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
-                bool browseForExisting = false;
-                switch (cmd) {
-                    case PythonConstants.AddEnvironment:
-                        _projectNode.ShowAddInterpreter();
-                        return VSConstants.S_OK;
-                    case PythonConstants.AddExistingVirtualEnv:
-                        browseForExisting = true;
-                        goto case PythonConstants.AddVirtualEnv;
-                    case PythonConstants.AddVirtualEnv:
-                        _projectNode.ShowAddVirtualEnvironment(browseForExisting).ContinueWith(t => {
-                            var ex = t.Exception;
-                            if (ex == null) {
-                                return;
-                            }
-
-                            var statusBar = (IVsStatusbar)GetService(typeof(SVsStatusbar));
-                            statusBar.SetText(SR.GetString(SR.VirtualEnvAddFailed));
-
-                            Debug.WriteLine("Failed to add virtual environment.\r\n{0}", ex.InnerException ?? ex);
-
-                            try {
-                                ActivityLog.LogError(SR.ProductName, (ex.InnerException ?? ex).ToString());
-                            } catch (InvalidOperationException) {
-                                // Activity log may be unavailable
-                            }
-                        }, 
-                            CancellationToken.None,
-                            TaskContinuationOptions.OnlyOnFaulted,
-                            TaskScheduler.FromCurrentSynchronizationContext());
-                        return VSConstants.S_OK;
-                    case PythonConstants.ViewAllEnvironments:
-                        PythonToolsPackage.Instance.ShowInterpreterList();
-                        return VSConstants.S_OK;
-                }
-            }
-            return base.ExecCommandOnNode(cmdGroup, cmd, nCmdexecopt, pvaIn, pvaOut);
-        }
-
         /// <summary>
         /// Interpreter container node cannot be deleted.
         /// </summary>

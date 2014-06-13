@@ -33,7 +33,7 @@ namespace Microsoft.PythonTools.Project {
         /// Installs virtualenv. If pip is not installed, the returned task will
         /// succeed but error text will be passed to the redirector.
         /// </summary>
-        public static async Task Install(IPythonInterpreterFactory factory, Redirector output = null) {
+        public static Task<bool> Install(IPythonInterpreterFactory factory, Redirector output = null) {
             bool elevate = PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ElevatePip;
             if (factory.Configuration.Version < new Version(2, 5)) {
                 if (output != null) {
@@ -41,9 +41,9 @@ namespace Microsoft.PythonTools.Project {
                 }
                 throw new OperationCanceledException();
             } else if (factory.Configuration.Version == new Version(2, 5)) {
-                await Pip.Install(factory, "https://go.microsoft.com/fwlink/?LinkID=317970", elevate, output);
+                return Pip.Install(factory, "https://go.microsoft.com/fwlink/?LinkID=317970", elevate, output);
             } else {
-                await Pip.Install(factory, "https://go.microsoft.com/fwlink/?LinkID=317969", elevate, output);
+                return Pip.Install(factory, "https://go.microsoft.com/fwlink/?LinkID=317969", elevate, output);
             }
         }
 
@@ -136,7 +136,9 @@ namespace Microsoft.PythonTools.Project {
                     bool elevate = PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ElevatePip;
                     await Pip.InstallPip(factory, elevate, output);
                 }
-                await Install(factory, output);
+                if (!await Install(factory, output)) {
+                    throw new InvalidOperationException(SR.GetString(SR.VirtualEnvCreationFailed));
+                }
             }
 
             await ContinueCreate(factory, path, false, output);

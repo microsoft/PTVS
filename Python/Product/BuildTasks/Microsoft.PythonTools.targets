@@ -194,20 +194,36 @@
   <Target Name="CreateManifestResourceNames" />
   <Target Name="_CopyAppConfigFile" />
 
+  <PropertyGroup>
+    <BuiltProjectOutputGroupDependsOn>
+      BuiltProjectOutputGroupFast;
+      $(BuiltProjectOutputGroupDependsOn)
+    </BuiltProjectOutputGroupDependsOn>
+  </PropertyGroup>
+  
+  <Target Name="BuiltProjectOutputGroupFast"
+          Returns="@(BuiltProjectOutputGroupFastOutput)"
+          DependsOnTargets="$(BuiltProjectOutputGroupFastDependsOn)">
+    <ItemGroup>
+      <BuiltProjectOutputGroupFastOutput Remove="@(BuiltProjectOutputGroupFastOutput)" />
+      <_BuiltProjectOutputGroupFastOutput Remove="@(_BuiltProjectOutputGroupFastOutput)" />
+    </ItemGroup>
+
+    <AssignTargetPath RootFolder="$(QualifiedProjectHome)" Files="@(Compile);@(Content);$(MSBuildProjectFile)">
+      <Output TaskParameter="AssignedFiles" ItemName="_BuiltProjectOutputGroupFastOutput" />
+    </AssignTargetPath>
+
+    <ItemGroup>
+      <BuiltProjectOutputGroupFastOutput Include="@(_BuiltProjectOutputGroupFastOutput->'%(FullPath)')" />
+    </ItemGroup>
+  </Target>
+
   <Target Name="BuiltProjectOutputGroup"
           Returns="@(BuiltProjectOutputGroupOutput)"
           DependsOnTargets="$(BuiltProjectOutputGroupDependsOn)">
     <ItemGroup>
       <BuiltProjectOutputGroupOutput Remove="@(BuiltProjectOutputGroupOutput)" />
-      <_BuiltProjectOutputGroupOutput Remove="@(_BuiltProjectOutputGroupOutput)" />
-    </ItemGroup>
-
-    <AssignTargetPath RootFolder="$(QualifiedProjectHome)" Files="@(Compile);@(Content);$(MSBuildProjectFile)">
-      <Output TaskParameter="AssignedFiles" ItemName="_BuiltProjectOutputGroupOutput" />
-    </AssignTargetPath>
-
-    <ItemGroup>
-      <BuiltProjectOutputGroupOutput Include="@(_BuiltProjectOutputGroupOutput->'%(FullPath)')" />
+      <BuiltProjectOutputGroupOutput Include="@(BuiltProjectOutputGroupFastOutput)" />
     </ItemGroup>
   </Target>
 

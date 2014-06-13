@@ -18,52 +18,12 @@
     <link rel="stylesheet" href="../../../../../PythonTools/ReadmeStyle.css" type="text/css"/>
 </head>
 <body>
-    <h1 class="top">Three more things...</h1>
+    <h1 class="top">One more thing...</h1>
     <p>
-        To run this project, you will need to <strong>create a virtual
-        environment</strong>, <strong>install some dependencies</strong>
-        and <strong>synchronize the database</strong>.
-    </p>
-    <p>
-        We recommended creating a virtual environment and installing the
-        dependent packages in that virtual environment from the included
-        <code>requirements.txt</code> file.
+        Before running this project, you need to <strong>synchronize the
+        database</strong>.
     </p>
 
-    <h1>Create a virtual environment</h1>
-    <ol>
-        <li>Open Solution Explorer.</li>
-        <li>
-            <p>Right-click on Python Environments and select Add Virtual Environment.</p>
-            <img src="AddVirtualEnvironment.png" />
-        </li>
-        <li>
-            <p>Choose a base interpreter (we recommend Python 2.7 or Python 3.4).</p>
-            <img src="AddVirtualEnvironmentDialog.png" />
-        </li>
-        <li>
-            <p>Your virtual environment will appear under Python Environments.</p>
-            <img src="VirtualEnvironmentCreated.png" />
-        </li>
-    </ol>
-
-    <h1>Install required packages</h1>
-    <ol>
-        <li>Open Solution Explorer.</li>
-        <li>
-            <p>Right-click on <code>requirements.txt</code> and select Copy Full Path.</p>
-            <img src="CopyFullPath.png" />
-        </li>
-        <li>
-            <p>Right-click on the virtual environment and select Install Python Package.</p>
-            <img src="InstallPythonPackage.png" />
-        </li>
-        <li>
-            <p>In the text box, type: <code>-r "&lt;press Ctrl-V to paste full
-                path to requirements.txt&gt;"</code></p>
-            <img src="InstallPythonPackageDialog.png" />
-        </li>
-    </ol>
 
     <h1>Synchronize the Database</h1>
     <p>
@@ -77,34 +37,10 @@
             <p>Right-click the project node and select Python->Django Sync DB.</p>
             <img src="SyncDB.png" />
         </li>
-        <li>You will be prompted to create a superuser, enter yes.</li>
+        <li>You will be prompted to create a super user, enter yes.</li>
         <li>
             Enter a user name, email and password when prompted. The username
             and password do not need to match any existing account.
-        </li>
-    </ol>
-
-
-    <h1>Select a global environment [optional]</h1>
-    <p>
-        If you do not want to use a virtual environment, you can also add one of
-        your global environments to your project and install the dependencies
-        there.
-    </p>
-
-    <ol>
-        <li>Open Solution Explorer.</li>
-        <li>
-            <p>Right-click on Python Environments and select Add/Remove Python Environments.</p>
-            <img src="AddRemoveEnvironment.png" />
-        </li>
-        <li>
-            <p>Choose one or more installed environments.</p>
-            <img src="AddRemoveEnvironmentDialog.png" />
-        </li>
-        <li>
-            <p>Your selected environments will appear under Python Environments.</p>
-            <img src="EnvironmentAdded.png" />
         </li>
     </ol>
 </body>

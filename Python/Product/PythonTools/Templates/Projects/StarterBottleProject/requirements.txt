@@ -1,1 +1,1 @@
-bottle==0.12.7
+bottle<1

@@ -94,14 +94,19 @@
   -->
 
   <PropertyGroup>
-    <BuiltProjectOutputGroupDependsOn>
+    <BuiltProjectOutputGroupFastDependsOn>
       _BuildingForUpToDateCheck;
       _DetectWebConfig;
       _DetectWebDebugConfig;
+      _GetPythonAzureSetupConfigOutput;
+      $(BuiltProjectOutputGroupFastDependsOn)
+    </BuiltProjectOutputGroupFastDependsOn>
+    <BuiltProjectOutputGroupDependsOn>
+      BuiltProjectOutputGroupFast;
+      _BuildingForUpToDateCheck2;
       _GetPythonWebSitesFiles;
       _GetPythonCloudServiceFiles;
       _GetPythonVirtualEnvFiles;
-      _GetPythonAzureSetupConfigOutput;
       $(BuiltProjectOutputGroupDependsOn)
     </BuiltProjectOutputGroupDependsOn>
     <SourceFilesProjectOutputGroupDependsOn>
@@ -118,7 +123,45 @@
       <BuildingForUpToDateCheck>true</BuildingForUpToDateCheck>
     </PropertyGroup>
   </Target>
+  <Target Name="_BuildingForUpToDateCheck2">
+    <PropertyGroup>
+      <BuildingForUpToDateCheck>true</BuildingForUpToDateCheck>
+    </PropertyGroup>
+  </Target>
 
+  <Target Name="BuiltProjectOutputGroupFast"
+          Returns="@(BuiltProjectOutputGroupFastOutput)"
+          DependsOnTargets="$(BuiltProjectOutputGroupFastDependsOn)">
+    <ItemGroup>
+      <BuiltProjectOutputGroupFastOutput Remove="@(BuiltProjectOutputGroupFastOutput)" />
+      <_BuiltProjectOutputGroupFastOutput Remove="@(_BuiltProjectOutputGroupFastOutput)" />
+
+      <_BuiltProjectOutputGroupFastInput Include="@(Compile);@(Content);$(MSBuildProjectFile);@(_PythonAzureSetupConfigOutput);@(PyVEnvCfg)" />
+
+      <_BuiltProjectOutputGroupFastInputWithTargetPath Include="@(_BuiltProjectOutputGroupFastInput)" Condition="'%(_BuiltProjectOutputGroupFastInput.TargetPath)' != ''" />
+      <_BuiltProjectOutputGroupFastInputWithoutTargetPath Include="@(_BuiltProjectOutputGroupFastInput)" Condition="'%(_BuiltProjectOutputGroupFastInput.TargetPath)' == ''" />
+    </ItemGroup>
+
+    <AssignTargetPath RootFolder="$(QualifiedProjectHome)" Files="@(_BuiltProjectOutputGroupFastInputWithoutTargetPath)">
+      <Output TaskParameter="AssignedFiles" ItemName="_BuiltProjectOutputGroupFastOutput" />
+    </AssignTargetPath>
+
+    <ItemGroup>
+      <BuiltProjectOutputGroupFastOutput Include="@(_BuiltProjectOutputGroupFastOutput->'%(FullPath)');
+                                                  @(_BuiltProjectOutputGroupFastInputWithTargetPath->'%(FullPath)')" />
+    </ItemGroup>
+
+    <!-- Finished checking, so reset this flag in case whoever is building us
+         immediately starts running an actual build. -->
+    <PropertyGroup>
+      <BuildingForUpToDateCheck>false</BuildingForUpToDateCheck>
+    </PropertyGroup>
+  </Target>
+
+  <!-- Worker Role deployment uses this target to select the files to deploy,
+       so we implement it and provide all the files. BuiltProjectOutputGroupFast
+       is the implementation we now use for up-to-date checks, since it is
+       significantly faster when projects include virtual environments. -->
   <Target Name="BuiltProjectOutputGroup"
           Returns="@(BuiltProjectOutputGroupOutput)"
           DependsOnTargets="$(BuiltProjectOutputGroupDependsOn)">
@@ -126,14 +169,8 @@
       <BuiltProjectOutputGroupOutput Remove="@(BuiltProjectOutputGroupOutput)" />
       <_BuiltProjectOutputGroupOutput Remove="@(_BuiltProjectOutputGroupOutput)" />
 
-      <_BuiltProjectOutputGroupInput Include="
-        @(_PythonWebCommonFiles);
-        @(_PythonWebSitesFiles);
-        @(_PythonCloudServiceFiles);
-        @(_PythonVirtualEnvFiles);@(PyVEnvCfg);
-        @(_PythonAzureSetupConfigOutput);
-        @(Compile);@(Content);$(MSBuildProjectFile)
-      "/>
+      <_BuiltProjectOutputGroupInput Include="@(_PythonWebCommonFiles);@(_PythonWebSitesFiles);@(_PythonCloudServiceFiles);@(_PythonVirtualEnvFiles)" />
+
       <_BuiltProjectOutputGroupInputWithTargetPath Include="@(_BuiltProjectOutputGroupInput)" Condition="'%(_BuiltProjectOutputGroupInput.TargetPath)' != ''" />
       <_BuiltProjectOutputGroupInputWithoutTargetPath Include="@(_BuiltProjectOutputGroupInput)" Condition="'%(_BuiltProjectOutputGroupInput.TargetPath)' == ''" />
     </ItemGroup>
@@ -143,7 +180,8 @@
     </AssignTargetPath>
 
     <ItemGroup>
-      <BuiltProjectOutputGroupOutput Include="@(_BuiltProjectOutputGroupOutput->'%(FullPath)');
+      <BuiltProjectOutputGroupOutput Include="@(BuiltProjectOutputGroupFastOutput);
+                                              @(_BuiltProjectOutputGroupOutput->'%(FullPath)');
                                               @(_BuiltProjectOutputGroupInputWithTargetPath->'%(FullPath)')" />
     </ItemGroup>
 
@@ -1026,8 +1064,6 @@ $(_CloudServiceAzureSetupConfig)
     <WebServerHost Condition="'$(WebServerHost)' == ''">localhost</WebServerHost>
     <_IgnorePythonWebCommands Condition="'$(_IgnorePythonWebCommands)' == ''">false</_IgnorePythonWebCommands>
     <PythonCommands Condition="!$(_IgnorePythonWebCommands)">$(PythonCommands);PythonRunWebServerCommand;PythonDebugWebServerCommand</PythonCommands>
-    <PythonCommands Condition="!$(_IgnorePythonWebCommands) and '$(PythonWebFrameworkPackage)' != ''">$(PythonCommands);PythonUpgradeWebFrameworkCommand</PythonCommands>
-    <PythonWebFrameworkPackageDisplayName Condition="'$(PythonWebFrameworkPackageDisplayName)' == ''">framework</PythonWebFrameworkPackageDisplayName>
   </PropertyGroup>
 
   <Target Name="PythonRunWebServerCommand"
@@ -1086,18 +1122,6 @@ $(_CloudServiceAzureSetupConfig)
                              WorkingDirectory="$(WorkingDirectory)"
                              ExecuteIn="console"
                              Condition="'$(PythonDebugWebServerCommand)' != ''">
-      <Output TaskParameter="Command" ItemName="Commands" />
-    </CreatePythonCommandItem>
-  </Target>
-
-  <Target Name="PythonUpgradeWebFrameworkCommand"
-          Label="resource:Microsoft.PythonTools;Microsoft.PythonTools.Resources;UpgradeWebFrameworkLabel"
-          Returns="@(Commands)">
-    <!-- 'pip' is a special TargetType that will also install pip if required. -->
-    <CreatePythonCommandItem Target="$(PythonWebFrameworkPackage)"
-                             TargetType="pip"
-                             Arguments="--upgrade"
-                             ExecuteIn="output">
       <Output TaskParameter="Command" ItemName="Commands" />
     </CreatePythonCommandItem>
   </Target>

@@ -13,9 +13,8 @@
   </TemplateData>
   <TemplateContent>
     <Project File="StarterBottleProject.pyproj" ReplaceParameters="true">
-      <ProjectItem OpenInWebBrowser="true">readme.mht</ProjectItem>
       <ProjectItem>requirements.txt</ProjectItem>
-      <ProjectItem>app.py</ProjectItem>
+      <ProjectItem OpenInEditor="true">app.py</ProjectItem>
       <ProjectItem>routes.py</ProjectItem>
       <Folder Name="static">
         <Folder Name="content">
@@ -55,4 +54,8 @@
       </Folder>
     </Project>
   </TemplateContent>
+  <WizardExtension>
+    <Assembly>Microsoft.PythonTools.ProjectWizards, Version=2.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</Assembly>
+    <FullClassName>Microsoft.PythonTools.ProjectWizards.InstallRequirementsWizard</FullClassName>
+  </WizardExtension>
 </VSTemplate>

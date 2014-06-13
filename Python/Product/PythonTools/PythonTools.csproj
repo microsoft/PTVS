@@ -931,9 +931,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <ZipProject Include="Templates\Projects\StarterBottleProject\Readme.mht" />
-    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\Readme.mht" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\Readme.mht" />
     <ZipProject Include="Templates\Projects\CloudService\Readme.mht" />
     <None Include="Templates\SharedFiles\Readme\WorkerRoleConfiguration.html" />
     <SharedTemplateFile Include="Templates\SharedFiles\ConfigureCloudService.ps1">
@@ -994,42 +991,14 @@
     </SharedTemplateFile>
     <None Include="Templates\SharedFiles\Readme\ServiceDefinition.png" />
     <None Include="Templates\SharedFiles\Readme\WebRoleConfiguration.html" />
-    <None Include="Templates\Projects\StarterBottleProject\Readme\readme.html" />
-    <None Include="Templates\Projects\StarterBottleProject\Readme\AddRemoveEnvironment.png" />
-    <None Include="Templates\Projects\StarterBottleProject\Readme\AddRemoveEnvironmentDialog.png" />
-    <None Include="Templates\Projects\StarterBottleProject\Readme\AddVirtualEnvironment.png" />
-    <None Include="Templates\Projects\StarterBottleProject\Readme\AddVirtualEnvironmentDialog.png" />
-    <None Include="Templates\Projects\StarterBottleProject\Readme\CopyFullPath.png" />
-    <None Include="Templates\Projects\StarterBottleProject\Readme\EnvironmentAdded.png" />
-    <None Include="Templates\Projects\StarterBottleProject\Readme\InstallPythonPackage.png" />
-    <None Include="Templates\Projects\StarterBottleProject\Readme\InstallPythonPackageDialog.png" />
-    <None Include="Templates\Projects\StarterBottleProject\Readme\VirtualEnvironmentCreated.png" />
-    <None Include="Templates\Projects\StarterFlaskJadeProject\Readme\AddRemoveEnvironment.png" />
-    <None Include="Templates\Projects\StarterFlaskJadeProject\Readme\AddRemoveEnvironmentDialog.png" />
-    <None Include="Templates\Projects\StarterFlaskJadeProject\Readme\AddVirtualEnvironment.png" />
-    <None Include="Templates\Projects\StarterFlaskJadeProject\Readme\AddVirtualEnvironmentDialog.png" />
-    <None Include="Templates\Projects\StarterFlaskJadeProject\Readme\CopyFullPath.png" />
-    <None Include="Templates\Projects\StarterFlaskJadeProject\Readme\EnvironmentAdded.png" />
-    <None Include="Templates\Projects\StarterFlaskJadeProject\Readme\InstallPythonPackage.png" />
-    <None Include="Templates\Projects\StarterFlaskJadeProject\Readme\InstallPythonPackageDialog.png" />
-    <None Include="Templates\Projects\StarterFlaskJadeProject\Readme\readme.html" />
-    <None Include="Templates\Projects\StarterFlaskJadeProject\Readme\VirtualEnvironmentCreated.png" />
-    <None Include="Templates\Projects\StarterFlaskProject\Readme\AddRemoveEnvironment.png" />
-    <None Include="Templates\Projects\StarterFlaskProject\Readme\AddRemoveEnvironmentDialog.png" />
-    <None Include="Templates\Projects\StarterFlaskProject\Readme\AddVirtualEnvironment.png" />
-    <None Include="Templates\Projects\StarterFlaskProject\Readme\AddVirtualEnvironmentDialog.png" />
-    <None Include="Templates\Projects\StarterFlaskProject\Readme\CopyFullPath.png" />
-    <None Include="Templates\Projects\StarterFlaskProject\Readme\EnvironmentAdded.png" />
-    <None Include="Templates\Projects\StarterFlaskProject\Readme\InstallPythonPackage.png" />
-    <None Include="Templates\Projects\StarterFlaskProject\Readme\InstallPythonPackageDialog.png" />
-    <None Include="Templates\Projects\StarterFlaskProject\Readme\readme.html" />
-    <None Include="Templates\Projects\StarterFlaskProject\Readme\VirtualEnvironmentCreated.png" />
     <Content Include="ReadmeStyle.css" />
     <Content Include="Templates\Projects\CloudService\Readme\AddNewWebRole.png" />
     <Content Include="Templates\Projects\CloudService\Readme\AddNewWorkerRole.png" />
     <Content Include="Templates\Projects\CloudService\Readme\NewWebRoleDialog.png" />
     <Content Include="Templates\Projects\CloudService\Readme\NewWorkerRoleDialog.png" />
     <Content Include="Templates\Projects\CloudService\Readme\readme.html" />
+    <ZipProject Include="Templates\Projects\WebProjectBottle\requirements.txt" />
+    <ZipProject Include="Templates\Projects\WebProjectFlask\requirements.txt" />
     <Content Include="visualstudio_py_debugger.py">
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

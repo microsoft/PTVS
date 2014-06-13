@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.Diagnostics;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 
@@ -122,10 +123,12 @@ namespace Microsoft.VisualStudioTools.Project {
 
         public override void WriteLine(string line) {
             _pane.OutputStringThreadSafe(line + Environment.NewLine);
+            Debug.WriteLine(line, "Output Window");
         }
 
         public override void WriteErrorLine(string line) {
             _pane.OutputStringThreadSafe(line + Environment.NewLine);
+            Debug.WriteLine(line, "Output Window");
         }
     }
 }

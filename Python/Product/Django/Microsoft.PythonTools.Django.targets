@@ -23,8 +23,6 @@
     <PythonRunWebServerCommandType Condition="'$(PythonRunWebServerCommandType)' == ''">script</PythonRunWebServerCommandType>
     <PythonDebugWebServerCommandArguments Condition="'$(PythonDebugWebServerCommandArguments)' == ''">runserver --noreload --settings $(DjangoSettingsModule) %SERVER_PORT% $(CommandLineArguments)</PythonDebugWebServerCommandArguments>
     <PythonDebugWebServerCommandType Condition="'$(PythonDebugWebServerCommandType)' == ''">script</PythonDebugWebServerCommandType>
-    <PythonWebFrameworkPackage Condition="'$(PythonWebFrameworkPackage)' == ''">django</PythonWebFrameworkPackage>
-    <PythonWebFrameworkPackageDisplayName Condition="'$(PythonWebFrameworkPackageDisplayName)' == ''">Django</PythonWebFrameworkPackageDisplayName>
 
     <PythonWsgiHandler Condition="'$(PythonWsgiHandler)' == ''">django.core.handlers.wsgi.WSGIHandler()</PythonWsgiHandler>
   </PropertyGroup>

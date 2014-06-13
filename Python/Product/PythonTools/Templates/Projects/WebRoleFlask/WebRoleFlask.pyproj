@@ -11,8 +11,6 @@
     <WorkingDirectory>.</WorkingDirectory>
     <LaunchProvider>Web launcher</LaunchProvider>
     <OutputPath>.</OutputPath>
-    <PythonWebFrameworkPackage>flask</PythonWebFrameworkPackage>
-    <PythonWebFrameworkPackageDisplayName>Flask</PythonWebFrameworkPackageDisplayName>
     <PythonWsgiHandler>{StartupModule}.wsgi_app</PythonWsgiHandler>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">

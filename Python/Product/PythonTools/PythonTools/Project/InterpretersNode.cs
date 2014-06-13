@@ -222,7 +222,7 @@ namespace Microsoft.PythonTools.Project {
                                 CommonUtils.GetAbsoluteFilePath(ProjectMgr.ProjectHome, "requirements.txt")
                             ),
                             true,
-                            false
+                            PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ElevatePip
                         ).HandleAllExceptions(SR.ProductName).DoNotWait();
                         return VSConstants.S_OK;
                     case PythonConstants.GenerateRequirementsTxt:
@@ -381,32 +381,36 @@ namespace Microsoft.PythonTools.Project {
                 yield break;
             }
 
-            var findRequirement = new Regex("^\\s*(?<spec>(?<name>[^\\s#=]+)(==(?<ver>[^\\s#]+))?)");
-            var existing = new Dictionary<string, string>();
-            foreach (var req in updates) {
-                var m = findRequirement.Match(req);
-                if (m.Success) {
-                    existing[m.Groups["name"].Value] = req;
-                }
+            var findRequirement = new Regex("(?<!#.*)(?<spec>(?<name>[^\\s=]+)(==(?<ver>\\S+))?)");
+            var existing = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+            foreach (var m in updates.SelectMany(req => findRequirement.Matches(req).Cast<Match>())) {
+                existing[m.Groups["name"].Value] = m.Value;
             }
 
-            foreach (var line in original) {
-                var m = findRequirement.Match(line);
-                if (m.Success) {
+            var seen = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+            foreach (var _line in original) {
+                var line = _line;
+                foreach(var m in findRequirement.Matches(line).Cast<Match>()) {
                     string newReq;
-                    if (existing.TryGetValue(m.Groups["name"].Value, out newReq)) {
-                        existing.Remove(m.Groups["name"].Value);
-                        yield return findRequirement.Replace(line, newReq);
-                    } else {
-                        yield return line;
+                    var name = m.Groups["name"].Value;
+                    if (existing.TryGetValue(name, out newReq)) {
+                        line = findRequirement.Replace(line, m2 =>
+                            name.Equals(m2.Groups["name"].Value, StringComparison.InvariantCultureIgnoreCase) ?
+                                newReq :
+                                m2.Value
+                        );
+                        seen.Add(name);
                     }
-                } else {
-                    yield return line;
                 }
+                yield return line;
             }
 
             if (addNew) {
-                foreach (var req in existing.Values.OrderBy(v => v)) {
+                foreach (var req in existing
+                    .Where(kv => !seen.Contains(kv.Key))
+                    .Select(kv => kv.Value)
+                    .OrderBy(v => v)
+                ) {
                     yield return req;
                 }
             }

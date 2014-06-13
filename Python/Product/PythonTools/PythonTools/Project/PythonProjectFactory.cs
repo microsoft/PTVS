@@ -150,15 +150,11 @@ namespace Microsoft.PythonTools.Project {
             if (bottleImports.Any()) {
                 var globals = projectXml.PropertyGroups.FirstOrDefault() ?? projectXml.AddPropertyGroup();
                 AddOrSetProperty(globals, "PythonDebugWebServerCommandArguments", "--debug $(CommandLineArguments)");
-                AddOrSetProperty(globals, "PythonWebFrameworkPackage", "bottle");
-                AddOrSetProperty(globals, "PythonWebFrameworkPackageDisplayName", "Bottle");
                 AddOrSetProperty(globals, "PythonWsgiHandler", "{StartupModule}.wsgi_app()");
                 log(__VSUL_ERRORLEVEL.VSUL_INFORMATIONAL, SR.GetString(SR.UpgradedBottleImports));
             }
             if (flaskImports.Any()) {
                 var globals = projectXml.PropertyGroups.FirstOrDefault() ?? projectXml.AddPropertyGroup();
-                AddOrSetProperty(globals, "PythonWebFrameworkPackage", "flask");
-                AddOrSetProperty(globals, "PythonWebFrameworkPackageDisplayName", "Flask");
                 AddOrSetProperty(globals, "PythonWsgiHandler", "{StartupModule}.wsgi_app");
                 log(__VSUL_ERRORLEVEL.VSUL_INFORMATIONAL, SR.GetString(SR.UpgradedFlaskImports));
             }
