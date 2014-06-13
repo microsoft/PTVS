@@ -69,7 +69,8 @@ namespace AzurePublishingUITests {
             string moduleName,
             string textInResponse,
             string pythonVersion,
-            int publishTimeout
+            int publishTimeout,
+            string packageName = null
         ) {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
                 var pyProj = app.CreateProject(
@@ -81,7 +82,7 @@ namespace AzurePublishingUITests {
 
                 var factory = WebProjectTests.CreateVirtualEnvironment(pythonVersion, app, pyProj);
 
-                WebProjectTests.InstallWebFramework(moduleName, pyProj, factory);
+                WebProjectTests.InstallWebFramework(moduleName, packageName ?? moduleName, factory);
 
                 app.Dte.ExecuteCommand("Project.ConverttoWindowsAzureCloudServiceProject");
 
