@@ -131,6 +131,10 @@ namespace Microsoft.PythonTools.Analysis {
         private Dictionary<string, object> GenerateMembers(ModuleInfo moduleInfo, IEnumerable<object> children) {
             Dictionary<string, object> res = new Dictionary<string, object>();
             foreach (var keyValue in moduleInfo.Scope.Variables) {
+                if (keyValue.Value.IsEphemeral) {
+                    // Never got a value, so leave it out.
+                    continue;
+                }
                 res[keyValue.Key] = GenerateMember(keyValue.Value, moduleInfo);
             }
             foreach (var child in children.OfType<string>()) {
@@ -537,10 +541,16 @@ namespace Microsoft.PythonTools.Analysis {
         private object GetClassMembers(ClassInfo ci, ModuleInfo declModule) {
             Dictionary<string, object> memTable = new Dictionary<string, object>();
             foreach (var keyValue in ci.Scope.Variables) {
+                if (keyValue.Value.IsEphemeral) {
+                    continue;
+                }
                 memTable[keyValue.Key] = GenerateMember(keyValue.Value, declModule, true);
             }
             if (ci.Instance.InstanceAttributes != null) {
                 foreach (var keyValue in ci.Instance.InstanceAttributes) {
+                    if (keyValue.Value.IsEphemeral) {
+                        continue;
+                    }
                     memTable[keyValue.Key] = GenerateMember(keyValue.Value, declModule, true);
                 }
             }

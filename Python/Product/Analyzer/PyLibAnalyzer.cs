@@ -88,7 +88,7 @@ namespace Microsoft.PythonTools.Analysis {
             Console.WriteLine(" /dryrun                        - don't analyze, but write out list of files that " +
                               "would have been analyzed.");
             Console.WriteLine(" /wait       [identifier]       - wait for the specified analysis to complete.");
-            Console.WriteLine(" /repeat     [count]            - repeat up to count times if needen (default 3).");
+            Console.WriteLine(" /repeat     [count]            - repeat up to count times if needed (default 3).");
         }
 
         private static IEnumerable<KeyValuePair<string, string>> ParseArguments(IEnumerable<string> args) {
