@@ -13,8 +13,7 @@
  * ***************************************************************************/
 
 using System;
-using System.Diagnostics;
-using System.Threading;         // Ambiguous with EnvDTE.Thread.
+using System.Threading;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
@@ -51,7 +50,7 @@ namespace DjangoUITests {
                         try {
                             app.Dte.ExecuteCommand("Project.AddWindowsAzureCloudServiceProject");
                         } catch (Exception ex2) {
-                            Console.WriteLine("Unable to execute Project.AddWindowsAzureCloudServiceProject.\r\n{1}", ex2);
+                            Console.WriteLine("Unable to execute Project.AddWindowsAzureCloudServiceProject.\r\n{0}", ex2);
                             exception = ex1;
                         }
                     }
