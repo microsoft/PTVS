@@ -668,7 +668,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <param name="newParentId">The new parent id of the item.</param>
         /// <returns>The newly added FileNode.</returns>
         /// <remarks>While a new node will be used to represent the item, the underlying MSBuild item will be the same and as a result file properties saved in the project file will not be lost.</remarks>
-        private FileNode RenameFileNode(string oldFileName, string newFileName, HierarchyNode newParent) {
+        internal FileNode RenameFileNode(string oldFileName, string newFileName, HierarchyNode newParent) {
             if (CommonUtils.IsSamePath(oldFileName, newFileName)) {
                 // We do not want to rename the same file
                 return null;
@@ -710,11 +710,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         /// <param name="newFileNode">The newly added Parent node.</param>
         protected virtual void RenameChildNodes(FileNode parentNode) {
-            foreach (HierarchyNode child in GetChildNodes()) {
-                FileNode childNode = child as FileNode;
-                if (null == childNode) {
-                    continue;
-                }
+            foreach (var childNode in GetChildNodes().OfType<FileNode>()) {
                 string newfilename;
                 if (childNode.HasParentNodeNameRelation) {
                     string relationalName = childNode.Parent.GetRelationalName();

@@ -135,6 +135,10 @@ namespace Microsoft.VisualStudioTools.Project {
             return base.QueryService(ref guidService, out result);
         }
 
+        internal override FileNode RenameFileNode(string oldFileName, string newFileName) {
+            return this.RenameFileNode(oldFileName, newFileName, Parent);
+        }
+
         #endregion
 
     }
