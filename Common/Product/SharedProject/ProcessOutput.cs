@@ -107,6 +107,7 @@ namespace Microsoft.VisualStudioTools.Project {
         private ProcessWaitHandle _waitHandle;
         private readonly Redirector _redirector;
         private bool _isDisposed;
+        private bool _seenNullInOutput, _seenNullInError;
         private bool _haveRaisedExitedEvent;
 
         private static readonly char[] EolChars = new[] { '\r', '\n' };
@@ -159,12 +160,12 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <returns>A <see cref="ProcessOutput"/> object.</returns>
         public static ProcessOutput Run(
             string filename,
-                                        IEnumerable<string> arguments,
-                                        string workingDirectory,
-                                        IEnumerable<KeyValuePair<string, string>> env,
-                                        bool visible,
-                                        Redirector redirector,
-                                        bool quoteArgs = true,
+            IEnumerable<string> arguments,
+            string workingDirectory,
+            IEnumerable<KeyValuePair<string, string>> env,
+            bool visible,
+            Redirector redirector,
+            bool quoteArgs = true,
             bool elevate = false
         ) {
             if (string.IsNullOrEmpty(filename)) {
@@ -210,11 +211,13 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </param>
         /// <param name="quoteArgs"></param>
         /// <returns>A <see cref="ProcessOutput"/> object.</returns>
-        public static ProcessOutput RunElevated(string filename,
-                                                IEnumerable<string> arguments,
-                                                string workingDirectory,
-                                                Redirector redirector,
-                                                bool quoteArgs = true) {
+        public static ProcessOutput RunElevated(
+            string filename,
+            IEnumerable<string> arguments,
+            string workingDirectory,
+            Redirector redirector,
+            bool quoteArgs = true
+        ) {
             var outFile = Path.GetTempFileName();
             var errFile = Path.GetTempFileName();
             var psi = new ProcessStartInfo("cmd.exe");
@@ -413,7 +416,10 @@ namespace Microsoft.VisualStudioTools.Project {
             }
 
             if (e.Data == null) {
-                OnExited(_process, EventArgs.Empty);
+                _seenNullInOutput = true;
+                if (_seenNullInError || !_process.StartInfo.RedirectStandardError) {
+                    OnExited(_process, EventArgs.Empty);
+                }
             } else if (!string.IsNullOrEmpty(e.Data)) {
                 foreach (var line in SplitLines(e.Data)) {
                     if (_output != null) {
@@ -432,7 +438,10 @@ namespace Microsoft.VisualStudioTools.Project {
             }
 
             if (e.Data == null) {
-                OnExited(_process, EventArgs.Empty);
+                _seenNullInError = true;
+                if (_seenNullInOutput || !_process.StartInfo.RedirectStandardOutput) {
+                    OnExited(_process, EventArgs.Empty);
+                }
             } else if (!string.IsNullOrEmpty(e.Data)) {
                 foreach (var line in SplitLines(e.Data)) {
                     if (_error != null) {

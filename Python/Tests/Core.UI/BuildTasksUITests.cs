@@ -48,9 +48,8 @@ namespace PythonToolsUITests {
 
         internal void Execute(PythonProjectNode projectNode, string commandName) {
             Console.WriteLine("Executing command {0}", commandName);
-            UIThread.Invoke(() => {
-                projectNode._customCommands.First(cc => cc.DisplayLabel == commandName).Execute(projectNode);
-            });
+            var t = UIThread.InvokeTask(() => projectNode._customCommands.First(cc => cc.DisplayLabel == commandName).ExecuteAsync(projectNode));
+            t.GetAwaiter().GetResult();
         }
 
         internal Task ExecuteAsync(PythonProjectNode projectNode, string commandName) {

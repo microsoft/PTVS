@@ -668,38 +668,38 @@ namespace Microsoft.PythonTools.Project {
             return false;
         }
 
-        private void RunInOutput(IPythonProject2 project, CommandStartInfo startInfo) {
+        private async void RunInOutput(IPythonProject2 project, CommandStartInfo startInfo) {
             Redirector redirector = OutputWindowRedirector.GetGeneral(project.Site);
             if (startInfo.ErrorRegex != null || startInfo.WarningRegex != null) {
                 redirector = new TeeRedirector(redirector, new ErrorListRedirector(startInfo.WorkingDirectory, _errorListProvider, startInfo.ErrorRegex, startInfo.WarningRegex));
             }
             redirector.ShowAndActivate();
 
-            var process = ProcessOutput.Run(
+            using (var process = ProcessOutput.Run(
                 startInfo.Filename,
-                new [] { startInfo.Arguments },
+                new[] { startInfo.Arguments },
                 startInfo.WorkingDirectory,
                 startInfo.EnvironmentVariables,
                 false,
                 redirector,
                 quoteArgs: false
-            );
-
-            process.Exited += (s, e) => process.Dispose();
+            )) {
+                await process;
+            }
         }
 
-        private void RunInConsole(IPythonProject2 project, CommandStartInfo startInfo) {
-            var process = ProcessOutput.Run(
+        private async void RunInConsole(IPythonProject2 project, CommandStartInfo startInfo) {
+            using (var process = ProcessOutput.Run(
                 startInfo.Filename,
-                new [] { startInfo.Arguments },
+                new[] { startInfo.Arguments },
                 startInfo.WorkingDirectory,
                 startInfo.EnvironmentVariables,
                 true,
                 null,
                 quoteArgs: false
-            );
-
-            process.Exited += (s, e) => process.Dispose();
+            )) {
+                await process;
+            }
         }
     }
 
