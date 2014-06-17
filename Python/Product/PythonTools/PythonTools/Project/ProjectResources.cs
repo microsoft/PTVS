@@ -68,6 +68,7 @@ namespace Microsoft.PythonTools.Project {
         public const string PipInstallFailedExitCode = "PipInstallFailedExitCode";
 
         public const string VirtualEnvCreating = "VirtualEnvCreating";
+        public const string VirtualEnvCreatingPleaseWait = "VirtualEnvCreatingPleaseWait";
         public const string VirtualEnvCreationSucceeded = "VirtualEnvCreationSucceeded";
         public const string VirtualEnvCreationFailed = "VirtualEnvCreationFailed";
         public const string VirtualEnvCreationFailedExitCode = "VirtualEnvCreationFailedExitCode";
@@ -162,6 +163,9 @@ namespace Microsoft.PythonTools.Project {
         public const string RequirementsTxtReplace = "RequirementsTxtReplace";
         public const string RequirementsTxtRefresh = "RequirementsTxtRefresh";
         public const string RequirementsTxtUpdate = "RequirementsTxtUpdate";
+        public const string RequirementsTxtReplaceHelp = "RequirementsTxtReplaceHelp";
+        public const string RequirementsTxtRefreshHelp = "RequirementsTxtRefreshHelp";
+        public const string RequirementsTxtUpdateHelp = "RequirementsTxtUpdateHelp";
         public const string RequirementsTxtInstalling = "RequirementsTxtInstalling";
 
         public const string RequirementsTxtFailedToRead = "RequirementsTxtFailedToRead";

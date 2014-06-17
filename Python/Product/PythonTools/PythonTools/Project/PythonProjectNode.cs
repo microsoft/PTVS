@@ -1366,6 +1366,20 @@ namespace Microsoft.PythonTools.Project {
                 throw new OperationCanceledException();
             }
 
+            var dlg = Site.GetService(typeof(SVsThreadedWaitDialog)) as IVsThreadedWaitDialog2;
+            if (dlg != null) {
+                dlg.StartWaitDialog(
+                    SR.ProductName,
+                    SR.GetString(SR.VirtualEnvCreatingPleaseWait),
+                    null,
+                    null,
+                    null,
+                    0,
+                    true,
+                    true
+                );
+            }
+
             await data.WaitForReady();
 
             var doCreate = data.WillCreateVirtualEnv;
@@ -1396,6 +1410,11 @@ namespace Microsoft.PythonTools.Project {
                         redirector.WriteErrorLine(SR.GetString(SR.PackageInstallFailed, Path.GetFileName(txt)));
                     }
                 }
+            }
+
+            if (dlg != null) {
+                int dummy;
+                dlg.EndWaitDialog(out dummy);
             }
         }
 

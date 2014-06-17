@@ -37,22 +37,25 @@ namespace PythonToolsTests {
         public void MergeRequirements() {
             // Comments should be preserved, only package specs should change.
             AssertUtil.AreEqual(
-                InterpretersNode.MergeRequirements(new [] {
+                InterpretersNode.MergeRequirements(new[] {
                     "a # with a comment",
                     "B==0.2",
                     "# just a comment B==01234",
                     "",
+                    "x < 1",
                     "d==1.0 e==2.0 f==3.0"
-                }, new [] {
+                }, new[] {
                     "b==0.1",
                     "a==0.2",
                     "c==0.3",
                     "e==4.0",
+                    "x==0.8"
                 }, false),
                 "a==0.2 # with a comment",
                 "b==0.1",
                 "# just a comment B==01234",
                 "",
+                "x==0.8",
                 "d==1.0 e==4.0 f==3.0"
             );
 
@@ -83,6 +86,17 @@ namespace PythonToolsTests {
                 "a==0.1",
                 "b==0.2",
                 "c==0.3"
+            );
+
+            // Check all the inequalities
+            const string inequalities = "<=|>=|<|>|!=|==";
+            AssertUtil.AreEqual(
+                InterpretersNode.MergeRequirements(
+                    inequalities.Split('|').Select(s => "a " + s + " 1.2.3"),
+                    new[] { "a==0" },
+                    false
+                ),
+                inequalities.Split('|').Select(_ => "a==0").ToArray()
             );
         }
     }

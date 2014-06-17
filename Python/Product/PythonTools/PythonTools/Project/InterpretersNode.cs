@@ -294,9 +294,18 @@ namespace Microsoft.PythonTools.Project {
                     ExpandedControlText = SR.GetString(SR.RequirementsTxtContentExpanded),
                     ExpandedInformation = string.Join(Environment.NewLine, existing)
                 };
-                var replace = new TaskDialogButton(SR.GetString(SR.RequirementsTxtReplace));
-                var refresh = new TaskDialogButton(SR.GetString(SR.RequirementsTxtRefresh));
-                var update = new TaskDialogButton(SR.GetString(SR.RequirementsTxtUpdate));
+                var replace = new TaskDialogButton(
+                    SR.GetString(SR.RequirementsTxtReplace),
+                    SR.GetString(SR.RequirementsTxtReplaceHelp)
+                );
+                var refresh = new TaskDialogButton(
+                    SR.GetString(SR.RequirementsTxtRefresh),
+                    SR.GetString(SR.RequirementsTxtRefreshHelp)
+                );
+                var update = new TaskDialogButton(
+                    SR.GetString(SR.RequirementsTxtUpdate),
+                    SR.GetString(SR.RequirementsTxtUpdateHelp)
+                );
                 td.Buttons.Add(replace);
                 td.Buttons.Add(refresh);
                 td.Buttons.Add(update);
@@ -322,7 +331,7 @@ namespace Microsoft.PythonTools.Project {
                     _ => {
                         if (items.Any()) {
                             File.WriteAllLines(txt, MergeRequirements(existing, items, addNew));
-                        } else {
+                        } else if (existing == null) {
                             File.WriteAllText(txt, "");
                         }
                     },
@@ -381,7 +390,7 @@ namespace Microsoft.PythonTools.Project {
                 yield break;
             }
 
-            var findRequirement = new Regex("(?<!#.*)(?<spec>(?<name>[^\\s=]+)(==(?<ver>\\S+))?)");
+            var findRequirement = new Regex("(?<!#.*)(?<spec>(?<name>.+?)(\\s*(?<cmp><=|>=|<|>|!=|==)\\s*(?<ver>\\S+))?)");
             var existing = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
             foreach (var m in updates.SelectMany(req => findRequirement.Matches(req).Cast<Match>())) {
                 existing[m.Groups["name"].Value] = m.Value;
