@@ -722,7 +722,7 @@ namespace Microsoft.PythonTools.Repl {
                     SendString(extraArgs ?? String.Empty);
                 };
 
-                using (new StreamLock(this, throwIfDisconnected: true)) {
+                using (new StreamLock(this, throwIfDisconnected: false)) {
                     if (_stream == null) {
                         // If we're still waiting for debuggee to connect to us, postpone the actual execution until we have the command stream.
                         if (_listenerSocket != null) {
