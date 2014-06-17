@@ -218,7 +218,6 @@ public:
     /* Borrowed reference to a generator, or NULL */
     PyObject *f_gen;
 
-    PyThreadState* f_tstate;
     int f_lasti;                /* Last instruction if called */
     /* As of 2.3 f_lineno is only valid when tracing is active (i.e. when
        f_trace is set) -- at other times use PyCode_Addr2Line instead. */
