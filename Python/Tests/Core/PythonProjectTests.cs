@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -97,6 +98,91 @@ namespace PythonToolsTests {
                     false
                 ),
                 inequalities.Split('|').Select(_ => "a==0").ToArray()
+            );
+        }
+
+        [TestMethod, Priority(0)]
+        public void MergeRequirementsMismatchedCase() {
+            AssertUtil.AreEqual(
+                InterpretersNode.MergeRequirements(new[] {
+                    "aaaaaa==0.0",
+                    "BbBbBb==0.1",
+                    "CCCCCC==0.2"
+                }, new[] {
+                    "aaaAAA==0.1",
+                    "bbbBBB==0.2",
+                    "cccCCC==0.3"
+                }, false),
+                "aaaAAA==0.1",
+                "bbbBBB==0.2",
+                "cccCCC==0.3"
+            );
+
+            // https://pytools.codeplex.com/workitem/2465
+            AssertUtil.AreEqual(
+                InterpretersNode.MergeRequirements(new[] {
+                    "Flask==0.10.1",
+                    "itsdangerous==0.24",
+                    "Jinja2==2.7.3",
+                    "MarkupSafe==0.23",
+                    "Werkzeug==0.9.6"
+                }, new[] {
+                    "flask==0.10.1",
+                    "itsdangerous==0.24",
+                    "jinja2==2.7.3",
+                    "markupsafe==0.23",
+                    "werkzeug==0.9.6"
+                }, false),
+                "flask==0.10.1",
+                "itsdangerous==0.24",
+                "jinja2==2.7.3",
+                "markupsafe==0.23",
+                "werkzeug==0.9.6"
+            );
+        }
+
+        [TestMethod, Priority(0)]
+        public void FindRequirementsRegexTest() {
+            var r = new Regex(InterpretersNode.FindRequirementRegex, RegexOptions.IgnorePatternWhitespace);
+            AssertUtil.AreEqual(r.Matches("aaaa bbbb cccc").Cast<Match>().Select(m => m.Value),
+                "aaaa",
+                "bbbb",
+                "cccc"
+            );
+            AssertUtil.AreEqual(r.Matches("aaaa#a\r\nbbbb#b\r\ncccc#c\r\n").Cast<Match>().Select(m => m.Value),
+                "aaaa",
+                "bbbb",
+                "cccc"
+            );
+
+            AssertUtil.AreEqual(r.Matches("a==1 b!=2 c<=3").Cast<Match>().Select(m => m.Value),
+                "a==1",
+                "b!=2",
+                "c<=3"
+            );
+
+            AssertUtil.AreEqual(r.Matches("a==1 b!=2 c<=3").Cast<Match>().Select(m => m.Groups["name"].Value),
+                "a",
+                "b",
+                "c"
+            );
+
+            AssertUtil.AreEqual(r.Matches("a==1#a\r\nb!=2#b\r\nc<=3#c\r\n").Cast<Match>().Select(m => m.Value),
+                "a==1",
+                "b!=2",
+                "c<=3"
+            );
+
+            AssertUtil.AreEqual(r.Matches("a == 1 b != 2 c <= 3").Cast<Match>().Select(m => m.Value),
+                "a == 1",
+                "b != 2",
+                "c <= 3"
+            );
+
+            AssertUtil.AreEqual(r.Matches("a == 1 b != 2 c <= 3").Cast<Match>().Select(m => m.Groups["name"].Value),
+                "a",
+                "b",
+                "c"
             );
         }
     }

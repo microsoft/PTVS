@@ -378,6 +378,15 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
+        internal const string FindRequirementRegex = @"
+            (?<!\#.*)       # ensure we are not in a comment
+            (?<spec>        # <spec> includes name, version and whitespace
+                (?<name>[^\s\#<>=!]+)           # just the name, no whitespace
+                (\s*(?<cmp><=|>=|<|>|!=|==)\s*
+                    (?<ver>[^\s\#]+)
+                )?          # cmp and ver are optional
+            )";
+
         internal static IEnumerable<string> MergeRequirements(
             IEnumerable<string> original,
             IEnumerable<string> updates,
@@ -390,7 +399,7 @@ namespace Microsoft.PythonTools.Project {
                 yield break;
             }
 
-            var findRequirement = new Regex("(?<!#.*)(?<spec>(?<name>.+?)(\\s*(?<cmp><=|>=|<|>|!=|==)\\s*(?<ver>\\S+))?)");
+            var findRequirement = new Regex(FindRequirementRegex, RegexOptions.IgnorePatternWhitespace);
             var existing = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
             foreach (var m in updates.SelectMany(req => findRequirement.Matches(req).Cast<Match>())) {
                 existing[m.Groups["name"].Value] = m.Value;
