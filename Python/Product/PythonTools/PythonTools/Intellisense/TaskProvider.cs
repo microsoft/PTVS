@@ -40,6 +40,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly SourceSpan _rawSpan;
         private readonly VSTASKPRIORITY _priority;
         private readonly bool _squiggle;
+        private readonly ITextSnapshot _snapshot;
 
         internal TaskProviderItem(
             string message,
@@ -50,6 +51,7 @@ namespace Microsoft.PythonTools.Intellisense {
         ) {
             _message = message;
             _rawSpan = rawSpan;
+            _snapshot = snapshot;
             _span = snapshot != null ? CreateSpan(snapshot, rawSpan) : null;
             _rawSpan = rawSpan;
             _priority = priority;
@@ -73,20 +75,24 @@ namespace Microsoft.PythonTools.Intellisense {
 
         #region Conversion Functions
 
-        /// <summary>
-        /// Returns a function that will create the required squiggle. A
-        /// function is returned to allow the calculations to be performed on a
-        /// worker thread while the actual creation can be batched and
-        /// marshalled to the UI thread.
-        /// </summary>
-        public Func<SimpleTagger<ErrorTag>, TrackingTagSpan<ErrorTag>> ToSquiggleFunc() {
-            if (!_squiggle || _span == null || string.IsNullOrEmpty(ErrorType)) {
-                return null;
+        
+        public bool IsValid {
+            get {
+                if (!_squiggle || _span == null || string.IsNullOrEmpty(ErrorType)) {
+                    return false;
+                }
+                return true;
             }
+        }
 
-            var tag = new ErrorTag(ErrorType, _message);
+        public void CreateSquiggleSpan(SimpleTagger<ErrorTag> tagger) {
+            tagger.CreateTagSpan(_span, new ErrorTag(ErrorType, _message));
+        }
 
-            return c => c.CreateTagSpan(_span, tag);
+        public ITextSnapshot Snapshot {
+            get {
+                return _snapshot;
+            }
         }
 
         public ErrorTaskItem ToErrorTaskItem(EntryKey key) {
@@ -286,7 +292,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
     sealed class TaskProvider : IVsTaskProvider, IDisposable {
         private readonly Dictionary<EntryKey, List<TaskProviderItem>> _items;
-        private readonly Dictionary<EntryKey, ITextBuffer> _buffers;
+        private readonly Dictionary<EntryKey, HashSet<ITextBuffer>> _errorSources;
         private readonly object _itemsLock = new object();
         private readonly uint _cookie;
         private readonly IVsTaskList _errorList;
@@ -297,7 +303,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public TaskProvider(IVsTaskList errorList, IErrorProviderFactory errorProvider) {
             _items = new Dictionary<EntryKey, List<TaskProviderItem>>();
-            _buffers = new Dictionary<EntryKey, ITextBuffer>();
+            _errorSources = new Dictionary<EntryKey, HashSet<ITextBuffer>>();
 
             _errorList = errorList;
             if (_errorList != null) {
@@ -372,15 +378,42 @@ namespace Microsoft.PythonTools.Intellisense {
             return tcs.Task;
         }
 
-        public void RegisterTextBuffer(IProjectEntry entry, string moniker, ITextBuffer buffer) {
-            lock (_buffers) {
-                _buffers[new EntryKey(entry, moniker)] = buffer;
+        /// <summary>
+        /// Adds the buffer to be tracked for reporting squiggles and error list entries
+        /// for the given project entry and moniker for the error source.
+        /// </summary>
+        public void AddBufferForErrorSource(IProjectEntry entry, string moniker, ITextBuffer buffer) {
+            lock (_errorSources) {
+                var key = new EntryKey(entry, moniker);
+                HashSet<ITextBuffer> buffers;
+                if (!_errorSources.TryGetValue(key, out buffers)) {
+                    _errorSources[new EntryKey(entry, moniker)] = buffers = new HashSet<ITextBuffer>();
+                }
+                buffers.Add(buffer);
             }
         }
 
-        public void UnregisterTextBuffer(IProjectEntry entry, string moniker) {
-            lock (_buffers) {
-                _buffers.Remove(new EntryKey(entry, moniker));
+        /// <summary>
+        /// Removes the buffer from tracking for reporting squiggles and error list entries
+        /// for the given project entry and moniker for the error source.
+        /// </summary>
+        public void RemoveBufferForErrorSource(IProjectEntry entry, string moniker, ITextBuffer buffer) {
+            lock (_errorSources) {
+                var key = new EntryKey(entry, moniker);
+                HashSet<ITextBuffer> buffers;
+                if (_errorSources.TryGetValue(key, out buffers)) {
+                    buffers.Remove(buffer);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Clears all tracked buffers for the given project entry and moniker for
+        /// the error source.
+        /// </summary>
+        public void ClearErrorSource(IProjectEntry entry, string moniker) {
+            lock (_errorSources) {
+                _errorSources.Remove(new EntryKey(entry, moniker));
             }
         }
 
@@ -460,25 +493,31 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private async Task RefreshAsync() {
             var buffers = new HashSet<ITextBuffer>();
-            var squiggleFunctions = new List<Tuple<ITextBuffer, Func<SimpleTagger<ErrorTag>, TrackingTagSpan<ErrorTag>>[]>>();
+            var bufferToErrorList = new Dictionary<ITextBuffer, List<TaskProviderItem>>();
 
             if (_errorProvider != null) {
-                lock (_buffers) {
-                    foreach (var kv in _buffers) {
+                lock (_errorSources) {
+                    foreach (var kv in _errorSources) {
                         List<TaskProviderItem> items;
-                        buffers.Add(kv.Value);
-                        
+                        buffers.UnionWith(kv.Value);
+
                         lock (_itemsLock) {
                             if (!_items.TryGetValue(kv.Key, out items)) {
                                 continue;
                             }
-                            var functions = items.Select(tpi => tpi.ToSquiggleFunc()).Where(f => f != null).ToArray();
+
                             // Don't care if functions is empty - we need to
                             // perform the refresh to clear out old squiggles
-                            squiggleFunctions.Add(Tuple.Create(
-                                kv.Value,
-                                functions
-                            ));
+                            foreach (var item in items) {
+                                if (item.IsValid) {
+                                    List<TaskProviderItem> itemList;
+                                    if (!bufferToErrorList.TryGetValue(item.Snapshot.TextBuffer, out itemList)) {
+                                        bufferToErrorList[item.Snapshot.TextBuffer] = itemList = new List<TaskProviderItem>();
+                                    }
+
+                                    itemList.Add(item);
+                                }
+                            }
                         }
                     }
                 }
@@ -493,19 +532,19 @@ namespace Microsoft.PythonTools.Intellisense {
                     }
                 }
 
-                if (squiggleFunctions.Any()) {
-                    foreach (var t in squiggleFunctions) {
-                        var tagger = _errorProvider.GetErrorTagger(t.Item1);
+                if (bufferToErrorList.Any()) {
+                    foreach (var kv in bufferToErrorList) {
+                        var tagger = _errorProvider.GetErrorTagger(kv.Key);
                         if (tagger == null) {
                             continue;
                         }
 
-                        if (buffers.Remove(t.Item1)) {
-                            tagger.RemoveTagSpans(span => span.Span.TextBuffer == t.Item1);
+                        if (buffers.Remove(kv.Key)) {
+                            tagger.RemoveTagSpans(span => span.Span.TextBuffer == kv.Key);
                         }
-
-                        foreach (var func in t.Item2) {
-                            func(tagger);
+                        
+                        foreach (var taskProviderItem in kv.Value) {
+                            taskProviderItem.CreateSquiggleSpan(tagger);
                         }
                     }
                 }
@@ -543,6 +582,7 @@ namespace Microsoft.PythonTools.Intellisense {
         public int EnumTaskItems(out IVsEnumTaskItems ppenum) {
             lock (_itemsLock) {
                 ppenum = new TaskEnum(_items
+                    .Where(x => x.Key.Entry.FilePath != null)   // don't report REPL window errors in the error list, you can't naviagate to them
                     .SelectMany(kv => kv.Value.Select(i => i.ToErrorTaskItem(kv.Key)))
                     .ToArray()
                 );
