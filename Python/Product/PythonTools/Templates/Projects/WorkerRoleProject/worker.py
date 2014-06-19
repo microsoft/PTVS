@@ -1,4 +1,5 @@
 ﻿import os
+from time import sleep
 
 #
 # The azure library provides access to services made available by the
@@ -50,5 +51,5 @@ if __name__ == '__main__':
         #    bus_service.receive_queue_message('queue name', timeout=seconds)
         # to avoid consuming 100% CPU time while your worker has no work.
         #
-        pass
+        sleep(1.0)
 

@@ -39,7 +39,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public override int MenuCommandId {
-            get { return PythonConstants.EnvironmentMenuId; }
+            get { return PythonConstants.SearchPathMenuId; }
         }
 
         public override Guid MenuGroupId {

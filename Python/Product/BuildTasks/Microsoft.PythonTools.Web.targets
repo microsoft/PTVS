@@ -234,6 +234,7 @@
   <Target Name="ResolvePythonInterpreterPath">
     <ResolveEnvironment>
       <Output TaskParameter="PrefixPath" PropertyName="PythonPrefixPath" />
+      <Output TaskParameter="LibraryPath" PropertyName="PythonLibraryPath" />
       <Output TaskParameter="ProjectRelativePrefixPath" PropertyName="PythonPrefixSubPath" />
       <Output TaskParameter="InterpreterPath" PropertyName="PythonInterpreterPath" Condition="$(IsWindowsApplication) != 'true'" />
       <Output TaskParameter="WindowsInterpreterPath" PropertyName="PythonInterpreterPath" Condition="$(IsWindowsApplication) == 'true'" />
@@ -257,6 +258,8 @@
     <PropertyGroup Condition="'$(PythonPrefixSubPath)' != ''">
       <VirtualEnvEnabled>true</VirtualEnvEnabled>
       <PythonPrefixSubPath Condition="!HasTrailingSlash('$(PythonPrefixSubPath)')">$(PythonPrefixSubPath)\</PythonPrefixSubPath>
+      <PythonLibrarySubPath>$([msbuild]::MakeRelative($(PythonPrefixPath), $(PythonLibraryPath)))</PythonLibrarySubPath>
+      <PythonLibrarySubPath Condition="!HasTrailingSlash('$(PythonLibrarySubPath)')">$(PythonLibrarySubPath)\</PythonLibrarySubPath>
       <VirtualEnvIsVEnv Condition="Exists('$(PythonPrefixSubPath)Lib\orig-prefix.txt')">false</VirtualEnvIsVEnv>
       <VirtualEnvIsVEnv Condition="Exists('$(PythonPrefixSubPath)pyvenv.cfg')">true</VirtualEnvIsVEnv>
     </PropertyGroup>
@@ -290,7 +293,7 @@
       <SuppressWebSitesVirtualEnvError Condition="'$(SuppressWebSitesVirtualEnvError)' == ''">false</SuppressWebSitesVirtualEnvError>
     </PropertyGroup>
 
-    <Error Text="A virtual environment is required to deploy dependencies to Microsoft Azure Web Sites. Add &lt;SuppressWebSitesVirtualEnvError&gt;true&lt;/SuppressWebSitesVirtualEnvError&gt; to your project if you have no dependencies other than the Python standard library."
+    <Error Text="A virtual environment is required to deploy dependencies to Microsoft Azure Web Sites. Either add a virtual environment or add &lt;SuppressWebSitesVirtualEnvError&gt;true&lt;/SuppressWebSitesVirtualEnvError&gt; to your project if you have no dependencies other than the Python standard library."
            Condition="!$(SuppressWebSitesVirtualEnvError) and !$(VirtualEnvEnabled)" />
     <Error Text="$(PythonInterpreterDescription) is not supported on Web Sites. Please select Python 2.7 or 3.4."
            Condition="$(PythonVersion) != '2.7' and $(PythonVersion) != '3.4'" />
@@ -339,11 +342,12 @@
        Note that if the user includes a web.config file in their project, no
        file will be generated and these targets will have no effect.
   -->
-  <Target Name="_GetDeployedSearchPaths">
+  <Target Name="_GetDeployedSearchPaths" DependsOnTargets="ResolvePythonInterpreterPath">
     <ItemGroup>
       <DeployedSearchPaths Include="$(DeployedSiteRoot)" />
       <_SearchPaths Include="$(WorkingDirectory)" Condition="'$(WorkingDirectory)' != '' and '$(WorkingDirectory)' != '.'" />
       <_SearchPaths Include="$(SearchPath)" Condition="'$(SearchPath)' != ''" />
+      <_SearchPaths Include="$(PythonLibrarySubPath);$(PythonLibrarySubPath)site-packages" Condition="$(VirtualEnvEnabled) and $(RoleType) != 'Web'" />
     </ItemGroup>
     <CombinePath BasePath="$(DeployedSiteRoot)" Paths="@(_SearchPaths)" Condition="'@(_SearchPaths)' != ''">
       <Output TaskParameter="CombinedPaths" ItemName="DeployedSearchPaths"/>
@@ -827,7 +831,7 @@
   </Target>
 
   <Target Name="_CreatePythonAzureSetupConfig"
-          DependsOnTargets="ResolvePythonInterpreterPath;_GetPythonAzureSetupConfigOutput"
+          DependsOnTargets="ResolvePythonInterpreterPath;_GetPythonAzureSetupConfigOutput;_GetDeployedSearchPaths"
           Condition="!$(SuppressCollectPythonCloudServiceFiles)">
     <Error Text="Should not be invoked during up-to-date check" Condition="$(BuildingForUpToDateCheck)" />
 

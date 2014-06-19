@@ -93,7 +93,7 @@ if (-not $interpreter_path -or -not (Test-Path $interpreter_path)) {
 Set-Alias py (gi $interpreter_path -EA Stop)
 
 $python_path_variable = read_value 'python_path_variable' 'PYTHONPATH'
-${env:$python_path_variable} = read_value 'python_path' ''
+[Environment]::SetEnvironmentVariable($python_path_variable, (read_value 'python_path' ''))
 
 $worker_directory = read_value 'worker_directory' '.'
 cd $worker_directory
