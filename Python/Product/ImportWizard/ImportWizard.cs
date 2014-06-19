@@ -25,6 +25,7 @@ using System.Windows.Forms;
 using EnvDTE;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.TemplateWizard;
+using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.ImportWizard {
     public sealed class Wizard : IWizard {
@@ -32,6 +33,10 @@ namespace Microsoft.PythonTools.ImportWizard {
         public void ProjectFinishedGenerating(EnvDTE.Project project) { }
         public void ProjectItemFinishedGenerating(EnvDTE.ProjectItem projectItem) { }
         public void RunFinished() { }
+
+        private static async void DoNotWait(Task task) {
+            await task;
+        }
 
         public void RunStarted(object automationObject, Dictionary<string, string> replacementsDictionary, WizardRunKind runKind, object[] customParams) {
             try {
@@ -51,9 +56,10 @@ namespace Microsoft.PythonTools.ImportWizard {
             if (dte == null) {
                 MessageBox.Show("Unable to start wizard: no automation object available.", "Python Tools for Visual Studio");
             } else {
-                System.Threading.Tasks.Task.Factory.StartNew(() => {
+                DoNotWait(Task.Run(() => {
                     string projName = replacementsDictionary["$projectname$"];
-                    string solnName = replacementsDictionary["$specifiedsolutionname$"];
+                    string solnName;
+                    replacementsDictionary.TryGetValue("$specifiedsolutionname$", out solnName);
                     string directory;
                     if (String.IsNullOrWhiteSpace(solnName)) {
                         // Create directory is unchecked, destinationdirectory is the
@@ -69,7 +75,7 @@ namespace Microsoft.PythonTools.ImportWizard {
 
                     object inObj = projName + "|" + directory, outObj = null; 
                     dte.Commands.Raise(GuidList.guidPythonToolsCmdSet.ToString("B"), (int)PkgCmdIDList.cmdidImportWizard, ref inObj, ref outObj);
-                });
+                }));
             }
             throw new WizardCancelledException();
         }
