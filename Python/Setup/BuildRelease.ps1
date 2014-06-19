@@ -383,6 +383,8 @@ try {
                     /p:VisualStudioVersion=$($targetVs.number) `
                     /p:"CustomBuildIdentifier=$name" `
                     /p:ReleaseBuild=$signedbuildText `
+                    /p:DeployExtension=false `
+                    /p:DeployVSTemplates=false `
                     Python\Tests\dirs.proj
 
                 if ($LASTEXITCODE -gt 0) {
@@ -403,6 +405,8 @@ try {
                     /p:"CustomBuildIdentifier=$name" `
                     /p:IncludeVsLogger=$includeVsLogger `
                     /p:ReleaseBuild=$signedbuildText `
+                    /p:DeployExtension=false `
+                    /p:DeployVSTemplates=false `
                     Python\Setup\dirs.proj
 
                 if ($LASTEXITCODE -gt 0) {
