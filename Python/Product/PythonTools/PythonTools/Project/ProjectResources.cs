@@ -68,7 +68,6 @@ namespace Microsoft.PythonTools.Project {
         public const string PipInstallFailedExitCode = "PipInstallFailedExitCode";
 
         public const string VirtualEnvCreating = "VirtualEnvCreating";
-        public const string VirtualEnvCreatingPleaseWait = "VirtualEnvCreatingPleaseWait";
         public const string VirtualEnvCreationSucceeded = "VirtualEnvCreationSucceeded";
         public const string VirtualEnvCreationFailed = "VirtualEnvCreationFailed";
         public const string VirtualEnvCreationFailedExitCode = "VirtualEnvCreationFailedExitCode";

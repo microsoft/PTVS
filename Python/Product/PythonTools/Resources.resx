@@ -543,9 +543,4 @@ By default, URIs matching the pattern are mapped directly to a file system path.
   <data name="RequirementsTxtUpdateHelp" xml:space="preserve">
     <value>Packages will be updated or added, and all other contents will be preserved.</value>
   </data>
-  <data name="VirtualEnvCreatingPleaseWait" xml:space="preserve">
-    <value>Please wait for the virtual environment to be created before debugging or publishing your project.
-
-Click Cancel to hide this window - the installation will continue to run.</value>
-  </data>
 </root>
