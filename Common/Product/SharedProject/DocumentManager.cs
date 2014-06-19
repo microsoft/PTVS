@@ -387,7 +387,7 @@ namespace Microsoft.VisualStudioTools.Project {
             uint uiVsDocCookie;
             ErrorHandler.ThrowOnFailure(pRDT.FindAndLockDocument((uint)_VSRDTFLAGS.RDT_NoLock, oldName, out pIVsHierarchy, out itemId, out docData, out uiVsDocCookie));
 
-            if (docData != IntPtr.Zero) {
+            if (docData != IntPtr.Zero && pIVsHierarchy != null) {
                 try {
                     IntPtr pUnk = Marshal.GetIUnknownForObject(pIVsHierarchy);
                     Guid iid = typeof(IVsHierarchy).GUID;

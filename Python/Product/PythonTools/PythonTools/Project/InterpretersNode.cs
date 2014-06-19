@@ -439,18 +439,29 @@ namespace Microsoft.PythonTools.Project {
             await _installingPackage.WaitAsync();
 
             if (!_disposed && _fileWatcher != null) {
-                _fileWatcher.EnableRaisingEvents = false;
+                try {
+                    _fileWatcher.EnableRaisingEvents = false;
+                } catch (IOException) {
+                } catch (ObjectDisposedException) {
+                }
             }
         }
 
         internal void PackageChangeDone() {
-            if (Interlocked.Decrement(ref _waitingToInstallPackage) == 0) {
-                if (!_disposed && _fileWatcher != null) {
-                    _fileWatcher.EnableRaisingEvents = true;
-                    ThreadPool.QueueUserWorkItem(CheckPackages);
+            try {
+                if (Interlocked.Decrement(ref _waitingToInstallPackage) == 0) {
+                    if (!_disposed && _fileWatcher != null) {
+                        try {
+                            _fileWatcher.EnableRaisingEvents = true;
+                        } catch (IOException) {
+                        } catch (ObjectDisposedException) {
+                        }
+                        ThreadPool.QueueUserWorkItem(CheckPackages);
+                    }
                 }
+            } finally {
+                _installingPackage.Release();
             }
-            _installingPackage.Release();
         }
 
         public new PythonProjectNode ProjectMgr {
