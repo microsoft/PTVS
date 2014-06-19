@@ -369,7 +369,7 @@ namespace Microsoft.PythonTools.Debugger {
 
         #region Debuggee Communcation
 
-        internal void Connected(Stream stream) {
+        internal void Connect(Stream stream) {
             Debug.WriteLine("Process Connected: " + _processGuid);
 
             lock (this) {
@@ -381,6 +381,11 @@ namespace Microsoft.PythonTools.Debugger {
 
             if (!_delayUnregister) {
                 Unregister();
+            }
+
+            var connected = Connected;
+            if (connected != null) {
+                connected(this, EventArgs.Empty);
             }
         }
 
@@ -1150,6 +1155,7 @@ namespace Microsoft.PythonTools.Debugger {
 
         #region Debugging Events
 
+        public event EventHandler Connected;
         /// <summary>
         /// Fired when the process has started and is broken into the debugger, but before any user code is run.
         /// </summary>

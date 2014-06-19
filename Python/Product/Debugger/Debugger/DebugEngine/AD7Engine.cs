@@ -60,8 +60,9 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         private int _defaultBreakOnExceptionMode;
         private bool _justMyCodeEnabled = true;
         private AutoResetEvent _loadComplete = new AutoResetEvent(false);
-        private bool _programCreated;
+        private bool _engineCreated, _programCreated;
         private object _syncLock = new object();
+        private bool _isProgramCreateDelayed;
         private AD7Thread _processLoadedThread, _startThread;
         private AD7Module _startModule;
         private bool _attached, _pseudoAttach;
@@ -317,11 +318,10 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             AD7EngineCreateEvent.Send(this);
 
             lock (_syncLock) {
-                AD7ProgramCreateEvent.Send(this);
-                _programCreated = true;
-                
-                if (_processLoadedThread != null) {
-                    SendLoadComplete(_processLoadedThread);
+                _engineCreated = true;
+                if (_isProgramCreateDelayed) {
+                    _isProgramCreateDelayed = false;
+                    SendProgramCreate();
                 }
             }
 
@@ -329,8 +329,18 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             return VSConstants.S_OK;
         }
 
+        private void SendProgramCreate() {
+            Debug.WriteLine("Sending program create " + GetHashCode());
+            AD7ProgramCreateEvent.Send(this);
+
+            _programCreated = true;
+            if (_processLoadedThread != null) {
+                SendLoadComplete(_processLoadedThread);
+            }
+        }
+
         private void SendLoadComplete(AD7Thread thread) {
-            Debug.WriteLine("Sending load complete" + GetHashCode());
+            Debug.WriteLine("Sending load complete " + GetHashCode());
 
             if (_startModule != null) {
                 SendModuleLoaded(_startModule);
@@ -717,7 +727,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                 _process = new PythonProcess(version, exe, args, dir, env, interpreterOptions, debugOptions, dirMapping);
             }
 
-            _programCreated = false;
+            _engineCreated = _programCreated = false;
             _loadComplete.Reset();
 
             if (!attachRunning) {
@@ -1175,6 +1185,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         }
 
         private void AttachEvents(PythonProcess process) {
+            process.Connected += OnConnected;
             process.ProcessLoaded += OnProcessLoaded;
             process.ModuleLoaded += OnModuleLoaded;
             process.ThreadCreated += OnThreadCreated;
@@ -1219,6 +1230,17 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
         private void OnStepComplete(object sender, ThreadEventArgs e) {
             Send(new AD7SteppingCompleteEvent(), AD7SteppingCompleteEvent.IID, _threads[e.Thread]);
+        }
+
+        private void OnConnected(object sender, EventArgs e) {
+            lock (_syncLock) {
+                if (_engineCreated) {
+                    SendProgramCreate();
+                } else {
+                    Debug.WriteLine("Delaying program create " + GetHashCode());
+                    _isProgramCreateDelayed = true;
+                }
+            }
         }
 
         private void OnProcessLoaded(object sender, ThreadEventArgs e) {

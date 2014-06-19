@@ -138,7 +138,7 @@ namespace Microsoft.PythonTools.Debugger.Remote {
                 }
 
                 var process = new PythonRemoteProcess(pid, uri, langVer);
-                process.Connected(stream);
+                process.Connect(stream);
                 stream = null;
                 return process;
             } catch (IOException ex) {

@@ -107,7 +107,7 @@ namespace Microsoft.PythonTools.Debugger {
                         (targetProcess = weakProcess.Target as PythonProcess) != null) {
 
                         if (result == ConnErrorMessages.None) {
-                            targetProcess.Connected(stream);
+                            targetProcess.Connect(stream);
                             stream = null;
                             socket = null;
                         } else {
