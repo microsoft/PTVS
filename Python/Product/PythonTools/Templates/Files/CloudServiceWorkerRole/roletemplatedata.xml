@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<RoleTemplateData RoleProjectTargetFramework="4.0" MinWindowsAzureToolsVersion="2.2" MaxWindowsAzureToolsVersion="2.3" RoleProjectGuid="38CD0F90-16C9-4258-8FF8-BEC3DDC394EC">
+<RoleTemplateData RoleProjectTargetFramework="4.0" MinWindowsAzureToolsVersion="2.2" MaxWindowsAzureToolsVersion="2.9" RoleProjectGuid="38CD0F90-16C9-4258-8FF8-BEC3DDC394EC">
   <VsTemplate Name="Web\WorkerRoleProject.zip" Language="Python"/>
   <ServiceModel>
     <Role Type="Worker" />

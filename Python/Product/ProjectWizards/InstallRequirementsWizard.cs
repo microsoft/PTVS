@@ -56,7 +56,7 @@ namespace Microsoft.PythonTools.ProjectWizards {
             }
 
             var td = new TaskDialog(provider) {
-                Title = Resources.PythonToolsForVisualStudio,
+                Title = string.Format("{0} - {1}", project.Name, Resources.PythonToolsForVisualStudio),
                 MainInstruction = Resources.InstallRequirementsHeading,
                 Content = Resources.InstallRequirementsMessage,
                 EnableHyperlinks = true,
@@ -64,7 +64,7 @@ namespace Microsoft.PythonTools.ProjectWizards {
             };
 
             // TODO: Remove for 2.1 RC
-            td.Footer = "\t" + Resources.InstallRequirementsFooter;
+            td.Footer = Resources.InstallRequirementsFooter;
 
             var venv = new TaskDialogButton(
                 Resources.InstallRequirementsIntoVirtualEnv,

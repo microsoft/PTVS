@@ -1,4 +1,4 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<RoleTemplateData RoleProjectTargetFramework="4.0" MinWindowsAzureToolsVersion="2.2" MaxWindowsAzureToolsVersion="2.3" RoleProjectGuid="3031CC4B-5191-4D8E-BBDF-4051B46AE631">
+<RoleTemplateData RoleProjectTargetFramework="4.0" MinWindowsAzureToolsVersion="2.2" MaxWindowsAzureToolsVersion="2.9" RoleProjectGuid="3031CC4B-5191-4D8E-BBDF-4051B46AE631">
   <VsTemplate Name="Web\EmptyWebRole.zip" Language="Python" />
 </RoleTemplateData>

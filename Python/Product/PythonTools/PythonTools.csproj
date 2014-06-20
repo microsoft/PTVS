@@ -931,7 +931,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <ZipProject Include="Templates\Projects\CloudService\Readme.mht" />
     <None Include="Templates\SharedFiles\Readme\WorkerRoleConfiguration.html" />
     <SharedTemplateFile Include="Templates\SharedFiles\ConfigureCloudService.ps1">
       <IncludeInWebRoleTemplates>true</IncludeInWebRoleTemplates>
@@ -992,11 +991,6 @@
     <None Include="Templates\SharedFiles\Readme\ServiceDefinition.png" />
     <None Include="Templates\SharedFiles\Readme\WebRoleConfiguration.html" />
     <Content Include="ReadmeStyle.css" />
-    <Content Include="Templates\Projects\CloudService\Readme\AddNewWebRole.png" />
-    <Content Include="Templates\Projects\CloudService\Readme\AddNewWorkerRole.png" />
-    <Content Include="Templates\Projects\CloudService\Readme\NewWebRoleDialog.png" />
-    <Content Include="Templates\Projects\CloudService\Readme\NewWorkerRoleDialog.png" />
-    <Content Include="Templates\Projects\CloudService\Readme\readme.html" />
     <ZipProject Include="Templates\Projects\WebProjectBottle\requirements.txt" />
     <ZipProject Include="Templates\Projects\WebProjectFlask\requirements.txt" />
     <Content Include="visualstudio_py_debugger.py">

@@ -22,7 +22,6 @@ using System.Reflection;
 using Microsoft.PythonTools.ProjectWizards.Properties;
 using Microsoft.VisualStudio.TemplateWizard;
 using Microsoft.VisualStudioTools;
-using IVsExtensibility = EnvDTE.IVsExtensibility;
 using Project = EnvDTE.Project;
 using ProjectItem = EnvDTE.ProjectItem;
 
@@ -113,26 +112,8 @@ namespace Microsoft.PythonTools.ProjectWizards {
                 throw new WizardBackoutException();
             }
 
-            // Run the original wizard to get the right replacements, but
-            // suppress UI to avoid the dialog that does not include our
-            // projects.
-            var extensibility = provider.GetService(typeof(IVsExtensibility)) as IVsExtensibility;
-            var dte = WizardHelpers.GetDTE(automationObject);
-            extensibility.EnterAutomationFunction();
-            try {
-                if (dte != null) {
-                    dte.SuppressUI = true;
-                }
-                try {
-                    _wizard.RunStarted(automationObject, replacementsDictionary, runKind, customParams);
-                } finally {
-                    if (dte != null) {
-                        dte.SuppressUI = false;
-                    }
-                }
-            } finally {
-                extensibility.ExitAutomationFunction();
-            }
+            // Run the original wizard to get the right replacements
+            _wizard.RunStarted(automationObject, replacementsDictionary, runKind, customParams);
         }
     }
 }

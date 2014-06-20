@@ -258,7 +258,7 @@
     <PropertyGroup Condition="'$(PythonPrefixSubPath)' != ''">
       <VirtualEnvEnabled>true</VirtualEnvEnabled>
       <PythonPrefixSubPath Condition="!HasTrailingSlash('$(PythonPrefixSubPath)')">$(PythonPrefixSubPath)\</PythonPrefixSubPath>
-      <PythonLibrarySubPath>$([msbuild]::MakeRelative($(PythonPrefixPath), $(PythonLibraryPath)))</PythonLibrarySubPath>
+      <PythonLibrarySubPath>$(PythonPrefixSubPath)$([msbuild]::MakeRelative($(PythonPrefixPath), $(PythonLibraryPath)))</PythonLibrarySubPath>
       <PythonLibrarySubPath Condition="!HasTrailingSlash('$(PythonLibrarySubPath)')">$(PythonLibrarySubPath)\</PythonLibrarySubPath>
       <VirtualEnvIsVEnv Condition="Exists('$(PythonPrefixSubPath)Lib\orig-prefix.txt')">false</VirtualEnvIsVEnv>
       <VirtualEnvIsVEnv Condition="Exists('$(PythonPrefixSubPath)pyvenv.cfg')">true</VirtualEnvIsVEnv>
