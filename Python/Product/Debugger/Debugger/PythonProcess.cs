@@ -343,7 +343,7 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         public void SetExceptionInfo(int defaultBreakOnMode, IEnumerable<KeyValuePair<string, int>> breakOn) {
-            lock (this) {
+            lock (_streamLock) {
                 if (_stream != null) {
                     SendExceptionInfo(defaultBreakOnMode, breakOn);
                 } else {
@@ -372,18 +372,22 @@ namespace Microsoft.PythonTools.Debugger {
         internal void Connect(Stream stream) {
             Debug.WriteLine("Process Connected: " + _processGuid);
 
-            lock (this) {
+            EventHandler connected;
+            lock (_streamLock) {
                 _stream = stream;
                 if (_breakOn != null) {
                     SendExceptionInfo(_defaultBreakMode, _breakOn);
                 }
+
+                // This must be done under the lock so that any handlers that are added after we assigned _stream
+                // above won't get called twice, once from Connected add handler, and the second time below. 
+                connected = _connected;
             }
 
             if (!_delayUnregister) {
                 Unregister();
             }
 
-            var connected = Connected;
             if (connected != null) {
                 connected(this, EventArgs.Empty);
             }
@@ -1155,7 +1159,28 @@ namespace Microsoft.PythonTools.Debugger {
 
         #region Debugging Events
 
-        public event EventHandler Connected;
+        private EventHandler _connected;
+
+        public event EventHandler Connected {
+            add {
+                lock (_streamLock) {
+                    _connected += value;
+
+                    // If a subscriber adds the handler after the process is connected, fire the event immediately.
+                    // Since connection happens on a background thread, subscribers are racing against that thread
+                    // when registering handlers, so we need to notify them even if they're too late.
+                    if (_stream != null) {
+                        value(this, EventArgs.Empty);
+                    }
+                }
+            }
+            remove {
+                lock (_streamLock) {
+                    _connected -= value;
+                }
+            }
+        }
+
         /// <summary>
         /// Fired when the process has started and is broken into the debugger, but before any user code is run.
         /// </summary>
