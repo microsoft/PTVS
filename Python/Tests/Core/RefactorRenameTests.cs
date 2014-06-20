@@ -2379,7 +2379,14 @@ def g(a, b, c):
             var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version ?? new Version(2, 6));
             var classifierProvider = new PythonClassifierProvider(new MockContentTypeRegistryService());
             classifierProvider._classificationRegistry = new MockClassificationTypeRegistryService();
-            using (var analyzer = new VsProjectAnalyzer(fact, new[] { fact })) {
+            var analyzer = new VsProjectAnalyzer(fact, new[] { fact });
+
+            var taskProvider = new TaskProvider(null, new MockErrorProviderFactory());
+            var originalTaskProvider = VsProjectAnalyzer.ReplaceTaskProviderForTests(new Lazy<TaskProvider>(() => {
+                return taskProvider;
+            }));
+
+            try {
                 for (int loops = 0; loops < 2; loops++) {
                     MockTextBuffer[] buffers = new MockTextBuffer[inputs.Length];
                     MockTextView[] views = new MockTextView[inputs.Length];
@@ -2428,12 +2435,14 @@ def g(a, b, c):
                     for (int i = 0; i < buffers.Length; i++) {
                         Assert.AreEqual(inputs[i].Output, buffers[i].CurrentSnapshot.GetText());
                     }
-                    
+
                     foreach (var monitored in analysis) {
                         analyzer.StopMonitoringTextBuffer(monitored.BufferParser, monitored.TextView);
                     }
                 }
-
+            } finally {
+                analyzer.Dispose();
+                VsProjectAnalyzer.ReplaceTaskProviderForTests(originalTaskProvider);
             }
         }
 

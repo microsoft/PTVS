@@ -951,7 +951,13 @@ def func(a):
             CompletionAnalysis context;
 
             var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version.ToVersion());
-            using (var analyzer = new VsProjectAnalyzer(fact, new[] { fact })) {
+            var taskProvider = new TaskProvider(null, new MockErrorProviderFactory());
+            var originalTaskProvider = VsProjectAnalyzer.ReplaceTaskProviderForTests(new Lazy<TaskProvider>(() => {
+                return taskProvider;
+            }));
+
+            var analyzer = new VsProjectAnalyzer(fact, new[] { fact });
+            try {
                 var buffer = new MockTextBuffer(code);
                 buffer.AddProperty(typeof(VsProjectAnalyzer), analyzer);
                 var classifierProvider = new PythonClassifierProvider(new MockContentTypeRegistryService());
@@ -964,9 +970,9 @@ def func(a):
 
                 var tcs = new TaskCompletionSource<object>();
                 ((IPythonProjectEntry)monitoredBuffer.ProjectEntry).OnNewAnalysis += (s, e) => tcs.SetResult(null);
-                
+
                 analyzer.WaitForCompleteAnalysis(x => true);
-                
+
                 tcs.Task.GetAwaiter().GetResult();
                 analyzer.StopMonitoringTextBuffer(monitoredBuffer.BufferParser, textView);
 
@@ -987,11 +993,14 @@ def func(a):
                         IndentSize = 4
                     }
                 );
-            }
 
-            var completions = context.GetCompletions(new MockGlyphService()).Completions
-                .Select(c => c.DisplayText).ToSet();
-            return completions;
+                var completions = context.GetCompletions(new MockGlyphService()).Completions
+                    .Select(c => c.DisplayText).ToSet();
+                return completions;
+            } finally {
+                analyzer.Dispose();
+                VsProjectAnalyzer.ReplaceTaskProviderForTests(originalTaskProvider);
+            }
         }
 
         private static void TestQuickInfo(string code, int start, int end, params string[] expected) {
@@ -1036,20 +1045,29 @@ def func(a):
         }
 
         private static ExpressionAnalysis AnalyzeExpressionWorker(int location, string sourceCode, bool forCompletion, VsProjectAnalyzer analyzer) {
-            var buffer = new MockTextBuffer(sourceCode);
-            buffer.AddProperty(typeof(VsProjectAnalyzer), analyzer);
-            var classifierProvider = new PythonClassifierProvider(new MockContentTypeRegistryService());
-            classifierProvider._classificationRegistry = new MockClassificationTypeRegistryService();
-            classifierProvider.GetClassifier(buffer);
-            var textView = new MockTextView(buffer);
-            var item = analyzer.MonitorTextBuffer(textView, textView.TextBuffer); // We leak here because we never un-monitor, but it's a test.
-            while (!item.ProjectEntry.IsAnalyzed) {
-                Thread.Sleep(10);
-            }
+            var taskProvider = new TaskProvider(null, new MockErrorProviderFactory());
+            var originalTaskProvider = VsProjectAnalyzer.ReplaceTaskProviderForTests(new Lazy<TaskProvider>(() => {
+                return taskProvider;
+            }));
 
-            var snapshot = (MockTextSnapshot)buffer.CurrentSnapshot;
-            analyzer.StopMonitoringTextBuffer(item.BufferParser, textView);
-            return snapshot.AnalyzeExpression(new MockTrackingSpan(snapshot, location, location == snapshot.Length ? 0 : 1), forCompletion);
+            try {
+                var buffer = new MockTextBuffer(sourceCode);
+                buffer.AddProperty(typeof(VsProjectAnalyzer), analyzer);
+                var classifierProvider = new PythonClassifierProvider(new MockContentTypeRegistryService());
+                classifierProvider._classificationRegistry = new MockClassificationTypeRegistryService();
+                classifierProvider.GetClassifier(buffer);
+                var textView = new MockTextView(buffer);
+                var item = analyzer.MonitorTextBuffer(textView, textView.TextBuffer); // We leak here because we never un-monitor, but it's a test.
+                while (!item.ProjectEntry.IsAnalyzed) {
+                    Thread.Sleep(10);
+                }
+
+                var snapshot = (MockTextSnapshot)buffer.CurrentSnapshot;
+                analyzer.StopMonitoringTextBuffer(item.BufferParser, textView);
+                return snapshot.AnalyzeExpression(new MockTrackingSpan(snapshot, location, location == snapshot.Length ? 0 : 1), forCompletion);
+            } finally {
+                VsProjectAnalyzer.ReplaceTaskProviderForTests(originalTaskProvider);
+            }
         }
 
         private static void MemberCompletionTest(int location, string sourceCode, string expectedExpression) {
@@ -1099,36 +1117,45 @@ def func(a):
         }
 
         private static CompletionAnalysis GetCompletionsWorker(int location, string sourceCode, bool intersectMembers, VsProjectAnalyzer analyzer) {
-            var buffer = new MockTextBuffer(sourceCode);
-            buffer.AddProperty(typeof(VsProjectAnalyzer), analyzer);
-            var classifierProvider = new PythonClassifierProvider(new MockContentTypeRegistryService());
-            classifierProvider._classificationRegistry = new MockClassificationTypeRegistryService();
-            classifierProvider.GetClassifier(buffer);
-            var snapshot = (MockTextSnapshot)buffer.CurrentSnapshot;
+            var taskProvider = new TaskProvider(null, new MockErrorProviderFactory());
+            var originalTaskProvider = VsProjectAnalyzer.ReplaceTaskProviderForTests(new Lazy<TaskProvider>(() => {
+                return taskProvider;
+            }));
 
-            var textView = new MockTextView(buffer);
-            var monitoredBuffer = analyzer.MonitorTextBuffer(textView, buffer);
-            analyzer.WaitForCompleteAnalysis(x => true);
-            while (buffer.GetPythonProjectEntry().Analysis == null) {
-                System.Threading.Thread.Sleep(500);
-            }
-            analyzer.StopMonitoringTextBuffer(monitoredBuffer.BufferParser, textView);
-            var span = snapshot.GetApplicableSpan(new SnapshotPoint(snapshot, location)) ??
-                snapshot.CreateTrackingSpan(location, 0, SpanTrackingMode.EdgeInclusive);
+            try {
+                var buffer = new MockTextBuffer(sourceCode);
+                buffer.AddProperty(typeof(VsProjectAnalyzer), analyzer);
+                var classifierProvider = new PythonClassifierProvider(new MockContentTypeRegistryService());
+                classifierProvider._classificationRegistry = new MockClassificationTypeRegistryService();
+                classifierProvider.GetClassifier(buffer);
+                var snapshot = (MockTextSnapshot)buffer.CurrentSnapshot;
+
+                var textView = new MockTextView(buffer);
+                var monitoredBuffer = analyzer.MonitorTextBuffer(textView, buffer);
+                analyzer.WaitForCompleteAnalysis(x => true);
+                while (buffer.GetPythonProjectEntry().Analysis == null) {
+                    System.Threading.Thread.Sleep(500);
+                }
+                analyzer.StopMonitoringTextBuffer(monitoredBuffer.BufferParser, textView);
+                var span = snapshot.GetApplicableSpan(new SnapshotPoint(snapshot, location)) ??
+                    snapshot.CreateTrackingSpan(location, 0, SpanTrackingMode.EdgeInclusive);
 
 #pragma warning disable 618
-            var context = snapshot.GetCompletions(
-                span,
-                new MockTrackingPoint(snapshot, location),
-                new CompletionOptions {
-                    HideAdvancedMembers = false,
-                    IntersectMembers = intersectMembers,
-                    ConvertTabsToSpaces = true,
-                    IndentSize = 4
-                }
-            );
+                var context = snapshot.GetCompletions(
+                    span,
+                    new MockTrackingPoint(snapshot, location),
+                    new CompletionOptions {
+                        HideAdvancedMembers = false,
+                        IntersectMembers = intersectMembers,
+                        ConvertTabsToSpaces = true,
+                        IndentSize = 4
+                    }
+                );
 #pragma warning restore 618
-            return context;
+                return context;
+            } finally {
+                VsProjectAnalyzer.ReplaceTaskProviderForTests(originalTaskProvider);
+            }
         }
 
         private static void SignatureTest(int location, string sourceCode, string expectedExpression, int paramIndex, PythonLanguageVersion version = PythonLanguageVersion.V27) {
@@ -1141,7 +1168,14 @@ def func(a):
                 location = sourceCode.Length + location;
             }
             var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version.ToVersion());
-            using (var analyzer = new VsProjectAnalyzer(fact, new[] { fact })) {
+
+            var taskProvider = new TaskProvider(null, new MockErrorProviderFactory());
+            var originalTaskProvider = VsProjectAnalyzer.ReplaceTaskProviderForTests(new Lazy<TaskProvider>(() => {
+                return taskProvider;
+            }));
+
+            var analyzer = new VsProjectAnalyzer(fact, new[] { fact });
+            try {
                 var buffer = new MockTextBuffer(sourceCode);
                 buffer.AddProperty(typeof(VsProjectAnalyzer), analyzer);
                 var classifierProvider = new PythonClassifierProvider(new MockContentTypeRegistryService());
@@ -1163,6 +1197,9 @@ def func(a):
                 sigs = snapshot.GetSignatures(new MockTrackingSpan(snapshot, location, 1));
                 Assert.AreEqual(expectedExpression, sigs.Text, sourceCode);
                 Assert.AreEqual(paramIndex, sigs.ParameterIndex, sourceCode);
+            } finally {
+                analyzer.Dispose();
+                VsProjectAnalyzer.ReplaceTaskProviderForTests(originalTaskProvider);
             }
         }
 

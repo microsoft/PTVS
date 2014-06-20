@@ -14,12 +14,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
@@ -31,6 +29,7 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
+using Microsoft.VisualStudioTools;
 using TestUtilities;
 using TestUtilities.Mocks;
 using TestUtilities.Python;
@@ -42,6 +41,7 @@ namespace PythonToolsTests {
 
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
+            UIThread.InitializeAndNeverInvoke();
             AssertListener.Initialize();
             PythonTestData.Deploy(includeTestData: false);
         }
@@ -50,42 +50,44 @@ namespace PythonToolsTests {
         public void KeywordClassification27() {
             var code = string.Join(Environment.NewLine, PythonKeywords.All(PythonLanguageVersion.V27));
             code += "\r\nTrue\r\nFalse";
-            var helper = new ClassifierHelper(new MockTextBuffer(code), PythonLanguageVersion.V27);
 
-            foreach (var span in helper.AstClassifierSpans) {
-                var text = span.Span.GetText();
-                if (string.IsNullOrWhiteSpace(text)) {
-                    continue;
-                }
-                
-                // None, True and False are special
-                if (text == "None" || text == "True" || text == "False") {
-                    Assert.AreEqual("Python builtin", span.ClassificationType.Classification, text);
-                    continue;
-                }
+            using (var helper = new ClassifierHelper(new MockTextBuffer(code), PythonLanguageVersion.V27)) {
+                foreach (var span in helper.AstClassifierSpans) {
+                    var text = span.Span.GetText();
+                    if (string.IsNullOrWhiteSpace(text)) {
+                        continue;
+                    }
 
-                Assert.AreEqual("keyword", span.ClassificationType.Classification, text);
+                    // None, True and False are special
+                    if (text == "None" || text == "True" || text == "False") {
+                        Assert.AreEqual("Python builtin", span.ClassificationType.Classification, text);
+                        continue;
+                    }
+
+                    Assert.AreEqual("keyword", span.ClassificationType.Classification, text);
+                }
             }
         }
 
         [TestMethod, Priority(0)]
         public void KeywordClassification33() {
             var code = string.Join(Environment.NewLine, PythonKeywords.All(PythonLanguageVersion.V33));
-            var helper = new ClassifierHelper(new MockTextBuffer(code), PythonLanguageVersion.V33);
 
-            foreach (var span in helper.AstClassifierSpans) {
-                var text = span.Span.GetText();
-                if (string.IsNullOrWhiteSpace(text)) {
-                    continue;
-                }
-                
-                // None is special
-                if (text == "None") {
-                    Assert.AreEqual("Python builtin", span.ClassificationType.Classification, text);
-                    continue;
-                }
+            using (var helper = new ClassifierHelper(new MockTextBuffer(code), PythonLanguageVersion.V33)) {
+                foreach (var span in helper.AstClassifierSpans) {
+                    var text = span.Span.GetText();
+                    if (string.IsNullOrWhiteSpace(text)) {
+                        continue;
+                    }
 
-                Assert.AreEqual("keyword", span.ClassificationType.Classification, text);
+                    // None is special
+                    if (text == "None") {
+                        Assert.AreEqual("Python builtin", span.ClassificationType.Classification, text);
+                        continue;
+                    }
+
+                    Assert.AreEqual("keyword", span.ClassificationType.Classification, text);
+                }
             }
         }
 
@@ -99,12 +101,13 @@ os.path = ntpath
 abc = 123
 abc = True
 ";
-            var helper = new ClassifierHelper(new MockTextBuffer(code), PythonLanguageVersion.V27);
-            helper.CheckAstClassifierSpans("ki ki ki i.i=i i=n i=b");
+            using (var helper = new ClassifierHelper(new MockTextBuffer(code), PythonLanguageVersion.V27)) {
+                helper.CheckAstClassifierSpans("ki ki ki i.i=i i=n i=b");
 
-            helper.Analyze();
+                helper.Analyze();
 
-            helper.CheckAnalysisClassifierSpans("m<abc>m<os>m<ntpath>m<os>m<ntpath>m<abc>m<abc>");
+                helper.CheckAnalysisClassifierSpans("m<abc>m<os>m<ntpath>m<os>m<ntpath>m<abc>m<abc>");
+            }
         }
 
         [TestMethod, Priority(0)]
@@ -117,13 +120,14 @@ MyClassAlias = MyClass
 mca = MyClassAlias()
 MyClassType = type(mc)
 ";
-            var helper = new ClassifierHelper(new MockTextBuffer(code), PythonLanguageVersion.V27);
-            helper.CheckAstClassifierSpans("ki(i): k i=i() i=i i=i() i=i(i)");
-            helper.AnalysisClassifierSpans.ToArray();
+            using (var helper = new ClassifierHelper(new MockTextBuffer(code), PythonLanguageVersion.V27)) {
+                helper.CheckAstClassifierSpans("ki(i): k i=i() i=i i=i() i=i(i)");
+                helper.AnalysisClassifierSpans.ToArray();
 
-            helper.Analyze();
+                helper.Analyze();
 
-            helper.CheckAnalysisClassifierSpans("c<MyClass>c<object>cc<MyClassAlias>ccc<type>");
+                helper.CheckAnalysisClassifierSpans("c<MyClass>c<object>cc<MyClassAlias>ccc<type>");
+            }
         }
 
         [TestMethod, Priority(0)]
@@ -137,28 +141,31 @@ f(a, b, c)
 a = b
 b = c
 ";
-            var helper = new ClassifierHelper(new MockTextBuffer(code), PythonLanguageVersion.V27);
-            helper.CheckAstClassifierSpans("ki(i,i,i): i=i i=i ki i(i,i,i) i=i i=i");
-            
-            helper.Analyze();
+            using (var helper = new ClassifierHelper(new MockTextBuffer(code), PythonLanguageVersion.V27)) {
+                helper.CheckAstClassifierSpans("ki(i,i,i): i=i i=i ki i(i,i,i) i=i i=i");
 
-            helper.CheckAnalysisClassifierSpans("f<f>ppppppppf<f>");
+                helper.Analyze();
+
+                helper.CheckAnalysisClassifierSpans("f<f>ppppppppf<f>");
+            }
         }
 
         [TestMethod, Priority(0)]
         public void TrueFalseClassification() {
             var code = "True False";
 
-            var helper = new ClassifierHelper(new MockTextBuffer(code), PythonLanguageVersion.V27);
-            helper.CheckAstClassifierSpans("b<True> b<False>");
+            using (var helper = new ClassifierHelper(new MockTextBuffer(code), PythonLanguageVersion.V27)) {
+                helper.CheckAstClassifierSpans("b<True> b<False>");
+            }
 
-            helper = new ClassifierHelper(new MockTextBuffer(code), PythonLanguageVersion.V33);
-            helper.CheckAstClassifierSpans("k<True> k<False>");
+            using (var helper = new ClassifierHelper(new MockTextBuffer(code), PythonLanguageVersion.V33)) {
+                helper.CheckAstClassifierSpans("k<True> k<False>");
+            }
         }
 
         #region ClassifierHelper class
 
-        private class ClassifierHelper {
+        private class ClassifierHelper : IDisposable {
             private static readonly MockContentTypeRegistryService _contentRegistry = new MockContentTypeRegistryService();
             private static readonly MockClassificationTypeRegistryService _classificationRegistry = new MockClassificationTypeRegistryService();
             private static readonly PythonClassifierProvider _provider1 =
@@ -166,6 +173,7 @@ b = c
             private static readonly PythonAnalysisClassifierProvider _provider2 =
                 new PythonAnalysisClassifierProvider(_contentRegistry) { _classificationRegistry = _classificationRegistry };
 
+            private readonly Lazy<TaskProvider> _originalTaskProvider;
             private readonly MockTextBuffer _buffer;
             private readonly MockTextView _view;
             private readonly IPythonInterpreterFactory _factory;
@@ -179,6 +187,15 @@ b = c
                 _buffer.AddProperty(typeof(VsProjectAnalyzer), analyzer);
 
                 _view = new MockTextView(_buffer);
+
+                var taskProvider = new TaskProvider(null, new MockErrorProviderFactory());
+                _originalTaskProvider = VsProjectAnalyzer.ReplaceTaskProviderForTests(new Lazy<TaskProvider>(() => {
+                    return taskProvider;
+                }));
+            }
+
+            public void Dispose() {
+                VsProjectAnalyzer.ReplaceTaskProviderForTests(_originalTaskProvider);
             }
 
             public ITextView TextView {
