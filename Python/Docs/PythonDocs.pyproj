@@ -69,7 +69,11 @@
     <Content Include="User\Features Debugging.md" />
     <Content Include="User\Features Matrix.md" />
     <Content Include="User\Features Web Project.md" />
+    <Content Include="User\Images\AddVirtualEnvironmentRequirementsTxt.png" />
     <Content Include="User\Images\AzureCloudProject.png" />
+    <Content Include="User\Images\AzureCloudProjectWizard.png" />
+    <Content Include="User\Images\CustomizeColors.png" />
+    <Content Include="User\Images\InstallRequirementsTxt.png" />
     <Content Include="User\Images\NewProjectWeb.png" />
     <Content Include="User\Images\PublishCloudProject.png" />
     <Content Include="User\Images\PyLintCommand.png" />
@@ -162,6 +166,7 @@
     <Content Include="User\Images\ObjectBrowser.png" />
     <Content Include="User\Images\OptionsDialog.png" />
     <Content Include="User\Images\ProjectEnvironments.png" />
+    <Content Include="User\Images\PythonDirectory.png" />
     <Content Include="User\Images\PythonLauncher.png" />
     <Content Include="User\Images\QuickInfo.png" />
     <Content Include="User\Images\QuickTips.png" />
@@ -175,7 +180,10 @@
     <Content Include="User\Images\RemoteDebuggingTransport.png" />
     <Content Include="User\Images\RemoteDebuggingTransportSSL.png" />
     <Content Include="User\Images\RemoteDebuggingVideo.png" />
+    <Content Include="User\Images\ReplaceRequirementsTxt.png" />
+    <Content Include="User\Images\RequirementsTxtWizard.png" />
     <Content Include="User\Images\SearchPath.png" />
+    <Content Include="User\Images\SemanticColorization.png" />
     <Content Include="User\Images\SendToDefiningModule.png" />
     <Content Include="User\Images\SendToInteractive.png" />
     <Content Include="User\Images\ShowAllFilesDisabled.png" />

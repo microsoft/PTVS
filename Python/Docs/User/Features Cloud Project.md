@@ -32,31 +32,33 @@ Create
 
 --(
 
->>![Azure Cloud Project template](Images/AzureCloudProject.png)
+<div style="float: right">
+
+<div style="margin: 1em"><img src="Images/AzureCloudProject.png" alt="Azure Cloud Project template" /></div>
+
+<div style="float: right"><a href="Images/AzureCloudProjectWizard.png"><img src="Images/AzureCloudProjectWizard.png" width="400px" alt="Azure Cloud Project wizard" /></a></div>
+
+</div>
 
 To start creating your project, select the Azure Cloud Service template from the New Project dialog.
-(If you have not installed the Azure SDK Tools for Visual Studio, you will be prompted to install them now.)
+If you have not installed the Azure SDK Tools for Visual Studio, you will be prompted to install them now.
 
---)
 
---(
-
->>![Empty Azure Cloud Project](Images/EmptyCloudProject.png)
-
-This template will produce an empty Cloud project.
-To add new roles to the project, right click the **Roles** item and select one of the items under **Add**.
-
-From the dialog that appears next, select **Python** to view the Python templates.
+In the next dialog that appears, you may select one or more roles to include.
 Cloud projects may combine roles written in different languages, so you can easily write each part of your application in the most suitable language.
+To add new roles to the project after completing this dialog, you can right click 'Roles' in Solution Explorer and select one of the items under 'Add'.
 
---)
-
+**Important:**
 After adding a new role to your Cloud project, you may be presented with some more configuration instructions.
 These are required to work around certain limitations in the Azure SDK Tools that we hope to resolve in a later version.
+If you add multiple roles at the same time, you may not see all of the instructions.
+Check the readme.mht files in each new role for configuration information.
+
+--)
 
 --(
 
->>![Worker Role Support Files](Images/WorkerRoleSupportFiles.png)
+<<![Worker Role Support Files](Images/WorkerRoleSupportFiles.png)
 
 In your role projects, you will see a `bin` directory containing one or two PowerShell scripts.
 These are used to configure the remote machine, including installing Python, any [WebPI references](#webpi-references) or [requirements.txt](#requirementstxt) file in your project, and setting up IIS if necessary.
@@ -144,7 +146,9 @@ The file is executed with `pip -r requirements.txt` as part of initialization.
 
 Note that Cloud Service instances do not include C compilers, so all libraries with C extensions must provide precompiled binaries.
 
-pip and dependencies, as well as the packages in `requirements.txt`, will be downloaded automatically and may count as changeable bandwidth usage.
+See [wiki:"Virtual Environments" Python Environments#managing-required-packages] for more information on managing `requirements.txt` files.
+
+pip and its dependencies, as well as the packages in `requirements.txt`, will be downloaded automatically and may count as changeable bandwidth usage.
 To include your dependencies as part of your deployment, create a virtual environment on your local machine and change the Build Action of your `requirements.txt` file to **None**.
 This will prevent it from being deployed and executed on the instance.
 

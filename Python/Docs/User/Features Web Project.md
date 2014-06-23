@@ -11,21 +11,38 @@ You can install these packages into your active environment by right-clicking th
 Templates
 ---------
 
-New project templates are provided for the Bottle, Django, and Flask frameworks. These templates can be found in the New Project dialog:
+--(
 
-![New Web Project templates](Images/NewProjectWeb.png)
+<<![New Web Project templates](Images/NewProjectWeb.png)
 
-These templates are preconfigured to launch as a web server with an randomly selected local port, to open your default browser when debugging, and to allow direct publishing to [Microsoft Azure](http://www.azure.com).
-These changes are also available in the generic "Empty Web Project" template, which can be used for other frameworks, such as Pyramid.
+New project templates are provided for the Bottle, Django, and Flask frameworks.
+These templates can be found in the New Project dialog.
 
-Other than the generic one, each template includes a basic web server with a "hello, world" message.
-This code is enough to run and debug the server locally (where some settings need to be obtained from the environment) and to deploy to Microsoft Azure (where a [WSGI app](http://www.python.org/dev/peps/pep-3333/) object needs to be provided).
+Each templates is preconfigured to launch as a web server with an randomly selected local port, to open your default browser when debugging, and to allow direct publishing to [Microsoft Azure](http://www.azure.com).
+These features are also available in the generic "Web Project" template, which can be used for other frameworks, such as Pyramid.
 
-When deploying to Azure, use of a virtual environment based on 32-bit Python 2.7 is recommended to ensure the deployed app has the same libraries as when run locally.
-Azure does not currently support installing packages from a `REQUIREMENTS.TXT` file or selecting an alternative Python version.
+Other than Web Project (and the Blank templates that are not shown), each template includes a starter site with some pages and static files.
+This code is sufficient to run and debug the server locally (where some settings need to be obtained from the environment) and also to deploy to Microsoft Azure (where a [WSGI app](http://www.python.org/dev/peps/pep-3333/) object needs to be provided).
 
-As a convenience, the templates that are associated with a web framework include a command under the Project menu (and the project item's context menu in Solution Explorer) to install or upgrade to the latest version of the framework.
-A specific version can be installed using the [wiki:"regular pip support" Python Environments#project-environments] and specifying a `name==version` package spec.
+--)
+
+--(
+
+>>![Requirements.txt wizard](Images/RequirementsTxtWizard.png)
+
+When you create one of these projects, one or more external packages are required.
+This dialog will appear to help you install these packages using pip.
+We recommend using a [wiki:"virtual environment" Python Environments#virtual-environments] for web projects, as this will ensure that the correct dependencies are included when you publish your web site.
+
+When deploying to Microsoft Azure, using a virtual environment based on 32-bit Python 2.7 or 3.4 is required to ensure the deployed app has the same libraries as when run locally.
+Microsoft Azure Web Sites **do not** support installing packages from a `requirements.txt` file or selecting an alternate Python version.
+However, Microsoft Azure Cloud Service does support the `requirements.txt` file.
+See the [wiki:"Cloud Project" Features Cloud Project] documentation for more information on publishing to Cloud Service.
+
+--)
+
+We are actively seeking feedback on this dialog during our Beta release.
+You can provide feedback or ask questions on [issue:"our issue tracker" 2446].
 
 Debugging
 ---------
