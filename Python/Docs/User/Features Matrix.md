@@ -50,9 +50,13 @@ Below is a feature matrix for the supported editions of Visual Studio.
 || &nbsp;Bottle web project <sup>new</sup>       || yes              || yes              || yes              || yes              || no               ||
 || &nbsp;Flask web project <sup>new</sup>        || yes              || yes              || yes              || yes              || no               ||
 || &nbsp;Generic web project <sup>new</sup>      || yes              || yes              || yes              || yes              || no               ||
-|| &nbsp;Web Deploy to Azure Web Site            || yes <sup>2</sup> || yes              || yes              || yes              || no               ||
-|| &nbsp;Web Deploy to Azure Web Role            || yes <sup>2</sup> || yes <sup>3</sup> || yes <sup>4</sup> || yes <sup>4</sup> || no               ||
-|| &nbsp;Run in Azure emulator                   || yes <sup>2</sup> || yes <sup>3</sup> || yes <sup>4</sup> || yes <sup>4</sup> || no               ||
+|| **Azure**                                     || **2010 Pro+**    || **2012 Pro+**    || **2013 Pro+**    || **2013 Web**     || **2013 Desktop** ||
+|| &nbsp;Web Deploy to Web Site                  || yes <sup>2</sup> || yes              || yes              || yes              || no               ||
+|| &nbsp;Web Deploy to Web Role                  || no               || yes <sup>3</sup> || yes <sup>4</sup> || yes <sup>4</sup> || no               ||
+|| &nbsp;Web Deploy to Worker Role <sup>new</sup>|| no               || yes <sup>3</sup> || yes <sup>4</sup> || yes <sup>4</sup> || no               ||
+|| &nbsp;Run in Azure emulator                   || no               || yes <sup>3</sup> || yes <sup>4</sup> || yes <sup>4</sup> || no               ||
+|| &nbsp;Web Site Remote debugging <sup>new</sup>|| no               || yes <sup>8</sup> || yes <sup>8</sup> || yes <sup>6</sup> || no               ||
+|| &nbsp;Server Explorer Attach <sup>new</sup>   || no               || no               || yes <sup>7</sup> || yes <sup>7</sup> || no               ||
 || **Django Templates**                          || **2010 Pro+**    || **2012 Pro+**    || **2013 Pro+**    || **2013 Web**     || **2013 Desktop** ||
 || &nbsp;Debugging                               || yes              || yes              || yes              || yes              || no               ||
 || &nbsp;Completions                             || yes              || yes              || yes <sup>5</sup> || yes <sup>5</sup> || no               ||
@@ -61,7 +65,7 @@ Below is a feature matrix for the supported editions of Visual Studio.
 || &nbsp;Debugging                               || yes              || yes              || yes              || yes              || yes              ||
 || &nbsp;Debugging without a project             || yes              || yes              || yes              || yes              || yes              ||
 || &nbsp;Debugging - Attach to existing          || yes              || yes              || yes              || no               || yes              ||
-|| &nbsp;Mixed-Mode debugging                    || no               || yes              || yes              || no               || yes              ||
+|| &nbsp;Mixed-Mode debugging                    || no               || yes              || yes              || yes              || yes              ||
 || &nbsp;Remote debugging (Windows/Linux/Mac)    || yes              || yes              || yes              || no               || yes              ||
 || &nbsp;Debug interactive window                || yes              || yes              || yes              || yes              || yes              ||
 || **Profiling**                                 || **2010 Pro+**    || **2012 Pro+**    || **2013 Pro+**    || **2013 Web**     || **2013 Desktop** ||
@@ -73,10 +77,16 @@ Below is a feature matrix for the supported editions of Visual Studio.
 
 1. Git support for VS 2012 is available in the Visual Studio Tools for Git extension, available on the [Visual Studio Gallery](http://visualstudiogallery.msdn.microsoft.com/abafc7d6-dcaa-40f4-8a5e-d6724bdb980c).
 
-2. Deployment to Azure Web Site or Web Role requires [Azure SDK for .NET 2.1 - VS 2010 SP1](http://go.microsoft.com/fwlink/?LinkId=313855).  Later versions don't support VS 2010.
+2. Deployment to Azure Web Site requires [Azure SDK for .NET 2.1 - VS 2010 SP1](http://go.microsoft.com/fwlink/?LinkId=313855).  Later versions don't support VS 2010.
 
-3. Deployment to Azure Web Role requires [Azure SDK for .NET 2.2 - VS 2012](http://go.microsoft.com/fwlink/?LinkId=323511) or later.
+3. Support for Azure Web Role and Worker Role requires [Azure SDK for .NET 2.3 - VS 2012](http://go.microsoft.com/fwlink/?LinkId=323511) or later.
 
-4. Deployment to Azure Web Role requires [Azure SDK for .NET 2.2 - VS 2013](http://go.microsoft.com/fwlink/?LinkId=323510) or later.
+4. Support for Azure Web Role and Worker Role requires [Azure SDK for .NET 2.3 - VS 2013](http://go.microsoft.com/fwlink/?LinkId=323510) or later.
 
 5. Django template editor in Visual Studio 2013 has some known issues that are resolved by installing Update 2.
+
+6. Requires Windows 8 or later. Visual Studio 2013 Express for Web doesn't have the Attach to Process dialog, but Azure Web Site remote debugging is still possible using the Attach Debugger (Python) command in Server Explorer. This requires [Azure SDK for .NET 2.3 - VS 2013](http://go.microsoft.com/fwlink/?LinkId=323510) or later.
+
+7. Requires Windows 8 or later. Attach Debugger (Python) command in Server Explorer requires [Azure SDK for .NET 2.3 - VS 2013](http://go.microsoft.com/fwlink/?LinkId=323510) or later.
+
+8. Requires Windows 8 or later.
