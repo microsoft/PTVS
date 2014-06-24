@@ -1,7 +1,7 @@
 ﻿Remote Debugging on Microsoft Azure
 ===================================
 
-Python Tools has special support for remote debugging of code running on Microsoft Azure Web Sites. Unlike simple remote debugging, the target machine is not directly accessible over TCP in this scenario, but PTVS comes with a WebSocket proxy for the debugging protocol that exposes the debugger protocol via HTTP. When you create a new Microsoft Azure project, the proxy is fully configured for you in an automatically generated web.debug.config, and will be enabled on the web site if you publish your project in the "Debug" configuration by following [wiki:"these steps" Features%20Web%20Project#publishing-to-microsoft-azure].
+Python Tools has special support for remote debugging of code running on Microsoft Azure Web Sites. Unlike simple remote debugging, the target machine is not directly accessible over TCP in this scenario, but PTVS comes with a WebSocket proxy for the debugging protocol that exposes the debugger protocol via HTTP. When you create a new Microsoft Azure project, the proxy is fully configured for you in an automatically generated web.debug.config, and will be enabled on the web site if you publish your project in the "Debug" configuration by following [wiki:"these steps" Features Web Project#publishing-to-microsoft-azure].
 
 Since the Azure remote debugging uses web sockets, it must be enabled for your web site in the management portal. This setting can be found on the web site management page, on the "Configure" tab - don't forget to click "Save" after changing it:
 
@@ -16,13 +16,13 @@ Note that on Visual Studio Professional and above, you will see two "Attach Debu
 * You do not have Visual Studio 2013:
  * Server Explorer functionality is not available on your version of Visual Studio. You will have to use attach via Attach to Process dialog as described [below](#attaching-without-server-explorer).
 * You do not have Visual Studio 2013 Update 2 or later installed:
- * Download and install [Update 2](http://www.microsoft.com/en-us/download/details.aspx?id=42023). 
+ * Download and install [Update 2](http://www.microsoft.com/en-us/download/details.aspx?id=42666). 
 * The project is not opened in Solution Explorer:
  * Open the project that you're trying to debug via File → Open → Project/Solution.
 * The web site is not running (i.e. stopped - this can be seen from its icon):
  * Start the web site by right-clicking on it in Server Explorer and selecting "Start Web Site" in the context menu.
 * The project was not deployed in the "Debug" configuration:
- * Re-deploy the project in "Debug" configuration as described [wiki:"here" Features%20Web%20Project#publishing-to-microsoft-azure].
+ * Re-deploy the project in "Debug" configuration as described [wiki:"here" Features Web Project#publishing-to-microsoft-azure].
 * web.debug.config was modified to disable the debug proxy.
  * Restore the original web.debug.config. The easiest way to do so is to delete it, which will cause it to be recreated with default settings on the next publish.
 
