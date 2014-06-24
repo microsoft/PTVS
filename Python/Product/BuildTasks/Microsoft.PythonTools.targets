@@ -149,7 +149,7 @@
           Returns="@(Commands)">
     <CreatePythonCommandItem Target="pylint.lint"
                              TargetType="module"
-                             Arguments="&quot;--msg-template={abspath}({line},{column}): warning {msg_id}: {msg}&quot; -r n @(Compile, ' ')"
+                             Arguments="&quot;--msg-template={abspath}({line},{column}): warning {msg_id}: {msg} [{C}:{symbol}]&quot; -r n @(Compile, ' ')"
                              WorkingDirectory="$(WorkingDirectory)"
                              ExecuteIn="output"
                              RequiredPackages="pylint&gt;=1.0.0"

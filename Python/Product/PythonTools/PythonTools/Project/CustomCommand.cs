@@ -304,11 +304,13 @@ namespace Microsoft.PythonTools.Project {
                 LineGroupKey = "line",
                 ColumnGroupKey = "column";
 
+            private readonly IVsHierarchy _hierarchy;
             private readonly string _workingDirectory;
             private readonly ErrorListProvider _errorListProvider;
             private readonly Regex _errorRegex, _warningRegex;
 
-            public ErrorListRedirector(string workingDirectory, ErrorListProvider errorListProvider, Regex errorRegex, Regex warningRegex) {
+            public ErrorListRedirector(IVsHierarchy hierarchy, string workingDirectory, ErrorListProvider errorListProvider, Regex errorRegex, Regex warningRegex) {
+                _hierarchy = hierarchy;
                 _workingDirectory = workingDirectory;
                 _errorListProvider = errorListProvider;
                 _errorRegex = errorRegex;
@@ -332,6 +334,7 @@ namespace Microsoft.PythonTools.Project {
 
                             var task = new ErrorTask {
                                 Document = document,
+                                HierarchyItem = _hierarchy,
                                 Line = line - 1,
                                 Column = column - 1,
                                 ErrorCategory = errorCategory,
@@ -671,7 +674,7 @@ namespace Microsoft.PythonTools.Project {
         private async void RunInOutput(IPythonProject2 project, CommandStartInfo startInfo) {
             Redirector redirector = OutputWindowRedirector.GetGeneral(project.Site);
             if (startInfo.ErrorRegex != null || startInfo.WarningRegex != null) {
-                redirector = new TeeRedirector(redirector, new ErrorListRedirector(startInfo.WorkingDirectory, _errorListProvider, startInfo.ErrorRegex, startInfo.WarningRegex));
+                redirector = new TeeRedirector(redirector, new ErrorListRedirector(project as IVsHierarchy, startInfo.WorkingDirectory, _errorListProvider, startInfo.ErrorRegex, startInfo.WarningRegex));
             }
             redirector.ShowAndActivate();
 
