@@ -11,7 +11,7 @@
     <OutputPath>.</OutputPath>
     <Name>PythonDocs</Name>
     <RootNamespace>PythonDocs</RootNamespace>
-    <InterpreterId>{2af0f10d-7135-4994-9156-5d01c9c11b7e}</InterpreterId>
+    <InterpreterId>{9a7a9026-48c1-4688-9d5d-e5699d47d074}</InterpreterId>
     <InterpreterVersion>3.3</InterpreterVersion>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
     <CommandLineArguments>--site pytools --doc-root Python\Docs --dir User</CommandLineArguments>
@@ -208,6 +208,7 @@
     <Content Include="User\Images\WorkerRoleSupportFiles.png" />
     <Content Include="User\PyLint.md" />
     <Content Include="User\Python Environments.md" />
+    <Content Include="User\VS14.md" />
     <Content Include="User\Where is PTVS installed%253f.md" />
   </ItemGroup>
   <ItemGroup>
