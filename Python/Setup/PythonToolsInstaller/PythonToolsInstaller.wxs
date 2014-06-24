@@ -53,6 +53,10 @@
       DEVENV_PATH OR WDEXPRESS_PATH OR VWDEXPRESS_PATH OR Installed
     </Condition>
 
+    <!-- Include an icon for the Programs and Features dialog -->
+    <Icon Id="ARPIcon" SourceFile="Icon$(var.VSTargetVersion).ico" />
+    <Property Id="ARPPRODUCTICON" Value="ARPIcon" />
+
     <!-- This location is the directory that PythonTools.msm will install into.
          We use it to reference some installed files. -->
     <DirectoryRef Id="Dir_VSExtensions">
