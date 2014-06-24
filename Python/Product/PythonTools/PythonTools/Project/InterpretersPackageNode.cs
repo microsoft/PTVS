@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
@@ -304,6 +305,46 @@ namespace Microsoft.PythonTools.Project {
 
         protected override NodeProperties CreatePropertiesObject() {
             return new InterpretersPackageNodeProperties(this);
+        }
+
+        internal static bool ShouldInstallRequirementsTxt(
+            IServiceProvider provider,
+            string targetLabel,
+            string txt,
+            bool elevate
+        ) {
+            if (!File.Exists(txt)) {
+                return false;
+            }
+            string content;
+            try {
+                content = File.ReadAllText(txt);
+            } catch (Exception ex) {
+                if (ex.IsCriticalException()) {
+                    throw;
+                }
+                return false;
+            }
+
+            var td = new TaskDialog(provider) {
+                Title = SR.ProductName,
+                MainInstruction = SR.GetString(SR.ShouldInstallRequirementsTxtHeader),
+                Content = SR.GetString(SR.ShouldInstallRequirementsTxtContent),
+                ExpandedByDefault = true,
+                ExpandedControlText = SR.GetString(SR.ShouldInstallRequirementsTxtExpandedControl),
+                CollapsedControlText = SR.GetString(SR.ShouldInstallRequirementsTxtCollapsedControl),
+                ExpandedInformation = content,
+                AllowCancellation = true
+            };
+
+            var install = new TaskDialogButton(SR.GetString(SR.ShouldInstallRequirementsTxtInstallInto, targetLabel)) {
+                ElevationRequired = elevate
+            };
+
+            td.Buttons.Add(install);
+            td.Buttons.Add(TaskDialogButton.Cancel);
+
+            return td.ShowModal() == install;
         }
     }
 }

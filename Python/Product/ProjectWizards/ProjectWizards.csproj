@@ -81,6 +81,9 @@
     <Compile Include="..\PythonTools\PkgCmdID.cs">
       <Link>PkgCmdID.cs</Link>
     </Compile>
+    <Compile Include="..\PythonTools\PythonConstants.cs">
+      <Link>PythonConstants.cs</Link>
+    </Compile>
     <Compile Include="CloudServiceWizard.cs" />
     <Compile Include="InstallRequirementsWizard.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

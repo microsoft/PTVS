@@ -1108,7 +1108,7 @@ namespace Microsoft.PythonTools.Project {
                 if ((int)cmd == PythonConstants.InstallRequirementsTxt) {
                     var status = base.QueryStatusSelectionOnNodes(selectedNodes, cmdGroup, cmd, pCmdText) |
                         QueryStatusResult.SUPPORTED;
-                    if (File.Exists(CommonUtils.GetAbsoluteDirectoryPath(ProjectHome, "requirements.txt"))) {
+                    if (File.Exists(CommonUtils.GetAbsoluteFilePath(ProjectHome, "requirements.txt"))) {
                         status |= QueryStatusResult.ENABLED;
                     }
                     return status;
@@ -1188,12 +1188,21 @@ namespace Microsoft.PythonTools.Project {
                         var node = _interpretersContainer.AllChildren.OfType<InterpretersNode>().FirstOrDefault(n => n._factory == active);
                         var name = "-r " + ProcessOutput.QuoteSingleArgument(txt);
                         var elevate = PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ElevatePip;
-                        if (node == null) {
-                            InterpretersPackageNode.InstallNewPackage(active, Site, name, true, elevate)
-                                .HandleAllExceptions(SR.ProductName).DoNotWait();
-                        } else {
-                            InterpretersPackageNode.InstallNewPackage(node, name, true, elevate)
-                                .HandleAllExceptions(SR.ProductName).DoNotWait();
+
+                        var alreadyConfirmed = Marshal.GetObjectForNativeVariant(vaIn) as bool? ?? false;
+                        if (alreadyConfirmed || InterpretersPackageNode.ShouldInstallRequirementsTxt(
+                            Site,
+                            node == null ? active.Description : node.Caption,
+                            txt,
+                            elevate
+                        )) {
+                            if (node == null) {
+                                InterpretersPackageNode.InstallNewPackage(active, Site, name, true, elevate)
+                                    .HandleAllExceptions(SR.ProductName).DoNotWait();
+                            } else {
+                                InterpretersPackageNode.InstallNewPackage(node, name, true, elevate)
+                                    .HandleAllExceptions(SR.ProductName).DoNotWait();
+                            }
                         }
                         handled = true;
                         return VSConstants.S_OK;

@@ -32,6 +32,8 @@ namespace Microsoft.PythonTools {
         internal const string ProjectImageList = "Microsoft.PythonImageList.bmp";
 #endif
 
+        internal const string IssueTrackerUrl = "http://go.microsoft.com/fwlink/?LinkId=402428";
+
         internal const string LibraryManagerGuid = "888888e5-b976-4366-9e98-e7bc01f1842c";
         internal const string LibraryManagerServiceGuid = "88888859-2f95-416e-9e2b-cac4678e5af7";
         public const string ProjectFactoryGuid = "888888a0-9f3d-457c-b088-3a5042f75d52";
@@ -131,8 +133,8 @@ namespace Microsoft.PythonTools {
         //Mixed-mode debugging project property
         public const string EnableNativeCodeDebugging = "EnableNativeCodeDebugging";
 
-        public const string WorkingDirectorySetting = CommonConstants.WorkingDirectory;
-        public const string ProjectHomeSetting = CommonConstants.ProjectHome;
+        public const string WorkingDirectorySetting = "WorkingDirectory";
+        public const string ProjectHomeSetting = "ProjectHome";
 
         /// <summary>
         /// The canonical name of the debug launcher for web projects.

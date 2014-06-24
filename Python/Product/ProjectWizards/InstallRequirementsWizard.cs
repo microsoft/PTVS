@@ -96,7 +96,7 @@ namespace Microsoft.PythonTools.ProjectWizards {
                 cmdId = (int)PkgCmdIDList.cmdidInstallRequirementsTxt;
             }
             if (cmdId != 0) {
-                object inObj = null, outObj = null;
+                object inObj = (object)true, outObj = null;
                 try {
                     project.DTE.Commands.Raise(
                         GuidList.guidPythonToolsCmdSet.ToString("B"),
@@ -108,7 +108,12 @@ namespace Microsoft.PythonTools.ProjectWizards {
                     if (ex.IsCriticalException()) {
                         throw;
                     }
-                    TaskDialog.ForException(provider, ex, Resources.InstallRequirementsFailed).ShowModal();
+                    TaskDialog.ForException(
+                        provider,
+                        ex,
+                        Resources.InstallRequirementsFailed,
+                        PythonConstants.IssueTrackerUrl
+                    ).ShowModal();
                 }
             }
         }

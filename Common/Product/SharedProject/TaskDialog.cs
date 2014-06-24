@@ -33,9 +33,15 @@ namespace Microsoft.VisualStudioTools {
             UseCommandLinks = true;
         }
 
-        public static TaskDialog ForException(IServiceProvider provider, Exception exception, string message = null) {
-            const string suffix = "Please press Ctrl+C to copy the contents of this dialog and report this error " +
-                "to our <a href=\"http://go.microsoft.com/fwlink/?LinkId=402428\">issue tracker</a>.";
+        public static TaskDialog ForException(
+            IServiceProvider provider,
+            Exception exception,
+            string message = null,
+            string issueTrackerUrl = null
+        ) {
+            string suffix = string.IsNullOrEmpty(issueTrackerUrl) ?
+                "Please press Ctrl+C to copy the contents of this dialog and report this error." :
+                "Please press Ctrl+C to copy the contents of this dialog and report this error to our <a href=\"issuetracker\">issue tracker</a>.";
 
             if (string.IsNullOrEmpty(message)) {
                 message = suffix;
@@ -52,6 +58,13 @@ namespace Microsoft.VisualStudioTools {
                 ExpandedInformation = exception.ToString()
             };
             td.Buttons.Add(TaskDialogButton.Close);
+            if (!string.IsNullOrEmpty(issueTrackerUrl)) {
+                td.HyperlinkClicked += (s, e) => {
+                    if (e.Url == "issuetracker") {
+                        Process.Start(issueTrackerUrl);
+                    }
+                };
+            }
             return td;
         }
 
@@ -221,7 +234,7 @@ namespace Microsoft.VisualStudioTools {
                 if (AllowCancellation) {
                     config.dwFlags |= NativeMethods.TASKDIALOG_FLAGS.TDF_ALLOW_DIALOG_CANCELLATION;
                 }
-                if (UseCommandLinks) {
+                if (UseCommandLinks && config.cButtons > 0) {
                     config.dwFlags |= NativeMethods.TASKDIALOG_FLAGS.TDF_USE_COMMAND_LINKS;
                 }
                 if (!ShowExpandedInformationInContent) {
@@ -275,6 +288,14 @@ namespace Microsoft.VisualStudioTools {
             try {
                 switch ((NativeMethods.TASKDIALOG_NOTIFICATION)uNotification) {
                     case NativeMethods.TASKDIALOG_NOTIFICATION.TDN_CREATED:
+                        foreach (var btn in _buttons.Where(b => b.ElevationRequired)) {
+                            NativeMethods.SendMessage(
+                                hwnd,
+                                (int)NativeMethods.TASKDIALOG_MESSAGE.TDM_SET_BUTTON_ELEVATION_REQUIRED_STATE,
+                                new IntPtr(GetButtonId(btn, _buttons)),
+                                new IntPtr(1)
+                            );
+                        }
                         break;
                     case NativeMethods.TASKDIALOG_NOTIFICATION.TDN_NAVIGATED:
                         break;
@@ -502,6 +523,26 @@ namespace Microsoft.VisualStudioTools {
                 TDN_EXPANDO_BUTTON_CLICKED = 10 // wParam = 0 (dialog is now collapsed), wParam != 0 (dialog is now expanded)
             };
 
+            const int WM_USER = 0x0400;
+
+            internal enum TASKDIALOG_MESSAGE : int {
+                TDM_NAVIGATE_PAGE = WM_USER + 101,
+                TDM_CLICK_BUTTON = WM_USER + 102, // wParam = Button ID
+                TDM_SET_MARQUEE_PROGRESS_BAR = WM_USER + 103, // wParam = 0 (nonMarque) wParam != 0 (Marquee)
+                TDM_SET_PROGRESS_BAR_STATE = WM_USER + 104, // wParam = new progress state
+                TDM_SET_PROGRESS_BAR_RANGE = WM_USER + 105, // lParam = MAKELPARAM(nMinRange, nMaxRange)
+                TDM_SET_PROGRESS_BAR_POS = WM_USER + 106, // wParam = new position
+                TDM_SET_PROGRESS_BAR_MARQUEE = WM_USER + 107, // wParam = 0 (stop marquee), wParam != 0 (start marquee), lparam = speed (milliseconds between repaints)
+                TDM_SET_ELEMENT_TEXT = WM_USER + 108, // wParam = element (TASKDIALOG_ELEMENTS), lParam = new element text (LPCWSTR)
+                TDM_CLICK_RADIO_BUTTON = WM_USER + 110, // wParam = Radio Button ID
+                TDM_ENABLE_BUTTON = WM_USER + 111, // lParam = 0 (disable), lParam != 0 (enable), wParam = Button ID
+                TDM_ENABLE_RADIO_BUTTON = WM_USER + 112, // lParam = 0 (disable), lParam != 0 (enable), wParam = Radio Button ID
+                TDM_CLICK_VERIFICATION = WM_USER + 113, // wParam = 0 (unchecked), 1 (checked), lParam = 1 (set key focus)
+                TDM_UPDATE_ELEMENT_TEXT = WM_USER + 114, // wParam = element (TASKDIALOG_ELEMENTS), lParam = new element text (LPCWSTR)
+                TDM_SET_BUTTON_ELEVATION_REQUIRED_STATE = WM_USER + 115, // wParam = Button ID, lParam = 0 (elevation not required), lParam != 0 (elevation required)
+                TDM_UPDATE_ICON = WM_USER + 116  // wParam = icon element (TASKDIALOG_ICON_ELEMENTS), lParam = new icon (hIcon if TDF_USE_HICON_* was set, PCWSTR otherwise)
+            }
+
             [DllImport("comctl32.dll", SetLastError = true)]
             internal static extern int TaskDialogIndirect(
                 ref TASKDIALOGCONFIG pTaskConfig,
@@ -553,6 +594,9 @@ namespace Microsoft.VisualStudioTools {
                 public IntPtr lpCallbackData;
                 public uint cxWidth;
             }
+
+            [DllImport("user32.dll")]
+            internal static extern IntPtr SendMessage(IntPtr hWnd, int Msg, IntPtr wParam, IntPtr lParam);
         }
     }
 
@@ -574,6 +618,7 @@ namespace Microsoft.VisualStudioTools {
 
         public string Text { get; set; }
         public string Subtext { get; set; }
+        public bool ElevationRequired { get; set; }
 
         private TaskDialogButton() { }
         public static readonly TaskDialogButton OK = new TaskDialogButton();

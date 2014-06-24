@@ -543,4 +543,21 @@ By default, URIs matching the pattern are mapped directly to a file system path.
   <data name="RequirementsTxtUpdateHelp" xml:space="preserve">
     <value>Packages will be updated or added, and all other contents will be preserved.</value>
   </data>
+  <data name="ShouldInstallRequirementsTxtCollapsedControl" xml:space="preserve">
+    <value>Show &amp;requirements.txt</value>
+  </data>
+  <data name="ShouldInstallRequirementsTxtContent" xml:space="preserve">
+    <value>Please review the contents of the file below before continuing.
+
+Packages that cannot be installed using pip may prevent all listed packages from being installed.</value>
+  </data>
+  <data name="ShouldInstallRequirementsTxtExpandedControl" xml:space="preserve">
+    <value>Hide &amp;requirements.txt</value>
+  </data>
+  <data name="ShouldInstallRequirementsTxtHeader" xml:space="preserve">
+    <value>Install requirements.txt</value>
+  </data>
+  <data name="ShouldInstallRequirementsTxtInstallInto" xml:space="preserve">
+    <value>&amp;Install into {0}</value>
+  </data>
 </root>

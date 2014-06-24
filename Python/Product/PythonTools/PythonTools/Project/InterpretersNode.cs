@@ -216,14 +216,16 @@ namespace Microsoft.PythonTools.Project {
                         InterpretersPackageNode.InstallNewPackage(this).HandleAllExceptions(SR.ProductName).DoNotWait();
                         return VSConstants.S_OK;
                     case PythonConstants.InstallRequirementsTxt:
-                        InterpretersPackageNode.InstallNewPackage(
-                            this,
-                            "-r " + ProcessOutput.QuoteSingleArgument(
-                                CommonUtils.GetAbsoluteFilePath(ProjectMgr.ProjectHome, "requirements.txt")
-                            ),
-                            true,
-                            PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ElevatePip
-                        ).HandleAllExceptions(SR.ProductName).DoNotWait();
+                        bool elevate = PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ElevatePip;
+                        var txt = CommonUtils.GetAbsoluteFilePath(ProjectMgr.ProjectHome, "requirements.txt");
+                        if (InterpretersPackageNode.ShouldInstallRequirementsTxt(ProjectMgr.Site, Caption, txt, elevate)) {
+                            InterpretersPackageNode.InstallNewPackage(
+                                this,
+                                "-r " + ProcessOutput.QuoteSingleArgument(txt),
+                                true,
+                                elevate
+                            ).HandleAllExceptions(SR.ProductName).DoNotWait();
+                        }
                         return VSConstants.S_OK;
                     case PythonConstants.GenerateRequirementsTxt:
                         GenerateRequirementsTxt().HandleAllExceptions(SR.ProductName).DoNotWait();

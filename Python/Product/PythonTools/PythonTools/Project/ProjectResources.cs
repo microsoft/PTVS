@@ -171,6 +171,12 @@ namespace Microsoft.PythonTools.Project {
         public const string RequirementsTxtFailedToWrite = "RequirementsTxtFailedToWrite";
         public const string RequirementsTxtFailedToAddToProject = "RequirementsTxtFailedToAddToProject";
 
+        public const string ShouldInstallRequirementsTxtHeader = "ShouldInstallRequirementsTxtHeader";
+        public const string ShouldInstallRequirementsTxtContent = "ShouldInstallRequirementsTxtContent";
+        public const string ShouldInstallRequirementsTxtExpandedControl = "ShouldInstallRequirementsTxtExpandedControl";
+        public const string ShouldInstallRequirementsTxtCollapsedControl = "ShouldInstallRequirementsTxtCollapsedControl";
+        public const string ShouldInstallRequirementsTxtInstallInto = "ShouldInstallRequirementsTxtInstallInto";
+
         private static readonly Lazy<ResourceManager> _manager = new Lazy<ResourceManager>(
             () => new System.Resources.ResourceManager("Microsoft.PythonTools.Resources", typeof(SR).Assembly),
             LazyThreadSafetyMode.ExecutionAndPublication
