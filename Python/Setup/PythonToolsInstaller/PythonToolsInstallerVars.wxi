@@ -33,5 +33,14 @@
   <?define Comp_VSPyFileProgIdGuid=C48EAEBD-4ABB-4A4B-A134-15B5B5BBA533?>
   <?define Comp_WDPyFileProgIdGuid=43E8DA2B-9DC8-4FD8-B0F1-DBC814ADBE5B?>
   <?define Comp_VWDPyFileProgIdGuid=D59F21B1-9891-496F-94ED-44BA6B645A21?>
+
+  <?elseif "$(var.VSTargetVersion)" = "14.0" ?>
+  <?define InstallerUpgradeGuid=17BBD365-BA18-4655-A737-9ABD1F9A6E4C?>
+  <?define Comp_ProgramMenuFolder=13F8DC5F-C65E-4AF5-94CD-2A9B8CE9F831?>
+  <?define Comp_PyProjRegistrationGuid=4F6FF763-3FD0-4ED0-94B5-0F4266A5805F?>
+
+  <?define Comp_VSPyFileProgIdGuid=B518DA6B-F986-4947-A347-CFEE6A497DEC?>
+  <?define Comp_WDPyFileProgIdGuid=450A0988-EED7-4813-8EB5-D38A7B733C9F?>
+  <?define Comp_VWDPyFileProgIdGuid=4A020E7B-1A10-4E33-A1DC-3C4FBC28B346?>
   <?endif ?>
 </Include>
