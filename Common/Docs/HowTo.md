@@ -140,6 +140,8 @@ Requirements are:
 * Pygments (`pip install pygments`)
 * Pillow with JPEG and PNG codecs (`pip install Pillow`)
 
+You can use "Install from requirements.txt" (in the context menu of the Python environment node in Solution Explorer) to install those.
+
 The first time the script is run, it will generate a file `maps.cache`, which contains all of the mappings used for the `src` and `file` links. This file should be deleted when source files are added, removed, moved or renamed, but will significantly speed up later refresh times.
 
 Uploading to CodePlex

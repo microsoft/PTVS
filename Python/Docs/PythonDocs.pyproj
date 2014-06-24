@@ -11,7 +11,7 @@
     <OutputPath>.</OutputPath>
     <Name>PythonDocs</Name>
     <RootNamespace>PythonDocs</RootNamespace>
-    <InterpreterId>{9a7a9026-48c1-4688-9d5d-e5699d47d074}</InterpreterId>
+    <InterpreterId>{2af0f10d-7135-4994-9156-5d01c9c11b7e}</InterpreterId>
     <InterpreterVersion>3.3</InterpreterVersion>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
     <CommandLineArguments>--site pytools --doc-root Python\Docs --dir User</CommandLineArguments>
@@ -60,6 +60,7 @@
     <Content Include="Images\Play.png" />
     <Content Include="Images\Play.svg" />
     <Content Include="Planning\WebFrameworks.md" />
+    <Content Include="requirements.txt" />
     <Content Include="User\codeplex.map" />
     <Content Include="User\Django%2520Web%2520Site%252fCloud%2520Service%2520Tutorial.md" />
     <Content Include="User\Documentation.md" />
@@ -72,6 +73,11 @@
     <Content Include="User\Images\AddVirtualEnvironmentRequirementsTxt.png" />
     <Content Include="User\Images\AzureCloudProject.png" />
     <Content Include="User\Images\AzureCloudProjectWizard.png" />
+    <Content Include="User\Images\AzureRemoteDebuggingAttached.png" />
+    <Content Include="User\Images\AzureRemoteDebuggingManualAttach.png" />
+    <Content Include="User\Images\AzureRemoteDebuggingProxyInfoPage.png" />
+    <Content Include="User\Images\AzureRemoteDebuggingSecret.png" />
+    <Content Include="User\Images\AzureRemoteDebuggingWebSiteAttach.png" />
     <Content Include="User\Images\CustomizeColors.png" />
     <Content Include="User\Images\InstallRequirementsTxt.png" />
     <Content Include="User\Images\NewProjectWeb.png" />
@@ -84,6 +90,7 @@
     <Content Include="User\Features Projects.md" />
     <Content Include="User\Features Refactoring.md" />
     <Content Include="User\Features Remote Debugging.md" />
+    <Content Include="User\Features Azure Remote Debugging.md" />
     <Content Include="User\Images\AddImport.png" />
     <Content Include="User\Images\AddRemoveEnvironments.png" />
     <Content Include="User\Images\AddVirtualEnvironment.png" />
@@ -176,9 +183,9 @@
     <Content Include="User\Images\RemoteDebuggingBreakpointHit.png" />
     <Content Include="User\Images\RemoteDebuggingBreakpointSet.png" />
     <Content Include="User\Images\RemoteDebuggingQualifier.png" />
+    <Content Include="User\Images\RemoteDebuggingQualifierSSL.png" />
     <Content Include="User\Images\RemoteDebuggingSSLWarning.png" />
     <Content Include="User\Images\RemoteDebuggingTransport.png" />
-    <Content Include="User\Images\RemoteDebuggingTransportSSL.png" />
     <Content Include="User\Images\RemoteDebuggingVideo.png" />
     <Content Include="User\Images\ReplaceRequirementsTxt.png" />
     <Content Include="User\Images\RequirementsTxtWizard.png" />
@@ -196,6 +203,7 @@
     <Content Include="User\Images\WebConvertMenu.png" />
     <Content Include="User\Images\WebLauncherProperties.png" />
     <Content Include="User\Images\WebPIComponents.png" />
+    <Content Include="User\Images\WebPublishConfig.png" />
     <Content Include="User\Images\WebPublishMenu.png" />
     <Content Include="User\Images\WorkerRoleSupportFiles.png" />
     <Content Include="User\PyLint.md" />

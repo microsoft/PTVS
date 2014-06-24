@@ -144,6 +144,10 @@ With these tools installed, Python projects will display a Publish command in th
 The "Publish" command will deploy your site to an Azure Web Site.
 After selecting the command, a wizard will walk you through creating a web site or importing publish settings, previewing modified files, and publishing to a remote server.
 
+If you plan on debugging your published project directly on Microsoft Azure servers by using Python remote debugging, you need to publish the site in "Debug" configuration. This setting is separate from the current active solution configuration, and always defaults to "Release". To change it, open the "Settings" tab, and use the "Configuration" combo box in the publish wizard:
+
+![Changing the publish configuration](Images/WebPublishConfig.png)
+
 See the [documentation on Azure.com](http://azure.microsoft.com/en-us/documentation/services/web-sites/#python) for more information on creating and deploying to Web Sites.
 
 ![Convert to Windows Azure Cloud Service Project command](Images/WebConvertMenu.png)

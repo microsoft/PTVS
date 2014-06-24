@@ -29,6 +29,7 @@ Features in Depth
  * [wiki:"Debugging without a Project" Features Debugging#debugging-without-a-project]
  * [wiki:"The Debug Interactive Window" Features Debugging#the-debug-interactive-window]
  * [wiki:"Remote Debugging for Windows, Linux and OS X" Features Remote Debugging]
+ * [wiki:"Remote Debugging for Microsoft Azure Web Sites" Features Azure Remote Debugging]
  * [wiki:"Python/C++ Mixed-Mode Debugging" Features Mixed-mode Debugging]
 * [wiki:"Profiling" Features Profiling]
 * [wiki:"Projects" Features Projects]

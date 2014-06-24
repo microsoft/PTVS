@@ -67,7 +67,7 @@ The most common scenario for remote debugging is to set a breakpoint in the sour
 
 ![Setting a breakpoint](Images/RemoteDebuggingBreakpointSet.png)
 
-Attaching is done using <span class="menu">Debug</span> → <span class="menu">Attach to Process</span> menu command, which opens the “Attach to Process” dialog. The first thing to do in it is to open the “Transport” combo box, and change selection to “Python remote debugging (unsecured)”: 
+Attaching is done using <span class="menu">Debug</span> → <span class="menu">Attach to Process</span> menu command, which opens the “Attach to Process” dialog. The first thing to do in it is to open the “Transport” combo box, and change selection to “Python remote debugging”: 
 
 ![Choosing the remote debugging transport](Images/RemoteDebuggingTransport.png)
 
@@ -105,9 +105,9 @@ After you have the certificate and the private key files generated and registere
 ptvsd.enable_attach(secret = 'joshua', certfile = 'joshua.cer', keyfile = 'joshua.key')
 ```
 
-The attach process is exactly the same as described earlier, except that, instead of “Python remote debugging (unsecured)” transport, you need to use “Python remote debugging (SSL)”: 
+The attach process is exactly the same as described earlier, except that, instead of using the **tcp://** scheme in the Qualifier, you use **tcps://**: 
 
-![Choosing the remote debugging transport with SSL](Images/RemoteDebuggingTransportSSL.png)
+![Choosing the remote debugging transport with SSL](Images/RemoteDebuggingQualifierSSL.png)
 
 If you did not add the certificate to the CA root store, you will get a warning message: 
 
