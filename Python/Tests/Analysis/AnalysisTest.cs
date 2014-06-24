@@ -1944,6 +1944,56 @@ oar2 = 100 * fob2";
         }
 
         [TestMethod, Priority(0)]
+        public void NotOperator() {
+            var text = @"
+
+class C(object):
+    def __nonzero__(self):
+        pass
+
+    def __bool__(self):
+        pass
+
+a = not C()
+";
+
+            var entry = ProcessText(text, PythonLanguageVersion.V27);
+            AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("a", 0), "bool");
+
+            entry = ProcessText(text, PythonLanguageVersion.V33);
+            AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("a", 0), "bool");
+        }
+
+        [TestMethod, Priority(0)]
+        public void UnaryOperators() {
+            var operators = new[] {
+                new { Method = "pos", Operator = "+" },
+                new { Method = "neg", Operator = "-" },
+                new { Method = "invert", Operator = "~" },
+            };
+
+            var text = @"
+class Result(object):
+    pass
+
+class C(object):
+    def __{0}__(self):
+        return Result()
+
+a = {1}C()
+b = {1}{1}C()
+";
+
+            foreach (var test in operators) {
+                Console.WriteLine(test.Operator);
+                var entry = ProcessText(String.Format(text, test.Method, test.Operator));
+
+                AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("a", text.IndexOf("a =")), "Result instance");
+                AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("b", text.IndexOf("b =")), "Result instance");
+            }
+        }
+
+        [TestMethod, Priority(0)]
         public void BinaryOperators() {
             var operators = new[] {
                 new { Method = "add", Operator = "+" },

@@ -45,7 +45,7 @@ namespace Microsoft.PythonTools.Interpreter {
         private FileSystemWatcher _libWatcher;
         private readonly object _libWatcherLock = new object();
         private FileSystemWatcher _verWatcher;
-        private readonly FileSystemWatcher _verDirWatcher;
+        private FileSystemWatcher _verDirWatcher;
         private readonly object _verWatcherLock = new object();
 
         // Only one thread can be updating our current state
@@ -588,6 +588,7 @@ namespace Microsoft.PythonTools.Interpreter {
                         if (_verDirWatcher != null) {
                             _verDirWatcher.EnableRaisingEvents = false;
                             _verDirWatcher.Dispose();
+                            _verDirWatcher = null;
                         }
                     }
                 }
@@ -650,20 +651,21 @@ namespace Microsoft.PythonTools.Interpreter {
             FileSystemWatcher watcher = null;
 
             lock (_verWatcherLock) {
-                var dir = DatabasePath;
+                var dirName = Path.GetFileName(CommonUtils.TrimEndSeparator(DatabasePath));
+                var dir = Path.GetDirectoryName(DatabasePath);
 
-                var dirName = Path.GetFileName(CommonUtils.TrimEndSeparator(dir));
                 while (CommonUtils.IsValidPath(dir) && !Directory.Exists(dir)) {
+                    dirName = Path.GetFileName(CommonUtils.TrimEndSeparator(dir));
                     dir = Path.GetDirectoryName(dir);
                 }
 
                 if (Directory.Exists(dir)) {
                     try {
                         watcher = new FileSystemWatcher {
-                            IncludeSubdirectories = true,
+                            IncludeSubdirectories = false,
                             Path = dir,
                             Filter = dirName,
-                            NotifyFilter = NotifyFilters.DirectoryName
+                            NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName
                         };
                     } catch (ArgumentException ex) {
                         Debug.WriteLine("Error starting database directory FileSystemWatcher:\r\n{0}", ex);
@@ -671,6 +673,7 @@ namespace Microsoft.PythonTools.Interpreter {
                     }
 
                     watcher.Created += OnDatabaseFolderChanged;
+                    watcher.Renamed += OnDatabaseFolderChanged;
                     watcher.Deleted += OnDatabaseFolderChanged;
 
                     try {
@@ -730,6 +733,11 @@ namespace Microsoft.PythonTools.Interpreter {
                     _verWatcher.EnableRaisingEvents = false;
                     _verWatcher.Dispose();
                 }
+                if (_verDirWatcher != null) {
+                    _verDirWatcher.EnableRaisingEvents = false;
+                    _verDirWatcher.Dispose();
+                }
+                _verDirWatcher = CreateDatabaseDirectoryWatcher();
                 _verWatcher = CreateDatabaseVerWatcher();
                 RefreshIsCurrent();
             }

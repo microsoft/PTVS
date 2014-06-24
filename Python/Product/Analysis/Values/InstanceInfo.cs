@@ -244,6 +244,39 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _classInfo.GetMember(node, unit, name);
         }
 
+        public override IAnalysisSet UnaryOperation(Node node, AnalysisUnit unit, PythonOperator operation) {
+            if (operation == PythonOperator.Not) {
+                return unit.ProjectState.ClassInfos[BuiltinTypeId.Bool].Instance;
+            }
+            
+            string methodName = UnaryOpToString(unit.ProjectState, operation);
+            if (methodName != null) {
+                var method = GetMember(node, unit, methodName);
+                if (method.Count > 0) {
+                    var res = method.Call(
+                        node,
+                        unit,
+                        new[] { this },
+                        ExpressionEvaluator.EmptyNames
+                    );
+
+                    return res;
+                }
+            }
+            return base.UnaryOperation(node, unit, operation);
+        }
+
+        internal static string UnaryOpToString(PythonAnalyzer state, PythonOperator operation) {
+            string op = null;
+            switch (operation) {
+                case PythonOperator.Not: op = state.LanguageVersion.Is3x() ? "__bool__" : "__nonzero__"; break;
+                case PythonOperator.Pos: op = "__pos__"; break;
+                case PythonOperator.Invert: op = "__invert__"; break;
+                case PythonOperator.Negate: op = "__neg__"; break;
+            }
+            return op;
+        }
+
         public override IAnalysisSet BinaryOperation(Node node, AnalysisUnit unit, PythonOperator operation, IAnalysisSet rhs) {
             string op = BinaryOpToString(operation);
 

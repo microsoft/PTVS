@@ -60,7 +60,7 @@ namespace Microsoft.PythonTools.Commands {
 
             var dlg = new Microsoft.PythonTools.Project.ImportWizard.ImportWizard();
 
-            Microsoft.VisualStudio.Shell.OleMenuCmdEventArgs oleArgs = args as Microsoft.VisualStudio.Shell.OleMenuCmdEventArgs;
+            var oleArgs = args as Microsoft.VisualStudio.Shell.OleMenuCmdEventArgs;
             if (oleArgs != null) {
                 string projectArgs = oleArgs.InValue as string;
                 if (projectArgs != null) {

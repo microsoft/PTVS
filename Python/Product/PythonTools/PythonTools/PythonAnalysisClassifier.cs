@@ -455,8 +455,7 @@ namespace Microsoft.PythonTools {
             if (node.Root != null) {
                 foreach (var name in node.Root.Names) {
                     if (name != null && !string.IsNullOrEmpty(name.Name)) {
-                        _head.Modules.Add(name.Name);
-                        _head.Names.Add(Tuple.Create(name.Name, Span.FromBounds(name.StartIndex, name.EndIndex)));
+                        AddSpan(Tuple.Create(name.Name, Span.FromBounds(name.StartIndex, name.EndIndex)), PythonPredefinedClassificationTypeNames.Module);
                     }
                 }
             }

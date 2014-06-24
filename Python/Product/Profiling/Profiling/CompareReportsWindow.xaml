@@ -8,6 +8,7 @@
     MinWidth="300" MinHeight="220"
     Width="500" Height="auto" SizeToContent="Height"
     WindowStartupLocation="CenterOwner"
+    ShowInTaskbar="False"
     Background="{DynamicResource {x:Static wpf:Controls.BackgroundKey}}"
     TextElement.Foreground="{DynamicResource {x:Static wpf:Controls.ForegroundKey}}"
     TextOptions.TextFormattingMode="Display"

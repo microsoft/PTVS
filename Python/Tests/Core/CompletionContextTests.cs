@@ -310,7 +310,21 @@ except (None)"}) {
 
             // combining various partial expressions with previous expressions
             var prefixes = new[] { "", "(", "a = ", "f(", "l[", "{", "if " };
-            var exprs = new[] { "x[0].", "x(0).", "x.", "x.y.", "f(x[2]).", "f(x, y).", "f({2:3}).", "f(a + b).", "f(a or b).", "{2:3}.", "f(x if False else y).", /*"(\r\nx\r\n)."*/ };
+            var exprs = new[] {
+                "f(a=x).",
+                "x[0].",
+                "x(0).",
+                "x.",
+                "x.y.",
+                "f(x[2]).",
+                "f(x, y).",
+                "f({2:3}).",
+                "f(a + b).",
+                "f(a or b).",
+                "{2:3}.",
+                "f(x if False else y).",
+                "(\r\nx\r\n).",
+            };
             foreach (var prefix in prefixes) {
                 foreach (var expr in exprs) {
                     string test = prefix + expr;

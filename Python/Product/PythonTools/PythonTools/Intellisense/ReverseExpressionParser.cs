@@ -300,7 +300,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         } else if ((token.ClassificationType == Classifier.Provider.Keyword &&
                             PythonKeywords.IsOnlyStatementKeyword(text)) ||
                             (token.ClassificationType == Classifier.Provider.Operator && IsAssignmentOperator(text))) {
-                            if (isSigHelp && text == "=") {
+                            if (nesting != 0 && text == "=") {
                                 // keyword argument allowed in signatures
                                 lastTokenWasKeywordArgAssignment = lastTokenWasCommaOrOperator = true;
                             } else if (start == null || (nestingChanged && nesting != 0)) {

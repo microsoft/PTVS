@@ -14,6 +14,7 @@
     ResizeMode="CanResizeWithGrip"
     UseLayoutRounding="True"
     WindowStartupLocation="CenterOwner"
+    ShowInTaskbar="False"
     Background="{DynamicResource {x:Static wpf:Controls.BackgroundKey}}"
     TextElement.Foreground="{DynamicResource {x:Static wpf:Controls.ForegroundKey}}">
     <vstools:DialogWindowVersioningWorkaround.Resources>

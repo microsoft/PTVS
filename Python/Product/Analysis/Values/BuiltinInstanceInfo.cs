@@ -85,6 +85,28 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
+        public override IAnalysisSet UnaryOperation(Node node, AnalysisUnit unit, PythonOperator operation) {
+            if (operation == PythonOperator.Not) {
+                return unit.ProjectState.ClassInfos[BuiltinTypeId.Bool].Instance;
+            }
+
+            string methodName = InstanceInfo.UnaryOpToString(unit.ProjectState, operation);
+            if (methodName != null) {
+                var method = GetMember(node, unit, methodName);
+                if (method.Count > 0) {
+                    var res = method.Call(
+                        node,
+                        unit,
+                        new[] { this },
+                        ExpressionEvaluator.EmptyNames
+                    );
+
+                    return res;
+                }
+            }
+            return base.UnaryOperation(node, unit, operation);
+        }
+
         public override IAnalysisSet BinaryOperation(Node node, AnalysisUnit unit, PythonOperator operation, IAnalysisSet rhs) {
             return ConstantInfo.NumericOp(node, this, unit, operation, rhs) ?? NumericOp(node, unit, operation, rhs) ?? AnalysisSet.Empty;
         }

@@ -56,12 +56,12 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal string PrecedingExpression {
             get {
-            var startSpan = _snapshot.CreateTrackingSpan(Span.GetSpan(_snapshot).Start.Position, 0, SpanTrackingMode.EdgeInclusive);
-            var parser = new ReverseExpressionParser(_snapshot, _snapshot.TextBuffer, startSpan);
-            var sourceSpan = parser.GetExpressionRange();
-            if (sourceSpan.HasValue && sourceSpan.Value.Length > 0) {
-                return sourceSpan.Value.GetText();
-            }
+                var startSpan = _snapshot.CreateTrackingSpan(Span.GetSpan(_snapshot).Start.Position, 0, SpanTrackingMode.EdgeInclusive);
+                var parser = new ReverseExpressionParser(_snapshot, _snapshot.TextBuffer, startSpan);
+                var sourceSpan = parser.GetExpressionRange();
+                if (sourceSpan.HasValue && sourceSpan.Value.Length > 0) {
+                    return sourceSpan.Value.GetText();
+                }
                 return string.Empty;
             }
         }
@@ -107,7 +107,7 @@ namespace Microsoft.PythonTools.Intellisense {
             } else {
                 members = analysis.GetAllAvailableMembersByIndex(
                     VsProjectAnalyzer.TranslateIndex(
-                        Span.GetStartPoint(_snapshot).Position, 
+                        Span.GetStartPoint(_snapshot).Position,
                         _snapshot,
                         analysis
                     ),
@@ -124,7 +124,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             var start = _stopwatch.ElapsedMilliseconds;
-            
+
             var result = new FuzzyCompletionSet(
                 "Python",
                 "Python",

@@ -4,6 +4,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:ui="clr-namespace:Microsoft.VisualStudioTools"
         x:ClassModifier="internal"
+        ShowInTaskbar="False"
         Title="Merge files or folders..." Height="179" Width="470" WindowStartupLocation="CenterOwner" ResizeMode="NoResize" SizeToContent="WidthAndHeight">
     <StackPanel>
         <TextBox x:Name="_message" Margin="10,10,10,10" Height="86" BorderThickness="0" TextWrapping="WrapWithOverflow" Background="{x:Null}" IsReadOnly="True"/>

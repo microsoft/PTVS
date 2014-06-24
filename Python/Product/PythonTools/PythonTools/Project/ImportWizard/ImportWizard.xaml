@@ -13,6 +13,7 @@
     HasMaximizeButton="True"
     UseLayoutRounding="True"
     SnapsToDevicePixels="True"
+    ShowInTaskbar="False"
     WindowStartupLocation="CenterOwner">
 
     <Window.Title>

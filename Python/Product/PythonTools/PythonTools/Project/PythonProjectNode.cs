@@ -1106,8 +1106,12 @@ namespace Microsoft.PythonTools.Project {
                 }
 
                 if ((int)cmd == PythonConstants.InstallRequirementsTxt) {
-                    return base.QueryStatusSelectionOnNodes(selectedNodes, cmdGroup, cmd, pCmdText) |
-                        QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
+                    var status = base.QueryStatusSelectionOnNodes(selectedNodes, cmdGroup, cmd, pCmdText) |
+                        QueryStatusResult.SUPPORTED;
+                    if (File.Exists(CommonUtils.GetAbsoluteDirectoryPath(ProjectHome, "requirements.txt"))) {
+                        status |= QueryStatusResult.ENABLED;
+                    }
+                    return status;
                 }
             }
 
