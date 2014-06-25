@@ -100,14 +100,9 @@ The source for the documentation is under source control. It is part of a Python
 
 To edit existing documentation, open the `.md` file using Solution Explorer and start editing. To add new documentation pages, add a New Item or copy/paste an existing .md file using Solution Explorer.
 
-When you are done with your changes, convert the documentation to HTML to make sure your Markdown is rendered as expected (previews in Markdown editors won't be accurate).  To do this, run the project (F5 or CTRL-F5).  You will be prompted for some information:
-1. Convert to HTML, answer **y**.
-1. Upload to CodePlex, answer **n**.
-After all files are converted, verify the contents of the generated HTML files.
+When you are done with your changes, convert the documentation to HTML to make sure your Markdown is rendered as expected (previews in Markdown editors won't be accurate).  To do this, simply build the project. After all files are converted, verify the contents of the generated HTML files.
 
-When you are ready to upload your changes, check-out `User\codeplex.map` from source control. Then run the project (F5 or CTRL-F5). You will be prompted for some information:
-1. Convert to HTML, answer **y** unless you are absolutely sure the HTML is already up to date (ie. you haven't modified anything since the last conversion).
-1. Upload to CodePlex, answer **y**.
+When you are ready to upload your changes, check-out `User\codeplex.map` from source control. Then build and run the project (F5 or CTRL-F5). You will be prompted for some information:
 1. Enter your CodePlex user.
 1. Enter your CodePlex password.
 

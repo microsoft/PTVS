@@ -14,7 +14,8 @@
     <InterpreterId>{9a7a9026-48c1-4688-9d5d-e5699d47d074}</InterpreterId>
     <InterpreterVersion>3.3</InterpreterVersion>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>--site pytools --doc-root Python\Docs --dir User</CommandLineArguments>
+    <CommandLineArgumentsPrefix>--site pytools --doc-root Python\Docs --dir User</CommandLineArgumentsPrefix>
+    <CommandLineArguments>$(CommandLineArgumentsPrefix) --upload</CommandLineArguments>
     <InterpreterPath />
     <InterpreterArguments />
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
@@ -215,5 +216,53 @@
     <InterpreterReference Include="{2af0f10d-7135-4994-9156-5d01c9c11b7e}\3.3" />
     <InterpreterReference Include="{9a7a9026-48c1-4688-9d5d-e5699d47d074}\3.3" />
   </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
+  <PropertyGroup>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
+    <PtvsTargetsFile>$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets</PtvsTargetsFile>
+  </PropertyGroup>
+  <Import Condition="Exists($(PtvsTargetsFile))" Project="$(PtvsTargetsFile)" />
+  <Import Condition="!Exists($(PtvsTargetsFile))" Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
+
+  <!-- Enable build. -->
+  <Target Name="CoreCompile"/>
+
+  <ItemGroup>
+    <Markdown Include="**\*.md"/>
+  </ItemGroup>
+
+  <Target Name="GetMarkdownOutputItems" Returns="@(MarkdownOutput)">
+    <RunPythonCommand Target="$(StartupFile)"
+                      TargetType="script"
+                      ExecuteIn="none"
+                      Arguments="$(CommandLineArgumentsPrefix) --convert --list-outputs-only"
+                      ConsoleToMSBuild="true">
+      <Output TaskParameter="ConsoleOutput" PropertyName="_MarkdownOutputList"/>
+    </RunPythonCommand>
+
+    <ItemGroup>
+      <MarkdownOutput Include="$(_MarkdownOutputList.Split('&#10;'))"/>
+    </ItemGroup>
+  </Target>
+
+  <!-- Disable output group based up-to-date checks, and rely on regular MSBuild logic. -->
+  <Target Name="BuiltProjectOutputGroupFast_Markdown"
+          Returns="@(BuiltProjectOutputGroupFastOutput)"
+          AfterTargets="BuiltProjectOutputGroupFast"
+          DependsOnTargets="GetMarkdownOutputItems">
+    <ItemGroup>
+      <BuiltProjectOutputGroupFastOutput Include="@(MarkdownOutput)"/>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="ConvertMarkdownToHtml" AfterTargets="CoreCompile" DependsOnTargets="GetMarkdownOutputItems" Inputs="$(MSBuildProjectFile);@(Markdown)" Outputs="@(MarkdownOutput)">
+    <RunPythonCommand Target="$(StartupFile)"
+                      TargetType="script"
+                      ExecuteIn="none"
+                      Arguments="$(CommandLineArgumentsPrefix) --convert">
+    </RunPythonCommand>
+    <ItemGroup>
+      <FileWrites Include="@(MarkdownOutput)"/>
+    </ItemGroup>
+  </Target>
+
 </Project>

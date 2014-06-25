@@ -39,10 +39,12 @@ def get_build_root(start):
     return start
 
 class LinkMapper:
-    def __init__(self, source_root, url_base, doc_root):
+    def __init__(self, source_root, url_base, doc_root, list_outputs_only):
         self.source_root = source_root
         self.url_base = url_base
         self.doc_root = doc_root
+        self.list_outputs_only = list_outputs_only
+
         self.source_url_base = self.url_base + 'SourceControl/latest#'
         self.wiki_url_base = self.url_base + 'wikipage?title='
         self.issue_url_base = self.url_base + 'workitem/'
@@ -53,6 +55,11 @@ class LinkMapper:
             return
         except:
             pass
+
+        if self.list_outputs_only:
+            self.file_map = None
+            self.type_map = None
+            return
 
         print('Creating file maps')
         file_map = {}
@@ -129,6 +136,11 @@ class LinkMapper:
         video_id = matchobj.group(3)
         title = matchobj.group(2) or ("YouTube video " + matchobj.group(3))
 
+        thumbnail_filename = 'VideoThumbnails/{}.png'.format(video_id)
+        if self.list_outputs_only:
+            log_output(thumbnail_filename)
+            return
+
         print('Generating video thumbnail for {}'.format(video_id))
 
         with urllib.request.urlopen("http://img.youtube.com/vi/{}/hqdefault.jpg".format(video_id)) as f:
@@ -136,7 +148,6 @@ class LinkMapper:
         thumbnail = PIL.Image.open(io.BytesIO(thumbnail_data)).convert('RGBA')
         overlay = PIL.Image.open(os.path.join(self.source_root, self.doc_root, 'Images/Play.png'))
 
-        thumbnail_filename = 'VideoThumbnails/{}.png'.format(video_id)
         PIL.Image.alpha_composite(thumbnail, overlay).save(thumbnail_filename)
 
         return """
@@ -149,11 +160,12 @@ class LinkMapper:
     @property
     def patterns(self):
         return [
-            (r'(?<!`)\[src\:([^\]]+)\]', self.replace_source_links),
-            (r'(?<!`)\[file\:([^\]]+)\]', self.replace_file_links),
-            (r'(?<!`)\[wiki\:("([^"]+)"\s*)?([^\]]+)\]', self.replace_wiki_links),
-            (r'(?<!`)\[issue\:("([^"]+)"\s*)?([0-9]+)\]', self.replace_issue_links),
-            (r'(?<!`)\[video\:("([^"]+)"\s*)?([^\]]+)\]', self.replace_video_links),
+            # (pattern, replacement, has_outputs)
+            (r'(?<!`)\[src\:([^\]]+)\]', self.replace_source_links, False),
+            (r'(?<!`)\[file\:([^\]]+)\]', self.replace_file_links, False),
+            (r'(?<!`)\[wiki\:("([^"]+)"\s*)?([^\]]+)\]', self.replace_wiki_links, False),
+            (r'(?<!`)\[issue\:("([^"]+)"\s*)?([0-9]+)\]', self.replace_issue_links, False),
+            (r'(?<!`)\[video\:("([^"]+)"\s*)?([^\]]+)\]', self.replace_video_links, True),
         ]
 
 
@@ -218,21 +230,26 @@ markdown = markdown2.Markdown(
 # and the indented ones cause formatting conflicts.
 markdown._do_code_blocks = lambda t: t
 
-def main(start_dir, site, doc_root):
+def log_output(name):
+    print(os.path.abspath(name))
+
+def main(start_dir, site, doc_root, list_outputs_only):
     if not os.path.isabs(start_dir):
         start_dir = os.path.join(os.getcwd(), start_dir)
 
     BUILD_ROOT = get_build_root(start_dir)
     url_base = 'http://{0}.codeplex.com/'.format(site)
 
-    link_mapper = LinkMapper(BUILD_ROOT, url_base, doc_root)
-    
+    link_mapper = LinkMapper(BUILD_ROOT, url_base, doc_root, list_outputs_only)
+   
     sources = os.path.join(BUILD_ROOT, doc_root)
-    print('Reading from ' + sources)
+    if not list_outputs_only:
+        print('Reading from ' + sources)
     
     for dirname, _, filenames in os.walk(sources):
         for filename in (f for f in filenames if f.upper().endswith('.MD')):
-            print('Converting {}'.format(filename))
+            if not list_outputs_only:
+                print('Converting {}'.format(filename))
             cwd = os.getcwd()
             os.chdir(dirname)
             try:
@@ -240,18 +257,28 @@ def main(start_dir, site, doc_root):
                     text = src.read()
             
                 # Do our own link replacements, rather than markdown2's
-                for pattern, repl in link_mapper.patterns:
-                    text = re.sub(pattern, repl, text)
+                for pattern, repl, has_outputs in link_mapper.patterns:
+                    if list_outputs_only:
+                        if has_outputs:
+                            for mo in re.finditer(pattern, text):
+                                repl(mo)
+                    else:
+                        text = re.sub(pattern, repl, text)
+
+                html_filename = filename[:-3] + '.html'
+
+                if list_outputs_only:
+                    log_output(html_filename)
+                else:
+                    html = markdown.convert(text)
             
-                html = markdown.convert(text)
-            
-                # Do any post-conversion replacements
-                for pattern, repl in HTML_PATTERNS:
-                    html = re.sub(pattern, repl, html)
-            
-                with open(filename[:-3] + '.html', 'w', encoding='utf-8') as dest:
-                    dest.write(HEADER)
-                    dest.write(html)
-                    dest.write(FOOTER)
+                    # Do any post-conversion replacements
+                    for pattern, repl in HTML_PATTERNS:
+                        html = re.sub(pattern, repl, html)
+
+                    with open(html_filename, 'w', encoding='utf-8') as dest:
+                        dest.write(HEADER)
+                        dest.write(html)
+                        dest.write(FOOTER)
             finally:
                 os.chdir(cwd)

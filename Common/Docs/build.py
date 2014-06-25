@@ -27,6 +27,10 @@ def parse_options(args):
     parser.add_argument('--upload', action='store_true',
                         help='If specified, uploads files to CodePlex.' +
                              'Can be used with --dry-run option.')
+    parser.add_argument('--list-outputs-only', action='store_true',
+                        help='If specified in conjunction with --convert, output is a list of ' +
+                             'files that will be generated once --convert is run, one per line. ' +
+                             'No files are actually generated.')
     options = parser.parse_args(args)
     return options
 
@@ -55,7 +59,8 @@ if __name__ == '__main__':
     if options.convert:
         exit_code = update_html.main(options.dir,
                                      options.site,
-                                     options.doc_root)
+                                     options.doc_root,
+                                     options.list_outputs_only)
         if exit_code:
             sys.exit(exit_code)
     if options.upload:
