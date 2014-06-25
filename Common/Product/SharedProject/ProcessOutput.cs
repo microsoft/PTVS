@@ -19,6 +19,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Win32.SafeHandles;
@@ -166,13 +167,23 @@ namespace Microsoft.VisualStudioTools.Project {
             bool visible,
             Redirector redirector,
             bool quoteArgs = true,
-            bool elevate = false
+            bool elevate = false,
+            Encoding outputEncoding = null,
+            Encoding errorEncoding = null
         ) {
             if (string.IsNullOrEmpty(filename)) {
                 throw new ArgumentException("Filename required", "filename");
             }
             if (elevate) {
-                return RunElevated(filename, arguments, workingDirectory, redirector, quoteArgs);
+                return RunElevated(
+                    filename,
+                    arguments,
+                    workingDirectory,
+                    redirector,
+                    quoteArgs,
+                    outputEncoding,
+                    errorEncoding
+                );
             }
 
             var psi = new ProcessStartInfo(filename);
@@ -187,6 +198,8 @@ namespace Microsoft.VisualStudioTools.Project {
             psi.UseShellExecute = false;
             psi.RedirectStandardError = !visible || (redirector != null);
             psi.RedirectStandardOutput = !visible || (redirector != null);
+            psi.StandardOutputEncoding = outputEncoding ?? psi.StandardOutputEncoding;
+            psi.StandardErrorEncoding = errorEncoding ?? outputEncoding ?? psi.StandardErrorEncoding;
             if (env != null) {
                 foreach (var kv in env) {
                     psi.EnvironmentVariables[kv.Key] = kv.Value;
@@ -216,7 +229,9 @@ namespace Microsoft.VisualStudioTools.Project {
             IEnumerable<string> arguments,
             string workingDirectory,
             Redirector redirector,
-            bool quoteArgs = true
+            bool quoteArgs = true,
+            Encoding outputEncoding = null,
+            Encoding errorEncoding = null
         ) {
             var outFile = Path.GetTempFileName();
             var errFile = Path.GetTempFileName();
@@ -249,7 +264,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 result.Exited += (s, e) => {
                     try {
                         try {
-                            var lines = File.ReadAllLines(outFile);
+                            var lines = File.ReadAllLines(outFile, outputEncoding ?? Encoding.Default);
                             foreach (var line in lines) {
                                 redirector.WriteLine(line);
                             }
@@ -268,7 +283,7 @@ namespace Microsoft.VisualStudioTools.Project {
 #endif
                         }
                         try {
-                            var lines = File.ReadAllLines(errFile);
+                            var lines = File.ReadAllLines(errFile, errorEncoding ?? outputEncoding ?? Encoding.Default);
                             foreach (var line in lines) {
                                 redirector.WriteErrorLine(line);
                             }

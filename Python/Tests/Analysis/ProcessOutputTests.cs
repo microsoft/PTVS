@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
@@ -126,6 +127,38 @@ namespace AnalysisTests {
                     Assert.AreEqual("  File \"<string>\", line 1, in <module>", error[1]);
                     Assert.AreEqual("AssertionError", error[2]);
                 }
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void ProcessOutputEncoding() {
+            var testDataPath = TestData.GetTempPath();
+            var testData = Path.Combine(testDataPath, "ProcessOutputEncoding.txt");
+            for (int i = 1; File.Exists(testData); ++i) {
+                testData = Path.Combine(testDataPath, string.Format("ProcessOutputEncoding{0}.txt", i));
+            }
+
+            const string testString = "‚‡”¾‰œðÝ";
+
+            File.WriteAllText(testData, testString, new UTF8Encoding(false));
+
+            using (var output = ProcessOutput.Run(
+                "cmd.exe",
+                new[] { "/C", "type " + Path.GetFileName(testData) },
+                testDataPath,
+                null,
+                false,
+                null,
+                outputEncoding: new UTF8Encoding(false)
+            )) {
+                output.Wait();
+                Assert.AreEqual(0, output.ExitCode);
+
+                foreach (var line in output.StandardOutputLines.Concat(output.StandardErrorLines)) {
+                    Console.WriteLine(line);
+                }
+
+                Assert.AreEqual(testString, output.StandardOutputLines.Single());
             }
         }
     }
