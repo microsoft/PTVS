@@ -1,10 +1,14 @@
-# Create your views here.
+"""
+Definition of views.
+"""
+
 from django.shortcuts import render
 from django.http import HttpRequest
 from django.template import RequestContext
 from datetime import datetime
 
 def home(request):
+    """Renders the home page."""
     assert isinstance(request, HttpRequest)
     return render(
         request,
@@ -17,6 +21,7 @@ def home(request):
     )
 
 def contact(request):
+    """Renders the contact page."""
     assert isinstance(request, HttpRequest)
     return render(
         request,
@@ -30,6 +35,7 @@ def contact(request):
     )
 
 def about(request):
+    """Renders the about page."""
     assert isinstance(request, HttpRequest)
     return render(
         request,
