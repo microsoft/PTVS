@@ -170,10 +170,7 @@
                                   Background="Transparent"
                                   ToolTipService.ShowDuration="{x:Static s:Int32.MaxValue}">
                                 <Grid.ToolTip>
-                                    <ToolTip Content="{Binding Message,Mode=OneWay}"
-                                             Placement="Bottom"
-                                             PlacementTarget="{Binding ElementName=RefreshingDBLabel}"
-                                             StaysOpen="True" />
+                                    <ToolTip Content="{Binding Message,Mode=OneWay}" Placement="Bottom" StaysOpen="True" />
                                 </Grid.ToolTip>
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="auto" />
