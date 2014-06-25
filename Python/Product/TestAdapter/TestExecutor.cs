@@ -167,6 +167,9 @@ namespace Microsoft.PythonTools.TestAdapter {
                 }
                 env[pythonPathVar] = pythonPath;
             }
+            foreach (var envVar in testCase.Environment) {
+                env[envVar.Key] = envVar.Value;
+            }
 
             using (var proc = ProcessOutput.Run(
                 !settings.IsWindowsApplication ? 
@@ -277,7 +280,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 projSettings.Factory = provider.ActiveInterpreter;
 
                 projSettings.ProjectHome = Path.GetFullPath(Path.Combine(proj.DirectoryPath, proj.GetPropertyValue(PythonConstants.ProjectHomeSetting) ?? "."));
-
+                
                 bool isWindowsApplication;
                 if (bool.TryParse(proj.GetPropertyValue(PythonConstants.IsWindowsApplicationSetting), out isWindowsApplication)) {
                     projSettings.IsWindowsApplication = isWindowsApplication;
@@ -292,6 +295,8 @@ namespace Microsoft.PythonTools.TestAdapter {
                         .Where(path => !string.IsNullOrEmpty(path))
                         .Select(path => Path.GetFullPath(Path.Combine(projSettings.ProjectHome, path)))
                 );
+
+                projSettings.DjangoSettingsModule = proj.GetPropertyValue("DjangoSettingsModule");
 
                 return projSettings;
             } finally {
@@ -339,6 +344,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 SearchPath = new List<string>();
                 WorkingDir = String.Empty;
                 ProjectHome = String.Empty;
+                DjangoSettingsModule = String.Empty;
             }
 
             public IPythonInterpreterFactory Factory { get; set; }
@@ -346,6 +352,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             public List<string> SearchPath { get; private set; }
             public string WorkingDir { get; set; }
             public string ProjectHome { get; set; }
+            public string DjangoSettingsModule { get; set; }
         }
 
         class PythonTestCase {
@@ -362,6 +369,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
             public readonly string WorkingDirectory;
             public readonly string SearchPaths;
+            public readonly IEnumerable<KeyValuePair<string, string>> Environment;
             public readonly IEnumerable<string> Arguments;
 
             public PythonTestCase(PythonProjectSettings settings, TestCase testCase, bool usePtvsd) {
@@ -416,6 +424,12 @@ namespace Microsoft.PythonTools.TestAdapter {
                 }
 
                 Arguments = arguments;
+
+                if (!string.IsNullOrEmpty(settings.DjangoSettingsModule)) {
+                    Environment = new[] { new KeyValuePair<string, string>("DJANGO_SETTINGS_MODULE", settings.DjangoSettingsModule) };
+                }
+
+                Environment = Environment ?? Enumerable.Empty<KeyValuePair<string, string>>();
             }
 
             private static int GetFreePort() {

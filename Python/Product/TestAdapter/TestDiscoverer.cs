@@ -71,12 +71,12 @@ namespace Microsoft.PythonTools.TestAdapter {
                             // worst, we'll get no results.
                             using (var analyzer = new TestAnalyzer(
                                 factory,
-                                ((MSBuild.Project)proj).FullPath,
+                                proj.FullPath,
                                 projectHome,
                                 TestExecutor.ExecutorUri
                             )) {
                                 // Provide all files to the test analyzer
-                                foreach (var item in ((MSBuild.Project)proj).GetItems("Compile")) {
+                                foreach (var item in proj.GetItems("Compile")) {
                                     string fileAbsolutePath = CommonUtils.GetAbsoluteFilePath(projectHome, item.EvaluatedInclude);
                                     string fullName;
 
