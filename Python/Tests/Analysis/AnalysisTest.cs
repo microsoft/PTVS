@@ -1454,6 +1454,48 @@ d = getattr(a, 'value', 'fob')
         }
 
         [TestMethod, Priority(0)]
+        public void SetAttr() {
+            var entry = ProcessText(@"
+class X(object):
+    pass
+x = X()
+
+setattr(x, 'a', 123)
+object.__setattr__(x, 'b', 3.1415)
+
+a = x.a
+b = x.b
+");
+
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("a", 1), BuiltinTypeId.Int);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("b", 1), BuiltinTypeId.Float);
+        }
+
+        [TestMethod, Priority(0)]
+        public void VarsSpecialization() {
+            var entry = ProcessText(@"
+x = vars()
+k = x.keys()[0]
+v = x['a']
+");
+
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("x", 1), BuiltinTypeId.Dict);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("k", 1), BuiltinTypeId_Str);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("v", 1), BuiltinTypeId.Object);
+        }
+
+        [TestMethod, Priority(0)]
+        public void DirSpecialization() {
+            var entry = ProcessText(@"
+x = dir()
+v = x[0]
+");
+
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("x", 1), BuiltinTypeId.List);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("v", 1), BuiltinTypeId_Str);
+        }
+
+        [TestMethod, Priority(0)]
         public void ListAppend() {
             var entry = ProcessText(@"
 x = []
@@ -2055,6 +2097,32 @@ l = 42j {1} C()
                 AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("k", text.IndexOf("k =")), "ForwardResult instance");
                 AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("l", text.IndexOf("l =")), "ReverseResult instance");
             }
+        }
+
+        [TestMethod, Priority(0)]
+        public void SequenceConcat() {
+            var text = @"
+x1 = ()
+y1 = x1 + ()
+y1v = y1[0]
+
+x2 = (1,2,3)
+y2 = x2 + (4.0,5.0,6.0)
+y2v = y2[0]
+
+x3 = [1,2,3]
+y3 = x3 + [4.0,5.0,6.0]
+y3v = y3[0]
+";
+
+            var entry = ProcessText(text);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("x1", 1), BuiltinTypeId.Tuple);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("y1", 1), BuiltinTypeId.Tuple);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("y1v", 1));
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("y2", 1), BuiltinTypeId.Tuple);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("y2v", 1), BuiltinTypeId.Int, BuiltinTypeId.Float);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("y3", 1), BuiltinTypeId.List);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("y3v", 1), BuiltinTypeId.Int, BuiltinTypeId.Float);
         }
 
         [TestMethod, Priority(0)]
@@ -2913,6 +2981,49 @@ for abc in x:
             values = entry.GetValuesByIndex("abc", code.IndexOf("print(abc)")).ToArray();
             Assert.AreEqual(1, values.Length);
             Assert.AreEqual("int", values[0].ShortDescription);
+        }
+
+        [TestMethod, Priority(0)]
+        public void SetOperators() {
+            var entry = ProcessText(@"
+x = {1, 2, 3}
+y = {3.14, 2.718}
+
+x_or_y = x | y
+x_and_y = x & y
+x_sub_y = x - y
+x_xor_y = x ^ y
+
+y_or_x = y | x
+y_and_x = y & x
+y_sub_x = y - x
+y_xor_x = y ^ x
+
+x_or_y_0 = next(iter(x_or_y))
+x_and_y_0 = next(iter(x_and_y))
+x_sub_y_0 = next(iter(x_sub_y))
+x_xor_y_0 = next(iter(x_xor_y))
+
+y_or_x_0 = next(iter(y_or_x))
+y_and_x_0 = next(iter(y_and_x))
+y_sub_x_0 = next(iter(y_sub_x))
+y_xor_x_0 = next(iter(y_xor_x))
+");
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("x", 0), BuiltinTypeId.Set);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("y", 0), BuiltinTypeId.Set);
+            foreach (var op in new[] { "or", "and", "sub", "xor" }) {
+                AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("x_" + op + "_y", 0), BuiltinTypeId.Set);
+                AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("y_" + op + "_x", 0), BuiltinTypeId.Set);
+
+                if (op == "or") {
+                    AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("x_" + op + "_y_0", 0), BuiltinTypeId.Int, BuiltinTypeId.Float);
+                    AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("y_" + op + "_x_0", 0), BuiltinTypeId.Int, BuiltinTypeId.Float);
+                } else {
+                    AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("x_" + op + "_y_0", 0), BuiltinTypeId.Int);
+                    AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("y_" + op + "_x_0", 0), BuiltinTypeId.Float);
+                }
+            }
+
         }
 
         [TestMethod, Priority(0)]

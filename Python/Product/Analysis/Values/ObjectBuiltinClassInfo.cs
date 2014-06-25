@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -19,20 +20,28 @@ using Microsoft.PythonTools.Parsing.Ast;
 namespace Microsoft.PythonTools.Analysis.Values {
     class ObjectBuiltinClassInfo : BuiltinClassInfo {
         private AnalysisValue _new;
+        private AnalysisValue _setattr;
 
         public ObjectBuiltinClassInfo(IPythonType classObj, PythonAnalyzer projectState)
             : base(classObj, projectState) {
         }
 
-        public override IAnalysisSet GetMember(Parsing.Ast.Node node, AnalysisUnit unit, string name) {
+        public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
             var res = base.GetMember(node, unit, name);
 
-            if (name == "__new__") {
-                return _new = _new ?? new SpecializedCallable(
-                    res.OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
-                    ObjectNew,
-                    false
-                );
+            switch (name) {
+                case "__new__":
+                    return _new = _new ?? new SpecializedCallable(
+                        res.OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
+                        ObjectNew,
+                        false
+                    );
+                case "__setattr__":
+                    return _setattr = _setattr ?? new SpecializedCallable(
+                        res.OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
+                        ObjectSetAttr,
+                        false
+                    );
             }
 
             return res;
@@ -54,5 +63,17 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
             return ProjectState.ClassInfos[BuiltinTypeId.Object].Instance;
         }
+
+        private IAnalysisSet ObjectSetAttr(Node node, Analysis.AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
+            if (args.Length >= 3) {
+                foreach (var ii in args[0].OfType<InstanceInfo>()) {
+                    foreach (var key in args[1].GetConstantValueAsString()) {
+                        ii.SetMember(node, unit, key, args[2]);
+                    }
+                }
+            }
+            return AnalysisSet.Empty;
+        }
+
     }
 }

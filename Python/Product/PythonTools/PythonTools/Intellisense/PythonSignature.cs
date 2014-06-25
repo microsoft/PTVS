@@ -95,12 +95,22 @@ namespace Microsoft.PythonTools.Intellisense {
             _documentation = overload.Documentation.LimitLines(15, stopAtFirstBlankLine: true);
 
             _parameters = new ReadOnlyCollection<IParameter>(parameters);
-            if (paramIndex < parameters.Length) {
+            if (lastKeywordArg == null) {
+                for (int i = 0; i < parameters.Length; ++i) {
+                    if (i == paramIndex || IsParamArray(parameters[i].Name)) {
+                        _currentParameter = parameters[i];
+                        break;
+                    }
+                }
+            } else if (paramIndex < parameters.Length) {
                 _currentParameter = parameters[paramIndex];
-            } else {
-                _currentParameter = null;
             }
         }
+
+        internal static bool IsParamArray(string name) {
+            return name != null && name.StartsWith("*") && !name.StartsWith("**");
+        }
+
 
         internal void SetCurrentParameter(IParameter newValue) {
             if (newValue != _currentParameter) {

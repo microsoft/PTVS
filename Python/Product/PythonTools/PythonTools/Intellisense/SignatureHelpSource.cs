@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+using System.Linq;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
 
@@ -34,14 +35,9 @@ namespace Microsoft.PythonTools.Intellisense {
             
             var sigs = _textBuffer.CurrentSnapshot.GetSignatures(span);
 
-            ISignature curSig = null;
-            
-            foreach (var sig in sigs.Signatures) {
-                if (sigs.ParameterIndex == 0 || sig.Parameters.Count > sigs.ParameterIndex) {
-                    curSig = sig;
-                    break;
-                }
-            }
+            ISignature curSig = sigs.Signatures
+                .OrderBy(s => s.Parameters.Count)
+                .FirstOrDefault(s => sigs.ParameterIndex < s.Parameters.Count);
             
             foreach (var sig in sigs.Signatures) {
                 signatures.Add(sig);

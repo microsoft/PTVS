@@ -428,12 +428,26 @@ namespace Microsoft.PythonTools.Analysis {
                 return;
             }
 
-            Directory.CreateDirectory(Path.GetDirectoryName(_logPrivate));
-            _listener = new StreamWriter(
-                new FileStream(_logPrivate, FileMode.Append, FileAccess.Write, FileShare.ReadWrite),
-                Encoding.UTF8);
-            _listener.WriteLine();
-            TraceInformation("Start analysis");
+            for (int retries = 10; retries > 0; --retries) {
+                try {
+                    Directory.CreateDirectory(Path.GetDirectoryName(_logPrivate));
+                    _listener = new StreamWriter(
+                        new FileStream(_logPrivate, FileMode.Append, FileAccess.Write, FileShare.ReadWrite),
+                        Encoding.UTF8
+                    );
+                    break;
+                } catch (IOException) {
+                } catch (UnauthorizedAccessException) {
+                }
+                Thread.Sleep(100);
+            }
+
+            if (_listener != null) {
+                _listener.WriteLine();
+                TraceInformation("Start analysis");
+            } else {
+                LogToGlobal(string.Format("WARN: Unable to log output to {0}", _logPrivate));
+            }
         }
 
         internal bool Prepare(bool firstRun) {

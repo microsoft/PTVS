@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Microsoft.PythonTools.Interpreter;
@@ -218,6 +219,15 @@ namespace Microsoft.PythonTools.Analysis {
         /// </summary>
         internal static bool IsObjectOrUnknown(this IAnalysisSet res) {
             return res.Count == 0 || (res.Count == 1 && res.First().TypeId == BuiltinTypeId.Object);
+        }
+
+        /// <summary>
+        /// Returns a sequence of all recognized string values in the set.
+        /// </summary>
+        internal static IEnumerable<string> GetConstantValueAsString(this IAnalysisSet values) {
+            return values
+                .Select(v => v.GetConstantValueAsString())
+                .Where(s => !string.IsNullOrEmpty(s));
         }
 
     }

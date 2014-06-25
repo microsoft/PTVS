@@ -133,9 +133,12 @@ namespace Microsoft.PythonTools.Analysis {
             SpecializeFunction(_builtinName, "min", ReturnUnionOfInputs);
             SpecializeFunction(_builtinName, "max", ReturnUnionOfInputs);
             SpecializeFunction(_builtinName, "getattr", SpecialGetAttr);
+            SpecializeFunction(_builtinName, "setattr", SpecialSetAttr);
             SpecializeFunction(_builtinName, "next", SpecialNext);
             SpecializeFunction(_builtinName, "iter", SpecialIter);
             SpecializeFunction(_builtinName, "super", SpecialSuper);
+            SpecializeFunction(_builtinName, "vars", ReturnsStringToObjectDict);
+            SpecializeFunction(_builtinName, "dir", ReturnsListOfString);
 
             // analyzing the copy module causes an explosion in types (it gets called w/ all sorts of types to be
             // copied, and always returns the same type).  So we specialize these away so they return the type passed
@@ -214,6 +217,32 @@ namespace Microsoft.PythonTools.Analysis {
             return unit.ProjectState.ClassInfos[BuiltinTypeId.Str].Instance;
         }
 
+        IAnalysisSet ReturnsListOfString(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
+            return unit.Scope.GetOrMakeNodeValue(node, n => {
+                var vars = new VariableDef();
+                vars.AddTypes(unit, unit.ProjectState.ClassInfos[BuiltinTypeId.Str].Instance);
+                return new ListInfo(
+                    new[] { vars },
+                    unit.ProjectState.ClassInfos[BuiltinTypeId.List],
+                    node,
+                    unit.ProjectEntry
+                );
+            });
+        }
+
+        IAnalysisSet ReturnsStringToObjectDict(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
+            return unit.Scope.GetOrMakeNodeValue(node, n => {
+                var dict = new DictionaryInfo(unit.ProjectEntry, node);
+                dict.AddTypes(
+                    node,
+                    unit,
+                    unit.ProjectState.ClassInfos[BuiltinTypeId.Str].Instance,
+                    unit.ProjectState.ClassInfos[BuiltinTypeId.Object].Instance
+                );
+                return dict;
+            });
+        }
+
         IAnalysisSet SpecialGetAttr(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
             var res = AnalysisSet.Empty;
             if (args.Length >= 2) {
@@ -233,6 +262,17 @@ namespace Microsoft.PythonTools.Analysis {
                 }
             }
             return res;
+        }
+
+        IAnalysisSet SpecialSetAttr(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
+            if (args.Length >= 3) {
+                foreach (var ii in args[0].OfType<InstanceInfo>()) {
+                    foreach (var key in args[1].GetConstantValueAsString()) {
+                        ii.SetMember(node, unit, key, args[2]);
+                    }
+                }
+            }
+            return AnalysisSet.Empty;
         }
 
         IAnalysisSet SpecialNext(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {

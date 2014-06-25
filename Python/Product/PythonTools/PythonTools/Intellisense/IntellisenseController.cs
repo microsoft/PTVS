@@ -14,6 +14,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Windows.Input;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
@@ -275,59 +276,43 @@ namespace Microsoft.PythonTools.Intellisense {
                     PositionAffinity.Successor
                 );
 
-                if (targetPt != null) {
-                    var span = targetPt.Value.Snapshot.CreateTrackingSpan(targetPt.Value.Position, 0, SpanTrackingMode.EdgeInclusive);
-                    
-                    var sigs = targetPt.Value.Snapshot.GetSignatures(span);
-                    bool retrigger = false;
-                    if (sigs.Signatures.Count == _sigHelpSession.Signatures.Count) {
-                        for (int i = 0; i < sigs.Signatures.Count && !retrigger; i++) {
-                            var leftSig = sigs.Signatures[i];
-                            var rightSig = _sigHelpSession.Signatures[i];
+                if (targetPt == null) {
+                    return;
+                }
+                var span = targetPt.Value.Snapshot.CreateTrackingSpan(targetPt.Value.Position, 0, SpanTrackingMode.EdgeInclusive);
 
-                            if (leftSig.Parameters.Count == rightSig.Parameters.Count) {
-                                for (int j = 0; j < leftSig.Parameters.Count; j++) {
-                                    var leftParam = leftSig.Parameters[j];
-                                    var rightParam = rightSig.Parameters[j];
+                var sigs = targetPt.Value.Snapshot.GetSignatures(span);
+                bool retrigger = false;
+                if (sigs.Signatures.Count == _sigHelpSession.Signatures.Count) {
+                    for (int i = 0; i < sigs.Signatures.Count && !retrigger; i++) {
+                        var leftSig = sigs.Signatures[i];
+                        var rightSig = _sigHelpSession.Signatures[i];
 
-                                    if (leftParam.Name != rightParam.Name || leftParam.Documentation != rightParam.Documentation) {
-                                        retrigger = true;
-                                        break;
-                                    }
-                                }
-                            }
+                        if (leftSig.Parameters.Count == rightSig.Parameters.Count) {
+                            for (int j = 0; j < leftSig.Parameters.Count; j++) {
+                                var leftParam = leftSig.Parameters[j];
+                                var rightParam = rightSig.Parameters[j];
 
-                            if (leftSig.Content != rightSig.Content || leftSig.Documentation != rightSig.Documentation) {
-                                retrigger = true;
-                            }
-                        }
-                    } else {
-                        retrigger = true;
-                    }
-
-                    if (retrigger) {
-                        _sigHelpSession.Dismiss();
-                        TriggerSignatureHelp();
-                    } else {
-                        int curParam = sigs.ParameterIndex;
-                        if (sigs.LastKeywordArgument != null) {
-                            curParam = Int32.MaxValue;
-                            for (int i = 0; i < sig.Parameters.Count; i++) {
-                                if (sig.Parameters[i].Name == sigs.LastKeywordArgument) {
-                                    curParam = i;
+                                if (leftParam.Name != rightParam.Name || leftParam.Documentation != rightParam.Documentation) {
+                                    retrigger = true;
                                     break;
                                 }
                             }
                         }
 
-                        if (curParam < sig.Parameters.Count) {
-                            sig.SetCurrentParameter(sig.Parameters[curParam]);
-                        }else if(sigs.LastKeywordArgument == "") {
-                            sig.SetCurrentParameter(null);
-                        } else {
-                            CommaFindBestSignature(curParam, sigs.LastKeywordArgument);
+                        if (leftSig.Content != rightSig.Content || leftSig.Documentation != rightSig.Documentation) {
+                            retrigger = true;
                         }
                     }
+                } else {
+                    retrigger = true;
+                }
+
+                if (retrigger) {
+                    _sigHelpSession.Dismiss();
+                    TriggerSignatureHelp();
+                } else {
+                    CommaFindBestSignature(sigs.ParameterIndex, sigs.LastKeywordArgument);
                 }
             }
         }
@@ -335,32 +320,40 @@ namespace Microsoft.PythonTools.Intellisense {
         private void CommaFindBestSignature(int curParam, string lastKeywordArg) {
             // see if we have a signature which accomodates this...
 
-            // TODO: We should also take into account param arrays
             // TODO: We should also get the types of the arguments and use that to
             // pick the best signature when the signature includes types.
-            foreach (var availableSig in _sigHelpSession.Signatures) {
-                if (lastKeywordArg != null) {
-                    for (int i = 0; i < availableSig.Parameters.Count; i++) {
-                        if (availableSig.Parameters[i].Name == lastKeywordArg) {
-                            _sigHelpSession.SelectedSignature = availableSig;
-
-                            PythonSignature sig = availableSig as PythonSignature;
-                            if (sig != null) {
-                                sig.SetCurrentParameter(sig.Parameters[i]);
-                            }
-                            break;
-
-                        }
+            var bestSig = _sigHelpSession.SelectedSignature as PythonSignature;
+            if (bestSig != null) {
+                for (int i = 0; i < bestSig.Parameters.Count; ++i) {
+                    if (bestSig.Parameters[i].Name == lastKeywordArg ||
+                        lastKeywordArg == null && (i == curParam || PythonSignature.IsParamArray(bestSig.Parameters[i].Name))
+                    ) {
+                        bestSig.SetCurrentParameter(bestSig.Parameters[i]);
+                        _sigHelpSession.SelectedSignature = bestSig;
+                        return;
                     }
-                } else if (availableSig.Parameters.Count > curParam) {
-                    _sigHelpSession.SelectedSignature = availableSig;
-
-                    PythonSignature sig = availableSig as PythonSignature;
-                    if (sig != null) {
-                        sig.SetCurrentParameter(sig.Parameters[curParam]);
-                    }
-                    break;
                 }
+            }
+
+            PythonSignature fallback = null;
+            foreach (var sig in _sigHelpSession.Signatures.OfType<PythonSignature>().OrderBy(s => s.Parameters.Count)) {
+                fallback = sig;
+                for (int i = 0; i < sig.Parameters.Count; ++i) {
+                    if (sig.Parameters[i].Name == lastKeywordArg ||
+                        lastKeywordArg == null && (i == curParam || PythonSignature.IsParamArray(sig.Parameters[i].Name))
+                    ) {
+                        sig.SetCurrentParameter(sig.Parameters[i]);
+                        _sigHelpSession.SelectedSignature = sig;
+                        return;
+                    }
+                }
+            }
+
+            if (fallback != null) {
+                fallback.SetCurrentParameter(null);
+                _sigHelpSession.SelectedSignature = fallback;
+            } else {
+                _sigHelpSession.Dismiss();
             }
         }
 

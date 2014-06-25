@@ -51,6 +51,18 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override IAnalysisSet BinaryOperation(Node node, AnalysisUnit unit, PythonOperator operation, IAnalysisSet rhs) {
             var res = AnalysisSet.Empty;
             switch (operation) {
+                case PythonOperator.Add:
+                    var seq = (SequenceInfo)unit.Scope.GetOrMakeNodeValue(node, _ => 
+                        new SequenceInfo(new[] { new VariableDef() }, ClassInfo, node, unit.ProjectEntry)
+                    );
+                    var idx = seq.IndexTypes[0];
+                    idx.AddTypes(unit, GetEnumeratorTypes(node, unit));
+
+                    foreach (var type in rhs.Where(t => t.IsOfType(ClassInfo))) {
+                        idx.AddTypes(unit, type.GetEnumeratorTypes(node, unit));
+                    }
+                    res = res.Union(seq);
+                    break;
                 case PythonOperator.Multiply:
                     foreach (var type in rhs) {
                         var typeId = type.TypeId;

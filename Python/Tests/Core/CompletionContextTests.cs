@@ -332,7 +332,11 @@ except (None)"}) {
                     MemberCompletionTest(-1, test, expr);
                 }
             }
+        }
 
+        [TestMethod, Priority(0)]
+        public void SignatureHelp() {
+            var prefixes = new[] { "", "(", "a = ", "f(", "l[", "{", "if " };
             var sigs = new[] { 
                 new { Expr = "f(", Param = 0, Function="f" } ,
                 new { Expr = "f(1,", Param = 1, Function="f" },
@@ -361,12 +365,11 @@ except (None)"}) {
                 new { Expr = "f(0, [a for b in c],", Param = 2, Function="f" },
                 new { Expr = "f(0, (a for b in c),", Param = 2, Function="f" },
                 new { Expr = "f(0, {a for b in c},", Param = 2, Function="f" },
-                new { Expr = "f([1,2", Param = 0, Function="f" } ,
-                new { Expr = "f([1,2,", Param = 0, Function="f" } ,
-                new { Expr = "f({1:2,", Param = 0, Function="f" } ,
-                new { Expr = "f({1,", Param = 0, Function="f" } ,
-                new { Expr = "f({1:2", Param = 0, Function="f" } ,
-                new { Expr = "f({1", Param = 0, Function="f" } ,
+                new { Expr = "f([1,2", Param = 0, Function="f" },
+                new { Expr = "f([1,2,", Param = 0, Function="f" },
+                new { Expr = "f({1:2,", Param = 0, Function="f" },
+                new { Expr = "f({1,", Param = 0, Function="f" },
+                new { Expr = "f({1:2", Param = 0, Function="f" },
             };
 
             foreach (var prefix in prefixes) {
@@ -376,6 +379,15 @@ except (None)"}) {
                     SignatureTest(-1, test, sig.Function, sig.Param);
                 }
             }
+        }
+
+        [TestMethod, Priority(0)]
+        public void SignatureHelpStarArgs() {
+            SignatureAnalysis sigResult;
+            SignatureTest(-1, @"def f(a, *b, c=None): pass
+f(1, 2, 3, 4,", "f", 4, PythonLanguageVersion.V27, true, out sigResult);
+            Assert.IsTrue(sigResult.Signatures.Count >= 1, "No signature analysis results");
+            Assert.AreEqual("*b", sigResult.Signatures[0].CurrentParameter.Name);
         }
 
         [TestMethod, Priority(0)]

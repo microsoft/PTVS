@@ -59,6 +59,7 @@ namespace Microsoft.PythonTools.Project {
                     return null;
                 }
                 wnd._view.VirtualEnvName = path;
+                wnd._view.WillInstallRequirementsTxt = false;
                 if (wnd._view.WillAddVirtualEnv) {
                     return wnd._view;
                 }
