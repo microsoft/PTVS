@@ -127,19 +127,19 @@ f(x=42, y = 'abc')
 
         [TestMethod, Priority(0)]
         public void TestPackageImportStar() {
-            var fobInit = GetSourceUnit("from oar import *", @"C:\\Test\\Lib\\fob\\__init__.py");
-            var oarInit = GetSourceUnit("from baz import *", @"C:\\Test\\Lib\\fob\\oar\\__init__.py");
-            var baz = GetSourceUnit("import quox\r\nfunc = quox.func", @"C:\\Test\\Lib\\fob\\oar\\baz.py");
-            var quox = GetSourceUnit("def func(): return 42", @"C:\\Test\\Lib\\fob\\oar\\quox.py");
+            var fobInit = GetSourceUnit("from oar import *", @"C:\Test\Lib\fob\__init__.py");
+            var oarInit = GetSourceUnit("from baz import *", @"C:\Test\Lib\fob\oar\__init__.py");
+            var baz = GetSourceUnit("import quox\r\nfunc = quox.func", @"C:\Test\Lib\fob\oar\baz.py");
+            var quox = GetSourceUnit("def func(): return 42", @"C:\Test\Lib\fob\oar\quox.py");
 
             var state = CreateAnalyzer();
 
             AnalysisLog.Output = Console.Out;
             try {
-                var fobInitState = state.AddModule("fob", @"C:\\Test\\Lib\\fob\\__init__.py");
-                var oarInitState = state.AddModule("fob.oar", @"C:\\Test\\Lib\\fob\\oar\\__init__.py");
-                var bazState = state.AddModule("fob.oar.baz", @"C:\\Test\\Lib\\fob\\oar\\baz.py");
-                var quoxState = state.AddModule("fob.oar.quox", @"C:\\Test\\Lib\\fob\\oar\\quox.py");
+                var fobInitState = state.AddModule("fob", @"C:\Test\Lib\fob\__init__.py");
+                var oarInitState = state.AddModule("fob.oar", @"C:\Test\Lib\fob\oar\__init__.py");
+                var bazState = state.AddModule("fob.oar.baz", @"C:\Test\Lib\fob\oar\baz.py");
+                var quoxState = state.AddModule("fob.oar.quox", @"C:\Test\Lib\fob\oar\quox.py");
 
                 Prepare(fobInitState, fobInit);
                 Prepare(oarInitState, oarInit);
@@ -164,7 +164,58 @@ f(x=42, y = 'abc')
                 }
             }
         }
-        
+
+        [TestMethod, Priority(0)]
+        public void TestClassAssignSameName() {
+            var text = @"x = 123
+
+class A:
+    x = x
+    pass
+
+class B:
+    x = 3.1415
+    x = x
+";
+
+            var entry = ProcessText(text);
+
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("x", 0), BuiltinTypeId.Int);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("x", text.IndexOf("x =")), BuiltinTypeId.Int);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("x", text.IndexOf("pass")), BuiltinTypeId.Int);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("A.x", 0), BuiltinTypeId.Int);
+            
+            // Arguably this should only be float, but since we don't support
+            // definite assignment having both int and float is correct now.
+            //
+            // It also means we handle this case consistently:
+            //
+            // class B(object):
+            //     if False:
+            //         x = 3.1415
+            //     x = x
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("B.x", 0), BuiltinTypeId.Int, BuiltinTypeId.Float);
+        }
+
+        [TestMethod, Priority(0)]
+        public void TestFunctionAssignSameName() {
+            var text = @"x = 123
+
+def f():
+    x = x
+    return x
+
+y = f()
+";
+
+            var entry = ProcessText(text);
+
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("x", 0), BuiltinTypeId.Int);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("x", text.IndexOf("x =")), BuiltinTypeId.Int);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("x", text.IndexOf("return")), BuiltinTypeId.Int);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("y", 0), BuiltinTypeId.Int);
+        }
+
         /// <summary>
         /// Binary operators should assume their result type
         /// https://pytools.codeplex.com/workitem/1575

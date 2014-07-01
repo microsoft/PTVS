@@ -490,23 +490,16 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         internal override void AnalyzeWorker(DDG ddg, CancellationToken cancel) {
-            // evaluate the 1st iterator in the outer scope
-            ddg.Scope = _outerUnit.Scope;
-
             var comp = (Comprehension)Ast;
-            ComprehensionFor forComp = comp.Iterators[0] as ComprehensionFor;
-
-            var listTypes = AnalysisSet.Empty;
-            if (forComp != null) {
-                listTypes = ddg._eval.Evaluate(forComp.List);
-            }
-
-            ddg.Scope = Scope;
+            var forComp = comp.Iterators[0] as ComprehensionFor;
 
             if (forComp != null) {
-                foreach (var listType in listTypes) {
-                    ddg._eval.AssignTo(comp, forComp.Left, listType.GetEnumeratorTypes(comp, this));
-                }
+                // evaluate the 1st iterator in the outer scope
+                ddg.Scope = _outerUnit.Scope;
+                var listTypes = ddg._eval.Evaluate(forComp.List);
+                ddg.Scope = Scope;
+
+                ddg._eval.AssignTo(comp, forComp.Left, listTypes.GetEnumeratorTypes(comp, this));
             }
 
             ExpressionEvaluator.WalkComprehension(ddg._eval, (Comprehension)Ast);

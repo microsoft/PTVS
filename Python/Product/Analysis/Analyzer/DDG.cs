@@ -142,6 +142,23 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
         public override bool Walk(AssignmentStatement node) {
             var valueType = _eval.Evaluate(node.Right);
+            
+            // For self assignments (e.g. "fob = fob"), include values from 
+            // outer scopes, otherwise such assignments will always be unknown
+            // because we use the unassigned variable for the RHS.
+            var ne = node.Right as NameExpression;
+            InterpreterScope oldScope;
+            if (ne != null &&
+                (oldScope = _eval.Scope).OuterScope != null &&
+                node.Left.OfType<NameExpression>().Any(n => n.Name == ne.Name)) {
+                try {
+                    _eval.Scope = _eval.Scope.OuterScope;
+                    valueType = valueType.Union(_eval.Evaluate(node.Right));
+                } finally {
+                    _eval.Scope = oldScope;
+                }
+            }
+
             foreach (var left in node.Left) {
                 _eval.AssignTo(node, left, valueType);
             }
