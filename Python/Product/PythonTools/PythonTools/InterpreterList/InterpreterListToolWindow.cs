@@ -23,7 +23,7 @@ namespace Microsoft.PythonTools.InterpreterList {
     class InterpreterListToolWindow : ToolWindowPane {
         public InterpreterListToolWindow() {
             BitmapResourceID = PythonConstants.ResourceIdForReplImages;
-            BitmapIndex = 1;
+            BitmapIndex = 0;
             Caption = SR.GetString(SR.Environments);
 
             Content = new InterpreterList(

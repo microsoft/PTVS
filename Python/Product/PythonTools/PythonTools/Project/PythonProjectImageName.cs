@@ -23,7 +23,7 @@ namespace Microsoft.PythonTools.Project {
         Interpreter,
         MissingInterpreter,
         ActiveInterpreter,
-        InterpretersContainer = Interpreter,
-        InterpretersPackage = SearchPath
+        InterpretersPackage,
+        InterpretersContainer = Interpreter
     }
 }

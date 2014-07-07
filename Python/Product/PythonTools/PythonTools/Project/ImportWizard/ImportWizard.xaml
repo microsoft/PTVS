@@ -48,7 +48,7 @@
         
         <Grid Grid.Column="0" Grid.RowSpan="3"
               Background="{DynamicResource {x:Static wpf:Controls.BackgroundAccentKey}}">
-            <Image Source="/Microsoft.PythonTools;component/PyProjectBig.png"
+            <Image Source="/Microsoft.PythonTools;component/PythonProjectBig.ico"
                    Stretch="Uniform"
                    MaxWidth="64px"
                    Margin="24px"

@@ -1111,7 +1111,7 @@
     <EmbeddedResource Include="..\Icons\Dev$(VSTarget)\PythonImageList.bmp" Condition="'$(VSTarget)' == '10.0'" />
     <EmbeddedResource Include="..\Icons\Dev$(VSTarget)\PythonImageList.png" Condition="'$(VSTarget)' != '10.0'" />
     <Resource Include="..\Icons\Dev$(VSTarget)\PyFile.png" />
-    <Resource Include="..\Icons\Dev$(VSTarget)\PyProjectBig.png" />
+    <Resource Include="..\Icons\Dev$(VSTarget)\PythonProjectBig.ico" />
     <EmbeddedResource Include="Legacy\ObsoleteResources.resx">
       <ManifestResourceName>Microsoft.VisualStudioTools.SharedProject</ManifestResourceName>
     </EmbeddedResource>
@@ -1169,8 +1169,11 @@
     <EmbeddedResource Include="..\Icons\Dev$(VSTarget)\completionset.bmp">
       <Link>Resources\completionset.bmp</Link>
     </EmbeddedResource>
-    <EmbeddedResource Include="..\Icons\Dev$(VSTarget)\PythonPackageIcons.bmp">
+    <EmbeddedResource Include="..\Icons\Dev$(VSTarget)\PythonPackageIcons.bmp" Condition="$(VSTarget) == '10.0'">
       <Link>Resources\PythonPackageIcons.bmp</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\Icons\Dev$(VSTarget)\PythonPackageIcons.png" Condition="$(VSTarget) != '10.0'">
+      <Link>Resources\PythonPackageIcons.png</Link>
     </EmbeddedResource>
     <ConditionalEmbeddedResource Include="VSPackage.resx">
       <SubType>Designer</SubType>

@@ -44,7 +44,11 @@ namespace Microsoft.PythonTools.Project {
             for (HierarchyNode child = this.FirstChild; child != null; child = child.NextSibling) {
                 if (ModulePath.IsInitPyFile(child.Url)) {
                     if (_imageList == null) {
+#if DEV11_OR_LATER
+                        _imageList = Utilities.GetImageList(Assembly.GetExecutingAssembly().GetManifestResourceStream("Microsoft.Resources.PythonPackageIcons.png"));
+#else
                         _imageList = Utilities.GetImageList(Assembly.GetExecutingAssembly().GetManifestResourceStream("Microsoft.Resources.PythonPackageIcons.bmp"));
+#endif
                     }
 
                     return open ?
