@@ -78,7 +78,7 @@ namespace Microsoft.PythonTools.Intellisense {
         
         public bool IsValid {
             get {
-                if (!_squiggle || _span == null || string.IsNullOrEmpty(ErrorType)) {
+                if (!_squiggle || _snapshot == null || _span == null || string.IsNullOrEmpty(ErrorType)) {
                     return false;
                 }
                 return true;
@@ -96,7 +96,11 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public ErrorTaskItem ToErrorTaskItem(EntryKey key) {
-            return new ErrorTaskItem(_rawSpan, _message, key.Entry.FilePath) { Priority = _priority };
+            return new ErrorTaskItem(
+                _rawSpan,
+                _message,
+                (key.Entry != null ? key.Entry.FilePath : null) ?? string.Empty
+            ) { Priority = _priority };
         }
 
         #endregion
@@ -506,8 +510,6 @@ namespace Microsoft.PythonTools.Intellisense {
                                 continue;
                             }
 
-                            // Don't care if functions is empty - we need to
-                            // perform the refresh to clear out old squiggles
                             foreach (var item in items) {
                                 if (item.IsValid) {
                                     List<TaskProviderItem> itemList;
@@ -532,7 +534,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     }
                 }
 
-                if (bufferToErrorList.Any()) {
+                if (_errorProvider != null) {
                     foreach (var kv in bufferToErrorList) {
                         var tagger = _errorProvider.GetErrorTagger(kv.Key);
                         if (tagger == null) {
@@ -542,18 +544,18 @@ namespace Microsoft.PythonTools.Intellisense {
                         if (buffers.Remove(kv.Key)) {
                             tagger.RemoveTagSpans(span => span.Span.TextBuffer == kv.Key);
                         }
-                        
+
                         foreach (var taskProviderItem in kv.Value) {
                             taskProviderItem.CreateSquiggleSpan(tagger);
                         }
                     }
-                }
 
-                if (_errorProvider != null && buffers.Any()) {
-                    // Clear tags for any remaining buffers.
-                    foreach (var buffer in buffers) {
-                        var tagger = _errorProvider.GetErrorTagger(buffer);
-                        tagger.RemoveTagSpans(span => span.Span.TextBuffer == buffer);
+                    if (buffers.Any()) {
+                        // Clear tags for any remaining buffers.
+                        foreach (var buffer in buffers) {
+                            var tagger = _errorProvider.GetErrorTagger(buffer);
+                            tagger.RemoveTagSpans(span => span.Span.TextBuffer == buffer);
+                        }
                     }
                 }
             });
