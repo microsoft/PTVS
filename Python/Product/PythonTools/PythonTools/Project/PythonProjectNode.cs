@@ -1347,14 +1347,17 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private async void ShowAddVirtualEnvironmentWithErrorHandling(bool browseForExisting) {
+            var service = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
+            var statusBar = (IVsStatusbar)GetService(typeof(SVsStatusbar));
+            object index = (short)0;
+            statusBar.Animation(1, ref index);
             try {
-                await ShowAddVirtualEnvironment(browseForExisting);
+                await AddVirtualEnvironment.ShowDialog(this, service, browseForExisting);
             } catch (Exception ex) {
                 if (ex.IsCriticalException()) {
                     throw;
                 }
 
-                var statusBar = (IVsStatusbar)GetService(typeof(SVsStatusbar));
                 statusBar.SetText(SR.GetString(SR.VirtualEnvAddFailed));
 
                 Debug.WriteLine("Failed to add virtual environment.\r\n{0}", ex.InnerException ?? ex);
@@ -1364,51 +1367,8 @@ namespace Microsoft.PythonTools.Project {
                 } catch (InvalidOperationException) {
                     // Activity log may be unavailable
                 }
-            }
-        }
-
-        /// <summary>
-        /// Executes Add Interpreter menu command.
-        /// </summary>
-        private async Task ShowAddVirtualEnvironment(bool browseForExisting) {
-            var service = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
-
-            var data = AddVirtualEnvironment.ShowDialog(this, service, browseForExisting);
-
-            if (data == null) {
-                throw new OperationCanceledException();
-            }
-
-            await data.WaitForReady();
-
-            var doCreate = data.WillCreateVirtualEnv;
-            var path = data.VirtualEnvPath;
-            var baseInterp = data.BaseInterpreter.Interpreter;
-
-            var factory = await CreateOrAddVirtualEnvironment(
-                service,
-                data.WillCreateVirtualEnv,
-                data.VirtualEnvPath,
-                data.BaseInterpreter.Interpreter,
-                data.UseVEnv
-            );
-
-            if (factory != null && data.WillInstallRequirementsTxt) {
-                var txt = CommonUtils.GetAbsoluteFilePath(ProjectHome, "requirements.txt");
-                if (File.Exists(txt)) {
-                    var redirector = OutputWindowRedirector.GetGeneral(Site);
-                    redirector.WriteLine(SR.GetString(SR.RequirementsTxtInstalling, txt));
-                    if (await Pip.Install(
-                        factory,
-                        "-r " + ProcessOutput.QuoteSingleArgument(txt),
-                        false,  // never elevate for a virtual environment
-                        redirector
-                    )) {
-                        redirector.WriteLine(SR.GetString(SR.PackageInstallSucceeded, Path.GetFileName(txt)));
-                    } else {
-                        redirector.WriteErrorLine(SR.GetString(SR.PackageInstallFailed, Path.GetFileName(txt)));
-                    }
-                }
+            } finally {
+                statusBar.Animation(0, ref index);
             }
         }
 
@@ -1420,13 +1380,17 @@ namespace Microsoft.PythonTools.Project {
             bool preferVEnv = false
         ) {
             if (create && preferVEnv) {
-                await VirtualEnv.CreateWithVEnv(baseInterp,
+                await VirtualEnv.CreateWithVEnv(
+                    baseInterp,
                     path,
-                    OutputWindowRedirector.GetGeneral(Site));
+                    OutputWindowRedirector.GetGeneral(Site)
+                );
             } else if (create) {
-                await VirtualEnv.CreateAndInstallDependencies(baseInterp,
+                await VirtualEnv.CreateAndInstallDependencies(
+                    baseInterp,
                     path,
-                    OutputWindowRedirector.GetGeneral(Site));
+                    OutputWindowRedirector.GetGeneral(Site)
+                );
             }
 
             var existing = _interpreters.FindInterpreter(path);

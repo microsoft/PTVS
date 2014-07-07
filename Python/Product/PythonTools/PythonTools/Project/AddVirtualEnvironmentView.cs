@@ -29,11 +29,12 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.InterpreterList;
 using Microsoft.VisualStudio.PlatformUI;
 using Microsoft.VisualStudioTools;
+using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project {
     sealed class AddVirtualEnvironmentView : DependencyObject, INotifyPropertyChanged {
         readonly IInterpreterOptionsService _interpreterService;
-        readonly HashSet<InterpreterView> _busy;
+        private readonly PythonProjectNode _project;
         internal readonly string _projectHome;
         private readonly SemaphoreSlim _ready = new SemaphoreSlim(1);
 
@@ -45,14 +46,13 @@ namespace Microsoft.PythonTools.Project {
 
 
         public AddVirtualEnvironmentView(
-            string projectHome,
+            PythonProjectNode project,
             IInterpreterOptionsService interpreterService,
             IPythonInterpreterFactory selectInterpreter
         ) {
             _interpreterService = interpreterService;
-            _projectHome = projectHome;
-            VirtualEnvBasePath = _projectHome;
-            _busy = new HashSet<InterpreterView>();
+            _project = project;
+            VirtualEnvBasePath = _projectHome = project.ProjectHome;
             Interpreters = new ObservableCollection<InterpreterView>(InterpreterView.GetInterpreters(interpreterService));
             var selection = Interpreters.FirstOrDefault(v => v.Interpreter == selectInterpreter);
             if (selection == null) {
@@ -482,6 +482,42 @@ namespace Microsoft.PythonTools.Project {
                 new PropertyMetadata());
         public static readonly DependencyProperty InterpretersProperty =
             InterpretersPropertyKey.DependencyProperty;
+
+
+
+        public bool IsWorking {
+            get { return (bool)GetValue(IsWorkingProperty); }
+            private set { SafeSetValue(IsWorkingPropertyKey, value); }
+        }
+
+        private static readonly DependencyPropertyKey IsWorkingPropertyKey =
+            DependencyProperty.RegisterReadOnly("IsWorking",
+                typeof(bool),
+                typeof(AddVirtualEnvironmentView),
+                new PropertyMetadata(false));
+        public static readonly DependencyProperty IsWorkingProperty =
+            IsWorkingPropertyKey.DependencyProperty;
+
+        public async Task Create() {
+            IsWorking = true;
+            try {
+                var op = new AddVirtualEnvironmentOperation(
+                    _project,
+                    VirtualEnvPath,
+                    BaseInterpreter.Interpreter,
+                    WillCreateVirtualEnv,
+                    UseVEnv,
+                    WillInstallRequirementsTxt,
+                    OutputWindowRedirector.GetGeneral(_project.Site)
+                );
+                await op.Run();
+            } finally {
+                IsWorking = false;
+                RefreshCanCreateVirtualEnv(VirtualEnvPath);
+            }
+        }
+
+
 
         private object SafeGetValue(DependencyProperty property) {
             if (Dispatcher.CheckAccess()) {

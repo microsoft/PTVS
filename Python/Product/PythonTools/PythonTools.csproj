@@ -299,6 +299,7 @@
     <Compile Include="PythonTools\Options\PythonGeneralOptionsPage.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="PythonTools\Project\AddVirtualEnvironmentOperation.cs" />
     <Compile Include="PythonTools\Project\AnalyzerChangingEventArgs.cs" />
     <Compile Include="PythonTools\Project\Attributes.cs" />
     <Compile Include="PythonTools\Project\ProjectResources.cs" />

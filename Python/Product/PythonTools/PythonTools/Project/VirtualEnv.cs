@@ -137,7 +137,7 @@ namespace Microsoft.PythonTools.Project {
                     await Pip.InstallPip(factory, elevate, output);
                 }
                 if (!await Install(factory, output)) {
-                    throw new InvalidOperationException(SR.GetString(SR.VirtualEnvCreationFailed));
+                    throw new InvalidOperationException(SR.GetString(SR.VirtualEnvCreationFailed, path));
                 }
             }
 

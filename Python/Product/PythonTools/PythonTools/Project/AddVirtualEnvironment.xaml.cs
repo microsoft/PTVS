@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -36,45 +37,50 @@ namespace Microsoft.PythonTools.Project {
     /// Interaction logic for AddInterpreter.xaml
     /// </summary>
     partial class AddVirtualEnvironment : DialogWindowVersioningWorkaround {
-        readonly AddVirtualEnvironmentView _view;
+        private readonly AddVirtualEnvironmentView _view;
+        private Task _currentOperation;
 
         private AddVirtualEnvironment(PythonProjectNode project, IInterpreterOptionsService service) {
-            _view = new AddVirtualEnvironmentView(project.ProjectHome, service, project.Interpreters.ActiveInterpreter);
+            _view = new AddVirtualEnvironmentView(project, service, project.Interpreters.ActiveInterpreter);
             _view.PropertyChanged += View_PropertyChanged;
             DataContext = _view;
 
             InitializeComponent();
         }
 
-        public static AddVirtualEnvironmentView ShowDialog(
+        public static async Task ShowDialog(
             PythonProjectNode project,
             IInterpreterOptionsService service,
             bool browseForExisting = false
         ) {
             var wnd = new AddVirtualEnvironment(project, service);
+            var view = wnd._view;
 
             if (browseForExisting) {
                 var path = PythonToolsPackage.Instance.BrowseForDirectory(IntPtr.Zero, project.ProjectHome);
                 if (string.IsNullOrEmpty(path)) {
-                    return null;
+                    throw new OperationCanceledException();
                 }
-                wnd._view.VirtualEnvName = path;
-                wnd._view.WillInstallRequirementsTxt = false;
-                if (wnd._view.WillAddVirtualEnv) {
-                    return wnd._view;
+                view.VirtualEnvName = path;
+                view.WillInstallRequirementsTxt = false;
+                await view.WaitForReady();
+                if (view.WillAddVirtualEnv) {
+                    await view.Create();
+                    return;
                 }
                 
-                wnd._view.ShowBrowsePathError = true;
-                wnd._view.BrowseOrigPrefix = VirtualEnv.GetOrigPrefixPath(path);
+                view.ShowBrowsePathError = true;
+                view.BrowseOrigPrefix = VirtualEnv.GetOrigPrefixPath(path);
             }
 
             wnd.VirtualEnvPathTextBox.ScrollToEnd();
             wnd.VirtualEnvPathTextBox.SelectAll();
             wnd.VirtualEnvPathTextBox.Focus();
-            if (wnd.ShowModal() ?? false) {
-                return wnd._view;
-            } else {
-                return null;
+
+            wnd.ShowDialog();
+            var op = wnd._currentOperation;
+            if (op != null) {
+                await op;
             }
         }
 
@@ -100,12 +106,22 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private void Save_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
-            e.CanExecute = _view.WillCreateVirtualEnv || _view.WillAddVirtualEnv;
+            e.CanExecute = _currentOperation == null && 
+                (_view.WillCreateVirtualEnv || _view.WillAddVirtualEnv);
         }
 
-        private void Save_Executed(object sender, ExecutedRoutedEventArgs e) {
-            DialogResult = true;
-            Close();
+        private async void Save_Executed(object sender, ExecutedRoutedEventArgs e) {
+            Debug.Assert(_currentOperation == null);
+            bool closeAfterOperation = _view.WillAddVirtualEnv;
+            _currentOperation = _view.Create().HandleAllExceptions(SR.ProductName);
+            
+            await _currentOperation;
+
+            _currentOperation = null;
+            if (closeAfterOperation) {
+                DialogResult = true;
+                Close();
+            }
         }
 
         private void WebChooseInterpreter_CanExecute(object sender, CanExecuteRoutedEventArgs e) {

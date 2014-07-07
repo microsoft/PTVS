@@ -83,13 +83,188 @@
                             </DataTrigger>
                         </DataTemplate.Triggers>
                     </DataTemplate>
+                    
+                    <DataTemplate x:Key="Actions">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <Label Grid.Row="0" Name="ActionsLabel">
+                                Actions we will perform:
+                            </Label>
+                            <StackPanel Grid.Row="1" Name="Actions" Margin="12 3" Orientation="Vertical">
+                                <StackPanel.Resources>
+                                    <Style TargetType="Label" BasedOn="{StaticResource BulletedLabel}">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </Style>
+                                </StackPanel.Resources>
+                                <Label Name="InstallPipAndVirtualEnv">
+                                    Install pip and virtualenv packages
+                                </Label>
+                                <Label Name="InstallPip">
+                                    Install pip
+                                </Label>
+                                <Label Name="InstallVirtualEnv">
+                                    Install the virtualenv package
+                                </Label>
+                                <Label Name="AddVirtualEnvironment">
+                                    Add the virtual environment
+                                </Label>
+                                <Label Name="CreateVirtualEnv">
+                                    Create a virtual environment
+                                </Label>
+                                <Label Name="CreateVEnv">
+                                    Create a virtual environment using venv
+                                </Label>
+                                <Label Name="InstallRequirements">
+                                    Install packages from requirements.txt
+                                </Label>
+                                <Label Name="CannotCreate">
+                                    No action will be taken.
+                                </Label>
+                                <Label Name="MayNotSupportWarning">
+                                    WARNING - the selected interpreter may not
+                                    support virtual environments.
+                                </Label>
+                            </StackPanel>
+
+                            <Label Grid.Row="0" Name="ProgressLabel" Visibility="Collapsed">
+                                Working...
+                            </Label>
+                            <ProgressBar Grid.Row="1" Name="Progress"
+                                         Visibility="Hidden"
+                                         IsIndeterminate="True"
+                                         VerticalAlignment="Top"
+                                         MinHeight="6"
+                                         Height="12"
+                                         Margin="12 3" />
+                        </Grid>
+                        <DataTemplate.Triggers>
+                            <!-- Show the progress bar if we're working -->
+                            <DataTrigger Binding="{Binding IsWorking}" Value="True">
+                                <Setter TargetName="ActionsLabel" Property="Visibility" Value="Collapsed" />
+                                <Setter TargetName="Actions" Property="Visibility" Value="Hidden" />
+                                <Setter TargetName="ProgressLabel" Property="Visibility" Value="Visible" />
+                                <Setter TargetName="Progress" Property="Visibility" Value="Visible" />
+                            </DataTrigger>
+                            
+                            <!-- Show both Install messages if pip is required,
+                                 then hide the Pip+VirtualEnv one if we don't
+                                 need virtualenv. -->
+                            <DataTrigger Binding="{Binding WillInstallPip}" Value="True">
+                                <Setter TargetName="InstallPip" Property="Visibility" Value="Visible" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding WillInstallVirtualEnv}" Value="True">
+                                <Setter TargetName="InstallVirtualEnv" Property="Visibility" Value="Visible" />
+                            </DataTrigger>
+                            <MultiDataTrigger>
+                                <MultiDataTrigger.Conditions>
+                                    <Condition Binding="{Binding WillInstallPip}" Value="True" />
+                                    <Condition Binding="{Binding WillInstallVirtualEnv}" Value="True" />
+                                </MultiDataTrigger.Conditions>
+                                <Setter TargetName="InstallPip" Property="Visibility" Value="Collapsed" />
+                                <Setter TargetName="InstallVirtualEnv" Property="Visibility" Value="Collapsed" />
+                                <Setter TargetName="InstallPipAndVirtualEnv" Property="Visibility" Value="Visible" />
+                            </MultiDataTrigger>
+                            <!-- Show the correct Create message, but hide both
+                                 if we're not creating. -->
+                            <DataTrigger Binding="{Binding UseVEnv}" Value="True">
+                                <Setter TargetName="CreateVEnv" Property="Visibility" Value="Visible" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding UseVEnv}" Value="False">
+                                <Setter TargetName="CreateVirtualEnv" Property="Visibility" Value="Visible" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding WillCreateVirtualEnv}" Value="False">
+                                <Setter TargetName="CreateVirtualEnv" Property="Visibility" Value="Collapsed" />
+                                <Setter TargetName="CreateVEnv" Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                            <!-- Show messages if the flag says we should -->
+                            <DataTrigger Binding="{Binding WillAddVirtualEnv}" Value="True">
+                                <Setter TargetName="AddVirtualEnvironment" Property="Visibility" Value="Visible" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding WillInstallRequirementsTxt}" Value="True">
+                                <Setter TargetName="InstallRequirements" Property="Visibility" Value="Visible" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding CannotCreateVirtualEnv}" Value="True">
+                                <Setter TargetName="CannotCreate" Property="Visibility" Value="Visible" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding MayNotSupportVirtualEnv}" Value="True">
+                                <Setter TargetName="MayNotSupportWarning" Property="Visibility" Value="Visible" />
+                            </DataTrigger>
+                        </DataTemplate.Triggers>
+                    </DataTemplate>
+                    
+                    <DataTemplate x:Key="Buttons">
+                        <DataTemplate.Resources>
+                            <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                                <Setter Property="Margin" Value="0 0 9 0" />
+                                <Setter Property="MinWidth" Value="86" />
+                                <Setter Property="MinHeight" Value="24" />
+                                <Setter Property="Visibility" Value="Collapsed" />
+                            </Style>
+                        </DataTemplate.Resources>
+                        <StackPanel Orientation="Horizontal">
+                            <Button Name="Add" IsDefault="True" Command="ApplicationCommands.Save" AutomationProperties.AutomationId="Add">
+                                _Add
+                            </Button>
+                            <Button Name="Create" IsDefault="True" Command="ApplicationCommands.Save" AutomationProperties.AutomationId="Create">
+                                <StackPanel Orientation="Horizontal">
+                                    <Image Name="UACShield"
+                                           Source="{x:Static wpf:Controls.UacShield}"
+                                           Width="16" Height="16"
+                                           VerticalAlignment="Center"
+                                           Visibility="Collapsed"/>
+                                    <AccessText Text="C_reate" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                            <Button Name="Close"
+                                    Visibility="Collapsed"
+                                    Command="ApplicationCommands.Close"
+                                    AutomationProperties.AutomationId="Close">
+                                _Close
+                            </Button>
+                            <Button Name="Cancel"
+                                    Visibility="Visible"
+                                    Command="ApplicationCommands.Close"
+                                    AutomationProperties.AutomationId="Cancel">
+                                _Cancel
+                            </Button>
+                        </StackPanel>
+                        <DataTemplate.Triggers>
+                            <DataTrigger Binding="{Binding WillAddVirtualEnv}" Value="True">
+                                <Setter TargetName="Add" Property="Visibility" Value="Visible" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding WillCreateVirtualEnv}" Value="True">
+                                <Setter TargetName="Create" Property="Visibility" Value="Visible" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding WillInstallElevated}" Value="True">
+                                <Setter TargetName="UACShield" Property="Visibility" Value="Visible" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding IsWorking}" Value="True">
+                                <Setter TargetName="Close" Property="Visibility" Value="Visible" />
+                                <Setter TargetName="Cancel" Property="Visibility" Value="Collapsed" />
+                                <Setter TargetName="Add" Property="IsEnabled" Value="False" />
+                                <Setter TargetName="Create" Property="IsEnabled" Value="False" />
+                            </DataTrigger>
+                        </DataTemplate.Triggers>
+                    </DataTemplate>
                 </ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </vstools:DialogWindowVersioningWorkaround.Resources>
     <Grid Margin="6">
+        <Grid.Resources>
+            <Style TargetType="wpf:LabelledControl" BasedOn="{StaticResource {x:Type wpf:LabelledControl}}">
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding IsWorking}" Value="True">
+                        <Setter Property="IsEnabled" Value="False" />
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+        </Grid.Resources>
+        
         <Grid.RowDefinitions>
-            <RowDefinition Height="auto" />
             <RowDefinition Height="auto" />
             <RowDefinition Height="auto" />
             <RowDefinition Height="auto" />
@@ -196,106 +371,19 @@
             </CheckBox>
         </wpf:LabelledControl>
 
-        <Label Grid.Row="4">
-            Actions we will perform:
-        </Label>
+        <ContentControl Grid.Row="4"
+                        IsTabStop="False"
+                        Focusable="False"
+                        Content="{Binding}"
+                        ContentTemplate="{StaticResource Actions}"
+                        Margin="12 3" />
 
-        <StackPanel Grid.Row="5" Margin="12 3" Orientation="Vertical">
-            <Label Style="{StaticResource BulletedLabel}">
-                <Label.Visibility>
-                    <MultiBinding Converter="{StaticResource BoolToVisibleOrCollapsed}">
-                        <Binding Path="WillInstallPip" />
-                        <Binding Path="WillInstallVirtualEnv" />
-                    </MultiBinding>
-                </Label.Visibility>
-                Install pip and virtualenv packages
-            </Label>
-            <Label Style="{StaticResource BulletedLabel}">
-                <Label.Visibility>
-                    <MultiBinding Converter="{StaticResource BoolToVisibleOrCollapsed}">
-                        <Binding Path="WillInstallPip" />
-                        <Binding Path="WillInstallVirtualEnv" Converter="{StaticResource BoolNot}" />
-                    </MultiBinding>
-                </Label.Visibility>
-                Install pip
-            </Label>
-            <Label Style="{StaticResource BulletedLabel}">
-                <Label.Visibility>
-                    <MultiBinding Converter="{StaticResource BoolToVisibleOrCollapsed}">
-                        <Binding Path="WillInstallPip" Converter="{StaticResource BoolNot}" />
-                        <Binding Path="WillInstallVirtualEnv" />
-                    </MultiBinding>
-                </Label.Visibility>
-                Install the virtualenv package
-            </Label>
-            <Label Visibility="{Binding WillAddVirtualEnv,Converter={StaticResource BoolToVisibleOrCollapsed}}"
-                   Style="{StaticResource BulletedLabel}">
-                Add the virtual environment
-            </Label>
-            <Label Style="{StaticResource BulletedLabel}">
-                <Label.Visibility>
-                    <MultiBinding Converter="{StaticResource BoolToVisibleOrCollapsed}">
-                        <Binding Path="WillCreateVirtualEnv" />
-                        <Binding Path="UseVEnv" Converter="{StaticResource BoolNot}" />
-                    </MultiBinding>
-                </Label.Visibility>
-                Create a virtual environment
-            </Label>
-            <Label Style="{StaticResource BulletedLabel}">
-                <Label.Visibility>
-                    <MultiBinding Converter="{StaticResource BoolToVisibleOrCollapsed}">
-                        <Binding Path="WillCreateVirtualEnv" />
-                        <Binding Path="UseVEnv" />
-                    </MultiBinding>
-                </Label.Visibility>
-                Create a virtual environment using venv
-            </Label>
-            <Label Visibility="{Binding WillInstallRequirementsTxt,Converter={StaticResource BoolToVisibleOrCollapsed}}"
-                   Style="{StaticResource BulletedLabel}">
-                Install packages from requirements.txt
-            </Label>
-            <Label Visibility="{Binding CannotCreateVirtualEnv,Converter={StaticResource BoolToVisibleOrCollapsed}}"
-                   Style="{StaticResource BulletedLabel}">
-                No action will be taken.
-            </Label>
-            <Label Visibility="{Binding MayNotSupportVirtualEnv,Converter={StaticResource BoolToVisibleOrCollapsed}}"
-                   Style="{StaticResource BulletedLabel}">
-                WARNING - the selected interpreter may not support virtual
-                environments.
-            </Label>
-        </StackPanel>
-
-        <StackPanel Grid.Row="6"
-                    Orientation="Horizontal"
-                    HorizontalAlignment="Right"
-                    Margin="0 12 0 0">
-            <Button IsDefault="True"
-                    Visibility="{Binding WillAddVirtualEnv,Converter={StaticResource BoolToVisibleOrCollapsed}}"
-                    Command="ApplicationCommands.Save"
-                    MinWidth="86" MinHeight="24" Margin="0 0 9 0"
-                    AutomationProperties.AutomationId="Add">
-                _Add
-            </Button>
-            <Button IsDefault="True"
-                    Visibility="{Binding WillCreateVirtualEnv,Converter={StaticResource BoolToVisibleOrCollapsed}}"
-                    Command="ApplicationCommands.Save"
-                    MinWidth="86" MinHeight="24" Margin="0 0 9 0"
-                    AutomationProperties.AutomationId="Create">
-                    <StackPanel Orientation="Horizontal">
-                        <Image Source="{x:Static wpf:Controls.UacShield}"
-                               Width="16" Height="16"
-                               VerticalAlignment="Center"
-                               Visibility="{Binding WillInstallElevated,Converter={StaticResource BoolToVisibleOrCollapsed}}"/>
-                        <AccessText Text="C_reate"
-                                    VerticalAlignment="Center" />
-                    </StackPanel>
-            </Button>
-            <Button IsCancel="True"
-                    Command="ApplicationCommands.Close"
-                    MinWidth="86" MinHeight="24" Margin="0 0 9 0"
-                    AutomationProperties.AutomationId="Cancel">
-                _Cancel
-            </Button>
-        </StackPanel>
+        <ContentControl Grid.Row="5"
+                        IsTabStop="False"
+                        Focusable="False"
+                        Content="{Binding}"
+                        ContentTemplate="{StaticResource Buttons}"
+                        HorizontalAlignment="Right"
+                        Margin="0 12 0 0" />
     </Grid>
 </vstools:DialogWindowVersioningWorkaround>

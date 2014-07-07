@@ -345,7 +345,8 @@ namespace PythonToolsUITests {
                 }
 
                 using (var dlg = new AutomationDialog(app, AutomationElement.FromHandle(app.WaitForDialog(t)))) {
-                    dlg.ClickButtonAndClose("Create", nameIsAutomationId: true);
+                    dlg.ClickButtonByAutomationId("Create");
+                    dlg.ClickButtonAndClose("Close", nameIsAutomationId: true);
                 }
                 
                 t.WaitAndUnwrapExceptions();

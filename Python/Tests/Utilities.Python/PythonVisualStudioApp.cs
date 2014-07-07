@@ -294,7 +294,8 @@ namespace TestUtilities.UI.Python {
                     return view.UpdateInterpreter(view.BaseInterpreter);
                 }).Wait();
 
-                createVenv.ClickButtonAndClose("Create", nameIsAutomationId: true);
+                createVenv.ClickButtonByAutomationId("Create");
+                createVenv.ClickButtonAndClose("Close", nameIsAutomationId: true);
             }
 
             return OpenSolutionExplorer().WaitForChildOfProject(
