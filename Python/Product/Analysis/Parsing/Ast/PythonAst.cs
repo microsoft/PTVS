@@ -57,6 +57,11 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             }
         }
 
+        /// <summary>
+        /// True if the AST was created with verbatim strings.
+        /// </summary>
+        public bool HasVerbatim { get; internal set; }
+
         public override void Walk(PythonWalker walker) {
             if (walker.Walk(this)) {
                 _body.Walk(walker);

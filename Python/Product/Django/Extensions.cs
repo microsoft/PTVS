@@ -73,6 +73,22 @@ namespace Microsoft.PythonTools.Django {
                 item.itemid == VSConstants.VSITEMID_ROOT;
         }
 
+        internal static bool IsNonMemberItem(this VSITEMSELECTION item) {
+            object obj;
+            try {
+                ErrorHandler.ThrowOnFailure(
+                    item.pHier.GetProperty(
+                        item.itemid,
+                        (int)__VSHPROPID.VSHPROPID_IsNonMemberItem,
+                        out obj
+                    )
+                );
+            } catch (System.Runtime.InteropServices.COMException) {
+                return false;
+            }
+            return (obj as bool?) ?? false;
+        }
+
         internal static string Name(this VSITEMSELECTION item) {
             return item.pHier.GetItemName(item.itemid);
         }

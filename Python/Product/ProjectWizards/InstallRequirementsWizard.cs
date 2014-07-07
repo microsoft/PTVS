@@ -27,7 +27,34 @@ namespace Microsoft.PythonTools.ProjectWizards {
             if (project.DTE.SuppressUI) {
                 return;
             }
-            
+
+            string description = null;
+            try {
+                var p = project.Properties.Item("InterpreterDescription");
+                if (p != null) {
+                    description = p.Value as string;
+                }
+            } catch (ArgumentException) {
+            }
+
+            if (string.IsNullOrEmpty(description)) {
+                bool isValid = false;
+                try {
+                    var p = project.Properties.Item("InterpreterId");
+                    isValid = p != null && !string.IsNullOrEmpty(p.Value as string);
+                } catch (ArgumentException) {
+                }
+                if (!isValid) {
+                    // We don't have a usable interpreter, so there's no point
+                    // going ahead.
+                    // Fall out - the user will find what they need when they
+                    // try and run or edit, but until then there's no reason to
+                    // block them or duplicate all of our help messages into yet
+                    // another assembly.
+                    return;
+                }
+            }
+
             ProjectItem requirementsTxt = null;
             try {
                 requirementsTxt = project.ProjectItems.Item("requirements.txt");
@@ -48,13 +75,6 @@ namespace Microsoft.PythonTools.ProjectWizards {
                 return;
             }
 
-            string description = Resources.DefaultInterpreterDescription;
-            try {
-                var p = project.Properties.Item("InterpreterDescription");
-                description = (p != null ? p.Value as string : null) ?? description;
-            } catch (ArgumentException) {
-            }
-
             var td = new TaskDialog(provider) {
                 Title = string.Format("{0} - {1}", project.Name, Resources.PythonToolsForVisualStudio),
                 MainInstruction = Resources.InstallRequirementsHeading,
@@ -70,6 +90,7 @@ namespace Microsoft.PythonTools.ProjectWizards {
                 Resources.InstallRequirementsIntoVirtualEnv,
                 Resources.InstallRequirementsIntoVirtualEnvTip
             );
+            description = description ?? Resources.DefaultInterpreterDescription;
             var install = new TaskDialogButton(
                 string.Format(Resources.InstallRequirementsIntoGlobalEnv, description),
                 Resources.InstallRequirementsIntoGlobalEnvTip

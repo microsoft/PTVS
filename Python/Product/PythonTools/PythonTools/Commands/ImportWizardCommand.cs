@@ -58,7 +58,7 @@ namespace Microsoft.PythonTools.Commands {
             var statusBar = (IVsStatusbar)CommonPackage.GetGlobalService(typeof(SVsStatusbar));
             statusBar.SetText(SR.GetString(SR.StatusImportWizardStarting));
 
-            var dlg = new Microsoft.PythonTools.Project.ImportWizard.ImportWizard();
+            string initialProjectPath = null, initialSourcePath = null;
 
             var oleArgs = args as Microsoft.VisualStudio.Shell.OleMenuCmdEventArgs;
             if (oleArgs != null) {
@@ -66,16 +66,21 @@ namespace Microsoft.PythonTools.Commands {
                 if (projectArgs != null) {
                     var argItems = projectArgs.Split('|');
                     if (argItems.Length == 2) {
-                        dlg.ImportSettings.ProjectPath = CommonUtils.GetAvailableFilename(
+                        initialProjectPath = CommonUtils.GetAvailableFilename(
                             argItems[1],
                             argItems[0],
                             ".pyproj"
                         );
-                        dlg.ImportSettings.SourcePath = argItems[1];
+                        initialSourcePath = argItems[1];
                     }
                 }
-            } 
-            
+            }
+
+            var dlg = new Microsoft.PythonTools.Project.ImportWizard.ImportWizard(
+                initialSourcePath,
+                initialProjectPath
+            );
+
             if (dlg.ShowModal() ?? false) {
                 CreateProjectAndHandleErrors(statusBar, dlg);
             } else {

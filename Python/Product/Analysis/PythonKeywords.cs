@@ -22,14 +22,6 @@ namespace Microsoft.PythonTools.Analysis {
     /// The canonical source of keyword names for Python.
     /// </summary>
     public static class PythonKeywords {
-        private static bool Is3x(PythonLanguageVersion version) {
-            return version == PythonLanguageVersion.None || version.Is3x();
-        }
-
-        private static bool Is2x(PythonLanguageVersion version) {
-            return version == PythonLanguageVersion.None || version.Is2x();
-        }
-
         /// <summary>
         /// Returns true if the specified identifier is a keyword in a
         /// particular version of Python.
@@ -81,11 +73,11 @@ namespace Microsoft.PythonTools.Analysis {
             yield return "and";
             yield return "as";
             yield return "else";
-            if (Is3x(version)) {
+            if (version.Is3x()) {
                 yield return "False";
             }
             yield return "for";
-            if (version == PythonLanguageVersion.None || version >= PythonLanguageVersion.V33) {
+            if (version >= PythonLanguageVersion.V33) {
                 yield return "from";
             }
             yield return "if";
@@ -95,12 +87,10 @@ namespace Microsoft.PythonTools.Analysis {
             yield return "None";
             yield return "not";
             yield return "or";
-            if (Is3x(version)) {
+            if (version.Is3x()) {
                 yield return "True";
             }
-            if (version == PythonLanguageVersion.None || version >= PythonLanguageVersion.V25) {
-                yield return "yield";
-            }
+            yield return "yield";
         }
 
         /// <summary>
@@ -114,7 +104,7 @@ namespace Microsoft.PythonTools.Analysis {
             yield return "class";
             yield return "def";
             yield return "del";
-            if (Is2x(version)) {
+            if (version.Is2x()) {
                 yield return "exec";
             }
             yield return "if";
@@ -125,11 +115,11 @@ namespace Microsoft.PythonTools.Analysis {
             yield return "from";
             yield return "global";
             yield return "import";
-            if (Is3x(version)) {
+            if (version.Is3x()) {
                 yield return "nonlocal";
             }
             yield return "pass";
-            if (Is2x(version)) {
+            if (version.Is2x()) {
                 yield return "print";
             }
             yield return "raise";
@@ -137,9 +127,7 @@ namespace Microsoft.PythonTools.Analysis {
             yield return "try";
             yield return "while";
             yield return "with";
-            if (version == PythonLanguageVersion.None || version >= PythonLanguageVersion.V25) {
-                yield return "yield";
-            }
+            yield return "yield";
         }
 
         /// <summary>

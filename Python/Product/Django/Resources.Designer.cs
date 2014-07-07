@@ -88,6 +88,42 @@ namespace Microsoft.PythonTools.Django {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to C&amp;reate anyway.
+        /// </summary>
+        internal static string DjangoAppAlreadyExistsCreateAnyway {
+            get {
+                return ResourceManager.GetString("DjangoAppAlreadyExistsCreateAnyway", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You may be prompted to replace files..
+        /// </summary>
+        internal static string DjangoAppAlreadyExistsCreateAnywaySubtitle {
+            get {
+                return ResourceManager.GetString("DjangoAppAlreadyExistsCreateAnywaySubtitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The folder &apos;{0}&apos; already exists and a new app cannot be created here. Please select a different name or remove the existing folder..
+        /// </summary>
+        internal static string DjangoAppAlreadyExistsInstruction {
+            get {
+                return ResourceManager.GetString("DjangoAppAlreadyExistsInstruction", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot create app &apos;{0}&apos;.
+        /// </summary>
+        internal static string DjangoAppAlreadyExistsTitle {
+            get {
+                return ResourceManager.GetString("DjangoAppAlreadyExistsTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Launches Django web sites using the Python debugger. This enables launching and starting a web browser automatically. It launches using manage.py and passes the runserver flag as well as additional options to configure the port and other settings..
         /// </summary>
         internal static string DjangoLauncherDescription {
@@ -129,6 +165,24 @@ namespace Microsoft.PythonTools.Django {
         internal static string OpenDjangoShellLabel {
             get {
                 return ResourceManager.GetString("OpenDjangoShellLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Python Tools for Visual Studio.
+        /// </summary>
+        internal static string PythonToolsForVisualStudio {
+            get {
+                return ResourceManager.GetString("PythonToolsForVisualStudio", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select another &amp;name.
+        /// </summary>
+        internal static string SelectAnotherName {
+            get {
+                return ResourceManager.GetString("SelectAnotherName", resourceCulture);
             }
         }
         

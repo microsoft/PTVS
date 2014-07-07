@@ -100,9 +100,8 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
         public override void PostWalk(FunctionDefinition node) {
             if (node.Body != null && node.Name != null) {
-                Debug.Assert(_scope.Node == node);
-                Debug.Assert(_scope.OuterScope.Node != node);
-                _scope = _scope.OuterScope;
+                Debug.Assert(_scope.EnumerateTowardsGlobal.Contains(_curUnit.Scope.OuterScope));
+                _scope = _curUnit.Scope.OuterScope;
                 _curUnit = _analysisStack.Pop();
                 Debug.Assert(_scope.EnumerateTowardsGlobal.Contains(_curUnit.Scope));
             }
@@ -347,12 +346,6 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         private void PushIsInstanceScope(Node node, KeyValuePair<NameExpression, Expression>[] isInstanceNames, SuiteStatement effectiveSuite) {
             InterpreterScope scope;
             if (!_curUnit.Scope.TryGetNodeScope(node, out scope)) {
-                if (_scope is IsInstanceScope) {
-                    // Reuse the current scope
-                    _curUnit.Scope.AddNodeScope(node, _scope);
-                    return;
-                }
-
                 // find our parent scope, it may not be just the last entry in _scopes
                 // because that can be a StatementScope and we would start a new range.
                 var declScope = _scope.EnumerateTowardsGlobal.FirstOrDefault(s => !(s is StatementScope));
@@ -536,7 +529,6 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             if (isInstanceScope != null && isInstanceScope._effectiveSuite == node) {
                 // pop the isinstance scope
                 _scope = _scope.OuterScope;
-                var declScope = _curUnit.Scope;
                 // transform back into a line number and start the new statement scope on the line
                 // after the suite statement.
                 var lineNo = _entry.Tree.IndexToLocation(node.EndIndex).Line;
@@ -548,9 +540,9 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 } else {
                     offset = lineNo < _entry.Tree._lineLocations.Length ? _entry.Tree._lineLocations[lineNo] : _entry.Tree._lineLocations[_entry.Tree._lineLocations.Length - 1];
                 }
-                var closingScope = new StatementScope(offset, declScope);
+                var closingScope = new StatementScope(offset, _scope);
+                _scope.Children.Add(closingScope);
                 _scope = closingScope;
-                declScope.Children.Add(closingScope);
             }
             return false;
         }

@@ -374,14 +374,18 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             foreach (var test in node.Tests) {
                 _eval.Evaluate(test.Test);
 
+                var prevScope = Scope;
+
                 TryPushIsInstanceScope(test, test.Test);
 
                 test.Body.Walk(this);
+
+                Scope = prevScope;
             }
             if (node.ElseStatement != null) {
                 node.ElseStatement.Walk(this);
             }
-            return true;
+            return false;
         }
 
         public override bool Walk(ImportStatement node) {

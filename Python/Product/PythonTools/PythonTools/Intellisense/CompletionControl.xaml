@@ -20,7 +20,6 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*"/>
                     <RowDefinition />
-                    <RowDefinition />
                 </Grid.RowDefinitions>
 
                 <ContentControl Grid.Row="0"
@@ -28,28 +27,28 @@
                                 HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
                                 VerticalAlignment="Stretch" VerticalContentAlignment="Stretch"/>
 
-                <StackPanel Orientation="Vertical" Margin="3" Grid.Row="2"
-                            Visibility="{Binding RelativeSource={RelativeSource AncestorType={x:Type l:CompletionControl}},Path=WarningVisibility}">
-                    <StackPanel.Resources>
-                        <Style TargetType="{x:Type TextBlock}">
-                            <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:Controls.ForegroundKey}}" />
-                        </Style>
-                    </StackPanel.Resources>
-                    <TextBlock>
-                        The completion DB needs to be refreshed.
-                    </TextBlock>
-                    <StackPanel Orientation="Horizontal" Margin="0 3 0 0">
-                        <TextBlock Padding="0 0 3 0">
-                            Open
+                <Border Grid.Row="1"
+                        Padding="3"
+                        Visibility="{Binding RelativeSource={RelativeSource AncestorType={x:Type l:CompletionControl}},Path=WarningVisibility}"
+                        Background="{DynamicResource {x:Static wpf:Controls.TooltipBackgroundKey}}"
+                        TextElement.Foreground="{DynamicResource {x:Static wpf:Controls.TooltipTextKey}}">
+                    <StackPanel Orientation="Vertical">
+                        <TextBlock>
+                            The completion DB needs to be refreshed.
                         </TextBlock>
-                        <Button Style="{StaticResource NavigationButton}" GotFocus="Button_GotFocus">
-                            Python Environments
-                        </Button>
-                        <TextBlock Padding="3 0 0 0">
-                            for more details.
-                        </TextBlock>
+                        <StackPanel Orientation="Horizontal" Margin="0 3 0 0">
+                            <TextBlock Padding="0 0 3 0">
+                                Open
+                            </TextBlock>
+                            <Button Style="{StaticResource NavigationButton}" GotFocus="Button_GotFocus">
+                                Python Environments
+                            </Button>
+                            <TextBlock Padding="3 0 0 0">
+                                for more details.
+                            </TextBlock>
+                        </StackPanel>
                     </StackPanel>
-                </StackPanel>
+                </Border>
             </Grid>
         </DataTemplate>
     </ContentControl.ContentTemplate>

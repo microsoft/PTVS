@@ -134,6 +134,8 @@ namespace Microsoft.PythonTools.Project {
             bool elevate,
             Redirector output = null
         ) {
+            factory.ThrowIfNotRunnable("factory");
+
             if (!factory.FindModules("pip").Any()) {
                 await InstallPip(factory, elevate, output);
             }
@@ -150,6 +152,8 @@ namespace Microsoft.PythonTools.Project {
             bool elevate,
             Redirector output = null
         ) {
+            factory.ThrowIfNotRunnable("factory");
+
             if (!factory.FindModules("pip").Any()) {
                 if (site != null) {
                     try {
@@ -295,7 +299,7 @@ namespace Microsoft.PythonTools.Project {
             bool elevate,
             Redirector output = null
         ) {
-            factory.ThrowIfNotRunnable();
+            factory.ThrowIfNotRunnable("factory");
 
             if (Microsoft.VisualStudio.Shell.VsShellUtilities.ShowMessageBox(
                 site,

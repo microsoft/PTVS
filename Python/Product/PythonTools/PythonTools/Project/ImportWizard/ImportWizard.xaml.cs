@@ -69,6 +69,10 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
         public static readonly DependencyProperty PageSequenceProperty = PageSequencePropertyKey.DependencyProperty;
 
         public ImportWizard() {
+            InitializeComponent();
+        }
+
+        public ImportWizard(string sourcePath, string projectPath) {
             ImportSettings = new ImportSettings();
 
             _pageSequence = new CollectionViewSource {
@@ -83,6 +87,14 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
             PageSequence = _pageSequence.View;
             PageSequence.CurrentChanged += PageSequence_CurrentChanged;
             PageSequence.MoveCurrentToFirst();
+
+            if (!string.IsNullOrEmpty(sourcePath)) {
+                ImportSettings.SourcePath = sourcePath;
+            }
+            if (!string.IsNullOrEmpty(projectPath)) {
+                ImportSettings.ProjectPath = projectPath;
+            }
+            ImportSettings.UpdateIsValid();
 
             DataContext = this;
 

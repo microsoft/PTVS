@@ -49,19 +49,29 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override IAnalysisSet BinaryOperation(Node node, AnalysisUnit unit, PythonOperator operation, IAnalysisSet rhs) {
+            SequenceInfo seq = null;
+            VariableDef idx = null;
             var res = AnalysisSet.Empty;
             switch (operation) {
                 case PythonOperator.Add:
-                    var seq = (SequenceInfo)unit.Scope.GetOrMakeNodeValue(node, _ => 
-                        new SequenceInfo(new[] { new VariableDef() }, ClassInfo, node, unit.ProjectEntry)
-                    );
-                    var idx = seq.IndexTypes[0];
-                    idx.AddTypes(unit, GetEnumeratorTypes(node, unit));
-
+                    foreach (var type in rhs.Where(t => !t.IsOfType(ClassInfo))) {
+                        res = res.Union(CallReverseBinaryOp(node, unit, operation, rhs));
+                    }
+                    
                     foreach (var type in rhs.Where(t => t.IsOfType(ClassInfo))) {
+                        if (seq == null) {
+                            seq = (SequenceInfo)unit.Scope.GetOrMakeNodeValue(node, _ =>
+                                new SequenceInfo(new[] { new VariableDef() }, ClassInfo, node, unit.ProjectEntry)
+                            );
+                            idx = seq.IndexTypes[0];
+                            idx.AddTypes(unit, GetEnumeratorTypes(node, unit));
+                        }
                         idx.AddTypes(unit, type.GetEnumeratorTypes(node, unit));
                     }
-                    res = res.Union(seq);
+
+                    if (seq != null) {
+                        res = res.Union(seq);
+                    }
                     break;
                 case PythonOperator.Multiply:
                     foreach (var type in rhs) {
@@ -70,10 +80,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                         if (typeId == BuiltinTypeId.Int || typeId == BuiltinTypeId.Long) {
                             res = res.Union(this);
                         } else {
-                            var partialRes = type.ReverseBinaryOperation(node, unit, operation, SelfSet);
-                            if (partialRes != null) {
-                                res = res.Union(partialRes);
-                            }
+                            res = res.Union(CallReverseBinaryOp(node, unit, operation, type));
                         }
 
                     }

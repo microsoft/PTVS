@@ -1590,5 +1590,32 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                 }
             }
         }
+
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void DeleteFolderWithReadOnlyFile() {
+            foreach (var projectType in ProjectTypes) {
+                var proj = new ProjectDefinition(
+                    "HelloWorld",
+                    projectType,
+                    Compile("file1"),
+                    Folder("folder"),
+                    Compile("folder\\file2")
+                );
+                using (var solution = proj.Generate().ToVs()) {
+                    foreach (var item in proj.Items.OfType<CompileItem>()) {
+                        foreach (var name in new[] { item.Name, item.Name.Replace('\\', '/') }) {
+                            string fullName = Path.Combine(solution.Directory, proj.Name, name) + projectType.CodeExtension;
+                            File.SetAttributes(fullName, FileAttributes.ReadOnly);
+                        }
+                    }
+
+                    var dir = solution.Project.ProjectItems.Item("folder").FileNames[0];
+                    solution.Project.ProjectItems.Item("folder").Delete();
+                    Assert.IsFalse(Directory.Exists(dir), dir + " should have been deleted");
+                }
+            }
+        }
     }
 }

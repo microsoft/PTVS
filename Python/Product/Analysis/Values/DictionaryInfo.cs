@@ -157,7 +157,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                         false
                     );
                 case "iterkeys":
-                    if (!unit.ProjectState.LanguageVersion.Is3x()) {
+                    if (unit.ProjectState.LanguageVersion.Is2x()) {
                         return _iterKeysMethod = _iterKeysMethod ?? new SpecializedCallable(
                             res.OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
                             DictionaryIterKeys,
@@ -166,7 +166,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     }
                     break;
                 case "itervalues":
-                    if (!unit.ProjectState.LanguageVersion.Is3x()) {
+                    if (unit.ProjectState.LanguageVersion.Is2x()) {
                         return _iterValuesMethod = _iterValuesMethod ?? new SpecializedCallable(
                             res.OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
                             DictionaryIterValues,
@@ -175,7 +175,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     }
                     break;
                 case "iteritems":
-                    if (!unit.ProjectState.LanguageVersion.Is3x()) {
+                    if (unit.ProjectState.LanguageVersion.Is2x()) {
                         return _iterItemsMethod = _iterItemsMethod ?? new SpecializedCallable(
                             res.OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
                             DictionaryIterItems,

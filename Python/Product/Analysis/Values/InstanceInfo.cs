@@ -143,35 +143,37 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     // TODO: We should really do a get descriptor / call here
                     getattrRes = getattrRes.Union(getAttrFunc.Call(node, unit, new[] { SelfSet, ProjectState.ClassInfos[BuiltinTypeId.Str].Instance.SelfSet }, ExpressionEvaluator.EmptyNames));
                 }
-                if (getattrRes.Count > 0) {
-                    return getattrRes;
-                }
             }
-            
-            // then check class members
-            var classMem = _classInfo.GetMemberNoReferences(node, unit, name);
-            if (classMem.Count > 0) {
-                var desc = classMem.GetDescriptor(node, this, _classInfo, unit);
-                if (desc.Count > 0) {
-                    // TODO: Check if it's a data descriptor...
-                    return desc;
-                }
-            } else {
-                // if the class gets a value later we need to be re-analyzed
-                _classInfo.Scope.CreateEphemeralVariable(node, unit, name, false).AddDependency(unit);
-            }
-           
-            // ok, it most be an instance member...
+
+            // ok, it must be an instance member, or it will become one later
+            VariableDef def;
             if (_instanceAttrs == null) {
                 _instanceAttrs = new Dictionary<string, VariableDef>();
             }
-            VariableDef def;
             if (!_instanceAttrs.TryGetValue(name, out def)) {
                 _instanceAttrs[name] = def = new EphemeralVariableDef();
             }
             def.AddReference(node, unit);
             def.AddDependency(unit);
+            getattrRes = getattrRes.Union(def.TypesNoCopy);
 
+            // now check class members
+            var classMem = _classInfo.GetMemberNoReferences(node, unit, name);
+            if (classMem.Count > 0) {
+                var desc = classMem.GetDescriptor(node, this, _classInfo, unit);
+                if (desc.Count > 0) {
+                    // TODO: Check if it's a data descriptor...
+                    getattrRes = getattrRes.Union(desc);
+                }
+            } else {
+                // if the class gets a value later we need to be re-analyzed
+                _classInfo.Scope.CreateEphemeralVariable(node, unit, name, false).AddDependency(unit);
+            }
+
+            if (getattrRes.Count > 0) {
+                return getattrRes;
+            }
+           
             // check and see if it's defined in a base class instance as well...
             var res = def.Types;
             foreach (var b in _classInfo.Bases) {

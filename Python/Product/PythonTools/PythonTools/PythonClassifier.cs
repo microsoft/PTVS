@@ -16,6 +16,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Text;
+using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Text;
@@ -29,6 +30,7 @@ namespace Microsoft.PythonTools {
         private readonly TokenCache _tokenCache;
         private readonly PythonClassifierProvider _provider;
         private readonly ITextBuffer _buffer;
+        private PythonLanguageVersion _version;
 
         [ThreadStatic]
         private static Dictionary<PythonLanguageVersion, Tokenizer> _tokenizers;    // tokenizer for each version, shared between all buffers
@@ -40,10 +42,19 @@ namespace Microsoft.PythonTools {
             _tokenCache = new TokenCache();
             _provider = provider;
             _buffer = buffer;
+
+            var analyzer = _buffer.GetAnalyzer();
+            Debug.Assert(analyzer != null);
+            _version = analyzer.InterpreterFactory.GetLanguageVersion();
         }
 
         internal void NewVersion() {
             _tokenCache.Clear();
+
+            var analyzer = _buffer.GetAnalyzer();
+            Debug.Assert(analyzer != null);
+            _version = analyzer.InterpreterFactory.GetLanguageVersion();
+
             var changed = ClassificationChanged;
             if (changed != null) {
                 var snapshot = _buffer.CurrentSnapshot;
@@ -79,10 +90,9 @@ namespace Microsoft.PythonTools {
             if (_tokenizers == null) {
                 _tokenizers = new Dictionary<PythonLanguageVersion, Tokenizer>();
             }
-            var langVersion = _buffer.GetAnalyzer().InterpreterFactory.GetLanguageVersion();
             Tokenizer res;
-            if (!_tokenizers.TryGetValue(langVersion, out res)) {
-                _tokenizers[langVersion] = res = new Tokenizer(langVersion, options: TokenizerOptions.Verbatim | TokenizerOptions.VerbatimCommentsAndLineJoins);
+            if (!_tokenizers.TryGetValue(_version, out res)) {
+                _tokenizers[_version] = res = new Tokenizer(_version, options: TokenizerOptions.Verbatim | TokenizerOptions.VerbatimCommentsAndLineJoins);
             }
             return res;
         }

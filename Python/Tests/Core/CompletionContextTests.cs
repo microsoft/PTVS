@@ -262,6 +262,40 @@ print
             AssertUtil.Contains(completionList, "any");
         }
 
+        [TestMethod, Priority(0)]
+        public void CtrlSpaceAfterNumber() {
+            // http://pytools.codeplex.com/workitem/2323
+            string code = @"
+2
+2.
+2..
+2.0.
+";
+
+            Assert.IsNull(GetCompletionSetCtrlSpace(
+                code.IndexOf("2") + 1,
+                code
+            ));
+
+            Assert.IsNull(GetCompletionSetCtrlSpace(
+                code.IndexOf("2.") + 2,
+                code
+            ));
+
+            var completionList = GetCompletionSetCtrlSpace(
+                code.IndexOf("2..") + 3,
+                code
+            ).Completions.Select(x => x.DisplayText).ToArray();
+
+            AssertUtil.ContainsAtLeast(completionList, "real", "imag");
+
+            completionList = GetCompletionSetCtrlSpace(
+                code.IndexOf("2.0.") + 4,
+                code
+            ).Completions.Select(x => x.DisplayText).ToArray();
+
+            AssertUtil.ContainsAtLeast(completionList, "real", "imag");
+        }
 
         [TestMethod, Priority(0)]
         public void ExceptionCompletions() {

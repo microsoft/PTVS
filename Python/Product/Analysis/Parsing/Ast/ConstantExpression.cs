@@ -108,14 +108,14 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 return "None";
             } else if (_value is AsciiString) {
                 StringBuilder res = new StringBuilder();
-                if (version.Is3x()) {
+                if (!version.Is2x()) {
                     res.Append("b");
                 }
                 AppendEscapedString(res, ((AsciiString)_value).String, escape8bitStrings);
                 return res.ToString();
             } else if (_value is string) {
                 StringBuilder res = new StringBuilder();
-                if (version.Is2x()) {
+                if (!version.Is3x()) {
                     res.Append("u");
                 }
                 AppendEscapedString(res, (string)_value, escape8bitStrings);

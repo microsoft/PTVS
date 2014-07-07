@@ -275,6 +275,12 @@
     <Compile Include="..\..\..\Common\Product\SharedProject\CommonUtils.cs">
       <Link>Project\CommonUtils.cs</Link>
     </Compile>
+    <Compile Include="..\..\..\Common\Product\SharedProject\ExceptionExtensions.cs">
+      <Link>ExceptionExtensions.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\Common\Product\SharedProject\TaskDialog.cs">
+      <Link>TaskDialog.cs</Link>
+    </Compile>
     <Compile Include="Debugger\DjangoLauncherProvider.cs" />
     <Compile Include="DialogWindowVersioningWorkaround.cs" />
     <Compile Include="Formatting\TemplateHtmlCommandFactory.cs" />

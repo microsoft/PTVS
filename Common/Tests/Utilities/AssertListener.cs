@@ -72,7 +72,12 @@ namespace TestUtilities {
                 }
             }
 
-            Assert.Fail(string.IsNullOrEmpty(message) ? "Debug.Assert failed" : message);
+            message = string.IsNullOrEmpty(message) ? "Debug.Assert failed" : message;
+            if (Debugger.IsAttached) {
+                Debugger.Break();
+            }
+
+            Assert.Fail(message);
         }
 
         public override void WriteLine(string message) {

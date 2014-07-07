@@ -24,6 +24,8 @@ namespace Microsoft.PythonTools.Project {
     internal class SR : CommonSR {
         public const string PythonToolsForVisualStudio = "PythonToolsForVisualStudio";
 
+        public const string NoCompletionsCompletion = "NoCompletionsCompletion";
+        public const string WarningUnknownType = "WarningUnknownType";
         public const string WarningAnalysisNotCurrent = "WarningAnalysisNotCurrent";
 
         public const string SearchPaths = "SearchPaths";

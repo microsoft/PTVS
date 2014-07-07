@@ -52,6 +52,12 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
+        public ICollection<TValue> Values {
+            get {
+                return dictionary.Values;
+            }
+        }
+
         public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator() {
             return dictionary.GetEnumerator();
         }

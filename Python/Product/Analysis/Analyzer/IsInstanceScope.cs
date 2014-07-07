@@ -101,14 +101,20 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             }
             PropagateIsInstanceTypes(node, unit, types, res);
 
-            outer = OuterScope.GetVariable(node, unit, name, addRef);
-            if (OuterScope.Variables.TryGetValue(name, out immediateOuter) && immediateOuter != res) {
-                if (addRef && immediateOuter != outer) {
-                    res.AddReference(node, unit);
-                }
-                PropagateIsInstanceTypes(node, unit, types, immediateOuter);
+            foreach (var scope in OuterScope.EnumerateTowardsGlobal) {
+                outer = scope.GetVariable(node, unit, name, addRef);
+                if (scope.Variables.TryGetValue(name, out immediateOuter) && immediateOuter != res) {
+                    if (addRef && immediateOuter != outer) {
+                        res.AddReference(node, unit);
+                    }
+                    PropagateIsInstanceTypes(node, unit, types, immediateOuter);
 
-                OuterScope.GetLinkedVariables(name).Add(res);
+                    scope.GetLinkedVariables(name).Add(res);
+                }
+
+                if (!(scope is IsInstanceScope)) {
+                    break;
+                }
             }
             return res;
         }

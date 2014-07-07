@@ -63,10 +63,16 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             _trueExpr.AppendCodeString(res, ast, format);
             res.Append(this.GetProceedingWhiteSpace(ast));
             res.Append("if");
+            if (!ast.HasVerbatim) {
+                res.Append(' ');
+            }
             _testExpr.AppendCodeString(res, ast, format);
             res.Append(this.GetSecondWhiteSpace(ast));
             if (!this.IsIncompleteNode(ast)) {
                 res.Append("else");
+                if (!ast.HasVerbatim) {
+                    res.Append(' ');
+                }
                 _falseExpr.AppendCodeString(res, ast, format);
             }
         }

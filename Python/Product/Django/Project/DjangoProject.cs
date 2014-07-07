@@ -25,6 +25,7 @@ using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Flavor;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Django.Project {
     [Guid("564253E9-EF07-4A40-89CF-790E61F53368")]
@@ -337,7 +338,7 @@ namespace Microsoft.PythonTools.Django.Project {
         }
 
         private bool CanAddAppToSelectedNode(IEnumerable<VSITEMSELECTION> items) {
-            if (items.Count() == 1) {
+            if (items.Count() == 1 && !items.First().IsNonMemberItem()) {
                 var selectedType = GetSelectedItemType();
                 if (selectedType == VSConstants.GUID_ItemType_PhysicalFolder || selectedType == PythonProjectGuid) {
                     return true;
@@ -379,11 +380,60 @@ namespace Microsoft.PythonTools.Django.Project {
             return base.ExecCommand(itemid, ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
         }
 
+        private string GetNewAppNameFromUser(string lastName = null) {
+            var dialog = new NewAppDialog();
+            dialog.ViewModel.Name = lastName ?? string.Empty;
+            return (dialog.ShowModal() ?? false) ? dialog.ViewModel.Name : null;
+        }
+
+        private string ResolveAppNameCollisionWithUser(EnvDTE.ProjectItems items, string name, out bool cancel) {
+            while (true) {
+                try {
+                    if (items.Item(name) == null) {
+                        break;
+                    }
+                } catch (ArgumentException) {
+                    break;
+                }
+
+                var td = new TaskDialog(new ServiceProvider(GetSite())) {
+                    Title = Resources.PythonToolsForVisualStudio,
+                    MainInstruction = string.Format(Resources.DjangoAppAlreadyExistsTitle, name),
+                    Content = string.Format(Resources.DjangoAppAlreadyExistsInstruction, name),
+                    AllowCancellation = true
+                };
+                var cont = new TaskDialogButton(
+                    Resources.DjangoAppAlreadyExistsCreateAnyway,
+                    Resources.DjangoAppAlreadyExistsCreateAnywaySubtitle
+                );
+                var retry = new TaskDialogButton(Resources.SelectAnotherName);
+                td.Buttons.Add(cont);
+                td.Buttons.Add(retry);
+                td.Buttons.Add(TaskDialogButton.Cancel);
+
+                var clicked = td.ShowModal();
+                if (clicked == cont) {
+                    break;
+                } else if (clicked == retry) {
+                    name = GetNewAppNameFromUser(name);
+                    if (string.IsNullOrEmpty(name)) {
+                        cancel = true;
+                        return null;
+                    }
+                } else {
+                    cancel = true;
+                    return null;
+                }
+            }
+
+            cancel = false;
+            return name;
+        }
+
         private void StartNewApp() {
             var selectedItems = GetSelectedItems();
-            var dialog = new NewAppDialog();
-            bool? res = dialog.ShowModal();
-            if (res != null && res.Value) {
+            var name = GetNewAppNameFromUser();
+            if (!string.IsNullOrEmpty(name)) {
                 object projectObj;
                 ErrorHandler.ThrowOnFailure(
                     _innerVsHierarchy.GetProperty(
@@ -419,7 +469,12 @@ namespace Microsoft.PythonTools.Django.Project {
 #else
                     var newAppTemplate = sln.GetProjectItemTemplate("DjangoNewAppFiles14.zip", "Python");
 #endif
-                    parentItems.AddFromTemplate(newAppTemplate, dialog.ViewModel.Name);
+
+                    bool cancel;
+                    name = ResolveAppNameCollisionWithUser(parentItems, name, out cancel);
+                    if (!cancel) {
+                        parentItems.AddFromTemplate(newAppTemplate, name);
+                    }
                 }
             }
         }
@@ -773,6 +828,35 @@ namespace Microsoft.PythonTools.Django.Project {
         #region IVsProject Members
 
         int IVsProject.AddItem(uint itemidLoc, VSADDITEMOPERATION dwAddItemOperation, string pszItemName, uint cFilesToOpen, string[] rgpszFilesToOpen, IntPtr hwndDlgOwner, VSADDRESULT[] pResult) {
+            if (cFilesToOpen == 1 && Path.GetFileName(rgpszFilesToOpen[0]).Equals("DjangoNewAppFiles.vstemplate", StringComparison.OrdinalIgnoreCase)) {
+                object selectedObj;
+                ErrorHandler.ThrowOnFailure(
+                    _innerVsHierarchy.GetProperty(
+                        itemidLoc,
+                        (int)__VSHPROPID.VSHPROPID_ExtObject,
+                        out selectedObj
+                    )
+                );
+
+                EnvDTE.ProjectItems items = null;
+                var project = selectedObj as EnvDTE.Project;
+                if (project != null) {
+                    items = project.ProjectItems;
+                } else {
+                    var selection = selectedObj as EnvDTE.ProjectItem;
+                    if (selection != null) {
+                        items = selection.ProjectItems;
+                    }
+                }
+
+                if (items != null) {
+                    bool cancel;
+                    pszItemName = ResolveAppNameCollisionWithUser(items, pszItemName, out cancel);
+                    if (cancel) {
+                        return VSConstants.E_ABORT;
+                    }
+                }
+            }
             return _innerProject.AddItem(itemidLoc, dwAddItemOperation, pszItemName, cFilesToOpen, rgpszFilesToOpen, hwndDlgOwner, pResult);
         }
 

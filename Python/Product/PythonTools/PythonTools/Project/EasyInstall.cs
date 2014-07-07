@@ -89,6 +89,8 @@ namespace Microsoft.PythonTools.Project {
             bool elevate,
             Redirector output = null
         ) {
+            factory.ThrowIfNotRunnable("factory");
+
             await ContinueRun(factory, output, elevate, package);
         }
 
@@ -99,6 +101,8 @@ namespace Microsoft.PythonTools.Project {
             bool elevate,
             Redirector output = null
         ) {
+            factory.ThrowIfNotRunnable("factory");
+
             bool isScript;
             if (site != null && GetEasyInstallPath(factory, out isScript) == null) {
                 await Pip.QueryInstallPip(factory, site, SR.GetString(SR.InstallEasyInstall), elevate, output);

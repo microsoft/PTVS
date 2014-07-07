@@ -325,10 +325,24 @@ namespace Microsoft.VisualStudioTools.Project {
         public virtual void DeleteFolder(string path) {
             if (Directory.Exists(path)) {
                 try {
-                    Directory.Delete(path, true);
+                    try {
+                        Directory.Delete(path, true);
+                    } catch (UnauthorizedAccessException) {
+                        // probably one or more files are read only
+                        foreach (var file in Directory.EnumerateFiles(path, "*", SearchOption.AllDirectories)) {
+                            // We will ignore all exceptions here and rethrow when
+                            // we retry the Directory.Delete.
+                            try {
+                                File.SetAttributes(file, FileAttributes.Normal);
+                            } catch (UnauthorizedAccessException) {
+                            } catch (IOException) {
+                            }
+                        }
+                        Directory.Delete(path, true);
+                    }
                 } catch (IOException ioEx) {
                     // re-throw with a friendly path
-                    throw new IOException(ioEx.Message.Replace(path, Path.GetFileName(CommonUtils.TrimEndSeparator(Url))));
+                    throw new IOException(ioEx.Message.Replace(path, Caption));
                 }
             }
         }

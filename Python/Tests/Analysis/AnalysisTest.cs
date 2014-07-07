@@ -5239,6 +5239,23 @@ def f():
         }
 
         [TestMethod, Priority(0)]
+        public void NestedIsInstance1908() {
+            // https://pytools.codeplex.com/workitem/1908
+            var code = @"
+def f(x):
+    y = object()    
+    assert isinstance(x, int)
+    if isinstance(y, float):
+        print('hi')
+
+    pass
+";
+
+            var entry = ProcessText(code);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("y", code.IndexOf("pass")), BuiltinTypeId.Object, BuiltinTypeId.Float);
+        }
+
+        [TestMethod, Priority(0)]
         public void IsInstanceUserDefinedType() {
             var text = @"
 class C(object):
@@ -6334,6 +6351,27 @@ builtins3 = modules.pop('__builtin__')
             AssertUtil.ContainsExactly(entry.GetValuesByIndex("builtins3", 0).Select(av => av.Name), "__builtin__");
         }
 
+        [TestMethod, Priority(0)]
+        public void ClassInstanceAttributes() {
+            var code = @"
+class A:
+    abc = 123
+
+p1 = A.abc
+p2 = A().abc
+a = A()
+a.abc = 3.1415
+p4 = A().abc
+p3 = a.abc
+";
+            var entry = ProcessText(code);
+
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("p1", 0), BuiltinTypeId.Int);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("p3", 0), BuiltinTypeId.Int, BuiltinTypeId.Float);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("p4", 0), BuiltinTypeId.Int, BuiltinTypeId.Float);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("p2", 0), BuiltinTypeId.Int, BuiltinTypeId.Float);
+        }
+
         #endregion
 
         #region Helpers
@@ -6457,10 +6495,6 @@ builtins3 = modules.pop('__builtin__')
     }
 
     static class ModuleAnalysisExtensions {
-        /// <summary>
-        /// TODO: This method should go away, it's only being used for tests, and the tests should be using GetMembersFromExpression
-        /// which may need to be cleaned up.
-        /// </summary>
         public static IEnumerable<string> GetMemberNamesByIndex(this ModuleAnalysis analysis, string exprText, int index, GetMemberOptions options = GetMemberOptions.IntersectMultipleResults) {
             return analysis.GetMembersByIndex(exprText, index, options).Select(m => m.Name);
         }

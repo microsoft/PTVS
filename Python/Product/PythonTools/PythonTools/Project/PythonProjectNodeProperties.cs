@@ -72,14 +72,16 @@ namespace Microsoft.PythonTools.Project {
         [Browsable(false)]
         public string InterpreterId {
             get {
-                return ((PythonProjectNode)this.Node).Interpreters.ActiveInterpreter.Id.ToString();
+                var interpreter = ((PythonProjectNode)this.Node).Interpreters.ActiveInterpreter;
+                return interpreter.IsRunnable() ? interpreter.Id.ToString() : null;
             }
         }
 
         [Browsable(false)]
         public string InterpreterDescription {
             get {
-                return ((PythonProjectNode)this.Node).Interpreters.ActiveInterpreter.Description;
+                var interpreter = ((PythonProjectNode)this.Node).Interpreters.ActiveInterpreter;
+                return interpreter.IsRunnable() ? interpreter.Description : null;
             }
         }
 
@@ -93,7 +95,8 @@ namespace Microsoft.PythonTools.Project {
         [Browsable(false)]
         public string InterpreterVersion {
             get {
-                return ((PythonProjectNode)this.Node).Interpreters.ActiveInterpreter.Configuration.Version.ToString();
+                var interpreter = ((PythonProjectNode)this.Node).Interpreters.ActiveInterpreter;
+                return interpreter.IsRunnable() ? interpreter.Configuration.Version.ToString() : null;
             }
         }
 

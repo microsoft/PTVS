@@ -354,7 +354,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         private static IAnalysisSet EvaluateListComprehension(ExpressionEvaluator ee, Node node) {
-            if (!ee._unit.ProjectState.LanguageVersion.Is3x()) {
+            if (ee._unit.ProjectState.LanguageVersion.Is2x()) {
                 // list comprehension is in enclosing scope in 2.x
                 ListComprehension listComp = (ListComprehension)node;
 

@@ -124,7 +124,7 @@ namespace Microsoft.PythonTools.Parsing {
         public static Parser CreateParser(Stream stream, PythonLanguageVersion version, ParserOptions parserOptions = null) {
             var options = parserOptions ?? ParserOptions.Default;
 
-            var defaultEncoding = version.Is3x() ? Encoding.UTF8 : PythonAsciiEncoding.Instance;
+            var defaultEncoding = version.Is2x() ? PythonAsciiEncoding.Instance : Encoding.UTF8;
 
             var reader = GetStreamReaderWithEncoding(stream, defaultEncoding, options.ErrorSink);
 
@@ -195,6 +195,7 @@ namespace Microsoft.PythonTools.Parsing {
 
         private PythonAst CreateAst(Statement ret) {
             var ast = new PythonAst(ret, _tokenizer.GetLineLocations(), _tokenizer.LanguageVersion);
+            ast.HasVerbatim = _verbatim;
             ast.PrivatePrefix = _privatePrefix;
             if (_token.Token != null) {
                 ast.SetLoc(0, GetEnd());
@@ -1301,7 +1302,7 @@ namespace Microsoft.PythonTools.Parsing {
                     var commaStart = GetStart();
                     commaWhiteSpace = _tokenWhiteSpace;
                     value = ParseExpression();
-                    if (!_langVersion.Is2x()) {
+                    if (_langVersion.Is3x()) {
                         ReportSyntaxError(commaStart, GetEnd(), "invalid syntax, only exception value is allowed in 3.x.");
                     }
                     if (MaybeEat(TokenKind.Comma)) {
@@ -1314,7 +1315,7 @@ namespace Microsoft.PythonTools.Parsing {
                     cause = ParseExpression();
                     isFromForm = true;
 
-                    if (!_langVersion.Is3x()) {
+                    if (_langVersion.Is2x()) {
                        ReportSyntaxError(fromStart, cause.EndIndex, "invalid syntax, from cause not allowed in 2.x.");
                     }
                 }
@@ -3556,7 +3557,7 @@ namespace Microsoft.PythonTools.Parsing {
             
             if (MaybeEat(TokenKind.Multiply)) {
                 string whitespace = _tokenWhiteSpace;
-                if (!_langVersion.Is3x()) {
+                if (_langVersion.Is2x()) {
                     ReportSyntaxError("invalid syntax");
                 }
                 var start = GetStart();

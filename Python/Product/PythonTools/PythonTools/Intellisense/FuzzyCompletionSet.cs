@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Media;
+using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
 
@@ -162,6 +163,14 @@ namespace Microsoft.PythonTools.Intellisense {
             RegexOptions.IgnoreCase | RegexOptions.CultureInvariant
         );
 
+        private readonly static IList<Completion> _noCompletions = new[] { new Completion(
+            SR.GetString(SR.NoCompletionsCompletion),
+            null,
+            SR.GetString(SR.WarningUnknownType),
+            null,
+            null
+        ) };
+
         /// <summary>
         /// Initializes a new instance with the specified properties.
         /// </summary>
@@ -188,7 +197,11 @@ namespace Microsoft.PythonTools.Intellisense {
             _shouldFilter = options.FilterCompletions;
             _shouldHideAdvanced = options.HideAdvancedMembers && !_completions.All(IsAdvanced);
 
-            if (_shouldFilter | _shouldHideAdvanced) {
+            if (!_completions.Any()) {
+                _completions = null;
+            }
+
+            if (_completions != null && _shouldFilter | _shouldHideAdvanced) {
                 _filteredCompletions = new FilteredObservableCollection<Completion>(_completions);
 
                 foreach (var c in _completions.Cast<DynamicallyVisibleCompletion>()) {
@@ -210,7 +223,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// </value>
         public override IList<Completion> Completions {
             get {
-                return (IList<Completion>)_filteredCompletions ?? _completions;
+                return (IList<Completion>)_filteredCompletions ?? _completions ?? _noCompletions;
             }
         }
 
@@ -223,6 +236,10 @@ namespace Microsoft.PythonTools.Intellisense {
         /// of the completion set, and then determines the best match.
         /// </summary>
         public override void Filter() {
+            if (_completions == null) {
+                return;
+            }
+
             if (_filteredCompletions == null) {
                 foreach (var c in _completions.Cast<DynamicallyVisibleCompletion>()) {
                     c.Visible = true;
@@ -269,6 +286,10 @@ namespace Microsoft.PythonTools.Intellisense {
         /// Determines the best match in the completion set.
         /// </summary>
         public override void SelectBestMatch() {
+            if (_completions == null) {
+                return;
+            }
+            
             var text = ApplicableTo.GetText(ApplicableTo.TextBuffer.CurrentSnapshot);
 
             Completion bestMatch = _previousSelection;
@@ -316,6 +337,10 @@ namespace Microsoft.PythonTools.Intellisense {
         /// is no single match in the completion set.
         /// </returns> 
         public bool SelectSingleBest() {
+            if (_completions == null) {
+                return false;
+            }
+            
             var text = ApplicableTo.GetText(ApplicableTo.TextBuffer.CurrentSnapshot);
 
             Completion bestMatch = null;

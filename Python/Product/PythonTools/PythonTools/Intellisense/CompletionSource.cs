@@ -57,17 +57,9 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var completions = provider.GetCompletions(_provider._glyphService);
            
-            if (completions == null || completions.Completions.Count == 0) {
-                if (PythonToolsPackage.Instance != null && 
-                    !session.TextView.GetAnalyzer().InterpreterFactory.IsAnalysisCurrent()) {
-                    // no completions, inform the user via the status bar that the analysis is not yet complete.
-                    var statusBar = (IVsStatusbar)CommonPackage.GetGlobalService(typeof(SVsStatusbar));
-                    statusBar.SetText(SR.GetString(SR.WarningAnalysisNotCurrent));
-                }
-                return;
+            if (completions != null && completions.Completions.Count > 0) {
+                completionSets.Add(completions);
             }
-
-            completionSets.Add(completions);
         }
 
         public void Dispose() {

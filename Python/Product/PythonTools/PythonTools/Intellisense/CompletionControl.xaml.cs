@@ -13,18 +13,16 @@
  * ***************************************************************************/
 
 using System;
-using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.VisualStudio.Text.Editor;
+using Microsoft.VisualStudioTools;
+using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.Intellisense {
     /// <summary>
@@ -65,18 +63,24 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        private void Button_GotFocus(object sender, RoutedEventArgs e) {
+        private async void Button_GotFocus(object sender, RoutedEventArgs e) {
             // HACK: Handling GotFocus because this is the only event we get
             // when clicking on the button - the VS text editor somehow absorbs
             // all the rest...
 
-            var toolWindow = PythonToolsPackage.Instance.FindToolWindow(typeof(InterpreterList.InterpreterListToolWindow), 0, true) as ToolWindowPane;
-            var frame = toolWindow != null ? toolWindow.Frame as IVsWindowFrame : null;
-            if (toolWindow == null || frame == null) {
-                ErrorHandler.ThrowOnFailure(VsShellUtilities.ShowMessageBox(PythonToolsPackage.Instance, "Unable to create Python Environments window.", "Python Tools for Visual Studio", OLEMSGICON.OLEMSGICON_NOICON, OLEMSGBUTTON.OLEMSGBUTTON_OK, OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST));
-                return;
-            }
-            ErrorHandler.ThrowOnFailure(frame.Show());
+            // Short delay to ensure the completion control has lost focus,
+            // otherwise the environment list will be hidden immediately.
+            await Task.Delay(50);
+            // Should already be on the UI thread, but we'll invoke to be safe
+            UIThread.Invoke(() => {
+                var toolWindow = PythonToolsPackage.Instance.FindToolWindow(typeof(InterpreterList.InterpreterListToolWindow), 0, true) as ToolWindowPane;
+                var frame = toolWindow != null ? toolWindow.Frame as IVsWindowFrame : null;
+                if (toolWindow == null || frame == null) {
+                    ErrorHandler.ThrowOnFailure(VsShellUtilities.ShowMessageBox(PythonToolsPackage.Instance, "Unable to create Python Environments window.", "Python Tools for Visual Studio", OLEMSGICON.OLEMSGICON_NOICON, OLEMSGBUTTON.OLEMSGBUTTON_OK, OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST));
+                    return;
+                }
+                ErrorHandler.ThrowOnFailure(frame.Show());
+            });
         }
 
         #region IIntellisenseCommandTarget Members

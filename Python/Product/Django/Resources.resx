@@ -126,6 +126,18 @@
   <data name="CommandReplTitle" xml:space="preserve">
     <value>Django Management Console - {ProjectName}</value>
   </data>
+  <data name="DjangoAppAlreadyExistsCreateAnyway" xml:space="preserve">
+    <value>C&amp;reate anyway</value>
+  </data>
+  <data name="DjangoAppAlreadyExistsCreateAnywaySubtitle" xml:space="preserve">
+    <value>You may be prompted to replace files.</value>
+  </data>
+  <data name="DjangoAppAlreadyExistsInstruction" xml:space="preserve">
+    <value>The folder '{0}' already exists and a new app cannot be created here. Please select a different name or remove the existing folder.</value>
+  </data>
+  <data name="DjangoAppAlreadyExistsTitle" xml:space="preserve">
+    <value>Cannot create app '{0}'</value>
+  </data>
   <data name="DjangoLauncherDescription" xml:space="preserve">
     <value>Launches Django web sites using the Python debugger. This enables launching and starting a web browser automatically. It launches using manage.py and passes the runserver flag as well as additional options to configure the port and other settings.</value>
   </data>
@@ -140,6 +152,12 @@
   </data>
   <data name="OpenDjangoShellLabel" xml:space="preserve">
     <value>Open &amp;Django Shell</value>
+  </data>
+  <data name="PythonToolsForVisualStudio" xml:space="preserve">
+    <value>Python Tools for Visual Studio</value>
+  </data>
+  <data name="SelectAnotherName" xml:space="preserve">
+    <value>Select another &amp;name</value>
   </data>
   <data name="StaticUriHelp" xml:space="preserve">
     <value>A regex pattern to identify static URIs, for example: ^/static/.*

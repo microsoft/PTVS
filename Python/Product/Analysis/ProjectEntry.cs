@@ -206,11 +206,15 @@ namespace Microsoft.PythonTools.Analysis {
             _unit = new AnalysisUnit(tree, _myScope.Scope);
             AnalysisLog.NewUnit(_unit);
 
+            foreach (var value in MyScope.Scope.Variables.Values) {
+                value.EnqueueDependents();
+            }
+
             MyScope.Scope.Children.Clear();
             MyScope.Scope.ClearNodeScopes();
             MyScope.Scope.ClearNodeValues();
             MyScope.ClearUnresolvedModules();
-
+            
             // collect top-level definitions first
             var walker = new OverviewWalker(this, _unit);
             tree.Walk(walker);
@@ -239,12 +243,12 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             _unit.Enqueue();
-
+            
             if (!enqueueOnly) {
                 _projectState.AnalyzeQueuedEntries(cancel);
             }
 
-            // publish the analysis now that it's complete
+            // publish the analysis now that it's complete/running
             _currentAnalysis = new ModuleAnalysis(
                 _unit, 
                 ((ModuleScope)_unit.Scope).CloneForPublish(),

@@ -18,6 +18,7 @@ using System.Diagnostics;
 using System.Linq;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.VisualStudio.Language.Intellisense;
+using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.Text;
 
@@ -58,6 +59,14 @@ namespace Microsoft.PythonTools.Intellisense {
             get {
                 var startSpan = _snapshot.CreateTrackingSpan(Span.GetSpan(_snapshot).Start.Position, 0, SpanTrackingMode.EdgeInclusive);
                 var parser = new ReverseExpressionParser(_snapshot, _snapshot.TextBuffer, startSpan);
+                using (var e = parser.GetEnumerator()) {
+                    if (e.MoveNext() &&
+                        e.Current != null &&
+                        e.Current.ClassificationType.IsOfType(PredefinedClassificationTypeNames.Number)) {
+                        return null;
+                    }
+                }
+
                 var sourceSpan = parser.GetExpressionRange();
                 if (sourceSpan.HasValue && sourceSpan.Value.Length > 0) {
                     return sourceSpan.Value.GetText();
@@ -80,7 +89,9 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var analysis = GetAnalysisEntry();
             var text = PrecedingExpression;
-            if (!string.IsNullOrEmpty(text)) {
+            if (text == null) {
+                return null;
+            } else if (text != string.Empty) {
                 string fixedText = FixupCompletionText(text);
                 if (analysis != null && fixedText != null && (pyReplEval == null || !pyReplEval.LiveCompletionsOnly)) {
                     lock (_analyzer) {
