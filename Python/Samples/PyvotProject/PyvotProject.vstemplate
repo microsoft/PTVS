@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<VSTemplate Version="3.0.0" Type="Project" xmlns="http://schemas.microsoft.com/developer/vstemplate/2005">
+  <TemplateData>
+    <Name>Pyvot Project</Name>
+    <Description>A sample for working with the Pyvot library for Excel.</Description>
+    <Icon Package="{6dbd7c1e-1f1b-496d-ac7c-c55dae66c783}" ID="401" />
+    <ProjectType>Python</ProjectType>
+    <SortOrder>1060</SortOrder>
+    <TemplateID>0ce980f7-e2d0-490c-a127-fd0809f75901</TemplateID>
+    <CreateNewFolder>true</CreateNewFolder>
+    <DefaultName>PyvotProgram</DefaultName>
+    <ProvideDefaultName>true</ProvideDefaultName>
+    <PreviewImage>PyvotProject.png</PreviewImage>
+  </TemplateData>
+  <TemplateContent>
+    <Project File="PyvotProject.pyproj" ReplaceParameters="true">
+      <ProjectItem ReplaceParameters="true" TargetFileName="$safeprojectname$.py">Program.py</ProjectItem>
+      <ProjectItem OpenInWebBrowser="true">readme.mht</ProjectItem>
+      <ProjectItem>PyvotSample.xlsx</ProjectItem>
+      <ProjectItem>requirements.txt</ProjectItem>
+    </Project>
+  </TemplateContent>
+  <WizardExtension>
+    <Assembly>Microsoft.PythonTools.ProjectWizards, Version=2.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</Assembly>
+    <FullClassName>Microsoft.PythonTools.ProjectWizards.InstallRequirementsWizard</FullClassName>
+  </WizardExtension>
+</VSTemplate>

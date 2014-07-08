@@ -69,6 +69,9 @@ job.SelectCertificate(10006)"
 job.SelectCertificate(67)"
         $job.SelectCertificate("67")     # StrongName key
     }
+    if ($certificates -match "opc") {
+        $job.SelectCertificate("160")     # Microsoft OPC Publisher (VSIX)
+    }
     
     foreach ($approver in $approvers) {
         $msg = "$msg

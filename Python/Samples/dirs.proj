@@ -1,0 +1,17 @@
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), build.root))\Build\Common.Build.settings" />
+
+  <ItemGroup>
+    <ProjectFile Include="KinectGame\KinectGame.csproj"/>
+    <ProjectFile Include="PollsBottle\PollsBottle.csproj"/>
+    <ProjectFile Include="PollsDjango\PollsDjango.csproj"/>
+    <ProjectFile Include="PollsFlask\PollsFlask.csproj"/>
+    <ProjectFile Include="PollsFlaskJade\PollsFlaskJade.csproj"/>
+    <ProjectFile Include="PyvotProject\PyvotProject.csproj"/>
+    <ProjectFile Include="Samples\Samples.csproj"/>
+  </ItemGroup>
+
+  <Import Project="$(TargetsPath)\Common.Build.Traversal.targets" />
+
+</Project>

@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Vsix xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Version="1.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2010">
+  <Identifier Id="D793AEE5-B080-4A0F-AF00-4F40016BB0D2">
+    <Name>Python Tools for Visual Studio - Samples</Name>
+    <Author>Microsoft</Author>
+    <Version>2.1</Version>
+    <Description xml:space="preserve">Python Tools for Visual Studio sample project templates.</Description>
+    <Locale>1033</Locale>
+    <License>Python Tools for VS License.rtf</License>
+    <MoreInfoUrl>http://pytools.codeplex.com</MoreInfoUrl>
+    <GettingStartedGuide>http://pytools.codeplex.com</GettingStartedGuide>
+    <SupportedProducts>
+      <VisualStudio Version="10.0">
+        <Edition>Ultimate</Edition>
+        <Edition>Premium</Edition>
+        <Edition>Pro</Edition>
+        <Edition>Express_All</Edition>
+      </VisualStudio>
+      <VisualStudio Version="11.0">
+        <Edition>Ultimate</Edition>
+        <Edition>Premium</Edition>
+        <Edition>Pro</Edition>
+        <Edition>Express_All</Edition>
+      </VisualStudio>
+      <VisualStudio Version="12.0">
+        <Edition>Ultimate</Edition>
+        <Edition>Premium</Edition>
+        <Edition>Pro</Edition>
+        <Edition>Express_All</Edition>
+      </VisualStudio>
+    </SupportedProducts>
+    <SupportedFrameworkRuntimeEdition MinVersion="4.0" MaxVersion="4.5" />
+  </Identifier>
+  <References />
+  <Content>
+    <ProjectTemplate>ProjectTemplates</ProjectTemplate>
+  </Content>
+</Vsix>

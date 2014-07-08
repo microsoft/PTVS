@@ -1,0 +1,119 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Choose>
+    <When Condition=" '$(VisualStudioVersion)'=='11.0'  Or '$(TargetVisualStudioVersion)'=='VS110' ">
+      <PropertyGroup>
+        <MinimumVisualStudioVersion>11.0</MinimumVisualStudioVersion>
+        <FileUpgradeFlags>
+        </FileUpgradeFlags>
+        <UpgradeBackupLocation>
+        </UpgradeBackupLocation>
+        <OldToolsVersion>4.0</OldToolsVersion>
+      </PropertyGroup>
+    </When>
+    <When Condition=" '$(VisualStudioVersion)'=='12.0'  Or '$(TargetVisualStudioVersion)'=='VS120' ">
+      <PropertyGroup>
+        <MinimumVisualStudioVersion>12.0</MinimumVisualStudioVersion>
+        <FileUpgradeFlags>
+        </FileUpgradeFlags>
+        <UpgradeBackupLocation>
+        </UpgradeBackupLocation>
+        <OldToolsVersion>4.0</OldToolsVersion>
+      </PropertyGroup>
+    </When>
+  </Choose>
+  <Import Project="..\ProjectBefore.settings" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectTypeGuids>{82b43b9b-a64c-4715-b499-d71e9ca2bd60};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <ProjectGuid>{D7B1EBC4-480B-4ADF-B3EC-76F6A5C5C954}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>PollsFlask</RootNamespace>
+    <AssemblyName>PollsFlask</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <GeneratePkgDefFile>false</GeneratePkgDefFile>
+    <IncludeAssemblyInVSIXContainer>false</IncludeAssemblyInVSIXContainer>
+    <IncludeDebugSymbolsInVSIXContainer>false</IncludeDebugSymbolsInVSIXContainer>
+    <IncludeDebugSymbolsInLocalVSIXDeployment>false</IncludeDebugSymbolsInLocalVSIXDeployment>
+    <CreateVsixContainer>false</CreateVsixContainer>
+    <DeployExtension>false</DeployExtension>
+    <DeployVSTemplates>false</DeployVSTemplates>
+    <CopyVsixManifestToOutput>false</CopyVsixManifestToOutput>
+    <CopyBuildOutputToOutputDirectory>false</CopyBuildOutputToOutputDirectory>
+    <CopyOutputSymbolsToOutputDirectory>false</CopyOutputSymbolsToOutputDirectory>
+    <SccProjectName>SAK</SccProjectName>
+    <SccLocalPath>SAK</SccLocalPath>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccProvider>SAK</SccProvider>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.VisualStudio.CoreUtility">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <VSTemplate Include="PollsFlask.vstemplate">
+      <OutputSubPath>Samples</OutputSubPath>
+    </VSTemplate>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="PollsFlask\models\factory.py" />
+    <Content Include="runserver.py" />
+    <Content Include="PollsFlask\__init__.py" />
+    <Content Include="PollsFlask\models\azuretablestorage.py" />
+    <Content Include="PollsFlask\models\memory.py" />
+    <Content Include="PollsFlask\models\mongodb.py" />
+    <Content Include="PollsFlask\models\samples.json" />
+    <Content Include="PollsFlask\models\__init__.py" />
+    <Content Include="PollsFlask\views.py" />
+    <Content Include="PollsFlask\settings.py" />
+    <Content Include="PollsFlask\static\fonts\glyphicons-halflings-regular.eot" />
+    <Content Include="PollsFlask\static\fonts\glyphicons-halflings-regular.ttf" />
+    <Content Include="PollsFlask\static\fonts\glyphicons-halflings-regular.woff" />
+    <Content Include="PollsFlask\static\scripts\jquery-1.10.2.min.map" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="PollsFlask.png" />
+    <Content Include="PollsFlask.pyproj" />
+    <Content Include="requirements.txt" />
+    <Content Include="PollsFlask\static\content\bootstrap.css" />
+    <Content Include="PollsFlask\static\content\bootstrap.min.css" />
+    <Content Include="PollsFlask\static\content\site.css" />
+    <Content Include="PollsFlask\static\fonts\glyphicons-halflings-regular.svg" />
+    <Content Include="PollsFlask\static\scripts\bootstrap.js" />
+    <Content Include="PollsFlask\static\scripts\bootstrap.min.js" />
+    <Content Include="PollsFlask\static\scripts\jquery-1.10.2.intellisense.js" />
+    <Content Include="PollsFlask\static\scripts\jquery-1.10.2.js" />
+    <Content Include="PollsFlask\static\scripts\jquery-1.10.2.min.js" />
+    <Content Include="PollsFlask\static\scripts\jquery.validate-vsdoc.js" />
+    <Content Include="PollsFlask\static\scripts\jquery.validate.js" />
+    <Content Include="PollsFlask\static\scripts\jquery.validate.min.js" />
+    <Content Include="PollsFlask\static\scripts\jquery.validate.unobtrusive.js" />
+    <Content Include="PollsFlask\static\scripts\jquery.validate.unobtrusive.min.js" />
+    <Content Include="PollsFlask\static\scripts\modernizr-2.6.2.js" />
+    <Content Include="PollsFlask\static\scripts\respond.js" />
+    <Content Include="PollsFlask\static\scripts\respond.min.js" />
+    <Content Include="PollsFlask\static\scripts\_references.js" />
+    <Content Include="PollsFlask\templates\about.html" />
+    <Content Include="PollsFlask\templates\contact.html" />
+    <Content Include="PollsFlask\templates\details.html" />
+    <Content Include="PollsFlask\templates\index.html" />
+    <Content Include="PollsFlask\templates\layout.html" />
+    <Content Include="PollsFlask\templates\results.html" />
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="..\ProjectAfter.settings" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

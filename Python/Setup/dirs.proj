@@ -19,8 +19,9 @@
     <ProjectFile Include="PythonTools\PythonTools.wixproj"/>
     <ProjectFile Include="PythonProfiling\PythonProfiling.wixproj"/>
     <ProjectFile Include="PythonToolsInstaller\PythonToolsInstaller.wixproj"/>
-    <ProjectFile Include="FastCgiInstaller\FastCgi.wixproj"/>    
-    <ProjectFile Include="..\..\Internal\Python\VsLoggerSetup\VsLogger.wixproj" Condition="'$(IncludeVsLogger)' == 'True'"/>    
+    <ProjectFile Include="FastCgiInstaller\FastCgi.wixproj"/>
+    <ProjectFile Include="..\..\Internal\Python\VsLoggerSetup\VsLogger.wixproj" Condition="'$(IncludeVsLogger)' == 'True'"/>
+    <ProjectFile Include="..\Samples\dirs.proj"/>
   </ItemGroup>
 
   <Import Project="$(TargetsPath)\Common.Build.Traversal.targets" />

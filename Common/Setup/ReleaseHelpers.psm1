@@ -70,6 +70,9 @@ function begin_sign_files {
             if ($certificates -match "strongname") {
                 $job.SelectCertificate("67")     # StrongName key
             }
+            if ($certificates -match "opc") {
+                $job.SelectCertificate("160")     # Microsoft OPC Publisher (VSIX)
+            }
             
             foreach ($approver in $approvers) {
                 $job.AddApprover($approver)

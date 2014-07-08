@@ -1,0 +1,117 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Choose>
+    <When Condition=" '$(VisualStudioVersion)'=='11.0'  Or '$(TargetVisualStudioVersion)'=='VS110' ">
+      <PropertyGroup>
+        <MinimumVisualStudioVersion>11.0</MinimumVisualStudioVersion>
+        <FileUpgradeFlags>
+        </FileUpgradeFlags>
+        <UpgradeBackupLocation>
+        </UpgradeBackupLocation>
+        <OldToolsVersion>4.0</OldToolsVersion>
+      </PropertyGroup>
+    </When>
+    <When Condition=" '$(VisualStudioVersion)'=='12.0'  Or '$(TargetVisualStudioVersion)'=='VS120' ">
+      <PropertyGroup>
+        <MinimumVisualStudioVersion>12.0</MinimumVisualStudioVersion>
+        <FileUpgradeFlags>
+        </FileUpgradeFlags>
+        <UpgradeBackupLocation>
+        </UpgradeBackupLocation>
+        <OldToolsVersion>4.0</OldToolsVersion>
+      </PropertyGroup>
+    </When>
+  </Choose>
+  <Import Project="..\ProjectBefore.settings" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectTypeGuids>{82b43b9b-a64c-4715-b499-d71e9ca2bd60};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <ProjectGuid>{EBFDF065-90B1-4025-8F79-E885C6B2114E}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>PollsBottle</RootNamespace>
+    <AssemblyName>PollsBottle</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <GeneratePkgDefFile>false</GeneratePkgDefFile>
+    <IncludeAssemblyInVSIXContainer>false</IncludeAssemblyInVSIXContainer>
+    <IncludeDebugSymbolsInVSIXContainer>false</IncludeDebugSymbolsInVSIXContainer>
+    <IncludeDebugSymbolsInLocalVSIXDeployment>false</IncludeDebugSymbolsInLocalVSIXDeployment>
+    <CreateVsixContainer>false</CreateVsixContainer>
+    <DeployExtension>false</DeployExtension>
+    <DeployVSTemplates>false</DeployVSTemplates>
+    <CopyVsixManifestToOutput>false</CopyVsixManifestToOutput>
+    <CopyBuildOutputToOutputDirectory>false</CopyBuildOutputToOutputDirectory>
+    <CopyOutputSymbolsToOutputDirectory>false</CopyOutputSymbolsToOutputDirectory>
+    <SccProjectName>SAK</SccProjectName>
+    <SccLocalPath>SAK</SccLocalPath>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccProvider>SAK</SccProvider>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.VisualStudio.CoreUtility">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <VSTemplate Include="PollsBottle.vstemplate">
+      <OutputSubPath>Samples</OutputSubPath>
+    </VSTemplate>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="app.py" />
+    <Content Include="models\azuretablestorage.py" />
+    <Content Include="models\memory.py" />
+    <Content Include="models\mongodb.py" />
+    <Content Include="models\samples.json" />
+    <Content Include="models\factory.py" />
+    <Content Include="models\__init__.py" />
+    <Content Include="routes.py" />
+    <Content Include="settings.py" />
+    <Content Include="static\fonts\glyphicons-halflings-regular.eot" />
+    <Content Include="static\fonts\glyphicons-halflings-regular.ttf" />
+    <Content Include="static\fonts\glyphicons-halflings-regular.woff" />
+    <Content Include="static\scripts\jquery-1.10.2.min.map" />
+    <Content Include="views\about.tpl" />
+    <Content Include="views\contact.tpl" />
+    <Content Include="views\details.tpl" />
+    <Content Include="views\index.tpl" />
+    <Content Include="views\layout.tpl" />
+    <Content Include="views\results.tpl" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="PollsBottle.png" />
+    <Content Include="PollsBottle.pyproj" />
+    <Content Include="requirements.txt" />
+    <Content Include="static\content\bootstrap.css" />
+    <Content Include="static\content\bootstrap.min.css" />
+    <Content Include="static\content\site.css" />
+    <Content Include="static\fonts\glyphicons-halflings-regular.svg" />
+    <Content Include="static\scripts\bootstrap.js" />
+    <Content Include="static\scripts\bootstrap.min.js" />
+    <Content Include="static\scripts\jquery-1.10.2.intellisense.js" />
+    <Content Include="static\scripts\jquery-1.10.2.js" />
+    <Content Include="static\scripts\jquery-1.10.2.min.js" />
+    <Content Include="static\scripts\jquery.validate-vsdoc.js" />
+    <Content Include="static\scripts\jquery.validate.js" />
+    <Content Include="static\scripts\jquery.validate.min.js" />
+    <Content Include="static\scripts\jquery.validate.unobtrusive.js" />
+    <Content Include="static\scripts\jquery.validate.unobtrusive.min.js" />
+    <Content Include="static\scripts\modernizr-2.6.2.js" />
+    <Content Include="static\scripts\respond.js" />
+    <Content Include="static\scripts\respond.min.js" />
+    <Content Include="static\scripts\_references.js" />
+  </ItemGroup>
+  <Import Project="..\ProjectAfter.settings" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

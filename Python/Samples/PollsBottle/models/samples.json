@@ -1,0 +1,31 @@
+[
+    {
+        "text": "What is your favorite season?",
+        "choices": [
+            "Winter",
+            "Spring",
+            "Summer",
+            "Fall"
+        ]
+    },
+    {
+        "text": "How do you commute to work/school?",
+        "choices": [
+            "Car",
+            "Motorcycle",
+            "Bicycle",
+            "Walk",
+            "Public transportation",
+            "No commute"
+        ]
+    },
+    {
+        "text": "Have you tried Node.js Tools for Visual Studio (http://nodejstools.codeplex.com) ?",
+        "choices": [
+            "No, I do not use Node.js",
+            "No, but I use/have used Node.js",
+            "Yes, I have used it",
+            "Yes, I use it frequently"
+        ]
+    }
+]

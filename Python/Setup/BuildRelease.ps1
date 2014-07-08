@@ -226,6 +226,14 @@ $nonvs_products = @(
     }
 )
 
+$multivs_products = @(
+    @{name="Microsoft.PythonTools.Samples";
+      vsix="Microsoft.PythonTools.Samples.vsix";
+      signtag=" - Samples";
+      outname1="PTVS Samples"; outname2=".vsix"
+    }
+)
+
 Push-Location $buildroot
 
 $asmverfileBackedUp = 0
@@ -393,7 +401,7 @@ try {
                     continue
                 }
             }
-            
+
             if (-not $skipbuild) {
                 msbuild /v:n /m /fl /flp:"Verbosity=d;LogFile=BuildRelease.$config.$($targetVs.number).log" `
                     /t:$target `
@@ -431,6 +439,8 @@ try {
             
             mkdir $destdir\Binaries\ReplWindow -EA 0 | Out-Null
             Copy-Item -force -recurse Python\Product\ReplWindow\obj\Dev$($targetVs.number)\$config\extension.vsixmanifest $destdir\Binaries\ReplWindow
+
+            Copy-Item -force $bindir\Microsoft.PythonTools.Samples.vsix $destdir\
         }
         
         ######################################################################
@@ -524,13 +534,16 @@ try {
 
                 mkdir $destdir\UnsignedMsi -EA 0 | Out-Null
                 mkdir $destdir\SignedBinariesUnsignedMsi -EA 0 | Out-Null
+                mkdir $destdir\UnsignedVsix -EA 0 | Out-Null
                 
                 Move-Item $destdir\*.msi $destdir\UnsignedMsi -Force
+                Move-Item $destdir\*.vsix $destdir\UnsignedVsix -Force
                 Move-Item $bindir\en-us\*.msi $destdir\SignedBinariesUnsignedMsi -Force
             }
             
             $jobs = @()
             $done_nonvs_products = 0
+            $done_multivs_products = 0
             
             foreach ($targetVs in $targetVersions) {
                 $destdir = "$outdir\$($targetVs.name)\$config"
@@ -554,8 +567,23 @@ try {
                 $jobs += begin_sign_files $msi_files $destdir $approvers `
                     $projectName $projectUrl "$projectName $($targetVs.name) - installer" $projectKeywords `
                     "authenticode"
+                    
+                if (-not $done_multivs_products) {
+                    $vsix_files = @($multivs_products | 
+                        ForEach {@{
+                            path="$destdir\UnsignedVsix\$($_.vsix)";
+                            name="Python Tools for Visual Studio$($_.signtag)"
+                        }}
+                    )
+
+                    $jobs += begin_sign_files $vsix_files $destdir $approvers `
+                        $projectName $projectUrl "$projectName $($targetVs.name) - vsix" $projectKeywords `
+                        "authenticode;opc"
+                    
+                    $done_multivs_products = 1
+                }
             }
-            
+
             end_sign_files $jobs
         }
         ######################################################################
@@ -563,6 +591,7 @@ try {
         ######################################################################
         
         $done_nonvs_products = 0
+        $done_multivs_products = 0
         foreach ($targetVs in $targetVersions) {
             $destdir = "$outdir\$($targetVs.name)\$config"
             if ($config -match "debug") {
@@ -579,6 +608,16 @@ try {
                     }
                 }
                 $done_nonvs_products = 1
+            }
+
+            if (-not $done_multivs_products) {
+                foreach ($product in $multivs_products) {
+                    Copy-Item "$destdir\$($product.vsix)" "$outdir\$($product.outname1)$spacename$config_mark$($product.outname2)" -Force -EA:0
+                    if (-not $?) {
+                        Write-Output "Failed to copy $destdir\$($product.vsix)"
+                    }
+                }
+                $done_multivs_products = 1
             }
             
             foreach ($product in $products) {
