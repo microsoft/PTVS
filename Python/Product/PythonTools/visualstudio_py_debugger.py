@@ -174,9 +174,15 @@ FRAME_KIND_DJANGO = 2
 
 DJANGO_BUILTINS = {'True': True, 'False': False, 'None': None}
 
+PYTHON_EVALUATION_RESULT_REPR_KIND_NORMAL = 0    # regular repr and hex repr (if applicable) for the evaluation result; length is len(result)
+PYTHON_EVALUATION_RESULT_REPR_KIND_RAW = 1       # repr is raw representation of the value - see TYPES_WITH_RAW_REPR; length is len(repr)
+PYTHON_EVALUATION_RESULT_REPR_KIND_RAWLEN = 2    # same as above, but only the length is reported, not the actual value
+
 PYTHON_EVALUATION_RESULT_EXPANDABLE = 1
 PYTHON_EVALUATION_RESULT_METHOD_CALL = 2
 PYTHON_EVALUATION_RESULT_SIDE_EFFECTS = 4
+PYTHON_EVALUATION_RESULT_RAW = 8
+PYTHON_EVALUATION_RESULT_HAS_RAW_REPR = 16
 
 # Don't show attributes of these types if they come from the class (assume they are methods).
 METHOD_TYPES = (
@@ -213,13 +219,33 @@ def eval_repr(x):
     else:
         return eval(repr(x), {})
 
+
+# key is type, value is function producing the raw repr
+TYPES_WITH_RAW_REPR = {
+    unicode: (lambda s: s)
+}
+
+# bytearray is 2.6+
+try:
+    # getfilesystemencoding is used here because it effectively corresponds to the notion of "locale encoding":
+    # current ANSI codepage on Windows, LC_CTYPE on Linux, UTF-8 on OS X - which is exactly what we want.
+    TYPES_WITH_RAW_REPR[bytearray] = lambda b: b.decode(sys.getfilesystemencoding(), 'ignore') 
+except:
+    pass
+
+if sys.version[0] == '3':
+    TYPES_WITH_RAW_REPR[bytes] = TYPES_WITH_RAW_REPR[bytearray]
+else:
+    TYPES_WITH_RAW_REPR[str] = TYPES_WITH_RAW_REPR[unicode]
+
+
 if sys.version[0] == '3':
   # work around a crashing bug on CPython 3.x where they take a hard stack overflow
   # we'll never see this exception but it'll allow us to keep our try/except handler
   # the same across all versions of Python
-  class StackOverflowException(Exception): pass
+    class StackOverflowException(Exception): pass
 else:
-  StackOverflowException = RuntimeError
+    StackOverflowException = RuntimeError
   
 ASBR = to_bytes('ASBR')
 SETL = to_bytes('SETL')
@@ -974,13 +1000,13 @@ class Thread(object):
         self.unblock_work = work
         self.unblock()
 
-    def run_on_thread(self, text, cur_frame, execution_id, frame_kind):
+    def run_on_thread(self, text, cur_frame, execution_id, frame_kind, repr_kind = PYTHON_EVALUATION_RESULT_REPR_KIND_NORMAL):
         self._block_starting_lock.acquire()
         
         if not self._is_blocked:
             report_execution_error('<expression cannot be evaluated at this time>', execution_id)
         elif not self._is_working:
-            self.schedule_work(lambda : self.run_locally(text, cur_frame, execution_id, frame_kind))
+            self.schedule_work(lambda : self.run_locally(text, cur_frame, execution_id, frame_kind, repr_kind))
         else:
             report_execution_error('<error: previous evaluation has not completed>', execution_id)
         
@@ -1036,14 +1062,14 @@ class Thread(object):
             code = compile(text, '<debug input>', 'exec')
         return code
 
-    def run_locally(self, text, cur_frame, execution_id, frame_kind):
+    def run_locally(self, text, cur_frame, execution_id, frame_kind, repr_kind = PYTHON_EVALUATION_RESULT_REPR_KIND_NORMAL):
         try:
             code = self.compile(text, cur_frame)
             res = eval(code, cur_frame.f_globals, self.get_locals(cur_frame, frame_kind))
             self.locals_to_fast(cur_frame)
             # Report any updated variable values first
             self.enum_thread_frames_locally()
-            report_execution_result(execution_id, res)
+            report_execution_result(execution_id, res, repr_kind)
         except:
             # Report any updated variable values first
             self.enum_thread_frames_locally()
@@ -1638,10 +1664,11 @@ class DebuggerLoop(object):
         fid = read_int(self.conn) # frame id
         eid = read_int(self.conn) # execution id
         frame_kind = read_int(self.conn)
+        repr_kind = read_int(self.conn)
 
         thread, cur_frame = self.get_thread_and_frame(tid, fid, frame_kind)
         if thread is not None and cur_frame is not None:
-            thread.run_on_thread(text, cur_frame, eid, frame_kind)
+            thread.run_on_thread(text, cur_frame, eid, frame_kind, repr_kind)
 
     def execute_code_no_report(self, text, tid, fid, frame_kind):
         # execute given text in specified frame, without sending back the results
@@ -1814,17 +1841,33 @@ def get_object_len(obj):
     except:
         return None
 
-def report_execution_result(execution_id, result):
-    obj_repr = safe_repr(result)
-    hex_repr = safe_hex_repr(result)
+def report_execution_result(execution_id, result, repr_kind = PYTHON_EVALUATION_RESULT_REPR_KIND_NORMAL):
+    if repr_kind == PYTHON_EVALUATION_RESULT_REPR_KIND_NORMAL:
+        flags = 0
+        obj_repr = safe_repr(result)
+        obj_len = get_object_len(result)
+        hex_repr = safe_hex_repr(result)
+    else:
+        flags = PYTHON_EVALUATION_RESULT_RAW
+        hex_repr = None                
+        for cls, raw_repr in TYPES_WITH_RAW_REPR.items():
+            if isinstance(result, cls):
+                try:
+                    obj_repr = raw_repr(result)
+                except:
+                    obj_repr = None
+                break
+        obj_len = get_object_len(obj_repr)
+        if repr_kind == PYTHON_EVALUATION_RESULT_REPR_KIND_RAWLEN:
+            obj_repr = None
+
     res_type = type(result)
     type_name = type(result).__name__
-    obj_len = get_object_len(result)
 
     with _SendLockCtx:
         write_bytes(conn, EXCR)
         write_int(conn, execution_id)
-        write_object(conn, res_type, obj_repr, hex_repr, type_name, obj_len)
+        write_object(conn, res_type, obj_repr, hex_repr, type_name, obj_len, flags)
 
 def report_children(execution_id, children):
     children = [(name, expression, flags, safe_repr(result), safe_hex_repr(result), type(result), type(result).__name__, get_object_len(result)) for name, expression, result, flags in children]
@@ -1854,6 +1897,11 @@ def write_object(conn, obj_type, obj_repr, hex_repr, type_name, obj_len, flags =
         write_string(conn, type_name)
     if obj_type not in NONEXPANDABLE_TYPES and obj_len != 0:
         flags |= PYTHON_EVALUATION_RESULT_EXPANDABLE
+    for cls in TYPES_WITH_RAW_REPR:
+        if issubclass(obj_type, cls):
+            flags |= PYTHON_EVALUATION_RESULT_HAS_RAW_REPR
+            break
+    write_int(conn, obj_len or 0)
     write_int(conn, flags)
 
 

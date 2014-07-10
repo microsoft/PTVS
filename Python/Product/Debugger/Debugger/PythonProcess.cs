@@ -679,10 +679,10 @@ namespace Microsoft.PythonTools.Debugger {
             string objRepr = stream.ReadString();
             string hexRepr = stream.ReadString();
             string typeName = stream.ReadString();
+            long length = stream.ReadInt64();
             var flags = (PythonEvaluationResultFlags)stream.ReadInt32();
 
-            if ((typeName == "unicode" && LanguageVersion.Is2x()) ||
-                (typeName == "str" && LanguageVersion.Is3x())) {
+            if (!flags.HasFlag(PythonEvaluationResultFlags.Raw) && ((typeName == "unicode" && LanguageVersion.Is2x()) || (typeName == "str" && LanguageVersion.Is3x()))) {
                 objRepr = objRepr.FixupEscapedUnicodeChars();
             }
 
@@ -690,7 +690,7 @@ namespace Microsoft.PythonTools.Debugger {
                 hexRepr = null;
             }
 
-            return new PythonEvaluationResult(this, objRepr, hexRepr, typeName, expr, childName, frame, flags);
+            return new PythonEvaluationResult(this, objRepr, hexRepr, typeName, length, expr, childName, frame, flags);
         }
 
         private void HandleThreadFrameList(Stream stream) {
@@ -1015,7 +1015,7 @@ namespace Microsoft.PythonTools.Debugger {
             }
         }
 
-        internal void ExecuteText(string text, PythonStackFrame pythonStackFrame, Action<PythonEvaluationResult> completion) {
+        internal void ExecuteText(string text, PythonEvaluationResultReprKind reprKind, PythonStackFrame pythonStackFrame, Action<PythonEvaluationResult> completion) {
             int executeId = _ids.Allocate();
             DebugWriteCommand("ExecuteText to thread " + pythonStackFrame.Thread.Id + " " + executeId);
             lock (_pendingExecutes) {
@@ -1029,6 +1029,7 @@ namespace Microsoft.PythonTools.Debugger {
                 _stream.WriteInt32(pythonStackFrame.FrameId);
                 _stream.WriteInt32(executeId);
                 _stream.WriteInt32((int)pythonStackFrame.Kind);
+                _stream.WriteInt32((int)reprKind);
             }
         }
 

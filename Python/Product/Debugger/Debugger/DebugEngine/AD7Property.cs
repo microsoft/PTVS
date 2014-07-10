@@ -14,9 +14,12 @@
 
 using System;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Debugger.Interop;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Debugger.DebugEngine {
     // An implementation of IDebugProperty2
@@ -88,6 +91,9 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                 }
                 if (_evalResult.Flags.HasFlag(PythonEvaluationResultFlags.SideEffects)) {
                     propertyInfo.dwAttrib |= enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_VALUE_SIDE_EFFECT;
+                }
+                if (_evalResult.Flags.HasFlag(PythonEvaluationResultFlags.HasRawRepr)) {
+                    propertyInfo.dwAttrib |= enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_VALUE_RAW_STRING;
                 }
             }
 
@@ -172,21 +178,15 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
         // The debugger will call this when the user tries to edit the property's values in one of the debugger windows.
         public int SetValueAsString(string pszValue, uint dwRadix, uint dwTimeout) {
-            AutoResetEvent completion = new AutoResetEvent(false);
-            this._evalResult.Frame.ExecuteText(_evalResult.Expression + " = " + pszValue, obj => completion.Set());
-
-            while (!_frame.StackFrame.Thread.Process.HasExited && !completion.WaitOne(Math.Min((int)dwTimeout, 100))) {
-                if (dwTimeout <= 100) {
-                    break;
-                }
-                dwTimeout -= 100;
-            }
-
-            if (_frame.StackFrame.Thread.Process.HasExited || dwTimeout < 0) {
+            try {
+                var timeoutToken = new CancellationTokenSource((int)dwTimeout).Token;
+                _evalResult.Frame.ExecuteTextAsync(_evalResult.Expression + " = " + pszValue)
+                    .ContinueWith(t => t.Result, timeoutToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Current)
+                    .GetAwaiter().GetResult();
+                return VSConstants.S_OK;
+            } catch (OperationCanceledException) {
                 return VSConstants.E_FAIL;
             }
-
-            return VSConstants.S_OK;
         }
 
         #endregion
@@ -212,13 +212,28 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         }
 
         public int GetStringCharLength(out uint pLen) {
-            pLen = 0;
-            return VSConstants.E_NOTIMPL;
+            var result = _evalResult.Frame.ExecuteTextAsync(_evalResult.Expression, PythonEvaluationResultReprKind.RawLen).GetAwaiter().GetResult();
+            pLen = (uint)(result.ExceptionText != null ? result.ExceptionText.Length : result.Length); 
+            return VSConstants.S_OK;
         }
 
         public unsafe int GetStringChars(uint buflen, ushort[] rgString, out uint pceltFetched) {
-            pceltFetched = 0;
-            return VSConstants.E_NOTIMPL;
+            if (rgString.Length == 0) {
+                pceltFetched = 0;
+                return VSConstants.S_OK;
+            }
+
+            var result = _evalResult.Frame.ExecuteTextAsync(_evalResult.Expression, PythonEvaluationResultReprKind.Raw).GetAwaiter().GetResult();
+            var value = result.ExceptionText ?? result.StringRepr;
+
+            pceltFetched = Math.Min(buflen, (uint)value.Length);
+            fixed (char* src = value) {
+                fixed (ushort* dst = rgString) {
+                    Encoding.Unicode.GetBytes(src, checked((int)pceltFetched), (byte*)dst, checked((int)buflen * 2));
+                }
+            }
+
+            return VSConstants.S_OK;
         }
 
         public int SetValueAsStringWithError(string pszValue, uint dwRadix, uint dwTimeout, out string errorString) {

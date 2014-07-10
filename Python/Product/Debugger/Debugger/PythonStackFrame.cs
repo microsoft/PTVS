@@ -16,6 +16,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Debugger {
@@ -151,8 +153,28 @@ namespace Microsoft.PythonTools.Debugger {
         /// Executes the given text against this stack frame.
         /// </summary>
         /// <param name="text"></param>
-        public virtual void ExecuteText(string text, Action<PythonEvaluationResult> completion) {
-            _thread.Process.ExecuteText(text, this, completion);
+        public void ExecuteText(string text, Action<PythonEvaluationResult> completion) {
+            ExecuteText(text, PythonEvaluationResultReprKind.Normal, completion);
+        }
+
+        public void ExecuteText(string text, PythonEvaluationResultReprKind reprKind, Action<PythonEvaluationResult> completion) {
+            _thread.Process.ExecuteText(text, reprKind, this, completion);
+        }
+
+        public Task<PythonEvaluationResult> ExecuteTextAsync(string text, PythonEvaluationResultReprKind reprKind = PythonEvaluationResultReprKind.Normal) {
+            var tcs = new TaskCompletionSource<PythonEvaluationResult>();
+
+            EventHandler<ProcessExitedEventArgs> processExited = delegate {
+                tcs.TrySetCanceled();
+            };
+            tcs.Task.ContinueWith(_ => _thread.Process.ProcessExited -= processExited);
+            _thread.Process.ProcessExited += processExited;
+
+            ExecuteText(text, reprKind, result => {
+                tcs.TrySetResult(result);
+            });
+
+            return tcs.Task;
         }
 
         /// <summary>

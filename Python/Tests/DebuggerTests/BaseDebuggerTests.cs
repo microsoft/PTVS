@@ -373,11 +373,13 @@ namespace DebuggerTests {
             }
         }
 
-        internal void WaitForExit(PythonProcess process) {
+        internal void WaitForExit(PythonProcess process, bool assert = true) {
             bool exited = process.WaitForExit(DefaultWaitForExitTimeout);
             if (!exited) {
                 process.Terminate();
-                Assert.Fail("Timeout while waiting for Python process to exit.");
+                if (assert) {
+                    Assert.Fail("Timeout while waiting for Python process to exit.");
+                }
             }
         }
 

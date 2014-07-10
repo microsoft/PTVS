@@ -20,6 +20,7 @@ using System.Linq;
 using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -466,8 +467,35 @@ namespace DebuggerTests {
             EvalTest("LocalsTest3.py", 2, "f", 0, EvalResult.ErrorExpression("/2", "unexpected token '/'\r\ninvalid syntax\r\n"));
         }
 
+        [TestMethod, Priority(0)]
+        public void EvalRawTest() {
+            EvalTest("EvalRawTest.py", 28, "<module>", 0, PythonEvaluationResultReprKind.Raw,
+                EvalResult.Value("n", null, null, 0, PythonEvaluationResultFlags.None));
+
+            EvalRawTest(28, "s", "fob");
+            EvalRawTest(28, "u", "fob");
+            EvalRawTest(28, "ds", "fob");
+
+            if (Version.Version >= PythonLanguageVersion.V26) {
+                EvalRawTest(28, "ba", "fob");
+            }
+        }
+
+        private void EvalRawTest(int line, string expr, string expected) {
+            var flags = PythonEvaluationResultFlags.Raw | PythonEvaluationResultFlags.HasRawRepr;
+
+            EvalTest("EvalRawTest.py", line, "<module>", 0, PythonEvaluationResultReprKind.Raw,
+                EvalResult.Value(expr, null, expected, expected.Length, flags, allowOtherFlags: true));
+            EvalTest("EvalRawTest.py", line, "<module>", 0, PythonEvaluationResultReprKind.RawLen,
+                EvalResult.Value(expr, null, null, expected.Length, flags, allowOtherFlags: true));
+        }
+
         class EvalResult {
             private readonly string _typeName, _repr;
+            private readonly long? _length;
+            private readonly PythonEvaluationResultFlags? _flags;
+            private readonly bool _allowOtherFlags;
+
             public readonly string ExceptionText, Expression;
             public readonly bool IsError;
 
@@ -475,8 +503,8 @@ namespace DebuggerTests {
                 return new EvalResult(expression, exceptionText, false);
             }
 
-            public static EvalResult Value(string expression, string typeName, string repr) {
-                return new EvalResult(expression, typeName, repr);
+            public static EvalResult Value(string expression, string typeName, string repr, long? length = null, PythonEvaluationResultFlags? flags = null, bool allowOtherFlags = false) {
+                return new EvalResult(expression, typeName, repr, length, flags, allowOtherFlags);
             }
 
             public static EvalResult ErrorExpression(string expression, string error) {
@@ -489,23 +517,42 @@ namespace DebuggerTests {
                 IsError = isError;
             }
 
-            EvalResult(string expression, string typeName, string repr) {
+            EvalResult(string expression, string typeName, string repr, long? length, PythonEvaluationResultFlags? flags, bool allowOtherFlags) {
                 Expression = expression;
                 _typeName = typeName;
                 _repr = repr;
+                _length = length;
+                _flags = flags;
+                _allowOtherFlags = allowOtherFlags;
             }
 
             public void Validate(PythonEvaluationResult result) {
                 if (ExceptionText != null) {
                     Assert.AreEqual(ExceptionText, result.ExceptionText);
                 } else {
-                    Assert.AreEqual(_typeName, result.TypeName);
+                    if (_typeName != null) {
+                        Assert.AreEqual(_typeName, result.TypeName);
+                    }
                     Assert.AreEqual(_repr, result.StringRepr);
+                    if (_length != null) {
+                        Assert.AreEqual(_length.Value, result.Length);
+                    }
+                    if (_flags != null) {
+                        if (_allowOtherFlags) {
+                            Assert.AreEqual(_flags.Value, _flags.Value & result.Flags);
+                        } else {
+                            Assert.AreEqual(_flags.Value, result.Flags);
+                        }
+                    }
                 }
             }
         }
 
         private void EvalTest(string filename, int lineNo, string frameName, int frameIndex, EvalResult eval) {
+            EvalTest(filename, lineNo, frameName, frameIndex, PythonEvaluationResultReprKind.Normal, eval);
+        }
+
+        private void EvalTest(string filename, int lineNo, string frameName, int frameIndex, PythonEvaluationResultReprKind reprKind, EvalResult eval) {
             var debugger = new PythonDebugger();
             PythonThread thread = null;
             var process = DebugProcess(debugger, DebuggerTestPath + filename, (newproc, newthread) => {
@@ -534,20 +581,24 @@ namespace DebuggerTests {
                     Assert.IsTrue(frames[frameIndex].TryParseText(eval.Expression, out errorMsg), "failed to parse expression");
                     Assert.IsNull(errorMsg);
 
-                    AutoResetEvent textExecuted = new AutoResetEvent(false);
                     Assert.AreEqual(frameName, frames[frameIndex].FunctionName);
-                    frames[frameIndex].ExecuteText(eval.Expression, (completion) => {
-                        obj = completion;
-                        textExecuted.Set();
-                    }
-                    );
-                    AssertWaited(textExecuted);
+
+                    var timeoutToken = new CancellationTokenSource(10000).Token;
+                    obj = frames[frameIndex].ExecuteTextAsync(eval.Expression, reprKind)
+                        .ContinueWith(t => t.Result, timeoutToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Current)
+                        .GetAwaiter().GetResult();
+
                     eval.Validate(obj);
                 }
 
                 process.Continue();
-            } finally {
                 WaitForExit(process);
+                process = null;
+            } finally {
+                if (process != null) {
+                    process.Terminate();
+                    WaitForExit(process, assert: false);
+                }
             }
         }
 

@@ -16,13 +16,20 @@ using System;
 using System.Threading;
 
 namespace Microsoft.PythonTools.Debugger {
+    enum PythonEvaluationResultReprKind {
+        Normal,
+        Raw,
+        RawLen
+    }
 
     [Flags]
     enum PythonEvaluationResultFlags {
         None = 0,
         Expandable = 1,
         MethodCall = 2,
-        SideEffects = 4
+        SideEffects = 4,
+        Raw = 8,
+        HasRawRepr = 16,
     }
 
     /// <summary>
@@ -33,15 +40,17 @@ namespace Microsoft.PythonTools.Debugger {
         private readonly PythonStackFrame _frame;
         private readonly PythonProcess _process;
         private readonly PythonEvaluationResultFlags _flags;
+        private readonly long _length;
 
         /// <summary>
         /// Creates a PythonObject for an expression which successfully returned a value.
         /// </summary>
-        public PythonEvaluationResult(PythonProcess process, string objRepr, string hexRepr, string typeName, string expression, string childName, PythonStackFrame frame, PythonEvaluationResultFlags flags) {
+        public PythonEvaluationResult(PythonProcess process, string objRepr, string hexRepr, string typeName, long length, string expression, string childName, PythonStackFrame frame, PythonEvaluationResultFlags flags) {
             _process = process;
             _objRepr = objRepr;
             _hexRepr = hexRepr;
             _typeName = typeName;
+            _length = length;
             _expression = expression;
             _childName = childName;
             _frame = frame;
@@ -104,7 +113,8 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         /// <summary>
-        /// Gets the string representation of this evaluation or null if an exception was thrown.
+        /// Gets the string representation of this evaluation, or <c>null</c> if repr was not requested or the evaluation
+        /// failed with an exception.
         /// </summary>
         public string StringRepr {
             get {
@@ -128,6 +138,13 @@ namespace Microsoft.PythonTools.Debugger {
             get {
                 return _typeName;
             }
+        }
+
+        /// <summary>
+        /// Gets the length of the evaluated value as reported by <c>len()</c>, or <c>0</c> if evaluation failed with an exception.
+        /// </summary>
+        public long Length {
+            get { return _length; }
         }
 
         /// <summary>
