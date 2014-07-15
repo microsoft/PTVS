@@ -374,14 +374,6 @@ namespace Microsoft.PythonTools.Analysis.Browser {
             DatabaseDirectory.SelectAll();
         }
 
-        private void DatabaseDirectory_SelectionChanged(object sender, SelectionChangedEventArgs e) {
-            if (e.AddedItems.Count == 1) {
-                DatabaseDirectory.SetCurrentValue(TextBox.TextProperty, e.AddedItems[0]);
-                DatabaseDirectory.Focus();
-                DatabaseDirectory.SelectAll();
-            }
-        }
-
         private void DatabaseDirectory_TextChanged(object sender, TextChangedEventArgs e) {
             var dir = DatabaseDirectory.Text;
             if (!Directory.Exists(dir)) {
@@ -394,6 +386,23 @@ namespace Microsoft.PythonTools.Analysis.Browser {
                     break;
                 }
             }
+        }
+
+        private void NavigateTo_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+            e.CanExecute = Directory.Exists(e.Parameter as string);
+            e.Handled = true;
+        }
+
+        private void NavigateTo_Executed(object sender, ExecutedRoutedEventArgs e) {
+            DatabaseDirectory.SetCurrentValue(TextBox.TextProperty, e.Parameter);
+            DatabaseDirectory.Focus();
+            DatabaseDirectory.SelectAll();
+            e.Handled = true;
+        }
+
+        private void DatabaseDirectory_SubDirs_PreviewGotKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e) {
+            DatabaseDirectory.Focus();
+            e.Handled = true;
         }
     }
 

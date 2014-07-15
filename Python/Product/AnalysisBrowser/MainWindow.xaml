@@ -156,7 +156,17 @@
                         <TextBlock Margin="3" Text="{Binding}" />
                     </DataTemplate>
 
+                    <RoutedCommand x:Key="NavigateTo" />
                     <l:DirectoryList x:Key="SubDirList" IncludeDirectories="True" IncludeParentDirectory="True" />
+                    <DataTemplate x:Key="SubDirTemplate">
+                        <TextBlock>
+                            <Hyperlink Command="{StaticResource NavigateTo}"
+                                       CommandParameter="{Binding Mode=OneWay}"
+                                       TextDecorations="{x:Null}">
+                                <Run Text="{Binding Mode=OneWay}" />
+                            </Hyperlink>
+                        </TextBlock>
+                    </DataTemplate>
                 </Grid.Resources>
 
                 <Grid Grid.IsSharedSizeScope="True"
@@ -197,12 +207,19 @@
                                     </MultiBinding.Bindings>
                                 </MultiBinding>
                             </Popup.IsOpen>
+                            <Popup.CommandBindings>
+                                <CommandBinding Command="{StaticResource NavigateTo}"
+                                                CanExecute="NavigateTo_CanExecute"
+                                                Executed="NavigateTo_Executed" />
+                            </Popup.CommandBindings>
                             <ListBox Name="DatabaseDirectory_SubDirs"
-                                        FontFamily="Consolas"
-                                        Padding="0"
-                                        MaxHeight="200"
-                                        ItemsSource="{Binding Text,ElementName=DatabaseDirectory,Converter={StaticResource SubDirList}}"
-                                        SelectionChanged="DatabaseDirectory_SelectionChanged" />
+                                     PreviewGotKeyboardFocus="DatabaseDirectory_SubDirs_PreviewGotKeyboardFocus"
+                                     Focusable="False"
+                                     FontFamily="Consolas"
+                                     Padding="0"
+                                     MaxHeight="200"
+                                     ItemsSource="{Binding Text,ElementName=DatabaseDirectory,Converter={StaticResource SubDirList}}"
+                                     ItemTemplate="{StaticResource SubDirTemplate}" />
                         </Popup>
                         <Button Grid.Column="2"
                                 VerticalAlignment="Top"
@@ -232,7 +249,7 @@
                                   SelectedItem="{Binding Version}"
                                   ItemsSource="{Binding Source={x:Static l:MainWindow.SupportedVersions},Mode=OneTime}" />
                     </Grid>
-                    
+
                     <Grid Grid.Row="3">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="auto" SharedSizeGroup="Labels" />
@@ -240,17 +257,17 @@
                             <ColumnDefinition Width="auto" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
-                        
+
                         <Label Grid.Column="0">
                             Options:
                         </Label>
-                        
+
                         <CheckBox Grid.Column="1"
                                   IsChecked="{Binding LoadRecursive}">
                             Load all subdirectories
                         </CheckBox>
                     </Grid>
-                    
+
                     <Grid Grid.Row="4">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="auto" SharedSizeGroup="Labels" />
@@ -258,16 +275,16 @@
                             <ColumnDefinition Width="auto" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
-                        
+
                         <Label Grid.Column="0">
                             Break me:
                         </Label>
-                        
+
                         <CheckBox Grid.Column="1"
                                   IsChecked="{Binding LoadWithContention}">
                             Multithreaded load
                         </CheckBox>
-                        
+
                         <CheckBox Grid.Column="2"
                                   IsChecked="{Binding LoadWithLowMemory}">
                             Low memory

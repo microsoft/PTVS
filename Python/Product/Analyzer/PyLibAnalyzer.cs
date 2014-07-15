@@ -937,7 +937,7 @@ namespace Microsoft.PythonTools.Analysis {
                     using (var output = ProcessOutput.Run(_interpreter, arguments, prefixDir, env, false, null)) {
                         TraceInformation("Scraping {0}", file.ModuleName);
                         TraceInformation("Command: {0}", output.Arguments);
-                        TraceInformation("environ['Path'] = {0}", pathVar);
+                        TraceVerbose("environ['Path'] = {0}", pathVar);
                         output.Wait();
 
                         if (output.StandardOutputLines.Any()) {

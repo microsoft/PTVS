@@ -22,12 +22,9 @@ except:
     import _thread as thread
 
 try:
-    __builtins__
-except NameError:
-    try:
-        import __builtin__ as __builtins__
-    except ImportError:
-        import builtins as __builtins__
+    import __builtin__ as __builtins__
+except ImportError:
+    import builtins as __builtins__
 
 def safe_dir(obj):
     try:
@@ -59,50 +56,71 @@ def get_builtin(name):
 safe_getattr = PythonScraper.safe_getattr
 
 BUILTIN_TYPES = [type_name for type_name in builtins_keys() if type(get_builtin(type_name)) is type]
-if sys.version >= '3.':
+if sys.version_info[0] >= 3:
     BUILTIN = 'builtins'
     unicode = str
 else:
     BUILTIN = '__builtin__'
 
-TYPE_OVERRIDES = {'string': PythonScraper.type_to_typeref(types.CodeType),
-                  's': PythonScraper.type_to_typeref(str),
-                  'integer': PythonScraper.type_to_typeref(int),
-                  'boolean': PythonScraper.type_to_typeref(bool),
-                  'number': PythonScraper.type_to_typeref(int),
-                  'pid': PythonScraper.type_to_typeref(int),
-                  'ppid': PythonScraper.type_to_typeref(int),
-                  'fd': PythonScraper.type_to_typeref(int),
-                  'handle': PythonScraper.type_to_typeref(int),
-                  'Exit': PythonScraper.type_to_typeref(int),
-                  'fd2': PythonScraper.type_to_typeref(int),
-                  'Integral': PythonScraper.type_to_typeref(int),
-                  'exit_status':PythonScraper.type_to_typeref(int),
-                  'old_mask': PythonScraper.type_to_typeref(int),
-                  'source': PythonScraper.type_to_typeref(str),
-                  'newpos': PythonScraper.type_to_typeref(int),
-                  'key': PythonScraper.type_to_typeref(str),
-                  'dictionary': PythonScraper.type_to_typeref(dict),
-                  'None': PythonScraper.type_to_typeref(type(None)),
-                  'floating': PythonScraper.type_to_typeref(float),
-                  'filename': PythonScraper.type_to_typeref(str),
-                  'path': PythonScraper.type_to_typeref(str),
-                  'byteswritten': PythonScraper.type_to_typeref(int),
-                  'unicode': PythonScraper.type_to_typeref(unicode),
-                  'Unicode': PythonScraper.type_to_typeref(unicode),
-                  'True':  PythonScraper.type_to_typeref(bool),
-                  'False':  PythonScraper.type_to_typeref(bool),
-                  'lock': PythonScraper.type_to_typeref(thread.LockType),
-                  'code': PythonScraper.type_to_typeref(types.CodeType),
-                  'module': PythonScraper.type_to_typeref(types.ModuleType),
-                  'size': PythonScraper.type_to_typeref(int),
-                  'INT': PythonScraper.type_to_typeref(int),
-                  'STRING': PythonScraper.type_to_typeref(str),
-                  'TUPLE': PythonScraper.type_to_typeref(tuple),
-                  'OBJECT': PythonScraper.type_to_typeref(object),
-                  'LIST': PythonScraper.type_to_typeref(list),
-                  'DICT': PythonScraper.type_to_typeref(dict),
-                }
+TYPE_OVERRIDES = {
+    'string': PythonScraper.type_to_typeref(types.CodeType),
+    's': PythonScraper.type_to_typeref(str),
+    'integer': PythonScraper.type_to_typeref(int),
+    'boolean': PythonScraper.type_to_typeref(bool),
+    'number': PythonScraper.type_to_typeref(int),
+    'pid': PythonScraper.type_to_typeref(int),
+    'ppid': PythonScraper.type_to_typeref(int),
+    'fd': PythonScraper.type_to_typeref(int),
+    'handle': PythonScraper.type_to_typeref(int),
+    'Exit': PythonScraper.type_to_typeref(int),
+    'fd2': PythonScraper.type_to_typeref(int),
+    'Integral': PythonScraper.type_to_typeref(int),
+    'exit_status':PythonScraper.type_to_typeref(int),
+    'old_mask': PythonScraper.type_to_typeref(int),
+    'source': PythonScraper.type_to_typeref(str),
+    'newpos': PythonScraper.type_to_typeref(int),
+    'key': PythonScraper.type_to_typeref(str),
+    'dictionary': PythonScraper.type_to_typeref(dict),
+    'None': PythonScraper.type_to_typeref(type(None)),
+    'floating': PythonScraper.type_to_typeref(float),
+    'filename': PythonScraper.type_to_typeref(str),
+    'path': PythonScraper.type_to_typeref(str),
+    'byteswritten': PythonScraper.type_to_typeref(int),
+    'unicode': PythonScraper.type_to_typeref(unicode),
+    'Unicode': PythonScraper.type_to_typeref(unicode),
+    'True':  PythonScraper.type_to_typeref(bool),
+    'False':  PythonScraper.type_to_typeref(bool),
+    'lock': PythonScraper.type_to_typeref(thread.LockType),
+    'code': PythonScraper.type_to_typeref(types.CodeType),
+    'module': PythonScraper.type_to_typeref(types.ModuleType),
+    'size': PythonScraper.type_to_typeref(int),
+    'INT': PythonScraper.type_to_typeref(int),
+    'STRING': PythonScraper.type_to_typeref(str),
+    'TUPLE': PythonScraper.type_to_typeref(tuple),
+    'OBJECT': PythonScraper.type_to_typeref(object),
+    'LIST': PythonScraper.type_to_typeref(list),
+    'DICT': PythonScraper.type_to_typeref(dict),
+    'char *': PythonScraper.type_to_typeref(str),
+    'wchar_t *': PythonScraper.type_to_typeref(unicode),
+    'CHAR *': PythonScraper.type_to_typeref(str),
+    'TCHAR *': PythonScraper.type_to_typeref(str),
+    'WCHAR *': PythonScraper.type_to_typeref(unicode),
+    'LPSTR': PythonScraper.type_to_typeref(str),
+    'LPCSTR': PythonScraper.type_to_typeref(str),
+    'LPTSTR': PythonScraper.type_to_typeref(str),
+    'LPCTSTR': PythonScraper.type_to_typeref(str),
+    'LPWSTR': PythonScraper.type_to_typeref(unicode),
+    'LPCWSTR': PythonScraper.type_to_typeref(unicode),
+}
+
+try:
+    TYPE_OVERRIDES['file object'] = PythonScraper.type_to_typeref(file)
+except NameError:
+    try:
+        import _io
+        TYPE_OVERRIDES['file object'] = PythonScraper.type_to_typeref(_io._IOBase)  
+    except (NameError, ImportError):
+        pass
 
 RETURN_TYPE_OVERRIDES = dict(TYPE_OVERRIDES)
 RETURN_TYPE_OVERRIDES.update({'string': PythonScraper.type_to_typeref(str)})
@@ -131,28 +149,28 @@ def type_name_to_typeref(name, mod, type_overrides = TYPE_OVERRIDES):
 
 OBJECT_TYPE = PythonScraper.type_to_typeref(object)
 
-TOKENS_REGEX = (
-    '('
-    '(?:[a-zA-Z_][0-9a-zA-Z_-]*)|'  # identifier
-    '(?:[0-9]+[lL]?)|'              # integer value
-    '(?:[0-9]*\.[0-9]+)|'           # floating point value
-    '(?:\.\.\.)|'                   # ellipsis
-    '(?:\.)|'                      # dot
-    '(?:\()|'                      # open paren
-    '(?:\))|'                      # close paren
-    '(?:\:)|'                      # colon
-    '(?:-->)|'                      # return value
-    '(?:->)|'                      # return value
-    '(?:=>)|'                      # return value
-    '(?:[,])|'                      # comma
-    '(?:=)|'                      # assignment (default value)
-    '(?:\.\.\.)|'                      # ellipsis
-    '(?:\[)|'
-    '(?:\])|'
-    '(?:\*\*)|'
-    '(?:\*)|'
-     ')'
-    )
+TOKENS_REGEX = '(' + '|'.join([
+    r'(?:[a-zA-Z_][0-9a-zA-Z_-]*)',  # identifier
+    r'(?:-?[0-9]+[lL]?(?!\.))',      # integer value
+    r'(?:-?[0-9]*\.[0-9]+)',         # floating point value
+    r'(?:-?[0-9]+\.[0-9]*)',         # floating point value
+    r'(?:\s*\'.*?(?<!\\)\')',        # single-quote string
+    r'(?:\s*".*?(?<!\\)")',          # double-quote string
+    r'(?:\.\.\.)',                   # ellipsis
+    r'(?:\.)',                       # dot
+    r'(?:\()',                       # open paren
+    r'(?:\))',                       # close paren
+    r'(?:\:)',                       # colon
+    r'(?:-->)',                      # return value
+    r'(?:->)',                       # return value
+    r'(?:=>)',                       # return value
+    r'(?:,)',                        # comma
+    r'(?:=)',                        # assignment (default value)
+    r'(?:\[)',
+    r'(?:\])',
+    r'(?:\*\*)',
+    r'(?:\*)',
+]) + ')'
 
 def get_ret_type(ret_type, obj_class, mod):
     if ret_type is not None:
@@ -271,88 +289,127 @@ RETURN_TOKENS = set(['-->', '->', '=>', 'return'])
 
 def parse_args(tokens, cur_token, module):
     args = []
-    star_args = None
-    is_optional = False
-    default_value = None
+
+    arg = []
     annotation = None
-    ret_type = None
-    is_tuple_param = False
-    last_tuple_param = False
+    default_value = None
+    ignore = False
+    arg_tokens = []
+    next_is_optional = False
+    is_optional = False
+    paren_nesting = 0
     while cur_token < len(tokens):
         token = tokens[cur_token]
-        if token == '[':
-            # optional arg
-            is_optional = True
-        elif token == '*':
-            star_args = '*'
-        elif token == '**':
-            star_args = '**'
-        elif token == ')':
-            if is_tuple_param:
-                is_tuple_param = False
-                last_tuple_param = False
-            else:
-                cur_token += 2
-                break
-        elif token == ',':
-            cur_token += 2
-            if cur_token < len(tokens) and tokens[cur_token] == ']':
-                # [fob,], ignore the trailing ]
-                cur_token += 2
-            continue
-        elif token == '(':
-            is_tuple_param = True
-        else:
-            arg_name = token
-            if cur_token + 2 < len(tokens) and is_identifier(tokens[cur_token + 2]):
-                # C cstyle sig, 'int fob'
-                arg_name = tokens[cur_token + 2]
-                annotation = token
-                cur_token += 2
+        cur_token += 1
 
-            if cur_token + 4 < len(tokens) and tokens[cur_token + 2] == '=':
-                default_value = tokens[cur_token + 4]
-                cur_token += 4
-            
-            if cur_token + 4 < len(tokens) and tokens[cur_token + 2] == ':':
-                annotation = tokens[cur_token + 4]
-                cur_token += 4
-
-            arg = {'name': arg_name}
-            if default_value is not None:
-                arg['default_value'] = default_value
-            elif is_optional:
-                arg['default_value'] = 'None'
-
-            if annotation is not None:
-                arg_type = type_name_to_typeref(annotation, module)
-                if arg_type is not None:
-                    arg['type'] = [arg_type]
-            if star_args is not None:
-                arg['arg_format'] = star_args
-            elif token == '...':
-                arg['arg_format'] = '*'
-                arg['name'] = 'args'
-            
-            while cur_token + 2 < len(tokens) and tokens[cur_token + 2] == ']':
-                cur_token += 2
-    
-            if is_tuple_param:
-                if last_tuple_param:
-                    args[-1]['name'] = args[-1]['name'] + ', ' + arg_name
-                else:
-                    last_tuple_param = True
-                    args.append(arg)
-            else:
-                args.append(arg)
-            
+        if token in (',', ')') and paren_nesting == 0:
+            arg_tokens.append((arg, annotation, default_value, is_optional))
             is_optional = False
-            star_args = None
+            arg = []
+            annotation = None
             default_value = None
+            if token == ')':
+                cur_token += 1
+                break
+        elif ignore:
+            continue
+        elif token == '=':
+            if default_value is None:
+                default_value = []
+            else:
+                ignore = True
+        elif token == ':':
+            if annotation is None and default_value is None:
+                annotation = []
+            else:
+                ignore = True
+        elif default_value is not None:
+            default_value.append(token)
+        elif annotation is not None:
+            annotation.append(token)
+        elif token == '[':
+            next_is_optional = True
+        elif token in (']', ' ', ''):
+            pass
+        else:
+            arg.append(token)
+            if next_is_optional:
+                is_optional, next_is_optional = True, False
 
-        cur_token += 2
+        if token == '(':
+            paren_nesting += 1
+        elif token == ')':
+            paren_nesting -= 1
+
+    #from pprint import pprint; pprint(arg_tokens)
+
+    for arg, annotation, default_value, is_optional in arg_tokens:
+        if not arg or arg[0] == '/':
+            continue
+
+        arg_name = None
+        star_args = None
+
+        if arg[0] == '(':
+            names = [arg.pop(0)]
+            while names[-1] != ')' and arg:
+                names.append(arg.pop(0))
+            if names[-1] == ')':
+                names.pop()
+            arg_name = ', '.join(n for n in names[1:] if is_identifier(n))
+        elif is_identifier(arg[-1]):
+            arg_name = arg.pop()
+        elif arg[-1] == '...':
+            arg_name = 'args'
+            star_args = '*'
+        
+        if not annotation and arg:
+            if len(arg) > 1 and arg[-1] == '*':
+                # C style prototype
+                annotation = [' '.join(a for a in arg if a != 'const')]
+            elif is_identifier(arg[-1]):
+                annotation = arg[-1:]
+            elif arg[-1] == ')':
+                annotation = [arg.pop()]
+                while annotation[0] != '(':
+                    annotation.insert(0, arg.pop())
+
+        if arg and arg[0] in ('*', '**'):
+            star_args = arg[0]
+
+        data = { }
+
+        if arg_name:
+            data['name'] = arg_name
+        elif star_args == '*':
+            data['name'] = 'args'
+        elif star_args == '**':
+            data['name'] = 'kwargs'
+        else:
+            data['name'] = 'arg'
+        
+        if annotation and len(annotation) == 1:
+            data['type'] = [type_name_to_typeref(annotation[0], module)]
+           
+        if default_value:
+            default_value = [d for d in default_value if d]
+            
+            if is_optional and default_value[-1] == ']':
+                default_value.pop()
+
+            data['default_value'] = ''.join(default_value).strip()
+        elif is_optional:
+            data['default_value'] = 'None'
+
+        if star_args:
+            data['arg_format'] = star_args
+
+        args.append(data)
+
 
     # end of params, check for ret value
+    ret_type = None
+
     if cur_token + 2 < len(tokens) and tokens[cur_token] in RETURN_TOKENS:
         ret_type_start = cur_token + 2
         # we might have a descriptive return value, 'list of fob'
@@ -484,220 +541,3 @@ def get_new_overloads(type_obj, obj):
 
 def should_include_module(name):
     return True
-
-if __name__ == '__main__':
-    import pprint
-    r = parse_doc_str("""arange([start,] stop[, step,], dtype=None)
-
-    Returns
-    -------
-    out : ndarray""",
-        'numpy',
-        None,
-        'arange')
-
-    assert r == [{
-        'doc': 'Returns\n    -------\n    out : ndarray',
-        'ret_type': [('', 'ndarray')],
-        'args': ({'name': 'start', 'default_value':'None'}, 
-                 {'name': 'stop'}, 
-                 {'name': 'step', 'default_value': 'None'},
-                 {'name': 'dtype', 'default_value':'None'}, 
-                )
-    }], pprint.pformat(r)
-
-    r = parse_doc_str("""arange([start,] stop[, step,], dtype=None)
-
-    Return - out : ndarray""",
-        'numpy',
-        None,
-        'arange')
-
-    assert r == [{
-        'doc': 'Return - out : ndarray',
-        'ret_type': [('', 'ndarray')],
-        'args': ({'name': 'start', 'default_value':'None'}, 
-                 {'name': 'stop'}, 
-                 {'name': 'step', 'default_value': 'None'},
-                 {'name': 'dtype', 'default_value':'None'}, 
-                )
-    }], pprint.pformat(r)
-
-    r = parse_doc_str('reduce(function, sequence[, initial]) -> value', BUILTIN, __builtins__, 'reduce')
-    assert r == [
-           {'args': (
-                {'name': 'function'},
-                {'name': 'sequence'},
-                {'default_value': 'None', 'name': 'initial'}), 
-            'doc': '', 
-            'ret_type': [('', 'value')]
-           }
-        ], repr(r)
-
-    r = parse_doc_str('pygame.draw.arc(Surface, color, Rect, start_angle, stop_angle, width=1): return Rect', 
-                         'draw',
-                         None,
-                         'arc')
-
-    assert r == [
-           {'args': (
-               {'name': 'Surface'},
-               {'name': 'color'},
-               {'name': 'Rect'},
-               {'name': 'start_angle'},
-               {'name': 'stop_angle'},
-               {'default_value': '1', 'name': 'width'}),
-            'doc': '',
-            'ret_type': [('', 'Rect')]
-           }
-    ]
-
-    r = parse_doc_str('''B.isdigit() -> bool
-
-Return True if all characters in B are digits
-and there is at least one character in B, False otherwise.''',
-                    'bytes',
-                    None,
-                    'isdigit')
-
-    assert r == [
-        {'args': (),
-         'doc': 'Return True if all characters in B are digits\nand there is at least one character in B, False otherwise.',
-         'ret_type': [(BUILTIN, 'bool')]}
-    ], repr(r)
-    r = parse_doc_str('x.__init__(...) initializes x; see help(type(x)) for signature',
-                      'str',
-                      None,
-                      '__init__')
-
-    assert r == [{'args': ({'arg_format': '*', 'name': 'args'},),
-                  'doc': 'initializes x; see help(type(x)) for signature'}], repr(r)
-
-    r = parse_doc_str('S.find(sub [,start [,end]]) -> int',
-                         'str',
-                         None,
-                         'find')
-
-    assert r == [{
-        'args': (
-            {'name': 'sub'},
-            {'default_value': 'None', 'name': 'start'},
-            {'default_value': 'None', 'name': 'end'}
-        ),
-        'doc': '',
-        'ret_type': [(BUILTIN, 'int')]
-    }], repr(r)
-
-    r = parse_doc_str('S.format(*args, **kwargs) -> unicode',
-                      'str',
-                      None,
-                      'format')
-    assert r == [
-                 {'args': (
-                           {'arg_format': '*', 'name': 'args'},
-                           {'arg_format': '**', 'name': 'kwargs'}
-                          ),
-                 'doc': '',
-                 'ret_type': [(BUILTIN, unicode.__name__)]}
-    ], repr(r)
-    
-    r = parse_doc_str("'ascii(object) -> string\n\nReturn the same as repr().  In Python 3.x, the repr() result will\\ncontain printable characters unescaped, while the ascii() result\\nwill have such characters backslash-escaped.'",
-            'future_builtins',
-            None,
-            'ascii')
-    assert r == [{'args': ({'name': 'object'},),
-                 'doc': "Return the same as repr().  In Python 3.x, the repr() result will\\ncontain printable characters unescaped, while the ascii() result\\nwill have such characters backslash-escaped.'",
-                 'ret_type': [(BUILTIN, 'str')]}
-    ], repr(r)
-
-    r = parse_doc_str('f(INT class_code) => SpaceID',
-                'fob',
-                None,
-                'f')    
-    assert r == [{'args': ({'name': 'class_code', 'type': [(BUILTIN, 'int')]},),
-        'doc': '',
-        'ret_type': [('', 'SpaceID')]}], repr(r)
-
-    r = parse_doc_str('compress(data, selectors) --> iterator over selected data\n\nReturn data elements',
-                      'itertools',
-                      None,
-                      'compress')
-    assert r == [{'args': ({'name': 'data'}, {'name': 'selectors'}),
-                  'doc': 'Return data elements',
-                  'ret_type': [('', 'iterator')]}], repr(r)
-                  
-    r = parse_doc_str('isinstance(object, class-or-type-or-tuple) -> bool\n\nReturn whether an object is an '
-                      'instance of a class or of a subclass thereof.\nWith a type as second argument, '
-                      'return whether that is the object\'s type.\nThe form using a tuple, isinstance(x, (A, B, ...)),'
-                      ' is a shortcut for\nisinstance(x, A) or isinstance(x, B) or ... (etc.).',
-                      BUILTIN,
-                      None,
-                      'isinstance')
-    
-    assert r == [{'args': ({'name': 'object'}, {'name': 'class-or-type-or-tuple'}),
-                   'doc': "Return whether an object is an instance of a class or of a subclass thereof.\n"
-                          "With a type as second argument, return whether that is the object's type.\n"
-                          "The form using a tuple, isinstance(x, (A, B, ...)), is a shortcut for\n"
-                          "isinstance(x, A) or isinstance(x, B) or ... (etc.).",
-                   'ret_type': [(BUILTIN, 'bool')]}], repr(r)
-
-    r = parse_doc_str('pygame.Rect(left, top, width, height): return Rect\n'
-                      'pygame.Rect((left, top), (width, height)): return Rect\n'
-                      'pygame.Rect(object): return Rect\n'
-                      'pygame object for storing rectangular coordinates',
-                      'pygame',
-                      None,
-                      'Rect'
-     )
-    assert r == [
-        {'args': ({'name': 'left'}, {'name': 'top'}, {'name': 'width'}, {'name': 'height'}),
-         'doc': 'pygame object for storing rectangular coordinates',
-         'ret_type': [('', 'Rect')]},
-         {'args': ({'name': 'left, top'}, {'name': 'width, height'}),
-          'doc': 'pygame object for storing rectangular coordinates',
-         'ret_type': [('', 'Rect')]},
-         {'args': ({'name': 'object'},),
-          'doc': 'pygame object for storing rectangular coordinates',
-         'ret_type': [('', 'Rect')]}
-    ], repr(r)
-
-    r = parse_doc_str('read([size]) -> read at most size bytes, returned as a string.\n\n'
-                      'If the size argument is negative or omitted, read until EOF is reached.\n'
-                      'Notice that when in non-blocking mode, less data than what was requested\n'
-                      'may be returned, even if no size parameter was given.',
-                      BUILTIN,
-                      __builtins__,
-                      'read'
-     )
-
-    assert r == [{
-        'args': ({'default_value': 'None', 'name': 'size'},),
-        'doc': 'read at most size bytes, returned as a string.\n\nIf the size argument is negative or omitted, read until EOF is reached.\nNotice that when in non-blocking mode, less data than what was requested\nmay be returned, even if no size parameter was given.',
-        'ret_type': [('', '')]
-    }], repr(r)
-
-
-    r = get_overloads_from_doc_string('read([size]) -> read at most size bytes, returned as a string.\n\n'
-                      'If the size argument is negative or omitted, read until EOF is reached.\n'
-                      'Notice that when in non-blocking mode, less data than what was requested\n'
-                      'may be returned, even if no size parameter was given.',
-                      __builtins__,
-                      None,
-                      'read'
-     )
-
-    assert r == [{'args': ({'default_value': 'None', 'name': 'size'},),
-                 'doc': 'read at most size bytes, returned as a string.\n\nIf the size argument is negative or omitted, read until EOF is reached.\nNotice that when in non-blocking mode, less data than what was requested\nmay be returned, even if no size parameter was given.',
-                 'ret_type': [('', '')]}], repr(r)
-
-    r = parse_doc_str('T.__new__(S, ...) -> a new object with type S, a subtype of T',
-                      'struct',
-                      None,
-                      '__new__'
-     )
-
-    assert r == [{
-        'ret_type': [('', '')],
-        'doc': 'a new object with type S, a subtype of T',
-        'args': ({'name': 'S'}, {'arg_format': '*', 'name': 'args'})
-    }], repr(r)
