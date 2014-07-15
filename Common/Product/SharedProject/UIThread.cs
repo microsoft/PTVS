@@ -103,14 +103,14 @@ namespace Microsoft.VisualStudioTools {
         }
 
         [Conditional("DEBUG")]
-        public static void MustBeCalledFromUIThread() {
-            Debug.Assert(!InvokeRequired, "Invalid cross-thread call");
+        public static void MustBeCalledFromUIThread(string message = "Invalid cross-thread call") {
+            Debug.Assert(!InvokeRequired, message);
         }
 
         [Conditional("DEBUG")]
-        public static void MustNotBeCalledFromUIThread() {
+        public static void MustNotBeCalledFromUIThread(string message = "Invalid cross-thread call") {
             if (_tryToInvoke != false) {
-                Debug.Assert(InvokeRequired, "Invalid UI-thread call");
+                Debug.Assert(InvokeRequired, message);
             }
         }
 

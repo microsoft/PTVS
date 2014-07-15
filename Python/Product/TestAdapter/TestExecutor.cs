@@ -203,7 +203,9 @@ namespace Microsoft.PythonTools.TestAdapter {
                     }
 
                     try {
-                        while (!app.AttachToProcess(proc, PythonRemoteDebugPortSupplierUnsecuredId, testCase.DebugSecret, testCase.DebugPort)) {
+                        string qualifierUri = string.Format("tcp://{0}@localhost:{1}", testCase.DebugSecret, testCase.DebugPort);
+
+                        while (!app.AttachToProcess(proc, PythonRemoteDebugPortSupplierUnsecuredId, qualifierUri)) {
                             if (proc.Wait(TimeSpan.FromMilliseconds(500))) {
                                 break;
                             }

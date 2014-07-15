@@ -1276,7 +1276,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             Console.WriteLine("Checking CopyFullPath on:{0}", expected);
             AutomationWrapper.Select(element);
             VsIdeTestHostContext.Dte.ExecuteCommand("Project.CopyFullPath");
-
+            
             ThreadHelper.Generic.Invoke(() => clipboardText = System.Windows.Clipboard.GetText());
 
             Assert.AreEqual(expected, clipboardText);
@@ -1576,14 +1576,19 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     var project = (IVsProject)((dynamic)solution.Project).Project;
                     foreach (var item in proj.Items.OfType<CompileItem>()) {
                         foreach (var name in new[] { item.Name, item.Name.Replace('\\', '/') }) {
-                            string fullName = Path.Combine(solution.Directory, proj.Name, name) + projectType.CodeExtension; 
-                            Console.WriteLine(fullName);
+                            string relativeName = name + projectType.CodeExtension;
+                            string absoluteName = Path.Combine(solution.Directory, proj.Name, relativeName);
 
                             int found = 0;
                             var priority = new VSDOCUMENTPRIORITY[1];
                             uint itemid;
 
-                            ThreadHelper.Generic.Invoke(() => ErrorHandler.ThrowOnFailure(project.IsDocumentInProject(fullName, out found, priority, out itemid)));
+                            Console.WriteLine(relativeName);
+                            ThreadHelper.Generic.Invoke(() => ErrorHandler.ThrowOnFailure(project.IsDocumentInProject(relativeName, out found, priority, out itemid)));
+                            Assert.AreNotEqual(0, found);
+
+                            Console.WriteLine(absoluteName);
+                            ThreadHelper.Generic.Invoke(() => ErrorHandler.ThrowOnFailure(project.IsDocumentInProject(absoluteName, out found, priority, out itemid)));
                             Assert.AreNotEqual(0, found);
                         }
                     }

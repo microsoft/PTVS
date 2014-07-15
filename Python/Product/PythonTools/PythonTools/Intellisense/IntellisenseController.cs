@@ -16,6 +16,7 @@ using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Windows.Input;
+using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Editor;
@@ -62,7 +63,7 @@ namespace Microsoft.PythonTools.Intellisense {
             if (_quickInfoSession != null && !_quickInfoSession.IsDismissed) {
                 _quickInfoSession.Dismiss();
             }
-            var pt = e.TextPosition.GetPoint(PythonCoreConstants.IsPythonContent, PositionAffinity.Successor);
+            var pt = e.TextPosition.GetPoint(EditorExtensions.IsPythonContent, PositionAffinity.Successor);
             if (pt != null) {
                 _quickInfoSession = _provider._QuickInfoBroker.TriggerQuickInfo(
                     _textView,
@@ -204,7 +205,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 SnapshotPoint? caretPoint = _textView.BufferGraph.MapDownToFirstMatch(
                     _textView.Caret.Position.BufferPosition,
                     PointTrackingMode.Positive,
-                    PythonCoreConstants.IsPythonContent,
+                    EditorExtensions.IsPythonContent,
                     PositionAffinity.Predecessor
                 );
 
@@ -272,7 +273,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 var targetPt = _textView.BufferGraph.MapDownToFirstMatch(
                     new SnapshotPoint(_textView.TextBuffer.CurrentSnapshot, position),
                     PointTrackingMode.Positive,
-                    PythonCoreConstants.IsPythonContent,
+                    EditorExtensions.IsPythonContent,
                     PositionAffinity.Successor
                 );
 

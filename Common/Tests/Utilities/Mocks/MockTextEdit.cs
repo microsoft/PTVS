@@ -98,9 +98,19 @@ namespace TestUtilities.Mocks {
 
             // now apply the inserts
             int curDelete = 0, adjust = 0;
+            int deletesBorrowed = 0;
             foreach (InsertionEdit insert in _edits.Where(edit => edit is InsertionEdit)) {
                 while (curDelete < deletes.Count && deletes[curDelete].Start < insert.Position) {
-                    adjust -= deletes[curDelete++].Length;
+                    if (deletes[curDelete].Start + deletes[curDelete].Length < insert.Position) {
+                        adjust -= deletes[curDelete].Length - deletesBorrowed;
+                        deletesBorrowed = 0;
+                        curDelete++;
+                    } else {
+                        int deletesUsed = insert.Position - deletes[curDelete].Start;
+                        adjust -= deletesUsed;
+                        deletesBorrowed  += deletesUsed;
+                        break;
+                    }
                 }
 
                 text.Insert(insert.Position + adjust, insert.Text);
@@ -184,6 +194,10 @@ namespace TestUtilities.Mocks {
                 : base(position) {
                 Text = text;
             }
+
+            public override string ToString() {
+                return String.Format("<Insert Length={0} at {1}>", Text.Length, Position);
+            }
         }
 
         sealed class DeletionEdit : Edit {
@@ -192,6 +206,10 @@ namespace TestUtilities.Mocks {
             public DeletionEdit(int startPosition, int charsToDelete)
                 : base(startPosition) {
                 Length = charsToDelete;
+            }
+
+            public override string ToString() {
+                return String.Format("<Delete Length={0} at {1}>", Length, Position);
             }
         }
     }

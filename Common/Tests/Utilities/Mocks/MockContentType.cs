@@ -42,7 +42,6 @@ namespace TestUtilities.Mocks {
             return false;
         }
 
-
         public string DisplayName {
             get { return _name; }
         }

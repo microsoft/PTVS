@@ -150,7 +150,7 @@ namespace TestUtilities.Mocks {
         }
 
         public Microsoft.VisualStudio.Text.ITextSnapshot TextSnapshot {
-            get { throw new NotImplementedException(); }
+            get { return _buffer.CurrentSnapshot; }
         }
 
         public ITextViewLineCollection TextViewLines {

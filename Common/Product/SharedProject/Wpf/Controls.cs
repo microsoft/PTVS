@@ -21,6 +21,7 @@ using System.Windows.Data;
 using System.Windows.Interop;
 using System.Windows.Markup;
 using System.Windows.Media.Imaging;
+using Microsoft.VisualStudio.PlatformUI;
 using Microsoft.VisualStudio.Shell;
 
 namespace Microsoft.VisualStudioTools.Wpf {
@@ -66,6 +67,12 @@ namespace Microsoft.VisualStudioTools.Wpf {
         public static readonly object ScrollBarArrowBackgroundHoverKey = VsBrushes.ScrollBarArrowMouseOverBackgroundKey;
         public static readonly object ScrollBarArrowBackgroundPressedKey = VsBrushes.ScrollBarArrowPressedBackgroundKey;
         public static readonly object ScrollBarArrowBackgroundDisabledKey = VsBrushes.ScrollBarArrowDisabledBackgroundKey;
+
+#if DEV11_OR_LATER
+        public static readonly object SearchGlyphBrushKey = SearchControlColors.SearchGlyphBrushKey;
+#else
+        public static readonly object SearchGlyphBrushKey = VsBrushes.WindowTextKey;
+#endif
 
         public static readonly BitmapSource UacShield = CreateUacShield();
 

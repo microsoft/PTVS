@@ -23,13 +23,5 @@ namespace Microsoft.PythonTools {
         
         [Export, Name(ContentType), BaseDefinition("code")]
         internal static ContentTypeDefinition ContentTypeDefinition = null;
-
-        internal static bool IsPythonContent(ITextBuffer buffer) {
-            return buffer.ContentType.IsOfType(PythonCoreConstants.ContentType);
-        }
-
-        internal static bool IsPythonContent(ITextSnapshot buffer) {
-            return buffer.ContentType.IsOfType(PythonCoreConstants.ContentType);
-        }
     }
 }

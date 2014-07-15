@@ -18,6 +18,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio.Language.Intellisense;
@@ -112,7 +113,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 if (sCookie.Snapshot.TextBuffer != TextBuffer) {
                     IBufferGraph graph;
                     if (sCookie.Snapshot.TextBuffer.Properties.TryGetProperty(typeof(IBufferGraph), out graph)) {
-                        var newLine = graph.MapDownToInsertionPoint(line.Start, PointTrackingMode.Positive, PythonCoreConstants.IsPythonContent);
+                        var newLine = graph.MapDownToInsertionPoint(line.Start, PointTrackingMode.Positive, EditorExtensions.IsPythonContent);
                         if (newLine != null) {
                             lineStart = newLine.Value.Position;
                         }

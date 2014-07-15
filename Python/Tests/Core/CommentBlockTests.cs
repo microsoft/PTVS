@@ -30,17 +30,17 @@ print 'goodbye'"));
 
             EditorExtensions.CommentOrUncommentBlock(view, true);
 
-            Assert.AreEqual(view.TextBuffer.CurrentSnapshot.GetText(),
-                @"#print 'hello'
-print 'goodbye'");
+            Assert.AreEqual(@"#print 'hello'
+print 'goodbye'",
+                view.TextBuffer.CurrentSnapshot.GetText());
 
             view.Caret.MoveTo(view.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(1).Start);
 
             EditorExtensions.CommentOrUncommentBlock(view, true);
 
-            Assert.AreEqual(view.TextBuffer.CurrentSnapshot.GetText(),
-        @"#print 'hello'
-#print 'goodbye'");
+            Assert.AreEqual(@"#print 'hello'
+#print 'goodbye'",
+                 view.TextBuffer.CurrentSnapshot.GetText());
         }
 
         [TestMethod, Priority(0)]
@@ -53,17 +53,17 @@ print 'goodbye'");
 
             EditorExtensions.CommentOrUncommentBlock(view, false);
 
-            Assert.AreEqual(view.TextBuffer.CurrentSnapshot.GetText(),
-                @"print 'hello'
-#print 'goodbye'");
+            Assert.AreEqual(@"print 'hello'
+#print 'goodbye'", 
+                 view.TextBuffer.CurrentSnapshot.GetText());
 
             view.Caret.MoveTo(view.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(1).Start);
 
             EditorExtensions.CommentOrUncommentBlock(view, false);
 
-            Assert.AreEqual(view.TextBuffer.CurrentSnapshot.GetText(),
-        @"print 'hello'
-print 'goodbye'");
+            Assert.AreEqual(@"print 'hello'
+print 'goodbye'",
+                view.TextBuffer.CurrentSnapshot.GetText());
         }
 
         [TestMethod, Priority(0)]
@@ -79,9 +79,9 @@ print 'goodbye'"));
 
             EditorExtensions.CommentOrUncommentBlock(view, true);
 
-            Assert.AreEqual(view.TextBuffer.CurrentSnapshot.GetText(),
-                @"#print 'hello'
-#print 'goodbye'");
+            Assert.AreEqual(@"#print 'hello'
+#print 'goodbye'",
+                 view.TextBuffer.CurrentSnapshot.GetText());
         }
 
         [TestMethod, Priority(0)]
@@ -98,10 +98,10 @@ print 'goodbye'"));
 
             EditorExtensions.CommentOrUncommentBlock(view, true);
 
-            Assert.AreEqual(view.TextBuffer.CurrentSnapshot.GetText(),
-                @"#print 'hello'
+            Assert.AreEqual(@"#print 'hello'
 
-#print 'goodbye'");
+#print 'goodbye'",
+                 view.TextBuffer.CurrentSnapshot.GetText());
         }
 
         [TestMethod, Priority(0)]
@@ -118,10 +118,10 @@ print 'goodbye'"));
 
             EditorExtensions.CommentOrUncommentBlock(view, true);
 
-            Assert.AreEqual(view.TextBuffer.CurrentSnapshot.GetText(),
-                @"#print 'hello'
+            Assert.AreEqual(@"#print 'hello'
    
-#print 'goodbye'");
+#print 'goodbye'",
+                 view.TextBuffer.CurrentSnapshot.GetText());
         }
 
         [TestMethod, Priority(0)]
@@ -142,11 +142,11 @@ print 'goodbye'"));
 
             EditorExtensions.CommentOrUncommentBlock(view, true);
 
-            Assert.AreEqual(view.TextBuffer.CurrentSnapshot.GetText(),
-                @"def f():
+            Assert.AreEqual(@"def f():
     #print 'hello'
     #print 'still here'
-    print 'goodbye'");
+    print 'goodbye'",
+                    view.TextBuffer.CurrentSnapshot.GetText());
         }
 
         [TestMethod, Priority(0)]
@@ -168,12 +168,12 @@ print 'goodbye'"));
 
             EditorExtensions.CommentOrUncommentBlock(view, true);
 
-            Assert.AreEqual(view.TextBuffer.CurrentSnapshot.GetText(),
-                @"def f():
+            Assert.AreEqual(@"def f():
     #print 'hello'
 
     #print 'still here'
-    print 'goodbye'");
+    print 'goodbye'",
+                    view.TextBuffer.CurrentSnapshot.GetText());
         }
 
         [TestMethod, Priority(0)]
@@ -187,10 +187,10 @@ print('bye')"));
 
             EditorExtensions.CommentOrUncommentBlock(view, true);
 
-            Assert.AreEqual(view.TextBuffer.CurrentSnapshot.GetText(),
-                @"print('hi')
+            Assert.AreEqual(@"print('hi')
 
-print('bye')");
+print('bye')",
+             view.TextBuffer.CurrentSnapshot.GetText());
         }
 
         [TestMethod, Priority(0)]
@@ -212,12 +212,12 @@ print('bye')");
 
             EditorExtensions.CommentOrUncommentBlock(view, true);
 
-            Assert.AreEqual(view.TextBuffer.CurrentSnapshot.GetText(),
-                @"def f():
+            Assert.AreEqual(@"def f():
     #print 'hello'
   
     #print 'still here'
-    print 'goodbye'");
+    print 'goodbye'",
+                    view.TextBuffer.CurrentSnapshot.GetText());
         }
 
         [TestMethod, Priority(0)]
@@ -238,11 +238,11 @@ print('bye')");
 
             EditorExtensions.CommentOrUncommentBlock(view, false);
 
-            Assert.AreEqual(view.TextBuffer.CurrentSnapshot.GetText(),
-                @"def f():
+            Assert.AreEqual(@"def f():
     print 'hello'
     print 'still here'
-    print 'goodbye'");
+    print 'goodbye'",
+                    view.TextBuffer.CurrentSnapshot.GetText());
         }
 
         [TestMethod, Priority(0)]
@@ -258,9 +258,9 @@ print('bye')");
 
             EditorExtensions.CommentOrUncommentBlock(view, false);
 
-            Assert.AreEqual(view.TextBuffer.CurrentSnapshot.GetText(),
-                @"print 'hello'
-print 'goodbye'");
+            Assert.AreEqual(@"print 'hello'
+print 'goodbye'",
+                view.TextBuffer.CurrentSnapshot.GetText());
         }
 
         /// <summary>
@@ -279,9 +279,30 @@ print 'goodbye'"));
 
             EditorExtensions.CommentOrUncommentBlock(view, true);
 
-            Assert.AreEqual(view.TextBuffer.CurrentSnapshot.GetText(),
-                @"#print 'hello'
-print 'goodbye'");
+            Assert.AreEqual(@"#print 'hello'
+print 'goodbye'",
+                view.TextBuffer.CurrentSnapshot.GetText());
+        }
+
+        [TestMethod, Priority(0)]
+        public void TestCommentAfterCodeIsNotUncommented()
+        {
+            var view = new MockTextView(
+                new MockTextBuffer(@"print 'hello' #comment that should stay a comment
+#print 'still here' # another comment that should stay a comment
+print 'goodbye'"));
+
+            view.Selection.Select(
+                new SnapshotSpan(view.TextBuffer.CurrentSnapshot, new Span(0, view.TextBuffer.CurrentSnapshot.GetText().IndexOf("print 'goodbye'"))),
+                false
+            );
+
+            EditorExtensions.CommentOrUncommentBlock(view, false);
+
+            Assert.AreEqual(@"print 'hello' #comment that should stay a comment
+print 'still here' # another comment that should stay a comment
+print 'goodbye'",
+                view.TextBuffer.CurrentSnapshot.GetText());
         }
     }
 }

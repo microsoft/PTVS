@@ -99,8 +99,10 @@ namespace TestUtilities.UI {
             }
         }
 
-        public static void Backspace() {
-            Type(Key.Back);
+        public static void Backspace(int count = 1) {
+            for (int i = 0; i < count; ++i) {
+                Type(Key.Back);
+            }
         }
 
         /// <summary>

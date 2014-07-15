@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using Microsoft.PythonTools.Editor.Core;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Text;
@@ -118,7 +119,7 @@ namespace Microsoft.PythonTools.Editor {
             var pt = _textView.BufferGraph.MapDownToInsertionPoint(
                 new SnapshotPoint(_textView.TextBuffer.CurrentSnapshot, position),
                 PointTrackingMode.Positive,
-                PythonCoreConstants.IsPythonContent
+                EditorExtensions.IsPythonContent
             );
 
             if (pt == null) {

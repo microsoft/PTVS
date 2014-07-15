@@ -45,7 +45,7 @@ namespace TestUtilities {
             return dir ?? "";
         }
 
-        private static void CopyFiles(string sourceDir, string destDir) {
+        public static void CopyFiles(string sourceDir, string destDir) {
             sourceDir = sourceDir.TrimEnd('\\');
             destDir = destDir.TrimEnd('\\');
             try {

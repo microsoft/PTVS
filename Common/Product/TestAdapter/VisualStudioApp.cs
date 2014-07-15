@@ -129,8 +129,7 @@ namespace Microsoft.VisualStudioTools {
             return (DTE)runningObject;
         }
 
-
-        public bool AttachToProcess(ProcessOutput proc, Guid portSupplier, string secret, int port) {
+        public bool AttachToProcess(ProcessOutput proc, Guid portSupplier, string transportQualifierUri) {
             var debugger3 = (EnvDTE90.Debugger3)DTE.Debugger;
             var transports = debugger3.Transports;
             EnvDTE80.Transport transport = null;
@@ -145,7 +144,7 @@ namespace Microsoft.VisualStudioTools {
                 return false;
             }
 
-            var processes = debugger3.GetProcesses(transport, string.Format("tcp://{0}@localhost:{1}", secret, port));
+            var processes = debugger3.GetProcesses(transport, transportQualifierUri);
             if (processes.Count < 1) {
                 return false;
             }

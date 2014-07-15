@@ -39,6 +39,8 @@ namespace TestUtilities.Mocks {
             _eval.Initialize(this);
         }
 
+        public bool ShowAnsiCodes { get; set; }
+
         public Task<ExecutionResult> Execute(string text) {
             _view.BufferGraph.AddBuffer(
                 new MockTextBuffer(text, contentType: _contentType)
@@ -110,7 +112,7 @@ namespace TestUtilities.Mocks {
         }
 
         public void WriteLine(string text) {
-            if (text.IndexOf('\x1b') != -1) {
+            if (!ShowAnsiCodes && text.IndexOf('\x1b') != -1) {
                 AppendEscapedText(text);
             } else {
                 _output.AppendLine(text);

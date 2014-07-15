@@ -272,6 +272,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     } else {
                         items.Clear();
                     }
+                    // Always return true to ensure the refresh occurs
                     return true;
                 }
             }

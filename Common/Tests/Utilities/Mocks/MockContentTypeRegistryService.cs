@@ -29,8 +29,8 @@ namespace TestUtilities.Mocks {
         }
 
         public IContentType GetContentType(string typeName) {
-            if (typeName == "Python") {
-                return new MockContentType("Python", new IContentType[0]);
+            if (typeName == "Python" || typeName == "Node.js") {
+                return new MockContentType(typeName, new IContentType[0]);
             }
             throw new NotImplementedException();
         }

@@ -4249,7 +4249,7 @@ If the files in the existing folder have the same names as files in the folder y
                 itemId = VSConstants.VSITEMID_ROOT;
             } else {
                 HierarchyNode child = this.FindNodeByFullPath(EnsureRootedPath(mkDoc));
-                if (child != null && !child.IsNonMemberItem) {
+                if (child != null && (!child.IsNonMemberItem || IncludeNonMemberItemInProject(child))) {
                     found = 1;
                     itemId = child.ID;
                 }
@@ -4265,6 +4265,9 @@ If the files in the existing folder have the same names as files in the folder y
 
         }
 
+        protected virtual bool IncludeNonMemberItemInProject(HierarchyNode node) {
+            return false;
+        }
 
         public virtual int OpenItem(uint itemId, ref Guid logicalView, IntPtr punkDocDataExisting, out IVsWindowFrame frame) {
             // Init output params
@@ -5504,7 +5507,7 @@ If the files in the existing folder have the same names as files in the folder y
 
         private string EnsureRootedPath(string name) {
             if (!Path.IsPathRooted(name)) {
-                name = CommonUtils.GetAbsoluteDirectoryPath(
+                name = CommonUtils.GetAbsoluteFilePath(
                     ProjectHome,
                     name
                 );

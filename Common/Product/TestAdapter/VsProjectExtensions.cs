@@ -84,7 +84,7 @@ namespace Microsoft.VisualStudioTools.TestAdapter {
 
             string projectTypeGuids = project.GetAggregateProjectTypeGuids();
 
-            // Currently we assume that all Python projects are test projects.
+            // Currently we assume that all matching projects are test projects.
             return (projectTypeGuids.IndexOf(projectGuid.ToString(), StringComparison.OrdinalIgnoreCase) >= 0);
         }
 

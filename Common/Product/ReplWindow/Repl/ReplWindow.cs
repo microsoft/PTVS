@@ -285,15 +285,6 @@ namespace Microsoft.VisualStudio.Repl {
             // WARNING: This might trigger various services like IntelliSense, margins, taggers, etc.
             IVsTextView textViewAdapter = adapterFactory.CreateVsTextViewAdapter(provider, CreateRoleSet());
 
-#if NTVS_FEATURE_INTERACTIVEWINDOW
-            // work around a bug w/ JS language service, force tool tips to not do anything by putting
-            // our own text view filter in.  Otherwise when you hover you get an unhandled exception.
-            IOleCommandTarget next;
-            var filter = new TextViewFilter();
-            textViewAdapter.AddCommandFilter(filter, out next);
-            filter._next = next;
-#endif
-
             // make us a code window so we'll have the same colors as a normal code window.
             IVsTextEditorPropertyContainer propContainer;
             ErrorHandler.ThrowOnFailure(((IVsTextEditorPropertyCategoryContainer)textViewAdapter).GetPropertyCategory(Microsoft.VisualStudio.Editor.DefGuidList.guidEditPropCategoryViewMasterSettings, out propContainer));
@@ -343,41 +334,6 @@ namespace Microsoft.VisualStudio.Repl {
 
             _textViewHost = res;
         }
-
-#if NTVS_FEATURE_INTERACTIVEWINDOW
-        class TextViewFilter : IOleCommandTarget, IVsTextViewFilter {
-            internal IOleCommandTarget _next;
-
-            #region IOleCommandTarget Members
-
-            public int Exec(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
-                return _next.Exec(pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
-            }
-
-            public int QueryStatus(ref Guid pguidCmdGroup, uint cCmds, OLECMD[] prgCmds, IntPtr pCmdText) {
-                return _next.QueryStatus(ref pguidCmdGroup, cCmds, prgCmds, pCmdText);
-            }
-
-            #endregion
-
-            #region IVsTextViewFilter Members
-
-            public int GetDataTipText(TextSpan[] pSpan, out string pbstrText) {
-                pbstrText = null;
-                return VSConstants.S_FALSE;
-            }
-
-            public int GetPairExtents(int iLine, int iIndex, TextSpan[] pSpan) {
-                return VSConstants.E_FAIL;
-            }
-
-            public int GetWordExtent(int iLine, int iIndex, uint dwFlags, TextSpan[] pSpan) {
-                return VSConstants.E_FAIL;
-            }
-
-            #endregion
-        }
-#endif
 
         private static IEnumerable<IReplWindowCreationListener> GetCreationListeners(IComponentModel model, string contentType) {
             return
@@ -3026,21 +2982,6 @@ namespace Microsoft.VisualStudio.Repl {
             );
 
             AppendProjectionSpan(new ReplSpan(trackingSpan, ReplSpanKind.Output));
-
-#if NTVS_FEATURE_INTERACTIVEWINDOW
-            // Work around bug in JS language service.  We need to make sure they don't
-            // provide intellisense or quick tips, which can be done by making sure we have
-            // 2 JS buffers in the projection buffer.  Otherwise you get intellisense on
-            // the 1st input, but not others, and get an exception when hovering.
-            var buffer = _bufferFactory.CreateTextBuffer(_languageContentType);
-            trackingSpan = new CustomTrackingSpan(
-                buffer.CurrentSnapshot,
-                new Span(0, 0),
-                PointTrackingMode.Negative,
-                PointTrackingMode.Negative
-            );
-            AppendProjectionSpan(new ReplSpan(trackingSpan, ReplSpanKind.Output));
-#endif
         }
 
         private void AppendProjectionSpan(ReplSpan span) {

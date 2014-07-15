@@ -22,6 +22,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreter.Default;
@@ -298,7 +299,7 @@ namespace Microsoft.PythonTools {
             return view.BufferGraph.MapDownToFirstMatch(
                new SnapshotPoint(view.TextBuffer.CurrentSnapshot, view.Caret.Position.BufferPosition),
                PointTrackingMode.Positive,
-               PythonCoreConstants.IsPythonContent,
+               EditorExtensions.IsPythonContent,
                PositionAffinity.Successor
             );
         }
