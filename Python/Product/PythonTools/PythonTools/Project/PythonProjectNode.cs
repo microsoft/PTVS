@@ -1200,7 +1200,7 @@ namespace Microsoft.PythonTools.Project {
                                 InterpretersPackageNode.InstallNewPackage(active, Site, name, true, elevate)
                                     .HandleAllExceptions(SR.ProductName).DoNotWait();
                             } else {
-                                InterpretersPackageNode.InstallNewPackage(node, name, true, elevate)
+                                InterpretersPackageNode.InstallNewPackage(node, name, elevate)
                                     .HandleAllExceptions(SR.ProductName).DoNotWait();
                             }
                         }

@@ -237,6 +237,7 @@ namespace Microsoft.PythonTools.Project {
                 CannotCreateVirtualEnv = false;
                 NoInterpretersInstalled = false;
             }
+
         }
 
         public bool WillCreateVirtualEnv {

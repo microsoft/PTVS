@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Linq;
 
 namespace Microsoft.PythonTools.Project {
     /// <summary>
@@ -24,19 +25,19 @@ namespace Microsoft.PythonTools.Project {
     sealed class InstallPythonPackageView : INotifyPropertyChanged {
         private string _name;
         private string _installUsing;
-        private bool _installUsingPip, _installUsingEasyInstall;
+        private bool _installUsingPip, _installUsingEasyInstall, _installUsingConda;
         private bool _installElevated;
         private bool _isValid;
         private readonly bool _isInsecure;
-
-        private static readonly string[] _installUsingOptions = new[] { "pip", "easy_install" };
+        private bool _supportsConda;
 
 
         /// <summary>
         /// Create a InstallPythonPackageView with default values.
         /// </summary>
-        public InstallPythonPackageView(bool isInsecure) {
-            InstallUsing = _installUsingOptions[0];
+        public InstallPythonPackageView(bool isInsecure, bool supportConda) {
+            _supportsConda = supportConda;
+            InstallUsing = InstallUsingOptions.First();
             _isInsecure = isInsecure;
             PropertyChanged += new PropertyChangedEventHandler(OnPropertyChanged);
         }
@@ -70,7 +71,22 @@ namespace Microsoft.PythonTools.Project {
         /// </summary>
         public IEnumerable<string> InstallUsingOptions {
             get {
-                return _installUsingOptions;
+                if (_supportsConda) {
+                    yield return "conda";
+                }
+                yield return "pip";
+                yield return "easy_install";
+            }
+        }
+
+        public bool SupportsConda {
+            get {
+                return _supportsConda;
+            }
+            set {
+                _supportsConda = value;
+                OnPropertyChanged("InstallUsingOptions");
+                OnPropertyChanged("SupportsConda");
             }
         }
 
@@ -87,6 +103,7 @@ namespace Microsoft.PythonTools.Project {
                     OnPropertyChanged("InstallUsing");
                     InstallUsingPip = _installUsing == "pip";
                     InstallUsingEasyInstall = _installUsing == "easy_install";
+                    InstallUsingConda = _installUsing == "conda";
                     if (PythonToolsPackage.Instance != null) {
                         if (InstallUsingPip) {
                             InstallElevated = PythonToolsPackage.Instance.GeneralOptionsPage.ElevatePip;
@@ -129,6 +146,21 @@ namespace Microsoft.PythonTools.Project {
                 if (_installUsingEasyInstall != value) {
                     _installUsingEasyInstall = value;
                     OnPropertyChanged("InstallUsingEasyInstall");
+                }
+            }
+        }
+
+        /// <summary>
+        /// True if InstallUsing is set to conda.
+        /// </summary>
+        public bool InstallUsingConda {
+            get {
+                return _installUsingConda;
+            }
+            private set {
+                if (_installUsingConda != value) {
+                    _installUsingConda = value;
+                    OnPropertyChanged("InstallUsingConda");
                 }
             }
         }

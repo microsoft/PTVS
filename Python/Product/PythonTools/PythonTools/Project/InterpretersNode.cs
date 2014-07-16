@@ -222,7 +222,6 @@ namespace Microsoft.PythonTools.Project {
                             InterpretersPackageNode.InstallNewPackage(
                                 this,
                                 "-r " + ProcessOutput.QuoteSingleArgument(txt),
-                                true,
                                 elevate
                             ).HandleAllExceptions(SR.ProductName).DoNotWait();
                         }

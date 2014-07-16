@@ -45,7 +45,7 @@
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
                     <Label Grid.Column="0">
-                        We will download it from the Python Package Index using
+                        We will download and install it using
                     </Label>
                     <ComboBox Grid.Column="1"
                               IsEditable="False"

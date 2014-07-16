@@ -302,6 +302,7 @@
     <Compile Include="PythonTools\Project\AddVirtualEnvironmentOperation.cs" />
     <Compile Include="PythonTools\Project\AnalyzerChangingEventArgs.cs" />
     <Compile Include="PythonTools\Project\Attributes.cs" />
+    <Compile Include="PythonTools\Project\Conda.cs" />
     <Compile Include="PythonTools\Project\ProjectResources.cs" />
     <Compile Include="ProvideComponentPickerPropertyPageAttribute.cs" />
     <Compile Include="ProvideDiffSupportedContentTypeAttribute.cs" />

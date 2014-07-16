@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+using System.Threading.Tasks;
 using System.Windows;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudioTools;
@@ -23,8 +24,11 @@ namespace Microsoft.PythonTools.Project {
     partial class InstallPythonPackage : DialogWindowVersioningWorkaround {
         private readonly InstallPythonPackageView _view;
 
-        public static InstallPythonPackageView ShowDialog(IPythonInterpreterFactory factory) {
-            var wnd = new InstallPythonPackage(Pip.IsSecureInstall(factory));
+        public static InstallPythonPackageView ShowDialog(
+            IPythonInterpreterFactory factory,
+            IInterpreterOptionsService service
+        ) {
+            var wnd = new InstallPythonPackage(factory, service);
             if (wnd.ShowModal() ?? false) {
                 return wnd._view;
             } else {
@@ -32,8 +36,14 @@ namespace Microsoft.PythonTools.Project {
             }
         }
         
-        private InstallPythonPackage(bool isSecureInstall) {
-            _view = new InstallPythonPackageView(!isSecureInstall);
+        private InstallPythonPackage(
+            IPythonInterpreterFactory factory,
+            IInterpreterOptionsService service
+        ) {
+            _view = new InstallPythonPackageView(
+                !Pip.IsSecureInstall(factory),
+                Conda.CanInstall(factory, service)
+            );
             DataContext = _view;
 
             InitializeComponent();

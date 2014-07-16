@@ -18,6 +18,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
@@ -74,15 +75,30 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public static async Task InstallNewPackage(InterpretersNode parent) {
-            var view = InstallPythonPackage.ShowDialog(parent._factory);
+            var service = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
+            var view = InstallPythonPackage.ShowDialog(parent._factory, service);
             if (view == null) {
                 throw new OperationCanceledException();
             }
 
-            await InstallNewPackage(parent, view.Name, view.InstallUsingPip, view.InstallElevated);
+            Func<string, bool, Redirector, Task<bool>> f;
+            if (view.InstallUsingConda) {
+                f = (n, e, r) => Conda.Install(parent._factory, service, n, r);
+            } else if (view.InstallUsingEasyInstall) {
+                f = (n, e, r) => EasyInstall.Install(parent._factory, n, parent.ProjectMgr.Site, e, r);
+            } else {
+                f = (n, e, r) => Pip.Install(parent._factory, n, parent.ProjectMgr.Site, e, r);
+            }
+
+            await InstallNewPackage(parent, view.Name, view.InstallElevated, f);
         }
 
-        public static async Task InstallNewPackage(InterpretersNode parent, string name, bool withPip, bool elevated) {
+        public static async Task InstallNewPackage(
+            InterpretersNode parent,
+            string name,
+            bool elevate,
+            Func<string, bool, Redirector, Task<bool>> action = null
+        ) {
             var statusBar = (IVsStatusbar)parent.ProjectMgr.Site.GetService(typeof(SVsStatusbar));
 
             // don't process events while we're installing, we'll
@@ -93,9 +109,12 @@ namespace Microsoft.PythonTools.Project {
                 var redirector = OutputWindowRedirector.GetGeneral(parent.ProjectMgr.Site);
                 statusBar.SetText(SR.GetString(SR.PackageInstallingSeeOutputWindow, name));
 
-                var task = withPip ?
-                    Pip.Install(parent._factory, name, parent.ProjectMgr.Site, elevated, redirector) :
-                    EasyInstall.Install(parent._factory, name, parent.ProjectMgr.Site, elevated, redirector);
+                Task<bool> task;
+                if (action != null) {
+                    task = action(name, elevate, redirector);
+                } else {
+                    task = Pip.Install(parent._factory, name, elevate, redirector);
+                }
 
                 bool success = await task;
                 statusBar.SetText(SR.GetString(
