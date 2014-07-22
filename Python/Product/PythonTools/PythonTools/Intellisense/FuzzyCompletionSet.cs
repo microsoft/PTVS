@@ -157,6 +157,7 @@ namespace Microsoft.PythonTools.Intellisense {
         readonly FuzzyStringMatcher _comparer;
         readonly bool _shouldFilter;
         readonly bool _shouldHideAdvanced;
+        readonly bool _matchInsertionText;
 
         private readonly static Regex _advancedItemPattern = new Regex(
             @"__\w+__($|\s)",
@@ -185,8 +186,19 @@ namespace Microsoft.PythonTools.Intellisense {
         /// selecting items.</param>
         /// <param name="comparer">The comparer to use to order the provided
         /// completions.</param>
-        public FuzzyCompletionSet(string moniker, string displayName, ITrackingSpan applicableTo, IEnumerable<DynamicallyVisibleCompletion> completions, CompletionOptions options, IComparer<Completion> comparer) :
+        /// <param name="matchInsertionText">If true, matches user input against
+        /// the insertion text; otherwise, uses the display text.</param>
+        public FuzzyCompletionSet(
+            string moniker,
+            string displayName,
+            ITrackingSpan applicableTo,
+            IEnumerable<DynamicallyVisibleCompletion> completions,
+            CompletionOptions options,
+            IComparer<Completion> comparer,
+            bool matchInsertionText = false
+        ) :
             base(moniker, displayName, applicableTo, null, null) {
+            _matchInsertionText = matchInsertionText;
             _completions = new BulkObservableCollection<Completion>();
             _completions.AddRange(completions
                 .Where(c => c != null && !string.IsNullOrWhiteSpace(c.DisplayText))
@@ -211,8 +223,8 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        private static bool IsAdvanced(Completion comp) {
-            return _advancedItemPattern.IsMatch(comp.DisplayText);
+        private bool IsAdvanced(Completion comp) {
+            return _advancedItemPattern.IsMatch(_matchInsertionText ? comp.InsertionText : comp.DisplayText);
         }
 
         /// <summary>
@@ -255,7 +267,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     if (hideAdvanced && IsAdvanced(c)) {
                         c.Visible = false;
                     } else if (_shouldFilter) {
-                        c.Visible = _comparer.IsCandidateMatch(c.DisplayText, text);
+                        c.Visible = _comparer.IsCandidateMatch(_matchInsertionText ? c.InsertionText : c.DisplayText, text);
                     } else {
                         c.Visible = true;
                     }
@@ -300,7 +312,7 @@ namespace Microsoft.PythonTools.Intellisense {
             // Using the Completions property to only search through visible
             // completions.
             foreach (var comp in Completions) {
-                int value = _comparer.GetSortKey(comp.DisplayText, text);
+                int value = _comparer.GetSortKey(_matchInsertionText ? comp.InsertionText : comp.DisplayText, text);
                 if (bestMatch == null || value > bestValue) {
                     bestMatch = comp;
                     bestValue = value;
@@ -316,13 +328,17 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             if (((DynamicallyVisibleCompletion)bestMatch).Visible) {
-                SelectionStatus = new CompletionSelectionStatus(bestMatch,
+                SelectionStatus = new CompletionSelectionStatus(
+                    bestMatch,
                     isSelected: allowSelect && bestValue > 0,
-                    isUnique: isUnique);
+                    isUnique: isUnique
+                );
             } else {
-                SelectionStatus = new CompletionSelectionStatus(null,
+                SelectionStatus = new CompletionSelectionStatus(
+                    null,
                     isSelected: false,
-                    isUnique: false);
+                    isUnique: false
+                );
             }
 
             _previousSelection = bestMatch;
@@ -348,7 +364,7 @@ namespace Microsoft.PythonTools.Intellisense {
             // Using the _completions field to search through all completions
             // and ignore filtering settings.
             foreach (var comp in _completions) {
-                if (_comparer.IsCandidateMatch(comp.DisplayText, text)) {
+                if (_comparer.IsCandidateMatch(_matchInsertionText ? comp.InsertionText : comp.DisplayText, text)) {
                     if (bestMatch == null) {
                         bestMatch = comp;
                     } else {
@@ -358,9 +374,11 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             if (bestMatch != null) {
-                SelectionStatus = new CompletionSelectionStatus(bestMatch,
+                SelectionStatus = new CompletionSelectionStatus(
+                    bestMatch,
                     isSelected: true,
-                    isUnique: true);
+                    isUnique: true
+                );
                 return true;
             } else {
                 return false;

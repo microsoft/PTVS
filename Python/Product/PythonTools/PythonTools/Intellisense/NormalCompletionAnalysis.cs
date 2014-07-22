@@ -142,7 +142,9 @@ namespace Microsoft.PythonTools.Intellisense {
                 Span,
                 members.Select(m => PythonCompletion(glyphService, m)),
                 _options,
-                CompletionComparer.UnderscoresLast);
+                CompletionComparer.UnderscoresLast,
+                matchInsertionText: true
+            );
 
             end = _stopwatch.ElapsedMilliseconds;
 
