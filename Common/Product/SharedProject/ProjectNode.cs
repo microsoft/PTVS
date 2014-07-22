@@ -5370,7 +5370,7 @@ If the files in the existing folder have the same names as files in the folder y
         /// </summary>
         /// <param name="path">The full path on disk to the item which is being queried about..</param>
         internal HierarchyNode GetParentFolderForPath(string path) {
-            string parentDir = Path.GetDirectoryName(CommonUtils.TrimEndSeparator(path)) + Path.DirectorySeparatorChar;
+            var parentDir = CommonUtils.GetParent(path);
             HierarchyNode parent;
             if (CommonUtils.IsSamePath(parentDir, ProjectHome)) {
                 parent = this;

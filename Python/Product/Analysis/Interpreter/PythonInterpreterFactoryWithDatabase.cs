@@ -651,11 +651,11 @@ namespace Microsoft.PythonTools.Interpreter {
             FileSystemWatcher watcher = null;
 
             lock (_verWatcherLock) {
-                var dirName = Path.GetFileName(CommonUtils.TrimEndSeparator(DatabasePath));
+                var dirName = CommonUtils.GetFileOrDirectoryName(DatabasePath);
                 var dir = Path.GetDirectoryName(DatabasePath);
 
                 while (CommonUtils.IsValidPath(dir) && !Directory.Exists(dir)) {
-                    dirName = Path.GetFileName(CommonUtils.TrimEndSeparator(dir));
+                    dirName = CommonUtils.GetFileOrDirectoryName(dir);
                     dir = Path.GetDirectoryName(dir);
                 }
 

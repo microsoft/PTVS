@@ -46,7 +46,7 @@ namespace Microsoft.PythonTools.Project {
         [AutomationBrowsable(false)]
         public string FolderName {
             get {
-                return Path.GetFileName(CommonUtils.TrimEndSeparator(this.HierarchyNode.Url));
+                return CommonUtils.GetFileOrDirectoryName(this.HierarchyNode.Url);
             }
         }
 

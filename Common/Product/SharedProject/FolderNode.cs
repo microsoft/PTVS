@@ -112,13 +112,12 @@ namespace Microsoft.VisualStudioTools.Project {
             if (IsBeingCreated) {
                 return FinishFolderAdd(label, false);
             } else {
-                if (String.Equals(Path.GetFileName(CommonUtils.TrimEndSeparator(this.Url)), label, StringComparison.Ordinal)) {
+                if (String.Equals(CommonUtils.GetFileOrDirectoryName(Url), label, StringComparison.Ordinal)) {
                     // Label matches current Name
                     return VSConstants.S_OK;
                 }
 
-                string newPath = CommonUtils.NormalizeDirectoryPath(Path.Combine(
-                    Path.GetDirectoryName(CommonUtils.TrimEndSeparator(this.Url)), label));
+                string newPath = CommonUtils.GetAbsoluteDirectoryPath(CommonUtils.GetParent(Url), label);
 
                 // Verify that No Directory/file already exists with the new name among current children
                 var existingChild = Parent.FindImmediateChildByName(label);
@@ -203,7 +202,8 @@ namespace Microsoft.VisualStudioTools.Project {
                     IsBeingCreated = false;
                     var relativePath = CommonUtils.GetRelativeDirectoryPath(
                         ProjectMgr.ProjectHome,
-                        Path.Combine(Path.GetDirectoryName(CommonUtils.TrimEndSeparator(Url)), label));
+                        CommonUtils.GetAbsoluteDirectoryPath(CommonUtils.GetParent(Url), label)
+                    );
                     this.ItemNode.Rename(relativePath);
 
                     ProjectMgr.OnItemDeleted(this);
@@ -247,7 +247,7 @@ namespace Microsoft.VisualStudioTools.Project {
             get {
                 // it might have a backslash at the end... 
                 // and it might consist of Grandparent\parent\this\
-                return Path.GetFileName(CommonUtils.TrimEndSeparator(Url));
+                return CommonUtils.GetFileOrDirectoryName(Url);
             }
         }
 
@@ -368,11 +368,11 @@ namespace Microsoft.VisualStudioTools.Project {
             }
 
             // on a new dir && enter, we get called with the same name (so do nothing if name is the same
-            string strNewDir = CommonUtils.GetAbsoluteDirectoryPath(Path.GetDirectoryName(CommonUtils.TrimEndSeparator(this.Url)), newName);
+            string strNewDir = CommonUtils.GetAbsoluteDirectoryPath(CommonUtils.GetParent(Url), newName);
 
-            if (!CommonUtils.IsSameDirectory(this.Url, strNewDir)) {
+            if (!CommonUtils.IsSameDirectory(Url, strNewDir)) {
                 if (Directory.Exists(strNewDir)) {
-                    throw new InvalidOperationException(SR.GetString(SR.DirectoryExistError));
+                    throw new InvalidOperationException(SR.GetString(SR.DirectoryExistsShortMessage));
                 }
                 Directory.CreateDirectory(strNewDir);
             }

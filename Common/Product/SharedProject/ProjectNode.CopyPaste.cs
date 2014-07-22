@@ -549,7 +549,7 @@ namespace Microsoft.VisualStudioTools.Project {
                         // dragging a folder into a child, that's not allowed
                         VsShellUtilities.ShowMessageBox(
                             Project.Site,
-                            String.Format("Cannot move '{0}'. The destination folder is a subfolder of the source folder.", Path.GetFileName(CommonUtils.TrimEndSeparator(folder))),
+                            SR.GetString(SR.CannotMoveIntoSubfolder, CommonUtils.GetFileOrDirectoryName(folder)),
                             null,
                             OLEMSGICON.OLEMSGICON_CRITICAL,
                             OLEMSGBUTTON.OLEMSGBUTTON_OK,
@@ -558,11 +558,11 @@ namespace Microsoft.VisualStudioTools.Project {
                     }
                 }
 
-                var targetPath = Path.Combine(targetFolderNode.FullPathToChildren, Path.GetFileName(CommonUtils.TrimEndSeparator(folder)));
+                var targetPath = Path.Combine(targetFolderNode.FullPathToChildren, CommonUtils.GetFileOrDirectoryName(folder));
                 if (File.Exists(targetPath)) {
                     VsShellUtilities.ShowMessageBox(
                        Project.Site,
-                       String.Format("Unable to add '{0}'. A file with that name already exists.", Path.GetFileName(CommonUtils.TrimEndSeparator(folder))),
+                       SR.GetString(SR.CannotAddFileExists, CommonUtils.GetFileOrDirectoryName(folder)),
                        null,
                        OLEMSGICON.OLEMSGICON_CRITICAL,
                        OLEMSGBUTTON.OLEMSGBUTTON_OK,
@@ -577,7 +577,7 @@ namespace Microsoft.VisualStudioTools.Project {
                         } else {
                             VsShellUtilities.ShowMessageBox(
                                Project.Site,
-                               String.Format("Cannot move the folder '{0}'. A folder with that name already exists in the destination directory.", Path.GetFileName(CommonUtils.TrimEndSeparator(folder))),
+                               SR.GetString(SR.CannotMoveFolderExists, CommonUtils.GetFileOrDirectoryName(folder)),
                                null,
                                OLEMSGICON.OLEMSGICON_CRITICAL,
                                OLEMSGBUTTON.OLEMSGBUTTON_OK,
@@ -586,11 +586,10 @@ namespace Microsoft.VisualStudioTools.Project {
                         return null;
                     }
 
-                    var dialog = new OverwriteFileDialog(String.Format(
-@"This folder already contains a folder called '{0}'
-
-If the files in the existing folder have the same names as files in the 
-folder you are copying, do you want to replace the existing files?", Path.GetFileName(CommonUtils.TrimEndSeparator(folder))), false);
+                    var dialog = new OverwriteFileDialog(
+                        SR.GetString(SR.OverwriteFilesInExistingFolder, CommonUtils.GetFileOrDirectoryName(folder)),
+                        false
+                    );
                     dialog.Owner = Application.Current.MainWindow;
                     var res = dialog.ShowDialog();
                     if (res == null) {
@@ -603,7 +602,7 @@ folder you are copying, do you want to replace the existing files?", Path.GetFil
                     // otherwise yes, and we'll prompt about the files.
                 }
 
-                string targetFileName = Path.GetFileName(CommonUtils.TrimEndSeparator(folder));
+                string targetFileName = CommonUtils.GetFileOrDirectoryName(folder);
                 if (Utilities.IsSameComObject(Project, sourceHierarchy) &&
                     String.Equals(targetFolderNode.FullPathToChildren, folder, StringComparison.OrdinalIgnoreCase)) {
                     // copying a folder onto its self, make a copy
@@ -621,7 +620,7 @@ folder you are copying, do you want to replace the existing files?", Path.GetFil
                 if (Path.Combine(targetFolderNode.FullPathToChildren, targetFileName).Length >= NativeMethods.MAX_FOLDER_PATH) {
                     VsShellUtilities.ShowMessageBox(
                         Project.Site,
-                        "The folder name is too long.",
+                        SR.GetString(SR.FolderPathTooLongShortMessage),
                         null,
                         OLEMSGICON.OLEMSGICON_CRITICAL,
                         OLEMSGBUTTON.OLEMSGBUTTON_OK,
@@ -644,7 +643,7 @@ folder you are copying, do you want to replace the existing files?", Path.GetFil
             private void ReportMissingItem(string folder) {
                 VsShellUtilities.ShowMessageBox(
                     Project.Site,
-                    String.Format("The source URL '{0}' could not be found.", Path.GetFileName(CommonUtils.TrimEndSeparator(folder))),
+                    SR.GetString(SR.SourceUrlNotFound, CommonUtils.GetFileOrDirectoryName(folder)),
                     null,
                     OLEMSGICON.OLEMSGICON_CRITICAL,
                     OLEMSGBUTTON.OLEMSGBUTTON_OK,
@@ -670,7 +669,7 @@ folder you are copying, do you want to replace the existing files?", Path.GetFil
                     string source;
                     ErrorHandler.ThrowOnFailure(((IVsProject)sourceHierarchy).GetMkDocument(itemId, out source));
                     if (name == null) {
-                        name = Path.GetFileName(CommonUtils.TrimEndSeparator(source));
+                        name = CommonUtils.GetFileOrDirectoryName(source);
                     }
 
                     Guid guidType;
@@ -736,14 +735,14 @@ folder you are copying, do you want to replace the existing files?", Path.GetFil
             private static string GetCopyName(string existingFullPath) {
                 string newDir, name, extension;
                 if (CommonUtils.HasEndSeparator(existingFullPath)) {
-                    name = Path.GetFileName(CommonUtils.TrimEndSeparator(existingFullPath));
+                    name = CommonUtils.GetFileOrDirectoryName(existingFullPath);
                     extension = "";
                 } else {
                     extension = Path.GetExtension(existingFullPath);
                     name = Path.GetFileNameWithoutExtension(existingFullPath);
                 }
 
-                string folder = Path.GetDirectoryName(CommonUtils.TrimEndSeparator(existingFullPath));
+                string folder = CommonUtils.GetParent(existingFullPath);
                 int copyCount = 1;
                 do {
                     string newName = name + " - Copy";
@@ -1002,7 +1001,7 @@ folder you are copying, do you want to replace the existing files?", Path.GetFil
                     } else if (Directory.Exists(newPath)) {
                         VsShellUtilities.ShowMessageBox(
                             Project.Site,
-                            String.Format("A directory with the name '{0}' already exists.", Path.GetFileName(CommonUtils.TrimEndSeparator(newPath))),
+                            SR.GetString(SR.DirectoryExists, CommonUtils.GetFileOrDirectoryName(newPath)),
                             null,
                             OLEMSGICON.OLEMSGICON_CRITICAL,
                             OLEMSGBUTTON.OLEMSGBUTTON_OK,
@@ -1013,7 +1012,7 @@ folder you are copying, do you want to replace the existing files?", Path.GetFil
                     if (newPath.Length >= NativeMethods.MAX_PATH) {
                         VsShellUtilities.ShowMessageBox(
                             Project.Site,
-                            "The filename is too long.",
+                            SR.GetString(SR.PathTooLongShortMessage),
                             null,
                             OLEMSGICON.OLEMSGICON_CRITICAL,
                             OLEMSGBUTTON.OLEMSGBUTTON_OK,
@@ -1032,7 +1031,7 @@ folder you are copying, do you want to replace the existing files?", Path.GetFil
             /// <param name="dialog"></param>
             /// <returns></returns>
             private static bool PromptOverwriteFile(string filename, out OverwriteFileDialog dialog) {
-                dialog = new OverwriteFileDialog(String.Format("A file with the name '{0}' already exists.  Do you want to replace it?", Path.GetFileName(filename)), true);
+                dialog = new OverwriteFileDialog(SR.GetString(SR.FileAlreadyExists, Path.GetFileName(filename)), true);
                 dialog.Owner = Application.Current.MainWindow;
                 bool? dialogResult = dialog.ShowDialog();
 
@@ -1067,7 +1066,7 @@ folder you are copying, do you want to replace the existing files?", Path.GetFil
             private void CannotMoveSameLocation(string moniker) {
                 VsShellUtilities.ShowMessageBox(
                     Project.Site,
-                    String.Format("Cannot move '{0}'. The destination folder is the same as the source folder.", Path.GetFileName(CommonUtils.TrimEndSeparator(moniker))),
+                    SR.GetString(SR.CannotMoveIntoSameDirectory, CommonUtils.GetFileOrDirectoryName(moniker)),
                     null,
                     OLEMSGICON.OLEMSGICON_CRITICAL,
                     OLEMSGBUTTON.OLEMSGBUTTON_OK,
@@ -1557,7 +1556,7 @@ folder you are copying, do you want to replace the existing files?", Path.GetFil
 
                             VsShellUtilities.ShowMessageBox(
                                 Site,
-                                String.Format("Cannot add folder '{0}' as a child or decedent of self.", Path.GetFileName(CommonUtils.TrimEndSeparator(droppedFile))),
+                                SR.GetString(SR.CannotAddAsDescendantOfSelf, CommonUtils.GetFileOrDirectoryName(droppedFile)),
                                 null,
                                 OLEMSGICON.OLEMSGICON_CRITICAL,
                                 OLEMSGBUTTON.OLEMSGBUTTON_OK,

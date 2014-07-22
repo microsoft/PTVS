@@ -290,7 +290,7 @@ namespace Microsoft.PythonTools.Project {
             if (baseInterpreter != null) {
                 result.Description = string.Format(
                     "{0} ({1})",
-                    Path.GetFileName(CommonUtils.TrimEndSeparator(prefixPath)),
+                    CommonUtils.GetFileOrDirectoryName(prefixPath),
                     baseInterpreter.Description
                 );
 
@@ -299,7 +299,7 @@ namespace Microsoft.PythonTools.Project {
                 result.Architecture = baseInterpreter.Configuration.Architecture;
                 result.WatchLibraryForNewModules = true;
             } else {
-                result.Description = Path.GetFileName(CommonUtils.TrimEndSeparator(prefixPath));
+                result.Description = CommonUtils.GetFileOrDirectoryName(prefixPath);
 
                 result.Id = Guid.Empty;
                 result.LanguageVersion = new Version(0, 0);

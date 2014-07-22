@@ -37,7 +37,12 @@ namespace Microsoft.VisualStudioTools.Project {
         internal const string Cancel = "Cancel";
         internal const string CancelQueryEdit = "CancelQueryEdit";
         internal const string CancelQueryEditMultiple = "CancelQueryEditMultiple";
+        internal const string CannotAddFileExists = "CannotAddFileExists";
         internal const string CannotAddFileThatIsOpenInEditor = "CannotAddFileThatIsOpenInEditor";
+        internal const string CannotAddAsDescendantOfSelf = "CannotAddAsDescendantOfSelf";
+        internal const string CannotMoveFolderExists = "CannotMoveFolderExists";
+        internal const string CannotMoveIntoSameDirectory = "CannotMoveIntoSameDirectory";
+        internal const string CannotMoveIntoSubfolder = "CannotMoveIntoSubfolder";
         internal const string CanNotSaveFileNotOpeneInEditor = "CanNotSaveFileNotOpeneInEditor";
         internal const string cli1 = "cli1";
         internal const string Compile = "Compile";
@@ -58,7 +63,8 @@ namespace Microsoft.VisualStudioTools.Project {
         internal const string DetailsUsingTask = "DetailsUsingTask";
         internal const string Detailed = "Detailed";
         internal const string Diagnostic = "Diagnostic";
-        internal const string DirectoryExistError = "DirectoryExistError";
+        internal const string DirectoryExists = "DirectoryExists";
+        internal const string DirectoryExistsShortMessage = "DirectoryExistsShortMessage";
         internal const string EditorViewError = "EditorViewError";
         internal const string EmbeddedResource = "EmbeddedResource";
         internal const string Error = "Error";
@@ -87,6 +93,7 @@ namespace Microsoft.VisualStudioTools.Project {
         internal const string FileProperties = "FileProperties";
         internal const string FolderName = "FolderName";
         internal const string FolderNameDescription = "FolderNameDescription";
+        internal const string FolderPathTooLongShortMessage = "FolderPathTooLongShortMessage";
         internal const string FolderProperties = "FolderProperties";
         internal const string FullPath = "FullPath";
         internal const string FullPathDescription = "FullPathDescription";
@@ -106,6 +113,7 @@ namespace Microsoft.VisualStudioTools.Project {
         internal const string NestedProjectFailedToReload = "NestedProjectFailedToReload";
         internal const string OutputPath = "OutputPath";
         internal const string OutputPathDescription = "OutputPathDescription";
+        internal const string OverwriteFilesInExistingFolder = "OverwriteFilesInExistingFolder";
         internal const string PasteFailed = "PasteFailed";
         internal const string ParameterMustBeAValidGuid = "ParameterMustBeAValidGuid";
         internal const string ParameterMustBeAValidItemId = "ParameterMustBeAValidItemId";
@@ -137,8 +145,9 @@ namespace Microsoft.VisualStudioTools.Project {
         internal const string SaveOfProjectFileOutsideCurrentDirectory = "SaveOfProjectFileOutsideCurrentDirectory";
         internal const string ScriptArguments = "ScriptArguments";
         internal const string ScriptArgumentsDescription = "ScriptArgumentsDescription";
-        internal const string StandardEditorViewError = "StandardEditorViewError";
         internal const string Settings = "Settings";
+        internal const string SourceUrlNotFound = "SourceUrlNotFound";
+        internal const string StandardEditorViewError = "StandardEditorViewError";
         internal const string StartupFile = "StartupFile";
         internal const string StartupFileDescription = "StartupFileDescription";
         internal const string StartWebBrowser = "StartWebBrowser";

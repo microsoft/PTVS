@@ -15,6 +15,7 @@
 extern alias pythontools;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Microsoft.PythonTools;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -172,19 +173,20 @@ namespace PythonToolsTests {
         [TestMethod, Priority(0)]
         public void TestCreateFriendlyDirectoryPath() {
             foreach (var testCase in Triples(
-                @"C:\a\b", @"C:\", @"\",
+                @"C:\a\b", @"C:\", @"..\..",
                 @"C:\a\b", @"C:\a", @"..",
                 @"C:\a\b", @"C:\a\b", @".",
                 @"C:\a\b", @"C:\a\b\c", @"c",
                 @"C:\a\b", @"D:\a\b", @"D:\a\b",
+                @"C:\a\b", @"C:\", @"..\..",
 
-                @"\\pc\share\a\b", @"\\pc\share\", @"\",
+                @"\\pc\share\a\b", @"\\pc\share\", @"..\..",
                 @"\\pc\share\a\b", @"\\pc\share\a", @"..",
                 @"\\pc\share\a\b", @"\\pc\share\a\b", @".",
                 @"\\pc\share\a\b", @"\\pc\share\a\b\c", @"c",
                 @"\\pc\share\a\b", @"\\pc\othershare\a\b", @"..\..\..\othershare\a\b",
 
-                @"ftp://me@example.com/a/b", @"ftp://me@example.com/", @"/",
+                @"ftp://me@example.com/a/b", @"ftp://me@example.com/", @"../..",
                 @"ftp://me@example.com/a/b", @"ftp://me@example.com/a", @"..",
                 @"ftp://me@example.com/a/b", @"ftp://me@example.com/a/b", @".",
                 @"ftp://me@example.com/a/b", @"ftp://me@example.com/a/b/c", @"c",
@@ -200,19 +202,19 @@ namespace PythonToolsTests {
         [TestMethod, Priority(0)]
         public void TestCreateFriendlyFilePath() {
             foreach (var testCase in Triples(
-                @"C:\a\b", @"C:\file.exe", @"\file.exe",
+                @"C:\a\b", @"C:\file.exe", @"..\..\file.exe",
                 @"C:\a\b", @"C:\a\file.exe", @"..\file.exe",
                 @"C:\a\b", @"C:\a\b\file.exe", @"file.exe",
                 @"C:\a\b", @"C:\a\b\c\file.exe", @"c\file.exe",
                 @"C:\a\b", @"D:\a\b\file.exe", @"D:\a\b\file.exe",
 
-                @"\\pc\share\a\b", @"\\pc\share\file.exe", @"\file.exe",
+                @"\\pc\share\a\b", @"\\pc\share\file.exe", @"..\..\file.exe",
                 @"\\pc\share\a\b", @"\\pc\share\a\file.exe", @"..\file.exe",
                 @"\\pc\share\a\b", @"\\pc\share\a\b\file.exe", @"file.exe",
                 @"\\pc\share\a\b", @"\\pc\share\a\b\c\file.exe", @"c\file.exe",
                 @"\\pc\share\a\b", @"\\pc\othershare\a\b\file.exe", @"..\..\..\othershare\a\b\file.exe",
 
-                @"ftp://me@example.com/a/b", @"ftp://me@example.com/file.exe", @"/file.exe",
+                @"ftp://me@example.com/a/b", @"ftp://me@example.com/file.exe", @"../../file.exe",
                 @"ftp://me@example.com/a/b", @"ftp://me@example.com/a/file.exe", @"../file.exe",
                 @"ftp://me@example.com/a/b", @"ftp://me@example.com/a/b/file.exe", @"file.exe",
                 @"ftp://me@example.com/a/b", @"ftp://me@example.com/a/b/c/file.exe", @"c/file.exe",
@@ -228,36 +230,36 @@ namespace PythonToolsTests {
         [TestMethod, Priority(0)]
         public void TestGetRelativeDirectoryPath() {
             foreach (var testCase in Triples(
-                @"C:\a\b", @"C:\", @"\",
+                @"C:\a\b", @"C:\", @"..\..\",
                 @"C:\a\b", @"C:\a", @"..\",
                 @"C:\a\b\c", @"C:\a", @"..\..\",
                 @"C:\a\b", @"C:\a\b", @"",
                 @"C:\a\b", @"C:\a\b\c", @"c\",
                 @"C:\a\b", @"D:\a\b", @"D:\a\b\",
-                @"C:\a\b", @"C:\d\e", @"\d\e\",
+                @"C:\a\b", @"C:\d\e", @"..\..\d\e\",
 
-                @"\\root\share\path", @"\\Root\Share", @"\",
+                @"\\root\share\path", @"\\Root\Share", @"..\",
                 @"\\root\share\path", @"\\Root\share\Path\subpath", @"subpath\",
                 @"\\root\share\path\subpath", @"\\Root\share\Path\othersubpath", @"..\othersubpath\",
                 @"\\root\share\path", @"\\root\othershare\path", @"..\..\othershare\path\",
-                @"\\root\share\path", @"\\root\share\otherpath\", @"\otherpath\",
+                @"\\root\share\path", @"\\root\share\otherpath\", @"..\otherpath\",
 
-                @"ftp://me@example.com/share/path", @"ftp://me@example.com/", @"/",
-                @"ftp://me@example.com/share/path", @"ftp://me@example.com/Share", @"/Share/",
+                @"ftp://me@example.com/share/path", @"ftp://me@example.com/", @"../../",
+                @"ftp://me@example.com/share/path", @"ftp://me@example.com/Share", @"../../Share/",
                 @"ftp://me@example.com/share/path", @"ftp://me@example.com/share/path/subpath", @"subpath/",
                 @"ftp://me@example.com/share/path", @"ftp://me@example.com/share/Path/subpath", @"../Path/subpath/",
                 @"ftp://me@example.com/share/path/subpath", @"ftp://me@example.com/share/path/othersubpath", @"../othersubpath/",
                 @"ftp://me@example.com/share/path/subpath", @"ftp://me@example.com/share/Path/othersubpath", @"../../Path/othersubpath/",
-                @"ftp://me@example.com/path", @"ftp://me@example.com/otherpath/", @"/otherpath/",
+                @"ftp://me@example.com/path", @"ftp://me@example.com/otherpath/", @"../otherpath/",
 
-                @"C:\a\b\c\d", @"C:\.dottedname", @"\.dottedname\",
-                @"C:\a\b\c\d", @"C:\..dottedname", @"\..dottedname\",
+                @"C:\a\b\c\d", @"C:\.dottedname", @"..\..\..\..\.dottedname\",
+                @"C:\a\b\c\d", @"C:\..dottedname", @"..\..\..\..\..dottedname\",
                 @"C:\a\b\c\d", @"C:\a\.dottedname", @"..\..\..\.dottedname\",
                 @"C:\a\b\c\d", @"C:\a\..dottedname", @"..\..\..\..dottedname\",
 
                 "C:\\a\\b\\", @"C:\a\b", @"",
                 @"C:\a\b", "C:\\a\\b\\", @""
-                )) {
+            )) {
                 var expected = testCase.Item3;
                 var actual = CommonUtils.GetRelativeDirectoryPath(testCase.Item1, testCase.Item2);
 
@@ -268,29 +270,29 @@ namespace PythonToolsTests {
         [TestMethod, Priority(0)]
         public void TestGetRelativeFilePath() {
             foreach (var testCase in Triples(
-                @"C:\a\b", @"C:\file.exe", @"\file.exe",
+                @"C:\a\b", @"C:\file.exe", @"..\..\file.exe",
                 @"C:\a\b", @"C:\a\file.exe", @"..\file.exe",
                 @"C:\a\b\c", @"C:\a\file.exe", @"..\..\file.exe",
                 @"C:\a\b", @"C:\A\B\file.exe", @"file.exe",
                 @"C:\a\b", @"C:\a\B\C\file.exe", @"C\file.exe",
                 @"C:\a\b", @"D:\a\b\file.exe", @"D:\a\b\file.exe",
-                @"C:\a\b", @"C:\d\e\file.exe", @"\d\e\file.exe",
+                @"C:\a\b", @"C:\d\e\file.exe", @"..\..\d\e\file.exe",
 
-                @"\\root\share\path", @"\\Root\Share\file.exe", @"\file.exe",
+                @"\\root\share\path", @"\\Root\Share\file.exe", @"..\file.exe",
                 @"\\root\share\path", @"\\Root\Share\Path\file.exe", @"file.exe",
                 @"\\root\share\path", @"\\Root\share\Path\subpath\file.exe", @"subpath\file.exe",
                 @"\\root\share\path\subpath", @"\\Root\share\Path\othersubpath\file.exe", @"..\othersubpath\file.exe",
                 @"\\root\share\path", @"\\root\othershare\path\file.exe", @"..\..\othershare\path\file.exe",
-                @"\\root\share\path", @"\\root\share\otherpath\file.exe", @"\otherpath\file.exe",
+                @"\\root\share\path", @"\\root\share\otherpath\file.exe", @"..\otherpath\file.exe",
                 @"\\root\share\", @"\\otherroot\share\file.exe", @"\\otherroot\share\file.exe",
 
-                @"ftp://me@example.com/share/path", @"ftp://me@example.com/file.exe", @"/file.exe",
-                @"ftp://me@example.com/share/path", @"ftp://me@example.com/Share/file.exe", @"/Share/file.exe",
+                @"ftp://me@example.com/share/path", @"ftp://me@example.com/file.exe", @"../../file.exe",
+                @"ftp://me@example.com/share/path", @"ftp://me@example.com/Share/file.exe", @"../../Share/file.exe",
                 @"ftp://me@example.com/share/path", @"ftp://me@example.com/share/path/subpath/file.exe", @"subpath/file.exe",
                 @"ftp://me@example.com/share/path", @"ftp://me@example.com/share/Path/subpath/file.exe", @"../Path/subpath/file.exe",
                 @"ftp://me@example.com/share/path/subpath", @"ftp://me@example.com/share/path/othersubpath/file.exe", @"../othersubpath/file.exe",
                 @"ftp://me@example.com/share/path/subpath", @"ftp://me@example.com/share/Path/othersubpath/file.exe", @"../../Path/othersubpath/file.exe",
-                @"ftp://me@example.com/path", @"ftp://me@example.com/otherpath/file.exe", @"/otherpath/file.exe",
+                @"ftp://me@example.com/path", @"ftp://me@example.com/otherpath/file.exe", @"../otherpath/file.exe",
 
                 @"C:\a\b", "C:\\a\\b\\", @"",
                 // This is the expected behavior for GetRelativeFilePath
@@ -323,6 +325,7 @@ namespace PythonToolsTests {
                 @"C:\a\b", @"c", @"C:\a\b\c\",
                 @"C:\a\b", @"D:\a\b", @"D:\a\b\",
                 @"C:\a\b", @"\d\e", @"C:\d\e\",
+                @"C:\a\b\c\d", @"..\..\..\..", @"C:\",
 
                 @"\\root\share\path", @"..", @"\\root\share\",
                 @"\\root\share\path", @"subpath", @"\\root\share\path\subpath\",
@@ -331,7 +334,7 @@ namespace PythonToolsTests {
                 @"ftp://me@example.com/path", @"..", @"ftp://me@example.com/",
                 @"ftp://me@example.com/path", @"subpath", @"ftp://me@example.com/path/subpath/",
                 @"ftp://me@example.com/path", @"../otherpath/", @"ftp://me@example.com/otherpath/"
-                )) {
+            )) {
                 var expected = testCase.Item3;
                 var actual = CommonUtils.GetAbsoluteDirectoryPath(testCase.Item1, testCase.Item2);
 
@@ -348,6 +351,7 @@ namespace PythonToolsTests {
                 @"C:\a\b", @"c\file.exe", @"C:\a\b\c\file.exe",
                 @"C:\a\b", @"D:\a\b\file.exe", @"D:\a\b\file.exe",
                 @"C:\a\b", @"\d\e\file.exe", @"C:\d\e\file.exe",
+                @"C:\a\b\c\d\", @"..\..\..\..\", @"C:\",
 
                 @"\\root\share\path", @"..\file.exe", @"\\root\share\file.exe",
                 @"\\root\share\path", @"file.exe", @"\\root\share\path\file.exe",
@@ -358,7 +362,7 @@ namespace PythonToolsTests {
                 @"ftp://me@example.com/path", @"file.exe", @"ftp://me@example.com/path/file.exe",
                 @"ftp://me@example.com/path", @"subpath/file.exe", @"ftp://me@example.com/path/subpath/file.exe",
                 @"ftp://me@example.com/path", @"../otherpath/file.exe", @"ftp://me@example.com/otherpath/file.exe"
-                )) {
+            )) {
                 var expected = testCase.Item3;
                 var actual = CommonUtils.GetAbsoluteFilePath(testCase.Item1, testCase.Item2);
 
@@ -463,8 +467,12 @@ namespace PythonToolsTests {
                 @"/leading", @"/leading",
                 @"\leading", @"\leading",
                 @"wit/hin", @"wit/hin",
-                @"wit\hin", @"wit\hin"
-                )) {
+                @"wit\hin", @"wit\hin",
+                @"C:\a\", @"C:\a",
+                @"C:\", @"C:\",
+                @"ftp://a/", @"ftp://a",
+                @"ftp://", @"ftp://"
+            )) {
                 var expected = testCase.Item2;
                 var actual = CommonUtils.TrimEndSeparator(testCase.Item1);
 
@@ -497,6 +505,114 @@ namespace PythonToolsTests {
                 @"C:\a\b\", @"C:\a\b\..\x\c" // Quick path should not be taken
                 )) {
                 Assert.IsFalse(CommonUtils.IsSubpathOf(testCase.Item1, testCase.Item2), string.Format("{0} should not be subpath of {1}", testCase.Item2, testCase.Item1));
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void TestGetLastDirectoryName() {
+            foreach (var testCase in Pairs(
+                @"a\b\c", "b",
+                @"a\b\", "b",
+                @"a\b\c\", "c",
+                @"a\b\.\c", "b",
+                @"a\b\.\.\.\.\.\.\c", "b"
+            )) {
+                foreach (var scheme in new[] { "", "C:\\", "\\", ".\\", "\\\\share\\root\\", "ftp://" }) {
+                    var path = scheme + testCase.Item1;
+
+                    Assert.AreEqual(testCase.Item2, CommonUtils.GetLastDirectoryName(path), "Path: " + path);
+
+                    if (path.IndexOf('.') >= 0) {
+                        // Path.GetFileName will always fail on these, so don't
+                        // even bother testing.
+                        continue;
+                    }
+
+                    string ioPathResult;
+                    try {
+                        ioPathResult = Path.GetFileName(CommonUtils.TrimEndSeparator(Path.GetDirectoryName(path)));
+                    } catch (ArgumentException) {
+                        continue;
+                    }
+
+                    Assert.AreEqual(
+                        CommonUtils.GetLastDirectoryName(path),
+                        ioPathResult ?? string.Empty,
+                        "Did not match Path.GetFileName(...) result for " + path
+                    );
+                }
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void TestGetParentOfDirectory() {
+            foreach (var testCase in Pairs(
+                @"a\b\c", @"a\b\",
+                @"a\b\", @"a\",
+                @"a\b\c\", @"a\b\"
+            )) {
+                foreach (var scheme in new[] { "", "C:\\", "\\", ".\\", "\\\\share\\root\\", "ftp://" }) {
+                    var path = scheme + testCase.Item1;
+                    var expected = scheme + testCase.Item2;
+
+                    Assert.AreEqual(expected, CommonUtils.GetParent(path), "Path: " + path);
+
+                    if (scheme.Contains("://")) {
+                        // Path.GetFileName will always fail on these, so don't
+                        // even bother testing.
+                        continue;
+                    }
+
+                    string ioPathResult;
+                    try {
+                        ioPathResult = Path.GetDirectoryName(CommonUtils.TrimEndSeparator(path)) + Path.DirectorySeparatorChar;
+                    } catch (ArgumentException) {
+                        continue;
+                    }
+
+                    Assert.AreEqual(
+                        CommonUtils.GetParent(path),
+                        ioPathResult ?? string.Empty,
+                        "Did not match Path.GetDirectoryName(...) result for " + path
+                    );
+                }
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void TestGetFileOrDirectoryName() {
+            foreach (var testCase in Pairs(
+                @"a\b\c", @"c",
+                @"a\b\", @"b",
+                @"a\b\c\", @"c",
+                @"a", @"a",
+                @"a\", @"a"
+            )) {
+                foreach (var scheme in new[] { "", "C:\\", "\\", ".\\", "\\\\share\\root\\", "ftp://" }) {
+                    var path = scheme + testCase.Item1;
+                    var expected = testCase.Item2;
+
+                    Assert.AreEqual(expected, CommonUtils.GetFileOrDirectoryName(path), "Path: " + path);
+
+                    if (scheme.Contains("://")) {
+                        // Path.GetFileName will always fail on these, so don't
+                        // even bother testing.
+                        continue;
+                    }
+
+                    string ioPathResult;
+                    try {
+                        ioPathResult = CommonUtils.GetFileOrDirectoryName(path);
+                    } catch (ArgumentException) {
+                        continue;
+                    }
+
+                    Assert.AreEqual(
+                        CommonUtils.GetFileOrDirectoryName(path),
+                        ioPathResult ?? string.Empty,
+                        "Did not match Path.GetDirectoryName(...) result for " + path
+                    );
+                }
             }
         }
 

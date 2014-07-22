@@ -179,7 +179,7 @@
   <data name="Diagnostic" xml:space="preserve">
     <value>Diagnostic</value>
   </data>
-  <data name="DirectoryExistError" xml:space="preserve">
+  <data name="DirectoryExistsShortMessage" xml:space="preserve">
     <value>Directory already exists</value>
   </data>
   <data name="EditorViewError" xml:space="preserve">
@@ -628,5 +628,35 @@ Run Visual Studio with the /Log option and check ActivityLog.xml for more detail
   </data>
   <data name="Retry" xml:space="preserve">
     <value>T&amp;ry again</value>
+  </data>
+  <data name="CannotAddFileExists" xml:space="preserve">
+    <value>Unable to add '{0}'. A file with that name already exists.</value>
+  </data>
+  <data name="CannotAddFolderAsDescendantOfSelf" xml:space="preserve">
+    <value>Cannot add folder '{0}' as a child or decedent of self.</value>
+  </data>
+  <data name="CannotMoveFolderExists" xml:space="preserve">
+    <value>Cannot move the folder '{0}'. A folder with that name already exists in the destination directory.</value>
+  </data>
+  <data name="CannotMoveIntoSameDirectory" xml:space="preserve">
+    <value>Cannot move '{0}'. The destination folder is the same as the source folder.</value>
+  </data>
+  <data name="CannotMoveIntoSubfolder" xml:space="preserve">
+    <value>Cannot move '{0}'. The destination folder is a subfolder of the source folder.</value>
+  </data>
+  <data name="DirectoryExists" xml:space="preserve">
+    <value>A directory with the name '{0}' already exists.</value>
+  </data>
+  <data name="FolderPathTooLongShortMessage" xml:space="preserve">
+    <value>The folder name is too long.</value>
+  </data>
+  <data name="OverwriteFilesInExistingFolder" xml:space="preserve">
+    <value>This folder already contains a folder called '{0}'
+
+If the files in the existing folder have the same names as files in the 
+folder you are copying, do you want to replace the existing files?</value>
+  </data>
+  <data name="SourceUrlNotFound" xml:space="preserve">
+    <value>The source URL '{0}' could not be found.</value>
   </data>
 </root>

@@ -1760,7 +1760,7 @@ namespace Microsoft.VisualStudioTools.Project {
             Debug.Assert(!String.IsNullOrEmpty(GetMkDocument()));
 
             for (HierarchyNode child = this.firstChild; child != null; child = child.NextSibling) {
-                string filename = Path.GetFileName(CommonUtils.TrimEndSeparator(child.ItemNode.GetMetadata(ProjectFileConstants.Include)));
+                string filename = CommonUtils.GetFileOrDirectoryName(child.ItemNode.GetMetadata(ProjectFileConstants.Include));
 
                 if (String.Equals(filename, name, StringComparison.OrdinalIgnoreCase)) {
                     return child;

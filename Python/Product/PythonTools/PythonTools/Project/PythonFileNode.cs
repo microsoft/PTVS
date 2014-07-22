@@ -64,7 +64,7 @@ namespace Microsoft.PythonTools.Project {
         private static string GetNodeNameForPackage(HierarchyNode node) {
             var project = node as ProjectNode;
             if (project != null) {
-                return Path.GetFileName(CommonUtils.TrimEndSeparator(project.ProjectHome));
+                return CommonUtils.GetFileOrDirectoryName(project.ProjectHome);
             } else {
                 return node.Caption;
             }

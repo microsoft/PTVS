@@ -1123,7 +1123,7 @@ namespace Microsoft.VisualStudioTools.Project {
 
                     if (Directory.Exists(_path)) {
                         if (IsFileSymLink(_path)) {
-                            string parentDir = Path.GetDirectoryName(CommonUtils.TrimEndSeparator(_path)) + Path.DirectorySeparatorChar;
+                            string parentDir = CommonUtils.GetParent(_path);
                             if (IsRecursiveSymLink(parentDir, _path)) {
                                 // don't add recusrive sym link directory
                                 return;
