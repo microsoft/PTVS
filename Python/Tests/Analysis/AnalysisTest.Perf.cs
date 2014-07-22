@@ -230,7 +230,7 @@ import System
 
             var modules = new List<IPythonProjectEntry>();
             foreach (var sourceUnit in sourceUnits) {
-                modules.Add(projectState.AddModule(PythonAnalyzer.PathToModuleName(sourceUnit.Path), sourceUnit.Path, null));
+                modules.Add(projectState.AddModule(ModulePath.FromFullPath(sourceUnit.Path).ModuleName, sourceUnit.Path, null));
             }
             long start1 = sw.ElapsedMilliseconds;
             Trace.TraceInformation("AddSourceUnit: {0} ms", start1 - start0);

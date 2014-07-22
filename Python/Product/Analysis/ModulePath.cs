@@ -120,6 +120,8 @@ namespace Microsoft.PythonTools.Analysis {
             RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
         private static readonly Regex PythonBinaryRegex = new Regex(@"^(?!\d)(?<name>(\w|_)+)\.pyd$",
             RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
+        private static readonly Regex PythonCompiledRegex = new Regex(@"^(?!\d)(?<name>(\w|_)+)\.py[dco]$",
+            RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
 
         private static IEnumerable<ModulePath> GetModuleNamesFromPathHelper(
             string libPath,
@@ -340,25 +342,69 @@ namespace Microsoft.PythonTools.Analysis {
         /// not raise exceptions.
         /// </summary>
         public static bool IsPythonFile(string path) {
+            return IsPythonFile(path, true, true);
+        }
+
+        /// <summary>
+        /// Returns true if the provided path references an editable Python
+        /// source module. This function does not access the filesystem.
+        /// Retuns false if an invalid string is provided. This function does
+        /// not raise exceptions.
+        /// </summary>
+        /// <remarks>
+        /// This function may return true even if the file is not an importable
+        /// module. Use <see cref="IsPythonFile"/> and specify "strict" to
+        /// ensure the module can be imported.
+        /// </remarks>
+        public static bool IsPythonSourceFile(string path) {
+            return IsPythonFile(path, false, false);
+        }
+        
+        /// <summary>
+        /// Returns true if the provided path references an importable Python
+        /// module. This function does not access the filesystem.
+        /// Retuns false if an invalid string is provided. This function does
+        /// not raise exceptions.
+        /// </summary>
+        /// <param name="path">Path to check.</param>
+        /// <param name="strict">
+        /// True if the filename must be importable; false to allow unimportable
+        /// names.
+        /// </param>
+        /// <param name="allowCompiled">
+        /// True if pyd, pyc and pyo files should be allowed.
+        /// </param>
+        public static bool IsPythonFile(string path, bool strict, bool allowCompiled) {
             if (string.IsNullOrEmpty(path)) {
                 return false;
             }
 
             string name;
             try {
-                name = Path.GetFileName(path);
+                name = CommonUtils.GetFileOrDirectoryName(path);
             } catch (ArgumentException) {
                 return false;
             }
 
-            try {
-                var nameMatch = PythonFileRegex.Match(name);
-                if (nameMatch == null || !nameMatch.Success) {
-                    nameMatch = PythonBinaryRegex.Match(name);
+            if (strict) {
+                try {
+                    var nameMatch = PythonFileRegex.Match(name);
+                    if (allowCompiled && (nameMatch == null || !nameMatch.Success)) {
+                        nameMatch = PythonCompiledRegex.Match(name);
+                    }
+                    return nameMatch != null && nameMatch.Success;
+                } catch (RegexMatchTimeoutException) {
+                    return false;
                 }
-                return nameMatch != null && nameMatch.Success;
-            } catch (RegexMatchTimeoutException) {
-                return false;
+            } else {
+                var ext = name.Substring(name.LastIndexOf('.') + 1);
+                return "py".Equals(ext, StringComparison.OrdinalIgnoreCase) ||
+                    "pyw".Equals(ext, StringComparison.OrdinalIgnoreCase) ||
+                    (allowCompiled && (
+                        "pyd".Equals(ext, StringComparison.OrdinalIgnoreCase) ||
+                        "pyc".Equals(ext, StringComparison.OrdinalIgnoreCase) ||
+                        "pyo".Equals(ext, StringComparison.OrdinalIgnoreCase)
+                    ));
             }
         }
 
@@ -386,11 +432,14 @@ namespace Microsoft.PythonTools.Analysis {
         /// path to a Python file. This function will access the filesystem to
         /// determine the package name.
         /// </summary>
+        /// <param name="path">
+        /// The path referring to a Python file.
+        /// </param>
         /// <exception cref="ArgumentException">
         /// path is not a valid Python module.
         /// </exception>
         public static ModulePath FromFullPath(string path) {
-            return FromFullPath(path, null);
+            return FromFullPath(path, null, null);
         }
 
         /// <summary>
@@ -398,6 +447,9 @@ namespace Microsoft.PythonTools.Analysis {
         /// path to a Python file. This function will access the filesystem to
         /// determine the package name.
         /// </summary>
+        /// <param name="path">
+        /// The path referring to a Python file.
+        /// </param>
         /// <param name="topLevelPath">
         /// The directory to stop searching for packages at. The module name
         /// will never include the last segment of this path.
@@ -405,8 +457,39 @@ namespace Microsoft.PythonTools.Analysis {
         /// <exception cref="ArgumentException">
         /// path is not a valid Python module.
         /// </exception>
+        /// <remarks>This overload </remarks>
         public static ModulePath FromFullPath(string path, string topLevelPath) {
-            var name = Path.GetFileName(path);
+            return FromFullPath(path, topLevelPath, null);
+        }
+
+        /// <summary>
+        /// Returns a new ModulePath value determined from the provided full
+        /// path to a Python file. This function may access the filesystem to
+        /// determine the package name unless <paramref name="isPackage"/> is
+        /// provided.
+        /// </summary>
+        /// <param name="path">
+        /// The path referring to a Python file.
+        /// </param>
+        /// <param name="topLevelPath">
+        /// The directory to stop searching for packages at. The module name
+        /// will never include the last segment of this path.
+        /// </param>
+        /// <param name="isPackage">
+        /// A predicate that determines whether the specified substring of
+        /// <paramref name="path"/> represents a package. If omitted, the
+        /// default behavior is to check for a file named "__init__.py" in the
+        /// directory passed to the predicate.
+        /// </param>
+        /// <exception cref="ArgumentException">
+        /// path is not a valid Python module.
+        /// </exception>
+        public static ModulePath FromFullPath(
+            string path,
+            string topLevelPath = null,
+            Func<string, bool> isPackage = null
+        ) {
+            var name = CommonUtils.GetFileOrDirectoryName(path);
             var nameMatch = PythonFileRegex.Match(name);
             if (nameMatch == null || !nameMatch.Success) {
                 nameMatch = PythonBinaryRegex.Match(name);
@@ -416,16 +499,23 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             var fullName = nameMatch.Groups["name"].Value;
-            var remainder = Path.GetDirectoryName(path);
+            var remainder = CommonUtils.GetParent(path);
+            if (isPackage == null) {
+                // We know that f will be the result of GetParent() and always
+                // ends with a directory separator, so just concatenate to avoid
+                // potential path length problems.
+                isPackage = f => File.Exists(f + "__init__.py");
+            }
+
             while (
                 CommonUtils.IsValidPath(remainder) &&
-                File.Exists(Path.Combine(remainder, "__init__.py")) &&
+                isPackage(remainder) &&
                 (string.IsNullOrEmpty(topLevelPath) ||
                  (CommonUtils.IsSubpathOf(topLevelPath, remainder) &&
                   !CommonUtils.IsSameDirectory(topLevelPath, remainder)))
             ) {
-                fullName = Path.GetFileName(remainder) + "." + fullName;
-                remainder = Path.GetDirectoryName(remainder);
+                fullName = CommonUtils.GetFileOrDirectoryName(remainder) + "." + fullName;
+                remainder = CommonUtils.GetParent(remainder);
             }
 
             return new ModulePath(fullName, path, remainder);

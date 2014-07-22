@@ -129,7 +129,7 @@ namespace DjangoTests {
 
             List<IPythonProjectEntry> entries = new List<IPythonProjectEntry>();
             foreach (string file in Directory.EnumerateFiles(path, "*.py", SearchOption.AllDirectories)) {
-                var entry = analyzer.AddModule(PythonAnalyzer.PathToModuleName(file), file);
+                var entry = analyzer.AddModule(ModulePath.FromFullPath(file).ModuleName, file);
                 var parser = Parser.CreateParser(
                     new FileStream(file, FileMode.Open, FileAccess.Read),
                     PythonLanguageVersion.V27

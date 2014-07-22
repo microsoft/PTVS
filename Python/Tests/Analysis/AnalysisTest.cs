@@ -4407,7 +4407,7 @@ min(a, D())
             var projectState = new PythonAnalyzer(InterpreterFactory, Interpreter);
             var modules = new List<IPythonProjectEntry>();
             foreach (var sourceUnit in sourceUnits) {
-                modules.Add(projectState.AddModule(PythonAnalyzer.PathToModuleName(sourceUnit.Path), sourceUnit.Path, null));
+                modules.Add(projectState.AddModule(ModulePath.FromFullPath(sourceUnit.Path).ModuleName, sourceUnit.Path, null));
             }
             long start1 = sw.ElapsedMilliseconds;
             Trace.TraceInformation("AddSourceUnit: {0} ms", start1 - start0);
@@ -4657,12 +4657,38 @@ abc = 42
         /// <summary>
         /// Verify that the analyzer has the proper algorithm for turning a filename into a package name
         /// </summary>
-        //[TestMethod, Priority(0)] //FIXME, use files which exist somewhere
-        public void PathToModuleName() {
-            string nzmathPath = Path.Combine(Environment.GetEnvironmentVariable("DLR_ROOT"), @"External.LCA_RESTRICTED\Languages\IronPython\Math");
+        [TestMethod, Priority(0)]
+        public void ModulePathFromFullPath() {
+            var basePath = @"C:\Not\A\Real\Path\";
 
-            Assert.AreEqual(PythonAnalyzer.PathToModuleName(Path.Combine(nzmathPath, @"nzmath\factor\__init__.py")), "nzmath.factor");
-            Assert.AreEqual(PythonAnalyzer.PathToModuleName(Path.Combine(nzmathPath, @"nzmath\factor\find.py")), "nzmath.factor.find");
+            // Replace the usual File.Exists(p + '__init__.py') check so we can
+            // test without real files.
+            var packagePaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase) {
+                basePath + @"A\",
+                basePath + @"A\B\"
+            };
+
+            Func<string, bool> isPackage = p => {
+                Console.WriteLine("isPackage({0})", p);
+                return packagePaths.Contains(p);
+            };
+
+            // __init__ files appear in the full name but not the module name.
+            var mp = ModulePath.FromFullPath(Path.Combine(basePath, "A", "B", "__init__.py"), isPackage: isPackage);
+            Assert.AreEqual("A.B", mp.ModuleName);
+            Assert.AreEqual("A.B.__init__", mp.FullName);
+            Assert.AreEqual("__init__", mp.Name);
+
+            mp = ModulePath.FromFullPath(Path.Combine(basePath, "A", "B", "Module.py"), isPackage: isPackage);
+            Assert.AreEqual("A.B.Module", mp.ModuleName);
+
+            // Ensure we don't go back past the top-level directory if specified
+            mp = ModulePath.FromFullPath(
+                Path.Combine(basePath, "A", "B", "Module.py"),
+                Path.Combine(basePath, "A"),
+                isPackage
+            );
+            Assert.AreEqual("B.Module", mp.ModuleName);
         }
 
         [TestMethod, Priority(0)]

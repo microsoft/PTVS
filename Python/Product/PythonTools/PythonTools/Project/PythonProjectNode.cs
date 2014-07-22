@@ -181,11 +181,7 @@ namespace Microsoft.PythonTools.Project {
         protected override void LinkFileAdded(string filename) {
             if (PythonToolsPackage.Instance.DebuggingOptionsPage.UpdateSearchPathsWhenAddingLinkedFiles) {
                 // update our search paths.
-                string dirToAdd = Path.GetDirectoryName(filename);
-                while (!String.IsNullOrEmpty(dirToAdd) && File.Exists(Path.Combine(dirToAdd, "__init__.py"))) {
-                    dirToAdd = Path.GetDirectoryName(dirToAdd);
-                }
-
+                var dirToAdd = ModulePath.FromFullPath(filename).LibraryPath;
                 AddSearchPathEntry(CommonUtils.EnsureEndSeparator(dirToAdd));
             }
 
@@ -206,20 +202,13 @@ namespace Microsoft.PythonTools.Project {
         /// <param name="strFileName">The filename to be evaluated</param>
         /// <returns>true if is a code file</returns>
         public override bool IsCodeFile(string strFileName) {
-            return IsPythonFile(strFileName);
+            return ModulePath.IsPythonSourceFile(strFileName);
         }
 
         public override string[] CodeFileExtensions {
             get {
                 return new[] { PythonConstants.FileExtension, PythonConstants.WindowsFileExtension };
             }
-        }
-
-        internal static bool IsPythonFile(string strFileName) {
-            var ext = Path.GetExtension(strFileName);
-
-            return String.Equals(ext, PythonConstants.FileExtension, StringComparison.OrdinalIgnoreCase) ||
-                String.Equals(ext, PythonConstants.WindowsFileExtension, StringComparison.OrdinalIgnoreCase);
         }
 
         public override Type GetProjectFactoryType() {

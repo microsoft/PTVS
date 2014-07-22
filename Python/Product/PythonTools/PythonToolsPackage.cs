@@ -27,6 +27,7 @@ using System.Threading;
 using System.Web.Script.Serialization;
 using System.Windows.Forms;
 using System.Windows.Forms.Design;
+using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Commands;
 using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.Debugger.DebugEngine;
@@ -425,7 +426,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
         }
 
         public override bool IsRecognizedFile(string filename) {
-            return PythonProjectNode.IsPythonFile(filename);
+            return ModulePath.IsPythonSourceFile(filename);
         }
 
         public override Type GetLibraryManagerType() {

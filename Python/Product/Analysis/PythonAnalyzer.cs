@@ -164,7 +164,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// <param name="moduleName">The name of the module; used to associate with imports</param>
         /// <param name="filePath">The path to the file on disk</param>
         /// <param name="cookie">An application-specific identifier for the module</param>
-        /// <returns></returns>
+        /// <returns>The project entry for the new module.</returns>
         public IPythonProjectEntry AddModule(string moduleName, string filePath, IAnalysisCookie cookie = null) {
             var entry = new ProjectEntry(this, moduleName, filePath, cookie);
 
@@ -178,6 +178,17 @@ namespace Microsoft.PythonTools.Analysis {
                 _modulesByFilename[filePath] = entry.MyScope;
             }
             return entry;
+        }
+
+        /// <summary>
+        /// Associates an existing module with a new name.
+        /// </summary>
+        /// <remarks>New in 2.1</remarks>
+        public void AddModuleAlias(string moduleName, string moduleAlias) {
+            ModuleReference modRef;
+            if (Modules.TryImport(moduleName, out modRef)) {
+                Modules[moduleAlias] = modRef;
+            }
         }
 
         /// <summary>
@@ -594,8 +605,9 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
+        [Obsolete("Use ModulePath.FromFullPath() instead")]
         public static string PathToModuleName(string path) {
-            return PathToModuleName(path, fileName => File.Exists(fileName));
+            return ModulePath.FromFullPath(path).ModuleName;
         }
 
         /// <summary>
@@ -605,26 +617,12 @@ namespace Microsoft.PythonTools.Analysis {
         /// <param name="fileExists">A function that is used to verify the existence of files (in particular, __init__.py)
         /// in the tree. Its signature and semantics should match that of <see cref="File.Exists"/>.</param>
         /// <returns>A fully qualified module name.</returns>
+        [Obsolete("Use ModulePath.FromFullPath() instead")]
         public static string PathToModuleName(string path, Func<string, bool> fileExists) {
-            string moduleName;
-            string dirName;
-
-            if (path == null) {
-                return String.Empty;
-            } else if (ModulePath.IsInitPyFile(path)) {
-                moduleName = Path.GetFileName(Path.GetDirectoryName(path));
-                dirName = Path.GetDirectoryName(path);
-            } else {
-                moduleName = Path.GetFileNameWithoutExtension(path);
-                dirName = path;
-            }
-
-            while (dirName.Length != 0 && (dirName = Path.GetDirectoryName(dirName)).Length != 0 &&
-                fileExists(Path.Combine(dirName, "__init__.py"))) {
-                moduleName = Path.GetFileName(dirName) + "." + moduleName;
-            }
-
-            return moduleName;
+            return ModulePath.FromFullPath(
+                path,
+                isPackage: dirName => fileExists(Path.Combine(dirName, "__init__.py"))
+            ).ModuleName;
         }
 
         public AnalysisLimits Limits {

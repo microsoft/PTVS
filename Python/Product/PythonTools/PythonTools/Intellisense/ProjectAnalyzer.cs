@@ -321,7 +321,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             IProjectEntry entry;
             if (!_projectFiles.TryGetValue(path, out entry)) {
-                var modName = PythonAnalyzer.PathToModuleName(path);
+                var modName = ModulePath.FromFullPath(path).ModuleName;
 
                 if (buffer.ContentType.IsOfType(PythonCoreConstants.ContentType)) {
                     var reanalyzeEntries = Project.GetEntriesThatImportModule(modName, true).ToArray();
@@ -364,7 +364,7 @@ namespace Microsoft.PythonTools.Intellisense {
             return true;
         }
 
-        internal IProjectEntry AnalyzeFile(string path) {
+        internal IProjectEntry AnalyzeFile(string path, string addingFromDirectory = null) {
             if (_pyAnalyzer == null) {
                 // We aren't able to analyze code, so don't create an entry.
                 return null;
@@ -372,8 +372,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
             IProjectEntry item;
             if (!_projectFiles.TryGetValue(path, out item)) {
-                if (PythonProjectNode.IsPythonFile(path)) {
-                    var modName = PythonAnalyzer.PathToModuleName(path);
+                if (ModulePath.IsPythonSourceFile(path)) {
+                    var modName = ModulePath.FromFullPath(path, addingFromDirectory).ModuleName;
                     var reanalyzeEntries = Project.GetEntriesThatImportModule(modName, true).ToArray();
 
                     var pyEntry = _pyAnalyzer.AddModule(
@@ -396,6 +396,19 @@ namespace Microsoft.PythonTools.Intellisense {
                 if (item != null) {
                     _projectFiles[path] = item;
                     _queue.EnqueueFile(item, path);
+                }
+            } else if (addingFromDirectory != null) {
+                var module = item as IPythonProjectEntry;
+                if (module != null && ModulePath.IsPythonSourceFile(path)) {
+                    var modName = ModulePath.FromFullPath(path, addingFromDirectory).ModuleName;
+                    if (module.ModuleName != modName) {
+                        _pyAnalyzer.AddModuleAlias(module.ModuleName, modName);
+
+                        var reanalyzeEntries = Project.GetEntriesThatImportModule(modName, true).ToArray();
+                        foreach (var entryRef in reanalyzeEntries) {
+                            _analysisQueue.Enqueue(entryRef, AnalysisPriority.Low);
+                        }
+                    }
                 }
             }
 
@@ -1112,71 +1125,57 @@ namespace Microsoft.PythonTools.Intellisense {
                     return;
                 }
 
-                _analyzer.AnalyzeDirectoryWorker(_dir, true, _onFileAnalyzed, cancel);
+                AnalyzeDirectoryWorker(_dir, true, _onFileAnalyzed, cancel);
             }
 
             #endregion
-        }
 
-        private void AnalyzeDirectoryWorker(string dir, bool addDir, Action<IProjectEntry> onFileAnalyzed, CancellationToken cancel) {
-            if (_pyAnalyzer == null) {
-                // We aren't able to analyze code.
-                return;
-            }
-
-            if (string.IsNullOrEmpty(dir)) {
-                Debug.Assert(false, "Unexpected empty dir");
-                return;
-            }
-
-            if (addDir) {
-                lock (_contentsLock) {
-                    _pyAnalyzer.AddAnalysisDirectory(dir);
+            private void AnalyzeDirectoryWorker(string dir, bool addDir, Action<IProjectEntry> onFileAnalyzed, CancellationToken cancel) {
+                if (_analyzer._pyAnalyzer == null) {
+                    // We aren't able to analyze code.
+                    return;
                 }
-            }
 
-            try {
-                foreach (string filename in Directory.GetFiles(dir, "*.py")) {
-                    if (cancel.IsCancellationRequested) {
-                        break;
-                    }
-                    IProjectEntry entry = AnalyzeFile(filename);
-                    if (onFileAnalyzed != null) {
-                        onFileAnalyzed(entry);
+                if (string.IsNullOrEmpty(dir)) {
+                    Debug.Assert(false, "Unexpected empty dir");
+                    return;
+                }
+
+                if (addDir) {
+                    lock (_analyzer._contentsLock) {
+                        _analyzer._pyAnalyzer.AddAnalysisDirectory(dir);
                     }
                 }
-            } catch (IOException) {
-                // We want to handle DirectoryNotFound, DriveNotFound, PathTooLong
-            } catch (UnauthorizedAccessException) {
-            }
 
-            try {
-                foreach (string filename in Directory.GetFiles(dir, "*.pyw")) {
-                    if (cancel.IsCancellationRequested) {
-                        break;
+                try {
+                    var filenames = Directory.GetFiles(dir, "*.py").Concat(Directory.GetFiles(dir, "*.pyw"));
+                    foreach (string filename in filenames) {
+                        if (cancel.IsCancellationRequested) {
+                            break;
+                        }
+                        IProjectEntry entry = _analyzer.AnalyzeFile(filename, _dir);
+                        if (onFileAnalyzed != null) {
+                            onFileAnalyzed(entry);
+                        }
                     }
-                    IProjectEntry entry = AnalyzeFile(filename);
-                    if (onFileAnalyzed != null) {
-                        onFileAnalyzed(entry);
-                    }
+                } catch (IOException) {
+                    // We want to handle DirectoryNotFound, DriveNotFound, PathTooLong
+                } catch (UnauthorizedAccessException) {
                 }
-            } catch (IOException) {
-                // We want to handle DirectoryNotFound, DriveNotFound, PathTooLong
-            } catch (UnauthorizedAccessException) {
-            }
 
-            try {
-                foreach (string innerDir in Directory.GetDirectories(dir)) {
-                    if (cancel.IsCancellationRequested) {
-                        break;
+                try {
+                    foreach (string innerDir in Directory.GetDirectories(dir)) {
+                        if (cancel.IsCancellationRequested) {
+                            break;
+                        }
+                        if (File.Exists(Path.Combine(innerDir, "__init__.py"))) {
+                            AnalyzeDirectoryWorker(innerDir, false, onFileAnalyzed, cancel);
+                        }
                     }
-                    if (File.Exists(Path.Combine(innerDir, "__init__.py"))) {
-                        AnalyzeDirectoryWorker(innerDir, false, onFileAnalyzed, cancel);
-                    }
+                } catch (IOException) {
+                    // We want to handle DirectoryNotFound, DriveNotFound, PathTooLong
+                } catch (UnauthorizedAccessException) {
                 }
-            } catch (IOException) {
-                // We want to handle DirectoryNotFound, DriveNotFound, PathTooLong
-            } catch (UnauthorizedAccessException) {
             }
         }
 
@@ -1302,11 +1301,14 @@ namespace Microsoft.PythonTools.Intellisense {
                     return item;
                 }
 
-                if (PythonProjectNode.IsPythonFile(path)) {
+                if (ModulePath.IsPythonSourceFile(path)) {
                     // Use the entry path relative to the root of the archive to determine module name - this boundary
                     // should never be crossed, even if the parent directory of the zip is itself a package.
-                    var modName = PythonAnalyzer.PathToModuleName(pathInZip,
-                        fileExists: fileName => entry.Archive.GetEntry(fileName.Replace('\\', '/')) != null);
+                    var modName = ModulePath.FromFullPath(
+                        pathInZip,
+                        isPackage: dir => entry.Archive.GetEntry(
+                            (CommonUtils.EnsureEndSeparator(dir) + "__init__.py").Replace('\\', '/')
+                        ) != null).ModuleName;
                     item = _pyAnalyzer.AddModule(modName, path, null);
                 }
                 if (item == null) {
