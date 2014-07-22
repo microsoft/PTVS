@@ -426,15 +426,17 @@ if sys.version_info >= (3, 3):
     DONT_DEBUG = [__file__, _vspu.__file__, '<frozen importlib._bootstrap>']
 else:
     DONT_DEBUG = [__file__, _vspu.__file__]
-PREFIXES = [sys.prefix]
+PREFIXES = [path.normcase(sys.prefix)]
+# If we're running in a virtual env, DEBUG_STDLIB should respect this too.
+if hasattr(sys, 'base_prefix'):
+    PREFIXES.append(path.normcase(sys.base_prefix))
 if hasattr(sys, 'real_prefix'):
-    # we're running in a virtual env, DEBUG_STDLIB should respect this too.
-    PREFIXES.append(sys.real_prefix)
+    PREFIXES.append(path.normcase(sys.real_prefix))
 
 def should_debug_code(code):
     if not DEBUG_STDLIB:
         for prefix in PREFIXES:
-            if code.co_filename.startswith(prefix):
+            if path.normcase(code.co_filename).startswith(prefix):
                 return False
 
     filename = code.co_filename
