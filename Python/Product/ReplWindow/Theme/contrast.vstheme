@@ -1,37 +1,37 @@
 <Themes>
   <Theme Name="High Contrast" GUID="{a5c004b4-2d4b-494e-bf01-45fc492522c7}">
     <Category Name="Text Editor" GUID="{75A05685-00A8-4DED-BAE5-E7A50BFA929A}">
-      <!--<Color Name="Interactive - Black">
-        <Foreground Type="CT_RAW" Source="FF000000" />
+      <Color Name="Interactive - Black">
+        <Foreground Type="CT_RAW" Source="FFDCDCDC" />
       </Color>
       <Color Name="Interactive - Blue">
-        <Foreground Type="CT_RAW" Source="FFFF0000" />
+        <Foreground Type="CT_RAW" Source="FFFFA48C" />
       </Color>
-      <Color Name="Interactive - Cyan">
+      <!--<Color Name="Interactive - Cyan">
         <Foreground Type="CT_RAW" Source="FFFFFF00" />
-      </Color>
+      </Color>-->
       <Color Name="Interactive - DarkBlue">
-        <Foreground Type="CT_RAW" Source="FF7F0000" />
+        <Foreground Type="CT_RAW" Source="FFFF805C" />
       </Color>
       <Color Name="Interactive - DarkCyan">
-        <Foreground Type="CT_RAW" Source="FF7F7F00" />
+        <Foreground Type="CT_RAW" Source="FFC0C000" />
       </Color>
-      <Color Name="Interactive - DarkGray">
+      <!--<Color Name="Interactive - DarkGray">
         <Foreground Type="CT_RAW" Source="FF7F7F7F" />
-      </Color>
+      </Color>-->
       <Color Name="Interactive - DarkGreen">
-        <Foreground Type="CT_RAW" Source="FF007F00" />
+        <Foreground Type="CT_RAW" Source="FF00C000" />
       </Color>
       <Color Name="Interactive - DarkMagenta">
-        <Foreground Type="CT_RAW" Source="FF7F007F" />
+        <Foreground Type="CT_RAW" Source="FFC000C0" />
       </Color>
       <Color Name="Interactive - DarkRed">
-        <Foreground Type="CT_RAW" Source="FF00007F" />
+        <Foreground Type="CT_RAW" Source="FF0000C0" />
       </Color>
       <Color Name="Interactive - DarkYellow">
-        <Foreground Type="CT_RAW" Source="FF7F7F00" />
+        <Foreground Type="CT_RAW" Source="FFC0C000" />
       </Color>
-      <Color Name="Interactive - Gray">
+      <!--<Color Name="Interactive - Gray">
         <Foreground Type="CT_RAW" Source="FFC0C0C0" />
       </Color>
       <Color Name="Interactive - Green">
@@ -42,13 +42,13 @@
       </Color>
       <Color Name="Interactive - Red">
         <Foreground Type="CT_RAW" Source="FF0000FF" />
-      </Color>-->
+      </Color>
       <Color Name="Interactive - White">
-        <Foreground Type="CT_RAW" Source="FF7F7F7F" />
+        <Foreground Type="CT_RAW" Source="FFFFFFFF" />
       </Color>
       <Color Name="Interactive - Yellow">
-        <Foreground Type="CT_RAW" Source="FF20C0C0" />
-      </Color>
+        <Foreground Type="CT_RAW" Source="FF00FFFF" />
+      </Color>-->
     </Category>
   </Theme>
 </Themes>

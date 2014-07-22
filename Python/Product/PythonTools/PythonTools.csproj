@@ -908,6 +908,7 @@
   </ItemGroup>
   <ItemGroup>
     <!-- VSIX -->
+    <None Include="Dev11OrLater\contrast.vstheme" />
     <None Include="NoSurveyNewsFeed.html" />
     <None Include="NoInterpreters.html" />
     <Content Include="ptvsd\attach_server.py">
