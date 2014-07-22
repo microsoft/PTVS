@@ -36,8 +36,7 @@ namespace Microsoft.PythonTools.Commands {
     class SendToReplCommand : Command {
         public override void DoCommand(object sender, EventArgs args) {
             var activeView = CommonPackage.GetActiveTextView();
-            var dteProject = activeView.TextBuffer.GetProject();
-            var project = dteProject != null ? dteProject.GetPythonProject() : null;
+            var project = activeView.TextBuffer.GetProject();
             var analyzer = activeView.GetAnalyzer();
 
             ToolWindowPane window = (ToolWindowPane)ExecuteInReplCommand.EnsureReplWindow(analyzer, project);

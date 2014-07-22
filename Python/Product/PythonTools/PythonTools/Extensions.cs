@@ -25,12 +25,10 @@ using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Interpreter.Default;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.PythonTools.Project;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Repl;
@@ -210,6 +208,12 @@ namespace Microsoft.PythonTools {
             }
         }
 
+        internal static IEnumerable<PythonProjectNode> EnumerateLoadedPythonProjects(this IVsSolution solution) {
+            return EnumerateLoadedProjects(solution)
+                .Select(p => p.GetPythonProject())
+                .Where(p => p != null);
+        }
+
         public static IModuleContext GetModuleContext(this ITextBuffer buffer) {
             if (buffer == null) {
                 return null;
@@ -276,12 +280,20 @@ namespace Microsoft.PythonTools {
             return res;
         }
 
-        internal static EnvDTE.Project GetProject(this ITextBuffer buffer) {
+        internal static PythonProjectNode GetProject(this ITextBuffer buffer) {
             var path = buffer.GetFilePath();
             if (path != null && PythonToolsPackage.Instance != null) {
-                var item = PythonToolsPackage.Instance.DTE.Solution.FindProjectItem(path);
-                if (item != null) {
-                    return item.ContainingProject;
+                var sln = PythonToolsPackage.GetGlobalService(typeof(SVsSolution)) as IVsSolution;
+                if (sln != null) {
+                    foreach (var proj in sln.EnumerateLoadedPythonProjects()) {
+                        int found;
+                        var priority = new VSDOCUMENTPRIORITY[1];
+                        uint itemId;
+                        ErrorHandler.ThrowOnFailure(proj.IsDocumentInProject(path, out found, priority, out itemId));
+                        if (found != 0) {
+                            return proj;
+                        }
+                    }
                 }
             }
             return null;
@@ -400,22 +412,18 @@ namespace Microsoft.PythonTools {
 
         internal static VsProjectAnalyzer GetAnalyzer(this ITextBuffer buffer) {
             PythonProjectNode pyProj;
-            VsProjectAnalyzer analyzer;
             if (!buffer.Properties.TryGetProperty<PythonProjectNode>(typeof(PythonProjectNode), out pyProj)) {
-                var project = buffer.GetProject();
-                if (project != null) {
-                    pyProj = project.GetPythonProject();
-                    if (pyProj != null) {
-                        buffer.Properties.AddProperty(typeof(PythonProjectNode), pyProj);
-                    }
+                pyProj = buffer.GetProject();
+                if (pyProj != null) {
+                    buffer.Properties.AddProperty(typeof(PythonProjectNode), pyProj);
                 }
             }
 
             if (pyProj != null) {
-                analyzer = pyProj.GetAnalyzer();
-                return analyzer;
+                return pyProj.GetAnalyzer();
             }
             
+            VsProjectAnalyzer analyzer;
             // exists for tests where we don't run in VS and for the existing changes preview
             if (buffer.Properties.TryGetProperty<VsProjectAnalyzer>(typeof(VsProjectAnalyzer), out analyzer)) {
                 return analyzer;

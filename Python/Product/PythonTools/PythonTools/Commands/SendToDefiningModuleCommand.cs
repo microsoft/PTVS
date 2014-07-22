@@ -21,8 +21,7 @@ namespace Microsoft.PythonTools.Commands {
     class SendToDefiningModuleCommand : SendToReplCommand {
         public override void DoCommand(object sender, EventArgs args) {
             var activeView = PythonToolsPackage.GetActiveTextView();
-            var dteProject = activeView.TextBuffer.GetProject();
-            var pyProj = dteProject != null ? dteProject.GetPythonProject() : null;
+            var pyProj = activeView.TextBuffer.GetProject();
             var analyzer = activeView.GetAnalyzer();
             var window = ExecuteInReplCommand.EnsureReplWindow(analyzer, pyProj);
             var eval = window.Evaluator as PythonReplEvaluator;
