@@ -907,11 +907,25 @@ namespace PythonToolsUITests {
             File.WriteAllText(vcproj, File.ReadAllText(vcproj)
                 .Replace("$(PYTHON_INCLUDE)", Path.Combine(python.PrefixPath, "include"))
                 .Replace("$(PYTHON_LIB)", Path.Combine(python.PrefixPath, "libs"))
+                .Replace("$(PYTHON_TOOLSET)",
+#if DEV10
+                    "v100"
+#elif DEV11
+                    "v110"
+#elif DEV12
+                    "v120"
+#else
+#error Unsupported VS version
+#endif
+)
             );
 
             using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte))
             using (app.SelectDefaultInterpreter(python)) {
                 var project = app.OpenProject(@"TestData\ProjectReference\CProjectReference.sln", projectName: "PythonApplication2", expectedProjects: 2);
+
+                var sln = app.GetService<IVsSolution4>(typeof(SVsSolution));
+                sln.EnsureSolutionIsLoaded((uint)__VSBSLFLAGS.VSBSLFLAGS_None);
 
                 app.Dte.Solution.SolutionBuild.Clean(true);
                 app.Dte.Solution.SolutionBuild.Build(true);
