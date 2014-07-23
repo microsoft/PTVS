@@ -191,10 +191,13 @@ namespace TestUtilities.UI {
         /// Opens and activates the Navigate To window.
         /// </summary>
         public NavigateToDialog OpenNavigateTo() {
-#if DEV12_OR_LATER
-            Dte.ExecuteCommand("Edit.NavigateTo");
+            Task task = Task.Factory.StartNew(() => {
+                Dte.ExecuteCommand("Edit.NavigateTo");
+                Console.WriteLine("Successfully executed Edit.NavigateTo");
+            });
 
             for (int retries = 10; retries > 0; --retries) {
+#if DEV12_OR_LATER
                 foreach (var element in Element.FindAll(
                     TreeScope.Descendants,
                     new PropertyCondition(AutomationElement.ClassNameProperty, "Window")
@@ -206,14 +209,22 @@ namespace TestUtilities.UI {
                         return new NavigateToDialog(element);
                     }
                 }
+#else
+                var element = Element.FindFirst(
+                    TreeScope.Descendants,
+                    new AndCondition(
+                        new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Window),
+                        new PropertyCondition(AutomationElement.NameProperty, "Navigate To")
+                    )
+                );
+                if (element != null) {
+                    return new NavigateToDialog(element);
+                }
+#endif
                 System.Threading.Thread.Sleep(500);
             }
             Assert.Fail("Could not find Navigate To window");
             return null;
-#else
-            var dialog = OpenDialogWithDteExecuteCommand("Edit.NavigateTo");
-            return new NavigateToDialog(dialog);
-#endif
         }
 
         public SaveDialog SaveAs() {

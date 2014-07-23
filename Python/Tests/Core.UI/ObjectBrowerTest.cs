@@ -747,28 +747,27 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void NavigateTo() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                VsIdeTestHostContext.Dte.Solution.Open(TestData.GetPath(@"TestData\Navigation.sln"));
-                Assert.IsTrue(VsIdeTestHostContext.Dte.Solution.IsOpen, "The solution is not open");
-                var dialog = app.OpenNavigateTo();
+                app.OpenProject(@"TestData\Navigation.sln");
+                
+                using (var dialog = app.OpenNavigateTo()) {
+                    dialog.SearchTerm = "Class";
+                    Assert.AreEqual(4, dialog.WaitForNumberOfResults(4));
+                }
 
-                dialog.SearchTerm = "Class";
-                Assert.AreEqual(4, dialog.WaitForNumberOfResults(4));
-                dialog.Close();
+                using (var dialog = app.OpenNavigateTo()) {
+                    dialog.SearchTerm = "cls";
+                    Assert.AreEqual(4, dialog.WaitForNumberOfResults(4));
+                }
 
-                dialog = app.OpenNavigateTo();
-                dialog.SearchTerm = "cls";
-                Assert.AreEqual(4, dialog.WaitForNumberOfResults(4));
-                dialog.Close();
+                using (var dialog = app.OpenNavigateTo()) {
+                    dialog.SearchTerm = "func";
+                    Assert.AreEqual(8, dialog.WaitForNumberOfResults(8));
+                }
 
-                dialog = app.OpenNavigateTo();
-                dialog.SearchTerm = "func";
-                Assert.AreEqual(8, dialog.WaitForNumberOfResults(8));
-                dialog.Close();
-
-                dialog = app.OpenNavigateTo();
-                dialog.SearchTerm = "fn";
-                Assert.AreEqual(8, dialog.WaitForNumberOfResults(8));
-                dialog.Close();
+                using (var dialog = app.OpenNavigateTo()) {
+                    dialog.SearchTerm = "fn";
+                    Assert.AreEqual(8, dialog.WaitForNumberOfResults(8));
+                }
             }
         }
 

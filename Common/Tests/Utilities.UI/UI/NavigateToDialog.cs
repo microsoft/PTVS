@@ -17,13 +17,17 @@ using System.Threading;
 using System.Windows.Automation;
 
 namespace TestUtilities.UI {
-    public class NavigateToDialog : AutomationWrapper {
+    public class NavigateToDialog : AutomationWrapper, IDisposable {
         public NavigateToDialog(IntPtr hwnd)
             : base(AutomationElement.FromHandle(hwnd)) {
         }
 
         public NavigateToDialog(AutomationElement element)
             : base(element) {
+        }
+
+        public void Dispose() {
+            Close();
         }
 
         public void GoToSelection() {

@@ -294,13 +294,13 @@ namespace PythonToolsUITests {
 
                 var folder = window.FindItem("Solution 'CutPasteRelocatedTest' (1 project)", "CutPasteTest", "TestFolder", "SubItem.py");
                 AutomationWrapper.Select(folder);
-                Keyboard.ControlX();
+                app.ExecuteCommand("Edit.Cut");
 
                 var projectItem = window.FindItem("Solution 'CutPasteRelocatedTest' (1 project)", "CutPasteTest");
                 AutomationWrapper.Select(projectItem);
-                Keyboard.ControlV();
+                app.ExecuteCommand("Edit.Paste");
 
-                Assert.AreNotEqual(null, window.WaitForItem("Solution 'CutPasteRelocatedTest' (1 project)", "CutPasteTest", "SubItem.py"));
+                Assert.IsNotNull(window.WaitForItem("Solution 'CutPasteRelocatedTest' (1 project)", "CutPasteTest", "SubItem.py"));
 
                 app.Dte.Solution.Close(true);
                 try {

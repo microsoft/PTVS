@@ -79,6 +79,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private int _userCount;
 
         internal readonly HashSet<IProjectEntry> _hasParseErrors = new HashSet<IProjectEntry>();
+        internal readonly object _hasParseErrorsLock = new object();
 
         // Moniker strings allow the task provider to distinguish between
         // different sources of items for the same file.
@@ -882,7 +883,11 @@ namespace Microsoft.PythonTools.Intellisense {
             CollectingErrorSink errorSink
         ) {
             // Update the warn-on-launch state for this entry
-            if (errorSink.Errors.Any() ? _hasParseErrors.Add(entry) : _hasParseErrors.Remove(entry)) {
+            bool changed = false;
+            lock (_hasParseErrorsLock) {
+                changed = errorSink.Errors.Any() ? _hasParseErrors.Add(entry) : _hasParseErrors.Remove(entry);
+            }
+            if (changed) {
                 OnShouldWarnOnLaunchChanged(entry);
             }
 
@@ -1383,7 +1388,11 @@ namespace Microsoft.PythonTools.Intellisense {
                     // Python file and none of the project files have errors
                     TaskProvider.Value.Clear(entry, ParserTaskMoniker);
                 }
-                if (_hasParseErrors.Remove(entry)) {
+                bool removed = false;
+                lock (_hasParseErrorsLock) {
+                    removed = _hasParseErrors.Remove(entry);
+                }
+                if (removed) {
                     OnShouldWarnOnLaunchChanged(entry);
                 }
             }
@@ -1393,11 +1402,15 @@ namespace Microsoft.PythonTools.Intellisense {
             if (TaskProvider.IsValueCreated) {
                 TaskProvider.Value.ClearAll();
             }
-            _hasParseErrors.Clear();
+            lock (_hasParseErrorsLock) {
+                _hasParseErrors.Clear();
+            }
         }
 
         internal bool ShouldWarnOnLaunch(IProjectEntry entry) {
-            return _hasParseErrors.Contains(entry);
+            lock (_hasParseErrorsLock) {
+                return _hasParseErrors.Contains(entry);
+            }
         }
 
         private void OnShouldWarnOnLaunchChanged(IProjectEntry entry) {
@@ -1421,13 +1434,15 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             }
 
-            _analysisQueue.Stop();
+            _analysisQueue.Dispose();
             if (_pyAnalyzer != null) {
                 lock (_contentsLock) {
                     _pyAnalyzer.Interpreter.ModuleNamesChanged -= OnModulesChanged;
                     ((IDisposable)_pyAnalyzer).Dispose();
                 }
             }
+
+            _queueActivityEvent.Dispose();
         }
 
         #endregion
