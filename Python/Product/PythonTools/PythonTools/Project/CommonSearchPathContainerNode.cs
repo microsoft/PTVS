@@ -104,39 +104,6 @@ namespace Microsoft.PythonTools.Project {
             return (int)OleConstants.OLECMDERR_E_NOTSUPPORTED;
         }
 
-        internal override int QueryStatusOnNode(Guid cmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result) {
-            if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
-                switch (cmd) {
-                    case PythonConstants.AddSearchPathCommandId:
-                    case PythonConstants.AddSearchPathZipCommandId:
-                        result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
-                        return VSConstants.S_OK;
-                    case PythonConstants.AddPythonPathToSearchPathCommandId:
-                        result |= QueryStatusResult.SUPPORTED;
-                        if (_projectNode.IsPythonPathSet()) {
-                            result |= QueryStatusResult.ENABLED;
-                        }
-                        return VSConstants.S_OK;
-                }
-            }
-
-            return base.QueryStatusOnNode(cmdGroup, cmd, pCmdText, ref result);
-        }
-
-        internal override int ExecCommandOnNode(Guid cmdGroup, uint cmd, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
-            if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
-                switch (cmd) {
-                    case PythonConstants.AddSearchPathCommandId:
-                        return _projectNode.AddSearchPath();
-                    case PythonConstants.AddSearchPathZipCommandId:
-                        return _projectNode.AddSearchPathZip();
-                    case PythonConstants.AddPythonPathToSearchPathCommandId:
-                        return _projectNode.AddPythonPathToSearchPath();
-                }
-            }
-            return base.ExecCommandOnNode(cmdGroup, cmd, nCmdexecopt, pvaIn, pvaOut);
-        }
-
         /// <summary>
         /// SearchPathContainer Node cannot be deleted.
         /// </summary>

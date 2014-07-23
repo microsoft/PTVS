@@ -18,6 +18,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -29,10 +30,12 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Navigation;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Azure;
+using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
+using IServiceProvider = System.IServiceProvider;
 using NativeMethods = Microsoft.VisualStudioTools.Project.NativeMethods;
 using Task = System.Threading.Tasks.Task;
 using VsCommands2K = Microsoft.VisualStudio.VSConstants.VSStd2KCmdID;
@@ -814,7 +817,7 @@ namespace Microsoft.PythonTools.Project {
 
         public IPythonInterpreterFactory GetInterpreterFactory() {
             var fact = _interpreters.ActiveInterpreter;
-            
+
             if (!_interpreters.IsAvailable(fact)) {
                 var service = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
                 if (service != null) {
@@ -1001,23 +1004,6 @@ namespace Microsoft.PythonTools.Project {
                 }
             }
 
-            if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
-                switch ((int)cmd) {
-                    case PythonConstants.OpenInteractiveForEnvironment:
-                        try {
-                            var window = ExecuteInReplCommand.EnsureReplWindow(GetInterpreterFactory(), this);
-                            var pane = window as ToolWindowPane;
-                            if (pane != null) {
-                                ErrorHandler.ThrowOnFailure(((IVsWindowFrame)pane.Frame).Show());
-                                window.Focus();
-                            }
-                        } catch (InvalidOperationException ex) {
-                            MessageBox.Show(SR.GetString(SR.ErrorOpeningInteractiveWindow, ex), SR.ProductName);
-                        }
-                        return VSConstants.S_OK;
-                }
-            }
-
             if (cmdGroup == ProjectMgr.SharedCommandGuid) {
                 switch ((SharedCommands)cmd) {
                     case SharedCommands.OpenCommandPromptHere:
@@ -1032,6 +1018,7 @@ namespace Microsoft.PythonTools.Project {
             if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
                 switch ((int)cmd) {
                     case PythonConstants.OpenInteractiveForEnvironment:
+                    case PythonConstants.InstallPythonPackage:
                         var factory = GetInterpreterFactory();
                         if (Interpreters.IsAvailable(factory) && File.Exists(factory.Configuration.InterpreterPath)) {
                             result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
@@ -1039,7 +1026,7 @@ namespace Microsoft.PythonTools.Project {
                             result |= QueryStatusResult.INVISIBLE;
                         }
                         return VSConstants.S_OK;
-                    
+
                     case PythonConstants.CustomProjectCommandsMenu:
                         if (_customCommands != null && _customCommands.Any()) {
                             result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
@@ -1094,13 +1081,24 @@ namespace Microsoft.PythonTools.Project {
                     return QueryStatusResult.INVISIBLE | QueryStatusResult.NOTSUPPORTED;
                 }
 
-                if ((int)cmd == PythonConstants.InstallRequirementsTxt) {
-                    var status = base.QueryStatusSelectionOnNodes(selectedNodes, cmdGroup, cmd, pCmdText) |
-                        QueryStatusResult.SUPPORTED;
-                    if (File.Exists(CommonUtils.GetAbsoluteFilePath(ProjectHome, "requirements.txt"))) {
-                        status |= QueryStatusResult.ENABLED;
-                    }
-                    return status;
+                QueryStatusResult status;
+                switch ((int)cmd) {
+                    case PythonConstants.InstallRequirementsTxt:
+                        status = base.QueryStatusSelectionOnNodes(selectedNodes, cmdGroup, cmd, pCmdText) |
+                            QueryStatusResult.SUPPORTED;
+                        if (File.Exists(CommonUtils.GetAbsoluteFilePath(ProjectHome, "requirements.txt"))) {
+                            status |= QueryStatusResult.ENABLED;
+                        }
+                        return status;
+                    case PythonConstants.ActivateEnvironment:
+                        status = base.QueryStatusSelectionOnNodes(selectedNodes, cmdGroup, cmd, pCmdText);
+                        if (!status.HasFlag(QueryStatusResult.SUPPORTED)) {
+                            // Command is supported if an environment is
+                            // selected, so only force enable if nobody has
+                            // claimed it.
+                            status = QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
+                        }
+                        return status;
                 }
             }
 
@@ -1140,7 +1138,7 @@ namespace Microsoft.PythonTools.Project {
                 }
 
                 handled = true;
-                switch((int)cmdId) {
+                switch ((int)cmdId) {
                     case PythonConstants.AddEnvironment:
                         ShowAddInterpreter();
                         return VSConstants.S_OK;
@@ -1151,6 +1149,12 @@ namespace Microsoft.PythonTools.Project {
                     case PythonConstants.ViewAllEnvironments:
                         PythonToolsPackage.Instance.ShowInterpreterList();
                         return VSConstants.S_OK;
+                    case PythonConstants.AddSearchPathCommandId:
+                        return AddSearchPath();
+                    case PythonConstants.AddSearchPathZipCommandId:
+                        return AddSearchPathZip();
+                    case PythonConstants.AddPythonPathToSearchPathCommandId:
+                        return AddPythonPathToSearchPath();
                     default:
                         handled = false;
                         break;
@@ -1160,45 +1164,91 @@ namespace Microsoft.PythonTools.Project {
             return base.ExecCommandIndependentOfSelection(cmdGroup, cmdId, cmdExecOpt, vaIn, vaOut, commandOrigin, out handled);
         }
 
-        protected override int ExecCommandThatDependsOnSelectedNodes(Guid cmdGroup, uint cmdId, uint cmdExecOpt, IntPtr vaIn, IntPtr vaOut, CommandOrigin commandOrigin, IList<HierarchyNode> selectedNodes, out bool handled) {
-            if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
-                if ((int)cmdId == PythonConstants.InstallRequirementsTxt) {
-                    var txt = CommonUtils.GetAbsoluteFilePath(ProjectHome, "requirements.txt");
-                    if (_interpretersContainer != null && 
-                        File.Exists(txt) &&
-                        !selectedNodes.Any(n => {
-                        var status = QueryStatusResult.NOTSUPPORTED;
-                        return ErrorHandler.Succeeded(n.QueryStatusOnNode(cmdGroup, cmdId, IntPtr.Zero, ref status)) &&
-                            status.HasFlag(QueryStatusResult.SUPPORTED);
-                    })) {
-                        // No nodes support this command, so run it for the
-                        // current active environment.
-                        var active = _interpreters.ActiveInterpreter;
-                        var node = _interpretersContainer.AllChildren.OfType<InterpretersNode>().FirstOrDefault(n => n._factory == active);
-                        var name = "-r " + ProcessOutput.QuoteSingleArgument(txt);
-                        var elevate = PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ElevatePip;
+        private void GetSelectedInterpreterOrDefault(
+            IEnumerable<HierarchyNode> selectedNodes,
+            Dictionary<string, string> args,
+            out InterpretersNode node,
+            out IPythonInterpreterFactory factory
+        ) {
+            factory = null;
 
-                        var alreadyConfirmed = Marshal.GetObjectForNativeVariant(vaIn) as bool? ?? false;
-                        if (alreadyConfirmed || InterpretersPackageNode.ShouldInstallRequirementsTxt(
-                            Site,
-                            node == null ? active.Description : node.Caption,
-                            txt,
-                            elevate
-                        )) {
-                            if (node == null) {
-                                InterpretersPackageNode.InstallNewPackage(active, Site, name, true, elevate)
-                                    .HandleAllExceptions(SR.ProductName).DoNotWait();
-                            } else {
-                                InterpretersPackageNode.InstallNewPackage(node, name, elevate)
-                                    .HandleAllExceptions(SR.ProductName).DoNotWait();
-                            }
-                        }
-                        handled = true;
-                        return VSConstants.S_OK;
-                    }
+            // First try and get the factory from the parameter
+            string description;
+            if (args != null && args.TryGetValue("e", out description) && !string.IsNullOrEmpty(description)) {
+                var service = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
+
+                factory = _interpreters.GetInterpreterFactories().FirstOrDefault(
+                    // Description is a localized string, hence CCIC
+                    f => description.Equals(f.Description, StringComparison.CurrentCultureIgnoreCase)
+                ) ?? service.Interpreters.FirstOrDefault(
+                    f => description.Equals(f.Description, StringComparison.CurrentCultureIgnoreCase)
+                );
+            }
+
+            if (factory == null) {
+                var candidates = selectedNodes
+                    .OfType<InterpretersNode>()
+                    .Where(n => n._factory != null && n._factory.IsRunnable())
+                    .Distinct()
+                    .ToList();
+
+                if (candidates.Count == 1) {
+                    node = candidates[0];
+                    factory = node._factory;
+                    return;
+                }
+
+                factory = GetInterpreterFactory();
+            }
+
+            if (_interpretersContainer != null && factory != null) {
+                var active = factory;
+                node = _interpretersContainer.AllChildren
+                    .OfType<InterpretersNode>()
+                    .FirstOrDefault(n => n._factory == active);
+            } else {
+                node = null;
+            }
+        }
+
+        protected internal override string QueryCommandArguments(Guid cmdGroup, uint cmdId, CommandOrigin commandOrigin) {
+            if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
+                switch ((int)cmdId) {
+                    case PythonConstants.ActivateEnvironment:
+                        return "e,env,environment:";
+                    case PythonConstants.InstallRequirementsTxt:
+                        return "e,env,environment: a,admin y";
+                    case PythonConstants.OpenInteractiveForEnvironment:
+                        return "e,env,environment:";
+                    case PythonConstants.InstallPythonPackage:
+                        return "e,env,environment: p,package: a,admin";
+                    case PythonConstants.GenerateRequirementsTxt:
+                        return "e,env,environment:";
                 }
             }
-            
+            return base.QueryCommandArguments(cmdGroup, cmdId, commandOrigin);
+        }
+
+        protected override int ExecCommandThatDependsOnSelectedNodes(Guid cmdGroup, uint cmdId, uint cmdExecOpt, IntPtr vaIn, IntPtr vaOut, CommandOrigin commandOrigin, IList<HierarchyNode> selectedNodes, out bool handled) {
+            if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
+                handled = true;
+                switch ((int)cmdId) {
+                    case PythonConstants.ActivateEnvironment:
+                        return ExecActivateEnvironment(ParseCommandArgs(vaIn, cmdGroup, cmdId), selectedNodes);
+                    case PythonConstants.InstallRequirementsTxt:
+                        return ExecInstallRequirementsTxt(ParseCommandArgs(vaIn, cmdGroup, cmdId), selectedNodes);
+                    case PythonConstants.OpenInteractiveForEnvironment:
+                        return ExecOpenInteractiveForEnvironment(ParseCommandArgs(vaIn, cmdGroup, cmdId), selectedNodes);
+                    case PythonConstants.InstallPythonPackage:
+                        return ExecInstallPythonPackage(ParseCommandArgs(vaIn, cmdGroup, cmdId), selectedNodes);
+                    case PythonConstants.GenerateRequirementsTxt:
+                        return ExecGenerateRequirementsTxt(ParseCommandArgs(vaIn, cmdGroup, cmdId), selectedNodes);
+                    default:
+                        handled = false;
+                        break;
+                }
+            }
+
             return base.ExecCommandThatDependsOnSelectedNodes(cmdGroup, cmdId, cmdExecOpt, vaIn, vaOut, commandOrigin, selectedNodes, out handled);
         }
 
@@ -1231,6 +1281,33 @@ namespace Microsoft.PythonTools.Project {
 
             return base.DisableCmdInCurrentMode(cmdGroup, cmd);
         }
+        private int ExecActivateEnvironment(Dictionary<string, string> args, IList<HierarchyNode> selectedNodes) {
+            InterpretersNode selectedInterpreter;
+            IPythonInterpreterFactory selectedInterpreterFactory;
+            GetSelectedInterpreterOrDefault(selectedNodes, args, out selectedInterpreter, out selectedInterpreterFactory);
+            if (selectedInterpreterFactory != null) {
+                return SetInterpreterFactory(selectedInterpreterFactory);
+            }
+            return VSConstants.S_OK;
+        }
+
+        private int ExecOpenInteractiveForEnvironment(Dictionary<string, string> args, IList<HierarchyNode> selectedNodes) {
+            InterpretersNode selectedInterpreter;
+            IPythonInterpreterFactory selectedInterpreterFactory;
+            GetSelectedInterpreterOrDefault(selectedNodes, args, out selectedInterpreter, out selectedInterpreterFactory);
+            try {
+                var window = ExecuteInReplCommand.EnsureReplWindow(selectedInterpreterFactory, this);
+                var pane = window as ToolWindowPane;
+                if (pane != null) {
+                    ErrorHandler.ThrowOnFailure(((IVsWindowFrame)pane.Frame).Show());
+                    window.Focus();
+                }
+            } catch (InvalidOperationException ex) {
+                MessageBox.Show(SR.GetString(SR.ErrorOpeningInteractiveWindow, ex), SR.ProductName);
+            }
+            return VSConstants.S_OK;
+        }
+
 
         #region IPythonProject Members
 
@@ -1272,6 +1349,8 @@ namespace Microsoft.PythonTools.Project {
 
         #endregion
 
+        #region Search Path support
+
         internal int AddSearchPathZip() {
             var fileName = PythonToolsPackage.Instance.BrowseForFileOpen(
                 IntPtr.Zero,
@@ -1304,11 +1383,430 @@ namespace Microsoft.PythonTools.Project {
             return VSConstants.S_OK;
         }
 
+        #endregion
 
+        #region Package Installation support
+
+        private int ExecInstallPythonPackage(Dictionary<string, string> args, IList<HierarchyNode> selectedNodes) {
+            InterpretersNode selectedInterpreter;
+            IPythonInterpreterFactory selectedInterpreterFactory;
+            GetSelectedInterpreterOrDefault(selectedNodes, args, out selectedInterpreter, out selectedInterpreterFactory);
+
+            string name;
+            if (args != null && args.TryGetValue("p", out name)) {
+                // Don't prompt, just install
+                bool elevated = args.ContainsKey("a");
+                InstallNewPackageAsync(
+                    selectedInterpreterFactory,
+                    Site,
+                    name,
+                    elevated,
+                    node: selectedInterpreter
+                ).HandleAllExceptions(SR.ProductName).DoNotWait();
+            } else {
+                // Prompt the user
+                InstallNewPackageAsync(
+                    selectedInterpreterFactory,
+                    Site,
+                    selectedInterpreter
+                ).HandleAllExceptions(SR.ProductName).DoNotWait();
+            }
+            return VSConstants.S_OK;
+        }
+
+        private int ExecInstallRequirementsTxt(Dictionary<string, string> args, IList<HierarchyNode> selectedNodes) {
+            InterpretersNode selectedInterpreter;
+            IPythonInterpreterFactory selectedInterpreterFactory;
+            GetSelectedInterpreterOrDefault(selectedNodes, args, out selectedInterpreter, out selectedInterpreterFactory);
+            var txt = CommonUtils.GetAbsoluteFilePath(ProjectHome, "requirements.txt");
+            var elevated = PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ElevatePip;
+            var name = "-r " + ProcessOutput.QuoteSingleArgument(txt);
+            if (!args.ContainsKey("y")) {
+                if (!ShouldInstallRequirementsTxt(
+                    selectedInterpreterFactory.Description,
+                    txt,
+                    elevated
+                )) {
+                    return VSConstants.S_OK;
+                }
+            }
+
+            InstallNewPackageAsync(
+                selectedInterpreterFactory,
+                Site,
+                name,
+                elevated,
+                node: selectedInterpreter
+            ).HandleAllExceptions(SR.ProductName).DoNotWait();
+
+            return VSConstants.S_OK;
+        }
+
+
+        internal static void BeginUninstallPackage(
+            IPythonInterpreterFactory factory,
+            IServiceProvider provider,
+            string name,
+            InterpretersNode node = null
+        ) {
+            UninstallPackageAsync(factory, provider, name, node).HandleAllExceptions(SR.ProductName).DoNotWait();
+        }
+
+        internal static async Task InstallNewPackageAsync(
+            IPythonInterpreterFactory factory,
+            IServiceProvider provider,
+            InterpretersNode node = null
+        ) {
+            var service = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
+            var view = InstallPythonPackage.ShowDialog(factory, service);
+            if (view == null) {
+                throw new OperationCanceledException();
+            }
+
+            Func<string, bool, Redirector, Task<bool>> f;
+            if (view.InstallUsingConda) {
+                f = (n, e, r) => Conda.Install(factory, service, n, r);
+            } else if (view.InstallUsingEasyInstall) {
+                f = (n, e, r) => EasyInstall.Install(factory, n, provider, e, r);
+            } else {
+                f = (n, e, r) => Pip.Install(factory, n, provider, e, r);
+            }
+
+            await InstallNewPackageAsync(factory, provider, view.Name, view.InstallElevated, f, node);
+        }
+
+        internal static async Task InstallNewPackageAsync(
+            IPythonInterpreterFactory factory,
+            IServiceProvider provider,
+            string name,
+            bool elevate,
+            Func<string, bool, Redirector, Task<bool>> action = null,
+            InterpretersNode node = null
+        ) {
+            var statusBar = (IVsStatusbar)provider.GetService(typeof(SVsStatusbar));
+
+            var service = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>() as IInterpreterOptionsService2;
+            object cookie = null;
+            if (service != null) {
+                cookie = await service.LockInterpreterAsync(
+                    factory,
+                    InterpretersNode.InstallPackageLockMoniker,
+                    TimeSpan.MaxValue
+                );
+            }
+
+            try {
+                if (cookie != null && node != null) {
+                    // don't process events while we're installing, we'll
+                    // rescan once we're done
+                    node.StopWatching();
+                }
+
+                var redirector = OutputWindowRedirector.GetGeneral(provider);
+                statusBar.SetText(SR.GetString(SR.PackageInstallingSeeOutputWindow, name));
+
+                Task<bool> task;
+                if (action != null) {
+                    task = action(name, elevate, redirector);
+                } else {
+                    task = Pip.Install(factory, name, elevate, redirector);
+                }
+
+                bool success = await task;
+                statusBar.SetText(SR.GetString(
+                    success ? SR.PackageInstallSucceeded : SR.PackageInstallFailed,
+                    name
+                ));
+            } catch (Exception ex) {
+                if (ex.IsCriticalException()) {
+                    throw;
+                }
+                statusBar.SetText(SR.GetString(SR.PackageInstallFailed, name));
+            } finally {
+                if (service != null && cookie != null) {
+                    bool lastOne = service.UnlockInterpreter(cookie);
+                    if (lastOne && node != null) {
+                        node.ResumeWatching();
+                    }
+                }
+            }
+        }
+
+        internal static async Task UninstallPackageAsync(
+            IPythonInterpreterFactory factory,
+            IServiceProvider provider,
+            string name,
+            InterpretersNode node = null) {
+            var statusBar = (IVsStatusbar)provider.GetService(typeof(SVsStatusbar));
+
+            var service = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>() as IInterpreterOptionsService2;
+            object cookie = null;
+            if (service != null) {
+                cookie = await service.LockInterpreterAsync(
+                    factory,
+                    InterpretersNode.InstallPackageLockMoniker,
+                    TimeSpan.MaxValue
+                );
+            }
+
+            try {
+                if (cookie != null && node != null) {
+                    // don't process events while we're installing, we'll
+                    // rescan once we're done
+                    node.StopWatching();
+                }
+
+                var redirector = OutputWindowRedirector.GetGeneral(provider);
+                statusBar.SetText(SR.GetString(SR.PackageUninstallingSeeOutputWindow, name));
+
+                bool elevate = PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ElevatePip;
+
+                bool success = await Pip.Uninstall(factory, name, elevate, redirector);
+                statusBar.SetText(SR.GetString(
+                    success ? SR.PackageUninstallSucceeded : SR.PackageUninstallFailed,
+                    name
+                ));
+            } catch (Exception ex) {
+                if (ex.IsCriticalException()) {
+                    throw;
+                }
+                statusBar.SetText(SR.GetString(SR.PackageUninstallFailed, name));
+            } finally {
+                if (service != null && cookie != null) {
+                    bool lastOne = service.UnlockInterpreter(cookie);
+                    if (lastOne && node != null) {
+                        node.ResumeWatching();
+                    }
+                }
+            }
+        }
+
+
+        private bool ShouldInstallRequirementsTxt(
+            string targetLabel,
+            string txt,
+            bool elevate
+        ) {
+            if (!File.Exists(txt)) {
+                return false;
+            }
+            string content;
+            try {
+                content = File.ReadAllText(txt);
+            } catch (Exception ex) {
+                if (ex.IsCriticalException()) {
+                    throw;
+                }
+                return false;
+            }
+
+            var td = new TaskDialog(Site) {
+                Title = SR.ProductName,
+                MainInstruction = SR.GetString(SR.ShouldInstallRequirementsTxtHeader),
+                Content = SR.GetString(SR.ShouldInstallRequirementsTxtContent),
+                ExpandedByDefault = true,
+                ExpandedControlText = SR.GetString(SR.ShouldInstallRequirementsTxtExpandedControl),
+                CollapsedControlText = SR.GetString(SR.ShouldInstallRequirementsTxtCollapsedControl),
+                ExpandedInformation = content,
+                AllowCancellation = true
+            };
+
+            var install = new TaskDialogButton(SR.GetString(SR.ShouldInstallRequirementsTxtInstallInto, targetLabel)) {
+                ElevationRequired = elevate
+            };
+
+            td.Buttons.Add(install);
+            td.Buttons.Add(TaskDialogButton.Cancel);
+
+            return td.ShowModal() == install;
+        }
+
+        private int ExecGenerateRequirementsTxt(Dictionary<string, string> args, IList<HierarchyNode> selectedNodes) {
+            InterpretersNode selectedInterpreter;
+            IPythonInterpreterFactory selectedInterpreterFactory;
+            GetSelectedInterpreterOrDefault(selectedNodes, args, out selectedInterpreter, out selectedInterpreterFactory);
+            if (selectedInterpreterFactory != null) {
+                GenerateRequirementsTxtAsync(selectedInterpreterFactory)
+                    .HandleAllExceptions(SR.ProductName).DoNotWait();
+            }
+            return VSConstants.S_OK;
+        }
+
+        private async Task GenerateRequirementsTxtAsync(IPythonInterpreterFactory factory) {
+            var projectHome = ProjectHome;
+            var txt = CommonUtils.GetAbsoluteFilePath(projectHome, "requirements.txt");
+
+            string[] existing = null;
+            bool addNew = false;
+            if (File.Exists(txt)) {
+                try {
+                    existing = TaskDialog.CallWithRetry(
+                        _ => File.ReadAllLines(txt),
+                        Site,
+                        SR.ProductName,
+                        SR.GetString(SR.RequirementsTxtFailedToRead),
+                        SR.GetString(SR.ErrorDetail),
+                        SR.GetString(SR.Retry),
+                        SR.GetString(SR.Cancel)
+                    );
+                } catch (OperationCanceledException) {
+                    return;
+                }
+
+                var td = new TaskDialog(Site) {
+                    Title = SR.ProductName,
+                    MainInstruction = SR.GetString(SR.RequirementsTxtExists),
+                    Content = SR.GetString(SR.RequirementsTxtExistsQuestion),
+                    AllowCancellation = true,
+                    CollapsedControlText = SR.GetString(SR.RequirementsTxtContentCollapsed),
+                    ExpandedControlText = SR.GetString(SR.RequirementsTxtContentExpanded),
+                    ExpandedInformation = string.Join(Environment.NewLine, existing)
+                };
+                var replace = new TaskDialogButton(
+                    SR.GetString(SR.RequirementsTxtReplace),
+                    SR.GetString(SR.RequirementsTxtReplaceHelp)
+                );
+                var refresh = new TaskDialogButton(
+                    SR.GetString(SR.RequirementsTxtRefresh),
+                    SR.GetString(SR.RequirementsTxtRefreshHelp)
+                );
+                var update = new TaskDialogButton(
+                    SR.GetString(SR.RequirementsTxtUpdate),
+                    SR.GetString(SR.RequirementsTxtUpdateHelp)
+                );
+                td.Buttons.Add(replace);
+                td.Buttons.Add(refresh);
+                td.Buttons.Add(update);
+                td.Buttons.Add(TaskDialogButton.Cancel);
+                var selection = td.ShowModal();
+                if (selection == TaskDialogButton.Cancel) {
+                    return;
+                } else if (selection == replace) {
+                    existing = null;
+                } else if (selection == update) {
+                    addNew = true;
+                }
+            }
+
+            var items = await Pip.Freeze(factory);
+
+            if (File.Exists(txt) && !QueryEditFiles(false, txt)) {
+                return;
+            }
+
+            try {
+                TaskDialog.CallWithRetry(
+                    _ => {
+                        if (items.Any()) {
+                            File.WriteAllLines(txt, MergeRequirements(existing, items, addNew));
+                        } else if (existing == null) {
+                            File.WriteAllText(txt, "");
+                        }
+                    },
+                    Site,
+                    SR.ProductName,
+                    SR.GetString(SR.RequirementsTxtFailedToWrite),
+                    SR.GetString(SR.ErrorDetail),
+                    SR.GetString(SR.Retry),
+                    SR.GetString(SR.Cancel)
+                );
+            } catch (OperationCanceledException) {
+                return;
+            }
+
+            var existingNode = FindNodeByFullPath(txt);
+            if (existingNode == null || existingNode.IsNonMemberItem) {
+                if (!QueryEditProjectFile(false)) {
+                    return;
+                }
+                try {
+                    existingNode = TaskDialog.CallWithRetry(
+                        _ => {
+                            ErrorHandler.ThrowOnFailure(AddItem(
+                                ID,
+                                VSADDITEMOPERATION.VSADDITEMOP_LINKTOFILE,
+                                Path.GetFileName(txt),
+                                1,
+                                new[] { txt },
+                                IntPtr.Zero,
+                                new VSADDRESULT[1]
+                            ));
+
+                            return FindNodeByFullPath(txt);
+                        },
+                        Site,
+                        SR.ProductName,
+                        SR.GetString(SR.RequirementsTxtFailedToAddToProject),
+                        SR.GetString(SR.ErrorDetail),
+                        SR.GetString(SR.Retry),
+                        SR.GetString(SR.Cancel)
+                    );
+                } catch (OperationCanceledException) {
+                }
+            }
+        }
+
+        internal const string FindRequirementRegex = @"
+            (?<!\#.*)       # ensure we are not in a comment
+            (?<spec>        # <spec> includes name, version and whitespace
+                (?<name>[^\s\#<>=!]+)           # just the name, no whitespace
+                (\s*(?<cmp><=|>=|<|>|!=|==)\s*
+                    (?<ver>[^\s\#]+)
+                )?          # cmp and ver are optional
+            )";
+
+        internal static IEnumerable<string> MergeRequirements(
+            IEnumerable<string> original,
+            IEnumerable<string> updates,
+            bool addNew
+        ) {
+            if (original == null) {
+                foreach (var req in updates.OrderBy(r => r)) {
+                    yield return req;
+                }
+                yield break;
+            }
+
+            var findRequirement = new Regex(FindRequirementRegex, RegexOptions.IgnorePatternWhitespace);
+            var existing = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+            foreach (var m in updates.SelectMany(req => findRequirement.Matches(req).Cast<Match>())) {
+                existing[m.Groups["name"].Value] = m.Value;
+            }
+
+            var seen = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+            foreach (var _line in original) {
+                var line = _line;
+                foreach (var m in findRequirement.Matches(line).Cast<Match>()) {
+                    string newReq;
+                    var name = m.Groups["name"].Value;
+                    if (existing.TryGetValue(name, out newReq)) {
+                        line = findRequirement.Replace(line, m2 =>
+                            name.Equals(m2.Groups["name"].Value, StringComparison.InvariantCultureIgnoreCase) ?
+                                newReq :
+                                m2.Value
+                        );
+                        seen.Add(name);
+                    }
+                }
+                yield return line;
+            }
+
+            if (addNew) {
+                foreach (var req in existing
+                    .Where(kv => !seen.Contains(kv.Key))
+                    .Select(kv => kv.Value)
+                    .OrderBy(v => v)
+                ) {
+                    yield return req;
+                }
+            }
+        }
+
+        #endregion
 
         #region Virtual Env support
 
-        internal void ShowAddInterpreter() {
+        private void ShowAddInterpreter() {
             var service = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
 
             var result = AddInterpreter.ShowDialog(this, service);

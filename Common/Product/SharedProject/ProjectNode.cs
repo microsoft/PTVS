@@ -1156,8 +1156,6 @@ namespace Microsoft.VisualStudioTools.Project {
                         return VSConstants.S_OK;
 
                 }
-            } else if (cmdGroup != SharedCommandGuid) {
-                return (int)OleConstants.OLECMDERR_E_UNKNOWNGROUP;
             }
 
             return base.QueryStatusOnNode(cmdGroup, cmd, pCmdText, ref result);
@@ -3493,6 +3491,65 @@ namespace Microsoft.VisualStudioTools.Project {
 
         internal IntPtr GetIconHandleByName(ImageName name) {
             return ImageHandler.GetIconHandle(GetIconIndex(name));
+        }
+
+        internal Dictionary<string, string> ParseCommandArgs(IntPtr vaIn, Guid cmdGroup, uint cmdId) {
+            var switches = QueryCommandArguments(cmdGroup, cmdId, CommandOrigin.UiHierarchy);
+            if (string.IsNullOrEmpty(switches)) {
+                return null;
+            }
+
+            return ParseCommandArgs(vaIn, switches);
+        }
+
+        internal Dictionary<string, string> ParseCommandArgs(IntPtr vaIn, string switches) {
+            string args;
+            if (vaIn == IntPtr.Zero || string.IsNullOrEmpty(args = Marshal.GetObjectForNativeVariant(vaIn) as string)) {
+                return null;
+            }
+
+            var parse = Site.GetService(typeof(SVsParseCommandLine)) as IVsParseCommandLine;
+            if (ErrorHandler.Failed(parse.ParseCommandTail(args, -1))) {
+                return null;
+            }
+
+            parse.EvaluateSwitches(switches);
+
+            var res = new Dictionary<string, string>();
+            int i = -1;
+            foreach (var sw in switches.Split(' ')) {
+                i += 1;
+                var key = sw;
+                int comma = key.IndexOf(',');
+                if (comma > 0) {
+                    key = key.Remove(comma);
+                }
+
+                string value;
+                int hr;
+                switch (hr = parse.IsSwitchPresent(i)) {
+                    case VSConstants.S_OK:
+                        ErrorHandler.ThrowOnFailure(parse.GetSwitchValue(i, out value));
+                        res[key] = value;
+                        break;
+                    case VSConstants.S_FALSE:
+                        break;
+                    default:
+                        ErrorHandler.ThrowOnFailure(hr);
+                        break;
+                }
+            }
+
+            i = 0;
+            int count;
+            ErrorHandler.ThrowOnFailure(parse.GetParamCount(out count));
+            for (i = 0; i < count; ++i) {
+                string key = i.ToString(), value;
+                ErrorHandler.ThrowOnFailure(parse.GetParam(i, out value));
+                res[key] = value;
+            }
+
+            return res;
         }
 
         #endregion

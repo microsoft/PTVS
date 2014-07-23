@@ -53,7 +53,6 @@
         <CommandFlag>TextChanges</CommandFlag>
         <Strings>
           <ButtonText>Python Performance</ButtonText>
-          <CommandName>Python Performance</CommandName>
         </Strings>
       </Menu>
       
@@ -63,7 +62,6 @@
         <CommandFlag>AlwaysCreate</CommandFlag>
         <Strings>
           <ButtonText>Performance Context</ButtonText>
-          <CommandName>Performance Context</CommandName>
         </Strings>
       </Menu>
       
@@ -73,7 +71,6 @@
         <CommandFlag>AlwaysCreate</CommandFlag>
         <Strings>
           <ButtonText>Performance Reports Context</ButtonText>
-          <CommandName>Performance Reports Context</CommandName>
         </Strings> 
       </Menu>
 
@@ -83,29 +80,18 @@
         <CommandFlag>AlwaysCreate</CommandFlag>
         <Strings>
           <ButtonText>Performance Report Context</ButtonText>
-          <CommandName>Performance Report Context</CommandName>
         </Strings>
       </Menu>
     </Menus>
 
-      <!--Buttons section. -->
-    <!--This section defines the elements the user can interact with, like a menu command or a button 
-        or combo box in a toolbar. -->
+    <!--Buttons section. -->
     <Buttons>
-      <!--To define a menu group you have to specify its ID, the parent menu and its display priority. 
-          The command is visible and enabled by default. If you need to change the visibility, status, etc, you can use
-          the CommandFlag node.
-          You can add more than one CommandFlag node e.g.:
-              <CommandFlag>DefaultInvisible</CommandFlag>
-              <CommandFlag>DynamicVisibility</CommandFlag>
-          If you do not want an image next to your command, remove the Icon node or set it to <Icon guid="guidOfficeIcon" id="msotcidNoIcon" /> -->
-
       <!-- Analyze menu items -->
       <Button guid="guidPythonProfilingCmdSet" id="cmdidStartPythonProfiling" priority="0x0100" type="Button">
         <Parent guid="guidPerfMenuGroup" id="IDG_PERF_BAR_GENERAL" />
         <Strings>
-          <CommandName>cmdidStartPythonProfiling</CommandName>
           <ButtonText>Launch &amp;Python Profiling...</ButtonText>
+          <LocCanonicalName>.Python.LaunchProfiling</LocCanonicalName>
         </Strings>
       </Button>
       
@@ -115,8 +101,8 @@
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <Strings>
-          <CommandName>cmdidPerfExplorer</CommandName>
           <ButtonText>Python Performance Explorer</ButtonText>
+          <LocCanonicalName>.Python.PerformanceExplorer</LocCanonicalName>
         </Strings>
       </Button>
 
@@ -126,7 +112,7 @@
         <Icon guid="guidCmdBarImages" id="newSessionIcon"/>
         <Strings>
           <ButtonText>Add Performance Session</ButtonText>
-          <MenuText>Add Performance Session</MenuText>
+          <LocCanonicalName>.Python.AddPerformanceSession</LocCanonicalName>
         </Strings>
       </Button>
       <Button guid="guidPythonProfilingCmdSet" id="cmdidStartProfiling" priority="0x0000" type="Button">
@@ -135,7 +121,7 @@
         <CommandFlag>DefaultDisabled</CommandFlag>
         <Strings>
           <ButtonText>Start Profiling</ButtonText>
-          <MenuText>Start Profiling</MenuText>
+          <LocCanonicalName>.Python.StartProfiling</LocCanonicalName>
         </Strings>
       </Button>
       <Button guid="guidPythonProfilingCmdSet" id="cmdidStopProfiling" priority="0x0000" type="Button">
@@ -144,7 +130,7 @@
         <CommandFlag>DefaultDisabled</CommandFlag>
         <Strings>
           <ButtonText>Stop Profiling</ButtonText>
-          <MenuText>Stop Profiling</MenuText>
+          <LocCanonicalName>.Python.StopProfiling</LocCanonicalName>
         </Strings>
       </Button>
       
@@ -154,31 +140,21 @@
         <Icon guid="guidCmdBarImages" id="startIcon"/>
         <Strings>
           <ButtonText>&amp;Start Profiling</ButtonText>
-          <MenuText>&amp;Start Profiling</MenuText>
         </Strings>
       </Button>
       <Button guid="guidPythonProfilingCmdSet" id="cmdidPerfCtxSetAsCurrent" priority="0x0000" type="Button">
         <Parent guid="guidPythonProfilingCmdSet" id="perfCtxMenuGroup"/>
         <Strings>
           <ButtonText>Set as &amp;Current Session</ButtonText>
-          <MenuText>Set as &amp;Current Session</MenuText>
         </Strings>
       </Button>
       
       <!-- Context menu items for reports folder -->
-      <Button guid="guidPythonProfilingCmdSet" id="cmdidReportsAddReport" priority="0x0000" type="Button" Condition="%(VSTARGET)=='10.0'">
-        <Parent guid="guidPythonProfilingCmdSet" id="perfReportsCtxMenuGroup"/>
-<!--        <Icon guid="guidVsShellIcons" id="cmdidVsShellOpen"/> -->
-        <Strings>
-          <ButtonText>&amp;Add Report...</ButtonText>
-          <MenuText>&amp;Add Report...</MenuText>
-        </Strings>
-      </Button>
-      <Button guid="guidPythonProfilingCmdSet" id="cmdidReportsAddReport" priority="0x0000" type="Button" Condition="%(VSTARGET)!='10.0'">
+      <Button guid="guidPythonProfilingCmdSet" id="cmdidReportsAddReport" priority="0x0000" type="Button">
         <Parent guid="guidPythonProfilingCmdSet" id="perfReportsCtxMenuGroup"/>
         <Strings>
           <ButtonText>&amp;Add Report...</ButtonText>
-          <MenuText>&amp;Add Report...</MenuText>
+          <LocCanonicalName>.Python.AddPerformanceReport</LocCanonicalName>
         </Strings>
       </Button>
       <Button guid="guidPythonProfilingCmdSet" id="cmdidReportsCompareReports" priority="0x0000" type="Button">
@@ -186,48 +162,33 @@
         <Icon guid="guidCmdBarImages" id="compareReports"/>
         <Strings>
           <ButtonText>&amp;Compare Performance Reports...</ButtonText>
-          <MenuText>&amp;Compare Performance Reports...</MenuText>
+          <LocCanonicalName>.Python.ComparePerformanceReports</LocCanonicalName>
         </Strings>
       </Button>
       
       <!-- Context menu items for report item -->
-      <Button guid="guidPythonProfilingCmdSet" id="cmdidOpenReport" priority="0x0000" type="Button" Condition="%(VSTARGET)=='10.0'">
-        <Parent guid="guidPythonProfilingCmdSet" id="perfSingleReportCtxMenuGroup"/>
-<!--        <Icon guid="guidVsShellIcons" id="cmdidVsShellReports"/> -->
-        <Strings>
-          <ButtonText>&amp;Open</ButtonText>
-          <MenuText>&amp;Open</MenuText>
-        </Strings>
-      </Button>
-      <Button guid="guidPythonProfilingCmdSet" id="cmdidOpenReport" priority="0x0000" type="Button" Condition="%(VSTARGET)!='10.0'">
+      <Button guid="guidPythonProfilingCmdSet" id="cmdidOpenReport" priority="0x0000" type="Button">
         <Parent guid="guidPythonProfilingCmdSet" id="perfSingleReportCtxMenuGroup"/>
         <Strings>
           <ButtonText>&amp;Open</ButtonText>
-          <MenuText>&amp;Open</MenuText>
+          <LocCanonicalName>.Python.OpenPerformanceReport</LocCanonicalName>
         </Strings>
       </Button>
     </Buttons>
    
     <!--The bitmaps section is used to define the bitmaps that are used for the commands.-->
     <Bitmaps>
-      <!--  The bitmap id is defined in a way that is a little bit different from the others: 
-            the declaration starts with a guid for the bitmap strip, then there is the resource id of the 
-            bitmap strip containing the bitmaps and then there are the numeric ids of the elements used 
-            inside a button definition. An important aspect of this declaration is that the element id 
-            must be the actual index (1-based) of the bitmap inside the bitmap strip. -->
-      <Bitmap guid="guidCmdBarImages" href="..\Icons\Dev12.0\ProfilingCmdBar.bmp" usedList="startIcon, newSessionIcon, stopIcon, compareReports"
-              Condition="Defined(DEV12)"/>
-      <Bitmap guid="guidCmdBarImages" href="..\Icons\Dev11.0\ProfilingCmdBar.bmp" usedList="startIcon, newSessionIcon, stopIcon, compareReports"
-              Condition="Defined(DEV11)"/>
-      <Bitmap guid="guidCmdBarImages" href="..\Icons\Dev10.0\ProfilingCmdBar.bmp" usedList="startIcon, newSessionIcon, stopIcon, compareReports"
-              Condition="Defined(DEV10)"/>
+      <Bitmaps Condition="Defined(DEV12)">
+        <Bitmap guid="guidCmdBarImages" href="..\Icons\Dev12.0\ProfilingCmdBar.bmp" usedList="startIcon, newSessionIcon, stopIcon, compareReports"/>
+      </Bitmaps>
+      <Bitmaps Condition="Defined(DEV11)">
+        <Bitmap guid="guidCmdBarImages" href="..\Icons\Dev11.0\ProfilingCmdBar.bmp" usedList="startIcon, newSessionIcon, stopIcon, compareReports"/>
+      </Bitmaps>
+      <Bitmaps Condition="Defined(DEV10)">
+        <Bitmap guid="guidCmdBarImages" href="..\Icons\Dev10.0\ProfilingCmdBar.bmp" usedList="startIcon, newSessionIcon, stopIcon, compareReports"/>
+      </Bitmaps>
     </Bitmaps>
- 
   </Commands>
-
-  <VisibilityConstraints>
-    <VisibilityItem guid="guidPythonProfilingCmdSet" id="perfToolbarGroup" context="guidExplorerContext"/>
-  </VisibilityConstraints>
 
   <CommandPlacements>
     <CommandPlacement guid="guidPythonProfilingCmdSet" id="cmdidStartPythonProfiling" priority="0x10">
@@ -254,6 +215,10 @@
       <Parent guid="guidPythonProfilingCmdSet" id="perfSingleReportCtxMenuGroup"/>
     </CommandPlacement>
   </CommandPlacements>
+
+  <VisibilityConstraints>
+    <VisibilityItem guid="guidPythonProfilingCmdSet" id="perfToolbarGroup" context="guidExplorerContext"/>
+  </VisibilityConstraints>
 
   <Symbols>
     <!-- This is the package guid. -->

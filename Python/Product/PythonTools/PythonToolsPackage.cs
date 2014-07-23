@@ -822,6 +822,13 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
                 var cmd = new OpenReplCommand((int)PkgCmdIDList.cmdidReplWindow + i, factory);
                 replCommands.Add(cmd);
             }
+
+            if (defaultFactory != interpreterService.NoInterpretersValue) {
+                // This command is a fallback for the Python.Interactive command
+                // If no project is selected, the default environment will be
+                // used.
+                replCommands.Add(new OpenReplCommand((int)PythonConstants.OpenInteractiveForEnvironment, defaultFactory));
+            }
             return replCommands;
         }
 

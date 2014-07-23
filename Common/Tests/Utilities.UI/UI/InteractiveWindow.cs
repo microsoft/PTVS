@@ -39,6 +39,13 @@ namespace TestUtilities.UI {
 #endif
 
     public class InteractiveWindow : EditorWindow {
+#if INTERACTIVE_WINDOW
+        const string CommandBase = "OtherContextMenus.InteractiveConsole.";
+#else
+        const string CommandBase = "PythonInteractive.";
+#endif
+
+
         private sealed class ReplWindowInfo {
             public readonly ManualResetEvent Idle = new ManualResetEvent(false);
             public readonly ManualResetEvent ReadyForInput = new ManualResetEvent(false);
@@ -248,7 +255,7 @@ namespace TestUtilities.UI {
             if (waitForReady) {
                 ReadyForInput.Reset();
             }
-            _app.ExecuteCommand("OtherContextMenus.InteractiveConsole.ClearScreen");
+            _app.ExecuteCommand(CommandBase + "ClearScreen");
             if (waitForReady) {
                 Assert.IsTrue(ReadyForInput.WaitOne(1000));
             }
@@ -260,7 +267,7 @@ namespace TestUtilities.UI {
             for (int i = 0; i < attempts && !_replWindowInfo.ReadyForInput.WaitOne(0); i++) {
                 ReadyForInput.Reset();
                 try {
-                    _app.ExecuteCommand("OtherContextMenus.InteractiveConsole.CancelExecution");
+                    _app.ExecuteCommand(CommandBase + "CancelExecution");
                 } catch {
                     // command may not be immediately available
                 }

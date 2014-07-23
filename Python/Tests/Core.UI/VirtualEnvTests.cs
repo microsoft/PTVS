@@ -140,7 +140,7 @@ namespace PythonToolsUITests {
                 env.Select();
 
                 try {
-                    app.ExecuteCommand("ProjectandSolutionContextMenus.PythonEnvironment.Installfromrequirements.txt", timeout: 5000);
+                    app.ExecuteCommand("Python.InstallRequirementsTxt", timeout: 5000);
                     Assert.Fail("Command should not have executed");
                 } catch (AggregateException) {
                 }
@@ -148,7 +148,7 @@ namespace PythonToolsUITests {
                 var requirementsTxt = Path.Combine(Path.GetDirectoryName(project.FullName), "requirements.txt");
                 File.WriteAllText(requirementsTxt, "azure==0.6.2");
 
-                app.ExecuteCommand("ProjectandSolutionContextMenus.PythonEnvironment.Installfromrequirements.txt");
+                app.ExecuteCommand("Python.InstallRequirementsTxt");
 
                 app.SolutionExplorerTreeView.WaitForChildOfProject(
                     project,
@@ -159,7 +159,7 @@ namespace PythonToolsUITests {
 
                 File.Delete(requirementsTxt);
 
-                app.ExecuteCommand("ProjectandSolutionContextMenus.PythonEnvironment.Generaterequirements.txt");
+                app.ExecuteCommand("Python.GenerateRequirementsTxt");
 
                 app.SolutionExplorerTreeView.WaitForChildOfProject(
                     project,
@@ -215,30 +215,21 @@ namespace PythonToolsUITests {
 
                 env1.Select();
                 try {
-                    app.Dte.ExecuteCommand("ProjectandSolutionContextMenus.PythonEnvironment.ActivateEnvironment");
+                    app.Dte.ExecuteCommand("Python.ActivateEnvironment");
                     Assert.Fail("First env should already be active");
                 } catch (COMException) {
                 }
 
                 env2.Select();
-                app.Dte.ExecuteCommand("ProjectandSolutionContextMenus.PythonEnvironment.ActivateEnvironment");
+                app.Dte.ExecuteCommand("Python.ActivateEnvironment");
 
                 var id2 = Guid.Parse((string)project.Properties.Item("InterpreterId").Value);
                 Assert.AreNotEqual(id0, id2);
                 Assert.AreNotEqual(id1, id2);
 
                 // Change the selected node
-                app.SolutionExplorerTreeView.FindChildOfProject(
-                    project,
-                    SR.GetString(SR.Environments)
-                ).Select();
-
-                app.SolutionExplorerTreeView.FindChildOfProject(
-                    project,
-                    SR.GetString(SR.Environments),
-                    envName1
-                ).Select();
-                app.Dte.ExecuteCommand("ProjectandSolutionContextMenus.PythonEnvironment.ActivateEnvironment");
+                app.SolutionExplorerTreeView.SelectProject(project);
+                app.Dte.ExecuteCommand("Python.ActivateEnvironment", "/env:\"" + envName1 + "\"");
 
                 var id1b = Guid.Parse((string)project.Properties.Item("InterpreterId").Value);
                 Assert.AreEqual(id1, id1b);
@@ -326,32 +317,19 @@ namespace PythonToolsUITests {
             using (var dis = Init(app)) {
                 var project = app.OpenProject(@"TestData\Environments.sln");
 
-                app.OpenSolutionExplorer().FindChildOfProject(
-                    project,
-                    SR.GetString(SR.Environments),
-                    "Python 2.7"
-                ).Select();
-                app.Dte.ExecuteCommand("ProjectandSolutionContextMenus.PythonEnvironment.ActivateEnvironment");
+                app.OpenSolutionExplorer().SelectProject(project);
+                app.Dte.ExecuteCommand("Python.ActivateEnvironment", "/env:\"Python 2.7\"");
 
-                app.OpenSolutionExplorer().FindChildOfProject(project, SR.GetString(SR.Environments)).Select();
-
-                using (var createVenv = AutomationDialog.FromDte(app, "ProjectandSolutionContextMenus.PythonEnvironments.AddVirtualEnvironment")) {
+                using (var createVenv = AutomationDialog.FromDte(app, "Python.AddVirtualEnvironment")) {
                     var baseInterp = new ComboBox(createVenv.FindByAutomationId("BaseInterpreter")).GetSelectedItemName();
 
                     Assert.AreEqual("Python 2.7", baseInterp);
                     createVenv.Cancel();
                 }
 
-                app.OpenSolutionExplorer().FindChildOfProject(
-                    project,
-                    SR.GetString(SR.Environments),
-                    "Python 3.3"
-                ).Select();
-                app.Dte.ExecuteCommand("ProjectandSolutionContextMenus.PythonEnvironment.ActivateEnvironment");
+                app.Dte.ExecuteCommand("Python.ActivateEnvironment", "/env:\"Python 3.3\"");
 
-                app.OpenSolutionExplorer().FindChildOfProject(project, SR.GetString(SR.Environments)).Select();
-
-                using (var createVenv = AutomationDialog.FromDte(app, "ProjectandSolutionContextMenus.PythonEnvironments.AddVirtualEnvironment")) {
+                using (var createVenv = AutomationDialog.FromDte(app, "Python.AddVirtualEnvironment")) {
                     var baseInterp = new ComboBox(createVenv.FindByAutomationId("BaseInterpreter")).GetSelectedItemName();
 
                     Assert.AreEqual("Python 3.3", baseInterp);
@@ -512,7 +490,7 @@ namespace PythonToolsUITests {
                 var env = app.CreateVirtualEnvironment(project, out envName);
                 env.Select();
 
-                app.Dte.ExecuteCommand("Project.OpenInteractiveWindow");
+                app.Dte.ExecuteCommand("Project.OpenPythonInteractiveWindow");
 
                 var window = app.GetInteractiveWindow(string.Format("{0} Interactive", envName));
                 try {

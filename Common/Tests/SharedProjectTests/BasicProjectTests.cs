@@ -147,10 +147,10 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
         private static ProjectDefinition BasicProject(ProjectType projectType) {
             return new ProjectDefinition(
-                "HelloWorld", 
-                projectType, 
-                Compile("server"), 
-                Compile("..\\Extra", isExcluded:true)
+                "HelloWorld",
+                projectType,
+                Compile("server"),
+                Compile("..\\Extra", isExcluded: true)
             );
         }
 
@@ -165,7 +165,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                         // Counts may differ between project types, so we take
                         // the initial count and check against the delta.
                         int previousCount = project.ProjectItems.Count;
-                        
+
                         var item = project.ProjectItems.AddFromFileCopy(Path.Combine(solution.Directory, "Extra" + projectType.CodeExtension));
 
                         Assert.AreEqual("Extra" + projectType.CodeExtension, item.Properties.Item("FileName").Value);
@@ -216,7 +216,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                         Property("OutputPath", "."),
                         Compile("server"),
                         Target(
-                            "Clean", 
+                            "Clean",
                             Tasks.Message("Hello Clean World!", importance: "high")
                         ),
                         Target(
@@ -1204,7 +1204,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         public void OpenCommandHere() {
             var existing = System.Diagnostics.Process.GetProcesses().Select(x => x.Id).ToSet();
             try {
-                VsIdeTestHostContext.Dte.Commands.Item("ProjectandSolutionContextMenus.Project.OpenCommandPromptHere");
+                VsIdeTestHostContext.Dte.Commands.Item("File.OpenCommandPromptHere");
             } catch (ArgumentException) {
                 Assert.Inconclusive("Open Command Prompt Here command is not implemented");
             }
@@ -1219,17 +1219,22 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                 using (var solution = def.Generate().ToVs()) {
                     var folder = solution.WaitForItem("HelloWorld", "Folder");
+                    if (folder == null) {
+                        solution.SolutionExplorer.SelectProject(solution.Project);
+                        solution.App.ExecuteCommand("Project.ShowAllFiles");
+                        folder = solution.WaitForItem("HelloWorld", "Folder");
+                    }
                     AutomationWrapper.Select(folder);
-                    VsIdeTestHostContext.Dte.ExecuteCommand("ProjectandSolutionContextMenus.Project.OpenCommandPromptHere");
+                    solution.App.ExecuteCommand("File.OpenCommandPromptHere");
 
                     var after = System.Diagnostics.Process.GetProcesses();
                     var newProcs = after.Where(x => !existing.Contains(x.Id) && x.ProcessName == "cmd");
-                    Assert.AreEqual(1, newProcs.Count(), string.Join(";", after.Select(x => x.ProcessName)));                    
+                    Assert.AreEqual(1, newProcs.Count(), string.Join(";", after.Select(x => x.ProcessName)));
                     newProcs.First().Kill();
 
                     var project = solution.WaitForItem("HelloWorld");
                     AutomationWrapper.Select(folder);
-                    VsIdeTestHostContext.Dte.ExecuteCommand("ProjectandSolutionContextMenus.Project.OpenCommandPromptHere");
+                    solution.App.ExecuteCommand("File.OpenCommandPromptHere");
 
                     after = System.Diagnostics.Process.GetProcesses();
                     newProcs = after.Where(x => !existing.Contains(x.Id) && x.ProcessName == "cmd");
@@ -1258,8 +1263,13 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                     CheckCopyFullPath(solution.WaitForItem("HelloWorld", "IncFolder"),
                                       projectDir + "\\IncFolder\\");
-                    CheckCopyFullPath(solution.WaitForItem("HelloWorld", "ExcFolder"),
-                                      projectDir + "\\ExcFolder\\");
+                    var excFolder = solution.WaitForItem("HelloWorld", "ExcFolder");
+                    if (excFolder == null) {
+                        solution.SolutionExplorer.SelectProject(solution.Project);
+                        solution.App.ExecuteCommand("Project.ShowAllFiles");
+                        excFolder = solution.WaitForItem("HelloWorld", "ExcFolder");
+                    }
+                    CheckCopyFullPath(excFolder, projectDir + "\\ExcFolder\\");
                     CheckCopyFullPath(solution.WaitForItem("HelloWorld", "server" + def.ProjectType.CodeExtension),
                                       projectDir + "\\server" + def.ProjectType.CodeExtension);
                     CheckCopyFullPath(solution.WaitForItem("HelloWorld", "app" + def.ProjectType.CodeExtension),
@@ -1275,8 +1285,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             string clipboardText = "";
             Console.WriteLine("Checking CopyFullPath on:{0}", expected);
             AutomationWrapper.Select(element);
-            VsIdeTestHostContext.Dte.ExecuteCommand("Project.CopyFullPath");
-            
+            VsIdeTestHostContext.Dte.ExecuteCommand("File.CopyFullPath");
+
             ThreadHelper.Generic.Invoke(() => clipboardText = System.Windows.Clipboard.GetText());
 
             Assert.AreEqual(expected, clipboardText);
@@ -1291,7 +1301,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     projectType,
                     Compile("server"),
                     Folder("Folder", isExcluded: true),
-                    Compile("Folder\\server", content:"// new server", isExcluded: true)
+                    Compile("Folder\\server", content: "// new server", isExcluded: true)
                 );
                 using (var solution = proj.Generate().ToVs()) {
                     var window = solution.Project.ProjectItems.Item(projectType.Code("server")).Open();
@@ -1312,7 +1322,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                     // paste again, we should get the replace prompts...
                     VisualStudioApp.CheckMessageBox(
-                        TestUtilities.UI.MessageBoxButton.Yes, 
+                        TestUtilities.UI.MessageBoxButton.Yes,
                         "is already part of the project. Do you want to overwrite it?"
                     );
 
@@ -1339,9 +1349,9 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                         ItemGroup(
                             CustomItem("MyItemType", "..\\Imported\\ImportedItem.txt", ""),
                             CustomItem(
-                                "MyItemType", 
-                                "..\\Imported\\VisibleItem.txt", 
-                                "", 
+                                "MyItemType",
+                                "..\\Imported\\VisibleItem.txt",
+                                "",
                                 metadata: new Dictionary<string, string>() { { "Visible", "true" } }
                             )
                         )
@@ -1350,9 +1360,9 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                         "HelloWorld",
                         projectType,
                         CustomItem(
-                            "MyItemType", 
-                            "ProjectInvisible.txt", 
-                            "", 
+                            "MyItemType",
+                            "ProjectInvisible.txt",
+                            "",
                             metadata: new Dictionary<string, string>() { { "Visible", "false" } }
                         ),
                         Import("..\\Imported\\Imported.proj"),
@@ -1452,7 +1462,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
             public int OnQueryRemoveFiles(IVsProject pProject, int cFiles, string[] rgpszMkDocuments, VSQUERYREMOVEFILEFLAGS[] rgFlags, VSQUERYREMOVEFILERESULTS[] pSummaryResult, VSQUERYREMOVEFILERESULTS[] rgResults) {
                 return VSConstants.S_OK;
-        }
+            }
 
             public int OnQueryRenameDirectories(IVsProject pProject, int cDirs, string[] rgszMkOldNames, string[] rgszMkNewNames, VSQUERYRENAMEDIRECTORYFLAGS[] rgFlags, VSQUERYRENAMEDIRECTORYRESULTS[] pSummaryResult, VSQUERYRENAMEDIRECTORYRESULTS[] rgResults) {
                 return VSConstants.S_OK;

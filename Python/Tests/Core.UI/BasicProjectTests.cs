@@ -372,7 +372,7 @@ namespace PythonToolsUITests {
                 AutomationWrapper.Select(projectNode);
 
                 try {
-                    VsIdeTestHostContext.Dte.ExecuteCommand("ProjectandSolutionContextMenus.Project.Add.ExistingFolder");
+                    VsIdeTestHostContext.Dte.ExecuteCommand("Project.AddExistingFolder");
 
                     // try and dismiss the dialog if we successfully executed
                     try {
@@ -401,7 +401,7 @@ namespace PythonToolsUITests {
 
         private static SelectFolderDialog AddExistingFolder(VisualStudioApp app) {
             try {
-                return new SelectFolderDialog(app.OpenDialogWithDteExecuteCommand("ProjectandSolutionContextMenus.Project.Add.ExistingFolder"));
+                return new SelectFolderDialog(app.OpenDialogWithDteExecuteCommand("Project.AddExistingFolder"));
             } catch (COMException ex) {
                 Console.WriteLine(ex);
                 Assert.Fail("Unable to execute AddExistingFolder command");

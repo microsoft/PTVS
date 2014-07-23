@@ -68,7 +68,7 @@ namespace PythonToolsUITests {
                 var service = model.GetService<IInterpreterOptionsService>();
                 Assert.IsNotNull(service);
 
-                app.Dte.ExecuteCommand("View.PythonEnvironments");
+                app.Dte.ExecuteCommand("Python.ViewEnvironments");
                 var list = app.FindByAutomationId("PythonTools.InterpreterList");
                 Assert.IsNotNull(list);
 
@@ -97,7 +97,7 @@ namespace PythonToolsUITests {
                 // Check that only global environments are in the list
                 var service = app.InterpreterService;
 
-                app.Dte.ExecuteCommand("View.PythonEnvironments");
+                app.Dte.ExecuteCommand("Python.ViewEnvironments");
                 var list = app.FindByAutomationId("PythonTools.InterpreterList");
                 Assert.IsNotNull(list);
 
@@ -116,7 +116,7 @@ namespace PythonToolsUITests {
                 var env = app.CreateVirtualEnvironment(project, out envName);
                 env.Select();
 
-                app.Dte.ExecuteCommand("View.PythonEnvironments");
+                app.Dte.ExecuteCommand("Python.ViewEnvironments");
                 list = app.FindByAutomationId("PythonTools.InterpreterList");
                 Assert.IsNotNull(list);
 
@@ -148,7 +148,7 @@ namespace PythonToolsUITests {
                 // Check that only global environments are in the list
                 allNames = new HashSet<string>(service.Interpreters.Select(i => i.Description));
 
-                app.Dte.ExecuteCommand("View.PythonEnvironments");
+                app.Dte.ExecuteCommand("Python.ViewEnvironments");
                 list = app.FindByAutomationId("PythonTools.InterpreterList");
                 Assert.IsNotNull(list);
                 names = list.FindAll(TreeScope.Descendants, new PropertyCondition(AutomationElement.AutomationIdProperty, "InterpreterName"));
@@ -170,7 +170,7 @@ namespace PythonToolsUITests {
                 var service = model.GetService<IInterpreterOptionsService>();
                 Assert.IsNotNull(service);
 
-                app.Dte.ExecuteCommand("View.PythonEnvironments");
+                app.Dte.ExecuteCommand("Python.ViewEnvironments");
                 var list = app.FindByAutomationId("PythonTools.InterpreterList");
                 Assert.IsNotNull(list);
 
@@ -203,7 +203,7 @@ namespace PythonToolsUITests {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
                 var proj = app.OpenProject(@"TestData\VirtualEnv.sln");
 
-                app.Dte.ExecuteCommand("View.PythonEnvironments");
+                app.Dte.ExecuteCommand("Python.ViewEnvironments");
                 var list = app.FindByAutomationId("PythonTools.InterpreterList");
                 Assert.IsNotNull(list, "interpreter list is null");
 
@@ -224,7 +224,7 @@ namespace PythonToolsUITests {
                     "Python 2.7"));
                 python27Env.Select();
                 python27Env.SetFocus();
-                app.Dte.ExecuteCommand("ProjectandSolutionContextMenus.PythonEnvironment.ActivateEnvironment");
+                app.Dte.ExecuteCommand("Python.ActivateEnvironment");
 
                 // Check that the activate button for the virtual environment is now enabled and the interpreter
                 // id has been changed to something else
@@ -254,7 +254,7 @@ namespace PythonToolsUITests {
                 var service = model.GetService<IInterpreterOptionsService>();
                 Assert.IsNotNull(service);
 
-                app.Dte.ExecuteCommand("View.PythonEnvironments");
+                app.Dte.ExecuteCommand("Python.ViewEnvironments");
                 var list = app.FindByAutomationId("PythonTools.InterpreterList");
                 Assert.IsNotNull(list);
 
@@ -308,7 +308,7 @@ namespace PythonToolsUITests {
                     Description = "Invalid"
                 });
 
-                app.Dte.ExecuteCommand("View.PythonEnvironments");
+                app.Dte.ExecuteCommand("Python.ViewEnvironments");
                 var list = app.FindByAutomationId("PythonTools.InterpreterList");
 
                 int rowCount;
@@ -365,7 +365,7 @@ namespace PythonToolsUITests {
                 try {
                     Assert.AreEqual(1, service.Interpreters.Count());
 
-                    app.Dte.ExecuteCommand("View.PythonEnvironments");
+                    app.Dte.ExecuteCommand("Python.ViewEnvironments");
                     var list = new AutomationWrapper(app.FindByAutomationId("PythonTools.InterpreterList"));
                     Assert.IsNotNull(list);
 

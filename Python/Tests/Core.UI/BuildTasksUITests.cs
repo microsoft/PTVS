@@ -340,7 +340,7 @@ namespace PythonToolsUITests {
                 var env = app.CreateVirtualEnvironment(proj, out envName);
 
                 env.Select();
-                app.Dte.ExecuteCommand("ProjectandSolutionContextMenus.PythonEnvironment.ActivateEnvironment");
+                app.Dte.ExecuteCommand("Python.ActivateEnvironment");
                 // Ensure that no error dialog appears
                 app.WaitForNoDialog(TimeSpan.FromSeconds(5.0));
 

@@ -38,7 +38,7 @@ namespace PythonToolsTests {
         public void MergeRequirements() {
             // Comments should be preserved, only package specs should change.
             AssertUtil.AreEqual(
-                InterpretersNode.MergeRequirements(new[] {
+                PythonProjectNode.MergeRequirements(new[] {
                     "a # with a comment",
                     "B==0.2",
                     "# just a comment B==01234",
@@ -62,7 +62,7 @@ namespace PythonToolsTests {
 
             // addNew is true, so the c==0.3 should be added.
             AssertUtil.AreEqual(
-                InterpretersNode.MergeRequirements(new[] {
+                PythonProjectNode.MergeRequirements(new[] {
                     "a # with a comment",
                     "b==0.2",
                     "# just a comment B==01234"
@@ -79,7 +79,7 @@ namespace PythonToolsTests {
 
             // No existing entries, so the new ones are sorted and returned.
             AssertUtil.AreEqual(
-                InterpretersNode.MergeRequirements(null, new[] {
+                PythonProjectNode.MergeRequirements(null, new[] {
                     "b==0.2",
                     "a==0.1",
                     "c==0.3"
@@ -92,7 +92,7 @@ namespace PythonToolsTests {
             // Check all the inequalities
             const string inequalities = "<=|>=|<|>|!=|==";
             AssertUtil.AreEqual(
-                InterpretersNode.MergeRequirements(
+                PythonProjectNode.MergeRequirements(
                     inequalities.Split('|').Select(s => "a " + s + " 1.2.3"),
                     new[] { "a==0" },
                     false
@@ -104,7 +104,7 @@ namespace PythonToolsTests {
         [TestMethod, Priority(0)]
         public void MergeRequirementsMismatchedCase() {
             AssertUtil.AreEqual(
-                InterpretersNode.MergeRequirements(new[] {
+                PythonProjectNode.MergeRequirements(new[] {
                     "aaaaaa==0.0",
                     "BbBbBb==0.1",
                     "CCCCCC==0.2"
@@ -120,7 +120,7 @@ namespace PythonToolsTests {
 
             // https://pytools.codeplex.com/workitem/2465
             AssertUtil.AreEqual(
-                InterpretersNode.MergeRequirements(new[] {
+                PythonProjectNode.MergeRequirements(new[] {
                     "Flask==0.10.1",
                     "itsdangerous==0.24",
                     "Jinja2==2.7.3",
@@ -143,7 +143,7 @@ namespace PythonToolsTests {
 
         [TestMethod, Priority(0)]
         public void FindRequirementsRegexTest() {
-            var r = new Regex(InterpretersNode.FindRequirementRegex, RegexOptions.IgnorePatternWhitespace);
+            var r = new Regex(PythonProjectNode.FindRequirementRegex, RegexOptions.IgnorePatternWhitespace);
             AssertUtil.AreEqual(r.Matches("aaaa bbbb cccc").Cast<Match>().Select(m => m.Value),
                 "aaaa",
                 "bbbb",

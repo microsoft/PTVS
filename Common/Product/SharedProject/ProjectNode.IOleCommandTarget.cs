@@ -164,6 +164,22 @@ namespace Microsoft.VisualStudioTools.Project {
                 return (int)OleConstants.OLECMDERR_E_NOTSUPPORTED;
             }
 
+            if ((cmdExecOpt & 0xFFFF) == (uint)OLECMDEXECOPT.OLECMDEXECOPT_SHOWHELP &&
+                (cmdExecOpt >> 16) == (uint)VsMenus.VSCmdOptQueryParameterList &&
+                vaOut != IntPtr.Zero) {
+                // The command accepts arguments and VS is trying to get the
+                // format string before executing the actual command.
+                // Format strings are space-separated lists of switches:
+                //
+                //   s,s1,switch1 w,s2,switch2 ...
+                var args = QueryCommandArguments(cmdGroup, cmdId, commandOrigin);
+                if (string.IsNullOrEmpty(args)) {
+                    return (int)OleConstants.OLECMDERR_E_NOTSUPPORTED;
+                }
+                Marshal.GetNativeVariantForObject(args, vaOut);
+                return VSConstants.S_OK;
+            }
+
             IList<HierarchyNode> selectedNodes = GetSelectedNodes();
 
             // Check if all nodes can execute a command. If there is at least one that cannot return not handled.
@@ -207,6 +223,14 @@ namespace Microsoft.VisualStudioTools.Project {
             }
 
             return returnValue;
+        }
+
+        /// <summary>
+        /// Returns a space-separated string representing the supported switches
+        /// for the specified command.
+        /// </summary>
+        protected internal virtual string QueryCommandArguments(Guid cmdGroup, uint cmdId, CommandOrigin commandOrigin) {
+            return null;
         }
 
         #endregion

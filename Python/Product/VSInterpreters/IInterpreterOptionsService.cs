@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Interpreter {
@@ -98,5 +99,37 @@ namespace Microsoft.PythonTools.Interpreter {
         /// Raised when the default interpreter is set to a new value.
         /// </summary>
         event EventHandler DefaultInterpreterChanged;
+    }
+
+    public interface IInterpreterOptionsService2 : IInterpreterOptionsService {
+        /// <summary>
+        /// Marks the factory as locked. Future calls to LockInterpreterAsync
+        /// with the same moniker will block until
+        /// <see cref="UnlockInterpreter"/> is called. Each call
+        /// to LockInterpreterAsync must have a matching call to
+        /// <see cref="UnlockInterpreter"/>.
+        /// </summary>
+        /// <returns>
+        /// A cookie representing the current lock. This must be passed to
+        /// <see cref="UnlockInterpreter"/>.
+        /// </returns>
+        /// <remarks>New in 2.1</remarks>
+        Task<object> LockInterpreterAsync(IPythonInterpreterFactory factory, object moniker, TimeSpan timeout);
+
+        /// <summary>
+        /// Returns true if the factory is locked.
+        /// </summary>
+        /// <remarks>New in 2.1</remarks>
+        bool IsInterpreterLocked(IPythonInterpreterFactory factory, object moniker);
+
+        /// <summary>
+        /// Unlocks the factory.
+        /// </summary>
+        /// <returns>
+        /// <c>True</c> if there is nobody waiting on the same moniker and
+        /// factory.
+        /// </returns>
+        /// <remarks>New in 2.1</remarks>
+        bool UnlockInterpreter(object cookie);
     }
 }

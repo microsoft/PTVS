@@ -1335,6 +1335,9 @@ namespace Microsoft.VisualStudioTools.Project {
                         return this.ExcludeFromProjectWithProgress();
                     case VsCommands2K.INCLUDEINPROJECT:
                         return this.IncludeInProjectWithProgress(true);
+                    case VsCommands2K.CopyFullPathName:
+                        System.Windows.Clipboard.SetText(Url);
+                        return VSConstants.S_OK;
 
                 }
             } else if (cmdGroup == ProjectMgr.SharedCommandGuid) {
@@ -1348,9 +1351,6 @@ namespace Microsoft.VisualStudioTools.Project {
                         );
                         psi.WorkingDirectory = FullPathToChildren;
                         Process.Start(psi);
-                        return VSConstants.S_OK;
-                    case SharedCommands.CopyFullPath:
-                        System.Windows.Clipboard.SetText(Url);
                         return VSConstants.S_OK;
                 }
             }
@@ -1385,28 +1385,29 @@ namespace Microsoft.VisualStudioTools.Project {
                 }
             } else if (cmdGroup == VsMenus.guidStandardCommandSet2K) {
                 // http://social.msdn.microsoft.com/Forums/en/vsx/thread/f348aaed-cdcc-4709-9118-c0fd8b9e154d
-                if ((VsCommands2K)cmd == VsCommands2K.SHOWALLFILES) {
-                    if (ProjectMgr.CanShowAllFiles) {
-                        if (ProjectMgr.IsShowingAllFiles) {
-                            result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED | QueryStatusResult.LATCHED;
+                switch ((VsCommands2K)cmd) {
+                    case VsCommands2K.SHOWALLFILES:
+                        if (ProjectMgr.CanShowAllFiles) {
+                            if (ProjectMgr.IsShowingAllFiles) {
+                                result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED | QueryStatusResult.LATCHED;
+                            } else {
+                                result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
+                            }
                         } else {
-                            result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
+                            result |= QueryStatusResult.NOTSUPPORTED | QueryStatusResult.INVISIBLE;
                         }
-                    } else {
-                        result |= QueryStatusResult.NOTSUPPORTED | QueryStatusResult.INVISIBLE;
-                    }
-                    return VSConstants.S_OK;
+                        return VSConstants.S_OK;
+                    case VsCommands2K.CopyFullPathName:
+                        if (this is IDiskBasedNode || this is ProjectNode) {
+                            result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
+                            return VSConstants.S_OK;
+                        }
+                        break;
                 }
             } else if (cmdGroup == ProjectMgr.SharedCommandGuid) {
                 switch ((SharedCommands)cmd) {
                     case SharedCommands.OpenCommandPromptHere:
                         if (CanOpenCommandPrompt) {
-                            result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
-                            return VSConstants.S_OK;
-                        }
-                        break;
-                    case SharedCommands.CopyFullPath:
-                        if (this is IDiskBasedNode || this is ProjectNode) {
                             result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
                             return VSConstants.S_OK;
                         }

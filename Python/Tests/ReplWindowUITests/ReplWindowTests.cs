@@ -815,7 +815,7 @@ g()",
                 interactive.WaitForText(ReplPrompt);
 
                 try {
-                    app.Dte.ExecuteCommand("OtherContextMenus.InteractiveConsole.CancelExecution");
+                    app.Dte.ExecuteCommand("PythonInteractive.CancelExecution");
                     Assert.Fail("CancelExecution should not be available");
                 } catch {
                 }
@@ -1224,19 +1224,19 @@ g()",
                 Keyboard.Type("42");
                 interactive.WaitForText(ReplPrompt + code1, ReplPrompt + code2, ReplPrompt + code3, ReplPrompt + "42");
 
-                app.Dte.ExecuteCommand("OtherContextMenus.InteractiveConsole.SearchHistoryPrevious");
+                app.Dte.ExecuteCommand("PythonInteractive.SearchHistoryPrevious");
                 interactive.WaitForText(ReplPrompt + code1, ReplPrompt + code2, ReplPrompt + code3, ReplPrompt + code2);
 
-                app.Dte.ExecuteCommand("OtherContextMenus.InteractiveConsole.SearchHistoryPrevious");
+                app.Dte.ExecuteCommand("PythonInteractive.SearchHistoryPrevious");
                 interactive.WaitForText(ReplPrompt + code1, ReplPrompt + code2, ReplPrompt + code3, ReplPrompt + code1);
 
-                app.Dte.ExecuteCommand("OtherContextMenus.InteractiveConsole.SearchHistoryPrevious");
+                app.Dte.ExecuteCommand("PythonInteractive.SearchHistoryPrevious");
                 interactive.WaitForText(ReplPrompt + code1, ReplPrompt + code2, ReplPrompt + code3, ReplPrompt + code1);
 
-                app.Dte.ExecuteCommand("OtherContextMenus.InteractiveConsole.SearchHistoryNext");
+                app.Dte.ExecuteCommand("PythonInteractive.SearchHistoryNext");
                 interactive.WaitForText(ReplPrompt + code1, ReplPrompt + code2, ReplPrompt + code3, ReplPrompt + code2);
 
-                app.Dte.ExecuteCommand("OtherContextMenus.InteractiveConsole.SearchHistoryNext");
+                app.Dte.ExecuteCommand("PythonInteractive.SearchHistoryNext");
                 interactive.WaitForText(ReplPrompt + code1, ReplPrompt + code2, ReplPrompt + code3, ReplPrompt + code2);
             }
         }
@@ -2697,7 +2697,7 @@ $cls
                 using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer().InterpreterFactory)) {
                     var project = app.OpenProject(@"TestData\InteractiveFile.sln");
 
-                    app.Dte.ExecuteCommand("Debug.ExecuteFileinPythonInteractive");
+                    app.Dte.ExecuteCommand("Python.ExecuteInInteractive");
                     Assert.IsNotNull(interactive);
 
                     interactive.WaitForTextEnd("Program.pyabcdef", ReplPrompt);
@@ -2713,7 +2713,7 @@ $cls
                 using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer().InterpreterFactory)) {
                     var project = app.OpenProject(@"TestData\SysArgvRepl.sln");
 
-                    app.Dte.ExecuteCommand("Debug.ExecuteFileinPythonInteractive");
+                    app.Dte.ExecuteCommand("Python.ExecuteInInteractive");
                     Assert.IsNotNull(interactive);
 
                     interactive.WaitForTextEnd("Program.py']", ReplPrompt);
@@ -2729,7 +2729,7 @@ $cls
                 using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer().InterpreterFactory)) {
                     var project = app.OpenProject(@"TestData\SysArgvScriptArgsRepl.sln");
 
-                    app.Dte.ExecuteCommand("Debug.ExecuteFileinPythonInteractive");
+                    app.Dte.ExecuteCommand("Python.ExecuteInInteractive");
                     Assert.IsNotNull(interactive);
 
                     interactive.WaitForTextEnd(@"Program.py', '-source', 'C:\\Projects\\BuildSuite', '-destination', 'C:\\Projects\\TestOut', '-pattern', '*.txt', '-recurse', 'true']", ReplPrompt);
@@ -2757,7 +2757,7 @@ $cls
                 using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer().InterpreterFactory)) {
                     var project = app.OpenProject(@"TestData\SysArgvRepl.sln");
 
-                    app.Dte.ExecuteCommand("Debug.ExecuteFileinPythonInteractive");
+                    app.Dte.ExecuteCommand("Python.ExecuteInInteractive");
                     Assert.IsNotNull(interactive);
 
                     interactive.WaitForTextEnd("Program.py']", ReplPrompt);
@@ -2784,7 +2784,7 @@ $cls
                 using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer().InterpreterFactory)) {
                     var project = app.OpenProject(@"TestData\SysArgvScriptArgsRepl.sln");
 
-                    app.Dte.ExecuteCommand("Debug.ExecuteFileinPythonInteractive");
+                    app.Dte.ExecuteCommand("Python.ExecuteInInteractive");
                     Assert.IsNotNull(interactive);
 
                     interactive.WaitForTextEnd(@"Program.py', '-source', 'C:\\Projects\\BuildSuite', '-destination', 'C:\\Projects\\TestOut', '-pattern', '*.txt', '-recurse', 'true']", ReplPrompt);
@@ -2800,7 +2800,7 @@ $cls
                 using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer().InterpreterFactory)) {
                     var project = app.OpenProject(@"TestData\UnicodePathä.sln");
 
-                    app.Dte.ExecuteCommand("Debug.ExecuteFileinPythonInteractive");
+                    app.Dte.ExecuteCommand("Python.ExecuteInInteractive");
                     Assert.IsNotNull(interactive);
 
                     interactive.WaitForTextEnd("hello world from unicode path", ReplPrompt);
@@ -3132,7 +3132,7 @@ def g(): pass
                     )
                 );
 
-                app.Dte.ExecuteCommand("Edit.SendtoInteractive");
+                app.Dte.ExecuteCommand("Python.SendSelectionToInteractive");
 
                 interactive.WaitForText(
                     ReplPrompt + "def f():",
@@ -3359,7 +3359,7 @@ def g(): pass
                 var interactive = Prepare(app);
                 var project = app.OpenProject(@"TestData\UnicodeRepl.sln");
 
-                app.Dte.ExecuteCommand("Debug.ExecuteFileinPythonInteractive");
+                app.Dte.ExecuteCommand("Python.ExecuteInInteractive");
                 Assert.AreNotEqual(null, interactive);
 
                 interactive.WaitForTextEnd("Hello, world!", ReplPrompt);

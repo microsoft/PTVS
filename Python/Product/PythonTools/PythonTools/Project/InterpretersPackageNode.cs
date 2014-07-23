@@ -74,128 +74,6 @@ namespace Microsoft.PythonTools.Project {
             get { return _packageName; }
         }
 
-        public static async Task InstallNewPackage(InterpretersNode parent) {
-            var service = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
-            var view = InstallPythonPackage.ShowDialog(parent._factory, service);
-            if (view == null) {
-                throw new OperationCanceledException();
-            }
-
-            Func<string, bool, Redirector, Task<bool>> f;
-            if (view.InstallUsingConda) {
-                f = (n, e, r) => Conda.Install(parent._factory, service, n, r);
-            } else if (view.InstallUsingEasyInstall) {
-                f = (n, e, r) => EasyInstall.Install(parent._factory, n, parent.ProjectMgr.Site, e, r);
-            } else {
-                f = (n, e, r) => Pip.Install(parent._factory, n, parent.ProjectMgr.Site, e, r);
-            }
-
-            await InstallNewPackage(parent, view.Name, view.InstallElevated, f);
-        }
-
-        public static async Task InstallNewPackage(
-            InterpretersNode parent,
-            string name,
-            bool elevate,
-            Func<string, bool, Redirector, Task<bool>> action = null
-        ) {
-            var statusBar = (IVsStatusbar)parent.ProjectMgr.Site.GetService(typeof(SVsStatusbar));
-
-            // don't process events while we're installing, we'll
-            // rescan once we're done
-            await parent.BeginPackageChange();
-
-            try {
-                var redirector = OutputWindowRedirector.GetGeneral(parent.ProjectMgr.Site);
-                statusBar.SetText(SR.GetString(SR.PackageInstallingSeeOutputWindow, name));
-
-                Task<bool> task;
-                if (action != null) {
-                    task = action(name, elevate, redirector);
-                } else {
-                    task = Pip.Install(parent._factory, name, elevate, redirector);
-                }
-
-                bool success = await task;
-                statusBar.SetText(SR.GetString(
-                    success ? SR.PackageInstallSucceeded : SR.PackageInstallFailed,
-                    name
-                ));
-            } catch (Exception ex) {
-                if (ex.IsCriticalException()) {
-                    throw;
-                }
-                statusBar.SetText(SR.GetString(SR.PackageInstallFailed, name));
-            } finally {
-                parent.PackageChangeDone();
-            }
-        }
-
-        public static async Task InstallNewPackage(
-            IPythonInterpreterFactory factory,
-            IServiceProvider provider,
-            string name,
-            bool withPip,
-            bool elevated
-        ) {
-            var statusBar = (IVsStatusbar)provider.GetService(typeof(SVsStatusbar));
-
-            try {
-                var redirector = OutputWindowRedirector.GetGeneral(provider);
-                statusBar.SetText(SR.GetString(SR.PackageInstallingSeeOutputWindow, name));
-
-                var task = withPip ?
-                    Pip.Install(factory, name, provider, elevated, redirector) :
-                    EasyInstall.Install(factory, name, provider, elevated, redirector);
-
-                bool success = await task;
-                statusBar.SetText(SR.GetString(
-                    success ? SR.PackageInstallSucceeded : SR.PackageInstallFailed,
-                    name
-                ));
-
-                if (success) {
-                    var withDb = factory as IPythonInterpreterFactoryWithDatabase;
-                    if (withDb != null) {
-                        withDb.GenerateDatabase(GenerateDatabaseOptions.SkipUnchanged);
-                    }
-                }
-            } catch (Exception ex) {
-                if (ex.IsCriticalException()) {
-                    throw;
-                }
-                statusBar.SetText(SR.GetString(SR.PackageInstallFailed, name));
-            }
-        }
-
-        public static async Task UninstallPackage(InterpretersNode parent, string name) {
-            var statusBar = (IVsStatusbar)parent.ProjectMgr.Site.GetService(typeof(SVsStatusbar));
-
-            // don't process events while we're installing, we'll
-            // rescan once we're done
-            await parent.BeginPackageChange();
-
-            try {
-                var redirector = OutputWindowRedirector.GetGeneral(parent.ProjectMgr.Site);
-                statusBar.SetText(SR.GetString(SR.PackageUninstallingSeeOutputWindow, name));
-
-                bool elevate = PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ElevatePip;
-
-                bool success = await Pip.Uninstall(parent._factory, name, elevate, redirector);
-                statusBar.SetText(SR.GetString(
-                    success ? SR.PackageUninstallSucceeded : SR.PackageUninstallFailed,
-                    name
-                ));
-            } catch (Exception ex) {
-                if (ex.IsCriticalException()) {
-                    throw;
-                }
-                statusBar.SetText(SR.GetString(SR.PackageUninstallFailed, name));
-            } finally {
-                parent.PackageChangeDone();
-            }
-        }
-
         public override Guid ItemTypeGuid {
             get { return PythonConstants.InterpretersPackageItemTypeGuid; }
         }
@@ -245,7 +123,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public override void Remove(bool removeFromStorage) {
-            var task = UninstallPackage(Parent, Url);
+            PythonProjectNode.BeginUninstallPackage(Parent._factory, ProjectMgr.Site, Url, Parent);
         }
 
         public new InterpretersNode Parent {
@@ -324,46 +202,6 @@ namespace Microsoft.PythonTools.Project {
 
         protected override NodeProperties CreatePropertiesObject() {
             return new InterpretersPackageNodeProperties(this);
-        }
-
-        internal static bool ShouldInstallRequirementsTxt(
-            IServiceProvider provider,
-            string targetLabel,
-            string txt,
-            bool elevate
-        ) {
-            if (!File.Exists(txt)) {
-                return false;
-            }
-            string content;
-            try {
-                content = File.ReadAllText(txt);
-            } catch (Exception ex) {
-                if (ex.IsCriticalException()) {
-                    throw;
-                }
-                return false;
-            }
-
-            var td = new TaskDialog(provider) {
-                Title = SR.ProductName,
-                MainInstruction = SR.GetString(SR.ShouldInstallRequirementsTxtHeader),
-                Content = SR.GetString(SR.ShouldInstallRequirementsTxtContent),
-                ExpandedByDefault = true,
-                ExpandedControlText = SR.GetString(SR.ShouldInstallRequirementsTxtExpandedControl),
-                CollapsedControlText = SR.GetString(SR.ShouldInstallRequirementsTxtCollapsedControl),
-                ExpandedInformation = content,
-                AllowCancellation = true
-            };
-
-            var install = new TaskDialogButton(SR.GetString(SR.ShouldInstallRequirementsTxtInstallInto, targetLabel)) {
-                ElevationRequired = elevate
-            };
-
-            td.Buttons.Add(install);
-            td.Buttons.Add(TaskDialogButton.Cancel);
-
-            return td.ShowModal() == install;
         }
     }
 }

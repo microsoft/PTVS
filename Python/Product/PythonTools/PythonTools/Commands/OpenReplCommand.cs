@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.Linq;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Repl;
@@ -38,9 +39,38 @@ namespace Microsoft.PythonTools.Commands {
             _factory = factory;
         }
 
-        public override void DoCommand(object sender, EventArgs args) {
+        public override void DoCommand(object sender, EventArgs e) {
+            // _factory is never null, but if a specific factory or command line
+            // is passed as an argument, use that instead.
+            var factory = _factory;
+            var oe = e as OleMenuCmdEventArgs;
+            if (oe != null) {
+                IPythonInterpreterFactory asFactory;
+                string args;
+                if ((asFactory = oe.InValue as IPythonInterpreterFactory) != null) {
+                    factory = asFactory;
+                } else if (!string.IsNullOrEmpty(args = oe.InValue as string)) {
+                    string description;
+                    var parse = PythonToolsPackage.GetGlobalService(typeof(SVsParseCommandLine)) as IVsParseCommandLine;
+                    if (ErrorHandler.Succeeded(parse.ParseCommandTail(args, -1)) &&
+                        ErrorHandler.Succeeded(parse.EvaluateSwitches("e,env,environment:")) &&
+                        ErrorHandler.Succeeded(parse.GetSwitchValue(0, out description)) &&
+                        !string.IsNullOrEmpty(description)
+                    ) {
+                        var service = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
+                        asFactory = service.Interpreters.FirstOrDefault(
+                            // Descriptions are localized strings, hence CCIC
+                            f => description.Equals(f.Description, StringComparison.CurrentCultureIgnoreCase)
+                        );
+                        if (asFactory != null) {
+                            factory = asFactory;
+                        }
+                    }
+                }
+            }
+
             // These commands are project-insensitive, so pass null for project.
-            var window = (ToolWindowPane)ExecuteInReplCommand.EnsureReplWindow(_factory, null);
+            var window = (ToolWindowPane)ExecuteInReplCommand.EnsureReplWindow(factory, null);
 
             IVsWindowFrame windowFrame = (IVsWindowFrame)window.Frame;
             ErrorHandler.ThrowOnFailure(windowFrame.Show());
@@ -65,6 +95,7 @@ namespace Microsoft.PythonTools.Commands {
                 oleMenu.Enabled = true;
                 oleMenu.Supported = true;
                 oleMenu.Text = Description;
+                oleMenu.ParametersDescription = "e,env,environment:";
             }
         }
 

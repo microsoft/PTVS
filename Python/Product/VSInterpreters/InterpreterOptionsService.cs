@@ -22,16 +22,18 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.VisualStudio.Settings;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
 using Microsoft.Win32;
+using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.Interpreter {
     [Export(typeof(IInterpreterOptionsService))]
     [PartCreationPolicy(CreationPolicy.Shared)]
-    class InterpreterOptionsService : IInterpreterOptionsService {
+    class InterpreterOptionsService : IInterpreterOptionsService2 {
         internal static Guid NoInterpretersFactoryGuid = new Guid("{15CEBB59-1008-4305-97A9-CF5E2CB04711}");
 
         // Two locations for specifying factory providers.
@@ -60,6 +62,14 @@ namespace Microsoft.PythonTools.Interpreter {
 
         IPythonInterpreterFactory _defaultInterpreter;
         IPythonInterpreterFactory _noInterpretersValue;
+
+        class LockInfo {
+            public int _lockCount;
+            public readonly SemaphoreSlim _lock = new SemaphoreSlim(1, 1);
+        }
+        private Dictionary<IPythonInterpreterFactory, Dictionary<object, LockInfo>> _locks;
+        private readonly object _locksLock = new object();
+
 
         private readonly Thread _serviceThread;
 #if !DEV12_OR_LATER
@@ -486,6 +496,59 @@ namespace Microsoft.PythonTools.Interpreter {
             get {
                 return _providers;
             }
+        }
+
+        public async Task<object> LockInterpreterAsync(IPythonInterpreterFactory factory, object moniker, TimeSpan timeout) {
+            LockInfo info;
+            Dictionary<object, LockInfo> locks;
+
+            lock (_locksLock) {
+                if (_locks == null) {
+                    _locks = new Dictionary<IPythonInterpreterFactory, Dictionary<object, LockInfo>>();
+                }
+
+                if (!_locks.TryGetValue(factory, out locks)) {
+                    _locks[factory] = locks = new Dictionary<object, LockInfo>();
+                }
+
+                if (!locks.TryGetValue(moniker, out info)) {
+                    locks[moniker] = info = new LockInfo();
+                }
+            }
+
+            Interlocked.Increment(ref info._lockCount);
+            bool result = false;
+            try {
+                result = await info._lock.WaitAsync(timeout.TotalDays > 1 ? Timeout.InfiniteTimeSpan : timeout);
+                return result ? (object)info : null;
+            } finally {
+                if (!result) {
+                    Interlocked.Decrement(ref info._lockCount);
+                }
+            }
+        }
+
+        public bool IsInterpreterLocked(IPythonInterpreterFactory factory, object moniker) {
+            LockInfo info;
+            Dictionary<object, LockInfo> locks;
+
+            lock (_locksLock) {
+                return _locks != null &&
+                    _locks.TryGetValue(factory, out locks) &&
+                    locks.TryGetValue(moniker, out info) &&
+                    info._lockCount > 0;
+            }
+        }
+
+        public bool UnlockInterpreter(object cookie) {
+            var info = cookie as LockInfo;
+            if (info == null) {
+                throw new ArgumentException("cookie was not returned from a call to LockInterpreterAsync");
+            }
+
+            bool res = Interlocked.Decrement(ref info._lockCount) == 0;
+            info._lock.Release();
+            return res;
         }
     }
 }

@@ -99,13 +99,13 @@ namespace TestUtilities.UI.Python {
         public void OpenPythonPerformance() {
             try {
                 _deletePerformanceSessions = true;
-                Dte.ExecuteCommand("View.PythonPerformanceExplorer");
+                Dte.ExecuteCommand("Python.PerformanceExplorer");
             } catch {
                 // If the package is not loaded yet then the command may not
                 // work. Force load the package by opening the Launch dialog.
-                using (var dialog = new PythonPerfTarget(OpenDialogWithDteExecuteCommand("Analyze.LaunchPythonProfiling"))) {
+                using (var dialog = new PythonPerfTarget(OpenDialogWithDteExecuteCommand("Python.LaunchProfiling"))) {
                 }
-                Dte.ExecuteCommand("View.PythonPerformanceExplorer");
+                Dte.ExecuteCommand("Python.PerformanceExplorer");
             }
         }
 
@@ -114,7 +114,7 @@ namespace TestUtilities.UI.Python {
         /// </summary>
         public PythonPerfTarget LaunchPythonProfiling() {
             _deletePerformanceSessions = true;
-            return new PythonPerfTarget(OpenDialogWithDteExecuteCommand("Analyze.LaunchPythonProfiling"));
+            return new PythonPerfTarget(OpenDialogWithDteExecuteCommand("Python.LaunchProfiling"));
         }
 
         /// <summary>
@@ -277,7 +277,7 @@ namespace TestUtilities.UI.Python {
             );
             environmentsNode.Select();
 
-            using (var createVenv = AutomationDialog.FromDte(this, "ProjectandSolutionContextMenus.PythonEnvironments.AddVirtualEnvironment")) {
+            using (var createVenv = AutomationDialog.FromDte(this, "Python.AddVirtualEnvironment")) {
                 envPath = new TextBox(createVenv.FindByAutomationId("VirtualEnvPath")).GetValue();
                 var baseInterp = new ComboBox(createVenv.FindByAutomationId("BaseInterpreter")).GetSelectedItemName();
 
@@ -312,7 +312,7 @@ namespace TestUtilities.UI.Python {
             );
             environmentsNode.Select();
 
-            using (var createVenv = AutomationDialog.FromDte(this, "ProjectandSolutionContextMenus.PythonEnvironments.AddVirtualEnvironment")) {
+            using (var createVenv = AutomationDialog.FromDte(this, "Python.AddVirtualEnvironment")) {
                 new TextBox(createVenv.FindByAutomationId("VirtualEnvPath")).SetValue(envPath);
                 var baseInterp = new ComboBox(createVenv.FindByAutomationId("BaseInterpreter")).GetSelectedItemName();
 

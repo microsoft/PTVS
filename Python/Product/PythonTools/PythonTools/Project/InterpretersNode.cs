@@ -42,14 +42,15 @@ namespace Microsoft.PythonTools.Project {
     [ComVisible(true)]
     internal class InterpretersNode : HierarchyNode {
         private readonly MSBuildProjectInterpreterFactoryProvider _interpreters;
+        private readonly IInterpreterOptionsService _interpreterService;
         internal readonly IPythonInterpreterFactory _factory;
         private readonly bool _isReference;
         private readonly bool _canDelete;
         private readonly FileSystemWatcher _fileWatcher;
         private readonly Timer _timer;
         private bool _checkedItems, _checkingItems, _disposed;
-        private readonly SemaphoreSlim _installingPackage;
-        private int _waitingToInstallPackage;
+
+        public static readonly object InstallPackageLockMoniker = new object();
 
         public InterpretersNode(
             PythonProjectNode project,
@@ -62,10 +63,10 @@ namespace Microsoft.PythonTools.Project {
             ExcludeNodeFromScc = true;
 
             _interpreters = project.Interpreters;
+            _interpreterService = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
             _factory = factory;
             _isReference = isInterpreterReference;
             _canDelete = canDelete;
-            _installingPackage = new SemaphoreSlim(1);
 
             if (Directory.Exists(_factory.Configuration.LibraryPath)) {
                 // TODO: Need to handle watching for creation
@@ -109,8 +110,6 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public override void Close() {
-            _installingPackage.Wait();
-
             if (!_disposed && _fileWatcher != null) {
                 _fileWatcher.Dispose();
                 _timer.Dispose();
@@ -118,6 +117,37 @@ namespace Microsoft.PythonTools.Project {
             _disposed = true;
 
             base.Close();
+        }
+
+        /// <summary>
+        /// Disables the file watcher. This function may be called as many times
+        /// as you like, but it only requires one call to
+        /// <see cref="ResumeWatching"/> to re-enable the watcher.
+        /// </summary>
+        public void StopWatching() {
+            if (!_disposed && _fileWatcher != null) {
+                try {
+                    _fileWatcher.EnableRaisingEvents = false;
+                } catch (IOException) {
+                } catch (ObjectDisposedException) {
+                }
+            }
+        }
+
+        /// <summary>
+        /// Enables the file watcher, regardless of how many times
+        /// <see cref="StopWatching"/> was called. If the file watcher was
+        /// enabled successfully, the list of packages is updated.
+        /// </summary>
+        public void ResumeWatching() {
+            if (!_disposed && _fileWatcher != null) {
+                try {
+                    _fileWatcher.EnableRaisingEvents = true;
+                    CheckPackages(null);
+                } catch (IOException) {
+                } catch (ObjectDisposedException) {
+                }
+            }
         }
 
         private void PackagesChanged(object sender, FileSystemEventArgs e) {
@@ -205,44 +235,11 @@ namespace Microsoft.PythonTools.Project {
                             UseShellExecute = true
                         });
                         return VSConstants.S_OK;
+                    case VsCommands2K.CopyFullPathName:
+                        Clipboard.SetText(_factory.Configuration.InterpreterPath);
+                        return VSConstants.S_OK;
                 }
             }
-            
-            if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
-                switch (cmd) {
-                    case PythonConstants.ActivateEnvironment:
-                        return ProjectMgr.SetInterpreterFactory(_factory);
-                    case PythonConstants.InstallPythonPackage:
-                        InterpretersPackageNode.InstallNewPackage(this).HandleAllExceptions(SR.ProductName).DoNotWait();
-                        return VSConstants.S_OK;
-                    case PythonConstants.InstallRequirementsTxt:
-                        bool elevate = PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ElevatePip;
-                        var txt = CommonUtils.GetAbsoluteFilePath(ProjectMgr.ProjectHome, "requirements.txt");
-                        if (InterpretersPackageNode.ShouldInstallRequirementsTxt(ProjectMgr.Site, Caption, txt, elevate)) {
-                            InterpretersPackageNode.InstallNewPackage(
-                                this,
-                                "-r " + ProcessOutput.QuoteSingleArgument(txt),
-                                elevate
-                            ).HandleAllExceptions(SR.ProductName).DoNotWait();
-                        }
-                        return VSConstants.S_OK;
-                    case PythonConstants.GenerateRequirementsTxt:
-                        GenerateRequirementsTxt().HandleAllExceptions(SR.ProductName).DoNotWait();
-                        return VSConstants.S_OK;
-                    case PythonConstants.OpenInteractiveForEnvironment:
-                        try {
-                            var window = ExecuteInReplCommand.EnsureReplWindow(_factory, ProjectMgr);
-                            var pane = window as ToolWindowPane;
-                            if (pane != null) {
-                                ErrorHandler.ThrowOnFailure(((IVsWindowFrame)pane.Frame).Show());
-                                window.Focus();
-                            }
-                        } catch (InvalidOperationException ex) {
-                            MessageBox.Show(SR.GetString(SR.ErrorOpeningInteractiveWindow, ex), SR.ProductName);
-                        }
-                        return VSConstants.S_OK;
-                }
-            } 
             
             if (cmdGroup == ProjectMgr.SharedCommandGuid) {
                 switch ((SharedCommands)cmd) {
@@ -256,213 +253,10 @@ namespace Microsoft.PythonTools.Project {
                             );
                         }
                         break;
-                    case SharedCommands.CopyFullPath:
-                        Clipboard.SetText(_factory.Configuration.InterpreterPath);
-                        return VSConstants.S_OK;
                 }
             }
             
             return base.ExecCommandOnNode(cmdGroup, cmd, nCmdexecopt, pvaIn, pvaOut);
-        }
-
-        private async Task GenerateRequirementsTxt() {
-            var projectHome = ProjectMgr.ProjectHome;
-            var txt = CommonUtils.GetAbsoluteFilePath(projectHome, "requirements.txt");
-
-            string[] existing = null;
-            bool addNew = false;
-            if (File.Exists(txt)) {
-                try {
-                    existing = TaskDialog.CallWithRetry(
-                        _ => File.ReadAllLines(txt),
-                        ProjectMgr.Site,
-                        SR.ProductName,
-                        SR.GetString(SR.RequirementsTxtFailedToRead),
-                        SR.GetString(SR.ErrorDetail),
-                        SR.GetString(SR.Retry),
-                        SR.GetString(SR.Cancel)
-                    );
-                } catch (OperationCanceledException) {
-                    return;
-                }
-
-                var td = new TaskDialog(ProjectMgr.Site) {
-                    Title = SR.ProductName,
-                    MainInstruction = SR.GetString(SR.RequirementsTxtExists),
-                    Content = SR.GetString(SR.RequirementsTxtExistsQuestion),
-                    AllowCancellation = true,
-                    CollapsedControlText = SR.GetString(SR.RequirementsTxtContentCollapsed),
-                    ExpandedControlText = SR.GetString(SR.RequirementsTxtContentExpanded),
-                    ExpandedInformation = string.Join(Environment.NewLine, existing)
-                };
-                var replace = new TaskDialogButton(
-                    SR.GetString(SR.RequirementsTxtReplace),
-                    SR.GetString(SR.RequirementsTxtReplaceHelp)
-                );
-                var refresh = new TaskDialogButton(
-                    SR.GetString(SR.RequirementsTxtRefresh),
-                    SR.GetString(SR.RequirementsTxtRefreshHelp)
-                );
-                var update = new TaskDialogButton(
-                    SR.GetString(SR.RequirementsTxtUpdate),
-                    SR.GetString(SR.RequirementsTxtUpdateHelp)
-                );
-                td.Buttons.Add(replace);
-                td.Buttons.Add(refresh);
-                td.Buttons.Add(update);
-                td.Buttons.Add(TaskDialogButton.Cancel);
-                var selection = td.ShowModal();
-                if (selection == TaskDialogButton.Cancel) {
-                    return;
-                } else if (selection == replace) {
-                    existing = null;
-                } else if (selection == update) {
-                    addNew = true;
-                }
-            }
-            
-            var items = await Pip.Freeze(_factory);
-
-            if (File.Exists(txt) && !ProjectMgr.QueryEditFiles(false, txt)) {
-                return;
-            }
-
-            try {
-                TaskDialog.CallWithRetry(
-                    _ => {
-                        if (items.Any()) {
-                            File.WriteAllLines(txt, MergeRequirements(existing, items, addNew));
-                        } else if (existing == null) {
-                            File.WriteAllText(txt, "");
-                        }
-                    },
-                    ProjectMgr.Site, 
-                    SR.ProductName,
-                    SR.GetString(SR.RequirementsTxtFailedToWrite),
-                    SR.GetString(SR.ErrorDetail),
-                    SR.GetString(SR.Retry),
-                    SR.GetString(SR.Cancel)
-                );
-            } catch (OperationCanceledException) {
-                return;
-            }
-
-            var existingNode = ProjectMgr.FindNodeByFullPath(txt);
-            if (existingNode == null || existingNode.IsNonMemberItem) {
-                if (!ProjectMgr.QueryEditProjectFile(false)) {
-                    return;
-                }
-                try {
-                    existingNode = TaskDialog.CallWithRetry(
-                        _ => {
-                            ErrorHandler.ThrowOnFailure(ProjectMgr.AddItem(
-                                ProjectMgr.ID,
-                                VSADDITEMOPERATION.VSADDITEMOP_LINKTOFILE,
-                                Path.GetFileName(txt),
-                                1,
-                                new[] { txt },
-                                IntPtr.Zero,
-                                new VSADDRESULT[1]
-                            ));
-
-                            return ProjectMgr.FindNodeByFullPath(txt);
-                        },
-                        ProjectMgr.Site,
-                        SR.ProductName,
-                        SR.GetString(SR.RequirementsTxtFailedToAddToProject),
-                        SR.GetString(SR.ErrorDetail),
-                        SR.GetString(SR.Retry),
-                        SR.GetString(SR.Cancel)
-                    );
-                } catch (OperationCanceledException) {
-                }
-            }
-        }
-
-        internal const string FindRequirementRegex = @"
-            (?<!\#.*)       # ensure we are not in a comment
-            (?<spec>        # <spec> includes name, version and whitespace
-                (?<name>[^\s\#<>=!]+)           # just the name, no whitespace
-                (\s*(?<cmp><=|>=|<|>|!=|==)\s*
-                    (?<ver>[^\s\#]+)
-                )?          # cmp and ver are optional
-            )";
-
-        internal static IEnumerable<string> MergeRequirements(
-            IEnumerable<string> original,
-            IEnumerable<string> updates,
-            bool addNew
-        ) {
-            if (original == null) {
-                foreach (var req in updates.OrderBy(r => r)) {
-                    yield return req;
-                }
-                yield break;
-            }
-
-            var findRequirement = new Regex(FindRequirementRegex, RegexOptions.IgnorePatternWhitespace);
-            var existing = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
-            foreach (var m in updates.SelectMany(req => findRequirement.Matches(req).Cast<Match>())) {
-                existing[m.Groups["name"].Value] = m.Value;
-            }
-
-            var seen = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
-            foreach (var _line in original) {
-                var line = _line;
-                foreach(var m in findRequirement.Matches(line).Cast<Match>()) {
-                    string newReq;
-                    var name = m.Groups["name"].Value;
-                    if (existing.TryGetValue(name, out newReq)) {
-                        line = findRequirement.Replace(line, m2 =>
-                            name.Equals(m2.Groups["name"].Value, StringComparison.InvariantCultureIgnoreCase) ?
-                                newReq :
-                                m2.Value
-                        );
-                        seen.Add(name);
-                    }
-                }
-                yield return line;
-            }
-
-            if (addNew) {
-                foreach (var req in existing
-                    .Where(kv => !seen.Contains(kv.Key))
-                    .Select(kv => kv.Value)
-                    .OrderBy(v => v)
-                ) {
-                    yield return req;
-                }
-            }
-        }
-
-        internal async Task BeginPackageChange() {
-            Interlocked.Increment(ref _waitingToInstallPackage);
-            await _installingPackage.WaitAsync();
-
-            if (!_disposed && _fileWatcher != null) {
-                try {
-                    _fileWatcher.EnableRaisingEvents = false;
-                } catch (IOException) {
-                } catch (ObjectDisposedException) {
-                }
-            }
-        }
-
-        internal void PackageChangeDone() {
-            try {
-                if (Interlocked.Decrement(ref _waitingToInstallPackage) == 0) {
-                    if (!_disposed && _fileWatcher != null) {
-                        try {
-                            _fileWatcher.EnableRaisingEvents = true;
-                        } catch (IOException) {
-                        } catch (ObjectDisposedException) {
-                        }
-                        ThreadPool.QueueUserWorkItem(CheckPackages);
-                    }
-                }
-            } finally {
-                _installingPackage.Release();
-            }
         }
 
         public new PythonProjectNode ProjectMgr {
@@ -472,7 +266,9 @@ namespace Microsoft.PythonTools.Project {
         }
 
         internal override bool CanDeleteItem(__VSDELETEITEMOPERATION deleteOperation) {
-            if (_waitingToInstallPackage != 0) {
+            var service = _interpreterService as IInterpreterOptionsService2;
+            if (service != null && service.IsInterpreterLocked(_factory, InstallPackageLockMoniker)) {
+                // Prevent the environment from being deleted while installing.
                 return false;
             }
 
@@ -493,8 +289,9 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private void Remove(bool removeFromStorage, bool showPrompt) {
-            if (_waitingToInstallPackage != 0) {
-                // Prevent the environment from being deleting while installing.
+            var service = _interpreterService as IInterpreterOptionsService2;
+            if (service != null && service.IsInterpreterLocked(_factory, InstallPackageLockMoniker)) {
+                // Prevent the environment from being deleted while installing.
                 // This situation should not occur through the UI, but might be
                 // invocable through DTE.
                 return;
@@ -596,6 +393,14 @@ namespace Microsoft.PythonTools.Project {
                             result |= QueryStatusResult.ENABLED;
                         }
                         return VSConstants.S_OK;
+                    case VsCommands2K.CopyFullPathName:
+                        result |= QueryStatusResult.SUPPORTED;
+                        if (_interpreters.IsAvailable(_factory) &&
+                            Directory.Exists(_factory.Configuration.PrefixPath) &&
+                            File.Exists(_factory.Configuration.InterpreterPath)) {
+                            result |= QueryStatusResult.ENABLED;
+                        }
+                        return VSConstants.S_OK;
                 }
             }
             
@@ -644,7 +449,6 @@ namespace Microsoft.PythonTools.Project {
             if (cmdGroup == ProjectMgr.SharedCommandGuid) {
                 switch ((SharedCommands)cmd) {
                     case SharedCommands.OpenCommandPromptHere:
-                    case SharedCommands.CopyFullPath:
                         result |= QueryStatusResult.SUPPORTED;
                         if (_interpreters.IsAvailable(_factory) &&
                             Directory.Exists(_factory.Configuration.PrefixPath) &&

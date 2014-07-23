@@ -133,7 +133,7 @@
         <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom">
             <Button IsDefault="True" Click="OkClick" IsEnabled="{Binding IsValid}"
                     MinWidth="86" MinHeight="24"
-                    AutomationProperties.AutomationId="Ok" Content="{Binding StartText}"/>
+                    AutomationProperties.AutomationId="OK" Content="{Binding StartText}"/>
             <Button IsCancel="True" Click="CancelClick" MinWidth="86" MinHeight="24"
                     AutomationProperties.AutomationId="Cancel">
                 _Cancel

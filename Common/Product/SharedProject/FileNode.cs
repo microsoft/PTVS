@@ -495,8 +495,6 @@ namespace Microsoft.VisualStudioTools.Project {
                     result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
                     return VSConstants.S_OK;
                 }
-            } else if (cmdGroup != ProjectMgr.SharedCommandGuid) {
-                return (int)OleConstants.OLECMDERR_E_UNKNOWNGROUP;
             }
             return base.QueryStatusOnNode(cmdGroup, cmd, pCmdText, ref result);
         }
