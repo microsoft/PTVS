@@ -13,15 +13,19 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Logging;
 using Microsoft.PythonTools.Project;
+using Microsoft.PythonTools.Project.Web;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 
@@ -30,6 +34,44 @@ namespace Microsoft.PythonTools.Commands {
     /// Provides the command for starting a file or the start item of a project in the REPL window.
     /// </summary>
     internal sealed class DiagnosticsCommand : Command {
+        private static readonly IEnumerable<string> InterestingDteProperties = new[] {
+            "InterpreterId",
+            "InterpreterVersion",
+            "StartupFile",
+            "WorkingDirectory",
+            "PublishUrl",
+            "SearchPath",
+            "CommandLineArguments",
+            "InterpreterPath"
+        };
+        
+        private static readonly IEnumerable<string> InterestingProjectProperties = new[] {
+            "ClusterRunEnvironment",
+            "ClusterPublishBeforeRun",
+            "ClusterWorkingDir",
+            "ClusterMpiExecCommand",
+            "ClusterAppCommand",
+            "ClusterAppArguments",
+            "ClusterDeploymentDir",
+            "ClusterTargetPlatform",
+            PythonWebLauncher.DebugWebServerTargetProperty,
+            PythonWebLauncher.DebugWebServerTargetTypeProperty,
+            PythonWebLauncher.DebugWebServerArgumentsProperty,
+            PythonWebLauncher.DebugWebServerEnvironmentProperty,
+            PythonWebLauncher.RunWebServerTargetProperty,
+            PythonWebLauncher.RunWebServerTargetTypeProperty,
+            PythonWebLauncher.RunWebServerArgumentsProperty,
+            PythonWebLauncher.RunWebServerEnvironmentProperty,
+            PythonWebPropertyPage.StaticUriPatternSetting,
+            PythonWebPropertyPage.StaticUriRewriteSetting,
+            PythonWebPropertyPage.WsgiHandlerSetting
+        };
+
+        private static readonly Regex InterestingApplicationLogEntries = new Regex(
+            @"^Application: (devenv\.exe|.+?Python.+?\.exe|ipy(64)?\.exe)",
+            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant
+        );
+
         public override void DoCommand(object sender, EventArgs args) {
             var dlg = new DiagnosticsForm("Gathering data...");
 
@@ -37,8 +79,7 @@ namespace Microsoft.PythonTools.Commands {
                 var data = GetData();
                 try {
                     dlg.BeginInvoke((Action)(() => {
-                        dlg.TextBox.Text = data;
-                        dlg.TextBox.SelectAll();
+                        dlg.Ready(data);
                     }));
                 } catch (InvalidOperationException) {
                     // Window has been closed already
@@ -48,10 +89,7 @@ namespace Microsoft.PythonTools.Commands {
         }
 
         private string GetData() {
-
             StringBuilder res = new StringBuilder();
-            res.AppendLine("Use Ctrl-C to copy contents");
-            res.AppendLine();
 
             if (PythonToolsPackage.IsIpyToolsInstalled()) {
                 res.AppendLine("WARNING: IpyTools is installed on this machine.  Having both IpyTools and Python Tools for Visual Studio installed will break Python editing.");
@@ -65,8 +103,6 @@ namespace Microsoft.PythonTools.Commands {
             res.AppendLine("Projects: ");
 
             var projects = dte.Solution.Projects;
-            var interestingDteProperties = new[] { "InterpreterId", "InterpreterVersion", "StartupFile", "WorkingDirectory", "PublishUrl", "SearchPath", "CommandLineArguments", "InterpreterPath" };
-            var interestingProjectProperties = new[] { "ClusterRunEnvironment", "ClusterPublishBeforeRun", "ClusterWorkingDir", "ClusterMpiExecCommand", "ClusterAppCommand", "ClusterAppArguments", "ClusterDeploymentDir", "ClusterTargetPlatform" };
 
             foreach (EnvDTE.Project project in projects) {
                 string name;
@@ -100,18 +136,20 @@ namespace Microsoft.PythonTools.Commands {
                 if (Utilities.GuidEquals(PythonConstants.ProjectFactoryGuid, project.Kind)) {
                     res.AppendLine("        Kind: Python");
 
-                    foreach (var prop in interestingDteProperties) {
+                    foreach (var prop in InterestingDteProperties) {
                         res.AppendLine("        " + prop + ": " + GetProjectProperty(project, prop));
                     }
 
                     var pyProj = project.GetPythonProject();
                     if (pyProj != null) {
-                        foreach (var prop in interestingProjectProperties) {
-                            var propValue = pyProj.GetProjectProperty(prop);
-                            if (propValue != null) {
-                                res.AppendLine("        " + prop + ": " + propValue);
+                        UIThread.Invoke(() => {
+                            foreach (var prop in InterestingProjectProperties) {
+                                var propValue = pyProj.GetProjectProperty(prop);
+                                if (propValue != null) {
+                                    res.AppendLine("        " + prop + ": " + propValue);
+                                }
                             }
-                        }
+                        });
 
                         foreach (var factory in pyProj.Interpreters.GetInterpreterFactories()) {
                             res.AppendLine();
@@ -170,6 +208,35 @@ namespace Microsoft.PythonTools.Commands {
                 var inMemLogger = PythonToolsPackage.ComponentModel.GetService<InMemoryLogger>();
                 res.AppendLine(inMemLogger.ToString());
                 res.AppendLine();
+            } catch (Exception ex) {
+                if (ex.IsCriticalException()) {
+                    throw;
+                }
+                res.AppendLine("  Failed to access event log.");
+                res.AppendLine(ex.ToString());
+                res.AppendLine();
+            }
+
+            try {
+                res.AppendLine("System events:");
+
+                var application = new EventLog("Application");
+                var lastWeek = DateTime.Now.Subtract(TimeSpan.FromDays(7));
+                foreach (var entry in application.Entries.Cast<EventLogEntry>()
+                    .Where(e => e.InstanceId == 1026L)  // .NET Runtime
+                    .Where(e => e.TimeGenerated >= lastWeek)
+                    .Where(e => InterestingApplicationLogEntries.IsMatch(e.Message))
+                    .OrderByDescending(e => e.TimeGenerated)
+                ) {
+                    res.AppendLine(string.Format("Time: {0:s}", entry.TimeGenerated));
+                    using (var reader = new StringReader(entry.Message.TrimEnd())) {
+                        for (var line = reader.ReadLine(); line != null; line = reader.ReadLine()) {
+                            res.AppendLine(line);
+                        }
+                    }
+                    res.AppendLine();
+                }
+
             } catch (Exception ex) {
                 if (ex.IsCriticalException()) {
                     throw;

@@ -566,4 +566,7 @@ Packages that cannot be installed using pip may prevent all listed packages from
   <data name="WarningUnknownType" xml:space="preserve">
     <value>The type of this expression is unknown.</value>
   </data>
+  <data name="FailedToSaveDiagnosticInfo" xml:space="preserve">
+    <value>An error occurred saving the diagnostic info.</value>
+  </data>
 </root>

@@ -28,12 +28,13 @@
             this._ok = new System.Windows.Forms.Button();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this._copy = new System.Windows.Forms.Button();
+            this._save = new System.Windows.Forms.Button();
             this.tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
             // _textBox
             // 
-            this.tableLayoutPanel1.SetColumnSpan(this._textBox, 3);
+            this.tableLayoutPanel1.SetColumnSpan(this._textBox, 4);
             this._textBox.Dock = System.Windows.Forms.DockStyle.Fill;
             this._textBox.Location = new System.Drawing.Point(6, 3);
             this._textBox.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
@@ -55,8 +56,8 @@
             this._ok.MinimumSize = new System.Drawing.Size(86, 24);
             this._ok.Name = "_ok";
             this._ok.Size = new System.Drawing.Size(86, 24);
-            this._ok.TabIndex = 1;
-            this._ok.Text = "&OK";
+            this._ok.TabIndex = 3;
+            this._ok.Text = "C&lose";
             this._ok.UseVisualStyleBackColor = true;
             this._ok.Click += new System.EventHandler(this._ok_Click);
             // 
@@ -64,13 +65,15 @@
             // 
             this.tableLayoutPanel1.AutoSize = true;
             this.tableLayoutPanel1.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.tableLayoutPanel1.ColumnCount = 3;
+            this.tableLayoutPanel1.ColumnCount = 4;
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
             this.tableLayoutPanel1.Controls.Add(this._textBox, 0, 0);
-            this.tableLayoutPanel1.Controls.Add(this._ok, 2, 1);
-            this.tableLayoutPanel1.Controls.Add(this._copy, 1, 1);
+            this.tableLayoutPanel1.Controls.Add(this._ok, 3, 1);
+            this.tableLayoutPanel1.Controls.Add(this._copy, 2, 1);
+            this.tableLayoutPanel1.Controls.Add(this._save, 1, 1);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
@@ -91,10 +94,25 @@
             this._copy.MinimumSize = new System.Drawing.Size(86, 24);
             this._copy.Name = "_copy";
             this._copy.Size = new System.Drawing.Size(86, 24);
-            this._copy.TabIndex = 1;
-            this._copy.Text = "&Copy";
+            this._copy.TabIndex = 2;
+            this._copy.Text = "&Copy All";
             this._copy.UseVisualStyleBackColor = true;
             this._copy.Click += new System.EventHandler(this._copy_Click);
+            // 
+            // _save
+            // 
+            this._save.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this._save.AutoSize = true;
+            this._save.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this._save.Location = new System.Drawing.Point(536, 473);
+            this._save.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
+            this._save.MinimumSize = new System.Drawing.Size(86, 24);
+            this._save.Name = "_save";
+            this._save.Size = new System.Drawing.Size(86, 24);
+            this._save.TabIndex = 1;
+            this._save.Text = "&Save All...";
+            this._save.UseVisualStyleBackColor = true;
+            this._save.Click += new System.EventHandler(this._save_Click);
             // 
             // DiagnosticsForm
             // 
@@ -123,5 +141,6 @@
         private System.Windows.Forms.Button _ok;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.Button _copy;
+        private System.Windows.Forms.Button _save;
     }
 }

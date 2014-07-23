@@ -13,25 +13,32 @@
  * ***************************************************************************/
 
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
+using System.Diagnostics;
+using System.IO;
 using System.Windows.Forms;
+using Microsoft.VisualStudioTools;
+using Microsoft.VisualStudioTools.Project;
+using SR = Microsoft.PythonTools.Project.SR;
 
 namespace Microsoft.PythonTools.Commands {
     public partial class DiagnosticsForm : Form {
         public DiagnosticsForm(string content) {
             InitializeComponent();
             _textBox.Text = content;
+            _copy.Enabled = false;
+            _save.Enabled = false;
+            UseWaitCursor = true;
         }
 
-        public TextBox TextBox {
-            get {
-                return _textBox;
+        public void Ready(string content) {
+            if (IsDisposed) {
+                return;
             }
+
+            _textBox.Text = content;
+            _copy.Enabled = true;
+            _save.Enabled = true;
+            UseWaitCursor = false;
         }
 
         private void _ok_Click(object sender, EventArgs e) {
@@ -39,8 +46,37 @@ namespace Microsoft.PythonTools.Commands {
         }
 
         private void _copy_Click(object sender, EventArgs e) {
-            _textBox.SelectAll();
-            Clipboard.SetText(_textBox.SelectedText);
+            Clipboard.SetText(_textBox.Text);
+        }
+
+        private void _save_Click(object sender, EventArgs e) {
+            var path = PythonToolsPackage.Instance.BrowseForFileSave(
+                Handle,
+                "Text Files (*.txt)|*.txt|All Files (*.*)|*.*",
+                CommonUtils.GetAbsoluteFilePath(
+                    Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+                    string.Format("Diagnostic Info {0:yyyy-MM-dd'T'HHmmss}.txt", DateTime.Now)
+                )
+            );
+
+            if (string.IsNullOrEmpty(path)) {
+                return;
+            }
+
+            try {
+                TaskDialog.CallWithRetry(
+                    _ => File.WriteAllText(path, _textBox.Text),
+                    PythonToolsPackage.Instance,
+                    SR.ProductName,
+                    SR.GetString(SR.FailedToSaveDiagnosticInfo),
+                    SR.GetString(SR.ErrorDetail),
+                    SR.GetString(SR.Retry),
+                    SR.GetString(SR.Cancel)
+                );
+
+                Process.Start("explorer.exe", "/select," + ProcessOutput.QuoteSingleArgument(path));
+            } catch (OperationCanceledException) {
+            }
         }
     }
 }

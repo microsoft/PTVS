@@ -179,6 +179,8 @@ namespace Microsoft.PythonTools.Project {
         public const string ShouldInstallRequirementsTxtCollapsedControl = "ShouldInstallRequirementsTxtCollapsedControl";
         public const string ShouldInstallRequirementsTxtInstallInto = "ShouldInstallRequirementsTxtInstallInto";
 
+        public const string FailedToSaveDiagnosticInfo = "FailedToSaveDiagnosticInfo";
+
         private static readonly Lazy<ResourceManager> _manager = new Lazy<ResourceManager>(
             () => new System.Resources.ResourceManager("Microsoft.PythonTools.Resources", typeof(SR).Assembly),
             LazyThreadSafetyMode.ExecutionAndPublication
