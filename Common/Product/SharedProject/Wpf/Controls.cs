@@ -55,6 +55,10 @@ namespace Microsoft.VisualStudioTools.Wpf {
         public static readonly object ControlForegroundDisabledKey = VsBrushes.ComboBoxDisabledGlyphKey;
         public static readonly object ControlBorderDisabledKey = VsBrushes.ComboBoxDisabledBorderKey;
 
+        public static readonly object ComboBoxPopupBackgroundKey = VsBrushes.ComboBoxPopupBackgroundGradientKey;
+        public static readonly object ComboBoxPopupBorderKey = VsBrushes.ComboBoxPopupBorderKey;
+        public static readonly object ComboBoxPopupForegroundKey = VsBrushes.WindowTextKey;
+
         public static readonly object ScrollBarBackgroundKey = VsBrushes.ScrollBarBackgroundKey;
         public static readonly object ScrollBarThumbBackgroundKey = VsBrushes.ScrollBarThumbBackgroundKey;
         public static readonly object ScrollBarThumbBackgroundHoverKey = VsBrushes.ScrollBarThumbMouseOverBackgroundKey;
