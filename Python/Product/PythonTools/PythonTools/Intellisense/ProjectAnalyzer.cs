@@ -1434,7 +1434,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             }
 
-            _analysisQueue.Dispose();
+            ((IDisposable)_analysisQueue).Dispose();
             if (_pyAnalyzer != null) {
                 lock (_contentsLock) {
                     _pyAnalyzer.Interpreter.ModuleNamesChanged -= OnModulesChanged;
