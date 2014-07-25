@@ -151,7 +151,8 @@
         </Reference>
         <Reference Include="Microsoft.VisualStudio.Web.WindowsAzure.Contracts, Version=2.3.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
           <SpecificVersion>True</SpecificVersion>
-          <HintPath>$(DevEnvDir)PrivateAssemblies\Microsoft.VisualStudio.Web.WindowsAzure.Contracts.dll</HintPath>
+          <HintPath Condition="Exists('$(DevEnvDir)PrivateAssemblies\Microsoft.VisualStudio.Web.WindowsAzure.Contracts.dll')">$(DevEnvDir)PrivateAssemblies\Microsoft.VisualStudio.Web.WindowsAzure.Contracts.dll</HintPath>
+          <HintPath Condition="Exists('$(DevEnvDir)Extensions\Microsoft\Web Tools\WindowsAzure\Microsoft.VisualStudio.Web.WindowsAzure.Contracts.dll')">$(DevEnvDir)Extensions\Microsoft\Web Tools\WindowsAzure\Microsoft.VisualStudio.Web.WindowsAzure.Contracts.dll</HintPath>
         </Reference>
       </ItemGroup>
     </When>

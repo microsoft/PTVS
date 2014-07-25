@@ -29,6 +29,11 @@
 #include <strsafe.h>
 #include <winternl.h>
 
+// _Always_ is not defined for all versions, so make it a no-op if missing.
+#ifndef _Always_
+#define _Always_(x) x
+#endif
+
 using namespace std;
 
 typedef int (Py_IsInitialized)();
