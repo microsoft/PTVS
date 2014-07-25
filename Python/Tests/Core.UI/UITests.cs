@@ -195,41 +195,44 @@ namespace PythonToolsUITests {
                 // path is not handled correctly.
                 project.GetPythonProject().GetAnalyzer().WaitForCompleteAnalysis(_ => true);
 
-                app.OpenSolutionExplorer();
-                var window = app.SolutionExplorerTreeView;
+                var tree = app.OpenSolutionExplorer();
+
+                const string sln = "Solution 'LoadSearchPaths' (1 project)";
+                const string proj = "LoadSearchPaths";
+                var sp = SR.GetString(SR.SearchPaths);
 
                 // Entered in file as ..\AddSearchPaths\
-                var path1 = window.FindItem("Solution 'LoadSearchPaths' (1 project)", "LoadSearchPaths", SR.GetString(SR.SearchPaths), "..\\AddSearchPaths");
+                var path1 = tree.WaitForItem(sln, proj, sp, "..\\AddSearchPaths");
                 Assert.IsNotNull(path1, "Could not find ..\\AddSearchPaths");
 
                 // Entered in file as ..\HelloWorld
-                var path2 = window.FindItem("Solution 'LoadSearchPaths' (1 project)", "LoadSearchPaths", SR.GetString(SR.SearchPaths), "..\\HelloWorld");
+                var path2 = tree.WaitForItem(sln, proj, sp, "..\\HelloWorld");
                 Assert.IsNotNull(path2, "Could not find ..\\HelloWorld");
 
                 // Entered in file as ..\LoadSearchPaths\NotHere\..\ - resolves to .\
-                var path3 = window.FindItem("Solution 'LoadSearchPaths' (1 project)", "LoadSearchPaths", SR.GetString(SR.SearchPaths), ".");
+                var path3 = tree.WaitForItem(sln, proj, sp, ".");
                 Assert.IsNotNull(path3, "Could not find .");
 
                 // Entered in file as .\NotHere\
-                var path4 = window.FindItem("Solution 'LoadSearchPaths' (1 project)", "LoadSearchPaths", SR.GetString(SR.SearchPaths), "NotHere");
+                var path4 = tree.WaitForItem(sln, proj, sp, "NotHere");
                 Assert.IsNotNull(path4, "Could not find NotHere");
                 Assert.AreEqual("NotHere", path4.Current.Name);
 
                 AutomationWrapper.Select(path4);
-                app.Dte.ExecuteCommand("Edit.Delete"); // should not prompt, https://pytools.codeplex.com/workitem/1233
-                Assert.IsNull(window.WaitForItemRemoved("Solution 'LoadSearchPaths' (1 project)", "LoadSearchPaths", SR.GetString(SR.SearchPaths), "NotHere"));
+                app.ExecuteCommand("Edit.Delete"); // should not prompt, https://pytools.codeplex.com/workitem/1233
+                Assert.IsNull(tree.WaitForItemRemoved(sln, proj, sp, "NotHere"));
 
                 // Entered in file as Invalid*Search?Path
-                var path5 = window.FindItem("Solution 'LoadSearchPaths' (1 project)", "LoadSearchPaths", SR.GetString(SR.SearchPaths), "Invalid*Search?Path");
+                var path5 = tree.WaitForItem(sln, proj, sp, "Invalid*Search?Path");
                 Assert.IsNotNull(path5, "Could not find Invalid*Search?Path");
                 Assert.AreEqual(path5.Current.Name, "Invalid*Search?Path");
 
                 AutomationWrapper.Select(path5);
-                app.Dte.ExecuteCommand("Edit.Delete");
-                Assert.IsNull(window.WaitForItemRemoved("Solution 'LoadSearchPaths' (1 project)", "LoadSearchPaths", SR.GetString(SR.SearchPaths), "Invalid*Search?Path"));
+                app.ExecuteCommand("Edit.Delete");
+                Assert.IsNull(tree.WaitForItemRemoved(sln, proj, sp, "Invalid*Search?Path"));
 
                 // Ensure NotHere hasn't come back
-                path4 = window.FindItem("Solution 'LoadSearchPaths' (1 project)", "LoadSearchPaths", SR.GetString(SR.SearchPaths), "NotHere");
+                path4 = tree.WaitForItem(sln, proj, sp, "NotHere");
                 Assert.IsNull(path4, "NotHere came back");
             }
         }

@@ -374,8 +374,19 @@ namespace Microsoft.PythonTools.Intellisense {
             IProjectEntry item;
             if (!_projectFiles.TryGetValue(path, out item)) {
                 if (ModulePath.IsPythonSourceFile(path)) {
-                    var modName = ModulePath.FromFullPath(path, addingFromDirectory).ModuleName;
-                    var reanalyzeEntries = Project.GetEntriesThatImportModule(modName, true).ToArray();
+                    string modName;
+                    try {
+                        modName = ModulePath.FromFullPath(path, addingFromDirectory).ModuleName;
+                    } catch (ArgumentException) {
+                        // File is not a valid module, but we can still add an
+                        // entry for it.
+                        modName = null;
+                    }
+
+                    IPythonProjectEntry[] reanalyzeEntries = null;
+                    if (!string.IsNullOrEmpty(modName)) {
+                        reanalyzeEntries = Project.GetEntriesThatImportModule(modName, true).ToArray();
+                    }
 
                     var pyEntry = _pyAnalyzer.AddModule(
                         modName,
@@ -385,8 +396,10 @@ namespace Microsoft.PythonTools.Intellisense {
 
                     pyEntry.BeginParsingTree();
 
-                    foreach (var entryRef in reanalyzeEntries) {
-                        _analysisQueue.Enqueue(entryRef, AnalysisPriority.Low);
+                    if (reanalyzeEntries != null) {
+                        foreach (var entryRef in reanalyzeEntries) {
+                            _analysisQueue.Enqueue(entryRef, AnalysisPriority.Low);
+                        }
                     }
 
                     item = pyEntry;
@@ -401,8 +414,15 @@ namespace Microsoft.PythonTools.Intellisense {
             } else if (addingFromDirectory != null) {
                 var module = item as IPythonProjectEntry;
                 if (module != null && ModulePath.IsPythonSourceFile(path)) {
-                    var modName = ModulePath.FromFullPath(path, addingFromDirectory).ModuleName;
-                    if (module.ModuleName != modName) {
+                    string modName = null;
+                    try {
+                        modName = ModulePath.FromFullPath(path, addingFromDirectory).ModuleName;
+                    } catch (ArgumentException) {
+                        // Module does not have a valid name, so we can't make
+                        // an alias for it.
+                    }
+
+                    if (modName != null && module.ModuleName != modName) {
                         _pyAnalyzer.AddModuleAlias(module.ModuleName, modName);
 
                         var reanalyzeEntries = Project.GetEntriesThatImportModule(modName, true).ToArray();
