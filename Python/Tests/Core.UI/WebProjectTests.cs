@@ -21,13 +21,16 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Automation;
+using System.Xml;
 using EnvDTE;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project;
 using Microsoft.PythonTools.Project.Web;
 using Microsoft.TC.TestHostAdapters;
+using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
+using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools;
 using TestUtilities;
@@ -413,6 +416,89 @@ namespace PythonToolsUITests {
 
                 Pip.Uninstall(app.InterpreterService.DefaultInterpreter, "bottle", false).WaitAndUnwrapExceptions();
             }
+        }
+
+        private static void CloudProjectTest(string roleType, bool openServiceDefinition) {
+            Assert.IsTrue(roleType == "Web" || roleType == "Worker", "Invalid roleType: " + roleType);
+            
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte))
+            using (FileUtils.Backup(TestData.GetPath(@"TestData\CloudProject\ServiceDefinition.csdef"))) {
+                app.OpenProject("TestData\\CloudProject.sln", expectedProjects: 3);
+
+                var ccproj = app.Dte.Solution.Projects.Cast<Project>().FirstOrDefault(p => p.Name == "CloudProject");
+                Assert.IsNotNull(ccproj);
+
+                if (openServiceDefinition) {
+                    var wnd = ccproj.ProjectItems.Item("ServiceDefinition.csdef").Open();
+                    wnd.Activate();
+                    app.OnDispose(() => wnd.Close());
+                }
+
+                IVsHierarchy hier;
+                var sln = app.GetService<IVsSolution>(typeof(SVsSolution));
+                ErrorHandler.ThrowOnFailure(sln.GetProjectOfUniqueName(ccproj.FullName, out hier));
+
+                UIThread.Invoke(() =>
+                    PythonProjectNode.UpdateServiceDefinition(hier, roleType, roleType + "Role1", app.ServiceProvider)
+                );
+
+                var doc = new XmlDocument();
+                for (int retries = 5; retries > 0; --retries) {
+                    try {
+                        using (var reader = TestData.Read(@"TestData\CloudProject\ServiceDefinition.csdef")) {
+                            doc.Load(reader);
+                        }
+                        break;
+                    } catch (IOException ex) {
+                        Console.WriteLine("Exception while reading ServiceDefinition.csdef.{0}{1}", Environment.NewLine, ex);
+                    }
+                    Thread.Sleep(100);
+                }
+                var ns = new XmlNamespaceManager(doc.NameTable);
+                ns.AddNamespace("sd", "http://schemas.microsoft.com/ServiceHosting/2008/10/ServiceDefinition");
+                doc.Save(Console.Out);
+
+                var nav = doc.CreateNavigator();
+                if (roleType == "Web") {
+                    Assert.IsNotNull(nav.SelectSingleNode(
+                        "/sd:ServiceDefinition/sd:WebRole[@name='WebRole1']/sd:Startup/sd:Task[@commandLine='ps.cmd ConfigureCloudService.ps1']",
+                        ns
+                    ));
+                } else if (roleType == "Worker") {
+                    Assert.IsNotNull(nav.SelectSingleNode(
+                        "/sd:ServiceDefinition/sd:WorkerRole[@name='WorkerRole1']/sd:Startup/sd:Task[@commandLine='bin\\ps.cmd ConfigureCloudService.ps1']",
+                        ns
+                    ));
+                    Assert.IsNotNull(nav.SelectSingleNode(
+                        "/sd:ServiceDefinition/sd:WorkerRole[@name='WorkerRole1']/sd:Runtime/sd:EntryPoint/sd:ProgramEntryPoint[@commandLine='bin\\ps.cmd LaunchWorker.ps1']",
+                        ns
+                    ));
+                }
+            }
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void UpdateWebRoleServiceDefinitionInVS() {
+            CloudProjectTest("Web", false);
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void UpdateWorkerRoleServiceDefinitionInVS() {
+            CloudProjectTest("Worker", false);
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void UpdateWebRoleServiceDefinitionInVSDocumentOpen() {
+            CloudProjectTest("Web", true);
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void UpdateWorkerRoleServiceDefinitionInVSDocumentOpen() {
+            CloudProjectTest("Worker", true);
         }
 
         #region EndToEndTest

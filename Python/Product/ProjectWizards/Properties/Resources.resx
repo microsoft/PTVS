@@ -118,19 +118,33 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="AzureToolsInstallInstructions" xml:space="preserve">
-    <value>These are a free download for your version of Visual Studio.
-
-After installation, you will need to restart Visual Studio.</value>
+    <value>These tools are a free download for your version of Visual Studio that allow you to write, deploy and debug applications for Microsoft Azure in a range of programming languages.</value>
   </data>
   <data name="AzureToolsRequired" xml:space="preserve">
-    <value>This project type requires the Azure Tools for Visual Studio.</value>
+    <value>This project requires Microsoft Azure Tools for Visual Studio.</value>
+  </data>
+  <data name="AzureToolsUpgradeInstructions" xml:space="preserve">
+    <value>Your project can still be created, but some manual configuration of your project will be required and features may be missing or limited.
+
+We recommend installing the latest version of Microsoft Azure Tools for Visual Studio.</value>
+  </data>
+  <data name="AzureToolsUpgradeRecommended" xml:space="preserve">
+    <value>You have an old version of Microsoft Azure Tools for Visual Studio.</value>
+  </data>
+  <data name="ContinueWithoutAzureToolsUpgrade" xml:space="preserve">
+    <value>&amp;Continue
+Some manual steps will be required to configure your project.</value>
   </data>
   <data name="DefaultInterpreterDescription" xml:space="preserve">
     <value>your default environment</value>
     <comment>Used with InstallRequirementsIntoGlobalEnv if no description can be obtained from the project.</comment>
   </data>
+  <data name="DontShowAgain" xml:space="preserve">
+    <value>Do not show this warning again.</value>
+  </data>
   <data name="DownloadAndInstall" xml:space="preserve">
-    <value>Download and install now</value>
+    <value>&amp;Download and install now
+You will need to restart Visual Studio after installation.</value>
   </data>
   <data name="ErrorNoDte" xml:space="preserve">
     <value>Unable to start wizard: no automation object available.</value>

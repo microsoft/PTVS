@@ -19,6 +19,8 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Xml;
+using System.Xml.XPath;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TestUtilities
@@ -247,6 +249,85 @@ namespace TestUtilities
         public static void AreEqual(Regex expected, string actual, string message = null) {
             if (!expected.IsMatch(actual)) {
                 Assert.Fail(string.Format("Expected <{0}>. Actual <{1}>. {2}", expected, actual, message ?? ""));
+            }
+        }
+
+        public static void AreEqual(string expected, XmlDocument actual, string message = null) {
+            var expectedDoc = new XmlDocument();
+            expectedDoc.LoadXml(expected);
+            AreEqual(expectedDoc, actual, message);
+        }
+
+        public static void AreEqual(XmlDocument expected, XmlDocument actual, string message = null) {
+            var nav1 = expected.CreateNavigator();
+            var nav2 = actual.CreateNavigator();
+
+            if (string.IsNullOrEmpty(message)) {
+                message = string.Empty;
+            } else {
+                message = " " + message;
+            }
+
+            AreXPathNavigatorsEqual(nav1, nav2, message);
+        }
+
+        private static string GetFullPath(XPathNavigator nav) {
+            nav = nav.CreateNavigator();
+            var names = new Stack<string>();
+
+            names.Push(nav.Name);
+            while (nav.MoveToParent()) {
+                names.Push(nav.Name);
+            }
+
+            return "/" + string.Join("/", names);
+        }
+
+        private static void AreXPathNavigatorsEqual(XPathNavigator nav1, XPathNavigator nav2, string message) {
+            while (true) {
+                if (nav1.Name != nav2.Name) {
+                    Assert.Fail("Expected element <{0}>. Actual element <{1}>.{2}", nav1.Name, nav2.Name, message);
+                }
+                var anav1 = nav1.CreateNavigator();
+                var anav2 = nav2.CreateNavigator();
+                var attr1 = new List<string>();
+                var attr2 = new List<string>();
+
+                if (anav1.MoveToFirstAttribute()) {
+                    do {
+                        attr1.Add(string.Format("{0}=\"{1}\"", anav1.Name, anav1.Value));
+                    } while (anav1.MoveToNextAttribute());
+                }
+                if (anav2.MoveToFirstAttribute()) {
+                    do {
+                        attr2.Add(string.Format("{0}=\"{1}\"", anav2.Name, anav2.Value));
+                    } while (anav2.MoveToNextAttribute());
+                }
+
+                AssertUtil.ContainsExactly(attr2, attr1);
+
+                var cnav1 = nav1.CreateNavigator();
+                var cnav2 = nav2.CreateNavigator();
+                if (cnav1.MoveToFirstChild()) {
+                    if (cnav2.MoveToFirstChild()) {
+                        AreXPathNavigatorsEqual(cnav1, cnav2, message);
+                    } else {
+                        Assert.Fail("Expected element {0}.{1}", GetFullPath(cnav1), message);
+                    }
+                } else if (cnav2.MoveToFirstChild()) {
+                    Assert.Fail("Unexpected element {0}.{1}", GetFullPath(cnav2), message);
+                }
+
+                if (nav1.MoveToNext()) {
+                    if (nav2.MoveToNext()) {
+                        continue;
+                    } else {
+                        Assert.Fail("Expected element {0}.{1}", GetFullPath(nav1), message);
+                    }
+                } else if (nav2.MoveToNext()) {
+                    Assert.Fail("Unexpected element {0}.{1}", GetFullPath(nav2), message);
+                }
+                break;
             }
         }
     }

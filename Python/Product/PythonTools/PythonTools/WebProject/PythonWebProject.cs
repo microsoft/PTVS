@@ -24,6 +24,7 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Flavor;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
+using IServiceProvider = System.IServiceProvider;
 
 namespace Microsoft.PythonTools.Project.Web {
     [Guid("742BB562-7AEE-4FC7-8CD2-48D66C8CC435")]
@@ -106,7 +107,7 @@ namespace Microsoft.PythonTools.Project.Web {
 
             // Ensure we have a service provider as this is required for menu items to work
             if (this.serviceProvider == null) {
-                this.serviceProvider = (System.IServiceProvider)Package;
+                this.serviceProvider = (IServiceProvider)Package;
             }
 
             // Now let the base implementation set the inner object
@@ -117,7 +118,7 @@ namespace Microsoft.PythonTools.Project.Web {
             // we override the FlavoredProjectBase implementation with no way to
             // call it directory.
             // (This must run after we called base.SetInnerProject)
-            _menuService = (IOleCommandTarget)((System.IServiceProvider)this).GetService(typeof(IMenuCommandService));
+            _menuService = (IOleCommandTarget)((IServiceProvider)this).GetService(typeof(IMenuCommandService));
             if (_menuService == null) {
                 throw new InvalidOperationException("Cannot initialize Web project");
             }
@@ -208,7 +209,7 @@ namespace Microsoft.PythonTools.Project.Web {
         int IOleCommandTarget.Exec(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
             if (pguidCmdGroup == GuidList.guidWebPackgeCmdId) {
                 if (nCmdID == 0x101 /*  EnablePublishToWindowsAzureMenuItem*/) {
-                    var shell = (IVsShell)((System.IServiceProvider)this).GetService(typeof(SVsShell));
+                    var shell = (IVsShell)((IServiceProvider)this).GetService(typeof(SVsShell));
                     var webPublishPackageGuid = GuidList.guidWebPackageGuid;
                     IVsPackage package;
 
@@ -243,7 +244,7 @@ namespace Microsoft.PythonTools.Project.Web {
         }
 
         private bool AddWebRoleSupportFiles() {
-            var uiShell = (IVsUIShell)((System.IServiceProvider)this).GetService(typeof(SVsUIShell));
+            var uiShell = (IVsUIShell)((IServiceProvider)this).GetService(typeof(SVsUIShell));
             var emptyGuid = Guid.Empty;
             var result = new[] { VSADDRESULT.ADDRESULT_Failure };
             IntPtr dlgOwner;

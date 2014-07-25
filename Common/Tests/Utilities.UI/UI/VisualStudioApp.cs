@@ -24,9 +24,11 @@ using EnvDTE80;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools;
+using IOleServiceProvider = Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
 using Task = System.Threading.Tasks.Task;
 
 namespace TestUtilities.UI {
@@ -39,6 +41,7 @@ namespace TestUtilities.UI {
         private AzureCloudServiceActivityLog _azureActivityLog;
         private IntPtr _mainWindowHandle;
         private readonly DTE _dte;
+        private IServiceProvider _provider;
         private List<Action> _onDispose;
         private bool _isDisposed, _skipCloseAll;
 
@@ -109,14 +112,22 @@ namespace TestUtilities.UI {
             }
         }
 
-        public T GetService<T>(Type type = null) {
-            System.IServiceProvider sp;
-            if (_dte == null) {
-                sp = VsIdeTestHostContext.ServiceProvider;
-            } else {
-                sp = new Microsoft.VisualStudio.Shell.ServiceProvider((Microsoft.VisualStudio.OLE.Interop.IServiceProvider)_dte);
+        public IServiceProvider ServiceProvider {
+            get {
+                if (_provider == null) {
+                    if (_dte == null) {
+                        _provider = VsIdeTestHostContext.ServiceProvider;
+                    } else {
+                        _provider = new ServiceProvider((IOleServiceProvider)_dte);
+                        OnDispose(() => ((ServiceProvider)_provider).Dispose());
+                    }
+                }
+                return _provider;
             }
-            return (T)sp.GetService(type ?? typeof(T));
+        }
+
+        public T GetService<T>(Type type = null) {
+            return (T)ServiceProvider.GetService(type ?? typeof(T));
         }
 
         /// <summary>

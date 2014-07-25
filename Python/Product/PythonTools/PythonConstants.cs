@@ -140,5 +140,10 @@ namespace Microsoft.PythonTools {
         /// The canonical name of the debug launcher for web projects.
         /// </summary>
         public const string WebLauncherName = "Web launcher";
+
+        /// <summary>
+        /// The settings collection where "Suppress{dialog}" settings are stored
+        /// </summary>
+        public const string DontShowUpgradeDialogAgainCollection = "PythonTools\\Dialogs";
     }
 }

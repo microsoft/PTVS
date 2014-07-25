@@ -222,6 +222,7 @@ namespace Microsoft.VisualStudioTools {
                 config.pszExpandedControlText = ExpandedControlText;
                 config.pszCollapsedControlText = CollapsedControlText;
                 config.pszFooter = Footer;
+                config.pszVerificationText = VerificationText;
                 config.pfCallback = Callback;
 
                 if (Width.HasValue) {

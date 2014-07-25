@@ -1,0 +1,32 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{CC5FD16D-436D-48AD-A40C-5A424C6E3E79}") = "CloudProject", "CloudProject\CloudProject.ccproj", "{FD7F4C65-C1FF-42C2-AD80-FAE819F508C7}"
+EndProject
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "WebRole1", "CloudProject\WebRole1\WebRole1.pyproj", "{C6E3CB02-59D1-41C2-BDCB-841196E4C939}"
+EndProject
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "WorkerRole1", "CloudProject\WorkerRole1\WorkerRole1.pyproj", "{BE5BAA2C-46B6-460F-AB53-45872C059FB2}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FD7F4C65-C1FF-42C2-AD80-FAE819F508C7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FD7F4C65-C1FF-42C2-AD80-FAE819F508C7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FD7F4C65-C1FF-42C2-AD80-FAE819F508C7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FD7F4C65-C1FF-42C2-AD80-FAE819F508C7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C6E3CB02-59D1-41C2-BDCB-841196E4C939}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C6E3CB02-59D1-41C2-BDCB-841196E4C939}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C6E3CB02-59D1-41C2-BDCB-841196E4C939}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C6E3CB02-59D1-41C2-BDCB-841196E4C939}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BE5BAA2C-46B6-460F-AB53-45872C059FB2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BE5BAA2C-46B6-460F-AB53-45872C059FB2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BE5BAA2C-46B6-460F-AB53-45872C059FB2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BE5BAA2C-46B6-460F-AB53-45872C059FB2}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

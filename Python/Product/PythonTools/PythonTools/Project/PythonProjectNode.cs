@@ -18,10 +18,13 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Xml;
+using System.Xml.XPath;
 using Microsoft.Build.Execution;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Commands;
@@ -30,9 +33,9 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Navigation;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Azure;
-using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 using IServiceProvider = System.IServiceProvider;
@@ -1952,8 +1955,261 @@ namespace Microsoft.PythonTools.Project {
 
         public void AddedAsRole(object azureProjectHierarchy, string roleType) {
             var hier = azureProjectHierarchy as IVsHierarchy;
-            Debug.Assert(hier != null);
-            // TODO: modify the service definition appropriately
+
+            if (hier == null) {
+                return;
+            }
+
+            UIThread.Invoke(() => UpdateServiceDefinition(hier, roleType, Caption, Site));
+        }
+
+        private static bool TryGetItemId(object obj, out uint id) {
+            const uint nil = (uint)VSConstants.VSITEMID.Nil;
+            id = obj as uint? ?? nil;
+            if (id == nil) {
+                var asInt = obj as int?;
+                if (asInt.HasValue) {
+                    id = unchecked((uint)asInt.Value);
+                }
+            }
+            return id != nil;
+        }
+
+        /// <summary>
+        /// Updates the ServiceDefinition.csdef file in
+        /// <paramref name="project"/> to include the default startup and
+        /// runtime tasks for Python projects.
+        /// </summary>
+        /// <param name="project">
+        /// The Cloud Service project to update.
+        /// </param>
+        /// <param name="roleType">
+        /// The type of role being added, either "Web" or "Worker".
+        /// </param>
+        /// <param name="projectName">
+        /// The name of the role. This typically matches the Caption property.
+        /// </param>
+        /// <param name="site">
+        /// VS service provider.
+        /// </param>
+        internal static void UpdateServiceDefinition(
+            IVsHierarchy project,
+            string roleType,
+            string projectName,
+            IServiceProvider site
+        ) {
+            Utilities.ArgumentNotNull("project", project);
+            
+            object obj;
+            ErrorHandler.ThrowOnFailure(project.GetProperty(
+                (uint)VSConstants.VSITEMID.Root,
+                (int)__VSHPROPID.VSHPROPID_FirstChild,
+                out obj
+            ));
+
+            uint id;
+            while (TryGetItemId(obj, out id)) {
+                Guid itemType;
+                string mkDoc;
+
+                if (ErrorHandler.Succeeded(project.GetGuidProperty(id, (int)__VSHPROPID.VSHPROPID_TypeGuid, out itemType)) &&
+                    itemType == VSConstants.GUID_ItemType_PhysicalFile &&
+                    ErrorHandler.Succeeded(project.GetProperty(id, (int)__VSHPROPID.VSHPROPID_Name, out obj)) &&
+                    "ServiceDefinition.csdef".Equals(obj as string, StringComparison.InvariantCultureIgnoreCase) &&
+                    ErrorHandler.Succeeded(project.GetCanonicalName(id, out mkDoc)) &&
+                    !string.IsNullOrEmpty(mkDoc)
+                ) {
+                    // We have found the file
+                    var rdt = site.GetService(typeof(SVsRunningDocumentTable)) as IVsRunningDocumentTable;
+
+                    IVsHierarchy docHier;
+                    uint docId, docCookie;
+                    IntPtr pDocData;
+
+                    bool updateFileOnDisk = true;
+
+                    if (ErrorHandler.Succeeded(rdt.FindAndLockDocument(
+                        (uint)_VSRDTFLAGS.RDT_EditLock,
+                        mkDoc,
+                        out docHier,
+                        out docId,
+                        out pDocData,
+                        out docCookie
+                    ))) {
+                        try {
+                            if (pDocData != IntPtr.Zero) {
+                                try {
+                                    // File is open, so edit it through the document
+                                    UpdateServiceDefinition(
+                                        Marshal.GetObjectForIUnknown(pDocData) as IVsTextLines,
+                                        roleType,
+                                        projectName
+                                    );
+
+                                    ErrorHandler.ThrowOnFailure(rdt.SaveDocuments(
+                                        (uint)__VSRDTSAVEOPTIONS.RDTSAVEOPT_ForceSave,
+                                        docHier,
+                                        docId,
+                                        docCookie
+                                    ));
+
+                                    updateFileOnDisk = false;
+                                } catch (ArgumentException) {
+                                } catch (InvalidOperationException) {
+                                } finally {
+                                    Marshal.Release(pDocData);
+                                }
+                            }
+                        } finally {
+                            ErrorHandler.ThrowOnFailure(rdt.UnlockDocument(
+                                (uint)_VSRDTFLAGS.RDT_Unlock_SaveIfDirty | (uint)_VSRDTFLAGS.RDT_RequestUnlock,
+                                docCookie
+                            ));
+                        }
+                    }
+                    
+                    if (updateFileOnDisk) {
+                        // File is not open, so edit it on disk
+                        FileStream stream = null;
+                        try {
+                            UpdateServiceDefinition(mkDoc, roleType, projectName);
+                        } finally {
+                            if (stream != null) {
+                                stream.Close();
+                            }
+                        }
+                    }
+
+                    break;
+                }
+
+                if (ErrorHandler.Failed(project.GetProperty(id, (int)__VSHPROPID.VSHPROPID_NextSibling, out obj))) {
+                    break;
+                }
+            }
+        }
+
+        private static void UpdateServiceDefinition(IVsTextLines lines, string roleType, string projectName) {
+            if (lines == null) {
+                throw new ArgumentException("lines");
+            }
+
+            int lastLine, lastIndex;
+            string text;
+
+            ErrorHandler.ThrowOnFailure(lines.GetLastLineIndex(out lastLine, out lastIndex));
+            ErrorHandler.ThrowOnFailure(lines.GetLineText(0, 0, lastLine, lastIndex, out text));
+
+            var doc = new XmlDocument();
+            doc.LoadXml(text);
+
+            UpdateServiceDefinition(doc, roleType, projectName);
+
+            var sb = new StringBuilder();
+            doc.Save(XmlWriter.Create(
+                sb,
+                new XmlWriterSettings { Indent = true, IndentChars = " ", NewLineHandling = NewLineHandling.Entitize }
+            ));
+
+            var len = sb.Length;
+            var pStr = Marshal.StringToCoTaskMemUni(sb.ToString());
+
+            try {
+                ErrorHandler.ThrowOnFailure(lines.ReplaceLines(0, 0, lastLine, lastIndex, pStr, len, new TextSpan[1]));
+            } finally {
+                Marshal.FreeCoTaskMem(pStr);
+            }
+        }
+
+        private static void UpdateServiceDefinition(string path, string roleType, string projectName) {
+            var doc = new XmlDocument();
+            doc.Load(path);
+
+            UpdateServiceDefinition(doc, roleType, projectName);
+
+            doc.Save(XmlWriter.Create(
+                path,
+                new XmlWriterSettings { Indent = true, IndentChars = " ", NewLineHandling = NewLineHandling.Entitize }
+            ));
+        }
+
+        /// <summary>
+        /// Modifies the provided XML document to contain the service definition
+        /// nodes needed for the specified project.
+        /// </summary>
+        /// <exception cref="ArgumentException">
+        /// <paramref name="roleType"/> is not one of "Web" or "Worker".
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// A required element is missing from the document.
+        /// </exception>
+        internal static void UpdateServiceDefinition(XmlDocument doc, string roleType, string projectName) {
+            bool isWeb = roleType == "Web";
+            bool isWorker = roleType == "Worker";
+            if (isWeb == isWorker) {
+                throw new ArgumentException("Unknown role type: " + (roleType ?? "(null)"), "roleType");
+            }
+
+            var nav = doc.CreateNavigator();
+
+            var ns = new XmlNamespaceManager(doc.NameTable);
+            ns.AddNamespace("sd", "http://schemas.microsoft.com/ServiceHosting/2008/10/ServiceDefinition");
+
+            var role = nav.SelectSingleNode(string.Format(
+                "/sd:ServiceDefinition/sd:{0}Role[@name='{1}']", roleType, projectName
+            ), ns);
+
+            if (role == null) {
+                throw new InvalidOperationException("Missing role entry");
+            }
+
+            var startup = role.SelectSingleNode("sd:Startup", ns);
+            if (startup != null) {
+                startup.DeleteSelf();
+            }
+
+            role.AppendChildElement(null, "Startup", null, null);
+            startup = role.SelectSingleNode("sd:Startup", ns);
+            if (startup == null) {
+                throw new InvalidOperationException("Missing Startup entry");
+            }
+
+            startup.AppendChildElement(null, "Task", null, null);
+            var task = startup.SelectSingleNode("sd:Task", ns);
+            AddEnvironmentNode(task, ns);
+            task.CreateAttribute(null, "executionContext", null, "elevated");
+            task.CreateAttribute(null, "taskType", null, "simple");
+
+            if (isWeb) {
+                task.CreateAttribute(null, "commandLine", null, "ps.cmd ConfigureCloudService.ps1");
+            } else if (isWorker) {
+                task.CreateAttribute(null, "commandLine", null, "bin\\ps.cmd ConfigureCloudService.ps1");
+
+                var runtime = role.SelectSingleNode("sd:Runtime", ns);
+                if (runtime != null) {
+                    runtime.DeleteSelf();
+                }
+                role.AppendChildElement(null, "Runtime", null, null);
+                runtime = role.SelectSingleNode("sd:Runtime", ns);
+                AddEnvironmentNode(runtime, ns);
+                runtime.AppendChildElement(null, "EntryPoint", null, null);
+                var ep = runtime.SelectSingleNode("sd:EntryPoint", ns);
+                ep.AppendChildElement(null, "ProgramEntryPoint", null, null);
+                var pep = ep.SelectSingleNode("sd:ProgramEntryPoint", ns);
+                pep.CreateAttribute(null, "commandLine", null, "bin\\ps.cmd LaunchWorker.ps1");
+                pep.CreateAttribute(null, "setReadyOnProcessStart", null, "true");
+            }
+        }
+
+        private static void AddEnvironmentNode(XPathNavigator nav, IXmlNamespaceResolver ns) {
+            nav.AppendChildElement(null, "Environment", null, null);
+            nav = nav.SelectSingleNode("sd:Environment", ns);
+            nav.AppendChildElement(null, "Variable", null, null);
+            nav = nav.SelectSingleNode("sd:Variable", ns);
+            nav.CreateAttribute(null, "name", null, "EMULATED");
+            nav.AppendChildElement(null, "RoleInstanceValue", null, null);
+            nav = nav.SelectSingleNode("sd:RoleInstanceValue", ns);
+            nav.CreateAttribute(null, "xpath", null, "/RoleEnvironment/Deployment/@emulated");
         }
     }
 }

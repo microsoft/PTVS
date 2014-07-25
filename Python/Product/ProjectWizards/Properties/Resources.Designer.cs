@@ -61,9 +61,7 @@ namespace Microsoft.PythonTools.ProjectWizards.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to These are a free download for your version of Visual Studio.
-        ///
-        ///After installation, you will need to restart Visual Studio..
+        ///   Looks up a localized string similar to These tools are a free download for your version of Visual Studio that allow you to write, deploy and debug applications for Microsoft Azure in a range of programming languages..
         /// </summary>
         internal static string AzureToolsInstallInstructions {
             get {
@@ -72,11 +70,41 @@ namespace Microsoft.PythonTools.ProjectWizards.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to This project type requires the Azure Tools for Visual Studio..
+        ///   Looks up a localized string similar to This project requires Microsoft Azure Tools for Visual Studio..
         /// </summary>
         internal static string AzureToolsRequired {
             get {
                 return ResourceManager.GetString("AzureToolsRequired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Your project can still be created, but some manual configuration of your project will be required and features may be missing or limited.
+        ///
+        ///We recommend installing the latest version of Microsoft Azure Tools for Visual Studio. This is a free download that does not replace your existing installation or affect existing projects..
+        /// </summary>
+        internal static string AzureToolsUpgradeInstructions {
+            get {
+                return ResourceManager.GetString("AzureToolsUpgradeInstructions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You have an old version of Microsoft Azure Tools for Visual Studio..
+        /// </summary>
+        internal static string AzureToolsUpgradeRecommended {
+            get {
+                return ResourceManager.GetString("AzureToolsUpgradeRecommended", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &amp;Continue
+        ///Some manual steps will be required to configure your project..
+        /// </summary>
+        internal static string ContinueWithoutAzureToolsUpgrade {
+            get {
+                return ResourceManager.GetString("ContinueWithoutAzureToolsUpgrade", resourceCulture);
             }
         }
         
@@ -90,7 +118,17 @@ namespace Microsoft.PythonTools.ProjectWizards.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Download and install now.
+        ///   Looks up a localized string similar to Do not show this warning again..
+        /// </summary>
+        internal static string DontShowAgain {
+            get {
+                return ResourceManager.GetString("DontShowAgain", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &amp;Download and install now
+        ///You will need to restart Visual Studio after installation..
         /// </summary>
         internal static string DownloadAndInstall {
             get {

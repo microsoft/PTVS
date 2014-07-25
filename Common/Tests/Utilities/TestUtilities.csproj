@@ -94,6 +94,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssertListener.cs" />
+    <Compile Include="FileUtils.cs" />
     <Compile Include="Mocks\MockVsShell.cs" />
     <Compile Include="WebDownloadUtility.cs" />
     <Compile Include="Classification.cs" />

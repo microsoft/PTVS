@@ -14,10 +14,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Xml;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
@@ -184,6 +186,72 @@ namespace PythonToolsTests {
                 "b",
                 "c"
             );
+        }
+
+        [TestMethod, Priority(0)]
+        public void UpdateWorkerRoleServiceDefinitionTest() {
+            var doc = new XmlDocument();
+            doc.LoadXml(@"<?xml version=""1.0"" encoding=""utf-8""?>
+<ServiceDefinition name=""Azure1"" xmlns=""http://schemas.microsoft.com/ServiceHosting/2008/10/ServiceDefinition"" schemaVersion=""2014-01.2.3"">
+  <WorkerRole name=""PythonApplication1"" vmsize=""Small"" />
+  <WebRole name=""PythonApplication2"" />
+</ServiceDefinition>");
+
+            PythonProjectNode.UpdateServiceDefinition(doc, "Worker", "PythonApplication1");
+
+            AssertUtil.AreEqual(@"<?xml version=""1.0"" encoding=""utf-8""?>
+<ServiceDefinition name=""Azure1"" xmlns=""http://schemas.microsoft.com/ServiceHosting/2008/10/ServiceDefinition"" schemaVersion=""2014-01.2.3"">
+  <WorkerRole name=""PythonApplication1"" vmsize=""Small"">
+    <Startup>
+      <Task commandLine=""bin\ps.cmd ConfigureCloudService.ps1"" executionContext=""elevated"" taskType=""simple"">
+        <Environment>
+          <Variable name=""EMULATED"">
+            <RoleInstanceValue xpath=""/RoleEnvironment/Deployment/@emulated"" />
+          </Variable>
+        </Environment>
+      </Task>
+    </Startup>
+    <Runtime>
+      <Environment>
+        <Variable name=""EMULATED"">
+          <RoleInstanceValue xpath=""/RoleEnvironment/Deployment/@emulated"" />
+        </Variable>
+      </Environment>
+      <EntryPoint>
+        <ProgramEntryPoint commandLine=""bin\ps.cmd LaunchWorker.ps1"" setReadyOnProcessStart=""true"" />
+      </EntryPoint>
+    </Runtime>
+  </WorkerRole>
+  <WebRole name=""PythonApplication2"" />
+</ServiceDefinition>", doc);
+        }
+
+        [TestMethod, Priority(0)]
+        public void UpdateWebRoleServiceDefinitionTest() {
+            var doc = new XmlDocument();
+            doc.LoadXml(@"<?xml version=""1.0"" encoding=""utf-8""?>
+<ServiceDefinition name=""Azure1"" xmlns=""http://schemas.microsoft.com/ServiceHosting/2008/10/ServiceDefinition"" schemaVersion=""2014-01.2.3"">
+  <WorkerRole name=""PythonApplication1"" vmsize=""Small"" />
+  <WebRole name=""PythonApplication2"" />
+</ServiceDefinition>");
+
+            PythonProjectNode.UpdateServiceDefinition(doc, "Web", "PythonApplication2");
+
+            AssertUtil.AreEqual(@"<?xml version=""1.0"" encoding=""utf-8""?>
+<ServiceDefinition name=""Azure1"" xmlns=""http://schemas.microsoft.com/ServiceHosting/2008/10/ServiceDefinition"" schemaVersion=""2014-01.2.3"">
+  <WorkerRole name=""PythonApplication1"" vmsize=""Small"" />
+  <WebRole name=""PythonApplication2"">
+    <Startup>
+      <Task commandLine=""ps.cmd ConfigureCloudService.ps1"" executionContext=""elevated"" taskType=""simple"">
+        <Environment>
+          <Variable name=""EMULATED"">
+            <RoleInstanceValue xpath=""/RoleEnvironment/Deployment/@emulated"" />
+          </Variable>
+        </Environment>
+      </Task>
+    </Startup>
+  </WebRole>
+</ServiceDefinition>", doc);
         }
     }
 }
