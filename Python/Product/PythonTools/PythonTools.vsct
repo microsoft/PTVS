@@ -647,7 +647,7 @@
         <Strings>
           <ButtonText>S&amp;et as Startup File</ButtonText>
           <ToolTipText>Set as Startup File</ToolTipText>
-          <LocCanonicalName>SetPythonStartupFile</LocCanonicalName>
+          <LocCanonicalName>.Project.SetPythonStartupFile</LocCanonicalName>
         </Strings>
       </Button>
 
@@ -656,7 +656,7 @@
         <Strings>
           <ButtonText>Add Folder to Search &amp;Path...</ButtonText>
           <ToolTipText>Add Folder to Search Path...</ToolTipText>
-          <LocCanonicalName>AddSearchPathFolder</LocCanonicalName>
+          <LocCanonicalName>.Project.AddSearchPathFolder</LocCanonicalName>
         </Strings>
 
       </Button>
@@ -665,7 +665,7 @@
         <Strings>
           <ButtonText>Add &amp;Zip Archive to Search Path...</ButtonText>
           <ToolTipText>Add Zip Archive to Search Path...</ToolTipText>
-          <LocCanonicalName>AddSearchPathZip</LocCanonicalName>
+          <LocCanonicalName>.Project.AddSearchPathZip</LocCanonicalName>
         </Strings>
       </Button>
 
@@ -674,7 +674,7 @@
         <Strings>
           <ButtonText>Add P&amp;YTHONPATH to Search Path</ButtonText>
           <ToolTipText>Add PYTHONPATH to Search Path</ToolTipText>
-          <LocCanonicalName>AddSearchPathPYTHONPATH</LocCanonicalName>
+          <LocCanonicalName>.Project.AddSearchPathPYTHONPATH</LocCanonicalName>
         </Strings>
       </Button>
 
@@ -685,7 +685,7 @@
         <Strings>
           <ButtonText>&amp;Start without Debugging</ButtonText>
           <ToolTipText>Start without Debugging</ToolTipText>
-          <LocCanonicalName>StartWithoutDebugging</LocCanonicalName>
+          <LocCanonicalName>.Python.StartWithoutDebugging</LocCanonicalName>
         </Strings>
       </Button>
 
@@ -696,7 +696,7 @@
         <Strings>
           <ButtonText>Start with &amp;Debugging</ButtonText>
           <ToolTipText>Start with Debugging</ToolTipText>
-          <LocCanonicalName>StartWithDebugging</LocCanonicalName>
+          <LocCanonicalName>.Python.StartWithDebugging</LocCanonicalName>
         </Strings>
       </Button>
 

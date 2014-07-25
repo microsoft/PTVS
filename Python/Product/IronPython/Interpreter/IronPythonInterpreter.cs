@@ -30,7 +30,12 @@ using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudioTools;
 
 namespace Microsoft.IronPythonTools.Interpreter {
-    class IronPythonInterpreter : IPythonInterpreter, IDotNetPythonInterpreter, IDisposable {
+    class IronPythonInterpreter :
+        IPythonInterpreter,
+        IDotNetPythonInterpreter,
+        IPythonInterpreterWithProjectReferences,
+        IDisposable
+    {
         private readonly Dictionary<ObjectIdentityHandle, IMember> _members = new Dictionary<ObjectIdentityHandle, IMember>();
         private readonly ConcurrentDictionary<string, IronPythonModule> _modules = new ConcurrentDictionary<string, IronPythonModule>();
         private readonly ConcurrentBag<string> _assemblyLoadSet = new ConcurrentBag<string>();

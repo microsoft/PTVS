@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+extern alias pythontools;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -21,6 +22,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows;
+using System.Windows.Input;
 using EnvDTE;
 using EnvDTE80;
 using Microsoft.PythonTools;
@@ -38,7 +40,10 @@ using TestUtilities.Python;
 using TestUtilities.UI;
 using TestUtilities.UI.Python;
 using VSLangProj;
+using Keyboard = TestUtilities.UI.Keyboard;
 using MessageBoxButton = TestUtilities.UI.MessageBoxButton;
+using Mouse = TestUtilities.UI.Mouse;
+using ProcessOutput = pythontools::Microsoft.VisualStudioTools.Project.ProcessOutput;
 using Thread = System.Threading.Thread;
 using UIThread = Microsoft.VisualStudioTools.UIThread;
 
@@ -329,27 +334,28 @@ namespace PythonToolsUITests {
                 var project = app.OpenProject(@"TestData\AddExistingFolder.sln");
                 var solutionExplorer = app.SolutionExplorerTreeView;
 
-                var projectNode = solutionExplorer.WaitForItem("Solution 'AddExistingFolder' (1 project)", "AddExistingFolder");
-                AutomationWrapper.Select(projectNode);
+                solutionExplorer.SelectProject(project);
 
-                var dialog = AddExistingFolder(app);
-                Assert.AreEqual(dialog.Address, Path.GetFullPath(@"TestData\AddExistingFolder"));
+                using (var dialog = SelectFolderDialog.AddExistingFolder(app)) {
+                    Assert.AreEqual(dialog.Address, TestData.GetPath(@"TestData\AddExistingFolder"), ignoreCase: true);
 
-                dialog.FolderName = Path.GetFullPath(@"TestData\AddExistingFolder\TestFolder");
-                dialog.SelectFolder();
+                    dialog.FolderName = TestData.GetPath(@"TestData\AddExistingFolder\TestFolder");
+                    dialog.SelectFolder();
+                }
 
-                Assert.AreNotEqual(solutionExplorer.WaitForItem("Solution 'AddExistingFolder' (1 project)", "AddExistingFolder", "TestFolder"), null);
-                Assert.AreNotEqual(solutionExplorer.WaitForItem("Solution 'AddExistingFolder' (1 project)", "AddExistingFolder", "TestFolder", "TestFile.txt"), null);
+                Assert.IsNotNull(solutionExplorer.WaitForChildOfProject(project, "TestFolder"));
+                Assert.IsNotNull(solutionExplorer.WaitForChildOfProject(project, "TestFolder", "TestFile.txt"));
 
-                var subFolderNode = solutionExplorer.WaitForItem("Solution 'AddExistingFolder' (1 project)", "AddExistingFolder", "SubFolder");
-                AutomationWrapper.Select(subFolderNode);
+                var subFolderNode = solutionExplorer.WaitForChildOfProject(project, "SubFolder");
+                subFolderNode.Select();
 
-                dialog = AddExistingFolder(app);
-                Assert.AreEqual(dialog.Address, Path.GetFullPath(@"TestData\AddExistingFolder\SubFolder"));
-                dialog.FolderName = Path.GetFullPath(@"TestData\AddExistingFolder\SubFolder\TestFolder2");
-                dialog.SelectFolder();
+                using (var dialog = SelectFolderDialog.AddExistingFolder(app)) {
+                    Assert.AreEqual(dialog.Address, TestData.GetPath(@"TestData\AddExistingFolder\SubFolder"), ignoreCase: true);
+                    dialog.FolderName = TestData.GetPath(@"TestData\AddExistingFolder\SubFolder\TestFolder2");
+                    dialog.SelectFolder();
+                }
 
-                Assert.AreNotEqual(solutionExplorer.WaitForItem("Solution 'AddExistingFolder' (1 project)", "AddExistingFolder", "SubFolder", "TestFolder2"), null);
+                Assert.IsNotNull(solutionExplorer.WaitForChildOfProject(project, "SubFolder", "TestFolder2"));
             }
         }
 
@@ -368,44 +374,33 @@ namespace PythonToolsUITests {
                 app.WaitForMode(dbgDebugMode.dbgRunMode);
 
                 app.OpenSolutionExplorer();
-                var projectNode = solutionExplorer.WaitForItem("Solution 'AddExistingFolder' (1 project)", "AddExistingFolder");
-                AutomationWrapper.Select(projectNode);
+                solutionExplorer.SelectProject(project);
 
+                bool dialogWasCreated = false;
                 try {
-                    VsIdeTestHostContext.Dte.ExecuteCommand("Project.AddExistingFolder");
-
-                    // try and dismiss the dialog if we successfully executed
-                    try {
-                        var dialog = app.WaitForDialog();
-                        Keyboard.Type(System.Windows.Input.Key.Escape);
-                    } finally {
-                        Assert.Fail("Was able to add an existing folder");
+                    using (SelectFolderDialog.AddExistingFolder(app)) {
+                        // Dialog will be dismissed automatically if it opened
+                        dialogWasCreated = true;
                     }
-                } catch (COMException) {
+                } catch (AssertFailedException) {
+                    // Our DTE handling will fail the test, but we want to
+                    // prevent that.
                 }
+                Assert.IsFalse(dialogWasCreated, "Was able to add an existing folder while debugging");
+
                 app.Dte.ExecuteCommand("Debug.StopDebugging");
                 app.WaitForMode(dbgDebugMode.dbgDesignMode);
 
-                projectNode = solutionExplorer.WaitForItem("Solution 'AddExistingFolder' (1 project)", "AddExistingFolder");
-                AutomationWrapper.Select(projectNode);
+                solutionExplorer.SelectProject(project);
 
-                var addDialog = AddExistingFolder(app);
-                Assert.AreEqual(addDialog.Address, Path.GetFullPath(@"TestData\AddExistingFolder"));
+                using (var addDialog = SelectFolderDialog.AddExistingFolder(app)) {
+                    Assert.AreEqual(addDialog.Address, Path.GetFullPath(@"TestData\AddExistingFolder"), ignoreCase: true);
 
-                addDialog.FolderName = Path.GetFullPath(@"TestData\AddExistingFolder\TestFolder");
-                addDialog.SelectFolder();
+                    addDialog.FolderName = Path.GetFullPath(@"TestData\AddExistingFolder\TestFolder");
+                    addDialog.SelectFolder();
+                }
 
-                Assert.AreNotEqual(solutionExplorer.WaitForItem("Solution 'AddExistingFolder' (1 project)", "AddExistingFolder", "TestFolder"), null);
-            }
-        }
-
-        private static SelectFolderDialog AddExistingFolder(VisualStudioApp app) {
-            try {
-                return new SelectFolderDialog(app.OpenDialogWithDteExecuteCommand("Project.AddExistingFolder"));
-            } catch (COMException ex) {
-                Console.WriteLine(ex);
-                Assert.Fail("Unable to execute AddExistingFolder command");
-                return null;
+                Assert.IsNotNull(solutionExplorer.WaitForChildOfProject(project, "TestFolder"));
             }
         }
 
@@ -724,14 +719,14 @@ namespace PythonToolsUITests {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
                 var project = app.OpenProject(@"TestData\ProjectReference\ProjectReference.sln", expectedProjects: 2, projectName: "PythonApplication");
 
-                VsIdeTestHostContext.Dte.Solution.SolutionBuild.Build(WaitForBuildToFinish: true);
+                app.Dte.Solution.SolutionBuild.Build(WaitForBuildToFinish: true);
                 var program = project.ProjectItems.Item("Program.py");
                 var window = program.Open();
                 window.Activate();
 
                 var doc = app.GetDocument(program.Document.FullName);
                 var snapshot = doc.TextView.TextBuffer.CurrentSnapshot;
-                Assert.AreEqual(GetVariableAnalysis("a", snapshot).Values.First().Description, "str");
+                AssertUtil.ContainsExactly(GetVariableDescriptions("a", snapshot), "str");
 
                 var lib = GetProject("ClassLibrary");
                 var classFile = lib.ProjectItems.Item("Class1.cs");
@@ -759,9 +754,9 @@ namespace PythonToolsUITests {
                 classFile.Save();
 
                 // rebuild
-                VsIdeTestHostContext.Dte.Solution.SolutionBuild.Build(WaitForBuildToFinish: true);
+                app.Dte.Solution.SolutionBuild.Build(WaitForBuildToFinish: true);
 
-                Assert.AreEqual(GetVariableAnalysis("a", snapshot).Values.First().Description, "bool");
+                AssertUtil.ContainsExactly(GetVariableDescriptions("a", snapshot), "bool");
             }
         }
 
@@ -781,17 +776,19 @@ namespace PythonToolsUITests {
                 var window = program.Open();
                 window.Activate();
 
-                Thread.Sleep(2000);
+                Thread.Sleep(2000); // allow time to reload the new DLL
+                project.GetPythonProject().GetAnalyzer().WaitForCompleteAnalysis(_ => true);
 
                 var doc = app.GetDocument(program.Document.FullName);
                 var snapshot = doc.TextView.TextBuffer.CurrentSnapshot;
-                Assert.AreEqual(GetVariableAnalysis("a", snapshot).Values.First().Description, "str");
+                AssertUtil.ContainsExactly(GetVariableDescriptions("a", snapshot), "str");
 
                 CompileFile("ClassLibraryBool.cs", "ClassLibrary.dll");
 
-                Thread.Sleep(2000);
+                Thread.Sleep(2000); // allow time to reload the new DLL
+                project.GetPythonProject().GetAnalyzer().WaitForCompleteAnalysis(_ => true);
 
-                Assert.AreEqual(GetVariableAnalysis("a", snapshot).Values.First().Description, "bool");
+                AssertUtil.ContainsExactly(GetVariableDescriptions("a", snapshot), "bool");
             }
         }
 
@@ -810,34 +807,43 @@ namespace PythonToolsUITests {
                 var project = app.OpenProject(@"TestData\AssemblyReference\AssemblyReference.sln");
 
                 var program = project.ProjectItems.Item("Program2.py");
-                var window = program.Open();
-                window.Activate();
+                System.Threading.Tasks.Task.Run(() => {
+                    var window = program.Open();
+                    window.Activate();
+                });
 
-                Thread.Sleep(2000);
+                project.GetPythonProject().GetAnalyzer().WaitForCompleteAnalysis(_ => true);
 
                 var doc = app.GetDocument(program.Document.FullName);
                 var snapshot = doc.TextView.TextBuffer.CurrentSnapshot;
-                Assert.AreEqual(GetVariableAnalysis("a", snapshot).Values.First().Description, "str");
-                Assert.AreEqual(GetVariableAnalysis("b", snapshot).Values.First().Description, "int");
+                AssertUtil.ContainsExactly(GetVariableDescriptions("a", snapshot), "str");
+                AssertUtil.ContainsExactly(GetVariableDescriptions("b", snapshot), "int");
 
                 // verify getting signature help doesn't crash...  This used to crash because IronPython
                 // used the empty path for an assembly and throws an exception.  We now handle the exception
                 // in RemoteInterpreter.GetBuiltinFunctionDocumentation and RemoteInterpreter.GetPythonTypeDocumentation
-                Assert.AreEqual(GetSignatures("Class1.Fob(", snapshot).Signatures.First().Documentation, "");
+                AssertUtil.ContainsExactly(
+                    GetSignatures("Class1.Fob(", snapshot).Signatures.Select(s => s.Documentation),
+                    ""
+                );
 
                 // recompile one file, we should still have type info for both DLLs, with one updated
                 CompileFile("ClassLibraryBool.cs", "ClassLibrary.dll");
 
-                Thread.Sleep(2000);
-                Assert.AreEqual(GetVariableAnalysis("a", snapshot).Values.First().Description, "bool");
-                Assert.AreEqual(GetVariableAnalysis("b", snapshot).Values.First().Description, "int");
+                Thread.Sleep(2000); // allow time to reload the new DLL
+                project.GetPythonProject().GetAnalyzer().WaitForCompleteAnalysis(_ => true);
+                
+                AssertUtil.ContainsExactly(GetVariableDescriptions("a", snapshot), "bool");
+                AssertUtil.ContainsExactly(GetVariableDescriptions("b", snapshot), "int");
 
                 // recompile the 2nd file, we should then have updated types for both DLLs
                 CompileFile("ClassLibrary2Char.cs", "ClassLibrary2.dll");
-                Thread.Sleep(2000);
 
-                Assert.AreEqual(GetVariableAnalysis("a", snapshot).Values.First().Description, "bool");
-                Assert.AreEqual(GetVariableAnalysis("b", snapshot).Values.First().Description, "Char");
+                Thread.Sleep(2000); // allow time to reload the new DLL
+                project.GetPythonProject().GetAnalyzer().WaitForCompleteAnalysis(_ => true);
+
+                AssertUtil.ContainsExactly(GetVariableDescriptions("a", snapshot), "bool");
+                AssertUtil.ContainsExactly(GetVariableDescriptions("b", snapshot), "Char");
             }
         }
 
@@ -845,6 +851,10 @@ namespace PythonToolsUITests {
             var index = snapshot.GetText().IndexOf(variable + " =");
             var span = snapshot.CreateTrackingSpan(new Span(index, 1), SpanTrackingMode.EdgeInclusive);
             return snapshot.AnalyzeExpression(span);
+        }
+
+        private static IEnumerable<string> GetVariableDescriptions(string variable, ITextSnapshot snapshot) {
+            return GetVariableAnalysis(variable, snapshot).Values.Select(v => v.Description);
         }
 
         private static SignatureAnalysis GetSignatures(string text, ITextSnapshot snapshot) {
@@ -855,11 +865,29 @@ namespace PythonToolsUITests {
 
         private static void CompileFile(string file, string outname) {
             string loc = typeof(string).Assembly.Location;
-            var psi = new ProcessStartInfo(Path.Combine(Path.GetDirectoryName(loc), "csc.exe"), "/target:library /out:" + outname + " " + file);
-            psi.WorkingDirectory = TestData.GetPath(@"TestData\\AssemblyReference\\PythonApplication");
-            var proc = System.Diagnostics.Process.Start(psi);
-            proc.WaitForExit();
-            Assert.AreEqual(proc.ExitCode, 0);
+            using (var proc = ProcessOutput.Run(
+                Path.Combine(Path.GetDirectoryName(loc), "csc.exe"),
+                new[] { "/nologo", "/target:library",  "/out:" + outname, file },
+                TestData.GetPath(@"TestData\AssemblyReference\PythonApplication"),
+                null,
+                false,
+                null
+            )) {
+                Console.WriteLine("Executing {0}", proc.Arguments);
+                proc.Wait();
+                Console.WriteLine("Standard output:");
+                foreach (var line in proc.StandardOutputLines) {
+                    Console.WriteLine(line);
+                }
+                Console.WriteLine();
+                Console.WriteLine("Standard error:");
+                foreach (var line in proc.StandardErrorLines) {
+                    Console.WriteLine(line);
+                }
+                Console.WriteLine();
+
+                Assert.AreEqual(0, proc.ExitCode);
+            }
         }
 
         /// <summary>
@@ -999,43 +1027,34 @@ namespace PythonToolsUITests {
         public void AddFolderCopyAndPasteFile() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
                 var project = app.OpenProject(@"TestData\AddFolderCopyAndPasteFile.sln");
-                var solutionExplorer = app.SolutionExplorerTreeView;
-                var solutionNode = solutionExplorer.FindItem("Solution 'AddFolderCopyAndPasteFile' (1 project)");
+                var solutionExplorer = app.OpenSolutionExplorer();
 
-                var projectNode = solutionExplorer.FindItem("Solution 'AddFolderCopyAndPasteFile' (1 project)", "AddFolderCopyAndPasteFile");
-
-                var programNode = solutionExplorer.FindItem("Solution 'AddFolderCopyAndPasteFile' (1 project)", "AddFolderCopyAndPasteFile", "Program.py");
-                Mouse.MoveTo(programNode.GetClickablePoint());
-                Mouse.Click();
-                Keyboard.ControlC();
-
-                Keyboard.ControlV();
-                Thread.Sleep(2000);
+                solutionExplorer.FindChildOfProject(project, "Program.py").Select();
+                app.ExecuteCommand("Edit.Copy");
+                app.ExecuteCommand("Edit.Paste");
 
                 // Make sure that copy/paste directly under the project node works:
                 // http://pytools.codeplex.com/workitem/738
-                Assert.IsNotNull(solutionExplorer.FindItem("Solution 'AddFolderCopyAndPasteFile' (1 project)", "AddFolderCopyAndPasteFile", "Program - Copy.py"));
+                Assert.IsNotNull(solutionExplorer.WaitForChildOfProject(project, "Program - Copy.py"));
 
-                ProjectNewFolder(app, solutionNode, projectNode);
+                solutionExplorer.SelectProject(project);
 
+                app.ExecuteCommand("Project.NewFolder");
+                app.OpenSolutionExplorer();
                 Thread.Sleep(1000);
                 Keyboard.Type("Fob");
-                Keyboard.Type(System.Windows.Input.Key.Enter);
+                Keyboard.Type(Key.Enter);
 
-                WaitForItem(project, "Fob");
+                solutionExplorer.FindChildOfProject(project, "Program.py").Select();
+                app.ExecuteCommand("Edit.Copy");
 
-                Mouse.MoveTo(programNode.GetClickablePoint());
-                Mouse.Click();
-                Keyboard.ControlC();
+                var folder = solutionExplorer.WaitForChildOfProject(project, "Fob");
+                Assert.IsNotNull(folder);
+                folder.Select();
 
-                var folderNode = solutionExplorer.FindItem("Solution 'AddFolderCopyAndPasteFile' (1 project)", "AddFolderCopyAndPasteFile", "Fob");
-                Mouse.MoveTo(folderNode.GetClickablePoint());
-                Mouse.Click();
+                app.ExecuteCommand("Edit.Paste");
 
-                Keyboard.ControlV();
-                Thread.Sleep(2000);
-
-                Assert.IsNotNull(solutionExplorer.FindItem("Solution 'AddFolderCopyAndPasteFile' (1 project)", "AddFolderCopyAndPasteFile", "Fob", "Program.py"));
+                Assert.IsNotNull(solutionExplorer.WaitForChildOfProject(project, "Fob", "Program.py"));
             }
         }
 
@@ -1208,9 +1227,8 @@ namespace PythonToolsUITests {
                 options.SecondaryPrompt = "... ";
 
                 var solutionExplorer = app.OpenSolutionExplorer();
-                solutionExplorer.SetFocus();
 
-                var programNode = solutionExplorer.FindItem("Solution 'HelloWorld' (1 project)", "HelloWorld", "Program.py");
+                var programNode = solutionExplorer.WaitForChildOfProject(project, "Program.py");
                 programNode.Select();
 
                 // Press Alt-I to bring up the REPL

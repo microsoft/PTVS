@@ -15,8 +15,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -755,6 +753,17 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <param name="oldName">Previous name in storage</param>
         /// <param name="newName">New name in storage</param>
         internal virtual void RenameInStorage(string oldName, string newName) {
+            // Make a few attempts over a short time period
+            for (int retries = 4; retries > 0; --retries) {
+                try {
+                    File.Move(oldName, newName);
+                    return;
+                } catch (IOException) {
+                    System.Threading.Thread.Sleep(50);
+                }
+            }
+
+            // Final attempt has no handling so exception propagates
             File.Move(oldName, newName);
         }
 

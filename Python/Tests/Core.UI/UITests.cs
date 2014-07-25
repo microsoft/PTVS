@@ -161,23 +161,14 @@ namespace PythonToolsUITests {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
                 var project = app.OpenProject(@"TestData\AddSearchPaths.sln");
 
-                app.OpenSolutionExplorer();
-                var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer().SelectProject(project);
 
-                // find Program.py, send copy & paste, verify copy of file is there
-                var projectNode = window.FindItem("Solution 'AddSearchPaths' (1 project)", "AddSearchPaths", SR.GetString(SR.SearchPaths));
-                AutomationWrapper.Select(projectNode);
+                using (var dialog = SelectFolderDialog.AddFolderToSearchPath(app)) {
+                    dialog.FolderName = TestData.GetPath(@"TestData\Outlining");
+                    dialog.SelectFolder();
+                }
 
-                // Using a task to ensure exceptions are raised on the main thread
-                // when we wait for it to complete.
-                var task = Task.Factory.StartNew(() => app.Dte.ExecuteCommand("Project.AddFolderToSearchPath"));
-
-                var dialog = new SelectFolderDialog(app.WaitForDialog());
-                dialog.FolderName = TestData.GetPath(@"TestData\Outlining");
-                dialog.SelectFolder();
-
-                task.Wait();
-                app.Dte.ExecuteCommand("File.SaveAll");
+                app.ExecuteCommand("File.SaveAll");
 
                 var text = File.ReadAllText(TestData.GetPath(@"TestData\AddSearchPaths\AddSearchPaths.pyproj"));
                 string actual = Regex.Match(text, @"<SearchPath>.*</SearchPath>", RegexOptions.Singleline).Value;
