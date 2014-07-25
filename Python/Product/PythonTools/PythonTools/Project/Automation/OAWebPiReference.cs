@@ -19,7 +19,6 @@ using Microsoft.VisualStudioTools.Project.Automation;
 using VSLangProj;
 
 namespace Microsoft.PythonTools.Project.Automation {
-    [SuppressMessage("Microsoft.Interoperability", "CA1405:ComVisibleTypeBaseTypesShouldBeComVisible")]
     [ComVisible(true)]
     public class OAWebPiReference : OAReferenceBase {
         internal OAWebPiReference(WebPiReferenceNode webPiReferenceNode) :

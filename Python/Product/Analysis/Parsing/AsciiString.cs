@@ -12,6 +12,8 @@
  *
  * ***************************************************************************/
 
+using System.Diagnostics.CodeAnalysis;
+
 namespace Microsoft.PythonTools.Parsing {
     public sealed class AsciiString {
         private readonly byte[] _bytes;
@@ -22,6 +24,8 @@ namespace Microsoft.PythonTools.Parsing {
             _str = str;
         }
 
+        [SuppressMessage("Microsoft.Performance", "CA1819:PropertiesShouldNotReturnArrays",
+            Justification = "breaking change")]
         public byte[] Bytes {
             get {
                 return _bytes;

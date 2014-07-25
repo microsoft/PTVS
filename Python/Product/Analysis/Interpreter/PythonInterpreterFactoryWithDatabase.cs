@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -55,6 +56,8 @@ namespace Microsoft.PythonTools.Interpreter {
         // saturation when multiple threads refresh simultaneously.
         private static readonly SemaphoreSlim _sharedIsCurrentSemaphore = new SemaphoreSlim(4);
 
+        [SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors",
+            Justification = "breaking change")]
         public PythonInterpreterFactoryWithDatabase(
             Guid id,
             string description,
@@ -605,11 +608,14 @@ namespace Microsoft.PythonTools.Interpreter {
                 if (_refreshIsCurrentTrigger != null) {
                     _refreshIsCurrentTrigger.Dispose();
                 }
+
+                _isCurrentSemaphore.Dispose();
             }
         }
 
         public void Dispose() {
             Dispose(true);
+            GC.SuppressFinalize(this);
         }
 
         #endregion

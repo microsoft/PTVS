@@ -584,7 +584,7 @@ namespace Microsoft.PythonTools.Options {
         }
     }
 
-    class IntegerNode : OptionSettingNode {
+    sealed class IntegerNode : OptionSettingNode, IDisposable {
         private int _value;
         private readonly TextBox _textBox;
 
@@ -593,6 +593,10 @@ namespace Microsoft.PythonTools.Options {
             _textBox = new TextBox();
             _textBox.TextChanged += TextChanged;
             _textBox.GotFocus += TextBoxGotFocus;
+        }
+
+        public void Dispose() {
+            _textBox.Dispose();
         }
 
         private void TextBoxGotFocus(object sender, EventArgs e) {

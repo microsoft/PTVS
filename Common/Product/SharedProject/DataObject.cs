@@ -71,7 +71,6 @@ namespace Microsoft.VisualStudioTools.Project {
             }
         }
 
-        [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
         internal DATADIR DataDir {
             get {
                 return this.dataDir;
@@ -225,9 +224,9 @@ namespace Microsoft.VisualStudioTools.Project {
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1810:InitializeReferenceTypeStaticFieldsInline")]
         static DragDropHelper() {
-            CF_VSREFPROJECTITEMS = UnsafeNativeMethods.RegisterClipboardFormat("CF_VSREFPROJECTITEMS");
-            CF_VSSTGPROJECTITEMS = UnsafeNativeMethods.RegisterClipboardFormat("CF_VSSTGPROJECTITEMS");
-            CF_VSPROJECTCLIPDESCRIPTOR = UnsafeNativeMethods.RegisterClipboardFormat("CF_PROJECTCLIPBOARDDESCRIPTOR");
+            CF_VSREFPROJECTITEMS = (ushort)UnsafeNativeMethods.RegisterClipboardFormat("CF_VSREFPROJECTITEMS");
+            CF_VSSTGPROJECTITEMS = (ushort)UnsafeNativeMethods.RegisterClipboardFormat("CF_VSSTGPROJECTITEMS");
+            CF_VSPROJECTCLIPDESCRIPTOR = (ushort)UnsafeNativeMethods.RegisterClipboardFormat("CF_PROJECTCLIPBOARDDESCRIPTOR");
         }
 
 
@@ -354,7 +353,7 @@ namespace Microsoft.VisualStudioTools.Project {
 
         internal static IntPtr CopyHGlobal(IntPtr data) {
             IntPtr src = UnsafeNativeMethods.GlobalLock(data);
-            int size = UnsafeNativeMethods.GlobalSize(data);
+            var size = UnsafeNativeMethods.GlobalSize(data).ToInt32();
             IntPtr ptr = Marshal.AllocHGlobal(size);
             IntPtr buffer = UnsafeNativeMethods.GlobalLock(ptr);
 

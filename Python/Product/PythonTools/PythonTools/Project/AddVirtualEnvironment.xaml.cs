@@ -40,8 +40,8 @@ namespace Microsoft.PythonTools.Project {
         private readonly AddVirtualEnvironmentView _view;
         private Task _currentOperation;
 
-        private AddVirtualEnvironment(PythonProjectNode project, IInterpreterOptionsService service) {
-            _view = new AddVirtualEnvironmentView(project, service, project.Interpreters.ActiveInterpreter);
+        private AddVirtualEnvironment(AddVirtualEnvironmentView view) {
+            _view = view;
             _view.PropertyChanged += View_PropertyChanged;
             DataContext = _view;
 
@@ -53,34 +53,35 @@ namespace Microsoft.PythonTools.Project {
             IInterpreterOptionsService service,
             bool browseForExisting = false
         ) {
-            var wnd = new AddVirtualEnvironment(project, service);
-            var view = wnd._view;
+            using (var view = new AddVirtualEnvironmentView(project, service, project.Interpreters.ActiveInterpreter)) {
+                var wnd = new AddVirtualEnvironment(view);
 
-            if (browseForExisting) {
-                var path = PythonToolsPackage.Instance.BrowseForDirectory(IntPtr.Zero, project.ProjectHome);
-                if (string.IsNullOrEmpty(path)) {
-                    throw new OperationCanceledException();
+                if (browseForExisting) {
+                    var path = PythonToolsPackage.Instance.BrowseForDirectory(IntPtr.Zero, project.ProjectHome);
+                    if (string.IsNullOrEmpty(path)) {
+                        throw new OperationCanceledException();
+                    }
+                    view.VirtualEnvName = path;
+                    view.WillInstallRequirementsTxt = false;
+                    await view.WaitForReady();
+                    if (view.WillAddVirtualEnv) {
+                        await view.Create();
+                        return;
+                    }
+
+                    view.ShowBrowsePathError = true;
+                    view.BrowseOrigPrefix = VirtualEnv.GetOrigPrefixPath(path);
                 }
-                view.VirtualEnvName = path;
-                view.WillInstallRequirementsTxt = false;
-                await view.WaitForReady();
-                if (view.WillAddVirtualEnv) {
-                    await view.Create();
-                    return;
+
+                wnd.VirtualEnvPathTextBox.ScrollToEnd();
+                wnd.VirtualEnvPathTextBox.SelectAll();
+                wnd.VirtualEnvPathTextBox.Focus();
+
+                wnd.ShowDialog();
+                var op = wnd._currentOperation;
+                if (op != null) {
+                    await op;
                 }
-                
-                view.ShowBrowsePathError = true;
-                view.BrowseOrigPrefix = VirtualEnv.GetOrigPrefixPath(path);
-            }
-
-            wnd.VirtualEnvPathTextBox.ScrollToEnd();
-            wnd.VirtualEnvPathTextBox.SelectAll();
-            wnd.VirtualEnvPathTextBox.Focus();
-
-            wnd.ShowDialog();
-            var op = wnd._currentOperation;
-            if (op != null) {
-                await op;
             }
         }
 

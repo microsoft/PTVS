@@ -155,7 +155,7 @@ namespace Microsoft.VisualStudio.Repl {
         private int _currentInputId = 1;
         private string _inputValue;
         private string _uncommittedInput;
-        private AutoResetEvent _inputEvent = new AutoResetEvent(false);
+        private readonly AutoResetEvent _inputEvent = new AutoResetEvent(false);
         
         //
         // Output buffering.
@@ -499,9 +499,12 @@ namespace Microsoft.VisualStudio.Repl {
                 Evaluator.Dispose();
 
                 _buffer.Dispose();
+                _inputEvent.Dispose();
 
                 _commands = null;
             }
+
+            base.Dispose(disposing);
         }
 
         /// <summary>

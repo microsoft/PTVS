@@ -35,8 +35,7 @@ namespace Microsoft.VisualStudioTools.Project {
     /// <summary>
     /// This class implements an MSBuild logger that output events to VS outputwindow and tasklist.
     /// </summary>
-    [SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "IDE")]
-    internal class IDEBuildLogger : Logger {
+    internal class IDEBuildLogger : Logger, IDisposable {
         #region fields
 
         private const string GeneralCollection = @"General";
@@ -115,6 +114,25 @@ namespace Microsoft.VisualStudioTools.Project {
             this.hierarchy = hierarchy;
             this.serviceProvider = new ServiceProvider(site);
             this.dispatcher = Dispatcher.CurrentDispatcher;
+        }
+
+        #endregion
+
+        #region IDisposable
+
+        public void Dispose() {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing) {
+            if (disposing) {
+                var sp = this.serviceProvider as ServiceProvider;
+                this.serviceProvider = null;
+                if (sp != null) {
+                    sp.Dispose();
+                }
+            }
         }
 
         #endregion

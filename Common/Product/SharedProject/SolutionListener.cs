@@ -176,7 +176,6 @@ namespace Microsoft.VisualStudioTools.Project {
         /// The method that does the cleanup.
         /// </summary>
         /// <param name="disposing"></param>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1806:DoNotIgnoreMethodResults", MessageId = "Microsoft.VisualStudio.Shell.Interop.IVsSolution.UnadviseSolutionEvents(System.UInt32)")]
         protected virtual void Dispose(bool disposing) {
             // Everybody can go here.
             if (!this.isDisposed) {

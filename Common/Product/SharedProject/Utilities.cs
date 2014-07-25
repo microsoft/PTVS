@@ -193,8 +193,6 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         /// <param name="guids"></param>
         /// <returns>A CALPOLESTR that was created from the the list of strings.</returns>
-
-        [SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "CALPOLESTR")]
         public static CALPOLESTR CreateCALPOLESTR(IList<string> strings) {
             CALPOLESTR calpolStr = new CALPOLESTR();
 
@@ -226,8 +224,6 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         /// <param name="guids"></param>
         /// <returns>A CADWORD created from the list of tagVsSccFilesFlags.</returns>
-
-        [SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "CADWORD")]
         public static CADWORD CreateCADWORD(IList<tagVsSccFilesFlags> flags) {
             CADWORD cadWord = new CADWORD();
 
@@ -305,7 +301,6 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <param name="obj1">Can be an object, interface or IntPtr</param>
         /// <param name="obj2">Can be an object, interface or IntPtr</param>
         /// <returns>True if the 2 items represent the same thing</returns>
-        [SuppressMessage("Microsoft.Naming", "CA1720:IdentifiersShouldNotContainTypeNames", MessageId = "obj")]
         public static bool IsSameComObject(object obj1, object obj2) {
             bool isSame = false;
             IntPtr unknown1 = IntPtr.Zero;

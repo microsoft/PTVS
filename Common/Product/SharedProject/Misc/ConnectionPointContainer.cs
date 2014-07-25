@@ -49,7 +49,6 @@ namespace Microsoft.VisualStudioTools.Project {
         #region IConnectionPointContainer Members
         void IConnectionPointContainer.EnumConnectionPoints(out IEnumConnectionPoints ppEnum) {
             throw new NotImplementedException();
-            ;
         }
         void IConnectionPointContainer.FindConnectionPoint(ref Guid riid, out IConnectionPoint ppCP) {
             ppCP = connectionPoints[riid];

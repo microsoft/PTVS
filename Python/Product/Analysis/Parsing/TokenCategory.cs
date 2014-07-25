@@ -14,7 +14,6 @@
 
 namespace Microsoft.PythonTools.Parsing {
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1027:MarkEnumsWithFlags")]
     public enum TokenCategory {
         None,
 

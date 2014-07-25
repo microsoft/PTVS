@@ -712,6 +712,14 @@ namespace Microsoft.PythonTools.Project {
                     _interpreters.Dispose();
                     _interpreters = null;
                 }
+                if (_interpretersContainer != null) {
+                    _interpretersContainer.Dispose();
+                    _interpretersContainer = null;
+                }
+                if (_searchPathContainer != null) {
+                    _searchPathContainer.Dispose();
+                    _searchPathContainer = null;
+                }
                 if (_customCommands != null) {
                     foreach (var c in _customCommands) {
                         c.Dispose();

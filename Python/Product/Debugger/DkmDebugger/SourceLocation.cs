@@ -16,6 +16,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Text;
 using Microsoft.VisualStudio.Debugger;
 using Microsoft.VisualStudio.Debugger.Native;
 
@@ -60,25 +61,24 @@ namespace Microsoft.PythonTools.DkmDebugger {
         }
 
         public ReadOnlyCollection<byte> Encode() {
-            using (var stream = new MemoryStream()) {
-                using (var writer = new BinaryWriter(stream)) {
-                    writer.Write(FileName);
-                    if (FunctionName != null) {
-                        writer.Write(true);
-                        writer.Write(FunctionName);
-                    } else {
-                        writer.Write(false);
-                    }
-                    writer.Write(LineNumber);
-                    if (NativeAddress != null) {
-                        writer.Write(true);
-                        writer.Write(NativeAddress.CPUInstructionPart.InstructionPointer);
-                        writer.Write(NativeAddress.RVA);
-                    } else {
-                        writer.Write(false);
-                    }
+            using (var stream = new MemoryStream())
+            using (var writer = new BinaryWriter(stream)) {
+                writer.Write(FileName);
+                if (FunctionName != null) {
+                    writer.Write(true);
+                    writer.Write(FunctionName);
+                } else {
+                    writer.Write(false);
                 }
-
+                writer.Write(LineNumber);
+                if (NativeAddress != null) {
+                    writer.Write(true);
+                    writer.Write(NativeAddress.CPUInstructionPart.InstructionPointer);
+                    writer.Write(NativeAddress.RVA);
+                } else {
+                    writer.Write(false);
+                }
+                writer.Flush();
                 return new ReadOnlyCollection<byte>(stream.ToArray());
             }
         }

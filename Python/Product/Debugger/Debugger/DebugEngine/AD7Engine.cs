@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -40,6 +41,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
     // IDebugProgram3: This interface represents a program that is running in a process. Since this engine only debugs one process at a time and each 
     // process only contains one program, it is implemented on the engine.
 
+    [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",
+        Justification = "We do not control ownership of this class")]
     [ComVisible(true)]
     [Guid("8355452D-6D2F-41b0-89B8-BB2AA2529E94")]
     public sealed class AD7Engine : IDebugEngine2, IDebugEngineLaunch2, IDebugProgram3, IDebugSymbolSettings100 {
@@ -52,7 +55,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
         // The core of the engine is implemented by PythonProcess - we wrap and expose that to VS.
         private PythonProcess _process;
-        
+
         // mapping between PythonProcess threads and AD7Threads
         private Dictionary<PythonThread, AD7Thread> _threads = new Dictionary<PythonThread, AD7Thread>();
         private Dictionary<PythonModule, AD7Module> _modules = new Dictionary<PythonModule, AD7Module>();
@@ -83,7 +86,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         internal static event EventHandler<AD7EngineEventArgs> EngineDetaching;
 
         // These constants are duplicated in HpcLauncher and cannot be changed
-        
+
         public const string DebugEngineId = "{EC1375B7-E2CE-43E8-BF75-DC638DE1F1F9}";
         public const string DebugEngineName = "Python";
         public static Guid DebugEngineGuid = new Guid(DebugEngineId);
@@ -147,7 +150,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         /// </summary>
         public const string DirMappingSetting = "DIR_MAPPING";
 
-        public AD7Engine() {            
+        public AD7Engine() {
             _breakpointManager = new BreakpointManager(this);
             _defaultBreakOnExceptionMode = (int)enum_EXCEPTION_STATE.EXCEPTION_STOP_USER_UNCAUGHT;
             Debug.WriteLine("Python Engine Created " + GetHashCode());
@@ -210,7 +213,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             uint vsTid;
 
             if (tid <= uint.MaxValue && !_threadIdMapping.ContainsKey((uint)tid)) {
-               vsTid = (uint)tid;
+                vsTid = (uint)tid;
             } else {
                 do {
                     vsTid = ++_lastGeneratedVsTid;
@@ -278,7 +281,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
             // Attach can either be called to attach to a new process, or to complete an attach
             // to a launched process
-            if (_process == null) {                
+            if (_process == null) {
                 // TODO: Where do we get the language version from?
                 _events = ad7Callback;
 
@@ -305,7 +308,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                     MessageBox.Show("Failed to attach debugger:\r\n" + ex.Message, null, MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return VSConstants.E_FAIL;
                 }
-                    
+
                 AttachEvents(_process);
                 _attached = true;
             } else {
@@ -549,7 +552,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                         _defaultBreakOnExceptionMode =
                             (int)(pException[i].dwState & (enum_EXCEPTION_STATE.EXCEPTION_STOP_FIRST_CHANCE | enum_EXCEPTION_STATE.EXCEPTION_STOP_USER_UNCAUGHT));
                     } else {
-                        _breakOnException[pException[i].bstrExceptionName] = 
+                        _breakOnException[pException[i].bstrExceptionName] =
                             (int)(pException[i].dwState & (enum_EXCEPTION_STATE.EXCEPTION_STOP_FIRST_CHANCE | enum_EXCEPTION_STATE.EXCEPTION_STOP_USER_UNCAUGHT));
                     }
                 }
@@ -646,17 +649,17 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             Debug.Assert(_ad7ProgramId == Guid.Empty);
 
             process = null;
-            
+
             _events = ad7Callback;
 
             PythonLanguageVersion version = DefaultVersion;
             PythonDebugOptions debugOptions = PythonDebugOptions.None;
             bool attachRunning = false;
             List<string[]> dirMapping = null;
-            string interpreterOptions = null;           
+            string interpreterOptions = null;
             if (options != null) {
                 var splitOptions = SplitOptions(options);
-                
+
                 foreach (var optionSetting in splitOptions) {
                     var setting = optionSetting.Split(new[] { '=' }, 2);
 
@@ -707,7 +710,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                                 break;
                             case WebBrowserUrl:
                                 _webBrowserUrl = HttpUtility.UrlDecode(setting[1]);
-                                break; 
+                                break;
                             case EnableDjangoDebugging:
                                 if (Boolean.TryParse(setting[1], out value) && value) {
                                     debugOptions |= PythonDebugOptions.DjangoDebugging;
@@ -762,7 +765,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                     }
                 }
             }
-            if (options.Length  - lastStart > 0) {
+            if (options.Length - lastStart > 0) {
                 res.Add(options.Substring(lastStart, options.Length - lastStart));
             }
             return res.ToArray();
@@ -920,10 +923,10 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
                 _breakpointManager.ClearBoundBreakpoints();
 
-            var detaching = EngineDetaching;
-            if (detaching != null) {
-                detaching(this, new AD7EngineEventArgs(this));
-            }
+                var detaching = EngineDetaching;
+                if (detaching != null) {
+                    detaching(this, new AD7EngineEventArgs(this));
+                }
 
                 _process.Detach();
             }
@@ -1070,7 +1073,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             switch (sk) {
                 case enum_STEPKIND.STEP_INTO: thread.StepInto(); break;
                 case enum_STEPKIND.STEP_OUT: thread.StepOut(); break;
-                case enum_STEPKIND.STEP_OVER: thread.StepOver(); break; 
+                case enum_STEPKIND.STEP_OVER: thread.StepOver(); break;
             }
             return VSConstants.S_OK;
         }
@@ -1175,7 +1178,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             Debug.WriteLine(String.Format("Sending Event: {0} {1}", eventObject.GetType(), iidEvent));
             try {
                 EngineUtils.RequireOk(_events.Event(this, null, program, thread, eventObject, ref riidEvent, attributes));
-            } catch (InvalidCastException) {                
+            } catch (InvalidCastException) {
                 // COM object has gone away
             }
         }
@@ -1201,7 +1204,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             process.StepComplete += OnStepComplete;
             process.ThreadExited += OnThreadExited;
             process.DebuggerOutput += OnDebuggerOutput;
-            
+
             process.StartListening();
         }
 
@@ -1303,7 +1306,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         private void OnEntryPointHit(object sender, ThreadEventArgs e) {
             Send(new AD7EntryPointEvent(), AD7EntryPointEvent.IID, _threads[e.Thread]);
         }
-        
+
         private void OnBreakpointBindSucceeded(object sender, BreakpointEventArgs e) {
             IDebugPendingBreakpoint2 pendingBreakpoint;
             var boundBreakpoint = _breakpointManager.GetBreakpoint(e.Breakpoint);

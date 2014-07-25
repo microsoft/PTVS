@@ -14,6 +14,7 @@
 
 using System;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -153,212 +154,212 @@ namespace Microsoft.VisualStudioTools.Project {
 
         [Browsable(false)]
         public string ActiveFileSharePath {
-            get { throw new System.NotImplementedException(); }
+            get { throw new NotImplementedException(); }
         }
 
         [Browsable(false)]
         public VSLangProj.prjWebAccessMethod ActiveWebAccessMethod {
-            get { throw new System.NotImplementedException(); }
+            get { throw new NotImplementedException(); }
         }
 
         [Browsable(false)]
         public string ApplicationIcon {
             get {
-                throw new System.NotImplementedException();
+                throw new NotImplementedException();
             }
             set {
-                throw new System.NotImplementedException();
+                throw new NotImplementedException();
             }
         }
 
         [Browsable(false)]
         public string AssemblyKeyContainerName {
             get {
-                throw new System.NotImplementedException();
+                throw new NotImplementedException();
             }
             set {
-                throw new System.NotImplementedException();
+                throw new NotImplementedException();
             }
         }
 
         [Browsable(false)]
         public string AssemblyName {
             get {
-                throw new System.NotImplementedException();
+                throw new NotImplementedException();
             }
             set {
-                throw new System.NotImplementedException();
+                throw new NotImplementedException();
             }
         }
 
         [Browsable(false)]
         public string AssemblyOriginatorKeyFile {
             get {
-                throw new System.NotImplementedException();
+                throw new NotImplementedException();
             }
             set {
-                throw new System.NotImplementedException();
+                throw new NotImplementedException();
             }
         }
 
         [Browsable(false)]
         public VSLangProj.prjOriginatorKeyMode AssemblyOriginatorKeyMode {
             get {
-                throw new System.NotImplementedException();
+                throw new NotImplementedException();
             }
             set {
-                throw new System.NotImplementedException();
+                throw new NotImplementedException();
             }
         }
 
         [Browsable(false)]
         public VSLangProj.prjScriptLanguage DefaultClientScript {
             get {
-                throw new System.NotImplementedException();
+                throw new NotImplementedException();
             }
             set {
-                throw new System.NotImplementedException();
+                throw new NotImplementedException();
             }
         }
 
         [Browsable(false)]
         public VSLangProj.prjHTMLPageLayout DefaultHTMLPageLayout {
             get {
-                throw new System.NotImplementedException();
+                throw new NotImplementedException();
             }
             set {
-                throw new System.NotImplementedException();
+                throw new NotImplementedException();
             }
         }
 
         [Browsable(false)]
         public string DefaultNamespace {
             get {
-                throw new System.NotImplementedException();
+                throw new NotImplementedException();
             }
             set {
-                throw new System.NotImplementedException();
+                throw new NotImplementedException();
             }
         }
 
         [Browsable(false)]
         public VSLangProj.prjTargetSchema DefaultTargetSchema {
             get {
-                throw new System.NotImplementedException();
+                throw new NotImplementedException();
             }
             set {
-                throw new System.NotImplementedException();
+                throw new NotImplementedException();
             }
         }
 
         [Browsable(false)]
         public bool DelaySign {
             get {
-                throw new System.NotImplementedException();
+                throw new NotImplementedException();
             }
             set {
-                throw new System.NotImplementedException();
+                throw new NotImplementedException();
             }
         }
 
         [Browsable(false)]
         public new object ExtenderNames {
-            get { throw new System.NotImplementedException(); }
+            get { throw new NotImplementedException(); }
         }
 
         [Browsable(false)]
         public string FileSharePath {
             get {
-                throw new System.NotImplementedException();
+                throw new NotImplementedException();
             }
             set {
-                throw new System.NotImplementedException();
+                throw new NotImplementedException();
             }
         }
 
         [Browsable(false)]
         public bool LinkRepair {
             get {
-                throw new System.NotImplementedException();
+                throw new NotImplementedException();
             }
             set {
-                throw new System.NotImplementedException();
+                throw new NotImplementedException();
             }
         }
 
         [Browsable(false)]
         public string LocalPath {
-            get { throw new System.NotImplementedException(); }
+            get { throw new NotImplementedException(); }
         }
 
         [Browsable(false)]
         public string OfflineURL {
-            get { throw new System.NotImplementedException(); }
+            get { throw new NotImplementedException(); }
         }
 
         [Browsable(false)]
         public VSLangProj.prjCompare OptionCompare {
             get {
-                throw new System.NotImplementedException();
+                throw new NotImplementedException();
             }
             set {
-                throw new System.NotImplementedException();
+                throw new NotImplementedException();
             }
         }
 
         [Browsable(false)]
         public VSLangProj.prjOptionExplicit OptionExplicit {
             get {
-                throw new System.NotImplementedException();
+                throw new NotImplementedException();
             }
             set {
-                throw new System.NotImplementedException();
+                throw new NotImplementedException();
             }
         }
 
         [Browsable(false)]
         public VSLangProj.prjOptionStrict OptionStrict {
             get {
-                throw new System.NotImplementedException();
+                throw new NotImplementedException();
             }
             set {
-                throw new System.NotImplementedException();
+                throw new NotImplementedException();
             }
         }
 
         [Browsable(false)]
         public string OutputFileName {
-            get { throw new System.NotImplementedException(); }
+            get { throw new NotImplementedException(); }
         }
 
         [Browsable(false)]
         public VSLangProj.prjOutputType OutputType {
             get {
-                throw new System.NotImplementedException();
+                throw new NotImplementedException();
             }
             set {
-                throw new System.NotImplementedException();
+                throw new NotImplementedException();
             }
         }
 
         [Browsable(false)]
         public VSLangProj.prjProjectType ProjectType {
-            get { throw new System.NotImplementedException(); }
+            get { throw new NotImplementedException(); }
         }
 
         [Browsable(false)]
         public string ReferencePath {
             get {
-                throw new System.NotImplementedException();
+                throw new NotImplementedException();
             }
             set {
-                throw new System.NotImplementedException();
+                throw new NotImplementedException();
             }
         }
 
         [Browsable(false)]
         public string ServerExtensionsVersion {
-            get { throw new System.NotImplementedException(); }
+            get { throw new NotImplementedException(); }
         }
 
         [Browsable(false)]
@@ -386,36 +387,36 @@ namespace Microsoft.VisualStudioTools.Project {
         [Browsable(false)]
         public VSLangProj.prjWebAccessMethod WebAccessMethod {
             get {
-                throw new System.NotImplementedException();
+                throw new NotImplementedException();
             }
             set {
-                throw new System.NotImplementedException();
+                throw new NotImplementedException();
             }
         }
 
         [Browsable(false)]
         public string WebServer {
-            get { throw new System.NotImplementedException(); }
+            get { throw new NotImplementedException(); }
         }
 
         [Browsable(false)]
         public string WebServerVersion {
-            get { throw new System.NotImplementedException(); }
+            get { throw new NotImplementedException(); }
         }
 
         [Browsable(false)]
         public string __id {
-            get { throw new System.NotImplementedException(); }
+            get { throw new NotImplementedException(); }
         }
 
         [Browsable(false)]
         public object __project {
-            get { throw new System.NotImplementedException(); }
+            get { throw new NotImplementedException(); }
         }
 
         [Browsable(false)]
         public object get_Extender(string ExtenderName) {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         #endregion

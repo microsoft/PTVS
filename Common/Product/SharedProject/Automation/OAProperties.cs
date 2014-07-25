@@ -25,7 +25,6 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
     /// <summary>
     /// Contains all of the properties of a given object that are contained in a generic collection of properties.
     /// </summary>
-    [SuppressMessage("Microsoft.Naming", "CA1710:IdentifiersShouldHaveCorrectSuffix")]
     [ComVisible(true)]
     public class OAProperties : EnvDTE.Properties {
         private NodeProperties target;
@@ -98,7 +97,6 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
         /// </summary>
         /// <param name="index">The index at which to return a mamber.</param>
         /// <returns>A Property object.</returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1800:DoNotCastUnnecessarily")]
         public virtual EnvDTE.Property Item(object index) {
             if (index is string) {
                 string indexAsString = (string)index;

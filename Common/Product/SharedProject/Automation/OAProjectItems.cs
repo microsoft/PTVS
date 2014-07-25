@@ -26,7 +26,6 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
     /// <summary>
     /// Contains ProjectItem objects
     /// </summary>
-    [SuppressMessage("Microsoft.Naming", "CA1710:IdentifiersShouldHaveCorrectSuffix")]
     [ComVisible(true)]
     public class OAProjectItems : OANavigableProjectItems {
         #region ctor
@@ -211,7 +210,6 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
         /// <param name="result">The <paramref name="VSADDRESULT"/> returned by the Add methods</param>
         /// <param name="path">The full path of the item added.</param>
         /// <returns>A ProjectItem object.</returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1800:DoNotCastUnnecessarily")]
         private EnvDTE.ProjectItem EvaluateAddResult(VSADDRESULT result, string path) {
             return UIThread.Invoke<EnvDTE.ProjectItem>(() => {
                 if (result != VSADDRESULT.ADDRESULT_Failure) {

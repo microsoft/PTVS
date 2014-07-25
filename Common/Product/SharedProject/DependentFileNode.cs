@@ -119,7 +119,6 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <summary>
         /// Redraws the state icon if the node is not excluded from source control.
         /// </summary>
-        [SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "Scc")]
         protected internal override void UpdateSccStateIcons() {
             if (!this.ExcludeNodeFromScc) {
                 ProjectMgr.ReDrawNode(this.Parent, UIHierarchyElement.SccState);

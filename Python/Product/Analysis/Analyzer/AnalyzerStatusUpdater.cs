@@ -637,12 +637,19 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         /// Closes the listener.
         /// </summary>
         public void Dispose() {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing) {
             if (!_disposed) {
-                Abort();
                 _disposed = true;
-                _worker.Join(LOCK_TIMEOUT);
-                _workerStarted.Dispose();
-                _requestAdded.Dispose();
+                if (disposing) {
+                    Abort();
+                    _worker.Join(LOCK_TIMEOUT);
+                    _workerStarted.Dispose();
+                    _requestAdded.Dispose();
+                }
             }
         }
 

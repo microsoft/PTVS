@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -174,7 +175,7 @@ namespace Microsoft.PythonTools.Repl {
             _curListener = new CommandProcessorThread(this, stream, redirectStdOutput, process);
         }
 
-        class CommandProcessorThread {
+        class CommandProcessorThread : IDisposable {
             private readonly BasePythonReplEvaluator _eval;
 
             // Of the following two, only one is non-null at any given time.
@@ -245,7 +246,12 @@ namespace Microsoft.PythonTools.Repl {
 
             private void ProcessExited(object sender, EventArgs e) {
                 using (new StreamLock(this, throwIfDisconnected: false)) {
-                    _stream = null;
+                    // Use Interlocked because Dispose() also does this but
+                    // outside of StreamLock().
+                    var stream = Interlocked.Exchange(ref _stream, null);
+                    if (stream != null) {
+                        stream.Dispose();
+                    }
                 }
 
                 if (_preConnectionOutput != null) {
@@ -362,6 +368,7 @@ namespace Microsoft.PythonTools.Repl {
                 }
             }
 
+            [Serializable]
             private class DisconnectedException : IOException {
                 public DisconnectedException(string message)
                     : base(message) {
@@ -654,9 +661,6 @@ namespace Microsoft.PythonTools.Repl {
 
             static readonly string _noReplProcess = "Current interactive window is disconnected - please reset the process." + Environment.NewLine;
 
-            [DllImport("user32", CallingConvention = CallingConvention.Winapi)]
-            static extern bool AllowSetForegroundWindow(int dwProcessId);
-
             public Task<ExecutionResult> ExecuteText(string text) {
                 if (text.StartsWith("$")) {
                     _eval._window.WriteError(String.Format("Unknown command '{0}', use \"$help\" for help" + Environment.NewLine, text.Substring(1).Trim()));
@@ -665,7 +669,7 @@ namespace Microsoft.PythonTools.Repl {
 
                 Action send = () => {
                     if (_process != null) {
-                        AllowSetForegroundWindow(_process.Id);
+                        Microsoft.VisualStudioTools.Project.NativeMethods.AllowSetForegroundWindow(_process.Id);
                     }
 
                     _stream.Write(RunCommandBytes);
@@ -709,7 +713,7 @@ namespace Microsoft.PythonTools.Repl {
             public Task<ExecutionResult> ExecuteFile(string filename, string extraArgs, string fileType) {
                 Action send = () => {
                     if (_process != null) {
-                        AllowSetForegroundWindow(_process.Id);
+                        Microsoft.VisualStudioTools.Project.NativeMethods.AllowSetForegroundWindow(_process.Id);
                     }
 
                     if (fileType == ExecuteFileEx_Script) {
@@ -878,19 +882,19 @@ namespace Microsoft.PythonTools.Repl {
                 return new KeyValuePair<string, bool>[0];
             }
 
-            public void Close() {
-                var stream = Volatile.Read(ref _stream);
+            [SuppressMessage("Microsoft.Usage", "CA2213:DisposableFieldsShouldBeDisposed", MessageId = "_stream", Justification = "false positive")]
+            public void Dispose() {
+                var stream = Interlocked.Exchange(ref _stream, null);
 
                 // There is a potential race where ith a different thread doing _stream = null, but even if that happens
                 // we do have our own reference and can dispose the object.
 
                 if (stream != null) {
-                    // Try and close the connection gracefully, but don't block on it indefinitely - if we're stuck waiting
-                    // for too long, just drop it
-                    if (Monitor.TryEnter(_streamLock, 200)) {
-                        try {
-                            _stream = null;
-                            using (stream) {
+                    try {
+                        // Try and close the connection gracefully, but don't block on it indefinitely - if we're stuck waiting
+                        // for too long, just drop it
+                        if (Monitor.TryEnter(_streamLock, 200)) {
+                            try {
                                 try {
                                     var ar = stream.BeginWrite(ExitCommandBytes, 0, ExitCommandBytes.Length, null, null);
                                     using (ar.AsyncWaitHandle) {
@@ -899,11 +903,12 @@ namespace Microsoft.PythonTools.Repl {
                                     stream.EndWrite(ar);
                                 } catch (IOException) {
                                 }
+                            } finally {
+                                Monitor.Exit(_streamLock);
                             }
-
-                        } finally {
-                            Monitor.Exit(_streamLock);
                         }
+                    } finally {
+                        stream.Dispose();
                     }
                 }
 
@@ -922,6 +927,10 @@ namespace Microsoft.PythonTools.Repl {
                         bool success = _completion.TrySetResult(ExecutionResult.Failure);
                         Debug.Assert(success);
                         _completion = null;
+                    }
+                    if (_completionResultEvent != null) {
+                        _completionResultEvent.Dispose();
+                        _completionResultEvent = null;
                     }
                 }
             }
@@ -1318,7 +1327,7 @@ namespace Microsoft.PythonTools.Repl {
 
         public virtual void Close() {
             if (_curListener != null) {
-                _curListener.Close();
+                _curListener.Dispose();
                 _curListener = null;
             }
             _attached = false;

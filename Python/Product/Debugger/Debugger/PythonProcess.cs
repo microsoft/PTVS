@@ -181,6 +181,7 @@ namespace Microsoft.PythonTools.Debugger {
 
         public void Dispose() {
             Dispose(true);
+            GC.SuppressFinalize(this);
         }
 
         protected virtual void Dispose(bool disposing) {
@@ -191,10 +192,12 @@ namespace Microsoft.PythonTools.Debugger {
                     if (_stream != null) {
                         _stream.Dispose();
                     }
+                    if (_process != null) {
+                        _process.Dispose();
+                    }
+                    _lineEvent.Dispose();
                 }
             }
-
-            GC.SuppressFinalize(this);
         }
 
         ~PythonProcess() {
@@ -395,7 +398,6 @@ namespace Microsoft.PythonTools.Debugger {
 
         internal void Unregister() {
             DebugConnectionListener.UnregisterProcess(_processGuid);
-            GC.SuppressFinalize(this);
         }
 
         /// <summary>
@@ -938,9 +940,6 @@ namespace Microsoft.PythonTools.Debugger {
             }
         }
 
-        [DllImport("kernel32", SetLastError = true, ExactSpelling = true)]
-        public static extern Int32 WaitForSingleObject(SafeWaitHandle handle, Int32 milliseconds);
-
         internal void BindBreakpoint(PythonBreakpoint breakpoint) {
             DebugWriteCommand(String.Format("Bind Breakpoint IsDjango: {0}", breakpoint.IsDjangoBreakpoint));
 
@@ -1114,7 +1113,10 @@ namespace Microsoft.PythonTools.Debugger {
             }
 
             // wait up to 2 seconds for line event...
-            for (int i = 0; i < 20 && _stream != null && WaitForSingleObject(_lineEvent.SafeWaitHandle, 100) != 0; i++) {
+            for (int i = 0; i < 20 && _stream != null; i++) {
+                if (NativeMethods.WaitForSingleObject(_lineEvent.SafeWaitHandle, 100) == 0) {
+                    break;
+                }
             }
 
             return _setLineResult;

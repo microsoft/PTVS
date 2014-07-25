@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
@@ -164,6 +165,7 @@ namespace Microsoft.VisualStudio.Repl {
         /// <summary>
         /// Event triggered when the REPL is ready to accept input.
         /// </summary>
+        [SuppressMessage("Microsoft.Design", "CA1009:DeclareEventHandlersCorrectly", Justification = "back compat")]
         event Action ReadyForInput;
     }
 }

@@ -237,7 +237,6 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <summary>
         /// Constructor for the ReferenceNode. It is called when the project is reloaded, when the project element representing the refernce exists. 
         /// </summary>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2234:PassSystemUriObjectsInsteadOfStrings")]
         public ProjectReferenceNode(ProjectNode root, ProjectElement element)
             : base(root, element) {
             this.referencedProjectRelativePath = this.ItemNode.GetMetadata(ProjectFileConstants.Include);

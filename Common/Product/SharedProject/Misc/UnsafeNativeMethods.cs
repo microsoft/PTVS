@@ -24,7 +24,7 @@ namespace Microsoft.VisualStudioTools.Project {
         internal static extern bool GlobalUnLock(IntPtr h);
 
         [DllImport(ExternDll.Kernel32, EntryPoint = "GlobalSize", SetLastError = true, CharSet = CharSet.Unicode, ExactSpelling = true, CallingConvention = CallingConvention.StdCall)]
-        internal static extern int GlobalSize(IntPtr h);
+        internal static extern IntPtr GlobalSize(IntPtr h);
 
         [DllImport(ExternDll.Ole32, ExactSpelling = true, CharSet = CharSet.Unicode)]
         internal static extern int OleSetClipboard(Microsoft.VisualStudio.OLE.Interop.IDataObject dataObject);
@@ -53,14 +53,8 @@ namespace Microsoft.VisualStudioTools.Project {
         [DllImport(ExternDll.Shell32, EntryPoint = "DragQueryFileW", SetLastError = true, CharSet = CharSet.Unicode, ExactSpelling = true, CallingConvention = CallingConvention.StdCall)]
         internal static extern uint DragQueryFile(IntPtr hDrop, uint iFile, char[] lpszFile, uint cch);
 
-        [DllImport(ExternDll.User32, EntryPoint = "RegisterClipboardFormatW", SetLastError = true, CharSet = CharSet.Unicode, ExactSpelling = true, CallingConvention = CallingConvention.StdCall)]
-        internal static extern ushort RegisterClipboardFormat(string format);
-
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode"), DllImport(ExternDll.Shell32, EntryPoint = "SHGetSpecialFolderLocation")]
-        internal static extern int SHGetSpecialFolderLocation(IntPtr hwnd, int csidl, [Out, MarshalAs(UnmanagedType.LPArray)] IntPtr[] ppidl);
-
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode"), DllImport(ExternDll.Shell32, EntryPoint = "SHGetPathFromIDList", CharSet = System.Runtime.InteropServices.CharSet.Auto)]
-        internal static extern bool SHGetPathFromIDList(IntPtr pidl, IntPtr pszPath);
+        [DllImport(ExternDll.User32, SetLastError = true, CharSet = CharSet.Unicode, CallingConvention = CallingConvention.StdCall)]
+        internal static extern uint RegisterClipboardFormat(string format);
     }
 }
 

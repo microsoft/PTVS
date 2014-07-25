@@ -28,7 +28,6 @@ namespace Microsoft.PythonTools.Django {
         /// <param name="obj1">Can be an object, interface or IntPtr</param>
         /// <param name="obj2">Can be an object, interface or IntPtr</param>
         /// <returns>True if the 2 items represent the same thing</returns>
-        [SuppressMessage("Microsoft.Naming", "CA1720:IdentifiersShouldNotContainTypeNames", MessageId = "obj")]
         public static bool IsSameComObject(object obj1, object obj2) {
             bool isSame = false;
             IntPtr unknown1 = IntPtr.Zero;

@@ -199,7 +199,6 @@ namespace Microsoft.VisualStudioTools.Project {
 
         #region ExtenderSupport
         [Browsable(false)]
-        [SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "CATID")]
         public virtual string ExtenderCATID {
             get {
                 Guid catid = this.HierarchyNode.ProjectMgr.GetCATIDForType(this.GetType());

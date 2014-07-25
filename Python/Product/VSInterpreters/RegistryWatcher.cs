@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.AccessControl;
@@ -275,7 +276,13 @@ namespace Microsoft.PythonTools {
             }
         }
 
-        private class WatchEntry {
+        private sealed class WatchEntry : IDisposable {
+            private readonly AutoResetEvent _eventHandle;
+            private readonly RegistryKey _key;
+            private readonly RegistryChangedEventHandler _callback;
+            private readonly RegistryChangedEventArgs _args;
+            private bool _registered;
+
             /// <summary>
             /// Creates a WatchEntry that has an event but does not watch a
             /// registry key. All functions become no-ops, but
@@ -298,11 +305,12 @@ namespace Microsoft.PythonTools {
                 Register();
             }
 
-            private readonly AutoResetEvent _eventHandle;
-            private readonly RegistryKey _key;
-            private readonly RegistryChangedEventHandler _callback;
-            private readonly RegistryChangedEventArgs _args;
-            private bool _registered;
+            public void Dispose() {
+                _eventHandle.Dispose();
+                if (_key != null) {
+                    _key.Close();
+                }
+            }
 
             public AutoResetEvent EventHandle { get { return _eventHandle; } }
 
@@ -377,6 +385,7 @@ namespace Microsoft.PythonTools {
 
         const int MAXIMUM_WAIT_OBJECTS = 64;
 
+        [SuppressMessage("Microsoft.Design", "CA1060:MovePInvokesToNativeMethodsClass")]
         [DllImport("advapi32", EntryPoint = "RegNotifyChangeKeyValue", CallingConvention = CallingConvention.Winapi)]
         private static extern int _RegNotifyChangeKeyValue(SafeHandle hKey, bool bWatchSubtree, RegNotifyChange dwNotifyFilter, SafeHandle hEvent, bool fAsynchronous);
 

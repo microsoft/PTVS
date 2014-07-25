@@ -32,7 +32,7 @@ using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project {
-    sealed class AddVirtualEnvironmentView : DependencyObject, INotifyPropertyChanged {
+    sealed class AddVirtualEnvironmentView : DependencyObject, INotifyPropertyChanged, IDisposable {
         readonly IInterpreterOptionsService _interpreterService;
         private readonly PythonProjectNode _project;
         internal readonly string _projectHome;
@@ -71,6 +71,10 @@ namespace Microsoft.PythonTools.Project {
 
             CanInstallRequirementsTxt = File.Exists(CommonUtils.GetAbsoluteFilePath(_projectHome, "requirements.txt"));
             WillInstallRequirementsTxt = CanInstallRequirementsTxt;
+        }
+
+        public void Dispose() {
+            _ready.Dispose();
         }
 
         private void OnInterpretersChanged(object sender, EventArgs e) {

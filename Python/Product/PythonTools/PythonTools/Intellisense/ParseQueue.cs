@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -161,6 +162,8 @@ namespace Microsoft.PythonTools.Intellisense {
         }
     }
 
+    [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",
+        Justification = "ownership is unclear")]
     class BufferParser {
         internal VsProjectAnalyzer _parser;
         private readonly ParseQueue _queue;
@@ -403,7 +406,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private static bool IncludesTextChanges(TextContentChangedEventArgs e) {
             bool mixedChanges = false;
             foreach (var change in e.Changes) {
-                if (change.OldText != "" || change.NewText != Environment.NewLine) {
+                if (!string.IsNullOrEmpty(change.OldText) || change.NewText != Environment.NewLine) {
                     mixedChanges = true;
                     break;
                 }

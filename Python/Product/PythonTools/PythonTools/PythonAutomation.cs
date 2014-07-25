@@ -256,7 +256,7 @@ namespace Microsoft.PythonTools {
                 } else {
                     throw new InvalidOperationException(
                         String.Format(
-                            "Bad intellisense mode, must be one of: ",
+                            "Bad intellisense mode, must be one of: {0}",
                             String.Join(", ", Enum.GetNames(typeof(ReplIntellisenseMode)))
                         )
                     );

@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.Design;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
@@ -256,6 +257,8 @@ namespace Microsoft.PythonTools {
 #if DEV11_OR_LATER // TODO: UNSURE IF WE NEED THIS FOR DEV12
     [ProvideX64DebuggerFixForIntegratedShell]
 #endif
+    [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",
+        Justification = "Object is owned by VS and cannot be disposed")]
     public sealed class PythonToolsPackage : CommonPackage, IVsComponentSelectorProvider {
         private LanguagePreferences _langPrefs;
         public static PythonToolsPackage Instance;

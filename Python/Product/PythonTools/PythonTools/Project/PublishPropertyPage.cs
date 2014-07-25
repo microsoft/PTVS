@@ -13,12 +13,15 @@
  * ***************************************************************************/
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project {
+    [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",
+        Justification = "object is owned by VS")]
     [Guid(PythonConstants.PublishPropertyPageGuid)]
     public sealed class PublishPropertyPage : CommonPropertyPage {
         private readonly PublishPropertyControl _control;

@@ -101,18 +101,6 @@ namespace Microsoft.PythonTools.Project {
         #region methods
 
         /// <summary>
-        /// Closes the node.
-        /// </summary>
-        /// <returns></returns>
-        public override void Close() {
-            try {
-                Dispose(true);
-            } finally {
-                base.Close();
-            }
-        }
-
-        /// <summary>
         /// Links a reference node to the project and hierarchy.
         /// </summary>
         protected override void BindReferenceData() {

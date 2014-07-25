@@ -34,7 +34,6 @@ namespace Microsoft.VisualStudioTools.Project {
     /// Manages the CopyPaste and Drag and Drop scenarios for a Project.
     /// </summary>
     /// <remarks>This is a partial class.</remarks>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1506:AvoidExcessiveClassCoupling")]
     internal partial class ProjectNode : IVsUIHierWinClipboardHelperEvents {
         private uint copyPasteCookie;
         private DropDataType _dropType;
@@ -518,6 +517,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 return result;
             }
 
+            [Serializable]
             sealed class CancelPasteException : Exception {
             }
 

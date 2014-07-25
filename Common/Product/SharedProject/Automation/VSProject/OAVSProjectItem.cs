@@ -22,7 +22,6 @@ namespace Microsoft.VisualStudioTools.Project.Automation
     /// <summary>
     /// Represents a language-specific project item
     /// </summary>
-    [SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "OAVS")]
     [ComVisible(true)]
     public class OAVSProjectItem : VSProjectItem
     {

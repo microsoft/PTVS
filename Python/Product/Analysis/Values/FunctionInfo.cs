@@ -43,7 +43,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _functionDefinition = node;
             _declVersion = declUnit.ProjectEntry.AnalysisVersion;
 
-            if (Name == "__new__") {
+            if (_functionDefinition.Name == "__new__") {
                 IsClassMethod = true;
             }
 

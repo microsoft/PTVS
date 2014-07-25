@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -193,6 +194,8 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
+        [SuppressMessage("Microsoft.Performance", "CA1820:TestForEmptyStringsUsingStringLength",
+            Justification = "defaultValue == String.Empty is the correct check")]
         internal ParameterResult GetParameterResultFromParameterInfo(IParameterInfo param) {
             string name = param.Name;
 
@@ -220,7 +223,7 @@ namespace Microsoft.PythonTools.Analysis {
 
             bool isOptional = false;
             string defaultValue = param.DefaultValue;
-            if (defaultValue != null && defaultValue == String.Empty) {
+            if (defaultValue == String.Empty) {
                 isOptional = true;
                 defaultValue = null;
             }

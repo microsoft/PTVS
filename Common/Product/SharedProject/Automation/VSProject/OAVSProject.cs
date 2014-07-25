@@ -23,7 +23,6 @@ namespace Microsoft.VisualStudioTools.Project.Automation
     /// <summary>
     /// Represents an automation friendly version of a language-specific project.
     /// </summary>
-    [SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "OAVS")]
     [ComVisible(true), CLSCompliant(false)]
     public class OAVSProject : VSProject
     {
@@ -131,7 +130,6 @@ namespace Microsoft.VisualStudioTools.Project.Automation
         {
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1065:DoNotRaiseExceptionsInUnexpectedLocations")]
         public virtual string TemplatePath
         {
             get
@@ -140,7 +138,6 @@ namespace Microsoft.VisualStudioTools.Project.Automation
             }
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1065:DoNotRaiseExceptionsInUnexpectedLocations")]
         public virtual ProjectItem WebReferencesFolder
         {
             get
@@ -149,7 +146,6 @@ namespace Microsoft.VisualStudioTools.Project.Automation
             }
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1065:DoNotRaiseExceptionsInUnexpectedLocations")]
         public virtual bool WorkOffline
         {
             get
@@ -168,7 +164,6 @@ namespace Microsoft.VisualStudioTools.Project.Automation
     /// <summary>
     /// Provides access to language-specific project events
     /// </summary>
-    [SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "OAVS")]
     [ComVisible(true), CLSCompliant(false)]
     public class OAVSProjectEvents : VSProjectEvents
     {
@@ -193,7 +188,6 @@ namespace Microsoft.VisualStudioTools.Project.Automation
             }
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1065:DoNotRaiseExceptionsInUnexpectedLocations")]
         public virtual ImportsEvents ImportsEvents
         {
             get

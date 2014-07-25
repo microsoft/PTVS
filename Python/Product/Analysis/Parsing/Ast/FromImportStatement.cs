@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 
 namespace Microsoft.PythonTools.Parsing.Ast {
@@ -61,6 +62,8 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         /// <summary>
         /// Gets the variables associated with each imported name.
         /// </summary>
+        [SuppressMessage("Microsoft.Performance", "CA1819:PropertiesShouldNotReturnArrays",
+            Justification = "breaking change")]
         public PythonVariable[] Variables {
             get { return _variables; }
             set { _variables = value; }

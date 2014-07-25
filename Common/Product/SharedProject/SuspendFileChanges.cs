@@ -39,7 +39,6 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1800:DoNotCastUnnecessarily")]
         public void Suspend() {
             if (this.isSuspending)
                 return;

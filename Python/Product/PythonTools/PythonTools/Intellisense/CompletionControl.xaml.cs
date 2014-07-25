@@ -324,7 +324,14 @@ namespace Microsoft.PythonTools.Intellisense {
         #endregion
 
         public void Dispose() {
-            Content = null;
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing) {
+            if (disposing) {
+                Content = null;
+            }
         }
     }
 }

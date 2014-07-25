@@ -73,18 +73,6 @@ namespace Microsoft.PythonTools.Project {
 
         #region methods
 
-        /// <summary>
-        /// Closes the node.
-        /// </summary>
-        /// <returns></returns>
-        public override void Close() {
-            try {
-                Dispose(true);
-            } finally {
-                base.Close();
-            }
-        }
-
         public override Guid ItemTypeGuid {
             get {
                 return VSConstants.ItemTypeGuid.VirtualFolder_guid;

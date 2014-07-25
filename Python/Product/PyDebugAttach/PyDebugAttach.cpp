@@ -262,15 +262,16 @@ typedef __kernel_entry NTSTATUS NTAPI
 // (http://msdn.microsoft.com/en-us/library/windows/desktop/ms684280(v=vs.85).aspx) and walk the 
 // LDR_DATA_TABLE_ENTRY data structures http://msdn.microsoft.com/en-us/library/windows/desktop/aa813708(v=vs.85).aspx
 // which have changed in Windows 7, and may change more in the future, so we can't use them there.
-_Success_(return) BOOL EnumProcessModulesHelper(
+__success(return) BOOL EnumProcessModulesHelper(
     __in   HANDLE hProcess,
     __out  HMODULE *lphModule,
     __in   DWORD cb,
-    __out  LPDWORD lpcbNeeded
+    _Always_(__out) LPDWORD lpcbNeeded
     ) {
         if (lpcbNeeded == nullptr) {
             return FALSE;
         }
+        *lpcbNeeded = 0;
 
         auto kernel32 = GetModuleHandle(L"kernel32.dll");
         if (kernel32 == nullptr) {
@@ -338,7 +339,7 @@ BOOL PatchFunction(LPSTR exportingDll, PVOID replacingFunc, LPVOID newFunction) 
     HANDLE hProcess = GetCurrentProcess();
     DWORD modSize = sizeof(HMODULE) * 1024;
     HMODULE* hMods = (HMODULE*)_malloca(modSize);
-    DWORD modsNeeded;
+    DWORD modsNeeded = 0;
     if (hMods == nullptr) {
         modsNeeded = 0;
         return FALSE;
@@ -686,13 +687,13 @@ enum ConnErrorMessages {
     ConnError_SysSetTraceNotFound,
     ConnError_SysGetTraceNotFound,
     ConnError_PyDebugAttachNotFound,
-	ConnError_RemoteNetworkError,
-	ConnError_RemoteSslError,
-	ConnError_RemoteUnsupportedServer,
-	ConnError_RemoteSecretMismatch,
-	ConnError_RemoteAttachRejected,
-	ConnError_RemoteInvalidUri,
-	ConnError_RemoteUnsupportedTransport
+    ConnError_RemoteNetworkError,
+    ConnError_RemoteSslError,
+    ConnError_RemoteUnsupportedServer,
+    ConnError_RemoteSecretMismatch,
+    ConnError_RemoteAttachRejected,
+    ConnError_RemoteInvalidUri,
+    ConnError_RemoteUnsupportedTransport
 };
 
 // Ensures handles are closed when they go out of scope
@@ -1665,7 +1666,7 @@ void Detach() {
     HANDLE hProcess = GetCurrentProcess();
     DWORD modSize = sizeof(HMODULE) * 1024;
     HMODULE* hMods = (HMODULE*)_malloca(modSize);
-    DWORD modsNeeded;
+    DWORD modsNeeded = 0;
     if (hMods == nullptr) {
         modsNeeded = 0;
         return;

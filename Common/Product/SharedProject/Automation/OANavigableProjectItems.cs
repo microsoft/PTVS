@@ -22,7 +22,6 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
     /// <summary>
     /// This can navigate a collection object only (partial implementation of ProjectItems interface)
     /// </summary>
-    [SuppressMessage("Microsoft.Naming", "CA1710:IdentifiersShouldHaveCorrectSuffix")]
     [ComVisible(true)]
     public class OANavigableProjectItems : EnvDTE.ProjectItems {
         #region fields
@@ -171,7 +170,6 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
         /// </summary>
         /// <param name="index">Either index by number (1-based) or by name can be used to get the item</param>
         /// <returns>Project Item. ArgumentException if invalid index is specified</returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1800:DoNotCastUnnecessarily")]
         public virtual EnvDTE.ProjectItem Item(object index) {
             // Changed from MPFProj: throws ArgumentException instead of returning null (http://mpfproj10.codeplex.com/workitem/9158)
             if (index is int) {

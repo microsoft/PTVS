@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -29,6 +30,8 @@ namespace Microsoft.PythonTools.Analysis {
     /// To analyze a file the tree should be updated with a call to UpdateTree and then PreParse
     /// should be called on all files.  Finally Parse should then be called on all files.
     /// </summary>
+    [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",
+        Justification = "Unclear ownership makes it unlikely this object will be disposed correctly")]
     internal sealed class ProjectEntry : IPythonProjectEntry {
         private readonly PythonAnalyzer _projectState;
         private readonly string _moduleName;

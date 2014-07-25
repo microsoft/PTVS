@@ -34,7 +34,6 @@ namespace Microsoft.VisualStudioTools.Project {
     /// An object that deals with user interaction via a GUI in the form a hierarchy: a parent node with zero or more child nodes, each of which
     /// can itself be a hierarchy.  
     /// </summary>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1506:AvoidExcessiveClassCoupling")]
     internal abstract class HierarchyNode :
         IDisposable,
         IOleServiceProvider {
@@ -66,7 +65,6 @@ namespace Microsoft.VisualStudioTools.Project {
         /// The URL of the node.
         /// </summary>
         /// <value></value>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1056:UriPropertiesShouldNotBeStrings")]
         public abstract string Url {
             get;
         }
@@ -348,7 +346,6 @@ namespace Microsoft.VisualStudioTools.Project {
 
 
         [System.ComponentModel.BrowsableAttribute(false)]
-        [SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "ID")]
         public uint ID {
             get {
                 return this.hierarchyId;
@@ -399,7 +396,6 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <summary>
         /// Specifies if a Node is under source control.
         /// </summary>
-        [SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "Scc")]
         public bool ExcludeNodeFromScc {
             get {
                 return flags.HasFlag(HierarchyNodeFlags.ExcludeFromScc);
@@ -522,7 +518,6 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         /// <param name="propId">the property id of the property requested</param>
         /// <returns>the property object requested</returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1800:DoNotCastUnnecessarily"), System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity")]
         public virtual object GetProperty(int propId) {
             object result = null;
             switch ((__VSHPROPID)propId) {
@@ -714,7 +709,6 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <param name="propid">the property id of the property to be set</param>
         /// <param name="value">value of the property</param>
         /// <returns>S_OK if succeeded</returns>
-        [SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "propid")]
         public virtual int SetProperty(int propid, object value) {
             __VSHPROPID id = (__VSHPROPID)propid;
 
@@ -738,7 +732,6 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <param name="propid">property id for the guid property requested</param>
         /// <param name="guid">the requested guid</param>
         /// <returns>S_OK if succeded</returns>
-        [SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "propid")]
         public virtual int GetGuidProperty(int propid, out Guid guid) {
             guid = Guid.Empty;
             if (propid == (int)__VSHPROPID.VSHPROPID_TypeGuid) {
@@ -764,7 +757,6 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <param name="propid">property id of the guid property to be set</param>
         /// <param name="guid">the guid to be set</param>
         /// <returns>E_NOTIMPL</returns>
-        [SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "propid")]
         public virtual int SetGuidProperty(int propid, ref Guid guid) {
             return VSConstants.E_NOTIMPL;
         }
@@ -790,7 +782,6 @@ namespace Microsoft.VisualStudioTools.Project {
         /// This method is called by the interface method GetMkDocument to specify the item moniker.
         /// </summary>
         /// <returns>The moniker for this item</returns>
-        [SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "Mk")]
         public virtual string GetMkDocument() {
             return String.Empty;
         }
@@ -975,7 +966,6 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <summary>
         /// Redraws the state icon if the node is not excluded from source control.
         /// </summary>
-        [SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "Scc")]
         protected internal virtual void UpdateSccStateIcons() {
             if (!this.ExcludeNodeFromScc) {
                 ProjectMgr.ReDrawNode(this, UIHierarchyElement.SccState);
@@ -1005,7 +995,6 @@ namespace Microsoft.VisualStudioTools.Project {
         /// Add a new Folder to the project hierarchy.
         /// </summary>
         /// <returns>S_OK if succeeded, otherwise an error</returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1800:DoNotCastUnnecessarily")]
         protected virtual int AddNewFolder() {
             // Check out the project file.
             if (!this.ProjectMgr.QueryEditProjectFile(false)) {
@@ -1118,7 +1107,6 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         /// <returns>A stringbuilder.</returns>
         /// <devremark>This method has to be public since seleceted nodes will call it.</devremark>
-        [SuppressMessage("Microsoft.Naming", "CA1702:CompoundWordsShouldBeCasedCorrectly", MessageId = "ClipBoard")]
         protected internal virtual string PrepareSelectedNodesForClipBoard() {
             Debug.Assert(this.ProjectMgr != null, " No project mananager available for this node " + ToString());
             Debug.Assert(this.ProjectMgr.ItemsDraggedOrCutOrCopied != null, " The itemsdragged list should have been initialized prior calling this method");
@@ -1176,7 +1164,6 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         /// <param name="selectedNodes">list of selected nodes.</param>
         /// <param name="pointerToVariant">contains the location (x,y) at which to show the menu.</param>
-        [SuppressMessage("Microsoft.Naming", "CA1720:IdentifiersShouldNotContainTypeNames", MessageId = "pointer")]
         protected virtual int DisplayContextMenu(IList<HierarchyNode> selectedNodes, IntPtr pointerToVariant) {
             if (selectedNodes == null || selectedNodes.Count == 0 || pointerToVariant == IntPtr.Zero) {
                 return NativeMethods.OLECMDERR_E_NOTSUPPORTED;
@@ -1195,7 +1182,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 if (cmdId == VsMenus.IDM_VS_CTXT_PROJNODE) {
                     projectsSelected += 1;
                 }
-                
+
                 // We check here whether we have a multiple selection of
                 // nodes of differing type.
                 if (menuId == 0) {
@@ -1292,9 +1279,6 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <param name="pvaIn">Pointer to a VARIANTARG structure containing input arguments. Can be NULL</param>
         /// <param name="pvaOut">VARIANTARG structure to receive command output. Can be NULL.</param>
         /// <returns>If the method succeeds, it returns S_OK. If it fails, it returns an error code.</returns>
-        [SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "Cmdexecopt")]
-        [SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "n")]
-        [SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "pva")]
         internal virtual int ExecCommandOnNode(Guid cmdGroup, uint cmd, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
             if (InvalidProject()) {
                 return (int)OleConstants.OLECMDERR_E_NOTSUPPORTED;
@@ -1371,7 +1355,6 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <param name="pCmdText">Pointer to an OLECMDTEXT structure in which to return the name and/or status information of a single command. Can be NULL to indicate that the caller does not require this information.</param>
         /// <param name="result">An out parameter specifying the QueryStatusResult of the command.</param>
         /// <returns>If the method succeeds, it returns S_OK. If it fails, it returns an error code.</returns>
-        [SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "p")]
         internal virtual int QueryStatusOnNode(Guid cmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result) {
             if (cmdGroup == VsMenus.guidStandardCommandSet97) {
                 switch ((VsCommands)cmd) {
@@ -1517,7 +1500,6 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         /// <param name="files">The list of files to be placed under source control.</param>
         /// <param name="flags">The flags that are associated to the files.</param>
-        [SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "Scc")]
         protected internal virtual void GetSccFiles(IList<string> files, IList<tagVsSccFilesFlags> flags) {
             if (this.ExcludeNodeFromScc || this.IsNonMemberItem) {
                 return;
@@ -1538,8 +1520,6 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <param name="sccFile">One of the file associated to the node.</param>
         /// <param name="files">The list of files to be placed under source control.</param>
         /// <param name="flags">The flags that are associated to the files.</param>
-        [SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "Scc")]
-        [SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "scc")]
         protected internal virtual void GetSccSpecialFiles(string sccFile, IList<string> files, IList<tagVsSccFilesFlags> flags) {
             if (this.ExcludeNodeFromScc) {
                 return;
@@ -1567,7 +1547,6 @@ namespace Microsoft.VisualStudioTools.Project {
         /// Called to determine whether a project item is reloadable. 
         /// </summary>
         /// <returns>True if the project item is reloadable.</returns>
-        [SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "Reloadable")]
         protected internal virtual bool IsItemReloadable() {
             return true;
         }
@@ -1727,8 +1706,8 @@ namespace Microsoft.VisualStudioTools.Project {
                 if (manager != null) {
                     manager.Close(__FRAMECLOSE.FRAMECLOSE_PromptSave);
                 }
-
-            } catch { } finally {
+            } catch {
+            } finally {
                 this.Dispose(true);
             }
         }
@@ -1775,7 +1754,6 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         /// <typeparam name="T">The type of hierachy node being serched for</typeparam>
         /// <param name="nodes">A list of nodes of type T</param>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
         internal void FindNodesOfType<T>(List<T> nodes)
             where T : HierarchyNode {
             for (HierarchyNode n = this.FirstChild; n != null; n = n.NextSibling) {
@@ -1793,7 +1771,6 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         /// <typeparam name="T">The type of hierachy node being serched for</typeparam>
         /// <param name="nodes">A list of nodes of type T</param>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
         internal IEnumerable<T> EnumNodesOfType<T>()
             where T : HierarchyNode {
             for (HierarchyNode n = this.FirstChild; n != null; n = n.NextSibling) {
@@ -1835,7 +1812,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 if (riid.Equals(NativeMethods.IID_IUnknown)) {
                     ppvObject = Marshal.GetIUnknownForObject(obj);
                     return VSConstants.S_OK;
-                } 
+                }
 
                 IntPtr pUnk = IntPtr.Zero;
                 try {

@@ -20,7 +20,7 @@ using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project {
-    class PythonAssemblyReferenceNode : AssemblyReferenceNode {
+    sealed class PythonAssemblyReferenceNode : AssemblyReferenceNode {
         private bool _failedToAnalyze;
 
         public PythonAssemblyReferenceNode(PythonProjectNode root, ProjectElement element)

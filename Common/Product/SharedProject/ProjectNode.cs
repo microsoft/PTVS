@@ -72,9 +72,7 @@ namespace Microsoft.VisualStudioTools.Project {
             OpenReferenceFolder = 2,
             ReferenceFolder = 3,
             Reference = 4,
-            [SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "SDL")]
             SDLWebReference = 5,
-            [SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "DISCO")]
             DISCOWebReference = 6,
             Folder = 7,
             OpenFolder = 8,
@@ -86,19 +84,15 @@ namespace Microsoft.VisualStudioTools.Project {
             WindowsForm = 14,
             WindowsUserControl = 15,
             WindowsComponent = 16,
-            [SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "XML")]
             XMLSchema = 17,
-            [SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "XML")]
             XMLFile = 18,
             WebForm = 19,
             WebService = 20,
             WebUserControl = 21,
             WebCustomUserControl = 22,
-            [SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "ASP")]
             ASPPage = 23,
             GlobalApplicationClass = 24,
             WebConfig = 25,
-            [SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "HTML")]
             HTMLPage = 26,
             StyleSheet = 27,
             ScriptFile = 28,
@@ -112,23 +106,18 @@ namespace Microsoft.VisualStudioTools.Project {
             XWorld = 36,
             Audio = 37,
             Video = 38,
-            [SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "CAB")]
             CAB = 39,
-            [SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "JAR")]
             JAR = 40,
             DataEnvironment = 41,
             PreviewFile = 42,
             DanglingReference = 43,
-            [SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "XSLT")]
             XSLTFile = 44,
             Cursor = 45,
             AppDesignerFolder = 46,
             Data = 47,
             Application = 48,
             DataSet = 49,
-            [SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "PFX")]
             PFX = 50,
-            [SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "SNK")]
             SNK = 51,
 
             ImageLast = 51
@@ -281,7 +270,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// for which it wants to support extensibility. This also enables us to have multiple
         /// type mapping to the same CATID if we choose to.
         /// </summary>
-        private Dictionary<Type, Guid> catidMapping = new Dictionary<Type, Guid>();
+        private Dictionary<Type, Guid> catidMapping;
 
         /// <summary>
         /// The internal package implementation.
@@ -370,7 +359,6 @@ namespace Microsoft.VisualStudioTools.Project {
         /// This is the project instance guid that is peristed in the project file
         /// </summary>
         [System.ComponentModel.BrowsableAttribute(false)]
-        [SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "ID")]
         public virtual Guid ProjectIDGuid {
             get {
                 return this.projectIdGuid;
@@ -532,7 +520,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <summary>
         /// True if the project uses the Project Designer Editor instead of the property page frame to edit project properties.
         /// </summary>
-        protected virtual bool SupportsProjectDesigner {
+        protected bool SupportsProjectDesigner {
             get {
                 return this.supportsProjectDesigner;
             }
@@ -641,7 +629,6 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <summary>
         /// Gets the Base Uniform Resource Identifier (URI).
         /// </summary>
-        [SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "URI")]
         public Microsoft.VisualStudio.Shell.Url BaseURI {
             get {
                 if (baseUri == null && this.buildProject != null) {
@@ -731,7 +718,7 @@ namespace Microsoft.VisualStudioTools.Project {
             }
             set {
                 this.buildLogger = value;
-                this.useProvidedLogger = true;
+                this.useProvidedLogger = value != null;
             }
         }
 
@@ -819,7 +806,6 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <summary>
         /// The internal package implementation.
         /// </summary>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
         internal ProjectPackage Package {
             get {
                 return this.package;
@@ -1086,6 +1072,18 @@ namespace Microsoft.VisualStudioTools.Project {
                     SetBuildProject(null);
                 }
 
+                var logger = BuildLogger as IDisposable;
+                BuildLogger = null;
+                if (logger != null) {
+                    logger.Dispose();
+                }
+
+                var tasks = taskProvider;
+                taskProvider = null;
+                if (tasks != null) {
+                    tasks.Dispose();
+                }
+
                 isClosing = true;
                 isClosed = false;
 
@@ -1244,7 +1242,6 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <param name="wizardToRun">The name of the wizard to run.</param>
         /// <param name="dlgOwner">The owner of the dialog box.</param>
         /// <returns>A VSADDRESULT enum value describing success or failure.</returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1800:DoNotCastUnnecessarily"), SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "dlg")]
         public virtual VSADDRESULT RunWizard(HierarchyNode parentNode, string itemName, string wizardToRun, IntPtr dlgOwner) {
             Debug.Assert(!String.IsNullOrEmpty(itemName), "The Add item dialog was passing in a null or empty item to be added to the hierrachy.");
             Debug.Assert(!String.IsNullOrEmpty(this.ProjectHome), "ProjectHome is not specified for this project.");
@@ -1444,7 +1441,6 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <param name="flags">Set of flag values taken from the VSCREATEPROJFLAGS enumeration.</param>
         /// <param name="iidProject">Identifier of the interface that the caller wants returned. </param>
         /// <param name="canceled">An out parameter specifying if the project creation was canceled</param>
-        [SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "iid")]
         public virtual void Load(string fileName, string location, string name, uint flags, ref Guid iidProject, out int canceled) {
             using (new DebugTimer("ProjectLoad")) {
                 _diskNodes.Clear();
@@ -1673,7 +1669,6 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <summary>
         /// Do the build by invoking msbuild
         /// </summary>
-        [SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "vsopts")]
         internal virtual void BuildAsync(uint vsopts, string config, IVsOutputWindowPane output, string target, Action<MSBuildResult, string> uiThreadCallback) {
             BuildPrelude(output);
             SetBuildConfigurationProperties(config);
@@ -1744,7 +1739,6 @@ namespace Microsoft.VisualStudioTools.Project {
 
 
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity"), System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Globalization", "CA1308:NormalizeStringsToUppercase")]
         public virtual CompilerParameters GetProjectOptions(string config) {
             // This needs to be commented out because if you build for Debug the properties from the Debug 
             // config are cached. When you change configurations the old props are still cached, and 
@@ -1831,8 +1825,6 @@ namespace Microsoft.VisualStudioTools.Project {
             return (s != null && s.ToUpperInvariant().Trim() == "TRUE");
         }
 
-        [SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "Attr")]
-        [SuppressMessage("Microsoft.Naming", "CA1720:IdentifiersShouldNotContainTypeNames", MessageId = "bool")]
         public virtual bool GetBoolAttr(string config, string name) {
             SetConfiguration(config);
             try {
@@ -2015,7 +2007,6 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <param name="fullPath">the full path to the subfolder we want to verify.</param>
         /// <param name="parent">the parent node where to add the subfolder if it does not exist.</param>
         /// <returns>the foldernode correcsponding to the path.</returns>
-        [SuppressMessage("Microsoft.Naming", "CA1702:CompoundWordsShouldBeCasedCorrectly", MessageId = "SubFolder")]
         protected virtual FolderNode VerifySubFolderExists(string relativePath, string fullPath, HierarchyNode parent, bool createOnDisk = true) {
             Debug.Assert(!CommonUtils.HasEndSeparator(relativePath));
 
@@ -2289,7 +2280,11 @@ namespace Microsoft.VisualStudioTools.Project {
                 var logger = new IDEBuildLogger(output, this.TaskProvider, GetOuterInterface<IVsHierarchy>());
                 logger.ErrorString = ErrorString;
                 logger.WarningString = WarningString;
+                var oldLogger = this.BuildLogger as IDisposable;
                 this.BuildLogger = logger;
+                if (oldLogger != null) {
+                    oldLogger.Dispose();
+                }
             } else {
                 ((IDEBuildLogger)this.BuildLogger).OutputWindowPane = output;
             }
@@ -2323,7 +2318,6 @@ namespace Microsoft.VisualStudioTools.Project {
         /// you should be aware that any call to BuildTarget on any project
         /// will reset the list of generated items/properties
         /// </remarks>
-        [SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "Ms")]
         protected virtual MSBuildResult InvokeMsBuild(string target) {
             UIThread.MustBeCalledFromUIThread();
 
@@ -2584,8 +2578,6 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         /// <param name="file">The file to be added.</param>
         /// <returns>A Projectelement describing the newly added file.</returns>
-        [SuppressMessage("Microsoft.Naming", "CA1702:CompoundWordsShouldBeCasedCorrectly", MessageId = "ToMs")]
-        [SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "Ms")]
         internal virtual MsBuildProjectElement AddFileToMsBuild(string file) {
             MsBuildProjectElement newItem;
 
@@ -2610,8 +2602,6 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         /// <param name="folder">The folder to be added.</param>
         /// <returns>A ProjectElement describing the newly added folder.</returns>
-        [SuppressMessage("Microsoft.Naming", "CA1702:CompoundWordsShouldBeCasedCorrectly", MessageId = "ToMs")]
-        [SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "Ms")]
         protected virtual ProjectElement AddFolderToMsBuild(string folder) {
             ProjectElement newItem;
 
@@ -2968,6 +2958,8 @@ namespace Microsoft.VisualStudioTools.Project {
             }
         }
 
+        protected abstract void InitializeCATIDs();
+
         #endregion
 
         #region non-virtual methods
@@ -3007,7 +2999,6 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <summary>
         /// Do the build by invoking msbuild
         /// </summary>
-        [SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "vsopts")]
         public virtual MSBuildResult Build(string config, string target) {
             UIThread.MustBeCalledFromUIThread();
 
@@ -3072,7 +3063,6 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <param name="file">file name</param>
         /// <param name="itemType">MSBuild item type</param>
         /// <returns>new project element</returns>
-        [SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "Ms")]
         public MsBuildProjectElement CreateMsBuildFileItem(string file, string itemType) {
             return new MsBuildProjectElement(this, file, itemType);
         }
@@ -3294,7 +3284,6 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <summary>
         /// Register the project with the Scc manager.
         /// </summary>
-        [SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "Scc")]
         protected void RegisterSccProject() {
 
             if (this.isRegisteredWithScc || String.IsNullOrEmpty(this.sccProjectName)) {
@@ -3313,8 +3302,6 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <summary>
         ///  Unregisters us from the SCC manager
         /// </summary>
-        [SuppressMessage("Microsoft.Naming", "CA1702:CompoundWordsShouldBeCasedCorrectly", MessageId = "UnRegister")]
-        [SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "Un")]
         protected void UnRegisterProject() {
             if (!this.isRegisteredWithScc) {
                 return;
@@ -3333,12 +3320,18 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         /// <param name="type">Type of the object for which you want the CATID</param>
         /// <returns>CATID</returns>
-        [SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "CATID")]
         protected internal Guid GetCATIDForType(Type type) {
             Utilities.ArgumentNotNull("type", type);
 
-            if (catidMapping.ContainsKey(type))
-                return catidMapping[type];
+            if (catidMapping == null) {
+                catidMapping = new Dictionary<Type, Guid>();
+                InitializeCATIDs();
+            }
+
+            Guid result;
+            if (catidMapping.TryGetValue(type, out result)) {
+                return result;
+            }
             // If you get here and you want your object to be extensible, then add a call to AddCATIDMapping() in your project constructor
             return Guid.Empty;
         }
@@ -3351,9 +3344,12 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         /// <param name="type">Type of the extensible object</param>
         /// <param name="catid">GUID that extender can use to uniquely identify your object type</param>
-        [SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "catid")]
-        [SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "CATID")]
         protected void AddCATIDMapping(Type type, Guid catid) {
+            if (catidMapping == null) {
+                catidMapping = new Dictionary<Type, Guid>();
+                InitializeCATIDs();
+            }
+
             catidMapping.Add(type, catid);
         }
 
@@ -3423,7 +3419,6 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <summary>
         /// Retrieve all XML fragments that need to be saved from the flavors and store the information in msbuild.
         /// </summary>
-        [SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "XML")]
         protected void PersistXMLFragments() {
             if (IsFlavorDirty()) {
                 XmlDocument doc = new XmlDocument();
@@ -3788,7 +3783,6 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <param name="result"></param>
         /// <returns>S_OK if it succeeds </returns>
         /// <remarks>The result array is initalized to failure.</remarks>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1506:AvoidExcessiveClassCoupling"), System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity")]
         public virtual int AddItemWithSpecific(uint itemIdLoc, VSADDITEMOPERATION op, string itemName, uint filesToOpen, string[] files, IntPtr dlgOwner, uint editorFlags, ref Guid editorType, string physicalView, ref Guid logicalView, VSADDRESULT[] result) {
             return AddItemWithSpecificInternal(itemIdLoc, op, itemName, filesToOpen, files, dlgOwner, editorFlags, ref editorType, physicalView, ref logicalView, result);
         }
@@ -5595,7 +5589,6 @@ If the files in the existing folder have the same names as files in the folder y
             }
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2233:OperationsShouldNotOverflow", MessageId = "cookie-1")]
         public virtual int UnadviseHierarchyEvents(uint cookie) {
             this._hierarchyEventSinks.RemoveAt(cookie - 1);
             return VSConstants.S_OK;
@@ -5704,8 +5697,7 @@ If the files in the existing folder have the same names as files in the folder y
                 }
             }
         }
-
-        [SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "propid")]
+        
         internal void OnPropertyChanged(HierarchyNode node, int propid, uint flags) {
             Utilities.ArgumentNotNull("node", node);
 
@@ -5747,8 +5739,6 @@ If the files in the existing folder have the same names as files in the folder y
         /// Causes the hierarchy to be redrawn.
         /// </summary>
         /// <param name="element">Used by the hierarchy to decide which element to redraw</param>
-        [SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "Re")]
-        [SuppressMessage("Microsoft.Naming", "CA1702:CompoundWordsShouldBeCasedCorrectly", MessageId = "ReDraw")]
         internal void ReDrawNode(HierarchyNode node, UIHierarchyElement element) {
             foreach (IVsHierarchyEvents sink in _hierarchyEventSinks) {
                 int result;
@@ -5856,7 +5846,6 @@ If the files in the existing folder have the same names as files in the folder y
         /// <param name="docData">Item identifier of the hierarchy item saved from VSITEMID.</param>
         /// <param name="cancelled">[out] true if the save action was canceled.</param>
         /// <returns>[out] true if the save action was canceled.</returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity")]
         public virtual int SaveItem(VSSAVEFLAGS saveFlag, string silentSaveAsName, uint itemid, IntPtr docData, out int cancelled) {
             cancelled = 0;
 
@@ -5990,7 +5979,6 @@ If the files in the existing folder have the same names as files in the folder y
         /// <param name="itemId">Item identifier of an item in the hierarchy. Valid values are VSITEMID_NIL, VSITEMID_ROOT and VSITEMID_SELECTION.</param>
         /// <param name="isReloadable">A flag indicating that the project item is reloadable (1 for reloadable, 0 for non-reloadable).</param>
         /// <returns>If the method succeeds, it returns S_OK. If it fails, it returns an error code. </returns>
-        [SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "Reloadable")]
         public virtual int IsItemReloadable(uint itemId, out int isReloadable) {
             isReloadable = 0;
 

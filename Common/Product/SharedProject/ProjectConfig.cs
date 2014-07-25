@@ -754,7 +754,6 @@ namespace Microsoft.VisualStudioTools.Project {
     }
 
     [ComVisible(true)]
-    [SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "Buildable")]
     internal class BuildableProjectConfig : IVsBuildableProjectCfg {
         #region fields
         ProjectConfig config = null;

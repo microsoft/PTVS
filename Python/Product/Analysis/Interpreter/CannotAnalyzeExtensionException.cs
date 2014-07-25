@@ -16,6 +16,7 @@ using System;
 using System.Runtime.Serialization;
 
 namespace Microsoft.PythonTools.Interpreter {
+    [Serializable]
     public class CannotAnalyzeExtensionException : Exception {
         public CannotAnalyzeExtensionException() : base() { }
         public CannotAnalyzeExtensionException(string msg) : base(msg) { }
@@ -23,6 +24,7 @@ namespace Microsoft.PythonTools.Interpreter {
             : base(message, innerException) {
         }
 
-        protected CannotAnalyzeExtensionException(SerializationInfo info, StreamingContext context) : base(info, context) { }
+        protected CannotAnalyzeExtensionException(SerializationInfo info, StreamingContext context)
+            : base(info, context) { }
     }
 }

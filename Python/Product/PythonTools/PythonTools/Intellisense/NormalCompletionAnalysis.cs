@@ -91,7 +91,7 @@ namespace Microsoft.PythonTools.Intellisense {
             var text = PrecedingExpression;
             if (text == null) {
                 return null;
-            } else if (text != string.Empty) {
+            } else if (!string.IsNullOrEmpty(text)) {
                 string fixedText = FixupCompletionText(text);
                 if (analysis != null && fixedText != null && (pyReplEval == null || !pyReplEval.LiveCompletionsOnly)) {
                     lock (_analyzer) {

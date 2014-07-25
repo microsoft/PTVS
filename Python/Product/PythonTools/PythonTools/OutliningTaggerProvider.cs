@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
@@ -37,6 +38,8 @@ namespace Microsoft.PythonTools {
 
         #endregion
 
+        [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",
+            Justification = "Object is owned by VS and cannot be disposed")]
         internal class OutliningTagger : ITagger<IOutliningRegionTag> {
             private readonly ITextBuffer _buffer;
             private readonly Timer _timer;

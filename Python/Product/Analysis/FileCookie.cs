@@ -16,6 +16,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Text;
+using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Analysis {
     public class FileCookie : IAnalysisCookie {
@@ -81,8 +83,7 @@ namespace Microsoft.PythonTools.Analysis {
                     using (ZipArchive archive = ZipFile.Open(_zipFileName, ZipArchiveMode.Read)) {
                         var entry = archive.GetEntry(_pathInZip.Replace('\\', '/'));
                         if (entry != null) {
-                            using (Stream stream = entry.Open())
-                            using (var reader = new StreamReader(stream)) {
+                            using (var reader = new StreamReader(entry.Open())) {
                                 string line;
                                 while ((line = reader.ReadLine()) != null) {
                                     _allLines.Add(line);

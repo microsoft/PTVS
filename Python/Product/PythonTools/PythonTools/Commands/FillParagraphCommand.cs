@@ -155,8 +155,8 @@ namespace Microsoft.PythonTools.Commands {
 
         private bool PrevNotParaStart(FillPrefix prefix, int prev_num, int ln_num, string prev_txt, Regex regexp) {
             var notBufFirstLn = prev_num != ln_num;
-            var notFileDocStrAndHasPrefix = prefix.Prefix != "" && prev_txt.IndexOf(prefix.Prefix) == 0;
-            var isFileDocStrAndNotEmptyLine = prefix.Prefix == "" && prev_txt != "";
+            var notFileDocStrAndHasPrefix = !string.IsNullOrEmpty(prefix.Prefix) && prev_txt.StartsWith(prefix.Prefix);
+            var isFileDocStrAndNotEmptyLine = string.IsNullOrEmpty(prefix.Prefix) && !string.IsNullOrEmpty(prev_txt);
             var notDocStringOrNoTripleQuotesYet = !(prefix.IsDocString && regexp.Match(prev_txt).Success);
             return (notBufFirstLn &&
                     (notFileDocStrAndHasPrefix || isFileDocStrAndNotEmptyLine) &&
@@ -199,8 +199,8 @@ namespace Microsoft.PythonTools.Commands {
 
             SnapshotPoint res;
             if (!prefix.IsDocString ||
-                _startDocStringRegex.Match(prev_txt).Success ||
-                prev_txt == "") {
+                string.IsNullOrEmpty(prev_txt) ||
+                _startDocStringRegex.IsMatch(prev_txt)) {
                 // Normally ln is the start for filling, prev line stopped the loop.
                 res = point.Snapshot.GetLineFromLineNumber(ln_num).Start;
             } else {
@@ -214,8 +214,8 @@ namespace Microsoft.PythonTools.Commands {
 
         private bool NextNotParaEnd(FillPrefix prefix, int next_num, int ln_num, string next_txt, Regex regexp) {
             var notBufLastLn = next_num != ln_num;
-            var notFileDocStrAndHasPrefix = prefix.Prefix != "" && next_txt.IndexOf(prefix.Prefix) == 0;
-            var isFileDocStrAndNotEmptyLine = prefix.Prefix == "" && next_txt != "";
+            var notFileDocStrAndHasPrefix = !string.IsNullOrEmpty(prefix.Prefix) && next_txt.StartsWith(prefix.Prefix);
+            var isFileDocStrAndNotEmptyLine = string.IsNullOrEmpty(prefix.Prefix) && string.IsNullOrEmpty(next_txt);
             var notDocStringOrNoTripleQuotesYet = !(prefix.IsDocString && regexp.Match(next_txt).Success);
             return (notBufLastLn &&
                     (notFileDocStrAndHasPrefix || isFileDocStrAndNotEmptyLine) &&
@@ -257,8 +257,8 @@ namespace Microsoft.PythonTools.Commands {
 
             SnapshotPoint res;
             if (!prefix.IsDocString ||
-                _startDocStringRegex.Match(next_txt).Success ||
-                next_txt == "") {
+                string.IsNullOrEmpty(next_txt) ||
+                _startDocStringRegex.IsMatch(next_txt)) {
                 // Normally ln is the last line to fill, next line stopped the loop.
                 res = point.Snapshot.GetLineFromLineNumber(ln_num).End;
             } else {
@@ -292,7 +292,7 @@ namespace Microsoft.PythonTools.Commands {
             var match = regexp.Match(lntxt);
             if (match.Success) {
                 return new FillPrefix(lntxt.Substring(0, match.Length), false);
-            } else if (lntxt.Trim() == "") {
+            } else if (string.IsNullOrEmpty(lntxt.Trim())) {
                 return new FillPrefix(null, false);
             } else {
                 regexp = _whitespaceRegex;

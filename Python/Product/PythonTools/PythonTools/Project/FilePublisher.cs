@@ -40,8 +40,8 @@ namespace Microsoft.PythonTools.Project {
                     // try copying without impersonating first...
                     CopyOneFile(destination, item);
                 } catch (UnauthorizedAccessException) {
-                    var resource = new _NETRESOURCE();
-                    resource.dwType = RESOURCETYPE_DISK;
+                    var resource = new NativeMethods._NETRESOURCE();
+                    resource.dwType = NativeMethods.RESOURCETYPE_DISK;
                     resource.lpRemoteName = Path.GetPathRoot(destination.LocalPath);
                     
                     NetworkCredential creds = null;
@@ -54,7 +54,7 @@ namespace Microsoft.PythonTools.Project {
                         throw;
                     }
 
-                    var netAddRes = WNetAddConnection3(
+                    var netAddRes = NativeMethods.WNetAddConnection3(
                         Process.GetCurrentProcess().MainWindowHandle, 
                         ref resource,
                         creds.Password, 
@@ -73,24 +73,6 @@ namespace Microsoft.PythonTools.Project {
 
                 project.Progress = (int)(((double)i / (double)files.Count) * 100);
             }
-        }
-
-        [DllImport("mpr")]
-        static extern uint WNetAddConnection3(IntPtr handle, ref _NETRESOURCE lpNetResource, string lpPassword, string lpUsername, uint dwFlags);
-
-        private const int CONNECT_INTERACTIVE = 0x08;
-        private const int CONNECT_PROMPT = 0x10;
-        private const int RESOURCETYPE_DISK = 1;
-
-        struct _NETRESOURCE {
-            public uint dwScope;
-            public uint dwType;
-            public uint dwDisplayType;
-            public uint dwUsage;
-            public string lpLocalName;
-            public string lpRemoteName;
-            public string lpComment;
-            public string lpProvider;
         }
 
         private static void CopyOneFile(Uri destination, IPublishFile item) {

@@ -74,7 +74,8 @@ namespace Microsoft.PythonTools.Debugger {
         }
     }
 
-    public class ConnectionException : Exception {
+    [Serializable]
+    public sealed class ConnectionException : Exception {
         public ConnectionException(ConnErrorMessages error) {
             Error = error;
         }
@@ -84,7 +85,14 @@ namespace Microsoft.PythonTools.Debugger {
             Error = error;
         }
 
-        public ConnErrorMessages Error { get; private set; }
+        public ConnErrorMessages Error {
+            get {
+                return (ConnErrorMessages)Data[typeof(ConnErrorMessages)];
+            }
+            private set {
+                Data[typeof(ConnErrorMessages)] = value;
+            }
+        }
 
         public override string Message {
             get { return Error.GetErrorMessage(); }

@@ -14,6 +14,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Debugger;
 
@@ -236,6 +237,8 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies {
     internal struct Int32EnumProxy<TEnum> : IWritableDataProxy<TEnum> {
         public Int32Proxy UnderlyingProxy { get; private set; }
 
+        [SuppressMessage("Microsoft.Usage", "CA2207:InitializeValueTypeStaticFieldsInline",
+            Justification = ".cctor used for debug check, not initialization")]
         static Int32EnumProxy() {
             Debug.Assert(typeof(TEnum).IsSubclassOf(typeof(Enum)));
         }

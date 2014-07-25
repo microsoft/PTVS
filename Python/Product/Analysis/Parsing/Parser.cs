@@ -4302,11 +4302,18 @@ namespace Microsoft.PythonTools.Parsing {
         #region IDisposable Members
 
         public void Dispose() {
-            if (_sourceReader != null) {
-                _sourceReader.Close();
-            }
-            if (_tokenizer != null) {
-                _tokenizer.Uninitialize();
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing) {
+            if (disposing) {
+                if (_sourceReader != null) {
+                    _sourceReader.Close();
+                }
+                if (_tokenizer != null) {
+                    _tokenizer.Uninitialize();
+                }
             }
         }
 
@@ -4920,7 +4927,7 @@ namespace Microsoft.PythonTools.Parsing {
 #if DEBUG
                 // all codecs should be stored in lowercase because we only look up from lowercase strings
                 foreach (KeyValuePair<string, EncodingInfoWrapper> kvp in d) {
-                    Debug.Assert(kvp.Key.ToLower(CultureInfo.InvariantCulture) == kvp.Key);
+                    Debug.Assert(kvp.Key.ToLowerInvariant() == kvp.Key);
                 }
 #endif
                 return d;
@@ -5061,7 +5068,7 @@ namespace Microsoft.PythonTools.Parsing {
             if (name == null) {
                 return null;
             }
-            return name.ToLower(CultureInfo.InvariantCulture).Replace('-', '_').Replace(' ', '_');
+            return name.ToLowerInvariant().Replace('-', '_').Replace(' ', '_');
         }
 
         /// <summary>

@@ -74,10 +74,6 @@ namespace Microsoft.VisualStudioTools {
                 }
             };
 #endif
-            IServiceContainer container = this as IServiceContainer;
-            ServiceCreatorCallback callback = new ServiceCreatorCallback(CreateService);
-            //container.AddService(GetLanguageServiceType(), callback, true);
-            container.AddService(GetLibraryManagerType(), callback, true);
         }
 
         internal static Dictionary<Command, MenuCommand> Commands {
@@ -193,6 +189,10 @@ namespace Microsoft.VisualStudioTools {
         }
 
         protected override void Initialize() {
+            var container = (IServiceContainer)this;
+            //container.AddService(GetLanguageServiceType(), CreateService, true);
+            container.AddService(GetLibraryManagerType(), CreateService, true);
+
             var componentManager = _compMgr = (IOleComponentManager)GetService(typeof(SOleComponentManager));
             OLECRINFO[] crinfo = new OLECRINFO[1];
             crinfo[0].cbSize = (uint)Marshal.SizeOf(typeof(OLECRINFO));

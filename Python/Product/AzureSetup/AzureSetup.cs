@@ -51,6 +51,7 @@ namespace AzureSetup {
             "IIS-CGI"
         };
 
+        [STAThread]
         static void Main(string[] args) {
             try {
                 ConfigureFastCgi();

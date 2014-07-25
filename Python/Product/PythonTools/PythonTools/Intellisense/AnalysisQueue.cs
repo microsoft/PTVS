@@ -128,8 +128,10 @@ namespace Microsoft.PythonTools.Intellisense {
 
         #region IDisposable Members
 
-        void IDisposable.Dispose() {
+        public void Dispose() {
             Stop();
+            _workEvent.Dispose();
+            _cancel.Dispose();
         }
 
         #endregion

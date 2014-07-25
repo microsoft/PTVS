@@ -21,7 +21,6 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
     /// <summary>
     /// Contains OAReferenceItem objects 
     /// </summary>
-    [SuppressMessage("Microsoft.Interoperability", "CA1405:ComVisibleTypeBaseTypesShouldBeComVisible")]
     [ComVisible(true), CLSCompliant(false)]
     public class OAReferenceFolderItem : OAProjectItem {
         #region ctors

@@ -81,6 +81,7 @@
     </Compile>
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="ConnErrorMessages.cs" />
+    <Compile Include="NativeMethods.cs" />
     <Compile Include="PyAttacher.cs" />
   </ItemGroup>
   <Import Project="..\ProjectAfter.settings" />

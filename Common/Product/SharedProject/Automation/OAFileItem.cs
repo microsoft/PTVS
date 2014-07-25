@@ -27,7 +27,6 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
     /// <summary>
     /// Represents an automation object for a file in a project
     /// </summary>
-    [SuppressMessage("Microsoft.Interoperability", "CA1405:ComVisibleTypeBaseTypesShouldBeComVisible")]
     [ComVisible(true)]
     public class OAFileItem : OAProjectItem {
         #region ctors

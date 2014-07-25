@@ -25,7 +25,6 @@ namespace Microsoft.VisualStudioTools.Project.Automation
     /// <summary>
     /// Represents a project reference of the solution
     /// </summary>
-    [SuppressMessage("Microsoft.Interoperability", "CA1405:ComVisibleTypeBaseTypesShouldBeComVisible")]
     [ComVisible(true)]
     public class OAProjectReference : OAReferenceBase
     {

@@ -764,8 +764,6 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <param name="sccFile">One of the file associated to the node.</param>
         /// <param name="files">The list of files to be placed under source control.</param>
         /// <param name="flags">The flags that are associated to the files.</param>
-        [SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "Scc")]
-        [SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "scc")]
         protected internal override void GetSccSpecialFiles(string sccFile, IList<string> files, IList<tagVsSccFilesFlags> flags) {
             if (this.ExcludeNodeFromScc) {
                 return;

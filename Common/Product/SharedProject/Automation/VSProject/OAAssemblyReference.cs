@@ -19,7 +19,6 @@ using System.Text;
 using VSLangProj;
 
 namespace Microsoft.VisualStudioTools.Project.Automation {
-    [SuppressMessage("Microsoft.Interoperability", "CA1405:ComVisibleTypeBaseTypesShouldBeComVisible")]
     [ComVisible(true)]
     public class OAAssemblyReference : OAReferenceBase {
         internal OAAssemblyReference(AssemblyReferenceNode assemblyReference) :

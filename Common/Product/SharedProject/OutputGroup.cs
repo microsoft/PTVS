@@ -57,7 +57,6 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <summary>
         /// Get the project configuration object associated with this output group
         /// </summary>
-        [SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "Cfg")]
         protected ProjectConfig ProjectCfg {
             get { return _projectCfg; }
         }

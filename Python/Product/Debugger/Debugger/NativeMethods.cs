@@ -14,22 +14,11 @@
 
 using System;
 using System.Runtime.InteropServices;
-using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Project;
-using Microsoft.VisualStudio.Shell;
+using Microsoft.Win32.SafeHandles;
 
-namespace Microsoft.PythonTools.InterpreterList {
-    [Guid(PythonConstants.InterpreterListToolWindowGuid)]
-    sealed class InterpreterListToolWindow : ToolWindowPane {
-        public InterpreterListToolWindow() {
-            BitmapResourceID = PythonConstants.ResourceIdForReplImages;
-            BitmapIndex = 0;
-            Caption = SR.GetString(SR.Environments);
-
-            Content = new InterpreterList(
-                PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>(),
-                PythonToolsPackage.Instance
-            );
-        }
+namespace Microsoft.PythonTools.Debugger {
+    internal static class NativeMethods {
+        [DllImport("kernel32", SetLastError = true, ExactSpelling = true)]
+        public static extern Int32 WaitForSingleObject(SafeWaitHandle handle, Int32 milliseconds);
     }
 }

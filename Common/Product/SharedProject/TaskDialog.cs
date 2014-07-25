@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio;
@@ -543,6 +544,8 @@ namespace Microsoft.VisualStudioTools {
                 TDM_UPDATE_ICON = WM_USER + 116  // wParam = icon element (TASKDIALOG_ICON_ELEMENTS), lParam = new icon (hIcon if TDF_USE_HICON_* was set, PCWSTR otherwise)
             }
 
+            [SuppressMessage("Microsoft.Interoperability", "CA1400:PInvokeEntryPointsShouldExist",
+                Justification = "Entry point exists but CA can't find it")]
             [DllImport("comctl32.dll", SetLastError = true)]
             internal static extern int TaskDialogIndirect(
                 ref TASKDIALOGCONFIG pTaskConfig,

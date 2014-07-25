@@ -127,11 +127,16 @@ namespace Microsoft.PythonTools.DkmDebugger {
         }
     }
 
-    internal class CppEvaluationException : Exception {
-        public DkmEvaluationResult EvaluationResult { get; private set; }
+    [Serializable]
+    sealed class CppEvaluationException : Exception {
+        public DkmEvaluationResult EvaluationResult {
+            get {
+                return (DkmEvaluationResult)Data[typeof(DkmEvaluationResult)];
+            }
+        }
 
         public CppEvaluationException(DkmEvaluationResult evalResult = null) {
-            EvaluationResult = evalResult;
+            Data[typeof(DkmEvaluationResult)] = evalResult;
         }
     }
 }

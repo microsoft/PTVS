@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.Serialization;
 using System.Text;
 
@@ -172,7 +173,7 @@ namespace Microsoft.PythonTools.Parsing {
         private int _index;
 
         public override bool Fallback(char charUnknownHigh, char charUnknownLow, int index) {
-            throw new EncoderFallbackException(String.Format("'ascii' codec can't encode character '\\u{0:X}{1:04X}' in position {1}", (int)charUnknownHigh, (int)charUnknownLow, index));
+            throw new EncoderFallbackException(String.Format("'ascii' codec can't encode character '\\u{0:X}{1:04X}' in position {2}", (int)charUnknownHigh, (int)charUnknownLow, index));
         }
 
         public override bool Fallback(char charUnknown, int index) {
@@ -311,11 +312,11 @@ namespace Microsoft.PythonTools.Parsing {
 
     [Serializable]
     public class BadSourceException : Exception {
-        internal byte _badByte;
-        internal int _index;
+        [SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors",
+            Justification = "cannot seal class because of back compat")]
         public BadSourceException(byte b, int index) {
-            _badByte = b;
-            _index = index;
+            Data["BadByte"] = b;
+            Data["Index"] = index;
         }
 
         public BadSourceException() : base() { }
@@ -329,13 +330,19 @@ namespace Microsoft.PythonTools.Parsing {
 
         public byte BadByte {
             get {
-                return _badByte;
+                if (Data.Contains("BadByte")) {
+                    return (byte)Data["BadByte"];
+                }
+                return 0;
             }
         }
 
         public int Index {
             get {
-                return _index;
+                if (Data.Contains("Index")) {
+                    return (int)Data["Index"];
+                }
+                return 0;
             }
         }
     }

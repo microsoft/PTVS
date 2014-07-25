@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -29,6 +30,8 @@ namespace Microsoft.PythonTools.Interpreter {
         PythonTypeDatabase _baseDb;
         bool _baseHasRefreshed;
 
+        [SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors",
+            Justification = "call to RefreshIsCurrent is required for back compat")]
         public DerivedInterpreterFactory(PythonInterpreterFactoryWithDatabase baseFactory,
                                          InterpreterFactoryCreationOptions options)
             : base(options.Id,

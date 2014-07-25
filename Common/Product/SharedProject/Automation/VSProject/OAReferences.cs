@@ -26,7 +26,6 @@ namespace Microsoft.VisualStudioTools.Project.Automation
     /// <summary>
     /// Represents the automation object for the equivalent ReferenceContainerNode object
     /// </summary>
-    [SuppressMessage("Microsoft.Naming", "CA1710:IdentifiersShouldHaveCorrectSuffix")]
     [ComVisible(true)]
     public class OAReferences : ConnectionPointContainer,
                                 IEventSource<_dispReferencesEvents>,

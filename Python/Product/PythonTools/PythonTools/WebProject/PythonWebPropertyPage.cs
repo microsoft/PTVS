@@ -13,12 +13,15 @@
  * ***************************************************************************/
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using Microsoft.VisualStudioTools.Project;
 using SR = Microsoft.PythonTools.Project.SR;
 
 namespace Microsoft.PythonTools.Project.Web {
+    [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",
+        Justification = "object is owned by VS")]
     [Guid(PythonConstants.WebPropertyPageGuid)]
     class PythonWebPropertyPage : CommonPropertyPage {
         private readonly PythonWebPropertyPageControl _control;

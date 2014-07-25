@@ -49,43 +49,35 @@ namespace Microsoft.VisualStudioTools.Project {
     /// Defines the status of the command being queried
     /// </summary>
     [Flags]
-    [SuppressMessage("Microsoft.Naming", "CA1714:FlagsEnumsShouldHavePluralNames")]
-    [SuppressMessage("Microsoft.Design", "CA1008:EnumsShouldHaveZeroValue")]
     public enum QueryStatusResult {
         /// <summary>
         /// The command is not supported.
         /// </summary>
-        [SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "NOTSUPPORTED")]
         NOTSUPPORTED = 0,
 
         /// <summary>
         /// The command is supported
         /// </summary>
-        [SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "SUPPORTED")]
         SUPPORTED = 1,
 
         /// <summary>
         /// The command is enabled
         /// </summary>
-        [SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "ENABLED")]
         ENABLED = 2,
 
         /// <summary>
         /// The command is toggled on
         /// </summary>
-        [SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "LATCHED")]
         LATCHED = 4,
 
         /// <summary>
         /// The command is toggled off (the opposite of LATCHED).
         /// </summary>
-        [SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "NINCHED")]
         NINCHED = 8,
 
         /// <summary>
         /// The command is invisible.
         /// </summary>
-        [SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "INVISIBLE")]
         INVISIBLE = 16
     }
 
@@ -101,7 +93,6 @@ namespace Microsoft.VisualStudioTools.Project {
     /// Defines the component from which a command was issued.
     /// </summary>
     public enum CommandOrigin {
-        [SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "Ui")]
         UiHierarchy,
         OleCommandTarget
     }
@@ -155,7 +146,6 @@ namespace Microsoft.VisualStudioTools.Project {
     /// Used by the hierarchy node to decide which element to redraw.
     /// </summary>
     [Flags]
-    [SuppressMessage("Microsoft.Naming", "CA1714:FlagsEnumsShouldHavePluralNames")]
     public enum UIHierarchyElement {
         None = 0,
 
@@ -167,7 +157,6 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <summary>
         /// This will be translated to VSHPROPID_StateIconIndex
         /// </summary>
-        [SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "Scc")]
         SccState = 2,
 
         /// <summary>
@@ -193,7 +182,6 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <summary>
         /// The VS installation directory. This is the same as the $(DevEnvDir) macro.
         /// </summary>
-        [SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "Env")]
         DevEnvDir,
 
         /// <summary>
@@ -229,7 +217,6 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <summary>
         /// The ResolvedNonMSBuildProjectOutputs msbuild property
         /// </summary>
-        [SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "VSIDE")]
         VSIDEResolvedNonMSBuildProjectOutputs,
 
         /// <summary>
@@ -268,7 +255,6 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <summary>
         /// true if the project was removed from the solution before the solution was closed. false if the project was removed from the solution while the solution was being closed.
         /// </summary>
-        [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
         internal bool Removed {
             get { return _removed; }
         }
@@ -292,7 +278,6 @@ namespace Microsoft.VisualStudioTools.Project {
     /// <summary>
     /// Argument of the event raised when a project property is changed.
     /// </summary>
-    [SuppressMessage("Microsoft.Naming", "CA1710:IdentifiersShouldHaveCorrectSuffix")]
     public class ProjectPropertyChangedArgs : EventArgs {
         private string propertyName;
         private string oldValue;

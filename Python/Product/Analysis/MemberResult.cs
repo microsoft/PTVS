@@ -201,6 +201,14 @@ namespace Microsoft.PythonTools.Analysis {
             return Name == ((MemberResult)obj).Name;
         }
 
+        public static bool operator ==(MemberResult x, MemberResult y) {
+            return x.Name == y.Name;
+        }
+
+        public static bool operator !=(MemberResult x, MemberResult y) {
+            return x.Name != y.Name;
+        }
+
         public override int GetHashCode() {
             return Name.GetHashCode();
         }

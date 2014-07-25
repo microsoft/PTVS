@@ -2135,6 +2135,7 @@ namespace Microsoft.PythonTools.Parsing {
         /// We only use this when the tokenizer has been created to use group recovery because this alters
         /// how we tokenize the language.  The parser creates the tokenizer in this mode.
         /// </summary>
+        [Serializable]
         class GroupingRecovery {
             /// <summary>
             /// the new line kind that was in the grouping
@@ -2192,7 +2193,6 @@ namespace Microsoft.PythonTools.Parsing {
         }
 
         [Conditional("DEBUG")]
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1822:MarkMembersAsStatic")]
         private void CheckInvariants() {
             Debug.Assert(_buffer.Length >= 1);
 
@@ -2391,7 +2391,7 @@ namespace Microsoft.PythonTools.Parsing {
                     );
                 } else {
                     _errors.Add(
-                        String.Format("Non-ASCII character '\\x{0:x}' at position {1}, but no encoding declared; see http://www.python.org/peps/pep-0263.html for details", bse._badByte, bse.Index + CurrentIndex),
+                        String.Format("Non-ASCII character '\\x{0:x}' at position {1}, but no encoding declared; see http://www.python.org/peps/pep-0263.html for details", bse.BadByte, bse.Index + CurrentIndex),
                         null,
                         CurrentIndex + bse.Index,
                         CurrentIndex + bse.Index + 1,

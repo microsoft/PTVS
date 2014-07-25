@@ -894,10 +894,17 @@ namespace Microsoft.PythonTools.Analysis {
 
         #region IDisposable Members
 
-        void IDisposable.Dispose() {
-            IDisposable interpreter = _interpreter as IDisposable;
-            if (interpreter != null) {
-                interpreter.Dispose();
+        public void Dispose() {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing) {
+            if (disposing) {
+                IDisposable interpreter = _interpreter as IDisposable;
+                if (interpreter != null) {
+                    interpreter.Dispose();
+                }
             }
         }
 

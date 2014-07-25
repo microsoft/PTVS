@@ -18,6 +18,7 @@ using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Hosting;
 using System.ComponentModel.Composition.Primitives;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -33,7 +34,7 @@ using Task = System.Threading.Tasks.Task;
 namespace Microsoft.PythonTools.Interpreter {
     [Export(typeof(IInterpreterOptionsService))]
     [PartCreationPolicy(CreationPolicy.Shared)]
-    class InterpreterOptionsService : IInterpreterOptionsService2 {
+    sealed class InterpreterOptionsService : IInterpreterOptionsService2, IDisposable {
         internal static Guid NoInterpretersFactoryGuid = new Guid("{15CEBB59-1008-4305-97A9-CF5E2CB04711}");
 
         // Two locations for specifying factory providers.
@@ -63,9 +64,13 @@ namespace Microsoft.PythonTools.Interpreter {
         IPythonInterpreterFactory _defaultInterpreter;
         IPythonInterpreterFactory _noInterpretersValue;
 
-        class LockInfo {
+        sealed class LockInfo : IDisposable {
             public int _lockCount;
             public readonly SemaphoreSlim _lock = new SemaphoreSlim(1, 1);
+
+            public void Dispose() {
+                _lock.Dispose();
+            }
         }
         private Dictionary<IPythonInterpreterFactory, Dictionary<object, LockInfo>> _locks;
         private readonly object _locksLock = new object();
@@ -91,6 +96,23 @@ namespace Microsoft.PythonTools.Interpreter {
             Initialize(provider);
 
             InitializeDefaultInterpreterWatcher(provider);
+        }
+
+        public void Dispose() {
+            lock (_locksLock) {
+                if (_locks != null) {
+                    foreach (var dict in _locks.Values) {
+                        foreach (var li in dict.Values) {
+                            li.Dispose();
+                        }
+                    }
+                    _locks = null;
+                }
+            }
+
+            foreach (var provider in _providers.OfType<IDisposable>()) {
+                provider.Dispose();
+            }
         }
 
         private void InitializeDefaultInterpreterWatcher(IServiceProvider serviceProvider) {

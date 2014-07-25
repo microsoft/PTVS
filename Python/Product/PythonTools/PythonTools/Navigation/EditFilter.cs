@@ -215,7 +215,7 @@ namespace Microsoft.PythonTools.Language {
             // ensure our library is loaded so find all references will go to our library
             Package.GetGlobalService(typeof(IPythonLibraryManager));
 
-            if (provider.Expression != "") {
+            if (!string.IsNullOrEmpty(provider.Expression)) {
                 var findSym = (IVsFindSymbol)PythonToolsPackage.GetGlobalService(typeof(SVsObjectSearch));
                 VSOBSEARCHCRITERIA2 searchCriteria = new VSOBSEARCHCRITERIA2();
                 searchCriteria.eSrchType = VSOBSEARCHTYPE.SO_ENTIREWORD;

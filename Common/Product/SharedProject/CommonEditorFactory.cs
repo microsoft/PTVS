@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.Designer.Interfaces;
@@ -28,6 +29,7 @@ namespace Microsoft.VisualStudioTools.Project {
     /// <summary>
     /// Common factory for creating our editor
     /// </summary>    
+    [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable")]
     public abstract class CommonEditorFactory : IVsEditorFactory {
         private Package _package;
         private ServiceProvider _serviceProvider;

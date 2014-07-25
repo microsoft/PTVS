@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Net.NetworkInformation;
@@ -25,7 +26,6 @@ using System.Threading;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.Settings;
-using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
@@ -34,6 +34,8 @@ using Microsoft.VisualStudioTools.Project;
 using MSBuild = Microsoft.Build.Evaluation;
 
 namespace Microsoft.PythonTools.TestAdapter {
+    [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",
+        Justification = "object owned by VS")]
     [ExtensionUri(TestExecutor.ExecutorUriString)]
     class TestExecutor : ITestExecutor {
         public const string ExecutorUriString = "executor://PythonTestExecutor/v1";
