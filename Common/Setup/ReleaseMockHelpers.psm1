@@ -156,3 +156,16 @@ function end_sign_files {
         }
     }
 }
+
+function start_virus_scan {
+    param($description, $contact, $path)
+    
+    $xml = New-Object XML
+    $xml.LoadXml("<root><description /><contact /><path /><region>AOC</region></root>")
+    $xml.root.description = $description
+    $xml.root.contact = $contact
+    $xml.root.path = $path
+    
+    Write-Debug "Posting to http://vcs/process.asp:
+$($xml.OuterXml)"
+}

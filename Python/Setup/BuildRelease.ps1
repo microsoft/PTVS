@@ -637,6 +637,11 @@ try {
         Write-Output "Copying source files"
         robocopy /s . $outdir\Sources /xd TestResults Binaries Servicing obj | Out-Null
     }
+    
+    if ($signedbuild) {
+        start_virus_scan "PTVS$spacename" "ptvscore" $outdir
+    }
+    
     $successful = $true
 } finally {
     if ($asmverfileBackedUp) {
