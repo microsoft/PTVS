@@ -100,14 +100,24 @@ namespace Microsoft.PythonTools.Intellisense {
                 } else {
                     _queue[iPri].Add(item);
                 }
-                _workEvent.Set();
+                try {
+                    _workEvent.Set();
+                } catch (ObjectDisposedException) {
+                    // Queue was closed while we were running
+                }
             }
         }
 
         public void Stop() {
-            _cancel.Cancel();
+            try {
+                _cancel.Cancel();
+            } catch (ObjectDisposedException) {
+            }
             if (_workThread.IsAlive) {
-                _workEvent.Set();
+                try {
+                    _workEvent.Set();
+                } catch (ObjectDisposedException) {
+                }
                 _workThread.Join();
             }
         }

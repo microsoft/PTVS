@@ -327,13 +327,20 @@ namespace Microsoft.PythonTools.Interpreter {
         /// raised, regardless of whether the values were changed.
         /// </summary>
         public virtual void RefreshIsCurrent() {
-            if (!_isCurrentSemaphore.Wait(0)) {
-                // Another thread is working on our state, so we will wait for
-                // them to finish and return, since the value is up to date.
-                _isCurrentSemaphore.Wait();
-                _isCurrentSemaphore.Release();
+            try {
+                if (!_isCurrentSemaphore.Wait(0)) {
+                    // Another thread is working on our state, so we will wait for
+                    // them to finish and return, since the value is up to date.
+                    _isCurrentSemaphore.Wait();
+                    _isCurrentSemaphore.Release();
+                    return;
+                }
+            } catch (ObjectDisposedException) {
+                // We've been disposed and the call has come in from
+                // externally, probably a timer.
                 return;
             }
+            
             try {
                 _isCheckingDatabase = true;
                 OnIsCurrentChanged();
