@@ -484,7 +484,8 @@ f(1, 2, 3, 4,", "f", 4, PythonLanguageVersion.V27, true, out sigResult);
 
             code = "from sys.";
             completions = GetCompletionSetCtrlSpace(-1, code);
-            Assert.AreEqual(0, completions.Completions.Count);
+            // There will be one completion saying that there are no completions
+            Assert.AreEqual(1, completions.Completions.Count);
 
             // Error case - no completions
             code = "from sys. import ";

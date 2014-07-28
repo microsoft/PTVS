@@ -453,7 +453,7 @@ namespace PythonToolsTests {
             });
             ImportWizardCustomizationsWorker(BottleProjectCustomization.Instance, proj => {
                 Assert.AreNotEqual(-1, proj.Descendant("ProjectTypeGuids").Value.IndexOf("e614c764-6d9e-4607-9337-b7073809a0bd", StringComparison.OrdinalIgnoreCase));
-                Assert.IsTrue(proj.Descendants(proj.GetName("Import")).Any(d => d.Attribute("Project").Value.Contains("Bottle.targets")));
+                Assert.IsTrue(proj.Descendants(proj.GetName("Import")).Any(d => d.Attribute("Project").Value.Contains("Web.targets")));
                 Assert.AreEqual("Web launcher", proj.Descendant("LaunchProvider").Value);
             });
             ImportWizardCustomizationsWorker(DjangoProjectCustomization.Instance, proj => {
@@ -463,7 +463,7 @@ namespace PythonToolsTests {
             });
             ImportWizardCustomizationsWorker(FlaskProjectCustomization.Instance, proj => {
                 Assert.AreNotEqual(-1, proj.Descendant("ProjectTypeGuids").Value.IndexOf("789894c7-04a9-4a11-a6b5-3f4435165112", StringComparison.OrdinalIgnoreCase));
-                Assert.IsTrue(proj.Descendants(proj.GetName("Import")).Any(d => d.Attribute("Project").Value.Contains("Flask.targets")));
+                Assert.IsTrue(proj.Descendants(proj.GetName("Import")).Any(d => d.Attribute("Project").Value.Contains("Web.targets")));
                 Assert.AreEqual("Web launcher", proj.Descendant("LaunchProvider").Value);
             });
         }
