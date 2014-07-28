@@ -4474,25 +4474,15 @@ min(a, D())
             }
 
             var cancelSource = new CancellationTokenSource();
-            var analysisStopped = new ManualResetEvent(false);
-            var thread = new Thread(_ => {
-                try {
-                    new AnalysisTest().AnalyzeDir(ver.LibPath, ver.Version, cancel: cancelSource.Token);
-                    analysisStopped.Set();
-                } catch (ThreadAbortException) {
-                    Console.WriteLine("Thread was aborted");
-                } catch (Exception ex) {
-                    Console.WriteLine("Exception on thread:\n{0}", ex);
-                }
+            var task = Task.Run(() => {
+                new AnalysisTest().AnalyzeDir(ver.LibPath, ver.Version, cancel: cancelSource.Token);
             });
 
-            thread.Start();
             // Allow 10 seconds for parsing to complete and analysis to start
-            Thread.Sleep(10000);
-            cancelSource.Cancel();
+            cancelSource.CancelAfter(TimeSpan.FromSeconds(10));
 
-            if (!analysisStopped.WaitOne(15000)) {
-                thread.Abort();
+            if (!task.Wait(TimeSpan.FromSeconds(15))) {
+                task.Dispose();
                 Assert.Fail("Analysis did not abort within 5 seconds");
             }
         }

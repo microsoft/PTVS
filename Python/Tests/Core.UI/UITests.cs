@@ -49,39 +49,42 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DeferredSaveWithDot() {
-            // http://pytools.codeplex.com/workitem/623
-            // enable deferred saving on projects
-            var props = VsIdeTestHostContext.Dte.get_Properties("Environment", "ProjectsAndSolution");
-            var prevValue = props.Item("SaveNewProjects").Value;
-            props.Item("SaveNewProjects").Value = false;
+            string fullname;
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                // http://pytools.codeplex.com/workitem/623
+                // enable deferred saving on projects
+                var props = app.Dte.get_Properties("Environment", "ProjectsAndSolution");
+                var prevValue = props.Item("SaveNewProjects").Value;
+                props.Item("SaveNewProjects").Value = false;
+                app.OnDispose(() => { props.Item("SaveNewProjects").Value = prevValue; });
+
+
+                using (var newProjDialog = app.FileNewProject()) {
+                    newProjDialog.FocusLanguageNode();
+
+                    var consoleApp = newProjDialog.ProjectTypes.FindItem("Python Application");
+                    consoleApp.Select();
+                    newProjDialog.ProjectName = "Fob.Oar";
+                    newProjDialog.OK();
+                }
+
+                // wait for new solution to load...
+                for (int i = 0; i < 100 && app.Dte.Solution.Projects.Count == 0; i++) {
+                    System.Threading.Thread.Sleep(1000);
+                }
+
+                using (var saveDialog = AutomationDialog.FromDte(app, "File.SaveAll")) {
+                    saveDialog.ClickButtonAndClose("Save");
+                }
+
+                fullname = app.Dte.Solution.FullName;
+            }
 
             try {
-                // now run the test
-                string fullname;
-                using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                    using (var newProjDialog = app.FileNewProject()) {
-                        newProjDialog.FocusLanguageNode();
-
-                        var consoleApp = newProjDialog.ProjectTypes.FindItem("Python Application");
-                        consoleApp.Select();
-                        newProjDialog.ProjectName = "Fob.Oar";
-                        newProjDialog.OK();
-                    }
-
-                    // wait for new solution to load...
-                    for (int i = 0; i < 100 && app.Dte.Solution.Projects.Count == 0; i++) {
-                        System.Threading.Thread.Sleep(1000);
-                    }
-
-                    using (var saveDialog = AutomationDialog.FromDte(app, "File.SaveAll")) {
-                        saveDialog.ClickButtonAndClose("Save");
-                    }
-
-                    fullname = app.Dte.Solution.FullName;
-                }
+                // Delete the created directory after the solution has been
+                // closed.
                 Directory.Delete(Path.GetDirectoryName(fullname), true);
-            } finally {
-                props.Item("SaveNewProjects").Value = prevValue;
+            } catch {
             }
         }
 

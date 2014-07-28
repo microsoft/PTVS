@@ -14,23 +14,53 @@
 
 using System;
 using System.Windows.Automation;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TestUtilities.UI {
-    public class OverwriteFileDialog : AutomationWrapper {
-        public OverwriteFileDialog(IntPtr hwnd)
-            : base(AutomationElement.FromHandle(hwnd)) {
+    public class OverwriteFileDialog : AutomationDialog {
+        private OverwriteFileDialog(VisualStudioApp app, AutomationElement element)
+            : base(app, element) {
         }
 
-        public void Yes() {
-            Invoke(FindButton("_yes"));
+        public static OverwriteFileDialog Wait(VisualStudioApp app) {
+            var hwnd = app.WaitForDialog();
+            Assert.AreNotEqual(IntPtr.Zero, hwnd, "Did not find OverwriteFileDialog");
+            var element = AutomationElement.FromHandle(hwnd);
+
+            try {
+                Assert.IsNotNull(element.FindFirst(
+                    TreeScope.Descendants,
+                    new PropertyCondition(AutomationElement.AutomationIdProperty, "_allItems")
+                ), "Not correct dialog - missing '_allItems'");
+                Assert.IsNotNull(element.FindFirst(
+                    TreeScope.Descendants,
+                    new PropertyCondition(AutomationElement.AutomationIdProperty, "_yes")
+                ), "Not correct dialog - missing '_yes'");
+
+                var res = new OverwriteFileDialog(app, element);
+                element = null;
+                return res;
+            } finally {
+                if (element != null) {
+                    AutomationWrapper.DumpElement(element);
+                }
+            }
+        }
+
+        public override void OK() {
+            ClickButtonAndClose("_yes", nameIsAutomationId: true);
         }
 
         public void No() {
-            Invoke(FindButton("_no"));
+            ClickButtonAndClose("_no", nameIsAutomationId: true);
         }
 
-        public void Cancel() {
-            Invoke(FindButton("_cancel"));
+        public void Yes() {
+            OK();
+        }
+
+        public override void Cancel() {
+            ClickButtonAndClose("_cancel", nameIsAutomationId: true);
         }
 
 
@@ -54,15 +84,8 @@ namespace TestUtilities.UI {
 
         public string Text {
             get {
-                var message = (ValuePattern)GetMessageTextBlock().GetCurrentPattern(ValuePattern.Pattern);
-                return message.Current.Value;
+                return FindByAutomationId("_message").GetValuePattern().Current.Value;
             }
-        }
-
-        private AutomationElement GetMessageTextBlock() {
-            return Element.FindFirst(TreeScope.Descendants,
-                new PropertyCondition(AutomationElement.AutomationIdProperty, "_message")
-            );
         }
     }
 }

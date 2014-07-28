@@ -360,6 +360,10 @@ namespace TestUtilities.UI {
 
             while (foundWindow != 0) {
                 IVsUIShell uiShell = GetService<IVsUIShell>(typeof(IVsUIShell));
+                if (uiShell == null) {
+                    return;
+                }
+                
                 IntPtr hwnd;
                 uiShell.GetDialogOwnerHwnd(out hwnd);
 
@@ -530,14 +534,15 @@ namespace TestUtilities.UI {
             Console.WriteLine("Ending dialog: ");
             AutomationWrapper.DumpElement(AutomationElement.FromHandle(hwnd));
             Console.WriteLine("--------");
-            StringBuilder title = new StringBuilder(4096);
-            Assert.AreNotEqual(NativeMethods.GetDlgItemText(hwnd, dlgField, title, title.Capacity), (uint)0);
+            try {
+                StringBuilder title = new StringBuilder(4096);
+                Assert.AreNotEqual(NativeMethods.GetDlgItemText(hwnd, dlgField, title, title.Capacity), (uint)0);
 
-            string t = title.ToString();
-            foreach (string expected in text) {
-                Assert.IsTrue(t.Contains(expected), string.Format("Did not find '{0}' in '{1}'", expected, t));
+                string t = title.ToString();
+                AssertUtil.Contains(t, text);
+            } finally {
+                NativeMethods.EndDialog(hwnd, buttonId);
             }
-            NativeMethods.EndDialog(hwnd, buttonId);
         }
 
         /// <summary>

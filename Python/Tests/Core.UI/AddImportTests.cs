@@ -229,36 +229,45 @@ sub_package";
         /// </summary>
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
-        public void Parameters() {            
-            var getreclimit = new [] { "from sys import getrecursionlimit" };
+        public void Parameters() {
+            var getreclimit = new[] { "from sys import getrecursionlimit" };
 
-            AddSmartTagTest("Parameters.py", 1, 19, _NoSmartTags);
-            AddSmartTagTest("Parameters.py", 1, 30, getreclimit);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenProject(@"TestData\AddImport.sln");
+                var item = project.ProjectItems.Item("Parameters.py");
+                var window = item.Open();
+                window.Activate();
 
-            AddSmartTagTest("Parameters.py", 4, 18, _NoSmartTags);
-            AddSmartTagTest("Parameters.py", 7, 18, _NoSmartTags);
-            AddSmartTagTest("Parameters.py", 10, 20, _NoSmartTags);
-            AddSmartTagTest("Parameters.py", 13, 22, _NoSmartTags);
-            AddSmartTagTest("Parameters.py", 16, 22, _NoSmartTags);
-            AddSmartTagTest("Parameters.py", 19, 22, _NoSmartTags);
-            
-            AddSmartTagTest("Parameters.py", 19, 35, getreclimit);
+                var doc = app.GetDocument(item.Document.FullName);
 
-            AddSmartTagTest("Parameters.py", 22, 25, _NoSmartTags);
-            AddSmartTagTest("Parameters.py", 22, 56, getreclimit);
+                AddSmartTagTest(doc, 1, 19, _NoSmartTags);
+                AddSmartTagTest(doc, 1, 30, getreclimit);
 
-            AddSmartTagTest("Parameters.py", 25, 38, _NoSmartTags);
-            AddSmartTagTest("Parameters.py", 25, 38, _NoSmartTags);
-            AddSmartTagTest("Parameters.py", 25, 48, getreclimit);
+                AddSmartTagTest(doc, 4, 18, _NoSmartTags);
+                AddSmartTagTest(doc, 7, 18, _NoSmartTags);
+                AddSmartTagTest(doc, 10, 20, _NoSmartTags);
+                AddSmartTagTest(doc, 13, 22, _NoSmartTags);
+                AddSmartTagTest(doc, 16, 22, _NoSmartTags);
+                AddSmartTagTest(doc, 19, 22, _NoSmartTags);
 
-            AddSmartTagTest("Parameters.py", 29, 12, _NoSmartTags);
-            AddSmartTagTest("Parameters.py", 29, 42, getreclimit);
+                AddSmartTagTest(doc, 19, 35, getreclimit);
 
-            AddSmartTagTest("Parameters.py", 34, 26, _NoSmartTags);
-            AddSmartTagTest("Parameters.py", 34, 31, getreclimit);
+                AddSmartTagTest(doc, 22, 25, _NoSmartTags);
+                AddSmartTagTest(doc, 22, 56, getreclimit);
 
-            AddSmartTagTest("Parameters.py", 42, 16, _NoSmartTags);
-            AddSmartTagTest("Parameters.py", 51, 16, _NoSmartTags);
+                AddSmartTagTest(doc, 25, 38, _NoSmartTags);
+                AddSmartTagTest(doc, 25, 38, _NoSmartTags);
+                AddSmartTagTest(doc, 25, 48, getreclimit);
+
+                AddSmartTagTest(doc, 29, 12, _NoSmartTags);
+                AddSmartTagTest(doc, 29, 42, getreclimit);
+
+                AddSmartTagTest(doc, 34, 26, _NoSmartTags);
+                AddSmartTagTest(doc, 34, 31, getreclimit);
+
+                AddSmartTagTest(doc, 42, 16, _NoSmartTags);
+                AddSmartTagTest(doc, 51, 16, _NoSmartTags);
+            }
         }
 
         /// <summary>
@@ -271,15 +280,7 @@ sub_package";
             AddSmartTagTest("Assignments.py", 1, 8, _NoSmartTags);
         }
 
-        private static void AddSmartTagTest(string filename, int line, int column, string[] expectedActions, int invokeAction = -1, string expectedText = null) {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenProject(@"TestData\AddImport.sln");
-                var item = project.ProjectItems.Item(filename);
-                var window = item.Open();
-                window.Activate();
-
-                var doc = app.GetDocument(item.Document.FullName);
-
+        private static void AddSmartTagTest(EditorWindow doc, int line, int column, string[] expectedActions, int invokeAction = -1, string expectedText = null) {
                 doc.Invoke(() => {
                     var point = doc.TextView.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(line - 1).Start.Add(column - 1);
                     doc.TextView.Caret.MoveTo(point);
@@ -303,6 +304,18 @@ sub_package";
                 } else {
                     doc.StartSmartTagSessionNoSession();
                 }
+        }
+
+        private static void AddSmartTagTest(string filename, int line, int column, string[] expectedActions, int invokeAction = -1, string expectedText = null) {
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenProject(@"TestData\AddImport.sln");
+                var item = project.ProjectItems.Item(filename);
+                var window = item.Open();
+                window.Activate();
+
+                var doc = app.GetDocument(item.Document.FullName);
+
+                AddSmartTagTest(doc, line, column, expectedActions, invokeAction, expectedText);
             }
         }
     }

@@ -138,8 +138,9 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                         solution.FindItem("MoveDuplicateFileName", "textfile.txt")
                     );
 
-                    var dialog = new OverwriteFileDialog(solution.App.WaitForDialog());
-                    dialog.No();
+                    using (var dialog = OverwriteFileDialog.Wait(solution.App)) {
+                        dialog.No();
+                    }
 
                     solution.App.WaitForDialogDismissed();
 
@@ -186,13 +187,15 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                         solution.FindItem("MoveDuplicateFileName", "textfile2.txt")
                     );
 
-                    var dialog = new OverwriteFileDialog(solution.App.WaitForDialog());
-                    dialog.No();
+                    using (var dialog = OverwriteFileDialog.Wait(solution.App)) {
+                        dialog.No();
+                    }
 
                     System.Threading.Thread.Sleep(1000);
 
-                    dialog = new OverwriteFileDialog(solution.App.WaitForDialog());
-                    dialog.Yes();
+                    using (var dialog = OverwriteFileDialog.Wait(solution.App)) {
+                        dialog.Yes();
+                    }
 
                     solution.App.WaitForDialogDismissed();
 
@@ -250,13 +253,15 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                         item2
                     );
 
-                    var dialog = new OverwriteFileDialog(solution.App.WaitForDialog());
-                    dialog.No();
+                    using (var dialog = OverwriteFileDialog.Wait(solution.App)) {
+                        dialog.No();
+                    }
 
                     System.Threading.Thread.Sleep(1000);
 
-                    dialog = new OverwriteFileDialog(solution.App.WaitForDialog());
-                    dialog.Yes();
+                    using (var dialog = OverwriteFileDialog.Wait(solution.App)) {
+                        dialog.Yes();
+                    }
 
                     solution.App.WaitForDialogDismissed();
 
@@ -309,8 +314,9 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                         solution.FindItem("MoveDuplicateFileName1", "textfile.txt")
                     );
 
-                    var dialog = new OverwriteFileDialog(solution.App.WaitForDialog());
-                    dialog.No();
+                    using (var dialog = OverwriteFileDialog.Wait(solution.App)) {
+                        dialog.No();
+                    }
 
                     solution.App.WaitForDialogDismissed();
 
