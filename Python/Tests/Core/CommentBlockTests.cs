@@ -24,14 +24,16 @@ namespace PythonToolsTests {
         public void TestCommentCurrentLine() {
             var view = new MockTextView(
                 new MockTextBuffer(@"print 'hello'
-print 'goodbye'"));
+print 'goodbye'
+"));
 
             view.Caret.MoveTo(view.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(0).Start);
 
             EditorExtensions.CommentOrUncommentBlock(view, true);
 
             Assert.AreEqual(@"#print 'hello'
-print 'goodbye'",
+print 'goodbye'
+",
                 view.TextBuffer.CurrentSnapshot.GetText());
 
             view.Caret.MoveTo(view.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(1).Start);
@@ -39,7 +41,8 @@ print 'goodbye'",
             EditorExtensions.CommentOrUncommentBlock(view, true);
 
             Assert.AreEqual(@"#print 'hello'
-#print 'goodbye'",
+#print 'goodbye'
+",
                  view.TextBuffer.CurrentSnapshot.GetText());
         }
 
@@ -70,7 +73,8 @@ print 'goodbye'",
         public void TestComment() {
             var view = new MockTextView(
                 new MockTextBuffer(@"print 'hello'
-print 'goodbye'"));
+print 'goodbye'
+"));
 
             view.Selection.Select(
                 new SnapshotSpan(view.TextBuffer.CurrentSnapshot, new Span(0, view.TextBuffer.CurrentSnapshot.Length)),
@@ -80,7 +84,8 @@ print 'goodbye'"));
             EditorExtensions.CommentOrUncommentBlock(view, true);
 
             Assert.AreEqual(@"#print 'hello'
-#print 'goodbye'",
+#print 'goodbye'
+",
                  view.TextBuffer.CurrentSnapshot.GetText());
         }
 
@@ -89,7 +94,8 @@ print 'goodbye'"));
             var view = new MockTextView(
                 new MockTextBuffer(@"print 'hello'
 
-print 'goodbye'"));
+print 'goodbye'
+"));
 
             view.Selection.Select(
                 new SnapshotSpan(view.TextBuffer.CurrentSnapshot, new Span(0, view.TextBuffer.CurrentSnapshot.Length)),
@@ -100,7 +106,8 @@ print 'goodbye'"));
 
             Assert.AreEqual(@"#print 'hello'
 
-#print 'goodbye'",
+#print 'goodbye'
+",
                  view.TextBuffer.CurrentSnapshot.GetText());
         }
 
@@ -109,7 +116,8 @@ print 'goodbye'"));
             var view = new MockTextView(
                 new MockTextBuffer(@"print 'hello'
    
-print 'goodbye'"));
+print 'goodbye'
+"));
 
             view.Selection.Select(
                 new SnapshotSpan(view.TextBuffer.CurrentSnapshot, new Span(0, view.TextBuffer.CurrentSnapshot.Length)),
@@ -120,7 +128,8 @@ print 'goodbye'"));
 
             Assert.AreEqual(@"#print 'hello'
    
-#print 'goodbye'",
+#print 'goodbye'
+",
                  view.TextBuffer.CurrentSnapshot.GetText());
         }
 
