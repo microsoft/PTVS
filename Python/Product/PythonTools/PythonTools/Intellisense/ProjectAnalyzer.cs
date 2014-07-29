@@ -322,18 +322,29 @@ namespace Microsoft.PythonTools.Intellisense {
 
             IProjectEntry entry;
             if (!_projectFiles.TryGetValue(path, out entry)) {
-                var modName = ModulePath.FromFullPath(path).ModuleName;
-
                 if (buffer.ContentType.IsOfType(PythonCoreConstants.ContentType)) {
-                    var reanalyzeEntries = Project.GetEntriesThatImportModule(modName, true).ToArray();
+                    string modName;
+                    try {
+                        modName = ModulePath.FromFullPath(path).ModuleName;
+                    } catch (ArgumentException) {
+                        modName = null;
+                    }
+
+                    IPythonProjectEntry[] reanalyzeEntries = null;
+                    if (!string.IsNullOrEmpty(modName)) {
+                        reanalyzeEntries = Project.GetEntriesThatImportModule(modName, true).ToArray();
+                    }
 
                     entry = _pyAnalyzer.AddModule(
                         modName,
                         buffer.GetFilePath(),
                         analysisCookie
                     );
-                    foreach (var entryRef in reanalyzeEntries) {
-                        _analysisQueue.Enqueue(entryRef, AnalysisPriority.Low);
+
+                    if (reanalyzeEntries != null) {
+                        foreach (var entryRef in reanalyzeEntries) {
+                            _analysisQueue.Enqueue(entryRef, AnalysisPriority.Low);
+                        }
                     }
                 } else if (buffer.ContentType.IsOfType("XAML")) {
                     entry = _pyAnalyzer.AddXamlFile(buffer.GetFilePath());
@@ -730,8 +741,13 @@ namespace Microsoft.PythonTools.Intellisense {
                     return null;
                 }
                 var document = item.Key.Document;
+                if (document == null) {
+                    return null;
+                }
 
-                return document != null ? document.TextBuffer.CurrentSnapshot : null;
+                var textBuffer = document.TextBuffer;
+                // TextBuffer may be null if we are racing with file close
+                return textBuffer != null ? textBuffer.CurrentSnapshot : null;
             }
         }
 

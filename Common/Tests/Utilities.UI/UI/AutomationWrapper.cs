@@ -44,7 +44,13 @@ namespace TestUtilities.UI {
         /// </summary>
         /// <param name="automationId"></param>
         public void ClickButtonByAutomationId(string automationId) {
-            Invoke(FindByAutomationId(automationId));
+            Invoke(FindFirstWithRetry(
+                TreeScope.Descendants,
+                new AndCondition(
+                    new PropertyCondition(AutomationElement.AutomationIdProperty, automationId),
+                    new PropertyCondition(AutomationElement.ClassNameProperty, "Button")
+                )
+            ));
         }
 
         
@@ -53,9 +59,13 @@ namespace TestUtilities.UI {
         /// </summary>
         /// <param name="name"></param>
         public void ClickButtonByName(string name) {
-            var button = FindByName(name);
-
-            Invoke(button);
+            Invoke(FindFirstWithRetry(
+                TreeScope.Descendants,
+                new AndCondition(
+                    new PropertyCondition(AutomationElement.NameProperty, name),
+                    new PropertyCondition(AutomationElement.ClassNameProperty, "Button")
+                )
+            ));
         }
 
         public AutomationElement FindByName(string name) {

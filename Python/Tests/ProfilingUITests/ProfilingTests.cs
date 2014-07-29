@@ -133,25 +133,26 @@ namespace ProfilingUITests {
             });
             var dialog = app.WaitForDialog(task);
             if (dialog != IntPtr.Zero) {
-                var saveDialog = new SaveDialog(dialog);
+                using (var saveDialog = new SaveDialog(app, AutomationElement.FromHandle(dialog))) {
 
-                var originalDestName = Path.Combine(SaveDirectory, Path.GetFileName(saveDialog.FileName));
-                var destName = originalDestName;
+                    var originalDestName = Path.Combine(SaveDirectory, Path.GetFileName(saveDialog.FileName));
+                    var destName = originalDestName;
 
-                while (File.Exists(destName)) {
-                    destName = string.Format("{0} {1}{2}",
-                        Path.GetFileNameWithoutExtension(originalDestName),
-                        Guid.NewGuid(),
-                        Path.GetExtension(originalDestName)
-                    );
-                }
+                    while (File.Exists(destName)) {
+                        destName = string.Format("{0} {1}{2}",
+                            Path.GetFileNameWithoutExtension(originalDestName),
+                            Guid.NewGuid(),
+                            Path.GetExtension(originalDestName)
+                        );
+                    }
 
-                saveDialog.FileName = destName;
-                saveDialog.Save();
-                try {
-                    task.Wait(TimeSpan.FromSeconds(5.0));
-                    Assert.Fail("Task did not fault");
-                } catch (AggregateException) {
+                    saveDialog.FileName = destName;
+                    saveDialog.Save();
+                    try {
+                        task.Wait(TimeSpan.FromSeconds(5.0));
+                        Assert.Fail("Task did not fault");
+                    } catch (AggregateException) {
+                    }
                 }
             } else {
                 // Ensure the exception is observed

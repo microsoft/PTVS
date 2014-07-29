@@ -187,8 +187,15 @@ namespace Microsoft.PythonTools.Project {
         protected override void LinkFileAdded(string filename) {
             if (PythonToolsPackage.Instance.DebuggingOptionsPage.UpdateSearchPathsWhenAddingLinkedFiles) {
                 // update our search paths.
-                var dirToAdd = ModulePath.FromFullPath(filename).LibraryPath;
-                AddSearchPathEntry(CommonUtils.EnsureEndSeparator(dirToAdd));
+                string dirToAdd;
+                try {
+                    dirToAdd = ModulePath.FromFullPath(filename).LibraryPath;
+                } catch (ArgumentException) {
+                    dirToAdd = null;
+                }
+                if (!string.IsNullOrEmpty(dirToAdd)) {
+                    AddSearchPathEntry(CommonUtils.EnsureEndSeparator(dirToAdd));
+                }
             }
 
             base.LinkFileAdded(filename);
@@ -1432,7 +1439,7 @@ namespace Microsoft.PythonTools.Project {
             var txt = CommonUtils.GetAbsoluteFilePath(ProjectHome, "requirements.txt");
             var elevated = PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ElevatePip;
             var name = "-r " + ProcessOutput.QuoteSingleArgument(txt);
-            if (!args.ContainsKey("y")) {
+            if (args != null && !args.ContainsKey("y")) {
                 if (!ShouldInstallRequirementsTxt(
                     selectedInterpreterFactory.Description,
                     txt,

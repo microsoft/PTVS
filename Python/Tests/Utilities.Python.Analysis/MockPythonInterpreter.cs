@@ -29,12 +29,10 @@ namespace TestUtilities.Python {
         }
 
 
-        public void Initialize(PythonAnalyzer state) {
-            throw new NotImplementedException();
-        }
+        public void Initialize(PythonAnalyzer state) { }
 
         public IPythonType GetBuiltinType(BuiltinTypeId id) {
-            throw new NotImplementedException();
+            throw new KeyNotFoundException();
         }
 
         public IList<string> GetModuleNames() {

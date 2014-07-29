@@ -820,7 +820,9 @@ namespace Microsoft.VisualStudioTools.Project {
                     // Send OnItemRenamed for the folder now, after all of the children have been renamed
                     Project.Tracker.OnItemRenamed(SourceFolder, NewFolderPath, VSRENAMEFILEFLAGS.VSRENAMEFILEFLAGS_Directory);
 
-                    sourceFolder.ExpandItem(wasExpanded ? EXPANDFLAGS.EXPF_ExpandFolder : EXPANDFLAGS.EXPF_CollapseFolder);
+                    if (sourceFolder != null && Project.ParentHierarchy != null) {
+                        sourceFolder.ExpandItem(wasExpanded ? EXPANDFLAGS.EXPF_ExpandFolder : EXPANDFLAGS.EXPF_CollapseFolder);
+                    }
                 }
             }
 

@@ -13,37 +13,46 @@
  * ***************************************************************************/
 
 using System;
+using System.Threading;
 using System.Windows.Automation;
 using System.Windows.Input;
 
 namespace TestUtilities.UI {
-    public class SaveDialog : AutomationWrapper {
-        public SaveDialog(IntPtr hwnd)
-            : base(AutomationElement.FromHandle(hwnd)) {
+    public class SaveDialog : AutomationDialog {
+        public SaveDialog(VisualStudioApp app, AutomationElement element)
+            : base(app, element) {
+        }
+
+        public static SaveDialog FromDte(VisualStudioApp app) {
+            return new SaveDialog(
+                app,
+                AutomationElement.FromHandle(app.OpenDialogWithDteExecuteCommand("File.SaveSelectedItemsAs"))
+            );
         }
 
         public void Save() {
-            Keyboard.PressAndRelease(Key.S, Key.LeftAlt);
+            WaitForInputIdle();
+            // The Save button on this dialog is broken and so UIA cannot invoke
+            // it (though somehow Inspect is able to...). We use the keyboard
+            // instead.
+            WaitForClosed(DefaultTimeout, () => Keyboard.PressAndRelease(Key.S, Key.LeftAlt));
+        }
+
+        public override void OK() {
+            Save();
         }
 
         public string FileName { 
             get {
-                var filename = (ValuePattern)GetFilenameEditBox().GetCurrentPattern(ValuePattern.Pattern);
-                return filename.Current.Value;
+                return GetFilenameEditBox().GetValuePattern().Current.Value;
             }
             set {
-                var filename = (ValuePattern)GetFilenameEditBox().GetCurrentPattern(ValuePattern.Pattern);
-                filename.SetValue(value);                
+                GetFilenameEditBox().GetValuePattern().SetValue(value);
             }
         }
 
         private AutomationElement GetFilenameEditBox() {
-            return Element.FindFirst(TreeScope.Descendants,
-                new AndCondition(
-                    new PropertyCondition(AutomationElement.ClassNameProperty, "Edit"),
-                    new PropertyCondition(AutomationElement.NameProperty, "File name:")
-                )
-            );
+            return FindByAutomationId("FileNameControlHost");
         }
     }
 }

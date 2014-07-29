@@ -190,7 +190,17 @@ namespace TestUtilities.UI {
                 Console.WriteLine("Successfully executed command {0} {1}", commandName, commandArgs);
             });
 
-            if (!task.Wait(timeout)) {
+            bool timedOut = false;
+            try {
+                timedOut = !task.Wait(timeout);
+            } catch (AggregateException ae) {
+                foreach (var ex in ae.InnerExceptions) {
+                    Console.WriteLine(ex.ToString());
+                }
+                throw;
+            }
+
+            if (timedOut) {
                 string msg = String.Format("Command {0} failed to execute in specified timeout", commandName);
                 Console.WriteLine(msg);
                 DumpVS();
@@ -239,8 +249,7 @@ namespace TestUtilities.UI {
         }
 
         public SaveDialog SaveAs() {
-            var dialog = OpenDialogWithDteExecuteCommand("File.SaveSelectedItemsAs");
-            return new SaveDialog(dialog);
+            return SaveDialog.FromDte(this);
         }
 
         /// <summary>

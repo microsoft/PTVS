@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -29,6 +30,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools;
 using Microsoft.Win32;
 using TestUtilities.Python;
+using Process = System.Diagnostics.Process;
 
 namespace TestUtilities.UI.Python {
     class PythonVisualStudioApp : VisualStudioApp {
@@ -277,6 +279,8 @@ namespace TestUtilities.UI.Python {
             );
             environmentsNode.Select();
 
+            var alreadyRunning = Process.GetProcessesByName("python");
+
             using (var createVenv = AutomationDialog.FromDte(this, "Python.AddVirtualEnvironment")) {
                 envPath = new TextBox(createVenv.FindByAutomationId("VirtualEnvPath")).GetValue();
                 var baseInterp = new ComboBox(createVenv.FindByAutomationId("BaseInterpreter")).GetSelectedItemName();
@@ -298,6 +302,17 @@ namespace TestUtilities.UI.Python {
                 createVenv.ClickButtonAndClose("Close", nameIsAutomationId: true);
             }
 
+            var nowRunning = Process.GetProcessesByName("python").Except(alreadyRunning).ToArray();
+            foreach (var p in nowRunning) {
+                if (p.HasExited) {
+                    continue;
+                }
+                try {
+                    p.WaitForExit(30000);
+                } catch (Win32Exception) {
+                }
+            }
+            
             return OpenSolutionExplorer().WaitForChildOfProject(
                 project,
                 SR.GetString(SR.Environments),

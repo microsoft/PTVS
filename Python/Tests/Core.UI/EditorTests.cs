@@ -298,6 +298,10 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void AutoIndent() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var prevSetting = PythonToolsPackage.Instance.AdvancedEditorOptionsPage.AddNewLineAtEndOfFullyTypedWord;
+                app.OnDispose(() => PythonToolsPackage.Instance.AdvancedEditorOptionsPage.AddNewLineAtEndOfFullyTypedWord = prevSetting);
+                PythonToolsPackage.Instance.AdvancedEditorOptionsPage.AddNewLineAtEndOfFullyTypedWord = true;
+
                 var project = app.OpenProject(@"TestData\AutoIndent.sln");
 
 
@@ -803,9 +807,6 @@ x\
                     app.Dte.Solution.SolutionBuild.Build(true);
 
                     items = app.WaitForErrorListItems(0);
-                    for (int retries = 5; retries > 0 && items.Count > 0; --retries) {
-                        items = app.WaitForErrorListItems(0);
-                    }
                     Assert.AreEqual(0, items.Count);
                 } finally {
                     wnd.Close();

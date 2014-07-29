@@ -103,7 +103,7 @@ namespace PythonToolsUITests {
 
                 // find Program.py, send copy & paste, verify copy of file is there
                 var programPy = window.WaitForItem("Solution 'AbsolutePath' (1 project)", "AbsolutePath", "Program.py");
-                Assert.AreNotEqual(null, programPy);
+                Assert.IsNotNull(programPy);
             }
         }
 
@@ -124,13 +124,13 @@ namespace PythonToolsUITests {
                 Keyboard.ControlC();
                 Keyboard.ControlV();
 
-                Assert.AreNotEqual(null, window.WaitForItem("Solution 'HelloWorld' (1 project)", "HelloWorld", "Program - Copy.py"));
+                Assert.IsNotNull(window.WaitForItem("Solution 'HelloWorld' (1 project)", "HelloWorld", "Program - Copy.py"));
 
                 AutomationWrapper.Select(programPy);
                 Keyboard.ControlC();
                 Keyboard.ControlV();
 
-                Assert.AreNotEqual(null, window.WaitForItem("Solution 'HelloWorld' (1 project)", "HelloWorld", "Program - Copy (2).py"));
+                Assert.IsNotNull(window.WaitForItem("Solution 'HelloWorld' (1 project)", "HelloWorld", "Program - Copy (2).py"));
             }
         }
 
@@ -154,7 +154,7 @@ namespace PythonToolsUITests {
                 Keyboard.Type("MyNewFolder");
                 Keyboard.PressAndRelease(Key.Enter);
 
-                Assert.AreNotEqual(null, window.WaitForItem("Solution 'HelloWorld' (1 project)", "HelloWorld", "MyNewFolder"));
+                Assert.IsNotNull(window.WaitForItem("Solution 'HelloWorld' (1 project)", "HelloWorld", "MyNewFolder"));
             }
         }
 
@@ -251,7 +251,7 @@ namespace PythonToolsUITests {
                 Keyboard.Type("FolderX");
                 Keyboard.PressAndRelease(Key.Enter);
 
-                Assert.AreNotEqual(null, window.WaitForItem("Solution 'HelloWorld' (1 project)", "HelloWorld", "FolderX"));
+                Assert.IsNotNull(window.WaitForItem("Solution 'HelloWorld' (1 project)", "HelloWorld", "FolderX"));
 
                 var folderNode = window.FindItem("Solution 'HelloWorld' (1 project)", "HelloWorld", "FolderX");
                 AutomationWrapper.Select(folderNode);
@@ -263,7 +263,7 @@ namespace PythonToolsUITests {
                 Keyboard.Type("FolderY");
                 Keyboard.PressAndRelease(Key.Enter);
 
-                Assert.AreNotEqual(null, window.WaitForItem("Solution 'HelloWorld' (1 project)", "HelloWorld", "FolderX", "FolderY"));
+                Assert.IsNotNull(window.WaitForItem("Solution 'HelloWorld' (1 project)", "HelloWorld", "FolderX", "FolderY"));
                 var innerFolderNode = window.FindItem("Solution 'HelloWorld' (1 project)", "HelloWorld", "FolderX", "FolderY");
                 AutomationWrapper.Select(innerFolderNode);
 
@@ -271,7 +271,7 @@ namespace PythonToolsUITests {
                     TestData.GetPath(@"TestData\DebuggerProject\BreakpointTest.py")
                 );
 
-                Assert.AreNotEqual(null, window.WaitForItem("Solution 'HelloWorld' (1 project)", "HelloWorld", "FolderX", "FolderY", "BreakpointTest.py"));
+                Assert.IsNotNull(window.WaitForItem("Solution 'HelloWorld' (1 project)", "HelloWorld", "FolderX", "FolderY", "BreakpointTest.py"));
             }
         }
 
@@ -313,7 +313,7 @@ namespace PythonToolsUITests {
 
                 VisualStudioApp.CheckMessageBox(MessageBoxButton.Yes, "HelloWorldExisting.pyproj", "overwrite");
 
-                Assert.AreNotEqual(null, window.WaitForItem("Solution 'RenameProjectTestUI' (1 project)", "HelloWorldExisting"));
+                Assert.IsNotNull(window.WaitForItem("Solution 'RenameProjectTestUI' (1 project)", "HelloWorldExisting"));
             }
         }
 
@@ -323,14 +323,13 @@ namespace PythonToolsUITests {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
                 var project = app.OpenProject(@"TestData\RenameItemsTestUI.sln");
 
-                app.OpenSolutionExplorer();
-                var window = app.SolutionExplorerTreeView;
+                var window = app.OpenSolutionExplorer();
 
                 // find Program.py, send copy & paste, verify copy of file is there
-                var projectNode = window.FindItem("Solution 'RenameItemsTestUI' (1 project)", "HelloWorld", "Program.py");
+                var node = window.FindChildOfProject(project, "Program.py");
 
                 // rename once, cancel renaming to existing file....
-                AutomationWrapper.Select(projectNode);
+                node.Select();
                 Keyboard.PressAndRelease(Key.F2);
                 System.Threading.Thread.Sleep(100);
                 Keyboard.PressAndRelease(Key.A, Key.LeftCtrl);
@@ -344,7 +343,7 @@ namespace PythonToolsUITests {
                 VisualStudioApp.CheckMessageBox(MessageBoxButton.Cancel, "file name extension");
 
                 // rename again, don't cancel...
-                AutomationWrapper.Select(projectNode);
+                node.Select();
                 Keyboard.PressAndRelease(Key.F2);
                 System.Threading.Thread.Sleep(100);
                 Keyboard.PressAndRelease(Key.A, Key.LeftCtrl);
@@ -357,7 +356,7 @@ namespace PythonToolsUITests {
 
                 VisualStudioApp.CheckMessageBox(MessageBoxButton.Yes, "file name extension");
 
-                Assert.AreNotEqual(null, window.WaitForItem("Solution 'RenameItemsTestUI' (1 project)", "HelloWorld", "NewName.txt"));
+                Assert.IsNotNull(window.WaitForChildOfProject(project, "NewName.txt"));
             }
         }
 
@@ -366,21 +365,19 @@ namespace PythonToolsUITests {
         public void CrossProjectCopy() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
                 app.OpenProject(@"TestData\HelloWorld2.sln", expectedProjects: 2);
+                var proj1 = app.Dte.Solution.Projects.Cast<Project>().Single(p => p.Name == "HelloWorld2");
+                var proj2 = app.Dte.Solution.Projects.Cast<Project>().Single(p => p.Name == "HelloWorld");
 
-                app.OpenSolutionExplorer();
-                var window = app.SolutionExplorerTreeView;
+                var window = app.OpenSolutionExplorer();
 
-                var folderNode = window.FindItem("Solution 'HelloWorld2' (2 projects)", "HelloWorld2", "TestFolder3");
-                AutomationWrapper.Select(folderNode);
+                window.FindChildOfProject(proj1, "TestFolder3").Select();
+                app.ExecuteCommand("Edit.Copy");
 
-                Keyboard.ControlC();
+                window.SelectProject(proj2);
+                app.ExecuteCommand("Edit.Paste");
 
-                var projectNode = window.FindItem("Solution 'HelloWorld2' (2 projects)", "HelloWorld");
-
-                AutomationWrapper.Select(projectNode);
-                Keyboard.ControlV();
-
-                Assert.AreNotEqual(null, window.WaitForItem("Solution 'HelloWorld2' (2 projects)", "HelloWorld", "TestFolder3"));
+                Assert.IsNotNull(window.WaitForChildOfProject(proj1, "TestFolder3"));
+                Assert.IsNotNull(window.WaitForChildOfProject(proj2, "TestFolder3"));
             }
         }
 
@@ -389,22 +386,19 @@ namespace PythonToolsUITests {
         public void CrossProjectCutPaste() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
                 app.OpenProject(@"TestData\HelloWorld2.sln", expectedProjects: 2);
+                var proj1 = app.Dte.Solution.Projects.Cast<Project>().Single(p => p.Name == "HelloWorld2");
+                var proj2 = app.Dte.Solution.Projects.Cast<Project>().Single(p => p.Name == "HelloWorld");
 
-                app.OpenSolutionExplorer();
-                var window = app.SolutionExplorerTreeView;
+                var window = app.OpenSolutionExplorer();
 
-                var folderNode = window.FindItem("Solution 'HelloWorld2' (2 projects)", "HelloWorld2", "TestFolder2");
-                AutomationWrapper.Select(folderNode);
+                window.FindChildOfProject(proj1, "TestFolder2").Select();
+                app.ExecuteCommand("Edit.Cut");
 
-                Keyboard.ControlX();
+                window.SelectProject(proj2);
+                app.ExecuteCommand("Edit.Paste");
 
-                var projectNode = window.FindItem("Solution 'HelloWorld2' (2 projects)", "HelloWorld");
-
-                AutomationWrapper.Select(projectNode);
-                Keyboard.ControlV();
-
-                Assert.AreNotEqual(null, window.WaitForItem("Solution 'HelloWorld2' (2 projects)", "HelloWorld", "TestFolder2"));
-                Assert.AreEqual(null, window.WaitForItemRemoved("Solution 'HelloWorld2' (2 projects)", "HelloWorld2", "TestFolder2"));
+                Assert.IsNotNull(window.WaitForChildOfProject(proj2, "TestFolder2"));
+                Assert.IsNull(window.WaitForChildOfProjectRemoved(proj1, "TestFolder2"));
             }
         }
 
@@ -413,22 +407,19 @@ namespace PythonToolsUITests {
         public void CutPaste() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
                 app.OpenProject(@"TestData\HelloWorld2.sln", expectedProjects: 2);
+                var proj = app.Dte.Solution.Projects.Cast<Project>().Single(p => p.Name == "HelloWorld2");
 
-                app.OpenSolutionExplorer();
-                var window = app.SolutionExplorerTreeView;
+                var window = app.OpenSolutionExplorer();
 
-                var subItem = window.FindItem("Solution 'HelloWorld2' (2 projects)", "HelloWorld2", "TestFolder", "SubItem.py");
-                AutomationWrapper.Select(subItem);
+                window.FindChildOfProject(proj, "TestFolder", "SubItem.py").Select();
 
-                Keyboard.ControlX();
+                app.ExecuteCommand("Edit.Cut");
 
-                var projectNode = window.FindItem("Solution 'HelloWorld2' (2 projects)", "HelloWorld2");
+                window.SelectProject(proj);
+                app.ExecuteCommand("Edit.Paste");
 
-                AutomationWrapper.Select(projectNode);
-                Keyboard.ControlV();
-
-                Assert.AreNotEqual(null, window.WaitForItem("Solution 'HelloWorld2' (2 projects)", "HelloWorld2", "SubItem.py"));
-                Assert.AreEqual(null, window.WaitForItemRemoved("Solution 'HelloWorld2' (2 projects)", "HelloWorld2", "TestFolder", "SubItem.py"));
+                Assert.IsNotNull(window.WaitForChildOfProject(proj, "SubItem.py"));
+                Assert.IsNull(window.WaitForChildOfProjectRemoved(proj, "TestFolder", "SubItem.py"));
             }
         }
 
@@ -437,9 +428,9 @@ namespace PythonToolsUITests {
         public void CopyFolderOnToSelf() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
                 app.OpenProject(@"TestData\HelloWorld2.sln", expectedProjects: 2);
+                var proj = app.Dte.Solution.Projects.Cast<Project>().Single(p => p.Name == "HelloWorld2");
 
-                app.OpenSolutionExplorer();
-                var window = app.SolutionExplorerTreeView;
+                var window = app.OpenSolutionExplorer();
 
                 try {
                     // Remove the destination folder in case a previous test has
@@ -448,19 +439,13 @@ namespace PythonToolsUITests {
                 } catch {
                 }
 
-                var folder = window.FindItem("Solution 'HelloWorld2' (2 projects)", "HelloWorld2", "TestFolder");
-                AutomationWrapper.Select(folder);
+                window.FindChildOfProject(proj, "TestFolder").Select();
+                app.ExecuteCommand("Edit.Copy");
 
-                Keyboard.ControlC();
+                window.FindChildOfProject(proj, "TestFolder").Select();
+                app.ExecuteCommand("Edit.Paste");
 
-                AutomationWrapper.Select(folder);
-                Keyboard.ControlV();
-
-                var item = window.WaitForItem("Solution 'HelloWorld2' (2 projects)", "HelloWorld2", "TestFolder - Copy");
-                if (item == null) {
-                    AutomationWrapper.DumpElement(window.Element);
-                    Assert.Fail("Did not find TestFolder - Copy");
-                }
+                Assert.IsNotNull(window.WaitForChildOfProject(proj, "TestFolder - Copy"));
             }
         }
 
@@ -470,8 +455,7 @@ namespace PythonToolsUITests {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
                 app.OpenProject(@"TestData\DragDropTest.sln");
 
-                app.OpenSolutionExplorer();
-                var window = app.SolutionExplorerTreeView;
+                var window = app.OpenSolutionExplorer();
 
                 var folder = window.FindItem("Solution 'DragDropTest' (1 project)", "DragDropTest", "TestFolder", "SubItem.py");
                 var point = folder.GetClickablePoint();
@@ -483,7 +467,7 @@ namespace PythonToolsUITests {
                 Mouse.MoveTo(point);
                 Mouse.Up(MouseButton.Left);
 
-                Assert.AreNotEqual(null, window.WaitForItem("Solution 'DragDropTest' (1 project)", "DragDropTest", "SubItem.py"));
+                Assert.IsNotNull(window.WaitForItem("Solution 'DragDropTest' (1 project)", "DragDropTest", "SubItem.py"));
             }
         }
 
@@ -509,8 +493,8 @@ namespace PythonToolsUITests {
                 Mouse.MoveTo(point);
                 Mouse.Up(MouseButton.Left);
 
-                Assert.AreNotEqual(null, window.WaitForItem("Solution 'DragDropTest' (1 project)", "DragDropTest", "TestFolder", "SubItem2.py"));
-                Assert.AreNotEqual(null, window.WaitForItem("Solution 'DragDropTest' (1 project)", "DragDropTest", "TestFolder", "SubItem3.py"));
+                Assert.IsNotNull(window.WaitForItem("Solution 'DragDropTest' (1 project)", "DragDropTest", "TestFolder", "SubItem2.py"));
+                Assert.IsNotNull(window.WaitForItem("Solution 'DragDropTest' (1 project)", "DragDropTest", "TestFolder", "SubItem3.py"));
             }
         }
 
@@ -536,7 +520,7 @@ namespace PythonToolsUITests {
                 Mouse.MoveTo(point);
                 Mouse.Up(MouseButton.Left);
 
-                Assert.AreNotEqual(null, window.WaitForItem("Solution 'DragDropTest' (1 project)", "DragDropTest", "TestFolder", "SubItem2.py"));
+                Assert.IsNotNull(window.WaitForItem("Solution 'DragDropTest' (1 project)", "DragDropTest", "TestFolder", "SubItem2.py"));
             }
         }
 
@@ -566,7 +550,7 @@ namespace PythonToolsUITests {
                 Mouse.MoveTo(point);
                 Mouse.Up(MouseButton.Left);
 
-                Assert.AreNotEqual(null, window.FindItem("Solution 'DragDropTest' (1 project)", "DragDropTest", "TestFolder2", "SubItem.py"));
+                Assert.IsNotNull(window.FindItem("Solution 'DragDropTest' (1 project)", "DragDropTest", "TestFolder2", "SubItem.py"));
             }
         }
 
@@ -596,7 +580,7 @@ namespace PythonToolsUITests {
                 Mouse.MoveTo(point);
                 Mouse.Up(MouseButton.Left);
 
-                Assert.AreNotEqual(null, window.FindItem("Solution 'DragDropTest' (1 project)", "DragDropTest", "TestFolder2", "SubFolder"));
+                Assert.IsNotNull(window.FindItem("Solution 'DragDropTest' (1 project)", "DragDropTest", "TestFolder2", "SubFolder"));
             }
         }
 
@@ -906,7 +890,7 @@ namespace PythonToolsUITests {
 
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
-                Assert.AreNotEqual(null, window.WaitForItem("Solution 'HelloWorld' (1 project)", "HelloWorld", basename));
+                Assert.IsNotNull(window.WaitForItem("Solution 'HelloWorld' (1 project)", "HelloWorld", basename));
 
                 Assert.AreEqual(fileWindow.Caption, basename);
 
@@ -920,28 +904,23 @@ namespace PythonToolsUITests {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
                 var project = app.OpenProject(@"TestData\SaveAsUI.sln");
 
-                app.OpenSolutionExplorer();
-                var solutionTree = app.SolutionExplorerTreeView;
-
-                // open and edit the file
-                var folderNode = solutionTree.FindItem("Solution 'SaveAsUI' (1 project)", "HelloWorld", "Program.py");
-                folderNode.SetFocus();
-                Keyboard.PressAndRelease(Key.Enter);
-
                 var item = project.ProjectItems.Item("Program.py");
                 var window = item.Open();
+                window.Activate();
 
                 var selection = ((TextSelection)window.Selection);
                 selection.SelectAll();
                 selection.Delete();
 
                 // save under a new file name
-                var saveDialog = app.SaveAs();
-                string oldName = saveDialog.FileName;
-                saveDialog.FileName = "Program2.py";
-                saveDialog.Save();
+                using (var saveDialog = SaveDialog.FromDte(app)) {
+                    Assert.AreEqual(item.FileNames[0], saveDialog.FileName);
+                    saveDialog.FileName = "Program2.py";
+                    saveDialog.WaitForInputIdle();
+                    saveDialog.Save();
+                }
 
-                Assert.AreNotEqual(null, solutionTree.WaitForItem("Solution 'SaveAsUI' (1 project)", "HelloWorld", "Program2.py"));
+                Assert.IsNotNull(app.OpenSolutionExplorer().WaitForChildOfProject(project, "Program2.py"));
             }
         }
 
@@ -1034,8 +1013,11 @@ namespace PythonToolsUITests {
 
                 // and make sure we no longer offer completions on the spam module.
                 Keyboard.Type("spam.");
-                System.Threading.Thread.Sleep(1000);
-                Assert.IsNull(doc.IntellisenseSessionStack.TopSession);
+
+                using (var sh = doc.WaitForSession<ICompletionSession>()) {
+                    var completion = sh.Session.CompletionSets.First().Completions.Select(x => x.DisplayText).Single();
+                    Assert.AreEqual(SR.GetString(SR.NoCompletionsCompletion), completion);
+                }
             }
         }
 

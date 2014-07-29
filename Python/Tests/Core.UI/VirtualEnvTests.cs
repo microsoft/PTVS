@@ -77,7 +77,7 @@ namespace PythonToolsUITests {
                 var env = app.CreateVirtualEnvironment(project, out envName);
                 env.Select();
 
-                using (var installPackage = AutomationDialog.FromDte(app, "ProjectandSolutionContextMenus.PythonEnvironment.InstallPythonPackage")) {
+                using (var installPackage = AutomationDialog.FromDte(app, "Python.InstallPackage")) {
                     var packageName = new TextBox(installPackage.FindByAutomationId("Name"));
                     packageName.SetValue("azure==0.6.2");
                     installPackage.ClickButtonAndClose("OK", nameIsAutomationId: true);
@@ -140,15 +140,17 @@ namespace PythonToolsUITests {
                 env.Select();
 
                 try {
-                    app.ExecuteCommand("Python.InstallRequirementsTxt", timeout: 5000);
+                    app.ExecuteCommand("Python.InstallRequirementsTxt", "/y", timeout: 5000);
                     Assert.Fail("Command should not have executed");
-                } catch (AggregateException) {
+                } catch (AggregateException ae) {
+                    ae.Handle(ex => ex is COMException);
+                } catch (COMException) {
                 }
 
                 var requirementsTxt = Path.Combine(Path.GetDirectoryName(project.FullName), "requirements.txt");
                 File.WriteAllText(requirementsTxt, "azure==0.6.2");
 
-                app.ExecuteCommand("Python.InstallRequirementsTxt");
+                app.ExecuteCommand("Python.InstallRequirementsTxt", "/y");
 
                 app.SolutionExplorerTreeView.WaitForChildOfProject(
                     project,
@@ -159,7 +161,7 @@ namespace PythonToolsUITests {
 
                 File.Delete(requirementsTxt);
 
-                app.ExecuteCommand("Python.GenerateRequirementsTxt");
+                app.ExecuteCommand("Python.GenerateRequirementsTxt", "/e:\"" + envName + "\"");
 
                 app.SolutionExplorerTreeView.WaitForChildOfProject(
                     project,

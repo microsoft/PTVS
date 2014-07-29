@@ -26,7 +26,7 @@
       </Menu>
 
       <Menu guid="guidPythonToolsCmdSet" id="CustomProjectCommandsMenu" priority="0x0600" type="Menu">
-        <Parent guid="guidPythonToolsCmdSet" id="CustomProjectCommandsMenu"/>
+        <Parent guid="guidSHLMainMenu" id="IDG_VS_CTXT_PROJECT_BUILD"/>
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <CommandFlag>TextChanges</CommandFlag>
@@ -98,7 +98,7 @@
         <Parent guid="guidSHLMainMenu" id="IDM_VS_MENU_PROJECT"/>
       </Group>
 
-      <Group guid="guidPythonToolsCmdSet" id="CustomProjectCommandsContextGroup" priority="0x0000">
+      <Group guid="guidPythonToolsCmdSet" id="CustomProjectCommandsGroup" priority="0x0000">
         <Parent guid="guidPythonToolsCmdSet" id="CustomProjectCommandsMenu"/>
       </Group>
 
@@ -714,6 +714,7 @@
 
 
       <Button guid="guidPythonToolsCmdSet" id="cmdidFirstCustomCmdId" priority="0x400" type="Button">
+        <Parent guid="guidPythonToolsCmdSet" id="CustomProjectCommandsGroup" />
         <CommandFlag>DynamicItemStart</CommandFlag>
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>

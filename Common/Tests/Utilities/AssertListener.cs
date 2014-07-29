@@ -15,10 +15,17 @@
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TestUtilities {
     public class AssertListener : TraceListener {
+        private readonly SynchronizationContext _testContext;
+
+        private AssertListener() {
+            _testContext = SynchronizationContext.Current;
+        }
+
         public override string Name {
             get { return "AssertListener"; }
             set { }
@@ -77,7 +84,11 @@ namespace TestUtilities {
                 Debugger.Break();
             }
 
-            Assert.Fail(message);
+            if (_testContext != SynchronizationContext.Current) {
+                _testContext.Post(_ => Assert.Fail(message), null);
+            } else {
+                Assert.Fail(message);
+            }
         }
 
         public override void WriteLine(string message) {

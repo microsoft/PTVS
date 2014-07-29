@@ -935,17 +935,6 @@ namespace PythonToolsUITests {
             File.WriteAllText(vcproj, File.ReadAllText(vcproj)
                 .Replace("$(PYTHON_INCLUDE)", Path.Combine(python.PrefixPath, "include"))
                 .Replace("$(PYTHON_LIB)", Path.Combine(python.PrefixPath, "libs"))
-                .Replace("$(PYTHON_TOOLSET)",
-#if DEV10
-                    "v100"
-#elif DEV11
-                    "v110"
-#elif DEV12
-                    "v120"
-#else
-#error Unsupported VS version
-#endif
-)
             );
 
             using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte))
@@ -1131,26 +1120,24 @@ namespace PythonToolsUITests {
         public void AddFromFileOutsideOfProject() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
                 var prevSetting = PythonToolsPackage.Instance.DebuggingOptionsPage.UpdateSearchPathsWhenAddingLinkedFiles;
-                try {
-                    PythonToolsPackage.Instance.DebuggingOptionsPage.UpdateSearchPathsWhenAddingLinkedFiles = false;
-                    var project = app.OpenProject(@"TestData\HelloWorld.sln");
-                    // "Python Environments", "References", "Search Paths", "Program.py"
-                    Assert.AreEqual(4, project.ProjectItems.Count);
-                    Assert.AreEqual(6, app.OpenSolutionExplorer().ExpandAll());
+                app.OnDispose(() => PythonToolsPackage.Instance.DebuggingOptionsPage.UpdateSearchPathsWhenAddingLinkedFiles = prevSetting);
+                PythonToolsPackage.Instance.DebuggingOptionsPage.UpdateSearchPathsWhenAddingLinkedFiles = false;
 
-                    var item = project.ProjectItems.AddFromFile(TestData.GetPath(@"TestData\DebuggerProject\LocalsTest.py"));
+                var project = app.OpenProject(@"TestData\HelloWorld.sln");
+                // "Python Environments", "References", "Search Paths", "Program.py"
+                Assert.AreEqual(4, project.ProjectItems.Count);
+                Assert.AreEqual(6, app.OpenSolutionExplorer().ExpandAll());
 
-                    Assert.IsNotNull(item);
-                    Assert.AreEqual(5, project.ProjectItems.Count);
-                    Assert.AreEqual(7, app.OpenSolutionExplorer().ExpandAll());
+                var item = project.ProjectItems.AddFromFile(TestData.GetPath(@"TestData\DebuggerProject\LocalsTest.py"));
 
-                    Assert.AreEqual("LocalsTest.py", item.Properties.Item("FileName").Value);
+                Assert.IsNotNull(item);
+                Assert.AreEqual(5, project.ProjectItems.Count);
+                Assert.AreEqual(7, app.OpenSolutionExplorer().ExpandAll());
 
-                    Assert.AreEqual(true, item.Properties.Item("IsLinkFile").Value);
-                    Assert.AreEqual(TestData.GetPath(@"TestData\DebuggerProject\LocalsTest.py"), item.Properties.Item("FullPath").Value);
-                } finally {
-                    PythonToolsPackage.Instance.DebuggingOptionsPage.UpdateSearchPathsWhenAddingLinkedFiles = prevSetting;
-                }
+                Assert.AreEqual("LocalsTest.py", item.Properties.Item("FileName").Value);
+
+                Assert.AreEqual(true, item.Properties.Item("IsLinkFile").Value);
+                Assert.AreEqual(TestData.GetPath(@"TestData\DebuggerProject\LocalsTest.py"), item.Properties.Item("FullPath").Value);
             }
         }
 
