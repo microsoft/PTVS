@@ -122,7 +122,13 @@
       <Group guid="guidPythonToolsCmdSet" id="CodeFileGroup2" priority="0x0110">
         <Parent guid="guidSHLMainMenu" id="IDM_VS_MENU_PROJECT"/>
       </Group>
-      
+      <Group guid="guidPythonToolsCmdSet" id="CodeFileGroup" priority="0x0200">
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_ITEMNODE"/>
+      </Group>
+      <Group guid="guidPythonToolsCmdSet" id="CodeFileGroup2" priority="0x0210">
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_ITEMNODE"/>
+      </Group>
+
       <!-- 
           Python Environments context menu
       -->
@@ -857,11 +863,11 @@
     <CommandPlacement guid="guidVSStd2K" id="cmdidCopyFullPathName" priority="0x0610">
       <Parent guid="guidSHLMainMenu" id="IDG_VS_CTXT_FOLDER_EXPLORE" />
     </CommandPlacement>
-    <CommandPlacement guid="guidVSStd2K" id="cmdidCopyFullPathName" priority="0x0602">
+    <CommandPlacement guid="guidVSStd2K" id="cmdidCopyFullPathName" priority="0x0200">
       <Parent guid="guidSHLMainMenu" id="IDG_VS_CTXT_PROJECT_EXPLORE"/>
     </CommandPlacement>
-    <CommandPlacement guid="guidVSStd2K" id="cmdidCopyFullPathName" priority="0x0602">
-      <Parent guid="guidPythonToolsCmdSet" id="CodeFileGroup"/>
+    <CommandPlacement guid="guidVSStd2K" id="cmdidCopyFullPathName" priority="0x0100">
+      <Parent guid="guidPythonToolsCmdSet" id="CodeFileGroup2"/>
     </CommandPlacement>
 
     <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidExecuteFileInRepl" priority="0x0300">
