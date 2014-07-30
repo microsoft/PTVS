@@ -12,10 +12,13 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using System.Threading;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TestUtilities {
@@ -35,6 +38,19 @@ namespace TestUtilities {
             if (null == Debug.Listeners["AssertListener"]) {
                 Debug.Listeners.Add(new AssertListener());
                 Debug.Listeners.Remove("Default");
+
+                AppDomain.CurrentDomain.FirstChanceException += CurrentDomain_FirstChanceException;
+            }
+        }
+
+        static void CurrentDomain_FirstChanceException(object sender, FirstChanceExceptionEventArgs e) {
+            if (e.Exception is NullReferenceException || e.Exception is ObjectDisposedException) {
+                var log = new EventLog("Application");
+                log.Source = "Application Error";
+                log.WriteEntry(
+                    "First-chance exception: " + e.Exception.ToString(),
+                    EventLogEntryType.Warning
+                );
             }
         }
 
