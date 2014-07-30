@@ -77,7 +77,7 @@ namespace Microsoft.PythonTools.Project {
                 wnd.VirtualEnvPathTextBox.SelectAll();
                 wnd.VirtualEnvPathTextBox.Focus();
 
-                wnd.ShowDialog();
+                wnd.ShowModal();
                 var op = wnd._currentOperation;
                 if (op != null) {
                     await op;
