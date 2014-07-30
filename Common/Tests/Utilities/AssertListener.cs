@@ -100,7 +100,7 @@ namespace TestUtilities {
                 Debugger.Break();
             }
 
-            if (_testContext != SynchronizationContext.Current) {
+            if (_testContext != null && _testContext != SynchronizationContext.Current) {
                 _testContext.Post(_ => Assert.Fail(message), null);
             } else {
                 Assert.Fail(message);

@@ -283,7 +283,7 @@ namespace Microsoft.PythonTools.Refactoring {
             try {
                 var store = (IVsFontAndColorStorage)PythonToolsPackage.GetGlobalService(typeof(SVsFontAndColorStorage));
                 Guid textEditorCategory = new Guid(FontsAndColorsCategory.TextEditor);
-                if (store.OpenCategory(ref textEditorCategory,
+                if (store != null && store.OpenCategory(ref textEditorCategory,
                     (uint)(__FCSTORAGEFLAGS.FCSF_LOADDEFAULTS | __FCSTORAGEFLAGS.FCSF_READONLY)) == VSConstants.S_OK) {
                     try {
                         FontInfo[] info = new FontInfo[1];

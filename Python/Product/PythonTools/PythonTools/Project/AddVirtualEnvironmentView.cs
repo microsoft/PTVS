@@ -364,9 +364,12 @@ namespace Microsoft.PythonTools.Project {
         /// Waits for any background processing to complete. Properties of this
         /// object may be invalid while processing is ongoing.
         /// </summary>
-        public Task WaitForReady() {
+        public async Task WaitForReady() {
             // Addresses https://pytools.codeplex.com/workitem/2312
-            return _ready.WaitAsync();
+            try {
+                await _ready.WaitAsync();
+            } catch (ObjectDisposedException) {
+            }
         }
 
         internal async Task UpdateInterpreter(InterpreterView view) {
@@ -375,7 +378,11 @@ namespace Microsoft.PythonTools.Project {
                 return;
             }
 
-            await _ready.WaitAsync();
+            try {
+                await _ready.WaitAsync();
+            } catch (ObjectDisposedException) {
+                return;
+            }
 
             try {
                 WillInstallPip = false;
@@ -417,7 +424,10 @@ namespace Microsoft.PythonTools.Project {
                         PythonToolsPackage.Instance.GeneralOptionsPage.ElevatePip;
                 }
             } finally {
-                _ready.Release();
+                try {
+                    _ready.Release();
+                } catch (ObjectDisposedException) {
+                }
             }
         }
 
