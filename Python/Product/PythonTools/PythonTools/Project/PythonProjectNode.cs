@@ -834,6 +834,15 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public IPythonInterpreterFactory GetInterpreterFactory() {
+            var interpreters = _interpreters;
+            if (interpreters == null) {
+                // May occur if we are racing with Dispose(), so the factory we
+                // return isn't important, but it has to be non-null to fulfil
+                // the contract.
+                var service = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
+                return service.DefaultInterpreter;
+            }
+
             var fact = _interpreters.ActiveInterpreter;
 
             if (!_interpreters.IsAvailable(fact)) {
@@ -868,6 +877,7 @@ namespace Microsoft.PythonTools.Project {
                 UnHookErrorsAndWarnings(_analyzer);
             }
             var analyzer = CreateAnalyzer();
+            Debug.Assert(analyzer != null);
 
             var analyzerChanging = ProjectAnalyzerChanging;
             if (analyzerChanging != null) {

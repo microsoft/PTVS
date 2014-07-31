@@ -17,6 +17,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Net.NetworkInformation;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -420,7 +421,19 @@ namespace PythonToolsUITests {
 
         private static void CloudProjectTest(string roleType, bool openServiceDefinition) {
             Assert.IsTrue(roleType == "Web" || roleType == "Worker", "Invalid roleType: " + roleType);
+
+            var asm = Assembly.Load("Microsoft.VisualStudio.CloudService.Wizard,Version=1.0.0.0,Culture=neutral,PublicKeyToken=b03f5f7f11d50a3a");
             
+            if (asm != null && asm.GetCustomAttributes(typeof(AssemblyFileVersionAttribute), false)
+                .OfType<AssemblyFileVersionAttribute>()
+                .Any(a => {
+                    Version ver;
+                    return Version.TryParse(a.Version, out ver) && ver < new Version(2, 4);
+                })
+            ) {
+                Assert.Inconclusive("Test requires Microsoft Azure Tools 2.4 or later");
+            }
+
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte))
             using (FileUtils.Backup(TestData.GetPath(@"TestData\CloudProject\ServiceDefinition.csdef"))) {
                 app.OpenProject("TestData\\CloudProject.sln", expectedProjects: 3);

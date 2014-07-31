@@ -246,9 +246,8 @@ namespace Microsoft.PythonTools.Repl {
 
             private void ProcessExited(object sender, EventArgs e) {
                 using (new StreamLock(this, throwIfDisconnected: false)) {
-                    // Use Interlocked because Dispose() also does this but
-                    // outside of StreamLock().
-                    var stream = Interlocked.Exchange(ref _stream, null);
+                    var stream = _stream;
+                    _stream = null;
                     if (stream != null) {
                         stream.Dispose();
                     }
@@ -884,16 +883,21 @@ namespace Microsoft.PythonTools.Repl {
 
             [SuppressMessage("Microsoft.Usage", "CA2213:DisposableFieldsShouldBeDisposed", MessageId = "_stream", Justification = "false positive")]
             public void Dispose() {
-                var stream = Interlocked.Exchange(ref _stream, null);
+                var stream = _stream;
 
-                // There is a potential race where ith a different thread doing _stream = null, but even if that happens
+                // There is a potential race with another thread doing _stream = null, but even if that happens
                 // we do have our own reference and can dispose the object.
 
                 if (stream != null) {
                     try {
-                        // Try and close the connection gracefully, but don't block on it indefinitely - if we're stuck waiting
-                        // for too long, just drop it
+                        // Try and close the connection gracefully, but don't
+                        // block on it indefinitely - if we're stuck waiting for
+                        // too long, just drop it.
                         if (Monitor.TryEnter(_streamLock, 200)) {
+                            // Set _stream to null inside the lock. We handle
+                            // ObjectDisposed but not NullReferencExceptions in
+                            // places where we access _stream inside the lock.
+                            _stream = null;
                             try {
                                 try {
                                     var ar = stream.BeginWrite(ExitCommandBytes, 0, ExitCommandBytes.Length, null, null);
