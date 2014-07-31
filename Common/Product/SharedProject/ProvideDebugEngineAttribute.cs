@@ -65,19 +65,24 @@ namespace Microsoft.VisualStudioTools {
 
             using (var incompatKey = engineKey.CreateSubkey("IncompatibleList")) {
                 // In VS 2013, mixed-mode debugging is supported with any engine that does not exclude us specifically
-                // (everyone should be using the new debugging APIs that permit arbitrary mixing).
+                // (everyone should be using the new debugging APIs that permit arbitrary mixing), except for the legacy
+                // .NET 2.0/3.0/3.5 engine.
+                //
                 // In VS 2012, only native/Python mixing is supported - other stock engines are not updated yet, and
                 // in particular throwing managed into the mix will cause the old native engine to be used.
+                //
                 // In VS 2010, mixed-mode debugging is not supported at all.
-#if !DEV12_OR_LATER
+#if DEV12_OR_LATER
+                incompatKey.SetValue("guidCOMPlusOnlyEng2", "{5FFF7536-0C87-462D-8FD2-7971D948E6DC}");
+#else
                 incompatKey.SetValue("guidCOMPlusNativeEng", "{92EF0900-2251-11D2-B72E-0000F87572EF}");
                 incompatKey.SetValue("guidCOMPlusOnlyEng", "{449EC4CC-30D2-4032-9256-EE18EB41B62B}");
                 incompatKey.SetValue("guidScriptEng", "{F200A7E7-DEA5-11D0-B854-00A0244A1DE2}");
                 incompatKey.SetValue("guidCOMPlusOnlyEng2", "{5FFF7536-0C87-462D-8FD2-7971D948E6DC}");
                 incompatKey.SetValue("guidCOMPlusOnlyEng4", "{FB0D4648-F776-4980-95F8-BB7F36EBC1EE}");
-#endif
 #if DEV10
                 incompatKey.SetValue("guidNativeOnlyEng", "{3B476D35-A401-11D2-AAD4-00C04F990171}");
+#endif
 #endif
             }
 

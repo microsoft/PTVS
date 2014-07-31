@@ -21,7 +21,7 @@ else:
 ds = DerivedString(u)
 
 try:
-    ba = bytearray(s)
+    ba = bytearray(u, 'ascii')
 except:
     pass
 

@@ -299,7 +299,7 @@ NameError: name 'does_not_exist' is not defined
             PythonProcess process = debugger.DebugProcess(Version, DebuggerTestPath + filename, (newproc, newthread) => {
                 var breakPoint = newproc.AddBreakPointByFileExtension(lineNo, filename);
                 breakPoint.Add();
-                _evaluator.AttachProcess(newproc);
+                _evaluator.AttachProcess(newproc, new MockThreadIdMapper());
             },
             debugOptions: PythonDebugOptions.CreateNoWindow);
 
@@ -335,7 +335,13 @@ NameError: name 'does_not_exist' is not defined
                 process.ProcessExited -= processExitedHandler;
             }
 
-            _evaluator.AttachProcess(process);
+            _evaluator.AttachProcess(process, new MockThreadIdMapper());
+        }
+
+        private class MockThreadIdMapper : IThreadIdMapper {
+            public long? GetPythonThreadId(uint vsThreadId) {
+                return vsThreadId;
+            }
         }
     }
 
@@ -345,6 +351,11 @@ NameError: name 'does_not_exist' is not defined
         public static new void DoDeployment(TestContext context) {
             AssertListener.Initialize();
             PythonTestData.Deploy();
+            // This function is necessary to avoid crashing since we're running
+            // outside of devenv.exe. Its effects will last for the rest of
+            // this test assembly, which is fine since we are never running in
+            // VS in these tests.
+            UIThread.InitializeAndNeverInvoke();
         }
 
         internal override PythonVersion Version {
@@ -360,6 +371,11 @@ NameError: name 'does_not_exist' is not defined
         public static new void DoDeployment(TestContext context) {
             AssertListener.Initialize();
             PythonTestData.Deploy();
+            // This function is necessary to avoid crashing since we're running
+            // outside of devenv.exe. Its effects will last for the rest of
+            // this test assembly, which is fine since we are never running in
+            // VS in these tests.
+            UIThread.InitializeAndNeverInvoke();
         }
 
         internal override PythonVersion Version {
@@ -375,6 +391,11 @@ NameError: name 'does_not_exist' is not defined
         public static new void DoDeployment(TestContext context) {
             AssertListener.Initialize();
             PythonTestData.Deploy();
+            // This function is necessary to avoid crashing since we're running
+            // outside of devenv.exe. Its effects will last for the rest of
+            // this test assembly, which is fine since we are never running in
+            // VS in these tests.
+            UIThread.InitializeAndNeverInvoke();
         }
 
         internal override PythonVersion Version {
@@ -385,11 +406,56 @@ NameError: name 'does_not_exist' is not defined
     }
 
     [TestClass]
+    public class DebugReplEvaluatorTests33 : DebugReplEvaluatorTests {
+        [ClassInitialize]
+        public static new void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
+            PythonTestData.Deploy();
+            // This function is necessary to avoid crashing since we're running
+            // outside of devenv.exe. Its effects will last for the rest of
+            // this test assembly, which is fine since we are never running in
+            // VS in these tests.
+            UIThread.InitializeAndNeverInvoke();
+        }
+
+        internal override PythonVersion Version {
+            get {
+                return PythonPaths.Python33;
+            }
+        }
+    }
+
+    [TestClass]
+    public class DebugReplEvaluatorTests34 : DebugReplEvaluatorTests {
+        [ClassInitialize]
+        public static new void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
+            PythonTestData.Deploy();
+            // This function is necessary to avoid crashing since we're running
+            // outside of devenv.exe. Its effects will last for the rest of
+            // this test assembly, which is fine since we are never running in
+            // VS in these tests.
+            UIThread.InitializeAndNeverInvoke();
+        }
+
+        internal override PythonVersion Version {
+            get {
+                return PythonPaths.Python34;
+            }
+        }
+    }
+
+    [TestClass]
     public class DebugReplEvaluatorTests27 : DebugReplEvaluatorTests {
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
             AssertListener.Initialize();
             PythonTestData.Deploy();
+            // This function is necessary to avoid crashing since we're running
+            // outside of devenv.exe. Its effects will last for the rest of
+            // this test assembly, which is fine since we are never running in
+            // VS in these tests.
+            UIThread.InitializeAndNeverInvoke();
         }
 
         internal override PythonVersion Version {
@@ -405,6 +471,11 @@ NameError: name 'does_not_exist' is not defined
         public static new void DoDeployment(TestContext context) {
             AssertListener.Initialize();
             PythonTestData.Deploy();
+            // This function is necessary to avoid crashing since we're running
+            // outside of devenv.exe. Its effects will last for the rest of
+            // this test assembly, which is fine since we are never running in
+            // VS in these tests.
+            UIThread.InitializeAndNeverInvoke();
         }
 
         internal override PythonVersion Version {
@@ -420,6 +491,11 @@ NameError: name 'does_not_exist' is not defined
         public static new void DoDeployment(TestContext context) {
             AssertListener.Initialize();
             PythonTestData.Deploy();
+            // This function is necessary to avoid crashing since we're running
+            // outside of devenv.exe. Its effects will last for the rest of
+            // this test assembly, which is fine since we are never running in
+            // VS in these tests.
+            UIThread.InitializeAndNeverInvoke();
         }
 
         internal override PythonVersion Version {

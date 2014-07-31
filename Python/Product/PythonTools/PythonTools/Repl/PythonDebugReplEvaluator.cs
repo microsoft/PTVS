@@ -50,7 +50,7 @@ namespace Microsoft.PythonTools.Repl {
         public PythonDebugReplEvaluator() {
             AD7Engine.EngineAttached += new EventHandler<AD7EngineEventArgs>(OnEngineAttached);
             AD7Engine.EngineDetaching += new EventHandler<AD7EngineEventArgs>(OnEngineDetaching);
-            AD7Engine.EngineBreakpointHit += new EventHandler<AD7EngineEventArgs>(OnEngineBreakpointHit);
+
             if (PythonToolsPackage.Instance != null) {
                 // running outside of VS, make this work for tests.
                 _debuggerEvents = PythonToolsPackage.Instance.DTE.Events.DebuggerEvents;
@@ -132,7 +132,7 @@ namespace Microsoft.PythonTools.Repl {
                 foreach (var engine in AD7Engine.GetEngines()) {
                     if (engine.Process != null) {
                         if (!_evaluators.ContainsKey(engine.Process.Id)) {
-                            AttachProcess(engine.Process);
+                            AttachProcess(engine.Process, engine);
                         }
                     }
                 }
@@ -141,12 +141,13 @@ namespace Microsoft.PythonTools.Repl {
 
         private void OnEnterBreakMode(EnvDTE.dbgEventReason Reason, ref EnvDTE.dbgExecutionAction ExecutionAction) {
             int activeProcessId = PythonToolsPackage.Instance.DTE.Debugger.CurrentProcess.ProcessID;
-            int activeThreadId = PythonToolsPackage.Instance.DTE.Debugger.CurrentThread.ID;
-
             AD7Engine engine = AD7Engine.GetEngines().SingleOrDefault(target => target.Process != null && target.Process.Id == activeProcessId);
             if (engine != null) {
-                AttachProcess(engine.Process);
-                ChangeActiveThread(activeThreadId, false);
+                long? activeThreadId = ((IThreadIdMapper)engine).GetPythonThreadId((uint)PythonToolsPackage.Instance.DTE.Debugger.CurrentThread.ID);
+                if (activeThreadId != null) {
+                    AttachProcess(engine.Process, engine);
+                    ChangeActiveThread(activeThreadId.Value, false);
+                }
             }
         }
 
@@ -438,12 +439,8 @@ namespace Microsoft.PythonTools.Repl {
             }
         }
 
-        private void OnEngineBreakpointHit(object sender, AD7EngineEventArgs e) {
-            AttachProcess(e.Engine.Process);
-        }
-
         private void OnEngineAttached(object sender, AD7EngineEventArgs e) {
-            AttachProcess(e.Engine.Process);
+            AttachProcess(e.Engine.Process, e.Engine);
         }
 
         private void OnEngineDetaching(object sender, AD7EngineEventArgs e) {
@@ -465,7 +462,7 @@ namespace Microsoft.PythonTools.Repl {
             }
         }
 
-        internal void AttachProcess(PythonProcess process) {
+        internal void AttachProcess(PythonProcess process, IThreadIdMapper threadIdMapper) {
             if (_evaluators.ContainsKey(process.Id)) {
                 // Process is already attached, so just switch to it if needed
                 SwitchProcess(process, false);
@@ -473,7 +470,7 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             process.ProcessExited += new EventHandler<ProcessExitedEventArgs>(OnProcessExited);
-            var evaluator = new PythonDebugProcessReplEvaluator(process);
+            var evaluator = new PythonDebugProcessReplEvaluator(process, threadIdMapper);
             evaluator.Window = _window;
             evaluator.AvailableScopesChanged += new EventHandler<EventArgs>(evaluator_AvailableScopesChanged);
             evaluator.MultipleScopeSupportChanged += new EventHandler<EventArgs>(evaluator_MultipleScopeSupportChanged);
@@ -534,14 +531,16 @@ namespace Microsoft.PythonTools.Repl {
     }
 
     internal class PythonDebugProcessReplEvaluator : BasePythonReplEvaluator {
-        private PythonProcess _process;
+        private readonly PythonProcess _process;
+        private readonly IThreadIdMapper _threadIdMapper;
         private long _threadId;
         private int _frameId;
         private PythonLanguageVersion _languageVersion;
 
-        public PythonDebugProcessReplEvaluator(PythonProcess process)
+        public PythonDebugProcessReplEvaluator(PythonProcess process, IThreadIdMapper threadIdMapper)
             : base(GetOptions()) {
             _process = process;
+            _threadIdMapper = threadIdMapper;
             _threadId = process.GetThreads()[0].Id;
             _languageVersion = process.LanguageVersion;
 
@@ -641,7 +640,8 @@ namespace Microsoft.PythonTools.Repl {
                     dteDebugger.CurrentProcess != null &&
                     dteDebugger.CurrentThread != null) {
                     if (_process.Id == dteDebugger.CurrentProcess.ProcessID) {
-                        activeThread = threads.SingleOrDefault(t => t.Id == dteDebugger.CurrentThread.ID);
+                        var activeThreadId = _threadIdMapper.GetPythonThreadId((uint)dteDebugger.CurrentThread.ID);
+                        activeThread = threads.SingleOrDefault(t => t.Id == activeThreadId);
                     }
                 }
             }
@@ -744,7 +744,7 @@ namespace Microsoft.PythonTools.Repl {
 
             EnvDTE.Thread dteActiveThread = null;
             foreach (EnvDTE.Thread dteThread in PythonToolsPackage.Instance.DTE.Debugger.CurrentProgram.Threads) {
-                if (dteThread.ID == _threadId) {
+                if (_threadIdMapper.GetPythonThreadId((uint)dteThread.ID) == _threadId) {
                     dteActiveThread = dteThread;
                     break;
                 }

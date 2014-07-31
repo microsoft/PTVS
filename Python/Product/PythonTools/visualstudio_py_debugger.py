@@ -117,6 +117,12 @@ class SynthesizedValue(object):
     def __repr__(self):
         return self.s
 
+# Specifies list of files not to debug. Can be extended by other modules
+# (the REPL does this for $attach support and not stepping into the REPL).
+DONT_DEBUG = [__file__, _vspu.__file__]
+if sys.version_info >= (3, 3):
+    DONT_DEBUG.append('<frozen importlib._bootstrap>')
+
 # dictionary of line no to break point info
 BREAKPOINTS = {}
 DJANGO_BREAKPOINTS = {}
@@ -276,13 +282,11 @@ def get_thread_from_id(id):
         THREADS_LOCK.release()
 
 def should_send_frame(frame):
-    return (frame is not None and 
-            frame.f_code not in (get_code(debug), get_code(exec_file), get_code(new_thread_wrapper)) and
-            frame.f_code.co_filename not in DONT_DEBUG)
+    return frame is not None and frame.f_code not in DEBUG_ENTRYPOINTS and frame.f_code.co_filename not in DONT_DEBUG
 
 def lookup_builtin(name, frame):
     try:
-        return  frame.f_builtins.get(bits)
+        return frame.f_builtins.get(bits)
     except:
         # http://ironpython.codeplex.com/workitem/30908
         builtins = frame.f_globals['__builtins__']
@@ -306,6 +310,7 @@ BREAK_MODE_UNHANDLED = 32
 BREAK_TYPE_NONE = 0
 BREAK_TYPE_UNHANLDED = 1
 BREAK_TYPE_HANDLED = 2
+
 
 class ExceptionBreakInfo(object):
     BUILT_IN_HANDLERS = {
@@ -418,14 +423,6 @@ def probe_stack(depth = 10):
       return
   probe_stack(depth - 1)
 
-
-# specifies list of files not to debug, can be added to externally (the REPL does this
-# for $attach support and not stepping into the REPL)
-
-if sys.version_info >= (3, 3):
-    DONT_DEBUG = [__file__, _vspu.__file__, '<frozen importlib._bootstrap>']
-else:
-    DONT_DEBUG = [__file__, _vspu.__file__]
 PREFIXES = [path.normcase(sys.prefix)]
 # If we're running in a virtual env, DEBUG_STDLIB should respect this too.
 if hasattr(sys, 'base_prefix'):
@@ -773,15 +770,24 @@ class Thread(object):
     def should_block_on_frame(self, frame):
         if not should_debug_code(frame.f_code):
             return False
-        
-        # walk up our frames and make sure no debugger code is on the stack
+        # It is still possible that we're somewhere in standard library code, but that code was invoked by our
+        # internal debugger machinery (e.g. socket.sendall or text encoding while tee'ing print output to VS).
+        # We don't want to block on any of that, either, so walk the stack and see if we hit debugger frames
+        # at some point below the non-debugger ones.
         while frame is not None:
-            if is_same_py_file(frame.f_code.co_filename, __file__):
-                if frame.f_code.co_name == 'debug' or frame.f_code.co_name == 'new_thread_wrapper':
-                    # our top-level functions
-                    break
-                # something like our stdout writer, don't block below here
-                return False
+            # There is usually going to be a debugger frame at the very bottom of the stack - the one that
+            # invoked user code on this thread when starting debugging. If we reached that, then everything
+            # above is user code, so we know that we do want to block here.
+            if frame.f_code in DEBUG_ENTRYPOINTS:
+                break
+            # Otherwise, check if it's some other debugger code.
+            filename = frame.f_code.co_filename
+            is_debugger_frame = False
+            for debugger_file in DONT_DEBUG:
+                if is_same_py_file(filename, debugger_file):
+                    # If it is, then the frames above it on the stack that we have just walked through
+                    # were for debugger internal purposes, and we do not want to block here.
+                    return False
             frame = frame.f_back
         return True
 
@@ -796,8 +802,8 @@ class Thread(object):
                     if self.should_block_on_frame(frame):   # don't step complete in our own debugger / non-user code
                         step_complete = True
                 elif stepping == STEPPING_LAUNCH_BREAK or stepping == STEPPING_ATTACH_BREAK:
-                    if ((stepping == STEPPING_LAUNCH_BREAK and not MODULES) or
-                        not self.should_block_on_frame(frame)): # don't break into inital Python code needed to set things up
+                    # If launching rather than attaching, don't break into inital Python code needed to set things up
+                    if stepping == STEPPING_LAUNCH_BREAK and (not MODULES or not self.should_block_on_frame(frame)):
                         handle_breakpoints = False
                     else:
                         step_complete = True
@@ -2254,3 +2260,15 @@ def debug(
             # Otherwise, suppress the extra traceback.
             sys.excepthook = silent_excepthook
         raise
+
+
+# Code objects for functions which are going to be at the bottom of the stack, right below the first
+# stack frame for user code. When we walk the stack to determine whether to report or block on a given
+# frame, hitting any of these means that we walked all the frames that we needed to look at.
+DEBUG_ENTRYPOINTS = frozenset((
+    get_code(debug),
+    get_code(exec_file),
+    get_code(exec_module),
+    get_code(exec_code),
+    get_code(new_thread_wrapper)
+))

@@ -45,7 +45,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         Justification = "We do not control ownership of this class")]
     [ComVisible(true)]
     [Guid("8355452D-6D2F-41b0-89B8-BB2AA2529E94")]
-    public sealed class AD7Engine : IDebugEngine2, IDebugEngineLaunch2, IDebugProgram3, IDebugSymbolSettings100 {
+    public sealed class AD7Engine : IDebugEngine2, IDebugEngineLaunch2, IDebugProgram3, IDebugSymbolSettings100, IThreadIdMapper {
         // used to send events to the debugger. Some examples of these events are thread create, exception thrown, module load.
         private IDebugEventCallback2 _events;
 
@@ -81,7 +81,6 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         private readonly Dictionary<uint, long> _threadIdMapping = new Dictionary<uint, long>();
         private uint _lastGeneratedVsTid;
 
-        internal static event EventHandler<AD7EngineEventArgs> EngineBreakpointHit;
         internal static event EventHandler<AD7EngineEventArgs> EngineAttached;
         internal static event EventHandler<AD7EngineEventArgs> EngineDetaching;
 
@@ -226,6 +225,11 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
         internal void UnregisterThreadId(uint vsTid) {
             _threadIdMapping.Remove(vsTid);
+        }
+
+        long? IThreadIdMapper.GetPythonThreadId(uint vsThreadId) {
+            long result;
+            return _threadIdMapping.TryGetValue(vsThreadId, out result) ? result : (long?)null;
         }
 
         private static bool IsDebuggingPythonOnly(IDebugProgram2 program) {
@@ -1317,11 +1321,6 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                 AD7BreakpointBoundEvent.IID,
                 null
             );
-
-            var breakpointHit = EngineBreakpointHit;
-            if (breakpointHit != null) {
-                breakpointHit(this, new AD7EngineEventArgs(this));
-            }
         }
 
         private void OnBreakpointBindFailed(object sender, BreakpointEventArgs e) {
