@@ -39,6 +39,7 @@ def profile(file, globals_obj, locals_obj, profdll):
     pyprofdll.InitProfiler.argtypes = [ctypes.c_void_p]
 
     profiler = pyprofdll.CreateProfiler(sys.dllhandle)
+    handle = None
 
     try:
         if sys.version_info[0] >= 3:
@@ -52,5 +53,6 @@ def profile(file, globals_obj, locals_obj, profdll):
             handle = start_profiling()
             execfile(file, globals_obj, locals_obj)
     finally:
-        pyprofdll.CloseThread(handle)
+        if handle:
+            pyprofdll.CloseThread(handle)
         pyprofdll.CloseProfiler(profiler)
