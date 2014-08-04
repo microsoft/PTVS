@@ -28,6 +28,7 @@ import bisect
 from os import path
 import ntpath
 import runpy
+from codecs import BOM_UTF8
 
 try:
     # In the local attach scenario, visualstudio_py_util is injected into globals()
@@ -517,19 +518,21 @@ class DjangoBreakpointInfo(object):
         if self._line_locations is None:
             # we need to calculate our line number offset information
             try:
-                contents = file(self.filename, 'rb')
-                line_info = []
-                file_len = 0
-                for line in contents:
-                    if not line_info and line.startswith('\xef\xbb\xbf'):
-                        line = line[3:] # Strip the BOM, Django seems to ignore this...
-                    file_len += len(line)
-                    line_info.append(file_len)
-                contents.close()
-                self._line_locations = line_info
+                contents = open(self.filename, 'rb')
             except:
                 # file not available, locked, etc...
                 pass
+            else:
+                with contents:
+                    line_info = []
+                    file_len = 0
+                    for line in contents:
+                        if not line_info and line.startswith(BOM_UTF8):
+                            line = line[3:] # Strip the BOM, Django seems to ignore this...
+                        file_len += len(line)
+                        line_info.append(file_len)
+                    contents.close()
+                    self._line_locations = line_info
 
         return self._line_locations
 
