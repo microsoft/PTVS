@@ -83,6 +83,7 @@
     <Compile Include="ComparePerfReports.cs" />
     <Compile Include="DefaultInterpreterSetter.cs" />
     <Compile Include="Django\NewAppDialog.cs" />
+    <Compile Include="MockReplOptions.cs" />
     <Compile Include="PythonProjectDebugProperties.cs" />
     <Compile Include="FormattingOptionsTreeView.cs" />
     <Compile Include="MockClassificationTypeRegistryService.cs" />

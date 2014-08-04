@@ -24,6 +24,7 @@ using System.Threading.Tasks;
 using System.Web;
 using Microsoft.PythonTools.Django;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudioTools.Project;
 using Microsoft.Win32;
 using TestUtilities;
 using TestUtilities.Python;
@@ -243,90 +244,83 @@ namespace FastCgiTest {
         }
 
         public static void ConfigureIIS(string appCmd, string appHostConfig, string python, string wfastcgi, Dictionary<string, string> envVars) {
-            var psi = new ProcessStartInfo(
-                appCmd,
-                String.Format(
-                    "set config /section:system.webServer/fastCGI " +
-                    "\"/+[fullPath='{0}', arguments='\"\"\"{1}\"\"\"']\" \"/AppHostConfig:{2}\"",
-                    python,
-                    wfastcgi,
-                    appHostConfig
-                )
-            );
-            RunProcess(psi);
+            using (var p = ProcessOutput.RunHiddenAndCapture(
+                appCmd, "set", "config", "/section:system.webServer/fastCGI",
+                string.Format("/+[fullPath='{0}', arguments='\"\"\"{1}\"\"\"']", python, wfastcgi),
+                "/AppHostConfig:" + appHostConfig
+            )) {
+                p.Wait();
+                DumpOutput(p);
+                Assert.AreEqual(0, p.ExitCode);
+            }
 
-            psi = new ProcessStartInfo(
-                appCmd,
-                String.Format(
-                    "set config /section:system.webServer/handlers " +
-                    "\"/+[name='Python_via_FastCGI',path='*',verb='*',modules='FastCgiModule',scriptProcessor='{0}|\"\"\"{1}\"\"\"',resourceType='Unspecified']\" " +
-                    "\"/AppHostConfig:{2}\"",
-                    python,
-                    wfastcgi,
-                    appHostConfig
-                )
-            );
-            RunProcess(psi);
+            using (var p = ProcessOutput.RunHiddenAndCapture(
+                appCmd, "set", "config", "/section:system.webServer/handlers",
+                string.Format(
+                    "/+[name='Python_via_FastCGI',path='*',verb='*',modules='FastCgiModule',scriptProcessor='{0}|\"\"\"{1}\"\"\"',resourceType='Unspecified']",
+                    python, wfastcgi
+                ),
+                "/AppHostConfig:" + appHostConfig
+            )) {
+                p.Wait();
+                DumpOutput(p);
+                Assert.AreEqual(0, p.ExitCode);
+            }
 
             foreach (var keyValue in envVars) {
-                psi = new ProcessStartInfo(
-                    appCmd,
-                    String.Format(
-                        "set config -section:system.webServer/fastCgi " +
-                        "/+\"[fullPath='{0}', arguments='\"\"\"{1}\"\"\"'].environmentVariables.[name='{2}',value='{3}']\" " +
-                        "/commit:apphost \"/AppHostConfig:{4}\"",
-                        python,
-                        wfastcgi,
-                        keyValue.Key,
-                        keyValue.Value,
-                        appHostConfig
-                    )
-                );
-                RunProcess(psi);
+                using (var p = ProcessOutput.RunHiddenAndCapture(
+                    appCmd, "set", "config", "-section:system.webServer/fastCgi",
+                    string.Format(
+                        "/+\"[fullPath='{0}', arguments='\"\"\"{1}\"\"\"'].environmentVariables.[name='{2}',value='{3}']",
+                        python, wfastcgi, keyValue.Key, keyValue.Value
+                    ),
+                    "/commit:apphost",
+                    "/AppHostConfig:" + appHostConfig
+                )) {
+                    p.Wait();
+                    DumpOutput(p);
+                    Assert.AreEqual(0, p.ExitCode);
+                }
             }
 
-            psi = new ProcessStartInfo(
-                appCmd,
-                String.Format(
-                    "add site /name:\"TestSite\" /bindings:http://localhost:8181 \"/physicalPath:{0}\" \"/AppHostConfig:{1}\"",
-                    Path.GetDirectoryName(appHostConfig),
-                    appHostConfig
-                )
-            );
-            RunProcess(psi);
-        }
+            using(var p = ProcessOutput.RunHiddenAndCapture(
+                appCmd, "add", "site", "/name:TestSite",
+                "/bindings:http://localhost:8181",
+                "/physicalPath:" + Path.GetDirectoryName(appHostConfig),
+                "/AppHostConfig:" + appHostConfig
+            )) {
+                p.Wait();
+                DumpOutput(p);
+                Assert.AreEqual(0, p.ExitCode);
+            }
+       }
 
-        private static void RunProcess(ProcessStartInfo psi) {
-            var proc = StartProcess(psi);
-
-            proc.WaitForExit();
-            if (proc.ExitCode != 0) {
-                throw new Exception("Update failed");
+        private static void DumpOutput(ProcessOutput process) {
+            foreach (var line in process.StandardOutputLines) {
+                Console.WriteLine(line);
+            }
+            foreach (var line in process.StandardErrorLines) {
+                Console.Error.WriteLine(line);
             }
         }
 
-        private static Process StartProcess(ProcessStartInfo psi) {
-            psi.UseShellExecute = false;
-            psi.CreateNoWindow = true;
-            psi.RedirectStandardOutput = true;
-            psi.RedirectStandardError = true;
-            var proc = Process.Start(psi);
-            proc.OutputDataReceived += new DataReceivedEventHandler(proc_OutputDataReceived);
-            proc.ErrorDataReceived += new DataReceivedEventHandler(proc_ErrorDataReceived);
-            proc.BeginErrorReadLine();
-            proc.BeginOutputReadLine();
-            return proc;
+        private void EnsureDjango() {
+            EnsureDjango(InterpreterPath);
         }
 
-        private static void proc_ErrorDataReceived(object sender, DataReceivedEventArgs e) {
-            Console.Error.WriteLine(e.Data);
-        }
-
-        private static void proc_OutputDataReceived(object sender, DataReceivedEventArgs e) {
-            Console.WriteLine(e.Data);
+        private static void EnsureDjango(string python) {
+            using (var proc = ProcessOutput.RunHiddenAndCapture(python, "-c", "import django")) {
+                proc.Wait();
+                if (proc.ExitCode != 0) {
+                    DumpOutput(proc);
+                    Assert.Inconclusive("Django must be installed into {0} for this test", python);
+                }
+            }
         }
 
         private static WebSite ConfigureIISForDjango(string appCmd, string python, string djangoSettings) {
+            EnsureDjango(python);
+
             var site = CreateSite();
             Console.WriteLine("Site: {0}", site);
 
@@ -399,7 +393,7 @@ namespace FastCgiTest {
 
         class WebSite : IDisposable {
             private readonly string _dir;
-            private Process _process;
+            private ProcessOutput _process;
 
             public WebSite(string dir) {
                 _dir = dir;
@@ -412,15 +406,15 @@ namespace FastCgiTest {
             }
 
             public void StartServer() {
-                var psi = new ProcessStartInfo(
+                _process = ProcessOutput.Run(
                     IisExpressPath,
-                    String.Format(
-                        "/config:\"{0}\" /systray:false",
-                        Path.Combine(_dir, "applicationHost.config")
-                    )
+                    new[] { "/config:" + Path.Combine(_dir, "applicationHost.config"), "/systray:false" },
+                    null,
+                    null,
+                    false,
+                    new OutputRedirector("IIS")
                 );
-                _process = StartProcess(psi);
-                Console.WriteLine("Server started: {0} {1}", psi.FileName, psi.Arguments);
+                Console.WriteLine("Server started: {0}", _process.Arguments);
             }
 
             public WebResponse Request(string uri) {
@@ -431,11 +425,12 @@ namespace FastCgiTest {
             }
 
             public void StopServer() {
-                if (_process != null) {
-                    if (!_process.HasExited) {
-                        _process.Kill();
+                var p = Interlocked.Exchange(ref _process, null);
+                if (p != null) {
+                    if (!p.Wait(TimeSpan.FromSeconds(5))) {
+                        p.Kill();
                     }
-                    _process = null;
+                    p.Dispose();
                 }
             }
 
@@ -453,6 +448,7 @@ namespace FastCgiTest {
 
         [TestMethod, Priority(0), TestCategory("Core")]
         public void TestDjangoNewApp() {
+            EnsureDjango();
             IisExpressTest(
                 "TestData\\WFastCgi\\DjangoApp",
                 new GetAndValidateUrl(GetLocalUrl(), ValidateWelcomeToDjango)
@@ -461,6 +457,7 @@ namespace FastCgiTest {
 
         [TestMethod, Priority(0), TestCategory("Core")]
         public void TestDjangoNewAppUrlRewrite() {
+            EnsureDjango();
             IisExpressTest(
                 "TestData\\WFastCgi\\DjangoAppUrlRewrite",
                 new GetAndValidateUrl(GetLocalUrl(), ValidateWelcomeToDjango)
@@ -681,9 +678,11 @@ namespace FastCgiTest {
         /// </summary>
         [TestMethod, Priority(0), TestCategory("Core")]
         public void TestStaticFiles() {
+            EnsureDjango();
             IisExpressTest(
                 CollectStaticFiles("TestData\\WFastCgi\\DjangoSimpleApp"),
                 "TestData\\WFastCgi\\DjangoSimpleApp",
+                null,
                 new GetAndValidateUrl(
                     GetLocalUrl("/static/fob/helloworld.txt"),
                     ValidateString("hello world from a static text file!")
@@ -696,9 +695,11 @@ namespace FastCgiTest {
         /// </summary>
         [TestMethod, Priority(0), TestCategory("Core")]
         public void TestStaticFilesUrlRewrite() {
+            EnsureDjango();
             IisExpressTest(
                 CollectStaticFiles("TestData\\WFastCgi\\DjangoSimpleAppUrlRewrite"),
                 "TestData\\WFastCgi\\DjangoSimpleAppUrlRewrite",
+                null,
                 new GetAndValidateUrl(
                     GetLocalUrl("/static/fob/helloworld.txt"),
                     ValidateString("hello world from a static text file!")
@@ -752,6 +753,7 @@ namespace FastCgiTest {
         /// </summary>
         [TestMethod, Priority(0), TestCategory("Core")]
         public void TestDjangoQueryString() {
+            EnsureDjango();
             IisExpressTest(
                 "TestData\\WFastCgi\\DjangoSimpleApp",
                 new GetAndValidateUrl(
@@ -766,6 +768,7 @@ namespace FastCgiTest {
         /// </summary>
         [TestMethod, Priority(0), TestCategory("Core")]
         public void TestDjangoPost() {
+            EnsureDjango();
             IisExpressTest(
                 "TestData\\WFastCgi\\DjangoSimpleApp",
                 new PostAndValidateUrl(
@@ -782,6 +785,7 @@ namespace FastCgiTest {
         /// </summary>
         [TestMethod, Priority(0), TestCategory("Core")]
         public void TestDjangoPath() {
+            EnsureDjango();
             IisExpressTest(
                 "TestData\\WFastCgi\\DjangoSimpleApp",
                 new GetAndValidateUrl(
@@ -796,6 +800,7 @@ namespace FastCgiTest {
         /// </summary>
         [TestMethod, Priority(0), TestCategory("Core")]
         public void TestDjangoQueryStringUrlRewrite() {
+            EnsureDjango();
             IisExpressTest(
                 "TestData\\WFastCgi\\DjangoSimpleAppUrlRewrite",
                 new GetAndValidateUrl(
@@ -810,6 +815,7 @@ namespace FastCgiTest {
         /// </summary>
         [TestMethod, Priority(0), TestCategory("Core")]
         public void TestDjangoPostUrlRewrite() {
+            EnsureDjango();
             IisExpressTest(
                 "TestData\\WFastCgi\\DjangoSimpleAppUrlRewrite",
                 new PostAndValidateUrl(
@@ -826,6 +832,7 @@ namespace FastCgiTest {
         /// </summary>
         [TestMethod, Priority(0), TestCategory("Core")]
         public void TestDjangoPathUrlRewrite() {
+            EnsureDjango();
             IisExpressTest(
                 "TestData\\WFastCgi\\DjangoSimpleAppUrlRewrite",
                 new GetAndValidateUrl(
@@ -841,11 +848,12 @@ namespace FastCgiTest {
         [TestMethod, Priority(0), TestCategory("Core")]
         public void TestExpandPathEnvironmentVariables() {
             IisExpressTest(
-                psi => {
-                    psi.EnvironmentVariables["SITELOCATION"] = TestData.GetPath("TestData\\WFastCgi\\ExpandPathEnvironmentVariables");
-                    psi.EnvironmentVariables["OTHERLOCATION"] = TestData.GetPath("TestData\\WFastCgi\\ExpandPathEnvironmentVariablesOtherDir");
-                },
+                null,
                 "TestData\\WFastCgi\\ExpandPathEnvironmentVariables",
+                new Dictionary<string, string> {
+                    { "SITELOCATION", TestData.GetPath("TestData\\WFastCgi\\ExpandPathEnvironmentVariables") },
+                    { "OTHERLOCATION", TestData.GetPath("TestData\\WFastCgi\\ExpandPathEnvironmentVariablesOtherDir") }
+                },
                 new GetAndValidateUrl(GetLocalUrl(), ValidateHelloWorld)
             );
         }
@@ -1051,23 +1059,19 @@ namespace FastCgiTest {
             }
         }
 
-        private Action<ProcessStartInfo> CollectStaticFiles(string location) {
-            return (startInfo) => {
-                var psi = new ProcessStartInfo(
+        private Action CollectStaticFiles(string location) {
+            return () => {
+                using (var p = ProcessOutput.Run(
                     InterpreterPath,
-                    String.Format("{0} collectstatic --noinput", Path.Combine(location, "manage.py"))
-                );
-                psi.UseShellExecute = false;
-                psi.CreateNoWindow = true;
-                psi.RedirectStandardOutput = true;
-                psi.RedirectStandardError = true;
-                var process = Process.Start(psi);
-                process.OutputDataReceived += ManagePyOutputDataReceived;
-                process.ErrorDataReceived += ManagePyOutputDataReceived;
-                process.BeginErrorReadLine();
-                process.BeginOutputReadLine();
-
-                process.WaitForExit();
+                    new[] { Path.Combine(location, "manage.py"), "collectstatic", "--noinput" },
+                    location,
+                    null,
+                    false,
+                    new OutputRedirector("manage.py")
+                )) {
+                    p.Wait();
+                    Assert.AreEqual(0, p.ExitCode);
+                }
             };
         }
 
@@ -1121,10 +1125,15 @@ namespace FastCgiTest {
         #region Test Case Infrastructure
 
         private void IisExpressTest(string location, params Action[] actions) {
-            IisExpressTest(null, location, actions);
+            IisExpressTest(null, location, null, actions);
         }
 
-        private void IisExpressTest(Action<ProcessStartInfo> initialization, string location, params Action[] actions) {
+        private void IisExpressTest(
+            Action initialization,
+            string location,
+            Dictionary<string, string> environment,
+            params Action[] actions
+        ) {
             Console.WriteLine("Current Directory: {0}", Environment.CurrentDirectory);
             Console.WriteLine("WFastCgiPath: {0}", WFastCgiPath);
             if (!Path.IsPathRooted(location)) {
@@ -1147,46 +1156,50 @@ namespace FastCgiTest {
                                 .Replace("[SITEPATH]", Path.GetFullPath(location))
             );
 
-            var psi = new ProcessStartInfo(IisExpressPath, String.Format("/config:\"{0}\" /site:WebSite1 /systray:false /trace:info", appConfig));
-            Console.WriteLine("Starting IIS Express: \"{0}\" {1}", psi.FileName, psi.Arguments);
-            psi.UseShellExecute = false;
-            psi.RedirectStandardError = true;
-            psi.RedirectStandardOutput = true;
-            psi.CreateNoWindow = true;
-            psi.EnvironmentVariables["WSGI_LOG"] = Path.Combine(location, "log.txt");
+            var env = environment != null ? new Dictionary<string, string>(environment) : new Dictionary<string, string>();
+            env["WSGI_LOG"] = Path.Combine(location, "log.txt");
 
             if (initialization != null) {
                 Console.WriteLine("Initializing");
-                initialization(psi);
+                initialization();
             }
 
-            using (var proc = Process.Start(psi)) {
-                proc.OutputDataReceived += IisOutputDataReceived;
-                proc.ErrorDataReceived += IisOutputDataReceived;
-                proc.BeginErrorReadLine();
-                proc.BeginOutputReadLine();
+            using (var p = ProcessOutput.Run(
+                IisExpressPath,
+                new[] { "/config:" + appConfig, "/site:WebSite1", "/systray:false", "/trace:info" },
+                null,
+                new[] { new KeyValuePair<string, string>("WSGI_LOG", Path.Combine(location, "log.txt")) },
+                false,
+                new OutputRedirector("IIS")
+            )) {
+                Console.WriteLine("Starting IIS Express: {0}", p.Arguments);
 
                 try {
                     foreach (var action in actions) {
                         action();
                     }
                 } finally {
-                    if (!proc.HasExited) {
-                        proc.Kill();
-                    }
+                    p.Kill();
                 }
             }
         }
 
-        private void ManagePyOutputDataReceived(object sender, DataReceivedEventArgs e) {
-            if (e.Data != null) {
-                Console.WriteLine("manage.py: {0}", e.Data);
-            }
-        }
+        private class OutputRedirector : Redirector {
+            private readonly string _format;
 
-        private void IisOutputDataReceived(object sender, DataReceivedEventArgs e) {
-            if (e.Data != null) {
-                Console.WriteLine("IIS: {0}", e.Data);
+            public OutputRedirector(string category) {
+                if (string.IsNullOrEmpty(category)) {
+                    _format = "{0}";
+                } else {
+                    _format = category + ": {0}";
+                }
+            }
+            public override void WriteLine(string line) {
+                Console.WriteLine(_format, line ?? "(null)");
+            }
+
+            public override void WriteErrorLine(string line) {
+                Console.Error.WriteLine(_format, line ?? "(null)");
             }
         }
 

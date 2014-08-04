@@ -84,7 +84,9 @@ namespace Microsoft.PythonTools.Commands {
         }
 
         private void QueryStatusMethod(object sender, EventArgs args) {
-            var oleMenu = sender as OleMenuCommand;
+            var oleMenu = (OleMenuCommand)sender;
+
+            oleMenu.ParametersDescription = "e,env,environment:";
 
             if (_factory == null) {
                 oleMenu.Visible = false;
@@ -95,7 +97,6 @@ namespace Microsoft.PythonTools.Commands {
                 oleMenu.Enabled = true;
                 oleMenu.Supported = true;
                 oleMenu.Text = Description;
-                oleMenu.ParametersDescription = "e,env,environment:";
             }
         }
 

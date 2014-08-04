@@ -1997,6 +1997,11 @@ namespace Microsoft.VisualStudio.Repl {
                 _stdInputStart = _stdInputBuffer.CurrentSnapshot.Length;
             });
 
+            var ready = ReadyForInput;
+            if (ready != null) {
+                ready();
+            }
+
             _inputEvent.WaitOne();
             _stdInputStart = null;
             _readingStdIn = false;

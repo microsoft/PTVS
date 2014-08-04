@@ -14,111 +14,43 @@
 
 using System.Diagnostics;
 using System.Linq;
-using System.Windows.Input;
 using Microsoft.IronPythonTools.Interpreter;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Repl;
-using Microsoft.TC.TestHostAdapters;
-using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text.Classification;
-using PythonToolsTests;
+using Microsoft.VisualStudioTools;
 using TestUtilities;
 using TestUtilities.Mocks;
-using TestUtilities.UI.Python;
-using Keyboard = TestUtilities.UI.Keyboard;
+using TestUtilities.Python;
 
 namespace ReplWindowUITests {
-#if PY_ALL || PY_IRON27
     [TestClass]
-    public class IronPythonReplTests : Python27ReplWindowTests {
-        [TestInitialize]
-        public new void Initialize() {
-            TestInitialize();
+    public class IronPythonReplEvaluatorTests {
+        static IronPythonReplEvaluatorTests() {
+            AssertListener.Initialize();
+            UIThread.InitializeAndNeverInvoke();
+            PythonTestData.Deploy(includeTestData: false);
         }
 
-        protected override string InterpreterDescription {
-            get {
-                return "IronPython 2.7 Interactive";
-            }
-        }
-
-        protected override PythonVersion PythonVersion {
+        protected virtual PythonVersion PythonVersion {
             get {
                 return PythonPaths.IronPython27;
             }
         }
 
-        protected override bool IPythonSupported {
-            get {
-                return false;
-            }
-        }
-
-        protected override string SourceFileName {
-            get {
-                return "string";
-            }
-        }
-
-        protected override bool KeyboardInterruptHasTracebackHeader {
-            get {
-                return false;
-            }
-        }
-
-        protected override bool CanRedirectSubprocess {
-            get {
-                return false;
-            }
-        }
-
         private IPythonInterpreterFactory IronPythonInterpreter {
             get {
-                var provider = new IronPythonInterpreterFactoryProvider();
-                return provider.GetInterpreterFactories().First();
-            }
-        }
-
-        /// <summary>
-        /// “x = 42”
-        /// “x.” should bring up intellisense completion
-        /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
-        public void ResetRepl() {
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var interactive = Prepare(app);
-                try {
-                    const string code = "x = 42";
-                    Keyboard.Type(code + "\r");
-
-                    interactive.WaitForText(ReplPrompt + code, ReplPrompt);
-
-                    Keyboard.Type("x.");
-
-                    interactive.WaitForText(ReplPrompt + code, ReplPrompt + "x.");
-
-                    using (var sh = interactive.WaitForSession<ICompletionSession>()) {
-                        Assert.IsNotNull(sh.Session.SelectedCompletionSet);
-                    }
-                    Keyboard.Type(Key.Back);
-                    Keyboard.Type(Key.Back);
-
-                    interactive.Reset();
-
-                    Keyboard.Type("x.");
-
-                    System.Threading.Thread.Sleep(1000);
-
-                    // and make sure we have no completions for the old buffers
-                    var sessionStack = interactive.IntellisenseSessionStack;
-                    Assert.IsNull(sessionStack.TopSession);
-                } finally {
-                    interactive.WaitForSessionDismissed();
+                if (PythonVersion == null) {
+                    Assert.Inconclusive("Interpreter missing for " + GetType().Name);
                 }
+                var provider = new IronPythonInterpreterFactoryProvider();
+                return provider.GetInterpreterFactories()
+                    .First(f => f.Id == PythonVersion.Id &&
+                                f.Configuration.Version == PythonVersion.Version.ToVersion());
             }
         }
 
@@ -279,24 +211,12 @@ namespace ReplWindowUITests {
 
 
     [TestClass]
-    public class IronPythonx64ReplTests : IronPythonReplTests {
-        [TestInitialize]
-        public new void Initialize() {
-            TestInitialize();
-        }
-
-        protected override string InterpreterDescription {
-            get {
-                return "IronPython 64-bit 2.7 Interactive";
-            }
-        }
-
+    public class IronPythonx64ReplEvaluatorTests : IronPythonReplEvaluatorTests {
         protected override PythonVersion PythonVersion {
             get {
                 return PythonPaths.IronPython27_x64;
             }
         }
     }
-#endif
 }
 

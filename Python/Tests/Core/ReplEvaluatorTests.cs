@@ -18,12 +18,10 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
-using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools;
-using Microsoft.VisualStudioTools.Project;
 using TestUtilities;
 using TestUtilities.Mocks;
 using TestUtilities.Python;
@@ -94,13 +92,67 @@ namespace PythonToolsTests {
         [TestMethod, Priority(0)]
         public void TestCanExecute() {
             using (var evaluator = MakeEvaluator()) {
-                Assert.AreEqual(evaluator.CanExecuteText("print 'hello'"), true);
-                Assert.AreEqual(evaluator.CanExecuteText("42"), true);
-                Assert.AreEqual(evaluator.CanExecuteText("for i in xrange(2):  print i\r\n\r\n"), true);
-                Assert.AreEqual(evaluator.CanExecuteText("raise Exception()\n"), true);
+                Assert.IsTrue(evaluator.CanExecuteText("print 'hello'"));
+                Assert.IsTrue(evaluator.CanExecuteText("42"));
+                Assert.IsTrue(evaluator.CanExecuteText("for i in xrange(2):  print i\r\n\r\n"));
+                Assert.IsTrue(evaluator.CanExecuteText("raise Exception()\n"));
 
-                Assert.AreEqual(evaluator.CanExecuteText("try:\r\n    print 'hello'\r\nexcept:\r\n    print 'goodbye'\r\n    \r\n    "), true);
-                Assert.AreEqual(evaluator.CanExecuteText("try:\r\n    print 'hello'\r\nfinally:\r\n    print 'goodbye'\r\n    \r\n    "), true);
+                Assert.IsTrue(evaluator.CanExecuteText("try:\r\n    print 'hello'\r\nexcept:\r\n    print 'goodbye'\r\n    \r\n    "));
+                Assert.IsTrue(evaluator.CanExecuteText("try:\r\n    print 'hello'\r\nfinally:\r\n    print 'goodbye'\r\n    \r\n    "));
+                Assert.IsFalse(evaluator.CanExecuteText("x = \\"));
+                Assert.IsTrue(evaluator.CanExecuteText("x = \\\r\n42\r\n\r\n"));
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void ReplSplitCodeTest() {
+            // http://pytools.codeplex.com/workitem/606
+
+            var testCases = new[] {
+                new { 
+                    Code = @"def f():
+    pass
+
+def g():
+    pass
+
+f()
+g()",
+                    Expected = new[] { "def f():\r\n    pass\r\n", "def g():\r\n    pass\r\n", "f()", "g()" }
+                },
+                new {
+                    Code = @"def f():
+    pass
+
+f()
+
+def g():
+    pass
+
+f()
+g()",
+                    Expected = new[] { "def f():\r\n    pass\r\n", "f()", "def g():\r\n    pass\r\n", "f()", "g()" }
+                },
+                new {
+                    Code = @"def f():
+    pass
+
+f()
+f()
+
+def g():
+    pass
+
+f()
+g()",
+                    Expected = new[] { "def f():\r\n    pass\r\n", "f()", "f()", "def g():\r\n    pass\r\n", "f()", "g()" }
+                }
+            };
+
+            using (var evaluator = MakeEvaluator()) {
+                foreach (var testCase in testCases) {
+                    AssertUtil.AreEqual(evaluator.SplitCode(testCase.Code), testCase.Expected);
+                }
             }
         }
 
@@ -246,69 +298,6 @@ namespace PythonToolsTests {
                     errorText
                 ));
             }
-        }
-    }
-
-
-    class ReplTestReplOptions : PythonReplEvaluatorOptions {
-        public override bool EnableAttach {
-            get { return true; }
-        }
-
-        public override string InterpreterOptions {
-            get { return ""; }
-        }
-
-        public override string WorkingDirectory {
-            get { return ""; }
-        }
-
-        public override IDictionary<string, string> EnvironmentVariables {
-            get { return null; }
-        }
-
-        public override string StartupScript {
-            get { return null; }
-        }
-
-        public override string SearchPaths {
-            get { return ""; }
-        }
-
-        public override string InterpreterArguments {
-            get { return ""; }
-        }
-
-        public override VsProjectAnalyzer ProjectAnalyzer {
-            get { return null; }
-        }
-
-        public override bool UseInterpreterPrompts {
-            get { return true; }
-        }
-
-        public override string ExecutionMode {
-            get { return ""; }
-        }
-
-        public override bool InlinePrompts {
-            get { return false; }
-        }
-
-        public override bool ReplSmartHistory {
-            get { return false; }
-        }
-
-        public override bool LiveCompletionsOnly {
-            get { return false; }
-        }
-
-        public override string PrimaryPrompt {
-            get { return ">>>"; }
-        }
-
-        public override string SecondaryPrompt {
-            get { return "..."; }
         }
     }
 }

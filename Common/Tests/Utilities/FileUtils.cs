@@ -14,6 +14,7 @@
 
 using System;
 using System.IO;
+using System.Text;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -26,6 +27,50 @@ namespace TestUtilities {
             File.Copy(path, backup);
             return new FileRestorer(path, backup);
         }
+
+        public static IDisposable TemporaryTextFile(out string path, string content) {
+            var tempPath = TestData.GetTempPath();
+            for (int retries = 100; retries > 0; --retries) {
+                path = Path.Combine(tempPath, Path.GetRandomFileName());
+                try {
+                    using (var stream = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+                    using (var writer = new StreamWriter(stream, Encoding.Default, 128, true)) {
+                        writer.Write(content);
+                        return new FileDeleter(path);
+                    }
+                } catch (IOException) {
+                } catch (UnauthorizedAccessException) {
+                }
+            }
+            Assert.Fail("Failed to create temporary file.");
+            throw new InvalidOperationException();
+        }
+
+        private sealed class FileDeleter : IDisposable {
+            private readonly string _path;
+
+            public FileDeleter(string path) {
+                _path = path;
+            }
+            
+            public void Dispose() {
+                for (int retries = 10; retries > 0; --retries) {
+                    try {
+                        File.Delete(_path);
+                        return;
+                    } catch (IOException) {
+                    } catch (UnauthorizedAccessException) {
+                        try {
+                            File.SetAttributes(_path, FileAttributes.Normal);
+                        } catch (IOException) {
+                        } catch (UnauthorizedAccessException) {
+                        }
+                    }
+                    Thread.Sleep(100);
+                }
+            }
+        }
+
 
         private sealed class FileRestorer : IDisposable {
             private readonly string _original, _backup;

@@ -871,39 +871,48 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private void UpdateActiveInterpreter() {
-            RefreshInterpreters();
-
-            if (_analyzer != null) {
-                UnHookErrorsAndWarnings(_analyzer);
-            }
-            var analyzer = CreateAnalyzer();
-            Debug.Assert(analyzer != null);
-
-            var analyzerChanging = ProjectAnalyzerChanging;
-            if (analyzerChanging != null) {
-                analyzerChanging(this, new AnalyzerChangingEventArgs(
-                    _analyzer != null ? _analyzer.Project : null,
-                    analyzer != null ? analyzer.Project : null
-                ));
+            if (IsClosing || IsClosed) {
+                // This deferred event is no longer important.
+                return;
             }
 
-            Reanalyze(this, analyzer);
-            if (_analyzer != null) {
-                analyzer.SwitchAnalyzers(_analyzer);
-                if (_analyzer.RemoveUser()) {
-                    _analyzer.Dispose();
+            try {
+                RefreshInterpreters();
+
+                if (_analyzer != null) {
+                    UnHookErrorsAndWarnings(_analyzer);
                 }
-            }
+                var analyzer = CreateAnalyzer();
+                Debug.Assert(analyzer != null);
 
-            _analyzer = analyzer;
-            var searchPath = ParseSearchPath();
-            if (searchPath != null && _analyzer != null) {
-                AnalyzeSearchPaths(searchPath);
-            }
+                var analyzerChanging = ProjectAnalyzerChanging;
+                if (analyzerChanging != null) {
+                    analyzerChanging(this, new AnalyzerChangingEventArgs(
+                        _analyzer != null ? _analyzer.Project : null,
+                        analyzer != null ? analyzer.Project : null
+                    ));
+                }
 
-            var analyzerChanged = ProjectAnalyzerChanged;
-            if (analyzerChanged != null) {
-                analyzerChanged(this, EventArgs.Empty);
+                Reanalyze(this, analyzer);
+                if (_analyzer != null) {
+                    analyzer.SwitchAnalyzers(_analyzer);
+                    if (_analyzer.RemoveUser()) {
+                        _analyzer.Dispose();
+                    }
+                }
+
+                _analyzer = analyzer;
+                var searchPath = ParseSearchPath();
+                if (searchPath != null && _analyzer != null) {
+                    AnalyzeSearchPaths(searchPath);
+                }
+
+                var analyzerChanged = ProjectAnalyzerChanged;
+                if (analyzerChanged != null) {
+                    analyzerChanged(this, EventArgs.Empty);
+                }
+            } catch (ObjectDisposedException) {
+                // Raced with project disposal
             }
         }
 
