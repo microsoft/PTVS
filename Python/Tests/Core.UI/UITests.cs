@@ -140,21 +140,13 @@ namespace PythonToolsUITests {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
                 var project = app.OpenProject(@"TestData\HelloWorld.sln");
 
-                app.OpenSolutionExplorer();
-                var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer().SelectProject(project);
 
-                // find Program.py, send copy & paste, verify copy of file is there
-                var projectNode = window.FindItem("Solution 'HelloWorld' (1 project)", "HelloWorld");
-                AutomationWrapper.Select(projectNode);
-
-                Keyboard.PressAndRelease(Key.F10, Key.LeftCtrl, Key.LeftShift);
-                Keyboard.PressAndRelease(Key.D);
-                Keyboard.PressAndRelease(Key.Right);
-                Keyboard.PressAndRelease(Key.D);
+                app.ExecuteCommand("Project.NewFolder");
                 Keyboard.Type("MyNewFolder");
                 Keyboard.PressAndRelease(Key.Enter);
 
-                Assert.IsNotNull(window.WaitForItem("Solution 'HelloWorld' (1 project)", "HelloWorld", "MyNewFolder"));
+                app.OpenSolutionExplorer().WaitForChildOfProject(project, "MyNewFolder");
             }
         }
 
@@ -237,41 +229,27 @@ namespace PythonToolsUITests {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
                 var project = app.OpenProject(@"TestData\HelloWorld.sln");
 
-                app.OpenSolutionExplorer();
-                var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer().SelectProject(project);
 
-                // find Program.py, send copy & paste, verify copy of file is there
-                var projectNode = window.FindItem("Solution 'HelloWorld' (1 project)", "HelloWorld");
-                AutomationWrapper.Select(projectNode);
-
-                Keyboard.PressAndRelease(Key.F10, Key.LeftCtrl, Key.LeftShift);
-                Keyboard.PressAndRelease(Key.D);
-                Keyboard.PressAndRelease(Key.Right);
-                Keyboard.PressAndRelease(Key.D);
+                app.ExecuteCommand("Project.NewFolder");
                 Keyboard.Type("FolderX");
                 Keyboard.PressAndRelease(Key.Enter);
 
-                Assert.IsNotNull(window.WaitForItem("Solution 'HelloWorld' (1 project)", "HelloWorld", "FolderX"));
+                var folderNode = app.OpenSolutionExplorer().WaitForChildOfProject(project, "FolderX");
+                folderNode.Select();
 
-                var folderNode = window.FindItem("Solution 'HelloWorld' (1 project)", "HelloWorld", "FolderX");
-                AutomationWrapper.Select(folderNode);
-
-                Keyboard.PressAndRelease(Key.F10, Key.LeftCtrl, Key.LeftShift);
-                Keyboard.PressAndRelease(Key.D);
-                Keyboard.PressAndRelease(Key.Right);
-                Keyboard.PressAndRelease(Key.D);
+                app.ExecuteCommand("Project.NewFolder");
                 Keyboard.Type("FolderY");
                 Keyboard.PressAndRelease(Key.Enter);
 
-                Assert.IsNotNull(window.WaitForItem("Solution 'HelloWorld' (1 project)", "HelloWorld", "FolderX", "FolderY"));
-                var innerFolderNode = window.FindItem("Solution 'HelloWorld' (1 project)", "HelloWorld", "FolderX", "FolderY");
-                AutomationWrapper.Select(innerFolderNode);
+                var innerFolderNode = app.OpenSolutionExplorer().WaitForChildOfProject(project, "FolderX", "FolderY");
+                innerFolderNode.Select();
 
                 var newItem = project.ProjectItems.Item("FolderX").Collection.Item("FolderY").Collection.AddFromFile(
                     TestData.GetPath(@"TestData\DebuggerProject\BreakpointTest.py")
                 );
 
-                Assert.IsNotNull(window.WaitForItem("Solution 'HelloWorld' (1 project)", "HelloWorld", "FolderX", "FolderY", "BreakpointTest.py"));
+                app.OpenSolutionExplorer().WaitForChildOfProject(project, "FolderX", "FolderY", "BreakpointTest.py");
             }
         }
 
@@ -732,10 +710,11 @@ namespace PythonToolsUITests {
                 uint cookie;
                 selectedHierarchy.AdviseHierarchyEvents(events, out cookie);
 
-                var newItem = new NewItemDialog(app.OpenDialogWithDteExecuteCommand("Project.AddNewItem"));
-                AutomationWrapper.Select(newItem.ProjectTypes.FindItem("Empty Python File"));
-                newItem.FileName = "zmodule1.py";
-                newItem.ClickOK();
+                using (var newItem = NewItemDialog.FromDte(app)) {
+                    AutomationWrapper.Select(newItem.ProjectTypes.FindItem("Empty Python File"));
+                    newItem.FileName = "zmodule1.py";
+                    newItem.OK();
+                }
 
                 var test2 = window.WaitForItem("Solution 'AddItemPreviousSiblingNotVisible' (1 project)", "HelloWorld", "zmodule1.py");
                 Assert.IsNotNull(test2);
@@ -764,17 +743,13 @@ namespace PythonToolsUITests {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
                 var project = app.OpenProject(@"TestData\AddExistingItem.sln");
 
-                app.OpenSolutionExplorer();
-                var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer().SelectProject(project);
 
-                var projectNode = window.WaitForItem("Solution 'AddExistingItem' (1 project)", "HelloWorld");
-                Assert.IsNotNull(projectNode, "projectNode");
-                AutomationWrapper.Select(projectNode);
-
-                var addExistingDlg = new AddExistingItemDialog(app.OpenDialogWithDteExecuteCommand("Project.AddExistingItem"));
-                addExistingDlg.FileName = TestData.GetPath(@"TestData\AddExistingItem\Program2.py");
-                addExistingDlg.Add();
-                Assert.IsNotNull(window.WaitForItem("Solution 'AddExistingItem' (1 project)", "HelloWorld", "Program2.py"));
+                using (var addExistingDlg = AddExistingItemDialog.FromDte(app)) {
+                    addExistingDlg.FileName = TestData.GetPath(@"TestData\AddExistingItem\Program2.py");
+                    addExistingDlg.Add();
+                }
+                app.OpenSolutionExplorer().WaitForChildOfProject(project, "Program2.py");
             }
         }
 
@@ -787,26 +762,22 @@ namespace PythonToolsUITests {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
                 var project = app.OpenProject(@"TestData\AddExistingItem.sln");
 
-                app.OpenSolutionExplorer();
-                var window = app.SolutionExplorerTreeView;
-
-                var projectNode = window.WaitForItem("Solution 'AddExistingItem' (1 project)", "HelloWorld");
-                Assert.IsNotNull(projectNode, "projectNode");
-                AutomationWrapper.Select(projectNode);
+                app.OpenSolutionExplorer().SelectProject(project);
 
                 const string filename = "Program2.py";
 
-                var addItemDlg = new NewItemDialog(app.OpenDialogWithDteExecuteCommand("Project.AddNewItem"));
-                AutomationWrapper.Select(addItemDlg.ProjectTypes.FindItem("Empty Python File"));
-                addItemDlg.FileName = filename;
-                addItemDlg.ClickOK();
+                using (var addItemDlg = NewItemDialog.FromDte(app)) {
+                    AutomationWrapper.Select(addItemDlg.ProjectTypes.FindItem("Empty Python File"));
+                    addItemDlg.FileName = filename;
+                    addItemDlg.OK();
+                }
 
                 VisualStudioApp.CheckMessageBox(
                     MessageBoxButton.Yes,
-                    "A file with the same name '" + filename + "' already exists. Do you want to overwrite it?"
+                    "A file with the same name", filename, "already exists. Do you want to overwrite it?"
                 );
 
-                Assert.IsNotNull(window.WaitForItem("Solution 'AddExistingItem' (1 project)", "HelloWorld", "Program2.py"));
+                app.OpenSolutionExplorer().WaitForChildOfProject(project, "Program2.py");
             }
         }
 
@@ -886,13 +857,14 @@ namespace PythonToolsUITests {
 
                 var fileWindow = app.Dte.ItemOperations.OpenFile(filename);
 
-                app.MoveCurrentFileToProject("HelloWorld");
+                using (var dialog = ChooseLocationDialog.FromDte(app)) {
+                    dialog.SelectProject("HelloWorld");
+                    dialog.OK();
+                }
 
-                app.OpenSolutionExplorer();
-                var window = app.SolutionExplorerTreeView;
-                Assert.IsNotNull(window.WaitForItem("Solution 'HelloWorld' (1 project)", "HelloWorld", basename));
+                app.OpenSolutionExplorer().WaitForChildOfProject(project, basename);
 
-                Assert.AreEqual(fileWindow.Caption, basename);
+                Assert.AreEqual(basename, fileWindow.Caption);
 
                 System.IO.File.Delete(filename);
             }

@@ -15,6 +15,7 @@
 using System;
 using System.Windows.Automation;
 using System.Windows.Input;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TestUtilities.UI {
     public class SelectFolderDialog : AutomationDialog {
@@ -51,7 +52,18 @@ namespace TestUtilities.UI {
 
         public string Address {
             get {
-                return GetAddressBox().Current.Name.Substring("Address: ".Length);
+                foreach (AutomationElement e in Element.FindAll(
+                    TreeScope.Descendants,
+                    new PropertyCondition(AutomationElement.ClassNameProperty, "ToolbarWindow32"))
+                ) {
+                    var name = e.Current.Name;
+                    if (name.StartsWith("Address: ", StringComparison.CurrentCulture)) {
+                        return name.Substring("Address: ".Length);
+                    }
+                }
+
+                Assert.Fail("Unable to find address");
+                return null;
             }
         }
 
@@ -62,15 +74,6 @@ namespace TestUtilities.UI {
                     new PropertyCondition(AutomationElement.NameProperty, "Folder:")
                 )
             );
-        }
-
-        private AutomationElement GetAddressBox() {
-            return Element.FindFirst(TreeScope.Descendants,
-                new AndCondition(
-                    new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Pane),
-                    new PropertyCondition(AutomationElement.ClassNameProperty, "Breadcrumb Parent")
-                )
-            ).FindFirst(TreeScope.Children, Condition.TrueCondition);
         }
     }
 }

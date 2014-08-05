@@ -45,12 +45,15 @@ namespace TestUtilities {
 
         static void CurrentDomain_FirstChanceException(object sender, FirstChanceExceptionEventArgs e) {
             if (e.Exception is NullReferenceException || e.Exception is ObjectDisposedException) {
-                var log = new EventLog("Application");
-                log.Source = "Application Error";
-                log.WriteEntry(
-                    "First-chance exception: " + e.Exception.ToString(),
-                    EventLogEntryType.Warning
-                );
+                // Exclude safe handle messages because they are noisy
+                if (!e.Exception.Message.Contains("Safe handle has been closed")) {
+                    var log = new EventLog("Application");
+                    log.Source = "Application Error";
+                    log.WriteEntry(
+                        "First-chance exception: " + e.Exception.ToString(),
+                        EventLogEntryType.Warning
+                    );
+                }
             }
         }
 

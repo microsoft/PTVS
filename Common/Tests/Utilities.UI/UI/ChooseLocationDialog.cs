@@ -14,20 +14,25 @@
 
 using System;
 using System.Windows.Automation;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TestUtilities.UI {
-    class ChooseLocationDialog : AutomationWrapper {
-        public ChooseLocationDialog(IntPtr hwnd)
-            : base(AutomationElement.FromHandle(hwnd)) {
+    class ChooseLocationDialog : AutomationDialog {
+        public ChooseLocationDialog(VisualStudioApp app, AutomationElement element)
+            : base(app, element) {
         }
 
-        public void ClickOK() {
-            ClickButtonByName("OK");
+        public static ChooseLocationDialog FromDte(VisualStudioApp app) {
+            return new ChooseLocationDialog(
+                app,
+                AutomationElement.FromHandle(app.OpenDialogWithDteExecuteCommand("File.ProjectPickerMoveInto"))
+            );
         }
 
-        public AutomationElement FindProject(string name) {
-            var list = Element.FindFirst(TreeScope.Children, new PropertyCondition(AutomationElement.ClassNameProperty, "ListBox"));
-            return list.FindFirst(TreeScope.Children, new PropertyCondition(AutomationElement.NameProperty, name));
+        public void SelectProject(string name) {
+            var item = Element.FindFirst(TreeScope.Descendants, new PropertyCondition(AutomationElement.NameProperty, name));
+            Assert.IsNotNull(item, "Did not find item " + name);
+            item.GetSelectionItemPattern().Select();
         }
 
     }

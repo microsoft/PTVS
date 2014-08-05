@@ -19,25 +19,27 @@ namespace TestUtilities.UI {
     /// <summary>
     /// Wrapps VS's Project->Add Item dialog.
     /// </summary>
-    public class NewItemDialog  : AutomationWrapper {
+    public class NewItemDialog : AutomationDialog {
+        private readonly VisualStudioApp _app;
         private Table _projectTypesTable;
 
-        public NewItemDialog(IntPtr dialog)
-            : this(AutomationElement.FromHandle(dialog)) {
+        public NewItemDialog(VisualStudioApp app, AutomationElement element)
+            : base(app, element) {
+            _app = app;
         }
 
-        public NewItemDialog(AutomationElement element)
-            : base(element) {
+        public static NewItemDialog FromDte(VisualStudioApp app) {
+            return new NewItemDialog(
+                app,
+                AutomationElement.FromHandle(app.OpenDialogWithDteExecuteCommand("Project.AddNewItem"))
+            );
         }
 
         /// <summary>
         /// Clicks the OK button on the dialog.
         /// </summary>
-        public void ClickOK() {
-            ClickButtonByAutomationId("btn_OK");
-            //The button click may result in a dialog
-            //  Allow some time for the dialog
-            System.Threading.Thread.Sleep(1000);
+        public override void OK() {
+            ClickButtonAndClose("btn_OK", nameIsAutomationId: true);
         }
 
         /// <summary>

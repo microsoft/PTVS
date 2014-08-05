@@ -12,25 +12,32 @@
  *
  * ***************************************************************************/
 
-using System;
+using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Input;
-using System.Diagnostics;
-using System.Windows;
-
 
 namespace TestUtilities.UI {
-    public class AddExistingItemDialog : AutomationWrapper {
-        public AddExistingItemDialog(IntPtr hwnd)
-            : base(AutomationElement.FromHandle(hwnd)) {
+    public class AddExistingItemDialog : AutomationDialog {
+        public AddExistingItemDialog(VisualStudioApp app, AutomationElement element)
+            : base(app, element) {
+        }
+
+        public static AddExistingItemDialog FromDte(VisualStudioApp app) {
+            return new AddExistingItemDialog(
+                app,
+                AutomationElement.FromHandle(app.OpenDialogWithDteExecuteCommand("Project.AddExistingItem"))
+            );
+        }
+
+        public override void OK() {
+            Add();
         }
 
         public void Add() {
-            Keyboard.PressAndRelease(Key.A, Key.LeftAlt);
+            WaitForClosed(DefaultTimeout, () => Keyboard.PressAndRelease(Key.A, Key.LeftAlt));
         }
 
         public void AddLink() {
-            
             var addButton = Element.FindFirst(TreeScope.Children,
                 new AndCondition(
                     new PropertyCondition(AutomationElement.NameProperty, "Add"),
@@ -46,6 +53,8 @@ namespace TestUtilities.UI {
 
             // type the keyboard short cut for Add to Link
             Keyboard.Type(Key.L);
+
+            WaitForClosed(DefaultTimeout);
         }
 
         public string FileName { 

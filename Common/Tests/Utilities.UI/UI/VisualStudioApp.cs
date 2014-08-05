@@ -717,16 +717,6 @@ namespace TestUtilities.UI {
             return res.ToString();
         }
 
-        public void MoveCurrentFileToProject(string projectName) {
-            var dialog = OpenDialogWithDteExecuteCommand("file.ProjectPickerMoveInto");
-
-            var chooseDialog = new ChooseLocationDialog(dialog);
-            chooseDialog.FindProject(projectName);
-            chooseDialog.ClickOK();
-
-            WaitForDialogDismissed();
-        }
-
         public DTE Dte {
             get {
                 return _dte;

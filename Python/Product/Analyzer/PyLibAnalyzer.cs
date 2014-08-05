@@ -468,7 +468,12 @@ namespace Microsoft.PythonTools.Analysis {
                         }
                         _updater.UpdateStatus(progress.Progress, progress.Maximum, message);
                     } else if (everSeen) {
-                        evt.Set();
+                        try {
+                            evt.Set();
+                        } catch (ObjectDisposedException) {
+                            // Event arrived after timeout and/or disposal of
+                            // listener.
+                        }
                     }
                 }, TimeSpan.FromSeconds(1.0))) {
                     if (!evt.WaitOne(TimeSpan.FromSeconds(60.0))) {
