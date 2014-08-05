@@ -553,13 +553,13 @@ namespace PythonToolsUITests {
 
                 EndToEndLog("Installed framework {0}", moduleName);
 
-                // Wait for analysis to complete so we don't have too many
-                // python.exe processes floating around.
-                for (int i = 0; i < 60 && Process.GetProcessesByName("Microsoft.PythonTools.Analyzer").Any(); --i) {
-                    Thread.Sleep(1000);
+                // Abort analysis so we don't have too many python.exe processes
+                // floating around.
+                foreach (var p in Process.GetProcessesByName("Microsoft.PythonTools.Analyzer")) {
+                    p.Kill();
                 }
 
-                EndToEndLog("Completed analysis");
+                EndToEndLog("Aborted analysis");
 
                 UIThread.Invoke(() => {
                     pyProj.SetProjectProperty("WebBrowserPort", "23457");
