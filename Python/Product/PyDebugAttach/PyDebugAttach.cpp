@@ -1025,7 +1025,7 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // go ahead and bring in the debugger module and initialize all threads in the process...
-        GilHolder gilLock(gilEnsure, gilRelease);   // acquire and hold the GIL until done...
+		GilHolder gilLock(gilEnsure, gilRelease);   // acquire and hold the GIL until done...
 
         auto pyTrue = boolFromLong(1);
         auto pyFalse = boolFromLong(0);
@@ -1055,13 +1055,13 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
         LoadAndEvaluateCode(utilModuleFilePath, "visualstudio_py_util.py", connInfo, isDebug, utilModuleDict,
             pyCompileString, dictSetItem, pyEvalCode, strFromString, getBuiltins, pyErrPrint);
 
-        auto replModule = PyObjectHolder(isDebug, pyModuleNew("visualstudio_py_repl"));
+		auto replModule = PyObjectHolder(isDebug, pyModuleNew("visualstudio_py_repl"));
         auto replModuleDict = pyModuleGetDict(replModule.ToPython());
         dictSetItem(replModuleDict, "visualstudio_py_util", utilModule.ToPython());
         LoadAndEvaluateCode(replModuleFilePath, "visualstudio_py_repl.py", connInfo, isDebug, replModuleDict,
             pyCompileString, dictSetItem, pyEvalCode, strFromString, getBuiltins, pyErrPrint);
 
-        auto globalsDict = PyObjectHolder(isDebug, pyDictNew());
+		auto globalsDict = PyObjectHolder(isDebug, pyDictNew());
         dictSetItem(globalsDict.ToPython(), "visualstudio_py_util", utilModule.ToPython());
         dictSetItem(globalsDict.ToPython(), "visualstudio_py_repl", replModule.ToPython());
         LoadAndEvaluateCode(debuggerModuleFilePath, "visualstudio_py_debugger.py", connInfo, isDebug, globalsDict.ToPython(),
@@ -1086,7 +1086,7 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
 
         auto debugId = PyObjectHolder(isDebug, strFromString(connInfo.Buffer->DebugId));
 
-        DecRef(call(attach_process.ToPython(), pyPortNum.ToPython(), debugId.ToPython(), pyTrue, pyFalse, NULL), isDebug);
+		DecRef(call(attach_process.ToPython(), pyPortNum.ToPython(), debugId.ToPython(), pyTrue, pyFalse, NULL), isDebug);
 
         auto sysMod = PyObjectHolder(isDebug, pyImportMod("sys"));
         if (*sysMod == nullptr) {
@@ -1108,24 +1108,16 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
         // will handle those.  So we collect the initial set of threads first here so that we don't keep iterating
         // if the program is spawning large numbers of threads.
         hash_set<PyThreadState*> initialThreads;
-        for (auto curThread = threadHead(head); curThread != nullptr; curThread = threadNext(curThread)) {
+		for (auto curThread = threadHead(head); curThread != nullptr; curThread = threadNext(curThread)) {
             initialThreads.insert(curThread);
         }
 
         hash_set<PyThreadState*> seenThreads;
         {
-            // Python 3.2's GIL has changed and we need it to be less aggressive in the face of heavy contention
-            // so that we can successfully attach.  So we prevent it from switching us out here.
-            unsigned long saveLongIntervalCheck;
-            if (getSwitchInterval != nullptr && setSwitchInterval != nullptr) {
-                saveLongIntervalCheck = getSwitchInterval();
-                setSwitchInterval(INFINITE);
-            }
-
             // find what index is holding onto the thread state...
             auto curPyThread = *curPythonThread;
             int threadStateIndex = -1;
-            for (int i = 0; i < 100000; i++) {
+			for (int i = 0; i < 100000; i++) {
                 void* value = getThreadTls(i);
                 if (value == curPyThread) {
                     threadStateIndex = i;
@@ -1148,7 +1140,7 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
                     long threadId = GetPythonThreadId(version, curThread);
                     // skip this thread - it doesn't really have any Python code on it...
                     if (threadId != GetCurrentThreadId()) {
-                        // create new debugger Thread object on our injected thread
+						// create new debugger Thread object on our injected thread
                         auto pyThreadId = PyObjectHolder(isDebug, intFromLong(threadId));
                         PyFrameObject* frame;
                         // update all of the frames so they have our trace func
@@ -1160,9 +1152,9 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
                             frame = ((PyThreadState_34*)curThread)->frame;
                         }
 
-                        auto threadObj = PyObjectHolder(isDebug, call(new_thread.ToPython(), pyThreadId.ToPython(), pyTrue, frame, NULL));
+						auto threadObj = PyObjectHolder(isDebug, call(new_thread.ToPython(), pyThreadId.ToPython(), pyTrue, frame, NULL));
                         if (threadObj.ToPython() == pyNone || *threadObj == nullptr) {
-                            break;
+							break;
                         }
 
                         // switch to our new thread so we can call sys.settrace on it...
@@ -1178,10 +1170,10 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
                         auto errOccured = errOccurred();
                         PyObject *type, *value, *traceback;
                         if (errOccured) {
-                            pyErrFetch(&type, &value, &traceback);
+							pyErrFetch(&type, &value, &traceback);
                         }
 
-                        auto traceFunc = PyObjectHolder(isDebug, pyGetAttr(threadObj.ToPython(), "trace_func"));
+						auto traceFunc = PyObjectHolder(isDebug, pyGetAttr(threadObj.ToPython(), "trace_func"));
 
                         if (*gettrace == NULL) {
                             DecRef(call(settrace.ToPython(), traceFunc.ToPython(), NULL), isDebug);
@@ -1196,17 +1188,17 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
                         }
 
                         if (errOccured) {
-                            pyErrRestore(type, value, traceback);
+							pyErrRestore(type, value, traceback);
                         }
 
-                        // update all of the frames so they have our trace func
+						// update all of the frames so they have our trace func
                         auto curFrame = (PyFrameObject*)GetPyObjectPointerNoDebugInfo(isDebug, frame);
                         while (curFrame != nullptr) {
                             // Special case for CFrame objects
                             // Stackless CFrame does not have a trace function
                             // This will just prevent a crash on attach.
                             if (((PyObject*)curFrame)->ob_type != PyCFrame_Type) {
-                                DecRef(curFrame->f_trace, isDebug);
+								DecRef(curFrame->f_trace, isDebug);
                                 IncRef(*traceFunc);
                                 curFrame->f_trace = traceFunc.ToPython();
                             }
@@ -1220,11 +1212,7 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
                     break;
                 }
             } while (foundThread);
-
-            if (getSwitchInterval != nullptr && setSwitchInterval != nullptr) {
-                setSwitchInterval(saveLongIntervalCheck);
-            }
-        }
+		}
 
         HMODULE hModule = NULL;
         if (GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, (LPCTSTR)GetCurrentModuleFilename, &hModule) != 0) {
