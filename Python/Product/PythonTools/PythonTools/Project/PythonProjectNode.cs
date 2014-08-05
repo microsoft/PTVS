@@ -162,6 +162,10 @@ namespace Microsoft.PythonTools.Project {
             return ImageHandler.GetIconHandle(GetIconIndex(name));
         }
 
+        internal override string IssueTrackerUrl {
+            get { return PythonConstants.IssueTrackerUrl; }
+        }
+
         private static string GetSearchPathEntry(IProjectEntry entry) {
             object result;
             entry.Properties.TryGetValue(_searchPathEntryKey, out result);

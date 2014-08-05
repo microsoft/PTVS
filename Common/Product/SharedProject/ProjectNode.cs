@@ -318,6 +318,11 @@ namespace Microsoft.VisualStudioTools.Project {
         public abstract string ProjectType {
             get;
         }
+
+        internal abstract string IssueTrackerUrl {
+            get;
+        }
+
         #endregion
 
         #region virtual properties

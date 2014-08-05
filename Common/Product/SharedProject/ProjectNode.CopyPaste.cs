@@ -15,6 +15,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -933,6 +934,40 @@ namespace Microsoft.VisualStudioTools.Project {
                     return null;
                 }
 
+                // Check that the source and destination paths aren't the same.  This is important if a symbolic link was used
+                try {
+                    string sourceLinkTarget;
+                    string destinationLinkTarget;
+                    sourceLinkTarget = NativeMethods.GetAbsolutePathToDirectory(Path.GetDirectoryName(moniker));
+                    try {
+                        destinationLinkTarget = NativeMethods.GetAbsolutePathToDirectory(targetFolder);
+                    } catch (FileNotFoundException) {
+                        // This can occur if the user had a symlink'd directory and deleted the backing directory.
+                        VsShellUtilities.ShowMessageBox(
+                                    Project.Site,
+                                    String.Format(
+                                        "Unable to find the destination folder."),
+                                    null,
+                                    OLEMSGICON.OLEMSGICON_CRITICAL,
+                                    OLEMSGBUTTON.OLEMSGBUTTON_OK,
+                                    OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
+                        return null;
+                    }
+
+                    // If the paths are the same, we can't really move the file...
+                    if (CommonUtils.IsSamePath(sourceLinkTarget, destinationLinkTarget)) {
+                        CannotMoveSameLocation(moniker);
+                        return null;
+                    }
+                } catch (Exception e) {
+                    if (e.IsCriticalException()) {
+                        throw;
+                    }
+                    TaskDialog.ForException(Project.Site, e, String.Empty, Project.IssueTrackerUrl).ShowModal();
+                    return null;
+                }
+
+                // Begin the move operation now that we are past pre-checks.
                 string newPath = Path.Combine(targetFolder, Path.GetFileName(moniker));
                 var existingChild = Project.FindNodeByFullPath(moniker);
                 if (existingChild != null && existingChild.IsLinkFile) {
@@ -1213,10 +1248,10 @@ namespace Microsoft.VisualStudioTools.Project {
                     } else {
                         // we are copying and adding a new file node
                         File.Copy(SourceMoniker, newPath, true);
-                        
+
                         // best effort to reset the ReadOnly attribute
                         try {
-                            File.SetAttributes(newPath, File.GetAttributes(newPath) &~ FileAttributes.ReadOnly);
+                            File.SetAttributes(newPath, File.GetAttributes(newPath) & ~FileAttributes.ReadOnly);
                         } catch (ArgumentException) {
                         } catch (UnauthorizedAccessException) {
                         } catch (IOException) {
