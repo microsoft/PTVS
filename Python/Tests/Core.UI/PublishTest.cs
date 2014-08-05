@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+extern alias pythontools;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -27,6 +28,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.Python;
 using TestUtilities.UI;
+using CommonUtils = pythontools::Microsoft.VisualStudioTools.CommonUtils;
 
 namespace PythonToolsUITests {
     [TestClass]
@@ -73,7 +75,7 @@ namespace PythonToolsUITests {
             string[] files = null;
             for (int retries = 10; retries > 0; --retries) {
                 try {
-                    files = Directory.GetFiles(dir);
+                    files = Directory.GetFiles(dir, "*", SearchOption.AllDirectories);
                     break;
                 } catch (IOException) {
                 }
@@ -83,7 +85,7 @@ namespace PythonToolsUITests {
             while (confirmation == null || files.Except(confirmation).Any()) {
                 Thread.Sleep(500);
                 confirmation = files;
-                files = Directory.GetFiles(dir);
+                files = Directory.GetFiles(dir, "*", SearchOption.AllDirectories);
             }
 
             return files;
@@ -103,15 +105,10 @@ namespace PythonToolsUITests {
                 try {
                     string subDir = Guid.NewGuid().ToString();
                     project.Properties.Item("PublishUrl").Value = Path.Combine(TestSharePublic, subDir);
+                    app.OnDispose(() => project.Properties.Item("PublishUrl").Value = "");
                     string dir = Path.Combine(TestSharePublic, subDir);
 
-                    app.OpenSolutionExplorer();
-                    var window = app.SolutionExplorerTreeView;
-
-                    // find Program.py, send copy & paste, verify copy of file is there
-                    var programPy = window.FindItem("Solution 'HelloWorld' (1 project)", "HelloWorld");
-
-                    AutomationWrapper.Select(programPy);
+                    app.OpenSolutionExplorer().SelectProject(project);
 
                     var files = PublishAndWaitForFiles(app, "Build.PublishSelection", dir);
 
@@ -121,7 +118,6 @@ namespace PythonToolsUITests {
 
                     Directory.Delete(dir, true);
                 } finally {
-                    project.Properties.Item("PublishUrl").Value = "";
                     WNetCancelConnection2(TestSharePublic, 0, true);
                 }
             }
@@ -139,17 +135,12 @@ namespace PythonToolsUITests {
                 try {
                     string subDir = Guid.NewGuid().ToString();
                     project.Properties.Item("PublishUrl").Value = Path.Combine(TestSharePublic, subDir);
+                    app.OnDispose(() => project.Properties.Item("PublishUrl").Value = "");
                     string dir = Path.Combine(TestSharePublic, subDir);
 
                     File.SetAttributes(sourceFile, attributes | FileAttributes.ReadOnly);
 
-                    app.OpenSolutionExplorer();
-                    var window = app.SolutionExplorerTreeView;
-
-                    // find Program.py, send copy & paste, verify copy of file is there
-                    var programPy = window.FindItem("Solution 'HelloWorld' (1 project)", "HelloWorld");
-
-                    AutomationWrapper.Select(programPy);
+                    app.OpenSolutionExplorer().SelectProject(project);
 
                     var files = PublishAndWaitForFiles(app, "Build.PublishSelection", dir);
                     
@@ -161,7 +152,6 @@ namespace PythonToolsUITests {
 
                     Directory.Delete(dir, true);
                 } finally {
-                    project.Properties.Item("PublishUrl").Value = "";
                     WNetCancelConnection2(TestSharePublic, 0, true);
                     File.SetAttributes(sourceFile, attributes);
                 }
@@ -176,15 +166,11 @@ namespace PythonToolsUITests {
                 try {
                     string subDir = Guid.NewGuid().ToString();
                     project.Properties.Item("PublishUrl").Value = Path.Combine(TestSharePublic, subDir);
+                    app.OnDispose(() => project.Properties.Item("PublishUrl").Value = "");
                     string dir = Path.Combine(TestSharePublic, subDir);
 
-                    app.OpenSolutionExplorer();
-                    var window = app.SolutionExplorerTreeView;
+                    app.OpenSolutionExplorer().SelectProject(project);
 
-                    // find Program.py, send copy & paste, verify copy of file is there
-                    var programPy = window.FindItem("Solution 'PublishTest' (1 project)", "HelloWorld");
-
-                    AutomationWrapper.Select(programPy);
                     var files = PublishAndWaitForFiles(app, "Build.PublishSelection", dir);
 
                     Assert.IsNotNull(files, "Timed out waiting for files to publish");
@@ -197,9 +183,6 @@ namespace PythonToolsUITests {
 
                     Directory.Delete(dir, true);
                 } finally {
-                    project.Properties.Item("PublishUrl").Value = "";
-                    app.DismissAllDialogs();
-                    VsIdeTestHostContext.Dte.Solution.Close(false);
                     WNetCancelConnection2(TestSharePrivate, 0, true);
                 }
             }
@@ -212,36 +195,27 @@ namespace PythonToolsUITests {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
                 try {
                     var project = app.OpenProject(@"TestData\HelloWorld.sln");
-                    try {
-                        string subDir = Guid.NewGuid().ToString();
-                        project.Properties.Item("PublishUrl").Value = Path.Combine(TestSharePrivate, subDir);
+                    string subDir = Guid.NewGuid().ToString();
+                    project.Properties.Item("PublishUrl").Value = Path.Combine(TestSharePrivate, subDir);
+                    app.OnDispose(() => project.Properties.Item("PublishUrl").Value = "");
 
-                        app.OpenSolutionExplorer();
-                        var window = app.SolutionExplorerTreeView;
+                    app.OpenSolutionExplorer().SelectProject(project);
 
-                        // find Program.py, send copy & paste, verify copy of file is there
-                        var programPy = window.FindItem("Solution 'HelloWorld' (1 project)", "HelloWorld");
-
-                        AutomationWrapper.Select(programPy);
-
-                        using (var creds = CredentialsDialog.PublishSelection(app)) {
-                            creds.UserName = PrivateShareUserWithoutMachine;
-                            creds.Password = PrivateSharePassword;
-                            creds.OK();
-                        }
-
-                        string dir = Path.Combine(TestSharePrivate, subDir);
-
-                        var files = WaitForFiles(dir);
-
-                        Assert.IsNotNull(files, "Timed out waiting for files to publish");                        
-                        Assert.AreEqual(1, files.Length);
-                        Assert.AreEqual(Path.GetFileName(files[0]), "Program.py");
-
-                        Directory.Delete(dir, true);
-                    } finally {
-                        project.Properties.Item("PublishUrl").Value = "";
+                    using (var creds = CredentialsDialog.PublishSelection(app)) {
+                        creds.UserName = PrivateShareUserWithoutMachine;
+                        creds.Password = PrivateSharePassword;
+                        creds.OK();
                     }
+
+                    string dir = Path.Combine(TestSharePrivate, subDir);
+
+                    var files = WaitForFiles(dir);
+
+                    Assert.IsNotNull(files, "Timed out waiting for files to publish");
+                    Assert.AreEqual(1, files.Length);
+                    Assert.AreEqual("Program.py", Path.GetFileName(files[0]));
+
+                    Directory.Delete(dir, true);
                 } finally {
                     WNetCancelConnection2(TestSharePrivate, 0, true);
                 }
@@ -293,36 +267,27 @@ namespace PythonToolsUITests {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
                 try {
                     var project = app.OpenProject(@"TestData\HelloWorld.sln");
-                    try {
-                        string subDir = Guid.NewGuid().ToString();
-                        project.Properties.Item("PublishUrl").Value = Path.Combine(TestSharePrivate, subDir);
+                    string subDir = Guid.NewGuid().ToString();
+                    project.Properties.Item("PublishUrl").Value = Path.Combine(TestSharePrivate, subDir);
+                    app.OnDispose(() => project.Properties.Item("PublishUrl").Value = "");
 
-                        app.OpenSolutionExplorer();
-                        var window = app.SolutionExplorerTreeView;
+                    app.OpenSolutionExplorer().SelectProject(project);
 
-                        // find Program.py, send copy & paste, verify copy of file is there
-                        var programPy = window.FindItem("Solution 'HelloWorld' (1 project)", "HelloWorld");
+                    using (var creds = CredentialsDialog.PublishSelection(app)) {
+                        creds.UserName = PrivateShareUserWithoutMachine;
+                        creds.Password = PrivateSharePassword;
+                        creds.OK();
+                    }
 
-                        AutomationWrapper.Select(programPy);
+                    System.Threading.Thread.Sleep(2000);
 
-                        using (var creds = CredentialsDialog.PublishSelection(app)) {
-                            creds.UserName = PrivateShareUserWithoutMachine;
-                            creds.Password = PrivateSharePassword;
-                            creds.OK();
-                        }
+                    using (var helper = new NetUseHelper()) {
+                        string dir = Path.Combine(helper.Drive + "\\", subDir);
+                        var files = WaitForFiles(dir);
+                        Assert.AreEqual(1, files.Length);
+                        Assert.AreEqual("Program.py", Path.GetFileName(files[0]));
 
-                        System.Threading.Thread.Sleep(2000);
-
-                        using (var helper = new NetUseHelper()) {
-                            string dir = Path.Combine(helper.Drive + "\\", subDir);
-                            var files = WaitForFiles(dir);
-                            Assert.AreEqual(1, files.Length);
-                            Assert.AreEqual("Program.py", Path.GetFileName(files[0]));
-
-                            Directory.Delete(dir, true);
-                        }
-                    } finally {
-                        project.Properties.Item("PublishUrl").Value = "";
+                        Directory.Delete(dir, true);
                     }
                 } finally {
                     WNetCancelConnection2(TestSharePrivate, 0, true);
@@ -337,41 +302,32 @@ namespace PythonToolsUITests {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
                 try {
                     var project = app.OpenProject(@"TestData\HelloWorld.sln");
-                    try {
-                        string subDir = Guid.NewGuid().ToString();
-                        project.Properties.Item("PublishUrl").Value = Path.Combine(TestSharePrivate, subDir);
-                        string dir = Path.Combine(TestSharePrivate, subDir);
+                    string subDir = Guid.NewGuid().ToString();
+                    project.Properties.Item("PublishUrl").Value = Path.Combine(TestSharePrivate, subDir);
+                    app.OnDispose(() => project.Properties.Item("PublishUrl").Value = "");
+                    string dir = Path.Combine(TestSharePrivate, subDir);
 
-                        app.OpenSolutionExplorer();
-                        var window = app.SolutionExplorerTreeView;
+                    app.OpenSolutionExplorer().SelectProject(project);
 
-                        // find Program.py, send copy & paste, verify copy of file is there
-                        var programPy = window.FindItem("Solution 'HelloWorld' (1 project)", "HelloWorld");
-
-                        AutomationWrapper.Select(programPy);
-
-                        using (var creds = CredentialsDialog.PublishSelection(app)) {
-                            creds.UserName = PrivateShareUser;
-                            creds.Password = PrivateSharePasswordIncorrect;
-                            creds.OK();
-                        }
-
-                        const string expected = "Publish failed: Incorrect user name or password: ";
-
-                        string text = "";
-                        for (int i = 0; i < 5; i++) {
-                            var statusBar = app.GetService<IVsStatusbar>(typeof(SVsStatusbar));
-                            ErrorHandler.ThrowOnFailure(statusBar.GetText(out text));
-                            if (text.StartsWith(expected)) {
-                                break;
-                            }
-                            System.Threading.Thread.Sleep(2000);
-                        }
-
-                        Assert.IsTrue(text.StartsWith(expected), "Expected '{0}', got '{1}'", expected, text);
-                    } finally {
-                        project.Properties.Item("PublishUrl").Value = "";
+                    using (var creds = CredentialsDialog.PublishSelection(app)) {
+                        creds.UserName = PrivateShareUser;
+                        creds.Password = PrivateSharePasswordIncorrect;
+                        creds.OK();
                     }
+
+                    const string expected = "Publish failed: Incorrect user name or password: ";
+
+                    string text = "";
+                    for (int i = 0; i < 5; i++) {
+                        var statusBar = app.GetService<IVsStatusbar>(typeof(SVsStatusbar));
+                        ErrorHandler.ThrowOnFailure(statusBar.GetText(out text));
+                        if (text.StartsWith(expected)) {
+                            break;
+                        }
+                        System.Threading.Thread.Sleep(2000);
+                    }
+
+                    Assert.IsTrue(text.StartsWith(expected), "Expected '{0}', got '{1}'", expected, text);
                 } finally {
                     WNetCancelConnection2(TestSharePrivate, 0, true);
                 }
@@ -385,42 +341,33 @@ namespace PythonToolsUITests {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
                 try {
                     var project = app.OpenProject(@"TestData\HelloWorld.sln");
-                    try {
-                        string subDir = Guid.NewGuid().ToString();
-                        project.Properties.Item("PublishUrl").Value = Path.Combine(TestSharePrivate, subDir);
-                        string dir = Path.Combine(TestSharePrivate, subDir);
+                    string subDir = Guid.NewGuid().ToString();
+                    project.Properties.Item("PublishUrl").Value = Path.Combine(TestSharePrivate, subDir);
+                    app.OnDispose(() => project.Properties.Item("PublishUrl").Value = "");
+                    string dir = Path.Combine(TestSharePrivate, subDir);
 
-                        app.OpenSolutionExplorer();
-                        var window = app.SolutionExplorerTreeView;
+                    app.OpenSolutionExplorer().SelectProject(project);
 
-                        // find Program.py, send copy & paste, verify copy of file is there
-                        var programPy = window.FindItem("Solution 'HelloWorld' (1 project)", "HelloWorld");
-
-                        AutomationWrapper.Select(programPy);
-
-                        using (var creds = CredentialsDialog.PublishSelection(app)) {
-                            creds.UserName = PrivateShareUser;
-                            creds.Password = PrivateSharePasswordIncorrect;
-                            creds.Cancel();
-                        }
-
-                        var statusBar = app.GetService<IVsStatusbar>(typeof(SVsStatusbar));
-                        string text = null;
-                        const string expected = "Publish failed: Access to the path";
-
-                        for (int i = 0; i < 10; i++) {
-                            ErrorHandler.ThrowOnFailure(statusBar.GetText(out text));
-
-                            if (text.StartsWith(expected)) {
-                                break;
-                            }
-                            System.Threading.Thread.Sleep(1000);
-                        }
-
-                        Assert.IsTrue(text.StartsWith(expected), "Expected '{0}', got '{1}'", expected, text);
-                    } finally {
-                        project.Properties.Item("PublishUrl").Value = "";
+                    using (var creds = CredentialsDialog.PublishSelection(app)) {
+                        creds.UserName = PrivateShareUser;
+                        creds.Password = PrivateSharePasswordIncorrect;
+                        creds.Cancel();
                     }
+
+                    var statusBar = app.GetService<IVsStatusbar>(typeof(SVsStatusbar));
+                    string text = null;
+                    const string expected = "Publish failed: Access to the path";
+
+                    for (int i = 0; i < 10; i++) {
+                        ErrorHandler.ThrowOnFailure(statusBar.GetText(out text));
+
+                        if (text.StartsWith(expected)) {
+                            break;
+                        }
+                        System.Threading.Thread.Sleep(1000);
+                    }
+
+                    Assert.IsTrue(text.StartsWith(expected), "Expected '{0}', got '{1}'", expected, text);
                 } finally {
                     WNetCancelConnection2(TestSharePrivate, 0, true);
                 }
@@ -432,41 +379,56 @@ namespace PythonToolsUITests {
         public void TestPublishFtp() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
                 var project = app.OpenProject(@"TestData\HelloWorld.sln");
-                try {
-                    string subDir = Guid.NewGuid().ToString();
-                    string url = TestFtpUrl + "/" + subDir;
-                    project.Properties.Item("PublishUrl").Value = url;
-                    string dir = Path.Combine(FtpValidateDir, subDir);
-                    Debug.WriteLine(dir);
+                string subDir = Guid.NewGuid().ToString();
+                string url = TestFtpUrl + "/" + subDir;
+                project.Properties.Item("PublishUrl").Value = url;
+                app.OnDispose(() => project.Properties.Item("PublishUrl").Value = "");
+                string dir = Path.Combine(FtpValidateDir, subDir);
+                Debug.WriteLine(dir);
 
-                    app.OpenSolutionExplorer();
-                    var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer().SelectProject(project);
 
-                    // find Program.py, send copy & paste, verify copy of file is there
-                    var programPy = window.FindItem("Solution 'HelloWorld' (1 project)", "HelloWorld");
+                app.ExecuteCommand("Build.PublishSelection");
+                System.Threading.Thread.Sleep(2000);
+                var files = WaitForFiles(dir);
+                Assert.AreEqual(1, files.Length);
+                Assert.AreEqual("Program.py", Path.GetFileName(files[0]));
 
-                    AutomationWrapper.Select(programPy);
+                // do it again w/ the directories already existing
+                File.Delete(files[0]);
 
-                    ThreadPool.QueueUserWorkItem(x => VsIdeTestHostContext.Dte.ExecuteCommand("Build.PublishSelection"));
-                    System.Threading.Thread.Sleep(2000);
-                    var files = WaitForFiles(dir);
-                    Assert.AreEqual(files.Length, 1);
-                    Assert.AreEqual(Path.GetFileName(files[0]), "Program.py");
+                app.OpenSolutionExplorer().SelectProject(project);
+                app.ExecuteCommand("Build.PublishSelection");
+                files = WaitForFiles(dir);
+                Assert.AreEqual(1, files.Length);
+                Assert.AreEqual("Program.py", Path.GetFileName(files[0]));
 
-                    // do it again w/ the directories already existing
-                    File.Delete(files[0]);
-                    AutomationWrapper.Select(programPy);
-                    ThreadPool.QueueUserWorkItem(x => VsIdeTestHostContext.Dte.ExecuteCommand("Build.PublishSelection"));
-                    files = WaitForFiles(dir);
-                    Assert.AreEqual(files.Length, 1);
-                    Assert.AreEqual(Path.GetFileName(files[0]), "Program.py");
+                Directory.Delete(dir, true);
+            }
+        }
 
-                    Directory.Delete(dir, true);
-                } finally {
-                    project.Properties.Item("PublishUrl").Value = "";
-                    app.DismissAllDialogs();
-                    VsIdeTestHostContext.Dte.Solution.Close(false);
-                }
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void TestPublishVirtualEnvironment() {
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenProject(@"TestData\VirtualEnv.sln");
+                var dir = TestData.GetTempPath(randomSubPath: true);
+                project.Properties.Item("PublishUrl").Value = dir;
+                app.OnDispose(() => project.Properties.Item("PublishUrl").Value = "");
+
+                app.OpenSolutionExplorer().SelectProject(project);
+                var files = PublishAndWaitForFiles(app, "Build.PublishSelection", dir);
+
+                Assert.IsNotNull(files, "Timed out waiting for files to publish");
+                AssertUtil.ContainsAtLeast(
+                    files.Select(f => CommonUtils.GetRelativeFilePath(dir, f).ToLowerInvariant()),
+                    "env\\include\\pyconfig.h",
+                    "env\\lib\\site.py",
+                    "env\\scripts\\python.exe",
+                    "program.py"
+                );
+
+                Directory.Delete(dir, true);
             }
         }
     }

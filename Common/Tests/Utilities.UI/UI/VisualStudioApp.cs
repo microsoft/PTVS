@@ -451,13 +451,13 @@ namespace TestUtilities.UI {
 
             int timeout = task == null ? 10000 : 60000;
 
-            while (timeout > 0 && hwnd == originalHwnd && (task == null || !task.IsCompleted)) {
+            while (timeout > 0 && hwnd == originalHwnd && (task == null || !(task.IsFaulted || task.IsCanceled))) {
                 timeout -= 500;
                 System.Threading.Thread.Sleep(500);
                 uiShell.GetDialogOwnerHwnd(out hwnd);
             }
 
-            if (task != null && task.IsFaulted) {
+            if (task != null && (task.IsFaulted || task.IsCanceled)) {
                 return IntPtr.Zero;
             }
 

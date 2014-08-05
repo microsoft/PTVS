@@ -181,6 +181,9 @@ namespace Microsoft.PythonTools.Project {
 
         public const string FailedToSaveDiagnosticInfo = "FailedToSaveDiagnosticInfo";
 
+        public const string FailedToCollectFilesForPublish = "FailedToCollectFilesForPublish";
+        public const string FailedToCollectFilesForPublishMessage = "FailedToCollectFilesForPublishMessage";
+
         private static readonly Lazy<ResourceManager> _manager = new Lazy<ResourceManager>(
             () => new System.Resources.ResourceManager("Microsoft.PythonTools.Resources", typeof(SR).Assembly),
             LazyThreadSafetyMode.ExecutionAndPublication

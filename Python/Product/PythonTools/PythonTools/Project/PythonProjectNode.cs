@@ -1377,7 +1377,42 @@ namespace Microsoft.PythonTools.Project {
         }
 
         bool IPythonProject.Publish(PublishProjectOptions options) {
-            return base.Publish(options, false);
+            return Publish(options, false);
+        }
+
+        public override bool Publish(PublishProjectOptions publishOptions, bool async) {
+            var factory = GetInterpreterFactory();
+            if (_interpreters.IsAvailable(factory) &&
+                Directory.Exists(factory.Configuration.PrefixPath) &&
+                CommonUtils.IsSubpathOf(ProjectHome, factory.Configuration.PrefixPath)
+            ) {
+                try {
+                    publishOptions = TaskDialog.CallWithRetry(
+                        _ => new PublishProjectOptions(
+                            publishOptions.AdditionalFiles.Concat(
+                                Directory.EnumerateFiles(
+                                    factory.Configuration.PrefixPath,
+                                    "*",
+                                    SearchOption.AllDirectories
+                                )
+                                // Exclude the completion DB
+                                .Where(f => !f.Contains("\\.ptvs\\"))
+                                .Select(f => new PublishFile(f, CommonUtils.GetRelativeFilePath(ProjectHome, f)))
+                            ).ToArray(),
+                            publishOptions.DestinationUrl
+                        ),
+                        Site,
+                        SR.GetString(SR.FailedToCollectFilesForPublish),
+                        SR.GetString(SR.FailedToCollectFilesForPublishMessage),
+                        SR.GetString(SR.ErrorDetail),
+                        SR.GetString(SR.Retry),
+                        SR.GetString(SR.Cancel)
+                    );
+                } catch (OperationCanceledException) {
+                    return false;
+                }
+            }
+            return base.Publish(publishOptions, async);
         }
 
         string IPythonProject.GetUnevaluatedProperty(string name) {

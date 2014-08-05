@@ -328,7 +328,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// 
         /// Returns true if the publish was succeessfully started, false if the project is not configured for publishing
         /// </summary>
-        public bool Publish(PublishProjectOptions publishOptions, bool async) {
+        public virtual bool Publish(PublishProjectOptions publishOptions, bool async) {
             string publishUrl = publishOptions.DestinationUrl ?? GetProjectProperty(CommonConstants.PublishUrl);
             bool found = false;
             if (!String.IsNullOrWhiteSpace(publishUrl)) {

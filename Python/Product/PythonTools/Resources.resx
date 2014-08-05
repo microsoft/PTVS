@@ -569,4 +569,10 @@ Packages that cannot be installed using pip may prevent all listed packages from
   <data name="FailedToSaveDiagnosticInfo" xml:space="preserve">
     <value>An error occurred saving the diagnostic info.</value>
   </data>
+  <data name="FailedToCollectFilesForPublish" xml:space="preserve">
+    <value>Failed to collect files to publish.</value>
+  </data>
+  <data name="FailedToCollectFilesForPublishMessage" xml:space="preserve">
+    <value>An error occurred while collecting files to publish. Review the details below and retry or cancel the operation.</value>
+  </data>
 </root>
