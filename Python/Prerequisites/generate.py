@@ -13,6 +13,7 @@ ASSEMBLIES = sorted([
     "DjangoTests",
     "DjangoUITests",
     "FastCgiTest",
+    "IronPythonTests",
     "Microsoft.IronPythonTools.Resolver",
     "Microsoft.PythonTools",
     "Microsoft.PythonTools.Analysis",
