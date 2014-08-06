@@ -398,16 +398,22 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
             Dictionary<string, AnalysisProgress> response = null;
             Request request;
+            bool abort = false;
 
-            for (; ; ) {
+            while (!abort) {
                 while (!_requests.TryDequeue(out request)) {
-                    if (_identifier == null && _period.TotalDays < 1) {
-                        if (!_requestAdded.WaitOne(_period)) {
-                            request = Request.Send;
-                            break;
+                    try {
+                        if (_identifier == null && _period.TotalDays < 1) {
+                            if (!_requestAdded.WaitOne(_period)) {
+                                request = Request.Send;
+                                break;
+                            }
+                        } else {
+                            _requestAdded.WaitOne();
                         }
-                    } else {
-                        _requestAdded.WaitOne();
+                    } catch (ObjectDisposedException) {
+                        request = Request.Abort;
+                        break;
                     }
                 }
                 if (request == null) {
@@ -420,6 +426,8 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                     if (!globalLock.WaitOne(LOCK_TIMEOUT)) {
                         continue;
                     }
+                } catch (ObjectDisposedException) {
+                    break;
                 } catch (AbandonedMutexException) {
                     break;
                 }
@@ -438,7 +446,12 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                         }
                     }
                 } finally {
-                    globalLock.ReleaseMutex();
+                    try {
+                        globalLock.ReleaseMutex();
+                    } catch (ObjectDisposedException) {
+                        abort = true;
+                        response = null;
+                    }
                 }
 
                 // Send the response outside the lock.
