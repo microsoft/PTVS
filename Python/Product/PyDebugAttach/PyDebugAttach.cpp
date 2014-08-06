@@ -16,18 +16,9 @@
 //
 
 #include "stdafx.h"
+
 #include "PyDebugAttach.h"
-#include <Windows.h>
-#include <Psapi.h>
-#include <TlHelp32.h>
-#include <hash_map>
-#include <string>
-#include <fstream>
-#include <hash_set>
-#include <WinSock.h>
 #include "..\VsPyProf\python.h"
-#include <strsafe.h>
-#include <winternl.h>
 
 // _Always_ is not defined for all versions, so make it a no-op if missing.
 #ifndef _Always_
@@ -425,12 +416,12 @@ char* ReadCodeFromFile(wchar_t* filePath) {
     return buffer;
 }
 
-// create a custom heap for our hash map.  This is necessary because if we suspend a thread while in a heap function
+// create a custom heap for our unordered map.  This is necessary because if we suspend a thread while in a heap function
 // then we could deadlock here.  We need to be VERY careful about what we do while the threads are suspended.
 static HANDLE g_heap = 0;
 
-template <typename T> class PrivateHeapAllocator {
-
+template<typename T>
+class PrivateHeapAllocator {
 public:
     typedef size_t    size_type;
     typedef ptrdiff_t difference_type;
@@ -439,16 +430,20 @@ public:
     typedef T&        reference;
     typedef const T&  const_reference;
     typedef T         value_type;
-    template <class U> struct rebind {
-        typedef PrivateHeapAllocator<U>
-            other;
+
+    template<class U>
+	struct rebind {
+        typedef PrivateHeapAllocator<U> other;
     };
 
-    inline explicit PrivateHeapAllocator() {}
-    inline ~PrivateHeapAllocator() {}
-    inline PrivateHeapAllocator(PrivateHeapAllocator const&) {}
+    explicit PrivateHeapAllocator() {}
+
+	PrivateHeapAllocator(PrivateHeapAllocator const&) {}
+
+	~PrivateHeapAllocator() {}
+
     template<typename U>
-    inline  PrivateHeapAllocator(PrivateHeapAllocator<U> const&) {}
+    PrivateHeapAllocator(PrivateHeapAllocator<U> const&) {}
 
     pointer allocate(size_type size, allocator<void>::const_pointer hint = 0) {
         if (g_heap == nullptr) {
@@ -462,18 +457,22 @@ public:
         HeapFree(g_heap, 0, p);
     }
 
-    //    size
-#undef max
-    inline size_type max_size() const {
-        return std::numeric_limits<size_type>::max() / sizeof(T);
+    size_type max_size() const {
+        return (std::numeric_limits<size_type>::max)() / sizeof(T);
     }
-    inline void construct(pointer p, const T& t) { new(p)T(t); }
-    inline void destroy(pointer p) { p->~T(); }
+
+    void construct(pointer p, const T& t) {
+		new(p) T(t);
+	}
+
+    void destroy(pointer p) {
+		p->~T();
+	}
 };
 
-typedef hash_map<DWORD, HANDLE, stdext::hash_compare<DWORD, std::less<DWORD> >, PrivateHeapAllocator<pair<DWORD, HANDLE> > > MyHashMap;
+typedef unordered_map<DWORD, HANDLE, std::hash<DWORD>, std::equal_to<DWORD>, PrivateHeapAllocator<pair<DWORD, HANDLE>>> ThreadMap;
 
-void ResumeThreads(MyHashMap &suspendedThreads) {
+void ResumeThreads(ThreadMap &suspendedThreads) {
     for (auto start = suspendedThreads.begin();  start != suspendedThreads.end(); start++) {
         ResumeThread((*start).second);
         CloseHandle((*start).second);
@@ -482,7 +481,7 @@ void ResumeThreads(MyHashMap &suspendedThreads) {
 }
 
 // Suspends all threads ensuring that they are not currently in a call to Py_AddPendingCall.
-void SuspendThreads(MyHashMap &suspendedThreads, Py_AddPendingCall* addPendingCall, PyEval_ThreadsInitialized* threadsInited) {
+void SuspendThreads(ThreadMap &suspendedThreads, Py_AddPendingCall* addPendingCall, PyEval_ThreadsInitialized* threadsInited) {
     DWORD curThreadId = GetCurrentThreadId();
     DWORD curProcess = GetCurrentProcessId();
     // suspend all the threads in the process so we can do things safely...
@@ -928,14 +927,13 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
             // threading becomes initialized (due to our pending call or the Python code creating a new thread)  then we're done 
             // and we just resume all of the presently suspended threads.
 
-            MyHashMap suspendedThreads;
-
-            bool addedPendingCall = false;
+			ThreadMap suspendedThreads;
 
             g_initedEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
             HandleHolder holder(g_initedEvent);
 
-            if (addPendingCall != nullptr && threadSafeAddPendingCall) {
+			bool addedPendingCall = false;
+			if (addPendingCall != nullptr && threadSafeAddPendingCall) {
                 // we're on a thread safe Python version, go ahead and pend our call to initialize threading.
                 addPendingCall(&AttachCallback, initThreads);
                 addedPendingCall = true;
@@ -1107,12 +1105,12 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
         // could be corrupt).  We also don't care about newly created threads as our start_new_thread wrapper
         // will handle those.  So we collect the initial set of threads first here so that we don't keep iterating
         // if the program is spawning large numbers of threads.
-        hash_set<PyThreadState*> initialThreads;
+        unordered_set<PyThreadState*> initialThreads;
 		for (auto curThread = threadHead(head); curThread != nullptr; curThread = threadNext(curThread)) {
             initialThreads.insert(curThread);
         }
 
-        hash_set<PyThreadState*> seenThreads;
+        unordered_set<PyThreadState*> seenThreads;
         {
             // find what index is holding onto the thread state...
             auto curPyThread = *curPythonThread;

@@ -21,10 +21,15 @@
 
 #include "targetver.h"
 
-#define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
-// Windows Header Files:
+#include <fstream>
+#include <string>
+#include <unordered_set>
+#include <unordered_map>
+
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-
-
-
-// TODO: reference additional headers your program requires here
+#include <psapi.h>
+#include <strsafe.h>
+#include <tlhelp32.h>
+#include <winsock.h>
+#include <winternl.h>

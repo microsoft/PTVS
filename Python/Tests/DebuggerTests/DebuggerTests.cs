@@ -690,7 +690,7 @@ namespace DebuggerTests {
         public void GlobalsTest() {
             if (Version.Version >= PythonLanguageVersion.V34) {
                 LocalsTest("GlobalsTest.py", 4, new string[] { }, new[] { "x", "y", "__file__", "__name__", "__package__", "__builtins__", "__doc__", "__cached__", "__loader__", "__spec__" });
-            }  else if (Version.Version >= PythonLanguageVersion.V33) {
+            } else if (Version.Version >= PythonLanguageVersion.V33) {
                 LocalsTest("GlobalsTest.py", 4, new string[] { }, new[] { "x", "y", "__file__", "__name__", "__package__", "__builtins__", "__doc__", "__cached__", "__loader__" });
             } else if (Version.Version >= PythonLanguageVersion.V32) {
                 LocalsTest("GlobalsTest.py", 4, new string[] { }, new[] { "x", "y", "__file__", "__name__", "__package__", "__builtins__", "__doc__", "__cached__" });
@@ -1768,101 +1768,97 @@ namespace DebuggerTests {
         /// attach via the threading module can be hit.
         /// </summary>
         [TestMethod, Priority(0)]
-        public void AttachThreadingStartNewThread() {
-            if (GetType() != typeof(DebuggerTestsIpy)) {    // IronPython doesn't support attach
-                // http://pytools.codeplex.com/workitem/638
-                // http://pytools.codeplex.com/discussions/285741#post724014
-                var psi = new ProcessStartInfo(Version.InterpreterPath, "\"" + TestData.GetPath(@"TestData\DebuggerProject\ThreadingStartNewThread.py") + "\"");
-                psi.WorkingDirectory = TestData.GetPath(@"TestData\DebuggerProject");
-                psi.EnvironmentVariables["PYTHONPATH"] = @"..\..";
-                psi.UseShellExecute = false;
-                Process p = Process.Start(psi);
+        public virtual void AttachThreadingStartNewThread() {
+            // http://pytools.codeplex.com/workitem/638
+            // http://pytools.codeplex.com/discussions/285741#post724014
+            var psi = new ProcessStartInfo(Version.InterpreterPath, "\"" + TestData.GetPath(@"TestData\DebuggerProject\ThreadingStartNewThread.py") + "\"");
+            psi.WorkingDirectory = TestData.GetPath(@"TestData\DebuggerProject");
+            psi.EnvironmentVariables["PYTHONPATH"] = @"..\..";
+            psi.UseShellExecute = false;
+            Process p = Process.Start(psi);
+            try {
+                System.Threading.Thread.Sleep(1000);
+
+                AutoResetEvent attached = new AutoResetEvent(false);
+                AutoResetEvent breakpointHit = new AutoResetEvent(false);
+
+                var proc = PythonProcess.Attach(p.Id);
                 try {
-                    System.Threading.Thread.Sleep(1000);
+                    proc.ProcessLoaded += (sender, args) => {
+                        attached.Set();
+                        var bp = proc.AddBreakPoint("ThreadingStartNewThread.py", 9);
+                        bp.Add();
 
-                    AutoResetEvent attached = new AutoResetEvent(false);
-                    AutoResetEvent breakpointHit = new AutoResetEvent(false);
+                        bp = proc.AddBreakPoint("ThreadingStartNewThread.py", 5);
+                        bp.Add();
 
-                    var proc = PythonProcess.Attach(p.Id);
-                    try {
-                        proc.ProcessLoaded += (sender, args) => {
+                        proc.Resume();
+                    };
+                    PythonThread mainThread = null;
+                    PythonThread bpThread = null;
+                    bool wrongLine = false;
+                    proc.BreakpointHit += (sender, args) => {
+                        if (args.Breakpoint.LineNo == 9) {
+                            // stop running the infinite loop
+                            Debug.WriteLine(String.Format("First BP hit {0}", args.Thread.Id));
+                            args.Thread.Frames[0].ExecuteText("x = False", (x) => { });
+                            mainThread = args.Thread;
+                        } else if (args.Breakpoint.LineNo == 5) {
+                            // we hit the breakpoint on the new thread
+                            Debug.WriteLine(String.Format("Second BP hit {0}", args.Thread.Id));
+                            breakpointHit.Set();
+                            bpThread = args.Thread;
+                        } else {
+                            Debug.WriteLine(String.Format("Hit breakpoint on wrong line number: {0}", args.Breakpoint.LineNo));
+                            wrongLine = true;
                             attached.Set();
-                            var bp = proc.AddBreakPoint("ThreadingStartNewThread.py", 9);
-                            bp.Add();
+                            breakpointHit.Set();
+                        }
+                        proc.Continue();
+                    };
+                    proc.StartListening();
 
-                            bp = proc.AddBreakPoint("ThreadingStartNewThread.py", 5);
-                            bp.Add();
+                    Assert.IsTrue(attached.WaitOne(10000), "Failed to attach within 10s");
+                    Assert.IsTrue(breakpointHit.WaitOne(20000), "Failed to hit breakpoint within 20s of attaching");
+                    Assert.IsFalse(wrongLine, "Breakpoint broke on the wrong line");
 
-                            proc.Resume();
-                        };
-                        PythonThread mainThread = null;
-                        PythonThread bpThread = null;
-                        bool wrongLine = false;
-                        proc.BreakpointHit += (sender, args) => {
-                            if (args.Breakpoint.LineNo == 9) {
-                                // stop running the infinite loop
-                                Debug.WriteLine(String.Format("First BP hit {0}", args.Thread.Id));
-                                args.Thread.Frames[0].ExecuteText("x = False", (x) => { });
-                                mainThread = args.Thread;
-                            } else if (args.Breakpoint.LineNo == 5) {
-                                // we hit the breakpoint on the new thread
-                                Debug.WriteLine(String.Format("Second BP hit {0}", args.Thread.Id));
-                                breakpointHit.Set();
-                                bpThread = args.Thread;
-                            } else {
-                                Debug.WriteLine(String.Format("Hit breakpoint on wrong line number: {0}", args.Breakpoint.LineNo));
-                                wrongLine = true;
-                                attached.Set();
-                                breakpointHit.Set();
-                            }
-                            proc.Continue();
-                        };
-                        proc.StartListening();
-
-                        Assert.IsTrue(attached.WaitOne(10000), "Failed to attach within 10s");
-                        Assert.IsTrue(breakpointHit.WaitOne(20000), "Failed to hit breakpoint within 20s of attaching");
-                        Assert.IsFalse(wrongLine, "Breakpoint broke on the wrong line");
-
-                        Assert.AreNotEqual(mainThread, bpThread);
-                    } finally {
-                        DetachProcess(proc);
-                    }
+                    Assert.AreNotEqual(mainThread, bpThread);
                 } finally {
-                    DisposeProcess(p);
+                    DetachProcess(proc);
                 }
+            } finally {
+                DisposeProcess(p);
             }
         }
 
 
         [TestMethod, Priority(0)]
-        public void AttachReattach() {
-            if (GetType() != typeof(DebuggerTestsIpy)) {    // IronPython doesn't support attach
-                Process p = Process.Start(Version.InterpreterPath, "\"" + TestData.GetPath(@"TestData\DebuggerProject\InfiniteRun.py") + "\"");
-                try {
-                    System.Threading.Thread.Sleep(1000);
+        public virtual void AttachReattach() {
+            Process p = Process.Start(Version.InterpreterPath, "\"" + TestData.GetPath(@"TestData\DebuggerProject\InfiniteRun.py") + "\"");
+            try {
+                System.Threading.Thread.Sleep(1000);
 
-                    AutoResetEvent attached = new AutoResetEvent(false);
-                    AutoResetEvent detached = new AutoResetEvent(false);
-                    for (int i = 0; i < 10; i++) {
-                        Console.WriteLine(i);
+                AutoResetEvent attached = new AutoResetEvent(false);
+                AutoResetEvent detached = new AutoResetEvent(false);
+                for (int i = 0; i < 10; i++) {
+                    Console.WriteLine(i);
 
-                        var proc = PythonProcess.Attach(p.Id);
+                    var proc = PythonProcess.Attach(p.Id);
 
-                        proc.ProcessLoaded += (sender, args) => {
-                            attached.Set();
-                        };
-                        proc.ProcessExited += (sender, args) => {
-                            detached.Set();
-                        };
-                        proc.StartListening();
+                    proc.ProcessLoaded += (sender, args) => {
+                        attached.Set();
+                    };
+                    proc.ProcessExited += (sender, args) => {
+                        detached.Set();
+                    };
+                    proc.StartListening();
 
-                        Assert.IsTrue(attached.WaitOne(10000), "Failed to attach within 10s");
-                        proc.Detach();
-                        Assert.IsTrue(detached.WaitOne(10000), "Failed to detach within 10s");
-                    }
-                } finally {
-                    DisposeProcess(p);
+                    Assert.IsTrue(attached.WaitOne(10000), "Failed to attach within 10s");
+                    proc.Detach();
+                    Assert.IsTrue(detached.WaitOne(10000), "Failed to detach within 10s");
                 }
+            } finally {
+                DisposeProcess(p);
             }
         }
 
@@ -1879,32 +1875,30 @@ namespace DebuggerTests {
         /// because we haven't cleared the stepping bit.
         /// </summary>
         [TestMethod, Priority(0)]
-        public void AttachMultithreadedSleeper() {
-            if (GetType() != typeof(DebuggerTestsIpy)) {    // IronPython doesn't support attach
-                // http://pytools.codeplex.com/discussions/285741 1/12/2012 6:20 PM
-                Process p = Process.Start(Version.InterpreterPath, "\"" + TestData.GetPath(@"TestData\DebuggerProject\AttachMultithreadedSleeper.py") + "\"");
+        public virtual void AttachMultithreadedSleeper() {
+            // http://pytools.codeplex.com/discussions/285741 1/12/2012 6:20 PM
+            Process p = Process.Start(Version.InterpreterPath, "\"" + TestData.GetPath(@"TestData\DebuggerProject\AttachMultithreadedSleeper.py") + "\"");
+            try {
+                System.Threading.Thread.Sleep(1000);
+
+                AutoResetEvent attached = new AutoResetEvent(false);
+
+                var proc = PythonProcess.Attach(p.Id);
+
                 try {
-                    System.Threading.Thread.Sleep(1000);
+                    proc.ProcessLoaded += (sender, args) => {
+                        attached.Set();
+                    };
+                    proc.StartListening();
 
-                    AutoResetEvent attached = new AutoResetEvent(false);
-
-                    var proc = PythonProcess.Attach(p.Id);
-
-                    try {
-                        proc.ProcessLoaded += (sender, args) => {
-                            attached.Set();
-                        };
-                        proc.StartListening();
-
-                        Assert.IsTrue(attached.WaitOne(10000), "Failed to attach within 10s");
-                        proc.Resume();
-                        Debug.WriteLine("Waiting for exit");
-                    } finally {
-                        WaitForExit(proc);
-                    }
+                    Assert.IsTrue(attached.WaitOne(10000), "Failed to attach within 10s");
+                    proc.Resume();
+                    Debug.WriteLine("Waiting for exit");
                 } finally {
-                    DisposeProcess(p);
+                    WaitForExit(proc);
                 }
+            } finally {
+                DisposeProcess(p);
             }
         }
 
@@ -1914,31 +1908,29 @@ namespace DebuggerTests {
         /// http://pytools.codeplex.com/workitem/834
         /// </summary>
         [TestMethod, Priority(0)]
-        public void AttachSingleThreadedSleeper() {
-            if (GetType() != typeof(DebuggerTestsIpy)) {    // IronPython doesn't support attach
-                // http://pytools.codeplex.com/discussions/285741 1/12/2012 6:20 PM
-                Process p = Process.Start(Version.InterpreterPath, "\"" + TestData.GetPath(@"TestData\DebuggerProject\AttachSingleThreadedSleeper.py") + "\"");
+        public virtual void AttachSingleThreadedSleeper() {
+            // http://pytools.codeplex.com/discussions/285741 1/12/2012 6:20 PM
+            Process p = Process.Start(Version.InterpreterPath, "\"" + TestData.GetPath(@"TestData\DebuggerProject\AttachSingleThreadedSleeper.py") + "\"");
+            try {
+                System.Threading.Thread.Sleep(1000);
+
+                AutoResetEvent attached = new AutoResetEvent(false);
+
+                var proc = PythonProcess.Attach(p.Id);
                 try {
-                    System.Threading.Thread.Sleep(1000);
+                    proc.ProcessLoaded += (sender, args) => {
+                        attached.Set();
+                    };
+                    proc.StartListening();
 
-                    AutoResetEvent attached = new AutoResetEvent(false);
-
-                    var proc = PythonProcess.Attach(p.Id);
-                    try {
-                        proc.ProcessLoaded += (sender, args) => {
-                            attached.Set();
-                        };
-                        proc.StartListening();
-
-                        Assert.IsTrue(attached.WaitOne(10000), "Failed to attach within 10s");
-                        proc.Resume();
-                        Debug.WriteLine("Waiting for exit");
-                    } finally {
-                        TerminateProcess(proc);
-                    }
+                    Assert.IsTrue(attached.WaitOne(10000), "Failed to attach within 10s");
+                    proc.Resume();
+                    Debug.WriteLine("Waiting for exit");
                 } finally {
-                    DisposeProcess(p);
+                    TerminateProcess(proc);
                 }
+            } finally {
+                DisposeProcess(p);
             }
         }
 
@@ -1966,81 +1958,75 @@ namespace DebuggerTests {
         }*/
 
         [TestMethod, Priority(0)]
-        public void AttachReattachThreadingInited() {
-            if (GetType() != typeof(DebuggerTestsIpy)) {    // IronPython shouldn't support attach
-                Process p = Process.Start(Version.InterpreterPath, "\"" + TestData.GetPath(@"TestData\DebuggerProject\InfiniteRunThreadingInited.py") + "\"");
-                try {
-                    System.Threading.Thread.Sleep(1000);
+        public virtual void AttachReattachThreadingInited() {
+            Process p = Process.Start(Version.InterpreterPath, "\"" + TestData.GetPath(@"TestData\DebuggerProject\InfiniteRunThreadingInited.py") + "\"");
+            try {
+                System.Threading.Thread.Sleep(1000);
 
-                    AutoResetEvent attached = new AutoResetEvent(false);
-                    AutoResetEvent detached = new AutoResetEvent(false);
-                    for (int i = 0; i < 10; i++) {
-                        Console.WriteLine(i);
+                AutoResetEvent attached = new AutoResetEvent(false);
+                AutoResetEvent detached = new AutoResetEvent(false);
+                for (int i = 0; i < 10; i++) {
+                    Console.WriteLine(i);
 
-                        var proc = PythonProcess.Attach(p.Id);
+                    var proc = PythonProcess.Attach(p.Id);
 
-                        proc.ProcessLoaded += (sender, args) => {
-                            attached.Set();
-                        };
-                        proc.ProcessExited += (sender, args) => {
-                            detached.Set();
-                        };
-                        proc.StartListening();
+                    proc.ProcessLoaded += (sender, args) => {
+                        attached.Set();
+                    };
+                    proc.ProcessExited += (sender, args) => {
+                        detached.Set();
+                    };
+                    proc.StartListening();
 
-                        Assert.IsTrue(attached.WaitOne(10000), "Failed to attach within 10s");
-                        proc.Detach();
-                        Assert.IsTrue(detached.WaitOne(10000), "Failed to detach within 10s");
-                    }
-                } finally {
-                    DisposeProcess(p);
+                    Assert.IsTrue(attached.WaitOne(10000), "Failed to attach within 10s");
+                    proc.Detach();
+                    Assert.IsTrue(detached.WaitOne(10000), "Failed to detach within 10s");
                 }
+            } finally {
+                DisposeProcess(p);
             }
         }
 
         [TestMethod, Priority(0)]
-        public void AttachReattachInfiniteThreads() {
-            if (GetType() != typeof(DebuggerTestsIpy)) {    // IronPython shouldn't support attach
-                Process p = Process.Start(Version.InterpreterPath, "\"" + TestData.GetPath(@"TestData\DebuggerProject\InfiniteThreads.py") + "\"");
-                try {
-                    System.Threading.Thread.Sleep(1000);
+        public virtual void AttachReattachInfiniteThreads() {
+            Process p = Process.Start(Version.InterpreterPath, "\"" + TestData.GetPath(@"TestData\DebuggerProject\InfiniteThreads.py") + "\"");
+            try {
+                System.Threading.Thread.Sleep(1000);
 
-                    AutoResetEvent attached = new AutoResetEvent(false);
-                    AutoResetEvent detached = new AutoResetEvent(false);
-                    for (int i = 0; i < 10; i++) {
-                        Console.WriteLine(i);
+                AutoResetEvent attached = new AutoResetEvent(false);
+                AutoResetEvent detached = new AutoResetEvent(false);
+                for (int i = 0; i < 10; i++) {
+                    Console.WriteLine(i);
 
-                        var proc = PythonProcess.Attach(p.Id);
+                    var proc = PythonProcess.Attach(p.Id);
 
-                        proc.ProcessLoaded += (sender, args) => {
-                            attached.Set();
-                        };
-                        proc.ProcessExited += (sender, args) => {
-                            detached.Set();
-                        };
-                        proc.StartListening();
+                    proc.ProcessLoaded += (sender, args) => {
+                        attached.Set();
+                    };
+                    proc.ProcessExited += (sender, args) => {
+                        detached.Set();
+                    };
+                    proc.StartListening();
 
-                        Assert.IsTrue(attached.WaitOne(20000), "Failed to attach within 20s");
-                        proc.Detach();
-                        Assert.IsTrue(detached.WaitOne(20000), "Failed to detach within 20s");
+                    Assert.IsTrue(attached.WaitOne(20000), "Failed to attach within 20s");
+                    proc.Detach();
+                    Assert.IsTrue(detached.WaitOne(20000), "Failed to detach within 20s");
 
-                    }
-                } finally {
-                    DisposeProcess(p);
                 }
+            } finally {
+                DisposeProcess(p);
             }
         }
 
         [TestMethod, Priority(0)]
-        public void AttachTimeout() {
-            if (GetType() != typeof(DebuggerTestsIpy)) {    // IronPython doesn't support attach
+        public virtual void AttachTimeout() {
+            string cast = "(PyCodeObject*)";
+            if (Version.Version >= PythonLanguageVersion.V32) {
+                // 3.2 changed the API here...
+                cast = "";
+            }
 
-                string cast = "(PyCodeObject*)";
-                if (Version.Version >= PythonLanguageVersion.V32) {
-                    // 3.2 changed the API here...
-                    cast = "";
-                }
-
-                var hostCode = @"#include <python.h>
+            var hostCode = @"#include <python.h>
 #include <windows.h>
 #include <stdio.h>
 
@@ -2066,19 +2052,14 @@ int main(int argc, char* argv[]) {
     printf(""Executing\r\n"");
     PyEval_EvalCode(src, glb, loc);
 }";
-                AttachTest(hostCode);
-            }
+            AttachTest(hostCode);
         }
 
         /// <summary>
         /// Attempts to attach w/ code only running on new threads which are initialized using PyGILState_Ensure
         /// </summary>
         [TestMethod, Priority(0)]
-        public void AttachNewThread_PyGILState_Ensure() {
-            if (GetType() == typeof(DebuggerTestsIpy)) {    // IronPython doesn't support attach
-                Assert.Inconclusive("Test not supported");
-            }
-
+        public virtual void AttachNewThread_PyGILState_Ensure() {
             File.WriteAllText("gilstate_attach.py", @"def test():
     for i in range(10):
         print(i)
@@ -2195,12 +2176,7 @@ void main()
         /// Attempts to attach w/ code only running on new threads which are initialized using PyThreadState_New
         /// </summary>
         [TestMethod, Priority(0)]
-        public void AttachNewThread_PyThreadState_New() {
-            if (GetType() == typeof(DebuggerTestsIpy) ||    // IronPython doesn't support attach
-                Version.Version >= PythonLanguageVersion.V32) {    // PyEval_AcquireLock deprecated in 3.2
-                Assert.Inconclusive("Test not supported");
-            }
-
+        public virtual void AttachNewThread_PyThreadState_New() {
             File.WriteAllText("gilstate_attach.py", @"def test():
     for i in range(10):
         print(i)
@@ -2328,17 +2304,14 @@ void main()
         }
 
         [TestMethod, Priority(0)]
-        public void AttachTimeoutThreadsInitialized() {
-            if (GetType() != typeof(DebuggerTestsIpy)) {    // IronPython doesn't support attach
+        public virtual void AttachTimeoutThreadsInitialized() {
+            string cast = "(PyCodeObject*)";
+            if (Version.Version >= PythonLanguageVersion.V32) {
+                // 3.2 changed the API here...
+                cast = "";
+            }
 
-                string cast = "(PyCodeObject*)";
-                if (Version.Version >= PythonLanguageVersion.V32) {
-                    // 3.2 changed the API here...
-                    cast = "";
-                }
-
-
-                var hostCode = @"#include <python.h>
+            var hostCode = @"#include <python.h>
 #include <windows.h>
 
 int main(int argc, char* argv[]) {
@@ -2359,9 +2332,7 @@ int main(int argc, char* argv[]) {
     printf(""Executing\r\n"");
     PyEval_EvalCode(src, glb, loc);
 }";
-                AttachTest(hostCode);
-
-            }
+            AttachTest(hostCode);
         }
 
         private void AttachTest(string hostCode) {
@@ -2696,6 +2667,10 @@ int main(int argc, char* argv[]) {
                 return PythonPaths.Python32;
             }
         }
+
+        public override void AttachNewThread_PyThreadState_New() {
+            // PyEval_AcquireLock deprecated in 3.2
+        }
     }
 
     [TestClass]
@@ -2717,6 +2692,10 @@ int main(int argc, char* argv[]) {
                 return "PyUnicode_FromString";
             }
         }
+
+        public override void AttachNewThread_PyThreadState_New() {
+            // PyEval_AcquireLock deprecated in 3.2
+        }
     }
 
     [TestClass]
@@ -2737,6 +2716,10 @@ int main(int argc, char* argv[]) {
             get {
                 return "PyUnicode_FromString";
             }
+        }
+
+        public override void AttachNewThread_PyThreadState_New() {
+            // PyEval_AcquireLock deprecated in 3.2
         }
     }
 
@@ -2783,5 +2766,17 @@ int main(int argc, char* argv[]) {
                 return PythonPaths.IronPython27;
             }
         }
+
+        // IronPython does not support normal attach.
+        public override void AttachMultithreadedSleeper() { }
+        public override void AttachNewThread_PyGILState_Ensure() { }
+        public override void AttachNewThread_PyThreadState_New() { }
+        public override void AttachReattach() { }
+        public override void AttachReattachInfiniteThreads() { }
+        public override void AttachReattachThreadingInited() { }
+        public override void AttachSingleThreadedSleeper() { }
+        public override void AttachThreadingStartNewThread() { }
+        public override void AttachTimeoutThreadsInitialized() { }
+        public override void AttachTimeout() { }
     }
 }
