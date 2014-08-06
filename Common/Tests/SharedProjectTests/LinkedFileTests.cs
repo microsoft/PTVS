@@ -392,9 +392,10 @@ namespace VisualStudioToolsUITests {
                     Assert.IsNotNull(projectNode, "projectNode");
                     AutomationWrapper.Select(projectNode);
 
-                    var addExistingDlg = new AddExistingItemDialog(solution.App.OpenDialogWithDteExecuteCommand("Project.AddExistingItem"));
-                    addExistingDlg.FileName = Path.Combine(solution.Directory, "ExistingItem" + projectType.CodeExtension);
-                    addExistingDlg.AddLink();
+                    using (var addExistingDlg = AddExistingItemDialog.FromDte(solution.App)) {
+                        addExistingDlg.FileName = Path.Combine(solution.Directory, "ExistingItem" + projectType.CodeExtension);
+                        addExistingDlg.AddLink();
+                    }
 
                     var existingItem = solution.WaitForItem("LinkedFiles", "FolderWithAFile", "ExistingItem" + projectType.CodeExtension);
                     Assert.IsNotNull(existingItem, "existingItem");
@@ -414,9 +415,10 @@ namespace VisualStudioToolsUITests {
                     Assert.IsNotNull(projectNode, "projectNode");
                     AutomationWrapper.Select(projectNode);
 
-                    var addExistingDlg = new AddExistingItemDialog(solution.App.OpenDialogWithDteExecuteCommand("Project.AddExistingItem"));
-                    addExistingDlg.FileName = Path.Combine(solution.Directory, "FileNotInProject" + projectType.CodeExtension);
-                    addExistingDlg.AddLink();
+                    using (var addExistingDlg = AddExistingItemDialog.FromDte(solution.App)) {
+                        addExistingDlg.FileName = Path.Combine(solution.Directory, "FileNotInProject" + projectType.CodeExtension);
+                        addExistingDlg.AddLink();
+                    }
 
                     solution.App.WaitForDialog();
                     VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, "There is already a link to", "A project cannot have more than one link to the same file.", "FileNotInProject" + projectType.CodeExtension);
@@ -440,9 +442,10 @@ namespace VisualStudioToolsUITests {
                     Assert.IsNotNull(projectNode, "projectNode");
                     AutomationWrapper.Select(projectNode);
 
-                    var addExistingDlg = new AddExistingItemDialog(solution.App.OpenDialogWithDteExecuteCommand("Project.AddExistingItem"));
-                    addExistingDlg.FileName = Path.Combine(solution.Directory, "LinkedFilesDir\\SomeLinkedFile" + projectType.CodeExtension);
-                    addExistingDlg.AddLink();
+                    using (var addExistingDlg = AddExistingItemDialog.FromDte(solution.App)) {
+                        addExistingDlg.FileName = Path.Combine(solution.Directory, "LinkedFilesDir\\SomeLinkedFile" + projectType.CodeExtension);
+                        addExistingDlg.AddLink();
+                    }
 
                     solution.App.WaitForDialog();
                     VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, "There is already a link to", "SomeLinkedFile" + projectType.CodeExtension);
@@ -463,9 +466,10 @@ namespace VisualStudioToolsUITests {
                     AutomationWrapper.Select(projectNode);
 
 
-                    var addExistingDlg = new AddExistingItemDialog(solution.App.OpenDialogWithDteExecuteCommand("Project.AddExistingItem"));
-                    addExistingDlg.FileName = Path.Combine(solution.Directory, "ExistsOnDiskButNotInProject" + projectType.CodeExtension);
-                    addExistingDlg.AddLink();
+                    using (var addExistingDlg = AddExistingItemDialog.FromDte(solution.App)) {
+                        addExistingDlg.FileName = Path.Combine(solution.Directory, "ExistsOnDiskButNotInProject" + projectType.CodeExtension);
+                        addExistingDlg.AddLink();
+                    }
 
                     solution.App.WaitForDialog();
                     VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, "There is already a file of the same name in this folder.");
@@ -486,9 +490,10 @@ namespace VisualStudioToolsUITests {
                     AutomationWrapper.Select(projectNode);
 
 
-                    var addExistingDlg = new AddExistingItemDialog(solution.App.OpenDialogWithDteExecuteCommand("Project.AddExistingItem"));
-                    addExistingDlg.FileName = Path.Combine(solution.Directory, "ExistsOnDiskAndInProject" + projectType.CodeExtension);
-                    addExistingDlg.AddLink();
+                    using (var addExistingDlg = AddExistingItemDialog.FromDte(solution.App)) {
+                        addExistingDlg.FileName = Path.Combine(solution.Directory, "ExistsOnDiskAndInProject" + projectType.CodeExtension);
+                        addExistingDlg.AddLink();
+                    }
 
                     solution.App.WaitForDialog();
                     VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, "There is already a file of the same name in this folder.");
@@ -508,9 +513,10 @@ namespace VisualStudioToolsUITests {
                     Assert.IsNotNull(projectNode, "projectNode");
                     AutomationWrapper.Select(projectNode);
 
-                    var addExistingDlg = new AddExistingItemDialog(solution.App.OpenDialogWithDteExecuteCommand("Project.AddExistingItem"));
-                    addExistingDlg.FileName = Path.Combine(solution.Directory, "ExistsInProjectButNotOnDisk" + projectType.CodeExtension);
-                    addExistingDlg.AddLink();
+                    using (var addExistingDlg = AddExistingItemDialog.FromDte(solution.App)) {
+                        addExistingDlg.FileName = Path.Combine(solution.Directory, "ExistsInProjectButNotOnDisk" + projectType.CodeExtension);
+                        addExistingDlg.AddLink();
+                    }
 
                     solution.App.WaitForDialog();
                     VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, "There is already a file of the same name in this folder.");
@@ -531,9 +537,10 @@ namespace VisualStudioToolsUITests {
                     Assert.IsNotNull(projectNode, "projectNode");
                     AutomationWrapper.Select(projectNode);
 
-                    var addExistingDlg = new AddExistingItemDialog(solution.App.OpenDialogWithDteExecuteCommand("Project.AddExistingItem"));
-                    addExistingDlg.FileName = Path.Combine(solution.Directory, "LinkedFiles\\Fob\\AddExistingInProjectDirButNotInProject" + projectType.CodeExtension);
-                    addExistingDlg.AddLink();
+                    using (var addExistingDlg = AddExistingItemDialog.FromDte(solution.App)) {
+                        addExistingDlg.FileName = Path.Combine(solution.Directory, "LinkedFiles\\Fob\\AddExistingInProjectDirButNotInProject" + projectType.CodeExtension);
+                        addExistingDlg.AddLink();
+                    }
 
                     var addExistingInProjectDirButNotInProject = solution.WaitForItem("LinkedFiles", "Fob", "AddExistingInProjectDirButNotInProject" + projectType.CodeExtension);
                     Assert.IsNotNull(addExistingInProjectDirButNotInProject, "addExistingInProjectDirButNotInProject");

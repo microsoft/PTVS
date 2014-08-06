@@ -122,11 +122,10 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                         var project = app.OpenProject(solution.Filename);
 
-                        var dialog = app.OpenDialogWithDteExecuteCommand("Project.AddNewItem");
-
-                        var newItem = new NewItemDialog(AutomationElement.FromHandle(dialog));
-                        newItem.FileName = "NewFile" + projectType.CodeExtension;
-                        newItem.ClickOK();
+                        using (var newItem = NewItemDialog.FromDte(app)) {
+                            newItem.FileName = "NewFile" + projectType.CodeExtension;
+                            newItem.OK();
+                        }
 
                         System.Threading.Thread.Sleep(250);
 

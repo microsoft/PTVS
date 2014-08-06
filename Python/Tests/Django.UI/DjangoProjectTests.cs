@@ -181,10 +181,11 @@ namespace DjangoUITests {
 
                 app.SolutionExplorerTreeView.SelectProject(project);
 
-                var newItem = new NewItemDialog(app.OpenDialogWithDteExecuteCommand("Project.AddNewItem")); 
-                AutomationWrapper.Select(newItem.ProjectTypes.FindItem("HTML Page"));
-                newItem.FileName = "NewPage.html";
-                newItem.ClickOK();
+                using (var newItem = NewItemDialog.FromDte(app)) {
+                    AutomationWrapper.Select(newItem.ProjectTypes.FindItem("HTML Page"));
+                    newItem.FileName = "NewPage.html";
+                    newItem.OK();
+                }
 
                 System.Threading.Thread.Sleep(1000);
 
