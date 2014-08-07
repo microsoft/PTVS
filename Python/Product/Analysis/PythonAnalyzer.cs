@@ -101,6 +101,8 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         private void LoadKnownTypes() {
+            _itemCache.Clear();
+
             ModuleReference moduleRef;
             if (Modules.TryImport(_builtinName, out moduleRef)) {
                 _builtinModule = (BuiltinModule)moduleRef.Module;
