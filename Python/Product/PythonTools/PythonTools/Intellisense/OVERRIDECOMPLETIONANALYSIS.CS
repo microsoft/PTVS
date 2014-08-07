@@ -136,7 +136,19 @@ namespace Microsoft.PythonTools.Intellisense {
                     member.Documentation,
                     StandardGlyphGroup.GlyphGroupOverload));
 
-            var res = new FuzzyCompletionSet("PythonOverrides", "Python", Span, completions, _options, CompletionComparer.UnderscoresLast);
+            CompletionSet res;
+            if (completions.Any()) {
+                res = new FuzzyCompletionSet(
+                    "PythonOverrides",
+                    "Python",
+                    Span,
+                    completions,
+                    _options,
+                    CompletionComparer.UnderscoresLast
+                );
+            } else {
+                res = new CompletionSet();
+            }
 
             var end = _stopwatch.ElapsedMilliseconds;
 

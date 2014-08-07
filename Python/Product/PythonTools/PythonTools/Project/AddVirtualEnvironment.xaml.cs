@@ -113,16 +113,13 @@ namespace Microsoft.PythonTools.Project {
 
         private async void Save_Executed(object sender, ExecutedRoutedEventArgs e) {
             Debug.Assert(_currentOperation == null);
-            bool closeAfterOperation = _view.WillAddVirtualEnv;
             _currentOperation = _view.Create().HandleAllExceptions(SR.ProductName);
             
             await _currentOperation;
 
             _currentOperation = null;
-            if (closeAfterOperation) {
-                DialogResult = true;
-                Close();
-            }
+            DialogResult = true;
+            Close();
         }
 
         private void WebChooseInterpreter_CanExecute(object sender, CanExecuteRoutedEventArgs e) {

@@ -926,6 +926,10 @@
     <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindowF" priority="0x7F0E">
       <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
     </CommandPlacement>
+
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidOpenCommandPromptHere" priority="0x0180">
+      <Parent guid="guidSHLMainMenu" id="IDG_VS_CTXT_PROJECT_EXPLORE"/>
+    </CommandPlacement>
   </CommandPlacements>
 
   <KeyBindings>

@@ -166,7 +166,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private readonly static IList<Completion> _noCompletions = new[] { new Completion(
             SR.GetString(SR.NoCompletionsCompletion),
-            null,
+            string.Empty,
             SR.GetString(SR.WarningUnknownType),
             null,
             null

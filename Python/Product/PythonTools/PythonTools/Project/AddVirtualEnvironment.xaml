@@ -273,7 +273,8 @@
             <RowDefinition Height="auto" />
         </Grid.RowDefinitions>
 
-        <ContentControl Content="{Binding}"
+        <ContentControl Grid.Row="0"
+                        Content="{Binding}"
                         ContentTemplate="{StaticResource ErrorMessage}"
                         Visibility="{Binding ShowBrowsePathError,Converter={StaticResource BoolToVisibleOrCollapsed}}" />
         
