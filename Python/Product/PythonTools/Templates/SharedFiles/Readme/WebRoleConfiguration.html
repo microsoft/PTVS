@@ -20,11 +20,14 @@
 <body>
     <h1 class="top">One more thing...</h1>
     <div>
-        <p>To finish configuring your web role:</p>
+        <p>
+            If you are not using Microsoft Azure Tools 2.4 or later, you will 
+            need to finish configuring your web role:
+        </p>
         <ol>
             <li>Open your ServiceDefinition.csdef file: <img src="ServiceDefinition.png" /></li>
             <li>Find your new <code>&lt;WebRole role="{your project name}"&gt;</code> element.</li>
-            <li>Copy and paste the XML below as a child of the <code>WebRole</code> element.</li>
+            <li>Paste the XML below as a child of the <code>WebRole</code> element.</li>
         </ol>
 
         <textarea id="code" contenteditable="false" cols="75" rows="12">
@@ -38,6 +41,11 @@
   &lt;/Task&gt;
 &lt;/Startup&gt;
 </textarea>
+        <p class="hint">
+            (If you have Microsoft Azure Tools 2.4 or later, this code has
+            already been added.)
+        </p>
+
     </div>
 
     <h1>Configuring Deployment</h1>
