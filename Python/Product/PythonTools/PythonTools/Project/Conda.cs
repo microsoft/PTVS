@@ -54,39 +54,39 @@ namespace Microsoft.PythonTools.Project {
                 return false;
             }
 
-            if (string.IsNullOrEmpty(metaFile)) {
-                return false;
-            }
-
-            string text;
-            try {
-                text = File.ReadAllText(metaFile);
-            } catch (Exception ex) {
-                if (ex.IsCriticalException()) {
-                    throw;
+            if (!string.IsNullOrEmpty(metaFile)) {
+                string text = string.Empty;
+                try {
+                    text = File.ReadAllText(metaFile);
+                } catch (Exception ex) {
+                    if (ex.IsCriticalException()) {
+                        throw;
+                    }
                 }
-                return false;
+
+                var m = Regex.Match(text, @"\{[^{]+link.+?\{.+?""source""\s*:\s*""(.+?)""", RegexOptions.Singleline);
+                if (m.Success) {
+                    var pkg = m.Groups[1].Value;
+                    if (!Directory.Exists(pkg)) {
+                        return false;
+                    }
+
+                    var prefix = Path.GetDirectoryName(Path.GetDirectoryName(pkg));
+                    factory = service.Interpreters.FirstOrDefault(
+                        f => CommonUtils.IsSameDirectory(f.Configuration.PrefixPath, prefix)
+                    );
+
+                    if (factory != null && !factory.FindModules("conda").Any()) {
+                        factory = null;
+                    }
+
+                    return factory != null;
+                }
             }
 
-            var m = Regex.Match(text, @"\{[^{]+link.+?\{.+?""source""\s*:\s*""(.+?)""", RegexOptions.Singleline);
-            if (!m.Success) {
-                return false;
+            if (target.FindModules("conda").Any()) {
+                factory = target;
             }
-
-            var pkg = m.Groups[1].Value;
-            if (!Directory.Exists(pkg)) {
-                return false;
-            }
-
-            var prefix = Path.GetDirectoryName(Path.GetDirectoryName(pkg));
-            factory = service.Interpreters.FirstOrDefault(
-                f => CommonUtils.IsSameDirectory(f.Configuration.PrefixPath, prefix)
-            );
-
-            if (factory != null && !factory.FindModules("conda").Any()) {
-                factory = null;
-            }
-
             return factory != null;
         }
 
