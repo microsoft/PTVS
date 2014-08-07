@@ -78,7 +78,7 @@ namespace Microsoft.PythonTools.Intellisense {
         public override CompletionSet GetCompletions(IGlyphService glyphService) {
             var start1 = _stopwatch.ElapsedMilliseconds;
 
-            var members = Enumerable.Empty<MemberResult>();
+            IEnumerable<MemberResult> members = null;
 
             IReplEvaluator eval;
             IPythonReplIntellisense pyReplEval = null;
@@ -93,26 +93,32 @@ namespace Microsoft.PythonTools.Intellisense {
                 return null;
             } else if (!string.IsNullOrEmpty(text)) {
                 string fixedText = FixupCompletionText(text);
-                if (analysis != null && fixedText != null && (pyReplEval == null || !pyReplEval.LiveCompletionsOnly)) {
+                if (fixedText == null) {
+                    // The expression is invalid so we shouldn't provide a
+                    // completion set at all.
+                    return null;
+                }
+
+                if (analysis != null && (pyReplEval == null || !pyReplEval.LiveCompletionsOnly)) {
                     lock (_analyzer) {
-                        members = members.Concat(analysis.GetMembersByIndex(
-                            fixedText,
-                            VsProjectAnalyzer.TranslateIndex(
-                                Span.GetEndPoint(_snapshot).Position,
-                                _snapshot,
-                                analysis
-                            ),
-                            _options.MemberOptions
-                        ).ToArray());
+                        var index = VsProjectAnalyzer.TranslateIndex(
+                            Span.GetEndPoint(_snapshot).Position,
+                            _snapshot,
+                            analysis
+                        );
+
+                        members = analysis.GetMembersByIndex(fixedText, index, _options.MemberOptions);
                     }
                 }
 
-                if (pyReplEval != null && fixedText != null && _snapshot.TextBuffer.GetAnalyzer().ShouldEvaluateForCompletion(fixedText)) {
-                    var replStart = _stopwatch.ElapsedMilliseconds;
-
+                if (pyReplEval != null && _snapshot.TextBuffer.GetAnalyzer().ShouldEvaluateForCompletion(fixedText)) {
                     var replMembers = pyReplEval.GetMemberNames(fixedText);
                     if (replMembers != null) {
-                        members = members.Union(replMembers, CompletionComparer.MemberEquality);
+                        if (members != null) {
+                            members = members.Union(replMembers, CompletionComparer.MemberEquality);
+                        } else {
+                            members = replMembers;
+                        }
                     }
                 }
             } else {
@@ -129,9 +135,19 @@ namespace Microsoft.PythonTools.Intellisense {
             var end = _stopwatch.ElapsedMilliseconds;
 
             if (/*Logging &&*/ (end - start1) > TooMuchTime) {
-                var memberArray = members.ToArray();
-                members = memberArray;
-                Trace.WriteLine(String.Format("{0} lookup time {1} for {2} members", this, end - start1, members.Count()));
+                if (members != null) {
+                    var memberArray = members.ToArray();
+                    members = memberArray;
+                    Trace.WriteLine(String.Format("{0} lookup time {1} for {2} members", this, end - start1, members.Count()));
+                } else {
+                    Trace.WriteLine(String.Format("{0} lookup time {1} for zero members", this, end - start1));
+                }
+            }
+
+            if (members == null) {
+                // The expression is invalid so we shouldn't provide
+                // a completion set at all.
+                return null;
             }
 
             var start = _stopwatch.ElapsedMilliseconds;

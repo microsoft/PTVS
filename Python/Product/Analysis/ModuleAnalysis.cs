@@ -245,6 +245,20 @@ namespace Microsoft.PythonTools.Analysis {
             return false;
         }
 
+        private class ErrorWalker : PythonWalker {
+            public bool HasError { get; private set; }
+
+            public override bool Walk(ErrorStatement node) {
+                HasError = true;
+                return false;
+            }
+
+            public override bool Walk(ErrorExpression node) {
+                HasError = true;
+                return false;
+            }
+        }
+
         /// <summary>
         /// Evaluates a given expression and returns a list of members which exist in the expression.
         /// 
@@ -263,7 +277,13 @@ namespace Microsoft.PythonTools.Analysis {
             var expr = Statement.GetExpression(GetAstFromText(exprText, privatePrefix).Body);
             if (expr is ConstantExpression && ((ConstantExpression)expr).Value is int) {
                 // no completions on integer ., the user is typing a float
-                return new MemberResult[0];
+                return Enumerable.Empty<MemberResult>();
+            }
+
+            var errorWalker = new ErrorWalker();
+            expr.Walk(errorWalker);
+            if (errorWalker.HasError) {
+                return null;
             }
 
             var unit = GetNearestEnclosingAnalysisUnit(scope);
