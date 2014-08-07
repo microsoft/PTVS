@@ -145,9 +145,9 @@
     </When>
     <When Condition="'$(VSTarget)' == '12.0'">
       <ItemGroup>
-        <Reference Include="Microsoft.VisualStudio.WindowsAzure.CommonAzureTools.Contracts.1.1">
+        <Reference Include="Microsoft.VisualStudio.WindowsAzure.CommonAzureTools.Contracts.1.2">
           <SpecificVersion>False</SpecificVersion>
-          <HintPath>$(DevEnvDir)Extensions\Microsoft\Windows Azure Tools\Common\Microsoft.VisualStudio.WindowsAzure.CommonAzureTools.Contracts.1.1.dll</HintPath>
+          <HintPath>$(DevEnvDir)Extensions\Microsoft\Windows Azure Tools\Common\Microsoft.VisualStudio.WindowsAzure.CommonAzureTools.Contracts.1.2.dll</HintPath>
         </Reference>
         <Reference Include="Microsoft.VisualStudio.Web.WindowsAzure.Contracts, Version=2.3.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
           <SpecificVersion>True</SpecificVersion>
