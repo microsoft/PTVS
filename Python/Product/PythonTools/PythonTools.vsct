@@ -122,10 +122,10 @@
       <Group guid="guidPythonToolsCmdSet" id="CodeFileGroup2" priority="0x0110">
         <Parent guid="guidSHLMainMenu" id="IDM_VS_MENU_PROJECT"/>
       </Group>
-      <Group guid="guidPythonToolsCmdSet" id="CodeFileGroup" priority="0x0200">
+      <Group guid="guidPythonToolsCmdSet" id="CodeFileGroup" priority="0x0600">
         <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_ITEMNODE"/>
       </Group>
-      <Group guid="guidPythonToolsCmdSet" id="CodeFileGroup2" priority="0x0210">
+      <Group guid="guidPythonToolsCmdSet" id="CodeFileGroup2" priority="0x0610">
         <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_ITEMNODE"/>
       </Group>
 
