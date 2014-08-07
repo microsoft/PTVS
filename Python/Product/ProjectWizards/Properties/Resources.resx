@@ -152,9 +152,6 @@ You will need to restart Visual Studio after installation.</value>
   <data name="InstallRequirementsFailed" xml:space="preserve">
     <value>Your packages may not have been installed.</value>
   </data>
-  <data name="InstallRequirementsFooter" xml:space="preserve">
-    <value>&lt;a href="https://pytools.codeplex.com/workitem/2446"&gt;What do you think about this dialog?&lt;/a&gt;</value>
-  </data>
   <data name="InstallRequirementsHeading" xml:space="preserve">
     <value>This project requires external packages</value>
   </data>

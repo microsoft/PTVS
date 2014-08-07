@@ -83,9 +83,6 @@ namespace Microsoft.PythonTools.ProjectWizards {
                 AllowCancellation = true,
             };
 
-            // TODO: Remove for 2.1 RC
-            td.Footer = Resources.InstallRequirementsFooter;
-
             var venv = new TaskDialogButton(
                 Resources.InstallRequirementsIntoVirtualEnv,
                 Resources.InstallRequirementsIntoVirtualEnvTip

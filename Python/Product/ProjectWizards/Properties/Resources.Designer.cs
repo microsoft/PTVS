@@ -81,7 +81,7 @@ namespace Microsoft.PythonTools.ProjectWizards.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Your project can still be created, but some manual configuration of your project will be required and features may be missing or limited.
         ///
-        ///We recommend installing the latest version of Microsoft Azure Tools for Visual Studio. This is a free download that does not replace your existing installation or affect existing projects..
+        ///We recommend installing the latest version of Microsoft Azure Tools for Visual Studio..
         /// </summary>
         internal static string AzureToolsUpgradeInstructions {
             get {
@@ -151,15 +151,6 @@ namespace Microsoft.PythonTools.ProjectWizards.Properties {
         internal static string InstallRequirementsFailed {
             get {
                 return ResourceManager.GetString("InstallRequirementsFailed", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to &lt;a href=&quot;https://pytools.codeplex.com/workitem/2446&quot;&gt;What do you think about this dialog?&lt;/a&gt;.
-        /// </summary>
-        internal static string InstallRequirementsFooter {
-            get {
-                return ResourceManager.GetString("InstallRequirementsFooter", resourceCulture);
             }
         }
         
