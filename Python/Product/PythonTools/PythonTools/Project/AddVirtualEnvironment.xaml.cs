@@ -118,8 +118,12 @@ namespace Microsoft.PythonTools.Project {
             await _currentOperation;
 
             _currentOperation = null;
-            DialogResult = true;
-            Close();
+            try {
+                DialogResult = true;
+                Close();
+            } catch (InvalidOperationException) {
+                // Dialog is already closed by the user
+            }
         }
 
         private void WebChooseInterpreter_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
