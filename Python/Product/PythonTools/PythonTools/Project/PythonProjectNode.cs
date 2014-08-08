@@ -1399,7 +1399,7 @@ namespace Microsoft.PythonTools.Project {
                                     "*",
                                     SearchOption.AllDirectories
                                 )
-                                // Exclude the completion DB
+                            // Exclude the completion DB
                                 .Where(f => !f.Contains("\\.ptvs\\"))
                                 .Select(f => new PublishFile(f, CommonUtils.GetRelativeFilePath(ProjectHome, f)))
                             ).ToArray(),
@@ -2064,7 +2064,7 @@ namespace Microsoft.PythonTools.Project {
             IServiceProvider site
         ) {
             Utilities.ArgumentNotNull("project", project);
-            
+
             object obj;
             ErrorHandler.ThrowOnFailure(project.GetProperty(
                 (uint)VSConstants.VSITEMID.Root,
@@ -2132,7 +2132,7 @@ namespace Microsoft.PythonTools.Project {
                             ));
                         }
                     }
-                    
+
                     if (updateFileOnDisk) {
                         // File is not open, so edit it on disk
                         FileStream stream = null;
@@ -2154,6 +2154,18 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
+        private class StringWriterWithEncoding : StringWriter {
+            private readonly Encoding _encoding;
+
+            public StringWriterWithEncoding(Encoding encoding) {
+                _encoding = encoding;
+            }
+
+            public override Encoding Encoding {
+                get { return _encoding; }
+            }
+        }
+
         private static void UpdateServiceDefinition(IVsTextLines lines, string roleType, string projectName) {
             if (lines == null) {
                 throw new ArgumentException("lines");
@@ -2170,12 +2182,35 @@ namespace Microsoft.PythonTools.Project {
 
             UpdateServiceDefinition(doc, roleType, projectName);
 
-            var sb = new StringBuilder();
+            var encoding = Encoding.UTF8;
+
+            var userData = lines as IVsUserData;
+            if (userData != null) {
+                var guid = VSConstants.VsTextBufferUserDataGuid.VsBufferEncodingVSTFF_guid;
+                object data;
+                int cp;
+                if (ErrorHandler.Succeeded(userData.GetData(ref guid, out data)) &&
+                    (cp = (data as int? ?? (int)(data as uint? ?? 0)) & (int)__VSTFF.VSTFF_CPMASK) != 0) {
+                    try {
+                        encoding = Encoding.GetEncoding(cp);
+                    } catch (NotSupportedException) {
+                    } catch (ArgumentException) {
+                    }
+                }
+            }
+
+            var sw = new StringWriterWithEncoding(encoding);
             doc.Save(XmlWriter.Create(
-                sb,
-                new XmlWriterSettings { Indent = true, IndentChars = " ", NewLineHandling = NewLineHandling.Entitize }
+                sw,
+                new XmlWriterSettings {
+                    Indent = true,
+                    IndentChars = " ",
+                    NewLineHandling = NewLineHandling.Entitize,
+                    Encoding = encoding
+                }
             ));
 
+            var sb = sw.GetStringBuilder();
             var len = sb.Length;
             var pStr = Marshal.StringToCoTaskMemUni(sb.ToString());
 
@@ -2194,7 +2229,12 @@ namespace Microsoft.PythonTools.Project {
 
             doc.Save(XmlWriter.Create(
                 path,
-                new XmlWriterSettings { Indent = true, IndentChars = " ", NewLineHandling = NewLineHandling.Entitize }
+                new XmlWriterSettings {
+                    Indent = true,
+                    IndentChars = " ",
+                    NewLineHandling = NewLineHandling.Entitize,
+                    Encoding = Encoding.UTF8
+                }
             ));
         }
 

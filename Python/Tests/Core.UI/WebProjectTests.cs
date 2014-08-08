@@ -458,12 +458,15 @@ namespace PythonToolsUITests {
                 var doc = new XmlDocument();
                 for (int retries = 5; retries > 0; --retries) {
                     try {
-                        using (var reader = TestData.Read(@"TestData\CloudProject\ServiceDefinition.csdef")) {
-                            doc.Load(reader);
-                        }
+                        doc.Load(TestData.GetPath(@"TestData\CloudProject\ServiceDefinition.csdef"));
                         break;
                     } catch (IOException ex) {
                         Console.WriteLine("Exception while reading ServiceDefinition.csdef.{0}{1}", Environment.NewLine, ex);
+                    } catch (XmlException) {
+                        var copyTo = TestData.GetPath(@"TestData\CloudProject\" + Path.GetRandomFileName());
+                        File.Copy(TestData.GetPath(@"TestData\CloudProject\ServiceDefinition.csdef"), copyTo);
+                        Console.WriteLine("Copied file to " + copyTo);
+                        throw;
                     }
                     Thread.Sleep(100);
                 }
