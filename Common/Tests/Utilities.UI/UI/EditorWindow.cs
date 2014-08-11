@@ -119,7 +119,7 @@ namespace TestUtilities.UI {
             string expected = GetExpectedText(text);
 
             for (int i = 0; i < 100; i++) {
-                string curText = Text;
+                string curText = Text.TrimEnd();
 
                 if (Text.EndsWith(expected, StringComparison.CurrentCulture)) {
                     return;
@@ -145,10 +145,11 @@ namespace TestUtilities.UI {
         }
 
         private void FailWrongText(string expected) {
-            StringBuilder msg = new StringBuilder("Did not get text: ");
+            StringBuilder msg = new StringBuilder("Did not get text: <");
             AppendRepr(msg, expected);
-            msg.Append(" instead got ");
+            msg.Append("> instead got <");
             AppendRepr(msg, Text);
+            msg.Append(">");
             Assert.Fail(msg.ToString());
         }
 

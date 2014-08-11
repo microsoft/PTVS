@@ -283,13 +283,18 @@ namespace PythonToolsUITests {
                     --retries) {
                     Thread.Sleep(1000);
                 }
+
+                Assert.IsFalse(Process.GetProcessesByName("Microsoft.PythonTools.Analyzer").Any(), "Analyzer is still running");
+
                 // Need to wait some more for the database to be loaded.
-                Thread.Sleep(5000);
+                app.WaitForNoDialog(TimeSpan.FromSeconds(5.0));
 
                 env.Select();
                 using (var removeDeleteDlg = RemoveItemDialog.FromDte(app)) {
                     removeDeleteDlg.Delete();
                 }
+
+                app.WaitForNoDialog(TimeSpan.FromSeconds(5.0));
 
                 app.OpenSolutionExplorer().WaitForChildOfProjectRemoved(
                     project,
@@ -492,7 +497,7 @@ namespace PythonToolsUITests {
                 var env = app.CreateVirtualEnvironment(project, out envName);
                 env.Select();
 
-                app.Dte.ExecuteCommand("Project.OpenPythonInteractiveWindow");
+                app.Dte.ExecuteCommand("Python.Interactive");
 
                 var window = app.GetInteractiveWindow(string.Format("{0} Interactive", envName));
                 try {
