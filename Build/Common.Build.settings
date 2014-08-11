@@ -71,10 +71,10 @@
     -->
     <_VSUpdateVersion Condition="$(VSUpdateVersion)=='' and $(VisualStudioVersion)!='10.0'">$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\DevDiv\vs\Servicing\$(VSTarget)\devenv', 'UpdateVersion', null, RegistryView.Registry32))</_VSUpdateVersion>
     <VSUpdateVersion Condition="$(VSUpdateVersion)=='' and $(_VSUpdateVersion)!=''">$([System.Int32]::Parse($(_VSUpdateVersion.Substring($([MSBuild]::Add(1, $(_VSUpdateVersion.LastIndexOf(`.`))))))))</VSUpdateVersion>
-    <VSUpdateVersion Condition="$([MSBuild]::ValueOrDefault($(ReleaseBuild), `false`))">$([System.Int32]::MaxValue)</VSUpdateVersion>
+    <VSUpdateVersion Condition="'$(VSUpdateVersion)'=='' or $([MSBuild]::ValueOrDefault($(ReleaseBuild), `false`))">$([System.Int32]::MaxValue)</VSUpdateVersion>
     
     <BuildingWithDev12U3>false</BuildingWithDev12U3>
-    <BuildingWithDev12U3 Condition="$(VSUpdateVersion) >= 30723">true</BuildingWithDev12U3>
+    <BuildingWithDev12U3 Condition="$(VSTarget) == '12.0' and $(VSUpdateVersion) >= 30723">true</BuildingWithDev12U3>
   </PropertyGroup>
 
   <Import Project="$(TargetsPath)\Common.Build.CSharp.settings" Condition="'$(MSBuildProjectExtension)' == '.csproj' or '$(MSBuildProjectExtension)' == '.tmp_proj'" />
