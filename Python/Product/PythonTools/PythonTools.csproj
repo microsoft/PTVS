@@ -143,7 +143,17 @@
         </Reference>
       </ItemGroup>
     </When>
-    <When Condition="'$(VSTarget)' == '12.0'">
+    <Otherwise>
+      <ItemGroup>
+        <Reference Include="Microsoft.Windows.Design.Host, Version=4.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+          <SpecificVersion>False</SpecificVersion>
+          <HintPath>$(DevEnvDir)PrivateAssemblies\Microsoft.Windows.Design.Host.dll</HintPath>
+        </Reference>
+      </ItemGroup>
+    </Otherwise>
+  </Choose>
+  <Choose>
+    <When Condition="$(BuildingWithDev12U3)">
       <ItemGroup>
         <Reference Include="Microsoft.VisualStudio.WindowsAzure.CommonAzureTools.Contracts.1.2">
           <SpecificVersion>False</SpecificVersion>
@@ -157,12 +167,6 @@
       </ItemGroup>
     </When>
   </Choose>
-  <ItemGroup Condition="'$(VSTarget)' == '11.0' or '$(VSTarget)' == '12.0'">
-    <Reference Include="Microsoft.Windows.Design.Host, Version=4.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>$(DevEnvDir)PrivateAssemblies\Microsoft.Windows.Design.Host.dll</HintPath>
-    </Reference>
-  </ItemGroup>
   <ItemGroup>
     <Reference Include="Accessibility">
       <EmbedInteropTypes>False</EmbedInteropTypes>

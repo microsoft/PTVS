@@ -32,6 +32,7 @@
 
   <PropertyGroup Condition=" '$(VSTarget)' == '12.0' ">
     <DefineConstants>$(DefineConstants);DEV12;DEV12_OR_LATER;DEV11_OR_LATER</DefineConstants>
+    <DefineConstants Condition="$(BuildingWithDev12U3)">$(DefineConstants);BUILDING_WITH_DEV12U3</DefineConstants>
     <VSCTDefinitions>DEV12;DEV_12_OR_LATER;DEV11_OR_LATER</VSCTDefinitions>
     <MicrosoftBuildAssemblyVersion>12.0.0.0</MicrosoftBuildAssemblyVersion>
     <MicrosoftBuildAssemblyVersionSuffix>v12.0</MicrosoftBuildAssemblyVersionSuffix>

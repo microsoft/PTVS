@@ -718,7 +718,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
 #endif
             }, GuidList.guidPythonToolsCmdSet);
 
-#if DEV12_OR_LATER
+#if DEV12_OR_LATER && BUILDING_WITH_DEV12U3
             try {
                 RegisterCommands(new Command[] {
                     new AzureExplorerAttachDebuggerCommand()

@@ -12,7 +12,7 @@
  *
  * ***************************************************************************/
 
-#if DEV12_OR_LATER
+#if DEV12_OR_LATER && BUILDING_WITH_DEV12U3
 
 using System;
 using System.Collections.Generic;
