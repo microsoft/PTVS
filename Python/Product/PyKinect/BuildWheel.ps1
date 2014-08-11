@@ -28,7 +28,7 @@ if (Get-Command tf -EA 0) {
 try {
     $signedbuild = $release -or $mockrelease
     if ($signedbuild) {
-        $approvers = "smortaz", "dinov", "stevdo", "pminaev", "arturl", "gilbertw", "huvalo"
+        $approvers = "smortaz", "dinov", "stevdo", "pminaev", "gilbertw", "huvalo", "sitani", "crwilcox"
         $approvers = @($approvers | Where-Object {$_ -ne $env:USERNAME})
         
         $projectName = "PyKinect"

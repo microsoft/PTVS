@@ -28,12 +28,12 @@ from distutils.util import get_platform
 long_description = 'The pykinect package provides access to the Kinect device. The pykinect package includes both the "nui" and "audio" subpackages. The nui package provides interactions with the Kinect cameras including skeleton tracking, video camera, as well as the depth camera. The audio subpackage provides access to the Kinect devices microphones.'
 
 classifiers = [
-    'Development Status :: 4 - Beta',
+    'Development Status :: 5 - Production/Stable',
     'Environment :: Win32 (MS Windows)',
     'License :: OSI Approved :: Apache Software License',
     'Natural Language :: English',
-    'Operating System :: Microsoft',
-    'Operating System :: Microsoft :: Windows :: Windows NT/2000',
+    'Operating System :: Microsoft :: Windows',
+    'Operating System :: Microsoft :: Windows :: Windows 7',
     'Programming Language :: C++',
     'Programming Language :: Python',
     'Programming Language :: Python :: 2.7',
@@ -114,7 +114,7 @@ pykinectaudio_ext.headers=[
 
 setup_cfg = dict(
     name='pykinect',
-    version='2.1b1',
+    version='2.1',
     description='PyKinect Module for interacting with the Kinect SDK',
     long_description=long_description,
     author='Microsoft Corporation',

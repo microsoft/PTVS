@@ -5,6 +5,8 @@ $delete_pip_ini = $false
 $restore_pypirc = $false
 $delete_pypirc = $false
 
+py -2.7 -m pip install pypiserver passlib
+
 try {
     if (-not (Test-Path ~\pip)) {
         mkdir ~\pip | Out-Null
@@ -26,8 +28,6 @@ try {
     
     Copy-Item .pypirc ~\.pypirc
     $delete_pypirc = $true
-    
-    py -2.7 -m pip install pypiserver passlib
     
     if (-not (Test-Path .\TestPackages)) {
         mkdir .\TestPackages | Out-Null
