@@ -47,6 +47,14 @@ namespace Microsoft.PythonTools.Django.Intellisense {
 
             return PythonToolsPackage.Instance.AdvancedEditorOptionsPage.CompletionCommittedBy.IndexOf(typedCharacter) > 0;
         }
+
+        protected override bool IsRetriggerChar(ICompletionSession session, char typedCharacter) {
+            if (typedCharacter == ' ') {
+                return true;
+            }
+
+            return base.IsRetriggerChar(session, typedCharacter);
+        }
     }
 }
 
