@@ -172,7 +172,6 @@
     <None Include="source.extension.vsixmanifest">
       <SubType>Designer</SubType>
     </None>
-    <None Include="Theme\Microsoft.VisualStudio.ReplWindow.theme.pkgdef" />
     <None Include="Theme\blue.vstheme" />
     <None Include="Theme\contrast.vstheme" />
     <None Include="Theme\dark.vstheme" />
@@ -188,6 +187,10 @@
   <ItemGroup>
     <Folder Include="Resources\" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Theme\Microsoft.VisualStudio.ReplWindow.theme.v11.0.pkgdef" />
+    <None Include="Theme\Microsoft.VisualStudio.ReplWindow.theme.v12.0.pkgdef" />
+  </ItemGroup>
   <PropertyGroup>
     <UseCodebase>true</UseCodebase>
     <RegisterOutputPackage>true</RegisterOutputPackage>
@@ -202,16 +205,12 @@
   <Target Name="AfterBuild">
   </Target>
   -->
-  <Target Name="DeployThemePkgdef" BeforeTargets="GetVsixSourceItems"
-          Inputs="Theme\Microsoft.VisualStudio.ReplWindow.theme.pkgdef"
-          Outputs="$(OutputPath)Microsoft.VisualStudio.ReplWindow.theme.pkgdef"
-          Condition="'$(VSTarget)' != '10.0'">
-    <Copy SourceFiles="Theme\Microsoft.VisualStudio.ReplWindow.theme.pkgdef"
-          DestinationFiles="$(OutputPath)Microsoft.VisualStudio.ReplWindow.theme.pkgdef"
-          OverwriteReadOnlyFiles="true" />
+  <Target Name="DeployThemePkgdef" BeforeTargets="GetVsixSourceItems" Inputs="Theme\Microsoft.VisualStudio.ReplWindow.theme.v$(VSTarget).pkgdef" Outputs="$(OutputPath)Microsoft.VisualStudio.ReplWindow.theme.pkgdef" Condition="'$(VSTarget)' != '10.0'">
+    <Copy SourceFiles="Theme\Microsoft.VisualStudio.ReplWindow.theme.v$(VSTarget).pkgdef" DestinationFiles="$(OutputPath)Microsoft.VisualStudio.ReplWindow.theme.pkgdef" OverwriteReadOnlyFiles="true" />
     <ItemGroup>
       <VSIXSourceItem Include="$(OutputPath)Microsoft.VisualStudio.ReplWindow.theme.pkgdef">
-        <VSIXSubPath></VSIXSubPath>
+        <VSIXSubPath>
+        </VSIXSubPath>
       </VSIXSourceItem>
     </ItemGroup>
   </Target>

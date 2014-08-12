@@ -1,16 +1,16 @@
 <Themes>
-  <Theme Name="Blue" GUID="{a4d6a176-b948-4b29-8c66-53c97a1ed7d0}">
+  <Theme Name="Blue" GUID="{a4d6a176-b948-4b29-8c66-53c97a1ed7d0}" MinVSVersion="12">
     <Category Name="Text Editor" GUID="{75A05685-00A8-4DED-BAE5-E7A50BFA929A}">
       <!--<Color Name="Interactive - Black">
         <Foreground Type="CT_RAW" Source="FF000000" />
       </Color>
       <Color Name="Interactive - Blue">
         <Foreground Type="CT_RAW" Source="FFFF0000" />
-      </Color>
+      </Color>-->
       <Color Name="Interactive - Cyan">
-        <Foreground Type="CT_RAW" Source="FFFFFF00" />
+        <Foreground Type="CT_RAW" Source="FFC0C000" />
       </Color>
-      <Color Name="Interactive - DarkBlue">
+      <!--<Color Name="Interactive - DarkBlue">
         <Foreground Type="CT_RAW" Source="FF7F0000" />
       </Color>
       <Color Name="Interactive - DarkCyan">
