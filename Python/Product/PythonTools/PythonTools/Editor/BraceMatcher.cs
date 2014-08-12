@@ -30,7 +30,11 @@ namespace Microsoft.PythonTools.Editor {
         private readonly ITextView _textView;
         private readonly IComponentModel _compModel;
         private ITextBuffer _markedBuffer;
+#if DEV10
+        private static TextMarkerTag _tag = new TextMarkerTag("bracehighlight");
+#else
         private static TextMarkerTag _tag = new TextMarkerTag("Brace Matching (Rectangle)");
+#endif
 
         /// <summary>
         /// Starts watching the provided text view for brace matching.  When new braces are inserted
