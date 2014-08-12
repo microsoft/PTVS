@@ -116,6 +116,15 @@ namespace Microsoft.PythonTools.Project {
             }
             condaFactory.ThrowIfNotRunnable();
 
+            if (output != null) {
+                output.WriteLine(SR.GetString(SR.PackageInstalling, package));
+                if (PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ShowOutputWindowForPackageInstallation) {
+                    output.ShowAndActivate();
+                } else {
+                    output.Show();
+                }
+            }
+
             using (var proc = ProcessOutput.Run(
                 condaFactory.Configuration.InterpreterPath,
                 new[] { "-m", "conda", "install", "--yes", "-n", factory.Configuration.PrefixPath, package },
@@ -124,7 +133,20 @@ namespace Microsoft.PythonTools.Project {
                 false,
                 output
             )) {
-                return (await proc) != 0;
+                var exitCode = await proc;
+                if (output != null) {
+                    if (exitCode == 0) {
+                        output.WriteLine(SR.GetString(SR.PackageInstallSucceeded, package));
+                    } else {
+                        output.WriteLine(SR.GetString(SR.PackageInstallFailedExitCode, package, exitCode));
+                    }
+                    if (PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ShowOutputWindowForPackageInstallation) {
+                        output.ShowAndActivate();
+                    } else {
+                        output.Show();
+                    }
+                }
+                return exitCode == 0;
             }
         }
     }
