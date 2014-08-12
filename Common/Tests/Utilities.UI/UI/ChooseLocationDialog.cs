@@ -17,7 +17,7 @@ using System.Windows.Automation;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TestUtilities.UI {
-    class ChooseLocationDialog : AutomationDialog {
+    public class ChooseLocationDialog : AutomationDialog {
         public ChooseLocationDialog(VisualStudioApp app, AutomationElement element)
             : base(app, element) {
         }
