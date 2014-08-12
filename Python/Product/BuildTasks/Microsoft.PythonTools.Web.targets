@@ -652,11 +652,10 @@
 
     <Copy SourceFiles="@(_WebSitesFiles)"
           DestinationFiles="@(_PythonWebSitesFiles)"
-          SkipUnchangedFiles="true">
-      <Output TaskParameter="CopiedFiles" ItemName="FileWrites"/>
-    </Copy>
+          SkipUnchangedFiles="true"/>
 
     <ItemGroup>
+      <FileWrites Include="@(_PythonWebSitesFiles)" />
       <FilesForPackagingFromProject Include="@(_PythonWebSitesFiles->'%(FullPath)')">
         <DestinationRelativePath>%(_PythonWebSitesFiles.DestinationRelativeDir)%(FileName)%(Extension)</DestinationRelativePath>
         <FromTarget>CollectPythonWebSitesFiles</FromTarget>
@@ -734,9 +733,11 @@
 
     <Copy SourceFiles="@(_PythonCloudServiceFiles->'%(SourceFile)')"
           DestinationFiles="@(_PythonCloudServiceFiles->'%(TargetPath)')"
-          SkipUnchangedFiles="true">
-      <Output TaskParameter="CopiedFiles" ItemName="FileWrites"/>
-    </Copy>
+          SkipUnchangedFiles="true"/>
+
+    <ItemGroup>
+      <FileWrites Include="@(_PythonCloudServiceFiles->'%(TargetPath)')"/>
+    </ItemGroup>
   </Target>
 
   <Target Name="_CollectPythonCloudServiceFiles"
