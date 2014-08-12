@@ -210,7 +210,9 @@ namespace Microsoft.PythonTools.Project {
                 if (anyChanges) {
                     ProjectMgr.OnPropertyChanged(this, (int)__VSHPROPID.VSHPROPID_Expandable, 0);
                 }
-                ExpandItem(EXPANDFLAGS.EXPF_CollapseFolder);
+                if (ProjectMgr.ParentHierarchy != null) {
+                    ExpandItem(EXPANDFLAGS.EXPF_CollapseFolder);
+                }
             }
 
             if (prevChecked && anyChanges) {
