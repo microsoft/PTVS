@@ -188,6 +188,9 @@ namespace Microsoft.VisualStudioTools.Project {
             ProjectMgr.OnPropertyChanged(this, (int)__VSHPROPID.VSHPROPID_IsNonMemberItem, 0);
             ((IVsUIShell)GetService(typeof(SVsUIShell))).RefreshPropertyBrowser(0);
 
+            // On include, the folder should be added to source control.
+            this.ProjectMgr.Tracker.OnFolderAdded(this.Url, VSADDDIRECTORYFLAGS.VSADDDIRECTORYFLAGS_NoFlags);
+
             return VSConstants.S_OK;
         }
 
