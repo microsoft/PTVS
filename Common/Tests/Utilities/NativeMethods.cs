@@ -13,19 +13,19 @@
  * ***************************************************************************/
 
 using System;
+using System.IO;
 using System.Runtime.InteropServices;
+using System.Security.Principal;
 using System.Text;
 using System.Windows.Automation;
 using Accessibility;
 using Microsoft.VisualStudio.OLE.Interop;
 
-namespace TestUtilities
-{
+namespace TestUtilities {
     /// <summary>
     /// Unmanaged API wrappers.
     /// </summary>
-    public static class NativeMethods
-    {
+    public static class NativeMethods {
         public const int SW_SHOW = 5;
 
         /// <summary>
@@ -327,6 +327,57 @@ namespace TestUtilities
             FO_COPY = 0x0002,
             FO_DELETE = 0x0003,
             FO_RENAME = 0x0004,
+        }
+
+        /// <summary>
+        /// Use caution when using this directly as the errors it gives when you are not running as elevated are not
+        //  very good.  Please use the Wrapper method.
+        /// </summary>
+        /// <param name="lpSymlinkFileName">Path to the symbolic link you wish to create.</param>
+        /// <param name="lpTargetFileName">Path to the file/directory that the symbolic link should be pointing to.</param>
+        /// <param name="dwFlags">Flag specifying either file or directory.</param>
+        /// <returns></returns>
+        [DllImport("kernel32.dll")]
+        internal static extern bool CreateSymbolicLink(string lpSymlinkFileName, string lpTargetFileName, SymbolicLink dwFlags);
+
+        internal enum SymbolicLink {
+            File = 0,
+            Directory = 1
+        }
+
+        /// <summary>
+        /// Wrapper for extern method CreateSymbolicLink.  This handles some error cases and provides better information
+        /// in error cases.
+        /// </summary>
+        /// <param name="symlinkPath">Path to the symbolic link you wish to create.</param>
+        /// <param name="targetPath">Path to the file/directory that the symbolic link should be pointing to.</param>
+        public static void CreateSymbolicLink(string symlinkPath, string targetPath) {
+            // Pre-checks.
+            if (!(new WindowsPrincipal(WindowsIdentity.GetCurrent()).IsInRole(WindowsBuiltInRole.Administrator))) {
+                throw new UnauthorizedAccessException("Process must be run in elevated permissions in order to create symbolic link.");
+            } else if (Directory.Exists(symlinkPath) || File.Exists(symlinkPath)) {
+                throw new IOException("Path Already Exists.  We cannot create a symbolic link here");
+            }
+
+            // Create the correct symbolic link.
+            bool result;
+            if (File.Exists(targetPath)) {
+                result = CreateSymbolicLink(symlinkPath, targetPath, NativeMethods.SymbolicLink.File);
+            } else if (Directory.Exists(targetPath)) {
+                result = CreateSymbolicLink(symlinkPath, targetPath, NativeMethods.SymbolicLink.Directory);
+            } else {
+                throw new FileNotFoundException("Target File/Directory was not found.  Cannot make a symbolic link.");
+            }
+
+            // Validate that we created a symbolic link.
+            // If we failed and the symlink doesn't exist throw an exception here.
+            if (!result) {
+                if (!Directory.Exists(symlinkPath) && !File.Exists(symlinkPath)) {
+                    throw new FileNotFoundException("Unable to find symbolic link after creation.");
+                } else {
+                    Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
+                }
+            }
         }
     }
 }

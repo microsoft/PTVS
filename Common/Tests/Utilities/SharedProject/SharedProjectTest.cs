@@ -161,6 +161,14 @@ namespace TestUtilities.SharedProject {
         }
 
         /// <summary>
+        /// Helper function to create a SymbolicLinkItem object to simply syntax in 
+        /// defining project definitions.
+        /// </summary>
+        public static SymbolicLinkItem SymbolicLink(string name, string referencePath, bool isExcluded = false, bool isMissing = false) {
+            return new SymbolicLinkItem(name, referencePath, isExcluded, isMissing);
+        }
+
+        /// <summary>
         /// Helper function to create a FolderItem object to simply syntax in 
         /// defining project definitions.
         /// </summary>

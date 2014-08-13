@@ -1572,6 +1572,50 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void CopyFileFromFolderToLinkedFolderKeyboard() {
+            CopyFileFromFolderToLinkedFolder(CopyByKeyboard);
+        }
+
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void CopyFileFromFolderToLinkedFolderMouse() {
+            CopyFileFromFolderToLinkedFolder(CopyByMouse);
+        }
+
+        /// <summary>
+        /// Copy item from folder to a symbolic link of that folder.  Expect a copy to be made.
+        /// NOTE: Because of symbolic link creation, this test must be run as administrator.
+        /// </summary>
+        private void CopyFileFromFolderToLinkedFolder(MoveDelegate copier) {
+            foreach (var projectType in ProjectTypes) {
+                var projectDefs = new[] {
+                    new ProjectDefinition("MoveLinkedFolder",
+                        projectType,
+                        ItemGroup(
+                            Folder("Folder"),
+                            Content("Folder\\FileInFolder.txt", "File inside of linked folder..."),
+                            SymbolicLink("FolderLink", "Folder")
+                        )
+                    )
+                };
+
+                using (var solution = SolutionFile.Generate("MoveLinkedFolder", projectDefs).ToVs()) {
+                    copier(
+                        solution.FindItem("MoveLinkedFolder", "FolderLink"),
+                        solution.FindItem("MoveLinkedFolder", "Folder", "FileInFolder.txt"));
+
+                    // Verify that after the dialog our files are still present.
+                    solution.AssertFileExists("MoveLinkedFolder", "FolderLink", "FileInFolder.txt");
+                    solution.AssertFileExists("MoveLinkedFolder", "Folder", "FileInFolder.txt");
+
+                    // Verify the copies were made.
+                    solution.AssertFileExists("MoveLinkedFolder", "FolderLink", "FileInFolder - Copy.txt");
+                    solution.AssertFileExists("MoveLinkedFolder", "Folder", "FileInFolder - Copy.txt");
+                }
+            }
+        }
 
         internal delegate void MoveDelegate(AutomationElement destination, params AutomationElement[] source);
 
