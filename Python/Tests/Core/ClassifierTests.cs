@@ -111,6 +111,25 @@ abc = True
         }
 
         [TestMethod, Priority(0)]
+        public void ImportClassifications() {
+            var code = @"import abc as x
+from os import fdopen
+
+abc
+x
+os
+fdopen
+";
+            using (var helper = new ClassifierHelper(new MockTextBuffer(code), PythonLanguageVersion.V27)) {
+                helper.CheckAstClassifierSpans("kiki kiki i i i i");
+
+                helper.Analyze();
+
+                helper.CheckAnalysisClassifierSpans("m<abc>m<x>m<os>m<x>");
+            }
+        }
+
+        [TestMethod, Priority(0)]
         public void TypeClassification() {
             var code = @"class MyClass(object):
     pass

@@ -441,8 +441,15 @@ namespace Microsoft.PythonTools {
                 foreach (var dottedName in node.Names) {
                     foreach (var name in dottedName.Names) {
                         if (name != null && !string.IsNullOrEmpty(name.Name)) {
-                            _head.Modules.Add(name.Name);
-                            _head.Names.Add(Tuple.Create(name.Name, Span.FromBounds(name.StartIndex, name.EndIndex)));
+                            if (node.AsNames == null) {
+                                _head.Modules.Add(name.Name);
+                                _head.Names.Add(Tuple.Create(name.Name, Span.FromBounds(name.StartIndex, name.EndIndex)));
+                            } else {
+                                // Only want to highlight this instance of the
+                                // name, since it isn't going to be bound in the
+                                // rest of the module.
+                                AddSpan(Tuple.Create(name.Name, Span.FromBounds(name.StartIndex, name.EndIndex)), PythonPredefinedClassificationTypeNames.Module);
+                            }
                         }
                     }
                 }
