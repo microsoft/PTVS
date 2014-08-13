@@ -137,11 +137,17 @@ namespace TestUtilities {
         }
 
         /// <summary>
+        /// Returns the full path to the test data root.
+        /// </summary>
+        public static string GetPath() {
+            return Path.GetDirectoryName((typeof(TestData)).Assembly.Location);
+        }
+
+        /// <summary>
         /// Returns the full path to the deployed file.
         /// </summary>
         public static string GetPath(string relativePath) {
-            var testRoot = Path.GetDirectoryName((typeof(TestData)).Assembly.Location);
-            return CommonUtils.GetAbsoluteFilePath(testRoot, relativePath);
+            return CommonUtils.GetAbsoluteFilePath(GetPath(), relativePath);
         }
 
         /// <summary>

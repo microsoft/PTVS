@@ -24,6 +24,7 @@ using System.Threading.Tasks;
 using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudioTools;
 using Microsoft.Win32;
 using TestUtilities;
 using TestUtilities.Python;
@@ -1457,6 +1458,40 @@ namespace DebuggerTests {
             }
         }
 
+        [TestMethod]
+        public void TestExceptionInEgg() {
+            var debugger = new PythonDebugger();
+
+            TestException(debugger, DebuggerTestPath + "EGGceptionOnImport.py", true, ExceptionMode.Always, null,
+                // We see the exceptions in the egg and in our script
+                new ExceptionInfo(ExceptionModule + ".ValueError", 0),
+                new ExceptionInfo(ExceptionModule + ".ValueError", 0),
+                new ExceptionInfo(ExceptionModule + ".ValueError", 7)
+            );
+            TestException(debugger, DebuggerTestPath + "EGGceptionOnImport.py", true, ExceptionMode.Unhandled, null);
+
+            TestException(debugger, DebuggerTestPath + "EGGceptionOnCall.py", true, ExceptionMode.Always, null,
+                // This exception comes from inside the egg
+                new ExceptionInfo(ExceptionModule + ".ValueError", 0)
+            );
+            // We never see this exception because it is fully handled in the egg
+            TestException(debugger, DebuggerTestPath + "EGGceptionOnCall.py", true, ExceptionMode.Unhandled, null);
+
+
+            // We don't see any exceptions in callbacks
+            TestException(debugger, DebuggerTestPath + "EGGceptionOnCallback.py", true, ExceptionMode.Always, null,
+                new ExceptionInfo(ExceptionModule + ".ValueError", 0),
+                new ExceptionInfo(ExceptionModule + ".ValueError", 7),
+                new ExceptionInfo(ExceptionModule + ".TypeError", 0),
+                new ExceptionInfo(ExceptionModule + ".TypeError", 10),
+                new ExceptionInfo(ExceptionModule + ".TypeError", 13)
+            );
+
+            TestException(debugger, DebuggerTestPath + "EGGceptionOnCallback.py", true, ExceptionMode.Unhandled, null,
+                new ExceptionInfo(ExceptionModule + ".TypeError", 13)
+            );
+        }
+
         [Flags]
         private enum ExceptionMode {
             Never = 0,
@@ -1475,6 +1510,23 @@ namespace DebuggerTests {
             TestException(debugger, filename, resumeProcess, defaultExceptionMode, exceptionModes, PythonDebugOptions.RedirectOutput, exceptions);
         }
 
+        private static string TryGetStack(PythonThread thread) {
+            try {
+                return string.Join(
+                    Environment.NewLine,
+                    thread.Frames.Select(f => {
+                        var fn = f.FileName;
+                        if (CommonUtils.IsSubpathOf(TestData.GetPath("TestData"), fn)) {
+                            fn = CommonUtils.GetRelativeFilePath(TestData.GetPath(), fn);
+                        }
+                        return string.Format("    {0} in {1}:{2}", f.FunctionName, fn, f.LineNo);
+                    })
+                );
+            } catch (Exception ex) {
+                return "Failed to read stack." + Environment.NewLine + ex.ToString();
+            }
+        }
+
         private void TestException(
             PythonDebugger debugger,
             string filename,
@@ -1484,6 +1536,9 @@ namespace DebuggerTests {
             PythonDebugOptions debugOptions,
             params ExceptionInfo[] exceptions
         ) {
+            Console.WriteLine();
+            Console.WriteLine("Testing {0}", filename);
+
             bool loaded = false;
             var process = DebugProcess(debugger, filename, (processObj, threadObj) => {
                 loaded = true;
@@ -1495,22 +1550,13 @@ namespace DebuggerTests {
                 );
             }, debugOptions: debugOptions);
 
-            int curException = 0;
+            var raised = new List<Tuple<string, string>>();
             process.ExceptionRaised += (sender, args) => {
-                // V30 raises an exception as the process shuts down.
-                if (loaded && ((Version.Version == PythonLanguageVersion.V30 && curException < exceptions.Length) || Version.Version != PythonLanguageVersion.V30)) {
-                    if (GetType() != typeof(DebuggerTestsIpy) || curException < exceptions.Length) {    // Ipy over reports
-                        Assert.AreEqual(exceptions[curException].TypeName, args.Exception.TypeName);
-                    }
-
-                    if (GetType() != typeof(DebuggerTestsIpy) || curException < exceptions.Length) {    // Ipy over reports
-                        curException++;
-                    }
-                    if (resumeProcess) {
-                        process.Resume();
-                    } else {
-                        args.Thread.Resume();
-                    }
+                if (loaded) {
+                    raised.Add(Tuple.Create(args.Exception.TypeName, TryGetStack(args.Thread)));
+                }
+                if (resumeProcess) {
+                    process.Resume();
                 } else {
                     args.Thread.Resume();
                 }
@@ -1518,7 +1564,23 @@ namespace DebuggerTests {
 
             StartAndWaitForExit(process);
 
-            Assert.AreEqual(exceptions.Length, curException);
+            if (Version.Version == PythonLanguageVersion.V30 && raised.Count > exceptions.Length) {
+                // Python 3.0 raises an exception as the process shuts down.
+                raised.RemoveAt(raised.Count - 1);
+            }
+
+            if (GetType() == typeof(DebuggerTestsIpy) && raised.Count == exceptions.Length + 1) {
+                // IronPython over-reports exceptions
+                raised.RemoveAt(raised.Count - 1);
+            }
+
+            foreach (var t in raised) {
+                Console.WriteLine("Received {0} at{1}{2}", t.Item1, Environment.NewLine, t.Item2);
+            }
+            AssertUtil.AreEqual(
+                raised.Select(t => t.Item1),
+                exceptions.Select(e => e.TypeName).ToArray()
+            );
         }
 
         /// <summary>

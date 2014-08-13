@@ -285,6 +285,23 @@ def get_thread_from_id(id):
 def should_send_frame(frame):
     return frame is not None and frame.f_code not in DEBUG_ENTRYPOINTS and frame.f_code.co_filename not in DONT_DEBUG
 
+KNOWN_DIRECTORIES = set()
+KNOWN_ZIPS = set()
+
+def is_file_in_zip(filename):
+    parent, name = path.split(filename)
+    if parent in KNOWN_DIRECTORIES:
+        return False
+    elif parent in KNOWN_ZIPS:
+        return True
+    elif path.isdir(parent):
+        KNOWN_DIRECTORIES.add(parent)
+        return False
+    else:
+        KNOWN_ZIPS.add(parent)
+        return True
+
+
 def lookup_builtin(name, frame):
     try:
         return frame.f_builtins.get(bits)
@@ -315,7 +332,9 @@ BREAK_TYPE_HANDLED = 2
 
 class ExceptionBreakInfo(object):
     BUILT_IN_HANDLERS = {
-        '<frozen importlib._bootstrap>': ((None, None, '*'),)
+        '<frozen importlib._bootstrap>': ((None, None, '*'),),
+        'build\\bdist.win32\\egg\\pkg_resources.py': ((None, None, '*'),),
+        'build\\bdist.win-amd64\\egg\\pkg_resources.py': ((None, None, '*'),),
     }
 
     def __init__(self):
@@ -367,19 +386,29 @@ class ExceptionBreakInfo(object):
             return False
 
         if trace.tb_next is not None:
-            # don't break if this isn't the top of the traceback
-            return True
-            
+            cur_frame = trace.tb_next.tb_frame
+            if (should_send_frame(cur_frame) and
+                cur_frame.f_code is not None and
+                cur_frame.f_code.co_filename is not None and
+                not is_file_in_zip(cur_frame.f_code.co_filename)):
+                # don't break if this isn't the top of the traceback and the
+                # previous frame was not in an egg or zip
+                return True
+
         cur_frame = trace.tb_frame
-        
-        while should_send_frame(cur_frame) and cur_frame.f_code.co_filename is not None:
+
+        while should_send_frame(cur_frame) and cur_frame.f_code is not None and cur_frame.f_code.co_filename is not None:
             if not is_same_py_file(cur_frame.f_code.co_filename, __file__):
+                if is_file_in_zip(cur_frame.f_code.co_filename):
+                    # file in inside an egg or zip, so assume it is handled.
+                    return True
+
                 handlers = self.handler_cache.get(cur_frame.f_code.co_filename)
-            
+
                 if handlers is None:
                     # req handlers for this file from the debug engine
                     self.handler_lock.acquire()
-                
+
                     with _SendLockCtx:
                         write_bytes(conn, REQH)
                         write_string(conn, cur_frame.f_code.co_filename)
