@@ -656,9 +656,11 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
         protected virtual void Dispose(bool disposing) {
             if (!_disposed) {
-                _disposed = true;
                 if (disposing) {
                     Abort();
+                }
+                _disposed = true;
+                if (disposing) {
                     _worker.Join(LOCK_TIMEOUT);
                     _workerStarted.Dispose();
                     _requestAdded.Dispose();

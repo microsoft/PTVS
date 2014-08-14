@@ -34,7 +34,7 @@ namespace AnalyzerStatusTests {
 
         [TestMethod, Priority(0)]
         public void InitializeWithoutCrashing() {
-            using (var updater = new AnalyzerStatusUpdater("hi")) { }
+            using (var updater = new AnalyzerStatusUpdater("InitializeWithoutCrashing")) { }
 
             using (var updater = new AnalyzerStatusListener(x => { })) { }
         }
@@ -49,10 +49,22 @@ namespace AnalyzerStatusTests {
                 listener.RequestUpdate();
                 ready.WaitOne();
                 Assert.IsNotNull(results);
-                Assert.AreEqual(0, results.Count);
+                if (results.Count > 0) {
+                    ready.Reset();
+                    listener.RequestUpdate();
+                    ready.WaitOne();
+                    Assert.IsNotNull(results);
+                    if (results.Count > 0) {
+                        Console.WriteLine("WARNING: {0} results received from a previous test", results.Count);
+                        Console.WriteLine("Keys are:");
+                        foreach (var key in results.Keys) {
+                            Console.WriteLine("    {0}", key);
+                        }
+                    }
+                }
 
-                using (var sender1 = new AnalyzerStatusUpdater("s1"))
-                using (var sender2 = new AnalyzerStatusUpdater("s2")) {
+                using (var sender1 = new AnalyzerStatusUpdater("SendUpdates1"))
+                using (var sender2 = new AnalyzerStatusUpdater("SendUpdates2")) {
                     // Block until workers have started
                     sender1.WaitForWorkerStarted();
                     sender1.ThrowPendingExceptions();
@@ -63,15 +75,13 @@ namespace AnalyzerStatusTests {
                     listener.RequestUpdate();
                     ready.WaitOne();
                     Assert.IsNotNull(results);
-                    Assert.AreEqual(2, results.Count);
-                    Assert.IsTrue(results.ContainsKey("s1"), "s1 not found in {0}" + string.Join(", ", results.Keys));
-                    Assert.IsTrue(results.ContainsKey("s2"), "s2 not found in {0}" + string.Join(", ", results.Keys));
-                    Assert.AreEqual(int.MaxValue, results["s1"].Progress, "s1.Progress not initialized to MaxValue");
-                    Assert.AreEqual(0, results["s1"].Maximum, "s1.Maximum not initialized to 0");
-                    Assert.AreEqual(string.Empty, results["s1"].Message, "s1.Message not initialized to empty");
-                    Assert.AreEqual(int.MaxValue, results["s2"].Progress, "s2.Progress not initialized to MaxValue");
-                    Assert.AreEqual(0, results["s2"].Maximum, "s2.Maximum not initialized to 0");
-                    Assert.AreEqual(string.Empty, results["s2"].Message, "s2.Message not initialized to empty");
+                    AssertUtil.ContainsAtLeast(results.Keys, "SendUpdates1", "SendUpdates2");
+                    Assert.AreEqual(int.MaxValue, results["SendUpdates1"].Progress, "SendUpdates1.Progress not initialized to MaxValue");
+                    Assert.AreEqual(0, results["SendUpdates1"].Maximum, "SendUpdates1.Maximum not initialized to 0");
+                    Assert.AreEqual(string.Empty, results["SendUpdates1"].Message, "SendUpdates1.Message not initialized to empty");
+                    Assert.AreEqual(int.MaxValue, results["SendUpdates2"].Progress, "SendUpdates2.Progress not initialized to MaxValue");
+                    Assert.AreEqual(0, results["SendUpdates2"].Maximum, "SendUpdates2.Maximum not initialized to 0");
+                    Assert.AreEqual(string.Empty, results["SendUpdates2"].Message, "SendUpdates2.Message not initialized to empty");
 
                     sender1.UpdateStatus(100, 200, "Message1");
                     sender1.FlushQueue(TimeSpan.FromSeconds(1.0));
@@ -79,12 +89,12 @@ namespace AnalyzerStatusTests {
                     ready.Reset();
                     listener.RequestUpdate();
                     ready.WaitOne();
-                    Assert.AreEqual(100, results["s1"].Progress, "s1.Progress not set to 100");
-                    Assert.AreEqual(200, results["s1"].Maximum, "s1.Maximum not set to 200");
-                    Assert.AreEqual("Message1", results["s1"].Message, "s1.Message not set");
-                    Assert.AreEqual(int.MaxValue, results["s2"].Progress, "s2.Progress changed from MaxValue");
-                    Assert.AreEqual(0, results["s2"].Maximum, "s2.Maximum changed from 0");
-                    Assert.AreEqual(string.Empty, results["s2"].Message, "s2.Message changed from empty");
+                    Assert.AreEqual(100, results["SendUpdates1"].Progress, "SendUpdates1.Progress not set to 100");
+                    Assert.AreEqual(200, results["SendUpdates1"].Maximum, "SendUpdates1.Maximum not set to 200");
+                    Assert.AreEqual("Message1", results["SendUpdates1"].Message, "SendUpdates1.Message not set");
+                    Assert.AreEqual(int.MaxValue, results["SendUpdates2"].Progress, "SendUpdates2.Progress changed from MaxValue");
+                    Assert.AreEqual(0, results["SendUpdates2"].Maximum, "SendUpdates2.Maximum changed from 0");
+                    Assert.AreEqual(string.Empty, results["SendUpdates2"].Message, "SendUpdates2.Message changed from empty");
 
                     sender2.UpdateStatus(1000, 2000, "Message2");
                     sender2.FlushQueue(TimeSpan.FromSeconds(1.0));
@@ -92,19 +102,28 @@ namespace AnalyzerStatusTests {
                     ready.Reset();
                     listener.RequestUpdate();
                     ready.WaitOne();
-                    Assert.AreEqual(100, results["s1"].Progress, "s1.Progress changed from 100");
-                    Assert.AreEqual(200, results["s1"].Maximum, "s1.Maximum changed from 200");
-                    Assert.AreEqual("Message1", results["s1"].Message, "s1.Message changed");
-                    Assert.AreEqual(1000, results["s2"].Progress, "s2.Progress not set to 1000");
-                    Assert.AreEqual(2000, results["s2"].Maximum, "s2.Maximum not set to 2000");
-                    Assert.AreEqual("Message2", results["s2"].Message, "s2.Message not set");
+                    Assert.AreEqual(100, results["SendUpdates1"].Progress, "SendUpdates1.Progress changed from 100");
+                    Assert.AreEqual(200, results["SendUpdates1"].Maximum, "SendUpdates1.Maximum changed from 200");
+                    Assert.AreEqual("Message1", results["SendUpdates1"].Message, "SendUpdates1.Message changed");
+                    Assert.AreEqual(1000, results["SendUpdates2"].Progress, "SendUpdates2.Progress not set to 1000");
+                    Assert.AreEqual(2000, results["SendUpdates2"].Maximum, "SendUpdates2.Maximum not set to 2000");
+                    Assert.AreEqual("Message2", results["SendUpdates2"].Message, "SendUpdates2.Message not set");
                 }
 
+                Thread.Sleep(100); // allow updaters to terminate
                 ready.Reset();
                 listener.RequestUpdate();
                 ready.WaitOne();
                 Assert.IsNotNull(results);
-                Assert.AreEqual(0, results.Count, "results were not cleaned up");
+                if (results.Count > 0) {
+                    Console.WriteLine("WARNING: {0} results exist at end of test", results.Count);
+                    Console.WriteLine("Keys are:");
+                    foreach (var key in results.Keys) {
+                        Console.WriteLine("    {0}", key);
+                    }
+                }
+                Assert.IsFalse(results.ContainsKey("SendUpdates1"), "results were not cleaned up");
+                Assert.IsFalse(results.ContainsKey("SendUpdates2"), "results were not cleaned up");
             }
         }
 
@@ -114,8 +133,8 @@ namespace AnalyzerStatusTests {
 
             // We should stop creating new entries well before 10000
             for (int j = 0; j < 10000; ++j) {
-                Console.WriteLine("Creating S{0}", j);
-                var newUpdater = new AnalyzerStatusUpdater("S" + j.ToString());
+                Console.WriteLine("Creating LotsOfUpdaters{0}", j);
+                var newUpdater = new AnalyzerStatusUpdater("LotsOfUpdaters" + j.ToString());
                 updaters.Add(newUpdater);
             }
             // Give the updaters a chance to start
@@ -124,9 +143,11 @@ namespace AnalyzerStatusTests {
             }
 
             // Make sure that we got failures.
+            int succeeded = 0;
             try {
                 foreach (var u in updaters) {
                     u.ThrowPendingExceptions();
+                    succeeded += 1;
                 }
                 Assert.Fail("Should not have been able to create 10000 updaters");
             } catch (InvalidOperationException) {
@@ -135,18 +156,19 @@ namespace AnalyzerStatusTests {
                     u.Dispose();
                 }
             }
+            Console.WriteLine("{0} updaters were created.", succeeded);
             updaters.Clear();
         }
 
         [TestMethod, Priority(0)]
         public void IdentifierInUse() {
-            using (var updater = new AnalyzerStatusUpdater("Identifier")) {
+            using (var updater = new AnalyzerStatusUpdater("IdentifierInUse")) {
                 updater.UpdateStatus(1, 100);
                 updater.WaitForWorkerStarted();
                 // Should not throw
                 updater.ThrowPendingExceptions();
 
-                using (var updater2 = new AnalyzerStatusUpdater("Identifier")) {
+                using (var updater2 = new AnalyzerStatusUpdater("IdentifierInUse")) {
                     updater2.WaitForWorkerStarted();
                     updater2.UpdateStatus(99, 100);
 
@@ -172,9 +194,21 @@ namespace AnalyzerStatusTests {
                 listener.RequestUpdate();
                 ready.WaitOne();
                 Assert.IsNotNull(results);
-                Assert.AreEqual(0, results.Count);
+                if (results.Count > 0) {
+                    ready.Reset();
+                    listener.RequestUpdate();
+                    ready.WaitOne();
+                    Assert.IsNotNull(results);
+                    if (results.Count > 0) {
+                        Console.WriteLine("WARNING: {0} results received from a previous test", results.Count);
+                        Console.WriteLine("Keys are:");
+                        foreach (var key in results.Keys) {
+                            Console.WriteLine("    {0}", key);
+                        }
+                    }
+                }
 
-                using (var sender = new AnalyzerStatusUpdater("s")) {
+                using (var sender = new AnalyzerStatusUpdater("MessageMaximumLength")) {
                     sender.WaitForWorkerStarted();
                     sender.ThrowPendingExceptions();
 
@@ -186,8 +220,8 @@ namespace AnalyzerStatusTests {
                     listener.RequestUpdate();
                     ready.WaitOne();
                     Assert.IsNotNull(results);
-                    AssertUtil.ContainsExactly(results.Keys, "s");
-                    var receivedMessage = results["s"].Message;
+                    AssertUtil.Contains(results.Keys, "MessageMaximumLength");
+                    var receivedMessage = results["MessageMaximumLength"].Message;
                     Console.WriteLine("Message: <{0}>", receivedMessage);
                     Assert.AreEqual(
                         AnalyzerStatusUpdater.MAX_MESSAGE_LENGTH,
