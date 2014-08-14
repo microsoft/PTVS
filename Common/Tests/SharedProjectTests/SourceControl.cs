@@ -52,6 +52,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         /// </summary>
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        // Currently Fails: https://pytools.codeplex.com/workitem/2609
         public void MoveFolderWithItem() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
 
@@ -121,21 +122,91 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                         TestSccProvider.DocumentEvents.Clear();
 
                         var project = app.OpenProject(solution.Filename);
+                        var fileName = "NewFile" + projectType.CodeExtension;
 
                         using (var newItem = NewItemDialog.FromDte(app)) {
-                            newItem.FileName = "NewFile" + projectType.CodeExtension;
+                            newItem.FileName = fileName;
                             newItem.OK();
                         }
 
                         System.Threading.Thread.Sleep(250);
 
-                        var solutionFolder = app.Dte.Solution.Projects.Item(1).ProjectItems;
-                        Assert.AreNotEqual(null, solutionFolder.Item("NewFile" + projectType.CodeExtension));
-                        var projectDir = Path.GetDirectoryName(project.FullName);
+                        Assert.IsNotNull(project.ProjectItems.Item(fileName));
+                        AssertDocumentEvents(Path.GetDirectoryName(project.FullName),
+                            OnQueryAddFiles(fileName),
+                            OnAfterAddFilesEx(fileName)
+                        );
+                    }
+                }
+            }
+        }
 
-                        AssertDocumentEvents(projectDir,
-                            OnQueryAddFiles(projectType.Code(@"NewFile")),
-                            OnAfterAddFilesEx(projectType.Code(@"NewFile"))
+        public void AddExistingItem() {
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+
+                // close any projects before switching source control...
+                VsIdeTestHostContext.Dte.Solution.Close();
+
+                app.SelectSourceControlProvider("Test Source Provider");
+                foreach (var projectType in ProjectTypes) {
+                    var testDef = SourceControlProject(projectType);
+
+                    using (var solution = testDef.Generate()) {
+                        TestSccProvider.DocumentEvents.Clear();
+
+                        var project = app.OpenProject(solution.Filename);
+                        var fileName = projectType.Code(@"ExcludedFile");
+
+                        using (var newItem = AddExistingItemDialog.FromDte(app)) {
+                            newItem.FileName = fileName;
+                            newItem.OK();
+                        }
+
+                        System.Threading.Thread.Sleep(250);
+
+                        Assert.IsNotNull(project.ProjectItems.Item(fileName));
+                        AssertDocumentEvents(Path.GetDirectoryName(project.FullName),
+                            OnQueryAddFiles(fileName),
+                            OnAfterAddFilesEx(fileName)
+                        );
+                    }
+                }
+            }
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void IncludeInProject() {
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                // close any projects before switching source control...
+                VsIdeTestHostContext.Dte.Solution.Close();
+
+                app.SelectSourceControlProvider("Test Source Provider");
+                foreach (var projectType in ProjectTypes) {
+                    var testDef = SourceControlProject(projectType);
+
+                    using (var solution = testDef.Generate().ToVs()) {
+                        TestSccProvider.DocumentEvents.Clear();
+                        var project = app.OpenProject(solution.Filename);
+                        var window = app.SolutionExplorerTreeView;
+                        var fileName = projectType.Code(@"ExcludedFile");
+
+                        // Try to select the file.  If it throws, it is likely the issue was that we weren't showing all files.
+                        try {
+                            window.WaitForChildOfProject(project, fileName).Select();
+                        } catch (Exception) {
+                            // Show all files so we can see the excluded item if we previously couldn't
+                            solution.App.ExecuteCommand("Project.ShowAllFiles");
+                            window.WaitForChildOfProject(project, fileName).Select();
+                        }
+
+                        solution.App.ExecuteCommand("Project.IncludeInProject");
+
+                        System.Threading.Thread.Sleep(250);
+
+                        AssertDocumentEvents(Path.GetDirectoryName(project.FullName),
+                            OnQueryAddFiles(fileName),
+                            OnAfterAddFilesEx(fileName)
                         );
                     }
                 }
@@ -159,22 +230,23 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                         var project = app.OpenProject(solution.Filename);
                         var window = app.SolutionExplorerTreeView;
-                        var program = window.WaitForItem("Solution 'SourceControl' (1 project)", "SourceControl", "Program" + projectType.CodeExtension);
+                        var fileName = "Program" + projectType.CodeExtension;
+                        var program = window.WaitForChildOfProject(project, fileName);
 
-                        AutomationWrapper.Select(program);
+                        program.Select();
 
                         Keyboard.Type(Key.Delete);
                         app.WaitForDialog();
                         VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, "will be deleted permanently");
                         app.WaitForDialogDismissed();
 
-                        window.WaitForItemRemoved("Solution 'SourceControl' (1 project)", "SourceControl", "Program" + projectType.CodeExtension);
+                        window.WaitForChildOfProjectRemoved(project, fileName);
 
                         var projectDir = Path.GetDirectoryName(project.FullName);
 
                         AssertDocumentEvents(projectDir,
-                            OnQueryRemoveFiles(projectType.Code(@"Program")),
-                            OnAfterRemoveFiles(projectType.Code(@"Program"))
+                            OnQueryRemoveFiles(fileName),
+                            OnAfterRemoveFiles(fileName)
                         );
                     }
                 }
@@ -256,7 +328,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                                 break;
                             }
                         }
-                        Assert.AreNotEqual(null, fileInfo);
+                        Assert.IsNotNull(fileInfo);
 
                         fileInfo.GlyphChanged(VsStateIcon.STATEICON_CHECKEDOUTEXCLUSIVEOTHER);
 
@@ -514,7 +586,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             TestSccProvider.ExpectedProvider = null;
             TestSccProvider.ExpectedProjectName = null;
         }
-        
+
         private static ProjectDefinition SourceControlProject(ProjectType projectType) {
             return new ProjectDefinition("SourceControl", projectType,
                 PropertyGroup(
@@ -527,7 +599,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     Folder("TestFolder"),
                     Compile("Program"),
                     Compile("TestFolder\\SubItem"),
-                    Compile("ExcludedFile", isExcluded:true)
+                    Compile("ExcludedFile", isExcluded: true)
                 )
             );
         }
