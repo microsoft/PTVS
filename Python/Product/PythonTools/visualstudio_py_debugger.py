@@ -2297,7 +2297,7 @@ def debug(
 # Code objects for functions which are going to be at the bottom of the stack, right below the first
 # stack frame for user code. When we walk the stack to determine whether to report or block on a given
 # frame, hitting any of these means that we walked all the frames that we needed to look at.
-DEBUG_ENTRYPOINTS = frozenset((
+DEBUG_ENTRYPOINTS = set((
     get_code(debug),
     get_code(exec_file),
     get_code(exec_module),
