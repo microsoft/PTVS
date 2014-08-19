@@ -69,10 +69,8 @@ The value in the dropdown indicates which of these types is intended.
 
 "Arguments" are passed on the command line following the command.
 Any project property or environment variable can be specified with MSBuild syntax, for example: `$(StartupFile) --port $(SERVER_PORT)`.
-`$(StartupFile)` is the relative path to the startup file.
+`$(StartupFile)` is the relative path to the startup file and `{StartupModule}` is the importable name of the startup file.
 `$(SERVER_HOST)` and `$(SERVER_PORT)` are normal environment variables that are set by the "Launch URL" and "Port Number" properties, automatically, or by the "Environment" property.
-
-**Note:** There is a [issue:"known issue" 2322] with PTVS 2.1 Beta that prevents the use of `$(StartupModule)` and `$(StartupPath)` in this property.
 
 The "Environment" property is a newline-separated list of `NAME=VALUE` pairs specifying environment variables.
 These are set after all properties that may modify the environment, such as "Port Number" and search paths, and so may overwrite these values.

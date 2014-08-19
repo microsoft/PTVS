@@ -50,9 +50,8 @@ To add new roles to the project after completing this dialog, you can right clic
 
 **Important:**
 After adding a new role to your Cloud project, you may be presented with some more configuration instructions.
-These are required to work around certain limitations in the Azure SDK Tools that we hope to resolve in a later version.
-If you add multiple roles at the same time, you may not see all of the instructions.
-Check the readme.mht files in each new role for configuration information.
+If you are using Microsoft Azure Tools 2.4 or later, these instructions may not apply, and if you add multiple roles at the same time, you may not see all of the instructions.
+The instructions and troubleshooting tips are available in the readme.mht file in each new role.
 
 --)
 

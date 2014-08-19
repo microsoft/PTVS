@@ -218,4 +218,3 @@ Known Issues
 ============
 * Changing the active environment may cause VS to freeze briefly as the IntelliSense database is loaded. Environments with lots of packages may freeze for longer.
 * While the system-site-packages option will be respected, there is no way to set or change this from within VS.
-* Adding an existing virtual environment will also install from requirements.txt, if the file exists.
