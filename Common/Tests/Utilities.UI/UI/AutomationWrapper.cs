@@ -14,6 +14,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Automation;
@@ -78,12 +79,29 @@ namespace TestUtilities.UI {
             );
         }
 
+        private static string AsString(Condition condition) {
+            var andCond = condition as AndCondition;
+            if (andCond != null) {
+                return string.Join(" and ", andCond.GetConditions().Select(c => string.Format("({0})", AsString(c))));
+            }
+            var orCond = condition as AndCondition;
+            if (orCond != null) {
+                return string.Join(" or ", orCond.GetConditions().Select(c => string.Format("({0})", AsString(c))));
+            }
+            var propCond = condition as PropertyCondition;
+            if (propCond != null) {
+                return string.Format("{0}={1}", propCond.Property.ProgrammaticName, propCond.Value);
+            }
+
+            return condition.GetType().Name;
+        }
+
         private AutomationElement FindFirstWithRetry(TreeScope scope, Condition condition) {
             AutomationElement res = null;
             for (int i = 0; i < 20 && res == null; i++) {
                 res = Element.FindFirst(scope, condition);
                 if (res == null) {
-                    Console.WriteLine("Failed to find element {0} on try {1}", condition, i);
+                    Console.WriteLine("Failed to find element {0} on try {1}", AsString(condition), i);
                     if (i == 0) {
                         Console.WriteLine(new StackTrace(true).ToString());
                     }
@@ -235,6 +253,7 @@ namespace TestUtilities.UI {
         public static void DoDefaultAction(AutomationElement element) {
             CheckNullElement(element);
             var accessible = NativeMethods.GetAccessibleObject(element);
+            Console.WriteLine("Found {0} ({1})", accessible.accName, accessible.accDefaultAction);
             accessible.accDoDefaultAction();
         }
 

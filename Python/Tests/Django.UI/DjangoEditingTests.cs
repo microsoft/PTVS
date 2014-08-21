@@ -2045,34 +2045,7 @@ namespace DjangoUITests {
             var doc = app.GetDocument(item.Document.FullName);
 
             if (wait) {
-                var django = doc.Invoke(() => Microsoft.PythonTools.Django.DjangoPackage.GetProject(item.Document.FullName));
-                // wait until Django is loaded, and then wait until the
-                // analysis is complete.
-                bool isLoaded = false;
-                for (int i = 0; i < 36; i++) {
-
-                    if (django.Analyzer._templateFiles.Count > 0) {
-                        foreach (var templateFile in django.Analyzer._templateFiles) {
-                            if (templateFile.Value.GetAllValues().Count > 0) {
-                                isLoaded = true;
-                                break;
-                            } else {
-                                Console.WriteLine("No template information: {0}", templateFile.Key);
-                            }
-                        }
-                    }
-                    if (isLoaded) {
-                        break;
-                    }
-
-                    Console.WriteLine("{0} Django still not loaded, sleeping... {1} {2}",
-                        DateTime.Now,
-                        django.Analyzer._filters.Count,
-                        django.Analyzer._tags.Count);
-                    System.Threading.Thread.Sleep(5000);
-                }
-                Assert.IsTrue(isLoaded, "failed to wait for complete analysis");
-                Console.WriteLine("{0} Waited for a complete analysis", DateTime.Now);
+                pyProj.GetAnalyzer().WaitForCompleteAnalysis(_ => true);
             }
 
             return doc;

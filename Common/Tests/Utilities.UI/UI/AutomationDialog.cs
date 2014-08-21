@@ -35,6 +35,10 @@ namespace TestUtilities.UI {
             );
         }
 
+        public static AutomationDialog WaitForDialog(VisualStudioApp app) {
+            return new AutomationDialog(app, AutomationElement.FromHandle(app.WaitForDialog()));
+        }
+
         #region IDisposable Members
 
         ~AutomationDialog() {

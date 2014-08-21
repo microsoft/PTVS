@@ -15,6 +15,7 @@
 using System.Windows.Automation;
 using System;
 using System.Threading;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TestUtilities.UI
 {
@@ -24,20 +25,22 @@ namespace TestUtilities.UI
             : base(AutomationElement.FromHandle(element)) { 
         }
 
-        public AutomationElement this[string tabName] {
+        public AutomationElement this[Guid tabGuid] {
             get {
-                var tabItem = FindFirstByControlType(tabName, ControlType.Pane);
-                if (tabItem == null) {
-                    AutomationWrapper.DumpElement(Element);
-                    return null;
-                } else {
-                    AutomationWrapper.DumpElement(tabItem);
+                
+                var tabItem = FindByAutomationId("PropPage_" + tabGuid.ToString("n").ToLower());
+                Assert.IsNotNull(tabItem, "Failed to find page");
+                
+                AutomationWrapper.DumpElement(tabItem);
+                foreach (var p in tabItem.GetSupportedPatterns()) {
+                    Console.WriteLine("Supports {0}", p.ProgrammaticName);
                 }
 
-                Mouse.MoveTo(tabItem.GetClickablePoint());
-                Thread.Sleep(100);
-                Mouse.Click(System.Windows.Input.MouseButton.Left);
-                Thread.Sleep(100);
+                try {
+                    tabItem.GetInvokePattern().Invoke();
+                } catch (InvalidOperationException) {
+                    AutomationWrapper.DoDefaultAction(tabItem);
+                }
 
                 return FindByAutomationId("PageHostingPanel");
             }

@@ -189,6 +189,7 @@ namespace TestUtilities.UI.Python {
             }
 
             if (element == null) {
+                DumpVS();
                 return null;
             }
 

@@ -27,13 +27,12 @@ using TestUtilities.Python;
 using TestUtilities.UI;
 using TestUtilities.UI.Python;
 using TestUtilities.UI.Python.Django;
+using PythonConstants = Microsoft.PythonTools.PythonConstants;
 using UIThread = Microsoft.VisualStudioTools.UIThread;
 
 namespace DjangoUITests {
     [TestClass]
     public class DjangoProjectTests {
-        private const string AddDjangoAppCmd = "ProjectandSolutionContextMenus.Project.Add.Djangoapp";
-
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
@@ -154,10 +153,10 @@ namespace DjangoUITests {
                 );
                 app.SolutionExplorerTreeView.SelectProject(project);
 
-                var newAppDialog = new NewAppDialog(app.OpenDialogWithDteExecuteCommand(AddDjangoAppCmd));
-
-                newAppDialog.AppName = "Fob";
-                newAppDialog.Ok();
+                using (var newAppDialog = NewAppDialog.FromDte(app)) {
+                    newAppDialog.AppName = "Fob";
+                    newAppDialog.OK();
+                }
 
                 app.SolutionExplorerTreeView.WaitForItem(
                     app.Dte.Solution.FullName,
@@ -173,7 +172,7 @@ namespace DjangoUITests {
                 Assert.IsNotNull(appFolder.Collection.Item("__init__.py"));
 
                 app.SolutionExplorerTreeView.SelectProject(project);
-                        app.Dte.ExecuteCommand("Project.ValidateDjangoApp");
+                app.Dte.ExecuteCommand("Project.ValidateDjangoApp");
 
                 var console = app.GetInteractiveWindow("Django Management Console - " + project.Name);
                 Assert.IsNotNull(console);
@@ -205,10 +204,10 @@ namespace DjangoUITests {
                 );
                 app.SolutionExplorerTreeView.SelectProject(project);
 
-                var newAppDialog = new NewAppDialog(app.OpenDialogWithDteExecuteCommand(AddDjangoAppCmd));
-
-                newAppDialog.AppName = "Fob";
-                newAppDialog.Ok();
+                using (var newAppDialog = NewAppDialog.FromDte(app)) {
+                    newAppDialog.AppName = "Fob";
+                    newAppDialog.OK();
+                }
 
                 app.SolutionExplorerTreeView.WaitForItem(
                     app.Dte.Solution.FullName,
@@ -220,16 +219,12 @@ namespace DjangoUITests {
                 app.Dte.Documents.CloseAll(EnvDTE.vsSaveChanges.vsSaveChangesNo);
 
                 app.SolutionExplorerTreeView.SelectProject(project);
-                newAppDialog = new NewAppDialog(app.OpenDialogWithDteExecuteCommand(AddDjangoAppCmd));
-                newAppDialog.AppName = "Fob";
-                newAppDialog.Ok();
+                using (var newAppDialog = NewAppDialog.FromDte(app)) {
+                    newAppDialog.AppName = "Fob";
+                    newAppDialog.OK();
+                }
 
-                System.Threading.Thread.Sleep(1000);
-
-                VisualStudioApp.CheckMessageBox(
-                    TestUtilities.UI.MessageBoxButton.Ok,
-                    "is already part of the project."
-                );
+                using (var dlg = AutomationDialog.WaitForDialog(app)) { }
             }
         }
 
@@ -248,16 +243,12 @@ namespace DjangoUITests {
                 );
                 app.SolutionExplorerTreeView.SelectProject(project);
 
-                var newAppDialog = new NewAppDialog(app.OpenDialogWithDteExecuteCommand(AddDjangoAppCmd));
-                newAppDialog.AppName = app.Dte.Solution.Projects.Item(1).Name;
-                newAppDialog.Ok();
+                using (var newAppDialog = NewAppDialog.FromDte(app)) {
+                    newAppDialog.AppName = app.Dte.Solution.Projects.Item(1).Name;
+                    newAppDialog.OK();
+                }
 
-                app.SolutionExplorerTreeView.WaitForItem(
-                    app.Dte.Solution.FullName,
-                    app.Dte.Solution.Projects.Item(1).Name,
-                    app.Dte.Solution.Projects.Item(1).Name,
-                    "models.py"
-                );
+                using (var dlg = AutomationDialog.WaitForDialog(app)) { }
             }
         }
 
@@ -281,7 +272,7 @@ namespace DjangoUITests {
                 var hwnd = window.HWnd;
                 var projProps = new ProjectPropertiesWindow(new IntPtr(hwnd));
 
-                var debugPage = projProps["Debug"];
+                var debugPage = projProps[new Guid(PythonConstants.DebugPropertyPageGuid)];
                 Assert.IsNotNull(debugPage);
 
                 var dbgProps = new PythonProjectDebugProperties(debugPage);

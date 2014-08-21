@@ -42,28 +42,26 @@ namespace DjangoUITests {
                 );
                 app.SolutionExplorerTreeView.SelectProject(project);
 
-                Exception exception = null;
-                ThreadPool.QueueUserWorkItem(x => {
+                try {
+                    app.ExecuteCommand("Project.ConverttoMicrosoftAzureCloudServiceProject");
+                } catch (Exception ex1) {
                     try {
-                        app.Dte.ExecuteCommand("Project.ConverttoWindowsAzureCloudServiceProject");
-                    } catch (Exception ex1) {
+                        app.ExecuteCommand("Project.ConverttoWindowsAzureCloudServiceProject");
+                    } catch (Exception ex2) {
+                        Console.WriteLine("Unable to execute Project.ConverttoWindowsAzureCloudServiceProject.\r\n{0}", ex2);
                         try {
-                            app.Dte.ExecuteCommand("Project.AddWindowsAzureCloudServiceProject");
-                        } catch (Exception ex2) {
-                            Console.WriteLine("Unable to execute Project.AddWindowsAzureCloudServiceProject.\r\n{0}", ex2);
-                            exception = ex1;
+                            app.ExecuteCommand("Project.AddWindowsAzureCloudServiceProject");
+                        } catch (Exception ex3) {
+                            Console.WriteLine("Unable to execute Project.AddWindowsAzureCloudServiceProject.\r\n{0}", ex3);
+                            throw ex1;
                         }
                     }
-                });
+                }
 
                 var res = app.SolutionExplorerTreeView.WaitForItem(
                     "Solution '" + app.Dte.Solution.Projects.Item(1).Name + "' (2 projects)",
                     app.Dte.Solution.Projects.Item(1).Name + ".Azure"
                 );
-
-                if (exception != null) {
-                    Assert.Fail("Unable to execute Project.AddWindowsAzureCloudServiceProject:\r\n{0}", exception);
-                }
                 Assert.IsNotNull(res);
             }
         }

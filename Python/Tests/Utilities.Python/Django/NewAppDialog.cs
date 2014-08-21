@@ -16,29 +16,34 @@ using System;
 using System.Windows.Automation;
 
 namespace TestUtilities.UI.Python.Django {
-    class NewAppDialog : AutomationWrapper {
-        public NewAppDialog(IntPtr hwnd)
-            : base(AutomationElement.FromHandle(hwnd)) {
+    class NewAppDialog : AutomationDialog {
+        public NewAppDialog(VisualStudioApp app, AutomationElement element)
+            : base(app, element) {
         }
 
-        public void Ok() {
-            Invoke(FindButton("_ok"));
+        public static NewAppDialog FromDte(VisualStudioApp app) {
+            return new NewAppDialog(
+                app,
+                AutomationElement.FromHandle(
+                    app.OpenDialogWithDteExecuteCommand("ProjectandSolutionContextMenus.Project.Add.Djangoapp")
+                )
+            );
         }
 
-        public void Cancel() {
-            Invoke(FindButton("_cancel"));
+        public override void OK() {
+            ClickButtonAndClose("_ok", nameIsAutomationId: true);
+        }
+
+        public override void Cancel() {
+            ClickButtonAndClose("_cancel", nameIsAutomationId: true);
         }
         
         public string AppName {
             get {
-                var patterns = GetAppNameEditBox().GetSupportedPatterns();
-                var filename = (ValuePattern)GetAppNameEditBox().GetCurrentPattern(ValuePattern.Pattern);
-                return filename.Current.Value;
+                return GetAppNameEditBox().GetValuePattern().Current.Value;
             }
             set {
-                var patterns = GetAppNameEditBox().GetSupportedPatterns();
-                var filename = (ValuePattern)GetAppNameEditBox().GetCurrentPattern(ValuePattern.Pattern);
-                filename.SetValue(value);
+                GetAppNameEditBox().GetValuePattern().SetValue(value);
             }
         }
 
