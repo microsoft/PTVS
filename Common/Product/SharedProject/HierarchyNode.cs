@@ -1319,10 +1319,6 @@ namespace Microsoft.VisualStudioTools.Project {
                         return this.ExcludeFromProjectWithProgress();
                     case VsCommands2K.INCLUDEINPROJECT:
                         return this.IncludeInProjectWithProgress(true);
-                    case VsCommands2K.CopyFullPathName:
-                        System.Windows.Clipboard.SetText(Url);
-                        return VSConstants.S_OK;
-
                 }
             } else if (cmdGroup == ProjectMgr.SharedCommandGuid) {
                 switch ((SharedCommands)cmd) {
@@ -1335,6 +1331,9 @@ namespace Microsoft.VisualStudioTools.Project {
                         );
                         psi.WorkingDirectory = FullPathToChildren;
                         Process.Start(psi);
+                        return VSConstants.S_OK;
+                    case SharedCommands.CopyFullPath:
+                        System.Windows.Clipboard.SetText(Url);
                         return VSConstants.S_OK;
                 }
             }
@@ -1380,17 +1379,17 @@ namespace Microsoft.VisualStudioTools.Project {
                             result |= QueryStatusResult.NOTSUPPORTED | QueryStatusResult.INVISIBLE;
                         }
                         return VSConstants.S_OK;
-                    case VsCommands2K.CopyFullPathName:
-                        if (this is IDiskBasedNode || this is ProjectNode) {
-                            result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
-                            return VSConstants.S_OK;
-                        }
-                        break;
                 }
             } else if (cmdGroup == ProjectMgr.SharedCommandGuid) {
                 switch ((SharedCommands)cmd) {
                     case SharedCommands.OpenCommandPromptHere:
                         if (CanOpenCommandPrompt) {
+                            result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
+                            return VSConstants.S_OK;
+                        }
+                        break;
+                    case SharedCommands.CopyFullPath:
+                        if (this is IDiskBasedNode || this is ProjectNode) {
                             result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
                             return VSConstants.S_OK;
                         }

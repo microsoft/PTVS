@@ -237,9 +237,6 @@ namespace Microsoft.PythonTools.Project {
                             UseShellExecute = true
                         });
                         return VSConstants.S_OK;
-                    case VsCommands2K.CopyFullPathName:
-                        Clipboard.SetText(_factory.Configuration.InterpreterPath);
-                        return VSConstants.S_OK;
                 }
             }
             
@@ -255,6 +252,9 @@ namespace Microsoft.PythonTools.Project {
                             );
                         }
                         break;
+                    case SharedCommands.CopyFullPath:
+                        Clipboard.SetText(_factory.Configuration.InterpreterPath);
+                        return VSConstants.S_OK;
                 }
             }
             
@@ -395,14 +395,6 @@ namespace Microsoft.PythonTools.Project {
                             result |= QueryStatusResult.ENABLED;
                         }
                         return VSConstants.S_OK;
-                    case VsCommands2K.CopyFullPathName:
-                        result |= QueryStatusResult.SUPPORTED;
-                        if (_interpreters.IsAvailable(_factory) &&
-                            Directory.Exists(_factory.Configuration.PrefixPath) &&
-                            File.Exists(_factory.Configuration.InterpreterPath)) {
-                            result |= QueryStatusResult.ENABLED;
-                        }
-                        return VSConstants.S_OK;
                 }
             }
             
@@ -451,6 +443,14 @@ namespace Microsoft.PythonTools.Project {
             if (cmdGroup == ProjectMgr.SharedCommandGuid) {
                 switch ((SharedCommands)cmd) {
                     case SharedCommands.OpenCommandPromptHere:
+                        result |= QueryStatusResult.SUPPORTED;
+                        if (_interpreters.IsAvailable(_factory) &&
+                            Directory.Exists(_factory.Configuration.PrefixPath) &&
+                            File.Exists(_factory.Configuration.InterpreterPath)) {
+                            result |= QueryStatusResult.ENABLED;
+                        }
+                        return VSConstants.S_OK;
+                    case SharedCommands.CopyFullPath:
                         result |= QueryStatusResult.SUPPORTED;
                         if (_interpreters.IsAvailable(_factory) &&
                             Directory.Exists(_factory.Configuration.PrefixPath) &&

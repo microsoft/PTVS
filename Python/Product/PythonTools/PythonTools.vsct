@@ -112,7 +112,7 @@
       <Group guid="guidPythonToolsCmdSet" id="EditMenuGroup" priority="0x0001">
         <Parent guid="guidSHLMainMenu" id="IDM_VS_MENU_EDIT"/>
       </Group>
-      
+
       <!--
           Project menu and project context menu
       -->
@@ -717,6 +717,17 @@
         </Strings>
       </Button>
 
+      <Button guid="guidPythonToolsCmdSet" id="cmdidCopyFullPath" priority="0x0610" type="Button">
+        <Parent guid="guidSHLMainMenu" id="IDG_VS_CTXT_FOLDER_EXPLORE" />
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <Strings>
+          <ButtonText>Copy F&amp;ull Path</ButtonText>
+          <ToolTipText>Copy Full Path</ToolTipText>
+          <LocCanonicalName>.Python.CopyFullPath</LocCanonicalName>
+        </Strings>
+      </Button>
+
 
 
       <Button guid="guidPythonToolsCmdSet" id="cmdidFirstCustomCmdId" priority="0x400" type="Button">
@@ -860,13 +871,10 @@
     <!--
         Button placements
     -->
-    <CommandPlacement guid="guidVSStd2K" id="cmdidCopyFullPathName" priority="0x0610">
-      <Parent guid="guidSHLMainMenu" id="IDG_VS_CTXT_FOLDER_EXPLORE" />
-    </CommandPlacement>
-    <CommandPlacement guid="guidVSStd2K" id="cmdidCopyFullPathName" priority="0x0200">
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidCopyFullPath" priority="0x0200">
       <Parent guid="guidSHLMainMenu" id="IDG_VS_CTXT_PROJECT_EXPLORE"/>
     </CommandPlacement>
-    <CommandPlacement guid="guidVSStd2K" id="cmdidCopyFullPathName" priority="0x0100">
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidCopyFullPath" priority="0x0100">
       <Parent guid="guidPythonToolsCmdSet" id="CodeFileGroup2"/>
     </CommandPlacement>
 
@@ -1060,6 +1068,7 @@
       <!-- Shared commands, defined in CommonConstants.cs -->
       <IDSymbol name="cmdidAddExistingFolder" value="0x10001" />
       <IDSymbol name="cmdidOpenCommandPromptHere" value="0x10002" />
+      <IDSymbol name="cmdidCopyFullPath" value="0x10003" />
     </GuidSymbol>
 
     <GuidSymbol name="guidImages" value="{7f103a95-8141-4004-a01d-e3f739caa27d}" >
