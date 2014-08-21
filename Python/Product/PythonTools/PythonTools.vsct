@@ -107,10 +107,20 @@
       </Group>
 
       <!-- 
-          Edit menu and editor context menu
+          Edit menu
       -->
-      <Group guid="guidPythonToolsCmdSet" id="EditMenuGroup" priority="0x0001">
+      <Group guid="guidPythonToolsCmdSet" id="EditMenuGroup" priority="0xA000">
         <Parent guid="guidSHLMainMenu" id="IDM_VS_MENU_EDIT"/>
+      </Group>
+
+      <!--
+          Code Editor context menu
+      -->
+      <Group guid="guidPythonToolsCmdSet" id="EditMenuGroup" priority="0x0380">
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_CODEWIN"/>
+      </Group>
+      <Group guid="guidPythonToolsCmdSet" id="CodeFileGroup" priority="0x0390">
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_CODEWIN"/>
       </Group>
 
       <!--
@@ -218,8 +228,8 @@
     </Groups>
 
     <Buttons>
-      <Button guid="guidPythonToolsCmdSet" id="cmdidAddExistingFolder" priority="0x0200" type="Button">
-        <Parent guid="guidSHLMainMenu" id="IDG_VS_PROJ_FOLDER"/>
+      <Button guid="guidPythonToolsCmdSet" id="cmdidAddExistingFolder" priority="0x0500" type="Button">
+        <Parent guid="guidSHLMainMenu" id="IDG_VS_CTXT_PROJECT_ADD_ITEMS"/>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <CommandFlag>DynamicVisibility</CommandFlag>
         <Strings>
@@ -857,17 +867,6 @@
   </Commands>
 
   <CommandPlacements>
-    <!--
-        Group placements
-    -->
-    <CommandPlacement guid="guidPythonToolsCmdSet" id="EditMenuGroup" priority="0x0380">
-      <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_CODEWIN"/>
-    </CommandPlacement>
-
-    <CommandPlacement guid="guidPythonToolsCmdSet" id="DocWinTabGroup" priority="0x0600">
-      <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_EZDOCWINTAB"/>
-    </CommandPlacement>
-
     <!--
         Button placements
     -->
