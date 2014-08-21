@@ -975,10 +975,18 @@ namespace Microsoft.PythonTools.Repl {
 
                 public StreamLock(CommandProcessorThread evaluator, bool throwIfDisconnected) {
                     Monitor.Enter(evaluator._streamLock);
-                    if (throwIfDisconnected) {
-                        evaluator.ThrowIfDisconnected();
+                    try {
+                        if (throwIfDisconnected) {
+                            evaluator.ThrowIfDisconnected();
+                        }
+                        _evaluator = evaluator;
+
+                    } catch {
+                        // If any exceptions are thrown in the constructor, we
+                        // must exit the lock to avoid a deadlock.
+                        Monitor.Exit(evaluator._streamLock);
+                        throw;
                     }
-                    _evaluator = evaluator;
                 }
 
                 public void Dispose() {
