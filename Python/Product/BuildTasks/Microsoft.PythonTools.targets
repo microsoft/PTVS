@@ -209,7 +209,7 @@
       <_BuiltProjectOutputGroupFastOutput Remove="@(_BuiltProjectOutputGroupFastOutput)" />
     </ItemGroup>
 
-    <AssignTargetPath RootFolder="$(QualifiedProjectHome)" Files="@(Compile);@(Content);$(MSBuildProjectFile)">
+    <AssignTargetPath RootFolder="$(QualifiedProjectHome)" Files="@(Compile);@(Content);@(OutputFiles);$(MSBuildProjectFile)">
       <Output TaskParameter="AssignedFiles" ItemName="_BuiltProjectOutputGroupFastOutput" />
     </AssignTargetPath>
 
@@ -235,7 +235,7 @@
       <_SourceFilesProjectOutputGroupOutput Remove="@(_SourceFilesProjectOutputGroupOutput)" />
     </ItemGroup>
 
-    <AssignTargetPath RootFolder="$(QualifiedProjectHome)" Files="@(Compile);@(Content);$(MSBuildProjectFile)">
+    <AssignTargetPath RootFolder="$(QualifiedProjectHome)" Files="@(Compile);@(Content);@(InputFiles);$(MSBuildProjectFile)">
       <Output TaskParameter="AssignedFiles" ItemName="_SourceFilesProjectOutputGroupOutput" />
     </AssignTargetPath>
 

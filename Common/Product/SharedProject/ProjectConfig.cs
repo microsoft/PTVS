@@ -611,11 +611,6 @@ namespace Microsoft.VisualStudioTools.Project {
                         break;
                     }
 
-                    // output is an input, ignore it...
-                    if (allInputs.Contains(path)) {
-                        continue;
-                    }
-
                     string inputPath;
                     if (File.Exists(inputPath = output.GetMetadata("SourceFile"))) {
                         var inputModifiedTime = TryGetLastWriteTimeUtc(inputPath, outputWindow);
@@ -625,6 +620,11 @@ namespace Microsoft.VisualStudioTools.Project {
                         } else {
                             continue;
                         }
+                    }
+
+                    // output is an input, ignore it...
+                    if (allInputs.Contains(path)) {
+                        continue;
                     }
 
                     if (modifiedTime.Value < earliestOutput) {

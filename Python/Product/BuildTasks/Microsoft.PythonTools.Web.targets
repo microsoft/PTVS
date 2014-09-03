@@ -136,7 +136,7 @@
       <BuiltProjectOutputGroupFastOutput Remove="@(BuiltProjectOutputGroupFastOutput)" />
       <_BuiltProjectOutputGroupFastOutput Remove="@(_BuiltProjectOutputGroupFastOutput)" />
 
-      <_BuiltProjectOutputGroupFastInput Include="@(Compile);@(Content);$(MSBuildProjectFile);@(_PythonAzureSetupConfigOutput);@(PyVEnvCfg)" />
+      <_BuiltProjectOutputGroupFastInput Include="@(Compile);@(Content);@(OutputFiles);$(MSBuildProjectFile);@(_PythonAzureSetupConfigOutput);@(PyVEnvCfg)" />
 
       <_BuiltProjectOutputGroupFastInputWithTargetPath Include="@(_BuiltProjectOutputGroupFastInput)" Condition="'%(_BuiltProjectOutputGroupFastInput.TargetPath)' != ''" />
       <_BuiltProjectOutputGroupFastInputWithoutTargetPath Include="@(_BuiltProjectOutputGroupFastInput)" Condition="'%(_BuiltProjectOutputGroupFastInput.TargetPath)' == ''" />
@@ -200,7 +200,7 @@
       <_SourceFilesProjectOutputGroupOutput Remove="@(_SourceFilesProjectOutputGroupOutput)" />
     </ItemGroup>
 
-    <AssignTargetPath RootFolder="$(QualifiedProjectHome)" Files="@(Compile);@(Content);$(MSBuildProjectFile)">
+    <AssignTargetPath RootFolder="$(QualifiedProjectHome)" Files="@(Compile);@(Content);@(InputFiles);$(MSBuildProjectFile)">
       <Output TaskParameter="AssignedFiles" ItemName="_SourceFilesProjectOutputGroupOutput" />
     </AssignTargetPath>
 
