@@ -851,6 +851,23 @@ namespace Microsoft.PythonTools.Analysis {
             return res;
         }
 
+        private IEnumerable<string> GetSkipModules() {
+            var res = new HashSet<string>();
+
+            var r = new Regex(@"^(?<module>[\w\.]+)\.Skip", RegexOptions.IgnoreCase);
+            Match m;
+            foreach (var key in ConfigurationManager.AppSettings.AllKeys) {
+                if ((m = r.Match(key)).Success) {
+                    bool value;
+                    if (bool.TryParse(ConfigurationManager.AppSettings[key], out value) && value) {
+                        TraceInformation("{0}.Skip = True", m.Groups["module"].Value);
+                        yield return m.Groups["module"].Value;
+                    }
+                }
+            }
+        }
+
+
         private IEnumerable<string> IncludeModulesFromModulePath {
             get {
                 if (_readModulePath == null) {
@@ -981,6 +998,15 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
+        private static bool ContainsModule(HashSet<string> modules, string moduleName) {
+            foreach (var name in ModulePath.GetParents(moduleName)) {
+                if (modules.Contains(name)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         internal void Analyze() {
             if (_updater != null) {
                 _updater.UpdateStatus(_progressOffset, _progressTotal, "Starting analysis");
@@ -996,6 +1022,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             var callDepthOverrides = GetCallDepthOverrides();
+            var skipModules = new HashSet<string>(GetSkipModules(), StringComparer.Ordinal);
 
             foreach (var files in _analyzeFileGroups) {
                 if (_cancel.IsCancellationRequested) {
@@ -1010,6 +1037,10 @@ namespace Microsoft.PythonTools.Analysis {
 
                 if (_dryRun) {
                     foreach (var file in files) {
+                        if (ContainsModule(skipModules, file.ModuleName)) {
+                            continue;
+                        }
+
                         Debug.Assert(!file.IsCompiled);
                         var idbFile = CommonUtils.CreateFriendlyDirectoryPath(
                             _outDir,
@@ -1090,6 +1121,10 @@ namespace Microsoft.PythonTools.Analysis {
                     foreach (var item in items) {
                         if (_cancel.IsCancellationRequested) {
                             break;
+                        }
+
+                        if (ContainsModule(skipModules, item.ModuleName)) {
+                            continue;
                         }
 
                         if (_updater != null) {
