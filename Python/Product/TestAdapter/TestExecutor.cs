@@ -45,6 +45,15 @@ namespace Microsoft.PythonTools.TestAdapter {
 
         private readonly ManualResetEvent _cancelRequested = new ManualResetEvent(false);
 
+        private readonly VisualStudioApp _app;
+        private readonly IInterpreterOptionsService _interpreterService;
+
+        public TestExecutor() {
+            _app = VisualStudioApp.FromCommandLineArgs(Environment.GetCommandLineArgs());
+            _interpreterService = InterpreterOptionsServiceProvider.GetService(_app);
+        }
+
+
         public void Cancel() {
             _cancelRequested.Set();
         }
@@ -58,17 +67,14 @@ namespace Microsoft.PythonTools.TestAdapter {
 
             var receiver = new TestReceiver();
 
-            using (var app = VisualStudioApp.FromCommandLineArgs(Environment.GetCommandLineArgs())) {
-                var interpreterService = InterpreterOptionsServiceProvider.GetService(app);
-                var discoverer = new TestDiscoverer(interpreterService);
-                discoverer.DiscoverTests(sources, null, null, receiver);
+            var discoverer = new TestDiscoverer(_app, _interpreterService);
+            discoverer.DiscoverTests(sources, null, null, receiver);
 
-                if (_cancelRequested.WaitOne(0)) {
-                    return;
-                }
-
-                RunTestCases(app, interpreterService, receiver.Tests, runContext, frameworkHandle);
+            if (_cancelRequested.WaitOne(0)) {
+                return;
             }
+
+            RunTestCases(receiver.Tests, runContext, frameworkHandle);
         }
 
         public void RunTests(IEnumerable<TestCase> tests, IRunContext runContext, IFrameworkHandle frameworkHandle) {
@@ -78,15 +84,10 @@ namespace Microsoft.PythonTools.TestAdapter {
 
             _cancelRequested.Reset();
 
-            using (var app = VisualStudioApp.FromCommandLineArgs(Environment.GetCommandLineArgs())) {
-                var interpreterService = InterpreterOptionsServiceProvider.GetService(app);
-                RunTestCases(app, interpreterService, tests, runContext, frameworkHandle);
-            }
+            RunTestCases(tests, runContext, frameworkHandle);
         }
 
         private void RunTestCases(
-            VisualStudioApp app,
-            IInterpreterOptionsService interpreterService,
             IEnumerable<TestCase> tests,
             IRunContext runContext,
             IFrameworkHandle frameworkHandle
@@ -100,7 +101,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 }
 
                 try {
-                    RunTestCase(app, interpreterService, frameworkHandle, runContext, test, sourceToSettings);
+                    RunTestCase(frameworkHandle, runContext, test, sourceToSettings);
                 } catch (Exception ex) {
                     frameworkHandle.SendMessage(TestMessageLevel.Error, ex.ToString());
                 }
@@ -108,8 +109,6 @@ namespace Microsoft.PythonTools.TestAdapter {
         }
 
         private void RunTestCase(
-            VisualStudioApp app,
-            IInterpreterOptionsService interpreterService,
             IFrameworkHandle frameworkHandle,
             IRunContext runContext,
             TestCase test,
@@ -121,7 +120,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
             PythonProjectSettings settings;
             if (!sourceToSettings.TryGetValue(test.Source, out settings)) {
-                sourceToSettings[test.Source] = settings = LoadProjectSettings(test.Source, interpreterService);
+                sourceToSettings[test.Source] = settings = LoadProjectSettings(test.Source, _interpreterService);
             }
             if (settings == null) {
                 frameworkHandle.SendMessage(
@@ -137,12 +136,12 @@ namespace Microsoft.PythonTools.TestAdapter {
                 return;
             }
 
-            bool usePtvsd = runContext.IsBeingDebugged && app != null;
+            bool usePtvsd = runContext.IsBeingDebugged && _app != null;
 
             var testCase = new PythonTestCase(settings, test, usePtvsd);
 
             if (usePtvsd) {
-                app.DTE.Debugger.DetachAll();
+                _app.DTE.Debugger.DetachAll();
             }
 
             if (!File.Exists(settings.Factory.Configuration.InterpreterPath)) {
@@ -154,8 +153,8 @@ namespace Microsoft.PythonTools.TestAdapter {
             var pythonPathVar = settings.Factory.Configuration.PathEnvironmentVariable;
             var pythonPath = testCase.SearchPaths;
             if (!string.IsNullOrWhiteSpace(pythonPathVar)) {
-                if (app != null) {
-                    var settingsManager = SettingsManagerCreator.GetSettingsManager(app.DTE);
+                if (_app != null) {
+                    var settingsManager = SettingsManagerCreator.GetSettingsManager(_app.DTE);
                     if (settingsManager != null) {
                         var store = settingsManager.GetReadOnlySettingsStore(SettingsScope.UserSettings);
                         if (store != null && store.CollectionExists(@"PythonTools\Options\General")) {
@@ -192,7 +191,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 #endif
 
                 proc.Wait(TimeSpan.FromMilliseconds(500));
-                if (runContext.IsBeingDebugged && app != null) {
+                if (runContext.IsBeingDebugged && _app != null) {
                     if (proc.ExitCode.HasValue) {
                         // Process has already exited
                         frameworkHandle.SendMessage(TestMessageLevel.Error, "Failed to attach debugger because the process has already exited.");
@@ -207,7 +206,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                     try {
                         string qualifierUri = string.Format("tcp://{0}@localhost:{1}", testCase.DebugSecret, testCase.DebugPort);
 
-                        while (!app.AttachToProcess(proc, PythonRemoteDebugPortSupplierUnsecuredId, qualifierUri)) {
+                        while (!_app.AttachToProcess(proc, PythonRemoteDebugPortSupplierUnsecuredId, qualifierUri)) {
                             if (proc.Wait(TimeSpan.FromMilliseconds(500))) {
                                 break;
                             }
@@ -267,9 +266,10 @@ namespace Microsoft.PythonTools.TestAdapter {
             IInterpreterOptionsService interpreterService
         ) {
             var buildEngine = new MSBuild.ProjectCollection();
+            MSBuildProjectInterpreterFactoryProvider provider = null;
             try {
                 var proj = buildEngine.LoadProject(projectFile);
-                var provider = new MSBuildProjectInterpreterFactoryProvider(interpreterService, proj);
+                provider = new MSBuildProjectInterpreterFactoryProvider(interpreterService, proj);
                 try {
                     provider.DiscoverInterpreters();
                 } catch (InvalidDataException) {
@@ -304,6 +304,10 @@ namespace Microsoft.PythonTools.TestAdapter {
 
                 return projSettings;
             } finally {
+                if (provider != null) {
+                    provider.Dispose();
+                }
+
                 buildEngine.UnloadAllProjects();
                 buildEngine.Dispose();
             }
