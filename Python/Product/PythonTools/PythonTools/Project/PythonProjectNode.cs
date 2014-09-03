@@ -236,6 +236,10 @@ namespace Microsoft.PythonTools.Project {
             return "PythonProject";
         }
 
+        protected override string ProjectCapabilities {
+            get { return "Python"; }
+        }
+
         public override string GetFormatList() {
             return PythonConstants.ProjectFileFilter;
         }

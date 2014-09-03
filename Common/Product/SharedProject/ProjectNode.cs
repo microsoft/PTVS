@@ -553,6 +553,22 @@ namespace Microsoft.VisualStudioTools.Project {
             }
         }
 
+#if DEV11_OR_LATER
+        /// <summary>
+        /// A space separated list of the project's capabilities.
+        /// </summary>
+        /// <remarks>
+        /// These may be used by extensions to check whether they support this
+        /// project type. In general, this should only contain fundamental
+        /// properties of the project, such as the language name.
+        /// </remarks>
+        protected virtual string ProjectCapabilities {
+            get {
+                return null;
+            }
+        }
+#endif
+
         #endregion
 
         /// <summary>
@@ -975,6 +991,17 @@ namespace Microsoft.VisualStudioTools.Project {
                 default:
                     break;
             }
+
+#if DEV11_OR_LATER
+            switch ((__VSHPROPID5)propId) {
+                case __VSHPROPID5.VSHPROPID_ProjectCapabilities:
+                    var caps = ProjectCapabilities;
+                    if (!string.IsNullOrEmpty(caps)) {
+                        return caps;
+                    }
+                    break;
+            }
+#endif
 
             return base.GetProperty(propId);
         }
