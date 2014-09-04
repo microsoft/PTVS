@@ -553,7 +553,6 @@ namespace Microsoft.VisualStudioTools.Project {
             }
         }
 
-#if DEV11_OR_LATER
         /// <summary>
         /// A space separated list of the project's capabilities.
         /// </summary>
@@ -567,7 +566,6 @@ namespace Microsoft.VisualStudioTools.Project {
                 return null;
             }
         }
-#endif
 
         #endregion
 
