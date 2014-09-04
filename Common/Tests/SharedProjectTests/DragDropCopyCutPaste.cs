@@ -1485,6 +1485,41 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
+        /// <summary>
+        /// Cannot move folder with contents in solution explorer
+        /// 
+        /// http://pytools.codeplex.com/workitem/2609
+        /// </summary>
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void MoveFolderWithContents() {
+            foreach (var projectType in ProjectTypes) {
+                var testDef = new ProjectDefinition("FolderWithContentsProj",
+                    projectType,
+                    ItemGroup(
+                        Folder("A"),
+                        Folder("A\\B"),
+                        Content("A\\B\\File.txt", ""),
+                        Folder("C")
+                    )
+                );
+
+                using (var solution = testDef.Generate().ToVs()) {
+                    MoveByKeyboard(
+                        solution.FindItem("FolderWithContentsProj", "C"),
+                        solution.FindItem("FolderWithContentsProj", "A", "B")
+                    );
+
+                    solution.AssertFolderExists("FolderWithContentsProj", "A");
+                    solution.AssertFolderDoesntExist("FolderWithContentsProj", "A", "B");
+                    solution.AssertFileDoesntExist("FolderWithContentsProj", "A", "B", "File.txt");
+                    solution.AssertFolderExists("FolderWithContentsProj", "C");
+                    solution.AssertFolderExists("FolderWithContentsProj", "C", "B");
+                    solution.AssertFileExists("FolderWithContentsProj", "C", "B", "File.txt");
+                }
+            }
+        }
+
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void MoveProjectToSolutionFolderKeyboard() {

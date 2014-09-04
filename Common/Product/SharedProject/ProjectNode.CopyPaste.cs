@@ -938,26 +938,29 @@ namespace Microsoft.VisualStudioTools.Project {
                 // If they are in fact the same location, throw an error that copy/move will not work correctly.
                 if (DropEffect == DropEffect.Move && !CommonUtils.IsSamePath(Path.GetDirectoryName(moniker), Path.GetDirectoryName(targetFolder))) {
                     try {
-                        string sourceLinkTarget;
-                        string destinationLinkTarget;
-                        sourceLinkTarget = NativeMethods.GetAbsolutePathToDirectory(Path.GetDirectoryName(moniker));
-                        try {
-                            destinationLinkTarget = NativeMethods.GetAbsolutePathToDirectory(targetFolder);
-                        } catch (FileNotFoundException) {
-                            // This can occur if the user had a symlink'd directory and deleted the backing directory.
-                            VsShellUtilities.ShowMessageBox(
-                                        Project.Site,
-                                        String.Format(
-                                            "Unable to find the destination folder."),
-                                        null,
-                                        OLEMSGICON.OLEMSGICON_CRITICAL,
-                                        OLEMSGBUTTON.OLEMSGBUTTON_OK,
-                                        OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
-                            return null;
+                        string sourceLinkTarget = NativeMethods.GetAbsolutePathToDirectory(Path.GetDirectoryName(moniker));
+                        string destinationLinkTarget = null;
+
+                        // if the directory doesn't exist, just skip this.  We will create it later.
+                        if (Directory.Exists(targetFolder)) {
+                            try {
+                                destinationLinkTarget = NativeMethods.GetAbsolutePathToDirectory(targetFolder);
+                            } catch (FileNotFoundException) {
+                                // This can occur if the user had a symlink'd directory and deleted the backing directory.
+                                VsShellUtilities.ShowMessageBox(
+                                            Project.Site,
+                                            String.Format(
+                                                "Unable to find the destination folder."),
+                                            null,
+                                            OLEMSGICON.OLEMSGICON_CRITICAL,
+                                            OLEMSGBUTTON.OLEMSGBUTTON_OK,
+                                            OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
+                                return null;
+                            }
                         }
 
                         // If the paths are the same, we can't really move the file...
-                        if (CommonUtils.IsSamePath(sourceLinkTarget, destinationLinkTarget)) {
+                        if (destinationLinkTarget != null && CommonUtils.IsSamePath(sourceLinkTarget, destinationLinkTarget)) {
                             CannotMoveSameLocation(moniker);
                             return null;
                         }
