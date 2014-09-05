@@ -446,8 +446,12 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
         private FileSystemWatcher CreateFileSystemWatcher(string dir) {
-            var watcher = new FileSystemWatcher(dir);
-            watcher.IncludeSubdirectories = true;
+            var watcher = new FileSystemWatcher(dir) {
+                InternalBufferSize = 1024 * 4,  // 4k is minimum buffer size
+                IncludeSubdirectories = true
+            };
+
+            // Set Event Handlers
             watcher.Created += new FileSystemEventHandler(FileExistanceChanged);
             watcher.Deleted += new FileSystemEventHandler(FileExistanceChanged);
             watcher.Renamed += new RenamedEventHandler(FileNameChanged);
@@ -456,19 +460,27 @@ namespace Microsoft.VisualStudioTools.Project {
             watcher.Renamed += FileContentsChanged;
 #endif
             watcher.Error += WatcherError;
+
+            // Delay setting EnableRaisingEvents until everything else is initialized.
             watcher.EnableRaisingEvents = true;
-            watcher.InternalBufferSize = 1024 * 4;  // 4k is minimum buffer size
+
             return watcher;
         }
 
         private FileSystemWatcher CreateAttributesWatcher(string dir) {
-            var watcher = new FileSystemWatcher(dir);
-            watcher.IncludeSubdirectories = true;
-            watcher.NotifyFilter = NotifyFilters.Attributes;
+            var watcher = new FileSystemWatcher(dir) {
+                IncludeSubdirectories = true,
+                NotifyFilter = NotifyFilters.Attributes,
+                InternalBufferSize = 1024 * 4, // 4k is minimum buffer size
+            };
+
+            // Set Event Handlers
             watcher.Changed += FileAttributesChanged;
             watcher.Error += WatcherError;
+
+            // Delay setting EnableRaisingEvents until everything else is initialized.
             watcher.EnableRaisingEvents = true;
-            watcher.InternalBufferSize = 1024 * 4;  // 4k is minimum buffer size
+
             return watcher;
         }
 
@@ -1152,7 +1164,7 @@ namespace Microsoft.VisualStudioTools.Project {
                         _project.AddAllFilesFile(parent, _path);
                         if (String.Equals(_project.GetStartupFile(), _path, StringComparison.OrdinalIgnoreCase)) {
                             _project.BoldStartupItem();
-                    }
+                        }
                     }
 
                     parent.ExpandItem(wasExpanded ? EXPANDFLAGS.EXPF_ExpandFolder : EXPANDFLAGS.EXPF_CollapseFolder);
