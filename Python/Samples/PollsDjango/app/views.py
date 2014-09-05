@@ -51,7 +51,7 @@ def contact(request):
     return render(
         request,
         'app/contact.html',
-        RequestContext(request,
+        context_instance = RequestContext(request,
         {
             'title': 'Contact',
             'message': 'Your contact page.',
@@ -65,7 +65,7 @@ def about(request):
     return render(
         request,
         'app/about.html',
-        RequestContext(request,
+        context_instance = RequestContext(request,
         {
             'title': 'About',
             'message': 'Your application description page.',
