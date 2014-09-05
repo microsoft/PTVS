@@ -419,7 +419,13 @@ namespace Microsoft.PythonTools.Interpreter {
                 _missingModules = null;
             } finally {
                 _isCheckingDatabase = false;
-                _isCurrentSemaphore.Release();
+                try {
+                    _isCurrentSemaphore.Release();
+                } catch (ObjectDisposedException) {
+                    // The semaphore is not locked for disposal as it is only
+                    // used to prevent reentrance into this function. As a
+                    // result, it may have been disposed while we were in here.
+                }
             }
 
             OnIsCurrentChanged();
