@@ -198,10 +198,35 @@ namespace Microsoft.PythonTools.Project {
             // remove already existing nodes so we don't add them a 2nd time
             lines.ExceptWith(existing.Keys);
 
+            var packageInfoRegex = new Regex(@"
+                    (?<spec>        # <spec> includes name, version and whitespace
+                        (?<name>[^\s\#<>=!]+)           # just the name, no whitespace
+                        (\s*(?<cmp><=|>=|<|>|!=|==)\s*
+                            (?<ver>[^\s\#]+)
+                        )?          # cmp and ver are optional
+                    )", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.IgnorePatternWhitespace);
+
             // add the new nodes
             foreach (var line in lines) {
                 AddChild(new InterpretersPackageNode(ProjectMgr, line));
                 anyChanges = true;
+
+                var packageInfo = packageInfoRegex.Match(line.ToLower());
+                if (packageInfo.Groups["name"].Success) {
+                    //Log the details of the Installation
+                    Logging.PackageInstallDetails packageDetails =
+                        new Logging.PackageInstallDetails(
+                                packageInfo.Groups["name"].Value,
+                                packageInfo.Groups["ver"].Success ? packageInfo.Groups["ver"].Value : String.Empty,
+                                _factory.GetType().Name,
+                                _factory.Configuration.Version.ToString(),
+                                _factory.Configuration.Architecture.ToString(),
+                                "Existing", //Installer if we tracked it
+                                false, //Installer was not run elevated
+                                0); //The install was successful
+
+                    PythonToolsPackage.Instance.Logger.LogEvent(Logging.PythonLogEvent.PackageInstalled, packageDetails);
+                }
             }
             _checkingItems = false;
 
@@ -229,7 +254,7 @@ namespace Microsoft.PythonTools.Project {
 
         internal override int ExecCommandOnNode(Guid cmdGroup, uint cmd, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
             if (cmdGroup == VsMenus.guidStandardCommandSet2K) {
-                switch((VsCommands2K)cmd) {
+                switch ((VsCommands2K)cmd) {
                     case CommonConstants.OpenFolderInExplorerCmdId:
                         Process.Start(new ProcessStartInfo {
                             FileName = _factory.Configuration.PrefixPath,
@@ -239,7 +264,7 @@ namespace Microsoft.PythonTools.Project {
                         return VSConstants.S_OK;
                 }
             }
-            
+
             if (cmdGroup == ProjectMgr.SharedCommandGuid) {
                 switch ((SharedCommands)cmd) {
                     case SharedCommands.OpenCommandPromptHere:
@@ -257,7 +282,7 @@ namespace Microsoft.PythonTools.Project {
                         return VSConstants.S_OK;
                 }
             }
-            
+
             return base.ExecCommandOnNode(cmdGroup, cmd, nCmdexecopt, pvaIn, pvaOut);
         }
 
@@ -381,8 +406,8 @@ namespace Microsoft.PythonTools.Project {
             return null;
         }
 
-        
-        
+
+
         /// <summary>
         /// Disable Copy/Cut/Paste commands on interpreter node.
         /// </summary>
@@ -397,7 +422,7 @@ namespace Microsoft.PythonTools.Project {
                         return VSConstants.S_OK;
                 }
             }
-            
+
             if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
                 switch (cmd) {
                     case PythonConstants.ActivateEnvironment:
@@ -439,7 +464,7 @@ namespace Microsoft.PythonTools.Project {
                         return VSConstants.S_OK;
                 }
             }
-            
+
             if (cmdGroup == ProjectMgr.SharedCommandGuid) {
                 switch ((SharedCommands)cmd) {
                     case SharedCommands.OpenCommandPromptHere:

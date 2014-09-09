@@ -1153,9 +1153,9 @@ namespace Microsoft.PythonTools.Project {
         protected override int ExecCommandIndependentOfSelection(Guid cmdGroup, uint cmdId, uint cmdExecOpt, IntPtr vaIn, IntPtr vaOut, CommandOrigin commandOrigin, out bool handled) {
             if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
                 var command = GetCustomCommand(cmdId);
+                handled = true;
 
                 if (command != null) {
-                    handled = true;
                     if (command.CanExecute(null)) {
                         if (!Utilities.SaveDirtyFiles()) {
                             return VSConstants.S_OK;
@@ -1182,7 +1182,6 @@ namespace Microsoft.PythonTools.Project {
                     return VSConstants.S_OK;
                 }
 
-                handled = true;
                 switch ((int)cmdId) {
                     case PythonConstants.AddEnvironment:
                         ShowAddInterpreter();
@@ -1597,6 +1596,30 @@ namespace Microsoft.PythonTools.Project {
                     success ? SR.PackageInstallSucceeded : SR.PackageInstallFailed,
                     name
                 ));
+
+                var packageInfoRegex = new Regex(FindRequirementRegex, RegexOptions.IgnorePatternWhitespace);
+                var packageInfo = packageInfoRegex.Match(name.ToLower());
+
+                //If we fail to parse the package name then just skip logging it
+                if (packageInfo.Groups["name"].Success) {
+                    //If the argument has a "-r" then skip it
+                    if (!packageInfo.Groups["name"].Value.Contains("-r")) {
+                        //Log the details of the Installation
+                        Logging.PackageInstallDetails packageDetails =
+                            new Logging.PackageInstallDetails(
+                                    packageInfo.Groups["name"].Value,
+                                    packageInfo.Groups["ver"].Success ? packageInfo.Groups["ver"].Value : String.Empty,
+                                    factory.GetType().Name,
+                                    factory.Configuration.Version.ToString(),
+                                    factory.Configuration.Architecture.ToString(),
+                                    String.Empty, //Installer if we tracked it
+                                    elevate,
+                                    success ? 0 : 1);
+
+                        PythonToolsPackage.Instance.Logger.LogEvent(Logging.PythonLogEvent.PackageInstalled, packageDetails);
+                    }
+                }
+
             } catch (Exception ex) {
                 if (ex.IsCriticalException()) {
                     throw;

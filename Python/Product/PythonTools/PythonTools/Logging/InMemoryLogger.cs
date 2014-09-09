@@ -12,7 +12,10 @@
  *
  * ***************************************************************************/
 
+using System.Collections;
+using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using System.Linq;
 using System.Text;
 
 namespace Microsoft.PythonTools.Logging {
@@ -25,11 +28,12 @@ namespace Microsoft.PythonTools.Logging {
         private int _installedInterpreters;
         private int _configuredInterpreters;
         private int _debugLaunchCount, _normalLaunchCount;
+        private List<PackageInstallDetails> _packageInstalls = new List<PackageInstallDetails>();
 
         #region IPythonToolsLogger Members
 
         public void LogEvent(PythonLogEvent logEvent, object argument) {
-            switch(logEvent) {
+            switch (logEvent) {
                 case PythonLogEvent.Launch:
                     if ((int)argument != 0) {
                         _debugLaunchCount++;
@@ -43,6 +47,12 @@ namespace Microsoft.PythonTools.Logging {
                 case PythonLogEvent.ConfiguredInterpreters:
                     _configuredInterpreters = (int)argument;
                     break;
+                case PythonLogEvent.PackageInstalled:
+                    var packageInstallDetails = argument as PackageInstallDetails;
+                    if (packageInstallDetails != null) {
+                        _packageInstalls.Add(packageInstallDetails);
+                    }
+                    break;
             }
         }
 
@@ -54,6 +64,22 @@ namespace Microsoft.PythonTools.Logging {
             res.AppendLine("Configured Interpreters: " + _configuredInterpreters);
             res.AppendLine("Debug Launches: " + _debugLaunchCount);
             res.AppendLine("Normal Launches: " + _normalLaunchCount);
+
+            res.AppendLine();
+            if (_packageInstalls.Count > 0) {
+                res.AppendLine("Installed Packages:");
+                res.AppendLine(PackageInstallDetails.Header());
+                res.AppendLine("  Successful Installations");
+                foreach (PackageInstallDetails pd in _packageInstalls.Where(p => p.InstallResult == 0)) {
+                    res.AppendLine("    " + pd.ToString());
+                }
+                res.AppendLine();
+                res.AppendLine("  Failed Installations");
+                foreach (PackageInstallDetails pd in _packageInstalls.Where(p => p.InstallResult != 0)) {
+                    res.AppendLine("    " + pd.ToString());
+                }
+            }
+
             return res.ToString();
         }
     }

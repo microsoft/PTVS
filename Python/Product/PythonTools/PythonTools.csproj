@@ -292,6 +292,7 @@
     <Compile Include="PythonTools\Intellisense\UnresolvedImportSquiggleProvider.cs" />
     <Compile Include="PythonTools\Logging\InMemoryLogger.cs" />
     <Compile Include="PythonTools\Logging\IPythonToolsLogger.cs" />
+    <Compile Include="PythonTools\Logging\PackageInstallDetails.cs" />
     <Compile Include="PythonTools\Logging\PythonLogEvent.cs" />
     <Compile Include="PythonTools\Logging\PythonToolsLogger.cs" />
     <Compile Include="PythonTools\Options\PythonGeneralOptionsControl.cs">

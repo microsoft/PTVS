@@ -25,7 +25,7 @@ namespace Microsoft.PythonTools.Interpreter {
     public static class CPythonInterpreterFactoryConstants {
         public const string Id32 = "{2AF0F10D-7135-4994-9156-5D01C9C11B7E}";
         public const string Id64 = "{9A7A9026-48C1-4688-9D5D-E5699D47D074}";
-        
+
         public static readonly Guid Guid32 = new Guid(Id32);
         public static readonly Guid Guid64 = new Guid(Id64);
 

@@ -250,7 +250,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 return (int)OleConstants.OLECMDERR_E_NOTSUPPORTED;
             }
 
-            // Request unmanaged code permission in order to be able to creaet the unmanaged memory representing the guid.
+            // Request unmanaged code permission in order to be able to create the unmanaged memory representing the guid.
             new SecurityPermission(SecurityPermissionFlag.UnmanagedCode).Demand();
 
             Guid guid = VSConstants.guidCOMPLUSLibrary;

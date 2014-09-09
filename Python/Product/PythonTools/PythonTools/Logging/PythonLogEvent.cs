@@ -39,6 +39,12 @@ namespace Microsoft.PythonTools.Logging {
         /// 
         /// Data is an int enum mapping to SurveyNews* setting
         /// </summary>
-        SurveyNewsFrequency
+        SurveyNewsFrequency,
+
+        /// <summary>
+        /// Logs package installs
+        /// </summary>
+        PackageInstalled
+
     }
 }
