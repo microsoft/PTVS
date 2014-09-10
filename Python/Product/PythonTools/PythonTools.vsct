@@ -52,6 +52,7 @@
       </Menu>
 
       <Menu guid="guidPythonToolsCmdSet" id="DebuggerPythonContextMenu" priority="0x0301" type="Context">
+        <Parent guid="guidVSDebugGroup" id="IDG_DEBUG_DISPLAY"/>
         <Strings>
           <ButtonText>&amp;Python</ButtonText>
         </Strings>
