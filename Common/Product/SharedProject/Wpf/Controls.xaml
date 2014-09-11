@@ -832,7 +832,10 @@
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
 
-                        <Label Grid.Row="0" Content="{Binding Title}" Target="{Binding ElementName=Content}" />
+                        <Label Grid.Row="0"
+                               Content="{Binding Title}"
+                               Target="{Binding ElementName=Content}"
+                               Foreground="{DynamicResource {x:Static wpf:Controls.ForegroundKey}}"/>
                         <TextBlock Grid.Row="1" Text="{Binding HelpText}" Style="{StaticResource HelpText}" Name="HelpText" />
                         <ContentPresenter Grid.Row="2" Content="{Binding Content}" Margin="3" Name="Content" />
                     </Grid>
@@ -883,7 +886,8 @@
                                 CommandTarget="{Binding CommandTarget}" />
                         <Label Grid.Column="1" Grid.Row="0"
                                Content="{Binding Title}"
-                               Target="{Binding ElementName=Content}" />
+                               Target="{Binding ElementName=Content}"
+                               Foreground="{DynamicResource {x:Static wpf:Controls.ForegroundKey}}" />
                         <TextBlock Grid.Column="1" Grid.Row="1"
                                    Text="{Binding HelpText}"
                                    Style="{StaticResource HelpText}"

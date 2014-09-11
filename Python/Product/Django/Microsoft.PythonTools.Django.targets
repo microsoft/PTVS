@@ -24,7 +24,7 @@
     <PythonDebugWebServerCommandArguments Condition="'$(PythonDebugWebServerCommandArguments)' == ''">runserver --noreload --settings $(DjangoSettingsModule) %SERVER_PORT% $(CommandLineArguments)</PythonDebugWebServerCommandArguments>
     <PythonDebugWebServerCommandType Condition="'$(PythonDebugWebServerCommandType)' == ''">script</PythonDebugWebServerCommandType>
 
-    <PythonWsgiHandler Condition="'$(PythonWsgiHandler)' == ''">django.core.handlers.wsgi.WSGIHandler()</PythonWsgiHandler>
+    <PythonWsgiHandler Condition="'$(PythonWsgiHandler)' == ''">django.core.wsgi.get_wsgi_application()</PythonWsgiHandler>
   </PropertyGroup>
 
   <Target Name="CreateDjangoAppSettings">
