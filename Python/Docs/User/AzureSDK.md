@@ -7,7 +7,7 @@ The Azure SDK for Python package makes it easy to consume and manage Microsoft A
 
 The Azure SDK can be installed from the [Python Package Index](https://pypi.python.org/pypi/azure).
 
-To install the **latest stable version**: 0.8.0 (supports Python 2.7 and 3.3+):
+To install the **latest stable version**: 0.8.3 (supports Python 2.7 and 3.3+):
 
 ```
 pip install azure

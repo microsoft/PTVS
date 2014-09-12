@@ -11,7 +11,7 @@
     <OutputPath>.</OutputPath>
     <Name>PythonDocs</Name>
     <RootNamespace>PythonDocs</RootNamespace>
-    <InterpreterId>{9a7a9026-48c1-4688-9d5d-e5699d47d074}</InterpreterId>
+    <InterpreterId>{2af0f10d-7135-4994-9156-5d01c9c11b7e}</InterpreterId>
     <InterpreterVersion>3.3</InterpreterVersion>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
     <CommandLineArgumentsPrefix>--site pytools --doc-root Python\Docs --dir User</CommandLineArgumentsPrefix>
@@ -62,8 +62,47 @@
     <Content Include="Images\Play.svg" />
     <Content Include="Planning\WebFrameworks.md" />
     <Content Include="requirements.txt" />
+    <Content Include="User\Django.md" />
+    <Content Include="User\Images\DjangoConsoleCollectStatic.png" />
+    <Content Include="User\Images\DjangoConsoleShell.png" />
+    <Content Include="User\Images\DjangoConsoleSyncDB.png" />
+    <Content Include="User\Images\DjangoConsoleValidate.png" />
+    <Content Include="User\Images\DjangoTemplateDebugging.png" />
+    <Content Include="User\Images\DjangoTemplateIntelliSense.png" />
+    <Content Include="User\Images\DjangoTemplateIntelliSenseCSS.png" />
+    <Content Include="User\Images\DjangoTemplateIntelliSenseFilter.png" />
+    <Content Include="User\Images\DjangoTemplateIntelliSenseJS.png" />
+    <Content Include="User\Images\PollsBottleAzureTableStorageProjectDebugSettings.png" />
+    <Content Include="User\Images\PollsBottleMongoDBProjectDebugSettings.png" />
+    <Content Include="User\Images\PollsDjangoAzureBrowser.png" />
+    <Content Include="User\Images\PollsDjangoCommonBrowserLocal.png" />
+    <Content Include="User\Images\PollsDjangoCommonBrowserLocalLogin.png" />
+    <Content Include="User\Images\PollsDjangoCommonBrowserLocalMenu.png" />
+    <Content Include="User\Images\PollsDjangoCommonBrowserNoPolls.png" />
+    <Content Include="User\Images\PollsDjangoConsole.png" />
+    <Content Include="User\Images\PollsDjangoExternalPackages.png" />
+    <Content Include="User\Images\PollsDjangoMySQLConnectionInfo.png" />
+    <Content Include="User\Images\PollsDjangoMySQLInstallPackage.png" />
+    <Content Include="User\Images\PollsDjangoSqlAllowedServices.png" />
+    <Content Include="User\Images\PollsDjangoSqlCreate.png" />
+    <Content Include="User\Images\PollsDjangoSqlInstallPackageDjangoPyodbcAzure.png" />
+    <Content Include="User\Images\PollsDjangoSqlInstallPackagePyodbc.png" />
+    <Content Include="User\Images\PollsDjangoSqliteBrowser.png" />
+    <Content Include="User\Images\PollsDjangoSqlManage.png" />
+    <Content Include="User\Images\PollsDjangoSqlUpdateFirewall.png" />
+    <Content Include="User\Images\PollsDjangoSyncDB.png" />
+    <Content Include="User\Images\PollsFlaskAzureBrowser.png" />
+    <Content Include="User\Images\PollsFlaskAzureTableStorageAbout.png" />
+    <Content Include="User\Images\PollsFlaskAzureTableStorageProjectDebugSettings.png" />
+    <Content Include="User\Images\PollsFlaskExternalPackages.png" />
+    <Content Include="User\Images\PollsFlaskInMemoryBrowser.png" />
+    <Content Include="User\Images\PollsFlaskMongoDBAbout.png" />
+    <Content Include="User\Images\PollsFlaskMongoDBProjectDebugSettings.png" />
+    <Content Include="User\PollsDjangoMySql.md" />
+    <Content Include="User\PollsDjangoSql.md" />
+    <Content Include="User\PollsBottleMongoDB.md" />
+    <Content Include="User\PollsBottleAzureTableStorage.md" />
     <Content Include="User\codeplex.map" />
-    <Content Include="User\Django%2520Web%2520Site%252fCloud%2520Service%2520Tutorial.md" />
     <Content Include="User\Documentation.md" />
     <Content Include="User\AzureSDK.md" />
     <Content Include="User\Features Browsing.md" />
@@ -75,6 +114,7 @@
     <Content Include="User\Images\AzureCloudProject.png" />
     <Content Include="User\Images\AzureCloudProjectWizard.png" />
     <Content Include="User\Images\AzureRemoteDebuggingAttached.png" />
+    <Content Include="User\Images\AzureRemoteDebuggingEnableWebSockets.png" />
     <Content Include="User\Images\AzureRemoteDebuggingManualAttach.png" />
     <Content Include="User\Images\AzureRemoteDebuggingProxyInfoPage.png" />
     <Content Include="User\Images\AzureRemoteDebuggingSecret.png" />
@@ -82,6 +122,34 @@
     <Content Include="User\Images\CustomizeColors.png" />
     <Content Include="User\Images\InstallRequirementsTxt.png" />
     <Content Include="User\Images\NewProjectWeb.png" />
+    <Content Include="User\Images\PollsBottleAzureBrowser.png" />
+    <Content Include="User\Images\PollsBottleAzureTableStorageAbout.png" />
+    <Content Include="User\Images\PollsBottleExternalPackages.png" />
+    <Content Include="User\Images\PollsBottleInMemoryBrowser.png" />
+    <Content Include="User\Images\PollsBottleMongoDBAbout.png" />
+    <Content Include="User\Images\PollsBottleNewProject.png" />
+    <Content Include="User\Images\PollsCommonAddVirtualEnv.png" />
+    <Content Include="User\Images\PollsCommonAzurePlusNew.png" />
+    <Content Include="User\Images\PollsCommonAzureStorageCreate.png" />
+    <Content Include="User\Images\PollsCommonAzureTableStorageManageKeys.png" />
+    <Content Include="User\Images\PollsCommonCreateWebSite.png" />
+    <Content Include="User\Images\PollsCommonMongoLabAddon1.png" />
+    <Content Include="User\Images\PollsCommonMongoLabAddon2.png" />
+    <Content Include="User\Images\PollsCommonMongoLabConnectionInfo.png" />
+    <Content Include="User\Images\PollsCommonPublishWebSiteDialog.png" />
+    <Content Include="User\Images\PollsCommonRobomongoCreateConnection1.png" />
+    <Content Include="User\Images\PollsCommonRobomongoCreateConnection2.png" />
+    <Content Include="User\Images\PollsCommonRobomongoQuery.png" />
+    <Content Include="User\Images\PollsCommonServerExplorer.png" />
+    <Content Include="User\Images\PollsCommonServerExplorerTable.png" />
+    <Content Include="User\Images\PollsCommonWebSiteConfigureBottomMenu.png" />
+    <Content Include="User\Images\PollsCommonWebSiteConfigureSettingsMongoDB.png" />
+    <Content Include="User\Images\PollsCommonWebSiteConfigureSettingsTableStorage.png" />
+    <Content Include="User\Images\PollsCommonWebSiteTopMenu.png" />
+    <Content Include="User\Images\PollsDjangoClearDBAddon1.png" />
+    <Content Include="User\Images\PollsDjangoClearDBAddon2.png" />
+    <Content Include="User\Images\PollsDjangoNewProject.png" />
+    <Content Include="User\Images\PollsFlaskNewProject.png" />
     <Content Include="User\Images\PublishCloudProject.png" />
     <Content Include="User\Images\PyLintCommand.png" />
     <Content Include="User\Images\PyLintErrorList.png" />
@@ -111,34 +179,6 @@
     <Content Include="User\Images\DebugInteractive.png" />
     <Content Include="User\Images\DebugInteractiveMenu.png" />
     <Content Include="User\Images\DebugInteractiveOptions.png" />
-    <Content Include="User\Images\django-tutorial-001-new-project.png" />
-    <Content Include="User\Images\django-tutorial-002-add-virtual-env.png" />
-    <Content Include="User\Images\django-tutorial-003-install-django.png" />
-    <Content Include="User\Images\django-tutorial-004-install-django-output.png" />
-    <Content Include="User\Images\django-tutorial-004b-itworked.png" />
-    <Content Include="User\Images\django-tutorial-005-add-django-app.png" />
-    <Content Include="User\Images\django-tutorial-006-solution-explorer.png" />
-    <Content Include="User\Images\django-tutorial-007-sqlite3.png" />
-    <Content Include="User\Images\django-tutorial-008-dev-server.png" />
-    <Content Include="User\Images\django-tutorial-009-admin-add-poll.png" />
-    <Content Include="User\Images\django-tutorial-009-admin-login.png" />
-    <Content Include="User\Images\django-tutorial-010-index.png" />
-    <Content Include="User\Images\django-tutorial-011-detail.png" />
-    <Content Include="User\Images\django-tutorial-012-results.png" />
-    <Content Include="User\Images\django-tutorial-013-solution-explorer.png" />
-    <Content Include="User\Images\django-tutorial-014-detail-styled.png" />
-    <Content Include="User\Images\django-tutorial-015-debugging.png" />
-    <Content Include="User\Images\django-tutorial-018-shell-add-poll.png" />
-    <Content Include="User\Images\django-tutorial-019-shell-query.png" />
-    <Content Include="User\Images\django-tutorial-020-website-download-profile.png" />
-    <Content Include="User\Images\django-tutorial-020-website-publish.png" />
-    <Content Include="User\Images\django-tutorial-020-website.png" />
-    <Content Include="User\Images\django-tutorial-021-cloudservice-emulator.png" />
-    <Content Include="User\Images\django-tutorial-021-cloudservice-publish-progress.png" />
-    <Content Include="User\Images\django-tutorial-021-cloudservice-publish.png" />
-    <Content Include="User\Images\django-tutorial-021-cloudservice-settings.png" />
-    <Content Include="User\Images\django-tutorial-021-cloudservice-solution-explorer.png" />
-    <Content Include="User\Images\django-tutorial-021-cloudservice.png" />
     <Content Include="User\Images\EnvironmentsWindow.png" />
     <Content Include="User\Images\ExceptionPopup.png" />
     <Content Include="User\Images\ExceptionsDialog.png" />
@@ -207,6 +247,8 @@
     <Content Include="User\Images\WebPublishConfig.png" />
     <Content Include="User\Images\WebPublishMenu.png" />
     <Content Include="User\Images\WorkerRoleSupportFiles.png" />
+    <Content Include="User\PollsFlaskAzureTableStorage.md" />
+    <Content Include="User\PollsFlaskMongoDB.md" />
     <Content Include="User\PyLint.md" />
     <Content Include="User\Python Environments.md" />
     <Content Include="User\VS14.md" />
@@ -222,47 +264,30 @@
   </PropertyGroup>
   <Import Condition="Exists($(PtvsTargetsFile))" Project="$(PtvsTargetsFile)" />
   <Import Condition="!Exists($(PtvsTargetsFile))" Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
-
   <!-- Enable build. -->
-  <Target Name="CoreCompile"/>
-
+  <Target Name="CoreCompile" />
   <ItemGroup>
-    <Markdown Include="**\*.md"/>
+    <Markdown Include="**\*.md" />
   </ItemGroup>
-
   <Target Name="GetMarkdownOutputItems" Returns="@(MarkdownOutput)">
-    <RunPythonCommand Target="$(StartupFile)"
-                      TargetType="script"
-                      ExecuteIn="none"
-                      Arguments="$(CommandLineArgumentsPrefix) --convert --list-outputs-only"
-                      ConsoleToMSBuild="true">
-      <Output TaskParameter="ConsoleOutput" PropertyName="_MarkdownOutputList"/>
+    <RunPythonCommand Target="$(StartupFile)" TargetType="script" ExecuteIn="none" Arguments="$(CommandLineArgumentsPrefix) --convert --list-outputs-only" ConsoleToMSBuild="true">
+      <Output TaskParameter="ConsoleOutput" PropertyName="_MarkdownOutputList" />
     </RunPythonCommand>
-
     <ItemGroup>
-      <MarkdownOutput Include="$(_MarkdownOutputList.Split('&#10;'))"/>
+      <MarkdownOutput Include="$(_MarkdownOutputList.Split('&#xA;'))" />
     </ItemGroup>
   </Target>
-
   <!-- Disable output group based up-to-date checks, and rely on regular MSBuild logic. -->
-  <Target Name="BuiltProjectOutputGroupFast_Markdown"
-          Returns="@(BuiltProjectOutputGroupFastOutput)"
-          AfterTargets="BuiltProjectOutputGroupFast"
-          DependsOnTargets="GetMarkdownOutputItems">
+  <Target Name="BuiltProjectOutputGroupFast_Markdown" Returns="@(BuiltProjectOutputGroupFastOutput)" AfterTargets="BuiltProjectOutputGroupFast" DependsOnTargets="GetMarkdownOutputItems">
     <ItemGroup>
-      <BuiltProjectOutputGroupFastOutput Include="@(MarkdownOutput)"/>
+      <BuiltProjectOutputGroupFastOutput Include="@(MarkdownOutput)" />
     </ItemGroup>
   </Target>
-
   <Target Name="ConvertMarkdownToHtml" AfterTargets="CoreCompile" DependsOnTargets="GetMarkdownOutputItems" Inputs="$(MSBuildProjectFile);@(Markdown)" Outputs="@(MarkdownOutput)">
-    <RunPythonCommand Target="$(StartupFile)"
-                      TargetType="script"
-                      ExecuteIn="none"
-                      Arguments="$(CommandLineArgumentsPrefix) --convert">
+    <RunPythonCommand Target="$(StartupFile)" TargetType="script" ExecuteIn="none" Arguments="$(CommandLineArgumentsPrefix) --convert">
     </RunPythonCommand>
     <ItemGroup>
-      <FileWrites Include="@(MarkdownOutput)"/>
+      <FileWrites Include="@(MarkdownOutput)" />
     </ItemGroup>
   </Target>
-
 </Project>

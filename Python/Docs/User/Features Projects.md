@@ -34,8 +34,8 @@ After creation, you can choose another environment or create a virtual environme
 ### Django Web Project
 
 This project is based on the standard Django template.
-You can add new apps to the project, create virtual environments, edit page templates, interactively debug both code and template files, and publish to Windows Azure.
-See our [Django tutorial](http://www.windowsazure.com/en-us/develop/python/tutorials/django-with-python-tools-for-visual-studio-20/) for a walkthrough on creating and deploying a Django project.
+You can add new apps to the project, create virtual environments, edit page templates, interactively debug both code and template files, and publish to Microsoft Azure.
+See the [wiki:"Django" Django] documentation for more details on Django specific features.
 
 ### Other Web Projects (Bottle, Flask, etc.)
 
@@ -202,7 +202,7 @@ References
 
 Visual Studio projects support adding references to projects and extensions.
 Typically they indicate dependencies between projects and are used to provide IntelliSense at design time or linking at compile time.
-Python Tools for Visual Studio also uses references in a similar fashion, but due to the dynamic nature of Python they are primarly used at design time to provide improved IntelliSense.They can also be used for deployment to Windows Azure to install additional dependencies.
+Python Tools for Visual Studio also uses references in a similar fashion, but due to the dynamic nature of Python they are primarly used at design time to provide improved IntelliSense.They can also be used for deployment to Microsoft Azure to install additional dependencies.
 
 ### Extension Modules
 
@@ -232,8 +232,8 @@ The reference inside of Visual Studio will ensure that PTVS can find the assembl
 ![WebPI References](Images/WebPIComponents.png)
 
 You can also add references to WebPI product entries.
-This is currently used only for deployment to Windows Azure Cloud Service where you can install additional components via the WebPI feed.
+This is currently used only for deployment to Microsoft Azure Cloud Service where you can install additional components via the WebPI feed.
 By default, the feed displayed is Python specific and includes Django, CPython, and other core components.
 You can also select your own feed.
 
-When publishing to Windows Azure a setup task will run which will install all of the referenced products.
+When publishing to Microsoft Azure a setup task will run which will install all of the referenced products.

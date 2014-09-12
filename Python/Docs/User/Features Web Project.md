@@ -148,11 +148,21 @@ If you plan on debugging your published project directly on Microsoft Azure serv
 
 See the [documentation on Azure.com](http://azure.microsoft.com/en-us/documentation/services/web-sites/#python) for more information on creating and deploying to Web Sites.
 
-![Convert to Windows Azure Cloud Service Project command](Images/WebConvertMenu.png)
+![Convert to Microsoft Azure Cloud Service Project command](Images/WebConvertMenu.png)
 
-The "Convert to Windows Azure Cloud Service Project" command will add a Cloud Service project to your solution.
+The "Convert to Microsoft Azure Cloud Service Project" command will add a Cloud Service project to your solution.
 This project includes the deployment settings and configuration for the virtual machines and services to be used.
 You should use the Publish command on the cloud project to deploy to Cloud Service; the Publish command on the Python project will still deploy to Web Sites.
 
 See our [wiki:"Cloud Service Projects" Features Cloud Project] page for more information on Microsoft Azure Cloud Service.
 
+### Tutorials
+
+See the following tutorials for examples of using PTVS to create web applications for Microsoft Azure.
+
+ * [wiki:"Bottle and Azure Table Storage on Azure" PollsBottleAzureTableStorage]
+ * [wiki:"Bottle and MongoDB on Azure" PollsBottleMongoDB]
+ * [wiki:"Flask and Azure Table Storage on Azure" PollsFlaskAzureTableStorage]
+ * [wiki:"Flask and MongoDB on Azure" PollsFlaskMongoDB]
+ * [wiki:"Django and SQL Database on Azure" PollsDjangoSql]
+ * [wiki:"Django and MySQL on Azure" PollsDjangoMySql]

@@ -34,6 +34,7 @@ Features in Depth
 * [wiki:"Profiling" Features Profiling]
 * [wiki:"Projects" Features Projects]
  * [wiki:"Project Types" Features Projects#project-types]
+  * [wiki:"Django" Django]
   * [wiki:"Web Projects" Features Web Project]
   * [wiki:"Cloud Service Project" Features Cloud Project]
  * [wiki:"Working without Projects" Features Projects#lightweight-usage-project-free]
@@ -45,14 +46,19 @@ Features in Depth
  * [wiki:"Managing Requirements" Python Environments#managing-required-packages]
 * [wiki:"Unit Tests" Unit Tests]
 * [wiki:"PyLint" PyLint]
-* [wiki:"Overview of Django, IPython notebook and Azure cloud computing" PTVS Django Support]
- * [wiki:"Django tutorial for PTVS, Azure Web Sites and Cloud Services" Django Web Site/Cloud Service Tutorial]
 * [wiki:"Azure SDK for Python" AzureSDK]
 * [wiki:"MPI, IPython, and Cluster Support" Detailed Walk-thu Guide - HPC and Cloud Features]
 * [wiki:"Kinect for Python" PyKinect]
 * [wiki:"Pyvot - an Excel to Python bridge" Pyvot]
 * [wiki:"NumPy/SciPy for IronPython Quick Start (project deprecated)" NumPy and SciPy for .Net]
 * [wiki:"wfastcgi" wfastcgi]
+* Tutorials
+ * [wiki:"Bottle and Azure Table Storage on Azure" PollsBottleAzureTableStorage]
+ * [wiki:"Bottle and MongoDB on Azure" PollsBottleMongoDB]
+ * [wiki:"Flask and Azure Table Storage on Azure" PollsFlaskAzureTableStorage]
+ * [wiki:"Flask and MongoDB on Azure" PollsFlaskMongoDB]
+ * [wiki:"Django and SQL Database on Azure" PollsDjangoSql]
+ * [wiki:"Django and MySQL on Azure" PollsDjangoMySql]
 
 Release Notes
 -------------
