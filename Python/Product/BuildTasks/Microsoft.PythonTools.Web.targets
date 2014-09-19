@@ -415,7 +415,7 @@
   <!-- *************************************************************************
        Virtual environments are handled in three targets.
        
-       ConfigureVirtualEnv is part of generating WSGI settings for web.config.
+       ResolveVirtualEnvSettings determines settings for generating web.config.
        
        CollectVirtualEnvFiles will convert a virtual environment into deployable
        Content.
@@ -912,6 +912,8 @@ $(_CloudServiceAzureSetupConfig)
           !$(_CurrentWebConfigCode.Contains('Generated web.config for Microsoft Azure.'))">false</_RegenerateWebConfig>
     </PropertyGroup>
 
+    <Error Text="A customized web.config file exists at @(_OutWebConfig->'%(FullPath)'), but is not included in your project as Content. Please add this file to your project or delete it so we can regenerate it."
+           Condition="!$(_RegenerateWebConfig) and '@(_WebConfigInContent)' == '' and !$(BuildingForUpToDateCheck)" />
     <Message Text="Using existing web.config file" Condition="!$(_RegenerateWebConfig) and !$(BuildingForUpToDateCheck)"/>
   </Target>
 
