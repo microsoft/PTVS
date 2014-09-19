@@ -593,7 +593,7 @@ class handle_response(object):
         record.params['wsgi.multithread'] = False
         record.params['wsgi.run_once'] = False
 
-        self.physical_path = record.params.get('DOCUMENT_ROOT', os.path.dirname(__file__))
+        self.physical_path = record.params.get('APPL_PHYSICAL_PATH', os.path.dirname(__file__))
 
         if 'HTTP_X_ORIGINAL_URL' in record.params:
             # We've been re-written for shared FastCGI hosting, so send the
