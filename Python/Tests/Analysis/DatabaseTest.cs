@@ -154,6 +154,32 @@ namespace AnalysisTests {
                 Assert.IsNull(ptd2.GetModule("ntpath"));
             }
         }
+
+        [TestMethod, Priority(0)]
+        public void PropertyOfUnknownType() {
+            using (var db = MockCompletionDB.Create(PythonLanguageVersion.V34, "property_of_unknown_type")) {
+                var ptd = db.Database;
+                var module = ptd.GetModule("property_of_unknown_type");
+                Assert.IsNotNull(module);
+                var cls = module.GetMember(null, "Class");
+                Assert.IsInstanceOfType(cls, typeof(IPythonType));
+                var propObj = ((IPythonType)cls).GetMember(null, "no_return");
+                Assert.IsInstanceOfType(propObj, typeof(IBuiltinProperty));
+                var prop = (IBuiltinProperty)propObj;
+
+                Assert.IsNull(prop.Type, "Expected null property type");
+                Assert.AreEqual("property of unknown type", prop.Description);
+
+                // Ensure that we are still getting properties at all
+                propObj = ((IPythonType)cls).GetMember(null, "with_return");
+                Assert.IsInstanceOfType(propObj, typeof(IBuiltinProperty));
+                prop = (IBuiltinProperty)propObj;
+
+                Assert.IsNotNull(prop.Type, "Property should not have null type");
+                Assert.AreEqual("property of type int", prop.Description);
+            }
+        }
+
     }
 
 }

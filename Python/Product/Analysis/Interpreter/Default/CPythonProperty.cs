@@ -56,7 +56,11 @@ namespace Microsoft.PythonTools.Interpreter.Default {
 
         public string Description {
             get {
-                return "property of type " + Type.Name;
+                if (Type == null) {
+                    return "property of unknown type";
+                } else {
+                    return "property of type " + Type.Name;
+                }
             }
         }
 
