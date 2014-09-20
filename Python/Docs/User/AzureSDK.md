@@ -7,7 +7,7 @@ The Azure SDK for Python package makes it easy to consume and manage Microsoft A
 
 The Azure SDK can be installed from the [Python Package Index](https://pypi.python.org/pypi/azure).
 
-To install the **latest stable version**: 0.8.3 (supports Python 2.7 and 3.3+):
+To install the **latest stable version** (supports Python 2.7 and 3.3+):
 
 ```
 pip install azure
@@ -29,13 +29,13 @@ If you find any issues or have any questions regarding the usage of the SDK, [pl
 
 The [readme in the repository](https://github.com/Azure/azure-sdk-for-python) includes some basic documentation and code examples.
 
-The [Python Developer Center](http://www.windowsazure.com/en-us/develop/python/) on [windowsazure.com](http://www.windowsazure.com/) has more documentation on the various features of the SDK:
+The [Python Developer Center](http://azure.microsoft.com/en-us/develop/python/) on [azure.microsoft.com](http://azure.microsoft.com/) has more documentation on the various features of the SDK:
 
- - [Storage Blob](http://www.windowsazure.com/en-us/develop/python/how-to-guides/blob-service/)
- - [Storage Queue](http://www.windowsazure.com/en-us/develop/python/how-to-guides/queue-service/)
- - [Storage Table](http://www.windowsazure.com/en-us/develop/python/how-to-guides/table-service/)
- - [Service Bus Queues](http://www.windowsazure.com/en-us/develop/python/how-to-guides/service-bus-queues/)
- - [Service Bus Topics/Subscriptions](http://www.windowsazure.com/en-us/develop/python/how-to-guides/service-bus-topics/)
- - [Service Management](http://www.windowsazure.com/en-us/develop/python/how-to-guides/service-management/)
+ - [Storage Blob](http://azure.microsoft.com/en-us/develop/python/how-to-guides/blob-service/)
+ - [Storage Queue](http://azure.microsoft.com/en-us/develop/python/how-to-guides/queue-service/)
+ - [Storage Table](http://azure.microsoft.com/en-us/develop/python/how-to-guides/table-service/)
+ - [Service Bus Queues](http://azure.microsoft.com/en-us/develop/python/how-to-guides/service-bus-queues/)
+ - [Service Bus Topics/Subscriptions](http://azure.microsoft.com/en-us/develop/python/how-to-guides/service-bus-topics/)
+ - [Service Management](http://azure.microsoft.com/en-us/develop/python/how-to-guides/service-management/)
 
 For public APIs without documentation, the [unit tests](https://github.com/Azure/azure-sdk-for-python/tree/master/tests) are a good source of information.
