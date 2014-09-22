@@ -261,10 +261,16 @@ class SafeRepr(object):
 
     # Determines whether an iterable exceeds the limits set in maxlimits, and is therefore unsafe to repr().
     def _is_long_iter(self, obj, level = 0):
-        if not hasattr(obj, '__iter__') and not hasattr(obj, '__getitem__'):
-            return False
-
         try:
+            # Strings have their own limits (and do not nest). Because they don't have __iter__ in 2.x, this
+            # check goes before the next one.
+            if isinstance(obj, self.string_types):
+                return len(obj) > self.maxstring_inner
+
+            # If it's not an iterable (and not a string), it's fine.
+            if not hasattr(obj, '__iter__'):
+                return False
+
             # Iterable is its own iterator - this is a one-off iterable like generator or enumerate(). We can't
             # really count that, but repr() for these should not include any elements anyway, so we can treat it
             # the same as non-iterables.
@@ -275,9 +281,13 @@ class SafeRepr(object):
             if isinstance(obj, xrange):
                 return False
 
-            # Strings have their own limits (and do not nest).
-            if isinstance(obj, self.string_types):
-                return len(obj) > self.maxstring_inner
+            # numpy and scipy collections (ndarray etc) have self-truncating repr, so they're always safe.
+            try:
+                module = type(obj).__module__.partition('.')[0]
+                if module in ('numpy', 'scipy'):
+                    return False
+            except:
+                pass
 
             # Iterables that nest too deep are considered long.
             if level >= len(self.maxcollection):
@@ -586,6 +596,16 @@ class SafeRepr(object):
         #    text_repr = ''
         #print('len(SafeRepr()(dcoll)) = ' + str(len(text)) + ', len(repr(coll)) = ' + str(len(text_repr)))
         assert len(text) < 8192
+
+        # Test numpy types - they should all use their native reprs, even arrays exceeding limits
+        try:
+            import numpy as np
+        except ImportError:
+            print('WARNING! could not import numpy - skipping all numpy tests.')
+        else:
+            test(np.int32(123), repr(np.int32(123)))
+            test(np.float64(123.456), repr(np.float64(123.456)))
+            test(np.zeros(self.maxcollection[0] + 1), repr(np.zeros(self.maxcollection[0] + 1)));
 
 if __name__ == '__main__':
     print('Running tests...')
