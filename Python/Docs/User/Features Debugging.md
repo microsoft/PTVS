@@ -54,11 +54,11 @@ If you want to continue running, press F5. Your program will not break until the
 
 ### Inspecting values
 
-While your program is broken in the debugger, you can view the contents of local and global variables using Quick Tips or the Watch windows.
+While your program is broken in the debugger, you can view the contents of local and global variables using DataTips or the Watch windows.
 
-To view a value using Quick Tips, simply hover the mouse over any variable in the editor.
+To view a value using DataTips, simply hover the mouse over any variable in the editor.
 
-![Quick Tips](Images/QuickTips.png)
+![DataTips](Images/QuickTips.png)
 
 While debugging, you can also inspect variables using the Locals window and the Watch windows. The Locals window (Debug, Windows, Locals) contains all variables that are in the current scope.
 
@@ -68,6 +68,13 @@ The Watch windows (Debug, Windows, Watch, Watch 1-4) allow you to enter arbitrar
 
 ![Watch Window](Images/WatchWindow.png)
 
+When a value being inspected is a string (`str`, `unicode`, `bytes` and `bytearray` are all considered strings for this purpose), you will see a magnifying glass icon on the right side of the value. Clicking on it will display the unquoted string value in a popup dialog, with wrapping and scrolling, which is useful for long strings. In addition, clicking on the drop-down arrow on the icon will allow you to select the visualization mode that you want to use: plain text, HTML, XML, and JSON. 
+
+![String Visualizers](Images/DebugStringVisualizers.png)
+
+In HTML mode, an embedded browser instance will be used to render the HTML code in the string. In XML and JSON modes, there is syntax highlighting for the corresponding markup, and you can expand and collapse individual nodes in the tree. 
+
+![XML Visualizer](Images/DebugStringVisualizerXml.png)
 
 ### Exceptions
 

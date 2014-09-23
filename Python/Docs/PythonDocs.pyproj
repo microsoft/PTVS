@@ -63,6 +63,8 @@
     <Content Include="Planning\WebFrameworks.md" />
     <Content Include="requirements.txt" />
     <Content Include="User\Django.md" />
+    <Content Include="User\Images\DebugStringVisualizers.png" />
+    <Content Include="User\Images\DebugStringVisualizerXml.png" />
     <Content Include="User\Images\DjangoConsoleCollectStatic.png" />
     <Content Include="User\Images\DjangoConsoleShell.png" />
     <Content Include="User\Images\DjangoConsoleSyncDB.png" />
