@@ -1597,27 +1597,22 @@ namespace Microsoft.PythonTools.Project {
                     name
                 ));
 
-                var packageInfoRegex = new Regex(FindRequirementRegex, RegexOptions.IgnorePatternWhitespace);
-                var packageInfo = packageInfoRegex.Match(name.ToLower());
+                var packageInfo = FindRequirementRegex.Match(name.ToLower());
 
                 //If we fail to parse the package name then just skip logging it
                 if (packageInfo.Groups["name"].Success) {
-                    //If the argument has a "-r" then skip it
-                    if (!packageInfo.Groups["name"].Value.Contains("-r")) {
-                        //Log the details of the Installation
-                        Logging.PackageInstallDetails packageDetails =
-                            new Logging.PackageInstallDetails(
-                                    packageInfo.Groups["name"].Value,
-                                    packageInfo.Groups["ver"].Success ? packageInfo.Groups["ver"].Value : String.Empty,
-                                    factory.GetType().Name,
-                                    factory.Configuration.Version.ToString(),
-                                    factory.Configuration.Architecture.ToString(),
-                                    String.Empty, //Installer if we tracked it
-                                    elevate,
-                                    success ? 0 : 1);
+                    //Log the details of the Installation
+                    var packageDetails = new Logging.PackageInstallDetails(
+                        packageInfo.Groups["name"].Value,
+                        packageInfo.Groups["ver"].Success ? packageInfo.Groups["ver"].Value : String.Empty,
+                        factory.GetType().Name,
+                        factory.Configuration.Version.ToString(),
+                        factory.Configuration.Architecture.ToString(),
+                        String.Empty, //Installer if we tracked it
+                        elevate,
+                        success ? 0 : 1);
 
-                        PythonToolsPackage.Instance.Logger.LogEvent(Logging.PythonLogEvent.PackageInstalled, packageDetails);
-                    }
+                    PythonToolsPackage.Instance.Logger.LogEvent(Logging.PythonLogEvent.PackageInstalled, packageDetails);
                 }
 
             } catch (Exception ex) {
@@ -1849,14 +1844,16 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        internal const string FindRequirementRegex = @"
+        internal static readonly Regex FindRequirementRegex = new Regex(@"
             (?<!\#.*)       # ensure we are not in a comment
+            (?<=\s|\A)      # ensure we are preceded by a space/start of the line
             (?<spec>        # <spec> includes name, version and whitespace
-                (?<name>[^\s\#<>=!]+)           # just the name, no whitespace
+                (?<name>[^\s\#<>=!\-][^\s\#<>=!]*)  # just the name, no whitespace
                 (\s*(?<cmp><=|>=|<|>|!=|==)\s*
                     (?<ver>[^\s\#]+)
                 )?          # cmp and ver are optional
-            )";
+            )", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.IgnorePatternWhitespace
+        );
 
         internal static IEnumerable<string> MergeRequirements(
             IEnumerable<string> original,
@@ -1870,20 +1867,19 @@ namespace Microsoft.PythonTools.Project {
                 yield break;
             }
 
-            var findRequirement = new Regex(FindRequirementRegex, RegexOptions.IgnorePatternWhitespace);
             var existing = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
-            foreach (var m in updates.SelectMany(req => findRequirement.Matches(req).Cast<Match>())) {
+            foreach (var m in updates.SelectMany(req => FindRequirementRegex.Matches(req).Cast<Match>())) {
                 existing[m.Groups["name"].Value] = m.Value;
             }
 
             var seen = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
             foreach (var _line in original) {
                 var line = _line;
-                foreach (var m in findRequirement.Matches(line).Cast<Match>()) {
+                foreach (var m in FindRequirementRegex.Matches(line).Cast<Match>()) {
                     string newReq;
                     var name = m.Groups["name"].Value;
                     if (existing.TryGetValue(name, out newReq)) {
-                        line = findRequirement.Replace(line, m2 =>
+                        line = FindRequirementRegex.Replace(line, m2 =>
                             name.Equals(m2.Groups["name"].Value, StringComparison.InvariantCultureIgnoreCase) ?
                                 newReq :
                                 m2.Value

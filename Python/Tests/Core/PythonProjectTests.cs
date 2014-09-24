@@ -145,7 +145,7 @@ namespace PythonToolsTests {
 
         [TestMethod, Priority(0)]
         public void FindRequirementsRegexTest() {
-            var r = new Regex(PythonProjectNode.FindRequirementRegex, RegexOptions.IgnorePatternWhitespace);
+            var r = PythonProjectNode.FindRequirementRegex;
             AssertUtil.AreEqual(r.Matches("aaaa bbbb cccc").Cast<Match>().Select(m => m.Value),
                 "aaaa",
                 "bbbb",
@@ -182,6 +182,12 @@ namespace PythonToolsTests {
             );
 
             AssertUtil.AreEqual(r.Matches("a == 1 b != 2 c <= 3").Cast<Match>().Select(m => m.Groups["name"].Value),
+                "a",
+                "b",
+                "c"
+            );
+
+            AssertUtil.AreEqual(r.Matches("a -u b -f:x c").Cast<Match>().Select(m => m.Groups["name"].Value),
                 "a",
                 "b",
                 "c"

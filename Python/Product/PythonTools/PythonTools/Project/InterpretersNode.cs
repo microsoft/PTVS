@@ -198,32 +198,23 @@ namespace Microsoft.PythonTools.Project {
             // remove already existing nodes so we don't add them a 2nd time
             lines.ExceptWith(existing.Keys);
 
-            var packageInfoRegex = new Regex(@"
-                    (?<spec>        # <spec> includes name, version and whitespace
-                        (?<name>[^\s\#<>=!]+)           # just the name, no whitespace
-                        (\s*(?<cmp><=|>=|<|>|!=|==)\s*
-                            (?<ver>[^\s\#]+)
-                        )?          # cmp and ver are optional
-                    )", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.IgnorePatternWhitespace);
-
             // add the new nodes
             foreach (var line in lines) {
                 AddChild(new InterpretersPackageNode(ProjectMgr, line));
                 anyChanges = true;
 
-                var packageInfo = packageInfoRegex.Match(line.ToLower());
+                var packageInfo = PythonProjectNode.FindRequirementRegex.Match(line.ToLower());
                 if (packageInfo.Groups["name"].Success) {
                     //Log the details of the Installation
-                    Logging.PackageInstallDetails packageDetails =
-                        new Logging.PackageInstallDetails(
-                                packageInfo.Groups["name"].Value,
-                                packageInfo.Groups["ver"].Success ? packageInfo.Groups["ver"].Value : String.Empty,
-                                _factory.GetType().Name,
-                                _factory.Configuration.Version.ToString(),
-                                _factory.Configuration.Architecture.ToString(),
-                                "Existing", //Installer if we tracked it
-                                false, //Installer was not run elevated
-                                0); //The install was successful
+                    var packageDetails = new Logging.PackageInstallDetails(
+                        packageInfo.Groups["name"].Value,
+                        packageInfo.Groups["ver"].Success ? packageInfo.Groups["ver"].Value : String.Empty,
+                        _factory.GetType().Name,
+                        _factory.Configuration.Version.ToString(),
+                        _factory.Configuration.Architecture.ToString(),
+                        "Existing", //Installer if we tracked it
+                        false, //Installer was not run elevated
+                        0); //The installation already existed
 
                     PythonToolsPackage.Instance.Logger.LogEvent(Logging.PythonLogEvent.PackageInstalled, packageDetails);
                 }
