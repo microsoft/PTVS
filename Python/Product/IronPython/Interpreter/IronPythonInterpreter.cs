@@ -276,6 +276,9 @@ namespace Microsoft.IronPythonTools.Interpreter {
                             try {
                                 asm = LoadAssemblyByName(asmName);
                             } catch {
+                                asm = null;
+                            }
+                            if (asm == null) {
                                 asm = LoadAssemblyByPartialName(asmName);
                             }
                         }
