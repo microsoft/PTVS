@@ -417,6 +417,8 @@
       <Button guid="guidPythonToolsCmdSet" id="cmdidRemoveImportsCurrentScope" priority="0x200" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="RemoveImportsGroup"/>
         <Icon guid="guidImagesRefactoring" id="imgRemoveUsing" />
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
         <Strings>
           <ButtonText>Current &amp;Scope</ButtonText>
           <ToolTipText>Remove unused imports in the current scope.</ToolTipText>
@@ -427,6 +429,8 @@
       <Button guid="guidPythonToolsCmdSet" id="cmdidRemoveImports" priority="0x200" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="RemoveImportsGroup"/>
         <Icon guid="guidImagesRefactoring" id="imgRemoveUsing" />
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
         <Strings>
           <ButtonText>&amp;All Scopes</ButtonText>
           <ToolTipText>Remove unused imports in all scopes.</ToolTipText>
