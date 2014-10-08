@@ -33,7 +33,18 @@ namespace Microsoft.PythonTools.Project {
         private static readonly HashSet<Guid> IgnoredProjectTypeGuids = new HashSet<Guid> {
             new Guid("{789894C7-04A9-4A11-A6B5-3F4435165112}"), // Flask Web Project marker
             new Guid("{E614C764-6D9E-4607-9337-B7073809A0BD}"), // Bottle Web Project marker
-            new Guid("{725071E1-96AE-4405-9303-1BA64EFF6EBD}")  // Worker Role Project marker
+            new Guid("{725071E1-96AE-4405-9303-1BA64EFF6EBD}"), // Worker Role Project marker
+            // Reserved for future use
+            new Guid("{A41C8EA1-112A-4A2D-9F91-29557995525F}"),
+            new Guid("{8267E218-6B96-4D5D-A9DF-50CEDF58D05F}"),
+            new Guid("{6C0EFAFA-1A04-41B6-A6D7-511B90951B5B}"),
+            new Guid("{C6BB79BC-0657-4BB5-8732-4FFE9EB5352D}"),
+            new Guid("{C966CC89-2BC8-4036-85D1-478A085253AD}"),
+            new Guid("{D848A2D7-0C4D-4A6A-9048-2B62DC103475}"),
+            new Guid("{74DCBC5F-E288-431D-A7A0-B7CD4BE4B611}"),
+            new Guid("{2BAC7739-571D-41CB-953C-7101995EBD9E}"),
+            new Guid("{B452423D-5304-416F-975E-351476E8705C}"),
+            new Guid("{587EF8DD-BE2D-4792-AE5F-8AE0A49AC1A5}")
         };
 
         // These targets files existed in PTVS 2.1 Beta but were removed. We
