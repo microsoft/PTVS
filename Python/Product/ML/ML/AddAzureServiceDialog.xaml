@@ -1,0 +1,62 @@
+﻿<ui:DialogWindowVersioningWorkaround
+ x:Class="Microsoft.PythonTools.ML.AddAzureServiceDialog"
+    xmlns:ui="clr-namespace:Microsoft.PythonTools.ML"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+            Height="392" Width="591" 
+            xmlns:wpf="clr-namespace:Microsoft.VisualStudioTools.Wpf"
+            Background="{DynamicResource {x:Static wpf:Controls.BackgroundKey}}"
+            TextElement.Foreground="{DynamicResource {x:Static wpf:Controls.ForegroundKey}}" SizeToContent="Height" WindowStartupLocation="CenterOwner">
+    <ui:DialogWindowVersioningWorkaround.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/Microsoft.PythonTools.ML;component/ML/Controls/Controls.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </ui:DialogWindowVersioningWorkaround.Resources>
+    <DockPanel Margin="0,0,2,0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" >
+        <Label Content="Generate code for consuming an Azure Machine Learning Service" HorizontalAlignment="Left" Margin="5,0,0,0" VerticalAlignment="Top" FontWeight="Bold" DockPanel.Dock="Top"/>
+        <TextBlock HorizontalAlignment="Left" Margin="20,5,5,5" TextWrapping="Wrap" Text="The code for consuming the service will be generated.  You can optionally generate additional forms and views for interacting with the service." VerticalAlignment="Top" DockPanel.Dock="Top"/>
+        <DockPanel Margin="0,5,0,0" DockPanel.Dock="Top">
+            <Label Content="Azure ML Service" HorizontalAlignment="Left" Margin="0,0,0,0" VerticalAlignment="Top" Width="103"/>
+            <TextBox x:Name="AzureURL" Height="23" Margin="0,0,5,0" TextWrapping="NoWrap" Text="" VerticalAlignment="Top" HorizontalAlignment="Stretch"/>
+        </DockPanel>
+        <DockPanel Margin="0,5,0,0" DockPanel.Dock="Top">
+            <Label Content="Name" HorizontalAlignment="Left" Margin="0,0,0,0" VerticalAlignment="Top" Width="103"/>
+            <TextBox x:Name="ServiceName" Height="23" Margin="0,0,5,0" TextWrapping="NoWrap" Text="my_service" VerticalAlignment="Top" HorizontalAlignment="Stretch" TextChanged="ServiceName_TextChanged"/>
+        </DockPanel>
+        <DockPanel HorizontalAlignment="Stretch" Margin="0,5,0,0" DockPanel.Dock="Top">
+            <Label Content="API key" HorizontalAlignment="Left" Margin="0,0,0,0" VerticalAlignment="Top" Width="103"/>
+            <TextBox x:Name="ApiKey" Height="23" Margin="0,0,5,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" HorizontalAlignment="Stretch" />
+        </DockPanel>
+        <DockPanel HorizontalAlignment="Stretch" Margin="0,5,0,0" DockPanel.Dock="Top">
+            <Label Content="Add to" HorizontalAlignment="Left" Margin="0,0,0,0" VerticalAlignment="Top" Width="103"/>
+            <ComboBox x:Name="AddToCombo" Margin="0,0,5,0" VerticalAlignment="Top" HorizontalAlignment="Stretch" SelectedIndex="0">
+                <ComboBoxItem Content="New file (my_service.py)..."/>
+            </ComboBox>
+        </DockPanel>
+        <StackPanel Margin="0,5,0,0" DockPanel.Dock="Top" x:Name="AddDashboardDisplayPanel">
+            <CheckBox x:Name="AddDashboardDisplay" Content="Add Dashboard Display" HorizontalAlignment="Left" Margin="5,0,0,0" VerticalAlignment="Top" Checked="AddDashboardDisplay_Checked" Unchecked="AddDashboardDisplay_Checked" />
+            <TextBlock HorizontalAlignment="Left" Margin="43,0,0,0" TextWrapping="Wrap" Text="Add a form which allows the user to input values and execute the service.  A route will be generated in routes.py." VerticalAlignment="Top" Width="393"/>
+            <DockPanel Margin="43,0,0,0"  HorizontalAlignment="Stretch" x:Name="DashboardTargetPanel" IsEnabled="false">
+                <Label Content="Target folder:"></Label>
+                <TextBox x:Name="DashboardTargetFolder">views</TextBox>
+            </DockPanel>
+        </StackPanel>
+        <StackPanel DockPanel.Dock="Top" x:Name="AddInputFormPanel">
+            <CheckBox x:Name="AddInputForm" Content="Add Input Form" HorizontalAlignment="Left" Margin="5,0,0,0" VerticalAlignment="Top" Checked="AddInputForm_Checked" Unchecked="AddInputForm_Checked"/>
+            <TextBlock HorizontalAlignment="Left" Margin="39,0,0,0" TextWrapping="Wrap" Text="Add a view which displays the result of running the service.  A route will be generated in routes.py." VerticalAlignment="Top" Width="393"/>
+            <DockPanel Margin="43,0,0,0"  HorizontalAlignment="Stretch" x:Name="InputTargetPanel" IsEnabled="false">
+                <Label Content="Target folder:"></Label>
+                <TextBox x:Name="InputTargetFolder">views</TextBox>
+            </DockPanel>
+        </StackPanel>
+        <DockPanel DockPanel.Dock="Top" Margin="0,5,0,0">
+            <Button x:Name="CancelButton" Content="C_ancel" HorizontalAlignment="Right" Margin="5,0,5,5" VerticalAlignment="Bottom" Width="75" DockPanel.Dock="Right" IsCancel="True" Click="CancelButton_Click"/>
+            <Button x:Name="OkButton" Content="O_k" HorizontalAlignment="Right" Margin="0,0,0,5" VerticalAlignment="Bottom" Width="75" Click="OkButtonClick" DockPanel.Dock="Right" IsDefault="True"/>
+        </DockPanel>
+    </DockPanel>
+</ui:DialogWindowVersioningWorkaround>
