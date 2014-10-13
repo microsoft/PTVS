@@ -231,6 +231,11 @@ $multivs_products = @(
       vsix="Microsoft.PythonTools.Samples.vsix";
       signtag=" - Samples";
       outname1="PTVS Samples"; outname2=".vsix"
+    },
+    @{name="Microsoft.PythonTools.ML";
+      vsix="Microsoft.PythonTools.ML.vsix";
+      signtag=" - ML";
+      outname1="PTVS ML"; outname2=".vsix"
     }
 )
 
@@ -440,7 +445,7 @@ try {
             mkdir $destdir\Binaries\ReplWindow -EA 0 | Out-Null
             Copy-Item -force -recurse Python\Product\ReplWindow\obj\Dev$($targetVs.number)\$config\extension.vsixmanifest $destdir\Binaries\ReplWindow
 
-            Copy-Item -force $bindir\Microsoft.PythonTools.Samples.vsix $destdir\
+            Copy-Item -force ($multivs_products | %{ "$bindir\$($_.vsix)" }) $destdir\
         }
         
         ######################################################################
@@ -466,6 +471,7 @@ try {
                     "Microsoft.PythonTools.ImportWizard.dll", 
                     "Microsoft.PythonTools.IronPython.dll", 
                     "Microsoft.PythonTools.IronPython.Interpreter.dll", 
+                    "Microsoft.PythonTools.ML.dll", 
                     "Microsoft.PythonTools.MpiShim.exe", 
                     "Microsoft.PythonTools.Profiling.dll", 
                     "Microsoft.PythonTools.ProjectWizards.dll", 
@@ -541,6 +547,35 @@ try {
                 Move-Item $bindir\en-us\*.msi $destdir\SignedBinariesUnsignedMsi -Force
             }
             
+            # TODO: Generalise rebuilding step
+            foreach ($targetVs in $targetVersions) {
+                if ($targetVs.number -ne "12.0") {
+                    continue
+                }
+                $bindir = "Binaries\$config$($targetVs.number)"
+                $destdir = "$outdir\$($targetVs.name)\$config"
+                
+                mkdir $destdir\SignedBinariesUnsignedVsix -EA 0 | Out-Null
+                Copy-Item $destdir\UnsignedVsix\*.vsix $destdir\SignedBinariesUnsignedVsix -Force
+                
+                msbuild /v:n /m /fl /flp:"Verbosity=d;LogFile=BuildRelease.RebuildVsix.$config.$($targetVs.number).log" `
+                    /t:RebuildVsix `
+                    /p:Configuration=$config `
+                    /p:WixVersion=$version `
+                    /p:WixReleaseVersion=$fileVersion `
+                    /p:VSTarget=$($targetVs.number) `
+                    /p:VisualStudioVersion=$($targetVs.number) `
+                    /p:"CustomBuildIdentifier=$name" `
+                    /p:IncludeVsLogger=$includeVsLogger `
+                    /p:ReleaseBuild=$signedbuildText `
+                    /p:DeployExtension=false `
+                    /p:DeployVSTemplates=false `
+                    "/p:SignedBinaries=$destdir\SignedBinaries" `
+                    Python\Product\ML\ML.csproj
+                
+                Move-Item $bindir\Microsoft.PythonTools.ML.vsix $destdir\SignedBinariesUnsignedVsix -Force
+            }
+
             $jobs = @()
             $done_nonvs_products = 0
             $done_multivs_products = 0
@@ -570,8 +605,9 @@ try {
                     
                 if (-not $done_multivs_products) {
                     $vsix_files = @($multivs_products | 
-                        ForEach {@{
-                            path="$destdir\UnsignedVsix\$($_.vsix)";
+                        ?{ Test-Path "$destdir\SignedBinariesUnsignedVsix\$($_.vsix)" } |
+                        %{@{
+                            path="$destdir\SignedBinariesUnsignedVsix\$($_.vsix)";
                             name="Python Tools for Visual Studio$($_.signtag)"
                         }}
                     )

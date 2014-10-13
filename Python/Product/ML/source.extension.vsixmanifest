@@ -1,10 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Vsix xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Version="1.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2010">
   <Identifier Id="8706DC58-B4CC-4C79-937F-B7BAC9D5EC71">
-    <Name>Python Tools for Visual Studio - ML</Name>
+    <Name>Python Tools for Visual Studio - Machine Learning</Name>
     <Author>Microsoft</Author>
     <Version>2.1</Version>
-    <Description xml:space="preserve">Provides templates for Machine Learning projects.</Description>
+    <Description xml:space="preserve">Provides templates and support for machine learning projects written with Python.</Description>
     <Locale>1033</Locale>
     <InstalledByMsi>false</InstalledByMsi>
     <Icon>PythonProject.ico</Icon>
@@ -12,12 +12,6 @@
     <SupportedProducts>
       <!-- The Edition specifications are minimums; any SKU equal or 'higher'
            will accept them. -->
-      <VisualStudio Version="10.0">
-        <Edition>Pro</Edition>
-      </VisualStudio>
-      <VisualStudio Version="11.0">
-        <Edition>Pro</Edition>
-      </VisualStudio>
       <VisualStudio Version="12.0">
         <Edition>IntegratedShell</Edition>
         <Edition>WDExpress</Edition>
@@ -27,7 +21,7 @@
     <SupportedFrameworkRuntimeEdition MinVersion="4.0" />
   </Identifier>
   <References>
-    <Reference Id="Microsoft.VisualStudio.MPF" MinVersion="10.0">
+    <Reference Id="Microsoft.VisualStudio.MPF" MinVersion="12.0">
       <Name>Visual Studio MPF</Name>
     </Reference>
     <Reference Id="96492FC7-7BC6-46F7-8559-66BB4E09FD1E" MinVersion="2.1">
@@ -38,5 +32,6 @@
     <VsPackage>|%CurrentProject%;PkgdefProjectOutputGroup|</VsPackage>
     <Assembly AssemblyName="|%CurrentProject%;_GetAssemblyName|">|%CurrentProject%;_GetTargetPath|</Assembly>
     <MefComponent>|%CurrentProject%|</MefComponent>
+    <ProjectTemplate>Python\Machine Learning</ProjectTemplate>
   </Content>
 </Vsix>

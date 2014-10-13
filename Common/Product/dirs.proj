@@ -2,10 +2,6 @@
 
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), build.root))\Build\Common.Build.settings" />
 
-  <ItemGroup>
-    <ProjectFile Include="ReplWindow\ReplWindow.csproj"/>
-  </ItemGroup>
-
   <Import Project="$(TargetsPath)\Common.Build.Traversal.targets" />
 
 </Project>

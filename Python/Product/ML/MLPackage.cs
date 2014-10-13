@@ -24,7 +24,6 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
-using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.ML {
     [PackageRegistration(UseManagedResourcesOnly = true)]

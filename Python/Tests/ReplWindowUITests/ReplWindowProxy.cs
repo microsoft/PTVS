@@ -700,7 +700,7 @@ Base 0 means to interpret the base from the string as an integer literal.
             });
             Assert.IsTrue(
                 _replWindowInfo.ReadyForInput.WaitOne(TimeSpan.FromSeconds(10.0)),
-                "Timed out waiting for ClearScrean()"
+                "Timed out waiting for ClearScreen()"
             );
         }
 

@@ -88,12 +88,27 @@
     <Reference Include="System.Xml" />
     <Reference Include="WindowsBase" />
   </ItemGroup>
+  <ItemDefinitionGroup>
+    <ZipProject>
+      <Language>Python</Language>
+      <OutputSubPath>Machine Learning</OutputSubPath>
+    </ZipProject>
+  </ItemDefinitionGroup>
   <ItemGroup>
     <EmbeddedResource Include="ML\service_code.py" />
     <EmbeddedResource Include="ML\bottle_dashboard_template.tpl" />
     <EmbeddedResource Include="ML\bottle_form_template.tpl" />
     <EmbeddedResource Include="ML\bottle_form_route.py" />
     <EmbeddedResource Include="ML\bottle_dashboard_route.py" />
+    <ZipProject Include="ProjectTemplates\ClassifierTemplate\ClassifierTemplate.pyproj" />
+    <ZipProject Include="ProjectTemplates\ClassifierTemplate\ClassifierTemplate.vstemplate" />
+    <ZipProject Include="ProjectTemplates\ClassifierTemplate\classifier.py" />
+    <ZipProject Include="ProjectTemplates\ClusteringTemplate\ClusteringTemplate.pyproj" />
+    <ZipProject Include="ProjectTemplates\ClusteringTemplate\ClusteringTemplate.vstemplate" />
+    <ZipProject Include="ProjectTemplates\ClusteringTemplate\clustering.py" />
+    <ZipProject Include="ProjectTemplates\RegressionTemplate\regression.py" />
+    <ZipProject Include="ProjectTemplates\RegressionTemplate\RegressionTemplate.pyproj" />
+    <ZipProject Include="ProjectTemplates\RegressionTemplate\RegressionTemplate.vstemplate" />
     <None Include="source.extension.vsixmanifest">
       <SubType>Designer</SubType>
     </None>
@@ -156,25 +171,6 @@
     </ConditionalEmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\PythonTools\PythonTools.csproj">
-      <Project>{FA7BE5F5-E04F-4613-B7AC-70CE10D1BB68}</Project>
-      <Name>PythonTools</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemDefinitionGroup>
-    <ZipProject>
-      <Language>Python</Language>
-    </ZipProject>
-  </ItemDefinitionGroup>
-  <!-- 
-  <ItemGroup>
-    <ZipProject Include="Templates\Projects\HpcMpiProject\PythonApp.pyproj" />
-    <ZipProject Include="Templates\Projects\HpcMpiProject\Program.py" />
-    <ZipProject Include="Templates\Projects\HpcMpiProject\HpcMpiApp.vstemplate" />
-  </ItemGroup>
-  -->
-  <ItemGroup />
-  <ItemGroup>
     <Page Include="..\..\..\Common\Product\SharedProject\Wpf\Controls.xaml">
       <Link>ML\Controls\Controls.xaml</Link>
       <Generator>MSBuild:Compile</Generator>
@@ -197,6 +193,30 @@
     <RegisterWithCodebase>true</RegisterWithCodebase>
   </PropertyGroup>
   <Import Project="..\ProjectAfter.settings" />
+  
+  <Target Name="RebuildVsix" DependsOnTargets="GetVsixSourceItems">
+    <PropertyGroup>
+      <SignedTarget>$([msbuild]::ValueOrDefault($(SignedBinaries), $(TargetDir)))\$(TargetName)$(TargetExt)</SignedTarget>
+    </PropertyGroup>
+    
+    <ItemGroup>
+      <VSIXSourceItem Remove="@(IntermediateAssembly)" />
+      <VSIXSourceItem Include="$(SignedTarget)">
+        <VSIXSubPath>$(AssemblyVSIXSubPath)</VSIXSubPath>
+      </VSIXSourceItem>
+    </ItemGroup>
+    <Delete Files="$(TargetVsixContainer)" />
+
+    <CreateZipPackage
+         Files="@(VSIXSourceItem)"
+         ZipPackage="$(TargetVsixContainer)"
+         CompressionLevel="$(ZipPackageCompressionLevel)">
+      <Output TaskParameter="ZipPackage" ItemName="FileWrites" />
+      <Output TaskParameter="ZipPackage" ItemName="_CreatedVsixContainer" />
+    </CreateZipPackage>
+    
+    <Message Text="Rebuilt with $(SignedTarget) -&gt; $(TargetVsixContainer)" Importance="high" />
+  </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

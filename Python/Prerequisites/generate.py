@@ -29,6 +29,7 @@ ASSEMBLIES = sorted([
     "Microsoft.PythonTools.ImportWizard",
     "Microsoft.PythonTools.IronPython",
     "Microsoft.PythonTools.IronPython.Interpreter",
+    "Microsoft.PythonTools.ML",
     "Microsoft.PythonTools.MpiShim",
     "Microsoft.PythonTools.Profiling",
     "Microsoft.PythonTools.ProjectWizards",

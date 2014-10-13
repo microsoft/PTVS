@@ -34,10 +34,10 @@ namespace Microsoft.PythonTools.Project {
             new Guid("{789894C7-04A9-4A11-A6B5-3F4435165112}"), // Flask Web Project marker
             new Guid("{E614C764-6D9E-4607-9337-B7073809A0BD}"), // Bottle Web Project marker
             new Guid("{725071E1-96AE-4405-9303-1BA64EFF6EBD}"), // Worker Role Project marker
+            new Guid("{A41C8EA1-112A-4A2D-9F91-29557995525F}"), // ML Classifier template marker
+            new Guid("{8267E218-6B96-4D5D-A9DF-50CEDF58D05F}"), // ML Clustering template marker
+            new Guid("{6C0EFAFA-1A04-41B6-A6D7-511B90951B5B}"), // ML Regression template marker
             // Reserved for future use
-            new Guid("{A41C8EA1-112A-4A2D-9F91-29557995525F}"),
-            new Guid("{8267E218-6B96-4D5D-A9DF-50CEDF58D05F}"),
-            new Guid("{6C0EFAFA-1A04-41B6-A6D7-511B90951B5B}"),
             new Guid("{C6BB79BC-0657-4BB5-8732-4FFE9EB5352D}"),
             new Guid("{C966CC89-2BC8-4036-85D1-478A085253AD}"),
             new Guid("{D848A2D7-0C4D-4A6A-9048-2B62DC103475}"),
