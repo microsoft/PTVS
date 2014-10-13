@@ -18,14 +18,14 @@
 from distutils.core import setup
 
 setup(name='ptvsd',
-      version='2.1.0rc1',
+      version='2.1.0',
       description='Python Tools for Visual Studio remote debugging server',
       license='Apache License 2.0',
       author='Microsoft Corporation',
       author_email='ptvshelp@microsoft.com',
       url='https://pytools.codeplex.com/',
       classifiers=[
-        'Development Status :: 4 - Beta',
+        'Development Status :: 5 - Stable',
         'Programming Language :: Python',
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 3',
