@@ -20,14 +20,14 @@ Django tags and filters (builtins and user defined) are also available.
 
 ### Embedded CSS IntelliSense (VS 2013 Only)
 
-In PTVS 2.1, syntax coloring and IntelliSense is now available for embedded 
+In [PTVS 2.1](https://pytools.codeplex.com/releases/view/109707), syntax coloring and IntelliSense is now available for embedded 
 CSS.
 
 ![CSS IntelliSense](Images/DjangoTemplateIntelliSenseCSS.png)
 
 ### Embedded JavaScript IntelliSense (VS 2013 Only)
 
-In PTVS 2.1, syntax coloring and IntelliSense is now available for embedded 
+In [PTVS 2.1](https://pytools.codeplex.com/releases/view/109707), syntax coloring and IntelliSense is now available for embedded 
 JavaScript.
 
 ![JavaScript IntelliSense](Images/DjangoTemplateIntelliSenseJS.png)

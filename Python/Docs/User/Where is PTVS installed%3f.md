@@ -22,9 +22,9 @@ All Users
 By default, PTVS is installed for all users on the computer. Full installation paths for all released versions are shown below. (For 32-bit versions of Windows, replace `%ProgramFiles(x86)%` with `%ProgramFiles%`.)
 
 || **PTVS Version** || **VS Version** || **Path** ||
-|| 2.1 RC2 || 2013 || `%ProgramFiles(x86)%\Microsoft Visual Studio 12.0\Common7\IDE\Extensions\Microsoft\Python Tools for Visual Studio\2.1` ||
-|| 2.1 RC2 || 2012 || `%ProgramFiles(x86)%\Microsoft Visual Studio 11.0\Common7\IDE\Extensions\Microsoft\Python Tools for Visual Studio\2.1` ||
-|| 2.1 RC2 || 2010 || `%ProgramFiles(x86)%\Microsoft Visual Studio 10.0\Common7\IDE\Extensions\Microsoft\Python Tools for Visual Studio\2.1` ||
+|| 2.1 || 2013 || `%ProgramFiles(x86)%\Microsoft Visual Studio 12.0\Common7\IDE\Extensions\Microsoft\Python Tools for Visual Studio\2.1` ||
+|| 2.1 || 2012 || `%ProgramFiles(x86)%\Microsoft Visual Studio 11.0\Common7\IDE\Extensions\Microsoft\Python Tools for Visual Studio\2.1` ||
+|| 2.1 || 2010 || `%ProgramFiles(x86)%\Microsoft Visual Studio 10.0\Common7\IDE\Extensions\Microsoft\Python Tools for Visual Studio\2.1` ||
 || 2.0 || 2013 || `%ProgramFiles(x86)%\Microsoft Visual Studio 12.0\Common7\IDE\Extensions\Microsoft\Python Tools for Visual Studio\2.0` ||
 || 2.0 || 2012 || `%ProgramFiles(x86)%\Microsoft Visual Studio 11.0\Common7\IDE\Extensions\Microsoft\Python Tools for Visual Studio\2.0` ||
 || 2.0 || 2010 || `%ProgramFiles(x86)%\Microsoft Visual Studio 10.0\Common7\IDE\Extensions\Microsoft\Python Tools for Visual Studio\2.0` ||

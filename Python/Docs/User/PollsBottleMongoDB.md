@@ -24,8 +24,8 @@ to an Azure Website.
 ## Prerequisites
 
  - Visual Studio 2012 or 2013
- - [PTVS 2.1](http://pytools.codeplex.com/releases)
- - [PTVS 2.1 Samples VSIX](http://pytools.codeplex.com/releases)
+ - [PTVS 2.1](https://pytools.codeplex.com/releases/view/109707)
+ - [PTVS 2.1 Samples VSIX](https://pytools.codeplex.com/releases/view/109707)
  - [Azure SDK Tools for VS 2013](http://go.microsoft.com/fwlink/p/?linkid=323510) or 
    [Azure SDK Tools for VS 2012](http://go.microsoft.com/fwlink/p/?linkid=323511)
  - [Python 2.7 32-bit](https://www.python.org/ftp/python/2.7.8/python-2.7.8.msi) or 

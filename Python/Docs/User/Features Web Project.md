@@ -41,8 +41,6 @@ See the [wiki:"Cloud Project" Features Cloud Project] documentation for more inf
 
 --)
 
-We are actively seeking feedback on this dialog during our Beta release.
-You can provide feedback or ask questions on [issue:"our issue tracker" 2446].
 
 Debugging
 ---------

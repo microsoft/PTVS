@@ -1,7 +1,7 @@
 PyLint
 ======
 
-For PTVS 2.1 Alpha, we have added support for running [PyLint](http://pylint.org/) in PTVS.
+For [PTVS 2.1](https://pytools.codeplex.com/releases/view/109707), we have added support for running [PyLint](http://pylint.org/) in PTVS.
 
 In Solution Explorer, you'll see a command to run PyLint on your Python project node.
 

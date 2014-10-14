@@ -112,7 +112,7 @@ For more details on how the script works, including requirements and how to use 
 Converting to HTML
 ------------------
 
-The [file:build.py] script can be run with Python 3.3 to generate HTML files for all `*.md` files in the branch. This script handles filename mapping and the tweaks that we use for Markdown. It includes a shebang line that is recognized by the `py.exe` launcher, allowing it to be run directly.
+The [file:build.py] script can be run with Python 3.4 to generate HTML files for all `*.md` files in the branch. This script handles filename mapping and the tweaks that we use for Markdown. It includes a shebang line that is recognized by the `py.exe` launcher, allowing it to be run directly.
 
 Running the script looks like:
 
@@ -130,7 +130,7 @@ If you omit required parameters, the script will prompt for the requirement info
 
 Requirements are:
 
-* Python 3.3
+* Python 3.4
 * markdown2 (`pip install markdown2`)
 * Pygments (`pip install pygments`)
 * Pillow with JPEG and PNG codecs (`pip install Pillow`)
