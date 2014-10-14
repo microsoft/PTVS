@@ -109,6 +109,10 @@
     <ZipProject Include="ProjectTemplates\RegressionTemplate\regression.py" />
     <ZipProject Include="ProjectTemplates\RegressionTemplate\RegressionTemplate.pyproj" />
     <ZipProject Include="ProjectTemplates\RegressionTemplate\RegressionTemplate.vstemplate" />
+    <Content Include="Python Tools for VS License.rtf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
     <None Include="source.extension.vsixmanifest">
       <SubType>Designer</SubType>
     </None>
@@ -193,12 +197,10 @@
     <RegisterWithCodebase>true</RegisterWithCodebase>
   </PropertyGroup>
   <Import Project="..\ProjectAfter.settings" />
-  
   <Target Name="RebuildVsix" DependsOnTargets="GetVsixSourceItems">
     <PropertyGroup>
       <SignedTarget>$([msbuild]::ValueOrDefault($(SignedBinaries), $(TargetDir)))\$(TargetName)$(TargetExt)</SignedTarget>
     </PropertyGroup>
-    
     <ItemGroup>
       <VSIXSourceItem Remove="@(IntermediateAssembly)" />
       <VSIXSourceItem Include="$(SignedTarget)">
@@ -206,15 +208,10 @@
       </VSIXSourceItem>
     </ItemGroup>
     <Delete Files="$(TargetVsixContainer)" />
-
-    <CreateZipPackage
-         Files="@(VSIXSourceItem)"
-         ZipPackage="$(TargetVsixContainer)"
-         CompressionLevel="$(ZipPackageCompressionLevel)">
+    <CreateZipPackage Files="@(VSIXSourceItem)" ZipPackage="$(TargetVsixContainer)" CompressionLevel="$(ZipPackageCompressionLevel)">
       <Output TaskParameter="ZipPackage" ItemName="FileWrites" />
       <Output TaskParameter="ZipPackage" ItemName="_CreatedVsixContainer" />
     </CreateZipPackage>
-    
     <Message Text="Rebuilt with $(SignedTarget) -&gt; $(TargetVsixContainer)" Importance="high" />
   </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
