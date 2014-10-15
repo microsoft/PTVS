@@ -25,7 +25,7 @@ setup(name='ptvsd',
       author_email='ptvshelp@microsoft.com',
       url='https://pytools.codeplex.com/',
       classifiers=[
-        'Development Status :: 5 - Stable',
+        'Development Status :: 5 - Production/Stable',
         'Programming Language :: Python',
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 3',
