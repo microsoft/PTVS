@@ -197,6 +197,19 @@
     <RegisterWithCodebase>true</RegisterWithCodebase>
   </PropertyGroup>
   <Import Project="..\ProjectAfter.settings" />
+  <PropertyGroup>
+      <GetVsixSourceItemsDependsOn>$(GetVsixSourceItemsDependsOn);GetVsixTemplateItems</GetVsixSourceItemsDependsOn>
+  </PropertyGroup>
+  <Target Name="GetVsixTemplateItems" DependsOnTargets="ZipProjects;ZipItems">
+      <ItemGroup>
+          <VSIXSourceItem Include="@(IntermediateZipItem)">
+              <VSIXSubPath>ItemTemplates\%(IntermediateZipItem.Language)\%(IntermediateZipItem.OutputSubPath)\%(IntermediateZipItem.Culture)</VSIXSubPath>
+          </VSIXSourceItem>
+          <VSIXSourceItem Include="@(IntermediateZipProject)">
+              <VSIXSubPath>ProjectTemplates\%(IntermediateZipProject.Language)\%(IntermediateZipProject.OutputSubPath)\%(IntermediateZipProject.Culture)</VSIXSubPath>
+          </VSIXSourceItem>
+      </ItemGroup>
+  </Target>
   <Target Name="RebuildVsix" DependsOnTargets="GetVsixSourceItems">
     <PropertyGroup>
       <SignedTarget>$([msbuild]::ValueOrDefault($(SignedBinaries), $(TargetDir)))\$(TargetName)$(TargetExt)</SignedTarget>
