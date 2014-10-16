@@ -50,7 +50,8 @@ namespace Microsoft.PythonTools.ML {
             UpdateAddToCombo();
         }
 
-        public AddAzureServiceDialog(string defaultTargetFolder, bool supportsViews) : this() {
+        public AddAzureServiceDialog(string defaultTargetFolder, bool supportsViews)
+            : this() {
             if (defaultTargetFolder != null) {
                 InputTargetFolder.Text = defaultTargetFolder;
                 DashboardTargetFolder.Text = defaultTargetFolder;
@@ -71,6 +72,7 @@ namespace Microsoft.PythonTools.ML {
         private async void OkButtonClick(object sender, RoutedEventArgs e) {
             try {
                 var oauthEndpoint = UrlToODataUrl(AzureURL.Text);
+
                 var req = WebRequest.Create(oauthEndpoint);
                 req.ContentType = "application/json";
                 var response = await req.GetResponseAsync();
@@ -103,7 +105,9 @@ namespace Microsoft.PythonTools.ML {
                     Close();
                 }
             } catch (WebException wex) {
-                MessageBox.Show(String.Format(LocalizedResources.MetadataDownloadFailed, wex.Message));
+                MessageBox.Show(String.Format(LocalizedResources.MetadataDownloadFailed, wex.Message), "Python Azure ML", MessageBoxButton.OK, MessageBoxImage.Error);
+            } catch (UriFormatException ufe) {
+                MessageBox.Show(String.Format(LocalizedResources.AzureMLServiceInvalid, ufe.Message), "Python Azure ML", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -121,7 +125,7 @@ namespace Microsoft.PythonTools.ML {
                 var name = param.GetAttribute("Name", "");
                 var type = param.GetAttribute("Type", "");
                 var nullable = param.GetAttribute("Nullable", "");
-                serviceInfo.Inputs.Add(new KeyValuePair<string,EdmPrimitiveTypeKind>(name, ParseEdmType(type)));
+                serviceInfo.Inputs.Add(new KeyValuePair<string, EdmPrimitiveTypeKind>(name, ParseEdmType(type)));
             }
 
             var resultScore = nav.Select("/edmx:Edmx/edmx:DataServices/edm:Schema/edm:ComplexType[@Name='ScoreResult']/edm:Property", mngr);
@@ -136,7 +140,7 @@ namespace Microsoft.PythonTools.ML {
         }
 
         private static EdmPrimitiveTypeKind ParseEdmType(string type) {
-            switch(type) {
+            switch (type) {
                 case "Edm.String":
                     return EdmPrimitiveTypeKind.String;
                 case "Edm.Double":
@@ -181,25 +185,25 @@ namespace Microsoft.PythonTools.ML {
         /// </summary>
         private static string UrlToODataUrl(string url) {
             Uri uri;
-            if (Uri.TryCreate(url, UriKind.Absolute, out uri)) {
-                if (uri.AbsolutePath.StartsWith("/odata")) {
-                    return url;
-                }
-                if (uri.AbsolutePath.EndsWith("/score") ||
-                    uri.AbsolutePath.EndsWith("/score/")) {
-                    // remove score, add odata
-                    string authority = uri.GetLeftPart(UriPartial.Authority);
-                    var path = "/odata" + uri.PathAndQuery.Substring(uri.PathAndQuery.LastIndexOf("/score"));
-                    return authority + path + uri.Fragment;
-                }
-                if (uri.AbsolutePath.EndsWith("/score/help") ||
-                    uri.AbsolutePath.EndsWith("/score/help/")) {
-                    // remove /score/help, add odata
-                    string authority = uri.GetLeftPart(UriPartial.Authority);
-                    var path = "/odata" + uri.PathAndQuery.Substring(uri.PathAndQuery.LastIndexOf("/score/help"));
-                    return authority + path + uri.Fragment;
-                }
+            if (!Uri.TryCreate(url, UriKind.Absolute, out uri)) {
+                throw new UriFormatException(url);
             }
+            if (uri.AbsolutePath.StartsWith("/odata")) {
+                return url;
+            }
+            if (uri.AbsolutePath.TrimEnd('/').EndsWith("/score")) {
+                // remove score, add odata
+                string authority = uri.GetLeftPart(UriPartial.Authority);
+                var path = "/odata" + uri.PathAndQuery.Substring(uri.PathAndQuery.LastIndexOf("/score"));
+                return authority + path + uri.Fragment;
+            }
+            if (uri.AbsolutePath.TrimEnd('/').EndsWith("/score/help")) {
+                // remove /score/help, add odata
+                string authority = uri.GetLeftPart(UriPartial.Authority);
+                var path = "/odata" + uri.PathAndQuery.Substring(uri.PathAndQuery.LastIndexOf("/score/help"));
+                return authority + path + uri.Fragment;
+            }
+
             return url;
         }
 
@@ -214,39 +218,41 @@ namespace Microsoft.PythonTools.ML {
         /// </summary>
         private static string UrlToServiceUrl(string url) {
             Uri uri;
-            if (Uri.TryCreate(url, UriKind.Absolute, out uri)) {
-                if (uri.AbsolutePath.EndsWith("/score") || 
-                    uri.AbsolutePath.EndsWith("/score/")) {
-                    return url;
-                }
-                if (uri.AbsolutePath.StartsWith("/odata")) {
-                    // remove odata, add /score
-                    string authority = uri.GetLeftPart(UriPartial.Authority);
-                    var path = uri.PathAndQuery;
-                    Debug.Assert(path.StartsWith("/odata"));
-                    
-                    url = authority + path.Substring("/odata".Length);
-                    if (!url.EndsWith("/")) {
-                        url += "/";
-                    }
-                    url += "score";
-                    url += uri.Fragment;
 
-                    return url;
-                }
-                if (uri.AbsolutePath.EndsWith("/score/help") ||
-                    uri.AbsolutePath.EndsWith("/score/help/")) {
-                    // remove /score/help
-                    return url.Substring(0, url.LastIndexOf("/score/help"));
-                }
+            if (!Uri.TryCreate(url, UriKind.Absolute, out uri)) {
+                throw new UriFormatException(url);
             }
+
+            if (uri.AbsolutePath.TrimEnd('/').EndsWith("/score")) {
+                return url;
+            }
+            if (uri.AbsolutePath.StartsWith("/odata")) {
+                // remove odata, add /score
+                string authority = uri.GetLeftPart(UriPartial.Authority);
+                var path = uri.PathAndQuery;
+                Debug.Assert(path.StartsWith("/odata"));
+
+                url = authority + path.Substring("/odata".Length);
+                if (!url.EndsWith("/")) {
+                    url += "/";
+                }
+                url += "score";
+                url += uri.Fragment;
+
+                return url;
+            }
+            if (uri.AbsolutePath.TrimEnd('/').EndsWith("/score/help")) {
+                // remove /score/help
+                return url.Substring(0, url.LastIndexOf("/score/help"));
+            }
+
             return url;
         }
 
         public string GenerateServiceCode() {
             List<string> parameters = new List<string>();
             List<string> dictCreation = new List<string>();
-            foreach(var inputName in ServiceInfo.Inputs) {
+            foreach (var inputName in ServiceInfo.Inputs) {
                 parameters.Add(
                     String.Format(
                         "{0} = {1}",
@@ -256,7 +262,7 @@ namespace Microsoft.PythonTools.ML {
                 );
                 dictCreation.Add(String.Format("                '{0}' : {0}", inputName.Key));
             }
-            
+
             // TODO: Insert imports at top, code at bottom.
             return String.Format(
                 ReadResource("service_code.py"),
@@ -282,7 +288,7 @@ namespace Microsoft.PythonTools.ML {
             }
 
             return String.Format(
-                ReadResource("bottle_dashboard_route.py"), 
+                ReadResource("bottle_dashboard_route.py"),
                 ServiceName.Text,
                 importName,
                 String.Join(",\r\n", parameters)
@@ -358,7 +364,7 @@ namespace Microsoft.PythonTools.ML {
         }
 
         private string GetInputHtmlType(EdmPrimitiveTypeKind kind) {
-            switch(kind) {
+            switch (kind) {
                 case EdmPrimitiveTypeKind.Boolean:
                     return "checkbox";
                 case EdmPrimitiveTypeKind.Int32:

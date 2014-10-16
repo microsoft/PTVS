@@ -61,6 +61,15 @@ namespace Microsoft.PythonTools.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Azure ML Service is invalid: {0}.
+        /// </summary>
+        internal static string AzureMLServiceInvalid {
+            get {
+                return ResourceManager.GetString("AzureMLServiceInvalid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed to download service description: {0}.
         /// </summary>
         internal static string MetadataDownloadFailed {
