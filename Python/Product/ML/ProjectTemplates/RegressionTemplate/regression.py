@@ -5,7 +5,7 @@ algorithm to a dataset using Python libraries.
 The four steps are:
    1. Download a dataset (using pandas)
    2. Process the numeric data (using numpy)
-   3. Train and evaluate a learners (using scikit-learn)
+   3. Train and evaluate learners (using scikit-learn)
    4. Plot and compare results (using matplotlib)
 
 
