@@ -213,7 +213,6 @@
     <None Include="DkmDebugger\LocalComponent.vsdconfigxml">
       <SubType>Designer</SubType>
     </None>
-    <None Include="DkmDebugger\PythonDkm.natvis" />
     <None Include="DkmDebugger\RemoteComponent.vsdconfigxml">
       <SubType>Designer</SubType>
     </None>
@@ -226,30 +225,43 @@
     <ProjectReference Include="..\Attacher\Attacher.csproj">
       <Project>{666A22BB-0CB5-4C08-A20F-E17450DA6573}</Project>
       <Name>Attacher</Name>
+      <IncludeInVSIX>true</IncludeInVSIX>
     </ProjectReference>
+    <ProjectReference2 Include="..\DebuggerHelper\DebuggerHelper.vcxproj" />
+    <ProjectReference2 Include="..\DebuggerHelper\DebuggerHelperX86.vcxproj" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="DkmDebugger\Microsoft.Dia.Interop.dll" />
   </ItemGroup>
   <!-- .vsdconfigxml -> .vsdconfig -->
-  <ItemGroup Condition="'$(VSTarget)' != '10.0'">
-    <VsdConfigXml Include="DkmDebugger\*.vsdconfigxml">
-      <Visible>false</Visible>
-    </VsdConfigXml>
+  <ItemGroup>
+    <VsdConfigXml Include="DkmDebugger\*.vsdconfigxml" />
+    <Content Include="DkmDebugger\*.natvis">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VsixSubPath>.</VsixSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
-  <ItemGroup Condition="'$(VSTarget)' != '10.0'">
-    <NatVis Include="DkmDebugger\*.natvis">
-      <Visible>false</Visible>
-    </NatVis>
-  </ItemGroup>
-  <PropertyGroup Condition="'$(VSTarget)' != '10.0'">
-    <VsdConfigOutput>$(OutputPath)\DkmDebugger.vsdconfig</VsdConfigOutput>
-  </PropertyGroup>
-  <Target Name="GenerateVsdConfig" Inputs="@(VsdConfigXml)" Outputs="$(VsdConfigOutput)" Condition="'$(VSTarget)' != '10.0'">
-    <Exec Command="&quot;$(VSSDKDir)VisualStudioIntegration\Tools\Bin\vsdconfigtool.exe&quot; @(VsdConfigXml, ' ') &quot;$(TargetPath)&quot; &quot;$(VsdConfigOutput)&quot;" />
-  </Target>
   <Import Project="..\ProjectAfter.settings" />
-  <Target Name="AfterBuild" DependsOnTargets="GenerateVsdConfig" Condition="'$(VSTarget)' != '10.0'">
-    <Copy SourceFiles="@(NatVis)" DestinationFolder="$(OutputPath)\Visualizers" SkipUnchangedFiles="True" />
+  
+  <PropertyGroup>
+    <VsdConfigOutput>$(IntermediateOutputPath)\DkmDebugger.vsdconfig</VsdConfigOutput>
+  </PropertyGroup>
+  <Target Name="GenerateVsdConfig" Inputs="@(VsdConfigXml)" Outputs="$(VsdConfigOutput)" AfterTargets="CoreCompile" Condition="$(VSTarget) != '10.0'">
+    <PropertyGroup>
+      <_Arguments>@(VsdConfigXml, ' ') @(IntermediateAssembly->'"%(FullPath)"', ' ') "$(VsdConfigOutput)"</_Arguments>
+    </PropertyGroup>
+    <Exec Command='"$(VSSDKDir)VisualStudioIntegration\Tools\Bin\vsdconfigtool.exe" $(_Arguments)' />
+  </Target>
+  <Target Name="IncludeVsdConfig" BeforeTargets="AssignTargetPaths;GetVSIXSourceItems" Condition="$(VSTarget) != '10.0'">
+    <ItemGroup>
+      <Content Include="$(VsdConfigOutput)">
+        <IncludeInVSIX>true</IncludeInVSIX>
+        <VSIXSubPath>.</VSIXSubPath>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        <Link>$([System.IO.Path]::GetFileName($(VsdConfigOutput)))</Link>
+      </Content>
+    </ItemGroup>
+    <Message Text="VsdConfigOutput: $(VsdConfigOutput)" Importance="high" />
   </Target>
 </Project>

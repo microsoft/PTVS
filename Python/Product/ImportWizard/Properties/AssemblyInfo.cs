@@ -22,11 +22,6 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("ImportWizard")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Microsoft")]
-[assembly: AssemblyProduct("Python Tools for Visual Studio")]
-[assembly: AssemblyCopyright("© Microsoft Corporation.")]
-[assembly: AssemblyTrademark("")]
-[assembly: AssemblyCulture("")]
 
 [assembly: AssemblyVersion("2.1.0.0")]
 

@@ -1,0 +1,6 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <OutputPathSuffix Condition="'$(OutputPathSuffix)' == ''">ToolBinaries\$(MSBuildProjectName)\</OutputPathSuffix>
+  </PropertyGroup>
+  <Import Project="ProjectBefore.settings" />
+</Project>

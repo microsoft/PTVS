@@ -96,34 +96,34 @@
     <Compile Include="PythonVisualStudioApp.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Product\Analysis\Analysis.csproj">
+    <ProjectReference Include="$(BuildRoot)Python\Product\Analysis\Analysis.csproj">
       <Project>{a85d479d-67a9-4bdb-904a-7d86daf68a6f}</Project>
       <Name>Analysis</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Product\VSInterpreters\VSInterpreters.csproj">
+    <ProjectReference Include="$(BuildRoot)Python\Product\VSInterpreters\VSInterpreters.csproj">
       <Project>{815db0cd-c0dd-4997-b43c-abee4dbeffe7}</Project>
       <Name>VSInterpreters</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Product\PythonTools\PythonTools.csproj">
+    <ProjectReference Include="$(BuildRoot)Python\Product\PythonTools\PythonTools.csproj">
       <Project>{fa7be5f5-e04f-4613-b7ac-70ce10d1bb68}</Project>
       <Name>PythonTools</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Product\ReplWindow\ReplWindow.csproj">
+    <ProjectReference Include="$(BuildRoot)Python\Product\ReplWindow\ReplWindow.csproj">
       <Project>{20bb6fac-44d2-4d76-abfe-0c1e163a1a4f}</Project>
       <Name>ReplWindow</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\Common\Tests\Utilities.UI\TestUtilities.UI.csproj">
+    <ProjectReference Include="$(BuildRoot)Common\Tests\Utilities.UI\TestUtilities.UI.csproj">
       <Project>{e8150ebc-6b62-40bf-bf91-1dc60149b530}</Project>
       <Name>TestUtilities.UI</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\Common\Tests\Utilities\TestUtilities.csproj">
+    <ProjectReference Include="$(BuildRoot)Common\Tests\Utilities\TestUtilities.csproj">
       <Project>{d092d54e-ff29-4d32-9aee-4ef704c92f67}</Project>
       <Name>TestUtilities</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Utilities.Python.Analysis\TestUtilities.Python.Analysis.csproj">
+    <ProjectReference Include="$(BuildRoot)Python\Tests\Utilities.Python.Analysis\TestUtilities.Python.Analysis.csproj">
       <Project>{a731c4c3-3741-4080-a946-c47574c1f3bf}</Project>
       <Name>TestUtilities.Python.Analysis</Name>
     </ProjectReference>
   </ItemGroup>
-  <Import Project="..\TestProjectAfter.settings" />
+  <Import Project="$(BuildRoot)Python\Tests\TestProjectAfter.settings" />
 </Project>

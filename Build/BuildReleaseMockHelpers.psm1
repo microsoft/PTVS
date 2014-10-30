@@ -142,12 +142,32 @@ function end_sign_files {
         
         mkdir $outdir -EA 0 | Out-Null
         Write-Progress -Activity $activity -Completed
+
         Write-Output "Copying from $jobCompletionPath to $outdir"
-        copy -path $jobCompletionPath\* -dest $outdir -Force
-        if (-not $?) {
-            Write-Output "Failed to copy $jobCompletionPath to $outdir"
+        $retries = 9
+        $delay = 2
+        $copied = $null
+        while ($retries) {
+            try {
+                $copied = (Copy-Item -path $jobCompletionPath\* -dest $outdir -Force -PassThru)
+                break
+            } catch {
+                if ($retries -eq 0) {
+                    break
+                }
+                Write-Warning "Failed to copy - retrying in $delay seconds ($retries tries remaining)"
+                Sleep -seconds $delay
+                --$retries
+                $delay += $delay
+            }
         }
-        #Get rid of the MockSigned directory        
+        if (-not $copied) {
+            Throw "Failed to copy $jobCompletionPath to $outdir"
+        } else {
+            Write-Output "Copied $($copied.Count) files"
+        }
+
+        #Get rid of the MockSigned directory
         Remove-Item -Recurse $jobCompletionPath\*
         Remove-Item -Recurse $jobCompletionPath
 

@@ -67,7 +67,7 @@
     <Compile Include="PyLibAnalyzer.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Analysis\Analysis.csproj">
+    <ProjectReference Include="$(BuildRoot)Python\Product\Analysis\Analysis.csproj">
       <Project>{A85D479D-67A9-4BDB-904A-7D86DAF68A6F}</Project>
       <Name>Analysis</Name>
     </ProjectReference>
@@ -75,16 +75,28 @@
   <ItemGroup>
     <Content Include="BuiltinScraper.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>True</IncludeInVSIX>
     </Content>
     <Content Include="ExtensionScraper.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>True</IncludeInVSIX>
     </Content>
     <Content Include="IronPythonScraper.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>True</IncludeInVSIX>
     </Content>
     <Content Include="PythonScraper.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>True</IncludeInVSIX>
     </Content>
+    <Content Include="CompletionDB\*.idb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>True</IncludeInVSIX>
+      <VSIXSubPath>CompletionDB</VSIXSubPath>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="RefreshDefaultDB.py" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

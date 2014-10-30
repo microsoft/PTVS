@@ -22,14 +22,14 @@ using Microsoft.VisualStudioTools;
 
 namespace TestUtilities {
     public static class TestData {
-        const string BinariesAltSourcePath = @"Binaries";
-        const string BinariesSourcePath = @"Binaries\" +
+        const string BinariesAltSourcePath = @"BuildOutput";
+        const string BinariesSourcePath = @"BuildOutput\" +
 #if DEBUG
             @"Debug" + 
 #else
             @"Release" + 
 #endif
-            AssemblyVersionInfo.VSVersion;
+            AssemblyVersionInfo.VSVersion + @"\Tests";
         const string BinariesOutPath = "";
 
         const string DataAltSourcePath = @"TestData";

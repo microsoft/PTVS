@@ -1,6 +1,8 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <BuildRoot Condition="'$(BuildRoot)' == ''">$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), build.root))</BuildRoot>
+    <OutputPathSuffix>Samples\$(MSBuildProjectName)\</OutputPathSuffix>
+    <IntermediateOutputPathSuffix>obj\Samples_$(MSBuildProjectName)\</IntermediateOutputPathSuffix>
   </PropertyGroup>
   <Import Project="$(BuildRoot)\Build\Common.Build.settings" />
   <PropertyGroup>

@@ -28,15 +28,15 @@
   <Content>
     <VsPackage>|%CurrentProject%;PkgdefProjectOutputGroup|</VsPackage>
     <Assembly AssemblyName="|%CurrentProject%;_GetAssemblyName|">|%CurrentProject%|</Assembly>
-    <Assembly AssemblyName="|Microsoft.PythonTools.Analysis;AssemblyName|">|Microsoft.PythonTools.Analysis|</Assembly>
+    <Assembly AssemblyName="|Microsoft.PythonTools.Analysis;_GetAssemblyName|">|Microsoft.PythonTools.Analysis;_GetTargetPath|</Assembly>
     <Assembly AssemblyName="|Microsoft.PythonTools.BuildTasks;_GetAssemblyName|">|Microsoft.PythonTools.BuildTasks;_GetTargetPath|</Assembly>
-    <Assembly AssemblyName="|Microsoft.PythonTools.Debugger;AssemblyName|">|Microsoft.PythonTools.Debugger|</Assembly>
-    <Assembly AssemblyName="|Microsoft.PythonTools.ImportWizard;AssemblyName|">|Microsoft.PythonTools.ImportWizard|</Assembly>
-    <Assembly AssemblyName="|Microsoft.PythonTools.ProjectWizards;AssemblyName|">|Microsoft.PythonTools.ProjectWizards|</Assembly>
-    <Assembly AssemblyName="|Microsoft.PythonTools.VSInterpreters;AssemblyName|">|Microsoft.PythonTools.VSInterpreters|</Assembly>
-    <MefComponent>|%CurrentProject%|</MefComponent>
-    <MefComponent>|Microsoft.PythonTools.Analysis|</MefComponent>
-    <MefComponent>|Microsoft.PythonTools.Debugger|</MefComponent>
-    <MefComponent>|Microsoft.PythonTools.VSInterpreters|</MefComponent>
+    <Assembly AssemblyName="|Microsoft.PythonTools.Debugger;_GetAssemblyName|">|Microsoft.PythonTools.Debugger;_GetTargetPath|</Assembly>
+    <Assembly AssemblyName="|ImportWizard;AssemblyName|">|ImportWizard;_GetTargetPath|</Assembly>
+    <Assembly AssemblyName="|ProjectWizards;AssemblyName|">|ProjectWizards;_GetTargetPath|</Assembly>
+    <Assembly AssemblyName="|Microsoft.PythonTools.VSInterpreters;_GetAssemblyName|">|Microsoft.PythonTools.VSInterpreters;_GetTargetPath|</Assembly>
+    <MefComponent>|%CurrentProject%;_GetTargetPath|</MefComponent>
+    <MefComponent>|Microsoft.PythonTools.Analysis;_GetTargetPath|</MefComponent>
+    <MefComponent>|Microsoft.PythonTools.Debugger;_GetTargetPath|</MefComponent>
+    <MefComponent>|Microsoft.PythonTools.VSInterpreters;_GetTargetPath|</MefComponent>
   </Content>
 </Vsix>

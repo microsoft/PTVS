@@ -1,8 +1,148 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" Condition="'$(Language)' == 'C#'" />
-  <Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" Condition="'$(Language)' == 'C#' and '$(CreateVsixContainer)' != '' and $(CreateVsixContainer) and '$(VSToolsPath)' != ''" />
   <Import Project="Common.Build.CSharp.targets" Condition="'$(Language)' == 'C#'" />
+  <Import Project="Common.Build.VSSDK.targets" Condition="$(UseVSSDK) or $(UseVSSDKTemplateOnly)" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" Condition="'$(Language)' == 'C++'" />
-  <Import Project="$(WixTargetsPath)" Condition="'$(Language)' == 'WiX'" />
   <Import Project="Common.Build.Wix.targets" Condition="'$(Language)' == 'WiX'" />
+
+  <!--
+  Transforms ProjectReference2 items into references that will be built
+  but are not used as build references.
+  -->
+  <Target Name="_HandleProjectReferences"
+          BeforeTargets="AssignProjectConfiguration">
+    <ItemGroup>
+      <ProjectReference Include="@(ProjectReference2)">
+        <Name Condition="'%(ProjectReference2.Name)' != ''">%(ProjectReference2.Name)</Name>
+        <Name Condition="'%(ProjectReference2.Name)' == ''">%(ProjectReference2.Filename)</Name>
+      </ProjectReference>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_GetEmptyGroup" Returns="_EmptyGroup" />
+  
+  <!--
+  Gets all the content files to include in a VSIX from this project and any
+  other referenced projects.
+  
+  This allows projects to be referenced for their deployable content without
+  forcing a C# assembly reference (or errors/warnings when no reference exists).
+  -->
+  <Target Name="_GetVSIXSourceProjects">
+    <ItemGroup>
+      <_VSIXSourceProjects Include="@(ProjectReference2)" />
+      <_VSIXSourceProjects Include="@(ProjectReference)" Condition="'%(ProjectReference.IncludeInVSIX)' == 'true'" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="GetVSIXSourceItems"
+          DependsOnTargets="PrepareForBuild;AssignProjectConfiguration;_GetVSIXSourceProjects"
+          Returns="@(VSIXSourceItem)">
+    <MSBuild Projects="@(_VSIXSourceProjects)"
+             Targets="GetVSIXSourceItems"
+             Properties="Configuration=$(Configuration)">
+      <Output TaskParameter="TargetOutputs" ItemName="_VSIXSourceItem"/>
+    </MSBuild>
+
+    <CallTarget Targets="$(IncludeVSIXItemsFromTargets)" UseResultsCache="true">
+      <Output TaskParameter="TargetOutputs" ItemName="_VSIXSourceItem"/>
+    </CallTarget>
+
+    <PropertyGroup Condition="'@(AppConfigWithTargetPath)' != ''">
+      <_AppConfigFullPath>@(AppConfigWithTargetPath->'%(TargetPath)')</_AppConfigFullPath>
+      <_AppConfigFullPath Condition="!$([System.IO.Path]::IsPathRooted($(_AppConfigFullPath)))">$(OutDir)$(_AppConfigFullPath)</_AppConfigFullPath>
+    </PropertyGroup>
+    <ItemGroup>
+      <!-- Ensure we include the correct app.config file. -->
+      <_VSIXSourceItem Remove="$(MSBuildProjectDirectory)\app.config" />
+      <_VSIXSourceItem Include="$(_AppConfigFullPath)" />
+
+      <!-- Include the vsixmanifest -->
+      <_VSIXSourceItem Include="$(IntermediateVsixManifest)" Condition="'$(CopyVsixManifestToOutput)' == 'true'" />
+
+      <!-- Include the pkgdef if required -->
+      <_VSIXSourceItem Include="$(IntermediateOutputPath)$(TargetName).pkgdef" Condition="'$(IncludePkgdefInVSIXContainer)'=='true' AND '$(GeneratePkgDefFile)'=='true'">
+        <VSIXSubPath>$(PkgdefVSIXSubPath)</VSIXSubPath>
+      </_VSIXSourceItem>
+
+      <!-- Include any content that was marked for inclusion in the VSIX -->
+      <_VSIXSourceItem Include="@(Content->'%(FullPath)')" Condition="$([msbuild]::ValueOrDefault(%(Content.IncludeInVSIX), `false`))">
+        <VSIXSubPath Condition="'%(Content.VSIXSubPath)' == ''">%(Content.RelativeDir)</VSIXSubPath>
+      </_VSIXSourceItem>
+
+      <!-- Ensure VSIXSubPath is empty or ends in a backslash -->
+      <_VSIXSourceItem>
+        <VSIXSubPath Condition="'%(_VSIXSourceItem.VSIXSubPath)' == '.'"></VSIXSubPath>
+        <VSIXSubPath Condition="'%(_VSIXSourceItem.VSIXSubPath)' != '' and '%(_VSIXSourceItem.VSIXSubPath)' != '.' and !HasTrailingSlash(%(_VSIXSourceItem.VSIXSubPath))">%(_VSIXSourceItem.VSIXSubPath)\</VSIXSubPath>
+      </_VSIXSourceItem>
+
+      <!-- Take TemplateSubPath properties into account -->
+      <_VSIXSourceItem>
+        <VSIXSubPath Condition="'%(_VSIXSourceItem.TemplateSubPath)' != ''">%(_VSIXSourceItem.VSIXSubPath)%(_VSIXSourceItem.TemplateSubPath)</VSIXSubPath>
+        <VSIXSubPath Condition="'%(_VSIXSourceItem.TemplateSubPath)' != '' and !HasTrailingSlash(%(_VSIXSourceItem.TemplateSubPath))">%(_VSIXSourceItem.VSIXSubPath)%(_VSIXSourceItem.TemplateSubPath)\</VSIXSubPath>
+        <TemplateSubPath></TemplateSubPath>
+      </_VSIXSourceItem>
+    </ItemGroup>
+
+    <RemoveDuplicates Inputs="@(_VSIXSourceItem)">
+      <Output TaskParameter="Filtered" ItemName="VSIXSourceItem"/>
+    </RemoveDuplicates>
+
+    <Message Text="Dependencies from $(MSBuildProjectName):
+  @(VSIXSourceItem->'%(VSIXSubPath)%(Filename)%(Extension)', '
+  ')" Importance="normal" />
+  </Target>
+
+  <!--
+  To actually copy references to the output directory, set
+  CopyLocalReferenceVsixItems to true.
+  
+  This should be used for tools and tests only. Release packages should not ever
+  need this.
+  -->
+  <Target Name="_CopyReferenceVSIXDependencies"
+          DependsOnTargets="GetVSIXSourceItems"
+          Condition="$(CopyLocalReferenceVsixItems)"
+          Inputs="@(VSIXSourceItem)"
+          Outputs="@(VSIXSourceItem->'$(OutDir)%(VSIXSubPath)\%(Filename)%(Extension)')"
+          AfterTargets="AfterBuild">
+    <Copy SourceFiles="@(VSIXSourceItem)"
+          DestinationFiles="@(VSIXSourceItem->'$(OutDir)%(VSIXSubPath)\%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
+  </Target>
+
+  <!-- Gets the output location of debug symbols.
+  
+  VS 2010 moves PDB files rather than copying, and so the usual target will fail.
+  -->
+  <Target Name="DebugSymbolsFinalOutputProjectOutputGroup"
+          DependsOnTargets="DebugSymbolsProjectOutputGroup"
+          Returns="@(_DebugSymbolsFinalOutputProjectOutputGroupOutput)">
+    <ItemGroup>
+      <_DebugSymbolsFinalOutputProjectOutputGroupOutput Include="@(DebugSymbolsProjectOutputGroupOutput->'%(FinalOutputPath)'" />
+    </ItemGroup>
+  </Target>
+
+  <!--
+  Copies certain outputs from the project to the specified path.
+  
+  This is used when building releases.
+  -->
+  <Target Name="_CopyOutputsToPath"
+          AfterTargets="AfterBuild"
+          DependsOnTargets="BuiltProjectOutputGroup;DebugSymbolsFinalOutputProjectOutputGroup"
+          Condition="'$(CopyOutputsToPath)' != '' and $(MSBuildProjectExtension) != '.wixproj' and Exists($(TargetPath))">
+    <PropertyGroup>
+      <CopyOutputsToPath Condition="!HasTrailingSlash($(CopyOutputsToPath))">$(CopyOutputsToPath)\</CopyOutputsToPath>
+    </PropertyGroup>
+
+    <MakeDir Directories="$(CopyOutputsToPath)UnsignedBinaries;$(CopyOutputsToPath)Symbols"
+             ContinueOnError="true" />
+
+    <Copy SourceFiles="$(TargetPath)"
+          DestinationFiles="$(CopyOutputsToPath)UnsignedBinaries\$(TargetName)$(TargetExt)"
+          SkipUnchangedFiles="true" />
+
+    <Copy SourceFiles="@(DebugSymbolsProjectOutputGroupOutput->'%(FinalOutputPath)')"
+          DestinationFolder="$(CopyOutputsToPath)Symbols" />
+  </Target>
 </Project>

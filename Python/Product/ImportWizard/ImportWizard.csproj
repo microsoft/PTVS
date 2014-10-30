@@ -34,6 +34,7 @@
     <RootNamespace>Microsoft.PythonTools.ImportWizard</RootNamespace>
     <AssemblyName>Microsoft.PythonTools.ImportWizard</AssemblyName>
     <FileAlignment>512</FileAlignment>
+    <SuppressCommonAssemblyMetadata>true</SuppressCommonAssemblyMetadata>
     <SccProjectName>SAK</SccProjectName>
     <SccLocalPath>SAK</SccLocalPath>
     <SccAuxPath>SAK</SccAuxPath>
@@ -96,7 +97,7 @@
       <Name>Analysis</Name>
     </ProjectReference>
   </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="..\ProjectAfter.settings" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

@@ -3,8 +3,6 @@
     <BuildRoot Condition="'$(BuildRoot)' == ''">$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), build.root))</BuildRoot>
 
     <TargetName>ProfilingFiles</TargetName>
-    <SourceDir>$(BuildRoot)\Python\Product\Profiling\</SourceDir>
-    <ObjDir>$(SourceDir)obj\Dev$(VSTarget)\$(Configuration)</ObjDir>
   </PropertyGroup>
 
   <ItemDefinitionGroup>
@@ -16,7 +14,7 @@
 
   <ItemGroup>
     <!-- Registration files -->
-    <File Include="$(ObjDir)\extension.vsixmanifest" />
+    <File Include="Profiling\extension.vsixmanifest" />
     <File Include="Microsoft.PythonTools.Profiling.pkgdef" />
 
     <!-- Core extension -->

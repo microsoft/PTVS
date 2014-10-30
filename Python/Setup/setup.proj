@@ -1,0 +1,29 @@
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <Import Project="SetupProjectBefore.settings" />
+
+  <!--
+  These properties are set in Common.Build.settings, but may be overridden on
+  the command line.
+  
+  <PropertyGroup>
+    <Configuration Condition="$(Configuration)==''">Debug</Configuration>
+    <WixVersion Condition="$(WixVersion)==''">0.7.4100.000</WixVersion>
+    <VSTarget Condition="$(VSTarget)==''">10.0</VSTarget>
+  </PropertyGroup>
+  -->
+  
+  <ItemGroup>
+    <ProjectFile Include="Django\Django.wixproj"/>
+    <ProjectFile Include="ReplWindow\ReplWindow.wixproj"/>
+    <ProjectFile Include="PythonTools\PythonTools.wixproj"/>
+    <ProjectFile Include="PythonProfiling\PythonProfiling.wixproj"/>
+    <ProjectFile Include="PythonToolsInstaller\PythonToolsInstaller.wixproj"/>
+    <ProjectFile Include="..\..\Internal\Python\VsLoggerSetup\VsLogger.wixproj" Condition="'$(IncludeVsLogger)' == 'True'"/>
+    <ProjectFile Include="FastCgiInstaller\FastCgi.wixproj" Condition="'$(VSTarget)' == '12.0'"/>
+  </ItemGroup>
+
+  <Import Project="$(TargetsPath)\Common.Build.Traversal.targets" />
+
+  <Import Project="$(TargetsPath)\Common.Build.VSSDK.targets" Condition="'$(SignedBinariesPath)' != ''"/>
+</Project>

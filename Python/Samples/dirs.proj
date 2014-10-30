@@ -2,13 +2,14 @@
 
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), build.root))\Build\Common.Build.settings" />
 
-  <ItemGroup>
+  <ItemGroup Condition="'$(VSTarget)' == '12.0'">
     <ProjectFile Include="KinectGame\KinectGame.csproj"/>
     <ProjectFile Include="PollsBottle\PollsBottle.csproj"/>
     <ProjectFile Include="PollsDjango\PollsDjango.csproj"/>
     <ProjectFile Include="PollsFlask\PollsFlask.csproj"/>
     <ProjectFile Include="PollsFlaskJade\PollsFlaskJade.csproj"/>
     <ProjectFile Include="PyvotProject\PyvotProject.csproj"/>
+
     <ProjectFile Include="Samples\Samples.csproj"/>
   </ItemGroup>
 

@@ -40,8 +40,8 @@
     <SccLocalPath>SAK</SccLocalPath>
     <SccAuxPath>SAK</SccAuxPath>
     <SccProvider>SAK</SccProvider>
-    <DeployExtension>True</DeployExtension>
-    <CreateVsixContainer>True</CreateVsixContainer>
+    <UseVSSDK>true</UseVSSDK>
+    <CreateVsixContainer>true</CreateVsixContainer>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -197,36 +197,6 @@
     <RegisterWithCodebase>true</RegisterWithCodebase>
   </PropertyGroup>
   <Import Project="..\ProjectAfter.settings" />
-  <PropertyGroup>
-      <GetVsixSourceItemsDependsOn>$(GetVsixSourceItemsDependsOn);GetVsixTemplateItems</GetVsixSourceItemsDependsOn>
-  </PropertyGroup>
-  <Target Name="GetVsixTemplateItems" DependsOnTargets="ZipProjects;ZipItems">
-      <ItemGroup>
-          <VSIXSourceItem Include="@(IntermediateZipItem)">
-              <VSIXSubPath>ItemTemplates\%(IntermediateZipItem.Language)\%(IntermediateZipItem.OutputSubPath)\%(IntermediateZipItem.Culture)</VSIXSubPath>
-          </VSIXSourceItem>
-          <VSIXSourceItem Include="@(IntermediateZipProject)">
-              <VSIXSubPath>ProjectTemplates\%(IntermediateZipProject.Language)\%(IntermediateZipProject.OutputSubPath)\%(IntermediateZipProject.Culture)</VSIXSubPath>
-          </VSIXSourceItem>
-      </ItemGroup>
-  </Target>
-  <Target Name="RebuildVsix" DependsOnTargets="GetVsixSourceItems">
-    <PropertyGroup>
-      <SignedTarget>$([msbuild]::ValueOrDefault($(SignedBinaries), $(TargetDir)))\$(TargetName)$(TargetExt)</SignedTarget>
-    </PropertyGroup>
-    <ItemGroup>
-      <VSIXSourceItem Remove="@(IntermediateAssembly)" />
-      <VSIXSourceItem Include="$(SignedTarget)">
-        <VSIXSubPath>$(AssemblyVSIXSubPath)</VSIXSubPath>
-      </VSIXSourceItem>
-    </ItemGroup>
-    <Delete Files="$(TargetVsixContainer)" />
-    <CreateZipPackage Files="@(VSIXSourceItem)" ZipPackage="$(TargetVsixContainer)" CompressionLevel="$(ZipPackageCompressionLevel)">
-      <Output TaskParameter="ZipPackage" ItemName="FileWrites" />
-      <Output TaskParameter="ZipPackage" ItemName="_CreatedVsixContainer" />
-    </CreateZipPackage>
-    <Message Text="Rebuilt with $(SignedTarget) -&gt; $(TargetVsixContainer)" Importance="high" />
-  </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

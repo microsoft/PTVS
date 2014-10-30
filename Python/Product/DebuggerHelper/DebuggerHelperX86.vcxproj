@@ -1,9 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\ProjectBefore.settings" />
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" TreatAsLocalProperty="Platform">
   <PropertyGroup>
     <Platform>Win32</Platform>
   </PropertyGroup>
+  <Import Project="..\ProjectBefore.settings" />
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Release|Win32">
       <Configuration>Release</Configuration>
@@ -18,6 +18,7 @@
     <ProjectGuid>{A2A795F7-27D0-4801-88DA-95B368F070AD}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>DebuggerHelper</RootNamespace>
+    <IncludeVsixItemsFromTargets Condition="$(Configuration) != 'Debug'">$(IncludeVsixItemsFromTargets);DebugSymbolsProjectOutputGroup</IncludeVsixItemsFromTargets>
     <SccProjectName>SAK</SccProjectName>
     <SccAuxPath>SAK</SccAuxPath>
     <SccLocalPath>SAK</SccLocalPath>

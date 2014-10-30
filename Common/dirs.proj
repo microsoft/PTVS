@@ -2,9 +2,13 @@
 
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), build.root))\Build\Common.Build.settings" />
 
+  <PropertyGroup>
+    <IncludeTests Condition="'$(IncludeTests)' == ''">true</IncludeTests>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectFile Include="Product\dirs.proj"/>
-    <ProjectFile Include="Tests\dirs.proj"/>
+    <ProjectFile Include="Tests\dirs.proj" Condition="$(IncludeTests)"/>
   </ItemGroup>
 
   <Import Project="$(TargetsPath)\Common.Build.Traversal.targets" />

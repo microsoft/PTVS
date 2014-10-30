@@ -11,10 +11,14 @@
 
   <PropertyGroup>
     <Configuration Condition="'$(Configuration)' == ''">Debug</Configuration>
-    <WixVersion Condition="$(WixVersion)==''">0.7.4100.000</WixVersion>
-    <WixReleaseVersion Condition="$(ReleaseVersion)==''">0.7</WixReleaseVersion>
-    
-    <!--Default Platform value is specified in the C#/C++ specific files imported below -->
+    <!-- The version number to compare with existing install. -->
+    <MsiVersion Condition="$(MsiVersion)==''">0.7.4100.000</MsiVersion>
+    <!-- The version number that will be displayed to users. -->
+    <ReleaseVersion Condition="$(ReleaseVersion)==''">0.7</ReleaseVersion>
+    <!-- When true, increases build restrictions to ensure complete public releases -->
+    <ReleaseBuild Condition="'$(ReleaseBuild)' == ''">false</ReleaseBuild>
+
+    <!-- The default Platform value is specified in the imports below -->
     
     <RunFXCop Condition="'$(RunFXCop)' == ''">false</RunFXCop>
     <RunStyleCop Condition="'$(RunStyleCop)' == ''">false</RunStyleCop>
@@ -25,24 +29,57 @@
     <VSTarget Condition="$(VSTarget)=='' and '$(VisualStudioVersion)'=='12.0'">12.0</VSTarget>
     <VSTarget Condition="$(VSTarget)=='' and '$(VisualStudioVersion)'=='11.0'">11.0</VSTarget>
     <VSTarget Condition="$(VSTarget)==''">10.0</VSTarget>
+    <BuildingInsideVisualStudio Condition="'$(BuildingInsideVisualStudio)' == ''">false</BuildingInsideVisualStudio>
     
     <TargetFrameworkVersion Condition="'$(TargetFrameworkVersion)' == ''">v4.5</TargetFrameworkVersion>
     
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
 
     <BuildRoot Condition="'$(BuildRoot)' == ''">$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), build.root))</BuildRoot>
-    <TargetsPath>$(BuildRoot)\Build</TargetsPath>
-    <OutputPath Condition="'$(OutputPath)' == '' and '$(OutDir)' != '' and $(OutDir.EndsWith(`\`))">$(OutDir)</OutputPath>
-    <OutputPath Condition="'$(OutputPath)' == '' and '$(OutDir)' != '' and !$(OutDir.EndsWith(`\`))">$(OutDir)\</OutputPath>
-    <OutputPath Condition="'$(OutputPath)' == '' and '$(OutDir)' == ''">$(BuildRoot)\Binaries\$(Configuration)$(VSTarget)\</OutputPath>
-    <IntermediateOutputPath Condition="'$(IntermediateOutputPath)' == '' and '$(IntDir)' != '' and $(IntDir.EndsWith(`\`))">$(IntDir)</IntermediateOutputPath>
-    <IntermediateOutputPath Condition="'$(IntermediateOutputPath)' == '' and '$(IntDir)' != '' and !$(IntDir.EndsWith(`\`))">$(IntDir)\</IntermediateOutputPath>
-    <IntermediateOutputPath Condition="'$(IntermediateOutputPath)' == ''">$(MSBuildProjectDirectory)\obj\Dev$(VSTarget)\$(Configuration)\</IntermediateOutputPath>
+    <BuildRoot Condition="!HasTrailingSlash($(BuildRoot))">$(BuildRoot)\</BuildRoot>
+    <TargetsPath>$(BuildRoot)Build</TargetsPath>
+
+    <!-- BuildOutputRoot contains all build files.
+    
+    Rather than customizing OutputPath or IntermediateOutputPath in projects,
+    $(OutputPathSuffix) and $(IntermediateOutputPathSuffix) should be set.
+    -->
+    <BuildOutputRoot Condition="'$(BuildOutputRoot)' == ''">$(BuildRoot)\BuildOutput\$(Configuration)$(VSTarget)\</BuildOutputRoot>
+    <BuildOutputRoot Condition="!HasTrailingSlash($(BuildOutputRoot))">$(BuildOutputRoot)\</BuildOutputRoot>
+
+    <OutputPathSuffix Condition="'$(OutputPathSuffix)' != '' and !HasTrailingSlash($(OutputPathSuffix))">$(OutputPathSuffix)\</OutputPathSuffix>
+    <OutputPath Condition="'$(OutputPath)' == ''">$(BuildOutputRoot)$(OutputPathSuffix)</OutputPath>
+    <OutputPath Condition="!HasTrailingSlash($(OutputPath))">$(OutputPath)\</OutputPath>
+
+    <IntermediateOutputPathSuffix Condition="'$(IntermediateOutputPathSuffix)' != '' and !HasTrailingSlash($(IntermediateOutputPathSuffix))">$(IntermediateOutputPathSuffix)\</IntermediateOutputPathSuffix>
+    <IntermediateOutputPath Condition="'$(IntermediateOutputPath)' == ''">$(BuildOutputRoot)$(IntermediateOutputPathSuffix)</IntermediateOutputPath>
+    <IntermediateOutputPath Condition="!HasTrailingSlash($(IntermediateOutputPath))">$(IntermediateOutputPath)\</IntermediateOutputPath>
 
     <OutDir>$(OutputPath)</OutDir>
     <IntDir>$(IntermediateOutputPath)</IntDir>
 
-    <SuppressCommonAssemblyMetadata Condition="'$(SuppressCommonAssemblyMetadata)' == ''">False</SuppressCommonAssemblyMetadata>
+    <!-- Allows assemblies to specify their own version -->
+    <SuppressCommonAssemblyMetadata Condition="'$(SuppressCommonAssemblyMetadata)' == ''">false</SuppressCommonAssemblyMetadata>
+    
+    <!-- Enables VS SDK build steps.
+    
+    Set CreateVsixContainer for projects that create a .vsix file.
+    Set UseVSSDKTemplateOnly for projects that build templates but no code.
+    -->
+    <UseVSSDK Condition="'$(UseVSSDK)' == ''">false</UseVSSDK>
+    <UseVSSDKTemplateOnly Condition="'$(UseVSSDKTemplateOnly)' == ''">false</UseVSSDKTemplateOnly>
+    <!-- The location to copy VSIX contents so they can be signed and zipped -->
+    <CopyVsixExtensionRoot Condition="'$(CopyVsixExtensionRoot)' == ''">$(BuildOutputRoot)VSIX\</CopyVsixExtensionRoot>
+
+    <!-- These targets are invoked to find VSIX contents on all projects.
+    
+    The files found are used for deployment to the Experimental hive and
+    creation of .vsix files.
+    -->
+    <IncludeVsixItemsFromTargets Condition="'$(IncludeVsixItemsFromTargets)' == '' and '$(Configuration)' == 'Debug'">BuiltProjectOutputGroup;DebugSymbolsProjectOutputGroup</IncludeVsixItemsFromTargets>
+    <IncludeVsixItemsFromTargets Condition="'$(IncludeVsixItemsFromTargets)' == ''">BuiltProjectOutputGroup</IncludeVsixItemsFromTargets>
+    <!-- Copies entire VSIX contents to the output directory. -->
+    <CopyLocalReferenceVsixItems Condition="'$(CopyLocalReferenceVsixItems)' == ''">false</CopyLocalReferenceVsixItems>
   </PropertyGroup>
 
 
@@ -71,11 +108,29 @@
     -->
     <_VSUpdateVersion Condition="$(VSUpdateVersion)=='' and $(VisualStudioVersion)!='10.0'">$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\DevDiv\vs\Servicing\$(VSTarget)\devenv', 'UpdateVersion', null, RegistryView.Registry32))</_VSUpdateVersion>
     <VSUpdateVersion Condition="$(VSUpdateVersion)=='' and $(_VSUpdateVersion)!=''">$([System.Int32]::Parse($(_VSUpdateVersion.Substring($([MSBuild]::Add(1, $(_VSUpdateVersion.LastIndexOf(`.`))))))))</VSUpdateVersion>
-    <VSUpdateVersion Condition="'$(VSUpdateVersion)'=='' or $([MSBuild]::ValueOrDefault($(ReleaseBuild), `false`))">$([System.Int32]::MaxValue)</VSUpdateVersion>
+    <!--<VSUpdateVersion Condition="'$(VSUpdateVersion)'=='' or $(ReleaseBuild)">$([System.Int32]::MaxValue)</VSUpdateVersion>-->
     
     <BuildingWithDev12U3>false</BuildingWithDev12U3>
     <BuildingWithDev12U3 Condition="$(VSTarget) == '12.0' and $(VSUpdateVersion) >= 30723">true</BuildingWithDev12U3>
   </PropertyGroup>
+  
+  <ItemDefinitionGroup>
+    <!-- By default, project references are never copied.
+    
+    Setting Private to true will treat the reference as a critical dependency,
+    but files are only copied if CopyLocalReferenceVsixItems is also true, or if
+    a .vsix file is generated.
+    -->
+    <ProjectReference>
+      <Private>false</Private>
+    </ProjectReference>
+    <ProjectReference2>
+      <Visible>false</Visible>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <BuildReference>true</BuildReference>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </ProjectReference2>
+  </ItemDefinitionGroup>
 
   <Import Project="$(TargetsPath)\Common.Build.CSharp.settings" Condition="'$(MSBuildProjectExtension)' == '.csproj' or '$(MSBuildProjectExtension)' == '.tmp_proj'" />
   <Import Project="$(TargetsPath)\Common.Build.Cpp.settings" Condition="'$(MSBuildProjectExtension)' == '.vcxproj'" />
@@ -89,5 +144,4 @@
   <PropertyGroup>
     <CodeAnalysisRuleSet>$(BuildRoot)\Build\xTVS.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
-
 </Project>

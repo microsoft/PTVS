@@ -30,20 +30,20 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="IronPython">
-      <HintPath>..\..\Product\Python\IronPython\IronPython.dll</HintPath>
+      <HintPath>$(BuildRoot)Python\Product\IronPython\IronPython.dll</HintPath>
     </Reference>
     <Reference Include="IronPython.Modules">
-      <HintPath>..\..\Product\Python\IronPython\IronPython.Modules.dll</HintPath>
+      <HintPath>$(BuildRoot)Python\Product\IronPython\IronPython.Modules.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Microsoft.Dynamic">
-      <HintPath>..\..\Product\Python\IronPython\Microsoft.Dynamic.dll</HintPath>
+      <HintPath>$(BuildRoot)Python\Product\IronPython\Microsoft.Dynamic.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Scripting">
-      <HintPath>..\..\Product\Python\IronPython\Microsoft.Scripting.dll</HintPath>
+      <HintPath>$(BuildRoot)Python\Product\IronPython\Microsoft.Scripting.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Scripting.Metadata">
-      <HintPath>..\..\Product\Python\IronPython\Microsoft.Scripting.Metadata.dll</HintPath>
+      <HintPath>$(BuildRoot)Python\Product\IronPython\Microsoft.Scripting.Metadata.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="System" />
@@ -52,11 +52,6 @@
     </Reference>
     <Reference Include="System.Numerics" />
     <Reference Include="System.XML" />
-  </ItemGroup>
-  <ItemGroup>
-    <CodeAnalysisDependentAssemblyPaths Condition=" '$(VS100COMNTOOLS)' != '' " Include="$(VS100COMNTOOLS)..\IDE\PrivateAssemblies">
-      <Visible>False</Visible>
-    </CodeAnalysisDependentAssemblyPaths>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AnalysisSaveTest.cs" />
@@ -81,20 +76,24 @@
     <Compile Include="UpdaterTests.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Product\Analysis\Analysis.csproj">
+    <ProjectReference Include="$(BuildRoot)Python\Product\Analysis\Analysis.csproj">
       <Project>{A85D479D-67A9-4BDB-904A-7D86DAF68A6F}</Project>
       <Name>Analysis</Name>
       <Aliases>global,analysis</Aliases>
     </ProjectReference>
-    <ProjectReference Include="..\..\Product\Analyzer\Analyzer.csproj">
+    <ProjectReference Include="$(BuildRoot)Python\Product\Analyzer\Analyzer.csproj">
       <Project>{29a4fa1f-a562-4ed1-86fb-5850ef5da92c}</Project>
       <Name>Analyzer</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\Common\Tests\Utilities\TestUtilities.csproj">
+    <ProjectReference Include="$(BuildRoot)Common\Tests\Utilities\TestUtilities.csproj">
       <Project>{D092D54E-FF29-4D32-9AEE-4EF704C92F67}</Project>
       <Name>TestUtilities</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Product\IronPython\IronPython.Interpreter.csproj">
+    <ProjectReference Include="$(BuildRoot)Python\Product\IronPythonResolver\IronPythonResolver.csproj">
+      <Project>{31f224b1-68da-4524-9a1c-95f22492775b}</Project>
+      <Name>IronPythonResolver</Name>
+    </ProjectReference>
+    <ProjectReference Include="$(BuildRoot)Python\Product\IronPython\IronPython.Interpreter.csproj">
       <Project>{012293b1-168a-4c48-a678-db8361b50ba7}</Project>
       <Name>Microsoft.PythonTools.IronPython.Interpreter</Name>
     </ProjectReference>
@@ -105,16 +104,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\..\Product\PythonTools\CompletionDB\*.idb">
-      <Link>CompletionDB\%(Filename)%(Extension)</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="..\..\Product\Analyzer\*.py">
-      <Link>%(Filename)%(Extension)</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
   <Import Project="..\TestProjectAfter.settings" />
 </Project>

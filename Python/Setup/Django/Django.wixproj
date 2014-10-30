@@ -21,13 +21,9 @@
     <Compile Include="Django.wxs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Python\Product\Django\Django.csproj">
+    <ProjectReference Include="$(BuildRoot)\Python\Product\Django\Django.csproj">
       <Name>Microsoft.PythonTools.Django</Name>
       <Project>{639F1EFB-5A8B-4F8B-BF49-BC73F244D38D}</Project>
-      <Private>True</Private>
-      <RefProjectOutputGroups>Binaries</RefProjectOutputGroups>
-      <RefTargetDir>INSTALLLOCATION</RefTargetDir>
-      <DoNotHarvest>true</DoNotHarvest>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

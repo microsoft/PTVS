@@ -37,8 +37,7 @@
     <SccLocalPath>SAK</SccLocalPath>
     <SccAuxPath>SAK</SccAuxPath>
     <SccProvider>SAK</SccProvider>
-    <DeployExtension>True</DeployExtension>
-    <CreateVsixContainer>True</CreateVsixContainer>
+    <UseVSSDK>true</UseVSSDK>
     <StartAction>Program</StartAction>
     <StartProgram>$(DevEnvDir)devenv.exe</StartProgram>
     <StartArguments>/rootSuffix Exp /Log</StartArguments>
@@ -55,84 +54,40 @@
     <ProjectReference Include="..\Analysis\Analysis.csproj">
       <Project>{A85D479D-67A9-4BDB-904A-7D86DAF68A6F}</Project>
       <Name>Microsoft.PythonTools.Analysis</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Analyzer\Analyzer.csproj">
-      <Project>{29a4fa1f-a562-4ed1-86fb-5850ef5da92c}</Project>
-      <Name>Analyzer</Name>
-      <!-- Deliberately omitting SatelliteDllsProjectOutputGroup from the VSIX -->
-      <IncludeOutputGroupsInVSIX>BuiltProjectOutputGroup%3bBuiltProjectOutputGroupDependencies%3bGetCopyToOutputDirectoryItems%3b</IncludeOutputGroupsInVSIX>
-      <IncludeOutputGroupsInVSIXLocalOnly>DebugSymbolsProjectOutputGroup</IncludeOutputGroupsInVSIXLocalOnly>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
-    <ProjectReference Include="..\Attacher\Attacher.csproj">
-      <Project>{666A22BB-0CB5-4C08-A20F-E17450DA6573}</Project>
-      <Name>Attacher</Name>
-      <!--<ReferenceOutputAssembly>false</ReferenceOutputAssembly>-->
-      <!-- Deliberately omitting SatelliteDllsProjectOutputGroup from the VSIX -->
-      <IncludeOutputGroupsInVSIX>BuiltProjectOutputGroup%3bBuiltProjectOutputGroupDependencies%3bGetCopyToOutputDirectoryItems%3b</IncludeOutputGroupsInVSIX>
-      <IncludeOutputGroupsInVSIXLocalOnly>DebugSymbolsProjectOutputGroup%3b</IncludeOutputGroupsInVSIXLocalOnly>
-    </ProjectReference>
-    <ProjectReference Include="..\AttacherX86\AttacherX86.csproj">
-      <Project>{F3A5829D-EE15-4BE7-828F-2519172C6671}</Project>
-      <Name>AttacherX86</Name>
+      <IncludeInVSIX>True</IncludeInVSIX>
     </ProjectReference>
     <ProjectReference Include="..\BuildTasks\BuildTasks.csproj">
       <Project>{89d51398-a003-44ba-b1b2-cfc6f8396d7e}</Project>
       <Name>Microsoft.PythonTools.BuildTasks</Name>
-      <!-- Adding _GetAzureSupportFiles to the VSIX -->
-      <IncludeOutputGroupsInVSIX>BuiltProjectOutputGroup%3bBuiltProjectOutputGroupDependencies%3bGetCopyToOutputDirectoryItems%3bSatelliteDllsProjectOutputGroup%3b_GetAzureSupportFiles%3b</IncludeOutputGroupsInVSIX>
-      <IncludeOutputGroupsInVSIXLocalOnly>DebugSymbolsProjectOutputGroup%3b</IncludeOutputGroupsInVSIXLocalOnly>
+      <IncludeInVSIX>True</IncludeInVSIX>
     </ProjectReference>
     <ProjectReference Include="..\Debugger\Debugger.csproj">
       <Project>{DECC7971-FA58-4DB0-9561-BFFADD393BBD}</Project>
       <Name>Microsoft.PythonTools.Debugger</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ImportWizard\ImportWizard.csproj">
-      <Project>{A5E475F4-8D1F-401A-83D8-92D053E8FBFA}</Project>
-      <Name>Microsoft.PythonTools.ImportWizard</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ProjectWizards\ProjectWizards.csproj">
-      <Project>{3814d9db-10e6-4478-bd98-6c5840612af8}</Project>
-      <Name>Microsoft.PythonTools.ProjectWizards</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ReplWindow\ReplWindow.csproj">
-      <Project>{20BB6FAC-44D2-4D76-ABFE-0C1E163A1A4F}</Project>
-      <Name Condition="'$(InteractiveWindow)' == ''">Microsoft.VisualStudio.ReplWindow</Name>
-      <Name Condition="'$(InteractiveWindow)' != ''">Microsoft.VisualStudio.InteractiveWindow</Name>
-      <Private>True</Private>
-    </ProjectReference>
-    <Content Include="$(OutputPath)PyDebugAttach.dll">
-      <Link>PyDebugAttach.dll</Link>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <Content Include="$(OutputPath)PyDebugAttachX86.dll">
-      <Link>PyDebugAttachX86.dll</Link>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <Content Include="$(OutputPath)Microsoft.PythonTools.Debugger.Helper.x86.dll">
-      <Link>Microsoft.PythonTools.Debugger.Helper.x86.dll</Link>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <Content Include="$(OutputPath)Microsoft.PythonTools.Debugger.Helper.x86.pdb">
-      <Link>Microsoft.PythonTools.Debugger.Helper.x86.pdb</Link>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <Content Include="$(OutputPath)Microsoft.PythonTools.Debugger.Helper.x64.dll">
-      <Link>Microsoft.PythonTools.Debugger.Helper.x64.dll</Link>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <Content Include="$(OutputPath)Microsoft.PythonTools.Debugger.Helper.x64.pdb">
-      <Link>Microsoft.PythonTools.Debugger.Helper.x64.pdb</Link>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <ProjectReference Include="..\TestAdapter\TestAdapter.csproj" Condition="'$(VSTarget)' != '10.0'">
-      <Project>{5085df35-3a32-4894-835e-e5a3956d4f57}</Project>
-      <Name>Microsoft.PythonTools.TestAdapter</Name>
+      <IncludeInVSIX>True</IncludeInVSIX>
     </ProjectReference>
     <ProjectReference Include="..\VSInterpreters\VSInterpreters.csproj">
       <Project>{815db0cd-c0dd-4997-b43c-abee4dbeffe7}</Project>
       <Name>Microsoft.PythonTools.VSInterpreters</Name>
+      <IncludeInVSIX>True</IncludeInVSIX>
     </ProjectReference>
+    <ProjectReference2 Include="..\Analyzer\Analyzer.csproj" />
+    <ProjectReference Include="..\Attacher\Attacher.csproj">
+      <Project>{666A22BB-0CB5-4C08-A20F-E17450DA6573}</Project>
+      <Name>Attacher</Name>
+      <IncludeInVSIX>True</IncludeInVSIX>
+    </ProjectReference>
+    <ProjectReference2 Include="..\AttacherX86\AttacherX86.csproj" />
+    <ProjectReference2 Include="..\ImportWizard\ImportWizard.csproj" />
+    <ProjectReference2 Include="..\ProjectWizards\ProjectWizards.csproj" />
+    <ProjectReference Include="..\ReplWindow\ReplWindow.csproj">
+      <Project>{20BB6FAC-44D2-4D76-ABFE-0C1E163A1A4F}</Project>
+      <Private>false</Private>
+      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+      <Name Condition="'$(InteractiveWindow)' == ''">Microsoft.VisualStudio.ReplWindow</Name>
+      <Name Condition="'$(InteractiveWindow)' != ''">Microsoft.VisualStudio.InteractiveWindow</Name>
+    </ProjectReference>
+    <ProjectReference2 Include="..\TestAdapter\TestAdapter.csproj" Condition="'$(VSTarget)' != '10.0'" />
   </ItemGroup>
   <Choose>
     <When Condition="'$(VSTarget)' == '10.0'">
@@ -140,6 +95,7 @@
         <Reference Include="Microsoft.Windows.Design.Host, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
           <SpecificVersion>False</SpecificVersion>
           <HintPath>$(DevEnvDir)PrivateAssemblies\Microsoft.Windows.Design.Host.dll</HintPath>
+          <Private>false</Private>
         </Reference>
       </ItemGroup>
     </When>
@@ -148,6 +104,7 @@
         <Reference Include="Microsoft.Windows.Design.Host, Version=4.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
           <SpecificVersion>False</SpecificVersion>
           <HintPath>$(DevEnvDir)PrivateAssemblies\Microsoft.Windows.Design.Host.dll</HintPath>
+          <Private>false</Private>
         </Reference>
       </ItemGroup>
     </Otherwise>
@@ -158,11 +115,13 @@
         <Reference Include="Microsoft.VisualStudio.WindowsAzure.CommonAzureTools.Contracts.1.2">
           <SpecificVersion>False</SpecificVersion>
           <HintPath>$(DevEnvDir)Extensions\Microsoft\Windows Azure Tools\Common\Microsoft.VisualStudio.WindowsAzure.CommonAzureTools.Contracts.1.2.dll</HintPath>
+          <Private>false</Private>
         </Reference>
         <Reference Include="Microsoft.VisualStudio.Web.WindowsAzure.Contracts, Version=2.3.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
           <SpecificVersion>True</SpecificVersion>
           <HintPath Condition="Exists('$(DevEnvDir)PrivateAssemblies\Microsoft.VisualStudio.Web.WindowsAzure.Contracts.dll')">$(DevEnvDir)PrivateAssemblies\Microsoft.VisualStudio.Web.WindowsAzure.Contracts.dll</HintPath>
           <HintPath Condition="Exists('$(DevEnvDir)Extensions\Microsoft\Web Tools\WindowsAzure\Microsoft.VisualStudio.Web.WindowsAzure.Contracts.dll')">$(DevEnvDir)Extensions\Microsoft\Web Tools\WindowsAzure\Microsoft.VisualStudio.Web.WindowsAzure.Contracts.dll</HintPath>
+          <Private>false</Private>
         </Reference>
       </ItemGroup>
     </When>
@@ -192,7 +151,9 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Microsoft.VisualStudio.ComponentModelHost, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.CoreUtility, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
-    <Reference Include="Microsoft.VisualStudio.Debugger.Engine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" Condition="'$(VSTarget)' != '10.0'" />
+    <Reference Include="Microsoft.VisualStudio.Debugger.Engine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" Condition="'$(VSTarget)' != '10.0'">
+      <Private>false</Private>
+    </Reference>
     <Reference Include="Microsoft.VisualStudio.Debugger.Interop.10.0, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Debugger.Interop.11.0, Version=11.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" Condition="'$(VSTarget)' != '10.0'" />
     <Reference Include="Microsoft.VisualStudio.Debugger.InteropA, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
@@ -268,12 +229,16 @@
   <Choose>
     <When Condition="'$(VSTarget)' == '10.0'">
       <ItemGroup>
-        <Reference Include="Microsoft.VisualStudio.Settings, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=x86" />
+        <Reference Include="Microsoft.VisualStudio.Settings, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=x86">
+          <Private>false</Private>
+        </Reference>
       </ItemGroup>
     </When>
     <Otherwise>
       <ItemGroup>
-        <Reference Include="Microsoft.VisualStudio.Settings.$(VSTarget), Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=x86" />
+        <Reference Include="Microsoft.VisualStudio.Settings.$(VSTarget), Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=x86">
+          <Private>false</Private>
+        </Reference>
       </ItemGroup>
     </Otherwise>
   </Choose>
@@ -911,15 +876,14 @@
   </ItemGroup>
   <ItemGroup>
     <!-- VSIX -->
-    <None Include="Dev11OrLater\contrast.vstheme" />
+    <None Include="Theme\contrast.vstheme" />
     <None Include="NoSurveyNewsFeed.html" />
     <None Include="NoInterpreters.html" />
-    <Content Include="ptvsd\attach_server.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <None Include="Dev11OrLater\Microsoft.PythonTools.theme.pkgdef" />
-    <None Include="Dev11OrLater\dark.vstheme" />
-    <None Include="Dev11OrLater\make_theme_pkgdef.py" />
+    <None Include="ptvsd\attach_server.py" />
+    <None Include="Theme\Microsoft.PythonTools.theme.v11.0.pkgdef" />
+    <None Include="Theme\Microsoft.PythonTools.theme.v12.0.pkgdef" />
+    <None Include="Theme\dark.vstheme" />
+    <None Include="Theme\make_theme_pkgdef.py" />
     <Content Include="NoInterpreters.mht">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
@@ -928,13 +892,8 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <None Include="RefreshDefaultDB.py" />
-    <Content Include="ptvsd\__init__.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="ptvsd\__main__.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    <None Include="ptvsd\__init__.py" />
+    <Note Include="ptvsd\__main__.py" />
     <Content Include="pip_downloader.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
@@ -1089,18 +1048,6 @@
       <ResourceName>1000</ResourceName>
       <SubType>Designer</SubType>
     </VSCTCompile>
-    <Content Include="$(OutputPath)\DkmDebugger.vsdconfig" Condition="'$(VSTarget)' != '10.0'">
-      <InProject>false</InProject>
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-      <VSIXSubPath>.</VSIXSubPath>
-    </Content>
-    <Content Include="..\Debugger\DkmDebugger\PythonDkm.natvis" Condition="'$(VSTarget)' != '10.0'">
-      <Link>PythonDkm.natvis</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-      <VSIXSubPath>.</VSIXSubPath>
-    </Content>
     <None Include="Dev10\source.extension.vsixmanifest" Condition="'$(VSTarget)' == '10.0'">
       <SubType>Designer</SubType>
     </None>
@@ -1263,14 +1210,6 @@
   <ItemGroup>
     <Folder Include="Templates\Files\EmptyPackage\package\" />
   </ItemGroup>
-  <ItemGroup>
-    <Content Include="CompletionDB\*.idb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>True</IncludeInVSIX>
-      <VSIXSubPath>CompletionDB</VSIXSubPath>
-    </Content>
-  </ItemGroup>
-  <ItemGroup />
   <PropertyGroup>
     <!--
     To specify a different registry root to register your package, uncomment the TargetRegistryRoot
@@ -1289,23 +1228,20 @@
   <Target Name="AfterBuild">
   </Target>
   -->
-  <Target Name="DeployPTVSD" BeforeTargets="GetVsixSourceItems">
+  <Target Name="_DeployPTVSDFiles" AfterTargets="PrepareForBuild" Returns="@(_PTVSDFiles)">
     <ItemGroup>
-      <PTVSDFiles Include="$(OutputPath)visualstudio_py_*.py" />
-      <PTVSDFiles Include="$(OutputPath)ptvsd\*.py" />
-      <VSIXSourceItem Include="@(PTVSDFiles)">
+      <_PTVSDSourceFiles Include="visualstudio_py_*.py;ptvsd\*.py" />
+      <_PTVSDFiles Include="@(_PTVSDSourceFiles->'$(IntermediateOutputPath)ptvsd\%(Filename)%(Extension)')" />
+      <Content Include="@(_PTVSDFiles)">
+        <IncludeInVSIX>true</IncludeInVSIX>
         <VSIXSubPath>ptvsd</VSIXSubPath>
-      </VSIXSourceItem>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        <Link>ptvsd\%(Filename)%(Extension)</Link>
+      </Content>
     </ItemGroup>
-  </Target>
-  <Target Name="DeployThemePkgdef" BeforeTargets="GetVsixSourceItems" Inputs="Dev11OrLater\Microsoft.PythonTools.theme.pkgdef" Outputs="$(OutputPath)Microsoft.PythonTools.theme.pkgdef" Condition="'$(VSTarget)' != '10.0'">
-    <Copy SourceFiles="Dev11OrLater\Microsoft.PythonTools.theme.pkgdef" DestinationFiles="$(OutputPath)Microsoft.PythonTools.theme.pkgdef" OverwriteReadOnlyFiles="true" />
-    <ItemGroup>
-      <VSIXSourceItem Include="$(OutputPath)Microsoft.PythonTools.theme.pkgdef">
-        <VSIXSubPath>
-        </VSIXSubPath>
-      </VSIXSourceItem>
-    </ItemGroup>
+    <Copy SourceFiles="@(_PTVSDSourceFiles)" DestinationFiles="@(_PTVSDFiles)" SkipUnchangedFiles="true">
+      <Output TaskParameter="CopiedFiles" ItemName="FileWrites" />
+    </Copy>
   </Target>
   <Target Name="_CalculateSharedTemplateFiles">
     <ItemGroup>

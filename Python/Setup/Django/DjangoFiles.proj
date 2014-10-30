@@ -3,8 +3,6 @@
     <BuildRoot Condition="'$(BuildRoot)' == ''">$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), build.root))</BuildRoot>
 
     <TargetName>DjangoFiles</TargetName>
-    <SourceDir>$(BuildRoot)\Python\Product\Django\</SourceDir>
-    <ObjDir>$(SourceDir)obj\Dev$(VSTarget)\$(Configuration)</ObjDir>
   </PropertyGroup>
 
   <ItemDefinitionGroup>
@@ -18,7 +16,7 @@
 
   <ItemGroup>
     <!-- Registration files -->
-    <File Include="$(ObjDir)\extension.vsixmanifest" />
+    <File Include="Django\extension.vsixmanifest" />
     <File Include="Microsoft.PythonTools.Django.pkgdef" />
 
     <!-- Core extension -->

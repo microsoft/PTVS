@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+
+  <!--
+  Returns the paths and names required for generating a vsixmanifest file.
+  The default targets for this occasionally return the wrong files depending
+  on some internal ordering.
+  -->
   <Target Name="_GetTargetPath" Returns="@(_ResolvedReference1)">
     <ItemGroup>
       <_ResolvedReference1 Include="$(TargetPath)" />
@@ -12,4 +19,34 @@
       </_ResolvedReference2>
     </ItemGroup>
   </Target>
+
+  <!--
+  Transforms our ConditionalEmbeddedResource into EmbeddedResource item
+  groups with textual replacements in the .resx file.
+  
+  Currently the search and replace just updates the VS target version and
+  the build root.
+    -->
+  <Target Name="ConditionalResx"
+          BeforeTargets="MainResourcesGeneration"
+          Inputs="@(ConditionalEmbeddedResource)"
+          Outputs="@(ConditionalEmbeddedResource->'$(IntermediateOutputPath)%(Filename).xform.resx')">
+    <WriteLinesToFile
+      File="@(ConditionalEmbeddedResource->'$(IntermediateOutputPath)%(Filename).xform.resx')"
+      Lines="$([System.IO.File]::ReadAllText(`%(FullPath)`).Replace(`_VSVERSION_`,`$(VSTarget)`).Replace(`_BUILDROOT_`, `$(BuildRoot)`))"
+      Overwrite="true"/>
+
+    <Message Text="Written to @(ConditionalEmbeddedResource->'$(IntermediateOutputPath)%(Filename).xform.resx')" Importance="normal" />
+    
+    <ItemGroup>
+      <FileWrites Include="@(ConditionalEmbeddedResource->'$(IntermediateOutputPath)%(Filename).xform.resx')" />
+      <EmbeddedResource Include="@(ConditionalEmbeddedResource->'$(IntermediateOutputPath)%(Filename).xform.resx')">
+        <ManifestResourceName>%(ConditionalEmbeddedResource.ManifestResourceName)</ManifestResourceName>
+        <MergeWithCTO Condition="'%(ConditionalEmbeddedResource.MergeWithCTO)' != ''">%(ConditionalEmbeddedResource.MergeWithCTO)</MergeWithCTO>
+        <LastGenOutput Condition="'%(ConditionalEmbeddedResource.LastGenOutput)' != ''">%(ConditionalEmbeddedResource.LastGenOutput)</LastGenOutput>
+        <Generator Condition="'%(ConditionalEmbeddedResource.Generator)' != ''">%(ConditionalEmbeddedResource.Generator)</Generator>
+      </EmbeddedResource>
+    </ItemGroup>
+  </Target>
+
 </Project>

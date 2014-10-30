@@ -22,7 +22,7 @@
       </PropertyGroup>
     </When>
   </Choose>
-  <Import Project="..\ProjectBefore.settings" />
+  <Import Project="..\ToolProjectBefore.settings" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -63,9 +63,10 @@
     <ProjectReference Include="..\Analysis\Analysis.csproj">
       <Project>{a85d479d-67a9-4bdb-904a-7d86daf68a6f}</Project>
       <Name>Analysis</Name>
+      <Private>true</Private>
     </ProjectReference>
   </ItemGroup>
-  <Import Project="..\ProjectAfter.settings" />
+  <Import Project="..\ToolProjectAfter.settings" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

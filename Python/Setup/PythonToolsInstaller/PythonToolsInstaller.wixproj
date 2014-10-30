@@ -60,51 +60,30 @@
     <ProjectReference Include="..\PythonProfiling\PythonProfiling.wixproj">
       <Name>PythonProfiling</Name>
       <Project>{C7D3FCEB-47DA-4539-8D20-6B9047BAC3F7}</Project>
-      <Private>True</Private>
-      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
-      <RefTargetDir>INSTALLLOCATION</RefTargetDir>
     </ProjectReference>
     <ProjectReference Include="..\ReplWindow\ReplWindow.wixproj">
       <Name>ReplWindow</Name>
       <Project>{C0D64130-C0E9-4CAB-99BC-68F62357F010}</Project>
-      <Private>True</Private>
-      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
-      <RefTargetDir>INSTALLLOCATION</RefTargetDir>
     </ProjectReference>
     <ProjectReference Include="..\PythonTools\PythonTools.wixproj">
       <Name>PythonTools</Name>
       <Project>{0D7C4C3A-A08F-4B91-BD1C-C4C79C013484}</Project>
-      <Private>True</Private>
-      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
-      <RefTargetDir>INSTALLLOCATION</RefTargetDir>
     </ProjectReference>
     <ProjectReference Include="..\PythonHpcSupport\PythonHpcSupport.wixproj">
       <Name>PythonHpcSupportMsm</Name>
       <Project>{45DBE334-D497-4441-B136-5BA636173D26}</Project>
-      <Private>True</Private>
-      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
-      <RefTargetDir>INSTALLLOCATION</RefTargetDir>
     </ProjectReference>
     <ProjectReference Include="..\IronPythonInterpreter\IronPythonInterpreter.wixproj">
       <Name>IronPythonInterpreterMsm</Name>
       <Project>{92851481-9141-480E-A85D-85120766949C}</Project>
-      <Private>True</Private>
-      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
-      <RefTargetDir>INSTALLLOCATION</RefTargetDir>
     </ProjectReference>
     <ProjectReference Include="..\Django\Django.wixproj">
       <Name>DjangoMsm</Name>
       <Project>{16671BE6-DD23-41D9-841A-0B80D47A090D}</Project>
-      <Private>True</Private>
-      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
-      <RefTargetDir>INSTALLLOCATION</RefTargetDir>
     </ProjectReference>
     <ProjectReference Include="..\..\..\Internal\Python\VsLoggerSetup\VsLogger.wixproj" Condition="'$(IncludeVsLogger)' == 'True'">
       <Name>VsLoggerMsm</Name>
       <Project>{639BFC80-B31B-4D3F-9DF3-A65913000B4B}</Project>
-      <Private>True</Private>
-      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
-      <RefTargetDir>INSTALLLOCATION</RefTargetDir>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

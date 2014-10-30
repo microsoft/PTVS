@@ -3,14 +3,12 @@
     <BuildRoot Condition="'$(BuildRoot)' == ''">$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), build.root))</BuildRoot>
 
     <TargetName>IronPythonFiles</TargetName>
-    <SourceDir>$(BuildRoot)\Python\Product\IronPython\</SourceDir>
-    <ObjDir>$(SourceDir)obj\Dev$(VSTarget)\$(Configuration)</ObjDir>
   </PropertyGroup>
 
 
   <ItemGroup>
     <!-- Registration files -->
-    <File Include="$(ObjDir)\extension.vsixmanifest" />
+    <File Include="IronPython\extension.vsixmanifest" />
     <File Include="Microsoft.PythonTools.IronPython.pkgdef" />
 
     <!-- Core extension -->

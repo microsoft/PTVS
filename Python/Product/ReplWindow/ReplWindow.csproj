@@ -42,8 +42,7 @@
     <StartAction>Program</StartAction>
     <StartProgram>$(DevEnvDir)devenv.exe</StartProgram>
     <StartArguments>/rootsuffix Exp</StartArguments>
-    <DeployExtension>True</DeployExtension>
-    <CreateVsixContainer>True</CreateVsixContainer>
+    <UseVSSDK>true</UseVSSDK>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -205,13 +204,4 @@
   <Target Name="AfterBuild">
   </Target>
   -->
-  <Target Name="DeployThemePkgdef" BeforeTargets="GetVsixSourceItems" Inputs="Theme\Microsoft.VisualStudio.ReplWindow.theme.v$(VSTarget).pkgdef" Outputs="$(OutputPath)Microsoft.VisualStudio.ReplWindow.theme.pkgdef" Condition="'$(VSTarget)' != '10.0'">
-    <Copy SourceFiles="Theme\Microsoft.VisualStudio.ReplWindow.theme.v$(VSTarget).pkgdef" DestinationFiles="$(OutputPath)Microsoft.VisualStudio.ReplWindow.theme.pkgdef" OverwriteReadOnlyFiles="true" />
-    <ItemGroup>
-      <VSIXSourceItem Include="$(OutputPath)Microsoft.VisualStudio.ReplWindow.theme.pkgdef">
-        <VSIXSubPath>
-        </VSIXSubPath>
-      </VSIXSourceItem>
-    </ItemGroup>
-  </Target>
 </Project>

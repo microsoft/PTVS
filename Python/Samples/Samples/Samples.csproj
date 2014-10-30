@@ -32,13 +32,8 @@
     <OutputType>Library</OutputType>
     <RootNamespace>Microsoft.PythonTools.Samples</RootNamespace>
     <AssemblyName>Microsoft.PythonTools.Samples</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
-    <GeneratePkgDefFile>false</GeneratePkgDefFile>
-    <IncludeAssemblyInVSIXContainer>false</IncludeAssemblyInVSIXContainer>
-    <IncludeDebugSymbolsInVSIXContainer>false</IncludeDebugSymbolsInVSIXContainer>
-    <IncludeDebugSymbolsInLocalVSIXDeployment>false</IncludeDebugSymbolsInLocalVSIXDeployment>
-    <CopyBuildOutputToOutputDirectory>false</CopyBuildOutputToOutputDirectory>
-    <CopyOutputSymbolsToOutputDirectory>false</CopyOutputSymbolsToOutputDirectory>
+    <UseVSSDKTemplateOnly>true</UseVSSDKTemplateOnly>
+    <CreateVsixContainer>true</CreateVsixContainer>
     <SccProjectName>SAK</SccProjectName>
     <SccLocalPath>SAK</SccLocalPath>
     <SccAuxPath>SAK</SccAuxPath>
@@ -55,54 +50,12 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\KinectGame\KinectGame.csproj">
-      <Project>{4FFF0796-44CF-4EF2-90B7-B338FB417FD3}</Project>
-      <Name>KinectGame</Name>
-      <IncludeOutputGroupsInVSIX>TemplateProjectOutputGroup%3b</IncludeOutputGroupsInVSIX>
-      <TemplateType>Project</TemplateType>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-      <VSIXSubPath>ProjectTemplates</VSIXSubPath>
-    </ProjectReference>
-    <ProjectReference Include="..\PollsBottle\PollsBottle.csproj">
-      <Project>{EBFDF065-90B1-4025-8F79-E885C6B2114E}</Project>
-      <Name>PollsBottle</Name>
-      <IncludeOutputGroupsInVSIX>TemplateProjectOutputGroup%3b</IncludeOutputGroupsInVSIX>
-      <TemplateType>Project</TemplateType>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-      <VSIXSubPath>ProjectTemplates</VSIXSubPath>
-    </ProjectReference>
-    <ProjectReference Include="..\PollsDjango\PollsDjango.csproj">
-      <Project>{CF1FEFC2-1CB9-47B6-AD41-73C688ECA341}</Project>
-      <Name>PollsDjango</Name>
-      <IncludeOutputGroupsInVSIX>TemplateProjectOutputGroup%3b</IncludeOutputGroupsInVSIX>
-      <TemplateType>Project</TemplateType>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-      <VSIXSubPath>ProjectTemplates</VSIXSubPath>
-    </ProjectReference>
-    <ProjectReference Include="..\PollsFlaskJade\PollsFlaskJade.csproj">
-      <Project>{E42DEED0-A05F-400D-A9A0-D131F5D638D5}</Project>
-      <Name>PollsFlaskJade</Name>
-      <IncludeOutputGroupsInVSIX>TemplateProjectOutputGroup%3b</IncludeOutputGroupsInVSIX>
-      <TemplateType>Project</TemplateType>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-      <VSIXSubPath>ProjectTemplates</VSIXSubPath>
-    </ProjectReference>
-    <ProjectReference Include="..\PollsFlask\PollsFlask.csproj">
-      <Project>{D7B1EBC4-480B-4ADF-B3EC-76F6A5C5C954}</Project>
-      <Name>PollsFlask</Name>
-      <IncludeOutputGroupsInVSIX>TemplateProjectOutputGroup%3b</IncludeOutputGroupsInVSIX>
-      <TemplateType>Project</TemplateType>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-      <VSIXSubPath>ProjectTemplates</VSIXSubPath>
-    </ProjectReference>
-    <ProjectReference Include="..\PyvotProject\PyvotProject.csproj">
-      <Project>{CBDA204E-65EF-42A6-BCBD-792ACF7FF132}</Project>
-      <Name>PyvotProject</Name>
-      <IncludeOutputGroupsInVSIX>TemplateProjectOutputGroup%3b</IncludeOutputGroupsInVSIX>
-      <TemplateType>Project</TemplateType>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-      <VSIXSubPath>ProjectTemplates</VSIXSubPath>
-    </ProjectReference>
+    <ProjectReference2 Include="..\KinectGame\KinectGame.csproj" />
+    <ProjectReference2 Include="..\PollsBottle\PollsBottle.csproj" />
+    <ProjectReference2 Include="..\PollsDjango\PollsDjango.csproj" />
+    <ProjectReference2 Include="..\PollsFlaskJade\PollsFlaskJade.csproj" />
+    <ProjectReference2 Include="..\PollsFlask\PollsFlask.csproj" />
+    <ProjectReference2 Include="..\PyvotProject\PyvotProject.csproj" />
   </ItemGroup>
   <Import Project="..\ProjectAfter.settings" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

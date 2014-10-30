@@ -3,14 +3,12 @@
     <BuildRoot Condition="'$(BuildRoot)' == ''">$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), build.root))</BuildRoot>
 
     <TargetName>ReplWindowFiles</TargetName>
-    <SourceDir>$(BuildRoot)\Python\Product\ReplWindow\</SourceDir>
-    <ObjDir>$(SourceDir)obj\Dev$(VSTarget)\$(Configuration)</ObjDir>
   </PropertyGroup>
 
 
   <ItemGroup>
     <!-- Registration files -->
-    <File Include="$(ObjDir)\extension.vsixmanifest" />
+    <File Include="ReplWindow\extension.vsixmanifest" />
     <File Include="Microsoft.VisualStudio.ReplWindow.pkgdef" />
     <File Condition="$(VSTarget) != '10.0'"
           Include="Microsoft.VisualStudio.Replwindow.theme.pkgdef" />

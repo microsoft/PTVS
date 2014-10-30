@@ -51,7 +51,7 @@
     <Compile Include="PyAttacherX86.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Attacher\Attacher.csproj">
+    <ProjectReference Include="$(BuildRoot)Python\Product\Attacher\Attacher.csproj">
       <Project>{666A22BB-0CB5-4C08-A20F-E17450DA6573}</Project>
       <Name>Attacher</Name>
     </ProjectReference>

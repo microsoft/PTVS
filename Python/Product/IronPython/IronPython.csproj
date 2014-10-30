@@ -40,8 +40,7 @@
     <SccLocalPath>SAK</SccLocalPath>
     <SccAuxPath>SAK</SccAuxPath>
     <SccProvider>SAK</SccProvider>
-    <DeployExtension>True</DeployExtension>
-    <CreateVsixContainer>True</CreateVsixContainer>
+    <UseVSSDK>true</UseVSSDK>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -140,7 +139,6 @@
     <ProjectReference Include="..\PythonTools\PythonTools.csproj">
       <Project>{FA7BE5F5-E04F-4613-B7AC-70CE10D1BB68}</Project>
       <Name>Microsoft.PythonTools</Name>
-      <Private>False</Private>
     </ProjectReference>
     <ProjectReference Include="IronPython.Interpreter.csproj">
       <Project>{012293b1-168a-4c48-a678-db8361b50ba7}</Project>

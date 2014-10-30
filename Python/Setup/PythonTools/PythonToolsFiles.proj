@@ -4,8 +4,6 @@
     <ProjectGuid>{6AE79541-B1A5-4C40-B431-87252F08157F}</ProjectGuid>
 
     <TargetName>PythonToolsFiles</TargetName>
-    <SourceDir>$(BuildRoot)\Python\Product\PythonTools\</SourceDir>
-    <ObjDir>$(SourceDir)obj\Dev$(VSTarget)\$(Configuration)</ObjDir>
   </PropertyGroup>
 
 
@@ -15,7 +13,7 @@
                           Microsoft.PythonTools.Debugger.dll" />
 
     <!-- Registration files -->
-    <File Include="$(ObjDir)\extension.vsixmanifest" />
+    <File Include="PythonTools\extension.vsixmanifest" />
     <File Include="Microsoft.PythonTools.pkgdef" />
     <File Condition="$(VSTarget) != '10.0'"
           Include="Microsoft.PythonTools.theme.pkgdef" />
@@ -109,7 +107,7 @@
     </File>
 
     <!-- Default Completion DB -->
-    <File Include="$(SourceDir)CompletionDB\*.idb">
+    <File Include="CompletionDB\*.idb">
       <InstallDirectory>CompletionDB</InstallDirectory>
     </File>
   
@@ -133,7 +131,7 @@
                    Microsoft.PythonTools.Debugger.Helper.x64.dll;
                    Microsoft.PythonTools.Debugger.Helper.x64.pdb;
                    DkmDebugger.vsdconfig;
-                   PythonDkm.natvis" />
+                   DkmDebugger\PythonDkm.natvis" />
     
     <!-- Unit Test Adapter -->
     <File Condition="$(VSTarget) != '10.0'"

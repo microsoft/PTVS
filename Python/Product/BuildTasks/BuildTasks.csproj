@@ -75,34 +75,34 @@
   <ItemGroup>
     <Content Include="Microsoft.PythonTools.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVsix>true</IncludeInVsix>
+      <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <Content Include="TestTargets\README.txt" />
     <Content Include="Microsoft.PythonTools.Web.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVsix>true</IncludeInVsix>
+      <IncludeInVSIX>true</IncludeInVSIX>
       <SubType>Designer</SubType>
     </Content>
     <Content Include="ptvs_virtualenv_proxy.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVsix>true</IncludeInVsix>
+      <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <Content Include="web_config.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVsix>true</IncludeInVsix>
+      <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <Content Include="web_debug_config.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVsix>true</IncludeInVsix>
+      <IncludeInVSIX>true</IncludeInVSIX>
       <SubType>Designer</SubType>
     </Content>
     <Content Include="wfastcgi.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVsix>true</IncludeInVsix>
+      <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <Content Include="Microsoft.PythonTools.Worker.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVsix>true</IncludeInVsix>
+      <IncludeInVSIX>true</IncludeInVSIX>
       <SubType>Designer</SubType>
     </Content>
     <None Include="TestTargets\Microsoft.PythonTools.Django.targets" />
@@ -111,26 +111,16 @@
     <None Include="TestTargets\Microsoft.PythonTools.Worker.targets" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Analysis\Analysis.csproj">
+    <ProjectReference Include="$(BuildRoot)Python\Product\Analysis\Analysis.csproj">
       <Project>{a85d479d-67a9-4bdb-904a-7d86daf68a6f}</Project>
       <Name>Microsoft.PythonTools.Analysis</Name>
     </ProjectReference>
-    <ProjectReference Include="..\VSInterpreters\VSInterpreters.csproj">
+    <ProjectReference Include="$(BuildRoot)Python\Product\VSInterpreters\VSInterpreters.csproj">
       <Project>{815db0cd-c0dd-4997-b43c-abee4dbeffe7}</Project>
       <Name>Microsoft.PythonTools.VSInterpreters</Name>
     </ProjectReference>
-    <ProjectReference Include="..\AzureSetup\AzureSetup.csproj">
-      <Project>{b6905758-81d9-4287-be59-5d4e2f336414}</Project>
-      <Name>AzureSetup</Name>
-      <OutputItemType>_SupportFiles</OutputItemType>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
-    <ProjectReference Include="..\WebRole\WebRole.csproj">
-      <Project>{304ab14d-4e63-4004-8d63-ab8da2c601b4}</Project>
-      <Name>WebRole</Name>
-      <OutputItemType>_SupportFiles</OutputItemType>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
+    <ProjectReference2 Include="$(BuildRoot)Python\Product\AzureSetup\AzureSetup.csproj" />
+    <ProjectReference2 Include="$(BuildRoot)Python\Product\WebRole\WebRole.csproj" />
   </ItemGroup>
   <Import Project="..\ProjectAfter.settings" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
@@ -140,13 +130,4 @@
   <Target Name="AfterBuild">
   </Target>
   -->
-  <!-- These targets are invoked from PythonTools.csproj to collect correct
-       information about this project. -->
-  <Target Name="_GetAzureSupportFiles" Returns="@(_SupportFiles)">
-    <ItemGroup>
-      <!-- _SupportFiles already includes the outputs of AzureSetup and WebRole,
-           but we need to add the config file manually. -->
-      <_SupportFiles Include="$(OutDir)Microsoft.PythonTools.AzureSetup.exe.config" />
-    </ItemGroup>
-  </Target>
 </Project>

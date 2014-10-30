@@ -3,14 +3,12 @@
     <BuildRoot Condition="'$(BuildRoot)' == ''">$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), build.root))</BuildRoot>
 
     <TargetName>HpcFiles</TargetName>
-    <SourceDir>$(BuildRoot)\Python\Product\Hpc\</SourceDir>
-    <ObjDir>$(SourceDir)obj\Dev$(VSTarget)\$(Configuration)</ObjDir>
   </PropertyGroup>
 
 
   <ItemGroup>
     <!-- Registration files -->
-    <File Include="$(ObjDir)\extension.vsixmanifest" />
+    <File Include="Hpc\extension.vsixmanifest" />
     <File Include="Microsoft.PythonTools.Hpc.pkgdef" />
 
     <!-- Core extension -->

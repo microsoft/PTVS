@@ -170,40 +170,40 @@
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="400" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Icons\Dev_VSVERSION_\PythonProject.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+    <value>_BUILDROOT_\Python\Product\Icons\Dev_VSVERSION_\PythonProject.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="401" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Icons\Dev_VSVERSION_\PythonEmptyApplication.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+    <value>_BUILDROOT_\Python\Product\Icons\Dev_VSVERSION_\PythonEmptyApplication.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="402" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\icons\dev_VSVERSION_\IronPythonWPFApplication.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+    <value>_BUILDROOT_\Python\Product\Icons\dev_VSVERSION_\IronPythonWPFApplication.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="403" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\icons\dev_VSVERSION_\PythonWindowsForm.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+    <value>_BUILDROOT_\Python\Product\Icons\dev_VSVERSION_\PythonWindowsForm.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="404" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\icons\dev_VSVERSION_\PythonFile.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+    <value>_BUILDROOT_\Python\Product\Icons\dev_VSVERSION_\PythonFile.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="405" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\icons\dev_VSVERSION_\IronPythonWpfWindow.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+    <value>_BUILDROOT_\Python\Product\Icons\dev_VSVERSION_\IronPythonWpfWindow.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="406" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\icons\dev_VSVERSION_\PythonWebSite.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+    <value>_BUILDROOT_\Python\Product\Icons\dev_VSVERSION_\PythonWebSite.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="407" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\icons\dev_VSVERSION_\InterpreterList.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+    <value>_BUILDROOT_\Python\Product\Icons\dev_VSVERSION_\InterpreterList.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="408" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\icons\dev_VSVERSION_\PythonWorkerProject.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+    <value>_BUILDROOT_\Python\Product\Icons\dev_VSVERSION_\PythonWorkerProject.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="409" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\icons\dev_VSVERSION_\HTML.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+    <value>_BUILDROOT_\Python\Product\Icons\dev_VSVERSION_\HTML.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="410" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\icons\dev_VSVERSION_\CSS.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+    <value>_BUILDROOT_\Python\Product\Icons\dev_VSVERSION_\CSS.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="411" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\icons\dev_VSVERSION_\JS.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+    <value>_BUILDROOT_\Python\Product\Icons\dev_VSVERSION_\JS.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="3006" xml:space="preserve">
     <value>Python</value>

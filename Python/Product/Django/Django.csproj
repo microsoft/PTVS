@@ -33,6 +33,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Microsoft.PythonTools.Django</RootNamespace>
     <AssemblyName>Microsoft.PythonTools.Django</AssemblyName>
+    <UseVSSDK>true</UseVSSDK>
     <SccProjectName>SAK</SccProjectName>
     <SccLocalPath>SAK</SccLocalPath>
     <SccAuxPath>SAK</SccAuxPath>
@@ -474,7 +475,6 @@
     <UseCodebase>true</UseCodebase>
   </PropertyGroup>
   <Import Project="..\ProjectAfter.settings" />
-  <Import Project="$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\VSSDK\Microsoft.VsSDK.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

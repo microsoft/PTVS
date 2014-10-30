@@ -38,6 +38,10 @@
     <ProjectFile Include="WebRole\WebRole.csproj"/>
     <ProjectFile Include="Django\Django.csproj"/>
 
+    
+    <ProjectFile Include="AnalysisBrowser\AnalysisBrowser.csproj" />
+    <ProjectFile Include="AnalysisMemoryTester\AnalysisMemoryTester.csproj" />
+
     <ProjectFile Include="ML\ML.csproj" Condition="'$(VSTarget)' == '12.0'"/>
   </ItemGroup>
 
