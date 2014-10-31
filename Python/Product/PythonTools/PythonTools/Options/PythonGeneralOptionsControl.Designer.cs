@@ -88,7 +88,6 @@
             this._showOutputWindowForVirtualEnvCreate.TabIndex = 0;
             this._showOutputWindowForVirtualEnvCreate.Text = "Show Output window when creating &virtual environments";
             this._showOutputWindowForVirtualEnvCreate.UseVisualStyleBackColor = true;
-            this._showOutputWindowForVirtualEnvCreate.CheckedChanged += new System.EventHandler(this._showOutputWindowForVirtualEnvCreate_CheckedChanged);
             // 
             // _showOutputWindowForPackageInstallation
             // 
@@ -101,7 +100,6 @@
             this._showOutputWindowForPackageInstallation.TabIndex = 1;
             this._showOutputWindowForPackageInstallation.Text = "Show Output window when &installing or removing packages";
             this._showOutputWindowForPackageInstallation.UseVisualStyleBackColor = true;
-            this._showOutputWindowForPackageInstallation.CheckedChanged += new System.EventHandler(this._showOutputWindowForPackageInstallation_CheckedChanged);
             // 
             // _autoAnalysis
             // 
@@ -115,7 +113,6 @@
             this._autoAnalysis.TabIndex = 4;
             this._autoAnalysis.Text = "&Automatically generate completion DB on first use";
             this._autoAnalysis.UseVisualStyleBackColor = true;
-            this._autoAnalysis.CheckedChanged += new System.EventHandler(this._autoAnalysis_CheckedChanged);
             // 
             // _updateSearchPathsForLinkedFiles
             // 
@@ -129,7 +126,6 @@
             this._updateSearchPathsForLinkedFiles.TabIndex = 5;
             this._updateSearchPathsForLinkedFiles.Text = "&Update search paths when adding linked files";
             this._updateSearchPathsForLinkedFiles.UseVisualStyleBackColor = true;
-            this._updateSearchPathsForLinkedFiles.CheckedChanged += new System.EventHandler(this._updateSearchPathsForLinkedFiles_CheckedChanged);
             // 
             // _indentationInconsistentLabel
             // 
@@ -158,7 +154,6 @@
             this._indentationInconsistentCombo.Name = "_indentationInconsistentCombo";
             this._indentationInconsistentCombo.Size = new System.Drawing.Size(190, 21);
             this._indentationInconsistentCombo.TabIndex = 8;
-            this._indentationInconsistentCombo.SelectedIndexChanged += new System.EventHandler(this._indentationInconsistentCombo_SelectedIndexChanged);
             // 
             // _surveyNewsCheckLabel
             // 
@@ -188,7 +183,6 @@
             this._surveyNewsCheckCombo.Name = "_surveyNewsCheckCombo";
             this._surveyNewsCheckCombo.Size = new System.Drawing.Size(190, 21);
             this._surveyNewsCheckCombo.TabIndex = 10;
-            this._surveyNewsCheckCombo.SelectedIndexChanged += new System.EventHandler(this._surveyNewsCheckCombo_SelectedIndexChanged);
             // 
             // _elevatePip
             // 
@@ -201,7 +195,6 @@
             this._elevatePip.TabIndex = 2;
             this._elevatePip.Text = "Always run &pip as administrator";
             this._elevatePip.UseVisualStyleBackColor = true;
-            this._elevatePip.CheckedChanged += new System.EventHandler(this._elevatePip_CheckedChanged);
             // 
             // _elevateEasyInstall
             // 
@@ -214,7 +207,6 @@
             this._elevateEasyInstall.TabIndex = 3;
             this._elevateEasyInstall.Text = "Always run &easy_install as administrator";
             this._elevateEasyInstall.UseVisualStyleBackColor = true;
-            this._elevateEasyInstall.CheckedChanged += new System.EventHandler(this._elevateEasyInstall_CheckedChanged);
             // 
             // _unresolvedImportWarning
             // 
@@ -228,7 +220,6 @@
             this._unresolvedImportWarning.TabIndex = 6;
             this._unresolvedImportWarning.Text = "&Warn when imported module cannot be found";
             this._unresolvedImportWarning.UseVisualStyleBackColor = true;
-            this._unresolvedImportWarning.CheckedChanged += new System.EventHandler(this._unresolvedImportWarning_CheckedChanged);
             // 
             // _clearGlobalPythonPath
             // 
@@ -242,7 +233,6 @@
             this._clearGlobalPythonPath.TabIndex = 5;
             this._clearGlobalPythonPath.Text = "&Ignore system-wide PYTHONPATH variables";
             this._clearGlobalPythonPath.UseVisualStyleBackColor = true;
-            this._clearGlobalPythonPath.CheckedChanged += new System.EventHandler(this._clearGlobalPythonPath_CheckedChanged);
             // 
             // PythonGeneralOptionsControl
             // 
@@ -256,7 +246,6 @@
             this.tableLayoutPanel3.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
-
         }
 
         #endregion

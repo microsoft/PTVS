@@ -44,7 +44,6 @@
             this._promptOnBuildError.TabIndex = 0;
             this._promptOnBuildError.Text = "&Prompt before running when errors are present";
             this._promptOnBuildError.UseVisualStyleBackColor = true;
-            this._promptOnBuildError.CheckedChanged += new System.EventHandler(this._promptOnBuildError_CheckedChanged);
             // 
             // _waitOnAbnormalExit
             // 
@@ -57,7 +56,6 @@
             this._waitOnAbnormalExit.TabIndex = 1;
             this._waitOnAbnormalExit.Text = "&Wait for input when process exits abnormally";
             this._waitOnAbnormalExit.UseVisualStyleBackColor = true;
-            this._waitOnAbnormalExit.CheckedChanged += new System.EventHandler(this._waitOnExit_CheckedChanged);
             // 
             // _waitOnNormalExit
             // 
@@ -70,7 +68,6 @@
             this._waitOnNormalExit.TabIndex = 2;
             this._waitOnNormalExit.Text = "Wai&t for input when process exits normally";
             this._waitOnNormalExit.UseVisualStyleBackColor = true;
-            this._waitOnNormalExit.CheckedChanged += new System.EventHandler(this._waitOnNormalExit_CheckedChanged);
             // 
             // _teeStdOut
             // 
@@ -83,7 +80,6 @@
             this._teeStdOut.TabIndex = 3;
             this._teeStdOut.Text = "Tee program output to &Debug Output window";
             this._teeStdOut.UseVisualStyleBackColor = true;
-            this._teeStdOut.CheckedChanged += new System.EventHandler(this._redirectOutputToVs_CheckedChanged);
             // 
             // _breakOnSystemExitZero
             // 
@@ -96,7 +92,6 @@
             this._breakOnSystemExitZero.TabIndex = 4;
             this._breakOnSystemExitZero.Text = "Break on SystemExit exception with exit code of &zero";
             this._breakOnSystemExitZero.UseVisualStyleBackColor = true;
-            this._breakOnSystemExitZero.CheckedChanged += new System.EventHandler(this._breakOnSystemExitZero_CheckedChanged);
             // 
             // tableLayoutPanel2
             // 
@@ -135,7 +130,6 @@
             this._debugStdLib.TabIndex = 5;
             this._debugStdLib.Text = "Enable debugging of the Python standard &library";
             this._debugStdLib.UseVisualStyleBackColor = true;
-            this._debugStdLib.CheckedChanged += new System.EventHandler(this._debugStdLib_CheckedChanged);
             // 
             // PythonDebuggingOptionsControl
             // 

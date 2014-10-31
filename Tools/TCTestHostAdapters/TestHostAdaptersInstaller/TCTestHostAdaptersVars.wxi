@@ -96,6 +96,31 @@
     <?define C_VSIdeTestHostAddinPdb_Guid=B781A8C4-3924-45CF-B28E-E787F709C863?>
     <?define C_RemoteTestDll_Guid=6BE6F4BA-F01D-4774-9A83-FE278BBBD69E?>
     <?define C_RemoteTestTlb_Guid=BCD9646A-4CDA-415C-ABC9-45BF32BF47E9?>
+  <?elseif "$(var.VsRegistryVersion)" = "14.0" ?>
+    <?define VsName="Visual Studio 14"?>
+    <?define VsAddinName=TcVsIdeTestHost.14.0?>
+
+    <!-- Match the definition in Microsoft.TC.TestHostAdapters\Common\Constants.cs -->
+    <?define VsIdeTestHostAddinGuid=AD2680B2-CBF5-4A51-B760-78691C674DDD?>
+
+    <!-- Match the definition in Microsoft.TC.RemoteTest\RemoteTest.cs -->
+    <?define IRemoteTestGuid=710DACCD-F14D-43A8-A238-F3DE9CC967E3?>
+    <?define IRemoteTestProviderGuid=FAF32156-BC74-4E08-A5AB-7BE07B3EFBB1?>
+    <?define RemoteTestComponentGuid=843B32E7-F100-4383-BDF2-8228A6A07A9B?>
+    <?define DefaultRemoteTestProviderGuid=1998141F-810E-472D-A3C7-1272324D80A2?>
+    <?define RemoteTestTypeLibGuid=8302BFCD-A156-4881-A025-43513DFBD7F4?>
+
+    <!-- Product GUIDs: Must just be unique-->
+    <?define InstallerGuid=529F8B07-3EB1-4D1B-AF51-35BA1DAD9CE6?>
+    <?define InstallerUpgradeGuid=AB611EEE-413A-4779-B5ED-0876E95C1804?>
+
+    <?define C_VsIdeTestHostAddinXml_Guid=0C8A1227-32ED-4E2F-824E-E8B7D93D8CEF?>
+    <?define C_VsIdeTestHostFrameworkDll_Guid=6837F0CE-B4B7-421E-8CA0-01B1B4FC3E9F?>
+    <?define C_VSIdeTestHostFrameworkPdb_Guid=4D6A1D79-D24A-4A48-B39A-7E8D6FE02013?>
+    <?define C_VSIdeTestHostAddinDll_Guid=D4047476-DA8D-478A-A6D8-4120AFE71673?>
+    <?define C_VSIdeTestHostAddinPdb_Guid=A06309B4-A432-46AB-A67D-F048681ABAEC?>
+    <?define C_RemoteTestDll_Guid=E9C1AD61-620E-41BA-92B0-604AE40ADB97?>
+    <?define C_RemoteTestTlb_Guid=B1FA4E9D-73DB-4628-9602-C88AA762CC43?>
   <?else?>
     <?error Unrecognized VS Version. ?>
   <?endif?>

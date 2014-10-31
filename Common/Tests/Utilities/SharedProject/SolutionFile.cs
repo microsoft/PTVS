@@ -72,6 +72,8 @@ namespace TestUtilities.SharedProject {
             StringBuilder slnFile = new StringBuilder("\r\nMicrosoft Visual Studio Solution File, Format Version 12.00\r\n\u0023 Visual Studio 2012\r\n");
 #elif DEV12
             StringBuilder slnFile = new StringBuilder("\r\nMicrosoft Visual Studio Solution File, Format Version 12.00\r\n\u0023 Visual Studio 2013\r\nVisualStudioVersion = 12.0.20827.3\r\nMinimumVisualStudioVersion = 10.0.40219.1\r\n");
+#elif DEV14
+            StringBuilder slnFile = new StringBuilder("\r\nMicrosoft Visual Studio Solution File, Format Version 12.00\r\n\u0023 Visual Studio 14\r\nVisualStudioVersion = 14.0.21803.0\r\nMinimumVisualStudioVersion = 10.0.40219.1\r\n");
 #else
 #error Unsupported VS version
 #endif

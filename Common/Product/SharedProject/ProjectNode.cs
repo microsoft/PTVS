@@ -1248,7 +1248,7 @@ namespace Microsoft.VisualStudioTools.Project {
             };
 
             var items = this.buildProject.GetItems("AvailableItemName");
-            itemTypes = itemTypes.Union(items.Select(x => x.EvaluatedInclude));            
+            itemTypes = itemTypes.Union(items.Select(x => x.EvaluatedInclude));
 
             return itemTypes;
         }
@@ -1495,7 +1495,7 @@ namespace Microsoft.VisualStudioTools.Project {
 
                     // based on the passed in flags, this either reloads/loads a project, or tries to create a new one
                     // now we create a new project... we do that by loading the template and then saving under a new name
-                    // we also need to copy all the associated files with it.					
+                    // we also need to copy all the associated files with it.
                     if ((flags & (uint)__VSCREATEPROJFLAGS.CPF_CLONEFILE) == (uint)__VSCREATEPROJFLAGS.CPF_CLONEFILE) {
                         Debug.Assert(File.Exists(fileName), "Invalid filename passed to load the project. A valid filename is expected");
 
@@ -5727,7 +5727,7 @@ If the files in the existing folder have the same names as files in the folder y
                 }
             }
         }
-        
+
         internal void OnPropertyChanged(HierarchyNode node, int propid, uint flags) {
             Utilities.ArgumentNotNull("node", node);
 
@@ -5930,11 +5930,11 @@ If the files in the existing folder have the same names as files in the folder y
                 } else {
                     // if a SaveAs occurred we need to update to the fact our item's name has changed.
                     // this includes the following:
-                    // 	  1. call RenameDocument on the RunningDocumentTable
-                    // 	  2. update the full path name for the item in our hierarchy
-                    // 	  3. a directory-based project may need to transfer the open editor to the
-                    // 	 	 MiscFiles project if the new file is saved outside of the project directory.
-                    // 	 	 This is accomplished by calling IVsExternalFilesManager::TransferDocument                    
+                    //    1. call RenameDocument on the RunningDocumentTable
+                    //    2. update the full path name for the item in our hierarchy
+                    //    3. a directory-based project may need to transfer the open editor to the
+                    //       MiscFiles project if the new file is saved outside of the project directory.
+                    //       This is accomplished by calling IVsExternalFilesManager::TransferDocument                    
 
                     // we have three options for a saveas action to be performed
                     // 1. the flag was set (the save as command was triggered)

@@ -648,14 +648,14 @@ namespace Microsoft.PythonTools.Language {
 
                     case VSConstants.VSStd2KCmdID.COMMENT_BLOCK:
                     case VSConstants.VSStd2KCmdID.COMMENTBLOCK:
-                        if (EditorExtensions.CommentOrUncommentBlock(_textView, comment: true)) {
+                        if (_textView.CommentOrUncommentBlock(comment: true)) {
                             return VSConstants.S_OK;
                         }
                         break;
 
                     case VSConstants.VSStd2KCmdID.UNCOMMENT_BLOCK:
                     case VSConstants.VSStd2KCmdID.UNCOMMENTBLOCK:
-                        if (EditorExtensions.CommentOrUncommentBlock(_textView, comment: false)) {
+                        if (_textView.CommentOrUncommentBlock(comment: false)) {
                             return VSConstants.S_OK;
                         }
                         break;

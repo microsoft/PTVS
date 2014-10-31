@@ -60,7 +60,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// Disable rename
         /// </summary>
         /// <param name="label">new label</param>
-        /// <returns>E_NOTIMPLE in order to tell the call that we do not support rename</returns>
+        /// <returns>E_NOTIMPL in order to tell the call that we do not support rename</returns>
         public override string GetEditLabel() {
             throw new NotImplementedException();
         }

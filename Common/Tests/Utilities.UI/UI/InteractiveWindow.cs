@@ -278,7 +278,7 @@ namespace TestUtilities.UI {
             Assert.IsTrue(ReadyForInput.WaitOne(10000));
         }
 
-        internal IReplWindow ReplWindow {
+        internal IReplWindow2 ReplWindow {
             get {
                 return _replWindow;
             }
@@ -298,7 +298,7 @@ namespace TestUtilities.UI {
 
         public void WithStandardInputPrompt(string prompt, Action<string> action) {
             if ((bool)ReplWindow.GetOptionValue(ReplOptions.DisplayPromptInMargin)) {
-                action("");
+                action(String.Empty);
                 return;
             }
 

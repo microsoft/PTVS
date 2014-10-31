@@ -57,6 +57,10 @@
         <Setter Property="FontFamily" Value="Segoe UI" />
         <Setter Property="Margin" Value="0" />
     </Style>
+    
+    <Style TargetType="{x:Type ScrollViewer}">
+        <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:Controls.ForegroundKey}}"/>
+    </Style>
 
     <Style x:Key="BulletedLabel" TargetType="{x:Type Label}" BasedOn="{StaticResource {x:Type Label}}">
         <Setter Property="Padding" Value="1" />
@@ -96,6 +100,9 @@
         <Style.Triggers>
             <Trigger Property="IsFocused" Value="True">
                 <Setter Property="BorderBrush" Value="{DynamicResource {x:Static wpf:Controls.ControlBorderSelectedKey}}" />
+            </Trigger>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="{DynamicResource {x:Static wpf:Controls.ControlBackgroundHoverKey}}" />
             </Trigger>
             <Trigger Property="IsEnabled" Value="False">
                 <Setter Property="Background" Value="{DynamicResource {x:Static wpf:Controls.ControlBackgroundDisabledKey}}" />
@@ -188,14 +195,25 @@
             <Trigger Property="IsPressed" Value="True">
                 <Setter Property="BorderBrush" Value="{DynamicResource {x:Static wpf:Controls.ControlBorderSelectedKey}}" />
             </Trigger>
+            <Trigger Property="IsKeyboardFocused" Value="True">
+                <Setter Property="BorderBrush" Value="{DynamicResource {x:Static wpf:Controls.ControlBorderKey}}" />
+            </Trigger>
+            <Trigger Property="IsMouseOver" Value="True" >
+                <Setter Property="BorderBrush" Value="{DynamicResource {x:Static wpf:Controls.ButtonBorderHoverKey}}" />
+                <Setter Property="Background" Value="{DynamicResource {x:Static wpf:Controls.ButtonBackgroundHoverKey}}" />
+            </Trigger>
+            <Trigger Property="IsPressed" Value="True" >
+                <Setter Property="Background" Value="{DynamicResource {x:Static wpf:Controls.ButtonBackgroundPressedKey}}" />
+                <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:Controls.ButtonForegroundPressedKey}}" />
+            </Trigger>
             <MultiTrigger>
                 <MultiTrigger.Conditions>
                     <Condition Property="IsDefault" Value="True" />
                     <Condition Property="IsEnabled" Value="True" />
                     <Condition Property="IsMouseOver" Value="False" />
+                    <Condition Property="IsKeyboardFocused" Value="False" />
                 </MultiTrigger.Conditions>
                 <Setter Property="BorderBrush" Value="{DynamicResource {x:Static wpf:Controls.ControlBorderSelectedKey}}" />
-                <Setter Property="BorderThickness" Value="2" />
             </MultiTrigger>
             <MultiTrigger>
                 <MultiTrigger.Conditions>
@@ -204,7 +222,6 @@
                     <Condition Property="IsMouseOver" Value="True" />
                 </MultiTrigger.Conditions>
                 <Setter Property="BorderBrush" Value="{DynamicResource {x:Static wpf:Controls.ControlBorderHoverKey}}" />
-                <Setter Property="BorderThickness" Value="2" />
             </MultiTrigger>
         </Style.Triggers>
     </Style>
@@ -373,7 +390,15 @@
         </Style.Triggers>
     </Style>
 
-    <Style TargetType="{x:Type ListView}" BasedOn="{StaticResource {x:Type Control}}" />
+    <Style TargetType="{x:Type ListView}" BasedOn="{StaticResource {x:Type Control}}" >
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="BorderBrush" Value="{DynamicResource {x:Static wpf:Controls.ControlBorderKey}}" />
+                <Setter Property="Background" Value="{DynamicResource {x:Static wpf:Controls.ControlBackgroundKey}}" />
+            </Trigger>
+        </Style.Triggers>
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+    </Style>
     <Style TargetType="{x:Type ListViewItem}">
         <Setter Property="FocusVisualStyle" Value="{StaticResource FocusVisualStyle}" />
     </Style>

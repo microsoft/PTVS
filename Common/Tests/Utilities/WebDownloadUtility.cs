@@ -21,9 +21,12 @@ namespace TestUtilities {
         public static string GetString(Uri siteUri) {
             string text;
             var req = HttpWebRequest.CreateHttp(siteUri);
-            using (var resp = req.GetResponse()) {
-                text = new StreamReader(resp.GetResponseStream()).ReadToEnd();
+            
+            using (var resp = req.GetResponse())
+            using (StreamReader reader = new StreamReader(resp.GetResponseStream())) {
+                text = reader.ReadToEnd();
             }
+
             return text;
         }
     }

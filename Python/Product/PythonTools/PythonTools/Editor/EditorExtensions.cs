@@ -19,7 +19,7 @@ using Microsoft.VisualStudio.Text.Editor;
 
 namespace Microsoft.PythonTools.Editor.Core {
     internal static class EditorExtensions {
-        public static bool CommentOrUncommentBlock(ITextView view, bool comment) {
+        public static bool CommentOrUncommentBlock(this ITextView view, bool comment) {
             SnapshotPoint start, end;
             SnapshotPoint? mappedStart, mappedEnd;
 
@@ -58,7 +58,7 @@ namespace Microsoft.PythonTools.Editor.Core {
                 // TODO: select multiple spans?
                 // Select the full region we just commented, do not select if in projection buffer 
                 // (the selection might span non-language buffer regions)
-                if (IsPythonContent(view.TextBuffer)) {
+                if (view.TextBuffer.IsPythonContent()) {
                     UpdateSelection(view, start, end);
                 }
                 return true;
@@ -67,11 +67,11 @@ namespace Microsoft.PythonTools.Editor.Core {
             return false;
         }
 
-        internal static bool IsPythonContent(ITextBuffer buffer) {
+        internal static bool IsPythonContent(this ITextBuffer buffer) {
             return buffer.ContentType.IsOfType(PythonCoreConstants.ContentType);
         }
 
-        internal static bool IsPythonContent(ITextSnapshot buffer) {
+        internal static bool IsPythonContent(this ITextSnapshot buffer) {
             return buffer.ContentType.IsOfType(PythonCoreConstants.ContentType);
         }
 

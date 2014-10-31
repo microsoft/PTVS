@@ -136,11 +136,7 @@ visualstudio_py_repl.BACKEND.attach()";
             if (CurrentOptions != null) {
                 _smartReplHistory.Checked = CurrentOptions.ReplSmartHistory;
 
-                switch (CurrentOptions.ReplIntellisenseMode) {
-                    case ReplIntellisenseMode.AlwaysEvaluate: _evalAlways.Checked = true; break;
-                    case ReplIntellisenseMode.DontEvaluateCalls: _evalNoCalls.Checked = true; break;
-                    case ReplIntellisenseMode.NeverEvaluate: _evalNever.Checked = true; break;
-                }
+                ReplIntellisenseMode = CurrentOptions.ReplIntellisenseMode;
 
                 _inlinePrompts.Checked = CurrentOptions.InlinePrompts;
                 _useUserDefinedPrompts.Checked = !CurrentOptions.UseInterpreterPrompts;
@@ -180,26 +176,35 @@ visualstudio_py_repl.BACKEND.attach()";
 
         internal PythonInteractiveOptions CurrentOptions { get; private set; }
 
+        internal ReplIntellisenseMode ReplIntellisenseMode {
+            get {
+                if (_evalNever.Checked) {
+                    return ReplIntellisenseMode.NeverEvaluate;
+                } else if (_evalNoCalls.Checked) {
+                    return ReplIntellisenseMode.DontEvaluateCalls;
+                } else if (_evalAlways.Checked) {
+                    return ReplIntellisenseMode.AlwaysEvaluate;
+                } else {
+                    return ReplIntellisenseMode.NeverEvaluate;
+                }
+            }
+            set {
+                switch (value) {
+                    case ReplIntellisenseMode.AlwaysEvaluate: 
+                        _evalAlways.Checked = true; 
+                        break;
+                    case ReplIntellisenseMode.DontEvaluateCalls: 
+                        _evalNoCalls.Checked = true; 
+                        break;
+                    case ReplIntellisenseMode.NeverEvaluate: 
+                        _evalNever.Checked = true; 
+                        break;
+                }
+            }
+        }
+
         private void _smartReplHistory_CheckedChanged(object sender, EventArgs e) {
             CurrentOptions.ReplSmartHistory = _smartReplHistory.Checked;
-        }
-
-        private void _evalNever_CheckedChanged(object sender, EventArgs e) {
-            if (_evalNever.Checked) {
-                CurrentOptions.ReplIntellisenseMode = ReplIntellisenseMode.NeverEvaluate;
-            }
-        }
-
-        private void _evalNoCalls_CheckedChanged(object sender, EventArgs e) {
-            if (_evalNoCalls.Checked) {
-                CurrentOptions.ReplIntellisenseMode = ReplIntellisenseMode.DontEvaluateCalls;
-            }
-        }
-
-        private void _evalAlways_CheckedChanged(object sender, EventArgs e) {
-            if (_evalAlways.Checked) {
-                CurrentOptions.ReplIntellisenseMode = ReplIntellisenseMode.AlwaysEvaluate;
-            }
         }
 
         private void _useInterpreterPrompts_CheckedChanged(object sender, EventArgs e) {

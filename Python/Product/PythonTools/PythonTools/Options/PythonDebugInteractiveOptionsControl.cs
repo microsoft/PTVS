@@ -25,11 +25,31 @@ namespace Microsoft.PythonTools.Options {
             InitializeComponent();
 
             AddToolTips();
-            RefreshOptions();
         }
 
-        private void EnableOrDisableOptions(bool enable) {
-            _priPrompt.Enabled = _priPromptLabel.Enabled = _secPrompt.Enabled = _secPromptLabel.Enabled = _useUserDefinedPrompts.Enabled = _smartReplHistory.Enabled = _inlinePrompts.Enabled = enable;
+        internal void EnableUserDefinedPrompts(bool enable) {
+            _priPromptLabel.Enabled = _secPromptLabel.Enabled = _secPrompt.Enabled = _priPrompt.Enabled = _useUserDefinedPrompts.Checked = enable;
+        }
+
+        internal ReplIntellisenseMode ReplIntellisenseMode {
+            get {
+                if (_evalNever.Checked) {
+                    return ReplIntellisenseMode.NeverEvaluate;
+                } else if (_evalNoCalls.Checked) {
+                    return ReplIntellisenseMode.DontEvaluateCalls;
+                } else if (_evalAlways.Checked) {
+                    return ReplIntellisenseMode.AlwaysEvaluate;
+                } else {
+                    return ReplIntellisenseMode.NeverEvaluate;
+                }
+            }
+            set {
+                switch (value) {
+                    case ReplIntellisenseMode.AlwaysEvaluate: _evalAlways.Checked = true; break;
+                    case ReplIntellisenseMode.DontEvaluateCalls: _evalNoCalls.Checked = true; break;
+                    case ReplIntellisenseMode.NeverEvaluate: _evalNever.Checked = true; break;
+                }
+            }
         }
 
         private void AddToolTips() {
@@ -44,76 +64,30 @@ namespace Microsoft.PythonTools.Options {
             _tooltips.SetToolTip(_liveCompletionsOnly, liveCompletionsToolTip);
         }
 
-        private void RefreshOptions() {
-            _smartReplHistory.Checked = CurrentOptions.ReplSmartHistory;
-
-            switch (CurrentOptions.ReplIntellisenseMode) {
-                case ReplIntellisenseMode.AlwaysEvaluate: _evalAlways.Checked = true; break;
-                case ReplIntellisenseMode.DontEvaluateCalls: _evalNoCalls.Checked = true; break;
-                case ReplIntellisenseMode.NeverEvaluate: _evalNever.Checked = true; break;
-            }
-
-            _inlinePrompts.Checked = CurrentOptions.InlinePrompts;
-            _useUserDefinedPrompts.Checked = !CurrentOptions.UseInterpreterPrompts;
-            _priPrompt.Text = CurrentOptions.PrimaryPrompt;
-            _secPrompt.Text = CurrentOptions.SecondaryPrompt;
-            _priPromptLabel.Enabled = _secPromptLabel.Enabled = _secPrompt.Enabled = _priPrompt.Enabled = _useUserDefinedPrompts.Checked;
-            _liveCompletionsOnly.Checked = CurrentOptions.LiveCompletionsOnly;
-        }
-
-        private PythonDebugInteractiveOptionsPage OptionsPage {
-            get {
-                return PythonToolsPackage.Instance.InteractiveDebugOptionsPage;
-            }
-        }
-
-        private PythonInteractiveCommonOptions CurrentOptions {
-            get {
-                return OptionsPage.Options;
-            }
-        }
-
-        private void _smartReplHistory_CheckedChanged(object sender, EventArgs e) {
-            CurrentOptions.ReplSmartHistory = _smartReplHistory.Checked;
-        }
-
-        private void _evalNever_CheckedChanged(object sender, EventArgs e) {
-            if (_evalNever.Checked) {
-                CurrentOptions.ReplIntellisenseMode = ReplIntellisenseMode.NeverEvaluate;
-            }
-        }
-
-        private void _evalNoCalls_CheckedChanged(object sender, EventArgs e) {
-            if (_evalNoCalls.Checked) {
-                CurrentOptions.ReplIntellisenseMode = ReplIntellisenseMode.DontEvaluateCalls;
-            }
-        }
-
-        private void _evalAlways_CheckedChanged(object sender, EventArgs e) {
-            if (_evalAlways.Checked) {
-                CurrentOptions.ReplIntellisenseMode = ReplIntellisenseMode.AlwaysEvaluate;
-            }
-        }
-
+        /// <summary>
+        /// Disable/Enable other buttons related to interpreter prompts. 
+        /// </summary>
         private void _useInterpreterPrompts_CheckedChanged(object sender, EventArgs e) {
             _priPromptLabel.Enabled = _secPromptLabel.Enabled = _secPrompt.Enabled = _priPrompt.Enabled = _useUserDefinedPrompts.Checked;
-            CurrentOptions.UseInterpreterPrompts = !_useUserDefinedPrompts.Checked;
         }
 
-        private void _inlinePrompts_CheckedChanged(object sender, EventArgs e) {
-            CurrentOptions.InlinePrompts = _inlinePrompts.Checked;
+        internal void SyncControlWithPageSettings(PythonDebugInteractiveOptionsPage page) {
+            _smartReplHistory.Checked = page._options.ReplSmartHistory;
+            ReplIntellisenseMode = page._options.ReplIntellisenseMode;
+            _inlinePrompts.Checked = page._options.InlinePrompts;
+            _priPrompt.Text = page._options.PrimaryPrompt;
+            _secPrompt.Text = page._options.SecondaryPrompt;
+            EnableUserDefinedPrompts(!page._options.UseInterpreterPrompts);
+            _liveCompletionsOnly.Checked = page._options.LiveCompletionsOnly;
         }
 
-        private void _priPrompt_TextChanged(object sender, EventArgs e) {
-            CurrentOptions.PrimaryPrompt = _priPrompt.Text;
-        }
-
-        private void _secPrompt_TextChanged(object sender, EventArgs e) {
-            CurrentOptions.SecondaryPrompt = _secPrompt.Text;
-        }
-
-        private void _liveCompletionsOnly_CheckedChanged(object sender, EventArgs e) {
-            CurrentOptions.LiveCompletionsOnly = _liveCompletionsOnly.Checked;
+        internal void SyncPageWithControlSettings(PythonDebugInteractiveOptionsPage page) {
+            page._options.ReplSmartHistory = _smartReplHistory.Checked;
+            page._options.InlinePrompts = _inlinePrompts.Checked;
+            page._options.PrimaryPrompt = _priPrompt.Text;
+            page._options.SecondaryPrompt = _secPrompt.Text;
+            page._options.LiveCompletionsOnly = _liveCompletionsOnly.Checked;
+            page._options.UseInterpreterPrompts = !_useUserDefinedPrompts.Checked;
         }
     }
 }

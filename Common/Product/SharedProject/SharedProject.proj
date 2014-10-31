@@ -262,6 +262,10 @@
       <Link>SharedProject\ConfigProvider.cs</Link>
       <Visible>true</Visible>
     </Compile>
+    <Compile Include="$(_ProjectSystemFilesLocation)\FileWatcher.cs">
+      <Link>SharedProject\FileWatcher.cs</Link>
+      <Visible>true</Visible>
+    </Compile>
     <Compile Include="$(_ProjectSystemFilesLocation)\DataObject.cs">
       <Link>SharedProject\DataObject.cs</Link>
       <Visible>true</Visible>

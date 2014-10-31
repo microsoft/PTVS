@@ -35,6 +35,7 @@ namespace Microsoft.PythonTools.Options {
             get {
                 if (_window == null) {
                     _window = new PythonDebuggingOptionsControl();
+                    LoadSettingsFromStorage();
                 }
                 return _window;
             }
@@ -179,6 +180,7 @@ namespace Microsoft.PythonTools.Options {
         private const string DebugStdLibSetting = "DebugStdLib";
 
         public override void LoadSettingsFromStorage() {
+            // Load settings from storage.
             _promptBeforeRunningWithBuildError = !(LoadBool(DontPromptBeforeRunningWithBuildErrorSetting) ?? false);
             _waitOnAbnormalExit = LoadBool(WaitOnAbnormalExitSetting) ?? true;
             _waitOnNormalExit = LoadBool(WaitOnNormalExitSetting) ?? true;
@@ -196,6 +198,11 @@ namespace Microsoft.PythonTools.Options {
             } else {
                 _crossModuleAnalysisLimit = Convert.ToInt32(analysisLimit);
             }
+
+            // Synchronize UI with backing properties.
+            if (_window != null) {
+                _window.SyncControlWithPageSettings(this);
+            }
         }
 
         internal void LoadGeneralSettingsFromStorage() {
@@ -205,6 +212,12 @@ namespace Microsoft.PythonTools.Options {
         }
 
         public override void SaveSettingsToStorage() {
+            // Synchronize backing properties with UI.
+            if (_window != null) {
+                _window.SyncPageWithControlSettings(this);
+            }
+
+            // Save settings.
             SaveBool(DontPromptBeforeRunningWithBuildErrorSetting, !_promptBeforeRunningWithBuildError);
             SaveBool(WaitOnAbnormalExitSetting, _waitOnAbnormalExit);
             SaveBool(WaitOnNormalExitSetting, _waitOnNormalExit);

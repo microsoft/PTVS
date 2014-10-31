@@ -33,6 +33,7 @@ namespace Microsoft.PythonTools.Options {
             get {
                 if (_window == null) {
                     _window = new PythonFormattingGeneralOptionsControl();
+                    LoadSettingsFromStorage();
                 }
                 return _window;
             }
@@ -43,10 +44,22 @@ namespace Microsoft.PythonTools.Options {
         }
 
         public override void LoadSettingsFromStorage() {
+            // Load settings from storage.
             PythonToolsPackage.Instance.AdvancedEditorOptionsPage.LoadSettingsFromStorage();
+            
+            // Synchronize UI with backing properties.
+            if (_window != null) {
+                _window.SyncControlWithPageSettings(PythonToolsPackage.Instance.AdvancedEditorOptionsPage);
+            }
         }
 
         public override void SaveSettingsToStorage() {
+            // Synchronize backing properties with UI.
+            if (_window != null) {
+                _window.SyncPageWithControlSettings(PythonToolsPackage.Instance.AdvancedEditorOptionsPage);
+            }
+
+            // Save settings.
             PythonToolsPackage.Instance.AdvancedEditorOptionsPage.SaveSettingsToStorage();
         }
     }

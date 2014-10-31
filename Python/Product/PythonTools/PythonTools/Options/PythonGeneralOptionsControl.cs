@@ -18,8 +18,6 @@ using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Options {
     public partial class PythonGeneralOptionsControl : UserControl {
-        private readonly PythonGeneralOptionsPage _options;
-        
         private const int ErrorIndex = 0;
         private const int WarningIndex = 1;
         private const int DontIndex = 2;
@@ -30,80 +28,94 @@ namespace Microsoft.PythonTools.Options {
         private const int SurveyNewsOnceMonthIndex = 3;
 
         public PythonGeneralOptionsControl() {
-            _options = PythonToolsPackage.Instance.GeneralOptionsPage;
-
             InitializeComponent();
+        }
 
-            _showOutputWindowForVirtualEnvCreate.Checked = _options.ShowOutputWindowForVirtualEnvCreate;
-            _showOutputWindowForPackageInstallation.Checked = _options.ShowOutputWindowForPackageInstallation;
-            _elevatePip.Checked = _options.ElevatePip;
-            _elevateEasyInstall.Checked = _options.ElevateEasyInstall;
-            _autoAnalysis.Checked = _options.AutoAnalyzeStandardLibrary;
-            _updateSearchPathsForLinkedFiles.Checked = _options.UpdateSearchPathsWhenAddingLinkedFiles;
-            _unresolvedImportWarning.Checked = _options.UnresolvedImportWarning;
-            _clearGlobalPythonPath.Checked = _options.ClearGlobalPythonPath;
-
-            switch (_options.IndentationInconsistencySeverity) {
-                case Severity.Error: _indentationInconsistentCombo.SelectedIndex = ErrorIndex; break;
-                case Severity.Warning: _indentationInconsistentCombo.SelectedIndex = WarningIndex; break;
-                default: _indentationInconsistentCombo.SelectedIndex = DontIndex; break;
+        internal Severity IndentationInconsistencySeverity {
+            get {
+                switch (_indentationInconsistentCombo.SelectedIndex) {
+                    case ErrorIndex: 
+                        return Severity.Error;
+                    case WarningIndex: 
+                        return Severity.Warning;
+                    case DontIndex: 
+                        return Severity.Ignore;
+                    default:
+                        return Severity.Ignore;
+                }
             }
-
-            switch (PythonToolsPackage.Instance.GeneralOptionsPage.SurveyNewsCheck) {
-                case SurveyNewsPolicy.Disabled: _surveyNewsCheckCombo.SelectedIndex = SurveyNewsNeverIndex; break;
-                case SurveyNewsPolicy.CheckOnceDay: _surveyNewsCheckCombo.SelectedIndex = SurveyNewsOnceDayIndex; break;
-                case SurveyNewsPolicy.CheckOnceWeek: _surveyNewsCheckCombo.SelectedIndex = SurveyNewsOnceWeekIndex; break;
-                case SurveyNewsPolicy.CheckOnceMonth: _surveyNewsCheckCombo.SelectedIndex = SurveyNewsOnceMonthIndex; break;
-            }
-        }
-
-        private void _showOutputWindowForVirtualEnvCreate_CheckedChanged(object sender, EventArgs e) {
-            _options.ShowOutputWindowForVirtualEnvCreate = _showOutputWindowForVirtualEnvCreate.Checked;
-        }
-
-        private void _showOutputWindowForPackageInstallation_CheckedChanged(object sender, EventArgs e) {
-            _options.ShowOutputWindowForPackageInstallation = _showOutputWindowForPackageInstallation.Checked;
-        }
-
-        private void _elevatePip_CheckedChanged(object sender, EventArgs e) {
-            _options.ElevatePip = _elevatePip.Checked;
-        }
-
-        private void _elevateEasyInstall_CheckedChanged(object sender, EventArgs e) {
-            _options.ElevateEasyInstall = _elevateEasyInstall.Checked;
-        }
-
-        private void _autoAnalysis_CheckedChanged(object sender, EventArgs e) {
-            _options.AutoAnalyzeStandardLibrary = _autoAnalysis.Checked;
-        }
-
-        private void _updateSearchPathsForLinkedFiles_CheckedChanged(object sender, EventArgs e) {
-            _options.UpdateSearchPathsWhenAddingLinkedFiles = _updateSearchPathsForLinkedFiles.Checked;
-        }
-
-        private void _indentationInconsistentCombo_SelectedIndexChanged(object sender, EventArgs e) {
-            switch (_indentationInconsistentCombo.SelectedIndex) {
-                case ErrorIndex: _options.IndentationInconsistencySeverity = Severity.Error; break;
-                case WarningIndex: _options.IndentationInconsistencySeverity = Severity.Warning; break;
-                case DontIndex: _options.IndentationInconsistencySeverity = Severity.Ignore; break;
+            set {
+                switch (value) {
+                    case Severity.Error: 
+                        _indentationInconsistentCombo.SelectedIndex = ErrorIndex; 
+                        break;
+                    case Severity.Warning: 
+                        _indentationInconsistentCombo.SelectedIndex = WarningIndex; 
+                        break;
+                    default: 
+                        _indentationInconsistentCombo.SelectedIndex = DontIndex; 
+                        break;
+                }
             }
         }
 
-        private void _surveyNewsCheckCombo_SelectedIndexChanged(object sender, EventArgs e) {
-            switch (_surveyNewsCheckCombo.SelectedIndex) {
-                case SurveyNewsNeverIndex: _options.SurveyNewsCheck = SurveyNewsPolicy.Disabled; break;
-                case SurveyNewsOnceDayIndex: _options.SurveyNewsCheck = SurveyNewsPolicy.CheckOnceDay; break;
-                case SurveyNewsOnceWeekIndex: _options.SurveyNewsCheck = SurveyNewsPolicy.CheckOnceWeek; break;
-                case SurveyNewsOnceMonthIndex: _options.SurveyNewsCheck = SurveyNewsPolicy.CheckOnceMonth; break;
+        internal SurveyNewsPolicy SurveyNewsCheck {
+            get {
+                switch (_surveyNewsCheckCombo.SelectedIndex) {
+                    case SurveyNewsNeverIndex: 
+                        return SurveyNewsPolicy.Disabled; 
+                    case SurveyNewsOnceDayIndex: 
+                        return SurveyNewsPolicy.CheckOnceDay; 
+                    case SurveyNewsOnceWeekIndex: 
+                        return SurveyNewsPolicy.CheckOnceWeek; 
+                    case SurveyNewsOnceMonthIndex: 
+                        return SurveyNewsPolicy.CheckOnceMonth; 
+                    default:
+                        return SurveyNewsPolicy.Disabled;
+                }
+            }
+            set {
+                switch (value) {
+                    case SurveyNewsPolicy.Disabled: 
+                        _surveyNewsCheckCombo.SelectedIndex = SurveyNewsNeverIndex; 
+                        break;
+                    case SurveyNewsPolicy.CheckOnceDay: 
+                        _surveyNewsCheckCombo.SelectedIndex = SurveyNewsOnceDayIndex; 
+                        break;
+                    case SurveyNewsPolicy.CheckOnceWeek: 
+                        _surveyNewsCheckCombo.SelectedIndex = SurveyNewsOnceWeekIndex; 
+                        break;
+                    case SurveyNewsPolicy.CheckOnceMonth: 
+                        _surveyNewsCheckCombo.SelectedIndex = SurveyNewsOnceMonthIndex; 
+                        break;
+                }
             }
         }
 
-        private void _unresolvedImportWarning_CheckedChanged(object sender, EventArgs e) {
-            _options.UnresolvedImportWarning = _unresolvedImportWarning.Checked;
+        internal void SyncControlWithPageSettings(PythonGeneralOptionsPage page) {
+            _showOutputWindowForVirtualEnvCreate.Checked = page.ShowOutputWindowForVirtualEnvCreate;
+            _showOutputWindowForPackageInstallation.Checked = page.ShowOutputWindowForPackageInstallation;
+            _elevatePip.Checked = page.ElevatePip;
+            _elevateEasyInstall.Checked = page.ElevateEasyInstall;
+            _autoAnalysis.Checked = page.AutoAnalyzeStandardLibrary;
+            _updateSearchPathsForLinkedFiles.Checked = page.UpdateSearchPathsWhenAddingLinkedFiles;
+            _unresolvedImportWarning.Checked = page.UnresolvedImportWarning;
+            _clearGlobalPythonPath.Checked = page.ClearGlobalPythonPath;
+            IndentationInconsistencySeverity = page.IndentationInconsistencySeverity;
+            SurveyNewsCheck = page.SurveyNewsCheck;
         }
 
-        private void _clearGlobalPythonPath_CheckedChanged(object sender, EventArgs e) {
-            _options.ClearGlobalPythonPath = _clearGlobalPythonPath.Checked;
+        internal void SyncPageWithControlSettings(PythonGeneralOptionsPage page) {
+            page.ShowOutputWindowForVirtualEnvCreate = _showOutputWindowForVirtualEnvCreate.Checked;
+            page.ShowOutputWindowForPackageInstallation = _showOutputWindowForPackageInstallation.Checked;
+            page.ElevatePip = _elevatePip.Checked;
+            page.ElevateEasyInstall = _elevateEasyInstall.Checked;
+            page.AutoAnalyzeStandardLibrary = _autoAnalysis.Checked;
+            page.UpdateSearchPathsWhenAddingLinkedFiles = _updateSearchPathsForLinkedFiles.Checked;
+            page.IndentationInconsistencySeverity = IndentationInconsistencySeverity;
+            page.SurveyNewsCheck = SurveyNewsCheck;
+            page.UnresolvedImportWarning = _unresolvedImportWarning.Checked;
+            page.ClearGlobalPythonPath = _clearGlobalPythonPath.Checked;
         }
     }
 }

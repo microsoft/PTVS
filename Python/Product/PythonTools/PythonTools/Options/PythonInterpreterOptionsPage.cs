@@ -163,7 +163,7 @@ namespace Microsoft.PythonTools.Options {
 
                     // Search for the interpreter again, since it may be a
                     // placeholder rather than the actual instance.
-                    _service.DefaultInterpreter = 
+                    _service.DefaultInterpreter =
                         _service.FindInterpreter(defaultInterpreter.Id, ver) ??
                         _service.Interpreters.LastOrDefault();
                 } else {

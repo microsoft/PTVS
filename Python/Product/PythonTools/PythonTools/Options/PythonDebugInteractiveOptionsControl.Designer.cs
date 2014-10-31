@@ -60,7 +60,6 @@
             this._smartReplHistory.TabIndex = 0;
             this._smartReplHistory.Text = "Arrow Keys use smart &history";
             this._smartReplHistory.UseVisualStyleBackColor = true;
-            this._smartReplHistory.CheckedChanged += new System.EventHandler(this._smartReplHistory_CheckedChanged);
             // 
             // _completionModeGroup
             // 
@@ -108,7 +107,6 @@
             this._evalNever.TabStop = true;
             this._evalNever.Text = "&Never evaluate expressions";
             this._evalNever.UseVisualStyleBackColor = true;
-            this._evalNever.CheckedChanged += new System.EventHandler(this._evalNever_CheckedChanged);
             // 
             // _evalAlways
             // 
@@ -122,7 +120,6 @@
             this._evalAlways.TabStop = true;
             this._evalAlways.Text = "&Always evaluate expressions";
             this._evalAlways.UseVisualStyleBackColor = true;
-            this._evalAlways.CheckedChanged += new System.EventHandler(this._evalAlways_CheckedChanged);
             // 
             // _evalNoCalls
             // 
@@ -136,7 +133,6 @@
             this._evalNoCalls.TabStop = true;
             this._evalNoCalls.Text = "Never evaluate expressions containing &calls";
             this._evalNoCalls.UseVisualStyleBackColor = true;
-            this._evalNoCalls.CheckedChanged += new System.EventHandler(this._evalNoCalls_CheckedChanged);
             // 
             // _inlinePrompts
             // 
@@ -149,7 +145,6 @@
             this._inlinePrompts.TabIndex = 1;
             this._inlinePrompts.Text = "Use &inline prompts";
             this._inlinePrompts.UseVisualStyleBackColor = true;
-            this._inlinePrompts.CheckedChanged += new System.EventHandler(this._inlinePrompts_CheckedChanged);
             // 
             // _useUserDefinedPrompts
             // 
@@ -186,7 +181,6 @@
             this._priPrompt.Name = "_priPrompt";
             this._priPrompt.Size = new System.Drawing.Size(118, 20);
             this._priPrompt.TabIndex = 1;
-            this._priPrompt.TextChanged += new System.EventHandler(this._priPrompt_TextChanged);
             // 
             // _secPromptLabel
             // 
@@ -210,7 +204,6 @@
             this._secPrompt.Name = "_secPrompt";
             this._secPrompt.Size = new System.Drawing.Size(118, 20);
             this._secPrompt.TabIndex = 3;
-            this._secPrompt.TextChanged += new System.EventHandler(this._secPrompt_TextChanged);
             // 
             // _liveCompletionsOnly
             // 
@@ -223,7 +216,6 @@
             this._liveCompletionsOnly.TabIndex = 2;
             this._liveCompletionsOnly.Text = "Only use li&ve completions";
             this._liveCompletionsOnly.UseVisualStyleBackColor = true;
-            this._liveCompletionsOnly.CheckedChanged += new System.EventHandler(this._liveCompletionsOnly_CheckedChanged);
             // 
             // tableLayoutPanel1
             // 

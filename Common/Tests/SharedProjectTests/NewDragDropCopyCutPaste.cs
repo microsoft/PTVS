@@ -30,6 +30,43 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
     public class NewDragDropCopyCutPaste : SharedProjectTest {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void MoveToMissingFolderKeyboard() {
+            MoveToMissingFolder(MoveByKeyboard);
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void MoveToMissingFolderMouse() {
+            MoveToMissingFolder(MoveByMouse);
+        }
+
+        private void MoveToMissingFolder(MoveDelegate mover) {
+            foreach (var projectType in ProjectTypes) {
+                var testDef = new ProjectDefinition("MoveToMissingFolder",
+                    projectType,
+                    PropertyGroup(
+                        Property("ProjectView", "ShowAllFiles")
+                    ),
+                    ItemGroup(
+                        Folder("Fob", isExcluded: false, isMissing: true),
+                        Compile("codefile", isExcluded: false)
+                    )
+                );
+
+                using (var solution = testDef.Generate().ToVs()) {
+                    mover(
+                        solution.FindItem("MoveToMissingFolder", "codefile" + projectType.CodeExtension),
+                        solution.FindItem("MoveToMissingFolder", "Fob")
+                    );
+
+                    solution.AssertFileDoesntExist("MoveToMissingFolder", "codefile" + projectType.CodeExtension);
+                    solution.AssertFileExists("MoveToMissingFolder", "Fob", "codefile" + projectType.CodeExtension);
+                }
+            }
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void MoveExcludedFolderKeyboard() {
             MoveExcludedFolder(MoveByKeyboard);
         }

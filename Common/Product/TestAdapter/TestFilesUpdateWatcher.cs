@@ -29,7 +29,7 @@ namespace Microsoft.VisualStudioTools.TestAdapter {
         }
 
         public bool AddWatch(string path) {
-            ValidateArg.NotNullOrEmpty(path, "path");
+            ValidateArg.NotNull(path,"path");
 
             if (!String.IsNullOrEmpty(path)) {
                 var directoryName = Path.GetDirectoryName(path);
@@ -48,7 +48,7 @@ namespace Microsoft.VisualStudioTools.TestAdapter {
         }
 
         public bool AddDirectoryWatch(string path) {
-            ValidateArg.NotNullOrEmpty(path, "path");
+            ValidateArg.NotNull(path, "path");
 
             if (!String.IsNullOrEmpty(path)) {
                 if (!_fileWatchers.ContainsKey(path) && Directory.Exists(path)) {
@@ -66,7 +66,7 @@ namespace Microsoft.VisualStudioTools.TestAdapter {
         }
 
         public void RemoveWatch(string path) {
-            ValidateArg.NotNullOrEmpty(path, "path");
+            ValidateArg.NotNull(path, "path");
 
             if (!String.IsNullOrEmpty(path)) {
                 FileSystemWatcher watcher;

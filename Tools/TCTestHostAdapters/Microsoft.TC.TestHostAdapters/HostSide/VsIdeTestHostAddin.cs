@@ -186,7 +186,7 @@ namespace Microsoft.TC.TestHostAdapters
 
         /// <summary>Implements the OnAddInsUpdate method of the IDTExtensibility2 interface. Receives notification when the collection of Add-ins has changed.</summary>
         /// <param term='custom'>Array of parameters that are host application specific.</param>
-        /// <seealso class='IDTExtensibility2' />		
+        /// <seealso class='IDTExtensibility2' />
         public void OnAddInsUpdate(ref Array custom)
         {
         }

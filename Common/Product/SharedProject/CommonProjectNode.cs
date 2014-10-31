@@ -43,10 +43,7 @@ namespace Microsoft.VisualStudioTools.Project {
         SearchPathContainer,
         SearchPath,
         MissingSearchPath,
-        StartupFile,
-        InterpretersContainer = SearchPathContainer,
-        Interpreter = SearchPath,
-        InterpretersPackage = SearchPath
+        StartupFile
     }
 
     internal abstract class CommonProjectNode : ProjectNode, IVsProjectSpecificEditorMap2, IVsDeferredSaveProject {
@@ -492,7 +489,7 @@ namespace Microsoft.VisualStudioTools.Project {
             lock (_fileSystemChanges) {
                 _fileSystemChanges.Clear(); // none of the other changes matter now, we'll rescan the world
                 _currentMerger = null;  // abort any current merge now that we have a new one
-                _fileSystemChanges.Enqueue(new FileSystemChange(this, WatcherChangeTypes.All, null, watcher: sender as FileSystemWatcher));
+                _fileSystemChanges.Enqueue(new FileSystemChange(this, WatcherChangeTypes.All, null, watcher: sender as FileWatcher));
                 TriggerIdle();
             }
         }
@@ -612,9 +609,9 @@ namespace Microsoft.VisualStudioTools.Project {
             private readonly string _initialDir;
             private readonly Stack<DirState> _remainingDirs = new Stack<DirState>();
             private readonly CommonProjectNode _project;
-            private readonly FileSystemWatcher _watcher;
+            private readonly FileWatcher _watcher;
 
-            public DiskMerger(CommonProjectNode project, HierarchyNode parent, string dir, FileSystemWatcher watcher = null) {
+            public DiskMerger(CommonProjectNode project, HierarchyNode parent, string dir, FileWatcher watcher = null) {
                 _project = project;
                 _initialDir = dir;
                 _remainingDirs.Push(new DirState(dir, parent));
@@ -903,6 +900,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 return;
             }
 
+            try {
             lock (_fileSystemChanges) {
                 // we just generate a delete and creation here - we're just updating the hierarchy
                 // either changing icons or updating the non-project elements, so we don't need to
@@ -913,6 +911,10 @@ namespace Microsoft.VisualStudioTools.Project {
                     _fileSystemChanges.Enqueue(new FileSystemChange(this, WatcherChangeTypes.Created, e.FullPath, true));
                     TriggerIdle();
                 }
+                }
+            } catch (PathTooLongException) {
+                // A rename event can be reported for a path that's too long, and then access to RenamedEventArgs
+                // properties will throw this - nothing we can do other than ignoring it.
             }
         }
 
@@ -1020,9 +1022,9 @@ namespace Microsoft.VisualStudioTools.Project {
             internal readonly WatcherChangeTypes _type;
             private readonly string _path;
             private readonly bool _isRename;
-            internal readonly FileSystemWatcher _watcher;
+            internal readonly FileWatcher _watcher;
 
-            public FileSystemChange(CommonProjectNode node, WatcherChangeTypes changeType, string path, bool isRename = false, FileSystemWatcher watcher = null) {
+            public FileSystemChange(CommonProjectNode node, WatcherChangeTypes changeType, string path, bool isRename = false, FileWatcher watcher = null) {
                 _project = node;
                 _type = changeType;
                 _path = path;
@@ -1164,7 +1166,7 @@ namespace Microsoft.VisualStudioTools.Project {
                         _project.AddAllFilesFile(parent, _path);
                         if (String.Equals(_project.GetStartupFile(), _path, StringComparison.OrdinalIgnoreCase)) {
                             _project.BoldStartupItem();
-                        }
+                    }
                     }
 
                     parent.ExpandItem(wasExpanded ? EXPANDFLAGS.EXPF_ExpandFolder : EXPANDFLAGS.EXPF_CollapseFolder);
@@ -1480,7 +1482,7 @@ namespace Microsoft.VisualStudioTools.Project {
             return CreateFileNode(new MsBuildProjectElement(this, path, GetItemType(path)));
         }
 
-        protected virtual string GetItemType(string filename) {
+        internal virtual string GetItemType(string filename) {
             if (IsCodeFile(filename)) {
                 return "Compile";
             } else {

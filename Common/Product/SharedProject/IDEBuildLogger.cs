@@ -276,9 +276,18 @@ namespace Microsoft.VisualStudioTools.Project {
 
         /// <summary>
         /// This is the delegate for Message event types
-        /// </summary>		
+        /// </summary>
         protected virtual void MessageHandler(object sender, BuildMessageEventArgs messageEvent) {
             // NOTE: This may run on a background thread!
+
+            // Special-case this event type. It's reported by tasks derived from ToolTask, and prints out the command line used
+            // to invoke the tool.  It has high priority for some unclear reason, but we really don't want to be showing it for
+            // verbosity below normal (https://nodejstools.codeplex.com/workitem/693). The check here is taken directly from the
+            // standard MSBuild console logger, which does the same thing.
+            if (messageEvent is TaskCommandLineEventArgs && !IsVerbosityAtLeast(LoggerVerbosity.Normal)) {
+                return;
+            }
+
             QueueOutputEvent(messageEvent.Importance, messageEvent);
         }
 

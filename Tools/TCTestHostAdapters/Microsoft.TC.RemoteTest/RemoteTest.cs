@@ -21,6 +21,12 @@ namespace Microsoft.TC.RemoteTest
         public const string RemoteTestComponentGuid = "14D65E5C-BD10-470F-B88B-02A92E5341B0";
         public const string DefaultRemoteTestProviderGuid = "CF4ADC06-4F3F-47EB-8821-A0D2F7820FB4";
         public const string RemoteTestTypeLibGuid = "7A48F6FE-59A8-4312-9608-139931D36ED3";
+#elif DEV14
+        public const string IRemoteTestGuid = "710DACCD-F14D-43A8-A238-F3DE9CC967E3";
+        public const string IRemoteTestProviderGuid = "FAF32156-BC74-4E08-A5AB-7BE07B3EFBB1";
+        public const string RemoteTestComponentGuid = "843B32E7-F100-4383-BDF2-8228A6A07A9B";
+        public const string DefaultRemoteTestProviderGuid = "1998141F-810E-472D-A3C7-1272324D80A2";
+        public const string RemoteTestTypeLibGuid = "8302BFCD-A156-4881-A025-43513DFBD7F4";
 #else
 #error Unrecognized VS Version.
 #endif

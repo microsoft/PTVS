@@ -24,8 +24,9 @@ namespace Microsoft.PythonTools.Options {
 #endif
 
     class PythonDebugInteractiveOptionsPage : PythonDialogPage {
+        internal PythonInteractiveCommonOptions _options = new PythonInteractiveCommonOptions();
+
         private PythonDebugInteractiveOptionsControl _window;
-        private PythonInteractiveCommonOptions _options = new PythonInteractiveCommonOptions();
 
         private const string DefaultPrompt = ">>> ";
         private const string DefaultSecondaryPrompt = "... ";
@@ -47,6 +48,7 @@ namespace Microsoft.PythonTools.Options {
             get {
                 if (_window == null) {
                     _window = new PythonDebugInteractiveOptionsControl();
+                    LoadSettingsFromStorage();
                 }
                 return _window;
             }
@@ -69,6 +71,7 @@ namespace Microsoft.PythonTools.Options {
         }
 
         public override void LoadSettingsFromStorage() {
+            // Load settings from storage.
             _options.PrimaryPrompt = LoadString(PrimaryPromptSetting) ?? DefaultPrompt;
             _options.SecondaryPrompt = LoadString(SecondaryPromptSetting) ?? DefaultSecondaryPrompt;
             _options.InlinePrompts = LoadBool(InlinePromptsSetting) ?? true;
@@ -76,12 +79,20 @@ namespace Microsoft.PythonTools.Options {
             _options.ReplIntellisenseMode = LoadEnum<ReplIntellisenseMode>(ReplIntellisenseModeSetting) ?? ReplIntellisenseMode.DontEvaluateCalls;
             _options.ReplSmartHistory = LoadBool(SmartHistorySetting) ?? true;
             _options.LiveCompletionsOnly = LoadBool(LiveCompletionsOnlySetting) ?? false;
+
+            // Synchronize UI with backing properties.
+            if (_window != null) {
+                _window.SyncControlWithPageSettings(this);
+            }
         }
 
         public override void SaveSettingsToStorage() {
-            var model = (IComponentModel)PythonToolsPackage.GetGlobalService(typeof(SComponentModel));
-            var replProvider = model.GetService<IReplWindowProvider>();
-
+            // Synchronize backing properties with UI.
+            if (_window != null) {
+                _window.SyncPageWithControlSettings(this);
+            }
+            
+            // Save settings.
             SaveString(PrimaryPromptSetting, _options.PrimaryPrompt);
             SaveString(SecondaryPromptSetting, _options.SecondaryPrompt);
             SaveBool(InlinePromptsSetting, _options.InlinePrompts);
@@ -91,6 +102,9 @@ namespace Microsoft.PythonTools.Options {
             SaveBool(LiveCompletionsOnlySetting, _options.LiveCompletionsOnly);
 
             // propagate changed settings to existing REPL windows
+            var model = (IComponentModel)PythonToolsPackage.GetGlobalService(typeof(SComponentModel));
+            var replProvider = model.GetService<IReplWindowProvider>();
+            
             foreach (var replWindow in replProvider.GetReplWindows()) {
                 PythonDebugReplEvaluator pyEval = replWindow.Evaluator as PythonDebugReplEvaluator;
                 if (pyEval != null){

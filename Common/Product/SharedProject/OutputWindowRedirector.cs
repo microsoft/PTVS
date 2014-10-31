@@ -35,7 +35,7 @@ namespace Microsoft.VisualStudioTools.Project {
 
             IVsOutputWindowPane pane;
             if (ErrorHandler.Failed(outputWindow.GetPane(id, out pane)) || pane == null) {
-                if (ErrorHandler.Failed(outputWindow.CreatePane(id, title, 1, 0))) {
+                if (ErrorHandler.Failed(UIThread.Invoke(() => outputWindow.CreatePane(id, title, 1, 0)))) {
                     throw new InvalidOperationException("Unable to create output pane");
                 }
             }

@@ -43,15 +43,7 @@ namespace TestUtilities.SharedProject {
             // we want to pick up all of the MEF exports which are available, but they don't
             // depend upon us.  So if we're just running some tests in the IDE when the deployment
             // happens it won't have the DLLS with the MEF exports.  So we copy them here.
-            if (!CommonUtils.IsSameDirectory(typeof(SharedProjectTest).Assembly.Location, TestData.BinarySourceLocation)) {
-                foreach (var file in Directory.GetFiles(TestData.BinarySourceLocation, "*.dll")) {
-                    try {
-                        File.Copy(file, Path.Combine(runningLoc, Path.GetFileName(file)), true);
-                    } catch {
-                        // some of our DLLs our in use because we're running...
-                    }
-                }
-            }
+            TestData.Deploy(null, includeTestData: false);
 
             // load all of the available DLLs that depend upon TestUtilities into our catalog
             List<AssemblyCatalog> catalogs = new List<AssemblyCatalog>();

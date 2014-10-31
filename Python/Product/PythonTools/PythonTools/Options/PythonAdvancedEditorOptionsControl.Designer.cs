@@ -56,7 +56,6 @@
             this._completionCommitedBy.Name = "_completionCommitedBy";
             this._completionCommitedBy.Size = new System.Drawing.Size(458, 20);
             this._completionCommitedBy.TabIndex = 1;
-            this._completionCommitedBy.TextChanged += new System.EventHandler(this._completionCommitedBy_TextChanged);
             // 
             // _completionCommitedByLabel
             // 
@@ -82,7 +81,6 @@
             this._enterCommits.TabIndex = 2;
             this._enterCommits.Text = "&Enter commits current completion";
             this._enterCommits.UseVisualStyleBackColor = true;
-            this._enterCommits.CheckedChanged += new System.EventHandler(this._enterCommits_CheckedChanged);
             // 
             // _intersectMembers
             // 
@@ -95,7 +93,6 @@
             this._intersectMembers.TabIndex = 0;
             this._intersectMembers.Text = "Member completion displays &intersection of members";
             this._intersectMembers.UseVisualStyleBackColor = true;
-            this._intersectMembers.CheckedChanged += new System.EventHandler(this._intersectMembers_CheckedChanged);
             // 
             // _selectionInCompletionGroupBox
             // 
@@ -143,7 +140,6 @@
             this._newLineAfterCompleteCompletion.TabIndex = 3;
             this._newLineAfterCompleteCompletion.Text = "&Add new line on enter at end of fully typed word";
             this._newLineAfterCompleteCompletion.UseVisualStyleBackColor = true;
-            this._newLineAfterCompleteCompletion.CheckedChanged += new System.EventHandler(this._newLineAfterCompleteCompletion_CheckedChanged);
             // 
             // _completionResultsGroupBox
             // 
@@ -188,7 +184,6 @@
             this._filterCompletions.TabIndex = 1;
             this._filterCompletions.Text = "&Filter list based on search string";
             this._filterCompletions.UseVisualStyleBackColor = true;
-            this._filterCompletions.CheckedChanged += new System.EventHandler(this._filterCompletions_CheckedChanged);
             // 
             // _miscOptionsGroupBox
             // 
@@ -236,7 +231,6 @@
             this._outliningOnOpen.TabIndex = 0;
             this._outliningOnOpen.Text = "Enter &outlining mode when files open";
             this._outliningOnOpen.UseVisualStyleBackColor = true;
-            this._outliningOnOpen.CheckedChanged += new System.EventHandler(this._outliningOnOpen_CheckedChanged);
             // 
             // _pasteRemovesReplPrompts
             // 
@@ -249,7 +243,6 @@
             this._pasteRemovesReplPrompts.TabIndex = 1;
             this._pasteRemovesReplPrompts.Text = "&Paste removes REPL prompts";
             this._pasteRemovesReplPrompts.UseVisualStyleBackColor = true;
-            this._pasteRemovesReplPrompts.CheckedChanged += new System.EventHandler(this._pasteRemovesReplPrompts_CheckedChanged);
             // 
             // _colorNames
             // 
@@ -262,7 +255,6 @@
             this._colorNames.TabIndex = 1;
             this._colorNames.Text = "Color &names based on types";
             this._colorNames.UseVisualStyleBackColor = true;
-            this._colorNames.CheckedChanged += new System.EventHandler(this._colorNames_CheckedChanged);
             // 
             // tableLayoutPanel1
             // 

@@ -39,14 +39,14 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
         #region overridden methods
         public override ProjectItems Collection {
             get {
-                ProjectItems items = new OAProjectItems(this.Project, this.Node);
+                ProjectItems items = new OAProjectItems(this.Project, this.Node.Parent);
                 return items;
             }
         }
 
         public override ProjectItems ProjectItems {
             get {
-                return this.Collection;
+                return new OAProjectItems(Project, Node);
             }
         }
         #endregion

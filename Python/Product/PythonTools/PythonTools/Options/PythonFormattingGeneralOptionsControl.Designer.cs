@@ -41,7 +41,6 @@
             this._pasteRemovesReplPrompts.TabIndex = 4;
             this._pasteRemovesReplPrompts.Text = "&Paste removes REPL prompts";
             this._pasteRemovesReplPrompts.UseVisualStyleBackColor = true;
-            this._pasteRemovesReplPrompts.CheckedChanged += new System.EventHandler(this._pasteRemovesReplPrompts_CheckedChanged);
             // 
             // _formatOnPaste
             // 

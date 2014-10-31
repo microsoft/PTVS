@@ -37,6 +37,7 @@ namespace Microsoft.VisualStudioTools.Project {
             _itemProject = project;
         }
 
+        public event EventHandler ItemTypeChanged;
         public string ItemTypeName {
             get {
                 if (HasItemBeenDeleted()) {
@@ -54,6 +55,13 @@ namespace Microsoft.VisualStudioTools.Project {
 
                     ItemType = value;
                 }
+            }
+        }
+
+        protected virtual void OnItemTypeChanged() {
+            var evt = ItemTypeChanged;
+            if (evt != null) {
+                evt(this, EventArgs.Empty);
             }
         }
 

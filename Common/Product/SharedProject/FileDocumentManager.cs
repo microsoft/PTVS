@@ -63,7 +63,7 @@ namespace Microsoft.VisualStudioTools.Project {
             windowFrame = null;
             bool newFile = false;
             bool openWith = false;
-            return this.Open(newFile, openWith, editorFlags, ref editorType, physicalView, ref logicalView, docDataExisting, out windowFrame, windowFrameAction);
+            return Open(newFile, openWith, editorFlags, ref editorType, physicalView, ref logicalView, docDataExisting, out windowFrame, windowFrameAction);
         }
 
         /// <summary>
@@ -207,7 +207,7 @@ namespace Microsoft.VisualStudioTools.Project {
                     if (newFile) {
                         openFlags |= __VSOSEFLAGS.OSE_OpenAsNewFile;
                     }
-
+                    
                     //NOTE: we MUST pass the IVsProject in pVsUIHierarchy and the itemid
                     // of the node being opened, otherwise the debugger doesn't work.
                     if (editorType != Guid.Empty) {

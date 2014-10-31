@@ -34,6 +34,8 @@ namespace Microsoft.TC.TestHostAdapters
         private const string TargetVSVersion = "11.0";
 #elif DEV12
         private const string TargetVSVersion = "12.0";
+#elif DEV14
+        private const string TargetVSVersion = "14.0";
 #else
 #error Unrecognized VS Version.
 #endif

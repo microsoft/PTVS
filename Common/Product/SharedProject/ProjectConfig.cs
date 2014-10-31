@@ -227,7 +227,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// Implementation of the IVsSpecifyProjectDesignerPages. It will retun the pages that are configuration dependent.
         /// </summary>
         /// <param name="pages">The pages to return.</param>
-        /// <returns>VSConstants.S_OK</returns>		
+        /// <returns>VSConstants.S_OK</returns>
         public virtual int GetProjectDesignerPages(CAUUID[] pages) {
             this.GetCfgPropertyPages(pages);
             return VSConstants.S_OK;

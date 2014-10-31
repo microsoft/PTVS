@@ -45,6 +45,8 @@ namespace TestUtilities.Mocks {
                 return (T)(object)4;
             } else if (key.Equals(DefaultOptions.NewLineCharacterOptionId)) {
                 return (T)(object)"\r\n";
+            } else if (key.Equals(DefaultOptions.TabSizeOptionId)) {
+                return (T)(object)4;
             }
             throw new InvalidOperationException();
         }

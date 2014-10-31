@@ -119,7 +119,6 @@
             this._evalNever.TabStop = true;
             this._evalNever.Text = "&Never evaluate expressions";
             this._evalNever.UseVisualStyleBackColor = true;
-            this._evalNever.CheckedChanged += new System.EventHandler(this._evalNever_CheckedChanged);
             // 
             // _evalAlways
             // 
@@ -133,7 +132,6 @@
             this._evalAlways.TabStop = true;
             this._evalAlways.Text = "&Always evaluate expressions";
             this._evalAlways.UseVisualStyleBackColor = true;
-            this._evalAlways.CheckedChanged += new System.EventHandler(this._evalAlways_CheckedChanged);
             // 
             // _evalNoCalls
             // 
@@ -147,7 +145,6 @@
             this._evalNoCalls.TabStop = true;
             this._evalNoCalls.Text = "Never evaluate expressions containing &calls";
             this._evalNoCalls.UseVisualStyleBackColor = true;
-            this._evalNoCalls.CheckedChanged += new System.EventHandler(this._evalNoCalls_CheckedChanged);
             // 
             // _inlinePrompts
             // 

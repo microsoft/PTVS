@@ -46,6 +46,11 @@ namespace TestUtilities.UI {
             System.Threading.Thread.Sleep(500);
         }
 
+        public static void ControlA() {
+            PressAndRelease(Key.A, Key.LeftCtrl);
+            System.Threading.Thread.Sleep(500);
+        }
+
         public static void ControlC() {
             PressAndRelease(Key.C, Key.LeftCtrl);
             System.Threading.Thread.Sleep(500);

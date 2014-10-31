@@ -82,8 +82,9 @@ We have some special link formats:
 * `[issue:number]` will link to an issue, and `[issue:"New Title"number]` will change the display text:
  * [issue:1234]
  * [issue:"Our very first issue" 1]
-* `[video:"Video title" ID]` will create a centered thumbnail of YouTube video with the given ID with alt text of the thumbnail set to "Video title", which will open that video when clicked:
+* `[video:"Video title" ID]` will create a thumbnail of YouTube video with the given ID with alt text of the thumbnail set to "Video title", which will open that video when clicked. `[video:"Video title" ID scale]` will scale the thumbnail size as specified:
  * [video:"Mixed-mode debugging" wvJaKQ94lBY]
+ * [video:"Mixed-mode debugging" wvJaKQ94lBY 0.5]
 
 Other special conversions include:
 

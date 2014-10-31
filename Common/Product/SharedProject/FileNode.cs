@@ -423,7 +423,7 @@ namespace Microsoft.VisualStudioTools.Project {
 
             return base.QueryService(ref guidService, out result);
         }
-        
+
         /// <summary>
         /// Called by the drag&drop implementation to ask the node
         /// which is being dragged/droped over which nodes should
@@ -556,7 +556,7 @@ namespace Microsoft.VisualStudioTools.Project {
             sfc.Suspend();
 
             try {
-                // Rename the node.	
+                // Rename the node.
                 DocumentManager.UpdateCaption(this.ProjectMgr.Site, Path.GetFileName(newFilePath), docData);
                 // Check if the file name was actually changed.
                 // In same cases (e.g. if the item is a file and the user has changed its encoding) this function
@@ -675,30 +675,48 @@ namespace Microsoft.VisualStudioTools.Project {
             if (!this.IsNonMemberItem && newParent.IsNonMemberItem) {
                 ErrorHandler.ThrowOnFailure(newParent.IncludeInProject(false));
             }
+
+            // Retrieve child nodes to add later.
+            List<HierarchyNode> childNodes = this.GetChildNodes();
+
+            FileNode renamedNode;
             using (this.ProjectMgr.ExtensibilityEventsDispatcher.Suspend()) {
+
+                // Remove this from its parent.
                 ProjectMgr.OnItemDeleted(this);
                 this.Parent.RemoveChild(this);
-                this.ID = this.ProjectMgr.ItemIdMap.Add(this);
+
+                // Update name in MSBuild
                 this.ItemNode.Rename(CommonUtils.GetRelativeFilePath(ProjectMgr.ProjectHome, newFileName));
-                this.ItemNode.RefreshProperties();
-                UpdateCaption();
-                newParent.AddChild(this);
-                this.Parent = newParent;
+
+                // Request a new file node be made.  This is used to replace the old file node.  This way custom
+                // derived FileNode types will be used and correctly associated on rename.  This is useful for things 
+                // like .txt -> .js where the file would now be able to be a startup project/file.
+                renamedNode = this.ProjectMgr.CreateFileNode(this.ItemNode);
+                renamedNode.ID = this.ProjectMgr.ItemIdMap.Add(renamedNode);
+
+                renamedNode.ItemNode.RefreshProperties();
+                renamedNode.UpdateCaption();
+                newParent.AddChild(renamedNode);
+                renamedNode.Parent = newParent;
             }
 
-            ProjectMgr.ReDrawNode(this, UIHierarchyElement.Caption);
+            UpdateCaption();
+            ProjectMgr.ReDrawNode(renamedNode, UIHierarchyElement.Caption);
 
-            this.ProjectMgr.ExtensibilityEventsDispatcher.FireItemRenamed(this, oldFileName);
+            renamedNode.ProjectMgr.ExtensibilityEventsDispatcher.FireItemRenamed(this, oldFileName);
 
             //Update the new document in the RDT.
-            DocumentManager.RenameDocument(this.ProjectMgr.Site, oldFileName, newFileName, ID);
+            DocumentManager.RenameDocument(renamedNode.ProjectMgr.Site, oldFileName, newFileName, renamedNode.ID);
 
             //Select the new node in the hierarchy
-            ExpandItem(EXPANDFLAGS.EXPF_SelectItem);
+            renamedNode.ExpandItem(EXPANDFLAGS.EXPF_SelectItem);
 
-            RenameChildNodes(this);
+            // Add children to new node and rename them appropriately.
+            childNodes.ForEach(x => renamedNode.AddChild(x));
+            RenameChildNodes(renamedNode);
 
-            return this;
+            return renamedNode;
         }
 
         /// <summary>
@@ -845,8 +863,8 @@ namespace Microsoft.VisualStudioTools.Project {
                 } else {
                     this.RenameCaseOnlyChange(oldName, newName);
                 }
-                
-                DocumentManager.UpdateCaption(this.ProjectMgr.Site, Caption, docData);                
+
+                DocumentManager.UpdateCaption(this.ProjectMgr.Site, Caption, docData);
 
                 // changed from MPFProj:
                 // http://mpfproj10.codeplex.com/WorkItem/View.aspx?WorkItemId=8231

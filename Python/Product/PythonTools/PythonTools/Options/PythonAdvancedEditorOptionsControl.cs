@@ -19,46 +19,28 @@ namespace Microsoft.PythonTools.Options {
     public partial class PythonAdvancedEditorOptionsControl : UserControl {
         public PythonAdvancedEditorOptionsControl() {
             InitializeComponent();
-            _enterCommits.Checked = PythonToolsPackage.Instance.AdvancedEditorOptionsPage.EnterCommitsIntellisense;
-            _intersectMembers.Checked = PythonToolsPackage.Instance.AdvancedEditorOptionsPage.IntersectMembers;
-            _filterCompletions.Checked = PythonToolsPackage.Instance.AdvancedEditorOptionsPage.FilterCompletions;
-            _completionCommitedBy.Text = PythonToolsPackage.Instance.AdvancedEditorOptionsPage.CompletionCommittedBy;
-            _newLineAfterCompleteCompletion.Checked = PythonToolsPackage.Instance.AdvancedEditorOptionsPage.AddNewLineAtEndOfFullyTypedWord;
-            _outliningOnOpen.Checked = PythonToolsPackage.Instance.AdvancedEditorOptionsPage.EnterOutliningModeOnOpen;
-            _pasteRemovesReplPrompts.Checked = PythonToolsPackage.Instance.AdvancedEditorOptionsPage.PasteRemovesReplPrompts;
-            _colorNames.Checked = PythonToolsPackage.Instance.AdvancedEditorOptionsPage.ColorNames;
         }
 
-        private void _enterCommits_CheckedChanged(object sender, EventArgs e) {
-            PythonToolsPackage.Instance.AdvancedEditorOptionsPage.EnterCommitsIntellisense = _enterCommits.Checked;
+        internal void SyncControlWithPageSettings(PythonAdvancedEditorOptionsPage page) {
+            _enterCommits.Checked = page.EnterCommitsIntellisense;
+            _intersectMembers.Checked = page.IntersectMembers;
+            _filterCompletions.Checked = page.FilterCompletions;
+            _completionCommitedBy.Text = page.CompletionCommittedBy;
+            _newLineAfterCompleteCompletion.Checked = page.AddNewLineAtEndOfFullyTypedWord;
+            _outliningOnOpen.Checked = page.EnterOutliningModeOnOpen;
+            _pasteRemovesReplPrompts.Checked = page.PasteRemovesReplPrompts;
+            _colorNames.Checked = page.ColorNames;
         }
 
-        private void _intersectMembers_CheckedChanged(object sender, EventArgs e) {
-            PythonToolsPackage.Instance.AdvancedEditorOptionsPage.IntersectMembers = _intersectMembers.Checked;
-        }
-
-        private void _filterCompletions_CheckedChanged(object sender, EventArgs e) {
-            PythonToolsPackage.Instance.AdvancedEditorOptionsPage.FilterCompletions = _filterCompletions.Checked;
-        }
-
-        private void _completionCommitedBy_TextChanged(object sender, EventArgs e) {
-            PythonToolsPackage.Instance.AdvancedEditorOptionsPage.CompletionCommittedBy = _completionCommitedBy.Text;
-        }
-
-        private void _newLineAfterCompleteCompletion_CheckedChanged(object sender, EventArgs e) {
-            PythonToolsPackage.Instance.AdvancedEditorOptionsPage.AddNewLineAtEndOfFullyTypedWord = _newLineAfterCompleteCompletion.Checked;
-        }
-
-        private void _outliningOnOpen_CheckedChanged(object sender, EventArgs e) {
-            PythonToolsPackage.Instance.AdvancedEditorOptionsPage.EnterOutliningModeOnOpen = _outliningOnOpen.Checked;
-        }
-
-        private void _pasteRemovesReplPrompts_CheckedChanged(object sender, EventArgs e) {
-            PythonToolsPackage.Instance.AdvancedEditorOptionsPage.PasteRemovesReplPrompts = _pasteRemovesReplPrompts.Checked;
-        }
-
-        private void _colorNames_CheckedChanged(object sender, EventArgs e) {
-            PythonToolsPackage.Instance.AdvancedEditorOptionsPage.ColorNames = _colorNames.Checked;
+        internal void SyncPageWithControlSettings(PythonAdvancedEditorOptionsPage page) {
+            page.EnterCommitsIntellisense = _enterCommits.Checked;
+            page.IntersectMembers = _intersectMembers.Checked;
+            page.FilterCompletions = _filterCompletions.Checked;
+            page.CompletionCommittedBy = _completionCommitedBy.Text;
+            page.AddNewLineAtEndOfFullyTypedWord = _newLineAfterCompleteCompletion.Checked;
+            page.EnterOutliningModeOnOpen = _outliningOnOpen.Checked;
+            page.PasteRemovesReplPrompts = _pasteRemovesReplPrompts.Checked;
+            page.ColorNames = _colorNames.Checked;
         }
     }
 }

@@ -1203,6 +1203,31 @@ namespace Microsoft.VisualStudioTools.Project {
 
                 public override void DoAddition(ref bool? overwrite) {
                     string newPath = Path.Combine(TargetFolder, NewFileName);
+
+                    DirectoryInfo dirInfo = null;                    
+                        
+                    try {
+                        dirInfo = Directory.CreateDirectory(TargetFolder);
+                    } catch (ArgumentException) {
+                    } catch (UnauthorizedAccessException) {
+                    } catch (IOException) {
+                    } catch (NotSupportedException) {
+                    }
+
+                    if (dirInfo == null) {
+                        //Something went wrong and we failed to create the new directory
+                        //   Inform the user and cancel the addition
+                        VsShellUtilities.ShowMessageBox(
+                                            Project.Site,
+                                            SR.GetString(SR.FolderCannotBeCreatedOnDisk, CommonUtils.GetFileOrDirectoryName(TargetFolder)),
+                                            null,
+                                            OLEMSGICON.OLEMSGICON_CRITICAL,
+                                            OLEMSGBUTTON.OLEMSGBUTTON_OK,
+                                            OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
+                        return;
+                    }
+                    
+
                     if (DropEffect == DropEffect.Move && Utilities.IsSameComObject(Project, SourceHierarchy)) {
                         // we are doing a move, we need to remove the old item, and add the new.
                         // This also allows us to have better behavior if the user is selectively answering

@@ -39,7 +39,7 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
         #region overridden methods
         /// <summary>
         /// Not implemented. If called throws invalid operation exception.
-        /// </summary>	
+        /// </summary>
         public override void Delete() {
             throw new InvalidOperationException();
         }

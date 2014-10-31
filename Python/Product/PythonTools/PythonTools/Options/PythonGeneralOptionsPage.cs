@@ -51,6 +51,7 @@ namespace Microsoft.PythonTools.Options {
             get {
                 if (_window == null) {
                     _window = new PythonGeneralOptionsControl();
+                    LoadSettingsFromStorage();
                 }
                 return _window;
             }
@@ -227,6 +228,7 @@ namespace Microsoft.PythonTools.Options {
         private const string ClearGlobalPythonPathSetting = "ClearGlobalPythonPath";
 
         public override void LoadSettingsFromStorage() {
+            // Load settings from storage.
             _surveyNewsCheck = LoadEnum<SurveyNewsPolicy>(SurveyNewsCheckSetting) ?? SurveyNewsPolicy.CheckOnceWeek;
             _surveyNewsLastCheck = LoadDateTime(SurveyNewsLastCheckSetting) ?? DateTime.MinValue;
             _surveyNewsFeedUrl = LoadString(SurveyNewsFeedUrlSetting) ?? DefaultSurveyNewsFeedUrl;
@@ -238,9 +240,20 @@ namespace Microsoft.PythonTools.Options {
             _unresolvedImportWarning = LoadBool(UnresolvedImportWarningSetting) ?? true;
             _clearGlobalPythonPath = LoadBool(ClearGlobalPythonPathSetting) ?? true;
             DebugOptions.LoadGeneralSettingsFromStorage();
+
+            // Synchronize UI with backing properties.
+            if (_window != null) {
+                _window.SyncControlWithPageSettings(this);
+            }
         }
 
         public override void SaveSettingsToStorage() {
+            // Synchronize backing properties with UI.
+            if (_window != null) {
+                _window.SyncPageWithControlSettings(this);
+            }
+
+            // Save settings.
             SaveEnum(SurveyNewsCheckSetting, _surveyNewsCheck);
             SaveDateTime(SurveyNewsLastCheckSetting, _surveyNewsLastCheck);
             SaveBool(ShowOutputWindowForVirtualEnvCreateSetting, _showOutputWindowForVirtualEnvCreate);

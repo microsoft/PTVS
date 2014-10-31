@@ -44,6 +44,7 @@ namespace Microsoft.VisualStudioTools.Project {
             }
             set {
                 _itemType = value;
+                OnItemTypeChanged();
             }
         }
     }

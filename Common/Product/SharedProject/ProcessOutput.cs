@@ -206,8 +206,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 }
             }
 
-            var process = new Process();
-            process.StartInfo = psi;
+            var process = new Process { StartInfo = psi };
             return new ProcessOutput(process, redirector);
         }
 

@@ -125,8 +125,9 @@ namespace Microsoft.VisualStudioTools.Project {
                     return ShowFileOrFolderAlreadyExistsErrorMessage(newPath);
                 }
 
-                // Verify that No Directory/file already exists with the new name on disk
-                if (Directory.Exists(newPath) || File.Exists(newPath)) {
+                // Verify that No Directory/file already exists with the new name on disk.
+                // Unless the path exists because it is the path to the source file also.
+                if ((Directory.Exists(newPath) || File.Exists(newPath)) && !CommonUtils.IsSamePath(Url, newPath)) {
                     return ShowFileOrFolderAlreadyExistsErrorMessage(newPath);
                 }
 
@@ -385,11 +386,20 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <returns></returns>
         public virtual void RenameDirectory(string newPath) {
             if (Directory.Exists(this.Url)) {
-                if (Directory.Exists(newPath)) {
+                if (CommonUtils.IsSamePath(this.Url, newPath)) {
+                    // This is a rename to the same location with (possible) capitilization changes.
+                    // Directory.Move does not allow renaming to the same name so P/Invoke MoveFile to bypass this.
+                    if (!NativeMethods.MoveFile(this.Url, newPath)) {
+                        // Rather than perform error handling, Call Directory.Move and let it handle the error handling.  
+                        // If this succeeds, then we didn't really have errors that needed handling.
+                        Directory.Move(this.Url, newPath);
+                    }
+                } else if (Directory.Exists(newPath)) {
+                    // Directory exists and it wasn't the source.  Item cannot be moved as name exists.
                     ShowFileOrFolderAlreadyExistsErrorMessage(newPath);
+                } else {
+                    Directory.Move(this.Url, newPath);
                 }
-
-                Directory.Move(this.Url, newPath);
             }
         }
 

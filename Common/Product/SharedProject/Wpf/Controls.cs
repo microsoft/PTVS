@@ -19,7 +19,6 @@ using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Interop;
-using System.Windows.Markup;
 using System.Windows.Media.Imaging;
 using Microsoft.VisualStudio.PlatformUI;
 using Microsoft.VisualStudio.Shell;
@@ -58,6 +57,11 @@ namespace Microsoft.VisualStudioTools.Wpf {
         public static readonly object ComboBoxPopupBackgroundKey = VsBrushes.ComboBoxPopupBackgroundGradientKey;
         public static readonly object ComboBoxPopupBorderKey = VsBrushes.ComboBoxPopupBorderKey;
         public static readonly object ComboBoxPopupForegroundKey = VsBrushes.WindowTextKey;
+
+        public static readonly object ButtonForegroundPressedKey = VsBrushes.ActiveCaptionKey;
+        public static readonly object ButtonBackgroundPressedKey = VsBrushes.ComboBoxMouseDownBorderKey;
+        public static readonly object ButtonBackgroundHoverKey = VsBrushes.CommandBarHoverOverSelectedKey;
+        public static readonly object ButtonBorderHoverKey = VsBrushes.ComboBoxMouseOverGlyphKey;
 
         public static readonly object ScrollBarBackgroundKey = VsBrushes.ScrollBarBackgroundKey;
         public static readonly object ScrollBarThumbBackgroundKey = VsBrushes.ScrollBarThumbBackgroundKey;
@@ -129,6 +133,80 @@ namespace Microsoft.VisualStudioTools.Wpf {
 
         public object[] ConvertBack(object value, Type[] targetTypes, object parameter, System.Globalization.CultureInfo culture) {
             throw new NotImplementedException();
+        }
+    }
+
+    [ValueConversion(typeof(object), typeof(object))]
+    public sealed class ComparisonConverter : IValueConverter {
+        public object IfTrue {
+            get;
+            set;
+        }
+
+        public object IfFalse {
+            get;
+            set;
+        }
+
+        public ComparisonOperator Operator {
+            get;
+            set;
+        }
+
+        public object SecondOperand {
+            get;
+            set;
+        }
+
+        public enum ComparisonOperator {
+            LessThan,
+            LessThanOrEqualTo,
+            EqualTo,
+            NotEqualTo,
+            GreaterThan,
+            GreaterThanOrEqualTo
+        }
+
+        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture) {
+            return (Compare(value, Operator, SecondOperand)) ? IfTrue : IfFalse;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture) {
+            throw new NotImplementedException();
+        }
+
+        private bool Compare(object firstOperand, ComparisonOperator comparisonOperator, object secondOperand) {
+            // There may be loss of precision if firstOperand and secondOperand are not of the same type.
+            // This is unfortunately unavoidable unless we want to use type-specific converters.
+
+            var firstComparable = firstOperand as IComparable;
+            if (firstComparable == null) {
+                return false;
+            }
+
+            var secondComparable = System.Convert.ChangeType(secondOperand, firstComparable.GetType());
+            if (secondComparable == null) {
+                return false;
+            }
+
+            int result = firstComparable.CompareTo(secondComparable);
+
+            switch (comparisonOperator) {
+                case ComparisonOperator.LessThan:
+                    return result < 0;
+                case ComparisonOperator.LessThanOrEqualTo:
+                    return result <= 0;
+                case ComparisonOperator.EqualTo:
+                    return result == 0;
+                case ComparisonOperator.NotEqualTo:
+                    return result != 0;
+                case ComparisonOperator.GreaterThanOrEqualTo:
+                    return result >= 0;
+                case ComparisonOperator.GreaterThan:
+                    return result > 0;
+            }
+
+            throw new ArgumentException(String.Format("Comparison operator {0} not handled", comparisonOperator));
         }
     }
 }

@@ -73,6 +73,9 @@
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '12.0' ">
     <DefineConstants>$(DefineConstants);DEV12</DefineConstants>
   </PropertyGroup>
+  <PropertyGroup Condition=" '$(VisualStudioVersion)' == '14.0' ">
+    <DefineConstants>$(DefineConstants);DEV14</DefineConstants>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="microsoft.visualstudio.qualitytools.common, Version=$(VisualStudioVersion).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>$(DevEnvDir)\PrivateAssemblies\microsoft.visualstudio.qualitytools.common.dll</HintPath>

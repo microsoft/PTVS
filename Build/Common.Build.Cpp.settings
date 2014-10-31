@@ -14,6 +14,12 @@
     <Platform Condition="'$(Platform)'==''">Win32</Platform>
   </PropertyGroup>
   
+  <ItemDefinitionGroup Condition="'$(VSTarget)' == '14.0'">
+    <ClCompile>
+      <PreprocessorDefinitions>DEV14;DEV14_OR_LATER;DEV12_OR_LATER;DEV11_OR_LATER;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+
   <ItemDefinitionGroup Condition="'$(VSTarget)' == '12.0'">
     <ClCompile>
       <PreprocessorDefinitions>DEV12;DEV12_OR_LATER;DEV11_OR_LATER;%(PreprocessorDefinitions)</PreprocessorDefinitions>

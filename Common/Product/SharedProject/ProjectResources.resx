@@ -647,6 +647,9 @@ Run Visual Studio with the /Log option and check ActivityLog.xml for more detail
   <data name="DirectoryExists" xml:space="preserve">
     <value>A directory with the name '{0}' already exists.</value>
   </data>
+  <data name="FolderCannotBeCreatedOnDisk" xml:space="preserve">
+    <value>The folder '{0}' does not exist on disk and could not be created.</value>
+  </data>    
   <data name="FolderPathTooLongShortMessage" xml:space="preserve">
     <value>The folder name is too long.</value>
   </data>

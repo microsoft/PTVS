@@ -35,6 +35,7 @@ namespace Microsoft.PythonTools.Options {
             get {
                 if (_window == null) {
                     _window = new PythonAdvancedEditorOptionsControl();
+                    LoadSettingsFromStorage();
                 }
                 return _window;
             }
@@ -115,6 +116,7 @@ namespace Microsoft.PythonTools.Options {
         private const string ColorNamesWithAnalysisSetting = "ColorNamesWithAnalysis";
 
         public override void LoadSettingsFromStorage() {
+            // Load settings from storage.
             _enterCommitsIntellisense = LoadBool(EnterCommitsSetting) ?? true;
             _intersectMembers = LoadBool(IntersectMembersSetting) ?? false;
             _addNewLineAtEndOfFullyTypedWord = LoadBool(NewLineAtEndOfWordSetting) ?? false;
@@ -125,9 +127,20 @@ namespace Microsoft.PythonTools.Options {
             _searchMode = LoadEnum<FuzzyMatchMode>(SearchModeSetting) ?? FuzzyMatchMode.Default;
             _colorNames = LoadBool(ColorNamesSetting) ?? true;
             _colorNamesWithAnalysis = LoadBool(ColorNamesWithAnalysisSetting) ?? true;
+
+            // Synchronize UI with backing properties.
+            if (_window != null) {
+                _window.SyncControlWithPageSettings(this);
+            }
         }
 
         public override void SaveSettingsToStorage() {
+            // Synchronize backing properties with UI.
+            if (_window != null) {
+                _window.SyncPageWithControlSettings(this);
+            }
+
+            // Save settings.
             SaveBool(EnterCommitsSetting, _enterCommitsIntellisense);
             SaveBool(IntersectMembersSetting, _intersectMembers);
             SaveBool(NewLineAtEndOfWordSetting, _addNewLineAtEndOfFullyTypedWord);

@@ -35,7 +35,7 @@ namespace TestUtilities.Mocks {
         public MockReplWindow(IReplEvaluator eval, string contentType = "Python") {            
             _eval = eval;
             _contentType = contentType;
-            _view = new MockTextView(new MockTextBuffer("", "text"));
+            _view = new MockTextView(new MockTextBuffer(String.Empty, "text"));
             _eval.Initialize(this);
         }
 
@@ -109,6 +109,12 @@ namespace TestUtilities.Mocks {
 
         public void AbortCommand() {
             _eval.AbortCommand();
+        }
+
+        public Task<ExecutionResult> ExecuteCommand(string command) {
+            var tcs = new TaskCompletionSource<ExecutionResult>();
+            tcs.SetException(new NotImplementedException());
+            return tcs.Task;
         }
 
         public void WriteLine(string text) {

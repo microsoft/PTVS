@@ -31,6 +31,9 @@ LINK_PATTERNS = None
 HEADER = ''''''
 
 FOOTER = '''
+<br/>
+<br/>
+<p><i>This page was generated using a tool. Changes will be lost when the html is regenerated. Source file: {0}</i></p>
 '''
 
 def get_build_root(start):
@@ -133,8 +136,9 @@ class LinkMapper:
         return '[{}]({})'.format(title, self.issue_url_base + number)
 
     def replace_video_links(self, matchobj):
-        video_id = matchobj.group(3)
-        title = matchobj.group(2) or ("YouTube video " + matchobj.group(3))
+        video_id = matchobj.group(2)
+        title = matchobj.group(1) or ("YouTube video " + matchobj.group(2))
+        width = 480 * float(matchobj.group(3) or 1)
 
         thumbnail_filename = 'VideoThumbnails/{}.png'.format(video_id)
         if self.list_outputs_only:
@@ -151,11 +155,11 @@ class LinkMapper:
         PIL.Image.alpha_composite(thumbnail, overlay).save(thumbnail_filename)
 
         return """
-<p style="text-align: center">
+<p>
 <a href="http://www.youtube.com/watch?v={0}" target="_blank" style="display: inline-block">
-<img src="{1}" alt="{2}" border="0" width="480" height="360" />
+<img src="{1}" alt="{2}" border="0" width="{3}"/>
 </a></p>
-               """.format(video_id, thumbnail_filename, title)
+               """.format(video_id, thumbnail_filename, title, width)
 
     @property
     def patterns(self):
@@ -164,8 +168,8 @@ class LinkMapper:
             (r'(?<!`)\[src\:([^\]]+)\]', self.replace_source_links, False),
             (r'(?<!`)\[file\:([^\]]+)\]', self.replace_file_links, False),
             (r'(?<!`)\[wiki\:("([^"]+)"\s*)?([^\]]+)\]', self.replace_wiki_links, False),
-            (r'(?<!`)\[issue\:("([^"]+)"\s*)?([0-9]+)\]', self.replace_issue_links, False),
-            (r'(?<!`)\[video\:("([^"]+)"\s*)?([^\]]+)\]', self.replace_video_links, True),
+            (r'(?<!`)\[issue\:("([^"]+)"\s*)?(\d+)\]', self.replace_issue_links, False),
+            (r'(?<!`)\[video\:(?:"([^"]+)"\s*)?(\w+)\s*(\d+(?:\.\d+)?)?\]', self.replace_video_links, True),
         ]
 
 
@@ -241,7 +245,7 @@ def main(start_dir, site, doc_root, list_outputs_only):
     url_base = 'http://{0}.codeplex.com/'.format(site)
 
     link_mapper = LinkMapper(BUILD_ROOT, url_base, doc_root, list_outputs_only)
-   
+    
     sources = os.path.join(BUILD_ROOT, doc_root)
     if not list_outputs_only:
         print('Reading from ' + sources)
@@ -250,35 +254,35 @@ def main(start_dir, site, doc_root, list_outputs_only):
         for filename in (f for f in filenames if f.upper().endswith('.MD')):
             if not list_outputs_only:
                 print('Converting {}'.format(filename))
-            cwd = os.getcwd()
-            os.chdir(dirname)
-            try:
-                with open(filename, 'r', encoding='utf-8-sig') as src:
-                    text = src.read()
+                cwd = os.getcwd()
+                os.chdir(dirname)
+                try:
+                    with open(filename, 'r', encoding='utf-8-sig') as src:
+                        text = src.read()
             
-                # Do our own link replacements, rather than markdown2's
-                for pattern, repl, has_outputs in link_mapper.patterns:
+                    # Do our own link replacements, rather than markdown2's
+                    for pattern, repl, has_outputs in link_mapper.patterns:
+                        if list_outputs_only:
+                            if has_outputs:
+                                for mo in re.finditer(pattern, text):
+                                    repl(mo)
+                        else:
+                            text = re.sub(pattern, repl, text)
+            
+                    html_filename = filename[:-3] + '.html'
+
                     if list_outputs_only:
-                        if has_outputs:
-                            for mo in re.finditer(pattern, text):
-                                repl(mo)
+                        log_output(html_filename)
                     else:
-                        text = re.sub(pattern, repl, text)
-
-                html_filename = filename[:-3] + '.html'
-
-                if list_outputs_only:
-                    log_output(html_filename)
-                else:
-                    html = markdown.convert(text)
+                        html = markdown.convert(text)
             
                     # Do any post-conversion replacements
                     for pattern, repl in HTML_PATTERNS:
                         html = re.sub(pattern, repl, html)
-
-                    with open(html_filename, 'w', encoding='utf-8') as dest:
-                        dest.write(HEADER)
-                        dest.write(html)
-                        dest.write(FOOTER)
-            finally:
-                os.chdir(cwd)
+            
+                        with open(html_filename, 'w', encoding='utf-8') as dest:
+                            dest.write(HEADER)
+                            dest.write(html)
+                            dest.write(FOOTER.format(filename))
+                finally:
+                    os.chdir(cwd)

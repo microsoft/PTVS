@@ -29,7 +29,7 @@ print 'goodbye'
 
             view.Caret.MoveTo(view.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(0).Start);
 
-            EditorExtensions.CommentOrUncommentBlock(view, true);
+            view.CommentOrUncommentBlock(true);
 
             Assert.AreEqual(@"#print 'hello'
 print 'goodbye'
@@ -38,7 +38,7 @@ print 'goodbye'
 
             view.Caret.MoveTo(view.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(1).Start);
 
-            EditorExtensions.CommentOrUncommentBlock(view, true);
+            view.CommentOrUncommentBlock(true);
 
             Assert.AreEqual(@"#print 'hello'
 #print 'goodbye'
@@ -54,7 +54,7 @@ print 'goodbye'
 
             view.Caret.MoveTo(view.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(0).Start);
 
-            EditorExtensions.CommentOrUncommentBlock(view, false);
+            view.CommentOrUncommentBlock(false);
 
             Assert.AreEqual(@"print 'hello'
 #print 'goodbye'", 
@@ -62,7 +62,7 @@ print 'goodbye'
 
             view.Caret.MoveTo(view.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(1).Start);
 
-            EditorExtensions.CommentOrUncommentBlock(view, false);
+            view.CommentOrUncommentBlock(false);
 
             Assert.AreEqual(@"print 'hello'
 print 'goodbye'",
@@ -81,7 +81,7 @@ print 'goodbye'
                 false
             );
 
-            EditorExtensions.CommentOrUncommentBlock(view, true);
+            view.CommentOrUncommentBlock(true);
 
             Assert.AreEqual(@"#print 'hello'
 #print 'goodbye'
@@ -102,7 +102,7 @@ print 'goodbye'
                 false
             );
 
-            EditorExtensions.CommentOrUncommentBlock(view, true);
+            view.CommentOrUncommentBlock(true);
 
             Assert.AreEqual(@"#print 'hello'
 
@@ -124,7 +124,7 @@ print 'goodbye'
                 false
             );
 
-            EditorExtensions.CommentOrUncommentBlock(view, true);
+            view.CommentOrUncommentBlock(true);
 
             Assert.AreEqual(@"#print 'hello'
    
@@ -149,7 +149,7 @@ print 'goodbye'
                 false
             );
 
-            EditorExtensions.CommentOrUncommentBlock(view, true);
+            view.CommentOrUncommentBlock(true);
 
             Assert.AreEqual(@"def f():
     #print 'hello'
@@ -175,7 +175,7 @@ print 'goodbye'
                 false
             );
 
-            EditorExtensions.CommentOrUncommentBlock(view, true);
+            view.CommentOrUncommentBlock(true);
 
             Assert.AreEqual(@"def f():
     #print 'hello'
@@ -194,7 +194,7 @@ print('bye')"));
 
             view.Caret.MoveTo(view.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(1).Start);
 
-            EditorExtensions.CommentOrUncommentBlock(view, true);
+            view.CommentOrUncommentBlock(true);
 
             Assert.AreEqual(@"print('hi')
 
@@ -219,7 +219,7 @@ print('bye')",
                 false
             );
 
-            EditorExtensions.CommentOrUncommentBlock(view, true);
+            view.CommentOrUncommentBlock(true);
 
             Assert.AreEqual(@"def f():
     #print 'hello'
@@ -245,7 +245,7 @@ print('bye')",
                 false
             );
 
-            EditorExtensions.CommentOrUncommentBlock(view, false);
+            view.CommentOrUncommentBlock(false);
 
             Assert.AreEqual(@"def f():
     print 'hello'
@@ -265,7 +265,7 @@ print('bye')",
                 false
             );
 
-            EditorExtensions.CommentOrUncommentBlock(view, false);
+            view.CommentOrUncommentBlock(false);
 
             Assert.AreEqual(@"print 'hello'
 print 'goodbye'",
@@ -286,7 +286,7 @@ print 'goodbye'"));
                 false
             );
 
-            EditorExtensions.CommentOrUncommentBlock(view, true);
+            view.CommentOrUncommentBlock(true);
 
             Assert.AreEqual(@"#print 'hello'
 print 'goodbye'",
@@ -306,7 +306,7 @@ print 'goodbye'"));
                 false
             );
 
-            EditorExtensions.CommentOrUncommentBlock(view, false);
+            view.CommentOrUncommentBlock(false);
 
             Assert.AreEqual(@"print 'hello' #comment that should stay a comment
 print 'still here' # another comment that should stay a comment

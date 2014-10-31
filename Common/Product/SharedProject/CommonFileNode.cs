@@ -272,10 +272,11 @@ namespace Microsoft.VisualStudioTools.Project {
             }
 
             ResetNodeProperties();
+
             ItemNode = ProjectMgr.CreateMsBuildFileItem(
-                CommonUtils.GetRelativeFilePath(ProjectMgr.ProjectHome, Url),
-                ProjectMgr.IsCodeFile(Url) ? ProjectFileConstants.Compile : ProjectFileConstants.Content
+                CommonUtils.GetRelativeFilePath(ProjectMgr.ProjectHome, Url), ProjectMgr.GetItemType(Url)
             );
+
             IsVisible = true;
             ProjectMgr.ReDrawNode(this, UIHierarchyElement.Icon);
             ProjectMgr.OnPropertyChanged(this, (int)__VSHPROPID.VSHPROPID_IsNonMemberItem, 0);
@@ -286,7 +287,7 @@ namespace Microsoft.VisualStudioTools.Project {
             if (CommonUtils.IsSamePath(ProjectMgr.GetStartupFile(), Url)) {
                 ProjectMgr.BoldItem(this, true);
             }
-
+            
             // On include, the file should be added to source control.
             this.ProjectMgr.Tracker.OnItemAdded(this.Url, VSADDFILEFLAGS.VSADDFILEFLAGS_NoFlags);
 

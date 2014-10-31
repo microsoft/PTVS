@@ -20,6 +20,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
@@ -47,6 +48,15 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
         private bool browsable;
+    }
+
+    /// <summary>
+    /// This attribute is used to mark properties that shouldn't be serialized.  Marking properties with this will
+    /// result in them not being serialized and not being bold in the properties pane.
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Property)]
+    internal sealed class AlwaysSerializedAttribute : Attribute {
+        public AlwaysSerializedAttribute() { }
     }
 
     /// <summary>
@@ -230,10 +240,10 @@ namespace Microsoft.VisualStudioTools.Project {
     public class FileNodeProperties : NodeProperties {
         #region properties
 
-
         [SRCategoryAttribute(SR.Misc)]
         [SRDisplayName(SR.FileName)]
         [SRDescriptionAttribute(SR.FileNameDescription)]
+        [AlwaysSerialized]
         public virtual string FileName {
             get {
                 return this.HierarchyNode.Caption;
@@ -319,6 +329,7 @@ namespace Microsoft.VisualStudioTools.Project {
         [SRCategoryAttribute(SR.Advanced)]
         [SRDisplayName(SR.BuildAction)]
         [SRDescriptionAttribute(SR.BuildActionDescription)]
+        [AlwaysSerialized]
         [TypeConverter(typeof(BuildActionStringConverter))]
         public string ItemType {
             get {
@@ -328,7 +339,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 HierarchyNode.ItemNode.ItemTypeName = value;
             }
         }
-        
+
         /// <summary>
         /// Specifies the build action as a projBuildAction so that automation can get the
         /// expected enum value.
@@ -354,7 +365,7 @@ namespace Microsoft.VisualStudioTools.Project {
             get {
                 var publish = this.HierarchyNode.ItemNode.GetMetadata("Publish");
                 if (String.IsNullOrEmpty(publish)) {
-                    if (this.HierarchyNode.ItemNode.ItemTypeName == "Compile") {
+                    if (this.HierarchyNode.ItemNode.ItemTypeName == ProjectFileConstants.Compile) {
                         return true;
                     }
                     return false;
@@ -362,9 +373,26 @@ namespace Microsoft.VisualStudioTools.Project {
                 return Convert.ToBoolean(publish);
             }
             set {
-
                 this.HierarchyNode.ItemNode.SetMetadata("Publish", value.ToString());
             }
+        }
+
+        [Browsable(false)]
+        public bool ShouldSerializePublish() {
+            // If compile, default should be true, else the default is false.
+            if (HierarchyNode.ItemNode.ItemTypeName == ProjectFileConstants.Compile) {
+                return !Publish;
+            }
+            return Publish;
+        }
+
+        [Browsable(false)]
+        public void ResetPublish() {
+            // If compile, default should be true, else the default is false.
+            if (HierarchyNode.ItemNode.ItemTypeName == ProjectFileConstants.Compile) {
+                Publish = true;
+            }
+            Publish = false;
         }
 
         [Browsable(false)]
@@ -406,7 +434,6 @@ namespace Microsoft.VisualStudioTools.Project {
             }
         }
     }
-
 
     [ComVisible(true)]
     public class DependentFileNodeProperties : NodeProperties {
@@ -468,11 +495,11 @@ namespace Microsoft.VisualStudioTools.Project {
             if (destinationType == typeof(string)) {
                 switch ((prjBuildAction)value) {
                     case prjBuildAction.prjBuildActionCompile:
-                        return "Compile";
+                        return ProjectFileConstants.Compile;
                     case prjBuildAction.prjBuildActionContent:
-                        return "Content";
+                        return ProjectFileConstants.Content;
                     case prjBuildAction.prjBuildActionNone:
-                        return "None";
+                        return ProjectFileConstants.None;
                 }
             }
             return base.ConvertTo(context, culture, value, destinationType);
@@ -481,11 +508,11 @@ namespace Microsoft.VisualStudioTools.Project {
         public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value) {
             if (value is string) {
                 string strVal = (string)value;
-                if (strVal.Equals("Compile", StringComparison.OrdinalIgnoreCase)) {
+                if (strVal.Equals(ProjectFileConstants.Compile, StringComparison.OrdinalIgnoreCase)) {
                     return prjBuildAction.prjBuildActionCompile;
-                } else if (strVal.Equals("Content", StringComparison.OrdinalIgnoreCase)) {
+                } else if (strVal.Equals(ProjectFileConstants.Content, StringComparison.OrdinalIgnoreCase)) {
                     return prjBuildAction.prjBuildActionContent;
-                } else if (strVal.Equals("None", StringComparison.OrdinalIgnoreCase)) {
+                } else if (strVal.Equals(ProjectFileConstants.None, StringComparison.OrdinalIgnoreCase)) {
                     return prjBuildAction.prjBuildActionNone;
                 }
             }
@@ -536,7 +563,7 @@ namespace Microsoft.VisualStudioTools.Project {
             if (nodeProps != null) {
                 itemNames = nodeProps.HierarchyNode.ProjectMgr.GetAvailableItemNames();
             } else {
-                itemNames = new[] { "None", "Compile", "Content" };
+                itemNames = new[] { ProjectFileConstants.None, ProjectFileConstants.Compile, ProjectFileConstants.Content };
             }
             return new StandardValuesCollection(itemNames.ToArray());
         }

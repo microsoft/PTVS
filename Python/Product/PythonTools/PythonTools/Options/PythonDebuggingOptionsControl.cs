@@ -20,37 +20,24 @@ namespace Microsoft.PythonTools.Options {
     public partial class PythonDebuggingOptionsControl : UserControl {
         public PythonDebuggingOptionsControl() {
             InitializeComponent();
-            _promptOnBuildError.Checked = PythonToolsPackage.Instance.DebuggingOptionsPage.PromptBeforeRunningWithBuildError;
-
-            _waitOnAbnormalExit.Checked = PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnAbnormalExit;
-            _waitOnNormalExit.Checked = PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnNormalExit;
-            _teeStdOut.Checked = PythonToolsPackage.Instance.DebuggingOptionsPage.TeeStandardOutput;
-            _breakOnSystemExitZero.Checked = PythonToolsPackage.Instance.DebuggingOptionsPage.BreakOnSystemExitZero;
-            _debugStdLib.Checked = PythonToolsPackage.Instance.DebuggingOptionsPage.DebugStdLib;
         }
 
-        private void _promptOnBuildError_CheckedChanged(object sender, EventArgs e) {
-            PythonToolsPackage.Instance.DebuggingOptionsPage.PromptBeforeRunningWithBuildError = _promptOnBuildError.Checked;
+        internal void SyncControlWithPageSettings(PythonDebuggingOptionsPage page) {
+            _promptOnBuildError.Checked = page.PromptBeforeRunningWithBuildError;
+            _waitOnAbnormalExit.Checked = page.WaitOnAbnormalExit;
+            _waitOnNormalExit.Checked = page.WaitOnNormalExit;
+            _teeStdOut.Checked = page.TeeStandardOutput;
+            _breakOnSystemExitZero.Checked = page.BreakOnSystemExitZero;
+            _debugStdLib.Checked = page.DebugStdLib;
         }
 
-        private void _waitOnExit_CheckedChanged(object sender, EventArgs e) {
-            PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnAbnormalExit = _waitOnAbnormalExit.Checked;
-        }
-
-        private void _waitOnNormalExit_CheckedChanged(object sender, EventArgs e) {
-            PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnNormalExit = _waitOnNormalExit.Checked;
-        }
-
-        private void _redirectOutputToVs_CheckedChanged(object sender, EventArgs e) {
-            PythonToolsPackage.Instance.DebuggingOptionsPage.TeeStandardOutput = _teeStdOut.Checked;
-        }
-
-        private void _breakOnSystemExitZero_CheckedChanged(object sender, EventArgs e) {
-            PythonToolsPackage.Instance.DebuggingOptionsPage.BreakOnSystemExitZero = _breakOnSystemExitZero.Checked;
-        }
-
-        private void _debugStdLib_CheckedChanged(object sender, EventArgs e) {
-            PythonToolsPackage.Instance.DebuggingOptionsPage.DebugStdLib = _debugStdLib.Checked;
+        internal void SyncPageWithControlSettings(PythonDebuggingOptionsPage page) {
+            page.PromptBeforeRunningWithBuildError = _promptOnBuildError.Checked;
+            page.WaitOnAbnormalExit = _waitOnAbnormalExit.Checked;
+            page.WaitOnNormalExit = _waitOnNormalExit.Checked;
+            page.TeeStandardOutput = _teeStdOut.Checked;
+            page.BreakOnSystemExitZero = _breakOnSystemExitZero.Checked;
+            page.DebugStdLib = _debugStdLib.Checked;
         }
     }
 }

@@ -29,6 +29,8 @@ namespace Microsoft.TC.TestHostAdapters
         public const string VsIdeTestHostAddinGuidString = "32F55E70-9461-4998-827D-C4F9B16A282D";
 #elif DEV12
         public const string VsIdeTestHostAddinGuidString = "F993962B-FF17-4B86-88BC-2CFFC457A6FB";
+#elif DEV14
+        public const string VsIdeTestHostAddinGuidString = "AD2680B2-CBF5-4A51-B760-78691C674DDD";
 #else
 #error Unrecognized VS Version.
 #endif

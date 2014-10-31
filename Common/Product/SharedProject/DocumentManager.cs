@@ -357,9 +357,9 @@ namespace Microsoft.VisualStudioTools.Project {
         /// Rename document in the running document table from oldName to newName.
         /// </summary>
         /// <param name="provider">The service provider.</param>
-        /// <param name="oldName">Full path to the old name of the document.</param>		
-        /// <param name="newName">Full path to the new name of the document.</param>		
-        /// <param name="newItemId">The new item id of the document</param>		
+        /// <param name="oldName">Full path to the old name of the document.</param>
+        /// <param name="newName">Full path to the new name of the document.</param>
+        /// <param name="newItemId">The new item id of the document</param>
         public static void RenameDocument(IServiceProvider site, string oldName, string newName, uint newItemId) {
             Utilities.ArgumentNotNull("site", site);
 

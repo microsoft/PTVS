@@ -65,6 +65,7 @@ namespace Microsoft.VisualStudioTools.Project {
             }
             set {
                 _item.ItemType = value;
+                OnItemTypeChanged();
             }
         }
 

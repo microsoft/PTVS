@@ -15,6 +15,7 @@
 using System;
 using System.Collections;
 using System.ComponentModel;
+using System.Reflection;
 
 namespace Microsoft.VisualStudioTools.Project {
     /// <summary>
@@ -24,10 +25,9 @@ namespace Microsoft.VisualStudioTools.Project {
     /// </summary>
     public class DesignPropertyDescriptor : PropertyDescriptor {
         private string displayName; // Custom display name
-        private PropertyDescriptor property;	// Base property descriptor
+        private PropertyDescriptor property; // Base property descriptor
         private Hashtable editors = new Hashtable(); // Type -> editor instance
         private TypeConverter converter;
-
 
         /// <summary>
         /// Delegates to base.
@@ -106,15 +106,12 @@ namespace Microsoft.VisualStudioTools.Project {
             }
         }
 
-
-
         /// <summary>
         /// Convert name to a Type object.
         /// </summary>
         public virtual Type GetTypeFromNameProperty(string typeName) {
             return Type.GetType(typeName);
         }
-
 
         /// <summary>
         /// Delegates to base.
@@ -150,8 +147,13 @@ namespace Microsoft.VisualStudioTools.Project {
         /// Delegates to base.
         /// </summary>
         public override bool ShouldSerializeValue(object component) {
-            bool result = this.property.ShouldSerializeValue(component);
-            return result;
+            // If the user has set the AlwaysSerializedAttribute, do not attempt to bold.
+            if (property.ComponentType.GetProperty(property.Name).IsDefined(typeof(AlwaysSerializedAttribute))) {
+                return false;
+            } else {
+                bool result = property.ShouldSerializeValue(component);
+                return result;
+            }
         }
 
         /// <summary>

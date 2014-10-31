@@ -63,7 +63,7 @@ namespace Microsoft.VisualStudio.Repl {
     /// starts having problems w/ a large number of inputs.
     /// </summary>
     [Guid(ReplWindow.TypeGuid)]
-    class ReplWindow : ToolWindowPane, IOleCommandTarget, IReplWindow, IVsFindTarget {
+    class ReplWindow : ToolWindowPane, IOleCommandTarget, IReplWindow2, IVsFindTarget {
 #if NTVS_FEATURE_INTERACTIVEWINDOW
         public const string TypeGuid = "2153A414-267E-4731-B891-E875ADBA1993";
 #else
@@ -166,8 +166,8 @@ namespace Microsoft.VisualStudio.Repl {
 
         private string _commandPrefix = "%";
         private string _prompt = "» ";        // prompt for primary input
-        private string _secondPrompt = "";    // prompt for 2nd and additional lines
-        private string _stdInputPrompt = "";  // prompt for standard input
+        private string _secondPrompt = String.Empty;    // prompt for 2nd and additional lines
+        private string _stdInputPrompt = String.Empty;  // prompt for standard input
         private bool _displayPromptInMargin, _formattedPrompts;
 
         private static readonly char[] _whitespaceChars = new[] { '\r', '\n', ' ', '\t' };
@@ -727,11 +727,11 @@ namespace Microsoft.VisualStudio.Repl {
                                 }
 
                                 if (_displayPromptInMargin) {
-                                    UpdatePrompts(ReplSpanKind.Prompt, _prompt, "");
-                                    UpdatePrompts(ReplSpanKind.SecondaryPrompt, _secondPrompt, "");
+                                    UpdatePrompts(ReplSpanKind.Prompt, _prompt, String.Empty);
+                                    UpdatePrompts(ReplSpanKind.SecondaryPrompt, _secondPrompt, String.Empty);
                                 } else {
-                                    UpdatePrompts(ReplSpanKind.Prompt, "", _prompt);
-                                    UpdatePrompts(ReplSpanKind.SecondaryPrompt, "", _secondPrompt);
+                                    UpdatePrompts(ReplSpanKind.Prompt, String.Empty, _prompt);
+                                    UpdatePrompts(ReplSpanKind.SecondaryPrompt, String.Empty, _secondPrompt);
                                 }
                             }
                             break;
@@ -746,7 +746,7 @@ namespace Microsoft.VisualStudio.Repl {
                             break;
                         case ReplOptions.CurrentSecondaryPrompt:
                             oldPrompt = _secondPrompt;
-                            _secondPrompt = CheckOption<string>(option, value) ?? "";
+                            _secondPrompt = CheckOption<string>(option, value) ?? String.Empty;
                             if (!_isRunning && !_displayPromptInMargin) {
                                 // we need to update the current prompt though
                                 UpdatePrompts(ReplSpanKind.SecondaryPrompt, oldPrompt, _secondPrompt, currentOnly: true);
@@ -766,7 +766,7 @@ namespace Microsoft.VisualStudio.Repl {
 
                         case ReplOptions.SecondaryPrompt:
                             oldPrompt = _secondPrompt;
-                            _secondPrompt = CheckOption<string>(option, value) ?? "";
+                            _secondPrompt = CheckOption<string>(option, value) ?? String.Empty;
                             if (!_displayPromptInMargin) {
                                 UpdatePrompts(ReplSpanKind.SecondaryPrompt, oldPrompt, _secondPrompt);
                             }
@@ -2331,7 +2331,7 @@ namespace Microsoft.VisualStudio.Repl {
 
                     _sw = Stopwatch.StartNew();
 
-                    Task<ExecutionResult> task = ExecuteCommand(text) ?? Evaluator.ExecuteText(text) ?? ExecutionResult.Failed;
+                    Task<ExecutionResult> task = ExecuteCommand(text, updateHistory: true) ?? Evaluator.ExecuteText(text) ?? ExecutionResult.Failed;
                     
                     task.ContinueWith(FinishExecute, _uiScheduler);
                 }
@@ -2381,7 +2381,11 @@ namespace Microsoft.VisualStudio.Repl {
         }
 
         // Returns null if the text isn't recognized as a command
-        private Task<ExecutionResult> ExecuteCommand(string text) {
+        public Task<ExecutionResult> ExecuteCommand(string text) {
+            return ExecuteCommand(text, updateHistory: false);
+        }
+
+        private Task<ExecutionResult> ExecuteCommand(string text, bool updateHistory) {
             if (!text.StartsWith(_commandPrefix)) {
                 return null;
             }
@@ -2410,7 +2414,9 @@ namespace Microsoft.VisualStudio.Repl {
                 }
             }
 
-            _history.Last.Command = true;
+            if (updateHistory) {
+                _history.Last.Command = true;
+            }
 
             try {
                 return commandHandler.Execute(this, args) ?? ExecutionResult.Failed;
@@ -2524,7 +2530,7 @@ namespace Microsoft.VisualStudio.Repl {
             var lastLine = GetLastLine();
             _promptLineMapping.Add(new KeyValuePair<int, int>(lastLine.LineNumber, _projectionSpans.Count));
 
-            prompt = _displayPromptInMargin ? "" : FormatPrompt(prompt, _currentInputId);
+            prompt = _displayPromptInMargin ? String.Empty : FormatPrompt(prompt, _currentInputId);
             return new ReplSpan(prompt, promptKind);
         }
 
@@ -2540,7 +2546,7 @@ namespace Microsoft.VisualStudio.Repl {
         }
 
         private ReplSpan CreateSecondaryPrompt() {
-            string secondPrompt = _displayPromptInMargin ? "" : FormatPrompt(_secondPrompt, _currentInputId - 1);
+            string secondPrompt = _displayPromptInMargin ? String.Empty : FormatPrompt(_secondPrompt, _currentInputId - 1);
             return new ReplSpan(secondPrompt, ReplSpanKind.SecondaryPrompt);
         }
         

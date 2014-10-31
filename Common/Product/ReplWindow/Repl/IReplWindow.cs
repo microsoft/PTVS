@@ -168,4 +168,15 @@ namespace Microsoft.VisualStudio.Repl {
         [SuppressMessage("Microsoft.Design", "CA1009:DeclareEventHandlersCorrectly", Justification = "back compat")]
         event Action ReadyForInput;
     }
+
+    public interface IReplWindow2 : IReplWindow {
+
+        /// <summary>
+        /// Executes a special REPL command as if it were submitted as an input.
+        /// </summary>
+        /// <remarks>
+        /// This method can only execute special (prefixed) commands. To evaluate code snippers, use <see cref="Evaluator"/>.
+        /// </remarks>
+        Task<ExecutionResult> ExecuteCommand(string text);
+    }
 }
