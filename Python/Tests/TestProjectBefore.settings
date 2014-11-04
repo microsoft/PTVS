@@ -6,4 +6,5 @@
     <CopyLocalReferenceVsixItems>True</CopyLocalReferenceVsixItems>
   </PropertyGroup>
   <Import Project="$(BuildRoot)\Build\Common.Build.settings" />
+  <Import Project="$(BuildRoot)\Python\products.settings" />
 </Project>

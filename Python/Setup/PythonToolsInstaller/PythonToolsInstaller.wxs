@@ -17,7 +17,10 @@
     <Property Id="INSTALLLEVEL" Value="1"/>
 
     <!-- Conditions for install -->
+    <?if "$(var.IncludeHpc)" = "True" ?>
     <PropertyRef Id="HPC_CLIENT_INSTALLED"/>
+    <?endif ?>
+    
     <?ifdef CheckPTVS15PerUser ?>
     <PropertyRef Id="PTVS_15_PERUSER"/>
     <Condition Message="!(loc.PTVS15PerUserInstalled)">NOT PTVS_15_PERUSER OR Installed</Condition>
@@ -203,6 +206,7 @@
 
         <ConfigurationData Name="Config_StartMenuLocation" Value="Dir_StartMenu"/>
       </Merge>
+      <?if "$(var.IncludeHpc)" = "True" ?>
       <Merge Id="Merge_Hpc" Language="1033" SourceFile="Hpc.msm" DiskId="1">
         <?foreach key in VS;WD;VWD?>
         <ConfigurationData Name="Config_$(var.key)ExtensionsParent" Value="Dir_$(var.key)Extensions" />
@@ -210,6 +214,7 @@
         <?endforeach?>
         <ConfigurationData Name="Config_MSBuildLocation" Value="Dir_MSBuildTargets"/>
       </Merge>
+      <?endif ?>
       <Merge Id="Merge_IronPython" Language="1033" SourceFile="IronPython.msm" DiskId="1">
         <?foreach key in VS;WD;VWD?>
         <ConfigurationData Name="Config_$(var.key)ExtensionsParent" Value="Dir_$(var.key)Extensions" />
@@ -251,10 +256,12 @@
         <MergeRef Id="Merge_IronPython"/>
       </Feature>
 
+      <?if "$(var.IncludeHpc)" = "True" ?>
       <Feature Id="Feature_WinHpc" AllowAdvertise="no" Level="1" Title="Windows HPC Support" Description="Windows HPC Support">
         <Condition Level="2">NOT HPC_CLIENT_INSTALLED</Condition>
         <MergeRef Id="Merge_Hpc"/>
       </Feature>
+      <?endif ?>
 
       <Feature Id="Feature_VsPyFile" AllowAdvertise="no" Level="1" Title="Register file associations" Description="Associates Python projects and source files with Visual Studio (existing source file associations are not modified).">
         <ComponentRef Id="Comp_VSPyFileProgId"/>

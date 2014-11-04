@@ -5,4 +5,5 @@
     <IntermediateOutputPathSuffix>obj\Setup_$(MSBuildProjectName)\</IntermediateOutputPathSuffix>
   </PropertyGroup>
   <Import Project="$(BuildRoot)\Build\Common.Build.settings" />
+  <Import Project="$(BuildRoot)\Python\products.settings" />
 </Project>

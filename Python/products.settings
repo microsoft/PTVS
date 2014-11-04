@@ -1,0 +1,21 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <!-- Include HPC by default, and force to ReleaseBuild if dependencies are missing -->
+    <IncludeHpc Condition="'$(IncludeHpc)' == ''">true</IncludeHpc>
+    <IncludeHpc Condition="'$(registry:HKEY_CLASSES_ROOT\CLSID\{3C376723-5FF9-4C55-89BB-E9E7A31577E1})' == ''">$(ReleaseBuild)</IncludeHpc>
+    
+    <!-- Include test adapter by default, and force to false for VS 2010 -->
+    <IncludeTestAdapter Condition="'$(IncludeTestAdapter)' == ''">true</IncludeTestAdapter>
+    <IncludeTestAdapter Condition="'$(VSTarget)' == '10.0'">false</IncludeTestAdapter>
+    
+    <!-- Include ML by default, and force to false for VS 2010 and VS 2012 -->
+    <IncludeML Condition="'$(IncludeML)' == ''">true</IncludeML>
+    <IncludeML Condition="'$(VSTarget)' == '10.0' or '$(VSTarget)' == '11.0'">false</IncludeML>
+    
+    <!-- Include WFastCgi by default for VS 2013.
+    WFastCgi has no dependencies on VS version, but we only want to build it once.
+    -->
+    <IncludeWFastCgi Condition="'$(IncludeWFastCgi)' == '' and '$(VSTarget)' == '12.0'">true</IncludeWFastCgi>
+    <IncludeWFastCgi Condition="'$(IncludeWFastCgi)' == ''">false</IncludeWFastCgi>
+  </PropertyGroup>
+</Project>

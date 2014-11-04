@@ -18,9 +18,10 @@
     <ProjectFile Include="ReplWindow\ReplWindow.wixproj"/>
     <ProjectFile Include="PythonTools\PythonTools.wixproj"/>
     <ProjectFile Include="PythonProfiling\PythonProfiling.wixproj"/>
+    <ProjectFile Include="PythonHpcSupport\PythonHpcSupport.wixproj" Condition="$(IncludeHpc)"/>
     <ProjectFile Include="PythonToolsInstaller\PythonToolsInstaller.wixproj"/>
     <ProjectFile Include="..\..\Internal\Python\VsLoggerSetup\VsLogger.wixproj" Condition="'$(IncludeVsLogger)' == 'True'"/>
-    <ProjectFile Include="FastCgiInstaller\FastCgi.wixproj" Condition="'$(VSTarget)' == '12.0'"/>
+    <ProjectFile Include="FastCgiInstaller\FastCgi.wixproj" Condition="$(IncludeWFastCgi)"/>
   </ItemGroup>
 
   <Import Project="$(TargetsPath)\Common.Build.Traversal.targets" />

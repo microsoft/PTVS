@@ -1,6 +1,6 @@
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), build.root))\Build\Common.Build.settings" />
+  <Import Project="ProjectBefore.settings" />
 
   <ItemGroup>
     <ProjectFile Include="$(BuildRoot)\Common\Product\dirs.proj"/>
@@ -15,7 +15,7 @@
     <ProjectFile Include="AttacherX86\AttacherX86.csproj"/>
     <ProjectFile Include="Debugger\Debugger.csproj"/>
 
-    <ProjectFile Include="TestAdapter\TestAdapter.csproj" Condition="'$(VSTarget)' != '10.0'"/>
+    <ProjectFile Include="TestAdapter\TestAdapter.csproj" Condition="$(IncludeTestAdapter)"/>
 
     <ProjectFile Include="ImportWizard\ImportWizard.csproj"/>
     <ProjectFile Include="ProjectWizards\ProjectWizards.csproj"/>
@@ -24,7 +24,7 @@
     <ProjectFile Include="PythonTools\PythonTools.csproj"/>
 
     <ProjectFile Include="MpiShim\MpiShim.csproj"/>
-    <ProjectFile Include="Hpc\Hpc.csproj"/>
+    <ProjectFile Include="Hpc\Hpc.csproj" Condition="$(IncludeHpc)"/>
 
     <ProjectFile Include="IronPythonResolver\IronPythonResolver.csproj"/>
     <ProjectFile Include="IronPython\IronPython.Interpreter.csproj"/>
@@ -42,7 +42,7 @@
     <ProjectFile Include="AnalysisBrowser\AnalysisBrowser.csproj" />
     <ProjectFile Include="AnalysisMemoryTester\AnalysisMemoryTester.csproj" />
 
-    <ProjectFile Include="ML\ML.csproj" Condition="'$(VSTarget)' == '12.0'"/>
+    <ProjectFile Include="ML\ML.csproj" Condition="$(IncludeML)"/>
   </ItemGroup>
 
   <Import Project="$(TargetsPath)\Common.Build.Traversal.targets" />

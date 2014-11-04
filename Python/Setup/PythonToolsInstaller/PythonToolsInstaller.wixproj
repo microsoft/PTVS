@@ -15,6 +15,7 @@
     <DefineConstants>
       $(DefineConstants);
       IncludeVsLogger=$(IncludeVsLogger);
+      IncludeHpc=$(IncludeHpc);
     </DefineConstants>
     <DefineConstants Condition="$(VSTarget) == '10.0' or $(VSTarget) == '11.0' or $(VSTarget) == '12.0'">
       $(DefineConstants);
@@ -76,7 +77,7 @@
       <Name>PythonTools</Name>
       <Project>{0D7C4C3A-A08F-4B91-BD1C-C4C79C013484}</Project>
     </ProjectReference>
-    <ProjectReference Include="$(BuildRoot)\Python\Setup\PythonHpcSupport\PythonHpcSupport.wixproj">
+    <ProjectReference Include="$(BuildRoot)\Python\Setup\PythonHpcSupport\PythonHpcSupport.wixproj" Condition="$(IncludeHpc)">
       <Name>PythonHpcSupportMsm</Name>
       <Project>{45DBE334-D497-4441-B136-5BA636173D26}</Project>
     </ProjectReference>
