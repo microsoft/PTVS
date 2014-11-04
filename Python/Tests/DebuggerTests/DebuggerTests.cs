@@ -468,6 +468,19 @@ namespace DebuggerTests {
             EvalTest("LocalsTest3.py", 2, "f", 0, EvalResult.ErrorExpression("/2", "unexpected token '/'\r\ninvalid syntax\r\n"));
         }
 
+        // Test evaluation of objects of a type that does not have a __repr__ attribute (but does have repr()),
+        // and which cannot be used with isinstance and issubclass.
+        // https://pytools.codeplex.com/workitem/2770
+        // https://pytools.codeplex.com/workitem/2772
+        [TestMethod, Priority(0)]
+        public void EvalPseudoTypeTest() {
+            if (this is DebuggerTestsIpy) {
+                return;
+            }
+
+            EvalTest("EvalPseudoType.py", 22, "<module>", 0, EvalResult.Value("obj", "PseudoType", "pseudo"));
+        }
+
         [TestMethod, Priority(0)]
         public void EvalRawTest() {
             EvalTest("EvalRawTest.py", 28, "<module>", 0, PythonEvaluationResultReprKind.Raw,

@@ -1937,10 +1937,13 @@ def write_object(conn, obj_type, obj_repr, hex_repr, type_name, obj_len, flags =
         write_string(conn, type_name)
     if obj_type not in NONEXPANDABLE_TYPES and obj_len != 0:
         flags |= PYTHON_EVALUATION_RESULT_EXPANDABLE
-    for cls in TYPES_WITH_RAW_REPR:
-        if issubclass(obj_type, cls):
-            flags |= PYTHON_EVALUATION_RESULT_HAS_RAW_REPR
-            break
+    try:
+        for cls in TYPES_WITH_RAW_REPR:
+            if issubclass(obj_type, cls):
+                flags |= PYTHON_EVALUATION_RESULT_HAS_RAW_REPR
+                break
+    except: # guard against broken issubclass for types which aren't actually types, like vtkclass
+        pass
     write_int(conn, obj_len or 0)
     write_int(conn, flags)
 

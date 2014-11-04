@@ -233,7 +233,10 @@ class SafeRepr(object):
     def _repr(self, obj, level):
         '''Returns an iterable of the parts in the final repr string.'''
 
-        obj_repr = type(obj).__repr__
+        try:
+            obj_repr = type(obj).__repr__
+        except:
+            obj_repr = None
 
         def has_obj_repr(t):
             r = t.__repr__
