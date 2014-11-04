@@ -37,6 +37,10 @@ function _find_sdk_tool {
 function begin_sign_files {
     param($files, $outdir, $approvers, $projectName, $projectUrl, $jobDescription, $jobKeywords, $certificates, [switch] $delaysigned)
     
+    if ($files.Count -eq 0) {
+        return
+    }
+    
     if ($delaysigned) {
         # Ensure that all files are delay-signed
         # "sn -q -v ..." is true if the assembly has strong name and skip verification
@@ -44,7 +48,8 @@ function begin_sign_files {
         if (Test-Path alias:\sn) {
             $not_delay_signed = $files | %{ gi $_.path } | ?{ sn -q -v $_ }
             if ($not_delay_signed) {
-                Write-Error "Delay-signed check failed: $($not_delay_signed | %{ $_.Name })" -EA Stop
+                Throw "Delay-signed check failed: $($not_delay_signed | %{ $_.Name })
+You may need to skip strong name verification on this machine."
             }
         }
     }
@@ -114,6 +119,10 @@ Returning @{filecount=$($files.Count); outdir=$outdir}"
 
 function end_sign_files {
     param($jobs)
+    
+    if ($jobs.Count -eq 0) {
+        return
+    }
     
     foreach ($jobinfo in $jobs) {
         $job = $jobinfo.job

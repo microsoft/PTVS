@@ -16,9 +16,19 @@
       $(DefineConstants);
       IncludeVsLogger=$(IncludeVsLogger);
     </DefineConstants>
-    <DefineConstants Condition="'$(CustomBuildIdentifier)' != ''">
+    <DefineConstants Condition="$(VSTarget) == '10.0' or $(VSTarget) == '11.0' or $(VSTarget) == '12.0'">
       $(DefineConstants);
-      CustomBuildIdentifier=$(CustomBuildIdentifier)
+      CheckPTVS15PerUser=1;
+    </DefineConstants>
+    <DefineConstants Condition="$(VSTarget) == '12.0'">
+      $(DefineConstants);
+      IncludeWDExpress=12.0.30219.0;
+      IncludeVWDExpress=12.0.30219.0;
+    </DefineConstants>
+    <DefineConstants Condition="$(VSTarget) == '14.0'">
+      $(DefineConstants);
+      IncludeWDExpress=14.0.0.0;
+      IncludeVWDExpress=14.0.0.0;
     </DefineConstants>
   </PropertyGroup>
   <ItemGroup>
@@ -38,16 +48,13 @@
       <HintPath>WixNetFxExtension</HintPath>
       <Name>WixNetFxExtension</Name>
     </WixExtension>
-    <BindInputPaths Include="$(OutDir)">
-      <Visible>false</Visible>
-    </BindInputPaths>
-    <BindInputPaths Include="$(BuildRoot)\Python\Product\PythonTools">
-      <Visible>false</Visible>
-    </BindInputPaths>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="PythonToolsInstaller.wxs" />
     <Compile Include="UpgradeCodes.wxs" />
+    <Compile Include="$(BuildRoot)\Common\Setup\LaunchConditions.wxs">
+      <Link>CommonLaunchConditions.wxs</Link>
+    </Compile>
     <Compile Include="LaunchConditions.wxs" />
     <Compile Include="Directories.wxs" />
     <Compile Include="UI.wxs" />
@@ -57,31 +64,31 @@
     <Content Include="PythonToolsInstallerVars.wxi" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\PythonProfiling\PythonProfiling.wixproj">
+    <ProjectReference Include="$(BuildRoot)\Python\Setup\PythonProfiling\PythonProfiling.wixproj">
       <Name>PythonProfiling</Name>
       <Project>{C7D3FCEB-47DA-4539-8D20-6B9047BAC3F7}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\ReplWindow\ReplWindow.wixproj">
+    <ProjectReference Include="$(BuildRoot)\Python\Setup\ReplWindow\ReplWindow.wixproj">
       <Name>ReplWindow</Name>
       <Project>{C0D64130-C0E9-4CAB-99BC-68F62357F010}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\PythonTools\PythonTools.wixproj">
+    <ProjectReference Include="$(BuildRoot)\Python\Setup\PythonTools\PythonTools.wixproj">
       <Name>PythonTools</Name>
       <Project>{0D7C4C3A-A08F-4B91-BD1C-C4C79C013484}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\PythonHpcSupport\PythonHpcSupport.wixproj">
+    <ProjectReference Include="$(BuildRoot)\Python\Setup\PythonHpcSupport\PythonHpcSupport.wixproj">
       <Name>PythonHpcSupportMsm</Name>
       <Project>{45DBE334-D497-4441-B136-5BA636173D26}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\IronPythonInterpreter\IronPythonInterpreter.wixproj">
+    <ProjectReference Include="$(BuildRoot)\Python\Setup\IronPythonInterpreter\IronPythonInterpreter.wixproj">
       <Name>IronPythonInterpreterMsm</Name>
       <Project>{92851481-9141-480E-A85D-85120766949C}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\Django\Django.wixproj">
+    <ProjectReference Include="$(BuildRoot)\Python\Setup\Django\Django.wixproj">
       <Name>DjangoMsm</Name>
       <Project>{16671BE6-DD23-41D9-841A-0B80D47A090D}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\Internal\Python\VsLoggerSetup\VsLogger.wixproj" Condition="'$(IncludeVsLogger)' == 'True'">
+    <ProjectReference Include="$(BuildRoot)\Internal\Python\VsLoggerSetup\VsLogger.wixproj" Condition="'$(IncludeVsLogger)' == 'True'">
       <Name>VsLoggerMsm</Name>
       <Project>{639BFC80-B31B-4D3F-9DF3-A65913000B4B}</Project>
     </ProjectReference>
@@ -90,12 +97,14 @@
     <EmbeddedResource Include="Strings10.0.wxl" />
     <EmbeddedResource Include="Strings11.0.wxl" />
     <EmbeddedResource Include="Strings12.0.wxl" />
+    <EmbeddedResource Include="Strings14.0.wxl" />
   </ItemGroup>
   <Target Name="ExcludeStrings" BeforeTargets="BeforeBuild">
     <ItemGroup>
       <EmbeddedResource Remove="Strings10.0.wxl" Condition="'$(VSTarget)' != '10.0'" />
       <EmbeddedResource Remove="Strings11.0.wxl" Condition="'$(VSTarget)' != '11.0'" />
       <EmbeddedResource Remove="Strings12.0.wxl" Condition="'$(VSTarget)' != '12.0'" />
+      <EmbeddedResource Remove="Strings14.0.wxl" Condition="'$(VSTarget)' != '14.0'" />
     </ItemGroup>
   </Target>
   <Import Project="..\SetupProjectAfter.settings" />

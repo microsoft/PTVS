@@ -854,6 +854,11 @@
 
     <!--The bitmaps section is used to define the bitmaps that are used for the commands.-->
     <Bitmaps>
+      <Bitmaps Condition="Defined(DEV14)">
+        <Bitmap guid="guidImages" href="..\Icons\Dev14.0\Images_32bit.png" usedList="pyReplPic, pyListPic, bmpPicSearch, bmpPicX, bmpPicArrows, pyExecuteInReplPic"/>
+        <Bitmap guid="guidImagesRefactoring" href="..\Icons\Dev14.0\Refactoring_Commands.bmp" usedList="imgRemoveUsing, imgSortUsings"/>
+      </Bitmaps>
+
       <Bitmaps Condition="Defined(DEV12)">
         <Bitmap guid="guidImages" href="..\Icons\Dev12.0\Images_32bit.png" usedList="pyReplPic, pyListPic, bmpPicSearch, bmpPicX, bmpPicArrows, pyExecuteInReplPic"/>
         <Bitmap guid="guidImagesRefactoring" href="..\Icons\Dev12.0\Refactoring_Commands.bmp" usedList="imgRemoveUsing, imgSortUsings"/>

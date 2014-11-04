@@ -30,7 +30,11 @@ namespace Microsoft.PythonTools.Django.Intellisense {
             ITextBuffer textBuffer,
             IEditorOptions editorOptions,
             IEditorOperations editorOperations)
+#if DEV14_OR_LATER
+            : base(textView, _ => textBuffer)
+#else
             : base(textView, textBuffer)
+#endif
         {
             _editorOperations = editorOperations;
             _editorOptions = editorOptions;

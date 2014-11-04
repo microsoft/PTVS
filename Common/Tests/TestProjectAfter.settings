@@ -22,7 +22,7 @@
     </ItemGroup>
   </Target>
   
-  <Target Name="_GetTestBinaryDeployFiles" DependsOnTargets="_GetTestBinaryDeployDirectories" Condition="'@(TestBinaryDeployDirectories)' != ''">
+  <Target Name="_GetTestBinaryDeployFiles" Condition="'@(TestBinaryDeployDirectories)' != ''">
     <ItemGroup>
       <_TestBinaryDeployFiles Include="%(TestBinaryDeployDirectories.FullPath)\**\*" />
 
@@ -34,7 +34,7 @@
     </ItemGroup>
   </Target>
 
-  <Target Name="GetTestBinaryDeployFiles" DependsOnTargets="_GetTestBinaryDeployFiles" Returns="@(TestBinaryDeployFiles)">
+  <Target Name="GetTestBinaryDeployFiles" DependsOnTargets="_GetTestBinaryDeployDirectories;_GetTestBinaryDeployFiles" Returns="@(TestBinaryDeployFiles)">
     <RemoveDuplicates Inputs="@(UnfilteredTestBinaryDeployFiles)">
       <Output TaskParameter="Filtered" ItemName="FilteredTestBinaryDeployFiles"/>
     </RemoveDuplicates>
@@ -52,7 +52,7 @@
   we may copy from different outputs due to random ordering in directory
   processing.
   -->
-  <Target Name="_DeployTestFiles"
+  <Target Name="DeployTestFiles"
           DependsOnTargets="GetTestBinaryDeployFiles"
           Inputs="@(TestBinaryDeployFiles)"
           Outputs="@(TestBinaryDeployFiles->'%(TargetPath)')"

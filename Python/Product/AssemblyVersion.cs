@@ -20,7 +20,9 @@ using System.Runtime.InteropServices;
 // Properties\AssemblyInfo.cs file and remove any lines duplicating the ones below.
 // (See also AssemblyInfoCommon.cs in this same directory.)
 
+#if !SUPPRESS_COMMON_ASSEMBLY_VERSION
 [assembly: AssemblyVersion(AssemblyVersionInfo.StableVersion)]
+#endif
 [assembly: AssemblyFileVersion(AssemblyVersionInfo.Version)]
 
 class AssemblyVersionInfo {
@@ -47,13 +49,16 @@ class AssemblyVersionInfo {
 #elif DEV12
     public const string VSMajorVersion = "12";
     const string VSVersionSuffix = "2013";
+#elif DEV14
+    public const string VSMajorVersion = "14";
+    const string VSVersionSuffix = "2015";
 #else
 #error Unrecognized VS Version.
 #endif
 
     public const string VSVersion = VSMajorVersion + ".0";
 
-    // Defaults to "2.0.2.(2010|2012|2013)"
+    // Defaults to "2.0.2.(2010|2012|2013|2015)"
     public const string StableVersion = ReleaseVersion + "." + VSVersionSuffix;
 
     // Defaults to "2.1.4100.00"

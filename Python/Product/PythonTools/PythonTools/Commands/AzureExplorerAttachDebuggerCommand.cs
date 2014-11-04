@@ -12,7 +12,8 @@
  *
  * ***************************************************************************/
 
-#if DEV12_OR_LATER && BUILDING_WITH_DEV12U3
+#if DEV12_OR_LATER
+#if FEATURE_AZURE_REMOTE_DEBUG
 
 using System;
 using System.Collections.Generic;
@@ -431,4 +432,5 @@ namespace Microsoft.PythonTools.Commands {
     }
 }
 
+#endif
 #endif

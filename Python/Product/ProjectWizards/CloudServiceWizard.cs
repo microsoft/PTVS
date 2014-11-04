@@ -36,6 +36,9 @@ namespace Microsoft.PythonTools.ProjectWizards {
         const string AzureToolsDownload = "https://go.microsoft.com/fwlink/p/?linkid=323511";
 #elif DEV12
         const string AzureToolsDownload = "https://go.microsoft.com/fwlink/p/?linkid=323510";
+#elif DEV14
+        // TODO: Update this link when the download becomes available
+        const string AzureToolsDownload = "http://azure.microsoft.com";
 #else
 #error Unsupported VS version
 #endif

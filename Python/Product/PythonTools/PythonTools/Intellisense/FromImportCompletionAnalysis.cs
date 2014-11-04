@@ -60,9 +60,7 @@ namespace Microsoft.PythonTools.Intellisense {
             bool seenAlias = false;
             bool includeStar = true;
             foreach (var token in tokens.Skip(1)) {
-                if (token == null ||
-                    token.Span == null ||
-                    token.Span.End > span.GetEndPoint(textBuffer.CurrentSnapshot).Position) {
+                if (token == null || token.Span.End > span.GetEndPoint(textBuffer.CurrentSnapshot).Position) {
                     break;
                 }
 

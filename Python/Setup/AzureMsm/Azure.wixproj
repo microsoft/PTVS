@@ -21,10 +21,6 @@
     <ProjectReference Include="$(BuildRoot)\Python\Product\AzureSetup\AzureSetup.csproj">
       <Name>Microsoft.PythonTools.AzureSetup</Name>
       <Project>{B6905758-81D9-4287-BE59-5D4E2F336414}</Project>
-      <Private>True</Private>
-      <RefProjectOutputGroups>Binaries</RefProjectOutputGroups>
-      <RefTargetDir>INSTALLLOCATION</RefTargetDir>
-      <DoNotHarvest>true</DoNotHarvest>
     </ProjectReference>
   </ItemGroup>
   <Import Project="..\SetupProjectAfter.settings" />

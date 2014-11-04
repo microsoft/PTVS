@@ -19,30 +19,8 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Project Wizards")]
-[assembly: AssemblyDescription("")]
-[assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Microsoft")]
-[assembly: AssemblyProduct("Python Tools for Visual Studio")]
-[assembly: AssemblyCopyright("© Microsoft Corporation.")]
-[assembly: AssemblyTrademark("")]
-[assembly: AssemblyCulture("")]
+[assembly: AssemblyTitle("Python Tools for Visual Studio - Project Wizards")]
 
-[assembly: AssemblyVersion("2.1.0.0")]
+[assembly: AssemblyVersion(AssemblyVersionInfo.FileVersion + ".0.0")]
 
 [assembly: ComVisible(false)]
-
-// Need to clone these settings here for SettingsManagerCreator. We can't just
-// reference the existing AssemblyVersion.cs file because that will conflict
-// with our other attributes here, which need to remain fixed.
-class AssemblyVersionInfo {
-#if DEV10
-    public const string VSVersion = "10.0";
-#elif DEV11
-    public const string VSVersion = "11.0";
-#elif DEV12
-    public const string VSVersion = "12.0";
-#else
-#error Unrecognized VS Version.
-#endif
-}

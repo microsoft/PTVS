@@ -24,16 +24,21 @@
     ICE03: String overflow in component ID (only matters if we refer to the component by ID)
     ICE61: Using MajorUpgrade element
     ICE69: Shortcut not in same component as target file
+    CNDL1026: String overflow in file ID
     CNDL1086: Using SuppressModularization
     LGHT1056: Cannot merge SecureCustomProperties (because of SuppressModularization)
     -->
     <SuppressIces>ICE03;ICE61;ICE69</SuppressIces>
-    <CompilerSuppressSpecificWarnings>1086</CompilerSuppressSpecificWarnings>
+    <CompilerSuppressSpecificWarnings>1026;1086</CompilerSuppressSpecificWarnings>
     <LinkerSuppressSpecificWarnings>1056</LinkerSuppressSpecificWarnings>
     <DefineConstants>
         VSTargetVersion=$(VSTarget);
         MsiVersion=$(MsiVersion);
         ReleaseVersion=$(ReleaseVersion)
+    </DefineConstants>
+    <DefineConstants Condition="'$(CustomBuildIdentifier)' != ''">
+      $(DefineConstants);
+      CustomBuildIdentifier=$(CustomBuildIdentifier)
     </DefineConstants>
     <!-- If SignedBinariesPath has been provided, don't build references. -->
     <BuildProjectReferences Condition="'$(BuildProjectReferences)' == '' and '$(SignedBinariesPath)' != ''">false</BuildProjectReferences>

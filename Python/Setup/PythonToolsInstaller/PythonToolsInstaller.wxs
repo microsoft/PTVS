@@ -16,11 +16,21 @@
          cause them to be unselected by default. -->
     <Property Id="INSTALLLEVEL" Value="1"/>
 
+    <!-- Conditions for install -->
     <PropertyRef Id="HPC_CLIENT_INSTALLED"/>
+    <?ifdef CheckPTVS15PerUser ?>
     <PropertyRef Id="PTVS_15_PERUSER"/>
+    <Condition Message="!(loc.PTVS15PerUserInstalled)">NOT PTVS_15_PERUSER OR Installed</Condition>
+    <?endif ?>
+    
     <PropertyRef Id="IPYTOOLS_INSTALLED"/>
-    <PropertyRef Id="VS2013_PRERELEASE"/>
+    <Condition Message="!(loc.IronPythonToolsInstalled)">NOT IPYTOOLS_INSTALLED OR REMOVE ~= "ALL"</Condition>
+    
+    <PropertyRef Id="VS_PRERELEASE"/>
+    <Condition Message="!(loc.VSPrerelease)"> NOT VS_PRERELEASE OR Installed </Condition>
+    
     <PropertyRef Id="NETFRAMEWORK45"/>
+    <Condition Message="!(loc.NetFx45NotInstalled)"> NETFRAMEWORK45 OR Installed </Condition>
     
     <PropertyRef Id="VSINSTALLPATH"/>
     <PropertyRef Id="WDINSTALLPATH"/>
@@ -28,12 +38,6 @@
     <PropertyRef Id="DEVENV_PATH"/>
     <PropertyRef Id="WDEXPRESS_PATH"/>
     <PropertyRef Id="VWDEXPRESS_PATH"/>
-
-    <!-- Conditions for install -->
-    <Condition Message="!(loc.PTVS15PerUserInstalled)">NOT PTVS_15_PERUSER OR Installed</Condition>
-    <Condition Message="!(loc.IronPythonToolsInstalled)">NOT IPYTOOLS_INSTALLED OR REMOVE ~= "ALL"</Condition>
-    <Condition Message="!(loc.VSPrerelease)"> NOT VS2013_PRERELEASE OR Installed </Condition>
-    <Condition Message="!(loc.NetFx45NotInstalled)"> NETFRAMEWORK45 OR Installed </Condition>
 
     <!-- At least one installation path means some version is installed. -->
     <Condition Message="!(loc.NoInstallPath)">

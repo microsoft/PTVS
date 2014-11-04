@@ -2,6 +2,11 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 
+  <!-- This property may have been set by the project. -->
+  <PropertyGroup Condition="$(SuppressCommonAssemblyVersion)">
+    <DefineConstants>$(DefineConstants);SUPPRESS_COMMON_ASSEMBLY_VERSION</DefineConstants>
+  </PropertyGroup>
+  
   <!--
   Returns the paths and names required for generating a vsixmanifest file.
   The default targets for this occasionally return the wrong files depending

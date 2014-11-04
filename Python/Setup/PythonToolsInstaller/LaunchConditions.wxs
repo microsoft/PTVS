@@ -1,50 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
   <Fragment>
-    <!-- The install path properties are set if the path is available. -->
-    <Property Id="VSINSTALLPATH" Secure="yes">
-      <RegistrySearch Id="VSInstallDir" Root="HKLM" Key="Software\Microsoft\VisualStudio\$(var.VSTargetVersion)\Setup\VS" Name="ProductDir" Type="directory">
-          <DirectorySearch Id="VSInstallDir_Common7_IDE" Path="Common7\IDE" AssignToProperty="yes" Depth="1">
-            <FileSearch Id="VSInstallDir_Common7_IDE_msenv_dll" Name="msenv.dll"/>
-        </DirectorySearch>
-      </RegistrySearch>
-    </Property>
-    <Property Id="WDINSTALLPATH" Secure="yes">
-      <?if "$(var.VSTargetVersion)" = "12.0" ?>
-      <RegistrySearch Id="WDInstallDir" Root="HKLM" Key="Software\Microsoft\WDExpress\$(var.VSTargetVersion)" Name="InstallDir" Type="directory" />
-      <?endif?>
-    </Property>
-    <Property Id="VWDINSTALLPATH" Secure="yes">
-      <?if "$(var.VSTargetVersion)" = "12.0" ?>
-      <RegistrySearch Id="VWDInstallDir" Root="HKLM" Key="Software\Microsoft\VWDExpress\$(var.VSTargetVersion)" Name="InstallDir" Type="directory" />
-      <?endif?>
-    </Property>
-
-    <!-- The executable path properties are set if we can install into the
-         specific version that is available. 
-    -->
-    <Property Id="DEVENV_PATH" Secure="yes">
-      <DirectorySearch Id="DevEnvDir" Path="[VSINSTALLPATH]" Depth="1">
-        <FileSearch Name="devenv.exe" />
-      </DirectorySearch>
-    </Property>
-    <Property Id="WDEXPRESS_PATH" Secure="yes">
-      <?if "$(var.VSTargetVersion)" = "12.0" ?>
-      <DirectorySearch Id="WDExpressDir" Path="[WDINSTALLPATH]" Depth="1">
-        <FileSearch Name="WDExpress.exe" MinVersion="12.0.30219.0" />
-      </DirectorySearch>
-      <?endif?>
-    </Property>
-    <Property Id="VWDEXPRESS_PATH" Secure="yes">
-      <?if "$(var.VSTargetVersion)" = "12.0" ?>
-      <DirectorySearch Id="VWDExpressDir" Path="[VWDINSTALLPATH]" Depth="1">
-        <FileSearch Name="VWDExpress.exe" MinVersion="12.0.30219.0" />
-      </DirectorySearch>
-      <?endif?>
-    </Property>
-  </Fragment>
-  
-  <Fragment>
     <Property Id="PTVS_15_PERUSER" Secure="no">
       <RegistrySearch Id="PTVS15RegistrySearch" Root="HKCU" Key="Software\Microsoft\VisualStudio\$(var.VSTargetVersion)\ExtensionManager\EnabledExtensions" Name="96492FC7-7BC6-46F7-8559-66BB4E09FD1E,1.5" Type="raw"/>
     </Property>
@@ -53,22 +9,6 @@
   <Fragment>
     <Property Id="IPYTOOLS_INSTALLED">
       <ComponentSearch Id="Comp_VSTools" Guid="2DF41B37-FAEF-4FD8-A2F5-46B57FF9E951" Type="file" />
-    </Property>
-  </Fragment>
-
-  <Fragment>
-    <Property Id="VSLAUNCHER" >
-      <DirectorySearch Path="[ProgramFilesFolder]\Common Files\Microsoft Shared\MSEnv" Depth="4" Id="FindVSLauncher">
-        <FileSearch Name="VSLauncher.exe" />
-      </DirectorySearch>
-    </Property>
-  </Fragment>
-
-  <Fragment>
-    <Property Id="VS2013_PRERELEASE" Secure="no">
-      <DirectorySearch Id="VS120DevEnvFilePathSearch" Path="[VSINSTALLPATH]">
-        <FileSearch Id="VS120DevEnvFileVersionSearch" Name="devenv.exe" MinVersion="12.0.0.0" MaxVersion="12.0.21004.0"/>
-      </DirectorySearch>
     </Property>
   </Fragment>
 

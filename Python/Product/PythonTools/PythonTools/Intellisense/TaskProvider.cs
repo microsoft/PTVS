@@ -632,14 +632,21 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public int Next(uint celt, IVsTaskItem[] rgelt, uint[] pceltFetched = null) {
+            bool fetchedAny = false;
+            
+            if (pceltFetched != null && pceltFetched.Length > 0) {
+                pceltFetched[0] = 0;
+            }
+            
             for (int i = 0; i < celt && _enumerator.MoveNext(); i++) {
                 if (pceltFetched != null && pceltFetched.Length > 0) {
                     pceltFetched[0] = (uint)i + 1;
                 }
                 rgelt[i] = _enumerator.Current;
+                fetchedAny = true;
             }
 
-            return VSConstants.S_OK;
+            return fetchedAny ? VSConstants.S_OK : VSConstants.S_FALSE;
         }
 
         public int Reset() {

@@ -19,10 +19,10 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("ImportWizard")]
+[assembly: AssemblyTitle("Python Tools for Visual Studio - Import Wizard")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 
-[assembly: AssemblyVersion("2.1.0.0")]
+[assembly: AssemblyVersion(AssemblyVersionInfo.FileVersion + ".0.0")]
 
 [assembly: ComVisible(false)]

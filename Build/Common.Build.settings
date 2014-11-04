@@ -26,6 +26,7 @@
     <CodeCoverageEnabled Condition="'$(CodeCoverageEnabled)'==''">true</CodeCoverageEnabled>
 
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
+    <VSTarget Condition="$(VSTarget)=='' and '$(VisualStudioVersion)'=='14.0'">14.0</VSTarget>
     <VSTarget Condition="$(VSTarget)=='' and '$(VisualStudioVersion)'=='12.0'">12.0</VSTarget>
     <VSTarget Condition="$(VSTarget)=='' and '$(VisualStudioVersion)'=='11.0'">11.0</VSTarget>
     <VSTarget Condition="$(VSTarget)==''">10.0</VSTarget>
@@ -59,7 +60,7 @@
     <IntDir>$(IntermediateOutputPath)</IntDir>
 
     <!-- Allows assemblies to specify their own version -->
-    <SuppressCommonAssemblyMetadata Condition="'$(SuppressCommonAssemblyMetadata)' == ''">false</SuppressCommonAssemblyMetadata>
+    <SuppressCommonAssemblyVersion Condition="'$(SuppressCommonAssemblyVersion)' == ''">false</SuppressCommonAssemblyVersion>
     
     <!-- Enables VS SDK build steps.
     
@@ -101,17 +102,21 @@
 
   <PropertyGroup>
     <!--
-    Read the update version for the build machine so we can disable
+    Read the update version for the build machine so we can exclude
     features that require a particular update to build.
-    Release builds are required to be built with the latest update, so
-    we force the update version to int.MaxValue to enable everything.
+    
+    See language-specific settings files for feature preprocessor
+    definitions.
     -->
+    <VSMajorVersion>$([System.Double]::Parse($(VSTarget)))</VSMajorVersion>
     <_VSUpdateVersion Condition="$(VSUpdateVersion)=='' and $(VisualStudioVersion)!='10.0'">$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\DevDiv\vs\Servicing\$(VSTarget)\devenv', 'UpdateVersion', null, RegistryView.Registry32))</_VSUpdateVersion>
     <VSUpdateVersion Condition="$(VSUpdateVersion)=='' and $(_VSUpdateVersion)!=''">$([System.Int32]::Parse($(_VSUpdateVersion.Substring($([MSBuild]::Add(1, $(_VSUpdateVersion.LastIndexOf(`.`))))))))</VSUpdateVersion>
-    <!--<VSUpdateVersion Condition="'$(VSUpdateVersion)'=='' or $(ReleaseBuild)">$([System.Int32]::MaxValue)</VSUpdateVersion>-->
     
-    <BuildingWithDev12U3>false</BuildingWithDev12U3>
-    <BuildingWithDev12U3 Condition="$(VSTarget) == '12.0' and $(VSUpdateVersion) >= 30723">true</BuildingWithDev12U3>
+    <!-- Features default to true for release builds -->
+    <FeatureAzureRemoteDebug>$(ReleaseBuild)</FeatureAzureRemoteDebug>
+    
+    <!-- Enable features based on VS versions -->
+    <FeatureAzureRemoteDebug Condition="$(VSMajorVersion) > 12 or ($(VSMajorVersion) == 12 and $(VSUpdateVersion) >= 30723)">true</FeatureAzureRemoteDebug>
   </PropertyGroup>
   
   <ItemDefinitionGroup>

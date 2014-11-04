@@ -12,14 +12,7 @@
     <SccProvider>SAK</SccProvider>
     <SccAuxPath>SAK</SccAuxPath>
     <SccLocalPath>SAK</SccLocalPath>
-    <DefineConstants Condition="'$(CustomBuildIdentifier)' != ''">
-      $(DefineConstants);
-      CustomBuildIdentifier=$(CustomBuildIdentifier)
-    </DefineConstants>
   </PropertyGroup>
-  <ItemGroup>
-    <BindInputPaths Include="$(OutDir)" />
-  </ItemGroup>
   <ItemGroup>
     <Compile Include="PythonTools.wxs" />
   </ItemGroup>

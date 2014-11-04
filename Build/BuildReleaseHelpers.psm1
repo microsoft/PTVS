@@ -43,6 +43,10 @@ function _find_sdk_tool {
 function begin_sign_files {
     param($files, $outdir, $approvers, $projectName, $projectUrl, $jobDescription, $jobKeywords, $certificates, [switch] $delaysigned)
     
+    if ($files.Count -eq 0) {
+        return
+    }
+    
     if ($delaysigned) {
         # Ensure that all files are delay-signed
         # "sn -q -v ..." is true if the assembly has strong name and skip verification
@@ -93,6 +97,10 @@ function begin_sign_files {
 
 function end_sign_files {
     param($jobs)
+    
+    if ($jobs.Count -eq 0) {
+        return
+    }
     
     foreach ($jobinfo in $jobs) {
         $job = $jobinfo.job

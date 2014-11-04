@@ -8,7 +8,7 @@ import xml.etree.ElementTree
 from pathlib import WindowsPath
 from uuid import UUID
 
-for VS_VERSION in (11, 12):
+for VS_VERSION in (11, 12, 14):
     print('Writing to {}'.format(THEME_PKGDEF.format(VS_VERSION)))
     output = open(THEME_PKGDEF.format(VS_VERSION), 'w', encoding='ascii')
 

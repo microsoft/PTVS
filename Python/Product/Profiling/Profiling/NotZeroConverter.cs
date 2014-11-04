@@ -12,12 +12,18 @@
  *
  * ***************************************************************************/
 
-using Microsoft.VisualStudio.PlatformUI;
+using System;
+using System.Globalization;
+using System.Windows.Data;
 
 namespace Microsoft.PythonTools.Profiling {
-    public class NotZeroConverter : ValueConverter<int, bool> {
-        protected override bool Convert(int value, object parameter, System.Globalization.CultureInfo culture) {
-            return value != 0;
+    public class NotZeroConverter : IValueConverter {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
+            return (value as int? ?? 0) != 0;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) {
+            throw new NotImplementedException();
         }
     }
 }

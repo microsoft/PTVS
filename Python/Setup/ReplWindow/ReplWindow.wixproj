@@ -15,19 +15,12 @@
     <SccLocalPath>SAK</SccLocalPath>
   </PropertyGroup>
   <ItemGroup>
-    <BindInputPaths Include="$(OutDir)" />
-  </ItemGroup>
-  <ItemGroup>
     <Compile Include="ReplWindow.wxs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(BuildRoot)\Python\Product\ReplWindow\ReplWindow.csproj">
       <Name>ReplWindow</Name>
       <Project>{20BB6FAC-44D2-4D76-ABFE-0C1E163A1A4F}</Project>
-      <Private>True</Private>
-      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
-      <RefTargetDir>INSTALLLOCATION</RefTargetDir>
-      <DoNotHarvest>true</DoNotHarvest>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

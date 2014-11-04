@@ -144,15 +144,7 @@
 
     <WixVariable Id="WixUILicenseRtf" Value="License.rtf" />
 
-    <?if "$(var.VSTargetVersion)" = "10.0" ?>
-    <WixVariable Id="WixUIBannerBmp" Value="UIBanner2010.bmp" />
-    <WixVariable Id="WixUIDialogBmp" Value="Dialog2010.bmp" />
-    <?elseif "$(var.VSTargetVersion)" = "11.0" ?>
-    <WixVariable Id="WixUIBannerBmp" Value="UIBanner2012.bmp" />
-    <WixVariable Id="WixUIDialogBmp" Value="Dialog2012.bmp" />
-    <?elseif "$(var.VSTargetVersion)" = "12.0" ?>
-    <WixVariable Id="WixUIBannerBmp" Value="UIBanner2013.bmp" />
-    <WixVariable Id="WixUIDialogBmp" Value="Dialog2013.bmp" />
-    <?endif?>
+    <WixVariable Id="WixUIBannerBmp" Value="UIBanner$(var.VSTargetVersion).bmp" />
+    <WixVariable Id="WixUIDialogBmp" Value="Dialog$(var.VSTargetVersion).bmp" />
   </Fragment>
 </Wix>

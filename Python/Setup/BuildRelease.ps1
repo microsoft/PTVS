@@ -205,8 +205,15 @@ function msbuild-options($target, $config) {
 }
 
 # This function is invoked after each target is built.
-function after-build($target) {
-    Copy-Item -Force Python\Prerequisites\*.reg $($i.destdir)
+function after-build($buildroot, $target) {
+    Copy-Item -Force "$buildroot\Python\Prerequisites\*.reg" $($target.destdir)
+}
+
+# This function is invoked after the entire build process but before scorching
+function after-build-all($buildroot, $outdir) {
+    if (-not $release) {
+        Copy-Item -Force "$buildroot\Python\Prerequisites\*.reg" $outdir
+    }
 }
 
 # Add product name mappings here
@@ -258,6 +265,7 @@ $native_files = (
 )
 
 $supported_vs_versions = (
+    @{number="14.0"; name="VS 2015"},
     @{number="12.0"; name="VS 2013"},
     @{number="11.0"; name="VS 2012"},
     @{number="10.0"; name="VS 2010"}
@@ -277,9 +285,6 @@ if (-not (Get-Command msbuild -EA 0)) {
 }
 
 if (-not $outdir -and -not $release) {
-    if ($internal) {
-        $outdir = "$base_outdir\Internal"
-    }
     if (-not $outdir) {
         Throw "Invalid output directory '$outdir'"
     }
@@ -346,20 +351,21 @@ $version_file_is_readonly = $version_file.Attributes -band [io.FileAttributes]::
 $assembly_version = [regex]::Match((Get-Content $version_file), 'ReleaseVersion = "([0-9.]+)";').Groups[1].Value
 $release_version = [regex]::Match((Get-Content $version_file), 'FileVersion = "([0-9.]+)";').Groups[1].Value
 
-if ($release -and -not $outdir) {
-    $outdir = "$base_outdir\$release_version"
+if ($internal) {
+    $base_outdir = "$base_outdir\Internal\$name"
+} elseif ($release) {
+    $base_outdir = "$base_outdir\$release_version"
+}
+
+if (-not $outdir) {
+    $outdir = $base_outdir
 }
 
 $buildnumber = '{0}{1:MMdd}.{2:D2}' -f (((Get-Date).Year - $base_year), (Get-Date), 0)
 if ($release -or $mockrelease -or $internal) {
-    if ($internal) {
-        $outdirwithname = "$outdir\$name"
-    } else {
-        $outdirwithname = $outdir
-    }
     for ($buildindex = 0; $buildindex -lt 10000; $buildindex += 1) {
         $buildnumber = '{0}{1:MMdd}.{2:D2}' -f (((Get-Date).Year - $base_year), (Get-Date), $buildindex)
-        if (-not (Test-Path $outdirwithname\$buildnumber)) {
+        if (-not (Test-Path $outdir\$buildnumber)) {
             break
         }
         $buildnumber = ''
@@ -375,9 +381,7 @@ if ([int]::Parse([regex]::Match($buildnumber, '^[0-9]+').Value) -ge 65535) {
 
 $version = "$release_version.$buildnumber"
 
-if ($internal) {
-    $outdir = "$outdir\$name\$buildnumber"
-} elseif ($release -or $mockrelease) {
+if ($internal -or $release -or $mockrelease) {
     $outdir = "$outdir\$buildnumber"
 }
 
@@ -503,7 +507,7 @@ try {
                 }
             }
             
-            after-build $i
+            after-build $buildroot $i
         }
         
         ######################################################################
@@ -619,6 +623,8 @@ try {
                 %{ "Copied $($_.src) -> $($_.dest)" }
         }
     }
+    
+    after-build-all $buildroot $outdir
     
     if ($scorch) {
         tfpt scorch $buildroot /noprompt

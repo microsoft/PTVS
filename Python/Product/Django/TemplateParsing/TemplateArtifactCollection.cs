@@ -14,6 +14,7 @@
 
 #if DEV12_OR_LATER
 
+using System.Collections.Generic;
 using Microsoft.Html.Core;
 using Microsoft.Web.Core;
 
@@ -29,11 +30,20 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
             LeftSeparator = RightSeparator = "";
         }
 
+#if DEV14_OR_LATER
+        // TODO: Update entire class to support multiple separators correctly.
+        protected override IEnumerable<ISensitiveFragmentSeparatorsInfo> SeparatorInfos {
+            get {
+                yield return this;
+            }
+        }
+#else
         protected override ISensitiveFragmentSeparatorsInfo SeparatorInfo {
             get {
                 return this;
             }
         }
+#endif
 
         public string LeftSeparator { get; private set; }
 

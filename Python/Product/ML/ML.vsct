@@ -123,6 +123,9 @@
     <!--The bitmaps section is used to define the bitmaps that are used for the commands.-->
     <Bitmaps>
     <!-- 
+      <Bitmaps Condition="Defined(DEV14)">
+        <Bitmap guid="guidMLImages" href="..\..\..\Common\Product\Icons\Dev14.0\MLImages.bmp" usedList="one" />
+      </Bitmaps>
       <Bitmaps Condition="Defined(DEV12)">
         <Bitmap guid="guidMLImages" href="..\..\..\Common\Product\Icons\Dev12.0\MLImages.bmp" usedList="one" />
       </Bitmaps>

@@ -15,19 +15,12 @@
     <SccLocalPath>SAK</SccLocalPath>
   </PropertyGroup>
   <ItemGroup>
-    <BindInputPaths Include="$(OutDir)" />
-  </ItemGroup>
-  <ItemGroup>
     <Compile Include="IronPythonInterpreter.wxs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(BuildRoot)\Python\Product\IronPython\IronPython.csproj">
       <Name>Microsoft.PythonTools.IronPython</Name>
       <Project>{5AE43C93-8EF6-4D57-BC10-511035EF56C5}</Project>
-      <Private>True</Private>
-      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
-      <RefTargetDir>INSTALLLOCATION</RefTargetDir>
-      <DoNotHarvest>true</DoNotHarvest>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

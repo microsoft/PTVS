@@ -15,9 +15,6 @@
     <SccLocalPath>SAK</SccLocalPath>
   </PropertyGroup>
   <ItemGroup>
-    <BindInputPaths Include="$(OutDir)" />
-  </ItemGroup>
-  <ItemGroup>
     <Compile Include="Django.wxs" />
   </ItemGroup>
   <ItemGroup>

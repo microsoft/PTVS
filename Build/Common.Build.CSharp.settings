@@ -30,10 +30,20 @@
     <DefineConstants>TRACE;$(DefineConstants)</DefineConstants>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <DefineConstants Condition="$(FeatureAzureRemoteDebug)">$(DefineConstants);FEATURE_AZURE_REMOTE_DEBUG</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(VSTarget)' == '14.0' ">
+    <DefineConstants>$(DefineConstants);DEV14;DEV14_OR_LATER;DEV12_OR_LATER;DEV11_OR_LATER</DefineConstants>
+    <VSCTDefinitions>DEV14;DEV14_OR_LATER;DEV12_OR_LATER;DEV11_OR_LATER</VSCTDefinitions>
+    <MicrosoftBuildAssemblyVersion>14.0.0.0</MicrosoftBuildAssemblyVersion>
+    <MicrosoftBuildAssemblyVersionSuffix>Core</MicrosoftBuildAssemblyVersionSuffix>
+  </PropertyGroup>
+  
   <PropertyGroup Condition=" '$(VSTarget)' == '12.0' ">
     <DefineConstants>$(DefineConstants);DEV12;DEV12_OR_LATER;DEV11_OR_LATER</DefineConstants>
-    <DefineConstants Condition="$(BuildingWithDev12U3)">$(DefineConstants);BUILDING_WITH_DEV12U3</DefineConstants>
-    <VSCTDefinitions>DEV12;DEV_12_OR_LATER;DEV11_OR_LATER</VSCTDefinitions>
+    <VSCTDefinitions>DEV12;DEV12_OR_LATER;DEV11_OR_LATER</VSCTDefinitions>
     <MicrosoftBuildAssemblyVersion>12.0.0.0</MicrosoftBuildAssemblyVersion>
     <MicrosoftBuildAssemblyVersionSuffix>v12.0</MicrosoftBuildAssemblyVersionSuffix>
   </PropertyGroup>
@@ -50,10 +60,6 @@
     <VSCTDefinitions>DEV10</VSCTDefinitions>
     <MicrosoftBuildAssemblyVersion>4.0.0.0</MicrosoftBuildAssemblyVersion>
     <MicrosoftBuildAssemblyVersionSuffix>v4.0</MicrosoftBuildAssemblyVersionSuffix>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="$(SuppressCommonAssemblyMetadata)">
-    <DefineConstants>$(DefineConstants);SUPPRESS_COMMON_ASSEMBLY_METADATA</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup>

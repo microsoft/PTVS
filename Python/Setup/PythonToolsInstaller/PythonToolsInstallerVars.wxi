@@ -42,5 +42,16 @@
   <?define Comp_VSPyFileProgIdGuid=B518DA6B-F986-4947-A347-CFEE6A497DEC?>
   <?define Comp_WDPyFileProgIdGuid=450A0988-EED7-4813-8EB5-D38A7B733C9F?>
   <?define Comp_VWDPyFileProgIdGuid=4A020E7B-1A10-4E33-A1DC-3C4FBC28B346?>
+
+  <?else?>
+  <!--Unknown VS version, We'll insert a bunch of bogus values such that Wix will error out-->
+  <!--  To fix this define a new section above for the new VS version.  Leave this such that future new versions continue to crash on build-->
+  <?define InstallerUpgradeGuid=UNKNOWN_VSTARGET?>
+  <?define Comp_ProgramMenuFolder=UNKNOWN_VSTARGET?>
+  <?define Comp_PyProjRegistrationGuid=UNKNOWN_VSTARGET?>
+
+  <?define Comp_VSPyFileProgIdGuid=UNKNOWN_VSTARGET?>
+  <?define Comp_WDPyFileProgIdGuid=UNKNOWN_VSTARGET?>
+  <?define Comp_VWDPyFileProgIdGuid=UNKNOWN_VSTARGET?>
   <?endif ?>
 </Include>

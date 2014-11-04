@@ -20,8 +20,8 @@
 #include <stdlib.h>
 #include "python.h"
 #include "VSPerf.h"
-#include <hash_set>
-#include <hash_map>
+#include <unordered_set>
+#include <unordered_map>
 #include <string>
 #include <strsafe.h>
 
@@ -69,9 +69,9 @@ class VsPyProf {
     PyUnicode_AsUnicode* _asUnicode;
     PyUnicode_GetLength* _unicodeGetLength;
     
-    hash_set<DWORD_PTR> _registeredObjects;
-    hash_set<PyObject*> _referencedObjects;
-    hash_map<DWORD_PTR, wstring> _registeredModules;
+    unordered_set<DWORD_PTR> _registeredObjects;
+    unordered_set<PyObject*> _referencedObjects;
+    unordered_map<DWORD_PTR, wstring> _registeredModules;
     
     // Python type objects
     PyObject* PyCode_Type;

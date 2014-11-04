@@ -1,9 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <Choose>
-    <When Condition=" '$(VisualStudioVersion)'=='11.0'  Or '$(TargetVisualStudioVersion)'=='VS110' ">
+    <When Condition=" '$(VisualStudioVersion)'=='14.0'  Or '$(TargetVisualStudioVersion)'=='VS140' ">
       <PropertyGroup>
-        <MinimumVisualStudioVersion>11.0</MinimumVisualStudioVersion>
+        <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
         <FileUpgradeFlags>
         </FileUpgradeFlags>
         <UpgradeBackupLocation>
@@ -14,6 +14,16 @@
     <When Condition=" '$(VisualStudioVersion)'=='12.0'  Or '$(TargetVisualStudioVersion)'=='VS120' ">
       <PropertyGroup>
         <MinimumVisualStudioVersion>12.0</MinimumVisualStudioVersion>
+        <FileUpgradeFlags>
+        </FileUpgradeFlags>
+        <UpgradeBackupLocation>
+        </UpgradeBackupLocation>
+        <OldToolsVersion>4.0</OldToolsVersion>
+      </PropertyGroup>
+    </When>
+    <When Condition=" '$(VisualStudioVersion)'=='11.0'  Or '$(TargetVisualStudioVersion)'=='VS110' ">
+      <PropertyGroup>
+        <MinimumVisualStudioVersion>11.0</MinimumVisualStudioVersion>
         <FileUpgradeFlags>
         </FileUpgradeFlags>
         <UpgradeBackupLocation>
@@ -107,21 +117,28 @@
     </Reference>
     <Reference Include="WindowsBase" />
   </ItemGroup>
+  <PropertyGroup>
+    <WebEditorHintPath>$(DevEnvDir)\CommonExtensions\Microsoft\Web\Editor\</WebEditorHintPath>
+    <WebEditorHintPath Condition="'$(VSTarget)' == '14.0'">$(DevEnvDir)\Extensions\Microsoft\Web Tools\Editors\</WebEditorHintPath>
+  </PropertyGroup>
   <ItemGroup Condition="'$(VSTarget)' != '10.0' And '$(VSTarget)' != '11.0'">
     <Reference Include="Microsoft.Web.Core, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>$(DevEnvDir)\CommonExtensions\Microsoft\Web\Editor\Microsoft.Web.Core.dll</HintPath>
+      <HintPath>$(WebEditorHintPath)Microsoft.Web.Core.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Web.Editor, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>$(DevEnvDir)\CommonExtensions\Microsoft\Web\Editor\Microsoft.Web.Editor.dll</HintPath>
+      <HintPath>$(WebEditorHintPath)Microsoft.Web.Editor.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Html.Core, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>$(DevEnvDir)\CommonExtensions\Microsoft\Web\Editor\Microsoft.Html.Core.dll</HintPath>
+      <HintPath>$(WebEditorHintPath)Microsoft.Html.Core.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Html.Editor, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>$(DevEnvDir)\CommonExtensions\Microsoft\Web\Editor\Microsoft.Html.Editor.dll</HintPath>
+      <HintPath>$(WebEditorHintPath)Microsoft.Html.Editor.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Html.Package, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>$(DevEnvDir)\CommonExtensions\Microsoft\Web\Editor\Microsoft.VisualStudio.Html.Package.dll</HintPath>
+      <HintPath>$(WebEditorHintPath)Microsoft.VisualStudio.Html.Package.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.Web.HTML, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" Condition="'$(VSTarget)' == '14.0'">
+      <HintPath>$(DevEnvDir)Microsoft.VisualStudio.Web.Html.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

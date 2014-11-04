@@ -24,8 +24,6 @@
     <ProjectReference Include="$(BuildRoot)\Python\Product\Profiling\Profiling.csproj">
       <Name>Microsoft.PythonTools.Profiling</Name>
       <Project>{c42b194e-3333-45e8-bb26-d69d1a51ef0b}</Project>
-      <Private>True</Private>
-      <DoNotHarvest>true</DoNotHarvest>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

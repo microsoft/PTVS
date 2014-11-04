@@ -17,12 +17,14 @@
     1. Signed binaries (if any)
     2. Output directory (for explicit project references)
     3. Each project output directory (for implicit project references)
+    4. Setup output directory (for merge modules)
   -->
   <Target Name="_SetBindInputPaths" BeforeTargets="Link">
     <ItemGroup>
       <LinkerBindInputPaths Include="$(SignedBinariesPath)" Condition="'$(SignedBinariesPath)' != ''" />
       <LinkerBindInputPaths Include="$(BuildOutputRoot)Binaries\" />
       <LinkerBindInputPaths Include="$([System.IO.Directory]::GetDirectories(`$(BuildOutputRoot)\Binaries`))" Condition="Exists('$(BuildOutputRoot)\Binaries')" />
+      <LinkerBindInputPaths Include="$(BuildOutputRoot)Setup\" />
     </ItemGroup>
   </Target>
 
