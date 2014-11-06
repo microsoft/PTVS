@@ -38,5 +38,7 @@
     <MefComponent>|Microsoft.PythonTools.Analysis;_GetTargetPath|</MefComponent>
     <MefComponent>|Microsoft.PythonTools.Debugger;_GetTargetPath|</MefComponent>
     <MefComponent>|Microsoft.PythonTools.VSInterpreters;_GetTargetPath|</MefComponent>
+    <ProjectTemplate>ProjectTemplates</ProjectTemplate>
+    <ItemTemplate>ItemTemplates</ItemTemplate>
   </Content>
 </Vsix>

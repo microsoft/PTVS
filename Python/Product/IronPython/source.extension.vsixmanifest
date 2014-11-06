@@ -38,5 +38,7 @@
     <Assembly AssemblyName="|Microsoft.PythonTools.IronPython.Interpreter;AssemblyName|">|Microsoft.PythonTools.IronPython.Interpreter|</Assembly>
     <VsPackage>|%CurrentProject%;PkgdefProjectOutputGroup|</VsPackage>
     <MefComponent>|%CurrentProject%|</MefComponent>
+    <ProjectTemplate>ProjectTemplates</ProjectTemplate>
+    <ItemTemplate>ItemTemplates</ItemTemplate>
   </Content>
 </Vsix>

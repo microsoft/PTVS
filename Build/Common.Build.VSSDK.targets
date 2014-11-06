@@ -23,7 +23,7 @@
   -->
   <PropertyGroup Condition="'$(BuildingInsideVisualStudio)' == 'true'">
     <DeployExtension Condition="'$(DeployExtension)' == ''">true</DeployExtension>
-    <DeployVSTemplates Condition="'$(DeployVSTemplates)' == ''">true</DeployVSTemplates>
+    <DeployVSTemplates Condition="'$(DeployVSTemplates)' == ''">false</DeployVSTemplates>
     <CreateVsixContainer Condition="'$(CreateVsixContainer)' == ''">false</CreateVsixContainer>
     <CopyVsixManifestToOutput Condition="'$(CopyVsixManifestToOutput)' == ''">true</CopyVsixManifestToOutput>
   </PropertyGroup>
