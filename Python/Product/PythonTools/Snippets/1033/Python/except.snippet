@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CodeSnippets xmlns="http://schemas.microsoft.com/VisualStudio/2005/CodeSnippet">
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>except (try/except)</Title>
+      <Shortcut>except</Shortcut>
+      <Description>Code snippet for a try statement</Description>
+      <Author>Microsoft Corporation</Author>
+      <SnippetTypes>
+        <SnippetType>SurroundsWithStatement</SnippetType>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID>exception</ID>
+          <ToolTip>The exception to handle</ToolTip>
+          <Default></Default>
+        </Literal>
+      </Declarations>
+      <Code Language="Python"><![CDATA[try:
+    pass
+except $exception$:
+    $selected$]]></Code>
+    </Snippet>  
+  </CodeSnippet>
+</CodeSnippets>

@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CodeSnippets xmlns="http://schemas.microsoft.com/VisualStudio/2005/CodeSnippet">
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>with</Title>
+      <Shortcut>with</Shortcut>
+      <Description>Code snippet for a with statement</Description>
+      <Author>Microsoft Corporation</Author>
+      <SnippetTypes>
+        <SnippetType>SurroundsWithStatement</SnippetType>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID>ctx</ID>
+          <ToolTip>The context manager</ToolTip>
+          <Default>None</Default>
+        </Literal>
+      </Declarations>
+      <Code Language="Python"><![CDATA[with $ctx$:
+    $selected$]]></Code>
+    </Snippet>  
+  </CodeSnippet>
+</CodeSnippets>

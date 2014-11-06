@@ -26,7 +26,10 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.IncrementalSearch;
 using Microsoft.VisualStudio.Text.Operations;
+using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudioTools.Project;
+using IServiceProvider = System.IServiceProvider;
+using SR = Microsoft.PythonTools.Project.SR;
 using VSConstants = Microsoft.VisualStudio.VSConstants;
 
 namespace Microsoft.PythonTools.Intellisense {
@@ -35,22 +38,34 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly ITextView _textView;
         private readonly IntellisenseControllerProvider _provider;
         private readonly IIncrementalSearch _incSearch;
+        private readonly ExpansionClient _expansionClient;
+        private readonly IServiceProvider _serviceProvider;
+        private readonly IVsExpansionManager _expansionMgr;
         private BufferParser _bufferParser;
         private ICompletionSession _activeSession;
         private ISignatureHelpSession _sigHelpSession;
         private IQuickInfoSession _quickInfoSession;
         private IOleCommandTarget _oldTarget;
         private IEditorOperations _editOps;
+        private static string[] _allStandardSnippetTypes = { ExpansionClient.Expansion, ExpansionClient.SurroundsWith };
+        private static string[] _surroundsWithSnippetTypes = { ExpansionClient.SurroundsWith, ExpansionClient.SurroundsWithStatement };
+
 
         /// <summary>
         /// Attaches events for invoking Statement completion 
         /// </summary>
-        public IntellisenseController(IntellisenseControllerProvider provider, ITextView textView) {
+        public IntellisenseController(IntellisenseControllerProvider provider, ITextView textView, IServiceProvider serviceProvider) {
             _textView = textView;
             _provider = provider;
             _editOps = provider._EditOperationsFactory.GetEditorOperations(textView);
             _incSearch = provider._IncrementalSearch.GetIncrementalSearch(textView);
             _textView.MouseHover += TextViewMouseHover;
+            _serviceProvider = serviceProvider;
+            _expansionClient = new ExpansionClient(textView, provider._adaptersFactory);
+
+            var textMgr = (IVsTextManager2)_serviceProvider.GetService(typeof(SVsTextManager));
+            textMgr.GetExpansionManager(out _expansionMgr);
+
             textView.Properties.AddProperty(typeof(IntellisenseController), this);  // added so our key processors can get back to us
         }
 
@@ -516,12 +531,14 @@ namespace Microsoft.PythonTools.Intellisense {
                             } else {
                                 _activeSession.Dismiss();
                             }
+
                             break;
                         case VSConstants.VSStd2KCmdID.TAB:
                             if (!_activeSession.IsDismissed) {
                                 _activeSession.Commit();
                                 return VSConstants.S_OK;
                             }
+
                             break;
                         case VSConstants.VSStd2KCmdID.BACKSPACE:
                         case VSConstants.VSStd2KCmdID.DELETE:
@@ -562,12 +579,108 @@ namespace Microsoft.PythonTools.Intellisense {
                         case VSConstants.VSStd2KCmdID.DELETEWORDLEFT:
                             _sigHelpSession.Dismiss();
                             _sigHelpSession = null;
-                            break;                        
+                            break;
+                    }
+                }
+            } else {
+                if (pguidCmdGroup == VSConstants.VSStd2K) {
+                    switch ((VSConstants.VSStd2KCmdID)nCmdID) {
+                        case VSConstants.VSStd2KCmdID.RETURN:
+                            if (_expansionClient.InSession && ErrorHandler.Succeeded(_expansionClient.EndCurrentExpansion(false))) {
+                                return VSConstants.S_OK;
+                            }
+                            break;
+                        case VSConstants.VSStd2KCmdID.TAB:
+                            if (_expansionClient.InSession && ErrorHandler.Succeeded(_expansionClient.NextField())) {
+                                return VSConstants.S_OK;
+                            }
+                            if (_textView.Selection.IsEmpty && _textView.Caret.Position.BufferPosition > 0) {
+                                if (TryTriggerExpansion()) {
+                                    return VSConstants.S_OK;
+                                }
+                            }
+                            break;
+                        case VSConstants.VSStd2KCmdID.BACKTAB:
+                            if (_expansionClient.InSession && ErrorHandler.Succeeded(_expansionClient.PreviousField())) {
+                                return VSConstants.S_OK;
+                            }
+                            break;
+                        case VSConstants.VSStd2KCmdID.SURROUNDWITH:
+                        case VSConstants.VSStd2KCmdID.INSERTSNIPPET:
+                            TriggerSnippet(nCmdID);
+                            return VSConstants.S_OK;
                     }
                 }
             }
 
             return _oldTarget.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
+        }
+
+        private void TriggerSnippet(uint nCmdID) {
+            if (_expansionMgr != null) {
+                string prompt;
+                string[] snippetTypes;
+                if ((VSConstants.VSStd2KCmdID)nCmdID == VSConstants.VSStd2KCmdID.SURROUNDWITH) {
+                    prompt = SR.GetString(SR.SurroundWith);
+                    snippetTypes = _surroundsWithSnippetTypes;
+                } else {
+                    prompt = SR.GetString(SR.InsertSnippet);
+                    snippetTypes = _allStandardSnippetTypes;
+                }
+
+                _expansionMgr.InvokeInsertionUI(
+                    GetViewAdapter(),
+                    _expansionClient,
+                    GuidList.guidPythonLanguageServiceGuid,
+                    snippetTypes,
+                    snippetTypes.Length,
+                    0,
+                    null,
+                    0,
+                    0,
+                    prompt,
+                    ">"
+                );
+            }
+        }
+
+        private bool TryTriggerExpansion() {
+            if (_expansionMgr != null) {
+                var snapshot = _textView.TextBuffer.CurrentSnapshot;
+                var span = new SnapshotSpan(snapshot, new Span(_textView.Caret.Position.BufferPosition.Position - 1, 1));
+                var classification = _textView.TextBuffer.GetPythonClassifier().GetClassificationSpans(span);
+                if (classification.Count == 1) {
+                    var clsSpan = classification.First().Span;
+                    var text = classification.First().Span.GetText();
+
+                    TextSpan[] textSpan = new TextSpan[1];
+                    textSpan[0].iStartLine = clsSpan.Start.GetContainingLine().LineNumber;
+                    textSpan[0].iStartIndex = clsSpan.Start.Position - clsSpan.Start.GetContainingLine().Start;
+                    textSpan[0].iEndLine = clsSpan.End.GetContainingLine().LineNumber;
+                    textSpan[0].iEndIndex = clsSpan.End.Position - clsSpan.End.GetContainingLine().Start;
+
+                    string expansionPath, title;
+                    int hr = _expansionMgr.GetExpansionByShortcut(
+                        _expansionClient,
+                        GuidList.guidPythonLanguageServiceGuid,
+                        text,
+                        GetViewAdapter(),
+                        textSpan,
+                        1,
+                        out expansionPath,
+                        out title
+                    );
+                    if (ErrorHandler.Succeeded(hr) &&
+                        ErrorHandler.Succeeded(_expansionClient.InsertNamedExpansion(title, expansionPath, textSpan[0]))) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        private IVsTextView GetViewAdapter() {
+            return _provider._adaptersFactory.GetViewAdapter(_textView);
         }
 
         private static bool IsIdentifierChar(char ch) {
@@ -592,6 +705,20 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public int QueryStatus(ref Guid pguidCmdGroup, uint cCmds, OLECMD[] prgCmds, IntPtr pCmdText) {
+            if (pguidCmdGroup == VSConstants.VSStd2K) {
+                for (int i = 0; i < cCmds; i++) {
+                    switch ((VSConstants.VSStd2KCmdID)prgCmds[i].cmdID) {
+                        case VSConstants.VSStd2KCmdID.SURROUNDWITH:
+                        case VSConstants.VSStd2KCmdID.INSERTSNIPPET:
+                            if (_expansionMgr != null) {
+                                prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
+                                return VSConstants.S_OK;
+                            }
+                            break;
+                    }
+                }
+            }
+
             return _oldTarget.QueryStatus(ref pguidCmdGroup, cCmds, prgCmds, pCmdText);
         }
 

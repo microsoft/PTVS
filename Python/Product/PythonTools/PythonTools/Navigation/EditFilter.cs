@@ -16,15 +16,16 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Windows;
-using System.Windows.Interop;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Navigation;
+using Microsoft.PythonTools.Project;
 using Microsoft.PythonTools.Refactoring;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.OLE.Interop;
@@ -40,6 +41,8 @@ using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Navigation;
 
 namespace Microsoft.PythonTools.Language {
+    using IServiceProvider = System.IServiceProvider;    
+
 #if INTERACTIVE_WINDOW
     using IReplWindow = IInteractiveWindow;
 #endif
@@ -60,14 +63,18 @@ namespace Microsoft.PythonTools.Language {
     internal sealed class EditFilter : IOleCommandTarget {
         private readonly ITextView _textView;
         private readonly IEditorOperations _editorOps;
+        private readonly IServiceProvider _serviceProvider;
+        private readonly IComponentModel _componentModel;
         private IOleCommandTarget _next;
 
-        public EditFilter(ITextView textView, IEditorOperations editorOps) {
+        public EditFilter(ITextView textView, IEditorOperations editorOps, IServiceProvider serviceProvider) {
             _textView = textView;
             _textView.Properties[typeof(EditFilter)] = this;
             _editorOps = editorOps;
-            
-            BraceMatcher.WatchBraceHighlights(textView, PythonToolsPackage.ComponentModel);
+            _serviceProvider = serviceProvider;
+            _componentModel = (IComponentModel)_serviceProvider.GetService(typeof(SComponentModel));
+
+            BraceMatcher.WatchBraceHighlights(textView, _componentModel);
         }
 
         internal void AttachKeyboardFilter(IVsTextView vsTextView) {
@@ -138,13 +145,18 @@ namespace Microsoft.PythonTools.Language {
             Debug.Assert(location.Column > 0);
 
             if (CommonUtils.IsSamePath(location.FilePath, _textView.GetFilePath())) {
-                var adapterFactory = PythonToolsPackage.ComponentModel.GetService<IVsEditorAdaptersFactoryService>();
-                var viewAdapter = adapterFactory.GetViewAdapter(_textView);
+                var viewAdapter = GetViewAdapter();
                 viewAdapter.SetCaretPos(location.Line - 1, location.Column - 1);
                 viewAdapter.CenterLines(location.Line - 1, 1);
             } else {
                 location.GotoSource();
             }
+        }
+
+        private IVsTextView GetViewAdapter() {
+            var adapterFactory = _componentModel.GetService<IVsEditorAdaptersFactoryService>();
+            var viewAdapter = adapterFactory.GetViewAdapter(_textView);
+            return viewAdapter;
         }
 
         /// <summary>
@@ -211,12 +223,12 @@ namespace Microsoft.PythonTools.Language {
         /// that request by extracting the prvoided symbol list out and using that for the
         /// search results.
         /// </summary>
-        private static void ShowFindSymbolsDialog(ExpressionAnalysis provider, IVsNavInfo symbols) {
+        private void ShowFindSymbolsDialog(ExpressionAnalysis provider, IVsNavInfo symbols) {
             // ensure our library is loaded so find all references will go to our library
-            Package.GetGlobalService(typeof(IPythonLibraryManager));
+            _serviceProvider.GetService(typeof(IPythonLibraryManager));
 
             if (!string.IsNullOrEmpty(provider.Expression)) {
-                var findSym = (IVsFindSymbol)PythonToolsPackage.GetGlobalService(typeof(SVsObjectSearch));
+                var findSym = (IVsFindSymbol)_serviceProvider.GetService(typeof(SVsObjectSearch));
                 VSOBSEARCHCRITERIA2 searchCriteria = new VSOBSEARCHCRITERIA2();
                 searchCriteria.eSrchType = VSOBSEARCHTYPE.SO_ENTIREWORD;
                 searchCriteria.pIVsNavInfo = symbols;
@@ -227,12 +239,10 @@ namespace Microsoft.PythonTools.Language {
                 //  new Guid("{a5a527ea-cf0a-4abf-b501-eafe6b3ba5c6}")
                 ErrorHandler.ThrowOnFailure(findSym.DoSearch(new Guid(CommonConstants.LibraryGuid), new VSOBSEARCHCRITERIA2[] { searchCriteria }));
             } else {
-                var statusBar = (IVsStatusbar)CommonPackage.GetGlobalService(typeof(SVsStatusbar));
+                var statusBar = (IVsStatusbar)_serviceProvider.GetService(typeof(SVsStatusbar));
                 statusBar.SetText("The caret must be on valid expression to find all references.");
             }
         }
-
-        
 
         internal class LocationCategory : SimpleObjectList<SymbolList>, IVsNavInfo, ICustomSearchListProvider {
             private readonly string _name;
@@ -550,7 +560,7 @@ namespace Microsoft.PythonTools.Language {
         }
 
         private void UpdateStatusForIncompleteAnalysis() {
-            var statusBar = (IVsStatusbar)CommonPackage.GetGlobalService(typeof(SVsStatusbar));
+            var statusBar = (IVsStatusbar)_serviceProvider.GetService(typeof(SVsStatusbar));
             var analyzer = _textView.GetAnalyzer();
             if (analyzer != null && analyzer.IsAnalyzing) {
                 statusBar.SetText("Python source analysis is not up to date");
@@ -715,7 +725,7 @@ namespace Microsoft.PythonTools.Language {
 
             new VariableRenamer(_textView).RenameVariable(
                 RenameVariableUserInput.Instance,
-                (IVsPreviewChangesService)PythonToolsPackage.GetGlobalService(typeof(SVsPreviewChangesService))
+                (IVsPreviewChangesService)_serviceProvider.GetService(typeof(SVsPreviewChangesService))
             );
         }
 
@@ -919,8 +929,8 @@ namespace Microsoft.PythonTools.Language {
         }
 
 #if DEV10
-        internal static bool IsCSharpInstalled() {
-            IVsShell shell = (IVsShell)PythonToolsPackage.GetGlobalService(typeof(IVsShell));
+        private bool IsCSharpInstalled() {
+            IVsShell shell = (IVsShell)_serviceProvider.GetService(typeof(IVsShell));
             Guid csharpPacakge = GuidList.guidCSharpProjectPacakge;
             int installed;
             ErrorHandler.ThrowOnFailure(

@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CodeSnippets xmlns="http://schemas.microsoft.com/VisualStudio/2005/CodeSnippet">
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>for</Title>
+      <Shortcut>for</Shortcut>
+      <Description>Code snippet for a for loop</Description>
+      <Author>Microsoft Corporation</Author>
+      <SnippetTypes>
+        <SnippetType>SurroundsWithStatement</SnippetType>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID>var</ID>
+          <ToolTip>The variable name(s) to iterate over</ToolTip>
+          <Default>x</Default>
+        </Literal>
+        <Literal>
+          <ID>expr</ID>
+          <ToolTip>The expressions to enumerate</ToolTip>
+          <Default>[]</Default>
+        </Literal>      
+      </Declarations>
+      <Code Language="Python"><![CDATA[for $var$ in $expr$:
+    $selected$]]></Code>
+    </Snippet>  
+  </CodeSnippet>
+</CodeSnippets>

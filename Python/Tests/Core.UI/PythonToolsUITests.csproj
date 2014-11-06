@@ -132,6 +132,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="SnippetsTests.cs" />
     <Compile Include="UITests.cs" />
     <Compile Include="VirtualEnvTests.cs" />
     <Compile Include="WebProjectTests.cs" />

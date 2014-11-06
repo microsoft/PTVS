@@ -125,6 +125,7 @@
     <Compile Include="PythonPerfExplorer.cs" />
     <Compile Include="PythonPerfTarget.cs" />
     <Compile Include="PythonPerfToolBar.cs" />
+    <Compile Include="PythonProjectTest.cs" />
     <Compile Include="PythonVisualStudioApp.cs" />
   </ItemGroup>
   <ItemGroup>

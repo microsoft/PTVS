@@ -20,6 +20,7 @@ using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Repl;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text.Operations;
 using Microsoft.VisualStudio.Utilities;
 
@@ -51,7 +52,7 @@ namespace Microsoft.PythonTools.Editor {
                 textView.Properties.AddProperty(typeof(PythonReplEvaluator), (PythonReplEvaluator)window.Evaluator);
             }
 
-            var editFilter = new EditFilter(window.TextView, _editorOpsFactory.GetEditorOperations(textView));
+            var editFilter = new EditFilter(window.TextView, _editorOpsFactory.GetEditorOperations(textView), ServiceProvider.GlobalProvider);
             var intellisenseController = IntellisenseControllerProvider.GetOrCreateController(model, textView);
 
             editFilter.AttachKeyboardFilter(vsTextView);

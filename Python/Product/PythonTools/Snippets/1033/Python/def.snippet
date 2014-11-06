@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CodeSnippets xmlns="http://schemas.microsoft.com/VisualStudio/2005/CodeSnippet">
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>def</Title>
+      <Shortcut>def</Shortcut>
+      <Description>Code snippet for a function definition</Description>
+      <Author>Microsoft Corporation</Author>
+      <SnippetTypes>
+        <SnippetType>SurroundsWithStatement</SnippetType>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID>name</ID>
+          <ToolTip>The name of the function</ToolTip>
+          <Default>function</Default>
+        </Literal>
+        <Literal>
+          <ID>args</ID>
+          <ToolTip>The arguments for the function</ToolTip>
+          <Default>args</Default>
+        </Literal>      
+      </Declarations>
+      <Code Language="Python"><![CDATA[def $name$($args$):
+    $selected$]]></Code>
+    </Snippet>  
+  </CodeSnippet>
+</CodeSnippets>

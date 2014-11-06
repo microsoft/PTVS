@@ -184,6 +184,9 @@ namespace Microsoft.PythonTools.Project {
         public const string FailedToCollectFilesForPublish = "FailedToCollectFilesForPublish";
         public const string FailedToCollectFilesForPublishMessage = "FailedToCollectFilesForPublishMessage";
 
+        public const string InsertSnippet = "InsertSnippet";
+        public const string SurroundWith = "SurroundWith";
+
         private static readonly Lazy<ResourceManager> _manager = new Lazy<ResourceManager>(
             () => new System.Resources.ResourceManager("Microsoft.PythonTools.Resources", typeof(SR).Assembly),
             LazyThreadSafetyMode.ExecutionAndPublication

@@ -256,7 +256,9 @@ namespace Microsoft.PythonTools {
     [ProvideDiffSupportedContentType(".py;.pyw", ";")]
 #if DEV11_OR_LATER // TODO: UNSURE IF WE NEED THIS FOR DEV12
     [ProvideX64DebuggerFixForIntegratedShell]
-#endif
+#endif    
+    [ProvideCodeExpansions(GuidList.guidPythonLanguageService, false, 106, "Python", @"Snippets\%LCID%\SnippetsIndex.xml", @"Snippets\%LCID%\Python\")]
+    [ProvideCodeExpansionPath("Python", "Test", @"Snippets\%LCID%\Test\")]
     [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",
         Justification = "Object is owned by VS and cannot be disposed")]
     public sealed class PythonToolsPackage : CommonPackage, IVsComponentSelectorProvider {

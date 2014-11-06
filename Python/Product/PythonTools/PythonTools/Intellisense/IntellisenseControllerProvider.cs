@@ -20,6 +20,7 @@ using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Repl;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.IncrementalSearch;
@@ -48,7 +49,7 @@ namespace Microsoft.PythonTools.Intellisense {
         public IIntellisenseController TryCreateIntellisenseController(ITextView textView, IList<ITextBuffer> subjectBuffers) {
             IntellisenseController controller;
             if (!textView.Properties.TryGetProperty<IntellisenseController>(typeof(IntellisenseController), out controller)) {
-                controller = new IntellisenseController(this, textView);
+                controller = new IntellisenseController(this, textView, ServiceProvider.GlobalProvider);
             }
 
             var analyzer = textView.GetAnalyzer();
@@ -95,7 +96,7 @@ namespace Microsoft.PythonTools.Intellisense {
                    where exportedContentType == PythonCoreConstants.ContentType && export.Value.GetType() == typeof(IntellisenseControllerProvider)
                    select export.Value
                 ).First();
-                controller = new IntellisenseController((IntellisenseControllerProvider)intellisenseControllerProvider, textView);
+                controller = new IntellisenseController((IntellisenseControllerProvider)intellisenseControllerProvider, textView, ServiceProvider.GlobalProvider);
             }
             return controller;
         }

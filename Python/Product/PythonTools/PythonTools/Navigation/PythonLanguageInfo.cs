@@ -30,7 +30,7 @@ namespace Microsoft.PythonTools.Navigation {
     /// provide a code window manager so that we can have a navigation bar (actually we don't, this
     /// should be switched over to using our TextViewCreationListener instead).
     /// </summary>
-    [Guid("bf96a6ce-574f-3259-98be-503a3ad636dd")]
+    [Guid(GuidList.guidPythonLanguageService)]
     internal sealed class PythonLanguageInfo : IVsLanguageInfo, IVsLanguageDebugInfo {
         private readonly IServiceProvider _serviceProvider;
         private readonly IComponentModel _componentModel;

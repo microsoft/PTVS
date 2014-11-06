@@ -106,6 +106,19 @@
       <IncludeInWD>false</IncludeInWD>
     </File>
 
+    <!-- Snippets -->
+    <File Include="$(SourceDir)Snippets\1033\Python\*.snippet">
+      <InstallDirectory>Snippets_1033_Python</InstallDirectory>
+    </File>
+
+    <File Include="$(SourceDir)Snippets\1033\Test\*.snippet">
+      <InstallDirectory>Snippets_1033_Test</InstallDirectory>
+    </File>
+  
+    <File Include="$(SourceDir)Snippets\1033\SnippetsIndex.xml">
+      <InstallDirectory>Snippets_1033</InstallDirectory>
+    </File>
+
     <!-- Default Completion DB -->
     <File Include="CompletionDB\*.idb">
       <InstallDirectory>CompletionDB</InstallDirectory>

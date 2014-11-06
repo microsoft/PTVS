@@ -575,4 +575,10 @@ Packages that cannot be installed using pip may prevent all listed packages from
   <data name="FailedToCollectFilesForPublishMessage" xml:space="preserve">
     <value>An error occurred while collecting files to publish. Review the details below and retry or cancel the operation.</value>
   </data>
+  <data name="InsertSnippet" xml:space="preserve">
+    <value>Insert Snippet</value>
+  </data>
+  <data name="SurroundWith" xml:space="preserve">
+    <value>Surround With</value>
+  </data>
 </root>

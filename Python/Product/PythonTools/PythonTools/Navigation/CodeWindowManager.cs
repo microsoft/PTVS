@@ -20,6 +20,7 @@ using Microsoft.PythonTools.Language;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.OLE.Interop;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Operations;
@@ -203,7 +204,7 @@ namespace Microsoft.PythonTools.Navigation {
             var wpfTextView = VsEditorAdaptersFactoryService.GetWpfTextView(vsTextView);
             if (wpfTextView != null) {
                 var factory = PythonToolsPackage.ComponentModel.GetService<IEditorOperationsFactoryService>();
-                var editFilter = new EditFilter(wpfTextView, factory.GetEditorOperations(wpfTextView));
+                var editFilter = new EditFilter(wpfTextView, factory.GetEditorOperations(wpfTextView), ServiceProvider.GlobalProvider);
                 editFilter.AttachKeyboardFilter(vsTextView);
 #if DEV11_OR_LATER
                 new TextViewFilter(vsTextView);

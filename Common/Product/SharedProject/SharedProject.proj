@@ -573,6 +573,14 @@
       <Link>SharedProject\Debugger\WebSocketStream.cs</Link>
       <Visible>true</Visible>
     </Compile>
+    <Compile Include="$(_ProjectSystemFilesLocation)\ProvideCodeExpansionsAttribute.cs">
+      <Link>SharedProject\ProvideCodeExpansionsAttribute.cs</Link>
+      <Visible>true</Visible>
+    </Compile>
+    <Compile Include="$(_ProjectSystemFilesLocation)\ProvideCodeExpansionPathAttribute.cs">
+      <Link>SharedProject\ProvideCodeExpansionPathAttribute.cs</Link>
+      <Visible>true</Visible>
+    </Compile>
     <Compile Include="$(_ProjectSystemFilesLocation)\ProvideDebugLanguageAttribute.cs">
       <Link>SharedProject\ProvideDebugLanguageAttribute.cs</Link>
       <Visible>true</Visible>
