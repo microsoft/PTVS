@@ -150,7 +150,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 "Excluding files and folders...",
                 "Excluding files and folders in your project, this may take several seconds...",
                 ProjectMgr.Site)) {
-                return ExcludeFromProject();
+                return base.ExcludeFromProjectWithProgress();
             }
         }
 

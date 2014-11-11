@@ -795,16 +795,7 @@ namespace TestUtilities.UI {
                 Assert.AreEqual(expectedProjects, i, "Wrong number of loaded projects");
             }
 
-            var iter = Dte.Solution.Projects.GetEnumerator();
-            iter.MoveNext();
-
-            Project project = (Project)iter.Current;
-            if (projectName != null) {
-                while (project.Name != projectName) {
-                    Assert.IsTrue(iter.MoveNext(), "Failed to find project named " + projectName);
-                    project = (Project)iter.Current;
-                }
-            }
+            Project project = GetProject(projectName);
 
             Assert.IsNotNull(project, "No project loaded");
             Assert.IsNotNull(project.Properties, "No project loaded");
@@ -825,6 +816,22 @@ namespace TestUtilities.UI {
 
             DeleteAllBreakPoints();
 
+            return project;
+        }
+
+        public Project GetProject(string projectName) {
+            var iter = Dte.Solution.Projects.GetEnumerator();
+            if (!iter.MoveNext()) {
+                return null;
+            }
+
+            Project project = (Project)iter.Current;
+            if (projectName != null) {
+                while (project.Name != projectName) {
+                    Assert.IsTrue(iter.MoveNext(), "Failed to find project named " + projectName);
+                    project = (Project)iter.Current;
+                }
+            }
             return project;
         }
 

@@ -16,6 +16,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using System.Threading;
 using EnvDTE;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -76,6 +77,28 @@ namespace VisualStudioToolsUITests {
             );
         }
 
+        private static SolutionFile MultiProjectLinkedFiles(ProjectType projectType) {
+            return SolutionFile.Generate(
+                "MultiProjectLinkedFiles",
+                new ProjectDefinition(
+                    "LinkedFiles1",
+                    projectType,
+                    ItemGroup(
+                        Compile("..\\FileNotInProject1"),
+                        Compile("..\\FileNotInProject2")
+                    )
+                ),
+                new ProjectDefinition(
+                    "LinkedFiles2",
+                    projectType,
+                    ItemGroup(
+                        Compile("..\\FileNotInProject2", isMissing: true)
+                    )
+                )
+            );
+        }
+
+
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
@@ -115,16 +138,14 @@ namespace VisualStudioToolsUITests {
                     try {
                         autoItem.Properties.Item("FileName").Value = "Fob";
                         Assert.Fail("Should have failed to rename");
-                    } catch (TargetInvocationException tie) {
-                        Assert.AreEqual(tie.InnerException.GetType(), typeof(InvalidOperationException));
+                    } catch (InvalidOperationException) {
                     }
 
-                    autoItem = solution.Project.ProjectItems.Item("ExplicitDir").Collection.Item("ExplicitLinkedFile" + projectType.CodeExtension);
+                    autoItem = solution.Project.ProjectItems.Item("ExplicitDir").ProjectItems.Item("ExplicitLinkedFile" + projectType.CodeExtension);
                     try {
                         autoItem.Properties.Item("FileName").Value = "Fob";
                         Assert.Fail("Should have failed to rename");
-                    } catch (TargetInvocationException tie) {
-                        Assert.AreEqual(tie.InnerException.GetType(), typeof(InvalidOperationException));
+                    } catch (InvalidOperationException) {
                     }
                 }
             }
@@ -177,6 +198,60 @@ namespace VisualStudioToolsUITests {
                     }
 
                     Assert.IsTrue(found);
+                }
+            }
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void MultiProjectMove() {
+            foreach (var projectType in ProjectTypes) {
+                using (var solution = MultiProjectLinkedFiles(projectType).ToVs()) {
+
+                    var fileNode = solution.FindItem("LinkedFiles1", "FileNotInProject1" + projectType.CodeExtension);
+                    Assert.IsNotNull(fileNode, "projectNode");
+                    AutomationWrapper.Select(fileNode);
+
+                    solution.App.Dte.ExecuteCommand("Edit.Copy");
+
+                    var folderNode = solution.FindItem("LinkedFiles2");
+                    AutomationWrapper.Select(folderNode);
+
+                    solution.App.Dte.ExecuteCommand("Edit.Paste");
+
+                    // item should have moved
+                    var copiedFile = solution.WaitForItem("LinkedFiles2", "FileNotInProject1" + projectType.CodeExtension);
+                    Assert.IsNotNull(copiedFile, "movedLinkedFile");
+
+                    Assert.AreEqual(
+                        true,
+                        solution.App.GetProject("LinkedFiles2").ProjectItems.Item("FileNotInProject1" + projectType.CodeExtension).Properties.Item("IsLinkFile").Value
+                    );
+                }
+            }
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void MultiProjectMoveExists2() {
+            foreach (var projectType in ProjectTypes) {
+                using (var solution = MultiProjectLinkedFiles(projectType).ToVs()) {
+
+                    var fileNode = solution.FindItem("LinkedFiles1", "FileNotInProject2" + projectType.CodeExtension);
+                    Assert.IsNotNull(fileNode, "projectNode");
+                    AutomationWrapper.Select(fileNode);
+
+                    solution.App.Dte.ExecuteCommand("Edit.Copy");
+
+                    var folderNode = solution.FindItem("LinkedFiles2");
+                    AutomationWrapper.Select(folderNode);
+
+                    ThreadPool.QueueUserWorkItem(x => solution.App.ExecuteCommand("Edit.Paste"));
+
+                    string path = Path.Combine(solution.Directory, "FileNotInProject2" + projectType.CodeExtension);
+                    VisualStudioApp.CheckMessageBox(String.Format("There is already a link to '{0}'. You cannot have more than one link to the same file in a project.", path));
+
+                    solution.App.WaitForDialogDismissed();
                 }
             }
         }
@@ -278,7 +353,7 @@ namespace VisualStudioToolsUITests {
                     Assert.IsNotNull(fileNotInProject, "fileNotInProject");
 
                     // but it should be the linked file on disk outside of our project, not the file that exists on disk at the same location.
-                    var autoItem = solution.Project.ProjectItems.Item("FolderWithAFile").Collection.Item("FileNotInProject" + projectType.CodeExtension);
+                    var autoItem = solution.Project.ProjectItems.Item("FolderWithAFile").ProjectItems.Item("FileNotInProject" + projectType.CodeExtension);
                     Assert.AreEqual(Path.Combine(solution.Directory, "FileNotInProject" + projectType.CodeExtension), autoItem.Properties.Item("FullPath").Value);
                 }
             }
@@ -373,7 +448,7 @@ namespace VisualStudioToolsUITests {
                     autoItem.SaveAs(Path.Combine(solution.Directory, "LinkedFiles\\CreatedDirectory\\SaveAsCreateFileNewDirectory" + projectType.CodeExtension));
 
 
-                    autoItem = solution.Project.ProjectItems.Item("CreatedDirectory").Collection.Item("SaveAsCreateFileNewDirectory" + projectType.CodeExtension);
+                    autoItem = solution.Project.ProjectItems.Item("CreatedDirectory").ProjectItems.Item("SaveAsCreateFileNewDirectory" + projectType.CodeExtension);
                     isLinkFile = autoItem.Properties.Item("IsLinkFile").Value;
                     Assert.AreEqual(isLinkFile, false);
                 }

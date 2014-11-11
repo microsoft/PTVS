@@ -855,7 +855,6 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         private void AddAllFilesNode(HierarchyNode parent, HierarchyNode newNode) {
             newNode.IsVisible = IsShowingAllFiles;
-            newNode.ID = ItemIdMap.Add(newNode);
             parent.AddChild(newNode);
         }
 

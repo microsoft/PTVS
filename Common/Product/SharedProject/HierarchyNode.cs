@@ -1076,7 +1076,23 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         /// <returns></returns>
         internal virtual int ExcludeFromProjectWithProgress() {
-            return ExcludeFromProject();
+
+            int hr = ExcludeFromProject();
+            if (ErrorHandler.Succeeded(hr)) {
+                // https://pytools.codeplex.com/workitem/1996
+                // Mark the previous sibling or direct parent as the active item
+                IVsUIHierarchyWindow2 windows = UIHierarchyUtilities.GetUIHierarchyWindow(
+                    ProjectMgr.Site,
+                    new Guid(ToolWindowGuids80.SolutionExplorer)) as IVsUIHierarchyWindow2;
+                windows.ExpandItem(
+                    ProjectMgr,
+                    PreviousVisibleSibling != null ?
+                        PreviousVisibleSibling.ID :
+                        Parent.ID,
+                    EXPANDFLAGS.EXPF_SelectItem
+                );
+            }
+            return hr;
         }
 
         /// <summary>

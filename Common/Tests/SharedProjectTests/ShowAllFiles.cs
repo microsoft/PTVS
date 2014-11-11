@@ -17,7 +17,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 using Microsoft.TC.TestHostAdapters;
+using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudioTools.Project;
 using TestUtilities;
 using TestUtilities.SharedProject;
 using TestUtilities.UI;
@@ -776,6 +779,67 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         }
 
         /// <summary>
+        /// https://pytools.codeplex.com/workitem/1996
+        /// </summary>
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void ShowAllExcludeSelected() {
+            foreach (var projectType in ProjectTypes) {
+                var def = new ProjectDefinition(
+                    "ShowAllExcludeSelected",
+                    projectType,
+                    ItemGroup(
+                        Folder("Folder"),
+                        Compile("Folder\\File1"),
+                        Compile("Folder\\File2")
+                    ),
+                    Property("ProjectView", "ProjectFiles")
+                );
+
+                using (var solution = def.Generate().ToVs()) {
+                    solution.WaitForItem("ShowAllExcludeSelected");
+
+                    var file = solution.WaitForItem("ShowAllExcludeSelected", "Folder", "File2" + projectType.CodeExtension);
+                    AutomationWrapper.Select(file);
+                    solution.App.Dte.ExecuteCommand("Project.ExcludeFromProject");
+
+                    solution.WaitForItemRemoved("ShowAllExcludeSelected", "Folder", "File2" + projectType.CodeExtension);
+
+                    Assert.AreEqual("File1" + projectType.CodeExtension, Path.GetFileName(GetSelectedItemName()));
+
+                    file = solution.WaitForItem("ShowAllExcludeSelected", "Folder", "File1" + projectType.CodeExtension);
+                    AutomationWrapper.Select(file);
+                    solution.App.Dte.ExecuteCommand("Project.ExcludeFromProject");
+                    solution.WaitForItemRemoved("ShowAllExcludeSelected", "Folder", "File1" + projectType.CodeExtension);
+
+                    Assert.AreEqual("Folder", Path.GetFileName(GetSelectedItemName().TrimEnd('\\')));
+                }
+            }
+        }
+
+        private static string GetSelectedItemName() {
+            var window = UIHierarchyUtilities.GetUIHierarchyWindow(
+                VsIdeTestHostContext.ServiceProvider,
+                new Guid(ToolWindowGuids80.SolutionExplorer)
+            );
+            IntPtr hier;
+            uint itemid;
+            IVsMultiItemSelect select;
+            ErrorHandler.ThrowOnFailure(window.GetCurrentSelection(out hier, out itemid, out select));
+            Assert.AreNotEqual(IntPtr.Zero, hier);
+            Assert.IsNull(select);
+            try {
+                var obj = (IVsHierarchy)Marshal.GetObjectForIUnknown(hier);
+                string name;
+                ErrorHandler.ThrowOnFailure(obj.GetCanonicalName(itemid, out name));
+                return name;
+            } finally {
+                Marshal.Release(hier);
+            }
+        }
+
+
+        /// <summary>
         /// Creating & deleting files rapidly shouldn't leave a file hanging around
         /// 
         /// https://nodejstools.codeplex.com/workitem/380
@@ -888,6 +952,55 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     
                     Assert.IsNull(
                         solution.WaitForItemRemoved("CopyExcludedFolderWithItem", "NewFolder1", "NewFolder2")
+                    );
+                }
+            }
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void ShowAllFilesMoveExcludedItemToExcludedFolderByKeyboard() {
+            ShowAllFilesMoveExcludedItemToExcludedFolder(DragDropCopyCutPaste.MoveByKeyboard);
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void ShowAllFilesMoveExcludedItemToExcludedFolderByMouse() {
+            ShowAllFilesMoveExcludedItemToExcludedFolder(DragDropCopyCutPaste.MoveByMouse);
+        }
+
+        /// <summary>
+        /// https://pytools.codeplex.com/workitem/1909
+        /// </summary>
+        private void ShowAllFilesMoveExcludedItemToExcludedFolder(DragDropCopyCutPaste.MoveDelegate mover) {
+            foreach (var projectType in ProjectTypes) {
+                var def = new ProjectDefinition(
+                    "ShowAllFilesMoveExcludedItemToExcludedFolder",
+                    projectType,
+                    Property("ProjectView", "ShowAllFiles"),
+                    Folder("NewFolder1", isExcluded: true),
+                    Compile("server", isExcluded: true)
+                );
+
+                using (var solution = def.Generate().ToVs()) {
+                    var projectNode = solution.WaitForItem("ShowAllFilesMoveExcludedItemToExcludedFolder");
+                    AutomationWrapper.Select(projectNode);
+
+                    mover(
+                        solution.WaitForItem("ShowAllFilesMoveExcludedItemToExcludedFolder", "NewFolder1"),
+                        solution.WaitForItem("ShowAllFilesMoveExcludedItemToExcludedFolder", "server" + projectType.CodeExtension)
+                    );
+
+                    Assert.IsNotNull(
+                        solution.WaitForItem("ShowAllFilesMoveExcludedItemToExcludedFolder", "NewFolder1", "server" + projectType.CodeExtension)
+                    );
+                    solution.App.Dte.ExecuteCommand("Project.ShowAllFiles"); // stop showing all
+
+                    Assert.IsNull(
+                        solution.WaitForItemRemoved("ShowAllFilesMoveExcludedItemToExcludedFolder", "NewFolder1")
+                    );
+                    Assert.IsNull(
+                        solution.WaitForItemRemoved("ShowAllFilesMoveExcludedItemToExcludedFolder", "NewFolder1", "server" + projectType.CodeExtension)
                     );
                 }
             }

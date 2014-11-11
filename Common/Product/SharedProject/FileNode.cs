@@ -693,7 +693,6 @@ namespace Microsoft.VisualStudioTools.Project {
                 // derived FileNode types will be used and correctly associated on rename.  This is useful for things 
                 // like .txt -> .js where the file would now be able to be a startup project/file.
                 renamedNode = this.ProjectMgr.CreateFileNode(this.ItemNode);
-                renamedNode.ID = this.ProjectMgr.ItemIdMap.Add(renamedNode);
 
                 renamedNode.ItemNode.RefreshProperties();
                 renamedNode.UpdateCaption();

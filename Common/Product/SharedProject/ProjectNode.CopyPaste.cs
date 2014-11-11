@@ -915,6 +915,13 @@ namespace Microsoft.VisualStudioTools.Project {
 
                 // This will throw invalid cast exception if the hierrachy is not a project.
                 IVsProject project = (IVsProject)hierarchy;
+                object isLinkValue;
+                bool isLink = false;
+                if (ErrorHandler.Succeeded(((IVsHierarchy)project).GetProperty(itemidLoc, (int)__VSHPROPID2.VSHPROPID_IsLinkFile, out isLinkValue))) {
+                    if (isLinkValue is bool) {
+                        isLink = (bool)isLinkValue;
+                    }
+                }
 
                 string moniker;
                 ErrorHandler.ThrowOnFailure(project.GetMkDocument(itemidLoc, out moniker));
@@ -974,24 +981,38 @@ namespace Microsoft.VisualStudioTools.Project {
                 }
 
                 // Begin the move operation now that we are past pre-checks.
-                string newPath = Path.Combine(targetFolder, Path.GetFileName(moniker));
                 var existingChild = Project.FindNodeByFullPath(moniker);
-                if (existingChild != null && existingChild.IsLinkFile) {
-                    if (DropEffect == DropEffect.Move) {
-                        // moving a link file, just update it's location in the hierarchy
-                        return new ReparentLinkedFileAddition(Project, targetFolder, moniker);
-                    } else {
-                        // 
-                        VsShellUtilities.ShowMessageBox(
-                                Project.Site,
-                                String.Format("Cannot copy linked files within the same project. You cannot have more than one link to the same file in a project."),
-                                null,
-                                OLEMSGICON.OLEMSGICON_CRITICAL,
-                                OLEMSGBUTTON.OLEMSGBUTTON_OK,
-                                OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
-                        return null;
+                if (isLink) {
+                    // links we just want to update the link node for...
+                    if (existingChild != null) {
+                        if (ComUtilities.IsSameComObject(Project, project)) {
+                            if (DropEffect != DropEffect.Move) {
+                                VsShellUtilities.ShowMessageBox(
+                                        Project.Site,
+                                        String.Format("Cannot copy linked files within the same project. You cannot have more than one link to the same file in a project."),
+                                        null,
+                                        OLEMSGICON.OLEMSGICON_CRITICAL,
+                                        OLEMSGBUTTON.OLEMSGBUTTON_OK,
+                                        OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
+                                return null;
+                            }
+                        } else {
+                            VsShellUtilities.ShowMessageBox(
+                                    Project.Site,
+                                    String.Format("There is already a link to '{0}'. You cannot have more than one link to the same file in a project.", moniker),
+                                    null,
+                                    OLEMSGICON.OLEMSGICON_CRITICAL,
+                                    OLEMSGBUTTON.OLEMSGBUTTON_OK,
+                                    OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
+                            return null;
+                        }
                     }
-                } else if (File.Exists(newPath) &&  
+
+                    return new ReparentLinkedFileAddition(Project, targetFolder, moniker);
+                }
+
+                string newPath = Path.Combine(targetFolder, Path.GetFileName(moniker));
+                if (File.Exists(newPath) &&  
                     CommonUtils.IsSamePath(
                         NativeMethods.GetAbsolutePathToDirectory(newPath), 
                         NativeMethods.GetAbsolutePathToDirectory(moniker))) {
@@ -1158,17 +1179,25 @@ namespace Microsoft.VisualStudioTools.Project {
 
                 public override void DoAddition(ref bool? overwrite) {
                     var existing = Project.FindNodeByFullPath(Moniker);
-                    Project.OnItemDeleted(existing);
-                    existing.Parent.RemoveChild(existing);
+                    bool created = false;
+                    if (existing != null) {
+                        Project.OnItemDeleted(existing);
+                        existing.Parent.RemoveChild(existing);
+                        existing.ID = Project.ItemIdMap.Add(existing);
+                    } else {
+                        existing = Project.CreateFileNode(Moniker);
+                        created = true;
+                    }
 
-                    existing.ID = Project.ItemIdMap.Add(existing);
 
                     var newParent = TargetFolder == Project.ProjectHome ? Project : Project.FindNodeByFullPath(TargetFolder);
                     newParent.AddChild(existing);
-                    Project.ItemsDraggedOrCutOrCopied.Remove(existing); // we don't need to remove the file after Paste
+                    if (Project.ItemsDraggedOrCutOrCopied != null) {
+                        Project.ItemsDraggedOrCutOrCopied.Remove(existing); // we don't need to remove the file after Paste
+                    }
 
                     var link = existing.ItemNode.GetMetadata(ProjectFileConstants.Link);
-                    if (link != null) {
+                    if (link != null || created) {
                         // update the link to the new location within solution explorer
                         existing.ItemNode.SetMetadata(
                             ProjectFileConstants.Link,

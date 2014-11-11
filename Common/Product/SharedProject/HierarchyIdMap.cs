@@ -12,7 +12,9 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Microsoft.VisualStudioTools.Project {
     sealed class HierarchyIdMap {
@@ -22,10 +24,15 @@ namespace Microsoft.VisualStudioTools.Project {
         public uint Add(HierarchyNode node) {
             UIThread.MustBeCalledFromUIThread();
 
+#if DEBUG
+            foreach (var item in _ids) {
+                Debug.Assert(node != item);
+            }
+#endif
             if (_freedIds.Count > 0) {
                 var i = _freedIds.Pop();
                 _ids[i] = node;
-                return (uint)i;
+                return (uint)i + 1;
             } else {
                 _ids.Add(node);
                 // ids are 1 based
@@ -37,17 +44,14 @@ namespace Microsoft.VisualStudioTools.Project {
             UIThread.MustBeCalledFromUIThread();
 
             int i = (int)node.ID - 1;
-            if (0 <= i && i < _ids.Count && object.ReferenceEquals(node, _ids[i])) {
-                _ids[i] = null;
-            } else {
-                for (i = 0; i < _ids.Count; ++i) {
-                    if (object.ReferenceEquals(node, _ids[i])) {
-                        _ids[i] = null;
-                        _freedIds.Push(i);
-                        break;
-                    }
-                }
+            if(i < 0 ||
+                i >= _ids.Count ||
+                !object.ReferenceEquals(node, _ids[i])) {
+                throw new InvalidOperationException("Removing node with invalid ID or map is corrupted");
             }
+
+            _ids[i] = null;
+            _freedIds.Push(i);
         }
 
         public HierarchyNode this[uint itemId] {
@@ -59,12 +63,6 @@ namespace Microsoft.VisualStudioTools.Project {
                     return _ids[i];
                 }
                 return null;
-            }
-        }
-
-        public uint Count {
-            get {
-                return (uint)_ids.Count;
             }
         }
     }
