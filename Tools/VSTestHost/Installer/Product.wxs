@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Product Id="*"
+           Name="VS Test Host Adapter"
+           Language="1033"
+           Version="1.0.0.0"
+           Manufacturer="Microsoft Corporation"
+           UpgradeCode="4ff73677-1aed-4738-8ac7-ffc843e1cbd0">
+    <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" Platform="x86" />
+
+    <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
+
+    <?ifdef VSTestHostDLLSource10 ?>
+    <Feature Id="VSTestHost_10" Title="Visual Studio 2010 Support">
+      <Condition Level="0">NOT VS10TARGET</Condition>
+      <Component Id="VSTestHost_10" Directory="GAC" Guid="{EE43BF7D-1971-4ECC-9749-F55DFDC442A3}">
+        <File Name="$(var.VSTestHostName10).dll" Source="$(var.VSTestHostDLLSource10)" KeyPath="yes" Assembly=".net" />
+      </Component>
+      <Component Id="Pkgdef_10" Directory="VS10Target" Guid="{E7460D09-AE6F-4990-9AD7-1BEE658A7A03}">
+        <File Name="$(var.VSTestHostName10).pkgdef" Source="$(var.VSTestHostPkgdefSource10)" KeyPath="yes" />
+      </Component>
+    </Feature>
+    <?endif?>
+
+    <?ifdef VSTestHostDLLSource11 ?>
+    <Feature Id="VSTestHost_11" Title="Visual Studio 2012 Support">
+      <Condition Level="0">NOT VS11TARGET</Condition>
+      <Component Id="VSTestHost_11" Directory="GAC" Guid="{30E9AAC8-47FF-4232-B8BB-37A4B31AA230}">
+        <File Name="$(var.VSTestHostName11).dll" Source="$(var.VSTestHostDLLSource11)" KeyPath="yes" Assembly=".net" />
+      </Component>
+      <Component Id="Pkgdef_11" Directory="VS11Target" Guid="{C8920EC5-07B2-4035-AF66-13675AB5C2AC}">
+        <File Name="$(var.VSTestHostName11).pkgdef" Source="$(var.VSTestHostPkgdefSource11)" KeyPath="yes" />
+      </Component>
+    </Feature>
+    <?endif?>
+
+    <?ifdef VSTestHostDLLSource12 ?>
+    <Feature Id="VSTestHost_12" Title="Visual Studio 2013 Support">
+      <Condition Level="0">NOT VS12TARGET</Condition>
+      <Component Id="VSTestHost_12" Directory="GAC" Guid="{E8FF9E25-2638-4F77-A3C6-6239F4A15947}">
+        <File Name="$(var.VSTestHostName12).dll" Source="$(var.VSTestHostDLLSource12)" KeyPath="yes" Assembly=".net" />
+      </Component>
+      <Component Id="Pkgdef_12" Directory="VS12Target" Guid="{84D74953-D79C-48B3-A11F-67A3259A1147}">
+        <File Name="$(var.VSTestHostName12).pkgdef" Source="$(var.VSTestHostPkgdefSource12)" KeyPath="yes" />
+      </Component>
+      
+      <ComponentRef Id="Host_VisualStudio_12" />
+    </Feature>
+    <?endif?>
+
+    <?ifdef VSTestHostDLLSource14 ?>
+    <Feature Id="VSTestHost_14" Title="Visual Studio 2015 Support">
+      <Condition Level="0">NOT VS14TARGET</Condition>
+      <Component Id="VSTestHost_14" Directory="GAC" Guid="{63CFA056-438D-4839-915D-3F7B4EC07C83}">
+        <File Name="$(var.VSTestHostName14).dll" Source="$(var.VSTestHostDLLSource14)" KeyPath="yes" Assembly=".net" />
+      </Component>
+      <Component Id="Pkgdef_14" Directory="VS14Target" Guid="{C3FC89B5-962D-450F-B1BD-6646DC3D1A3E}">
+        <File Name="$(var.VSTestHostName14).pkgdef" Source="$(var.VSTestHostPkgdefSource14)" KeyPath="yes" />
+      </Component>
+
+      <ComponentRef Id="Host_VisualStudio_14" />
+    </Feature>
+    <?endif?>
+
+    <InstallExecuteSequence>
+      <InstallExecute After="PublishProduct" />
+    </InstallExecuteSequence>
+
+    <!-- Execute devenv /setup -->
+    <?foreach VSSKU in VS;WD;VWD?>
+    <?foreach VSVersion in $(var.SupportedVSVersions)?>
+
+    <PropertyRef Id="$(var.VSSKU)$(var.VSVersion)INSTALLED" />
+    
+    <CustomAction Id="$(var.VSSKU)$(var.VSVersion)Setup" Property="$(var.VSSKU)$(var.VSVersion)INSTALLED" ExeCommand="/setup" Execute="deferred" Return="check" Impersonate="no" />
+    <CustomAction Id="$(var.VSSKU)$(var.VSVersion)Setup_Rollback" Property="$(var.VSSKU)$(var.VSVersion)INSTALLED" ExeCommand="/setup" Execute="rollback" Return="check" Impersonate="no" />
+
+    <InstallExecuteSequence>
+      <Custom Action="$(var.VSSKU)$(var.VSVersion)Setup_Rollback" Before="$(var.VSSKU)$(var.VSVersion)Setup">
+        $(var.VSSKU)$(var.VSVersion)INSTALLED
+      </Custom>
+      <Custom Action="$(var.VSSKU)$(var.VSVersion)Setup" Before="InstallFinalize">
+        $(var.VSSKU)$(var.VSVersion)INSTALLED
+      </Custom>
+    </InstallExecuteSequence>
+
+    <UI>
+      <ProgressText Action="$(var.VSSKU)$(var.VSVersion)Setup" Template="Running /setup for $(var.VSSKU) $(var.VSVersion).0" />
+      <ProgressText Action="$(var.VSSKU)$(var.VSVersion)Setup_Rollback" Template="Rolling back /setup for $(var.VSSKU) $(var.VSVersion).0" />
+    </UI>
+
+    <?endforeach?>
+    <?endforeach?>
+  </Product>
+
+  <Fragment>
+    <Directory Id="TARGETDIR" Name="SourceDir" />
+  </Fragment>
+
+  <Fragment>
+    <DirectoryRef Id="TARGETDIR">
+      <Directory Id="GAC" />
+    </DirectoryRef>
+  </Fragment>
+
+  <!--
+  We iterate over every combination of SKU and version to generate the
+  components, but only the ones referenced above will be included in the MSI.
+  -->
+  <?foreach VSSKU in VisualStudio;WDExpress;VWDExpress?>
+  <?foreach VSVersion in $(var.SupportedVSVersions)?>
+
+  <?ifdef Condition?>
+  <?undef Condition?>
+  <?endif?>
+  <?if "$(var.VSSKU)" = "VisualStudio"?>
+  <?define Condition=VS$(var.VSVersion)INSTALLED?>
+  <?elseif "$(var.VSSKU)" = "WDExpress"?>
+  <?define Condition=WD$(var.VSVersion)INSTALLED?>
+  <?elseif "$(var.VSSKU)" = "VWDExpress"?>
+  <?define Condition=VWD$(var.VSVersion)INSTALLED?>
+  <?else?>
+  <?define Condition=$(var.VSSKU)_$(var.VSVersion)?>
+  <?endif?>
+  
+  <?define VSHiveKey=SOFTWARE\Microsoft\$(var.VSSKU)\$(var.VSVersion).0?>
+  <?define AssemblyName=Microsoft.VisualStudioTools.VSTestHost.$(var.VSVersion).0, Version=$(var.VSVersion).0.0.0, Culture=neutral, PublicKeyToken=B03F5F7F11D50A3A?>
+
+  <!-- 
+  This component is the registration to launch unit tests
+  -->
+  <Fragment>
+    <PropertyRef Id="$(var.Condition)"/>
+
+    <Component Id="Host_$(var.VSSKU)_$(var.VSVersion)" Directory="TARGETDIR" Guid="*">
+      <Condition>$(var.Condition)</Condition>
+
+      <RegistryKey Root="HKLM" Key="$(var.VSHiveKey)">
+        <RegistryKey Key="EnterpriseTools\QualityTools\HostAdapters\VSTestHost">
+          <RegistryValue Name="Type" Value="Microsoft.VisualStudioTools.VSTestHost.TesterTestAdapter, $(var.AssemblyName)" Type="string" KeyPath="yes" />
+          <RegistryValue Name="EditorType" Value="Microsoft.VisualStudioTools.VSTestHost.TesterTestControl, $(var.AssemblyName)" Type="string" />
+          <RegistryValue Key="SupportedTestTypes" Name="{13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b}" Value="Unit Test" Type="string" />
+        </RegistryKey>
+        <RegistryKey Key="EnterpriseTools\QualityTools\TestTypes\{13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b}\SupportedHostAdapters">
+          <RegistryValue Name="VSTestHost" Value="[ProductName]" Type="string" />
+        </RegistryKey>
+      </RegistryKey>
+    </Component>
+  </Fragment>
+
+  <?undef AssemblyName?>
+  <?undef VSHiveKey?>
+  <?endforeach?>
+  <?endforeach?>
+
+
+  <!--
+  Create a search for every version combination. Only the referenced properties
+  will be included in the MSI.
+  -->
+  <?foreach VSVersion in $(var.SupportedVSVersions)?>
+  <Fragment>
+    <Property Id="VS$(var.VSVersion)TARGET" Secure="yes">
+      <RegistrySearch Id="VSInstallDir_$(var.VSVersion)" Root="HKLM" Key="Software\Microsoft\VisualStudio\$(var.VSVersion).0" Name="InstallDir" Type="directory" />
+    </Property>
+    <DirectoryRef Id="TARGETDIR">
+      <Directory Id="VS$(var.VSVersion)TARGET">
+        <Directory Id="VS$(var.VSVersion)CommonExtensions" Name="CommonExtensions">
+          <Directory Id="VS$(var.VSVersion)Microsoft" Name="Microsoft">
+            <Directory Id="VS$(var.VSVersion)Target" Name="VSTestHost" />
+          </Directory>
+        </Directory>
+      </Directory>
+    </DirectoryRef>
+  </Fragment>
+  <Fragment>
+    <Property Id="VS$(var.VSVersion)INSTALLED" Secure="yes">
+      <RegistrySearch Id="VSInstalled_$(var.VSVersion)" Root="HKLM" Key="Software\Microsoft\VisualStudio\$(var.VSVersion).0" Name="InstallDir" Type="directory">
+        <FileSearch Id="devenv_$(var.VSVersion)" Name="devenv.exe"/>
+      </RegistrySearch>
+    </Property>
+  </Fragment>
+  <Fragment>
+    <Property Id="WD$(var.VSVersion)INSTALLED" Secure="yes">
+      <RegistrySearch Id="WDInstalled_$(var.VSVersion)" Root="HKLM" Key="Software\Microsoft\WDExpress\$(var.VSVersion).0" Name="InstallDir" Type="directory">
+        <FileSearch Id="wdexpress_$(var.VSVersion)" Name="wdexpress.exe"/>
+      </RegistrySearch>
+    </Property>
+  </Fragment>
+  <Fragment>
+    <Property Id="VWD$(var.VSVersion)INSTALLED" Secure="yes">
+      <RegistrySearch Id="WDInstalled_$(var.VSVersion)" Root="HKLM" Key="Software\Microsoft\VWDExpress\$(var.VSVersion).0" Name="InstallDir" Type="directory">
+        <FileSearch Id="vwdexpress_$(var.VSVersion)" Name="wdexpress.exe"/>
+      </RegistrySearch>
+    </Property>
+  </Fragment>
+
+  <?endforeach ?>
+</Wix>

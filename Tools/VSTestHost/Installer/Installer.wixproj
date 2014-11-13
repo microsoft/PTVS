@@ -1,0 +1,86 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <ProductVersion>3.8</ProductVersion>
+    <ProjectGuid>19b3ef60-2d4b-4598-9f31-bcd75751b244</ProjectGuid>
+    <SchemaVersion>2.0</SchemaVersion>
+    <OutputName>VSTestHost</OutputName>
+    <OutputType>Package</OutputType>
+    <DefineSolutionProperties>false</DefineSolutionProperties>
+    <WixInstallPath>$(MSBuildThisFileDirectory)\..\..\Wix\3.7</WixInstallPath>
+    <WixTargetsPath>$(WixInstallPath)\Wix.targets</WixTargetsPath>
+    <VSTestHostTarget Condition="'$(VSTestHostTarget)' == ''">Build</VSTestHostTarget>
+    <VSTargetVersions Condition="'$(VSTargetVersions)' == ''">10;11;12;14</VSTargetVersions>
+    <SccProjectName>SAK</SccProjectName>
+    <SccProvider>SAK</SccProvider>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccLocalPath>SAK</SccLocalPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <OutputPath>bin\$(Configuration)\</OutputPath>
+    <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
+    <DefineConstants>Debug</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <OutputPath>bin\$(Configuration)\</OutputPath>
+    <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Product.wxs" />
+  </ItemGroup>
+  <Import Project="$(WixTargetsPath)" />
+
+  <Target Name="_GetVSTestHostItems">
+    <ItemGroup>
+      <_VSVersions Include="$(VSTargetVersions)" />
+    </ItemGroup>
+    <!-- No signed binaries provided, so rebuild VSTestHost from source. -->
+    <ItemGroup Condition="'$(VSTestHostSignedBinariesPath)' == ''">
+      <_VSTestHost Include="@(_VSVersions->'..\VSTestHost\bin\$(Configuration)_%(Identity).0\Microsoft.VisualStudioTools.VSTestHost.%(Identity).0.dll')">
+        <PkgDefFullPath>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)\..\VSTestHost\bin\$(Configuration)_%(Identity).0\Microsoft.VisualStudioTools.VSTestHost.%(Identity).0.pkgdef'))</PkgDefFullPath>
+        <Project>$(MSBuildThisFileDirectory)\..\VSTestHost\VSTestHost.csproj</Project>
+        <Properties>Platform=AnyCPU;Configuration=$(Configuration);VisualStudioVersion=%(Identity).0;DeployExtension=false</Properties>
+        <VSVersion>%(Identity)</VSVersion>
+      </_VSTestHost>
+    </ItemGroup>
+    
+    <!-- We have signed binaries, so use those instead of rebuilding. -->
+    <ItemGroup Condition="'$(VSTestHostSignedBinariesPath)' != ''">
+      <_VSTestHost Include="@(_VSVersions->'$(VSTestHostSignedBinariesPath)\Microsoft.VisualStudioTools.VSTestHost.%(Identity).0.dll')">
+        <PkgDefFullPath>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)\..\VSTestHost\bin\$(Configuration)_%(Identity).0\Microsoft.VisualStudioTools.VSTestHost.%(Identity).0.pkgdef'))</PkgDefFullPath>
+        <VSVersion>%(Identity)</VSVersion>
+      </_VSTestHost>
+    </ItemGroup>
+  </Target>
+  
+  <Target Name="BuildVSTestHost" DependsOnTargets="_GetVSTestHostItems" Condition="'$(VSTestHostSignedBinariesPath)' == ''">
+    <MSBuild Projects="@(_VSTestHost->'%(Project)')"
+             BuildInParallel="true"
+             Targets="$(VSTestHostTarget)"
+             Properties="%(Properties)"
+             StopOnFirstFailure="false"
+             ContinueOnError="true"
+             UnloadProjectsOnCompletion="true" />
+  </Target>
+  
+  <Target Name="GetVSTestHostItems" DependsOnTargets="_GetVSTestHostItems;BuildVSTestHost">
+    <ItemGroup>
+      <VSTestHost Include="@(_VSTestHost)" Condition="Exists('%(FullPath)')" />
+    </ItemGroup>
+  </Target>
+  
+  <Target Name="SetConstants" DependsOnTargets="GetVSTestHostItems" BeforeTargets="BeforeBuild">
+    <Error Text="No versions of VSTestHost are available." Condition="'@(VSTestHost)' == ''" />
+    <PropertyGroup>
+      <DefineConstants>
+        SupportedVSVersions=@(VSTestHost->'%(VSVersion)','%3b');
+        @(VSTestHost->'VSTestHostDLLSource%(VSVersion)=%(FullPath)',';');
+        @(VSTestHost->'VSTestHostPkgdefSource%(VSVersion)=%(PkgdefFullPath)',';');
+        @(VSTestHost->'VSTestHostName%(VSVersion)=Microsoft.VisualStudioTools.VSTestHost.%(VSVersion).0',';');
+        $(DefineConstants)
+      </DefineConstants>
+    </PropertyGroup>
+  </Target>
+</Project>

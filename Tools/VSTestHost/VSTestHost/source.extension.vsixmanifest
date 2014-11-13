@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
+  <Metadata>
+    <Identity Id="185d223a-f461-4197-bd14-de0236e7eeca" Version="1.0" Language="en-US" Publisher="Microsoft" />
+    <DisplayName>VSTestHost</DisplayName>
+    <Description>Allows UI testing of the Visual Studio IDE.</Description>
+  </Metadata>
+  <Installation InstalledByMsi="true" AllUsers="true">
+    <InstallationTarget Id="Microsoft.VisualStudio.Pro" Version="10.0" />
+    <InstallationTarget Version="10.0" Id="Microsoft.VisualStudio.IntegratedShell" />
+    <InstallationTarget Version="12.0" Id="Microsoft.VisualStudio.VWDExpress" />
+    <InstallationTarget Version="12.0" Id="Microsoft.VisualStudio.WDExpress" />
+  </Installation>
+  <Dependencies>
+    <Dependency Id="Microsoft.Framework.NDP" DisplayName="Microsoft .NET Framework" d:Source="Manual" Version="[4.5,)" />
+  </Dependencies>
+  <Assets>
+    <Asset Type="Microsoft.VisualStudio.VsPackage" d:Source="Project" d:ProjectName="%CurrentProject%" Path="|%CurrentProject%;PkgdefProjectOutputGroup|" />
+    <Asset Type="Microsoft.VisualStudio.Assembly" d:Source="Project" d:ProjectName="%CurrentProject%" Path="|%CurrentProject%|" AssemblyName="|%CurrentProject%;AssemblyName|" />
+  </Assets>
+</PackageManifest>
