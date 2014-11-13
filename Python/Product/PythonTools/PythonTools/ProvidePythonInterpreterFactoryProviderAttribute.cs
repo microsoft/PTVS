@@ -14,6 +14,7 @@
 
 using System;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools {
     /// <summary>
@@ -31,7 +32,8 @@ namespace Microsoft.PythonTools {
         /// <param name="id">The ID of the provider.</param>
         /// <param name="factoryProvider">
         /// A type in the assembly containing the provider. This does not need
-        /// to be the provider object itself.
+        /// to be the provider object itself. The assembly needs to be deployed
+        /// in the root of the package.
         /// </param>
         public ProvidePythonInterpreterFactoryProviderAttribute(Guid id, Type factoryProvider) {
             _id = id.ToString("B");
@@ -44,7 +46,8 @@ namespace Microsoft.PythonTools {
         /// <param name="id">The ID of the provider.</param>
         /// <param name="factoryProvider">
         /// A type in the assembly containing the provider. This does not need
-        /// to be the provider object itself.
+        /// to be the provider object itself. The assembly needs to be deployed
+        /// in the root of the package.
         /// </param>
         public ProvidePythonInterpreterFactoryProviderAttribute(string id, Type factoryProvider) {
             _id = id;
@@ -59,8 +62,8 @@ namespace Microsoft.PythonTools {
             //
             using (var engineKey = context.CreateKey(PythonCoreConstants.BaseRegistryKey + "\\InterpreterFactories")) {
                 using (var subKey = engineKey.CreateSubkey(_id)) {
-                    var codeBase = new Uri(_provider.Assembly.CodeBase).LocalPath;
-                    subKey.SetValue("CodeBase", context.EscapePath(codeBase));
+                    var filename = CommonUtils.GetFileOrDirectoryName(_provider.Assembly.CodeBase);
+                    subKey.SetValue("CodeBase", "$PackageFolder$\\" + filename);
                 }
             }
         }
