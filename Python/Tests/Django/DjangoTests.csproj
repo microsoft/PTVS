@@ -55,9 +55,6 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.TC.TestHostAdapters, Version=1.0.0.0, Culture=neutral, PublicKeyToken=aa09a9889eb008f7, processorArchitecture=MSIL">
-      <HintPath>$(BuildRoot)\Common\Tests\TCTestHostAdapters\$(VSTarget)\Microsoft.TC.TestHostAdapters.dll</HintPath>
-    </Reference>
     <Reference Include="Microsoft.VisualStudio.CoreUtility, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.OLE.Interop, Version=7.1.40304.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
@@ -76,9 +73,16 @@
     </Reference>
     <Reference Include="System.Web" />
   </ItemGroup>
+  <PropertyGroup>
+    <WebEditorHintPath>$(DevEnvDir)\CommonExtensions\Microsoft\Web\Editor\</WebEditorHintPath>
+    <WebEditorHintPath Condition="'$(VSTarget)' == '14.0'">$(DevEnvDir)\Extensions\Microsoft\Web Tools\Editors\</WebEditorHintPath>
+  </PropertyGroup>
   <ItemGroup Condition="'$(VSTarget)' != '10.0' And '$(VSTarget)' != '11.0'">
     <Reference Include="Microsoft.VisualStudio.Html.Package, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>$(DevEnvDir)\CommonExtensions\Microsoft\Web\Editor\Microsoft.VisualStudio.Html.Package.dll</HintPath>
+      <HintPath>$(WebEditorHintPath)Microsoft.VisualStudio.Html.Package.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.Web.HTML, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" Condition="'$(VSTarget)' == '14.0'">
+      <HintPath>$(DevEnvDir)Microsoft.VisualStudio.Web.Html.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

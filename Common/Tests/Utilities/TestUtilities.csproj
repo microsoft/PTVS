@@ -23,14 +23,6 @@
   <ItemGroup>
     <Reference Include="Accessibility" />
     <Reference Include="Microsoft.Build, Version=$(MicrosoftBuildAssemblyVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-    <Reference Include="Microsoft.TC.RemoteTest">
-      <HintPath>$(BuildRoot)\Common\Tests\TCTestHostAdapters\$(VSTarget)\Microsoft.TC.RemoteTest.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="Microsoft.TC.TestHostAdapters">
-      <HintPath>$(BuildRoot)\Common\Tests\TCTestHostAdapters\$(VSTarget)\Microsoft.TC.TestHostAdapters.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
     <Reference Include="Microsoft.VisualStudio.ComponentModelHost, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.CoreUtility, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Language.Intellisense, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />

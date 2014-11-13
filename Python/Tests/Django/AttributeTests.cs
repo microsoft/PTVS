@@ -13,18 +13,12 @@
  * ***************************************************************************/
 
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Text;
-using System.Threading;         // Ambiguous with EnvDTE.Thread.
 using Microsoft.PythonTools.Django;
-using Microsoft.PythonTools.Django.TemplateParsing;
-using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.VisualStudio.Text;
 using TestUtilities;
-using TestUtilities.Mocks;
 using TestUtilities.Python;
 
 namespace DjangoTests {

@@ -22,7 +22,6 @@ using System.Threading;
 using EnvDTE90;
 using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.Parsing;
-using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Win32;
 using TestUtilities;

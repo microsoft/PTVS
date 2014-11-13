@@ -918,41 +918,51 @@
     <Content Include="Snippets\1033\Python\for.snippet">
       <IncludeInVSIX>true</IncludeInVSIX>
       <SubType>Designer</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Snippets\1033\SnippetsIndex.xml">
       <IncludeInVSIX>true</IncludeInVSIX>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Snippets\1033\Test\testclass.snippet">
       <SubType>Designer</SubType>
       <IncludeInVSIX>true</IncludeInVSIX>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Snippets\1033\Python\while.snippet">
       <SubType>Designer</SubType>
       <IncludeInVSIX>true</IncludeInVSIX>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Snippets\1033\Python\def.snippet">
       <SubType>Designer</SubType>
       <IncludeInVSIX>true</IncludeInVSIX>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Snippets\1033\Python\class.snippet">
       <SubType>Designer</SubType>
       <IncludeInVSIX>true</IncludeInVSIX>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Snippets\1033\Python\if.snippet">
       <SubType>Designer</SubType>
       <IncludeInVSIX>true</IncludeInVSIX>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Snippets\1033\Python\with.snippet">
       <SubType>Designer</SubType>
       <IncludeInVSIX>true</IncludeInVSIX>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Snippets\1033\Python\try.snippet">
       <SubType>Designer</SubType>
       <IncludeInVSIX>true</IncludeInVSIX>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Snippets\1033\Python\except.snippet">
       <SubType>Designer</SubType>
       <IncludeInVSIX>true</IncludeInVSIX>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="Templates\SharedFiles\Readme\WorkerRoleConfiguration.html" />
     <SharedTemplateFile Include="Templates\SharedFiles\ConfigureCloudService.ps1">
