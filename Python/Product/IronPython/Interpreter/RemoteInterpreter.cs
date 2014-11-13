@@ -228,6 +228,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 return action();
             } catch (FileLoadException) {
             } catch (IOException) {
+            } catch (CannotUnwrapHandleException) {
             }
             return null;
         }
@@ -237,6 +238,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 return action();
             } catch (FileLoadException) {
             } catch (IOException) {
+            } catch (CannotUnwrapHandleException) {
             }
             return new ObjectIdentityHandle();
         }
@@ -246,6 +248,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 return action();
             } catch (FileLoadException) {
             } catch (IOException) {
+            } catch (CannotUnwrapHandleException) {
             }
             return string.Empty;
         }
@@ -255,6 +258,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 return action();
             } catch (FileLoadException) {
             } catch (IOException) {
+            } catch (CannotUnwrapHandleException) {
             }
             return new string[0];
         }
@@ -264,6 +268,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 return action();
             } catch (FileLoadException) {
             } catch (IOException) {
+            } catch (CannotUnwrapHandleException) {
             }
             return defaultValue;
         }
@@ -273,6 +278,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 return action();
             } catch (FileLoadException) {
             } catch (IOException) {
+            } catch (CannotUnwrapHandleException) {
             }
             return defaultValueCreator();
         }
@@ -454,17 +460,32 @@ namespace Microsoft.IronPythonTools.Interpreter {
             }
         }
 
+        [Serializable]
+        private class CannotUnwrapHandleException : Exception {
+            public CannotUnwrapHandleException() { }
+            public CannotUnwrapHandleException(string message) : base(message) { }
+            public CannotUnwrapHandleException(string message, Exception inner) : base(message, inner) { }
+            protected CannotUnwrapHandleException(
+              System.Runtime.Serialization.SerializationInfo info,
+              System.Runtime.Serialization.StreamingContext context)
+                : base(info, context) { }
+        }
+
         private object Unwrap(ObjectIdentityHandle handle) {
             if (handle.IsNull) {
-                return null;
+                throw new CannotUnwrapHandleException();
             }
 
             lock (_members) {
                 if (handle.Id > _reverseMembers.Count) {
                     Debug.Fail("Invalid object identity handle");
-                    return null;
+                    throw new CannotUnwrapHandleException();
                 }
-                return _reverseMembers[handle.Id - 1];
+                var result = _reverseMembers[handle.Id - 1];
+                if (result == null) {
+                    throw new CannotUnwrapHandleException();
+                }
+                return result;
             }
         }
 

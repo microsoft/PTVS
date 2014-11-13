@@ -652,9 +652,13 @@ namespace Microsoft.PythonTools.Debugger {
             }
 
             Debug.WriteLine("Received execution request {0}", execId);
-            var evalResult = ReadPythonObject(stream, completion.Text, null, completion.Frame);
             if (completion != null) {
+                var evalResult = ReadPythonObject(stream, completion.Text, null, completion.Frame);
                 completion.Completion(evalResult);
+            } else {
+                // Passing null for parameters other than stream is okay as long
+                // as we drop the result.
+                ReadPythonObject(stream, null, null, null);
             }
         }
 
