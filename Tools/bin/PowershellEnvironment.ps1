@@ -4,7 +4,9 @@ function Get-Batchfile ($file) {
     $cmd = "`"$file`" & set"
     cmd /c $cmd | Foreach-Object {
         $p, $v = $_.split('=')
-        Set-Item -path env:$p -value $v
+        if($p -ne '') {
+            Set-Item -path env:$p -value $v
+        }
     }
 }
 
@@ -12,17 +14,24 @@ function VsVars32()
 {
     #Scan for the most recent version of Visual Studio
     #Order:
+    #   Visual Studio 2015
+    #   Visual Studio 2013
     #   Visual Studio 2012
     #   Visual Studio 2010
     #
-    $vscomntools = (Get-ChildItem env:VS120COMNTOOLS).Value
+    $vscomntools = (Get-ChildItem env:VS140COMNTOOLS).Value
     if($vscomntools -eq '') {
-        "Visual Studio 2013 not installed, Falling back to 2012"
-        $vscomntools = (Get-ChildItem env:VS110COMNTOOLS).Value
+        "Visual Studio 2015 not installed, Falling back to 2013"
+        $vscomntools = (Get-ChildItem env:VS120COMNTOOLS).Value
         if($vscomntools -eq '')
         {
-            "Visual Studio 2012 not installed, Falling back to 2010"
-            $vscomntools = (Get-ChildItem env:VS100COMNTOOLS).Value
+            "Visual Studio 2013 not installed, Falling back to 2012"
+            $vscomntools = (Get-ChildItem env:VS110COMNTOOLS).Value
+            if($vscomntools -eq '')
+            {
+                "Visual Studio 2012 not installed, Falling back to 2010"
+                $vscomntools = (Get-ChildItem env:VS100COMNTOOLS).Value
+            }
         }
     }
 
