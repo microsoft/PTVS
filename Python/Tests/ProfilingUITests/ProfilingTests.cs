@@ -1543,7 +1543,7 @@ namespace ProfilingUITests {
         }
 
         private static string GetPerfToolsPath(bool x64) {
-            RegistryKey key = Registry.LocalMachine.OpenSubKey(@"Software\Microsoft\VisualStudio\" + VSUtility.Version);
+            RegistryKey key = Registry.LocalMachine.OpenSubKey(@"Software\Microsoft\VisualStudio\" + AssemblyVersionInfo.VSVersion);
             var shFolder = key.GetValue("ShellFolder") as string;
             if (shFolder == null) {
                 throw new InvalidOperationException("Cannot find shell folder for Visual Studio");

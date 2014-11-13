@@ -2527,7 +2527,7 @@ int main(int argc, char* argv[]) {
         }
 
         private static string GetVCInstallDir() {
-            using (var key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32).OpenSubKey("SOFTWARE\\Microsoft\\VisualStudio\\" + VSUtility.Version + "\\Setup\\VC")) {
+            using (var key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32).OpenSubKey("SOFTWARE\\Microsoft\\VisualStudio\\" + AssemblyVersionInfo.VSVersion + "\\Setup\\VC")) {
                 return key.GetValue("ProductDir").ToString();
             }
         }
@@ -2614,7 +2614,7 @@ int main(int argc, char* argv[]) {
         }
 
         private static string GetVSIDEInstallDir() {
-            using (var key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32).OpenSubKey("SOFTWARE\\Microsoft\\VisualStudio\\" + VSUtility.Version + "\\Setup\\VS")) {
+            using (var key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32).OpenSubKey("SOFTWARE\\Microsoft\\VisualStudio\\" + AssemblyVersionInfo.VSVersion + "\\Setup\\VS")) {
                 return key.GetValue("EnvironmentDirectory").ToString();
             }
         }

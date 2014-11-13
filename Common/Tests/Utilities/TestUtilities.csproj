@@ -165,10 +165,6 @@
     <Compile Include="TestData.cs" />
     <Compile Include="TestExtensions.cs" />
     <Compile Include="TestMethod.cs" />
-    <Compile Include="VsIdeHostAdapter.cs">
-      <ExcludeFromStyleCop>true</ExcludeFromStyleCop>
-    </Compile>
-    <Compile Include="VSUtility.cs" />
   </ItemGroup>
   <Target Name="BeforeCompile">
     <Exec Command="taskkill /f /im QTAgent32.exe" IgnoreExitCode="true" ContinueOnError="true" IgnoreStandardErrorWarningFormat="true" />
