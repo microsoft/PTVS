@@ -19,8 +19,6 @@ using System.Text;
 using System.Threading;
 using System.Windows;
 using System.Windows.Automation;
-using System.Windows.Threading;
-using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Language.Intellisense;
@@ -31,6 +29,7 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Tagging;
+using Microsoft.VisualStudioTools.VSTestHost;
 
 namespace TestUtilities.UI {
     public class EditorWindow : AutomationWrapper {
@@ -182,7 +181,7 @@ namespace TestUtilities.UI {
         private static void ShowSmartTagWorker(object dummy) {
             for (int i = 0; i < 40; i++) {
                 try {
-                    VsIdeTestHostContext.Dte.ExecuteCommand("View.ShowSmartTag");
+                    VSTestContext.DTE.ExecuteCommand("View.ShowSmartTag");
                     break;
                 } catch {
                     System.Threading.Thread.Sleep(250);
@@ -232,7 +231,7 @@ namespace TestUtilities.UI {
 
         public IIntellisenseSessionStack IntellisenseSessionStack {
             get {
-                var compModel = (IComponentModel)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SComponentModel));
+                var compModel = (IComponentModel)VSTestContext.ServiceProvider.GetService(typeof(SComponentModel));
                 var stackMapService = compModel.GetService<IIntellisenseSessionStackMapService>();
 
                 return stackMapService.GetStackForTextView(TextView);
@@ -247,7 +246,7 @@ namespace TestUtilities.UI {
         public IClassifier Classifier {
             get {
 
-                var compModel = (IComponentModel)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SComponentModel));
+                var compModel = (IComponentModel)VSTestContext.ServiceProvider.GetService(typeof(SComponentModel));
 
                 var provider = compModel.GetService<IClassifierAggregatorService>();
                 return provider.GetClassifier(TextView.TextBuffer);
@@ -255,7 +254,7 @@ namespace TestUtilities.UI {
         }
 
         public ITagAggregator<T> GetTaggerAggregator<T>(ITextBuffer buffer) where T : ITag {
-            var compModel = (IComponentModel)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SComponentModel));
+            var compModel = (IComponentModel)VSTestContext.ServiceProvider.GetService(typeof(SComponentModel));
 
             return compModel.GetService<Microsoft.VisualStudio.Text.Tagging.IBufferTagAggregatorFactoryService>().CreateTagAggregator<T>(buffer);
         }
@@ -265,9 +264,9 @@ namespace TestUtilities.UI {
             uint itemID;
             IVsWindowFrame windowFrame;
 
-            if (VsShellUtilities.IsDocumentOpen(VsIdeTestHostContext.ServiceProvider, filePath, Guid.Empty, out uiHierarchy, out itemID, out windowFrame)) {
+            if (VsShellUtilities.IsDocumentOpen(VSTestContext.ServiceProvider, filePath, Guid.Empty, out uiHierarchy, out itemID, out windowFrame)) {
                 var textView = VsShellUtilities.GetTextView(windowFrame);
-                IComponentModel compModel = (IComponentModel)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SComponentModel));
+                IComponentModel compModel = (IComponentModel)VSTestContext.ServiceProvider.GetService(typeof(SComponentModel));
                 var adapterFact = compModel.GetService<IVsEditorAdaptersFactoryService>();
                 return adapterFact.GetWpfTextView(textView);
             }

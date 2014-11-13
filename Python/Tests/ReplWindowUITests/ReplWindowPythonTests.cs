@@ -17,7 +17,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Windows;
-using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -35,7 +34,7 @@ namespace ReplWindowUITests {
     [TestClass, Ignore]
     public abstract class ReplWindowPythonTests : ReplWindowPythonSmokeTests {
         [TestMethod, Priority(0)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void RegressionImportSysBackspace() {
             using (var interactive = Prepare()) {
                 const string importCode = ">import sys";
@@ -56,7 +55,7 @@ namespace ReplWindowUITests {
         }
 
         [TestMethod, Priority(0)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void RegressionImportMultipleModules() {
             using (var interactive = Prepare()) {
                 interactive.AddNewLineAtEndOfFullyTypedWord = true;
@@ -77,7 +76,7 @@ namespace ReplWindowUITests {
         /// appropriate syntax color highlighting.
         /// </summary>
         [TestMethod, Priority(0)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void SyntaxHighlightingRaiseException() {
             using (var interactive = Prepare()) {
                 const string code = "raise Exception()";
@@ -111,7 +110,7 @@ namespace ReplWindowUITests {
         /// input. (regression for http://pytools.codeplex.com/workitem/92)
         /// </summary>
         [TestMethod, Priority(0)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void PrintWithParens() {
             using (var interactive = Prepare()) {
                 const string inputCode = ">print ('a',";
@@ -134,7 +133,7 @@ namespace ReplWindowUITests {
         /// (regression for http://pytools.codeplex.com/workitem/93)
         /// </summary>
         [TestMethod, Priority(0)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void UndeletableIndent() {
             using (var interactive = Prepare()) {
                 const string inputCode = ">print (('a',";
@@ -154,7 +153,7 @@ namespace ReplWindowUITests {
         }
 
         [TestMethod, Priority(0)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void InlineImage() {
             using (var interactive = Prepare()) {
                 interactive.SubmitCode(@"import sys
@@ -216,7 +215,7 @@ repl is not None");
         }
 
         [TestMethod, Priority(0)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void ImportCompletions() {
             using (var interactive = Prepare()) {
                 if (interactive.Settings.Version.IsIronPython) {
@@ -245,7 +244,7 @@ repl is not None");
         }
 
         [TestMethod, Priority(0)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void Comments() {
             using (var interactive = Prepare()) {
                 const string code = "# fob";

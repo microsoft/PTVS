@@ -20,7 +20,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Automation;
 using System.Windows.Input;
-using Microsoft.TC.TestHostAdapters;
 using Microsoft.TestSccPackage;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -51,13 +50,13 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         /// the list of events from Tools->Show Scc Track Document Events.
         /// </summary>
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         // Currently Fails: https://pytools.codeplex.com/workitem/2609
         public void MoveFolderWithItem() {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
 
                 // close any projects before switching source control...
-                VsIdeTestHostContext.Dte.Solution.Close();
+                app.Dte.Solution.Close();
 
                 app.SelectSourceControlProvider("Test Source Provider");
 
@@ -107,12 +106,12 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void AddNewItem() {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
 
                 // close any projects before switching source control...
-                VsIdeTestHostContext.Dte.Solution.Close();
+                app.Dte.Solution.Close();
 
                 app.SelectSourceControlProvider("Test Source Provider");
                 foreach (var projectType in ProjectTypes) {
@@ -142,10 +141,10 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         }
 
         public void AddExistingItem() {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
 
                 // close any projects before switching source control...
-                VsIdeTestHostContext.Dte.Solution.Close();
+                app.Dte.Solution.Close();
 
                 app.SelectSourceControlProvider("Test Source Provider");
                 foreach (var projectType in ProjectTypes) {
@@ -175,11 +174,11 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void IncludeInProject() {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 // close any projects before switching source control...
-                VsIdeTestHostContext.Dte.Solution.Close();
+                app.Dte.Solution.Close();
 
                 app.SelectSourceControlProvider("Test Source Provider");
                 foreach (var projectType in ProjectTypes) {
@@ -214,12 +213,12 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void RemoveItem() {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
 
                 // close any projects before switching source control...
-                VsIdeTestHostContext.Dte.Solution.Close();
+                app.Dte.Solution.Close();
 
                 app.SelectSourceControlProvider("Test Source Provider");
                 foreach (var projectType in ProjectTypes) {
@@ -257,12 +256,12 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         /// Verify we get called w/ a project which does have source control enabled.
         /// </summary>
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void BasicSourceControl() {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
 
                 // close any projects before switching source control...
-                VsIdeTestHostContext.Dte.Solution.Close();
+                app.Dte.Solution.Close();
 
                 app.SelectSourceControlProvider("Test Source Provider");
 
@@ -305,12 +304,12 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         /// Verify the glyph change APIs update the glyphs appropriately
         /// </summary>
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void SourceControlGlyphChanged() {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
 
                 // close any projects before switching source control...
-                VsIdeTestHostContext.Dte.Solution.Close();
+                app.Dte.Solution.Close();
 
                 app.SelectSourceControlProvider("Test Source Provider");
 
@@ -357,12 +356,12 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         /// Verify we don't get called for a project which doesn't have source control enabled.
         /// </summary>
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void SourceControlNoControl() {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
 
                 // close any projects before switching source control...
-                VsIdeTestHostContext.Dte.Solution.Close();
+                app.Dte.Solution.Close();
 
                 app.SelectSourceControlProvider("Test Source Provider");
                 DontExpectSourceControl();
@@ -393,9 +392,9 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         /// https://pytools.codeplex.com/workitem/1417
         /// </summary>
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void SourceControlExcludedFilesNotPresent() {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 foreach (var projectType in ProjectTypes) {
                     using (var solution = SourceControlProject(projectType).Generate()) {
                         // close any projects before switching source control...
@@ -422,9 +421,9 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         /// Verify we get called w/ a project which does have source control enabled.
         /// </summary>
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void SourceControlRenameFolder() {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 foreach (var projectType in ProjectTypes) {
                     // close any projects before switching source control...
                     app.Dte.Solution.Close();

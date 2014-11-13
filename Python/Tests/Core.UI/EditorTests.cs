@@ -24,7 +24,6 @@ using Microsoft.PythonTools;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Parsing;
-using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -49,9 +48,9 @@ namespace PythonToolsUITests {
         #region Test Cases
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void UnregisteredFileExtensionEditor() {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\UnregisteredFileExtension.sln");
 
                 var item = project.ProjectItems.Item("Fob.unregfileext");
@@ -70,7 +69,7 @@ namespace PythonToolsUITests {
 
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void OutliningTest() {
             OutlineTest("Program.py",
                 new ExpectedTag(8, 18, "\r\n    pass"),
@@ -84,7 +83,7 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void OutlineNestedFuncDef() {
             OutlineTest("NestedFuncDef.py",
                 new ExpectedTag(8, 36, @"
@@ -95,14 +94,14 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void OutliningBadForStatement() {
             // there should be no exceptions and no outlining when parsing a malformed for statement
             OutlineTest("BadForStatement.py");
         }
 
         private void OutlineTest(string filename, params ExpectedTag[] expected) {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 var prevOption = PythonToolsPackage.Instance.AdvancedEditorOptionsPage.EnterOutliningModeOnOpen;
                 try {
                     PythonToolsPackage.Instance.AdvancedEditorOptionsPage.EnterOutliningModeOnOpen = true;
@@ -127,7 +126,7 @@ namespace PythonToolsUITests {
 
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void ClassificationTest() {
             Classification.Verify(GetClassifications("Program.py"),
                 new Classification("comment", 0, 8, "#comment"),
@@ -156,7 +155,7 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void ClassificationMultiLineStringTest() {
             Classification.Verify(GetClassifications("MultiLineString.py"),
                 new Classification("identifier", 0, 1, "x"),
@@ -169,7 +168,7 @@ namespace PythonToolsUITests {
         /// http://pytools.codeplex.com/workitem/749
         /// </summary>
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void ClassificationMultiLineStringTest2() {
             Classification.Verify(GetClassifications("MultiLineString2.py"),
                 new Classification("string", 0, 15, "'''\r\nfob oar'''"),
@@ -179,9 +178,9 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void SignaturesTest() {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\Signatures.sln");
 
                 var item = project.ProjectItems.Item("sigs.py");
@@ -220,9 +219,9 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void MultiLineSignaturesTest() {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\Signatures.sln");
 
                 var item = project.ProjectItems.Item("multilinesigs.py");
@@ -272,10 +271,10 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void CompletionsCaseSensitive() {
             // http://pytools.codeplex.com/workitem/457
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\Completions.sln");
 
                 var item = project.ProjectItems.Item("oar.py");
@@ -295,9 +294,9 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void AutoIndent() {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 var prevSetting = PythonToolsPackage.Instance.AdvancedEditorOptionsPage.AddNewLineAtEndOfFullyTypedWord;
                 app.OnDispose(() => PythonToolsPackage.Instance.AdvancedEditorOptionsPage.AddNewLineAtEndOfFullyTypedWord = prevSetting);
                 PythonToolsPackage.Instance.AdvancedEditorOptionsPage.AddNewLineAtEndOfFullyTypedWord = true;
@@ -464,9 +463,9 @@ pass");
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void AutoIndentExisting() {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\AutoIndent.sln");
 
                 // http://pytools.codeplex.com/workitem/138
@@ -545,9 +544,9 @@ pass");
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void TypingTest() {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\EditorTests.sln");
 
                 // http://pytools.codeplex.com/workitem/139
@@ -582,9 +581,9 @@ def f(): pass
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void CompletionTests() {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\EditorTests.sln");
 
                 TypingTest(app, project, "BackslashCompletion.py", 2, 0, @"x = 42
@@ -634,9 +633,9 @@ x\
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void OpenInvalidUnicodeFile() {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\ErrorProjectUnicode.sln");
                 var item = project.ProjectItems.Item("Program.py");
                 var windowTask = Task.Run(() => item.Open());
@@ -653,9 +652,9 @@ x\
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void IndentationInconsistencyWarning() {
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new PythonVisualStudioApp()) {
                 var options = app.Options;
                 var severity = options.IndentationInconsistencySeverity;
                 options.IndentationInconsistencySeverity = Severity.Warning;
@@ -673,9 +672,9 @@ x\
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void IndentationInconsistencyError() {
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new PythonVisualStudioApp()) {
                 var options = app.Options;
                 var severity = options.IndentationInconsistencySeverity;
                 options.IndentationInconsistencySeverity = Severity.Error;
@@ -693,9 +692,9 @@ x\
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void IndentationInconsistencyIgnore() {
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new PythonVisualStudioApp()) {
                 var options = app.Options;
                 var severity = options.IndentationInconsistencySeverity;
                 options.IndentationInconsistencySeverity = Severity.Ignore;
@@ -709,7 +708,7 @@ x\
         }
 
         private static void SquiggleShowHide(string document, Action<PythonVisualStudioApp> test) {
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new PythonVisualStudioApp()) {
                 UnresolvedImportSquiggleProvider._alwaysCreateSquiggle = true;
                 app.OnDispose(() => UnresolvedImportSquiggleProvider._alwaysCreateSquiggle = false);
 
@@ -735,7 +734,7 @@ x\
         }
 
         [TestMethod, Priority(0), TestCategory("Core"), TestCategory("Squiggle")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void ImportPresent() {
             SquiggleShowHide("ImportPresent.py", app => {
                 var items = app.WaitForErrorListItems(0);
@@ -744,7 +743,7 @@ x\
         }
 
         [TestMethod, Priority(0), TestCategory("Core"), TestCategory("Squiggle")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void ImportSelf() {
             SquiggleShowHide("ImportSelf.py", app => {
                 var items = app.WaitForErrorListItems(0);
@@ -753,7 +752,7 @@ x\
         }
 
         [TestMethod, Priority(0), TestCategory("Core"), TestCategory("Squiggle")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void ImportMissingThenAddThenExcludeFile() {
             SquiggleShowHide("ImportMissing.py", app => {
                 string text;
@@ -778,7 +777,7 @@ x\
         }
 
         [TestMethod, Priority(0), TestCategory("Core"), TestCategory("Squiggle")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void ImportPresentThenAddThenRemoveReference() {
             var python = PythonPaths.Versions.LastOrDefault(p => p.Version.Is3x() && !p.Isx64);
             python.AssertInstalled();
@@ -789,7 +788,7 @@ x\
                 .Replace("$(PYTHON_LIB)", Path.Combine(python.PrefixPath, "libs"))
             );
 
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte))
+            using (var app = new PythonVisualStudioApp())
             using (app.SelectDefaultInterpreter(python)) {
                 var project = app.OpenProject(@"TestData\ProjectReference\CProjectReference.sln", projectName: "PythonApplication2", expectedProjects: 2);
 
@@ -855,7 +854,7 @@ x\
         }
 
         private static IList<ClassificationSpan> GetClassifications(string filename) {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\Classification.sln");
 
                 var item = project.ProjectItems.Item(filename);

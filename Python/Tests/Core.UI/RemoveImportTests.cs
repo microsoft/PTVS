@@ -14,7 +14,6 @@
 
 using System.Threading;
 using EnvDTE;
-using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.Python;
@@ -30,7 +29,7 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void FromImport1() {
             string expectedText = @"from sys import oar
 
@@ -41,7 +40,7 @@ oar";
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void FromImport2() {
             string expectedText = @"from sys import baz
 
@@ -51,7 +50,7 @@ baz";
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void FromImportParens1() {
             string expectedText = @"from sys import (oar)
 
@@ -61,7 +60,7 @@ oar";
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void FromImportParens2() {
             string expectedText = @"from sys import (baz)
 
@@ -71,7 +70,7 @@ baz";
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void FromImportParensTrailingComma1() {
             string expectedText = @"from sys import (baz, )
 
@@ -81,7 +80,7 @@ baz";
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void FromImportParensTrailingComma2() {
             string expectedText = @"from sys import (oar, )
 
@@ -91,7 +90,7 @@ oar";
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void Import1() {
             string expectedText = @"import oar
 
@@ -101,7 +100,7 @@ oar";
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void Import2() {
             string expectedText = @"import baz
 
@@ -111,7 +110,7 @@ baz";
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void Import3() {
             string expectedText = @"import baz
 
@@ -121,7 +120,7 @@ baz";
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void Import4() {
             string expectedText = @"import oar, quox
 
@@ -132,7 +131,7 @@ quox";
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void Import5() {
             string expectedText = @"import oar, quox
 
@@ -143,7 +142,7 @@ quox";
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void Import6() {
             string expectedText = @"import oar,          quox
 
@@ -154,7 +153,7 @@ quox";
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void ImportComment() {
             string expectedText = @"#baz
 import oar,          quox
@@ -168,7 +167,7 @@ quox";
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void FromImportComment() {
             string expectedText = @"#baz
 from xyz import oar,          quox
@@ -182,7 +181,7 @@ quox";
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void ImportDup() {
             string expectedText = @"";
 
@@ -190,7 +189,7 @@ quox";
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void FromImportDup() {
             string expectedText = @"";
 
@@ -198,7 +197,7 @@ quox";
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void Import() {
             string expectedText = @"";
 
@@ -206,7 +205,7 @@ quox";
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void FromImport() {
             string expectedText = @"";
 
@@ -214,7 +213,7 @@ quox";
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void FutureImport() {
             string expectedText = @"from __future__ import with_statement";
 
@@ -222,7 +221,7 @@ quox";
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void LocalScopeDontRemoveGlobal() {
             string expectedText = @"import dne
 
@@ -235,7 +234,7 @@ def f():
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void LocalScopeOnly() {
             string expectedText = @"import dne
 
@@ -247,7 +246,7 @@ def f():
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void ImportTrailingWhitespace() {
             string expectedText = @"fob";
 
@@ -255,7 +254,7 @@ def f():
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void ClosureReference() {
             string expectedText = @"def f():
     import something
@@ -267,7 +266,7 @@ def f():
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void NameMangledUnmangled() {
             string expectedText = @"class C:
     def f(self):
@@ -279,7 +278,7 @@ def f():
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void NameMangledMangled() {
             string expectedText = @"class C:
     def f(self):
@@ -291,7 +290,7 @@ def f():
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void EmptyFuncDef1() {
             string expectedText = @"def f():
     pass";
@@ -301,7 +300,7 @@ def f():
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void EmptyFuncDef2() {
             string expectedText = @"def f():
     pass";
@@ -311,7 +310,7 @@ def f():
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void EmptyFuncDefWhitespace() {
             string expectedText = @"def f():
     pass";
@@ -321,7 +320,7 @@ def f():
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void ImportStar() {
             string expectedText = @"from sys import *";
 
@@ -329,7 +328,7 @@ def f():
         }
 
         private static void RemoveSmartTagTest(string filename, int line, int column, bool allScopes, string expectedText) {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\RemoveImport.sln");
                 var item = project.ProjectItems.Item(filename);
                 var window = item.Open();
@@ -343,9 +342,9 @@ def f():
                 });
 
                 if (allScopes) {
-                    ThreadPool.QueueUserWorkItem(x => VsIdeTestHostContext.Dte.ExecuteCommand("EditorContextMenus.CodeWindow.RemoveImports.AllScopes"));
+                    app.ExecuteCommand("EditorContextMenus.CodeWindow.RemoveImports.AllScopes");
                 } else {
-                    ThreadPool.QueueUserWorkItem(x => VsIdeTestHostContext.Dte.ExecuteCommand("EditorContextMenus.CodeWindow.RemoveImports.CurrentScope"));
+                    app.ExecuteCommand("EditorContextMenus.CodeWindow.RemoveImports.CurrentScope");
                 }
 
                 doc.WaitForText(expectedText);

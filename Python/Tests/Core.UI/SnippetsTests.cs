@@ -18,7 +18,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using EnvDTE;
-using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.Python;
@@ -86,7 +85,7 @@ namespace PythonToolsUITests {
         };
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void TestBasicSnippetsTab() {
             using (var solution = BasicProject.Generate().ToVs()) {
                 foreach (var snippet in BasicSnippets) {
@@ -160,7 +159,7 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void TestPassSelected() {
             var snippet = new Snippet(
                 "class",
@@ -180,7 +179,7 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void TestPassSelectedIndented() {
             using (var solution = BasicProject.Generate().ToVs()) {
                 var app = solution.OpenItem("SnippetsTest", "indented.py");
@@ -199,7 +198,7 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void TestSurroundWith() {
             using (var solution = BasicProject.Generate().ToVs()) {
                 foreach (var snippet in BasicSnippets) {
@@ -211,7 +210,7 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void TestSurroundWithMultiline() {
             using (var solution = BasicProject.Generate().ToVs()) {
                 foreach (var snippet in BasicSnippets) {
@@ -228,7 +227,7 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void TestInsertSnippet() {
             using (var solution = BasicProject.Generate().ToVs()) {
                 foreach (var snippet in BasicSnippets) {
@@ -240,7 +239,7 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void TestInsertSnippetEmptySelectionNonEmptyLine() {
             using (var solution = BasicProject.Generate().ToVs()) {
                 foreach (var snippet in BasicSnippets) {
@@ -262,7 +261,7 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void TestTestClassSnippet() {
             using (var solution = BasicProject.Generate().ToVs()) {
                 var snippet = new Snippet(
@@ -279,7 +278,7 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void TestTestClassSnippetBadImport() {
             using (var solution = BasicProject.Generate().ToVs()) {
                 var snippet = new Snippet(
@@ -296,7 +295,7 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void TestTestClassSnippetImportAs() {
             using (var solution = BasicProject.Generate().ToVs()) {
                 var snippet = new Snippet(
@@ -313,7 +312,7 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void TestTestClassSnippetUnitTestImported() {
             using (var solution = BasicProject.Generate().ToVs()) {
                 var snippet = new Snippet(
@@ -333,7 +332,7 @@ namespace PythonToolsUITests {
         /// Starting a nested session should dismiss the initial session
         /// </summary>
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void TestNestedSession() {
             using (var solution = BasicProject.Generate().ToVs()) {
                 var app = solution.OpenItem("SnippetsTest", "app.py");

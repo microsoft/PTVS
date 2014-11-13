@@ -14,7 +14,6 @@
 
 using System.Threading;
 using Microsoft.PythonTools;
-using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
@@ -33,7 +32,7 @@ namespace ReplWindowUITests {
         }
 
         [TestMethod, Priority(0)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void IPythonMode() {
             using (var interactive = PrepareIPython()) {
                 interactive.SubmitCode("x = 42\n?x");
@@ -48,7 +47,7 @@ namespace ReplWindowUITests {
         }
 
         [TestMethod, Priority(0)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void IPythonCtrlBreakAborts() {
             using (var interactive = PrepareIPython()) {
                 var code = "while True: pass";
@@ -71,7 +70,7 @@ namespace ReplWindowUITests {
         }
 
         [TestMethod, Priority(0)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void IPythonSimpleCompletion() {
             using (var interactive = PrepareIPython()) {
                 interactive.AddNewLineAtEndOfFullyTypedWord = false;
@@ -100,7 +99,7 @@ namespace ReplWindowUITests {
         }
 
         [TestMethod, Priority(0)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void IPythonSimpleSignatureHelp() {
             using (var interactive = PrepareIPython()) {
                 Assert.IsNotNull(interactive);
@@ -117,7 +116,7 @@ namespace ReplWindowUITests {
         }
 
         [TestMethod, Priority(0)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void IPythonInlineGraph() {
             using (var interactive = PrepareIPython()) {
                 interactive.SubmitCode(@"from pylab import *
@@ -138,7 +137,7 @@ plot(x, x)");
         }
 
         [TestMethod, Priority(0)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void IPythonStartInInteractive() {
             using (var interactive = PrepareIPython())
             using (new DefaultInterpreterSetter(interactive.Window.TextView.GetAnalyzer().InterpreterFactory)) {
@@ -150,7 +149,7 @@ plot(x, x)");
         }
 
         [TestMethod, Priority(0)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void ExecuteInIPythonReplSysArgv() {
             using (var interactive = PrepareIPython())
             using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer().InterpreterFactory)) {
@@ -162,7 +161,7 @@ plot(x, x)");
         }
 
         [TestMethod, Priority(0)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void ExecuteInIPythonReplSysArgvScriptArgs() {
             using (var interactive = PrepareIPython())
             using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer().InterpreterFactory)) {

@@ -23,7 +23,6 @@ using System.Windows.Automation;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Profiling;
-using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools.Project;
 using Microsoft.Win32;
@@ -77,9 +76,9 @@ namespace ProfilingUITests {
         }
 
         [TestMethod, Priority(0)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void DefaultInterpreterSelected() {
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new PythonVisualStudioApp()) {
                 var service = app.InterpreterService;
                 var originalDefault = service.DefaultInterpreter;
 
@@ -98,9 +97,9 @@ namespace ProfilingUITests {
         }
 
         [TestMethod, Priority(0)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void StartupProjectSelected() {
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new PythonVisualStudioApp()) {
                 app.OpenProject(TestData.GetPath(@"TestData\MultiProjectAnalysis\MultiProjectAnalysis.sln"));
 
                 foreach (var project in app.Dte.Solution.Projects.Cast<EnvDTE.Project>()) {
@@ -192,20 +191,48 @@ namespace ProfilingUITests {
             return LaunchSession(app, () => profiling.LaunchProject(project, openReport));
         }
 
+        private PythonVisualStudioApp OpenProfileTestProject(
+            out EnvDTE.Project project,
+            out IPythonProfiling profiling,
+            string projectFile = @"TestData\ProfileTest.sln"
+        ) {
+            var app = new PythonVisualStudioApp();
+            try {
+                profiling = (IPythonProfiling)app.Dte.GetObject("PythonProfiling");
+
+                // no sessions yet
+                Assert.IsNull(profiling.GetSession(1));
+
+                if (string.IsNullOrEmpty(projectFile)) {
+                    project = null;
+                } else {
+                    project = app.OpenProject(projectFile);
+                } 
+
+                var res = app;
+                app = null;
+                return res;
+            } finally {
+                if (app != null) {
+                    app.Dispose();
+                }
+            }
+        }
+
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void NewProfilingSession() {
             PythonPaths.Python27.AssertInstalled();
 
             var testFile = TestData.GetPath(@"TestData\ProfileTest\Program.py");
             Assert.IsTrue(File.Exists(testFile), "ProfileTest\\Program.py does not exist");
 
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new PythonVisualStudioApp()) {
                 app.OpenPythonPerformance();
                 app.PythonPerformanceExplorerToolBar.NewPerfSession();
 
-                var profiling = (IPythonProfiling)VsIdeTestHostContext.Dte.GetObject("PythonProfiling");
+                var profiling = (IPythonProfiling)app.Dte.GetObject("PythonProfiling");
 
                 app.OpenPythonPerformance();
                 var perf = app.PythonPerformanceExplorerTreeView.WaitForItem("Performance *");
@@ -248,16 +275,16 @@ namespace ProfilingUITests {
         /// https://pytools.codeplex.com/workitem/1179
         /// </summary>
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void DeleteMultipleSessions() {
-            VsIdeTestHostContext.Dte.Solution.Close(false);
+            using (var app = new PythonVisualStudioApp()) {
+                app.Dte.Solution.Close(false);
 
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
                 app.OpenPythonPerformance();
                 app.PythonPerformanceExplorerToolBar.NewPerfSession();
                 app.PythonPerformanceExplorerToolBar.NewPerfSession();
 
-                var profiling = (IPythonProfiling)VsIdeTestHostContext.Dte.GetObject("PythonProfiling");
+                var profiling = (IPythonProfiling)app.Dte.GetObject("PythonProfiling");
 
                 app.OpenPythonPerformance();
                 var perf = app.PythonPerformanceExplorerTreeView.WaitForItem("Performance *");
@@ -286,15 +313,13 @@ namespace ProfilingUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void NewProfilingSessionOpenSolution() {
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenProject(@"TestData\ProfileTest.sln");
-
+            EnvDTE.Project project;
+            IPythonProfiling profiling;
+            using (var app = OpenProfileTestProject(out project, out profiling)) {
                 app.OpenPythonPerformance();
                 app.PythonPerformanceExplorerToolBar.NewPerfSession();
-
-                var profiling = (IPythonProfiling)VsIdeTestHostContext.Dte.GetObject("PythonProfiling");
 
                 var perf = app.PythonPerformanceExplorerTreeView.WaitForItem("Performance");
 
@@ -329,9 +354,9 @@ namespace ProfilingUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void LaunchPythonProfilingWizard() {
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new PythonVisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\ProfileTest.sln");
 
                 using (var perfTarget = app.LaunchPythonProfiling()) {
@@ -348,7 +373,7 @@ namespace ProfilingUITests {
                 }
                 app.WaitForDialogDismissed();
 
-                var profiling = (IPythonProfiling)VsIdeTestHostContext.Dte.GetObject("PythonProfiling");
+                var profiling = (IPythonProfiling)app.Dte.GetObject("PythonProfiling");
                 var session = profiling.GetSession(1);
 
                 Assert.IsNotNull(app.PythonPerformanceExplorerTreeView.WaitForItem("HelloWorld *"));
@@ -361,16 +386,11 @@ namespace ProfilingUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void LaunchProject() {
-            var profiling = (IPythonProfiling)VsIdeTestHostContext.Dte.GetObject("PythonProfiling");
-
-            // no sessions yet
-            Assert.IsNull(profiling.GetSession(1));
-
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenProject(@"TestData\ProfileTest.sln");
-
+            EnvDTE.Project project;
+            IPythonProfiling profiling;
+            using (var app = OpenProfileTestProject(out project, out profiling)) {
                 var session = LaunchProject(app, profiling, project, TestData.GetPath(@"TestData\ProfileTest"), false);
                 try {
                     while (profiling.IsProfiling) {
@@ -393,16 +413,11 @@ namespace ProfilingUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void LaunchProjectWithSpaceInFilename() {
-            var profiling = (IPythonProfiling)VsIdeTestHostContext.Dte.GetObject("PythonProfiling");
-
-            // no sessions yet
-            Assert.IsNull(profiling.GetSession(1));
-
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenProject(@"TestData\Profile Test.sln");
-
+            EnvDTE.Project project;
+            IPythonProfiling profiling;
+            using (var app = OpenProfileTestProject(out project, out profiling, @"TestData\Profile Test.sln")) {
                 var session = LaunchProject(app, profiling, project, TestData.GetPath(@"TestData\Profile Test"), false);
                 try {
                     while (profiling.IsProfiling) {
@@ -425,16 +440,11 @@ namespace ProfilingUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void LaunchProjectWithSearchPath() {
-            var profiling = (IPythonProfiling)VsIdeTestHostContext.Dte.GetObject("PythonProfiling");
-
-            // no sessions yet
-            Assert.IsNull(profiling.GetSession(1));
-
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenProject(@"TestData\ProfileTestSysPath.sln");
-
+            EnvDTE.Project project;
+            IPythonProfiling profiling;
+            using (var app = OpenProfileTestProject(out project, out profiling, @"TestData\ProfileTestSysPath.sln")) {
                 var session = LaunchProject(app, profiling, project, TestData.GetPath(@"TestData\ProfileTestSysPath"), false);
                 try {
                     while (profiling.IsProfiling) {
@@ -457,16 +467,11 @@ namespace ProfilingUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void LaunchProjectWithPythonPathSet() {
-            var profiling = (IPythonProfiling)VsIdeTestHostContext.Dte.GetObject("PythonProfiling");
-
-            // no sessions yet
-            Assert.IsNull(profiling.GetSession(1));
-
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenProject(@"TestData\ProfileTestSysPath.sln");
-
+            EnvDTE.Project project;
+            IPythonProfiling profiling;
+            using (var app = OpenProfileTestProject(out project, out profiling, @"TestData\ProfileTestSysPath.sln")) {
                 IPythonProfileSession session = null;
                 var oldPythonPath = Environment.GetEnvironmentVariable("PYTHONPATH");
                 var oldClearPythonPath = PythonToolsPackage.Instance.GeneralOptionsPage.ClearGlobalPythonPath;
@@ -499,16 +504,11 @@ namespace ProfilingUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void LaunchProjectWithPythonPathClear() {
-            var profiling = (IPythonProfiling)VsIdeTestHostContext.Dte.GetObject("PythonProfiling");
-
-            // no sessions yet
-            Assert.IsNull(profiling.GetSession(1));
-
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenProject(@"TestData\ProfileTestSysPath.sln");
-
+            EnvDTE.Project project;
+            IPythonProfiling profiling;
+            using (var app = OpenProfileTestProject(out project, out profiling, @"TestData\ProfileTestSysPath.sln")) {
                 IPythonProfileSession session = null;
                 var oldPythonPath = Environment.GetEnvironmentVariable("PYTHONPATH");
                 var oldClearPythonPath = PythonToolsPackage.Instance.GeneralOptionsPage.ClearGlobalPythonPath;
@@ -542,16 +542,11 @@ namespace ProfilingUITests {
 
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void TestSaveDirtySession() {
-            var profiling = (IPythonProfiling)VsIdeTestHostContext.Dte.GetObject("PythonProfiling");
-
-            // no sessions yet
-            Assert.IsNull(profiling.GetSession(1));
-
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenProject(@"TestData\ProfileTest.sln");
-
+            EnvDTE.Project project;
+            IPythonProfiling profiling;
+            using (var app = OpenProfileTestProject(out project, out profiling)) {
                 var session = LaunchProject(app, profiling, project, TestData.GetPath(@"TestData\ProfileTest"), false);
                 try {
                     while (profiling.IsProfiling) {
@@ -586,16 +581,11 @@ namespace ProfilingUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void TestDeleteReport() {
-            var profiling = (IPythonProfiling)VsIdeTestHostContext.Dte.GetObject("PythonProfiling");
-
-            // no sessions yet
-            Assert.IsNull(profiling.GetSession(1));
-
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenProject(@"TestData\ProfileTest.sln");
-
+            EnvDTE.Project project;
+            IPythonProfiling profiling;
+            using (var app = OpenProfileTestProject(out project, out profiling)) {
                 var session = LaunchProject(app, profiling, project, TestData.GetPath(@"TestData\ProfileTest"), false);
                 try {
                     string reportFilename;
@@ -613,16 +603,11 @@ namespace ProfilingUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void TestCompareReports() {
-            var profiling = (IPythonProfiling)VsIdeTestHostContext.Dte.GetObject("PythonProfiling");
-
-            // no sessions yet
-            Assert.IsNull(profiling.GetSession(1));
-
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenProject(@"TestData\ProfileTest.sln");
-
+            EnvDTE.Project project;
+            IPythonProfiling profiling;
+            using (var app = OpenProfileTestProject(out project, out profiling)) {
                 var session = LaunchProject(app, profiling, project, TestData.GetPath(@"TestData\ProfileTest"), false);
                 try {
                     for (int i = 0; i < 100 && profiling.IsProfiling; i++) {
@@ -689,16 +674,11 @@ namespace ProfilingUITests {
 
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void TestRemoveReport() {
-            var profiling = (IPythonProfiling)VsIdeTestHostContext.Dte.GetObject("PythonProfiling");
-
-            // no sessions yet
-            Assert.IsNull(profiling.GetSession(1));
-
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenProject(@"TestData\ProfileTest.sln");
-
+            EnvDTE.Project project;
+            IPythonProfiling profiling;
+            using (var app = OpenProfileTestProject(out project, out profiling)) {
                 var session = LaunchProject(app, profiling, project, TestData.GetPath(@"TestData\ProfileTest"), false);
                 string reportFilename;
                 WaitForReport(profiling, session, app, out reportFilename);
@@ -714,16 +694,11 @@ namespace ProfilingUITests {
         // P2 because the report viewer may crash VS depending on prior state.
         // We will restart VS before running this test to ensure it is clean.
         [TestMethod, Priority(2), TestCategory("Core"), TestCategory("RestartVS")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void TestOpenReport() {
-            var profiling = (IPythonProfiling)VsIdeTestHostContext.Dte.GetObject("PythonProfiling");
-
-            // no sessions yet
-            Assert.IsNull(profiling.GetSession(1));
-
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenProject(@"TestData\ProfileTest.sln");
-
+            EnvDTE.Project project;
+            IPythonProfiling profiling;
+            using (var app = OpenProfileTestProject(out project, out profiling)) {
                 var session = LaunchProject(app, profiling, project, TestData.GetPath(@"TestData\ProfileTest"), false);
                 try {
                     IPythonPerformanceReport report;
@@ -766,16 +741,11 @@ namespace ProfilingUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void TestOpenReportCtxMenu() {
-            var profiling = (IPythonProfiling)VsIdeTestHostContext.Dte.GetObject("PythonProfiling");
-
-            // no sessions yet
-            Assert.IsNull(profiling.GetSession(1));
-
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenProject(@"TestData\ProfileTest.sln");
-
+            EnvDTE.Project project;
+            IPythonProfiling profiling;
+            using (var app = OpenProfileTestProject(out project, out profiling)) {
                 var session = LaunchProject(app, profiling, project, TestData.GetPath(@"TestData\ProfileTest"), false);
                 try {
                     IPythonPerformanceReport report;
@@ -795,16 +765,11 @@ namespace ProfilingUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void TestTargetPropertiesForProject() {
-            var profiling = (IPythonProfiling)VsIdeTestHostContext.Dte.GetObject("PythonProfiling");
-
-            // no sessions yet
-            Assert.IsNull(profiling.GetSession(1));
-
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenProject(@"TestData\ProfileTest.sln");
-
+            EnvDTE.Project project;
+            IPythonProfiling profiling;
+            using (var app = OpenProfileTestProject(out project, out profiling)) {
                 var session = LaunchProject(app, profiling, project, TestData.GetPath(@"TestData\ProfileTest"), false);
                 while (profiling.IsProfiling) {
                     Thread.Sleep(100);
@@ -825,16 +790,13 @@ namespace ProfilingUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void TestTargetPropertiesForInterpreter() {
-            var profiling = (IPythonProfiling)VsIdeTestHostContext.Dte.GetObject("PythonProfiling");
-
-            // no sessions yet
-            Assert.IsNull(profiling.GetSession(1));
-
             PythonPaths.Python27.AssertInstalled();
 
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+            EnvDTE.Project project;
+            IPythonProfiling profiling;
+            using (var app = OpenProfileTestProject(out project, out profiling, null)) {
                 var session = LaunchProcess(app,
                     profiling,
                     "{2AF0F10D-7135-4994-9156-5D01C9C11B7E};2.7",
@@ -872,17 +834,14 @@ namespace ProfilingUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void TestTargetPropertiesForExecutable() {
-            var profiling = (IPythonProfiling)VsIdeTestHostContext.Dte.GetObject("PythonProfiling");
-
-            // no sessions yet
-            Assert.IsNull(profiling.GetSession(1));
-
             var interp = PythonPaths.Python27;
             interp.AssertInstalled();
 
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+            EnvDTE.Project project;
+            IPythonProfiling profiling;
+            using (var app = OpenProfileTestProject(out project, out profiling, null)) {
                 var session = LaunchProcess(app,
                     profiling,
                     interp.InterpreterPath,
@@ -914,17 +873,14 @@ namespace ProfilingUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void TestStopProfiling() {
-            var profiling = (IPythonProfiling)VsIdeTestHostContext.Dte.GetObject("PythonProfiling");
-
-            // no sessions yet
-            Assert.IsNull(profiling.GetSession(1));
-
             var interp = PythonPaths.Python27;
             interp.AssertInstalled();
 
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+            EnvDTE.Project project;
+            IPythonProfiling profiling;
+            using (var app = OpenProfileTestProject(out project, out profiling, null)) {
                 var session = LaunchProcess(app,
                     profiling,
                     interp.InterpreterPath,
@@ -978,16 +934,11 @@ namespace ProfilingUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void MultipleTargets() {
-            var profiling = (IPythonProfiling)VsIdeTestHostContext.Dte.GetObject("PythonProfiling");
-
-            // no sessions yet
-            Assert.IsNull(profiling.GetSession(1));
-
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenProject(@"TestData\ProfileTest.sln");
-
+            EnvDTE.Project project;
+            IPythonProfiling profiling;
+            using (var app = OpenProfileTestProject(out project, out profiling)) {
                 var session = LaunchProject(app, profiling, project, TestData.GetPath(@"TestData\ProfileTest"), false);
                 IPythonProfileSession session2 = null;
                 try {
@@ -1043,16 +994,11 @@ namespace ProfilingUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void MultipleTargetsWithProjectHome() {
-            var profiling = (IPythonProfiling)VsIdeTestHostContext.Dte.GetObject("PythonProfiling");
-
-            // no sessions yet
-            Assert.IsNull(profiling.GetSession(1));
-
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenProject(@"TestData\ProfileTest2.sln");
-
+            EnvDTE.Project project;
+            IPythonProfiling profiling;
+            using (var app = OpenProfileTestProject(out project, out profiling, @"TestData\ProfileTest2.sln")) {
                 var session = LaunchProject(app, profiling, project, TestData.GetPath(@"TestData\ProfileTest2"), false);
                 IPythonProfileSession session2 = null;
                 try {
@@ -1108,16 +1054,11 @@ namespace ProfilingUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void MultipleReports() {
-            var profiling = (IPythonProfiling)VsIdeTestHostContext.Dte.GetObject("PythonProfiling");
-
-            // no sessions yet
-            Assert.IsNull(profiling.GetSession(1));
-
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenProject(@"TestData\ProfileTest.sln");
-
+            EnvDTE.Project project;
+            IPythonProfiling profiling;
+            using (var app = OpenProfileTestProject(out project, out profiling)) {
                 var session = LaunchProject(app, profiling, project, TestData.GetPath(@"TestData\ProfileTest"), false);
                 try {
 
@@ -1151,17 +1092,14 @@ namespace ProfilingUITests {
 
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void LaunchExecutable() {
-            var profiling = (IPythonProfiling)VsIdeTestHostContext.Dte.GetObject("PythonProfiling");
-
-            // no sessions yet
-            Assert.IsNull(profiling.GetSession(1));
-
             var interp = PythonPaths.Python27;
             interp.AssertInstalled();
 
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+            EnvDTE.Project project;
+            IPythonProfiling profiling;
+            using (var app = OpenProfileTestProject(out project, out profiling, null)) {
                 var session = LaunchProcess(app, profiling, interp.InterpreterPath,
                     TestData.GetPath(@"TestData\ProfileTest\Program.py"),
                     TestData.GetPath(@"TestData\ProfileTest"),
@@ -1189,17 +1127,14 @@ namespace ProfilingUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void ClassProfile() {
-            var profiling = (IPythonProfiling)VsIdeTestHostContext.Dte.GetObject("PythonProfiling");
-
-            // no sessions yet
-            Assert.IsNull(profiling.GetSession(1));
-
             var interp = PythonPaths.Python27;
             interp.AssertInstalled();
 
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+            EnvDTE.Project project;
+            IPythonProfiling profiling;
+            using (var app = OpenProfileTestProject(out project, out profiling, null)) {
                 var session = LaunchProcess(app, profiling, interp.InterpreterPath,
                     TestData.GetPath(@"TestData\ProfileTest\ClassProfile.py"),
                     TestData.GetPath(@"TestData\ProfileTest"),
@@ -1228,9 +1163,8 @@ namespace ProfilingUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void OldClassProfile() {
-            var profiling = (IPythonProfiling)VsIdeTestHostContext.Dte.GetObject("PythonProfiling");
             bool anyMissing = false;
 
             foreach (var version in new[] { PythonPaths.Python25, PythonPaths.Python27, PythonPaths.Python27 }) {
@@ -1239,16 +1173,15 @@ namespace ProfilingUITests {
                     continue;
                 }
 
-                // no sessions yet
-                Assert.IsNull(profiling.GetSession(1));
-
-                using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+                EnvDTE.Project project;
+                IPythonProfiling profiling;
+                using (var app = OpenProfileTestProject(out project, out profiling, null)) {
                     var session = LaunchProcess(app, profiling, version.InterpreterPath,
-                    TestData.GetPath(@"TestData\ProfileTest\OldStyleClassProfile.py"),
-                    TestData.GetPath(@"TestData\ProfileTest"),
-                    "",
-                    false
-                );
+                        TestData.GetPath(@"TestData\ProfileTest\OldStyleClassProfile.py"),
+                        TestData.GetPath(@"TestData\ProfileTest"),
+                        "",
+                        false
+                    );
                     try {
                         while (profiling.IsProfiling) {
                             Thread.Sleep(100);
@@ -1279,17 +1212,14 @@ namespace ProfilingUITests {
 
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void DerivedProfile() {
-            var profiling = (IPythonProfiling)VsIdeTestHostContext.Dte.GetObject("PythonProfiling");
-
-            // no sessions yet
-            Assert.IsNull(profiling.GetSession(1));
-
             var interp = PythonPaths.Python27;
             interp.AssertInstalled();
 
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+            EnvDTE.Project project;
+            IPythonProfiling profiling;
+            using (var app = OpenProfileTestProject(out project, out profiling, null)) {
                 var session = LaunchProcess(app, profiling, interp.InterpreterPath,
                     TestData.GetPath(@"TestData\ProfileTest\DerivedProfile.py"),
                     TestData.GetPath(@"TestData\ProfileTest"),
@@ -1317,17 +1247,14 @@ namespace ProfilingUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void BuiltinsProfile() {
-            var profiling = (IPythonProfiling)VsIdeTestHostContext.Dte.GetObject("PythonProfiling");
-
-            // no sessions yet
-            Assert.IsNull(profiling.GetSession(1));
-
             var interp = PythonPaths.Python27;
             interp.AssertInstalled();
 
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+            EnvDTE.Project project;
+            IPythonProfiling profiling;
+            using (var app = OpenProfileTestProject(out project, out profiling, null)) {
                 var session = LaunchProcess(app, profiling, interp.InterpreterPath,
                     TestData.GetPath(@"TestData\ProfileTest\BuiltinsProfile.py"),
                     TestData.GetPath(@"TestData\ProfileTest"),
@@ -1357,17 +1284,14 @@ namespace ProfilingUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void Pystone() {
-            var profiling = (IPythonProfiling)VsIdeTestHostContext.Dte.GetObject("PythonProfiling");
-
-            // no sessions yet
-            Assert.IsNull(profiling.GetSession(1));
-
             var interp = PythonPaths.Python27;
             interp.AssertInstalled();
 
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+            EnvDTE.Project project;
+            IPythonProfiling profiling;
+            using (var app = OpenProfileTestProject(out project, out profiling, null)) {
                 var session = LaunchProcess(app, profiling, interp.InterpreterPath,
                     Path.Combine(interp.LibPath, "test\\pystone.py"),
                     Path.Combine(interp.LibPath, "test"),
@@ -1392,17 +1316,14 @@ namespace ProfilingUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void Python3k() {
-            var profiling = (IPythonProfiling)VsIdeTestHostContext.Dte.GetObject("PythonProfiling");
-
-            // no sessions yet
-            Assert.IsNull(profiling.GetSession(1));
-
             var interp = PythonPaths.Python31;
             interp.AssertInstalled();
 
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+            EnvDTE.Project project;
+            IPythonProfiling profiling;
+            using (var app = OpenProfileTestProject(out project, out profiling, null)) {
                 var session = LaunchProcess(app, profiling, interp.InterpreterPath,
                     TestData.GetPath(@"TestData\ProfileTest\BuiltinsProfile.py"),
                     TestData.GetPath(@"TestData\ProfileTest"),
@@ -1431,17 +1352,14 @@ namespace ProfilingUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void Python32() {
-            var profiling = (IPythonProfiling)VsIdeTestHostContext.Dte.GetObject("PythonProfiling");
-
-            // no sessions yet
-            Assert.IsNull(profiling.GetSession(1));
-
             var interp = PythonPaths.Python32;
             interp.AssertInstalled();
 
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+            EnvDTE.Project project;
+            IPythonProfiling profiling;
+            using (var app = OpenProfileTestProject(out project, out profiling, null)) {
                 var session = LaunchProcess(app, profiling, interp.InterpreterPath,
                     TestData.GetPath(@"TestData\ProfileTest\BuiltinsProfile.py"),
                     TestData.GetPath(@"TestData\ProfileTest"),
@@ -1471,16 +1389,13 @@ namespace ProfilingUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void Python64Bit() {
-            var profiling = (IPythonProfiling)VsIdeTestHostContext.Dte.GetObject("PythonProfiling");
-
-            // no sessions yet
-            Assert.IsNull(profiling.GetSession(1));
-
             PythonPaths.Python27_x64.AssertInstalled();
 
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+            EnvDTE.Project project;
+            IPythonProfiling profiling;
+            using (var app = OpenProfileTestProject(out project, out profiling, null)) {
                 var session = LaunchProcess(app, profiling, "{9A7A9026-48C1-4688-9D5D-E5699D47D074};2.7",
                     TestData.GetPath(@"TestData\ProfileTest\BuiltinsProfile.py"),
                     TestData.GetPath(@"TestData\ProfileTest"),
@@ -1511,16 +1426,13 @@ namespace ProfilingUITests {
 
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void LaunchExecutableUsingInterpreterGuid() {
             PythonPaths.Python27.AssertInstalled();
 
-            var profiling = (IPythonProfiling)VsIdeTestHostContext.Dte.GetObject("PythonProfiling");
-
-            // no sessions yet
-            Assert.IsNull(profiling.GetSession(1));
-
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+            EnvDTE.Project project;
+            IPythonProfiling profiling;
+            using (var app = OpenProfileTestProject(out project, out profiling, null)) {
                 var session = LaunchProcess(app, profiling,
                     string.Format("{0:B};{1}", PythonPaths.Python27.Id, PythonPaths.Python27.Version.ToVersion()),
                     TestData.GetPath(@"TestData\ProfileTest\Program.py"),

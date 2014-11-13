@@ -12,7 +12,6 @@
  *
  * ***************************************************************************/
 
-using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.Python;
@@ -28,9 +27,9 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void AddDifferentFileType() {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\HelloWorld.sln");
                 string fullPath = TestData.GetPath(@"TestData\HelloWorld.sln");
 
@@ -43,9 +42,9 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void FileNamesResolve() {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\HelloWorld.sln");
 
                 var ps = System.Management.Automation.PowerShell.Create();

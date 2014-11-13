@@ -12,10 +12,6 @@
  *
  * ***************************************************************************/
 
-using System;
-using System.Diagnostics;
-using System.Threading;         // Ambiguous with EnvDTE.Thread.
-using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.Python;
@@ -31,9 +27,9 @@ namespace DjangoUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void DebugDjangoProject() {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 DebuggerUITests.DebugProject.OpenProjectAndBreak(
                     app,
                     TestData.GetPath(@"TestData\DjangoDebugProject.sln"),

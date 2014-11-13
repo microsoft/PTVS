@@ -37,7 +37,7 @@ namespace TestUtilities.UI.Python {
         private bool _deletePerformanceSessions;
         private PythonPerfExplorer _perfTreeView;
         private PythonPerfToolBar _perfToolBar;
-        public PythonVisualStudioApp(DTE dte)
+        public PythonVisualStudioApp(DTE dte = null)
             : base(dte) {
         }
 

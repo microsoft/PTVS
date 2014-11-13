@@ -19,12 +19,12 @@ using System.Threading.Tasks;
 using System.Windows.Automation;
 using EnvDTE;
 using Microsoft.PythonTools;
-using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Document;
 using Microsoft.VisualStudio.Text.Tagging;
+using Microsoft.VisualStudioTools.VSTestHost;
 using TestUtilities;
 using TestUtilities.Python;
 using TestUtilities.UI;
@@ -40,9 +40,9 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void ToggleableOptionTest() {
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new PythonVisualStudioApp()) {
                 PythonToolsPackage.Instance.SetFormattingOption("SpaceBeforeClassDeclarationParen", true);
                 foreach (var expectedResult in new bool?[] { false, null, true }) {
                     using (var dialog = ToolsOptionsDialog.FromDte(app)) {
@@ -71,7 +71,7 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void FormatDocument() {
             // Fails due to https://pytools.codeplex.com/workitem/1952
             FormattingTest("document.py", null, @"# the quick brown fox jumped over the slow lazy dog the quick brown fox jumped
@@ -86,7 +86,7 @@ def g():
 
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void FormatSelection() {
             // Fails due to https://pytools.codeplex.com/workitem/1952
             FormattingTest("selection.py", new Span(0, 121), @"# the quick brown fox jumped over the slow lazy dog the quick brown fox jumped
@@ -100,7 +100,7 @@ def g():
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void FormatSelectionNoSelection() {
             FormattingTest("selection2.py", new Span(5, 0), @"x=1
 
@@ -110,7 +110,7 @@ z=3", new Span[0]);
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void FormatReduceLines() {
             PythonToolsPackage.Instance.SetFormattingOption("SpacesAroundBinaryOperators", true);
 
@@ -125,7 +125,7 @@ z=3", new Span[0]);
         /// <param name="expectedText">The expected source code after the formatting</param>
         /// <param name="changedSpans">The spans which should be marked as changed in the buffer after formatting</param>
         private static void FormattingTest(string filename, Span? selection, string expectedText, Span[] changedSpans) {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\FormattingTests\FormattingTests.sln");
                 var item = project.ProjectItems.Item(filename);
                 var window = item.Open();
@@ -191,7 +191,7 @@ z=3", new Span[0]);
                     for (int i = 0; i < 3; i++) {
                         try {
                             // wait for the command to become available if it's not already
-                            VsIdeTestHostContext.Dte.ExecuteCommand("Edit.FormatSelection");
+                            VSTestContext.DTE.ExecuteCommand("Edit.FormatSelection");
                             return;
                         } catch {
                             System.Threading.Thread.Sleep(1000);
@@ -210,7 +210,7 @@ z=3", new Span[0]);
                     for (int i = 0; i < 3; i++) {
                         try {
                             // wait for the command to become available if it's not already
-                            VsIdeTestHostContext.Dte.ExecuteCommand("Edit.FormatDocument");
+                            VSTestContext.DTE.ExecuteCommand("Edit.FormatDocument");
                             return;
                         } catch {
                             System.Threading.Thread.Sleep(1000);

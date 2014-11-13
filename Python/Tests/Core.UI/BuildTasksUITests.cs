@@ -22,7 +22,6 @@ using System.Windows.Automation;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Project;
-using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -69,9 +68,9 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void CustomCommandsAdded() {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 PythonProjectNode node;
                 EnvDTE.Project proj;
                 OpenProject(app, "Commands1.sln", out node, out proj);
@@ -113,9 +112,9 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void CustomCommandsWithResourceLabel() {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 PythonProjectNode node;
                 EnvDTE.Project proj;
                 OpenProject(app, "Commands2.sln", out node, out proj);
@@ -133,9 +132,9 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void CustomCommandsReplWithResourceLabel() {
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new PythonVisualStudioApp()) {
                 PythonProjectNode node;
                 EnvDTE.Project proj;
                 OpenProject(app, "Commands2.sln", out node, out proj);
@@ -154,9 +153,9 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void CustomCommandsRunInRepl() {
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new PythonVisualStudioApp()) {
                 PythonProjectNode node;
                 EnvDTE.Project proj;
                 OpenProject(app, "Commands1.sln", out node, out proj);
@@ -177,9 +176,9 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void CustomCommandsRunProcessInRepl() {
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new PythonVisualStudioApp()) {
                 PythonProjectNode node;
                 EnvDTE.Project proj;
                 OpenProject(app, "Commands3.sln", out node, out proj);
@@ -217,9 +216,9 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void CustomCommandsRunProcessInOutput() {
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new PythonVisualStudioApp()) {
                 PythonProjectNode node;
                 EnvDTE.Project proj;
                 OpenProject(app, "Commands3.sln", out node, out proj);
@@ -239,9 +238,9 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void CustomCommandsRunProcessInConsole() {
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new PythonVisualStudioApp()) {
                 PythonProjectNode node;
                 EnvDTE.Project proj;
                 OpenProject(app, "Commands3.sln", out node, out proj);
@@ -271,9 +270,9 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void CustomCommandsErrorList() {
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new PythonVisualStudioApp()) {
                 PythonProjectNode node;
                 EnvDTE.Project proj;
                 OpenProject(app, "ErrorCommand.sln", out node, out proj);
@@ -328,9 +327,9 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void CustomCommandsRequiredPackages() {
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte))
+            using (var app = new PythonVisualStudioApp())
             using (var dis = app.SelectDefaultInterpreter(PythonVersion, "virtualenv")) {
                 PythonProjectNode node;
                 EnvDTE.Project proj;
@@ -404,14 +403,14 @@ namespace PythonToolsUITests {
 
 
         [TestMethod, Priority(0)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void CustomCommandsSearchPath() {
             var expectedSearchPath = string.Format("['{0}', '{1}']",
                 TestData.GetPath(@"TestData\Targets").Replace("\\", "\\\\"),
                 TestData.GetPath(@"TestData\Targets\Package").Replace("\\", "\\\\")
             );
            
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new PythonVisualStudioApp()) {
                 PythonProjectNode node;
                 EnvDTE.Project proj;
                 OpenProject(app, "CommandSearchPath.sln", out node, out proj);

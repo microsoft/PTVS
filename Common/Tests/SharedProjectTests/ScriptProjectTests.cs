@@ -13,7 +13,6 @@
  * ***************************************************************************/
 
 using System.IO;
-using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.SharedProject;
@@ -26,7 +25,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
     [TestClass]
     public class ScriptProjectTests : SharedProjectTest {
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void RunWithoutStartupFile() {
             foreach (var projectType in ProjectTypes) {
                 var testDef = new ProjectDefinition("RunWithoutStartupFile", projectType);
@@ -50,7 +49,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         /// https://nodejstools.codeplex.com/workitem/476
         /// </summary>
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void RenameStartupFileFolder() {
             foreach (var projectType in ProjectTypes) {
                 var testDef = new ProjectDefinition(
@@ -76,7 +75,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void RenameStartupFile() {
             foreach (var projectType in ProjectTypes) {
                 var testDef = new ProjectDefinition(

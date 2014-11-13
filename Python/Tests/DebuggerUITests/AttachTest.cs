@@ -19,13 +19,10 @@ using EnvDTE80;
 using EnvDTE90;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Debugger.DebugEngine;
-using Microsoft.PythonTools.Interpreter;
-using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.Python;
 using TestUtilities.UI;
-using TestUtilities.UI.Python;
 using Path = System.IO.Path;
 using SD = System.Diagnostics;
 
@@ -43,15 +40,15 @@ namespace DebuggerUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void TestAttachBasic() {
 
             string debugSolution = TestData.GetPath(@"TestData\DebugAttach\DebugAttach.sln");
             string startFile = "Simple.py";
 
-            Debugger2 dbg2 = (Debugger2)VsIdeTestHostContext.Dte.Debugger;
 
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
+                var dbg2 = (Debugger2)app.Dte.Debugger;
                 SD.Process processToAttach = OpenSolutionAndLaunchFile(app, debugSolution, startFile, "", "");
 
                 try {
@@ -65,19 +62,18 @@ namespace DebuggerUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void TestAttachBreakImmediately() {
 
             string debugSolution = TestData.GetPath(@"TestData\DebugAttach\DebugAttach.sln");
             string startFile = "Simple.py";
             int breakLine = 22;
 
-            Debugger2 dbg2 = (Debugger2)VsIdeTestHostContext.Dte.Debugger;
-
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
+                var dbg2 = (Debugger2)app.Dte.Debugger;
                 SD.Process processToAttach = OpenSolutionAndLaunchFile(app, debugSolution, startFile, "", "");
 
-                VsIdeTestHostContext.Dte.Debugger.Breakpoints.Add(File: startFile, Line: breakLine);
+                app.Dte.Debugger.Breakpoints.Add(File: startFile, Line: breakLine);
 
                 try {
                     AttachAndWaitForMode(app, processToAttach, AD7Engine.DebugEngineName, dbgDebugMode.dbgBreakMode);
@@ -90,16 +86,15 @@ namespace DebuggerUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void TestAttachUserSetsBreakpoint() {
 
             string debugSolution = TestData.GetPath(@"TestData\DebugAttach\DebugAttach.sln");
             string startFile = "Simple.py";
             int breakLine = 22;
 
-            Debugger2 dbg2 = (Debugger2)VsIdeTestHostContext.Dte.Debugger;
-
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
+                var dbg2 = (Debugger2)app.Dte.Debugger;
                 SD.Process processToAttach = OpenSolutionAndLaunchFile(app, debugSolution, startFile, "", "");
 
                 try {
@@ -116,14 +111,13 @@ namespace DebuggerUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void TestAttachThreadsBreakAllAndSetExitFlag() {
             string debugSolution = TestData.GetPath(@"TestData\DebugAttach\DebugAttach.sln");
             string startFile = "fg.py";
 
-            Debugger2 dbg2 = (Debugger2)VsIdeTestHostContext.Dte.Debugger;
-
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
+                var dbg2 = (Debugger2)app.Dte.Debugger;
                 SD.Process processToAttach = OpenSolutionAndLaunchFile(app, debugSolution, startFile, "", "");
 
                 try {
@@ -151,15 +145,14 @@ namespace DebuggerUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void TestAttachThreadsBreakOneAndSetExitFlag() {
             string debugSolution = TestData.GetPath(@"TestData\DebugAttach\DebugAttach.sln");
             string startFile = "fg.py";
             int breakLine = 8;
 
-            Debugger2 dbg2 = (Debugger2)VsIdeTestHostContext.Dte.Debugger;
-
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
+                var dbg2 = (Debugger2)app.Dte.Debugger;
                 SD.Process processToAttach = OpenSolutionAndLaunchFile(app, debugSolution, startFile, "", "");
 
                 try {
@@ -188,14 +181,13 @@ namespace DebuggerUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void TestAttachLotsOfThreads() {
             string debugSolution = TestData.GetPath(@"TestData\DebugAttach\DebugAttach.sln");
             string startFile = "LotsOfThreads.py";
 
-            Debugger2 dbg2 = (Debugger2)VsIdeTestHostContext.Dte.Debugger;
-
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
+                var dbg2 = (Debugger2)app.Dte.Debugger;
                 SD.Process processToAttach = OpenSolutionAndLaunchFile(app, debugSolution, startFile, "", "");
                 System.Threading.Thread.Sleep(2000);
 

@@ -28,7 +28,6 @@ using Microsoft.PythonTools;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project;
 using Microsoft.PythonTools.Project.Web;
-using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -54,13 +53,13 @@ namespace PythonToolsUITests {
         public TestContext TestContext { get; set; }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void LoadWebFlavoredProject() {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\EmptyWebProject.sln");
                 Assert.AreEqual("EmptyWebProject.pyproj", Path.GetFileName(project.FileName), "Wrong project file name");
 
-                var catids = VsIdeTestHostContext.Dte.ObjectExtenders.GetContextualExtenderCATIDs();
+                var catids = app.Dte.ObjectExtenders.GetContextualExtenderCATIDs();
                 dynamic extender = project.Extender["WebApplication"];
                 Assert.IsNotNull(extender, "No WebApplication extender");
                 extender.StartWebServerOnDebug = true;
@@ -75,7 +74,7 @@ namespace PythonToolsUITests {
         }
 
         private static void CheckCommandLineArgs(string setValue, string expectedValue = null) {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\CheckCommandLineArgs.sln");
 
                 var proj = project.GetCommonProject() as IPythonProject2;
@@ -105,21 +104,21 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void WebProjectCommandLineArgs() {
             CheckCommandLineArgs(Guid.NewGuid().ToString("N"));
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void WebProjectStartupModuleArgs() {
             CheckCommandLineArgs("{StartupModule}", "CheckCommandLineArgs");
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void WebProjectStaticUri() {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 var project = app.CreateProject(
                     PythonVisualStudioApp.TemplateLanguageName,
                     PythonVisualStudioApp.EmptyWebProjectTemplate,
@@ -202,9 +201,9 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void WebProjectBuildWarnings() {
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte))
+            using (var app = new PythonVisualStudioApp())
             using (app.SelectDefaultInterpreter(PythonPaths.Python33 ?? PythonPaths.Python33_x64)) {
                 var project = app.CreateProject(
                     PythonVisualStudioApp.TemplateLanguageName,
@@ -278,9 +277,9 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void WebProjectAddSupportFiles() {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 var project = app.CreateProject(
                     PythonVisualStudioApp.TemplateLanguageName,
                     PythonVisualStudioApp.EmptyWebProjectTemplate,
@@ -305,9 +304,9 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void WorkerProjectAddSupportFiles() {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 var project = app.CreateProject(
                     PythonVisualStudioApp.TemplateLanguageName,
                     PythonVisualStudioApp.PythonApplicationTemplate,
@@ -332,9 +331,9 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void WebProjectCreateVirtualEnvOnNew() {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 var t = Task.Run(() => app.CreateProject(
                     PythonVisualStudioApp.TemplateLanguageName,
                     PythonVisualStudioApp.FlaskWebProjectTemplate,
@@ -379,9 +378,9 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void WebProjectInstallOnNew() {
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new PythonVisualStudioApp()) {
                 Pip.Uninstall(app.InterpreterService.DefaultInterpreter, "bottle", false).WaitAndUnwrapExceptions();
 
                 var t = Task.Run(() => app.CreateProject(
@@ -434,7 +433,7 @@ namespace PythonToolsUITests {
                 Assert.Inconclusive("Test requires Microsoft Azure Tools 2.4 or later");
             }
 
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte))
+            using (var app = new VisualStudioApp())
             using (FileUtils.Backup(TestData.GetPath(@"TestData\CloudProject\ServiceDefinition.csdef"))) {
                 app.OpenProject("TestData\\CloudProject.sln", expectedProjects: 3);
 
@@ -494,25 +493,25 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void UpdateWebRoleServiceDefinitionInVS() {
             CloudProjectTest("Web", false);
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void UpdateWorkerRoleServiceDefinitionInVS() {
             CloudProjectTest("Worker", false);
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void UpdateWebRoleServiceDefinitionInVSDocumentOpen() {
             CloudProjectTest("Web", true);
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void UpdateWorkerRoleServiceDefinitionInVSDocumentOpen() {
             CloudProjectTest("Worker", true);
         }
@@ -536,7 +535,7 @@ namespace PythonToolsUITests {
             string packageName = null
         ) {
             EndToEndLog("Starting {0} {1}", templateName, pythonVersion);
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 var pyProj = app.CreateProject(
                     PythonVisualStudioApp.TemplateLanguageName,
                     templateName,
@@ -742,31 +741,31 @@ namespace PythonToolsUITests {
         #endregion
 
         [TestMethod, Priority(0), TestCategory("Core"), Timeout(10 * 60 * 1000)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void FlaskEndToEndV34() {
             EndToEndTest(PythonVisualStudioApp.FlaskWebProjectTemplate, "flask", "Hello World!", "3.4");
         }
 
         [TestMethod, Priority(0), TestCategory("Core"), Timeout(10 * 60 * 1000)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void FlaskEndToEndV27() {
             EndToEndTest(PythonVisualStudioApp.FlaskWebProjectTemplate, "flask", "Hello World!", "2.7");
         }
 
         [TestMethod, Priority(0), TestCategory("Core"), Timeout(10 * 60 * 1000)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void BottleEndToEndV34() {
             EndToEndTest(PythonVisualStudioApp.BottleWebProjectTemplate, "bottle", "<b>Hello world</b>!", "3.4");
         }
 
         [TestMethod, Priority(0), TestCategory("Core"), Timeout(10 * 60 * 1000)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void BottleEndToEndV27() {
             EndToEndTest(PythonVisualStudioApp.BottleWebProjectTemplate, "bottle", "<b>Hello world</b>!", "2.7");
         }
 
         [TestMethod, Priority(0), TestCategory("Core"), Timeout(10 * 60 * 1000)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void DjangoEndToEndV27() {
             EndToEndTest(
                 PythonVisualStudioApp.DjangoWebProjectTemplate,
@@ -777,7 +776,7 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core"), Timeout(10 * 60 * 1000)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void DjangoEndToEndV34() {
             EndToEndTest(
                 PythonVisualStudioApp.DjangoWebProjectTemplate,

@@ -25,7 +25,6 @@ using analysis::Microsoft.VisualStudioTools;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project;
-using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
@@ -67,9 +66,9 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void InstallUninstallPackage() {
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte))
+            using (var app = new PythonVisualStudioApp())
             using (var dis = Init(app)) {
                 var project = CreateTemporaryProject(app);
 
@@ -106,9 +105,9 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void CreateInstallRequirementsTxt() {
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte))
+            using (var app = new PythonVisualStudioApp())
             using (var dis = Init(app)) {
                 var project = CreateTemporaryProject(app);
 
@@ -129,9 +128,9 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void InstallGenerateRequirementsTxt() {
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte))
+            using (var app = new PythonVisualStudioApp())
             using (var dis = Init(app)) {
                 var project = CreateTemporaryProject(app);
 
@@ -173,9 +172,9 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void LoadVirtualEnv() {
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte))
+            using (var app = new PythonVisualStudioApp())
             using (var dis = Init(app)) {
                 var project = CreateTemporaryProject(app);
                 var projectName = project.UniqueName;
@@ -198,9 +197,9 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void ActivateVirtualEnv() {
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte))
+            using (var app = new PythonVisualStudioApp())
             using (var dis = Init(app)) {
                 var project = CreateTemporaryProject(app);
 
@@ -239,9 +238,9 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void RemoveVirtualEnv() {
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte))
+            using (var app = new PythonVisualStudioApp())
             using (var dis = Init(app)) {
                 var project = CreateTemporaryProject(app);
 
@@ -267,9 +266,9 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void DeleteVirtualEnv() {
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte))
+            using (var app = new PythonVisualStudioApp())
             using (var dis = Init(app)) {
                 var project = CreateTemporaryProject(app);
 
@@ -314,13 +313,13 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void DefaultBaseInterpreterSelection() {
             // The project that will be loaded references these environments.
             PythonPaths.Python27.AssertInstalled();
             PythonPaths.Python33.AssertInstalled();
 
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte))
+            using (var app = new PythonVisualStudioApp())
             using (var dis = Init(app)) {
                 var project = app.OpenProject(@"TestData\Environments.sln");
 
@@ -346,9 +345,9 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void NoGlobalSitePackages() {
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte))
+            using (var app = new PythonVisualStudioApp())
             using (var dis = Init(app)) {
                 var project = CreateTemporaryProject(app);
 
@@ -374,9 +373,9 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void CreateVEnv() {
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte))
+            using (var app = new PythonVisualStudioApp())
             using (var dis = Init(app, PythonPaths.Python33 ?? PythonPaths.Python33_x64, false)) {
                 if (analysis::Microsoft.PythonTools.Interpreter.PythonInterpreterFactoryExtensions
                         .FindModules(dis.CurrentDefault, "virtualenv")
@@ -403,14 +402,14 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void AddExistingVEnv() {
             PythonPaths.Python33.AssertInstalled();
             if (!CommonUtils.IsSameDirectory("C:\\Python33", PythonPaths.Python33.PrefixPath)) {
                 Assert.Inconclusive("Python 3.3 not configured correctly");
             }
 
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new PythonVisualStudioApp()) {
                 var project = CreateTemporaryProject(app);
 
                 string envName;
@@ -480,9 +479,9 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void EnvironmentReplWorkingDirectory() {
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte))
+            using (var app = new PythonVisualStudioApp())
             using (var dis = Init(app)) {
                 var project = CreateTemporaryProject(app);
 

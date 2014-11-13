@@ -21,7 +21,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
-using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -42,7 +41,7 @@ namespace ReplWindowUITests {
 
         [TestMethod, Priority(0)]
         [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void ClearInputHelper() {
             using (var interactive = Prepare()) {
                 interactive.Type("1 + ", commitLastLine: false);
@@ -55,7 +54,7 @@ namespace ReplWindowUITests {
         }
 
         [TestMethod, Priority(0)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void ReplWindowOptions() {
             using (var interactive = Prepare()) {
                 interactive.SetOptionValue(ReplOptions.CommandPrefix, "%");
@@ -84,7 +83,7 @@ namespace ReplWindowUITests {
         }
 
         [TestMethod, Priority(0)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void Reset() {
             using (var interactive = Prepare()) {
                 // TODO (bug): Reset doesn't clean up completely. 
@@ -102,7 +101,7 @@ namespace ReplWindowUITests {
         }
 
         [TestMethod, Priority(0)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void PromptPositions() {
             using (var interactive = Prepare()) {
                 // TODO (bug): this insert a space somwhere in the socket stream
@@ -134,7 +133,7 @@ namespace ReplWindowUITests {
         /// </summary>
         [TestMethod, Priority(0)]
         [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void SimpleSignatureHelp() {
             using (var interactive = Prepare()) {
                 const string code = "def f(): pass";
@@ -159,7 +158,7 @@ namespace ReplWindowUITests {
         /// </summary>
         [TestMethod, Priority(0)]
         [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void SignatureHelpDefaultValue() {
             using (var interactive = Prepare()) {
                 const string code = "def f(a, b=1, c=\"d\"): pass";
@@ -187,7 +186,7 @@ namespace ReplWindowUITests {
         /// </summary>
         [TestMethod, Priority(0)]
         [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void SimpleCompletion() {
             using (var interactive = Prepare()) {
                 const string code = "x = 42";
@@ -221,7 +220,7 @@ namespace ReplWindowUITests {
         /// </summary>
         [TestMethod, Priority(0)]
         [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void SimpleCompletionSpaceNoCompletion() {
             using (var interactive = Prepare()) {
                 const string code = "x = 42";
@@ -242,7 +241,7 @@ namespace ReplWindowUITests {
         /// </summary>
         [TestMethod, Priority(0)]
         [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void CompletionWrongText() {
             using (var interactive = Prepare()) {
                 const string code = "x = 42";
@@ -272,7 +271,7 @@ namespace ReplWindowUITests {
         /// </summary>
         [TestMethod, Priority(0)]
         [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void CompletionFullTextWithoutNewLine() {
             using (var interactive = Prepare()) {
                 interactive.AddNewLineAtEndOfFullyTypedWord = false;
@@ -297,7 +296,7 @@ namespace ReplWindowUITests {
         /// </summary>
         [TestMethod, Priority(0)]
         [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void CompletionFullTextWithNewLine() {
             using (var interactive = Prepare()) {
                 interactive.AddNewLineAtEndOfFullyTypedWord = true;
@@ -322,7 +321,7 @@ namespace ReplWindowUITests {
         #region Input/output redirection tests
 
         [TestMethod, Priority(0)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void TestStdOutRedirected() {
             using (var interactive = Prepare()) {
                 interactive.RequirePrimaryPrompt();
@@ -348,7 +347,7 @@ namespace ReplWindowUITests {
         /// </summary>
         [TestMethod, Priority(0)]
         [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void TestRawInput() {
             using (var interactive = Prepare()) {
                 interactive.EnsureInputFunction();
@@ -367,7 +366,7 @@ namespace ReplWindowUITests {
 
         [TestMethod, Priority(0)]
         [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void OnlyTypeInRawInput() {
             using (var interactive = Prepare()) {
                 interactive.EnsureInputFunction();
@@ -389,7 +388,7 @@ namespace ReplWindowUITests {
 
         [TestMethod, Priority(0)]
         [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void DeleteCharactersInRawInput() {
             using (var interactive = Prepare()) {
                 interactive.EnsureInputFunction();
@@ -412,7 +411,7 @@ namespace ReplWindowUITests {
         /// </summary>
         [TestMethod, Priority(0)]
         [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void TestIndirectInput() {
             using (var interactive = Prepare()) {
                 interactive.SetOptionValue(ReplOptions.StandardInputPrompt, "INPUT: ");
@@ -435,7 +434,7 @@ namespace ReplWindowUITests {
 
         [TestMethod, Priority(0)]
         [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void EnterAtBeginningOfLine() {
             using (var interactive = Prepare()) {
                 // TODO (bug): complete statement detection
@@ -460,7 +459,7 @@ namespace ReplWindowUITests {
         /// </summary>
         [TestMethod, Priority(0)]
         [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void EnterInMiddleOfLine() {
             using (var interactive = Prepare()) {
                 const string code = "def f(): #fob";
@@ -482,7 +481,7 @@ namespace ReplWindowUITests {
         /// </summary>
         [TestMethod, Priority(0)]
         [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void LineBreak() {
             using (var interactive = Prepare()) {
                 const string quotes = "\"\"\"";
@@ -510,7 +509,7 @@ namespace ReplWindowUITests {
         /// </summary>
         [TestMethod, Priority(0)]
         [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void LineBreakInMiddleOfLine() {
             using (var interactive = Prepare()) {
                 Keyboard.Type("def f(): print('hello')");
@@ -532,7 +531,7 @@ namespace ReplWindowUITests {
         /// </summary>
         [TestMethod, Priority(0)]
         [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void CtrlEnterCommits() {
             using (var interactive = Prepare()) {
                 const string code = "x = 42";
@@ -550,7 +549,7 @@ namespace ReplWindowUITests {
         /// </summary>
         [TestMethod, Priority(0)]
         [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void EscapeClearsMultipleLines() {
             using (var interactive = Prepare()) {
                 const string code = "def f(): #fob";
@@ -574,7 +573,7 @@ namespace ReplWindowUITests {
         /// </summary>
         [TestMethod, Priority(0)]
         [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void CtrlEnterOnPreviousInput() {
             using (var interactive = Prepare()) {
                 const string code = "def f(): pass";
@@ -601,7 +600,7 @@ namespace ReplWindowUITests {
         /// </summary>
         [TestMethod, Priority(0)]
         [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void CtrlEnterForceCommit() {
             using (var interactive = Prepare()) {
                 const string code = "def f(): pass";
@@ -621,7 +620,7 @@ namespace ReplWindowUITests {
         /// </summary>
         [TestMethod, Priority(0)]
         [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void CtrlEnterMultiLineForceCommit() {
             using (var interactive = Prepare()) {
                 Keyboard.Type("def f():\rpass");
@@ -641,7 +640,7 @@ namespace ReplWindowUITests {
         /// Tests backspacing pass the prompt to the previous line
         /// </summary>
         [TestMethod, Priority(0)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void BackspacePrompt() {
             using (var interactive = Prepare()) {
                 interactive.Type("def f():\npass", commitLastLine: false);
@@ -662,7 +661,7 @@ namespace ReplWindowUITests {
         }
         [TestMethod, Priority(0)]
         [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void BackspaceSmartDedent() {
             using (var interactive = Prepare()) {
                 interactive.Type("   ", commitLastLine: false);
@@ -688,7 +687,7 @@ namespace ReplWindowUITests {
         /// </summary>
         [TestMethod, Priority(0)]
         [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void BackspaceSecondaryPrompt() {
             using (var interactive = Prepare()) {
                 interactive.Type("def f():\nx = 42\ny = 100", commitLastLine: false);
@@ -709,7 +708,7 @@ namespace ReplWindowUITests {
         /// </summary>
         [TestMethod, Priority(0)]
         [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void BackspaceSecondaryPromptSelected() {
             using (var interactive = Prepare()) {
                 interactive.RequireSecondaryPrompt();
@@ -732,7 +731,7 @@ namespace ReplWindowUITests {
         /// </summary>
         [TestMethod, Priority(0)]
         [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void DeleteSecondaryPromptSelected() {
             using (var interactive = Prepare()) {
                 interactive.RequireSecondaryPrompt();
@@ -755,7 +754,7 @@ namespace ReplWindowUITests {
         /// </summary>
         [TestMethod, Priority(0)]
         [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void EditTypeSecondaryPromptSelected() {
             using (var interactive = Prepare()) {
                 interactive.RequireSecondaryPrompt();
@@ -778,7 +777,7 @@ namespace ReplWindowUITests {
         /// </summary>
         [TestMethod, Priority(0)]
         [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void TestDelNoTextSelected() {
             using (var interactive = Prepare()) {
                 interactive.Type("abc", commitLastLine: false);
@@ -793,7 +792,7 @@ namespace ReplWindowUITests {
 
         [TestMethod, Priority(0)]
         [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void TestDelAtEndOfLine() {
             using (var interactive = Prepare()) {
                 interactive.Type("def f():\nprint('hello')", commitLastLine: false);
@@ -812,7 +811,7 @@ namespace ReplWindowUITests {
         }
 
         [TestMethod, Priority(0)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void TestDelAtEndOfBuffer() {
             using (var interactive = Prepare()) {
                 interactive.Type("def f():\nprint('hello')", commitLastLine: false);
@@ -825,7 +824,7 @@ namespace ReplWindowUITests {
 
         [TestMethod, Priority(0)]
         [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void TestDelInOutput() {
             using (var interactive = Prepare()) {
                 interactive.SubmitCode("print('hello')");
@@ -847,7 +846,7 @@ namespace ReplWindowUITests {
         /// while True: pass / Right Click -> Break Execution (or Ctrl-Break) should break execution
         /// </summary>
         [TestMethod, Priority(0)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void CtrlBreakInterrupts() {
             using (var interactive = Prepare()) {
                 var code = "while True: pass";
@@ -870,7 +869,7 @@ namespace ReplWindowUITests {
         /// This version runs for 1/2 second which kicks in the running UI.
         /// </summary>
         [TestMethod, Priority(1)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void CtrlBreakInterruptsLongRunning() {
             using (var interactive = Prepare()) {
                 var code = "while True: pass";
@@ -892,7 +891,7 @@ namespace ReplWindowUITests {
         /// Ctrl-Break while running should result in a new prompt
         /// </summary>
         [TestMethod, Priority(0)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void CtrlBreakNotRunning() {
             using (var interactive = Prepare()) {
                 interactive.WaitForText(">");
@@ -912,7 +911,7 @@ namespace ReplWindowUITests {
         /// </summary>
         [TestMethod, Priority(0)]
         [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void CtrlBreakInStandardInput() {
             using (var interactive = Prepare()) {
                 interactive.EnsureInputFunction();
@@ -974,7 +973,7 @@ namespace ReplWindowUITests {
         /// Enter "while True: pass", then hit up/down arrow, should move the caret in the edit buffer
         /// </summary>
         [TestMethod, Priority(0)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void CursorWhileCodeIsRunning() {
             using (var interactive = Prepare()) {
                 var code = "while True: pass";
@@ -1011,7 +1010,7 @@ namespace ReplWindowUITests {
 
         [TestMethod, Priority(0)]
         [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void HistoryUpdateDef() {
             using (var interactive = Prepare()) {
                 Keyboard.Type("def f():\rprint('hi')\r\r");
@@ -1047,7 +1046,7 @@ namespace ReplWindowUITests {
 
         [TestMethod, Priority(0)]
         [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void HistoryAppendDef() {
             using (var interactive = Prepare()) {
                 Keyboard.Type("def f():\rprint('hi')\r\r");
@@ -1077,7 +1076,7 @@ namespace ReplWindowUITests {
         }
 
         [TestMethod, Priority(0)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void HistoryBackForward() {
             using (var interactive = Prepare()) {
                 const string code1 = "x = 23";
@@ -1103,7 +1102,7 @@ namespace ReplWindowUITests {
         /// Test that maximum length of history is enforced and stores correct items.
         /// </summary>
         [TestMethod, Priority(1)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void HistoryMaximumLength() {
             using (var interactive = Prepare()) {
                 const int historyMax = 50;
@@ -1136,7 +1135,7 @@ namespace ReplWindowUITests {
         /// Test that we remember a partially typed input when we move to the history.
         /// </summary>
         [TestMethod, Priority(0)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void HistoryUncommittedInput1() {
             using (var interactive = Prepare()) {
                 const string code1 = "x = 42", code2 = "y = 100";
@@ -1164,7 +1163,7 @@ namespace ReplWindowUITests {
         /// Test that we don't restore on submit an uncomitted input saved for history.
         /// </summary>
         [TestMethod, Priority(0)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void HistoryUncommittedInput2() {
             using (var interactive = Prepare()) {
                 interactive.SubmitCode("1");
@@ -1187,7 +1186,7 @@ namespace ReplWindowUITests {
         /// both function definitions
         /// </summary>
         [TestMethod, Priority(0)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void HistorySearch() {
             using (var interactive = Prepare()) {
                 const string code1 = ">x = 42";
@@ -1227,7 +1226,7 @@ namespace ReplWindowUITests {
         #region Clipboard tests
 
         [TestMethod, Priority(1)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void CommentPaste() {
             using (var interactive = Prepare()) {
                 const string comment = "# fob oar baz";
@@ -1262,7 +1261,7 @@ namespace ReplWindowUITests {
         /// 
         /// </summary>
         [TestMethod, Priority(1)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void PasteWithError() {
             using (var interactive = Prepare()) {
                 interactive.RequirePrimaryPrompt();
@@ -1289,7 +1288,7 @@ def g(): pass
         }
 
         [TestMethod, Priority(1)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void CsvPaste() {
             using (var interactive = Prepare()) {
                 interactive.Invoke(() => {
@@ -1316,7 +1315,7 @@ def g(): pass
 
         [TestMethod, Priority(0)]
         [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void SelectAll() {
             using (var interactive = Prepare()) {
                 // Python interactive window.  Type $help for a list of commands.
@@ -1394,7 +1393,7 @@ input()");
         /// selection
         /// </summary>
         [TestMethod, Priority(0)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void EditCutIncludingPrompt() {
             using (var interactive = Prepare()) {
                 interactive.RequireSecondaryPrompt();
@@ -1420,7 +1419,7 @@ input()");
         /// Tests pasting when the secondary prompt is highlighted as part of the selection
         /// </summary>
         [TestMethod, Priority(0)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void EditPasteSecondaryPromptSelected() {
             using (var interactive = Prepare()) {
                 interactive.RequireSecondaryPrompt();
@@ -1456,7 +1455,7 @@ input()");
         /// caret is in the prompt.
         /// </summary>
         [TestMethod, Priority(0)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void EditPasteSecondaryPromptSelectedInPromptMargin() {
             using (var interactive = Prepare()) {
                 interactive.RequireSecondaryPrompt();
@@ -1487,7 +1486,7 @@ input()");
         /// Tests entering an unknown repl commmand
         /// </summary>
         [TestMethod, Priority(0)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void ReplCommandUnknown() {
             using (var interactive = Prepare()) {
                 const string code = "$unknown";
@@ -1500,7 +1499,7 @@ input()");
         /// Tests entering an unknown repl commmand
         /// </summary>
         [TestMethod, Priority(0)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void ReplCommandComment() {
             using (var interactive = Prepare()) {
                 const string code = "$$ quox oar baz";
@@ -1513,7 +1512,7 @@ input()");
         /// Tests using the $cls clear screen command
         /// </summary>
         [TestMethod, Priority(0)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void ClearScreenCommand() {
             using (var interactive = Prepare()) {
                 interactive.Type("$cls", commitLastLine: false);
@@ -1528,7 +1527,7 @@ input()");
         /// Tests REPL command help
         /// </summary>
         [TestMethod, Priority(0)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void ReplCommandHelp() {
             using (var interactive = Prepare()) {
                 interactive.SubmitCode("$help");
@@ -1544,7 +1543,7 @@ input()");
         /// Tests REPL command $load, with a simple script.
         /// </summary>
         [TestMethod, Priority(0)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void CommandsLoadScript() {
             using (var interactive = Prepare()) {
                 const string content = "print('hello world')";
@@ -1567,7 +1566,7 @@ input()");
         /// Tests REPL command $load, with a simple script.
         /// </summary>
         [TestMethod, Priority(0)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void CommandsLoadScriptWithQuotes() {
             using (var interactive = Prepare()) {
                 const string content = "print('hello world')";
@@ -1590,7 +1589,7 @@ input()");
         /// Tests REPL command $load, with multiple statements including a class definition.
         /// </summary>
         [TestMethod, Priority(0)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void CommandsLoadScriptWithClass() {
             using (var interactive = Prepare()) {
                 // http://pytools.codeplex.com/workitem/632
@@ -1621,7 +1620,7 @@ c = C()
         /// Tests $load command with file that includes multiple submissions.
         /// </summary>
         [TestMethod, Priority(0)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void CommandsLoadScriptMultipleSubmissions() {
             using (var interactive = Prepare()) {
                 const string content = @"def fob():
@@ -1655,7 +1654,7 @@ fob()
         /// Tests that ClearScreen doesn't cancel pending submissions queue.
         /// </summary>
         [TestMethod, Priority(0)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void CommandsLoadScriptMultipleSubmissionsWithClearScreen() {
             using (var interactive = Prepare()) {
                 const string content = @"def fob():
@@ -1684,7 +1683,7 @@ $cls
         /// Inserts code to REPL while input is accepted. 
         /// </summary>
         [TestMethod, Priority(0)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void InsertCode() {
             using (var interactive = Prepare()) {
                 interactive.Window.InsertCode("1");
@@ -1709,7 +1708,7 @@ $cls
         /// The inserted input should be appended to uncommitted input and show up when the execution is finished/aborted.
         /// </summary>
         [TestMethod, Priority(0)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void InsertCodeWhileRunning() {
             using (var interactive = Prepare()) {
                 var code = "while True: pass";
@@ -1748,7 +1747,7 @@ $cls
         /// snippet that also includes a single line break (line delta is zero).
         /// </summary>
         [TestMethod, Priority(0)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void TestProjectionBuffers_ZeroLineDeltaChange() {
             using (var interactive = Prepare()) {
                 interactive.Invoke(() => {

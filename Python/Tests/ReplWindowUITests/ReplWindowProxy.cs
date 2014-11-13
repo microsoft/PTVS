@@ -26,7 +26,6 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Repl;
-using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Repl;
@@ -188,7 +187,7 @@ Base 0 means to interpret the base from the string as an integer literal.
         ) {
             settings.Version.AssertInstalled();
 
-            var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte);
+            var app = new PythonVisualStudioApp();
             ReplWindowProxy result = null;
             try {
                 var wnd = OpenInteractive(app, settings, useIPython ? "IPython" : "Standard");

@@ -15,7 +15,6 @@
 using System.Collections.ObjectModel;
 using System.Windows.Automation;
 using EnvDTE;
-using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.Python;
@@ -23,7 +22,7 @@ using TestUtilities.UI;
 
 namespace PythonToolsUITests {
     [TestClass]
-    public class ObjectBrowerTest {
+    public class ObjectBrowserTest {
 
         private class NodeInfo {
             public NodeInfo(string name, string description, string[] members = null) {
@@ -77,9 +76,9 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void ObjectBrowserBasicTest() {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\Outlining.sln");
                 System.Threading.Thread.Sleep(1000);
 
@@ -102,7 +101,7 @@ namespace PythonToolsUITests {
                     new NodeInfo("NestedFuncDef.py", "NestedFuncDef.py", new[] { "f()" }),
                     new NodeInfo("Program.py", "Program.py", new[] { "f()" }));
 
-                VsIdeTestHostContext.Dte.Solution.Close(false);
+                app.Dte.Solution.Close(false);
 
                 System.Threading.Thread.Sleep(1000);
                 nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
@@ -111,9 +110,9 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void ObjectBrowserSearchTextTest() {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\ObjectBrowser.sln");
                 System.Threading.Thread.Sleep(1000);
 
@@ -173,9 +172,9 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void ObjectBrowserExpandTypeBrowserTest() {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\Inheritance.sln");
                 System.Threading.Thread.Sleep(1000);
 
@@ -211,9 +210,9 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void ObjectBrowserCommentsTest() {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\Inheritance.sln");
                 System.Threading.Thread.Sleep(1000);
 
@@ -272,9 +271,9 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void ObjectBrowserInheritanceRelationshipTest() {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\Inheritance.sln");
                 System.Threading.Thread.Sleep(1000);
 
@@ -325,9 +324,9 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void ObjectBrowserNavigationTest() {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\MultiModule.sln");
                 System.Threading.Thread.Sleep(1000);
 
@@ -388,9 +387,9 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void ObjectBrowserContextMenuBasicTest() {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\MultiModule.sln");
                 System.Threading.Thread.Sleep(1000);
 
@@ -465,9 +464,9 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void ObjectBrowserTypeBrowserViewTest() {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\MultiModule.sln");
                 System.Threading.Thread.Sleep(1000);
 
@@ -523,9 +522,9 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void ObjectBrowserTypeBrowserSortTest() {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\MultiModule.sln");
                 System.Threading.Thread.Sleep(1000);
 
@@ -613,9 +612,9 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void ObjectBrowserNavigateVarContextMenuTest() {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\MultiModule.sln");
                 System.Threading.Thread.Sleep(1000);
 
@@ -680,9 +679,9 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void ObjectBrowserFindAllReferencesTest() {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\MultiModule.sln");
                 System.Threading.Thread.Sleep(1000);
 
@@ -744,9 +743,9 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void NavigateTo() {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 app.OpenProject(@"TestData\Navigation.sln");
                 
                 using (var dialog = app.OpenNavigateTo()) {
@@ -772,9 +771,9 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void ResourceViewIsDisabledTest() {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\Outlining.sln");
                 System.Threading.Thread.Sleep(1000);
 

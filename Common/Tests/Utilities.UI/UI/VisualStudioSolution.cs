@@ -17,9 +17,9 @@ using System.IO;
 using System.Linq;
 using System.Windows.Automation;
 using System.Windows.Input;
-using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudioTools.VSTestHost;
 using TestUtilities.SharedProject;
 
 namespace TestUtilities.UI {
@@ -36,7 +36,7 @@ namespace TestUtilities.UI {
 
         public VisualStudioSolution(SolutionFile solution) {
             _solution = solution;
-            _app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            _app = new VisualStudioApp();
             Project = _app.OpenProject(solution.Filename);
 
             ThreadHelper.Generic.Invoke(Keyboard.Reset);
@@ -54,7 +54,7 @@ namespace TestUtilities.UI {
         /// Opens the specified filename from the specified project name.
         /// </summary>
         public EditorWindow OpenItem(string project, params string[] path) {
-            foreach (EnvDTE.Project proj in VsIdeTestHostContext.Dte.Solution.Projects) {
+            foreach (EnvDTE.Project proj in VSTestContext.DTE.Solution.Projects) {
                 if (proj.Name == project) {
                     var items = proj.ProjectItems;
                     EnvDTE.ProjectItem item = null;

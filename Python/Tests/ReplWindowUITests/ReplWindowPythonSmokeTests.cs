@@ -15,7 +15,6 @@
 using System.Runtime.InteropServices;
 using System.Threading;
 using Microsoft.PythonTools;
-using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -56,7 +55,7 @@ namespace ReplWindowUITests {
         }
 
         [TestMethod, Priority(0)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void ExecuteInReplSysArgv() {
             using (var interactive = Prepare())
             using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer().InterpreterFactory)) {
@@ -68,7 +67,7 @@ namespace ReplWindowUITests {
         }
 
         [TestMethod, Priority(0)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void ExecuteInReplSysArgvScriptArgs() {
             using (var interactive = Prepare())
             using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer().InterpreterFactory)) {
@@ -80,7 +79,7 @@ namespace ReplWindowUITests {
         }
 
         [TestMethod, Priority(0)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void ExecuteInReplUnicodeFilename() {
             using (var interactive = Prepare())
             using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer().InterpreterFactory)) {
@@ -92,7 +91,7 @@ namespace ReplWindowUITests {
         }
 
         [TestMethod, Priority(0)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void CwdImport() {
             using (var interactive = Prepare()) {
                 interactive.SubmitCode("import sys\nsys.path");
@@ -122,7 +121,7 @@ namespace ReplWindowUITests {
         }
 
         [TestMethod, Priority(0)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void QuitAndReset() {
             using (var interactive = Prepare()) {
                 interactive.SubmitCode("quit()");
@@ -137,7 +136,7 @@ namespace ReplWindowUITests {
         }
 
         [TestMethod, Priority(0)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public virtual void AttachReplTest() {
             using (var interactive = Prepare(enableAttach: true)) {
                 var app = interactive.App;

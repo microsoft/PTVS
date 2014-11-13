@@ -18,7 +18,6 @@ using System.IO;
 using System.Reflection;
 using System.Threading;
 using EnvDTE;
-using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.SharedProject;
@@ -105,7 +104,7 @@ namespace VisualStudioToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void RenameLinkedNode() {
             foreach (var projectType in ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
@@ -152,7 +151,7 @@ namespace VisualStudioToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void MoveLinkedNode() {
             foreach (var projectType in ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
@@ -203,7 +202,7 @@ namespace VisualStudioToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void MultiProjectMove() {
             foreach (var projectType in ProjectTypes) {
                 using (var solution = MultiProjectLinkedFiles(projectType).ToVs()) {
@@ -232,7 +231,7 @@ namespace VisualStudioToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void MultiProjectMoveExists2() {
             foreach (var projectType in ProjectTypes) {
                 using (var solution = MultiProjectLinkedFiles(projectType).ToVs()) {
@@ -257,7 +256,7 @@ namespace VisualStudioToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void MoveLinkedNodeOpen() {
             foreach (var projectType in ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
@@ -290,7 +289,7 @@ namespace VisualStudioToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void MoveLinkedNodeOpenEdited() {
             foreach (var projectType in ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
@@ -332,7 +331,7 @@ namespace VisualStudioToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void MoveLinkedNodeFileExistsButNotInProject() {
             foreach (var projectType in ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
@@ -360,7 +359,7 @@ namespace VisualStudioToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void DeleteLinkedNode() {
             foreach (var projectType in ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
@@ -378,7 +377,7 @@ namespace VisualStudioToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void LinkedFileInProjectIgnored() {
             foreach (var projectType in ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
@@ -390,7 +389,7 @@ namespace VisualStudioToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void SaveAsCreateLink() {
             foreach (var projectType in ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
@@ -412,7 +411,7 @@ namespace VisualStudioToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void SaveAsCreateFile() {
             foreach (var projectType in ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
@@ -433,7 +432,7 @@ namespace VisualStudioToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void SaveAsCreateFileNewDirectory() {
             foreach (var projectType in ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
@@ -459,7 +458,7 @@ namespace VisualStudioToolsUITests {
         /// Adding a duplicate link to the same item
         /// </summary>
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void AddExistingItem() {
             foreach (var projectType in ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
@@ -482,7 +481,7 @@ namespace VisualStudioToolsUITests {
         /// Adding a link to a folder which is already linked in somewhere else.
         /// </summary>
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void AddExistingItemAndItemIsAlreadyLinked() {
             foreach (var projectType in ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
@@ -509,7 +508,7 @@ namespace VisualStudioToolsUITests {
         /// path).
         /// </summary>
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void AddExistingItemAndLinkAlreadyExists() {
             foreach (var projectType in ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
@@ -532,7 +531,7 @@ namespace VisualStudioToolsUITests {
         /// Adding new linked item when file of same name exists (when the file only exists on disk)
         /// </summary>
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void AddExistingItemAndFileByNameExistsOnDiskButNotInProject() {
             foreach (var projectType in ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
@@ -556,7 +555,7 @@ namespace VisualStudioToolsUITests {
         /// Adding new linked item when file of same name exists (both in the project and on disk)
         /// </summary>
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void AddExistingItemAndFileByNameExistsOnDiskAndInProject() {
             foreach (var projectType in ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
@@ -580,7 +579,7 @@ namespace VisualStudioToolsUITests {
         /// Adding new linked item when file of same name exists (in the project, but not on disk)
         /// </summary>
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void AddExistingItemAndFileByNameExistsInProjectButNotOnDisk() {
             foreach (var projectType in ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
@@ -604,7 +603,7 @@ namespace VisualStudioToolsUITests {
         /// Add Existing Item from.  We should add the file to the directory where it lives.
         /// </summary>
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void AddExistingItemAsLinkButFileExistsInProjectDirectory() {
             foreach (var projectType in ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
@@ -627,7 +626,7 @@ namespace VisualStudioToolsUITests {
         /// Reaming the file name in the Link attribute is ignored.
         /// </summary>
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void RenamedLinkedFile() {
             foreach (var projectType in ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
@@ -644,7 +643,7 @@ namespace VisualStudioToolsUITests {
         /// A link path outside of our project dir will result in the link being ignored.
         /// </summary>
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void BadLinkPath() {
             foreach (var projectType in ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
@@ -661,7 +660,7 @@ namespace VisualStudioToolsUITests {
         /// A rooted link path is ignored.
         /// </summary>
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void RootedLinkIgnored() {
             foreach (var projectType in ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
@@ -675,7 +674,7 @@ namespace VisualStudioToolsUITests {
         /// A rooted link path is ignored.
         /// </summary>
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void RootedIncludeIgnored() {
             foreach (var projectType in ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs()) {

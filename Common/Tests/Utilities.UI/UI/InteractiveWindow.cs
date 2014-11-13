@@ -21,7 +21,6 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Threading;
-using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.ComponentModelHost;
 #if NTVS_FEATURE_INTERACTIVEWINDOW
 using Microsoft.NodejsTools.Repl;
@@ -31,6 +30,7 @@ using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text.Editor;
+using Microsoft.VisualStudioTools.VSTestHost;
 
 namespace TestUtilities.UI {
 #if INTERACTIVE_WINDOW
@@ -93,7 +93,7 @@ namespace TestUtilities.UI {
             if (app != null) {
                 compModel = app.GetService<IComponentModel>(typeof(SComponentModel));
             } else {
-                compModel = (IComponentModel)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SComponentModel));
+                compModel = (IComponentModel)VSTestContext.ServiceProvider.GetService(typeof(SComponentModel));
             }
             var replWindowProvider = compModel.GetService<IReplWindowProvider>();
             foreach (var frame in replWindowProvider.GetReplWindows()

@@ -21,13 +21,12 @@ using System.Text;
 using System.Windows.Automation;
 using EnvDTE;
 using EnvDTE80;
-using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.VisualStudioTools;
+using Microsoft.VisualStudioTools.VSTestHost;
 using IOleServiceProvider = Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
 using Task = System.Threading.Tasks.Task;
 
@@ -45,9 +44,9 @@ namespace TestUtilities.UI {
         private List<Action> _onDispose;
         private bool _isDisposed, _skipCloseAll;
 
-        public VisualStudioApp(DTE dte)
-            : this(new IntPtr(dte.MainWindow.HWnd)) {
-            _dte = dte;
+        public VisualStudioApp(DTE dte = null)
+            : this(new IntPtr((dte ?? VSTestContext.DTE).MainWindow.HWnd)) {
+            _dte = dte ?? VSTestContext.DTE;
         }
 
         private VisualStudioApp(IntPtr windowHandle)
@@ -116,7 +115,7 @@ namespace TestUtilities.UI {
             get {
                 if (_provider == null) {
                     if (_dte == null) {
-                        _provider = VsIdeTestHostContext.ServiceProvider;
+                        _provider = VSTestContext.ServiceProvider;
                     } else {
                         _provider = new ServiceProvider((IOleServiceProvider)_dte);
                         OnDispose(() => ((ServiceProvider)_provider).Dispose());
@@ -173,10 +172,10 @@ namespace TestUtilities.UI {
             } finally {
                 if (dialog == IntPtr.Zero) {
                     if (task.IsFaulted && task.Exception != null) {
-                        Assert.Fail("Unexpected Exception - VsIdeTestHostContext.Dte.ExecuteCommand({0},{1}){2}{3}",
+                        Assert.Fail("Unexpected Exception - VSTestContext.DTE.ExecuteCommand({0},{1}){2}{3}",
                                 commandName, commandArgs, Environment.NewLine, task.Exception.ToString());
                     }
-                    Assert.Fail("Task failed - VsIdeTestHostContext.Dte.ExecuteCommand({0},{1})",
+                    Assert.Fail("Task failed - VSTestContext.DTE.ExecuteCommand({0},{1})",
                             commandName, commandArgs);
                 }
             }
@@ -331,8 +330,15 @@ namespace TestUtilities.UI {
         }
 
         public OutputWindowPane GetOutputWindow(string name) {
-            return ((DTE2)VsIdeTestHostContext.Dte).ToolWindows.OutputWindow.OutputWindowPanes.Item(name);
+            return ((DTE2)VSTestContext.DTE).ToolWindows.OutputWindow.OutputWindowPanes.Item(name);
         }
+
+        public IEnumerable<Window> OpenDocumentWindows {
+            get {
+                return Dte.Windows.OfType<Window>().Where(w => w.Document != null);
+            }
+        }
+
 
         public void WaitForBuildComplete(int timeout) {
             for (int i = 0; i < timeout; i += 500) {
@@ -528,8 +534,8 @@ namespace TestUtilities.UI {
         /// buttonId is the button to press to dismiss.
         /// </summary>
         private static void CheckAndDismissDialog(string[] text, int dlgField, IntPtr buttonId) {
-            var handle = new IntPtr(VsIdeTestHostContext.Dte.MainWindow.HWnd);
-            IVsUIShell uiShell = VsIdeTestHostContext.ServiceProvider.GetService(typeof(IVsUIShell)) as IVsUIShell;
+            var handle = new IntPtr(VSTestContext.DTE.MainWindow.HWnd);
+            IVsUIShell uiShell = VSTestContext.ServiceProvider.GetService(typeof(IVsUIShell)) as IVsUIShell;
             IntPtr hwnd;
             uiShell.GetDialogOwnerHwnd(out hwnd);
 
@@ -728,7 +734,7 @@ namespace TestUtilities.UI {
                 System.Threading.Thread.Sleep(500);
             }
 
-            Assert.AreEqual(mode, VsIdeTestHostContext.Dte.Debugger.CurrentMode);
+            Assert.AreEqual(mode, VSTestContext.DTE.Debugger.CurrentMode);
         }
 
         public virtual Project CreateProject(

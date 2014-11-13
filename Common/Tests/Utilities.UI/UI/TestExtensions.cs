@@ -13,19 +13,14 @@
  * ***************************************************************************/
 
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
+using Microsoft.VisualStudioTools.VSTestHost;
 using TestUtilities.SharedProject;
 
 namespace TestUtilities.UI {
@@ -74,7 +69,7 @@ namespace TestUtilities.UI {
 
             // make sure we're still expanded.
             var solutionWindow = UIHierarchyUtilities.GetUIHierarchyWindow(
-                VsIdeTestHostContext.ServiceProvider,
+                VSTestContext.ServiceProvider,
                 new Guid(ToolWindowGuids80.SolutionExplorer)
             );
 

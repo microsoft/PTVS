@@ -15,10 +15,10 @@
 using System;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudioTools.VSTestHost;
 
 namespace TestUtilities.UI {
     public class DefaultInterpreterSetter : IDisposable {
@@ -27,8 +27,7 @@ namespace TestUtilities.UI {
         private bool _isDisposed;
 
         public DefaultInterpreterSetter(IPythonInterpreterFactory factory) {
-            var sp = new ServiceProvider(VsIdeTestHostContext.Dte as Microsoft.VisualStudio.OLE.Interop.IServiceProvider);
-            var model = (IComponentModel)sp.GetService(typeof(SComponentModel));
+            var model = (IComponentModel)VSTestContext.ServiceProvider.GetService(typeof(SComponentModel));
             var interpreterService = model.GetService<IInterpreterOptionsService>();
             Assert.IsNotNull(interpreterService);
 
@@ -41,8 +40,7 @@ namespace TestUtilities.UI {
             if (!_isDisposed) {
                 _isDisposed = true;
 
-                var sp = new ServiceProvider(VsIdeTestHostContext.Dte as Microsoft.VisualStudio.OLE.Interop.IServiceProvider);
-                var model = (IComponentModel)sp.GetService(typeof(SComponentModel));
+                var model = (IComponentModel)VSTestContext.ServiceProvider.GetService(typeof(SComponentModel));
                 var interpreterService = model.GetService<IInterpreterOptionsService>();
                 Assert.IsNotNull(interpreterService);
                 interpreterService.DefaultInterpreter = OriginalInterpreter;

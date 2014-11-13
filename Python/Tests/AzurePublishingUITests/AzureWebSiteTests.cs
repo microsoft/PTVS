@@ -16,7 +16,6 @@ using System;
 using System.IO;
 using System.Threading;
 using Microsoft.PythonTools;
-using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Win32;
 using PythonToolsUITests;
@@ -72,7 +71,7 @@ namespace AzurePublishingUITests {
             int publishTimeout,
             string packageName = null
         ) {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 var pyProj = app.CreateProject(
                     PythonVisualStudioApp.TemplateLanguageName,
                     templateName,
@@ -99,7 +98,7 @@ namespace AzurePublishingUITests {
         const int BottlePublishTimeout = 15 * 60 * 1000;
 
         [TestMethod, Priority(0), TestCategory("Core"), Timeout(BottlePublishTimeout)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void BottlePublish() {
             TestPublishToWebSite(
                 PythonVisualStudioApp.BottleWebProjectTemplate,
@@ -114,7 +113,7 @@ namespace AzurePublishingUITests {
         const int FlaskPublishTimeout = 15 * 60 * 1000;
 
         [TestMethod, Priority(0), TestCategory("Core"), Timeout(FlaskPublishTimeout)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void FlaskPublish() {
             TestPublishToWebSite(
                 PythonVisualStudioApp.FlaskWebProjectTemplate,
@@ -129,7 +128,7 @@ namespace AzurePublishingUITests {
         const int DjangoPublishTimeout = 25 * 60 * 1000;
 
         [TestMethod, Priority(0), TestCategory("Core"), Timeout(DjangoPublishTimeout)]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void DjangoPublish() {
             TestPublishToWebSite(
                 PythonVisualStudioApp.DjangoWebProjectTemplate,

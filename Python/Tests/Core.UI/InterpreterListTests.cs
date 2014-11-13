@@ -29,7 +29,6 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.InterpreterList;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Project;
-using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -51,7 +50,7 @@ namespace PythonToolsUITests {
         #region Tests requiring VS
 
         [TestMethod, Priority(0), TestCategory("InterpreterList")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void GetInstalledInterpreters() {
             var interps = InterpreterView.GetInterpreters().ToList();
             foreach (var ver in PythonPaths.Versions) {
@@ -61,9 +60,9 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("InterpreterList")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void InterpreterListInVS() {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 var model = app.GetService<IComponentModel>(typeof(SComponentModel));
                 var service = model.GetService<IInterpreterOptionsService>();
                 Assert.IsNotNull(service);
@@ -83,9 +82,9 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("InterpreterList")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void CreateRemoveVirtualEnvInInterpreterListInVS() {
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte))
+            using (var app = new PythonVisualStudioApp())
             using (var dis = app.SelectDefaultInterpreter(PythonPaths.Python27 ?? PythonPaths.Python27_x64, "virtualenv")) {
                 var project = app.CreateProject(
                     PythonVisualStudioApp.TemplateLanguageName,
@@ -161,9 +160,9 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("InterpreterList")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void LoadUnloadVirtualEnvInInterpreterListInVS() {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 var proj = app.OpenProject(@"TestData\VirtualEnv.sln");
 
                 var model = app.GetService<IComponentModel>(typeof(SComponentModel));
@@ -198,9 +197,9 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("InterpreterList")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void ActivateVirtualEnvInInterpreterListInVS() {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 var proj = app.OpenProject(@"TestData\VirtualEnv.sln");
 
                 app.Dte.ExecuteCommand("Python.ViewEnvironments");
@@ -247,9 +246,9 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("InterpreterList")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void ChangeDefaultInVS() {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 var model = app.GetService<IComponentModel>(typeof(SComponentModel));
                 var service = model.GetService<IInterpreterOptionsService>();
                 Assert.IsNotNull(service);
@@ -288,9 +287,9 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("InterpreterList")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void InvalidCustomInterpreterInVS() {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 var model = app.GetService<IComponentModel>(typeof(SComponentModel));
                 var service = model.GetService<IInterpreterOptionsService>();
                 Assert.IsNotNull(service);
@@ -351,9 +350,9 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("InterpreterList")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void RefreshDBStatesInVS() {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 var model = app.GetService<IComponentModel>(typeof(SComponentModel));
                 var service = model.GetService<IInterpreterOptionsService>();
                 Assert.IsNotNull(service);
@@ -428,9 +427,9 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("InterpreterList")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void InvalidCustomInterpreterDoesNotCrashInVS() {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 var model = app.GetService<IComponentModel>(typeof(SComponentModel));
                 var service = model.GetService<IInterpreterOptionsService>();
                 Assert.IsNotNull(service);

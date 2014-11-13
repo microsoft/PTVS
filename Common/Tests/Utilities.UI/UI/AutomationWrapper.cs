@@ -15,12 +15,10 @@
 using System;
 using System.Diagnostics;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Automation;
-using Accessibility;
-using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudioTools.VSTestHost;
 
 namespace TestUtilities.UI {
     public class AutomationWrapper {
@@ -320,13 +318,13 @@ namespace TestUtilities.UI {
         /// Dumps the current top-level window in VS
         /// </summary>
         public static void DumpVS() {
-            IVsUIShell uiShell = VsIdeTestHostContext.ServiceProvider.GetService(typeof(IVsUIShell)) as IVsUIShell;
+            IVsUIShell uiShell = VSTestContext.ServiceProvider.GetService(typeof(IVsUIShell)) as IVsUIShell;
             IntPtr hwnd;
             uiShell.GetDialogOwnerHwnd(out hwnd);
             AutomationWrapper.DumpElement(AutomationElement.FromHandle(hwnd));
 
             // if we have a dialog open dump the main VS window too
-            var mainHwnd = new IntPtr(VsIdeTestHostContext.Dte.MainWindow.HWnd);
+            var mainHwnd = new IntPtr(VSTestContext.DTE.MainWindow.HWnd);
             if (mainHwnd != hwnd) {
                 Console.WriteLine("VS: ");
                 AutomationWrapper.DumpElement(AutomationElement.FromHandle(mainHwnd));

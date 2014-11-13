@@ -20,11 +20,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using EnvDTE;
-using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudioTools.VSTestHost;
 using TestUtilities;
 using TestUtilities.SharedProject;
 using TestUtilities.UI;
@@ -40,23 +40,23 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
 #if FALSE
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void LoadNodejsProject() {
             string fullPath = Path.GetFullPath(@"TestData\NodejsProjectData\HelloWorld.sln");
             Assert.IsTrue(File.Exists(fullPath), "Can't find project file");
-            VsIdeTestHostContext.Dte.Solution.Open(fullPath);
+            VSTestContext.DTE.Solution.Open(fullPath);
 
-            Assert.IsTrue(VsIdeTestHostContext.Dte.Solution.IsOpen, "The solution is not open");
-            Assert.IsTrue(VsIdeTestHostContext.Dte.Solution.Projects.Count == 1, String.Format("Loading project resulted in wrong number of loaded projects, expected 1, received {0}", VsIdeTestHostContext.Dte.Solution.Projects.Count));
+            Assert.IsTrue(VSTestContext.DTE.Solution.IsOpen, "The solution is not open");
+            Assert.IsTrue(VSTestContext.DTE.Solution.Projects.Count == 1, String.Format("Loading project resulted in wrong number of loaded projects, expected 1, received {0}", VSTestContext.DTE.Solution.Projects.Count));
 
-            var iter = VsIdeTestHostContext.Dte.Solution.Projects.GetEnumerator();
+            var iter = VSTestContext.DTE.Solution.Projects.GetEnumerator();
             iter.MoveNext();
             Project project = (Project)iter.Current;
             Assert.AreEqual("HelloWorld.njsproj", Path.GetFileName(project.FileName), "Wrong project file name");
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void SaveProjectAs() {
             try {
                 var project = OpenProject(@"TestData\NodejsProjectData\HelloWorld.sln");
@@ -88,14 +88,14 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                 project.Save("");   // empty string means just save
                 project.Delete();
             } finally {
-                VsIdeTestHostContext.Dte.Solution.Close(false);
+                VSTestContext.DTE.Solution.Close(false);
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
             }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void RenameProjectTest() {
             try {
                 var project = OpenProject(@"TestData\NodejsProjectData\RenameProjectTest.sln");
@@ -137,7 +137,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     File.Delete(movePath);
                 }
             } finally {
-                VsIdeTestHostContext.Dte.Solution.Close();
+                VSTestContext.DTE.Solution.Close();
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
             }
@@ -155,7 +155,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void ProjectAddItem() {
             try {
                 foreach (var projectType in ProjectTypes) {
@@ -174,7 +174,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                         Assert.IsTrue(item.Object is VSProjectItem);
                         var vsProjItem = (VSProjectItem)item.Object;
-                        Assert.AreEqual(vsProjItem.DTE, VsIdeTestHostContext.Dte);
+                        Assert.AreEqual(vsProjItem.DTE, VSTestContext.DTE);
                         Assert.AreEqual(vsProjItem.ContainingProject, project);
                         Assert.AreEqual(vsProjItem.ProjectItem.ContainingProject, project);
                         vsProjItem.ProjectItem.Open();
@@ -182,7 +182,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                         Assert.AreEqual(true, vsProjItem.ProjectItem.Saved);
                         vsProjItem.ProjectItem.Document.Close(vsSaveChanges.vsSaveChangesNo);
                         Assert.AreEqual(false, vsProjItem.ProjectItem.IsOpen);
-                        Assert.AreEqual(VsIdeTestHostContext.Dte, vsProjItem.ProjectItem.DTE);
+                        Assert.AreEqual(VSTestContext.DTE, vsProjItem.ProjectItem.DTE);
 
                         Assert.AreEqual(1, project.ProjectItems.Count - previousCount, "Expected one new item");
                         previousCount = project.ProjectItems.Count;
@@ -194,16 +194,16 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     }
                 }
             } finally {
-                VsIdeTestHostContext.Dte.Solution.Close();
+                VSTestContext.DTE.Solution.Close();
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
             }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void CleanSolution() {
-            var msbuildLogProperty = VsIdeTestHostContext.Dte
+            var msbuildLogProperty = VSTestContext.DTE
                 .get_Properties("Environment", "ProjectsAndSolution")
                 .Item("MSBuildOutputVerbosity");
             var originalValue = msbuildLogProperty.Value;
@@ -226,22 +226,22 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                     );
                     using (var solution = proj.Generate().ToVs()) {
-                        VsIdeTestHostContext.Dte.ExecuteCommand("Build.CleanSolution");
+                        VSTestContext.DTE.ExecuteCommand("Build.CleanSolution");
                         solution.App.WaitForOutputWindowText("Build", "Hello Clean World!");
                     }
                 }
             } finally {
                 msbuildLogProperty.Value = originalValue;
-                VsIdeTestHostContext.Dte.Solution.Close();
+                VSTestContext.DTE.Solution.Close();
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
             }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void BuildSolution() {
-            var msbuildLogProperty = VsIdeTestHostContext.Dte
+            var msbuildLogProperty = VSTestContext.DTE
                 .get_Properties("Environment", "ProjectsAndSolution")
                 .Item("MSBuildOutputVerbosity");
             var originalValue = msbuildLogProperty.Value;
@@ -264,20 +264,20 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                         Target("CreateManifestResourceNames")
                     );
                     using (var solution = proj.Generate().ToVs()) {
-                        VsIdeTestHostContext.Dte.ExecuteCommand("Build.RebuildSolution");
+                        VSTestContext.DTE.ExecuteCommand("Build.RebuildSolution");
                         solution.App.WaitForOutputWindowText("Build", "Hello Build World!");
                     }
                 }
             } finally {
                 msbuildLogProperty.Value = originalValue;
-                VsIdeTestHostContext.Dte.Solution.Close();
+                VSTestContext.DTE.Solution.Close();
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
             }
         }
 #if FALSE
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void ProjectAddFolder() {
             try {
                 string fullPath = TestData.GetPath(@"TestData\NodejsProjectData\HelloWorld.sln");
@@ -314,18 +314,18 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                 folder.Delete();
             } finally {
-                VsIdeTestHostContext.Dte.Solution.Close();
+                VSTestContext.DTE.Solution.Close();
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
             }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void ProjectAddFolderThroughUI() {
             try {
                 var project = OpenProject(@"TestData\NodejsProjectData\AddFolderExists.sln");
-                using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                using (var app = new VisualStudioApp()) {
                     var solutionExplorer = app.SolutionExplorerTreeView;
 
                     var solutionNode = solutionExplorer.FindItem("Solution 'AddFolderExists' (1 project)");
@@ -368,10 +368,10 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void TestAddExistingFolder() {
             var project = OpenProject(@"TestData\NodejsProjectData\AddExistingFolder.sln");
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 var solutionExplorer = app.SolutionExplorerTreeView;
 
                 var projectNode = solutionExplorer.WaitForItem("Solution 'AddExistingFolder' (1 project)", "AddExistingFolder");
@@ -400,10 +400,10 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void TestAddExistingFolderProject() {
             var project = OpenProject(@"TestData\NodejsProjectData\AddExistingFolder.sln");
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 var solutionExplorer = app.SolutionExplorerTreeView;
 
                 var projectNode = solutionExplorer.WaitForItem("Solution 'AddExistingFolder' (1 project)", "AddExistingFolder");
@@ -420,13 +420,13 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void TestAddExistingFolderDebugging() {
             var project = OpenProject(@"TestData\NodejsProjectData\AddExistingFolder.sln");
             var window = project.ProjectItems.Item("server.js").Open();
             window.Activate();
 
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 var docWindow = app.GetDocument(window.Document.FullName);
 
                 var solutionExplorer = app.SolutionExplorerTreeView;
@@ -438,7 +438,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                 AutomationWrapper.Select(projectNode);
 
                 try {
-                    VsIdeTestHostContext.Dte.ExecuteCommand("ProjectandSolutionContextMenus.Project.Add.Existingfolder");
+                    VSTestContext.DTE.ExecuteCommand("ProjectandSolutionContextMenus.Project.Add.Existingfolder");
 
                     // try and dismiss the dialog if we successfully executed
                     try {
@@ -479,11 +479,11 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         /// 5) Enter to commit
         /// </summary>
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void ProjectAddAndRenameFolder() {
             try {
                 var project = OpenProject(@"TestData\NodejsProjectData\HelloWorld.sln");
-                using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                using (var app = new VisualStudioApp()) {
                     var solutionExplorer = app.SolutionExplorerTreeView;
 
                     var folder = project.ProjectItems.AddFolder("AddAndRenameFolder");
@@ -499,7 +499,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     Assert.IsTrue(Directory.Exists(@"TestData\NodejsProjectData\HelloWorld\AddAndRenameFolderNewName"));
                 }
             } finally {
-                VsIdeTestHostContext.Dte.Solution.Close();
+                VSTestContext.DTE.Solution.Close();
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
             }
@@ -512,11 +512,11 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         /// 4) Drag and drop nested folder onto project
         /// </summary>
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void ProjectAddAndMoveRenamedFolder() {
             try {
                 var project = OpenProject(@"TestData\NodejsProjectData\HelloWorld.sln");
-                using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                using (var app = new VisualStudioApp()) {
                     var solutionExplorer = app.SolutionExplorerTreeView;
 
                     var folder = project.ProjectItems.AddFolder("AddAndMoveRenamedFolder\\AddAndMoveRenamedSubFolder");
@@ -545,33 +545,33 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     Assert.IsTrue(Directory.Exists(@"TestData\NodejsProjectData\HelloWorld\AddAndMoveRenamedNewName"));
                 }
             } finally {
-                VsIdeTestHostContext.Dte.Solution.Close();
+                VSTestContext.DTE.Solution.Close();
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
             }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void ProjectBuild() {
             try {
                 var project = OpenProject(@"TestData\NodejsProjectData\HelloWorld.sln");
 
-                VsIdeTestHostContext.Dte.Solution.SolutionBuild.Build(true);
+                VSTestContext.DTE.Solution.SolutionBuild.Build(true);
             } finally {
-                VsIdeTestHostContext.Dte.Solution.Close();
+                VSTestContext.DTE.Solution.Close();
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
             }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void ProjectRenameAndDeleteItem() {
             try {
                 var project = OpenProject(@"TestData\NodejsProjectData\RenameItemsTest.sln");
 
-                VsIdeTestHostContext.Dte.Documents.CloseAll(vsSaveChanges.vsSaveChangesNo);
+                VSTestContext.DTE.Documents.CloseAll(vsSaveChanges.vsSaveChangesNo);
 
                 // invalid renames
                 AssertError<InvalidOperationException>(() => project.ProjectItems.Item("ProgramX.js").Name = "");
@@ -638,14 +638,14 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                 project.ProjectItems.Item("ProgramDelete.js").Delete();
             } finally {
-                VsIdeTestHostContext.Dte.Solution.Close();
+                VSTestContext.DTE.Solution.Close();
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
             }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void TestAutomationProperties() {
             try {
                 var project = OpenProject(@"TestData\NodejsProjectData\HelloWorld.sln");
@@ -674,7 +674,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                     Assert.AreEqual(intIndexValue, nameIndexValue);
                     Assert.AreEqual(intIndexValue, intIndexValue);
-                    Assert.AreEqual(VsIdeTestHostContext.Dte, project.Properties.Item(propCount + 1).DTE);
+                    Assert.AreEqual(VSTestContext.DTE, project.Properties.Item(propCount + 1).DTE);
                     Assert.AreEqual(0, project.Properties.Item(propCount + 1).NumIndices);
                     Assert.AreNotEqual(null, project.Properties.Item(propCount + 1).Parent);
                     Assert.AreEqual(null, project.Properties.Item(propCount + 1).Application);
@@ -684,7 +684,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                 Assert.AreEqual(propCount, project.Properties.Count);
 
-                Assert.AreEqual(project.Properties.DTE, VsIdeTestHostContext.Dte);
+                Assert.AreEqual(project.Properties.DTE, VSTestContext.DTE);
 
                 Assert.AreEqual(project.Properties.Item("StartWebBrowser").Value.GetType(), typeof(bool));
                 Assert.IsTrue(project.Properties.Item("NodejsPort").Value == null || project.Properties.Item("NodejsPort").Value.GetType() == typeof(int));
@@ -711,14 +711,14 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     Assert.AreEqual(project.Properties.Item(value).Value, tmpValue);
                 }
             } finally {
-                VsIdeTestHostContext.Dte.Solution.Close();
+                VSTestContext.DTE.Solution.Close();
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
             }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void TestAutomationProject() {
             try {
                 var project = OpenProject(@"TestData\NodejsProjectData\HelloWorld.sln");
@@ -749,21 +749,21 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     break;
                 }
 
-                Assert.AreEqual(VsIdeTestHostContext.Dte, project.ProjectItems.DTE);
+                Assert.AreEqual(VSTestContext.DTE, project.ProjectItems.DTE);
                 Assert.AreEqual(project, project.ProjectItems.Parent);
                 Assert.AreEqual(null, project.ProjectItems.Kind);
 
                 AssertError<ArgumentException>(() => project.ProjectItems.Item(-1));
                 AssertError<ArgumentException>(() => project.ProjectItems.Item(0));
             } finally {
-                VsIdeTestHostContext.Dte.Solution.Close();
+                VSTestContext.DTE.Solution.Close();
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
             }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void TestProjectItemAutomation() {
             var project = OpenProject(@"TestData\NodejsProjectData\HelloWorld.sln");
 
@@ -783,7 +783,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void TestRelativePaths() {
             // link to outside file should show up as top-level item
             var project = OpenProject(@"TestData\NodejsProjectData\RelativePaths.sln");
@@ -793,7 +793,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void ProjectConfiguration() {
             var project = OpenProject(@"TestData\NodejsProjectData\HelloWorld.sln");
 
@@ -825,13 +825,13 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         /// sure the completion info changes.
         /// </summary>
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void AddFolderExists() {
             Directory.CreateDirectory(TestData.GetPath(@"TestData\NodejsProjectData\\AddFolderExists\\X"));
             Directory.CreateDirectory(TestData.GetPath(@"TestData\NodejsProjectData\\AddFolderExists\\Y"));
 
             var project = OpenProject(@"TestData\NodejsProjectData\AddFolderExists.sln");
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 var solutionExplorer = app.SolutionExplorerTreeView;
 
                 var solutionNode = solutionExplorer.FindItem("Solution 'AddFolderExists' (1 project)");
@@ -877,10 +877,10 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void AddFolderCopyAndPasteFile() {
             var project = OpenProject(@"TestData\NodejsProjectData\AddFolderCopyAndPasteFile.sln");
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 var solutionExplorer = app.SolutionExplorerTreeView;
                 var solutionNode = solutionExplorer.FindItem("Solution 'AddFolderCopyAndPasteFile' (1 project)");
 
@@ -918,10 +918,10 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void CopyAndPasteFolder() {
             var project = OpenProject(@"TestData\NodejsProjectData\CopyAndPasteFolder.sln");
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 var solutionExplorer = app.SolutionExplorerTreeView;
                 var solutionNode = solutionExplorer.FindItem("Solution 'CopyAndPasteFolder' (1 project)");
 
@@ -958,10 +958,10 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void CopyAndPasteEmptyFolder() {
             var project = OpenProject(@"TestData\NodejsProjectData\CopyAndPasteFolder.sln");
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 var solutionExplorer = app.SolutionExplorerTreeView;
                 var solutionNode = solutionExplorer.FindItem("Solution 'CopyAndPasteFolder' (1 project)");
 
@@ -1008,11 +1008,11 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         /// Verify we can copy a folder with multiple items in it.
         /// </summary>
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void CopyFolderWithMultipleItems() {
             // http://mpfproj10.codeplex.com/workitem/11618
             var project = OpenProject(@"TestData\NodejsProjectData\FolderMultipleItems.sln");
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 var solutionExplorer = app.SolutionExplorerTreeView;
                 var solutionNode = solutionExplorer.FindItem("Solution 'FolderMultipleItems' (1 project)");
 
@@ -1033,7 +1033,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void LoadProjectWithDuplicateItems() {
             var solution = OpenProject(@"TestData\NodejsProjectData\DuplicateItems.sln");
 
@@ -1144,24 +1144,24 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         internal static Project OpenProject(string projName, string startItem = null, int expectedProjects = 1, string projectName = null, bool setStartupItem = true) {
             string fullPath = TestData.GetPath(projName);
             Assert.IsTrue(File.Exists(fullPath), "Cannot find " + fullPath);
-            VsIdeTestHostContext.Dte.Solution.Open(fullPath);
+            VSTestContext.DTE.Solution.Open(fullPath);
 
-            Assert.IsTrue(VsIdeTestHostContext.Dte.Solution.IsOpen, "The solution is not open");
+            Assert.IsTrue(VSTestContext.DTE.Solution.IsOpen, "The solution is not open");
 
-            int count = VsIdeTestHostContext.Dte.Solution.Projects.Count;
+            int count = VSTestContext.DTE.Solution.Projects.Count;
             if (expectedProjects != count) {
                 // if we have other files open we can end up with a bonus project...
                 int i = 0;
-                foreach (EnvDTE.Project proj in VsIdeTestHostContext.Dte.Solution.Projects) {
+                foreach (EnvDTE.Project proj in VSTestContext.DTE.Solution.Projects) {
                     if (proj.Name != "Miscellaneous Files") {
                         i++;
                     }
                 }
 
-                Assert.IsTrue(i == expectedProjects, String.Format("Loading project resulted in wrong number of loaded projects, expected 1, received {0}", VsIdeTestHostContext.Dte.Solution.Projects.Count));
+                Assert.IsTrue(i == expectedProjects, String.Format("Loading project resulted in wrong number of loaded projects, expected 1, received {0}", VSTestContext.DTE.Solution.Projects.Count));
             }
 
-            var iter = VsIdeTestHostContext.Dte.Solution.Projects.GetEnumerator();
+            var iter = VSTestContext.DTE.Solution.Projects.GetEnumerator();
             iter.MoveNext();
 
             Project project = (Project)iter.Current;
@@ -1191,7 +1191,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         }
 
         private static void DeleteAllBreakPoints() {
-            var debug3 = (Debugger3)VsIdeTestHostContext.Dte.Debugger;
+            var debug3 = (Debugger3)VSTestContext.DTE.Debugger;
             if (debug3.Breakpoints != null) {
                 foreach (var bp in debug3.Breakpoints) {
                     ((Breakpoint3)bp).Delete();
@@ -1200,11 +1200,11 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         }
 #endif
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void OpenCommandHere() {
             var existing = System.Diagnostics.Process.GetProcesses().Select(x => x.Id).ToSet();
             try {
-                VsIdeTestHostContext.Dte.Commands.Item("File.OpenCommandPromptHere");
+                VSTestContext.DTE.Commands.Item("File.OpenCommandPromptHere");
             } catch (ArgumentException) {
                 Assert.Inconclusive("Open Command Prompt Here command is not implemented");
             }
@@ -1245,7 +1245,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void CopyFullPath() {
             foreach (var projectType in ProjectTypes) {
                 var def = new ProjectDefinition(
@@ -1285,7 +1285,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             string clipboardText = "";
             Console.WriteLine("Checking CopyFullPath on:{0}", expected);
             AutomationWrapper.Select(element);
-            VsIdeTestHostContext.Dte.ExecuteCommand("File.CopyFullPath");
+            VSTestContext.DTE.ExecuteCommand("File.CopyFullPath");
 
             ThreadHelper.Generic.Invoke(() => clipboardText = System.Windows.Clipboard.GetText());
 
@@ -1293,7 +1293,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void PasteFileWhileOpenInEditor() {
             foreach (var projectType in ProjectTypes) {
                 var proj = new ProjectDefinition(
@@ -1340,7 +1340,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         /// and from imported projects and how it's controlled by the Visible metadata.
         /// </summary>
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void ItemVisibility() {
             try {
                 foreach (var projectType in ProjectTypes) {
@@ -1377,14 +1377,14 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     }
                 }
             } finally {
-                VsIdeTestHostContext.Dte.Solution.Close();
+                VSTestContext.DTE.Solution.Close();
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
             }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void ProjectAddExistingExcludedFolder() {
             foreach (var projectType in ProjectTypes) {
                 var def = new ProjectDefinition(
@@ -1526,7 +1526,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         /// Make sure that our events fire correctly for the rename
         /// </summary>
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void RenameFile() {
             foreach (var projectType in ProjectTypes) {
                 var proj = new ProjectDefinition(
@@ -1543,7 +1543,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                     ErrorHandler.ThrowOnFailure(project.AdviseHierarchyEvents(hierarchyEvents, out hierarchyCookie));
                     try {
-                        var trackDocs = (IVsTrackProjectDocuments2)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SVsTrackProjectDocuments));
+                        var trackDocs = (IVsTrackProjectDocuments2)VSTestContext.ServiceProvider.GetService(typeof(SVsTrackProjectDocuments));
                         var docTracker = new DocumentTracker();
                         uint cookie = VSConstants.VSCOOKIE_NIL;
 
@@ -1572,7 +1572,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void IsDocumentInProject() {
             foreach (var projectType in ProjectTypes) {
                 var proj = new ProjectDefinition(
@@ -1608,7 +1608,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void DeleteFolderWithReadOnlyFile() {
             foreach (var projectType in ProjectTypes) {
                 var proj = new ProjectDefinition(

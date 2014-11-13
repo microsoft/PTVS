@@ -21,13 +21,13 @@ using EnvDTE;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
-using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Editor;
+using Microsoft.VisualStudioTools.VSTestHost;
 using TestUtilities;
 using TestUtilities.Python;
 using TestUtilities.UI;
@@ -45,7 +45,7 @@ namespace DjangoUITests {
 
         [TestInitialize]
         public void ChangeDefaultInterpreter() {
-            var model = (IComponentModel)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SComponentModel));
+            var model = (IComponentModel)VSTestContext.ServiceProvider.GetService(typeof(SComponentModel));
             var interpreterService = model.GetService<IInterpreterOptionsService>();
             PreviousDefault = interpreterService.DefaultInterpreter;
 
@@ -67,7 +67,7 @@ namespace DjangoUITests {
 
         [TestCleanup]
         public void MyTestCleanup() {
-            var model = (IComponentModel)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SComponentModel));
+            var model = (IComponentModel)VSTestContext.ServiceProvider.GetService(typeof(SComponentModel));
             var interpreterService = model.GetService<IInterpreterOptionsService>();
             interpreterService.DefaultInterpreter = PreviousDefault;
         }
@@ -121,7 +121,7 @@ namespace DjangoUITests {
 #endif
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void Classifications() {
             InsertionTest("Classification.html.djt", 8, 10, "",
                 new Classification("HTML Tag Delimiter", 0, 1, "<"),
@@ -359,7 +359,7 @@ namespace DjangoUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void Insertion1() {
             InsertionTest("Insertion1.html.djt", 8, 10, "}",
                 new Classification("HTML Tag Delimiter", 0, 1, "<"),
@@ -435,7 +435,7 @@ namespace DjangoUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void Insertion2() {
             InsertionDeletionTest("Insertion2.html.djt", 9, 34, "{",
                 new Classification[] {
@@ -513,7 +513,7 @@ namespace DjangoUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void Insertion3() {
             InsertionTest("Insertion3.html.djt", 2, 5, "}",
                 new Classification("HTML Tag Delimiter", 0, 1, "<"),
@@ -525,7 +525,7 @@ namespace DjangoUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void Insertion4() {
             InsertionTest("Insertion4.html.djt", 1, 1, "{", new[] {
                 new Classification("Django template tag", 0, 2, "{{"),
@@ -539,7 +539,7 @@ namespace DjangoUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void Insertion5() {
             InsertionTest("Insertion5.html.djt", 1, 2, "#",
                 new Classification("Django template tag", 0, 2, "{#"),
@@ -549,7 +549,7 @@ namespace DjangoUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void Insertion6() {
             InsertionTest("Insertion6.html.djt", 1, 4, "a",
                 new Classification("Django template tag", 4, 6, "{{"),
@@ -558,7 +558,7 @@ namespace DjangoUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void Insertion7() {
             InsertionTest("Insertion7.html.djt", 1, 16, "{",
                 new Classification("Django template tag", 0, 2, "{{"),
@@ -574,7 +574,7 @@ namespace DjangoUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void Insertion8() {
             InsertionTest("Insertion8.html.djt", 2, 9, "}",
                 new Classification("HTML Tag Delimiter", 0, 1, "<"),
@@ -587,7 +587,7 @@ namespace DjangoUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void Insertion9() {
             InsertionTest("Insertion9.html.djt", 1, 7, "a",
                 new Classification("Django template tag", 4, 6, "{{"),
@@ -597,7 +597,7 @@ namespace DjangoUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void Insertion10() {
             InsertionTest("Insertion10.html.djt", 7, 10, "a",
                 new Classification("HTML Tag Delimiter", 0, 1, "<"),
@@ -637,7 +637,7 @@ namespace DjangoUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void Insertion11() {
             InsertionTest("Insertion11.html.djt", 9, 5, 1, "{", true,
                 new Classification("Django template tag", 2, 4, "{%"),
@@ -744,7 +744,7 @@ namespace DjangoUITests {
         /// http://pytools.codeplex.com/workitem/753
         /// </summary>
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void Insertion12() {
             InsertionTest("Insertion12.html.djt", 9, 61, "}",
                 new Classification("HTML Tag Delimiter", 0, 1, "<"),
@@ -1031,7 +1031,7 @@ namespace DjangoUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void Deletion1() {
             DeletionTest("Deletion1.html.djt", 1, 2, 1,
                 new Classification("Django template tag", 0, 2, "{{"),
@@ -1050,7 +1050,7 @@ namespace DjangoUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void Paste1() {
             PasteTest("Paste1.html.djt", 1, 2, "{{fob}}", "{{bazz}}",
                 new Classification("Django template tag", 0, 2, "{{"),
@@ -1065,43 +1065,43 @@ namespace DjangoUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void SelectAllMixed1() {
             SelectAllAndDeleteTest("SelectAllMixed1.html.djt");
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void SelectAllMixed2() {
             SelectAllAndDeleteTest("SelectAllMixed2.html.djt");
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void SelectAllMixed3() {
             SelectAllAndDeleteTest("SelectAllMixed3.html.djt");
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void SelectAllMixed4() {
             SelectAllAndDeleteTest("SelectAllMixed4.html.djt");
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void SelectAllTag() {
             SelectAllAndDeleteTest("SelectAllTag.html.djt");
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void SelectAllText() {
             SelectAllAndDeleteTest("SelectAllText.html.djt");
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void CutUndo() {
             CutUndoTest("CutUndo.html.djt",
                 6, 1, "{% for x in oar %}",
@@ -1139,7 +1139,7 @@ namespace DjangoUITests {
         }
 
         private static void SelectAllAndDeleteTest(string filename) {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 Window window;
                 var item = OpenDjangoProjectItem(app, filename, out window);
 
@@ -1161,7 +1161,7 @@ namespace DjangoUITests {
         }
 
         private static void DeletionTest(string filename, int line, int column, int deletionCount, params Classification[] expected) {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 Window window;
                 var item = OpenDjangoProjectItem(app, filename, out window);
                 item.MoveCaret(line, column);
@@ -1183,7 +1183,7 @@ namespace DjangoUITests {
         }
 
         private static void PasteTest(string filename, int line, int column, string selectionText, string pasteText, params Classification[] expected) {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 Window window;
                 var item = OpenDjangoProjectItem(app, filename, out window);
                 item.MoveCaret(line, column);
@@ -1217,7 +1217,7 @@ namespace DjangoUITests {
         }
 
         private static void CutUndoTest(string filename, int line, int column, string selectionText, params Classification[] expected) {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 Window window;
                 var item = OpenDjangoProjectItem(app, filename, out window);
                 item.MoveCaret(line, column);
@@ -1292,7 +1292,7 @@ namespace DjangoUITests {
         }
 
         private static void InsertionTest(string filename, int line, int column, int selectionLength, string insertionText, bool paste, bool checkInsertionLen, string projectName, bool wait, params Classification[] expected) {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte))
+            using (var app = new VisualStudioApp())
             using (WithoutBraceCompletion(app)) {
                 Window window;
                 var item = OpenDjangoProjectItem(app, filename, out window, projectName, wait);
@@ -1363,7 +1363,7 @@ namespace DjangoUITests {
         }
 
         private static void InsertionDeletionTest(string filename, int line, int column, string insertionText, Classification[] expectedFirst, Classification[] expectedAfter) {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte))
+            using (var app = new VisualStudioApp())
             using (WithoutBraceCompletion(app)) {
                 Window window;
                 var item = OpenDjangoProjectItem(app, filename, out window);
@@ -1408,7 +1408,7 @@ namespace DjangoUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void IntellisenseCompletions() {
             InsertionTest("Intellisense.html.djt", 6, 3, -1, " end\r",
                 paste: false,
@@ -1449,7 +1449,7 @@ namespace DjangoUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void IntellisenseCompletions2() {
             InsertionTest("Intellisense2.html.djt", 6, 1, -1, "{{" + Keyboard.OneSecondDelay + " o\t }}",
                 paste: false,
@@ -1493,7 +1493,7 @@ namespace DjangoUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void IntellisenseCompletions4() {
             InsertionTest("TestApp\\Templates\\page.html.djt", 6, 11, -1, "|cu\t",
                 paste: false,
@@ -1531,7 +1531,7 @@ namespace DjangoUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void IntellisenseCompletions5() {
             InsertionTest("TestApp\\Templates\\page.html.djt", 6, 11, -1, ".c\t",
                 paste: false,
@@ -1570,7 +1570,7 @@ namespace DjangoUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void IntellisenseCompletions6() {
             InsertionTest("TestApp\\Templates\\page.html.djt", 7, 1, -1, "{%" + Keyboard.OneSecondDelay + " auto\t o\t %}",
                 paste: false,
@@ -1614,7 +1614,7 @@ namespace DjangoUITests {
         /// http://pytools.codeplex.com/workitem/756
         /// </summary>
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void IntellisenseCompletions7() {
             InsertionTest("TestApp\\Templates\\page4.html.djt", 6, 8, -1, Keyboard.CtrlSpace.ToString(),
                 paste: false,
@@ -1651,7 +1651,7 @@ namespace DjangoUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void IntellisenseCompletions8() {
             string keySequence = Keyboard.CtrlSpace.ToString();
 #if !DEV12_OR_LATER
@@ -1699,7 +1699,7 @@ namespace DjangoUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void IntellisenseCompletions9() {
             string keySequence = Keyboard.CtrlSpace.ToString();
 #if DEV12_OR_LATER
@@ -1749,7 +1749,7 @@ namespace DjangoUITests {
 
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void IntellisenseCompletions10() {
             InsertionTest("TestApp\\Templates\\page3.html.djt", 6, 1, -1, Keyboard.CtrlSpace + "{%" + Keyboard.OneSecondDelay + " fo\t fob in con\t \t %}",
                 paste: false,
@@ -1795,7 +1795,7 @@ namespace DjangoUITests {
         /// http://pytools.codeplex.com/workitem/756
         /// </summary>
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void IntellisenseCompletions11() {
             InsertionTest("TestApp\\Templates\\page.html.djt", 3, 1, -1, "<\b\t",
                 paste: false,
@@ -1835,7 +1835,7 @@ namespace DjangoUITests {
         /// http://pytools.codeplex.com/workitem/1191
         /// </summary>
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void IntellisenseCompletions12() {
             InsertionTest("TestApp\\Templates\\page5.html.djt", 6, 8, -1, Keyboard.CtrlSpace.ToString(),
                 paste: false,
@@ -1872,7 +1872,7 @@ namespace DjangoUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void IntellisenseCompletionsHtml() {
             InsertionTest("Intellisense3.html.djt", 4, 1, -1, "<bo>",
                 paste: false,
@@ -1915,7 +1915,7 @@ namespace DjangoUITests {
 #if DEV12_OR_LATER
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void IntellisenseCompletionsCss() {
             InsertionTest("IntellisenseCssJs.html.djt", 3, 36, -1, Keyboard.CtrlSpace.ToString(),
                 paste: false,
@@ -1968,7 +1968,7 @@ namespace DjangoUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void IntellisenseCompletionsJS() {
             InsertionTest("IntellisenseCssJs.html.djt", 4, 35, -1, Keyboard.CtrlSpace.ToString(),
                 paste: false,

@@ -21,7 +21,6 @@ using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Threading;
-using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -98,9 +97,9 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void TestPublishFiles() {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\HelloWorld.sln");
                 try {
                     string subDir = Guid.NewGuid().ToString();
@@ -124,13 +123,13 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void TestPublishReadOnlyFiles() {
             var sourceFile = TestData.GetPath(@"TestData\HelloWorld\Program.py");
             Assert.IsTrue(File.Exists(sourceFile), sourceFile + " not found");
             var attributes = File.GetAttributes(sourceFile);
 
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\HelloWorld.sln");
                 try {
                     string subDir = Guid.NewGuid().ToString();
@@ -159,9 +158,9 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void TestPublishFilesControlled() {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\PublishTest.sln");
                 try {
                     string subDir = Guid.NewGuid().ToString();
@@ -189,10 +188,10 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void TestPublishFilesImpersonate() {
             WNetCancelConnection2(TestSharePrivate, 0, true);
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 try {
                     var project = app.OpenProject(@"TestData\HelloWorld.sln");
                     string subDir = Guid.NewGuid().ToString();
@@ -261,10 +260,10 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void TestPublishFilesImpersonateNoMachineName() {
             WNetCancelConnection2(TestSharePrivate, 0, true);
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 try {
                     var project = app.OpenProject(@"TestData\HelloWorld.sln");
                     string subDir = Guid.NewGuid().ToString();
@@ -296,10 +295,10 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void TestPublishFilesImpersonateWrongCredentials() {
             WNetCancelConnection2(TestSharePrivate, 0, true);
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 try {
                     var project = app.OpenProject(@"TestData\HelloWorld.sln");
                     string subDir = Guid.NewGuid().ToString();
@@ -335,10 +334,10 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void TestPublishFilesImpersonateCancelCredentials() {
             WNetCancelConnection2(TestSharePrivate, 0, true);
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 try {
                     var project = app.OpenProject(@"TestData\HelloWorld.sln");
                     string subDir = Guid.NewGuid().ToString();
@@ -375,9 +374,9 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void TestPublishFtp() {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\HelloWorld.sln");
                 string subDir = Guid.NewGuid().ToString();
                 string url = TestFtpUrl + "/" + subDir;
@@ -408,9 +407,9 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        [HostType("VSTestHost")]
         public void TestPublishVirtualEnvironment() {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\VirtualEnv.sln");
                 var dir = TestData.GetTempPath(randomSubPath: true);
                 project.Properties.Item("PublishUrl").Value = dir;
