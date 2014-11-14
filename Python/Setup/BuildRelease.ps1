@@ -18,8 +18,8 @@
     If `release` is specified, defaults to '\\pytools\release\<build number>'.
 
 .Parameter vstarget
-    [Optional] The VS version to build for. If omitted, builds for all versions
-    that are installed.
+    [Optional] The VS version to build for. If omitted, builds for all supported
+    versions that are installed.
     
     Valid values: "10.0", "11.0", "12.0"
 
@@ -109,7 +109,7 @@
 [CmdletBinding()]
 param(
     [string] $outdir,
-    [string] $vsTarget,
+    [string[]] $vsTarget,
     [string] $name,
     [switch] $release,
     [switch] $internal,
@@ -265,10 +265,10 @@ $native_files = (
 )
 
 $supported_vs_versions = (
-    @{number="14.0"; name="VS 2015"},
-    @{number="12.0"; name="VS 2013"},
-    @{number="11.0"; name="VS 2012"},
-    @{number="10.0"; name="VS 2010"}
+    @{number="14.0"; name="VS 2015"; build_by_default=$true},
+    @{number="12.0"; name="VS 2013"; build_by_default=$true},
+    @{number="11.0"; name="VS 2012"; build_by_default=$false},
+    @{number="10.0"; name="VS 2010"; build_by_default=$false}
 )
 
 # #############################################################################
@@ -387,8 +387,11 @@ if ($internal -or $release -or $mockrelease) {
 
 $target_versions = @()
 
+if ($vstarget) {
+    $vstarget = $vstarget | %{ "{0:00.0}" -f [float]::Parse($_) }
+}
 foreach ($target_vs in $supported_vs_versions) {
-    if (-not $vstarget -or ($vstarget -match $target_vs.number)) {
+    if ((-not $vstarget -and $target_vs.build_by_default) -or ($target_vs.number -in $vstarget)) {
         $vspath = Get-ItemProperty -Path "HKLM:\Software\Wow6432Node\Microsoft\VisualStudio\$($target_vs.number)" -EA 0
         if (-not $vspath) {
             $vspath = Get-ItemProperty -Path "HKLM:\Software\Microsoft\VisualStudio\$($target_vs.number)" -EA 0
