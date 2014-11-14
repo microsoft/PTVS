@@ -17,7 +17,7 @@
     <Property Id="INSTALLLEVEL" Value="1"/>
 
     <!-- Conditions for install -->
-    <?if "$(var.IncludeHpc)" = "True" ?>
+    <?if "$(var.IncludeHpc)" ~= "True" ?>
     <PropertyRef Id="HPC_CLIENT_INSTALLED"/>
     <?endif ?>
     
@@ -206,7 +206,7 @@
 
         <ConfigurationData Name="Config_StartMenuLocation" Value="Dir_StartMenu"/>
       </Merge>
-      <?if "$(var.IncludeHpc)" = "True" ?>
+      <?if "$(var.IncludeHpc)" ~= "True" ?>
       <Merge Id="Merge_Hpc" Language="1033" SourceFile="Hpc.msm" DiskId="1">
         <?foreach key in VS;WD;VWD?>
         <ConfigurationData Name="Config_$(var.key)ExtensionsParent" Value="Dir_$(var.key)Extensions" />
@@ -222,7 +222,7 @@
         <?endforeach?>
         <ConfigurationData Name="Config_MSBuildLocation" Value="Dir_MSBuildTargets"/>
       </Merge>
-      <?if "$(var.IncludeVsLogger)" = "True" ?>
+      <?if "$(var.IncludeVsLogger)" ~= "True" ?>
       <Merge Id="Merge_VsLogger" Language="1033" SourceFile="VsLogger.msm" DiskId="1">
         <?foreach key in VS;WD;VWD?>
         <ConfigurationData Name="Config_$(var.key)ExtensionsParent" Value="Dir_$(var.key)Extensions" />
@@ -244,7 +244,7 @@
       <MergeRef Id="Merge_ReplWindow"/>
       <MergeRef Id="Merge_Profiling"/>
 
-      <?if "$(var.IncludeVsLogger)" = "True" ?>
+      <?if "$(var.IncludeVsLogger)" ~= "True" ?>
       <MergeRef Id="Merge_VsLogger"/>
       <?endif?>
 
@@ -256,7 +256,7 @@
         <MergeRef Id="Merge_IronPython"/>
       </Feature>
 
-      <?if "$(var.IncludeHpc)" = "True" ?>
+      <?if "$(var.IncludeHpc)" ~= "True" ?>
       <Feature Id="Feature_WinHpc" AllowAdvertise="no" Level="1" Title="Windows HPC Support" Description="Windows HPC Support">
         <Condition Level="2">NOT HPC_CLIENT_INSTALLED</Condition>
         <MergeRef Id="Merge_Hpc"/>
