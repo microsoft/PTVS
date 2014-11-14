@@ -64,15 +64,13 @@
   </Fragment>
 
   <Fragment>
-    <?if $(var.VSTargetVersion)='12.0' ?>
     <Property Id="VS_PRERELEASE" Secure="no">
+      <?if "$(var.VSTargetVersion)"="12.0" ?>
       <DirectorySearch Id="VSDevEnvFilePathSearch" Path="[VSINSTALLPATH]">
         <FileSearch Id="VSDevEnvFileVersionSearch" Name="devenv.exe" MinVersion="12.0.0.0" MaxVersion="12.0.21004.0"/>
       </DirectorySearch>
+      <?endif ?>
     </Property>
-    <?else ?>
-    <Property Id="VS_PRERELEASE" Value="0" />
-    <?endif ?>
   </Fragment>
 
 </Wix>
