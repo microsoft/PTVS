@@ -8,6 +8,8 @@ We'll learn how to use a MySQL service hosted on Azure, how to configure the
 application to use MySQL, and how to publish the application to an Azure 
 Website.
 
+[video:"Django and MySQL on Azure" oKCApIrS0Lo]
+
 + [Prerequisites](#prerequisites)
 + [Create the Project](#create-the-project)
 + [Create a MySQL Database](#create-a-mysql-database)
