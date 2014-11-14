@@ -1,6 +1,7 @@
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\SetupProjectBefore.settings" />
+  
   <PropertyGroup>
-    <BuildRoot Condition="'$(BuildRoot)' == ''">$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), build.root))</BuildRoot>
     <ProjectGuid>{6AE79541-B1A5-4C40-B431-87252F08157F}</ProjectGuid>
 
     <TargetName>PythonToolsFiles</TargetName>
@@ -107,20 +108,30 @@
     </File>
 
     <!-- Snippets -->
-    <File Include="$(SourceDir)Snippets\1033\Python\*.snippet">
+    <!--
+    Generally we should avoid using wildcards, as MSBuild will resolve them eagerly and
+    WiX doesn't get to do its path binding magic. It's okay for data files, but should
+    never be used for binaries.
+    -->
+    <File Include="$(BuildOutputRoot)Binaries\PythonTools\Snippets\1033\Python\*.snippet">
       <InstallDirectory>Snippets_1033_Python</InstallDirectory>
     </File>
 
-    <File Include="$(SourceDir)Snippets\1033\Test\*.snippet">
+    <File Include="$(BuildOutputRoot)Binaries\PythonTools\Snippets\1033\Test\*.snippet">
       <InstallDirectory>Snippets_1033_Test</InstallDirectory>
     </File>
   
-    <File Include="$(SourceDir)Snippets\1033\SnippetsIndex.xml">
+    <File Include="Snippets\1033\SnippetsIndex.xml">
       <InstallDirectory>Snippets_1033</InstallDirectory>
     </File>
 
     <!-- Default Completion DB -->
-    <File Include="CompletionDB\*.idb">
+    <!--
+    Generally we should avoid using wildcards, as MSBuild will resolve them eagerly and
+    WiX doesn't get to do its path binding magic. It's okay for data files, but should
+    never be used for binaries.
+    -->
+    <File Include="$(BuildOutputRoot)Binaries\Analyzer\CompletionDB\*.idb">
       <InstallDirectory>CompletionDB</InstallDirectory>
     </File>
   
