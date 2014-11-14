@@ -1,0 +1,11 @@
+syntax: glob
+$tf/
+Internal/
+BuildOutput/
+obj/
+*.sdf
+*.opensdf
+*.suo
+TestResults/
+*.vspscc
+*.user

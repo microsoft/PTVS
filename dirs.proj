@@ -2,24 +2,12 @@
 
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), build.root))\Build\Common.Build.settings" />
 
-  <PropertyGroup>
-    <Root>$(MSBuildProjectDirectory)</Root>
-    <TasksPath>$(Root)\Build\</TasksPath>
-  </PropertyGroup>
-
-  <Import Project="$(TasksPath)\Build.tasks" />
-  <Import Project="$(TasksPath)\CopyReferencedFiles.proj" />
-  <Import Project="$(TasksPath)\IncrementVersion.proj" />
-  <Import Project="$(TasksPath)\MaddogTestcases.proj" />
-  <Import Project="$(TargetsPath)\ProcessMonitor.proj" />
-
   <ItemGroup>
-    <ProjectFile Include="Release\dirs.proj"/>
+    <ProjectFile Include="Common\dirs.proj"/>
+    <ProjectFile Include="Python\dirs.proj"/>
   </ItemGroup>
 
   <Import Project="$(TargetsPath)\Common.Build.Traversal.targets" />
-
-
 </Project>
   
   

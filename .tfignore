@@ -1,0 +1,4 @@
+.hg
+.hgignore
+BuildOutput
+Python\TestResults
