@@ -891,7 +891,7 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
         [DllImport(ExternDll.Kernel32, EntryPoint = "GetFinalPathNameByHandleW", CharSet = CharSet.Unicode, SetLastError = true)]
-        public static extern int GetFinalPathNameByHandle(IntPtr handle, [In, Out] StringBuilder path, int bufLen, int flags);
+        public static extern int GetFinalPathNameByHandle(SafeFileHandle handle, [In, Out] StringBuilder path, int bufLen, int flags);
 
         [DllImport(ExternDll.Kernel32, EntryPoint = "CreateFileW", CharSet = CharSet.Unicode, SetLastError = true)]
         public static extern SafeFileHandle CreateFile(
@@ -912,27 +912,28 @@ namespace Microsoft.VisualStudioTools.Project {
             const int FILE_FLAG_BACKUP_SEMANTICS = 0x02000000;
             const int DEVICE_QUERY_ACCESS = 0;
 
-            SafeFileHandle directoryHandle = CreateFile(
+            using (SafeFileHandle directoryHandle = CreateFile(
                 symlink,
                 DEVICE_QUERY_ACCESS,
                 FileShare.Write,
                 System.IntPtr.Zero,
                 FileMode.Open,
                 FILE_FLAG_BACKUP_SEMANTICS,
-                System.IntPtr.Zero);
-            if (directoryHandle.IsInvalid) {
-                Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
-            }
+                System.IntPtr.Zero)) {
+                if (directoryHandle.IsInvalid) {
+                    Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
+                }
 
-            StringBuilder path = new StringBuilder(512);
-            int pathSize = GetFinalPathNameByHandle(directoryHandle.DangerousGetHandle(), path, path.Capacity, 0);
-            if (pathSize < 0) {
-                Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
-            }
+                StringBuilder path = new StringBuilder(512);
+                int pathSize = GetFinalPathNameByHandle(directoryHandle, path, path.Capacity, 0);
+                if (pathSize < 0) {
+                    Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
+                }
 
-            // UNC Paths will start with \\?\.  Remove this if present as this isn't really expected on a path.
-            var pathString = path.ToString();
-            return pathString.StartsWith(@"\\?\") ? pathString.Substring(4) : pathString;
+                // UNC Paths will start with \\?\.  Remove this if present as this isn't really expected on a path.
+                var pathString = path.ToString();
+                return pathString.StartsWith(@"\\?\") ? pathString.Substring(4) : pathString;
+            }
         }
 
         [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]

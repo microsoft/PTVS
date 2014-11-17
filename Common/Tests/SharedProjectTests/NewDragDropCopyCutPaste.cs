@@ -244,6 +244,65 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("VsTestHost")]
+        public void MoveDuplicateFileNamesFoldersSkipOneKeyboard() {
+            MoveDuplicateFileNamesFoldersSkipOne(MoveByKeyboard);
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("VsTestHost")]
+        public void MoveDuplicateFileNamesFoldersSkipOneMouse() {
+            MoveDuplicateFileNamesFoldersSkipOne(MoveByMouse);
+        }
+
+        /// <summary>
+        /// Cut 2 items, paste where they exist, skip pasting the 1st one but paste the 2nd.
+        /// 
+        /// The 1st item shouldn't be removed from the parent hierarchy, the 2nd should, and only the 2nd item should be overwritten.
+        /// </summary>
+        private void MoveDuplicateFileNamesFoldersSkipOne(MoveDelegate mover) {
+            foreach (var projectType in ProjectTypes) {
+                var testDef = new ProjectDefinition("MoveDuplicateFileName",
+                    projectType,
+                    ItemGroup(
+                        Folder("Source"),
+                        Content("Source\\textfile1.txt", "source1"),
+                        Content("Source\\textfile2.txt", "source2"),
+                        
+                        Folder("Target"),
+                        Content("Target\\textfile1.txt", "target1"),
+                        Content("Target\\textfile2.txt", "target2")
+                    )
+                );
+
+                using (var solution = testDef.Generate().ToVs()) {
+                    mover(
+                        solution.FindItem("MoveDuplicateFileName", "Target"),
+                        solution.FindItem("MoveDuplicateFileName", "Source", "textfile1.txt"),
+                        solution.FindItem("MoveDuplicateFileName", "Source", "textfile2.txt")
+                    );
+
+                    using (var dialog = OverwriteFileDialog.Wait(solution.App)) {
+                        dialog.No();
+                    }
+
+                    System.Threading.Thread.Sleep(1000);
+
+                    using (var dialog = OverwriteFileDialog.Wait(solution.App)) {
+                        dialog.Yes();
+                    }
+
+                    solution.App.WaitForDialogDismissed();
+
+                    solution.AssertFileExistsWithContent("source1", "MoveDuplicateFileName", "Source", "textfile1.txt");
+                    solution.AssertFileDoesntExist("MoveDuplicateFileName", "textfile2.txt");
+                    solution.AssertFileExistsWithContent("target1", "MoveDuplicateFileName", "Target", "textfile1.txt");
+                    solution.AssertFileExistsWithContent("source2", "MoveDuplicateFileName", "Target", "textfile2.txt");
+                }
+            }
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("VSTestHost")]
         public void MoveDuplicateFileNamesCrossProjectSkipOneKeyboard() {
             MoveDuplicateFileNamesCrossProjectSkipOne(MoveByKeyboard);
