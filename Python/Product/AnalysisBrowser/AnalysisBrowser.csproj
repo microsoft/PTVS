@@ -79,7 +79,18 @@
     <Compile Include="..\..\..\Common\Product\SharedProject\CommonUtils.cs">
       <Link>CommonUtils.cs</Link>
     </Compile>
-    <Compile Include="IfElseConverter.cs" />
+    <Compile Include="..\..\..\Common\Product\SharedProject\Wpf\LambdaConverter\ILambdaConverterProvider.cs">
+      <Link>ILambdaConverterProvider.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\Common\Product\SharedProject\Wpf\LambdaConverter\LambdaConverter.cs">
+      <Link>LambdaConverter.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\Common\Product\SharedProject\Wpf\LambdaConverter\LambdaExtension.cs">
+      <Link>LambdaExtension.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\Common\Product\SharedProject\Wpf\LambdaConverter\LambdaProperties.cs">
+      <Link>LambdaProperties.cs</Link>
+    </Compile>
     <Compile Include="KnownTypesView.cs" />
     <Compile Include="ParameterView.cs" />
     <Compile Include="PropertyView.cs" />
@@ -87,7 +98,6 @@
     <Compile Include="FunctionView.cs" />
     <Compile Include="ModuleRefView.cs" />
     <Compile Include="MultipleMemberView.cs" />
-    <Compile Include="NotConverter.cs" />
     <Compile Include="RawView.cs" />
     <Compile Include="ValueView.cs" />
     <Page Include="ItemResources.xaml">

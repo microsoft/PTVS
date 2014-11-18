@@ -54,4 +54,43 @@
     </ItemGroup>
   </Target>
 
+  <!--
+  Processes {Lambda} converters in WPF XAML files and generates code for them.
+  -->
+
+  <PropertyGroup>
+    <BuildTasksProjectDir>$(BuildRoot)\Tools\BuildTasks</BuildTasksProjectDir>
+    <BuildTasksAssembly>$(BuildOutputRoot)\ToolBinaries\BuildTasks\Microsoft.VisualStudioTools.BuildTasks.dll</BuildTasksAssembly>
+  </PropertyGroup>
+  <ItemGroup>
+    <BuildTasksSourceFiles Include="$(BuildTasksProjectDir)\*.csproj"/>
+    <BuildTasksSourceFiles Include="$(BuildTasksProjectDir)\**\*.cs"/>
+  </ItemGroup>
+
+  <!-- Use Exec rather than MSBuild here to completely isolate the task build - otherwise it interferes with the main build.
+       To avoid spawning a new msbuild.exe process again and again unnecessarily, do a quick up-to-date check (effectively
+       duplicating the one done by .csproj) on the target. -->
+  <Target Name="BuildBuildTasks" Inputs="@(BuildTasksSourceFiles)" Outputs="$(BuildTasksAssembly)">
+    <Exec Command='"$(MSBuildBinPath)\msbuild.exe" "$(BuildRoot)\Tools\BuildTasks\BuildTasks.csproj"'/> 
+  </Target>
+
+  <UsingTask AssemblyFile="$(BuildTasksAssembly)" TaskName="Microsoft.VisualStudioTools.BuildTasks.ExtractLambdasFromXaml"/>
+
+  <Target Name="ExtractLambdasFromXaml"
+          DependsOnTargets="BuildBuildTasks"
+          Inputs="@(Page)"
+          Outputs="@(Page->'$(IntermediateOutputPath)%(Filename).g.lambdas$(DefaultLanguageSourceExtension)')">
+    <ExtractLambdasFromXaml InputFileName="@(Page->'%(FullPath)')" OutputFileName="$(IntermediateOutputPath)%(Filename).g.lambdas$(DefaultLanguageSourceExtension)" Language="$(Language)">
+      <Output TaskParameter="OutputFileName" ItemName="Compile"/>
+      <Output TaskParameter="OutputFileName" ItemName="FileWrites"/>
+    </ExtractLambdasFromXaml>
+  </Target>
+
+  <PropertyGroup>
+    <CoreCompileDependsOn>
+      ExtractLambdasFromXaml;
+      $(CoreCompileDependsOn)
+    </CoreCompileDependsOn>
+  </PropertyGroup>
+
 </Project>

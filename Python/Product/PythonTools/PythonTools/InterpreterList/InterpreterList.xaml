@@ -292,20 +292,12 @@
     </UserControl.Resources>
 
     <Grid>
-        <Grid.Resources>
-            <wpf:IfElseConverter x:Key="BVConverter"
-                                 IfTrue="{x:Static Visibility.Visible}"
-                                 IfFalse="{x:Static Visibility.Collapsed}"/>
-            <wpf:IfElseConverter x:Key="BCConverter"
-                                 IfTrue="{x:Static Visibility.Collapsed}"
-                                 IfFalse="{x:Static Visibility.Visible}"/>
-        </Grid.Resources>
         <ListView x:Name="interpreterList"
                   AutomationProperties.AutomationId="PythonTools.InterpreterList"
                   HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                   ItemContainerStyle="{StaticResource InterpreterItemStyle}"
                   ItemsSource="{Binding Interpreters}"
-                  Visibility="{Binding HasItems,RelativeSource={RelativeSource Self},Converter={StaticResource BVConverter}}">
+                  Visibility="{Binding HasItems, RelativeSource={RelativeSource Self}, Converter={wpf:Lambda '(bool b) => b ? Visibility.Visible : Visibility.Collapsed'}}">
             <ListView.Template>
                 <ControlTemplate>
                     <ScrollViewer CanContentScroll="False">
@@ -336,7 +328,7 @@
         
         <StackPanel Orientation="Vertical"
                     HorizontalAlignment="Center" VerticalAlignment="Center"
-                    Visibility="{Binding HasItems,ElementName=interpreterList,Converter={StaticResource BCConverter}}">
+                    Visibility="{Binding HasItems, ElementName=interpreterList, Converter={wpf:Lambda '(bool b) => b ? Visibility.Collapsed : Visibility.Visible'}}">
             <TextBlock HorizontalAlignment="Center"
                        Margin="6">
                 We didn't find any Python environments

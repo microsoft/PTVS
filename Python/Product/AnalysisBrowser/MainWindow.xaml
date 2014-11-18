@@ -4,6 +4,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:s="clr-namespace:System;assembly=mscorlib"
         xmlns:scm="clr-namespace:System.ComponentModel;assembly=WindowsBase"
+        xmlns:wpf="clr-namespace:Microsoft.VisualStudioTools.Wpf"
         Title="Python Tools Analysis Browser"
         Width="800" Height="600"
         Background="{x:Static SystemColors.ControlBrush}"
@@ -57,31 +58,9 @@
                         <ContentPresenter Content="{Binding}" />
                     </HierarchicalDataTemplate>
 
-                    <l:IfElseConverter x:Key="BoolToVis"
-                                       IfTrue="{x:Static Visibility.Visible}"
-                                       IfFalse="{x:Static Visibility.Collapsed}" />
+                    <wpf:Lambda x:Key="BoolToVis">(bool x) => x ? Visibility.Visible : Visibility.Collapsed</wpf:Lambda>
+                    <wpf:Lambda x:Key="BoolToCollapsed">(bool x) => x ? Visibility.Collapsed : Visibility.Visible</wpf:Lambda>
 
-                    <l:IfElseConverter x:Key="BoolToCollapsed"
-                                       IfTrue="{x:Static Visibility.Collapsed}"
-                                       IfFalse="{x:Static Visibility.Visible}" />
-
-                    <l:IfElseConverter x:Key="All">
-                        <l:IfElseConverter.IfTrue>
-                            <s:Boolean>True</s:Boolean>
-                        </l:IfElseConverter.IfTrue>
-                        <l:IfElseConverter.IfFalse>
-                            <s:Boolean>False</s:Boolean>
-                        </l:IfElseConverter.IfFalse>
-                    </l:IfElseConverter>
-
-                    <l:IfElseConverter x:Key="Not">
-                        <l:IfElseConverter.IfTrue>
-                            <s:Boolean>False</s:Boolean>
-                        </l:IfElseConverter.IfTrue>
-                        <l:IfElseConverter.IfFalse>
-                            <s:Boolean>True</s:Boolean>
-                        </l:IfElseConverter.IfFalse>
-                    </l:IfElseConverter>
                 </ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
@@ -99,7 +78,7 @@
         </Grid.ColumnDefinitions>
 
         <Grid Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3">
-            <Menu IsEnabled="{Binding Loading,Converter={StaticResource Not}}"
+            <Menu IsEnabled="{Binding Loading, Converter={wpf:Lambda '(bool x) => !x'}}"
                   Padding="3">
                 <MenuItem Header="_Database">
                     <MenuItem Header="_Open"
@@ -200,7 +179,7 @@
                                 AllowsTransparency="True"
                                 Placement="Bottom">
                             <Popup.IsOpen>
-                                <MultiBinding Converter="{StaticResource All}" Mode="OneWay">
+                                <MultiBinding Converter="{wpf:Lambda '(bool x, bool y) => x &amp;&amp; y'}" Mode="OneWay">
                                     <MultiBinding.Bindings>
                                         <Binding Path="HasItems" ElementName="DatabaseDirectory_SubDirs" Mode="OneWay" />
                                         <Binding Path="IsFocused" ElementName="DatabaseDirectory" Mode="OneWay" />

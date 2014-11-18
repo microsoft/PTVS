@@ -33,20 +33,8 @@
                 <ResourceDictionary Source="pack://application:,,,/Microsoft.PythonTools;component/SharedProject/Wpf/Controls.xaml" />
 
                 <ResourceDictionary>
-                    <wpf:IfElseConverter x:Key="BoolToVisible"
-                                         IfTrue="{x:Static Visibility.Visible}"
-                                         IfFalse="{x:Static Visibility.Hidden}" />
-                    <wpf:IfElseConverter x:Key="BoolToVisibleOrCollapsed"
-                                         IfTrue="{x:Static Visibility.Visible}"
-                                         IfFalse="{x:Static Visibility.Collapsed}" />
-                    <wpf:IfElseConverter x:Key="BoolNot">
-                        <wpf:IfElseConverter.IfTrue>
-                            <sys:Boolean>False</sys:Boolean>
-                        </wpf:IfElseConverter.IfTrue>
-                        <wpf:IfElseConverter.IfFalse>
-                            <sys:Boolean>True</sys:Boolean>
-                        </wpf:IfElseConverter.IfFalse>
-                    </wpf:IfElseConverter>
+                    <wpf:Lambda x:Key="BoolToVisible">(bool b) => b ? Visibility.Visible : Visibility.Hidden</wpf:Lambda>
+                    <wpf:Lambda x:Key="BoolToVisibleOrCollapsed">(bool b) => b ? Visibility.Visible : Visibility.Collapsed</wpf:Lambda>
                     
                     <Style x:Key="MonoTextBox" TargetType="{x:Type TextBox}" BasedOn="{StaticResource {x:Type TextBox}}">
                         <Setter Property="FontFamily" Value="Consolas" />

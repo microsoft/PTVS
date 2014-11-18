@@ -639,6 +639,22 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Compile Include="$(_ProjectSystemFilesLocation)\Wpf\LambdaConverter\ILambdaConverterProvider.cs">
+      <Link>SharedProject\Wpf\ILambdaConverterProvider.cs</Link>
+      <Visible>true</Visible>
+    </Compile>
+    <Compile Include="$(_ProjectSystemFilesLocation)\Wpf\LambdaConverter\LambdaConverter.cs">
+      <Link>SharedProject\Wpf\LambdaConverter.cs</Link>
+      <Visible>true</Visible>
+    </Compile>
+    <Compile Include="$(_ProjectSystemFilesLocation)\Wpf\LambdaConverter\LambdaExtension.cs">
+      <Link>SharedProject\Wpf\LambdaExtension.cs</Link>
+      <Visible>true</Visible>
+    </Compile>
+    <Compile Include="$(_ProjectSystemFilesLocation)\Wpf\LambdaConverter\LambdaProperties.cs">
+      <Link>SharedProject\Wpf\LambdaProperties.cs</Link>
+      <Visible>true</Visible>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="$(_ProjectSystemFilesLocation)\ProjectResources.resx">

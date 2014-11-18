@@ -31,9 +31,7 @@
         </Grid.RowDefinitions>
         
         <Grid.Resources>
-            <wpf:IfElseConverter x:Key="BoolToVisible"
-                                 IfTrue="{x:Static Visibility.Visible}"
-                                 IfFalse="{x:Static Visibility.Collapsed}"/>
+            <wpf:Lambda x:Key="BoolToVisible">x => x ? Visibility.Visible : Visibility.Collapsed</wpf:Lambda>
         </Grid.Resources>
         
         <wpf:LabelledControl Grid.Row="0"
