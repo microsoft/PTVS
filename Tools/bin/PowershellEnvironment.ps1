@@ -20,14 +20,14 @@ function VsVars32()
     #   Visual Studio 2010
     #
     $vscomntools = (Get-ChildItem env:VS140COMNTOOLS).Value
-    if($vscomntools -eq '') {
+    if([string]::IsNullOrEmpty($vscomntools)) {
         "Visual Studio 2015 not installed, Falling back to 2013"
         $vscomntools = (Get-ChildItem env:VS120COMNTOOLS).Value
-        if($vscomntools -eq '')
+        if([string]::IsNullOrEmpty($vscomntools))
         {
             "Visual Studio 2013 not installed, Falling back to 2012"
             $vscomntools = (Get-ChildItem env:VS110COMNTOOLS).Value
-            if($vscomntools -eq '')
+            if([string]::IsNullOrEmpty($vscomntools))
             {
                 "Visual Studio 2012 not installed, Falling back to 2010"
                 $vscomntools = (Get-ChildItem env:VS100COMNTOOLS).Value
