@@ -457,6 +457,8 @@ if (-not $skipclean) {
     }
 }
 
+$logdir = mkdir "$outdir\Logs" -Force
+
 if ($scorch) {
     tfpt scorch $buildroot /noprompt
 }
@@ -484,12 +486,11 @@ try {
                 VSTarget=$($_.number);
                 VSName=$($_.name);
                 destdir=mkdir "$outdir\$($_.name)\$config" -Force;
-                logfile="$outdir\Logs\BuildRelease.$config.$($_.number).log";
+                logfile="$logdir\BuildRelease.$config.$($_.number).log";
                 config=$config;
                 msi_version=$msi_version;
                 release_version=$release_version;
             }
-            mkdir (Split-Path -Parent $i.logfile) -Force
             $i.unsigned_bindir = mkdir "$($i.destdir)\UnsignedBinaries" -Force
             $i.unsigned_msidir = mkdir "$($i.destdir)\UnsignedMsi" -Force
             $i.symboldir = mkdir "$($i.destdir)\Symbols" -Force
@@ -498,7 +499,7 @@ try {
                 $i.signed_unsigned_msidir = mkdir "$($i.destdir)\SignedBinariesUnsignedMsi" -Force
                 $i.signed_msidir = mkdir "$($i.destdir)\SignedMsi" -Force
                 $i.final_msidir = $i.signed_msidir
-                $i.signed_logfile = "$outdir\Logs\BuildRelease_Signed.$config.$($_.number).log"
+                $i.signed_logfile = "$logdir\BuildRelease_Signed.$config.$($_.number).log"
             } else {
                 $i.final_msidir = $i.unsigned_msidir
             }
