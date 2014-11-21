@@ -420,5 +420,67 @@ and there is at least one character in B, False otherwise.''',
             }]
         )
 
+    def test_pyplot_figure(self):
+        pyplot_doc = """
+    Creates a new figure.
+
+    Parameters
+    ----------
+
+    num : integer or string, optional, default: none
+        If not provided, a new figure will be created, and a the figure number
+        will be increamted. The figure objects holds this number in a `number`
+        attribute.
+        If num is provided, and a figure with this id already exists, make
+        it active, and returns a reference to it. If this figure does not
+        exists, create it and returns it.
+        If num is a string, the window title will be set to this figure's
+        `num`.
+
+    figsize : tuple of integers, optional, default : None
+        width, height in inches. If not provided, defaults to rc
+        figure.figsize.
+
+    dpi : integer, optional, default ; None
+        resolution of the figure. If not provided, defaults to rc figure.dpi.
+
+    facecolor :
+        the background color; If not provided, defaults to rc figure.facecolor
+
+    edgecolor :
+        the border color. If not provided, defaults to rc figure.edgecolor
+
+    Returns
+    -------
+    figure : Figure
+        The Figure instance returned will also be passed to new_figure_manager
+        in the backends, which allows to hook custom Figure classes into the
+        pylab interface. Additional kwargs will be passed to the figure init
+        function.
+
+    Note
+    ----
+    If you are creating many figures, make sure you explicitly call "close"
+    on the figures you are not using, because this will enable pylab
+    to properly clean up the memory.
+
+    rcParams defines the default values, which can be modified in the
+    matplotlibrc file
+
+    """
+        self.check_doc_str(
+            pyplot_doc,
+            'matplotlib.pyplot',
+            'figure',
+            [{
+                'doc': pyplot_doc,
+                'ret_type': [('', 'Figure')],
+                'args': (
+                    {'name': 'args', 'arg_format': '*'},
+                    {'name': 'kwargs', 'arg_format': '**'}
+                )
+            }]
+        )
+
 if __name__ == '__main__':
     unittest.main()

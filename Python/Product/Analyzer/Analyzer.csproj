@@ -107,6 +107,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="RefreshDefaultDB.py" />
+    <None Include="BuiltinScraperTests.py" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

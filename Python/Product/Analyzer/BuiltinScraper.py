@@ -271,6 +271,12 @@ def parse_doc_str(input_str, module_name, mod, func_name, extra_args = [], obj_c
 
     finish_doc = ''.join(tokens[start_token:cur_token])
     if finish_doc:
+        if not overloads:
+            # This occurs when the docstring does not include a function spec
+            overloads.append({
+                'args': ({'name': 'args', 'arg_format': '*'}, {'name': 'kwargs', 'arg_format': '**'}),
+                'doc': ''
+            })
         for overload in overloads:
             overload['doc'] += finish_doc
             update_overload_from_doc_str(overload, overload['doc'], obj_class, mod)
