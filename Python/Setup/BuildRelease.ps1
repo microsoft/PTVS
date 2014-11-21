@@ -89,6 +89,9 @@
 .Parameter dev
     If specified, generates a build name from the current date.
 
+.Parameter copytests
+    If specified, copies the built test folder to the output directory.
+
 .Example
     .\BuildRelease.ps1 -release
     
@@ -120,7 +123,8 @@ param(
     [switch] $skipcopy,
     [switch] $skipdebug,
     [switch] $skipbuild,
-    [switch] $dev
+    [switch] $dev,
+    [switch] $copytests
 )
 
 $buildroot = (Split-Path -Parent $MyInvocation.MyCommand.Definition)
@@ -207,6 +211,11 @@ function msbuild-options($target, $config) {
 # This function is invoked after each target is built.
 function after-build($buildroot, $target) {
     Copy-Item -Force "$buildroot\Python\Prerequisites\*.reg" $($target.destdir)
+    
+    if ($copytests) {
+        Copy-Item -Recurse -Force "$buildroot\BuildOutput\$($target.config)$($target.VSTarget)\Tests" "$($target.destdir)\Tests"
+        Copy-Item -Recurse -Force "$buildroot\Python\Tests\TestData" "$($target.destdir)\Tests\TestData"
+    }
 }
 
 # This function is invoked after the entire build process but before scorching
@@ -475,20 +484,21 @@ try {
                 VSTarget=$($_.number);
                 VSName=$($_.name);
                 destdir=mkdir "$outdir\$($_.name)\$config" -Force;
-                logfile="$outdir\$($_.name)\BuildRelease.$config.$($_.number).log";
+                logfile="$outdir\Logs\BuildRelease.$config.$($_.number).log";
                 config=$config;
                 msi_version=$msi_version;
                 release_version=$release_version;
             }
-            $i.unsigned_bindir = mkdir "$($i.destdir)\UnsignedBinaries" -Force;
-            $i.unsigned_msidir = mkdir "$($i.destdir)\UnsignedMsi" -Force;
+            mkdir (Split-Path -Parent $i.logfile) -Force
+            $i.unsigned_bindir = mkdir "$($i.destdir)\UnsignedBinaries" -Force
+            $i.unsigned_msidir = mkdir "$($i.destdir)\UnsignedMsi" -Force
             $i.symboldir = mkdir "$($i.destdir)\Symbols" -Force
             if ($signedBuild) {
                 $i.signed_bindir = mkdir "$($i.destdir)\SignedBinaries" -Force
                 $i.signed_unsigned_msidir = mkdir "$($i.destdir)\SignedBinariesUnsignedMsi" -Force
                 $i.signed_msidir = mkdir "$($i.destdir)\SignedMsi" -Force
                 $i.final_msidir = $i.signed_msidir
-                $i.signed_logfile = "$outdir\$($_.name)\BuildRelease_Signed.$config.$($_.number).log"
+                $i.signed_logfile = "$outdir\Logs\BuildRelease_Signed.$config.$($_.number).log"
             } else {
                 $i.final_msidir = $i.unsigned_msidir
             }
