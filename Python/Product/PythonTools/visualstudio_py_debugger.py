@@ -120,9 +120,9 @@ class SynthesizedValue(object):
 
 # Specifies list of files not to debug. Can be extended by other modules
 # (the REPL does this for $attach support and not stepping into the REPL).
-DONT_DEBUG = [__file__, _vspu.__file__]
+DONT_DEBUG = [path.normcase(__file__), path.normcase(_vspu.__file__)]
 if sys.version_info >= (3, 3):
-    DONT_DEBUG.append('<frozen importlib._bootstrap>')
+    DONT_DEBUG.append(path.normcase('<frozen importlib._bootstrap>'))
 
 # dictionary of line no to break point info
 BREAKPOINTS = {}
@@ -283,7 +283,9 @@ def get_thread_from_id(id):
         THREADS_LOCK.release()
 
 def should_send_frame(frame):
-    return frame is not None and frame.f_code not in DEBUG_ENTRYPOINTS and frame.f_code.co_filename not in DONT_DEBUG
+    return (frame is not None and
+            frame.f_code not in DEBUG_ENTRYPOINTS and
+            path.normcase(frame.f_code.co_filename) not in DONT_DEBUG)
 
 KNOWN_DIRECTORIES = set()
 KNOWN_ZIPS = set()
@@ -332,9 +334,9 @@ BREAK_TYPE_HANDLED = 2
 
 class ExceptionBreakInfo(object):
     BUILT_IN_HANDLERS = {
-        '<frozen importlib._bootstrap>': ((None, None, '*'),),
-        'build\\bdist.win32\\egg\\pkg_resources.py': ((None, None, '*'),),
-        'build\\bdist.win-amd64\\egg\\pkg_resources.py': ((None, None, '*'),),
+        path.normcase('<frozen importlib._bootstrap>'): ((None, None, '*'),),
+        path.normcase('build\\bdist.win32\\egg\\pkg_resources.py'): ((None, None, '*'),),
+        path.normcase('build\\bdist.win-amd64\\egg\\pkg_resources.py'): ((None, None, '*'),),
     }
 
     def __init__(self):
@@ -386,38 +388,35 @@ class ExceptionBreakInfo(object):
             return False
 
         if trace.tb_next is not None:
-            cur_frame = trace.tb_next.tb_frame
-            if (should_send_frame(cur_frame) and
-                cur_frame.f_code is not None and
-                cur_frame.f_code.co_filename is not None and
-                not is_file_in_zip(cur_frame.f_code.co_filename)):
-                # don't break if this isn't the top of the traceback and the
-                # previous frame was not in an egg or zip
+          if should_send_frame(trace.tb_next.tb_frame) and should_debug_code(trace.tb_next.tb_frame.f_code):
+            # don't break if this is not the top of the traceback,
+            # unless the previous frame was not debuggable
+            return True
+            
+        cur_frame = trace.tb_frame
+        
+        while should_send_frame(cur_frame) and cur_frame.f_code is not None and cur_frame.f_code.co_filename is not None:
+            filename = path.normcase(cur_frame.f_code.co_filename)
+            if is_file_in_zip(filename):
+                # File is in a zip, so assume it handles exceptions
                 return True
 
-        cur_frame = trace.tb_frame
-
-        while should_send_frame(cur_frame) and cur_frame.f_code is not None and cur_frame.f_code.co_filename is not None:
-            if not is_same_py_file(cur_frame.f_code.co_filename, __file__):
-                if is_file_in_zip(cur_frame.f_code.co_filename):
-                    # file in inside an egg or zip, so assume it is handled.
-                    return True
-
-                handlers = self.handler_cache.get(cur_frame.f_code.co_filename)
-
+            if not is_same_py_file(filename, __file__):
+                handlers = self.handler_cache.get(filename)
+            
                 if handlers is None:
                     # req handlers for this file from the debug engine
                     self.handler_lock.acquire()
-
+                
                     with _SendLockCtx:
                         write_bytes(conn, REQH)
-                        write_string(conn, cur_frame.f_code.co_filename)
+                        write_string(conn, filename)
 
                     # wait for the handler data to be received
                     self.handler_lock.acquire()
                     self.handler_lock.release()
 
-                    handlers = self.handler_cache.get(cur_frame.f_code.co_filename)
+                    handlers = self.handler_cache.get(filename)
 
                 if handlers is None:
                     # no code available, so assume unhandled
@@ -461,15 +460,22 @@ if hasattr(sys, 'real_prefix'):
     PREFIXES.append(path.normcase(sys.real_prefix))
 
 def should_debug_code(code):
+    if not code or not code.co_filename:
+        return False
+
+    filename = path.normcase(code.co_filename)
     if not DEBUG_STDLIB:
         for prefix in PREFIXES:
-            if path.normcase(code.co_filename).startswith(prefix):
+            if filename.startswith(prefix):
                 return False
 
-    filename = code.co_filename
     for dont_debug_file in DONT_DEBUG:
         if is_same_py_file(filename, dont_debug_file):
             return False
+
+    if is_file_in_zip(filename):
+        # file in inside an egg or zip, so we can't debug it
+        return False
 
     return True
 
@@ -813,7 +819,7 @@ class Thread(object):
             if frame.f_code in DEBUG_ENTRYPOINTS:
                 break
             # Otherwise, check if it's some other debugger code.
-            filename = frame.f_code.co_filename
+            filename = path.normcase(frame.f_code.co_filename)
             is_debugger_frame = False
             for debugger_file in DONT_DEBUG:
                 if is_same_py_file(filename, debugger_file):
@@ -1577,13 +1583,13 @@ class DebuggerLoop(object):
         _start_new_thread(self.connect_to_repl_backend, (port_num,))
 
     def connect_to_repl_backend(self, port_num):
-        DONT_DEBUG.append(_vspr.__file__)
+        DONT_DEBUG.append(path.normcase(_vspr.__file__))
         self.repl_backend = _vspr.DebugReplBackend(self)
         self.repl_backend.connect_from_debugger(port_num)
         self.repl_backend.execution_loop()
 
     def connect_to_repl_backend_using_socket(self, sock):
-        DONT_DEBUG.append(_vspr.__file__)
+        DONT_DEBUG.append(path.normcase(_vspr.__file__))
         self.repl_backend = _vspr.DebugReplBackend(self)
         self.repl_backend.connect_from_debugger_using_socket(sock)
         self.repl_backend.execution_loop()

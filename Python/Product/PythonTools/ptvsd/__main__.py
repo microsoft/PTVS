@@ -12,6 +12,7 @@
  #
  # ###########################################################################
 
+import os
 import sys
 from optparse import OptionParser
 from ptvsd.visualstudio_py_util import exec_file
@@ -45,7 +46,7 @@ enable_attach(opts.secret, (opts.interface, opts.port), opts.certfile, opts.keyf
 if opts.wait:
     wait_for_attach()
 
-DONT_DEBUG.append(__file__)
+DONT_DEBUG.append(os.path.normcase(__file__))
 
 sys.argv = script_argv
 exec_file(script_argv[0], {'__name__': '__main__'})

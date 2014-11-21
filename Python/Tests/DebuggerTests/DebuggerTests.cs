@@ -1476,26 +1476,17 @@ namespace DebuggerTests {
             var debugger = new PythonDebugger();
 
             TestException(debugger, DebuggerTestPath + "EGGceptionOnImport.py", true, ExceptionMode.Always, null,
-                // We see the exceptions in the egg and in our script
-                new ExceptionInfo(ExceptionModule + ".ValueError", 0),
-                new ExceptionInfo(ExceptionModule + ".ValueError", 0),
+                // We only see the unhandled exception in our script
                 new ExceptionInfo(ExceptionModule + ".ValueError", 7)
             );
             TestException(debugger, DebuggerTestPath + "EGGceptionOnImport.py", true, ExceptionMode.Unhandled, null);
 
-            TestException(debugger, DebuggerTestPath + "EGGceptionOnCall.py", true, ExceptionMode.Always, null,
-                // This exception comes from inside the egg
-                new ExceptionInfo(ExceptionModule + ".ValueError", 0)
-            );
             // We never see this exception because it is fully handled in the egg
+            TestException(debugger, DebuggerTestPath + "EGGceptionOnCall.py", true, ExceptionMode.Always, null);
             TestException(debugger, DebuggerTestPath + "EGGceptionOnCall.py", true, ExceptionMode.Unhandled, null);
 
-
-            // We don't see any exceptions in callbacks
             TestException(debugger, DebuggerTestPath + "EGGceptionOnCallback.py", true, ExceptionMode.Always, null,
-                new ExceptionInfo(ExceptionModule + ".ValueError", 0),
                 new ExceptionInfo(ExceptionModule + ".ValueError", 7),
-                new ExceptionInfo(ExceptionModule + ".TypeError", 0),
                 new ExceptionInfo(ExceptionModule + ".TypeError", 10),
                 new ExceptionInfo(ExceptionModule + ".TypeError", 13)
             );
@@ -1567,12 +1558,12 @@ namespace DebuggerTests {
             process.ExceptionRaised += (sender, args) => {
                 if (loaded) {
                     raised.Add(Tuple.Create(args.Exception.TypeName, TryGetStack(args.Thread)));
-                }
-                if (resumeProcess) {
-                    process.Resume();
-                } else {
-                    args.Thread.Resume();
-                }
+                    }
+                    if (resumeProcess) {
+                        process.Resume();
+                    } else {
+                        args.Thread.Resume();
+                    }
             };
 
             StartAndWaitForExit(process);

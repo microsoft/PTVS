@@ -32,9 +32,9 @@ def main():
         from ptvsd.visualstudio_py_debugger import DONT_DEBUG, DEBUG_ENTRYPOINTS, get_code
         from ptvsd.attach_server import DEFAULT_PORT, enable_attach, wait_for_attach
 
-        DONT_DEBUG.append(__file__)
+        DONT_DEBUG.append(os.path.normcase(__file__))
         DEBUG_ENTRYPOINTS.add(get_code(main))
-        
+
         enable_attach(opts.secret, ('127.0.0.1', getattr(opts, 'port', DEFAULT_PORT)), redirect_output = True)
         wait_for_attach()
     

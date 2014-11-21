@@ -372,7 +372,7 @@ actual inspection and introspection."""
         from os import path
         sys.path.append(path.dirname(__file__))
         import visualstudio_py_debugger
-        visualstudio_py_debugger.DONT_DEBUG.append(__file__)
+        visualstudio_py_debugger.DONT_DEBUG.append(path.normcase(__file__))
         new_thread = visualstudio_py_debugger.new_thread()
         sys.settrace(new_thread.trace_func)
         visualstudio_py_debugger.intercept_threads(True)

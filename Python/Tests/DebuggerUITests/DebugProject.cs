@@ -221,15 +221,10 @@ namespace DebuggerUITests {
                 List<string> LinesToMatch = new List<string>() {
                     @"<Node Id=""\(Name=f @1 IsUnresolved=True\)"" Category=""CodeSchema_CallStackUnresolvedMethod"" Bounds=""[0-9,\.]+"" Label=""f"">",
                     @"<Node Id=""@2"" Category=""CodeSchema_CallStackUnresolvedMethod"" Bounds=""[0-9,\.]+"" Label=""SteppingTest3 module"">",
-                    @"<Node Id=""@4"" Category=""CodeSchema_CallStackUnresolvedMethod"" Bounds=""[0-9,\.]+"" Label=""exec_code"">",
                     @"<Node Id=""ExternalCodeRootNode"" Category=""ExternalCallStackEntry"" Bounds=""[0-9,\.]+"" Label=""External Code"">",
                     @"<Link Source=""@2"" Target=""\(Name=f @1 IsUnresolved=True\)"" Category=""CallStackDirectCall"">",
-                    @"<Link Source=""@4"" Target=""@2"" Category=""CallStackDirectCall"">",
-                    @"<Link Source=""ExternalCodeRootNode"" Target=""@4"" Category=""CallStackIndirectCall"">",
                     @"<Alias n=""1"" Uri=""Assembly=SteppingTest3"" />",
-                    @"<Alias n=""2"" Id=""\(Name=&quot;SteppingTest3 module&quot; @1 IsUnresolved=True\)"" />",
-                    @"<Alias n=""3"" Uri=""Assembly=visualstudio_py_util"" />",
-                    @"<Alias n=""4"" Id=""\(Name=exec_code @3 OverloadingParameters=\[\(Type=str Name=code\),\(Type=str Name=file\),\(Type=dict Name=global_variables\)\] IsUnresolved=True\)"" />"
+                    @"<Alias n=""2"" Id=""\(Name=&quot;SteppingTest3 module&quot; @1 IsUnresolved=True\)"" />"
                 };
 
                 var fileText = File.ReadAllText(dgmlFile);
@@ -493,7 +488,7 @@ namespace DebuggerUITests {
 
                     Assert.AreEqual(expectedDescription, excepDialog.Description);
                     Assert.AreEqual(expectedTitle, excepDialog.Title);
-
+                    
                     excepDialog.Cancel();
 
                     Assert.AreEqual((uint)expectedLine, ((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber);

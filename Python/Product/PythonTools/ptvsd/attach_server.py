@@ -17,6 +17,7 @@ __all__ = ['enable_attach', 'wait_for_attach', 'break_into_debugger', 'settrace'
 import atexit
 import getpass
 import os
+import os.path
 import platform
 import socket
 import struct
@@ -79,7 +80,7 @@ REPL = to_bytes('REPL')
 
 _attach_enabled = False
 _attached = threading.Event()
-vspd.DONT_DEBUG.append(__file__)
+vspd.DONT_DEBUG.append(os.path.normcase(__file__))
 
 
 class AttachAlreadyEnabledError(Exception):
