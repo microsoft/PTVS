@@ -677,4 +677,7 @@ if ($successful) {
             Write-Output "    $name"
         }
     }
+    exit 0
+} else {
+    exit 1
 }
