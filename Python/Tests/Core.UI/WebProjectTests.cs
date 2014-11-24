@@ -14,6 +14,7 @@
 
 extern alias analysis;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.NetworkInformation;
@@ -633,7 +634,7 @@ namespace PythonToolsUITests {
             int port,
             string textInResponse
         ) {
-            var pythonProcesses = Process.GetProcessesByName("python");
+            var pythonProcessIds = new HashSet<int>(Process.GetProcessesByName("python").Select(p => p.Id));
             Process[] newProcesses;
             bool prevNormal = true, prevAbnormal = true;
             int retries;
@@ -657,7 +658,7 @@ namespace PythonToolsUITests {
                 newProcesses = new Process[0];
                 for (int i = 20;
                     i > 0 && !newProcesses.Any();
-                    --i, newProcesses = Process.GetProcessesByName("python").Except(pythonProcesses).ToArray()) {
+                    --i, newProcesses = Process.GetProcessesByName("python").Where(p => !pythonProcessIds.Contains(p.Id)).ToArray()) {
                     Thread.Sleep(500);
                 }
                 Assert.IsTrue(newProcesses.Any(), "Did not find new Python process");

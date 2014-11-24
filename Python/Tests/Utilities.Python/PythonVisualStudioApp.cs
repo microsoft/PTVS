@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
@@ -280,7 +281,7 @@ namespace TestUtilities.UI.Python {
             );
             environmentsNode.Select();
 
-            var alreadyRunning = Process.GetProcessesByName("python");
+            var alreadyRunning = new HashSet<int>(Process.GetProcessesByName("python").Select(p => p.Id));
 
             using (var createVenv = AutomationDialog.FromDte(this, "Python.AddVirtualEnvironment")) {
                 envPath = new TextBox(createVenv.FindByAutomationId("VirtualEnvPath")).GetValue();
@@ -303,7 +304,7 @@ namespace TestUtilities.UI.Python {
                 createVenv.ClickButtonAndClose("Close", nameIsAutomationId: true);
             }
 
-            var nowRunning = Process.GetProcessesByName("python").Except(alreadyRunning).ToArray();
+            var nowRunning = Process.GetProcessesByName("python").Where(p => !alreadyRunning.Contains(p.Id)).ToArray();
             foreach (var p in nowRunning) {
                 if (p.HasExited) {
                     continue;
