@@ -14,6 +14,7 @@
 
 #if DEV12_OR_LATER
 
+using System;
 using System.Collections.Generic;
 using Microsoft.Html.Core;
 using Microsoft.Web.Core;
@@ -22,60 +23,129 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
     /// <summary>
     /// A collection of <see cref="TemplateArtifact"/> objects for a given text input.
     /// </summary>
-    internal class TemplateArtifactCollection : ArtifactCollection, ISensitiveFragmentSeparatorsInfo {
-        private static readonly string[] _separatorPairs = new[] { "{{", "}}", "{%", "%}", "{#", "#}" };
+    internal class TemplateArtifactCollection : ArtifactCollection {
+        private class SeparatorsInfo : ISensitiveFragmentSeparatorsInfo {
+            public string LeftSeparator { get; set; }
+            public string RightSeparator { get; set; }
+        }
+
+        private static readonly SeparatorsInfo[] _separatorInfos = new[] {
+            new SeparatorsInfo { LeftSeparator = "{{", RightSeparator = "}}" },
+            new SeparatorsInfo { LeftSeparator = "{%", RightSeparator = "%}" },
+            new SeparatorsInfo { LeftSeparator = "{#", RightSeparator = "#}" },
+        };
 
         public TemplateArtifactCollection()
             : base(new TemplateArtifactProcessor()) {
             LeftSeparator = RightSeparator = "";
         }
 
-#if DEV14_OR_LATER
-        // TODO: Update entire class to support multiple separators correctly.
-        protected override IEnumerable<ISensitiveFragmentSeparatorsInfo> SeparatorInfos {
-            get {
-                yield return this;
-            }
-        }
-#else
-        protected override ISensitiveFragmentSeparatorsInfo SeparatorInfo {
-            get {
-                return this;
-            }
-        }
-#endif
-
         public string LeftSeparator { get; private set; }
 
         public string RightSeparator { get; private set; }
 
         public override bool IsDestructiveChange(int start, int oldLength, int newLength, ITextProvider oldText, ITextProvider newText) {
-            // ArtifactCollection knows how to detect destructive changes, but it does so based on a single pair of separators that
-            // it obtains from SeparatorsInfo. So we iterate over all possible separator pairs here and invoke the base implementation
-            // until it detects the change as destructive, or we run out of separators to check.
-            try {
-                for (int i = 0; i < _separatorPairs.Length; i += 2) {
-                    LeftSeparator = _separatorPairs[i];
-                    RightSeparator = _separatorPairs[i + 1];
-                    if (base.IsDestructiveChange(start, oldLength, newLength, oldText, newText)) {
-                        return true;
-                    }
-                }
-            } finally {
-                LeftSeparator = RightSeparator = "";
-            }
+            // Get list of items overlapping the change. Note that items haven't been
+            // shifted yet and hence their positions match the old text snapshot.
+           var itemsInRange = ItemsInRange(new TextRange(start, oldLength));
 
-            // Due to a bug in SensitiveFragmentCollection, it does not properly treat { typed before an existing separator
-            // like {{ or {% as destructive, so handle that case ourselves.
-            var index = GetItemAtPosition(start);
-            if (index >= 0) {
-                string newStr = newText.GetText(new TextRange(start, newLength));
-                if (newStr.EndsWith("{")) {
+            // Is crosses item boundaries, it is destructive
+           if (itemsInRange.Count > 1 || (itemsInRange.Count == 1 && (!itemsInRange[0].Contains(start) || !itemsInRange[0].Contains(start + oldLength)))) {
+               return true;
+           }
+
+           foreach (var separatorInfo in _separatorInfos) {
+               if (IsDestructiveChangeForSeparator(separatorInfo, itemsInRange, start, oldLength, newLength, oldText, newText)) {
                     return true;
                 }
             }
 
             return false;
+        }
+
+        private bool IsDestructiveChangeForSeparator(
+            ISensitiveFragmentSeparatorsInfo separatorInfo,
+            IList<IArtifact> itemsInRange,
+            int start,
+            int oldLength,
+            int newLength,
+            ITextProvider oldText,
+            ITextProvider newText
+        ) {
+            if (separatorInfo == null || (separatorInfo.LeftSeparator.Length == 0 && separatorInfo.RightSeparator.Length == 0)) {
+                return false;
+            }
+
+            // Find out if one of the existing fragments contains position 
+            // and if change damages fragment start or end separators
+
+            string leftSeparator = separatorInfo.LeftSeparator;
+            string rightSeparator = separatorInfo.RightSeparator;
+
+            // If no items are affected, change is unsafe only if new region contains left side separators.
+            if (itemsInRange.Count == 0) {
+                // Simple optimization for whitespace insertion
+                if (oldLength == 0 && string.IsNullOrWhiteSpace(newText.GetText(new TextRange(start, newLength)))) {
+                    return false;
+                }
+
+                // Take into account that user could have deleted space between existing 
+                // { and % or added { to the existing % so extend search range accordingly.
+                int fragmentStart = Math.Max(0, start - leftSeparator.Length + 1);
+                int fragmentEnd = Math.Min(newText.Length, start + newLength + leftSeparator.Length - 1);
+                return newText.IndexOf(leftSeparator, TextRange.FromBounds(fragmentStart, fragmentEnd), true) >= 0;
+            }
+
+            // Is change completely inside an existing item?
+            if (itemsInRange.Count == 1 && (itemsInRange[0].Contains(start) && itemsInRange[0].Contains(start + oldLength))) {
+                // Check that change does not affect item left separator
+                if (TextRange.Contains(itemsInRange[0].Start, leftSeparator.Length, start)) {
+                    return true;
+                }
+
+                // Check that change does not affect item right separator. Note that we should not be using 
+                // TextRange.Intersect since in case oldLength is zero (like when user is typing right before %} or }})
+                // TextRange.Intersect will determine that zero-length range intersects with the right separator
+                // which is incorrect. Typing at position 10 does not change separator at position 10. Similarly,
+                // deleting text right before %} or }} does not make change destructive.
+
+                var htmlToken = itemsInRange[0] as IHtmlToken;
+                if (htmlToken == null || htmlToken.IsWellFormed) {
+                    int rightSeparatorStart = itemsInRange[0].End - rightSeparator.Length;
+                    if (start + oldLength > rightSeparatorStart) {
+                        if (TextRange.Intersect(rightSeparatorStart, rightSeparator.Length, start, oldLength)) {
+                            return true;
+                        }
+                    }
+                }
+
+                // Touching left separator is destructive too, like when changing {{ to {{@
+                // Check that change does not affect item left separator (whitespace is fine)
+                if (itemsInRange[0].Start + leftSeparator.Length == start) {
+                    if (oldLength == 0) {
+                        string text = newText.GetText(new TextRange(start, newLength));
+                        if (String.IsNullOrWhiteSpace(text)) {
+                            return false;
+                        }
+                    }
+
+                    return true;
+                }
+
+                int fragmentStart = itemsInRange[0].Start + separatorInfo.LeftSeparator.Length;
+                fragmentStart = Math.Max(fragmentStart, start - separatorInfo.RightSeparator.Length + 1);
+                int changeLength = newLength - oldLength;
+                int fragmentEnd = itemsInRange[0].End + changeLength;
+                fragmentEnd = Math.Min(fragmentEnd, start + newLength + separatorInfo.RightSeparator.Length - 1);
+
+                if (newText.IndexOf(separatorInfo.RightSeparator, TextRange.FromBounds(fragmentStart, fragmentEnd), true) >= 0) {
+                    return true;
+                }
+
+                return false;
+            }
+
+            return true;
         }
     }
 }
