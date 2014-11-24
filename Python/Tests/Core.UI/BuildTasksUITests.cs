@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -245,14 +246,14 @@ namespace PythonToolsUITests {
                 EnvDTE.Project proj;
                 OpenProject(app, "Commands3.sln", out node, out proj);
 
-                var existingProcesses = Process.GetProcessesByName("cmd");
+                var existingProcesses = new HashSet<int>(Process.GetProcessesByName("cmd").Select(p => p.Id));
 
                 Execute(node, "Write to Console");
 
                 Process newProcess = null;
                 for (int retries = 100; retries > 0 && newProcess == null; --retries) {
                     Thread.Sleep(100);
-                    newProcess = Process.GetProcessesByName("cmd").Except(existingProcesses).FirstOrDefault();
+                    newProcess = Process.GetProcessesByName("cmd").Where(p => !existingProcesses.Contains(p.Id)).FirstOrDefault();
                 }
                 Assert.IsNotNull(newProcess, "Process did not start");
                 try {
