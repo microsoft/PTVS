@@ -32,6 +32,7 @@
         
         <Grid.Resources>
             <wpf:Lambda x:Key="BoolToVisible">x => x ? Visibility.Visible : Visibility.Collapsed</wpf:Lambda>
+            <wpf:Lambda x:Key="BothBoolToVisible">(x, y) => (x &amp;&amp; y) ? Visibility.Visible : Visibility.Collapsed</wpf:Lambda>
         </Grid.Resources>
         
         <wpf:LabelledControl Grid.Row="0"
@@ -70,7 +71,7 @@
         <Label Grid.Row="3"
                Style="{StaticResource BulletedLabel}">
             <Label.Visibility>
-                <MultiBinding Converter="{StaticResource BoolToVisible}">
+                <MultiBinding Converter="{StaticResource BothBoolToVisible}">
                     <Binding Path="InstallUsingPip" />
                     <Binding Path="IsInsecure" />
                 </MultiBinding>
