@@ -246,9 +246,10 @@
   <!-- .vsdconfigxml -> .vsdconfig -->
   <ItemGroup>
     <VsdConfigXml Include="DkmDebugger\*.vsdconfigxml" />
-    <Content Include="DkmDebugger\*.natvis">
+    <Content Include="DkmDebugger\PythonDkm.natvis">
+      <Link>Visualizers\PythonDkm.natvis</Link>
       <IncludeInVSIX>true</IncludeInVSIX>
-      <VsixSubPath>.</VsixSubPath>
+      <VSIXSubPath>.</VSIXSubPath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
