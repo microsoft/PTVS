@@ -687,6 +687,7 @@ if ($successful) {
         foreach ($name in $failed_logs) {
             Write-Output "    $name"
         }
+        exit 1
     }
     exit 0
 } else {
