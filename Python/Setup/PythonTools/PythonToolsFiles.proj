@@ -155,7 +155,7 @@
                    Microsoft.PythonTools.Debugger.Helper.x64.dll;
                    Microsoft.PythonTools.Debugger.Helper.x64.pdb;
                    DkmDebugger.vsdconfig;
-                   DkmDebugger\PythonDkm.natvis" />
+                   Visualizers\PythonDkm.natvis" />
     
     <!-- Unit Test Adapter -->
     <File Condition="$(VSTarget) != '10.0'"
