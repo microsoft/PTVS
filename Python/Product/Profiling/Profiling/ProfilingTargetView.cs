@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -36,8 +37,16 @@ namespace Microsoft.PythonTools.Profiling {
         /// <summary>
         /// Create a ProfilingTargetView with default values.
         /// </summary>
-        public ProfilingTargetView() {
-            var solution = PythonProfilingPackage.Instance.Solution;
+        [Obsolete("An IServiceProvider should be provided")]
+        public ProfilingTargetView()
+            : this(PythonProfilingPackage.Instance) {
+        }
+
+        /// <summary>
+        /// Create a ProfilingTargetView with default values.
+        /// </summary>
+        public ProfilingTargetView(IServiceProvider serviceProvider) {
+            var solution = serviceProvider.GetService(typeof(SVsSolution)) as IVsSolution;
             
             var availableProjects = new List<ProjectTargetView>();
             foreach (var project in solution.EnumerateLoadedProjects()) {
@@ -46,7 +55,7 @@ namespace Microsoft.PythonTools.Profiling {
             _availableProjects = new ReadOnlyCollection<ProjectTargetView>(availableProjects);
 
             _project = null;
-            _standalone = new StandaloneTargetView();
+            _standalone = new StandaloneTargetView(serviceProvider);
             _isProjectSelected = true;
 
             _isValid = false;
@@ -54,7 +63,7 @@ namespace Microsoft.PythonTools.Profiling {
             PropertyChanged += new PropertyChangedEventHandler(ProfilingTargetView_PropertyChanged);
             _standalone.PropertyChanged += new PropertyChangedEventHandler(Standalone_PropertyChanged);
 
-            var startupProject = PythonProfilingPackage.Instance.GetStartupProjectGuid();
+            var startupProject = PythonProfilingPackage.GetStartupProjectGuid(serviceProvider);
             Project = AvailableProjects.FirstOrDefault(p => p.Guid == startupProject) ??
                 AvailableProjects.FirstOrDefault();
             if (Project != null) {
@@ -71,14 +80,22 @@ namespace Microsoft.PythonTools.Profiling {
         /// Create a ProfilingTargetView with values taken from a template.
         /// </summary>
         /// <param name="template"></param>
+        [Obsolete("An IServiceProvider should be provided")]
         public ProfilingTargetView(ProfilingTarget template)
-            : this() {
+            : this(PythonProfilingPackage.Instance, template) {
+        }
+
+        /// <summary>
+        /// Create a ProfilingTargetView with values taken from a template.
+        /// </summary>
+        public ProfilingTargetView(IServiceProvider serviceProvider, ProfilingTarget template)
+            : this(serviceProvider) {
             if (template.ProjectTarget != null) {
                 Project = new ProjectTargetView(template.ProjectTarget);
                 IsStandaloneSelected = false;
                 IsProjectSelected = true;
             } else if (template.StandaloneTarget != null) {
-                Standalone = new StandaloneTargetView(template.StandaloneTarget);
+                Standalone = new StandaloneTargetView(serviceProvider, template.StandaloneTarget);
                 IsProjectSelected = false;
                 IsStandaloneSelected = true;
             }

@@ -28,6 +28,12 @@ namespace Microsoft.PythonTools.Commands {
     /// Provides the command to import a project from existing code.
     /// </summary>
     class ImportWizardCommand : Command {
+        private readonly IServiceProvider _serviceProvider;
+
+        public ImportWizardCommand(IServiceProvider serviceProvider) {
+            _serviceProvider = serviceProvider;
+        }
+
         private async void CreateProjectAndHandleErrors(
             IVsStatusbar statusBar,
             Microsoft.PythonTools.Project.ImportWizard.ImportWizard dlg
@@ -36,7 +42,7 @@ namespace Microsoft.PythonTools.Commands {
                 var path = await dlg.ImportSettings.CreateRequestedProjectAsync();
                 if (File.Exists(path)) {
                     object outRef = null, pathRef = ProcessOutput.QuoteSingleArgument(path);
-                    PythonToolsPackage.Instance.DTE.Commands.Raise(
+                    _serviceProvider.GetDTE().Commands.Raise(
                         VSConstants.GUID_VSStandardCommandSet97.ToString("B"),
                         (int)VSConstants.VSStd97CmdID.OpenProject,
                         ref pathRef,
@@ -55,7 +61,7 @@ namespace Microsoft.PythonTools.Commands {
         }
 
         public override void DoCommand(object sender, EventArgs args) {
-            var statusBar = (IVsStatusbar)CommonPackage.GetGlobalService(typeof(SVsStatusbar));
+            var statusBar = (IVsStatusbar)_serviceProvider.GetService(typeof(SVsStatusbar));
             statusBar.SetText(SR.GetString(SR.StatusImportWizardStarting));
 
             string initialProjectPath = null, initialSourcePath = null;
@@ -77,6 +83,7 @@ namespace Microsoft.PythonTools.Commands {
             }
 
             var dlg = new Microsoft.PythonTools.Project.ImportWizard.ImportWizard(
+                _serviceProvider,
                 initialSourcePath,
                 initialProjectPath
             );

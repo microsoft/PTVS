@@ -26,17 +26,21 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public override int DebugLaunch(uint flags) {
-            if (_project.ShouldWarnOnLaunch && StartWithErrorsDialog.ShouldShow) {
-                var res = new StartWithErrorsDialog().ShowDialog();
-                if (res == DialogResult.No) {
-                    return VSConstants.S_OK;
+            
+            if (_project.ShouldWarnOnLaunch) {
+                var pyService = (PythonToolsService)_project.GetService(typeof(PythonToolsService));
+                if (pyService.DebuggerOptions.PromptBeforeRunningWithBuildError) {
+                    var res = new StartWithErrorsDialog(pyService).ShowDialog();
+                    if (res == DialogResult.No) {
+                        return VSConstants.S_OK;
+                    }
                 }
             }
 
             try {
                 return base.DebugLaunch(flags);
             } catch (NoInterpretersException) {
-                PythonToolsPackage.OpenNoInterpretersHelpPage();
+                PythonToolsPackage.OpenNoInterpretersHelpPage(ProjectMgr.Site);
                 return VSConstants.S_OK;
             }
         }

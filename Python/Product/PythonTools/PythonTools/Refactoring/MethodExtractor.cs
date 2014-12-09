@@ -24,12 +24,14 @@ namespace Microsoft.PythonTools.Refactoring {
     class MethodExtractor {
         private readonly ITextView _view;
         private readonly PythonAst _ast;
+        private readonly IServiceProvider _serviceProvider;
 
-        public MethodExtractor(ITextView textView) {
+        public MethodExtractor(IServiceProvider serviceProvider, ITextView textView) {
             _view = textView;
+            _serviceProvider = serviceProvider;
             var snapshot = _view.TextBuffer.CurrentSnapshot;
 
-            _ast = _view.GetAnalyzer().ParseSnapshot(snapshot);
+            _ast = _view.GetAnalyzer(_serviceProvider).ParseSnapshot(snapshot);
         }
 
         public bool ExtractMethod(IExtractMethodInput input) {

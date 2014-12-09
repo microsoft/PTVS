@@ -24,9 +24,11 @@ using Microsoft.VisualStudio.Text;
 namespace Microsoft.PythonTools.Intellisense {
     class SmartTagSource : ISmartTagSource {
         private readonly ITextBuffer _textBuffer;
+        private readonly System.IServiceProvider _serviceProvider;
         
-        public SmartTagSource(ITextBuffer textBuffer) {
+        public SmartTagSource(System.IServiceProvider serviceProvider, ITextBuffer textBuffer) {
             _textBuffer = textBuffer;
+            _serviceProvider = serviceProvider;
         }
 
         public void AugmentSmartTagSession(ISmartTagSession session, IList<SmartTagActionSet> smartTagActionSets) {
@@ -36,7 +38,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private void AddImportTags(ISmartTagSession session, IList<SmartTagActionSet> smartTagActionSets) {
             var textBuffer = _textBuffer;
             var span = session.CreateTrackingSpan(textBuffer);
-            var imports = textBuffer.CurrentSnapshot.GetMissingImports(span);
+            var imports = textBuffer.CurrentSnapshot.GetMissingImports(_serviceProvider, span);
             IOleComponentManager compMgr;
             SmartTagController controller;
 
@@ -74,10 +76,10 @@ namespace Microsoft.PythonTools.Intellisense {
 
                         if ((lastDot = import.Name.LastIndexOf('.')) == -1) {
                             // simple import
-                            actions.Add(new ImportSmartTagAction(import.Name, _textBuffer, session.TextView));
+                            actions.Add(new ImportSmartTagAction(import.Name, _textBuffer, session.TextView, _serviceProvider));
                         } else {
                             // importing a package or member of a module
-                            actions.Add(new ImportSmartTagAction(import.Name.Substring(0, lastDot), import.Name.Substring(lastDot + 1), _textBuffer, session.TextView));
+                            actions.Add(new ImportSmartTagAction(import.Name.Substring(0, lastDot), import.Name.Substring(lastDot + 1), _textBuffer, session.TextView, _serviceProvider));
                         }
                     }
 

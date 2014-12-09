@@ -34,6 +34,7 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudioTools.Project.Automation;
+using Microsoft.VisualStudioTools.VSTestHost;
 using TestUtilities;
 using TestUtilities.Python;
 using TestUtilities.UI;
@@ -827,7 +828,7 @@ namespace PythonToolsUITests {
                 // used the empty path for an assembly and throws an exception.  We now handle the exception
                 // in RemoteInterpreter.GetBuiltinFunctionDocumentation and RemoteInterpreter.GetPythonTypeDocumentation
                 AssertUtil.ContainsExactly(
-                    GetSignatures("Class1.Fob(", snapshot).Signatures.Select(s => s.Documentation),
+                    GetSignatures(app, "Class1.Fob(", snapshot).Signatures.Select(s => s.Documentation),
                     ""
                 );
 
@@ -854,17 +855,17 @@ namespace PythonToolsUITests {
         private static ExpressionAnalysis GetVariableAnalysis(string variable, ITextSnapshot snapshot) {
             var index = snapshot.GetText().IndexOf(variable + " =");
             var span = snapshot.CreateTrackingSpan(new Span(index, 1), SpanTrackingMode.EdgeInclusive);
-            return snapshot.AnalyzeExpression(span);
+            return snapshot.AnalyzeExpression(VSTestContext.ServiceProvider, span);
         }
 
         private static IEnumerable<string> GetVariableDescriptions(string variable, ITextSnapshot snapshot) {
             return GetVariableAnalysis(variable, snapshot).Values.Select(v => v.Description);
         }
 
-        private static SignatureAnalysis GetSignatures(string text, ITextSnapshot snapshot) {
+        private static SignatureAnalysis GetSignatures(VisualStudioApp app, string text, ITextSnapshot snapshot) {
             var index = snapshot.GetText().IndexOf(text);
             var span = snapshot.CreateTrackingSpan(new Span(index, text.Length), SpanTrackingMode.EdgeInclusive);
-            return snapshot.GetSignatures(span);
+            return snapshot.GetSignatures(app.ServiceProvider, span);
         }
 
         private static void CompileFile(string file, string outname) {
@@ -914,7 +915,7 @@ namespace PythonToolsUITests {
                 var snapshot = doc.TextView.TextBuffer.CurrentSnapshot;
                 var index = snapshot.GetText().IndexOf("a =");
                 var span = snapshot.CreateTrackingSpan(new Span(index, 1), SpanTrackingMode.EdgeInclusive);
-                var analysis = snapshot.AnalyzeExpression(span);
+                var analysis = snapshot.AnalyzeExpression(app.ServiceProvider, span);
                 Assert.AreEqual(analysis.Values.First().Description, "int");
             }
         }
@@ -1113,9 +1114,9 @@ namespace PythonToolsUITests {
         [HostType("VSTestHost")]
         public void AddFromFileOutsideOfProject() {
             using (var app = new VisualStudioApp()) {
-                var prevSetting = PythonToolsPackage.Instance.DebuggingOptionsPage.UpdateSearchPathsWhenAddingLinkedFiles;
-                app.OnDispose(() => PythonToolsPackage.Instance.DebuggingOptionsPage.UpdateSearchPathsWhenAddingLinkedFiles = prevSetting);
-                PythonToolsPackage.Instance.DebuggingOptionsPage.UpdateSearchPathsWhenAddingLinkedFiles = false;
+                var prevSetting = app.GetService<PythonToolsService>().GeneralOptions.UpdateSearchPathsWhenAddingLinkedFiles;
+                app.OnDispose(() => app.GetService<PythonToolsService>().GeneralOptions.UpdateSearchPathsWhenAddingLinkedFiles = prevSetting);
+                app.GetService<PythonToolsService>().GeneralOptions.UpdateSearchPathsWhenAddingLinkedFiles = false;
 
                 var project = app.OpenProject(@"TestData\HelloWorld.sln");
                 // "Python Environments", "References", "Search Paths", "Program.py"

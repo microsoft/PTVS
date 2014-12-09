@@ -91,22 +91,7 @@ namespace Microsoft.PythonTools.Project {
         public override void LoadSettings() {
             Loading = true;
             try {
-                _control.StartupFile = this.Project.GetProjectProperty(CommonConstants.StartupFile, false);
-                _control.WorkingDirectory = this.Project.GetProjectProperty(CommonConstants.WorkingDirectory, false);
-                if (string.IsNullOrEmpty(_control.WorkingDirectory)) {
-                    _control.WorkingDirectory = ".";
-                }
-                _control.IsWindowsApplication = Convert.ToBoolean(this.Project.GetProjectProperty(CommonConstants.IsWindowsApplication, false));
-                _control.OnInterpretersChanged();
-
-                if (PythonProject.Interpreters.IsActiveInterpreterGlobalDefault) {
-                    // ActiveInterpreter will never be null, so we need to check
-                    // the property to find out if it's following the global
-                    // default.
-                    _control.SetDefaultInterpreter(null);
-                } else {
-                    _control.SetDefaultInterpreter(PythonProject.Interpreters.ActiveInterpreter);
-                }
+                _control.LoadSettings();
             } finally {
                 Loading = false;
             }

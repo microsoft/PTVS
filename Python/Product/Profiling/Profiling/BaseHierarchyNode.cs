@@ -26,7 +26,7 @@ namespace Microsoft.PythonTools.Profiling {
     /// The minimal implementation needs to implement GetProperty.
     /// </summary>
     abstract class BaseHierarchyNode : IVsUIHierarchy {
-        internal ServiceProvider _serviceProvider;
+        private ServiceProvider _serviceProvider;
         private Dictionary<uint, IVsHierarchyEvents> _events = new Dictionary<uint, IVsHierarchyEvents>();
         private uint _eventCounter;
 

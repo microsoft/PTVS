@@ -62,9 +62,13 @@ namespace Microsoft.PythonTools.Project.Web {
         private readonly IPythonProject _project;
         private readonly IAsyncCommand _runServerCommand;
         private readonly IAsyncCommand _debugServerCommand;
+        private readonly PythonToolsService _pyService;
+        private readonly IServiceProvider _serviceProvider;
 
-        public PythonWebLauncher(IPythonProject project) {
+        public PythonWebLauncher(IServiceProvider serviceProvider, PythonToolsService pyService, IPythonProject project) {
+            _pyService = pyService;
             _project = project;
+            _serviceProvider = serviceProvider;
 
             var project2 = project as IPythonProject2;
             if (project2 != null) {
@@ -161,13 +165,13 @@ namespace Microsoft.PythonTools.Project.Web {
             }
 
             if (debug) {
-                PythonToolsPackage.Instance.Logger.LogEvent(Logging.PythonLogEvent.Launch, 1);
+                _pyService.Logger.LogEvent(Logging.PythonLogEvent.Launch, 1);
 
                 using (var dsi = CreateDebugTargetInfo(startInfo, GetInterpreterPath(_project, isWindows))) {
-                    dsi.Launch(PythonToolsPackage.Instance);
+                    dsi.Launch(_serviceProvider);
                 }
             } else {
-                PythonToolsPackage.Instance.Logger.LogEvent(Logging.PythonLogEvent.Launch, 0);
+                _pyService.Logger.LogEvent(Logging.PythonLogEvent.Launch, 0);
 
                 var psi = CreateProcessStartInfo(startInfo, GetInterpreterPath(_project, isWindows));
 
@@ -181,17 +185,17 @@ namespace Microsoft.PythonTools.Project.Web {
         }
 
         public int LaunchFile(string file, bool debug) {
-            return new DefaultPythonLauncher(_project).LaunchFile(file, debug);
+            return new DefaultPythonLauncher(_serviceProvider, _pyService, _project).LaunchFile(file, debug);
         }
 
-        private static string GetInterpreterPath(IPythonProject project, bool isWindows) {
+        private string GetInterpreterPath(IPythonProject project, bool isWindows) {
             var factory = project.GetInterpreterFactory();
 
             if (factory == null) {
                 throw new NoInterpretersException();
             }
 
-            var interpreterService = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
+            var interpreterService = _serviceProvider.GetComponentModel().GetService<IInterpreterOptionsService>();
             if (interpreterService == null || factory == interpreterService.NoInterpretersValue) {
                 throw new NoInterpretersException();
             }
@@ -201,14 +205,14 @@ namespace Microsoft.PythonTools.Project.Web {
                 factory.Configuration.InterpreterPath;
         }
 
-        private static void StartBrowser(string url, Func<bool> shortCircuitPredicate) {
+        private void StartBrowser(string url, Func<bool> shortCircuitPredicate) {
             Uri uri;
             if (!String.IsNullOrWhiteSpace(url) && Uri.TryCreate(url, UriKind.RelativeOrAbsolute, out uri)) {
                 OnPortOpenedHandler.CreateHandler(
                     uri.Port,
                     shortCircuitPredicate: shortCircuitPredicate,
                     action: () => {
-                        var web = PythonToolsPackage.GetGlobalService(typeof(SVsWebBrowsingService)) as IVsWebBrowsingService;
+                        var web = _serviceProvider.GetService(typeof(SVsWebBrowsingService)) as IVsWebBrowsingService;
                         if (web == null) {
                             PythonToolsPackage.OpenWebBrowser(url);
                             return;
@@ -271,8 +275,8 @@ namespace Microsoft.PythonTools.Project.Web {
             }
         }
 
-        private static IEnumerable<string> GetGlobalDebuggerOptions(bool allowPauseAtEnd, bool alwaysPauseAtEnd) {
-            var options = PythonToolsPackage.Instance.DebuggingOptionsPage;
+        private IEnumerable<string> GetGlobalDebuggerOptions(bool allowPauseAtEnd, bool alwaysPauseAtEnd) {
+            var options = _pyService.DebuggerOptions;
 
             if (alwaysPauseAtEnd || allowPauseAtEnd && options.WaitOnAbnormalExit) {
                 yield return AD7Engine.WaitOnAbnormalExitSetting + "=True";
@@ -426,14 +430,14 @@ namespace Microsoft.PythonTools.Project.Web {
             // Pause if the user has requested it.
             string pauseCommand = null;
             if (alwaysPause ||
-                PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnAbnormalExit &&
-                PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnNormalExit) {
+                _pyService.DebuggerOptions.WaitOnAbnormalExit &&
+                _pyService.DebuggerOptions.WaitOnNormalExit) {
                 pauseCommand = "pause";
-            } else if (PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnAbnormalExit &&
-                !PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnNormalExit) {
+            } else if (_pyService.DebuggerOptions.WaitOnAbnormalExit &&
+                !_pyService.DebuggerOptions.WaitOnNormalExit) {
                 pauseCommand = "if errorlevel 1 pause";
-            } else if (PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnNormalExit &&
-                !PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnAbnormalExit) {
+            } else if (_pyService.DebuggerOptions.WaitOnNormalExit &&
+                !_pyService.DebuggerOptions.WaitOnAbnormalExit) {
                 pauseCommand = "if not errorlevel 1 pause";
             }
             if (!string.IsNullOrEmpty(pauseCommand)) {
@@ -456,7 +460,7 @@ namespace Microsoft.PythonTools.Project.Web {
             try {
                 return GetFullUrl(host, TestServerPort);
             } catch (UriFormatException) {
-                var output = OutputWindowRedirector.GetGeneral(PythonToolsPackage.Instance);
+                var output = OutputWindowRedirector.GetGeneral(_serviceProvider);
                 output.WriteErrorLine(SR.GetString(SR.ErrorInvalidLaunchUrl, host));
                 output.ShowAndActivate();
                 return string.Empty;

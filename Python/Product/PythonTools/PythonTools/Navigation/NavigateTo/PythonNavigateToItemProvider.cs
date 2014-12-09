@@ -27,7 +27,6 @@ namespace Microsoft.PythonTools.Navigation.NavigateTo {
     internal class PythonNavigateToItemProvider : INavigateToItemProvider {
         private readonly IServiceProvider _serviceProvider;
         private readonly IGlyphService _glyphService;
-        private readonly CommonPackage _package;
         private Task _searchTask;
         private CancellationTokenSource _searchCts;
 
@@ -49,13 +48,15 @@ namespace Microsoft.PythonTools.Navigation.NavigateTo {
             private readonly string _searchValue;
             private readonly Stack<LibraryNode> _path = new Stack<LibraryNode>();
             private readonly FuzzyStringMatcher _comparer, _regexComparer;
+            private readonly PythonToolsService _pyService;
 
-            public LibraryNodeVisitor(PythonNavigateToItemProvider itemProvider, INavigateToCallback navCallback, string searchValue) {
+            public LibraryNodeVisitor(PythonToolsService pyService, PythonNavigateToItemProvider itemProvider, INavigateToCallback navCallback, string searchValue) {
+                _pyService = pyService;
                 _itemProvider = itemProvider;
                 _navCallback = navCallback;
                 _searchValue = searchValue;
                 _path.Push(null);
-                _comparer = new FuzzyStringMatcher(PythonToolsPackage.Instance.AdvancedEditorOptionsPage.SearchMode);
+                _comparer = new FuzzyStringMatcher(_pyService.AdvancedOptions.SearchMode);
                 _regexComparer = new FuzzyStringMatcher(FuzzyMatchMode.RegexIgnoreCase);
             }
 
@@ -119,22 +120,21 @@ namespace Microsoft.PythonTools.Navigation.NavigateTo {
             }
         }
 
-        public PythonNavigateToItemProvider(IServiceProvider serviceProvider, IGlyphService glyphService, CommonPackage package) {
+        public PythonNavigateToItemProvider(IServiceProvider serviceProvider, IGlyphService glyphService) {
             _serviceProvider = serviceProvider;
             _glyphService = glyphService;
-            _package = package;
         }
 
         public void StartSearch(INavigateToCallback callback, string searchValue) {
-            var packageServiceProvider = (IServiceProvider)_package;
-            var libraryManager = (LibraryManager)packageServiceProvider.GetService(_package.GetLibraryManagerType());
+            var libraryManager = (LibraryManager)_serviceProvider.GetService(typeof(IPythonLibraryManager));
             var library = libraryManager.Library;
 
             if (_searchCts != null) {
                 _searchCts.Dispose();
             }
             _searchCts = new CancellationTokenSource();
-            _searchTask = Task.Factory.StartNew(() => library.VisitNodes(new LibraryNodeVisitor(this, callback, searchValue), _searchCts.Token), _searchCts.Token);
+            var pyService = (PythonToolsService)_serviceProvider.GetService(typeof(PythonToolsService));
+            _searchTask = Task.Factory.StartNew(() => library.VisitNodes(new LibraryNodeVisitor(pyService, this, callback, searchValue), _searchCts.Token), _searchCts.Token);
         }
 
         public void StopSearch() {

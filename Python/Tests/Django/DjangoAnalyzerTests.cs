@@ -121,8 +121,9 @@ namespace DjangoTests {
                 djangoDbPath
             );
 
+            var serviceProvider = PythonToolsTestUtilities.CreateMockServiceProvider();
             PythonAnalyzer analyzer = new PythonAnalyzer(testFact);
-            DjangoAnalyzer djangoAnalyzer = new DjangoAnalyzer();
+            DjangoAnalyzer djangoAnalyzer = new DjangoAnalyzer(serviceProvider);
             djangoAnalyzer.OnNewAnalyzer(analyzer);
 
             analyzer.AddAnalysisDirectory(path);

@@ -19,31 +19,10 @@ using Microsoft.PythonTools.Parsing;
 namespace Microsoft.PythonTools.Options {
     [ComVisible(true)]
     public class PythonGeneralOptionsPage : PythonDialogPage {
-        private SurveyNewsPolicy _surveyNewsCheck;
-        private DateTime _surveyNewsLastCheck;
-        private string _surveyNewsFeedUrl;
-        private string _surveyNewsIndexUrl;
         private PythonGeneralOptionsControl _window;
-        private bool _showOutputWindowForVirtualEnvCreate;
-        private bool _showOutputWindowForPackageInstallation;
-        private bool _elevatePip;
-        private bool _elevateEasyInstall;
-        private bool _unresolvedImportWarning;
-        private bool _clearGlobalPythonPath;
-
-        private PythonDebuggingOptionsPage _debugOptions;
 
         public PythonGeneralOptionsPage()
             : base("General") {
-        }
-
-        private PythonDebuggingOptionsPage DebugOptions {
-            get {
-                if (_debugOptions == null) {
-                    _debugOptions = PythonToolsPackage.Instance.DebuggingOptionsPage;
-                }
-                return _debugOptions;
-            }
         }
 
         // replace the default UI of the dialog page w/ our own UI.
@@ -62,89 +41,99 @@ namespace Microsoft.PythonTools.Options {
         /// per week.
         /// </summary>
         /// <remarks>New in 2.0</remarks>
+        [Obsolete("Use PythonToolsService.GeneralOptions instead")]
         public SurveyNewsPolicy SurveyNewsCheck {
-            get { return _surveyNewsCheck; }
-            set { _surveyNewsCheck = value; }
+            get { return PyService.GeneralOptions.SurveyNewsCheck; }
+            set { PyService.GeneralOptions.SurveyNewsCheck = value; }
         }
 
         /// <summary>
         /// The date/time when the last check for news occurred.
         /// </summary>
         /// <remarks>New in 2.0</remarks>
+        [Obsolete("Use PythonToolsService.GeneralOptions instead")]
         public DateTime SurveyNewsLastCheck {
-            get { return _surveyNewsLastCheck; }
-            set { _surveyNewsLastCheck = value; }
+            get { return PyService.GeneralOptions.SurveyNewsLastCheck; }
+            set { PyService.GeneralOptions.SurveyNewsLastCheck = value; }
         }
 
         /// <summary>
         /// The url of the news feed.
         /// </summary>
         /// <remarks>New in 2.0</remarks>
+        [Obsolete("Use PythonToolsService.GeneralOptions instead")]
         public string SurveyNewsFeedUrl {
-            get { return _surveyNewsFeedUrl; }
-            set { _surveyNewsFeedUrl = value; }
+            get { return PyService.GeneralOptions.SurveyNewsFeedUrl; }
+            set { PyService.GeneralOptions.SurveyNewsFeedUrl = value; }
         }
 
         /// <summary>
         /// The url of the news index page.
         /// </summary>
         /// <remarks>New in 2.0</remarks>
+        [Obsolete("Use PythonToolsService.GeneralOptions instead")]
         public string SurveyNewsIndexUrl {
-            get { return _surveyNewsIndexUrl; }
-            set { _surveyNewsIndexUrl = value; }
+            get { return PyService.GeneralOptions.SurveyNewsIndexUrl; }
+            set { PyService.GeneralOptions.SurveyNewsIndexUrl = value; }
         }
 
         /// <summary>
         /// Show the output window for virtual environment creation.
         /// </summary>
         /// <remarks>New in 2.0</remarks>
+        [Obsolete("Use PythonToolsService.GeneralOptions instead")]
         public bool ShowOutputWindowForVirtualEnvCreate {
-            get { return _showOutputWindowForVirtualEnvCreate; }
-            set { _showOutputWindowForVirtualEnvCreate = value; }
+            get { return PyService.GeneralOptions.ShowOutputWindowForVirtualEnvCreate; }
+            set { PyService.GeneralOptions.ShowOutputWindowForVirtualEnvCreate = value; }
         }
 
         /// <summary>
         /// Show the output window for package installation.
         /// </summary>
         /// <remarks>New in 2.0</remarks>
+        [Obsolete("Use PythonToolsService.GeneralOptions instead")]
         public bool ShowOutputWindowForPackageInstallation {
-            get { return _showOutputWindowForPackageInstallation; }
-            set { _showOutputWindowForPackageInstallation = value; }
+            get { return PyService.GeneralOptions.ShowOutputWindowForPackageInstallation; }
+            set { PyService.GeneralOptions.ShowOutputWindowForPackageInstallation = value; }
         }
 
         /// <summary>
         /// True to always run pip elevated when installing or uninstalling
         /// packages.
         /// </summary>
+        [Obsolete("Use PythonToolsService.GeneralOptions instead")]
         public bool ElevatePip {
-            get { return _elevatePip; }
-            set { _elevatePip = value; }
+            get { return PyService.GeneralOptions.ElevatePip; }
+            set { PyService.GeneralOptions.ElevatePip = value; }
         }
 
         /// <summary>
         /// True to always run easy_install elevated when installing packages.
         /// </summary>
+        [Obsolete("Use PythonToolsService.GeneralOptions instead")]
         public bool ElevateEasyInstall {
-            get { return _elevateEasyInstall; }
-            set { _elevateEasyInstall = value; }
+            get { return PyService.GeneralOptions.ElevateEasyInstall; }
+            set { PyService.GeneralOptions.ElevateEasyInstall = value; }
         }
 
         /// <summary>
         /// True to warn when a module is not resolved.
         /// </summary>
         /// <remarks>New in 2.1</remarks>
+        [Obsolete("Use PythonToolsService.GeneralOptions instead")]
         public bool UnresolvedImportWarning {
-            get { return _unresolvedImportWarning; }
-            set { _unresolvedImportWarning = value; }
+            get { return PyService.GeneralOptions.UnresolvedImportWarning; }
+            set { PyService.GeneralOptions.UnresolvedImportWarning = value; }
         }
 
         /// <summary>
         /// True to mask global environment paths when launching projects.
         /// </summary>
         /// <remarks>New in 2.1</remarks>
+        [Obsolete("Use PythonToolsService.GeneralOptions instead")]
         public bool ClearGlobalPythonPath {
-            get { return _clearGlobalPythonPath; }
-            set { _clearGlobalPythonPath = value; }
+            get { return PyService.GeneralOptions.ClearGlobalPythonPath; }
+            set { PyService.GeneralOptions.ClearGlobalPythonPath = value; }
         }
 
         /// <summary>
@@ -155,9 +144,10 @@ namespace Microsoft.PythonTools.Options {
         /// This option lives in <see cref="PythonDebugOptionsPage"/> for
         /// backwards-compatibility.
         /// </remarks>
+        [Obsolete("Use PythonToolsService.GeneralOptions instead")]
         public bool AutoAnalyzeStandardLibrary {
-            get { return DebugOptions.AutoAnalyzeStandardLibrary; }
-            set { DebugOptions.AutoAnalyzeStandardLibrary = value; }
+            get { return PyService.GeneralOptions.AutoAnalyzeStandardLibrary; }
+            set { PyService.GeneralOptions.AutoAnalyzeStandardLibrary = value; }
         }
 
         /// <summary>
@@ -168,9 +158,10 @@ namespace Microsoft.PythonTools.Options {
         /// This option lives in <see cref="PythonDebugOptionsPage"/> for
         /// backwards-compatibility.
         /// </remarks>
+        [Obsolete("Use PythonToolsService.GeneralOptions instead")]
         public bool UpdateSearchPathsWhenAddingLinkedFiles {
-            get { return DebugOptions.UpdateSearchPathsWhenAddingLinkedFiles; }
-            set { DebugOptions.UpdateSearchPathsWhenAddingLinkedFiles = value; }
+            get { return PyService.GeneralOptions.UpdateSearchPathsWhenAddingLinkedFiles; }
+            set { PyService.GeneralOptions.UpdateSearchPathsWhenAddingLinkedFiles = value; }
         }
 
         /// <summary>
@@ -180,17 +171,19 @@ namespace Microsoft.PythonTools.Options {
         /// This option lives in <see cref="PythonDebugOptionsPage"/> for
         /// backwards-compatibility.
         /// </remarks>
+        [Obsolete("Use PythonToolsService.GeneralOptions instead")]
         public Severity IndentationInconsistencySeverity {
-            get { return DebugOptions.IndentationInconsistencySeverity; }
-            set { DebugOptions.IndentationInconsistencySeverity = value; }
+            get { return PyService.GeneralOptions.IndentationInconsistencySeverity; }
+            set { PyService.GeneralOptions.IndentationInconsistencySeverity = value; }
         }
 
+        [Obsolete("Use PythonToolsService.DebuggerOptions instead")]
         public event EventHandler IndentationInconsistencyChanged {
             add {
-                DebugOptions.IndentationInconsistencyChanged += value;
+                PyService.GeneralOptions.IndentationInconsistencyChanged += value;
             }
             remove {
-                DebugOptions.IndentationInconsistencyChanged -= value;
+                PyService.GeneralOptions.IndentationInconsistencyChanged -= value;
             }
         }
 
@@ -200,69 +193,27 @@ namespace Microsoft.PythonTools.Options {
         /// values.
         /// </summary>
         public override void ResetSettings() {
-            _surveyNewsCheck = SurveyNewsPolicy.CheckOnceWeek;
-            _surveyNewsLastCheck = DateTime.MinValue;
-            _surveyNewsFeedUrl = DefaultSurveyNewsFeedUrl;
-            _surveyNewsIndexUrl = DefaultSurveyNewsIndexUrl;
-            _showOutputWindowForVirtualEnvCreate = true;
-            _showOutputWindowForPackageInstallation = true;
-            _elevatePip = false;
-            _elevateEasyInstall = false;
-            _unresolvedImportWarning = true;
-            _clearGlobalPythonPath = true;
-            DebugOptions.ResetGeneralSettings();
+            PyService.GeneralOptions.Reset();
         }
 
-        private const string DefaultSurveyNewsFeedUrl = "http://go.microsoft.com/fwlink/?LinkId=303967";
-        private const string DefaultSurveyNewsIndexUrl = "http://go.microsoft.com/fwlink/?LinkId=309158";
-
-        private const string ShowOutputWindowForVirtualEnvCreateSetting = "ShowOutputWindowForVirtualEnvCreate";
-        private const string ShowOutputWindowForPackageInstallationSetting = "ShowOutputWindowForPackageInstallation";
-        private const string ElevatePipSetting = "ElevatePip";
-        private const string ElevateEasyInstallSetting = "ElevateEasyInstall";
-        private const string SurveyNewsCheckSetting = "SurveyNewsCheck";
-        private const string SurveyNewsLastCheckSetting = "SurveyNewsLastCheck";
-        private const string SurveyNewsFeedUrlSetting = "SurveyNewsFeedUrl";
-        private const string SurveyNewsIndexUrlSetting = "SurveyNewsIndexUrl";
-        private const string UnresolvedImportWarningSetting = "UnresolvedImportWarning";
-        private const string ClearGlobalPythonPathSetting = "ClearGlobalPythonPath";
-
         public override void LoadSettingsFromStorage() {
-            // Load settings from storage.
-            _surveyNewsCheck = LoadEnum<SurveyNewsPolicy>(SurveyNewsCheckSetting) ?? SurveyNewsPolicy.CheckOnceWeek;
-            _surveyNewsLastCheck = LoadDateTime(SurveyNewsLastCheckSetting) ?? DateTime.MinValue;
-            _surveyNewsFeedUrl = LoadString(SurveyNewsFeedUrlSetting) ?? DefaultSurveyNewsFeedUrl;
-            _surveyNewsIndexUrl = LoadString(SurveyNewsIndexUrlSetting) ?? DefaultSurveyNewsIndexUrl;
-            _showOutputWindowForVirtualEnvCreate = LoadBool(ShowOutputWindowForVirtualEnvCreateSetting) ?? true;
-            _showOutputWindowForPackageInstallation = LoadBool(ShowOutputWindowForPackageInstallationSetting) ?? true;
-            _elevatePip = LoadBool(ElevatePipSetting) ?? false;
-            _elevateEasyInstall = LoadBool(ElevateEasyInstallSetting) ?? false;
-            _unresolvedImportWarning = LoadBool(UnresolvedImportWarningSetting) ?? true;
-            _clearGlobalPythonPath = LoadBool(ClearGlobalPythonPathSetting) ?? true;
-            DebugOptions.LoadGeneralSettingsFromStorage();
+            // Load settings from storage.            
+            PyService.GeneralOptions.Load();
 
             // Synchronize UI with backing properties.
             if (_window != null) {
-                _window.SyncControlWithPageSettings(this);
+                _window.SyncControlWithPageSettings(PyService);
             }
         }
 
         public override void SaveSettingsToStorage() {
             // Synchronize backing properties with UI.
             if (_window != null) {
-                _window.SyncPageWithControlSettings(this);
+                _window.SyncPageWithControlSettings(PyService);
             }
 
             // Save settings.
-            SaveEnum(SurveyNewsCheckSetting, _surveyNewsCheck);
-            SaveDateTime(SurveyNewsLastCheckSetting, _surveyNewsLastCheck);
-            SaveBool(ShowOutputWindowForVirtualEnvCreateSetting, _showOutputWindowForVirtualEnvCreate);
-            SaveBool(ShowOutputWindowForPackageInstallationSetting, _showOutputWindowForPackageInstallation);
-            SaveBool(ElevatePipSetting, _elevatePip);
-            SaveBool(ElevateEasyInstallSetting, _elevateEasyInstall);
-            SaveBool(UnresolvedImportWarningSetting, _unresolvedImportWarning);
-            SaveBool(ClearGlobalPythonPathSetting, _clearGlobalPythonPath);
-            DebugOptions.SaveGeneralSettingsToStorage();
+            PyService.GeneralOptions.Save();
         }
     }
 }

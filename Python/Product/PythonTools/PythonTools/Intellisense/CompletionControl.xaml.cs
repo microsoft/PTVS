@@ -37,14 +37,21 @@ namespace Microsoft.PythonTools.Intellisense {
         public static readonly object HotTrackBrushKey = VsBrushes.ToolWindowTabMouseOverTextKey;
         private static readonly DependencyPropertyKey WarningVisibilityPropertyKey = DependencyProperty.RegisterReadOnly("WarningVisibility", typeof(Visibility), typeof(CompletionControl), new PropertyMetadata(Visibility.Visible));
         public static readonly DependencyProperty WarningVisibilityProperty = WarningVisibilityPropertyKey.DependencyProperty;
+        private readonly IServiceProvider _serviceProvider;
 
+        [Obsolete("Use version which takes IServiceProvider")]
+        public CompletionControl(UIElement view, ICompletionSession session)
+            : this(PythonToolsPackage.Instance, view, session) {
+        }
 
-        public CompletionControl(UIElement view, ICompletionSession session) {
+        public CompletionControl(IServiceProvider serviceProvider, UIElement view, ICompletionSession session) {
+            _serviceProvider = serviceProvider;
+
             InitializeComponent();
 
             Content = view;
 
-            var fact = session.TextView.GetAnalyzer().InterpreterFactory as IPythonInterpreterFactoryWithDatabase;
+            var fact = session.TextView.GetAnalyzer(serviceProvider).InterpreterFactory as IPythonInterpreterFactoryWithDatabase;
             if (fact == null) {
                 SetValue(WarningVisibilityPropertyKey, Visibility.Collapsed);
             } else {
@@ -73,13 +80,7 @@ namespace Microsoft.PythonTools.Intellisense {
             await Task.Delay(50);
             // Should already be on the UI thread, but we'll invoke to be safe
             UIThread.Invoke(() => {
-                var toolWindow = PythonToolsPackage.Instance.FindToolWindow(typeof(InterpreterList.InterpreterListToolWindow), 0, true) as ToolWindowPane;
-                var frame = toolWindow != null ? toolWindow.Frame as IVsWindowFrame : null;
-                if (toolWindow == null || frame == null) {
-                    ErrorHandler.ThrowOnFailure(VsShellUtilities.ShowMessageBox(PythonToolsPackage.Instance, "Unable to create Python Environments window.", "Python Tools for Visual Studio", OLEMSGICON.OLEMSGICON_NOICON, OLEMSGBUTTON.OLEMSGBUTTON_OK, OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST));
-                    return;
-                }
-                ErrorHandler.ThrowOnFailure(frame.Show());
+                _serviceProvider.ShowInterpreterList();
             });
         }
 

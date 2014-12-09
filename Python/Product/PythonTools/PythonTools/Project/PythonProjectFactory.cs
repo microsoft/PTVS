@@ -56,14 +56,12 @@ namespace Microsoft.PythonTools.Project {
 
         private const string WebTargets = @"$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.Web.targets";
 
-        public PythonProjectFactory(PythonProjectPackage/*!*/ package)
+        public PythonProjectFactory(IServiceProvider/*!*/ package)
             : base(package) {
         }
 
         internal override ProjectNode/*!*/ CreateProject() {
-            PythonProjectNode project = new PythonProjectNode((PythonProjectPackage)Package);
-            project.SetSite((IOleServiceProvider)((IServiceProvider)Package).GetService(typeof(IOleServiceProvider)));
-            return project;
+            return new PythonProjectNode(Site);
         }
 
         protected override string ProjectTypeGuids(string file) {

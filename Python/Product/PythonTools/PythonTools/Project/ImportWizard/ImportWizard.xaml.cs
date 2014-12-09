@@ -72,8 +72,8 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
             InitializeComponent();
         }
 
-        public ImportWizard(string sourcePath, string projectPath) {
-            ImportSettings = new ImportSettings();
+        public ImportWizard(IServiceProvider serviceProvider, string sourcePath, string projectPath) {
+            ImportSettings = new ImportSettings(serviceProvider);
 
             _pageSequence = new CollectionViewSource {
                 Source = new ObservableCollection<Page>(new Page[] {

@@ -58,7 +58,7 @@ namespace ReplWindowUITests {
         [HostType("VSTestHost")]
         public virtual void ExecuteInReplSysArgv() {
             using (var interactive = Prepare())
-            using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer().InterpreterFactory)) {
+            using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer(interactive.App.ServiceProvider).InterpreterFactory)) {
                 var project = interactive.App.OpenProject(@"TestData\SysArgvRepl.sln");
 
                 interactive.App.ExecuteCommand("Python.ExecuteInInteractive");
@@ -70,7 +70,7 @@ namespace ReplWindowUITests {
         [HostType("VSTestHost")]
         public virtual void ExecuteInReplSysArgvScriptArgs() {
             using (var interactive = Prepare())
-            using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer().InterpreterFactory)) {
+            using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer(interactive.App.ServiceProvider).InterpreterFactory)) {
                 var project = interactive.App.OpenProject(@"TestData\SysArgvScriptArgsRepl.sln");
 
                 interactive.App.ExecuteCommand("Python.ExecuteInInteractive");
@@ -82,7 +82,7 @@ namespace ReplWindowUITests {
         [HostType("VSTestHost")]
         public virtual void ExecuteInReplUnicodeFilename() {
             using (var interactive = Prepare())
-            using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer().InterpreterFactory)) {
+            using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer(interactive.App.ServiceProvider).InterpreterFactory)) {
                 var project = interactive.App.OpenProject(@"TestData\UnicodePathä.sln");
 
                 interactive.App.ExecuteCommand("Python.ExecuteInInteractive");
@@ -141,10 +141,11 @@ namespace ReplWindowUITests {
             using (var interactive = Prepare(enableAttach: true)) {
                 var app = interactive.App;
                 var project = app.OpenProject(@"TestData\DebuggerProject.sln");
-                Assert.IsNotNull(PythonToolsPackage.GetStartupProject(), "Startup project was not set");
+
+                Assert.IsNotNull(PythonToolsPackage.GetStartupProject(app.ServiceProvider), "Startup project was not set");
                 Assert.IsTrue(interactive.Settings.EnableAttach, "EnableAttach was not set");
 
-                using (var dis = new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer().InterpreterFactory)) {
+                using (var dis = new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer(interactive.App.ServiceProvider).InterpreterFactory)) {
                     Assert.AreEqual(dis.CurrentDefault.Description, project.GetPythonProject().GetInterpreterFactory().Description);
 
                     interactive.Reset();

@@ -30,11 +30,13 @@ namespace Microsoft.PythonTools.Intellisense {
     internal class NormalCompletionAnalysis : CompletionAnalysis {
         private readonly ITextSnapshot _snapshot;
         private readonly VsProjectAnalyzer _analyzer;
+        private readonly IServiceProvider _serviceProvider;
 
-        internal NormalCompletionAnalysis(VsProjectAnalyzer analyzer, ITextSnapshot snapshot, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options)
+        internal NormalCompletionAnalysis(VsProjectAnalyzer analyzer, ITextSnapshot snapshot, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options, IServiceProvider serviceProvider)
             : base(span, textBuffer, options) {
             _snapshot = snapshot;
             _analyzer = analyzer;
+            _serviceProvider = serviceProvider;
         }
 
         private string FixupCompletionText(string exprText) {
@@ -111,7 +113,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     }
                 }
 
-                if (pyReplEval != null && _snapshot.TextBuffer.GetAnalyzer().ShouldEvaluateForCompletion(fixedText)) {
+                if (pyReplEval != null && _snapshot.TextBuffer.GetAnalyzer(_serviceProvider).ShouldEvaluateForCompletion(fixedText)) {
                     var replMembers = pyReplEval.GetMemberNames(fixedText);
                     if (replMembers != null) {
                         if (members != null) {

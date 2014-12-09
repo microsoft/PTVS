@@ -25,6 +25,8 @@ using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Commands {
+    using IServiceProvider = System.IServiceProvider;
+
 #if INTERACTIVE_WINDOW
     using IReplWindow = IInteractiveWindow;
     using IReplCommand = IInteractiveWindowCommand;
@@ -34,12 +36,18 @@ namespace Microsoft.PythonTools.Commands {
     /// Provides the command to send selected text from a buffer to the remote REPL window.
     /// </summary>
     class SendToReplCommand : Command {
-        public override void DoCommand(object sender, EventArgs args) {
-            var activeView = CommonPackage.GetActiveTextView();
-            var project = activeView.TextBuffer.GetProject();
-            var analyzer = activeView.GetAnalyzer();
+        protected readonly IServiceProvider _serviceProvider;
 
-            ToolWindowPane window = (ToolWindowPane)ExecuteInReplCommand.EnsureReplWindow(analyzer, project);
+        public SendToReplCommand(IServiceProvider serviceProvider) {
+            _serviceProvider = serviceProvider;
+        }
+
+        public override void DoCommand(object sender, EventArgs args) {
+            var activeView = CommonPackage.GetActiveTextView(_serviceProvider);
+            var project = activeView.TextBuffer.GetProject(_serviceProvider);
+            var analyzer = activeView.GetAnalyzer(_serviceProvider);
+
+            ToolWindowPane window = (ToolWindowPane)ExecuteInReplCommand.EnsureReplWindow(_serviceProvider, analyzer, project);
 
             IVsWindowFrame windowFrame = (IVsWindowFrame)window.Frame;
             ErrorHandler.ThrowOnFailure(windowFrame.Show());
@@ -61,18 +69,18 @@ namespace Microsoft.PythonTools.Commands {
             }
         }
 
-        private static bool IsRealInterpreter(IPythonInterpreterFactory factory) {
+        private bool IsRealInterpreter(IPythonInterpreterFactory factory) {
             if (factory == null) {
                 return false;
             }
-            var interpreterService = CommonPackage.ComponentModel.GetService<IInterpreterOptionsService>();
+            var interpreterService = _serviceProvider.GetComponentModel().GetService<IInterpreterOptionsService>();
             return interpreterService != null && interpreterService.NoInterpretersValue != factory;
         }
 
         public override int? EditFilterQueryStatus(ref VisualStudio.OLE.Interop.OLECMD cmd, IntPtr pCmdText) {
-            var activeView = CommonPackage.GetActiveTextView();
+            var activeView = CommonPackage.GetActiveTextView(_serviceProvider);
             if (activeView != null && activeView.TextBuffer.ContentType.IsOfType(PythonCoreConstants.ContentType)) {
-                var analyzer = activeView.GetAnalyzer();
+                var analyzer = activeView.GetAnalyzer(_serviceProvider);
 
                 if (activeView.Selection.IsEmpty || 
                     activeView.Selection.Mode == TextSelectionMode.Box ||

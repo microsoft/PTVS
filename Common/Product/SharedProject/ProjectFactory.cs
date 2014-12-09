@@ -26,14 +26,13 @@ namespace Microsoft.VisualStudioTools.Project {
     /// Creates projects within the solution
     /// </summary>
 
-    public abstract class ProjectFactory : Microsoft.VisualStudio.Shell.Flavor.FlavoredProjectFactoryBase,
+    public abstract class ProjectFactory : FlavoredProjectFactoryBase,
 #if DEV11_OR_LATER
-        IVsAsynchronousProjectCreate,
+ IVsAsynchronousProjectCreate,
         IVsProjectUpgradeViaFactory4,
 #endif
-        IVsProjectUpgradeViaFactory {
+ IVsProjectUpgradeViaFactory {
         #region fields
-        private Microsoft.VisualStudio.Shell.Package package;
         private System.IServiceProvider site;
 
         /// <summary>
@@ -46,7 +45,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         private MSBuild.Project buildProject;
 #if DEV11_OR_LATER
-        private static readonly Lazy<IVsTaskSchedulerService> taskSchedulerService = new Lazy<IVsTaskSchedulerService>(() => Package.GetGlobalService(typeof(SVsTaskSchedulerService)) as IVsTaskSchedulerService);
+        private readonly Lazy<IVsTaskSchedulerService> taskSchedulerService;
 #endif
 
         // (See GetSccInfo below.)
@@ -57,13 +56,13 @@ namespace Microsoft.VisualStudioTools.Project {
         private string _cachedSccProject;
         private string _cachedSccProjectName, _cachedSccAuxPath, _cachedSccLocalPath, _cachedSccProvider;
 
-
         #endregion
 
         #region properties
+        [Obsolete("Use Site instead")]
         protected Microsoft.VisualStudio.Shell.Package Package {
             get {
-                return this.package;
+                return (Microsoft.VisualStudio.Shell.Package)this.site;
             }
         }
 
@@ -79,11 +78,20 @@ namespace Microsoft.VisualStudioTools.Project {
         #endregion
 
         #region ctor
-        protected ProjectFactory(Microsoft.VisualStudio.Shell.Package package) {
-            this.package = package;
-            this.site = package;
-            this.buildEngine = MSBuild.ProjectCollection.GlobalProjectCollection;
+        [Obsolete("Provide an IServiceProvider instead of a package")]
+        protected ProjectFactory(Microsoft.VisualStudio.Shell.Package package)
+            : this((IServiceProvider)package) {
         }
+
+        protected ProjectFactory(IServiceProvider serviceProvider)
+            : base(serviceProvider) {
+            this.site = serviceProvider;
+            this.buildEngine = MSBuild.ProjectCollection.GlobalProjectCollection;
+#if DEV11_OR_LATER
+            this.taskSchedulerService = new Lazy<IVsTaskSchedulerService>(() => Site.GetService(typeof(SVsTaskSchedulerService)) as IVsTaskSchedulerService);
+#endif
+        }
+
         #endregion
 
         #region abstract methods
@@ -139,7 +147,6 @@ namespace Microsoft.VisualStudioTools.Project {
             Utilities.CheckNotNull(node, "The project failed to be created");
             node.BuildEngine = this.buildEngine;
             node.BuildProject = this.buildProject;
-            node.Package = this.package as ProjectPackage;
             return node;
         }
 

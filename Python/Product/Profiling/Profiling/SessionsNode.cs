@@ -35,12 +35,14 @@ namespace Microsoft.PythonTools.Profiling {
     class SessionsNode : BaseHierarchyNode, IVsHierarchyDeleteHandler {
         private readonly List<SessionNode> _sessions = new List<SessionNode>();
         internal readonly EventSinkCollection _sessionsCollection = new EventSinkCollection();
+        private readonly IServiceProvider _serviceProvider;
         private readonly IVsUIHierarchyWindow _window;
         internal uint _activeSession = VSConstants.VSITEMID_NIL;
         internal static ImageList _imageList = InitImageList();
         const string _rootName = "Python Performance Sessions";
 
-        internal SessionsNode(IVsUIHierarchyWindow window) {
+        internal SessionsNode(IServiceProvider serviceProvider, IVsUIHierarchyWindow window) {
+            _serviceProvider = serviceProvider;
             _window = window;
         }
 
@@ -104,7 +106,7 @@ namespace Microsoft.PythonTools.Profiling {
                 prevSibl = VSConstants.VSITEMID_NIL;
             }
 
-            var node = new SessionNode(this, target, filename);
+            var node = new SessionNode(_serviceProvider, this, target, filename);
             _sessions.Add(node);
 
             OnItemAdded(VSConstants.VSITEMID_ROOT, prevSibl, node.ItemId);

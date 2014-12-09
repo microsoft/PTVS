@@ -243,9 +243,9 @@ namespace TestUtilities.UI.Python {
 
             try {
                 if (!string.IsNullOrEmpty(installPackages)) {
-                    Pip.InstallPip(factory, false).Wait();
+                    Pip.InstallPip(ServiceProvider, factory, false).Wait();
                     foreach (var package in installPackages.Split(' ', ',', ';').Select(s => s.Trim()).Where(s => !string.IsNullOrEmpty(s))) {
-                        Pip.Install(factory, package, false).Wait();
+                        Pip.Install(ServiceProvider, factory, package, false).Wait();
                     }
                 }
 

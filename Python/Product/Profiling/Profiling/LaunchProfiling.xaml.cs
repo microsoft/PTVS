@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.IO;
 using System.Windows;
 
@@ -21,8 +22,10 @@ namespace Microsoft.PythonTools.Profiling {
     /// </summary>
     public partial class LaunchProfiling : DialogWindowVersioningWorkaround {
         readonly ProfilingTargetView _viewModel;
+        private readonly IServiceProvider _serviceProvider;
 
-        public LaunchProfiling(ProfilingTargetView viewModel) {
+        public LaunchProfiling(IServiceProvider serviceProvider, ProfilingTargetView viewModel) {
+            _serviceProvider = serviceProvider;
             _viewModel = viewModel;
             DataContext = _viewModel;
             InitializeComponent();
@@ -31,7 +34,7 @@ namespace Microsoft.PythonTools.Profiling {
         private void FindInterpreterClick(object sender, RoutedEventArgs e) {
             var standalone = _viewModel.Standalone;
             if (standalone != null) {
-                var path = PythonToolsPackage.Instance.BrowseForFileOpen(
+                var path = _serviceProvider.BrowseForFileOpen(
                     new System.Windows.Interop.WindowInteropHelper(this).Handle,
                     "Executable files (*.exe;*.bat;*.cmd)|*.exe;*.bat;*.cmd|All Files (*.*)|*.*",
                     standalone.InterpreterPath
@@ -45,7 +48,7 @@ namespace Microsoft.PythonTools.Profiling {
         private void FindScriptClick(object sender, RoutedEventArgs e) {
             var standalone = _viewModel.Standalone;
             if (standalone != null) {
-                var path = PythonToolsPackage.Instance.BrowseForFileOpen(
+                var path = _serviceProvider.BrowseForFileOpen(
                     new System.Windows.Interop.WindowInteropHelper(this).Handle,
                     "Python files (*.py;*.pyw)|*.py;*.pyw|All Files (*.*)|*.*",
                     standalone.ScriptPath
@@ -59,7 +62,7 @@ namespace Microsoft.PythonTools.Profiling {
         private void FindWorkingDirectoryClick(object sender, RoutedEventArgs e) {
             var standalone = _viewModel.Standalone;
             if (standalone != null) {
-                var path = PythonToolsPackage.Instance.BrowseForDirectory(
+                var path = _serviceProvider.BrowseForDirectory(
                     new System.Windows.Interop.WindowInteropHelper(this).Handle,
                     standalone.WorkingDirectory
                 );

@@ -19,14 +19,30 @@ namespace Microsoft.PythonTools.Options {
     /// Stores options related to the all interactive windows.
     /// </summary>
     class PythonInteractiveCommonOptions {
-        private const string DefaultPrompt = ">>> ";
-        private const string DefaultSecondaryPrompt = "... ";
-
         private bool _smartHistory, _interpreterPrompts, _inlinePrompts, _liveCompletionsOnly;
         private ReplIntellisenseMode _replIntellisenseMode;
         private string _priPrompt, _secPrompt;
 
-        public PythonInteractiveCommonOptions() {
+        internal readonly PythonToolsService _pyService;
+
+        internal readonly string _category;
+        internal string _id;
+
+        private const string DefaultPrompt = ">>> ";
+        private const string DefaultSecondaryPrompt = "... ";
+
+        private const string PrimaryPromptSetting = "PrimaryPrompt";
+        private const string SecondaryPromptSetting = "SecondaryPrompt";
+        private const string InlinePromptsSetting = "InlinePrompts";
+        private const string UseInterpreterPromptsSetting = "UseInterpreterPrompts";
+        private const string ReplIntellisenseModeSetting = "InteractiveIntellisenseMode";
+        private const string SmartHistorySetting = "InteractiveSmartHistory";
+        private const string LiveCompletionsOnlySetting = "LiveCompletionsOnly";
+
+        internal PythonInteractiveCommonOptions(PythonToolsService pyService, string category, string id) {
+            _pyService = pyService;
+            _category = category;
+            _id = id;
             _priPrompt = DefaultPrompt;
             _secPrompt = DefaultSecondaryPrompt;
             _inlinePrompts = true;
@@ -68,6 +84,36 @@ namespace Microsoft.PythonTools.Options {
         public bool LiveCompletionsOnly {
             get { return _liveCompletionsOnly; }
             set { _liveCompletionsOnly = value; }
+        }
+
+        public void Load() {
+            PrimaryPrompt = _pyService.LoadString(_id + PrimaryPromptSetting, _category) ?? DefaultPrompt;
+            SecondaryPrompt = _pyService.LoadString(_id + SecondaryPromptSetting, _category) ?? DefaultSecondaryPrompt;
+            InlinePrompts = _pyService.LoadBool(_id + InlinePromptsSetting, _category) ?? true;
+            UseInterpreterPrompts = _pyService.LoadBool(_id + UseInterpreterPromptsSetting, _category) ?? true;
+            ReplIntellisenseMode = _pyService.LoadEnum<ReplIntellisenseMode>(_id + ReplIntellisenseModeSetting, _category) ?? ReplIntellisenseMode.DontEvaluateCalls;
+            ReplSmartHistory = _pyService.LoadBool(_id + SmartHistorySetting, _category) ?? true;
+            LiveCompletionsOnly = _pyService.LoadBool(_id + LiveCompletionsOnlySetting, _category) ?? false;
+        }
+
+        public void Save() {
+            _pyService.SaveString(_id + PrimaryPromptSetting, _category, PrimaryPrompt);
+            _pyService.SaveString(_id + SecondaryPromptSetting, _category, SecondaryPrompt);
+            _pyService.SaveBool(_id + InlinePromptsSetting, _category, InlinePrompts);
+            _pyService.SaveBool(_id + UseInterpreterPromptsSetting, _category, UseInterpreterPrompts);
+            _pyService.SaveEnum<ReplIntellisenseMode>(_id + ReplIntellisenseModeSetting, _category, ReplIntellisenseMode);
+            _pyService.SaveBool(_id + SmartHistorySetting, _category, ReplSmartHistory);
+            _pyService.SaveBool(_id + LiveCompletionsOnlySetting, _category, LiveCompletionsOnly);
+        }
+
+        public void Reset() {
+            PrimaryPrompt = DefaultPrompt;
+            SecondaryPrompt = DefaultSecondaryPrompt;
+            InlinePrompts = true;
+            UseInterpreterPrompts = true;
+            ReplIntellisenseMode = ReplIntellisenseMode.DontEvaluateCalls;
+            ReplSmartHistory = true;
+            LiveCompletionsOnly = false;
         }
     }
 }

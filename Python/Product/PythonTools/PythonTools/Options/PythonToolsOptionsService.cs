@@ -1,0 +1,45 @@
+﻿/* ****************************************************************************
+ *
+ * Copyright (c) Microsoft Corporation. 
+ *
+ * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
+ * copy of the license can be found in the License.html file at the root of this distribution. If 
+ * you cannot locate the Apache License, Version 2.0, please send an email to 
+ * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
+ * by the terms of the Apache License, Version 2.0.
+ *
+ * You must not remove this notice, or any other, from this software.
+ *
+ * ***************************************************************************/
+
+using System;
+using System.Globalization;
+using System.Runtime.InteropServices;
+using Microsoft.VisualStudio.Settings;
+using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
+
+namespace Microsoft.PythonTools.Options {
+    class PythonToolsOptionsService : IPythonToolsOptionsService {
+        private const string _optionsKey = "Options";
+        private readonly WritableSettingsStore _settingsStore;
+
+        public PythonToolsOptionsService(IServiceProvider serviceProvider) {
+            var settingsManager = PythonToolsPackage.GetSettings(serviceProvider);
+            _settingsStore = settingsManager.GetWritableSettingsStore(SettingsScope.UserSettings);
+        }
+
+        public void SaveString(string name, string value, string cat) {
+            _settingsStore.SetString(GetCollectionPath(cat), name, value);
+        }
+
+        private static string GetCollectionPath(string cat) {
+            return PythonCoreConstants.BaseRegistryKey + "\\" + _optionsKey + "\\" + cat;
+        }
+
+        public string LoadString(string name, string cat) {
+            var res = _settingsStore.GetString(GetCollectionPath(cat), name, null);
+            return res;
+        }
+    }
+}

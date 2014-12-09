@@ -19,11 +19,15 @@ using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Commands {
     class SendToDefiningModuleCommand : SendToReplCommand {
+        public SendToDefiningModuleCommand(IServiceProvider serviceProvider)
+            : base(serviceProvider) {
+        }
+
         public override void DoCommand(object sender, EventArgs args) {
-            var activeView = PythonToolsPackage.GetActiveTextView();
-            var pyProj = activeView.TextBuffer.GetProject();
-            var analyzer = activeView.GetAnalyzer();
-            var window = ExecuteInReplCommand.EnsureReplWindow(analyzer, pyProj);
+            var activeView = PythonToolsPackage.GetActiveTextView(_serviceProvider);
+            var pyProj = activeView.TextBuffer.GetProject(_serviceProvider);
+            var analyzer = activeView.GetAnalyzer(_serviceProvider);
+            var window = ExecuteInReplCommand.EnsureReplWindow(_serviceProvider, analyzer, pyProj);
             var eval = window.Evaluator as PythonReplEvaluator;
 
             string path = activeView.GetFilePath();

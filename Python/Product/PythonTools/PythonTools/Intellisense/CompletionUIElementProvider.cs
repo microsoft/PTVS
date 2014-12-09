@@ -19,6 +19,7 @@ using System.Reflection;
 using System.Windows;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Language.Intellisense;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Utilities;
 
 namespace Microsoft.PythonTools.Intellisense {
@@ -31,6 +32,7 @@ namespace Microsoft.PythonTools.Intellisense {
         internal List<Lazy<IUIElementProvider<CompletionSet, ICompletionSession>, IOrderableContentTypeMetadata>> UnOrderedCompletionSetUIElementProviders { get; set; }
         private static bool _isPreSp1 = CheckPreSp1();
         private bool _gettingUIElement;
+        private readonly IServiceProvider _serviceProvider;
 
         private static bool CheckPreSp1() {
             var attrs = typeof(VSConstants).Assembly.GetCustomAttributes(typeof(AssemblyFileVersionAttribute), false);
@@ -43,7 +45,9 @@ namespace Microsoft.PythonTools.Intellisense {
             return false;
         }
 
-        public CompletionUIElementProvider() {
+        [ImportingConstructor]
+        public CompletionUIElementProvider([Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider) {
+            _serviceProvider = serviceProvider;
         }
 
         public UIElement GetUIElement(CompletionSet itemToRender, ICompletionSession context, UIElementType elementType) {
@@ -53,10 +57,11 @@ namespace Microsoft.PythonTools.Intellisense {
             _gettingUIElement = true;
             try {
                 var orderedProviders = Orderer.Order(UnOrderedCompletionSetUIElementProviders);
+                var pyContentType = _serviceProvider.GetPythonContentType();
                 foreach (var presenterProviderExport in orderedProviders) {
 
                     foreach (var contentType in presenterProviderExport.Metadata.ContentTypes) {
-                        if (PythonToolsPackage.Instance.ContentType.IsOfType(contentType)) {
+                        if (pyContentType.IsOfType(contentType)) {
                             if (presenterProviderExport.Value.GetType() == typeof(CompletionUIElementProvider)) {
                                 // don't forward to ourselves...
                                 continue;
@@ -68,7 +73,7 @@ namespace Microsoft.PythonTools.Intellisense {
                                     return res;
                                 }
 
-                                return new CompletionControl(res, context);
+                                return new CompletionControl(_serviceProvider, res, context);
                             }
                         }
                     }

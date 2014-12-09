@@ -92,30 +92,30 @@ namespace Microsoft.PythonTools.Options {
             }
         }
 
-        internal void SyncControlWithPageSettings(PythonGeneralOptionsPage page) {
-            _showOutputWindowForVirtualEnvCreate.Checked = page.ShowOutputWindowForVirtualEnvCreate;
-            _showOutputWindowForPackageInstallation.Checked = page.ShowOutputWindowForPackageInstallation;
-            _elevatePip.Checked = page.ElevatePip;
-            _elevateEasyInstall.Checked = page.ElevateEasyInstall;
-            _autoAnalysis.Checked = page.AutoAnalyzeStandardLibrary;
-            _updateSearchPathsForLinkedFiles.Checked = page.UpdateSearchPathsWhenAddingLinkedFiles;
-            _unresolvedImportWarning.Checked = page.UnresolvedImportWarning;
-            _clearGlobalPythonPath.Checked = page.ClearGlobalPythonPath;
-            IndentationInconsistencySeverity = page.IndentationInconsistencySeverity;
-            SurveyNewsCheck = page.SurveyNewsCheck;
+        internal void SyncControlWithPageSettings(PythonToolsService pyService) {
+            _showOutputWindowForVirtualEnvCreate.Checked = pyService.GeneralOptions.ShowOutputWindowForVirtualEnvCreate;
+            _showOutputWindowForPackageInstallation.Checked = pyService.GeneralOptions.ShowOutputWindowForPackageInstallation;
+            _elevatePip.Checked = pyService.GeneralOptions.ElevatePip;
+            _elevateEasyInstall.Checked = pyService.GeneralOptions.ElevateEasyInstall;
+            _autoAnalysis.Checked = pyService.GeneralOptions.AutoAnalyzeStandardLibrary;
+            _updateSearchPathsForLinkedFiles.Checked = pyService.GeneralOptions.UpdateSearchPathsWhenAddingLinkedFiles;
+            _unresolvedImportWarning.Checked = pyService.GeneralOptions.UnresolvedImportWarning;
+            _clearGlobalPythonPath.Checked = pyService.GeneralOptions.ClearGlobalPythonPath;
+            IndentationInconsistencySeverity = pyService.GeneralOptions.IndentationInconsistencySeverity;
+            SurveyNewsCheck = pyService.GeneralOptions.SurveyNewsCheck;
         }
 
-        internal void SyncPageWithControlSettings(PythonGeneralOptionsPage page) {
-            page.ShowOutputWindowForVirtualEnvCreate = _showOutputWindowForVirtualEnvCreate.Checked;
-            page.ShowOutputWindowForPackageInstallation = _showOutputWindowForPackageInstallation.Checked;
-            page.ElevatePip = _elevatePip.Checked;
-            page.ElevateEasyInstall = _elevateEasyInstall.Checked;
-            page.AutoAnalyzeStandardLibrary = _autoAnalysis.Checked;
-            page.UpdateSearchPathsWhenAddingLinkedFiles = _updateSearchPathsForLinkedFiles.Checked;
-            page.IndentationInconsistencySeverity = IndentationInconsistencySeverity;
-            page.SurveyNewsCheck = SurveyNewsCheck;
-            page.UnresolvedImportWarning = _unresolvedImportWarning.Checked;
-            page.ClearGlobalPythonPath = _clearGlobalPythonPath.Checked;
+        internal void SyncPageWithControlSettings(PythonToolsService pyService) {
+            pyService.GeneralOptions.ShowOutputWindowForVirtualEnvCreate = _showOutputWindowForVirtualEnvCreate.Checked;
+            pyService.GeneralOptions.ShowOutputWindowForPackageInstallation = _showOutputWindowForPackageInstallation.Checked;
+            pyService.GeneralOptions.ElevatePip = _elevatePip.Checked;
+            pyService.GeneralOptions.ElevateEasyInstall = _elevateEasyInstall.Checked;
+            pyService.GeneralOptions.AutoAnalyzeStandardLibrary = _autoAnalysis.Checked;
+            pyService.GeneralOptions.UpdateSearchPathsWhenAddingLinkedFiles = _updateSearchPathsForLinkedFiles.Checked;
+            pyService.GeneralOptions.IndentationInconsistencySeverity = IndentationInconsistencySeverity;
+            pyService.GeneralOptions.SurveyNewsCheck = SurveyNewsCheck;
+            pyService.GeneralOptions.UnresolvedImportWarning = _unresolvedImportWarning.Checked;
+            pyService.GeneralOptions.ClearGlobalPythonPath = _clearGlobalPythonPath.Checked;
         }
     }
 }

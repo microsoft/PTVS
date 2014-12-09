@@ -166,7 +166,7 @@ namespace Microsoft.VisualStudioTools.Project {
         private HierarchyIdMap itemIdMap = new HierarchyIdMap();
 
         /// <summary>A service provider call back object provided by the IDE hosting the project manager</summary>
-        private ServiceProvider site;
+        private IServiceProvider site;
 
         private TrackDocumentsHelper tracker;
 
@@ -271,11 +271,6 @@ namespace Microsoft.VisualStudioTools.Project {
         /// type mapping to the same CATID if we choose to.
         /// </summary>
         private Dictionary<Type, Guid> catidMapping;
-
-        /// <summary>
-        /// The internal package implementation.
-        /// </summary>
-        private ProjectPackage package;
 
         /// <summary>
         /// Mapping from item names to their hierarchy nodes for all disk-based nodes.
@@ -822,24 +817,15 @@ namespace Microsoft.VisualStudioTools.Project {
             }
         }
 
-        /// <summary>
-        /// The internal package implementation.
-        /// </summary>
-        internal ProjectPackage Package {
-            get {
-                return this.package;
-            }
-            set {
-                this.package = value;
-            }
-        }
         #endregion
 
         #region ctor
 
-        protected ProjectNode() {
+        protected ProjectNode(IServiceProvider serviceProvider) {
             this.extensibilityEventsDispatcher = new ExtensibilityEventsDispatcher(this);
             this.Initialize();
+            this.site = serviceProvider;
+            taskProvider = new TaskProvider(this.site);
         }
 
         #endregion
@@ -1086,13 +1072,7 @@ namespace Microsoft.VisualStudioTools.Project {
                     try {
                         RegisterClipboardNotifications(false);
                     } finally {
-                        try {
-                            if (site != null) {
-                                site.Dispose();
-                            }
-                        } finally {
-                            buildEngine = null;
-                        }
+                        buildEngine = null;
                     }
                 }
 
@@ -3119,10 +3099,7 @@ namespace Microsoft.VisualStudioTools.Project {
 
         internal bool QueryEditFiles(bool suppressUI, params string[] files) {
             bool result = true;
-            if (this.site == null) {
-                // We're already zombied. Better return FALSE.
-                result = false;
-            } else if (this.disableQueryEdit) {
+            if (this.disableQueryEdit) {
                 return true;
             } else {
                 IVsQueryEditQuerySave2 queryEditQuerySave = this.GetService(typeof(SVsQueryEditQuerySave)) as IVsQueryEditQuerySave2;
@@ -5503,14 +5480,7 @@ If the files in the existing folder have the same names as files in the folder y
         /// </summary>
         /// <param name="site">An instance to an Microsoft.VisualStudio.OLE.Interop object</param>
         /// <returns>A success or failure value.</returns>
-        public virtual int SetSite(Microsoft.VisualStudio.OLE.Interop.IServiceProvider site) {
-            this.site = new ServiceProvider(site);
-
-            if (taskProvider != null) {
-                taskProvider.Dispose();
-            }
-            taskProvider = new TaskProvider(this.site);
-
+        public int SetSite(Microsoft.VisualStudio.OLE.Interop.IServiceProvider site) {
             return VSConstants.S_OK;
         }
 

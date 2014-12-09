@@ -37,25 +37,35 @@ namespace Microsoft.PythonTools.Commands {
     /// Provides the command for starting a file or the start item of a project in the REPL window.
     /// </summary>
     internal sealed class ExecuteInReplCommand : Command {
-        internal static IReplWindow/*!*/ EnsureReplWindow(VsProjectAnalyzer analyzer, PythonProjectNode project) {
-            return EnsureReplWindow(analyzer.InterpreterFactory, project);
+        private readonly IServiceProvider _serviceProvider;
+
+        public ExecuteInReplCommand(IServiceProvider serviceProvider) {
+            _serviceProvider = serviceProvider;
         }
 
-        internal static IReplWindow/*!*/ EnsureReplWindow(IPythonInterpreterFactory factory, PythonProjectNode project) {
-            var compModel = PythonToolsPackage.ComponentModel;
+        internal static IReplWindow/*!*/ EnsureReplWindow(IServiceProvider serviceProvider, VsProjectAnalyzer analyzer, PythonProjectNode project) {
+            return EnsureReplWindow(serviceProvider, analyzer.InterpreterFactory, project);
+        }
+
+        internal static IReplWindow/*!*/ EnsureReplWindow(IServiceProvider serviceProvider, IPythonInterpreterFactory factory, PythonProjectNode project) {
+            var compModel = serviceProvider.GetComponentModel();
             var provider = compModel.GetService<IReplWindowProvider>();
 
             string replId = PythonReplEvaluatorProvider.GetReplId(factory, project);
             var window = provider.FindReplWindow(replId);
             if (window == null) {
                 window = provider.CreateReplWindow(
-                    PythonToolsPackage.Instance.ContentType,
+                    serviceProvider.GetPythonContentType(),
                     factory.Description + " Interactive", 
                     typeof(PythonLanguageInfo).GUID,
                     replId
                 );
 
-                window.SetOptionValue(ReplOptions.UseSmartUpDown, PythonToolsPackage.Instance.InteractiveOptionsPage.GetOptions(factory).ReplSmartHistory);
+                var pyService = serviceProvider.GetPythonToolsService();
+                window.SetOptionValue(
+                    ReplOptions.UseSmartUpDown, 
+                    pyService.GetInteractiveOptions(factory).ReplSmartHistory
+                );
             }
 
             if (project != null && project.Interpreters.IsProjectSpecific(factory)) {
@@ -74,9 +84,9 @@ namespace Microsoft.PythonTools.Commands {
         private void QueryStatusMethod(object sender, EventArgs args) {
             var oleMenu = sender as OleMenuCommand;
             VsProjectAnalyzer analyzer;
-            var interpreterService = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
+            var interpreterService = _serviceProvider.GetComponentModel().GetService<IInterpreterOptionsService>();
             string filename, dir;
-            if (!PythonToolsPackage.TryGetStartupFileAndDirectory(out filename, out dir, out analyzer) ||
+            if (!PythonToolsPackage.TryGetStartupFileAndDirectory(_serviceProvider, out filename, out dir, out analyzer) ||
                 interpreterService == null ||
                 interpreterService.NoInterpretersValue == analyzer.InterpreterFactory) {
                 // no interpreters installed, disable the command.
@@ -86,16 +96,16 @@ namespace Microsoft.PythonTools.Commands {
             } else {
 
                 IWpfTextView textView;
-                var pyProj = CommonPackage.GetStartupProject() as PythonProjectNode;
-                var window = (IReplWindow)EnsureReplWindow(analyzer, pyProj);
+                var pyProj = CommonPackage.GetStartupProject(_serviceProvider) as PythonProjectNode;
+                var window = (IReplWindow)EnsureReplWindow(_serviceProvider, analyzer, pyProj);
                 if (pyProj != null) {
                     // startup project, enabled in Start in REPL mode.
                     oleMenu.Visible = true;
                     oleMenu.Enabled = true;
                     oleMenu.Supported = true;
                     oleMenu.Text = "Execute Project in P&ython Interactive";
-                } else if ((textView = CommonPackage.GetActiveTextView()) != null &&
-                    textView.TextBuffer.ContentType == PythonToolsPackage.Instance.ContentType) {
+                } else if ((textView = CommonPackage.GetActiveTextView(_serviceProvider)) != null &&
+                    textView.TextBuffer.ContentType == _serviceProvider.GetPythonContentType()) {
                     // enabled in Execute File mode...
                     oleMenu.Visible = true;
                     oleMenu.Enabled = true;
@@ -112,13 +122,13 @@ namespace Microsoft.PythonTools.Commands {
         public override void DoCommand(object sender, EventArgs args) {
             VsProjectAnalyzer analyzer;
             string filename, dir;
-            var pyProj = CommonPackage.GetStartupProject() as PythonProjectNode;
-            if (!PythonToolsPackage.TryGetStartupFileAndDirectory(out filename, out dir, out analyzer)) {
+            var pyProj = CommonPackage.GetStartupProject(_serviceProvider) as PythonProjectNode;
+            if (!PythonToolsPackage.TryGetStartupFileAndDirectory(_serviceProvider, out filename, out dir, out analyzer)) {
                 // TODO: Error reporting
                 return;
             }
             
-            var window = (IReplWindow)EnsureReplWindow(analyzer, pyProj);
+            var window = (IReplWindow)EnsureReplWindow(_serviceProvider, analyzer, pyProj);
             IVsWindowFrame windowFrame = (IVsWindowFrame)((ToolWindowPane)window).Frame;
 
             ErrorHandler.ThrowOnFailure(windowFrame.Show());

@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Microsoft.PythonTools.Parsing;
@@ -23,12 +24,14 @@ namespace Microsoft.PythonTools.Refactoring {
         private readonly ITextView _view;
         private readonly PythonAst _ast;
         private readonly bool _allScopes;
+        private readonly IServiceProvider _serviceProvider;
 
-        public ImportRemover(ITextView textView, bool allScopes) {
+        public ImportRemover(IServiceProvider serviceProvider, ITextView textView, bool allScopes) {
             _view = textView;
+            _serviceProvider = serviceProvider;
             var snapshot = _view.TextBuffer.CurrentSnapshot;
 
-            _ast = _view.GetAnalyzer().ParseSnapshot(snapshot);
+            _ast = _view.GetAnalyzer(_serviceProvider).ParseSnapshot(snapshot);
             _allScopes = allScopes;
         }
 

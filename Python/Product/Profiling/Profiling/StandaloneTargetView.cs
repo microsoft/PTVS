@@ -42,8 +42,13 @@ namespace Microsoft.PythonTools.Profiling {
         /// <summary>
         /// Create a StandaloneTargetView with default values.
         /// </summary>
-        public StandaloneTargetView() {
-            var componentService = (IComponentModel)(PythonProfilingPackage.GetGlobalService(typeof(SComponentModel)));
+        [Obsolete("An IServiceProvider should be provided")]
+        public StandaloneTargetView()
+            : this(PythonProfilingPackage.Instance) {
+        }
+
+        public StandaloneTargetView(IServiceProvider serviceProvider) {
+            var componentService = (IComponentModel)(serviceProvider.GetService(typeof(SComponentModel)));
             var interpreterService = componentService.GetService<IInterpreterOptionsService>();
 
             var availableInterpreters = interpreterService.Interpreters.Select(factory => new PythonInterpreterView(factory)).ToList();
@@ -73,7 +78,11 @@ namespace Microsoft.PythonTools.Profiling {
         /// Create a StandaloneTargetView with values taken from a template.
         /// </summary>
         public StandaloneTargetView(StandaloneTarget template)
-            : this() {
+            : this(PythonProfilingPackage.Instance, template) {
+        }
+
+        public StandaloneTargetView(IServiceProvider serviceProvider, StandaloneTarget template)
+            : this(serviceProvider) {
             if (template.PythonInterpreter != null) {
                 Version version;
                 if (IsAnyAvailableInterpreters && Version.TryParse(template.PythonInterpreter.Version, out version)) {

@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -51,7 +52,7 @@ namespace PythonToolsTests {
             var code = string.Join(Environment.NewLine, PythonKeywords.All(PythonLanguageVersion.V27));
             code += "\r\nTrue\r\nFalse";
 
-            using (var helper = new ClassifierHelper(new MockTextBuffer(code), PythonLanguageVersion.V27)) {
+            using (var helper = new ClassifierHelper(MockTextBuffer(code), PythonLanguageVersion.V27)) {
                 foreach (var span in helper.AstClassifierSpans) {
                     var text = span.Span.GetText();
                     if (string.IsNullOrWhiteSpace(text)) {
@@ -73,7 +74,7 @@ namespace PythonToolsTests {
         public void KeywordClassification33() {
             var code = string.Join(Environment.NewLine, PythonKeywords.All(PythonLanguageVersion.V33));
 
-            using (var helper = new ClassifierHelper(new MockTextBuffer(code), PythonLanguageVersion.V33)) {
+            using (var helper = new ClassifierHelper(MockTextBuffer(code), PythonLanguageVersion.V33)) {
                 foreach (var span in helper.AstClassifierSpans) {
                     var text = span.Span.GetText();
                     if (string.IsNullOrWhiteSpace(text)) {
@@ -101,13 +102,17 @@ os.path = ntpath
 abc = 123
 abc = True
 ";
-            using (var helper = new ClassifierHelper(new MockTextBuffer(code), PythonLanguageVersion.V27)) {
+            using (var helper = new ClassifierHelper(MockTextBuffer(code), PythonLanguageVersion.V27)) {
                 helper.CheckAstClassifierSpans("ki ki ki i.i=i i=n i=b");
 
                 helper.Analyze();
 
                 helper.CheckAnalysisClassifierSpans("m<abc>m<os>m<ntpath>m<os>m<ntpath>m<abc>m<abc>");
             }
+        }
+
+        private static MockTextBuffer MockTextBuffer(string code) {
+            return new MockTextBuffer(code, PythonCoreConstants.ContentType, "C:\\fob.py");
         }
 
         [TestMethod, Priority(0)]
@@ -120,7 +125,7 @@ x
 os
 fdopen
 ";
-            using (var helper = new ClassifierHelper(new MockTextBuffer(code), PythonLanguageVersion.V27)) {
+            using (var helper = new ClassifierHelper(MockTextBuffer(code), PythonLanguageVersion.V27)) {
                 helper.CheckAstClassifierSpans("kiki kiki i i i i");
 
                 helper.Analyze();
@@ -139,7 +144,7 @@ MyClassAlias = MyClass
 mca = MyClassAlias()
 MyClassType = type(mc)
 ";
-            using (var helper = new ClassifierHelper(new MockTextBuffer(code), PythonLanguageVersion.V27)) {
+            using (var helper = new ClassifierHelper(MockTextBuffer(code), PythonLanguageVersion.V27)) {
                 helper.CheckAstClassifierSpans("ki(i): k i=i() i=i i=i() i=i(i)");
                 helper.AnalysisClassifierSpans.ToArray();
 
@@ -160,7 +165,7 @@ f(a, b, c)
 a = b
 b = c
 ";
-            using (var helper = new ClassifierHelper(new MockTextBuffer(code), PythonLanguageVersion.V27)) {
+            using (var helper = new ClassifierHelper(MockTextBuffer(code), PythonLanguageVersion.V27)) {
                 helper.CheckAstClassifierSpans("ki(i,i,i): i=i i=i ki i(i,i,i) i=i i=i");
 
                 helper.Analyze();
@@ -173,11 +178,11 @@ b = c
         public void TrueFalseClassification() {
             var code = "True False";
 
-            using (var helper = new ClassifierHelper(new MockTextBuffer(code), PythonLanguageVersion.V27)) {
+            using (var helper = new ClassifierHelper(MockTextBuffer(code), PythonLanguageVersion.V27)) {
                 helper.CheckAstClassifierSpans("b<True> b<False>");
             }
 
-            using (var helper = new ClassifierHelper(new MockTextBuffer(code), PythonLanguageVersion.V33)) {
+            using (var helper = new ClassifierHelper(MockTextBuffer(code), PythonLanguageVersion.V33)) {
                 helper.CheckAstClassifierSpans("k<True> k<False>");
             }
         }
@@ -185,36 +190,34 @@ b = c
         #region ClassifierHelper class
 
         private class ClassifierHelper : IDisposable {
-            private static readonly MockContentTypeRegistryService _contentRegistry = new MockContentTypeRegistryService();
-            private static readonly MockClassificationTypeRegistryService _classificationRegistry = new MockClassificationTypeRegistryService();
-            private static readonly PythonClassifierProvider _provider1 =
-                new PythonClassifierProvider(_contentRegistry) { _classificationRegistry = _classificationRegistry };
-            private static readonly PythonAnalysisClassifierProvider _provider2 =
-                new PythonAnalysisClassifierProvider(_contentRegistry) { _classificationRegistry = _classificationRegistry };
+            private readonly MockContentTypeRegistryService _contentRegistry;
+            private readonly MockClassificationTypeRegistryService _classificationRegistry;
+            private readonly PythonClassifierProvider _provider1;
+            private readonly PythonAnalysisClassifierProvider _provider2;
 
-            private readonly Lazy<TaskProvider> _originalTaskProvider;
             private readonly MockTextBuffer _buffer;
             private readonly MockTextView _view;
             private readonly IPythonInterpreterFactory _factory;
             private MonitoredBufferResult _parser;
 
             public ClassifierHelper(MockTextBuffer buffer, PythonLanguageVersion version) {
+                var serviceProvider = PythonToolsTestUtilities.CreateMockServiceProvider();
+
+                _contentRegistry = new MockContentTypeRegistryService(PythonCoreConstants.ContentType);
+                _classificationRegistry = new MockClassificationTypeRegistryService();
+                _provider1 = new PythonClassifierProvider(_contentRegistry, serviceProvider) { _classificationRegistry = _classificationRegistry };
+                _provider2 = new PythonAnalysisClassifierProvider(_contentRegistry, serviceProvider) { _classificationRegistry = _classificationRegistry };
+
                 _buffer = buffer;
                 _factory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version.ToVersion());
 
-                var analyzer = new VsProjectAnalyzer(_factory, new[] { _factory });
+                var analyzer = new VsProjectAnalyzer(serviceProvider, _factory, new[] { _factory });
                 _buffer.AddProperty(typeof(VsProjectAnalyzer), analyzer);
 
                 _view = new MockTextView(_buffer);
-
-                var taskProvider = new TaskProvider(null, new MockErrorProviderFactory());
-                _originalTaskProvider = VsProjectAnalyzer.ReplaceTaskProviderForTests(new Lazy<TaskProvider>(() => {
-                    return taskProvider;
-                }));
             }
 
             public void Dispose() {
-                VsProjectAnalyzer.ReplaceTaskProviderForTests(_originalTaskProvider);
             }
 
             public ITextView TextView {

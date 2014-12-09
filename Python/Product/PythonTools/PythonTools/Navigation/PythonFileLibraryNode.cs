@@ -77,7 +77,7 @@ namespace Microsoft.PythonTools.Navigation {
                         null
                     );
 
-                    return EditFilter.GetFindRefLocations(exprAnalysis);
+                    return EditFilter.GetFindRefLocations(_hierarchy.ProjectMgr.Site, exprAnalysis);
                 }
             }
             

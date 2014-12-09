@@ -27,78 +27,59 @@ namespace Microsoft.PythonTools.Options {
 
     class PythonInteractiveOptionsPage : PythonDialogPage {
         internal PythonInteractiveOptionsControl _window;
-        internal readonly Dictionary<IPythonInterpreterFactory, PythonInteractiveOptions> _options = new Dictionary<IPythonInterpreterFactory, PythonInteractiveOptions>();
-
-        private const string DefaultPrompt = ">>> ";
-        private const string DefaultSecondaryPrompt = "... ";
-
-        private const string EnterOutlingModeOnOpenSetting = "EnterOutlingModeOnOpen";
-        private const string FillParagraphColumnsSetting = "FillParagraphColumns";
-        private const string PrimaryPromptSetting = "PrimaryPrompt";
-        private const string SecondaryPromptSetting = "SecondaryPrompt";
-        private const string InlinePromptsSetting = "InlinePrompts";
-        private const string UseInterpreterPromptsSetting = "UseInterpreterPrompts";
-        private const string ReplIntellisenseModeSetting = "InteractiveIntellisenseMode";
-        private const string SmartHistorySetting = "InteractiveSmartHistory";
-        private const string StartupScriptSetting = "StartupScript";
-        private const string ExecutionModeSetting = "ExecutionMode";
-        private const string InterpreterOptionsSetting = "InterpreterOptions";
-        private const string EnableAttachSetting = "EnableAttach";
-        private const string LiveCompletionsOnlySetting = "LiveCompletionsOnly";
 
         public PythonInteractiveOptionsPage()
             : base("Interactive Windows") {
         }
 
+        internal static IPythonInterpreterFactory NextOptionsSelection { get; set; }
+
         // replace the default UI of the dialog page w/ our own UI.
         protected override System.Windows.Forms.IWin32Window Window {
             get {
                 if (_window == null) {
-                    _window = new PythonInteractiveOptionsControl();
+                    _window = new PythonInteractiveOptionsControl(Site);
+                    PyService.EnvironmentsChanged += PyService_InteractiveWindowsChanged;
                 }
                 return _window;
             }
         }
 
-        public PythonInteractiveOptions GetOptions(IPythonInterpreterFactory interpreterFactory) {
-            PythonInteractiveOptions options;
-            if (!_options.TryGetValue(interpreterFactory, out options)) {
-                _options[interpreterFactory] = options = ReadOptions(GetInterpreterPath(interpreterFactory) + "\\");
+        protected override void Dispose(bool disposing) {
+            PyService.EnvironmentsChanged -= PyService_InteractiveWindowsChanged;
+            base.Dispose(disposing);
+        }
+
+        void PyService_InteractiveWindowsChanged(object sender, EventArgs e) {
+            if (_window != null) {
+                _window.UpdateInterpreters();
             }
-            return options;
+        }
+
+        public PythonInteractiveOptions GetOptions(IPythonInterpreterFactory interpreterFactory) {
+            return PyService.GetInteractiveOptions(interpreterFactory);
         }
 
         public override void ResetSettings() {
-            foreach (var options in _options.Values) {
-                options.PrimaryPrompt = DefaultPrompt;
-                options.SecondaryPrompt = DefaultSecondaryPrompt;
-                options.InlinePrompts = true;
-                options.UseInterpreterPrompts = true;
-                options.ReplIntellisenseMode = ReplIntellisenseMode.DontEvaluateCalls;
-                options.ReplSmartHistory = true;
-                options.StartupScript = "";
-                options.ExecutionMode = "";
-                options.InterpreterOptions = "";
-                options.EnableAttach = false;
-                options.LiveCompletionsOnly = false;
+            foreach (var options in PyService.InteractiveOptions) {
+                options.Value.Reset();
             }
         }
 
         public override void LoadSettingsFromStorage() {
-            var interpreterService = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
+            var interpreterService = ComponentModel.GetService<IInterpreterOptionsService>();
 
             var seenIds = new HashSet<Guid>();
-            var placeholders = _options.Where(kv => kv.Key is InterpreterPlaceholder).ToArray();
-            _options.Clear();
+            var placeholders = PyService.InteractiveOptions.Where(kv => kv.Key is InterpreterPlaceholder).ToArray();
+            PyService.ClearInteractiveOptions();
             foreach (var interpreter in interpreterService.Interpreters) {
-                string interpreterId = GetInterpreterPath(interpreter) + "\\";
                 seenIds.Add(interpreter.Id);
-                _options[interpreter] = ReadOptions(interpreterId);
+                PyService.GetInteractiveOptions(interpreter);
             }
 
             foreach (var kv in placeholders) {
                 if (!seenIds.Contains(kv.Key.Id)) {
-                    _options[kv.Key] = kv.Value;
+                    PyService.AddInteractiveOptions(kv.Key, kv.Value);
                 }
             }
 
@@ -107,26 +88,14 @@ namespace Microsoft.PythonTools.Options {
             }
         }
 
-        private PythonInteractiveOptions ReadOptions(string interpreterId) {
-            return new PythonInteractiveOptions() {
-                PrimaryPrompt = LoadString(interpreterId + PrimaryPromptSetting) ?? DefaultPrompt,
-                SecondaryPrompt = LoadString(interpreterId + SecondaryPromptSetting) ?? DefaultSecondaryPrompt,
-                InlinePrompts = LoadBool(interpreterId + InlinePromptsSetting) ?? true,
-                UseInterpreterPrompts = LoadBool(interpreterId + UseInterpreterPromptsSetting) ?? true,
-                ReplIntellisenseMode = LoadEnum<ReplIntellisenseMode>(interpreterId + ReplIntellisenseModeSetting) ?? ReplIntellisenseMode.DontEvaluateCalls,
-                ReplSmartHistory = LoadBool(interpreterId + SmartHistorySetting) ?? true,
-                StartupScript = LoadString(interpreterId + StartupScriptSetting) ?? "",
-                ExecutionMode = LoadString(interpreterId + ExecutionModeSetting) ?? "",
-                InterpreterOptions = LoadString(interpreterId + InterpreterOptionsSetting) ?? "",
-                EnableAttach = LoadBool(interpreterId + EnableAttachSetting) ?? false,
-                LiveCompletionsOnly = LoadBool(interpreterId + LiveCompletionsOnlySetting) ?? false
-            };
+        private PythonInteractiveOptions ReadOptions(IPythonInterpreterFactory interpreter) {
+            return PyService.GetInteractiveOptions(interpreter);
         }
 
         public override void SaveSettingsToStorage() {
-            var service = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
+            var service = ComponentModel.GetService<IInterpreterOptionsService>();
 
-            foreach (var keyValue in _options) {
+            foreach (var keyValue in PyService.InteractiveOptions) {
                 var interpreter = keyValue.Key;
 
                 if (interpreter is InterpreterPlaceholder) {
@@ -134,70 +103,12 @@ namespace Microsoft.PythonTools.Options {
                     continue;
                 }
                 
-                var options = keyValue.Value;
-                SaveOptions(interpreter, options);
+                SaveOptions(interpreter, keyValue.Value);
             }
-        }
-
-        /// <summary>
-        /// Gets a path which is unique for this interpreter (based upon the Id and version).
-        /// </summary>
-        static string GetInterpreterPath(IPythonInterpreterFactory interpreterFactory) {
-            return interpreterFactory.Id.ToString("B") + "\\" + interpreterFactory.Configuration.Version;
         }
 
         internal void SaveOptions(IPythonInterpreterFactory interpreter, PythonInteractiveOptions options) {
-            var replProvider = PythonToolsPackage.ComponentModel.GetService<IReplWindowProvider>();
-            string interpreterId = GetInterpreterPath(interpreter) + "\\";
-
-            SaveString(interpreterId + PrimaryPromptSetting, options.PrimaryPrompt ?? DefaultPrompt);
-            SaveString(interpreterId + SecondaryPromptSetting, options.SecondaryPrompt ?? DefaultSecondaryPrompt);
-            SaveBool(interpreterId + InlinePromptsSetting, options.InlinePrompts);
-            SaveBool(interpreterId + UseInterpreterPromptsSetting, options.UseInterpreterPrompts);
-            SaveEnum(interpreterId + ReplIntellisenseModeSetting, options.ReplIntellisenseMode);
-            SaveBool(interpreterId + SmartHistorySetting, options.ReplSmartHistory);
-            SaveString(interpreterId + StartupScriptSetting, options.StartupScript ?? "");
-            SaveString(interpreterId + ExecutionModeSetting, options.ExecutionMode ?? "");
-            SaveString(interpreterId + InterpreterOptionsSetting, options.InterpreterOptions ?? "");
-            SaveBool(interpreterId + EnableAttachSetting, options.EnableAttach);
-            SaveBool(interpreterId + LiveCompletionsOnlySetting, options.LiveCompletionsOnly);
-
-            // propagate changed settings to existing REPL windows
-            foreach (var replWindow in replProvider.GetReplWindows()) {
-                PythonReplEvaluator pyEval = replWindow.Evaluator as PythonReplEvaluator;
-                if (EvaluatorUsesThisInterpreter(pyEval, interpreter)) {
-                    if (options.UseInterpreterPrompts) {
-                        replWindow.SetOptionValue(ReplOptions.PrimaryPrompt, pyEval.PrimaryPrompt);
-                        replWindow.SetOptionValue(ReplOptions.SecondaryPrompt, pyEval.SecondaryPrompt);
-                    } else {
-                        replWindow.SetOptionValue(ReplOptions.PrimaryPrompt, options.PrimaryPrompt ?? DefaultPrompt);
-                        replWindow.SetOptionValue(ReplOptions.SecondaryPrompt, options.SecondaryPrompt ?? DefaultSecondaryPrompt);
-                    }
-                    replWindow.SetOptionValue(ReplOptions.DisplayPromptInMargin, !options.InlinePrompts);
-                    replWindow.SetOptionValue(ReplOptions.UseSmartUpDown, options.ReplSmartHistory);
-                }
-            }
-        }
-
-        private static bool EvaluatorUsesThisInterpreter(PythonReplEvaluator pyEval, IPythonInterpreterFactory interpreter) {
-            return pyEval != null &&
-                pyEval.Interpreter != null &&
-                pyEval.Interpreter.Id == interpreter.Id &&
-                pyEval.Interpreter.Configuration.Version == interpreter.Configuration.Version;
-        }
-
-        internal void NewInterpreter(IPythonInterpreterFactory factory, PythonInteractiveOptions options) {
-            _options[factory] = options;
-            if (_window != null) {
-                _window.UpdateInterpreters();
-            }
-        }
-
-        internal void RemoveInterpreter(IPythonInterpreterFactory factory) {
-            _options.Remove(factory);
-            if (_window != null) {
-                _window.UpdateInterpreters();
-            }
+            options.Save(interpreter);
         }
     }
 }

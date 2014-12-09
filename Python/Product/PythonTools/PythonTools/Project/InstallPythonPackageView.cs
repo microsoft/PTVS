@@ -30,12 +30,13 @@ namespace Microsoft.PythonTools.Project {
         private bool _isValid;
         private readonly bool _isInsecure;
         private bool _supportsConda;
-
+        private readonly IServiceProvider _serviceProvider;
 
         /// <summary>
         /// Create a InstallPythonPackageView with default values.
         /// </summary>
-        public InstallPythonPackageView(bool isInsecure, bool supportConda) {
+        public InstallPythonPackageView(IServiceProvider serviceProvider, bool isInsecure, bool supportConda) {
+            _serviceProvider = serviceProvider;
             _supportsConda = supportConda;
             InstallUsing = InstallUsingOptions.First();
             _isInsecure = isInsecure;
@@ -104,17 +105,13 @@ namespace Microsoft.PythonTools.Project {
                     InstallUsingPip = _installUsing == "pip";
                     InstallUsingEasyInstall = _installUsing == "easy_install";
                     InstallUsingConda = _installUsing == "conda";
-                    if (PythonToolsPackage.Instance != null) {
-                        if (InstallUsingPip) {
-                            InstallElevated = PythonToolsPackage.Instance.GeneralOptionsPage.ElevatePip;
-                        } else if (InstallUsingEasyInstall) {
-                            InstallElevated = PythonToolsPackage.Instance.GeneralOptionsPage.ElevateEasyInstall;
-                        } else {
-                            InstallElevated = false;
-                            IsValid = false;
-                        }
+                    if (InstallUsingPip) {
+                        InstallElevated = _serviceProvider.GetPythonToolsService().GeneralOptions.ElevatePip;
+                    } else if (InstallUsingEasyInstall) {
+                        InstallElevated = _serviceProvider.GetPythonToolsService().GeneralOptions.ElevateEasyInstall;
                     } else {
                         InstallElevated = false;
+                        IsValid = false;
                     }
                 }
             }

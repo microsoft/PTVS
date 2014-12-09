@@ -43,7 +43,8 @@ namespace PythonToolsUITests {
         [HostType("VSTestHost")]
         public void ToggleableOptionTest() {
             using (var app = new PythonVisualStudioApp()) {
-                PythonToolsPackage.Instance.SetFormattingOption("SpaceBeforeClassDeclarationParen", true);
+                var pyService = app.ServiceProvider.GetPythonToolsService();
+                pyService.SetFormattingOption("SpaceBeforeClassDeclarationParen", true);
                 foreach (var expectedResult in new bool?[] { false, null, true }) {
                     using (var dialog = ToolsOptionsDialog.FromDte(app)) {
                         dialog.SelectedView = "Text Editor/Python/Formatting/Spacing";
@@ -63,7 +64,7 @@ namespace PythonToolsUITests {
 
                         Assert.AreEqual(
                             expectedResult,
-                            PythonToolsPackage.Instance.GetFormattingOption("SpaceBeforeClassDeclarationParen")
+                            pyService.GetFormattingOption("SpaceBeforeClassDeclarationParen")
                         );
                     }
                 }
@@ -112,7 +113,8 @@ z=3", new Span[0]);
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("VSTestHost")]
         public void FormatReduceLines() {
-            PythonToolsPackage.Instance.SetFormattingOption("SpacesAroundBinaryOperators", true);
+            var pyService = VSTestContext.ServiceProvider.GetPythonToolsService();
+            pyService.SetFormattingOption("SpacesAroundBinaryOperators", true);
 
             FormattingTest("linereduction.py", null, "(a + b + c + d + e + f)\r\n", new[] { new Span(0, 41) });
         }

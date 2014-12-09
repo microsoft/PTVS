@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.Diagnostics;
 using System.IO;
 using Microsoft.PythonTools.Analysis;
@@ -21,11 +22,13 @@ using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project {
     class DefaultPythonProject : IPythonProject {
+        private readonly IServiceProvider _serviceProvider;
         private readonly string _filePath;
 
-        public DefaultPythonProject(string filePath) {
+        public DefaultPythonProject(IServiceProvider serviceProvider, string filePath) {
             Utilities.ArgumentNotNullOrEmpty("filePath", filePath);
             _filePath = filePath;
+            _serviceProvider = serviceProvider;
         }
 
         private string FullPath {
@@ -65,7 +68,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         IPythonInterpreterFactory IPythonProject.GetInterpreterFactory() {
-            return PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>().DefaultInterpreter;
+            return _serviceProvider.GetComponentModel().GetService<IInterpreterOptionsService>().DefaultInterpreter;
         }
 
         bool IPythonProject.Publish(PublishProjectOptions options) {
@@ -78,7 +81,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         VsProjectAnalyzer IPythonProject.GetProjectAnalyzer() {
-            return PythonToolsPackage.Instance.DefaultAnalyzer;
+            return _serviceProvider.GetPythonToolsService().DefaultAnalyzer;
         }
 
         public event System.EventHandler ProjectAnalyzerChanged {

@@ -52,7 +52,7 @@ namespace PythonToolsTests {
         [TestMethod, Priority(0)]
         public void GetApplicableSpanTest() {
             var text = "if fob.oar(eggs, spam<=ham) :";
-            var buffer = new MockTextBuffer(text);
+            var buffer = MockTextBuffer(text);
             var analyzer = AnalyzeTextBuffer(buffer);
             var snapshot = (MockTextSnapshot)buffer.CurrentSnapshot;
 
@@ -83,9 +83,10 @@ namespace PythonToolsTests {
 
         private static VsProjectAnalyzer AnalyzeTextBuffer(MockTextBuffer buffer, PythonLanguageVersion version = PythonLanguageVersion.V27) {
             var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version.ToVersion());
-            var analyzer = new VsProjectAnalyzer(fact, new[] { fact });
+            var serviceProvider = PythonToolsTestUtilities.CreateMockServiceProvider();
+            var analyzer = new VsProjectAnalyzer(serviceProvider, fact, new[] { fact });
             buffer.AddProperty(typeof(VsProjectAnalyzer), analyzer);
-            var classifierProvider = new PythonClassifierProvider(new MockContentTypeRegistryService());
+            var classifierProvider = new PythonClassifierProvider(new MockContentTypeRegistryService(PythonCoreConstants.ContentType), serviceProvider);
             classifierProvider._classificationRegistry = new MockClassificationTypeRegistryService();
             classifierProvider.GetClassifier(buffer);
             var textView = new MockTextView(buffer);
@@ -633,19 +634,19 @@ baz
                 var analysis = AnalyzeExpression(i, code, forCompletion: false);
 
                 var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(PythonLanguageVersion.V27.ToVersion());
-                using (var analyzer = new VsProjectAnalyzer(fact, new[] { fact })) {
-                    var buffer = new MockTextBuffer(code);
+                var serviceProvider = PythonToolsTestUtilities.CreateMockServiceProvider();
+                using (var analyzer = new VsProjectAnalyzer(serviceProvider, fact, new[] { fact })) {
+                    var buffer = MockTextBuffer(code);
                     buffer.AddProperty(typeof(VsProjectAnalyzer), analyzer);
-                    var classifierProvider = new PythonClassifierProvider(new MockContentTypeRegistryService());
+                    var classifierProvider = new PythonClassifierProvider(new MockContentTypeRegistryService(PythonCoreConstants.ContentType), serviceProvider);
                     classifierProvider._classificationRegistry = new MockClassificationTypeRegistryService();
                     classifierProvider.GetClassifier(buffer);
                     var snapshot = (MockTextSnapshot)buffer.CurrentSnapshot;
-#pragma warning disable 618
                     var context = snapshot.GetCompletions(
+                        serviceProvider,
                         new MockTrackingSpan(snapshot, i, 0),
                         new MockTrackingPoint(snapshot, i),
                         new CompletionOptions { HideAdvancedMembers = false });
-#pragma warning restore 618
                     Assert.AreEqual(NormalCompletionAnalysis.EmptyCompletionContext, context);
                 }
             }
@@ -881,7 +882,7 @@ class B(dict):
         }
 
         private IEnumerable<string> HideAdvancedMembersHelper(string text, params string[] completions) {
-            var buffer = new MockTextBuffer(text);
+            var buffer = MockTextBuffer(text);
             var snapshot = buffer.CurrentSnapshot;
             var set = new FuzzyCompletionSet(
                 "Test Completions",
@@ -955,7 +956,7 @@ def func(a):
         [TestMethod, Priority(0)]
         public void LoadAndUnloadModule() {
             var factories = new[] { InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(3, 3)) };
-            using (var analyzer = new VsProjectAnalyzer(factories[0], factories)) {
+            using (var analyzer = new VsProjectAnalyzer(PythonToolsTestUtilities.CreateMockServiceProvider(), factories[0], factories)) {
                 var m1Path = TestData.GetPath("TestData\\SimpleImport\\module1.py");
                 var m2Path = TestData.GetPath("TestData\\SimpleImport\\module2.py");
 
@@ -1002,6 +1003,10 @@ def func(a):
             }
         }
 
+        private static MockTextBuffer MockTextBuffer(string code) {
+            return new MockTextBuffer(code, PythonCoreConstants.ContentType, "C:\\fob.py");
+        }
+
         private static HashSet<string> EditAndGetCompletions(
             string code,
             string editText,
@@ -1012,16 +1017,13 @@ def func(a):
             CompletionAnalysis context;
 
             var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version.ToVersion());
-            var taskProvider = new TaskProvider(null, new MockErrorProviderFactory());
-            var originalTaskProvider = VsProjectAnalyzer.ReplaceTaskProviderForTests(new Lazy<TaskProvider>(() => {
-                return taskProvider;
-            }));
 
-            var analyzer = new VsProjectAnalyzer(fact, new[] { fact });
+            var serviceProvider = PythonToolsTestUtilities.CreateMockServiceProvider();
+            var analyzer = new VsProjectAnalyzer(serviceProvider, fact, new[] { fact });
             try {
-                var buffer = new MockTextBuffer(code);
+                var buffer = MockTextBuffer(code);
                 buffer.AddProperty(typeof(VsProjectAnalyzer), analyzer);
-                var classifierProvider = new PythonClassifierProvider(new MockContentTypeRegistryService());
+                var classifierProvider = new PythonClassifierProvider(new MockContentTypeRegistryService(PythonCoreConstants.ContentType), serviceProvider);
                 classifierProvider._classificationRegistry = new MockClassificationTypeRegistryService();
                 classifierProvider.GetClassifier(buffer);
                 var snapshot = (MockTextSnapshot)buffer.CurrentSnapshot;
@@ -1046,6 +1048,7 @@ def func(a):
                 int location = newSnapshot.GetText().IndexOf(completeAfter) + completeAfter.Length;
 
                 context = newSnapshot.GetCompletions(
+                    serviceProvider, 
                     new MockTrackingSpan(newSnapshot, location, 0),
                     new MockTrackingPoint(newSnapshot, location),
                     new CompletionOptions {
@@ -1060,7 +1063,6 @@ def func(a):
                 return completions;
             } finally {
                 analyzer.Dispose();
-                VsProjectAnalyzer.ReplaceTaskProviderForTests(originalTaskProvider);
             }
         }
 
@@ -1081,8 +1083,9 @@ def func(a):
                 location = sourceCode.Length + location + 1;
             }
             var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(PythonLanguageVersion.V27.ToVersion());
-            using (var analyzer = new VsProjectAnalyzer(fact, new[] { fact })) {
-                return AnalyzeExpressionWorker(location, sourceCode, forCompletion, analyzer);
+            var serviceProvider = PythonToolsTestUtilities.CreateMockServiceProvider();
+            using (var analyzer = new VsProjectAnalyzer(serviceProvider, fact, new[] { fact })) {
+                return AnalyzeExpressionWorker(serviceProvider, location, sourceCode, forCompletion, analyzer);
             }
         }
 
@@ -1091,8 +1094,9 @@ def func(a):
                 location = sourceCode.Length + location + 1;
             }
             var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(PythonLanguageVersion.V27.ToVersion());
-            using (var analyzer = new VsProjectAnalyzer(fact, new[] { fact })) {
-                var analysis = AnalyzeExpressionWorker(location, sourceCode, forCompletion, analyzer);
+            var serviceProvider = PythonToolsTestUtilities.CreateMockServiceProvider();
+            using (var analyzer = new VsProjectAnalyzer(serviceProvider, fact, new[] { fact })) {
+                var analysis = AnalyzeExpressionWorker(serviceProvider, location, sourceCode, forCompletion, analyzer);
 
                 List<object> quickInfo = new List<object>();
                 ITrackingSpan span;
@@ -1105,16 +1109,11 @@ def func(a):
             }
         }
 
-        private static ExpressionAnalysis AnalyzeExpressionWorker(int location, string sourceCode, bool forCompletion, VsProjectAnalyzer analyzer) {
-            var taskProvider = new TaskProvider(null, new MockErrorProviderFactory());
-            var originalTaskProvider = VsProjectAnalyzer.ReplaceTaskProviderForTests(new Lazy<TaskProvider>(() => {
-                return taskProvider;
-            }));
-
+        private static ExpressionAnalysis AnalyzeExpressionWorker(IServiceProvider serviceProvider, int location, string sourceCode, bool forCompletion, VsProjectAnalyzer analyzer) {
             try {
-                var buffer = new MockTextBuffer(sourceCode);
+                var buffer = MockTextBuffer(sourceCode);
                 buffer.AddProperty(typeof(VsProjectAnalyzer), analyzer);
-                var classifierProvider = new PythonClassifierProvider(new MockContentTypeRegistryService());
+                var classifierProvider = new PythonClassifierProvider(new MockContentTypeRegistryService(PythonCoreConstants.ContentType), serviceProvider);
                 classifierProvider._classificationRegistry = new MockClassificationTypeRegistryService();
                 classifierProvider.GetClassifier(buffer);
                 var textView = new MockTextView(buffer);
@@ -1125,9 +1124,8 @@ def func(a):
 
                 var snapshot = (MockTextSnapshot)buffer.CurrentSnapshot;
                 analyzer.StopMonitoringTextBuffer(item.BufferParser, textView);
-                return snapshot.AnalyzeExpression(new MockTrackingSpan(snapshot, location, location == snapshot.Length ? 0 : 1), forCompletion);
+                return snapshot.AnalyzeExpression(serviceProvider, new MockTrackingSpan(snapshot, location, location == snapshot.Length ? 0 : 1), forCompletion);
             } finally {
-                VsProjectAnalyzer.ReplaceTaskProviderForTests(originalTaskProvider);
             }
         }
 
@@ -1143,7 +1141,7 @@ def func(a):
                 location = sourceCode.Length + location + 1;
             }
             var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(PythonLanguageVersion.V27.ToVersion());
-            using (var analyzer = new VsProjectAnalyzer(fact, new[] { fact })) {
+            using (var analyzer = new VsProjectAnalyzer(PythonToolsTestUtilities.CreateMockServiceProvider(), fact, new[] { fact })) {
                 return GetCompletionsWorker(location, sourceCode, intersectMembers, analyzer);
             }
         }
@@ -1156,7 +1154,7 @@ def func(a):
             if (factory == null) {
                 factory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(PythonLanguageVersion.V27.ToVersion());
             }
-            using (var analyzer = new VsProjectAnalyzer(factory, new[] { factory })) {
+            using (var analyzer = new VsProjectAnalyzer(PythonToolsTestUtilities.CreateMockServiceProvider(), factory, new[] { factory })) {
                 return GetCompletionsWorker(location, sourceCode, intersectMembers, analyzer).GetCompletions(new MockGlyphService());
             }
         }
@@ -1178,45 +1176,36 @@ def func(a):
         }
 
         private static CompletionAnalysis GetCompletionsWorker(int location, string sourceCode, bool intersectMembers, VsProjectAnalyzer analyzer) {
-            var taskProvider = new TaskProvider(null, new MockErrorProviderFactory());
-            var originalTaskProvider = VsProjectAnalyzer.ReplaceTaskProviderForTests(new Lazy<TaskProvider>(() => {
-                return taskProvider;
-            }));
+            var buffer = MockTextBuffer(sourceCode);
+            buffer.AddProperty(typeof(VsProjectAnalyzer), analyzer);
+            var serviceProvider = PythonToolsTestUtilities.CreateMockServiceProvider();
+            var classifierProvider = new PythonClassifierProvider(new MockContentTypeRegistryService(PythonCoreConstants.ContentType), serviceProvider);
+            classifierProvider._classificationRegistry = new MockClassificationTypeRegistryService();
+            classifierProvider.GetClassifier(buffer);
+            var snapshot = (MockTextSnapshot)buffer.CurrentSnapshot;
 
-            try {
-                var buffer = new MockTextBuffer(sourceCode);
-                buffer.AddProperty(typeof(VsProjectAnalyzer), analyzer);
-                var classifierProvider = new PythonClassifierProvider(new MockContentTypeRegistryService());
-                classifierProvider._classificationRegistry = new MockClassificationTypeRegistryService();
-                classifierProvider.GetClassifier(buffer);
-                var snapshot = (MockTextSnapshot)buffer.CurrentSnapshot;
-
-                var textView = new MockTextView(buffer);
-                var monitoredBuffer = analyzer.MonitorTextBuffer(textView, buffer);
-                analyzer.WaitForCompleteAnalysis(x => true);
-                while (buffer.GetPythonProjectEntry().Analysis == null) {
-                    System.Threading.Thread.Sleep(500);
-                }
-                analyzer.StopMonitoringTextBuffer(monitoredBuffer.BufferParser, textView);
-                var span = snapshot.GetApplicableSpan(new SnapshotPoint(snapshot, location)) ??
-                    snapshot.CreateTrackingSpan(location, 0, SpanTrackingMode.EdgeInclusive);
-
-#pragma warning disable 618
-                var context = snapshot.GetCompletions(
-                    span,
-                    new MockTrackingPoint(snapshot, location),
-                    new CompletionOptions {
-                        HideAdvancedMembers = false,
-                        IntersectMembers = intersectMembers,
-                        ConvertTabsToSpaces = true,
-                        IndentSize = 4
-                    }
-                );
-#pragma warning restore 618
-                return context;
-            } finally {
-                VsProjectAnalyzer.ReplaceTaskProviderForTests(originalTaskProvider);
+            var textView = new MockTextView(buffer);
+            var monitoredBuffer = analyzer.MonitorTextBuffer(textView, buffer);
+            analyzer.WaitForCompleteAnalysis(x => true);
+            while (buffer.GetPythonProjectEntry().Analysis == null) {
+                System.Threading.Thread.Sleep(500);
             }
+            analyzer.StopMonitoringTextBuffer(monitoredBuffer.BufferParser, textView);
+            var span = snapshot.GetApplicableSpan(new SnapshotPoint(snapshot, location)) ??
+                snapshot.CreateTrackingSpan(location, 0, SpanTrackingMode.EdgeInclusive);
+
+            var context = snapshot.GetCompletions(
+                serviceProvider,
+                span,
+                new MockTrackingPoint(snapshot, location),
+                new CompletionOptions {
+                    HideAdvancedMembers = false,
+                    IntersectMembers = intersectMembers,
+                    ConvertTabsToSpaces = true,
+                    IndentSize = 4
+                }
+            );
+            return context;
         }
 
         private static void SignatureTest(int location, string sourceCode, string expectedExpression, int paramIndex, PythonLanguageVersion version = PythonLanguageVersion.V27) {
@@ -1230,16 +1219,12 @@ def func(a):
             }
             var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version.ToVersion());
 
-            var taskProvider = new TaskProvider(null, new MockErrorProviderFactory());
-            var originalTaskProvider = VsProjectAnalyzer.ReplaceTaskProviderForTests(new Lazy<TaskProvider>(() => {
-                return taskProvider;
-            }));
-
-            var analyzer = new VsProjectAnalyzer(fact, new[] { fact });
+            var serviceProvider = PythonToolsTestUtilities.CreateMockServiceProvider();
+            var analyzer = new VsProjectAnalyzer(serviceProvider, fact, new[] { fact });
             try {
-                var buffer = new MockTextBuffer(sourceCode);
+                var buffer = MockTextBuffer(sourceCode);
                 buffer.AddProperty(typeof(VsProjectAnalyzer), analyzer);
-                var classifierProvider = new PythonClassifierProvider(new MockContentTypeRegistryService());
+                var classifierProvider = new PythonClassifierProvider(new MockContentTypeRegistryService(PythonCoreConstants.ContentType), serviceProvider);
                 classifierProvider._classificationRegistry = new MockClassificationTypeRegistryService();
                 classifierProvider.GetClassifier(buffer);
 
@@ -1255,12 +1240,11 @@ def func(a):
                     analyzer.StopMonitoringTextBuffer(monitoredBuffer.BufferParser, textView);
                 }
 
-                sigs = snapshot.GetSignatures(new MockTrackingSpan(snapshot, location, 1));
+                sigs = snapshot.GetSignatures(serviceProvider, new MockTrackingSpan(snapshot, location, 1));
                 Assert.AreEqual(expectedExpression, sigs.Text, sourceCode);
                 Assert.AreEqual(paramIndex, sigs.ParameterIndex, sourceCode);
             } finally {
                 analyzer.Dispose();
-                VsProjectAnalyzer.ReplaceTaskProviderForTests(originalTaskProvider);
             }
         }
 

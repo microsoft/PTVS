@@ -42,8 +42,12 @@ namespace Microsoft.IronPythonTools.Debugger {
         private static readonly Guid _cpy64InterpreterGuid = new Guid("{9A7A9026-48C1-4688-9D5D-E5699D47D074}");
 
         private readonly IPythonProject _project;
+        private readonly PythonToolsService _pyService;
+        private readonly IServiceProvider _serviceProvider;
 
-        public IronPythonLauncher(IPythonProject project) {
+        public IronPythonLauncher(IServiceProvider serviceProvider, PythonToolsService pyService, IPythonProject project) {
+            _serviceProvider = serviceProvider;
+            _pyService = pyService;
             _project = project;
         }
 
@@ -113,15 +117,15 @@ namespace Microsoft.IronPythonTools.Debugger {
             }
 
             ProcessStartInfo startInfo;
-            if (!isWindows && (PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnNormalExit || PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnAbnormalExit)) {
+            if (!isWindows && (_pyService.DebuggerOptions.WaitOnNormalExit || _pyService.DebuggerOptions.WaitOnAbnormalExit)) {
                 command = "/c \"\"" + interpreter + "\" " + command;
-
-                if (PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnNormalExit &&
-                    PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnAbnormalExit) {
+                
+                if (_pyService.DebuggerOptions.WaitOnNormalExit &&
+                    _pyService.DebuggerOptions.WaitOnAbnormalExit) {
                     command += " & pause";
-                } else if (PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnNormalExit) {
+                } else if (_pyService.DebuggerOptions.WaitOnNormalExit) {
                     command += " & if not errorlevel 1 pause";
-                } else if (PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnAbnormalExit) {
+                } else if (_pyService.DebuggerOptions.WaitOnAbnormalExit) {
                     command += " & if errorlevel 1 pause";
                 }
 
@@ -169,7 +173,7 @@ namespace Microsoft.IronPythonTools.Debugger {
                     return;
                 }
 
-                LaunchDebugger(PythonToolsPackage.Instance, dbgInfo);
+                LaunchDebugger(_serviceProvider, dbgInfo);
             } finally {
                 if (ptr != IntPtr.Zero) {
                     Marshal.FreeCoTaskMem(ptr);
@@ -320,7 +324,7 @@ You may need to download it from http://ironpython.codeplex.com.");
                 dbgInfo.grfLaunch = (uint)__VSDBGLAUNCHFLAGS.DBGLAUNCH_StopDebuggingOnEnd | (uint)__VSDBGLAUNCHFLAGS4.DBGLAUNCH_UseDefaultBrowser;
                 dbgInfo.cbSize = (uint)Marshal.SizeOf(dbgInfo);
 
-                VsShellUtilities.LaunchDebugger(PythonToolsPackage.Instance, dbgInfo);
+                VsShellUtilities.LaunchDebugger(_serviceProvider, dbgInfo);
             } else {
                 // run the users default browser
                 var handler = GetBrowserHandlerProgId();

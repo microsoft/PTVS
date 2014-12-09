@@ -38,7 +38,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         internal void LoadSettings() {
-            var compModel = PythonToolsPackage.ComponentModel;
+            var compModel = _propPage.Project.Site.GetComponentModel();
             var launchProvider = _propPage.Project.GetProjectProperty(PythonConstants.LaunchProvider, false);
             if (String.IsNullOrWhiteSpace(launchProvider)) {
                 launchProvider = DefaultLauncherProvider.DefaultLauncherName;

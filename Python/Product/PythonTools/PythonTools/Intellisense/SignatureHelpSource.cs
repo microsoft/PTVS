@@ -32,8 +32,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public void AugmentSignatureHelpSession(ISignatureHelpSession session, System.Collections.Generic.IList<ISignature> signatures) {
             var span = session.GetApplicableSpan(_textBuffer);
-            
-            var sigs = _textBuffer.CurrentSnapshot.GetSignatures(span);
+
+            var sigs = _textBuffer.CurrentSnapshot.GetSignatures(_provider._serviceProvider, span);
 
             ISignature curSig = sigs.Signatures
                 .OrderBy(s => s.Parameters.Count)

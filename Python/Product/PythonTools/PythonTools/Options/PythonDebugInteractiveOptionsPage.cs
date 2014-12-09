@@ -24,20 +24,7 @@ namespace Microsoft.PythonTools.Options {
 #endif
 
     class PythonDebugInteractiveOptionsPage : PythonDialogPage {
-        internal PythonInteractiveCommonOptions _options = new PythonInteractiveCommonOptions();
-
         private PythonDebugInteractiveOptionsControl _window;
-
-        private const string DefaultPrompt = ">>> ";
-        private const string DefaultSecondaryPrompt = "... ";
-
-        private const string PrimaryPromptSetting = "PrimaryPrompt";
-        private const string SecondaryPromptSetting = "SecondaryPrompt";
-        private const string InlinePromptsSetting = "InlinePrompts";
-        private const string UseInterpreterPromptsSetting = "UseInterpreterPrompts";
-        private const string ReplIntellisenseModeSetting = "InteractiveIntellisenseMode";
-        private const string SmartHistorySetting = "InteractiveSmartHistory";
-        private const string LiveCompletionsOnlySetting = "LiveCompletionsOnly";
 
         public PythonDebugInteractiveOptionsPage()
             : base("Debug Interactive Window") {
@@ -56,67 +43,49 @@ namespace Microsoft.PythonTools.Options {
 
         internal PythonInteractiveCommonOptions Options {
             get {
-                return _options;
+                return PyService.DebugInteractiveOptions;
             }
         }
 
         public override void ResetSettings() {
-            _options.PrimaryPrompt = DefaultPrompt;
-            _options.SecondaryPrompt = DefaultSecondaryPrompt;
-            _options.InlinePrompts = true;
-            _options.UseInterpreterPrompts = true;
-            _options.ReplIntellisenseMode = ReplIntellisenseMode.DontEvaluateCalls;
-            _options.ReplSmartHistory = true;
-            _options.LiveCompletionsOnly = false;
+            PyService.DebugInteractiveOptions.Reset();
         }
 
         public override void LoadSettingsFromStorage() {
             // Load settings from storage.
-            _options.PrimaryPrompt = LoadString(PrimaryPromptSetting) ?? DefaultPrompt;
-            _options.SecondaryPrompt = LoadString(SecondaryPromptSetting) ?? DefaultSecondaryPrompt;
-            _options.InlinePrompts = LoadBool(InlinePromptsSetting) ?? true;
-            _options.UseInterpreterPrompts = LoadBool(UseInterpreterPromptsSetting) ?? true;
-            _options.ReplIntellisenseMode = LoadEnum<ReplIntellisenseMode>(ReplIntellisenseModeSetting) ?? ReplIntellisenseMode.DontEvaluateCalls;
-            _options.ReplSmartHistory = LoadBool(SmartHistorySetting) ?? true;
-            _options.LiveCompletionsOnly = LoadBool(LiveCompletionsOnlySetting) ?? false;
+            PyService.DebugInteractiveOptions.Load();
 
             // Synchronize UI with backing properties.
             if (_window != null) {
-                _window.SyncControlWithPageSettings(this);
+                _window.SyncControlWithPageSettings(PyService);
             }
         }
 
         public override void SaveSettingsToStorage() {
             // Synchronize backing properties with UI.
             if (_window != null) {
-                _window.SyncPageWithControlSettings(this);
+                _window.SyncPageWithControlSettings(PyService);
             }
             
             // Save settings.
-            SaveString(PrimaryPromptSetting, _options.PrimaryPrompt);
-            SaveString(SecondaryPromptSetting, _options.SecondaryPrompt);
-            SaveBool(InlinePromptsSetting, _options.InlinePrompts);
-            SaveBool(UseInterpreterPromptsSetting, _options.UseInterpreterPrompts);
-            SaveEnum<ReplIntellisenseMode>(ReplIntellisenseModeSetting, _options.ReplIntellisenseMode);
-            SaveBool(SmartHistorySetting, _options.ReplSmartHistory);
-            SaveBool(LiveCompletionsOnlySetting, _options.LiveCompletionsOnly);
+            PyService.DebugInteractiveOptions.Save();
 
             // propagate changed settings to existing REPL windows
-            var model = (IComponentModel)PythonToolsPackage.GetGlobalService(typeof(SComponentModel));
+            var model = ComponentModel;
             var replProvider = model.GetService<IReplWindowProvider>();
             
             foreach (var replWindow in replProvider.GetReplWindows()) {
                 PythonDebugReplEvaluator pyEval = replWindow.Evaluator as PythonDebugReplEvaluator;
                 if (pyEval != null){
-                    if (_options.UseInterpreterPrompts) {
+                    if (Options.UseInterpreterPrompts) {
                         replWindow.SetOptionValue(ReplOptions.PrimaryPrompt, pyEval.PrimaryPrompt);
                         replWindow.SetOptionValue(ReplOptions.SecondaryPrompt, pyEval.SecondaryPrompt);
                     } else {
-                        replWindow.SetOptionValue(ReplOptions.PrimaryPrompt, _options.PrimaryPrompt);
-                        replWindow.SetOptionValue(ReplOptions.SecondaryPrompt, _options.SecondaryPrompt);
+                        replWindow.SetOptionValue(ReplOptions.PrimaryPrompt, Options.PrimaryPrompt);
+                        replWindow.SetOptionValue(ReplOptions.SecondaryPrompt, Options.SecondaryPrompt);
                     }
-                    replWindow.SetOptionValue(ReplOptions.DisplayPromptInMargin, !_options.InlinePrompts);
-                    replWindow.SetOptionValue(ReplOptions.UseSmartUpDown, _options.ReplSmartHistory);
+                    replWindow.SetOptionValue(ReplOptions.DisplayPromptInMargin, !Options.InlinePrompts);
+                    replWindow.SetOptionValue(ReplOptions.UseSmartUpDown, Options.ReplSmartHistory);
                 }
             }
         }

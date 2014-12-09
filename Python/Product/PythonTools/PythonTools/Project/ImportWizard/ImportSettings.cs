@@ -48,8 +48,8 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
             GenericWebProjectCustomization.Instance
         };
 
-        public ImportSettings()
-            : this(PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>()) {
+        public ImportSettings(IServiceProvider serviceProvider)
+            : this(serviceProvider.GetComponentModel().GetService<IInterpreterOptionsService>()) {
         }
 
         public ImportSettings(IInterpreterOptionsService service) {

@@ -26,8 +26,9 @@ namespace Microsoft.PythonTools.Profiling {
         private readonly string _exe, _args, _dir;
         private readonly ProcessorArchitecture _arch;
         private readonly Process _process;
+        private readonly PythonToolsService _pyService;
 
-        public ProfiledProcess(string exe, string args, string dir, Dictionary<string, string> envVars, ProcessorArchitecture arch) {
+        public ProfiledProcess(PythonToolsService pyService, string exe, string args, string dir, Dictionary<string, string> envVars, ProcessorArchitecture arch) {
             if (arch != ProcessorArchitecture.X86 && arch != ProcessorArchitecture.Amd64) {
                 throw new InvalidOperationException(String.Format("Unsupported architecture: {0}", arch));
             }
@@ -37,6 +38,7 @@ namespace Microsoft.PythonTools.Profiling {
             if (String.IsNullOrEmpty(dir)) {
                 dir = ".";
             }
+            _pyService = pyService;
             _exe = exe;
             _args = args;
             _dir = dir;
@@ -51,10 +53,10 @@ namespace Microsoft.PythonTools.Profiling {
                 _args;
 
             processInfo = new ProcessStartInfo(_exe, arguments);
-            if (PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnNormalExit) {
+            if (_pyService.DebuggerOptions.WaitOnNormalExit) {
                 processInfo.EnvironmentVariables["VSPYPROF_WAIT_ON_NORMAL_EXIT"] = "1";
             }
-            if (PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnAbnormalExit) {
+            if (_pyService.DebuggerOptions.WaitOnAbnormalExit) {
                 processInfo.EnvironmentVariables["VSPYPROF_WAIT_ON_ABNORMAL_EXIT"] = "1";
             }
             

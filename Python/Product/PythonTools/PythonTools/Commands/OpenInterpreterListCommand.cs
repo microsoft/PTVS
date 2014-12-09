@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using Microsoft.PythonTools.InterpreterList;
 using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Commands {
@@ -20,9 +21,14 @@ namespace Microsoft.PythonTools.Commands {
     /// Provides the command for opening the interpreter list.
     /// </summary>
     class OpenInterpreterListCommand : Command {
+        private readonly IServiceProvider _provider;
+
+        public OpenInterpreterListCommand(IServiceProvider provider) {
+            _provider = provider;
+        }
 
         public override void DoCommand(object sender, EventArgs args) {
-            PythonToolsPackage.Instance.ShowInterpreterList();
+            _provider.ShowInterpreterList();
         }
 
         public string Description {

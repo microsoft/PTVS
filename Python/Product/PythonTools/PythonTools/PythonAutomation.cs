@@ -29,7 +29,12 @@ namespace Microsoft.PythonTools {
     /// </summary>
     [ComVisible(true)]
     public sealed class PythonAutomation : IVsPython, IPythonOptions, IPythonIntellisenseOptions {
-        internal PythonAutomation() {
+        private readonly IServiceProvider _serviceProvider;
+        private readonly PythonToolsService _pyService;
+
+        internal PythonAutomation(IServiceProvider serviceProvider) {
+            _serviceProvider = serviceProvider;
+            _pyService = serviceProvider.GetPythonToolsService();
         }
 
         #region IPythonOptions Members
@@ -39,69 +44,69 @@ namespace Microsoft.PythonTools {
         }
 
         IPythonInteractiveOptions IPythonOptions.GetInteractiveOptions(string interpreterName) {
-            var interpreters = PythonToolsPackage.Instance.InterpreterOptionsPage._options.Keys;
+            var interpreters = _pyService.InterpreterOptions.Select(x => x.Key);
             var factory = interpreters.FirstOrDefault(i => i.Description == interpreterName);
 
-            return factory == null ? null : new AutomationInterpreterOptions(factory);
+            return factory == null ? null : new AutomationInterpreterOptions(_serviceProvider, factory);
         }
 
         bool IPythonOptions.PromptBeforeRunningWithBuildErrorSetting {
             get {
-                return PythonToolsPackage.Instance.DebuggingOptionsPage.PromptBeforeRunningWithBuildError;
+                return _pyService.DebuggerOptions.PromptBeforeRunningWithBuildError;
             }
             set {
-                PythonToolsPackage.Instance.DebuggingOptionsPage.PromptBeforeRunningWithBuildError = value;
-                PythonToolsPackage.Instance.DebuggingOptionsPage.SaveSettingsToStorage();
+                _pyService.DebuggerOptions.PromptBeforeRunningWithBuildError = value;
+                _pyService.DebuggerOptions.Save();
             }
         }
 
         Severity IPythonOptions.IndentationInconsistencySeverity {
             get {
-                return PythonToolsPackage.Instance.DebuggingOptionsPage.IndentationInconsistencySeverity;
+                return _pyService.GeneralOptions.IndentationInconsistencySeverity;
             }
             set {
-                PythonToolsPackage.Instance.DebuggingOptionsPage.IndentationInconsistencySeverity = value;
-                PythonToolsPackage.Instance.DebuggingOptionsPage.SaveSettingsToStorage();
+                _pyService.GeneralOptions.IndentationInconsistencySeverity = value;
+                _pyService.GeneralOptions.Save();
             }
         }
 
         bool IPythonOptions.AutoAnalyzeStandardLibrary {
             get {
-                return PythonToolsPackage.Instance.DebuggingOptionsPage.AutoAnalyzeStandardLibrary;
+                return _pyService.GeneralOptions.AutoAnalyzeStandardLibrary;
             }
             set {
-                PythonToolsPackage.Instance.DebuggingOptionsPage.AutoAnalyzeStandardLibrary = value;
-                PythonToolsPackage.Instance.DebuggingOptionsPage.SaveSettingsToStorage();
+                _pyService.GeneralOptions.AutoAnalyzeStandardLibrary = value;
+                _pyService.GeneralOptions.Save();
             }
         }
 
         bool IPythonOptions.TeeStandardOutput {
             get {
-                return PythonToolsPackage.Instance.DebuggingOptionsPage.TeeStandardOutput;
+                return _pyService.DebuggerOptions.TeeStandardOutput;
             }
             set {
-                PythonToolsPackage.Instance.DebuggingOptionsPage.TeeStandardOutput = value;
-                PythonToolsPackage.Instance.DebuggingOptionsPage.SaveSettingsToStorage();
+                _pyService.DebuggerOptions.TeeStandardOutput = value;
+                _pyService.DebuggerOptions.Save();
             }
         }
 
         bool IPythonOptions.WaitOnAbnormalExit {
             get {
-                return PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnAbnormalExit;
+                return _pyService.DebuggerOptions.WaitOnAbnormalExit;
             }
             set {
-                PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnAbnormalExit = value;
-                PythonToolsPackage.Instance.DebuggingOptionsPage.SaveSettingsToStorage();
+                _pyService.DebuggerOptions.WaitOnAbnormalExit = value;
+                _pyService.DebuggerOptions.Save();
             }
         }
 
         bool IPythonOptions.WaitOnNormalExit {
             get {
-                return PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnNormalExit;
+                return _pyService.DebuggerOptions.WaitOnNormalExit;
             }
             set {
-                PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnNormalExit = value;
-                PythonToolsPackage.Instance.DebuggingOptionsPage.SaveSettingsToStorage();
+                _pyService.DebuggerOptions.WaitOnNormalExit = value;
+                _pyService.DebuggerOptions.Save();
             }
         }
 
@@ -111,42 +116,42 @@ namespace Microsoft.PythonTools {
 
         bool IPythonIntellisenseOptions.AddNewLineAtEndOfFullyTypedWord {
             get {
-                return PythonToolsPackage.Instance.AdvancedEditorOptionsPage.AddNewLineAtEndOfFullyTypedWord;
+                return _pyService.AdvancedOptions.AddNewLineAtEndOfFullyTypedWord;
             }
             set {
-                PythonToolsPackage.Instance.AdvancedEditorOptionsPage.AddNewLineAtEndOfFullyTypedWord = value;
-                PythonToolsPackage.Instance.AdvancedEditorOptionsPage.SaveSettingsToStorage();
+                _pyService.AdvancedOptions.AddNewLineAtEndOfFullyTypedWord = value;
+                _pyService.AdvancedOptions.Save();
             }
         }
 
         bool IPythonIntellisenseOptions.EnterCommitsCompletion {
             get {
-                return PythonToolsPackage.Instance.AdvancedEditorOptionsPage.EnterCommitsIntellisense;
+                return _pyService.AdvancedOptions.EnterCommitsIntellisense;
             }
             set {
-                PythonToolsPackage.Instance.AdvancedEditorOptionsPage.EnterCommitsIntellisense = value;
-                PythonToolsPackage.Instance.AdvancedEditorOptionsPage.SaveSettingsToStorage();
+                _pyService.AdvancedOptions.EnterCommitsIntellisense = value;
+                _pyService.AdvancedOptions.Save();                
             }
         }
 
         bool IPythonIntellisenseOptions.UseMemberIntersection {
             get {
-                return PythonToolsPackage.Instance.AdvancedEditorOptionsPage.IntersectMembers;
+                return _pyService.AdvancedOptions.IntersectMembers;
             }
             set {
-                PythonToolsPackage.Instance.AdvancedEditorOptionsPage.IntersectMembers = value;
-                PythonToolsPackage.Instance.AdvancedEditorOptionsPage.SaveSettingsToStorage();
+                _pyService.AdvancedOptions.IntersectMembers = value;
+                _pyService.AdvancedOptions.Save();
 
             }
         }
 
         string IPythonIntellisenseOptions.CompletionCommittedBy {
             get {
-                return PythonToolsPackage.Instance.AdvancedEditorOptionsPage.CompletionCommittedBy;
+                return _pyService.AdvancedOptions.CompletionCommittedBy;
             }
             set {
-                PythonToolsPackage.Instance.AdvancedEditorOptionsPage.CompletionCommittedBy = value;
-                PythonToolsPackage.Instance.AdvancedEditorOptionsPage.SaveSettingsToStorage();
+                _pyService.AdvancedOptions.CompletionCommittedBy = value;
+                _pyService.AdvancedOptions.Save();
             }
         }
 
@@ -165,7 +170,7 @@ namespace Microsoft.PythonTools {
             }
 
             if (commandId.HasValue) {
-                var dte = (EnvDTE.DTE)PythonToolsPackage.GetGlobalService(typeof(EnvDTE.DTE));
+                var dte = (EnvDTE.DTE)_serviceProvider.GetService(typeof(EnvDTE.DTE));
                 object inObj = null, outObj = null;
                 dte.Commands.Raise(GuidList.guidPythonToolsCmdSet.ToString("B"), commandId.Value, ref inObj, ref outObj);
             } else {
@@ -177,19 +182,26 @@ namespace Microsoft.PythonTools {
     [ComVisible(true)]
     public sealed class AutomationInterpreterOptions : IPythonInteractiveOptions {
         private readonly IPythonInterpreterFactory _interpreterFactory;
+        private readonly IServiceProvider _serviceProvider;
 
+        [Obsolete("A IServiceProvider should be provided")]
         public AutomationInterpreterOptions(IPythonInterpreterFactory interpreterFactory) {
+            _interpreterFactory = interpreterFactory;
+        }
+
+        public AutomationInterpreterOptions(IServiceProvider serviceProvider, IPythonInterpreterFactory interpreterFactory) {
+            _serviceProvider = serviceProvider;
             _interpreterFactory = interpreterFactory;
         }
 
         internal PythonInteractiveOptions CurrentOptions {
             get {
-                return PythonToolsPackage.Instance.InteractiveOptionsPage.GetOptions(_interpreterFactory);
+                return _serviceProvider.GetPythonToolsService().GetInteractiveOptions(_interpreterFactory);
             }
         }
 
-        private static void SaveSettingsToStorage() {
-            PythonToolsPackage.Instance.InteractiveOptionsPage.SaveSettingsToStorage();
+        private void SaveSettingsToStorage() {
+            CurrentOptions.Save(_interpreterFactory);
         }
 
         string IPythonInteractiveOptions.PrimaryPrompt {
@@ -279,7 +291,7 @@ namespace Microsoft.PythonTools {
                 return CurrentOptions.ExecutionMode;
             }
             set {
-                foreach (var mode in ExecutionMode.GetRegisteredModes()) {
+                foreach (var mode in ExecutionMode.GetRegisteredModes(_serviceProvider)) {
                     if (mode.FriendlyName.Equals(value, StringComparison.OrdinalIgnoreCase)) {
                         value = mode.Id;
                         break;

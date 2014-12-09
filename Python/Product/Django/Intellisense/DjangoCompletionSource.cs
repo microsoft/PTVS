@@ -58,7 +58,7 @@ namespace Microsoft.PythonTools.Django.Intellisense {
             artifact.Parse(artifactText);
 
             ITrackingSpan applicableSpan;
-            var completionSet = GetCompletionSet(session.GetOptions(), _analyzer, artifact.TokenKind, artifactText, artifact.InnerRange.Start, triggerPoint, out applicableSpan);
+            var completionSet = GetCompletionSet(session.GetOptions(_analyzer._serviceProvider), _analyzer, artifact.TokenKind, artifactText, artifact.InnerRange.Start, triggerPoint, out applicableSpan);
             completionSets.Add(completionSet);
         }
 

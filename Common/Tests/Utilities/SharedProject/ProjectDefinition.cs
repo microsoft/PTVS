@@ -28,6 +28,7 @@ namespace TestUtilities.SharedProject {
         public readonly ProjectType ProjectType;
         private readonly string _name;
         public readonly ProjectContentGenerator[] Items;
+        public readonly Guid Guid = Guid.NewGuid();
 
         /// <summary>
         /// Creates a new generic project not associated with any language that can be used
@@ -76,7 +77,7 @@ namespace TestUtilities.SharedProject {
             project.Save(projectFile);
 
             if (ProjectType != ProjectType.Generic) {
-                var projGuid = Guid.NewGuid();
+                var projGuid = Guid;
                 project.SetProperty("ProjectTypeGuid", TypeGuid.ToString());
                 project.SetProperty("Name", _name);
                 project.SetProperty("ProjectGuid", projGuid.ToString("B"));

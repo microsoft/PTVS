@@ -53,7 +53,7 @@ namespace Microsoft.PythonTools.Project {
             _interpreterService = interpreterService;
             _project = project;
             VirtualEnvBasePath = _projectHome = project.ProjectHome;
-            Interpreters = new ObservableCollection<InterpreterView>(InterpreterView.GetInterpreters(interpreterService));
+            Interpreters = new ObservableCollection<InterpreterView>(InterpreterView.GetInterpreters(project.Site, interpreterService));
             var selection = Interpreters.FirstOrDefault(v => v.Interpreter == selectInterpreter);
             if (selection == null) {
                 selection = Interpreters.FirstOrDefault(v => v.Interpreter == interpreterService.DefaultInterpreter)
@@ -420,8 +420,7 @@ namespace Microsoft.PythonTools.Project {
                         UseVEnv = false;
                     }
                     WillInstallElevated = (WillInstallPip || WillInstallVirtualEnv) &&
-                        PythonToolsPackage.Instance != null &&
-                        PythonToolsPackage.Instance.GeneralOptionsPage.ElevatePip;
+                        _project.Site.GetPythonToolsService().GeneralOptions.ElevatePip;
                 }
             } finally {
                 try {

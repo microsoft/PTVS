@@ -23,9 +23,7 @@ namespace Microsoft.PythonTools.Options {
     public class PythonFormattingOptionsPage : PythonDialogPage {
         private PythonFormattingOptionsControl _window;
         private readonly OptionCategory[] _categories;
-        private Func<CodeFormattingOptions> _optionsFactory;
         private const string _formattingCat = "Formatting";
-        private static readonly Dictionary<string, OptionInfo> _allOptions = new Dictionary<string, OptionInfo>();
 
         internal PythonFormattingOptionsPage()
             : this(new OptionCategory(
@@ -58,104 +56,8 @@ namespace Microsoft.PythonTools.Options {
 
         private void EnsureWindow() {
             if (_window == null) {
-                _window = new PythonFormattingOptionsControl(_categories);
+                _window = new PythonFormattingOptionsControl(Site, _categories);
             }
-        }
-
-        /// <summary>
-        /// Sets the value for a formatting setting.  The name is one of the properties
-        /// in CodeFormattingOptions.
-        /// </summary>
-        /// <param name="name"></param>
-        /// <param name="value"></param>
-        internal static void SetOption(string name, object value) {
-            EnsureAllOptions();
-            OptionInfo option;
-            if (!_allOptions.TryGetValue(name, out option)) {
-                throw new InvalidOperationException("Unknown option " + name);
-            }
-
-            SaveString(name, option.SerializeOptionValue(value), _formattingCat);
-        }
-
-        /// <summary>
-        /// Gets the value for a formatting setting.  The name is one of the properties in
-        /// CodeFormattingOptions.
-        /// </summary>
-        internal static object GetOption(string name) {
-            EnsureAllOptions();
-            OptionInfo option;
-            if (!_allOptions.TryGetValue(name, out option)) {
-                throw new InvalidOperationException("Unknown option " + name);
-            }
-            return option.DeserializeOptionValue(LoadString(name, _formattingCat));
-        }
-
-        private static void EnsureAllOptions() {
-            if (_allOptions.Count == 0) {
-                foreach (CodeFormattingCategory curCat in Enum.GetValues(typeof(CodeFormattingCategory))) {
-                    if (curCat == CodeFormattingCategory.None) {
-                        continue;
-                    }
-
-                    var cat = OptionCategory.GetOptions(curCat);
-                    foreach (var optionInfo in cat) {
-                        _allOptions[optionInfo.Key] = optionInfo;
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// Gets a new CodeFormattinOptions object configured to the users current settings.
-        /// </summary>
-        internal CodeFormattingOptions GetCodeFormattingOptions() {
-            if (_optionsFactory == null) {
-                // create a factory which can create CodeFormattingOptions without tons of reflection
-                var initializers = new Dictionary<OptionInfo, Action<CodeFormattingOptions, object>>();
-                foreach (CodeFormattingCategory curCat in Enum.GetValues(typeof(CodeFormattingCategory))) {
-                    if (curCat == CodeFormattingCategory.None) {
-                        continue;
-                    }
-
-                    var cat = OptionCategory.GetOptions(curCat);
-                    foreach (var option in cat) {
-                        var propInfo = typeof(CodeFormattingOptions).GetProperty(option.Key);
-
-                        if (propInfo.PropertyType == typeof(bool)) {
-                            initializers[option] = MakeFastSetter<bool>(propInfo);
-                        } else if (propInfo.PropertyType == typeof(bool?)) {
-                            initializers[option] = MakeFastSetter<bool?>(propInfo);
-                        } else if (propInfo.PropertyType == typeof(int)) {
-                            initializers[option] = MakeFastSetter<int>(propInfo);
-                        } else {
-                            throw new InvalidOperationException(String.Format("Unsupported formatting option type: {0}", propInfo.PropertyType.FullName));
-                        }
-                    }
-                }
-
-                _optionsFactory = CreateOptionsFactory(initializers);
-            }           
-
-            return _optionsFactory();
-        }
-
-        private Func<CodeFormattingOptions> CreateOptionsFactory(Dictionary<OptionInfo, Action<CodeFormattingOptions, object>> initializers) {
-            return () => {
-                var res = new CodeFormattingOptions();
-                foreach (var keyValue in initializers) {
-                    var option = keyValue.Key;
-                    var fastSet = keyValue.Value;
-
-                    fastSet(res, option.DeserializeOptionValue(LoadString(option.Key)));
-                }
-                return res;
-            };
-        }
-
-        private static Action<CodeFormattingOptions, object> MakeFastSetter<T>(PropertyInfo propInfo) {
-            var fastSet = (Action<CodeFormattingOptions, T>)Delegate.CreateDelegate(typeof(Action<CodeFormattingOptions, T>), propInfo.GetSetMethod());
-            return (options, value) => fastSet(options, (T)value);
         }
 
         public override void ResetSettings() {
@@ -174,7 +76,7 @@ namespace Microsoft.PythonTools.Options {
 
             foreach (var value in _categories) {
                 foreach (var option in value.Options) {
-                    _window.SetSetting(option.Key, option.DeserializeOptionValue(LoadString(option.Key)));
+                    _window.SetSetting(option.Key, PyService.GetFormattingOption(option.Key));
                 }
             }
             base.LoadSettingsFromStorage();
@@ -185,7 +87,7 @@ namespace Microsoft.PythonTools.Options {
 
             foreach (var value in _categories) {
                 foreach (var option in value.Options) {
-                    SaveString(option.Key, option.SerializeOptionValue(_window.GetSetting(option.Key)));
+                    PyService.SetFormattingOption(option.Key, _window.GetSetting(option.Key));
                 }
             }
             base.SaveSettingsToStorage();

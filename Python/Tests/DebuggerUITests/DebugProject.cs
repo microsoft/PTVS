@@ -107,7 +107,7 @@ namespace DebuggerUITests {
                 using (var app = new VisualStudioApp()) {
                     app.OpenProject(TestData.GetPath(@"TestData\SysPath.sln"));
 
-                    PythonToolsPackage.Instance.GeneralOptionsPage.ClearGlobalPythonPath = false;
+                    app.ServiceProvider.GetPythonToolsService().GeneralOptions.ClearGlobalPythonPath = false;
                     try {
                         ClearOutputWindowDebugPaneText();
                         app.Dte.ExecuteCommand("Debug.Start");
@@ -115,7 +115,7 @@ namespace DebuggerUITests {
 
                         WaitForDebugOutput(text => text.Contains(testDataPath));
                     } finally {
-                        PythonToolsPackage.Instance.GeneralOptionsPage.ClearGlobalPythonPath = true;
+                        app.ServiceProvider.GetPythonToolsService().GeneralOptions.ClearGlobalPythonPath = true;
                     }
 
                     ClearOutputWindowDebugPaneText();

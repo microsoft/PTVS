@@ -30,11 +30,18 @@ namespace Microsoft.PythonTools.Options {
         private ToolTip _invalidPathToolTip = new ToolTip();
         private ToolTip _invalidWindowsPathToolTip = new ToolTip();
         private ToolTip _invalidLibraryPathToolTip = new ToolTip();
+        private readonly IServiceProvider _serviceProvider;
 
-        public PythonInterpreterOptionsControl() {
+        [Obsolete("An IServiceProvider should be provided")]
+        public PythonInterpreterOptionsControl()
+            : this(PythonToolsPackage.Instance) {
+        }
+
+        public PythonInterpreterOptionsControl(IServiceProvider serviceProvider) {
+            _serviceProvider = serviceProvider;
             InitializeComponent();
 
-            _service = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
+            _service = serviceProvider.GetComponentModel().GetService<IInterpreterOptionsService>();
             UpdateInterpreters();
         }
 
@@ -52,9 +59,9 @@ namespace Microsoft.PythonTools.Options {
                 _showSettingsFor.Items.Clear();
                 _defaultInterpreter.Items.Clear();
 
-                foreach (var interpreter in OptionsPage._options.Keys.OrderBy(f => f.Description)) {
+                foreach (var interpreter in _serviceProvider.GetPythonToolsService().InterpreterOptions.Select(x => x.Key).OrderBy(f => f.Description)) {
                     InterpreterOptions opts;
-                    if (OptionsPage._options.TryGetValue(interpreter, out opts) && !opts.Removed) {
+                    if (_serviceProvider.GetPythonToolsService().TryGetInterpreterOptions(interpreter, out opts) && !opts.Removed) {
                         _showSettingsFor.Items.Add(interpreter);
                         _defaultInterpreter.Items.Add(interpreter);
                     }
@@ -85,8 +92,9 @@ namespace Microsoft.PythonTools.Options {
             base.OnVisibleChanged(e);
 
             if (Visible) {
-                var selection = PythonToolsPackage.Instance.NextOptionsSelection ?? _service.DefaultInterpreter;
-                PythonToolsPackage.Instance.NextOptionsSelection = null;
+
+                var selection = PythonInterpreterOptionsPage.NextOptionsSelection ?? _service.DefaultInterpreter;
+                PythonInterpreterOptionsPage.NextOptionsSelection = null;
                 _showSettingsFor.SelectedItem = selection;
                 _defaultInterpreter.SelectedItem = _service.DefaultInterpreter;
 
@@ -150,12 +158,6 @@ namespace Microsoft.PythonTools.Options {
 
         private void ShowSettingsForSelectedIndexChanged(object sender, EventArgs e) {
             LoadNewOptions();
-        }
-
-        private PythonInterpreterOptionsPage OptionsPage {
-            get {
-                return PythonToolsPackage.Instance.InterpreterOptionsPage;
-            }
         }
 
         public IPythonInterpreterFactory DefaultInterpreter {
@@ -256,7 +258,8 @@ namespace Microsoft.PythonTools.Options {
         private InterpreterOptions CurrentOptions {
             get {
                 var fact = _showSettingsFor.SelectedItem as IPythonInterpreterFactory;
-                return fact != null ? OptionsPage._options[fact] : null;
+                return fact != null ? 
+                    _serviceProvider.GetPythonToolsService().GetInterpreterOptions(fact) : null;
             }
         }
 
@@ -272,22 +275,27 @@ namespace Microsoft.PythonTools.Options {
                     _showSettingsFor.Enabled = true;
                 }
                 var id = Guid.NewGuid();
-                var newOptions = new InterpreterOptions() {
+                var factory = new InterpreterPlaceholder(id, newInterp.InterpreterDescription);
+                var newOptions = new InterpreterOptions(_serviceProvider.GetPythonToolsService(), factory) {
                     Display = newInterp.InterpreterDescription,
                     Added = true,
                     IsConfigurable = true,
                     SupportsCompletionDb = true,
                     Id = id,
-                    Factory = new InterpreterPlaceholder(id, newInterp.InterpreterDescription),
-                    InteractiveOptions = new PythonInteractiveOptions()
+                    Factory = factory,
+                    InteractiveOptions = new PythonInteractiveOptions(
+                        _serviceProvider,
+                        _serviceProvider.GetPythonToolsService(), 
+                        "Interactive Windows", 
+                        ""
+                    )
                 };
 
-                OptionsPage._options[newOptions.Factory] = newOptions;
+                _serviceProvider.GetPythonToolsService().AddInterpreterOptions(newOptions.Factory, newOptions, true);
                 _showSettingsFor.BeginUpdate();
                 UpdateInterpreters();
                 _showSettingsFor.SelectedItem = newOptions.Factory;
                 _showSettingsFor.EndUpdate();
-                PythonToolsPackage.Instance.InteractiveOptionsPage.NewInterpreter(newOptions.Factory, newOptions.InteractiveOptions);
             }
         }
 
@@ -299,7 +307,8 @@ namespace Microsoft.PythonTools.Options {
                     if (curOption != null) {
                         curOption.Removed = true;
                         UpdateInterpreters();
-                        PythonToolsPackage.Instance.InteractiveOptionsPage.RemoveInterpreter(curOption.Factory);
+                        _serviceProvider.GetPythonToolsService().RemoveInteractiveOptions(curOption.Factory);
+                        _serviceProvider.GetPythonToolsService().RemoveInterpreterOptions(curOption.Factory);
                     }
                 }
             }
@@ -330,7 +339,8 @@ namespace Microsoft.PythonTools.Options {
                     dir = Path.GetDirectoryName(_path.Text);
                 }
             }
-            var libPath = PythonToolsPackage.Instance.BrowseForDirectory(Handle, dir);
+
+            var libPath = _serviceProvider.BrowseForDirectory(Handle, dir);
             if (!string.IsNullOrEmpty(libPath)) {
                 _libraryPath.Text = libPath;
             }

@@ -68,16 +68,13 @@ namespace PythonToolsTests {
             PythonLanguageVersion version = PythonLanguageVersion.V27
         ) {
             var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version.ToVersion());
-            var errorProvider = new MockErrorProviderFactory();
-            var taskProvider = new TaskProvider(null, errorProvider);
-            var originalTaskProvider = VsProjectAnalyzer.ReplaceTaskProviderForTests(new Lazy<TaskProvider>(() => {
-                return taskProvider;
-            }));
-
+            
             try {
-                var analyzer = new VsProjectAnalyzer(fact, new[] { fact });
+                var serviceProvider = PythonToolsTestUtilities.CreateMockServiceProvider();
+                var errorProvider = (MockErrorProviderFactory)serviceProvider.GetService(typeof(MockErrorProviderFactory));
+                var analyzer = new VsProjectAnalyzer(serviceProvider, fact, new[] { fact });
                 buffer.AddProperty(typeof(VsProjectAnalyzer), analyzer);
-                var classifierProvider = new PythonClassifierProvider(new MockContentTypeRegistryService());
+                var classifierProvider = new PythonClassifierProvider(new MockContentTypeRegistryService(PythonCoreConstants.ContentType), serviceProvider);
                 classifierProvider._classificationRegistry = new MockClassificationTypeRegistryService();
                 classifierProvider.GetClassifier(buffer);
                 var textView = new MockTextView(buffer);
@@ -91,6 +88,7 @@ namespace PythonToolsTests {
                 var snapshot = buffer.CurrentSnapshot;
                 
                 // Ensure all tasks have been updated
+                var taskProvider = (TaskProvider)serviceProvider.GetService(typeof(TaskProvider));
                 var time = await taskProvider.FlushAsync();
                 Console.WriteLine("TaskProvider.FlushAsync took {0}ms", time.TotalMilliseconds);
 
@@ -100,7 +98,6 @@ namespace PythonToolsTests {
 
                 return spans;
             } finally {
-                VsProjectAnalyzer.ReplaceTaskProviderForTests(originalTaskProvider);
             }
         }
 
@@ -122,7 +119,7 @@ namespace PythonToolsTests {
 
         [TestMethod, Priority(0)]
         public void UnresolvedImportSquiggle() {
-            var buffer = new MockTextBuffer("import fob, oar\r\nfrom baz import *\r\nfrom .spam import eggs", "C:\\name.py");
+            var buffer = new MockTextBuffer("import fob, oar\r\nfrom baz import *\r\nfrom .spam import eggs", filename: "C:\\name.py");
             var squiggles = AnalyzeTextBuffer(buffer).Select(FormatErrorTag).ToArray();
 
             Console.WriteLine(" Squiggles found:");

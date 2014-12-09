@@ -12,19 +12,15 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.Runtime.InteropServices;
 using Microsoft.PythonTools.Intellisense;
 
 namespace Microsoft.PythonTools.Options {
     [ComVisible(true)]
     public class PythonAdvancedEditorOptionsPage : PythonDialogPage {
-        private bool _enterCommitsIntellisense, _intersectMembers, _addNewLineAtEndOfFullyTypedWord, _enterOutliningMode, _pasteRemovesReplPrompts;
         private PythonAdvancedEditorOptionsControl _window;
-        private string _completionCommittedBy;
         private const string _defaultCompletionChars = "{}[]().,:;+-*/%&|^~=<>#'\"\\";
-        private bool _filterCompletions;
-        private bool _colorNames, _colorNamesWithAnalysis;
-        private FuzzyMatchMode _searchMode;
 
         public PythonAdvancedEditorOptionsPage()
             : base("Advanced") {
@@ -41,116 +37,88 @@ namespace Microsoft.PythonTools.Options {
             }
         }
 
+        [Obsolete("Use PythonToolsService.AdvancedOptions instead")]
         public bool EnterCommitsIntellisense {
-            get { return _enterCommitsIntellisense; }
-            set { _enterCommitsIntellisense = value; }
+            get { return PyService.AdvancedOptions.EnterCommitsIntellisense; }
+            set { PyService.AdvancedOptions.EnterCommitsIntellisense = value; }
         }
 
+        [Obsolete("Use PythonToolsService.AdvancedOptions instead")]
         public bool IntersectMembers {
-            get { return _intersectMembers; }
-            set { _intersectMembers = value; }
+            get { return PyService.AdvancedOptions.IntersectMembers; }
+            set { PyService.AdvancedOptions.IntersectMembers = value; }
         }
 
+        [Obsolete("Use PythonToolsService.AdvancedOptions instead")]
         public bool FilterCompletions {
-            get { return _filterCompletions; }
-            set { _filterCompletions = value; }
+            get { return PyService.AdvancedOptions.FilterCompletions; }
+            set { PyService.AdvancedOptions.FilterCompletions = value; }
         }
 
+        [Obsolete("Use PythonToolsService.AdvancedOptions instead")]
         public FuzzyMatchMode SearchMode {
-            get { return _searchMode; }
-            set { _searchMode = value; }
+            get { return PyService.AdvancedOptions.SearchMode; }
+            set { PyService.AdvancedOptions.SearchMode = value; }
         }
 
+        [Obsolete("Use PythonToolsService.AdvancedOptions instead")]
         public bool AddNewLineAtEndOfFullyTypedWord {
-            get { return _addNewLineAtEndOfFullyTypedWord; }
-            set { _addNewLineAtEndOfFullyTypedWord = value; }
+            get { return PyService.AdvancedOptions.AddNewLineAtEndOfFullyTypedWord; }
+            set { PyService.AdvancedOptions.AddNewLineAtEndOfFullyTypedWord = value; }
         }
 
+        [Obsolete("Use PythonToolsService.AdvancedOptions instead")]
         public bool EnterOutliningModeOnOpen {
-            get { return _enterOutliningMode; }
-            set { _enterOutliningMode = value; }
+            get { return PyService.AdvancedOptions.EnterOutliningModeOnOpen; }
+            set { PyService.AdvancedOptions.EnterOutliningModeOnOpen = value; }
         }
 
+        [Obsolete("Use PythonToolsService.AdvancedOptions instead")]
         public bool PasteRemovesReplPrompts {
-            get { return _pasteRemovesReplPrompts; }
-            set { _pasteRemovesReplPrompts = value; }
+            get { return PyService.AdvancedOptions.PasteRemovesReplPrompts; }
+            set { PyService.AdvancedOptions.PasteRemovesReplPrompts = value; }
         }
 
+        [Obsolete("Use PythonToolsService.AdvancedOptions instead")]
         public string CompletionCommittedBy { 
-            get { return _completionCommittedBy; } 
-            set { _completionCommittedBy = value; } 
+            get { return PyService.AdvancedOptions.CompletionCommittedBy; }
+            set { PyService.AdvancedOptions.CompletionCommittedBy = value; } 
         }
 
+        [Obsolete("Use PythonToolsService.AdvancedOptions instead")]
         public bool ColorNames {
-            get { return _colorNames; }
-            set { _colorNames = value; }
+            get { return PyService.AdvancedOptions.ColorNames; }
+            set { PyService.AdvancedOptions.ColorNames = value; }
         }
 
+        [Obsolete("Use PythonToolsService.AdvancedOptions instead")]
         public bool ColorNamesWithAnalysis {
-            get { return _colorNamesWithAnalysis; }
-            set { _colorNamesWithAnalysis = value; }
+            get { return PyService.AdvancedOptions.ColorNamesWithAnalysis; }
+            set { PyService.AdvancedOptions.ColorNamesWithAnalysis = value; }
         }
 
         public override void ResetSettings() {
-            _enterCommitsIntellisense = true;
-            _intersectMembers = true;
-            _addNewLineAtEndOfFullyTypedWord = false;
-            _completionCommittedBy = _defaultCompletionChars;
-            _enterOutliningMode = true;
-            _pasteRemovesReplPrompts = true;
-            _filterCompletions = true;
-            _searchMode = FuzzyMatchMode.Default;
-            _colorNames = true;
-            _colorNamesWithAnalysis = true;
+            PyService.AdvancedOptions.Reset();
         }
-
-        private const string EnterCommitsSetting = "EnterCommits";
-        private const string IntersectMembersSetting = "IntersectMembers";
-        private const string NewLineAtEndOfWordSetting = "NewLineAtEndOfWord";
-        private const string CompletionCommittedBySetting = "CompletionCommittedBy";
-        private const string EnterOutlingModeOnOpenSetting = "EnterOutlingModeOnOpen";
-        private const string PasteRemovesReplPromptsSetting = "PasteRemovesReplPrompts";
-        private const string FilterCompletionsSetting = "FilterCompletions";
-        private const string SearchModeSetting = "SearchMode";
-        private const string ColorNamesSetting = "ColorNames";
-        private const string ColorNamesWithAnalysisSetting = "ColorNamesWithAnalysis";
 
         public override void LoadSettingsFromStorage() {
             // Load settings from storage.
-            _enterCommitsIntellisense = LoadBool(EnterCommitsSetting) ?? true;
-            _intersectMembers = LoadBool(IntersectMembersSetting) ?? false;
-            _addNewLineAtEndOfFullyTypedWord = LoadBool(NewLineAtEndOfWordSetting) ?? false;
-            _completionCommittedBy = LoadString("CompletionCommittedBy") ?? _defaultCompletionChars;
-            _enterOutliningMode = LoadBool(EnterOutlingModeOnOpenSetting) ?? true;
-            _pasteRemovesReplPrompts = LoadBool(PasteRemovesReplPromptsSetting) ?? true;
-            _filterCompletions = LoadBool(FilterCompletionsSetting) ?? true;
-            _searchMode = LoadEnum<FuzzyMatchMode>(SearchModeSetting) ?? FuzzyMatchMode.Default;
-            _colorNames = LoadBool(ColorNamesSetting) ?? true;
-            _colorNamesWithAnalysis = LoadBool(ColorNamesWithAnalysisSetting) ?? true;
+            PyService.AdvancedOptions.Load();
 
             // Synchronize UI with backing properties.
             if (_window != null) {
-                _window.SyncControlWithPageSettings(this);
+                _window.SyncControlWithPageSettings(PyService);
             }
         }
 
         public override void SaveSettingsToStorage() {
             // Synchronize backing properties with UI.
             if (_window != null) {
-                _window.SyncPageWithControlSettings(this);
+                _window.SyncPageWithControlSettings(PyService);
             }
 
             // Save settings.
-            SaveBool(EnterCommitsSetting, _enterCommitsIntellisense);
-            SaveBool(IntersectMembersSetting, _intersectMembers);
-            SaveBool(NewLineAtEndOfWordSetting, _addNewLineAtEndOfFullyTypedWord);
-            SaveString(CompletionCommittedBySetting, _completionCommittedBy);
-            SaveBool(EnterOutlingModeOnOpenSetting, _enterOutliningMode);
-            SaveBool(PasteRemovesReplPromptsSetting, _pasteRemovesReplPrompts);
-            SaveBool(FilterCompletionsSetting, _filterCompletions);
-            SaveEnum(SearchModeSetting, _searchMode);
-            SaveBool(ColorNamesSetting, _colorNames);
-            SaveBool(ColorNamesWithAnalysisSetting, _colorNamesWithAnalysis);
+            PyService.AdvancedOptions.Save();
         }
     }
 }

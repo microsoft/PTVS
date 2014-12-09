@@ -85,7 +85,6 @@ namespace Microsoft.PythonTools.Project {
                         return VSConstants.S_OK;
                     case CommonConstants.StartDebuggingCmdId:
                     case CommonConstants.StartWithoutDebuggingCmdId:
-                        CommonProjectPackage package = (CommonProjectPackage)ProjectMgr.Package;
                         IProjectLauncher starter = ((CommonProjectNode)ProjectMgr).GetLauncher();
                         if (starter != null) {
                             if (!Utilities.SaveDirtyFiles()) {

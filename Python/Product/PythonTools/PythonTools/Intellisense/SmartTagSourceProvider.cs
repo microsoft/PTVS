@@ -12,8 +12,10 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.ComponentModel.Composition;
 using Microsoft.VisualStudio.Language.Intellisense;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Utilities;
@@ -24,11 +26,15 @@ namespace Microsoft.PythonTools.Intellisense {
     [Name("Python Smart Tag Source Provider")]
     [ContentType(PythonCoreConstants.ContentType)]
     class SmartTagSourceProvider : ISmartTagSourceProvider {
-        public SmartTagSourceProvider() {
+        private readonly IServiceProvider _serviceProvider;
+
+        [ImportingConstructor]
+        public SmartTagSourceProvider([Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider) {
+            _serviceProvider = serviceProvider;
         }
 
         public ISmartTagSource TryCreateSmartTagSource(ITextBuffer textBuffer) {
-            return new SmartTagSource(textBuffer);
+            return new SmartTagSource(_serviceProvider, textBuffer);
         }
     }
 }

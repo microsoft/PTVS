@@ -26,6 +26,12 @@ namespace Microsoft.PythonTools.Commands {
     /// Provides the command to start script from a document tab or document window.
     /// </summary>
     abstract class StartScriptCommand : Command {
+        private readonly System.IServiceProvider _serviceProvider;
+
+        public StartScriptCommand(System.IServiceProvider serviceProvider) {
+            _serviceProvider = serviceProvider;
+        }
+
         public override void DoCommand(object sender, EventArgs args) {
             if (!Utilities.SaveDirtyFiles()) {
                 // Abort
@@ -34,23 +40,23 @@ namespace Microsoft.PythonTools.Commands {
 
             // Launch with project context if there is one and it contains the active document
             // Fallback to using default python project
-            var file = CommonPackage.GetActiveTextView().GetFilePath();
-            var pythonProjectNode = CommonPackage.GetStartupProject() as PythonProjectNode;
+            var file = CommonPackage.GetActiveTextView(_serviceProvider).GetFilePath();
+            var pythonProjectNode = CommonPackage.GetStartupProject(_serviceProvider) as PythonProjectNode;
             if ((pythonProjectNode != null) && (pythonProjectNode.FindNodeByFullPath(file) == null)) {
                 pythonProjectNode = null;
             }
-            IPythonProject pythonProject = pythonProjectNode as IPythonProject ?? new DefaultPythonProject(file);
+            IPythonProject pythonProject = pythonProjectNode as IPythonProject ?? new DefaultPythonProject(_serviceProvider, file);
 
-            var launcher = PythonToolsPackage.GetLauncher(pythonProject);
+            var launcher = PythonToolsPackage.GetLauncher(_serviceProvider, pythonProject);
             try {
                 launcher.LaunchFile(file, CommandId == CommonConstants.StartDebuggingCmdId);
             } catch (NoInterpretersException) {
-                PythonToolsPackage.OpenNoInterpretersHelpPage();
+                PythonToolsPackage.OpenNoInterpretersHelpPage(_serviceProvider);
             }
         }
 
         public override int? EditFilterQueryStatus(ref VisualStudio.OLE.Interop.OLECMD cmd, IntPtr pCmdText) {
-            var activeView = CommonPackage.GetActiveTextView();
+            var activeView = CommonPackage.GetActiveTextView(_serviceProvider);
             if (activeView != null && activeView.TextBuffer.ContentType.IsOfType(PythonCoreConstants.ContentType)) {
                 cmd.cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
             } else {
@@ -71,12 +77,20 @@ namespace Microsoft.PythonTools.Commands {
     }
 
     class StartWithoutDebuggingCommand : StartScriptCommand {
+        public StartWithoutDebuggingCommand(System.IServiceProvider serviceProvider)
+            : base(serviceProvider) {
+        }
+
         public override int CommandId {
             get { return (int)CommonConstants.StartWithoutDebuggingCmdId; }
         }
     }
 
     class StartDebuggingCommand : StartScriptCommand {
+        public StartDebuggingCommand(System.IServiceProvider serviceProvider)
+            : base(serviceProvider) {
+        }
+
         public override int CommandId {
             get { return (int)CommonConstants.StartDebuggingCmdId; }
         }

@@ -19,6 +19,7 @@ using System.Windows.Forms;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Options;
 using Microsoft.VisualStudio.ComponentModelHost;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Project {
     public partial class PythonGeneralPropertyPageControl : UserControl {
@@ -27,14 +28,35 @@ namespace Microsoft.PythonTools.Project {
         static readonly IPythonInterpreterFactory GlobalDefault =
             new InterpreterPlaceholder(Guid.Empty, "(Use global default)");
 
-        private readonly IInterpreterOptionsService _service;
+        private IInterpreterOptionsService _service;
         private readonly PythonGeneralPropertyPage _propPage;
 
         internal PythonGeneralPropertyPageControl(PythonGeneralPropertyPage newPythonGeneralPropertyPage) {
             InitializeComponent();
 
             _propPage = newPythonGeneralPropertyPage;
-            _service = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
+        }
+
+        internal void LoadSettings() {
+            _service = _propPage.Project.Site.GetComponentModel().GetService<IInterpreterOptionsService>();
+
+            StartupFile = _propPage.Project.GetProjectProperty(CommonConstants.StartupFile, false);
+            WorkingDirectory = _propPage.Project.GetProjectProperty(CommonConstants.WorkingDirectory, false);
+            if (string.IsNullOrEmpty(WorkingDirectory)) {
+                WorkingDirectory = ".";
+            }
+            IsWindowsApplication = Convert.ToBoolean(_propPage.Project.GetProjectProperty(CommonConstants.IsWindowsApplication, false));
+            OnInterpretersChanged();
+
+            if (_propPage.PythonProject.Interpreters.IsActiveInterpreterGlobalDefault) {
+                // ActiveInterpreter will never be null, so we need to check
+                // the property to find out if it's following the global
+                // default.
+                SetDefaultInterpreter(null);
+            } else {
+                SetDefaultInterpreter(_propPage.PythonProject.Interpreters.ActiveInterpreter);
+            }
+
         }
 
         private void InitializeInterpreters() {

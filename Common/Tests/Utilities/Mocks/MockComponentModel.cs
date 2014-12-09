@@ -27,7 +27,7 @@ namespace TestUtilities.Mocks {
             } else if (typeof(T) == typeof(IContentTypeRegistryService)) {
                 return (T)(object)new MockContentTypeRegistryService();
             }
-            throw new InvalidOperationException();
+            return null;
         }
 
         public System.ComponentModel.Composition.Primitives.ComposablePartCatalog DefaultCatalog {
@@ -47,7 +47,7 @@ namespace TestUtilities.Mocks {
         }
 
         public IEnumerable<T> GetExtensions<T>() where T : class {
-            throw new NotImplementedException();
+            yield break;
         }
     }
 }

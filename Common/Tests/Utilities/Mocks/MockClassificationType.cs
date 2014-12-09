@@ -18,11 +18,11 @@ using Microsoft.VisualStudio.Text.Classification;
 namespace TestUtilities.Mocks {
     public class MockClassificationType : IClassificationType {
         private readonly string _name;
-        private readonly IClassificationType[] _bases;
+        private readonly List<IClassificationType> _bases;
 
         public MockClassificationType(string name, IClassificationType[] bases) {
             _name = name;
-            _bases = bases;
+            _bases = new List<IClassificationType>(bases);
         }
 
         public IEnumerable<IClassificationType> BaseTypes {
@@ -44,6 +44,10 @@ namespace TestUtilities.Mocks {
                 }
             }
             return false;
+        }
+
+        public void AddBaseType(MockClassificationType mockClassificationType) {
+            _bases.Add(mockClassificationType);
         }
     }
 }

@@ -31,6 +31,7 @@ using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.PythonTools.Project;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -86,43 +87,31 @@ namespace Microsoft.PythonTools.Intellisense {
         private const string ParserTaskMoniker = "Parser";
         internal const string UnresolvedImportMoniker = "UnresolvedImport";
 
-
-        internal static Lazy<TaskProvider> ReplaceTaskProviderForTests(Lazy<TaskProvider> newProvider) {
-            return Interlocked.Exchange(ref _taskProvider, newProvider);
-        }
-
-        private static Lazy<TaskProvider> _taskProvider;
-        private static readonly Lazy<TaskProvider> _defaultTaskProvider = new Lazy<TaskProvider>(() => {
-            var errorList = PythonToolsPackage.GetGlobalService(typeof(SVsErrorList)) as IVsTaskList;
-            var model = PythonToolsPackage.ComponentModel;
-            var errorProvider = model != null ? model.GetService<IErrorProviderFactory>() : null;
-            return new TaskProvider(errorList, errorProvider);
-        }, LazyThreadSafetyMode.ExecutionAndPublication);
-
-        private static Lazy<TaskProvider> TaskProvider {
-            get {
-                return _taskProvider ?? _defaultTaskProvider;
-            }
-        }
+        private Lazy<TaskProvider> _taskProvider;
 
         private readonly UnresolvedImportSquiggleProvider _unresolvedSquiggles;
+        private readonly PythonToolsService _pyService;
+        private readonly IServiceProvider _serviceProvider;
 
         private object _contentsLock = new object();
 
         internal VsProjectAnalyzer(
+            IServiceProvider serviceProvider,
             IPythonInterpreterFactory factory,
             IPythonInterpreterFactory[] allFactories
         )
-            : this(factory.CreateInterpreter(), factory, allFactories) {
+            : this(serviceProvider, factory.CreateInterpreter(), factory, allFactories) {
         }
 
         internal VsProjectAnalyzer(
+            IServiceProvider serviceProvider,
             IPythonInterpreter interpreter,
             IPythonInterpreterFactory factory,
             IPythonInterpreterFactory[] allFactories,
             bool implicitProject = true
         ) {
-            _unresolvedSquiggles = new UnresolvedImportSquiggleProvider(TaskProvider);
+            _taskProvider = new Lazy<TaskProvider>(() => (TaskProvider)serviceProvider.GetService(typeof(TaskProvider)));
+            _unresolvedSquiggles = new UnresolvedImportSquiggleProvider(serviceProvider, _taskProvider);
 
             _queue = new ParseQueue(this);
             _analysisQueue = new AnalysisQueue(this);
@@ -136,13 +125,21 @@ namespace Microsoft.PythonTools.Intellisense {
                 interpreter.ModuleNamesChanged += OnModulesChanged;
             }
             _projectFiles = new ConcurrentDictionary<string, IProjectEntry>(StringComparer.OrdinalIgnoreCase);
+            _pyService = serviceProvider.GetPythonToolsService();
+            _serviceProvider = serviceProvider;
 
-            if (PythonToolsPackage.Instance != null && _pyAnalyzer != null) {
-                _pyAnalyzer.Limits.CrossModule = PythonToolsPackage.Instance.DebuggingOptionsPage.CrossModuleAnalysisLimit;
+            if (_pyAnalyzer != null) {
+                _pyAnalyzer.Limits.CrossModule = _pyService.GeneralOptions.CrossModuleAnalysisLimit;
                 // TODO: Load other limits from options
             }
 
             _userCount = 1;
+        }
+
+        internal PythonToolsService PyService {
+            get {
+                return _pyService;
+            }
         }
 
         public void AddUser() {
@@ -201,8 +198,8 @@ namespace Microsoft.PythonTools.Intellisense {
         internal void ReAnalyzeTextBuffers(BufferParser bufferParser) {
             ITextBuffer[] buffers = bufferParser.Buffers;
             if (buffers.Length > 0) {
-                TaskProvider.Value.ClearErrorSource(bufferParser._currentProjEntry, ParserTaskMoniker);
-                TaskProvider.Value.ClearErrorSource(bufferParser._currentProjEntry, UnresolvedImportMoniker);
+                _taskProvider.Value.ClearErrorSource(bufferParser._currentProjEntry, ParserTaskMoniker);
+                _taskProvider.Value.ClearErrorSource(bufferParser._currentProjEntry, UnresolvedImportMoniker);
                 _unresolvedSquiggles.StopListening(bufferParser._currentProjEntry as IPythonProjectEntry);
 
                 var projEntry = CreateProjectEntry(buffers[0], new SnapshotCookie(buffers[0].CurrentSnapshot));
@@ -223,7 +220,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
                     ConnectErrorList(projEntry, buffer);
                     if (doSquiggles) {
-                        TaskProvider.Value.AddBufferForErrorSource(projEntry, UnresolvedImportMoniker, buffer);
+                        _taskProvider.Value.AddBufferForErrorSource(projEntry, UnresolvedImportMoniker, buffer);
                     }
                 }
                 bufferParser._currentProjEntry = _openFiles[bufferParser] = projEntry;
@@ -244,12 +241,12 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        public static void ConnectErrorList(IProjectEntry projEntry, ITextBuffer buffer) {
-            TaskProvider.Value.AddBufferForErrorSource(projEntry, ParserTaskMoniker, buffer);
+        public void ConnectErrorList(IProjectEntry projEntry, ITextBuffer buffer) {
+            _taskProvider.Value.AddBufferForErrorSource(projEntry, ParserTaskMoniker, buffer);
         }
 
-        public static void DisconnectErrorList(IProjectEntry projEntry, ITextBuffer buffer) {
-            TaskProvider.Value.RemoveBufferForErrorSource(projEntry, ParserTaskMoniker, buffer);
+        public void DisconnectErrorList(IProjectEntry projEntry, ITextBuffer buffer) {
+            _taskProvider.Value.RemoveBufferForErrorSource(projEntry, ParserTaskMoniker, buffer);
         }
 
         internal void SwitchAnalyzers(VsProjectAnalyzer oldAnalyzer) {
@@ -271,7 +268,7 @@ namespace Microsoft.PythonTools.Intellisense {
             ConnectErrorList(projEntry, buffer);
             
             if (!buffer.Properties.ContainsProperty(typeof(IReplEvaluator))) {
-                TaskProvider.Value.AddBufferForErrorSource(projEntry, UnresolvedImportMoniker, buffer);
+                _taskProvider.Value.AddBufferForErrorSource(projEntry, UnresolvedImportMoniker, buffer);
                 _unresolvedSquiggles.ListenForNextNewAnalysis(projEntry as IPythonProjectEntry);
             }
 
@@ -291,14 +288,14 @@ namespace Microsoft.PythonTools.Intellisense {
 
             _unresolvedSquiggles.StopListening(bufferParser._currentProjEntry as IPythonProjectEntry);
 
-            if (TaskProvider.IsValueCreated) {
-                TaskProvider.Value.ClearErrorSource(bufferParser._currentProjEntry, ParserTaskMoniker);
-                TaskProvider.Value.ClearErrorSource(bufferParser._currentProjEntry, UnresolvedImportMoniker);
+            if (_taskProvider.IsValueCreated) {
+                _taskProvider.Value.ClearErrorSource(bufferParser._currentProjEntry, ParserTaskMoniker);
+                _taskProvider.Value.ClearErrorSource(bufferParser._currentProjEntry, UnresolvedImportMoniker);
 
                 if (ImplicitProject) {
                     // remove the file from the error list
-                    TaskProvider.Value.Clear(bufferParser._currentProjEntry, ParserTaskMoniker);
-                    TaskProvider.Value.Clear(bufferParser._currentProjEntry, UnresolvedImportMoniker);
+                    _taskProvider.Value.Clear(bufferParser._currentProjEntry, ParserTaskMoniker);
+                    _taskProvider.Value.Clear(bufferParser._currentProjEntry, UnresolvedImportMoniker);
                 }
             }
         }
@@ -465,7 +462,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// Gets a ExpressionAnalysis for the expression at the provided span.  If the span is in
         /// part of an identifier then the expression is extended to complete the identifier.
         /// </summary>
-        internal static ExpressionAnalysis AnalyzeExpression(ITextSnapshot snapshot, ITrackingSpan span, bool forCompletion = true) {
+        internal static ExpressionAnalysis AnalyzeExpression(IServiceProvider serviceProvider, ITextSnapshot snapshot, ITrackingSpan span, bool forCompletion = true) {
             var buffer = snapshot.TextBuffer;
             ReverseExpressionParser parser = new ReverseExpressionParser(snapshot, buffer, span);
 
@@ -487,7 +484,7 @@ namespace Microsoft.PythonTools.Intellisense {
             if (buffer.TryGetPythonProjectEntry(out entry) && entry.Analysis != null && text.Length > 0) {
                 var lineNo = parser.Snapshot.GetLineNumberFromPosition(loc.Start);
                 return new ExpressionAnalysis(
-                    snapshot.TextBuffer.GetAnalyzer(),
+                    snapshot.TextBuffer.GetAnalyzer(serviceProvider),
                     text,
                     entry.Analysis,
                     loc.Start,
@@ -502,15 +499,15 @@ namespace Microsoft.PythonTools.Intellisense {
         /// <summary>
         /// Gets a CompletionList providing a list of possible members the user can dot through.
         /// </summary>
-        internal static CompletionAnalysis GetCompletions(ITextSnapshot snapshot, ITrackingSpan span, ITrackingPoint point, CompletionOptions options) {
-            return TrySpecialCompletions(snapshot, span, point, options) ??
-                   GetNormalCompletionContext(snapshot, span, point, options);
+        internal static CompletionAnalysis GetCompletions(IServiceProvider serviceProvider, ITextSnapshot snapshot, ITrackingSpan span, ITrackingPoint point, CompletionOptions options) {
+            return TrySpecialCompletions(serviceProvider, snapshot, span, point, options) ??
+                   GetNormalCompletionContext(serviceProvider, snapshot, span, point, options);
         }
 
         /// <summary>
         /// Gets a list of signatuers available for the expression at the provided location in the snapshot.
         /// </summary>
-        internal static SignatureAnalysis GetSignatures(ITextSnapshot snapshot, ITrackingSpan span) {
+        internal static SignatureAnalysis GetSignatures(IServiceProvider serviceProvider, ITextSnapshot snapshot, ITrackingSpan span) {
             var buffer = snapshot.TextBuffer;
             ReverseExpressionParser parser = new ReverseExpressionParser(snapshot, buffer, span);
 
@@ -528,7 +525,7 @@ namespace Microsoft.PythonTools.Intellisense {
             var text = new SnapshotSpan(exprRange.Value.Snapshot, new Span(exprRange.Value.Start, sigStart.Value.Position - exprRange.Value.Start)).GetText();
             var applicableSpan = parser.Snapshot.CreateTrackingSpan(exprRange.Value.Span, SpanTrackingMode.EdgeInclusive);
 
-            if (snapshot.TextBuffer.GetAnalyzer().ShouldEvaluateForCompletion(text)) {
+            if (snapshot.TextBuffer.GetAnalyzer(serviceProvider).ShouldEvaluateForCompletion(text)) {
                 var liveSigs = TryGetLiveSignatures(snapshot, paramIndex, text, applicableSpan, lastKeywordArg);
                 if (liveSigs != null) {
                     return liveSigs;
@@ -544,7 +541,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     int index = TranslateIndex(loc.Start, snapshot, analysis);
 
                     IEnumerable<IOverloadResult> sigs;
-                    lock (snapshot.TextBuffer.GetAnalyzer()) {
+                    lock (snapshot.TextBuffer.GetAnalyzer(serviceProvider)) {
                         sigs = analysis.GetSignaturesByIndex(text, index);
                     }
                     var end = Stopwatch.ElapsedMilliseconds;
@@ -584,7 +581,7 @@ namespace Microsoft.PythonTools.Intellisense {
             return index;
         }
 
-        internal static MissingImportAnalysis GetMissingImports(ITextSnapshot snapshot, ITrackingSpan span) {
+        internal static MissingImportAnalysis GetMissingImports(IServiceProvider serviceProvider, ITextSnapshot snapshot, ITrackingSpan span) {
             ReverseExpressionParser parser = new ReverseExpressionParser(snapshot, snapshot.TextBuffer, span);
             var loc = span.GetSpan(snapshot.Version);
             int dummy;
@@ -625,7 +622,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         SpanTrackingMode.EdgeExclusive
                     );
 
-                    lock (snapshot.TextBuffer.GetAnalyzer()) {
+                    lock (snapshot.TextBuffer.GetAnalyzer(serviceProvider)) {
                         index = TranslateIndex(
                             index,
                             snapshot,
@@ -926,20 +923,20 @@ namespace Microsoft.PythonTools.Intellisense {
             if (changed) {
                 OnShouldWarnOnLaunchChanged(entry);
             }
-
+            
             var f = new TaskProviderItemFactory(snapshot);
 
             // Update the parser warnings/errors
             if (errorSink.Warnings.Any() || errorSink.Errors.Any()) {
-                TaskProvider.Value.ReplaceItems(
+                _taskProvider.Value.ReplaceItems(                    
                     entry,
                     ParserTaskMoniker,
-                    errorSink.Warnings.Select(er => f.FromParseWarning(er))
-                        .Concat(errorSink.Errors.Select(er => f.FromParseError(er)))
+                    errorSink.Warnings.Select(er => f.FromParseWarning(_serviceProvider, er))
+                        .Concat(errorSink.Errors.Select(er => f.FromParseError(_serviceProvider, er)))
                         .ToList()
                 );
-            } else if (TaskProvider.IsValueCreated) {
-                TaskProvider.Value.Clear(entry, ParserTaskMoniker);
+            } else if (_taskProvider.IsValueCreated) {
+                _taskProvider.Value.Clear(entry, ParserTaskMoniker);
             }
         }
 
@@ -1012,22 +1009,19 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal bool ShouldEvaluateForCompletion(string source) {
-            if (PythonToolsPackage.Instance != null) {
-                switch (PythonToolsPackage.Instance.InteractiveOptionsPage.GetOptions(_interpreterFactory).ReplIntellisenseMode) {
-                    case ReplIntellisenseMode.AlwaysEvaluate: return true;
-                    case ReplIntellisenseMode.NeverEvaluate: return false;
-                    case ReplIntellisenseMode.DontEvaluateCalls:
-                        var parser = Parser.CreateParser(new StringReader(source), _interpreterFactory.GetLanguageVersion());
+            switch (_pyService.GetInteractiveOptions(_interpreterFactory).ReplIntellisenseMode) {
+                case ReplIntellisenseMode.AlwaysEvaluate: return true;
+                case ReplIntellisenseMode.NeverEvaluate: return false;
+                case ReplIntellisenseMode.DontEvaluateCalls:
+                    var parser = Parser.CreateParser(new StringReader(source), _interpreterFactory.GetLanguageVersion());
 
-                        var stmt = parser.ParseSingleStatement();
-                        var exprWalker = new ExprWalker();
+                    var stmt = parser.ParseSingleStatement();
+                    var exprWalker = new ExprWalker();
 
-                        stmt.Walk(exprWalker);
-                        return exprWalker.ShouldExecute;
-                    default: throw new InvalidOperationException();
-                }
+                    stmt.Walk(exprWalker);
+                    return exprWalker.ShouldExecute;
+                default: throw new InvalidOperationException();
             }
-            return false;
         }
 
         class ExprWalker : PythonWalker {
@@ -1039,7 +1033,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        private static CompletionAnalysis TrySpecialCompletions(ITextSnapshot snapshot, ITrackingSpan span, ITrackingPoint point, CompletionOptions options) {
+        private static CompletionAnalysis TrySpecialCompletions(IServiceProvider serviceProvider, ITextSnapshot snapshot, ITrackingSpan span, ITrackingPoint point, CompletionOptions options) {
             var snapSpan = span.GetSpan(snapshot);
             var buffer = snapshot.TextBuffer;
             var classifier = buffer.GetPythonClassifier();
@@ -1101,7 +1095,7 @@ namespace Microsoft.PythonTools.Intellisense {
             return null;
         }
 
-        private static CompletionAnalysis GetNormalCompletionContext(ITextSnapshot snapshot, ITrackingSpan applicableSpan, ITrackingPoint point, CompletionOptions options) {
+        private static CompletionAnalysis GetNormalCompletionContext(IServiceProvider serviceProvider, ITextSnapshot snapshot, ITrackingSpan applicableSpan, ITrackingPoint point, CompletionOptions options) {
             var span = applicableSpan.GetSpan(snapshot);
 
             if (IsSpaceCompletion(snapshot, point) && !IntellisenseController.ForceCompletions) {
@@ -1115,11 +1109,12 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             return new NormalCompletionAnalysis(
-                snapshot.TextBuffer.GetAnalyzer(),
+                snapshot.TextBuffer.GetAnalyzer(serviceProvider),
                 snapshot,
                 applicableSpan,
                 snapshot.TextBuffer,
-                options
+                options,
+                serviceProvider
             );
         }
 
@@ -1419,10 +1414,10 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal void ClearParserTasks(IProjectEntry entry) {
             if (entry != null) {
-                if (TaskProvider.IsValueCreated) {
+                if (_taskProvider.IsValueCreated) {
                     // TaskProvider may not be created if we've never opened a
                     // Python file and none of the project files have errors
-                    TaskProvider.Value.Clear(entry, ParserTaskMoniker);
+                    _taskProvider.Value.Clear(entry, ParserTaskMoniker);
                 }
                 bool removed = false;
                 lock (_hasParseErrorsLock) {
@@ -1435,8 +1430,8 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal void ClearAllTasks() {
-            if (TaskProvider.IsValueCreated) {
-                TaskProvider.Value.ClearAll();
+            if (_taskProvider.IsValueCreated) {
+                _taskProvider.Value.ClearAll();
             }
             lock (_hasParseErrorsLock) {
                 _hasParseErrors.Clear();
@@ -1463,10 +1458,10 @@ namespace Microsoft.PythonTools.Intellisense {
         #region IDisposable Members
 
         public void Dispose() {
-            if (TaskProvider.IsValueCreated) {
+            if (_taskProvider.IsValueCreated) {
                 foreach (var entry in _projectFiles.Values) {
-                    TaskProvider.Value.Clear(entry, ParserTaskMoniker);
-                    TaskProvider.Value.Clear(entry, UnresolvedImportMoniker);
+                    _taskProvider.Value.Clear(entry, ParserTaskMoniker);
+                    _taskProvider.Value.Clear(entry, UnresolvedImportMoniker);
                 }
             }
 

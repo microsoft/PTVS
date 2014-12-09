@@ -21,11 +21,13 @@ namespace TestUtilities.Mocks {
         private readonly int _position;
         private readonly MockTextSnapshot _snapshot;
         private readonly PointTrackingMode _mode;
+        private readonly TrackingFidelityMode _fidelity;
 
-        public MockTrackingPoint(MockTextSnapshot snapshot, int position, PointTrackingMode mode = PointTrackingMode.Positive) {
+        public MockTrackingPoint(MockTextSnapshot snapshot, int position, PointTrackingMode mode = PointTrackingMode.Positive, TrackingFidelityMode fidelity = TrackingFidelityMode.Forward) {
             _position = position;
             _snapshot = snapshot;
             _mode = mode;
+            _fidelity = fidelity;
         }
 
         private SnapshotPoint GetPoint(ITextVersion version) {
@@ -102,11 +104,11 @@ namespace TestUtilities.Mocks {
         }
 
         public TrackingFidelityMode TrackingFidelity {
-            get { throw new NotImplementedException(); }
+            get { return _fidelity; }
         }
 
         public PointTrackingMode TrackingMode {
-            get { throw new NotImplementedException(); }
+            get { return _mode; }
         }
 
     }

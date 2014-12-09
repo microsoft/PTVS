@@ -102,9 +102,10 @@ namespace PythonToolsUITests {
 
         private void OutlineTest(string filename, params ExpectedTag[] expected) {
             using (var app = new VisualStudioApp()) {
-                var prevOption = PythonToolsPackage.Instance.AdvancedEditorOptionsPage.EnterOutliningModeOnOpen;
+
+                var prevOption = app.GetService<PythonToolsService>().AdvancedOptions.EnterOutliningModeOnOpen;
                 try {
-                    PythonToolsPackage.Instance.AdvancedEditorOptionsPage.EnterOutliningModeOnOpen = true;
+                    app.GetService<PythonToolsService>().AdvancedOptions.EnterOutliningModeOnOpen = true;
 
                     var project = app.OpenProject(@"TestData\Outlining.sln");
 
@@ -119,7 +120,7 @@ namespace PythonToolsUITests {
 
                     VerifyTags(doc.TextView.TextBuffer, tags, expected);
                 } finally {
-                    PythonToolsPackage.Instance.AdvancedEditorOptionsPage.EnterOutliningModeOnOpen = prevOption;
+                    app.GetService<PythonToolsService>().AdvancedOptions.EnterOutliningModeOnOpen = prevOption;
                 }
             }
         }
@@ -297,9 +298,9 @@ namespace PythonToolsUITests {
         [HostType("VSTestHost")]
         public void AutoIndent() {
             using (var app = new VisualStudioApp()) {
-                var prevSetting = PythonToolsPackage.Instance.AdvancedEditorOptionsPage.AddNewLineAtEndOfFullyTypedWord;
-                app.OnDispose(() => PythonToolsPackage.Instance.AdvancedEditorOptionsPage.AddNewLineAtEndOfFullyTypedWord = prevSetting);
-                PythonToolsPackage.Instance.AdvancedEditorOptionsPage.AddNewLineAtEndOfFullyTypedWord = true;
+                var prevSetting = app.GetService<PythonToolsService>().AdvancedOptions.AddNewLineAtEndOfFullyTypedWord;
+                app.OnDispose(() => app.GetService<PythonToolsService>().AdvancedOptions.AddNewLineAtEndOfFullyTypedWord = prevSetting);
+                app.GetService<PythonToolsService>().AdvancedOptions.AddNewLineAtEndOfFullyTypedWord = true;
 
                 var project = app.OpenProject(@"TestData\AutoIndent.sln");
 

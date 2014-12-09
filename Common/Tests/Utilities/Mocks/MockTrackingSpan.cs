@@ -20,11 +20,32 @@ namespace TestUtilities.Mocks {
     public class MockTrackingSpan : ITrackingSpan {
         private readonly int _start, _length;
         private readonly MockTextSnapshot _snapshot;
+        private readonly SpanTrackingMode _trackingMode;
+        private readonly ITrackingPoint _startPoint, _endPoint;
 
-        public MockTrackingSpan(MockTextSnapshot snapshot, int start, int length) {
+        public MockTrackingSpan(MockTextSnapshot snapshot, int start, int length, SpanTrackingMode trackingMode = SpanTrackingMode.EdgeExclusive) {
             _start = start;
             _length = length;
             _snapshot = snapshot;
+            _trackingMode = trackingMode;
+            switch(_trackingMode) {
+                case SpanTrackingMode.EdgeExclusive:
+                    _startPoint = new MockTrackingPoint(snapshot, start, PointTrackingMode.Positive);
+                    _endPoint = new MockTrackingPoint(snapshot, start + length, PointTrackingMode.Negative);
+                    break;
+                case SpanTrackingMode.EdgeInclusive:
+                    _startPoint = new MockTrackingPoint(snapshot, start, PointTrackingMode.Negative);
+                    _endPoint = new MockTrackingPoint(snapshot, start + length, PointTrackingMode.Positive);
+                    break;
+                case SpanTrackingMode.EdgeNegative:
+                    _startPoint = new MockTrackingPoint(snapshot, start, PointTrackingMode.Negative);
+                    _endPoint = new MockTrackingPoint(snapshot, start + length, PointTrackingMode.Negative);
+                    break;
+                case SpanTrackingMode.EdgePositive:
+                    _startPoint = new MockTrackingPoint(snapshot, start, PointTrackingMode.Positive);
+                    _endPoint = new MockTrackingPoint(snapshot, start + length, PointTrackingMode.Positive);
+                    break;
+            }
         }
 
         public SnapshotPoint GetEndPoint(ITextSnapshot snapshot) {
@@ -32,49 +53,10 @@ namespace TestUtilities.Mocks {
         }
 
         public Span GetSpan(ITextVersion version) {
-            var current = _snapshot.Version;
-            var target = version;
-            if (current.VersionNumber == target.VersionNumber) {
-                return new Span(_start, _length);
-            } else if (current.VersionNumber > target.VersionNumber) {
-                // Apply the changes in reverse
-                var changesStack = new Stack<INormalizedTextChangeCollection>();
-
-                for (var v = target; v.VersionNumber < current.VersionNumber; v = v.Next) {
-                    changesStack.Push(v.Changes);
-                }
-
-                var newStart = _start;
-                var newLength = _length;
-
-                while (changesStack.Count > 0) {
-                    foreach (var change in changesStack.Pop()) {
-                        if (change.NewPosition <= newStart) {
-                            newStart -= change.Delta;
-                        } else if (change.NewPosition <= newStart + newLength) {
-                            newLength -= change.Delta;
-                        }
-                    }
-                }
-
-                return new Span(newStart, newLength);
-            } else {
-                // Apply the changes normally
-                var newStart = _start;
-                var newLength = _length;
-
-                for (var v = current; v.VersionNumber < target.VersionNumber; v = v.Next) {
-                    foreach (var change in v.Changes) {
-                        if (change.OldPosition < newStart) {
-                            newStart += change.Delta;
-                        } else if (change.OldPosition < newStart + newLength) {
-                            newLength += change.Delta;
-                        }
-                    }
-                }
-
-                return new Span(newStart, newLength);
-            }
+            return Span.FromBounds(
+                _startPoint.GetPosition(version),
+                _endPoint.GetPosition(version)
+            );
         }
 
         public SnapshotSpan GetSpan(ITextSnapshot snapshot) {
@@ -100,7 +82,7 @@ namespace TestUtilities.Mocks {
         }
 
         public SpanTrackingMode TrackingMode {
-            get { throw new NotImplementedException(); }
+            get { return _trackingMode; }
         }
     }
 }

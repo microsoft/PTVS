@@ -20,10 +20,6 @@ using Microsoft.PythonTools.Parsing;
 namespace Microsoft.PythonTools.Options {
     [ComVisible(true)]
     public class PythonDebuggingOptionsPage : PythonDialogPage {
-        private bool _promptBeforeRunningWithBuildError, _waitOnAbnormalExit, _autoAnalysis, _waitOnNormalExit, _teeStdOut, _breakOnSystemExitZero, 
-                     _updateSearchPathsWhenAddingLinkedFiles, _debugStdLib;
-        private int? _crossModuleAnalysisLimit; // not exposed via the UI
-        private Severity _indentationInconsistencySeverity;
         private PythonDebuggingOptionsControl _window;
 
         public PythonDebuggingOptionsPage()
@@ -47,40 +43,40 @@ namespace Microsoft.PythonTools.Options {
         /// True to ask the user whether to run when their code contains errors.
         /// Default is false.
         /// </summary>
+        [Obsolete("Use PythonToolsService.DebuggerOptions instead")]
         public bool PromptBeforeRunningWithBuildError {
-            get { return _promptBeforeRunningWithBuildError; }
-            set { _promptBeforeRunningWithBuildError = value; }
+            get { return PyService.DebuggerOptions.PromptBeforeRunningWithBuildError; }
+            set { PyService.DebuggerOptions.PromptBeforeRunningWithBuildError = value; }
         }
 
         /// <summary>
         /// True to start analyzing an environment when it is used and has no
         /// database. Default is true.
         /// </summary>
+        [Obsolete("Use PythonToolsService.GeneralOptions instead")]
         public bool AutoAnalyzeStandardLibrary {
-            get { return _autoAnalysis; }
-            set { _autoAnalysis = value; }
+            get { return PyService.GeneralOptions.AutoAnalyzeStandardLibrary; }
+            set { PyService.GeneralOptions.AutoAnalyzeStandardLibrary = value; }
         }
 
         /// <summary>
         /// True to copy standard output from a Python process into the Output
         /// window. Default is true.
         /// </summary>
+        [Obsolete("Use PythonToolsService.DebuggerOptions instead")]
         public bool TeeStandardOutput {
-            get { return _teeStdOut; }
-            set { _teeStdOut = value; }
+            get { return PyService.DebuggerOptions.TeeStandardOutput; }
+            set { PyService.DebuggerOptions.TeeStandardOutput = value; }
         }
 
         /// <summary>
         /// The severity to apply to inconsistent indentation. Default is warn.
         /// </summary>
+        [Obsolete("Use PythonToolsService.GeneralOptions instead")]
         public Severity IndentationInconsistencySeverity {
-            get { return _indentationInconsistencySeverity; }
+            get { return PyService.GeneralOptions.IndentationInconsistencySeverity; }
             set {
-                _indentationInconsistencySeverity = value;
-                var changed = IndentationInconsistencyChanged;
-                if (changed != null) {
-                    changed(this, EventArgs.Empty);
-                }
+                PyService.GeneralOptions.IndentationInconsistencySeverity = value;
             }
         }
 
@@ -88,26 +84,29 @@ namespace Microsoft.PythonTools.Options {
         /// True to pause at the end of execution when an error occurs. Default
         /// is true.
         /// </summary>
+        [Obsolete("Use PythonToolsService.DebuggerOptions instead")]
         public bool WaitOnAbnormalExit {
-            get { return _waitOnAbnormalExit; }
-            set { _waitOnAbnormalExit = value; }
+            get { return PyService.DebuggerOptions.WaitOnAbnormalExit; }
+            set { PyService.DebuggerOptions.WaitOnAbnormalExit = value; }
         }
 
         /// <summary>
         /// True to pause at the end of execution when completing successfully.
         /// Default is true.
         /// </summary>
+        [Obsolete("Use PythonToolsService.DebuggerOptions instead")]
         public bool WaitOnNormalExit {
-            get { return _waitOnNormalExit; }
-            set { _waitOnNormalExit = value; }
+            get { return PyService.DebuggerOptions.WaitOnNormalExit; }
+            set { PyService.DebuggerOptions.WaitOnNormalExit = value; }
         }
 
         /// <summary>
         /// Maximum number of calls between modules to analyze. Default is 1300.
         /// </summary>
+        [Obsolete("Use PythonToolsService.GeneralOptions instead")]
         public int? CrossModuleAnalysisLimit {
-            get { return _crossModuleAnalysisLimit; }
-            set { _crossModuleAnalysisLimit = value; }
+            get { return PyService.GeneralOptions.CrossModuleAnalysisLimit; }
+            set { PyService.GeneralOptions.CrossModuleAnalysisLimit = value; }
         }
 
         /// <summary>
@@ -116,9 +115,10 @@ namespace Microsoft.PythonTools.Options {
         /// a SystemExit exception. Default is false.
         /// </summary>
         /// <remarks>New in 1.1</remarks>
+        [Obsolete("Use PythonToolsService.DebuggerOptions instead")]
         public bool BreakOnSystemExitZero {
-            get { return _breakOnSystemExitZero; }
-            set { _breakOnSystemExitZero = value; }
+            get { return PyService.DebuggerOptions.BreakOnSystemExitZero; }
+            set { PyService.DebuggerOptions.BreakOnSystemExitZero = value; }
         }
 
         /// <summary>
@@ -126,9 +126,10 @@ namespace Microsoft.PythonTools.Options {
         /// true.
         /// </summary>
         /// <remarks>New in 1.1</remarks>
+        [Obsolete("Use PythonToolsService.GeneralOptions instead")]
         public bool UpdateSearchPathsWhenAddingLinkedFiles {
-            get{ return _updateSearchPathsWhenAddingLinkedFiles;}
-            set { _updateSearchPathsWhenAddingLinkedFiles = value; }
+            get { return PyService.GeneralOptions.UpdateSearchPathsWhenAddingLinkedFiles; }
+            set { PyService.GeneralOptions.UpdateSearchPathsWhenAddingLinkedFiles = value; }
         }
 
         /// <summary>
@@ -136,12 +137,21 @@ namespace Microsoft.PythonTools.Options {
         /// library. Default is false.
         /// </summary>
         /// <remarks>New in 1.1</remarks>
+        [Obsolete("Use PythonToolsService.DebuggerOptions instead")]
         public bool DebugStdLib {
-            get { return _debugStdLib; }
-            set { _debugStdLib = value; }
+            get { return PyService.DebuggerOptions.DebugStdLib; }
+            set { PyService.DebuggerOptions.DebugStdLib = value; }
         }
 
-        public event EventHandler IndentationInconsistencyChanged;
+        [Obsolete("Use PythonToolsService.GeneralOptions instead")]
+        public event EventHandler IndentationInconsistencyChanged {
+            add {
+                PyService.GeneralOptions.IndentationInconsistencyChanged += value;
+            }
+            remove {
+                PyService.GeneralOptions.IndentationInconsistencyChanged -= value;
+            }
+        }
 
         #endregion
 
@@ -151,95 +161,26 @@ namespace Microsoft.PythonTools.Options {
         /// values.
         /// </summary>
         public override void ResetSettings() {
-            _promptBeforeRunningWithBuildError = false;
-            _waitOnAbnormalExit = true;
-            _indentationInconsistencySeverity = Severity.Warning;
-            _waitOnNormalExit = true;
-            _autoAnalysis = true;
-            _teeStdOut = true;
-            _breakOnSystemExitZero = false;
-            _updateSearchPathsWhenAddingLinkedFiles = true;
-            _debugStdLib = false;
+            PyService.DebuggerOptions.Reset();
         }
-
-        internal void ResetGeneralSettings() {
-            _autoAnalysis = true;
-            _updateSearchPathsWhenAddingLinkedFiles = true;
-            _indentationInconsistencySeverity = Severity.Warning;
-        }
-
-        private const string DontPromptBeforeRunningWithBuildErrorSetting = "DontPromptBeforeRunningWithBuildError";
-        private const string IndentationInconsistencySeveritySetting = "IndentationInconsistencySeverity";
-        private const string WaitOnAbnormalExitSetting = "WaitOnAbnormalExit";
-        private const string WaitOnNormalExitSetting = "WaitOnNormalExit";
-        private const string AutoAnalysisSetting = "AutoAnalysis";
-        private const string TeeStandardOutSetting = "TeeStandardOut";
-        private const string CrossModuleAnalysisLimitSetting = "CrossModuleAnalysisLimit";
-        private const string BreakOnSystemExitZeroSetting = "BreakOnSystemExitZero";
-        private const string UpdateSearchPathsWhenAddingLinkedFilesSetting = "UpdateSearchPathsWhenAddingLinkedFiles";
-        private const string DebugStdLibSetting = "DebugStdLib";
 
         public override void LoadSettingsFromStorage() {
-            // Load settings from storage.
-            _promptBeforeRunningWithBuildError = !(LoadBool(DontPromptBeforeRunningWithBuildErrorSetting) ?? false);
-            _waitOnAbnormalExit = LoadBool(WaitOnAbnormalExitSetting) ?? true;
-            _waitOnNormalExit = LoadBool(WaitOnNormalExitSetting) ?? true;
-            _autoAnalysis = LoadBool(AutoAnalysisSetting) ?? true;
-            _teeStdOut = LoadBool(TeeStandardOutSetting) ?? true;
-            _breakOnSystemExitZero = LoadBool(BreakOnSystemExitZeroSetting) ?? false;
-            _indentationInconsistencySeverity = LoadEnum<Severity>(IndentationInconsistencySeveritySetting) ?? Severity.Warning;
-            _updateSearchPathsWhenAddingLinkedFiles = LoadBool(UpdateSearchPathsWhenAddingLinkedFilesSetting) ?? true;
-            _debugStdLib = LoadBool(DebugStdLibSetting) ?? false;
-            var analysisLimit = LoadString(CrossModuleAnalysisLimitSetting);
-            if (analysisLimit == null) {
-                _crossModuleAnalysisLimit = 1300;    // default analysis limit
-            } else if (analysisLimit == "-") {
-                _crossModuleAnalysisLimit = null;
-            } else {
-                _crossModuleAnalysisLimit = Convert.ToInt32(analysisLimit);
-            }
+            PyService.DebuggerOptions.Load();
 
             // Synchronize UI with backing properties.
             if (_window != null) {
-                _window.SyncControlWithPageSettings(this);
+                _window.SyncControlWithPageSettings(PyService);
             }
-        }
-
-        internal void LoadGeneralSettingsFromStorage() {
-            _autoAnalysis = LoadBool(AutoAnalysisSetting) ?? true;
-            _updateSearchPathsWhenAddingLinkedFiles = LoadBool(UpdateSearchPathsWhenAddingLinkedFilesSetting) ?? true;
-            _indentationInconsistencySeverity = LoadEnum<Severity>(IndentationInconsistencySeveritySetting) ?? Severity.Warning;
         }
 
         public override void SaveSettingsToStorage() {
             // Synchronize backing properties with UI.
             if (_window != null) {
-                _window.SyncPageWithControlSettings(this);
+                _window.SyncPageWithControlSettings(PyService);
             }
 
-            // Save settings.
-            SaveBool(DontPromptBeforeRunningWithBuildErrorSetting, !_promptBeforeRunningWithBuildError);
-            SaveBool(WaitOnAbnormalExitSetting, _waitOnAbnormalExit);
-            SaveBool(WaitOnNormalExitSetting, _waitOnNormalExit);
-            SaveBool(AutoAnalysisSetting, _autoAnalysis);
-            SaveBool(TeeStandardOutSetting, _teeStdOut);
-            SaveBool(BreakOnSystemExitZeroSetting, _breakOnSystemExitZero);
-            SaveBool(UpdateSearchPathsWhenAddingLinkedFilesSetting, _updateSearchPathsWhenAddingLinkedFiles);
-            SaveEnum(IndentationInconsistencySeveritySetting, _indentationInconsistencySeverity);
-            SaveBool(DebugStdLibSetting, _debugStdLib);
-            if (_crossModuleAnalysisLimit != null) {
-                SaveInt(CrossModuleAnalysisLimitSetting, _crossModuleAnalysisLimit.Value);
-            } else {
-                SaveString(CrossModuleAnalysisLimitSetting, "-");
-            }
+            PyService.DebuggerOptions.Save();
 
         }
-
-        internal void SaveGeneralSettingsToStorage() {
-            SaveBool(AutoAnalysisSetting, _autoAnalysis);
-            SaveBool(UpdateSearchPathsWhenAddingLinkedFilesSetting, _updateSearchPathsWhenAddingLinkedFiles);
-            SaveEnum(IndentationInconsistencySeveritySetting, _indentationInconsistencySeverity);
-        }
-
     }
 }

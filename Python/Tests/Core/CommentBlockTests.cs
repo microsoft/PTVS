@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+using Microsoft.PythonTools;
 using Microsoft.PythonTools.Editor.Core;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
@@ -23,7 +24,7 @@ namespace PythonToolsTests {
         [TestMethod, Priority(0)]
         public void TestCommentCurrentLine() {
             var view = new MockTextView(
-                new MockTextBuffer(@"print 'hello'
+                MockTextBuffer(@"print 'hello'
 print 'goodbye'
 "));
 
@@ -49,7 +50,7 @@ print 'goodbye'
         [TestMethod, Priority(0)]
         public void TestUnCommentCurrentLine() {
             var view = new MockTextView(
-                new MockTextBuffer(@"#print 'hello'
+                MockTextBuffer(@"#print 'hello'
 #print 'goodbye'"));
 
             view.Caret.MoveTo(view.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(0).Start);
@@ -72,7 +73,7 @@ print 'goodbye'",
         [TestMethod, Priority(0)]
         public void TestComment() {
             var view = new MockTextView(
-                new MockTextBuffer(@"print 'hello'
+                MockTextBuffer(@"print 'hello'
 print 'goodbye'
 "));
 
@@ -92,7 +93,7 @@ print 'goodbye'
         [TestMethod, Priority(0)]
         public void TestCommentEmptyLine() {
             var view = new MockTextView(
-                new MockTextBuffer(@"print 'hello'
+                MockTextBuffer(@"print 'hello'
 
 print 'goodbye'
 "));
@@ -111,10 +112,14 @@ print 'goodbye'
                  view.TextBuffer.CurrentSnapshot.GetText());
         }
 
+        private static MockTextBuffer MockTextBuffer(string code) {
+            return new MockTextBuffer(code, PythonCoreConstants.ContentType, "C:\\fob.py");
+        }
+
         [TestMethod, Priority(0)]
         public void TestCommentWhiteSpaceLine() {
             var view = new MockTextView(
-                new MockTextBuffer(@"print 'hello'
+                MockTextBuffer(@"print 'hello'
    
 print 'goodbye'
 "));
@@ -136,7 +141,7 @@ print 'goodbye'
         [TestMethod, Priority(0)]
         public void TestCommentIndented() {
             var view = new MockTextView(
-                new MockTextBuffer(@"def f():
+                MockTextBuffer(@"def f():
     print 'hello'
     print 'still here'
     print 'goodbye'"));
@@ -161,7 +166,7 @@ print 'goodbye'
         [TestMethod, Priority(0)]
         public void TestCommentIndentedBlankLine() {
             var view = new MockTextView(
-                new MockTextBuffer(@"def f():
+                MockTextBuffer(@"def f():
     print 'hello'
 
     print 'still here'
@@ -188,7 +193,7 @@ print 'goodbye'
         [TestMethod, Priority(0)]
         public void TestCommentBlankLine() {
             var view = new MockTextView(
-                new MockTextBuffer(@"print('hi')
+                MockTextBuffer(@"print('hi')
 
 print('bye')"));
 
@@ -205,7 +210,7 @@ print('bye')",
         [TestMethod, Priority(0)]
         public void TestCommentIndentedWhiteSpaceLine() {
             var view = new MockTextView(
-                new MockTextBuffer(@"def f():
+                MockTextBuffer(@"def f():
     print 'hello'
   
     print 'still here'
@@ -232,7 +237,7 @@ print('bye')",
         [TestMethod, Priority(0)]
         public void TestUnCommentIndented() {
             var view = new MockTextView(
-                new MockTextBuffer(@"def f():
+                MockTextBuffer(@"def f():
     #print 'hello'
     #print 'still here'
     print 'goodbye'"));
@@ -257,7 +262,7 @@ print('bye')",
         [TestMethod, Priority(0)]
         public void TestUnComment() {
             var view = new MockTextView(
-                new MockTextBuffer(@"#print 'hello'
+                MockTextBuffer(@"#print 'hello'
 #print 'goodbye'"));
 
             view.Selection.Select(
@@ -278,7 +283,7 @@ print 'goodbye'",
         [TestMethod, Priority(0)]
         public void TestCommentStartOfLastLine() {
             var view = new MockTextView(
-                new MockTextBuffer(@"print 'hello'
+                MockTextBuffer(@"print 'hello'
 print 'goodbye'"));
 
             view.Selection.Select(
@@ -297,7 +302,7 @@ print 'goodbye'",
         public void TestCommentAfterCodeIsNotUncommented()
         {
             var view = new MockTextView(
-                new MockTextBuffer(@"print 'hello' #comment that should stay a comment
+                MockTextBuffer(@"print 'hello' #comment that should stay a comment
 #print 'still here' # another comment that should stay a comment
 print 'goodbye'"));
 

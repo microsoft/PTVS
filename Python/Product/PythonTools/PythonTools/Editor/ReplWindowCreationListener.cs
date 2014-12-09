@@ -12,13 +12,12 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.ComponentModel.Composition;
-using System.Linq;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Language;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.Editor;
-using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text.Operations;
@@ -35,17 +34,19 @@ namespace Microsoft.PythonTools.Editor {
     class ReplWindowCreationListener : IReplWindowCreationListener {
         private readonly IVsEditorAdaptersFactoryService _adapterFact;
         private readonly IEditorOperationsFactoryService _editorOpsFactory;
+        private readonly IServiceProvider _serviceProvider;
 
         [ImportingConstructor]
-        public ReplWindowCreationListener(IVsEditorAdaptersFactoryService adapterFact, IEditorOperationsFactoryService editorOpsFactory) {
+        public ReplWindowCreationListener([Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider, IVsEditorAdaptersFactoryService adapterFact, IEditorOperationsFactoryService editorOpsFactory) {
             _adapterFact = adapterFact;
             _editorOpsFactory = editorOpsFactory;
+            _serviceProvider = serviceProvider;
         }
 
         #region IReplWindowCreationListener Members
 
         public void ReplWindowCreated(IReplWindow window) {
-            var model = PythonToolsPackage.ComponentModel;
+            var model = _serviceProvider.GetComponentModel();
             var textView = window.TextView;
             var vsTextView = _adapterFact.GetViewAdapter(textView);
             if (window.Evaluator is PythonReplEvaluator) {

@@ -21,6 +21,7 @@ using System.Threading;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Parsing.Ast;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Tagging;
@@ -30,10 +31,17 @@ namespace Microsoft.PythonTools {
     [Export(typeof(ITaggerProvider)), ContentType(PythonCoreConstants.ContentType)]
     [TagType(typeof(IOutliningRegionTag))]
     class OutliningTaggerProvider : ITaggerProvider {
+        private readonly PythonToolsService _pyService;
+
+        [ImportingConstructor]
+        public OutliningTaggerProvider([Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider) {
+            _pyService = (PythonToolsService)serviceProvider.GetService(typeof(PythonToolsService));
+        }
+
         #region ITaggerProvider Members
 
         public ITagger<T> CreateTagger<T>(ITextBuffer buffer) where T : ITag {
-            return (ITagger<T>)(buffer.GetOutliningTagger() ?? new OutliningTagger(buffer));
+            return (ITagger<T>)(buffer.GetOutliningTagger() ?? new OutliningTagger(_pyService, buffer));
         }
 
         #endregion
@@ -43,14 +51,14 @@ namespace Microsoft.PythonTools {
         internal class OutliningTagger : ITagger<IOutliningRegionTag> {
             private readonly ITextBuffer _buffer;
             private readonly Timer _timer;
+            private readonly PythonToolsService _pyService;
             private bool _enabled, _eventHooked;
 
-            public OutliningTagger(ITextBuffer buffer) {
+            public OutliningTagger(PythonToolsService pyService, ITextBuffer buffer) {
+                _pyService = pyService;
                 _buffer = buffer;
                 _buffer.Properties[typeof(OutliningTagger)] = this;
-                if (PythonToolsPackage.Instance != null) {
-                    _enabled = PythonToolsPackage.Instance.AdvancedEditorOptionsPage.EnterOutliningModeOnOpen;
-                }
+                _enabled = _pyService.AdvancedOptions.EnterOutliningModeOnOpen;
                 _timer = new Timer(TagUpdate, null, Timeout.Infinite, Timeout.Infinite);                
             }
 

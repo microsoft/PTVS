@@ -20,7 +20,11 @@ using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.PythonTools.Refactoring {
     class ExtractMethodUserInput : IExtractMethodInput {
-        internal static ExtractMethodUserInput Instance = new ExtractMethodUserInput();
+        private readonly IServiceProvider _serviceProvider;
+
+        public ExtractMethodUserInput(IServiceProvider serviceProvider) {
+            _serviceProvider = serviceProvider;
+        }
 
         public bool ShouldExpandSelection() {
             var res = MessageBox.Show(@"The selected text does not cover an entire expression.
@@ -35,7 +39,7 @@ Would you like the selection to be extended to a valid expression?",
 
 
         public ExtractMethodRequest GetExtractionInfo(ExtractedMethodCreator previewer) {
-            var requestView = new ExtractMethodRequestView(previewer);
+            var requestView = new ExtractMethodRequestView(_serviceProvider, previewer);
             var dialog = new ExtractMethodDialog(requestView);
 
             bool res = dialog.ShowModal() ?? false;

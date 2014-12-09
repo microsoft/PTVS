@@ -33,6 +33,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly IVsTextView _view;
         private readonly ITextView _textView;
         private readonly IVsEditorAdaptersFactoryService _adapterFactory;
+        private readonly IServiceProvider _serviceProvider;
         private IVsExpansionSession _session;
         private bool _sessionEnded, _selectEndSpan;
         private ITrackingPoint _selectionStart, _selectionEnd;
@@ -41,8 +42,9 @@ namespace Microsoft.PythonTools.Intellisense {
         public const string SurroundsWithStatement = "SurroundsWithStatement";
         public const string Expansion = "Expansion";
 
-        public ExpansionClient(ITextView textView, IVsEditorAdaptersFactoryService adapterFactory) {
+        public ExpansionClient(ITextView textView, IVsEditorAdaptersFactoryService adapterFactory, IServiceProvider serviceProvider) {
             _textView = textView;
+            _serviceProvider = serviceProvider;
             _adapterFactory = adapterFactory;
             _view = _adapterFactory.GetViewAdapter(_textView);
             _lines = (IVsTextLines)_adapterFactory.GetBufferAdapter(_textView.TextBuffer);
@@ -236,7 +238,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
                         foreach (var import in importList) {
                             if (!walker.Imports.Contains(import)) {
-                                new ImportSmartTagAction(import, _textView.TextBuffer, _textView).Invoke();
+                                new ImportSmartTagAction(import, _textView.TextBuffer, _textView, _serviceProvider).Invoke();
                             }
                         }
                     }

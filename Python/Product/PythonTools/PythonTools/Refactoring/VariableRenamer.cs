@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.Collections.Generic;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
@@ -26,9 +27,11 @@ using Microsoft.VisualStudio.Text.Editor;
 namespace Microsoft.PythonTools.Refactoring {
     class VariableRenamer {
         private readonly ITextView _view;
+        private readonly IServiceProvider _serviceProvider;
 
-        public VariableRenamer(ITextView textView) {
+        public VariableRenamer(ITextView textView, IServiceProvider serviceProvider) {
             _view = textView;
+            _serviceProvider = serviceProvider;
         }
 
         public void RenameVariable(IRenameVariableInput input, IVsPreviewChangesService previewChanges) {
@@ -37,7 +40,7 @@ namespace Microsoft.PythonTools.Refactoring {
                 return;
             }
 
-            var analysis = _view.GetExpressionAnalysis();
+            var analysis = _view.GetExpressionAnalysis(_serviceProvider);
             
             string originalName = null;
             string privatePrefix = null;
@@ -97,7 +100,7 @@ namespace Microsoft.PythonTools.Refactoring {
             }
 
             PythonLanguageVersion languageVersion = PythonLanguageVersion.None;
-            var analyzer = _view.GetAnalyzer();
+            var analyzer = _view.GetAnalyzer(_serviceProvider);
             var factory = analyzer != null ? analyzer.InterpreterFactory : null;
             if (factory != null) {
                 languageVersion = factory.Configuration.Version.ToLanguageVersion();
@@ -105,7 +108,7 @@ namespace Microsoft.PythonTools.Refactoring {
 
             var info = input.GetRenameInfo(originalName, languageVersion);
             if (info != null) {
-                var engine = new PreviewChangesEngine(input, analysis, info, originalName, privatePrefix, _view.GetAnalyzer(), variables);
+                var engine = new PreviewChangesEngine(_serviceProvider, input, analysis, info, originalName, privatePrefix, _view.GetAnalyzer(_serviceProvider), variables);
                 if (info.Preview) {
                     previewChanges.PreviewChanges(engine);
                 } else {
@@ -119,7 +122,7 @@ namespace Microsoft.PythonTools.Refactoring {
             if (expr is NameExpression) {
                 // let's check if we'r re-naming a keyword argument...
                 ITrackingSpan span = _view.GetCaretSpan();
-                var sigs = _view.TextBuffer.CurrentSnapshot.GetSignatures(span);
+                var sigs = _view.TextBuffer.CurrentSnapshot.GetSignatures(_serviceProvider, span);
 
                 foreach (var sig in sigs.Signatures) {
                     IOverloadResult overloadRes = sig as IOverloadResult;

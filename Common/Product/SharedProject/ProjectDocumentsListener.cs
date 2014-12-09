@@ -11,6 +11,7 @@
  * You must not remove this notice, or any other, from this software.
  *
  * ***************************************************************************/
+
 using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -26,7 +27,7 @@ namespace Microsoft.VisualStudioTools.Project {
         #region fields
         private uint eventsCookie;
         private IVsTrackProjectDocuments2 projectDocTracker;
-        private ServiceProvider serviceProvider;
+        private IServiceProvider serviceProvider;
         private bool isDisposed;
         /// <summary>
         /// Defines an object that will be a mutex for this object for synchronizing thread calls.
@@ -35,7 +36,7 @@ namespace Microsoft.VisualStudioTools.Project {
         #endregion
 
         #region ctors
-        protected ProjectDocumentsListener(ServiceProvider serviceProviderParameter) {
+        protected ProjectDocumentsListener(System.IServiceProvider serviceProviderParameter) {
             Utilities.ArgumentNotNull("serviceProviderParameter", serviceProviderParameter);
 
             this.serviceProvider = serviceProviderParameter;
@@ -58,7 +59,7 @@ namespace Microsoft.VisualStudioTools.Project {
             }
         }
 
-        protected ServiceProvider ServiceProvider {
+        protected IServiceProvider ServiceProvider {
             get {
                 return this.serviceProvider;
             }

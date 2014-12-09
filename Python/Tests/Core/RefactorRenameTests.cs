@@ -2377,14 +2377,10 @@ def g(a, b, c):
             Console.WriteLine("Replacing {0} with {1}", caretText, newName);
 
             var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version ?? new Version(2, 6));
-            var classifierProvider = new PythonClassifierProvider(new MockContentTypeRegistryService());
+            var serviceProvider = PythonToolsTestUtilities.CreateMockServiceProvider();
+            var classifierProvider = new PythonClassifierProvider(new MockContentTypeRegistryService(PythonCoreConstants.ContentType), serviceProvider);
             classifierProvider._classificationRegistry = new MockClassificationTypeRegistryService();
-            var analyzer = new VsProjectAnalyzer(fact, new[] { fact });
-
-            var taskProvider = new TaskProvider(null, new MockErrorProviderFactory());
-            var originalTaskProvider = VsProjectAnalyzer.ReplaceTaskProviderForTests(new Lazy<TaskProvider>(() => {
-                return taskProvider;
-            }));
+            var analyzer = new VsProjectAnalyzer(serviceProvider, fact, new[] { fact });
 
             try {
                 for (int loops = 0; loops < 2; loops++) {
@@ -2394,7 +2390,7 @@ def g(a, b, c):
                     List<MonitoredBufferResult> analysis = new List<MonitoredBufferResult>();
                     for (int i = 0; i < inputs.Length; i++) {
                         var filename = inputs[i].Filename;
-                        buffers[i] = new MockTextBuffer(inputs[i].Input, filename);
+                        buffers[i] = new MockTextBuffer(inputs[i].Input, filename: filename);
                         views[i] = new MockTextView(buffers[i]);
                         buffers[i].AddProperty(typeof(VsProjectAnalyzer), analyzer);
                         classifierProvider.GetClassifier(buffers[i]);
@@ -2425,7 +2421,7 @@ def g(a, b, c):
                     var extractInput = new RenameVariableTestInput(newName, bufferTable, preview);
                     var previewChangesService = new TestPreviewChanges(expected);
 
-                    new VariableRenamer(views[0]).RenameVariable(extractInput, previewChangesService);
+                    new VariableRenamer(views[0], serviceProvider).RenameVariable(extractInput, previewChangesService);
                     if (error != null) {
                         Assert.AreEqual(error, extractInput.Failure);
                         return;
@@ -2442,7 +2438,6 @@ def g(a, b, c):
                 }
             } finally {
                 analyzer.Dispose();
-                VsProjectAnalyzer.ReplaceTaskProviderForTests(originalTaskProvider);
             }
         }
 

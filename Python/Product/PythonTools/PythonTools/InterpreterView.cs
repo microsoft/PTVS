@@ -29,10 +29,11 @@ namespace Microsoft.PythonTools {
         private bool _isRunning;
 
         public static IEnumerable<InterpreterView> GetInterpreters(
+            IServiceProvider serviceProvider,
             IInterpreterOptionsService interpreterService = null
         ) {
             if (interpreterService == null) {
-                interpreterService = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
+                interpreterService = serviceProvider.GetComponentModel().GetService<IInterpreterOptionsService>();
                 if (interpreterService == null) {
                     yield break;
                 }

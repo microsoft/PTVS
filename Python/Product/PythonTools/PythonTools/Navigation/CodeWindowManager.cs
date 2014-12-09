@@ -14,10 +14,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Language;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
@@ -26,44 +28,27 @@ using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Operations;
 using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudioTools;
+using IServiceProvider = System.IServiceProvider;
 
 namespace Microsoft.PythonTools.Navigation {
     class CodeWindowManager : IVsCodeWindowManager, IVsCodeWindowEvents {
+        private readonly IServiceProvider _serviceProvider;
         private readonly IVsCodeWindow _window;
         private readonly ITextBuffer _textBuffer;
+        private IWpfTextView _curView;
+        private readonly PythonToolsService _pyService;
         private static readonly HashSet<CodeWindowManager> _windows = new HashSet<CodeWindowManager>();
         private uint _cookieVsCodeWindowEvents;
         private DropDownBarClient _client;
         private static IVsEditorAdaptersFactoryService _vsEditorAdaptersFactoryService = null;
 
-        static CodeWindowManager() {
-            PythonToolsPackage.Instance.OnIdle += OnIdle;
-        }
-
-        public CodeWindowManager(IVsCodeWindow codeWindow, IWpfTextView textView) {
+        public CodeWindowManager(IServiceProvider serviceProvider, IVsCodeWindow codeWindow, IWpfTextView textView) {
+            _serviceProvider = serviceProvider;
             _window = codeWindow;
             _textBuffer = textView.TextBuffer;
+            _pyService = (PythonToolsService)_serviceProvider.GetService(typeof(PythonToolsService));
         }
-
-        private static void OnIdle(object sender, ComponentManagerEventArgs e) {
-            foreach (var window in _windows) {
-                if (e.ComponentManager.FContinueIdle() == 0) {
-                    break;
-                }
-
-                IVsTextView vsTextView;
-                if (ErrorHandler.Succeeded(window._window.GetLastActiveView(out vsTextView)) && vsTextView != null) {
-                    var wpfTextView = VsEditorAdaptersFactoryService.GetWpfTextView(vsTextView);
-                    if (wpfTextView != null) {
-                        EditFilter editFilter;
-                        if (wpfTextView.Properties.TryGetProperty(typeof(EditFilter), out editFilter) && editFilter != null) {
-                            editFilter.DoIdle(e.ComponentManager);
-                        }
-                    }
-                }
-            }
-        }
-
+        
         #region IVsCodeWindowManager Members
 
         public int AddAdornments() {
@@ -79,7 +64,7 @@ namespace Microsoft.PythonTools.Navigation {
                 ((IVsCodeWindowEvents)this).OnNewView(textView);
             }
 
-            if (PythonToolsPackage.Instance.LangPrefs.NavigationBar) {
+            if (_pyService.LangPrefs.NavigationBar) {
                 return AddDropDownBar();
             }
 
@@ -203,13 +188,14 @@ namespace Microsoft.PythonTools.Navigation {
         int IVsCodeWindowEvents.OnNewView(IVsTextView vsTextView) {
             var wpfTextView = VsEditorAdaptersFactoryService.GetWpfTextView(vsTextView);
             if (wpfTextView != null) {
-                var factory = PythonToolsPackage.ComponentModel.GetService<IEditorOperationsFactoryService>();
+                var factory = ComponentModel.GetService<IEditorOperationsFactoryService>();
                 var editFilter = new EditFilter(wpfTextView, factory.GetEditorOperations(wpfTextView), ServiceProvider.GlobalProvider);
                 editFilter.AttachKeyboardFilter(vsTextView);
 #if DEV11_OR_LATER
-                new TextViewFilter(vsTextView);
+                new TextViewFilter(_serviceProvider, vsTextView);
 #endif
                 wpfTextView.GotAggregateFocus += OnTextViewGotAggregateFocus;
+                wpfTextView.LostAggregateFocus += OnTextViewLostAggregateFocus;
             }
             return VSConstants.S_OK;
         }
@@ -218,6 +204,7 @@ namespace Microsoft.PythonTools.Navigation {
             var wpfTextView = VsEditorAdaptersFactoryService.GetWpfTextView(vsTextView);
             if (wpfTextView != null) {
                 wpfTextView.GotAggregateFocus -= OnTextViewGotAggregateFocus;
+                wpfTextView.LostAggregateFocus -= OnTextViewLostAggregateFocus;
             }
             return VSConstants.S_OK;
         }
@@ -225,21 +212,46 @@ namespace Microsoft.PythonTools.Navigation {
         private void OnTextViewGotAggregateFocus(object sender, EventArgs e) {
             var wpfTextView = sender as IWpfTextView;
             if (wpfTextView != null) {
+                _curView = wpfTextView;
                 if (_client != null) {
                     _client.UpdateView(wpfTextView);
                 }
+                _pyService.OnIdle += OnIdle;
             }
         }
 
-        private static IVsEditorAdaptersFactoryService VsEditorAdaptersFactoryService {
+        private void OnTextViewLostAggregateFocus(object sender, EventArgs e) {
+            var wpfTextView = sender as IWpfTextView;
+            if (wpfTextView != null) {
+                _curView = null;
+                _pyService.OnIdle -= OnIdle;
+            }
+        }
+
+        private IComponentModel ComponentModel {
+            get {
+                return (IComponentModel)_serviceProvider.GetService(typeof(SComponentModel));
+            }
+        }
+
+        private IVsEditorAdaptersFactoryService VsEditorAdaptersFactoryService {
             get {
                 if (_vsEditorAdaptersFactoryService == null) {
-                    _vsEditorAdaptersFactoryService = PythonToolsPackage.ComponentModel.GetService<IVsEditorAdaptersFactoryService>();
+                    _vsEditorAdaptersFactoryService = ComponentModel.GetService<IVsEditorAdaptersFactoryService>();
                 }
                 return _vsEditorAdaptersFactoryService;
             }
         }
 
         #endregion
+
+        private void OnIdle(object sender, ComponentManagerEventArgs eventArgs) {
+            if (_curView!= null) {
+                EditFilter editFilter;
+                if (_curView.Properties.TryGetProperty(typeof(EditFilter), out editFilter) && editFilter != null) {
+                    editFilter.DoIdle((IOleComponentManager)_serviceProvider.GetService(typeof(SOleComponentManager)));
+                }
+            }
+        }
     }
 }

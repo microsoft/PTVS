@@ -28,6 +28,12 @@ using NativeMethods = Microsoft.VisualStudioTools.Project.NativeMethods;
 namespace Microsoft.PythonTools.Debugger {
     [Guid("996D22BD-D117-4611-88F2-2832CB7D9517")]
     public class CustomDebuggerEventHandler : IVsCustomDebuggerEventHandler110 {
+        private readonly IServiceProvider _serviceProvider;
+        
+        public CustomDebuggerEventHandler(IServiceProvider serviceProvider) {
+            _serviceProvider = serviceProvider;
+        }
+
         public int OnCustomDebugEvent(ref Guid ProcessId, VsComponentMessage message) {
             switch ((VsPackageMessage)message.MessageCode) {
                 case VsPackageMessage.WarnAboutPythonSymbols:
@@ -46,7 +52,7 @@ namespace Microsoft.PythonTools.Debugger {
                 "Python/native mixed-mode debugging requires symbol files for the Python interpreter that is being debugged. Please add the folder " +
                 "containing those symbol files to your symbol search path, and force a reload of symbols for {0}.";
 
-            var dialog = new TaskDialog(PythonToolsPackage.Instance);
+            var dialog = new TaskDialog(_serviceProvider);
 
             var openSymbolSettings = new TaskDialogButton("Open symbol settings dialog");
             var downloadSymbols = new TaskDialogButton("Download symbols for my interpreter");
@@ -63,7 +69,7 @@ namespace Microsoft.PythonTools.Debugger {
 
             if (dialog.SelectedButton == openSymbolSettings) {
                 var cmdId = new CommandID(VSConstants.GUID_VSStandardCommandSet97, VSConstants.cmdidToolsOptions);
-                PythonToolsPackage.Instance.GlobalInvoke(cmdId,  "1F5E080F-CBD2-459C-8267-39fd83032166");
+                _serviceProvider.GlobalInvoke(cmdId,  "1F5E080F-CBD2-459C-8267-39fd83032166");
             } else if (dialog.SelectedButton == downloadSymbols) {
                 PythonToolsPackage.OpenWebBrowser(
                     string.Format("http://go.microsoft.com/fwlink/?LinkId=308954&clcid=0x{0:X}", CultureInfo.CurrentCulture.LCID));

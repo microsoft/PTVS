@@ -35,7 +35,7 @@ namespace TestUtilities.Mocks {
         public MockReplWindow(IReplEvaluator eval, string contentType = "Python") {            
             _eval = eval;
             _contentType = contentType;
-            _view = new MockTextView(new MockTextBuffer(String.Empty, "text"));
+            _view = new MockTextView(new MockTextBuffer(String.Empty, filename: "text"));
             _eval.Initialize(this);
         }
 

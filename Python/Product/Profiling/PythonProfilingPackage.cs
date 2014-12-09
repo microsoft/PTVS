@@ -133,8 +133,8 @@ namespace Microsoft.PythonTools.Profiling {
             return base.GetAutomationObject(name);
         }
 
-        internal Guid GetStartupProjectGuid() {
-            var buildMgr = (IVsSolutionBuildManager)GetService(typeof(IVsSolutionBuildManager));
+        internal static Guid GetStartupProjectGuid(IServiceProvider serviceProvider) {
+            var buildMgr = (IVsSolutionBuildManager)serviceProvider.GetService(typeof(IVsSolutionBuildManager));
             IVsHierarchy hierarchy;
             if (buildMgr != null && ErrorHandler.Succeeded(buildMgr.get_StartupProject(out hierarchy)) && hierarchy != null) {
                 Guid guid;
@@ -161,8 +161,8 @@ namespace Microsoft.PythonTools.Profiling {
         /// the OleMenuCommandService service and the MenuCommand class.
         /// </summary>
         private void StartProfilingWizard(object sender, EventArgs e) {
-            var targetView = new ProfilingTargetView();
-            var dialog = new LaunchProfiling(targetView);
+            var targetView = new ProfilingTargetView(this);
+            var dialog = new LaunchProfiling(this, targetView);
             var res = dialog.ShowModal() ?? false;
             if (res && targetView.IsValid) {
                 var target = targetView.GetTarget();
@@ -174,7 +174,7 @@ namespace Microsoft.PythonTools.Profiling {
 
         internal SessionNode ProfileTarget(ProfilingTarget target, bool openReport = true) {
             bool save;
-            string name = target.GetProfilingName(out save);
+            string name = target.GetProfilingName(this, out save);
             var session = ShowPerformanceExplorer().Sessions.AddTarget(target, name, save);
 
             StartProfiling(target, session, openReport);
@@ -204,7 +204,7 @@ namespace Microsoft.PythonTools.Profiling {
         private void ProfileProjectTarget(SessionNode session, ProjectTarget projectTarget, bool openReport) {
             var targetGuid = projectTarget.TargetProject;
 
-            var dte = (EnvDTE.DTE)GetGlobalService(typeof(EnvDTE.DTE));
+            var dte = (EnvDTE.DTE)GetService(typeof(EnvDTE.DTE));
             EnvDTE.Project projectToProfile = null;
             foreach (EnvDTE.Project project in dte.Solution.Projects) {
                 var kind = project.Kind;
@@ -228,7 +228,7 @@ namespace Microsoft.PythonTools.Profiling {
         }
 
         internal static void ProfileProject(SessionNode session, EnvDTE.Project projectToProfile, bool openReport) {
-            var model = (IComponentModel)(GetGlobalService(typeof(SComponentModel)));
+            var model = (IComponentModel)(session._serviceProvider.GetService(typeof(SComponentModel)));
             var interpreterService = model.GetService<IInterpreterOptionsService>();
 
             var projectHome = CommonUtils.GetAbsoluteDirectoryPath(
@@ -270,8 +270,8 @@ namespace Microsoft.PythonTools.Profiling {
             var env = new Dictionary<string, string>();
             if (!String.IsNullOrWhiteSpace(pathEnvVarName)) {
                 var searchPaths = searchPath.Split(';').ToList();
-
-                if (!PythonToolsPackage.Instance.GeneralOptionsPage.ClearGlobalPythonPath) {
+                var pyService = (PythonToolsService)session._serviceProvider.GetService(typeof(PythonToolsService));
+                if (!pyService.GeneralOptions.ClearGlobalPythonPath) {
                     searchPaths.AddRange(Environment.GetEnvironmentVariable(pathEnvVarName).Split(';'));
                 }
 
@@ -286,7 +286,7 @@ namespace Microsoft.PythonTools.Profiling {
         }
 
         private static void ProfileStandaloneTarget(SessionNode session, StandaloneTarget runTarget, bool openReport) {
-            var model = (IComponentModel)(GetGlobalService(typeof(SComponentModel)));
+            var model = (IComponentModel)(session._serviceProvider.GetService(typeof(SComponentModel)));
             var interpreterService = model.GetService<IInterpreterOptionsService>();
 
             var interpreterPath = runTarget.InterpreterPath;
@@ -308,7 +308,7 @@ namespace Microsoft.PythonTools.Profiling {
 
 
         private static void RunProfiler(SessionNode session, string interpreter, string script, string arguments, string workingDir, Dictionary<string, string> env, bool openReport, ProcessorArchitecture arch) {
-            var process = new ProfiledProcess(interpreter, String.Format("\"{0}\" {1}", script, arguments), workingDir, env, arch);
+            var process = new ProfiledProcess((PythonToolsService)session._serviceProvider.GetService(typeof(PythonToolsService)), interpreter, String.Format("\"{0}\" {1}", script, arguments), workingDir, env, arch);
 
             string baseName = Path.GetFileNameWithoutExtension(session.Filename);
             string date = DateTime.Now.ToString("yyyyMMdd");
@@ -321,7 +321,7 @@ namespace Microsoft.PythonTools.Profiling {
             }
 
             process.ProcessExited += (sender, args) => {
-                var dte = (EnvDTE.DTE)PythonProfilingPackage.GetGlobalService(typeof(EnvDTE.DTE));
+                var dte = (EnvDTE.DTE)session._serviceProvider.GetService(typeof(EnvDTE.DTE));
                 _profilingProcess = null;
                 _stopCommand.Enabled = false;
                 _startCommand.Enabled = true;
@@ -362,7 +362,7 @@ namespace Microsoft.PythonTools.Profiling {
         }
 
         private void AddPerformanceSession(object sender, EventArgs e) {
-            var dte = (EnvDTE.DTE)PythonToolsPackage.GetGlobalService(typeof(EnvDTE.DTE));
+            var dte = (EnvDTE.DTE)GetService(typeof(EnvDTE.DTE));
             string filename = "Performance.pyperf";
             bool save = false;
             if (dte.Solution.IsOpen && !String.IsNullOrEmpty(dte.Solution.FullName)) {
@@ -415,8 +415,8 @@ namespace Microsoft.PythonTools.Profiling {
             }
         }
 
-        internal static bool IsProfilingInstalled() {
-            IVsShell shell = (IVsShell)PythonToolsPackage.GetGlobalService(typeof(IVsShell));
+        internal bool IsProfilingInstalled() {
+            IVsShell shell = (IVsShell)GetService(typeof(IVsShell));
             Guid perfGuid = GuidList.GuidPerfPkg;
             int installed;
             ErrorHandler.ThrowOnFailure(

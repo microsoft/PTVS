@@ -17,11 +17,12 @@ using Microsoft.VisualStudio.Text;
 
 namespace TestUtilities.Mocks {
     public class MockTextCaret : ITextCaret {
-        private SnapshotPoint _position;
+        private MockTrackingPoint _position;
         private readonly MockTextView _view;
 
         public MockTextCaret(MockTextView view) {
             _view = view;
+            _position = new MockTrackingPoint((MockTextSnapshot)_view.TextBuffer.CurrentSnapshot, 0);
         }
 
         public double Bottom {
@@ -33,7 +34,6 @@ namespace TestUtilities.Mocks {
         }
 
         public void EnsureVisible() {
-            throw new System.NotImplementedException();
         }
 
         public double Height {
@@ -79,7 +79,7 @@ namespace TestUtilities.Mocks {
 
         public CaretPosition MoveTo(Microsoft.VisualStudio.Text.SnapshotPoint bufferPosition) {
             _view.Selection.Clear();
-            _position = bufferPosition;
+            _position = new MockTrackingPoint((MockTextSnapshot)bufferPosition.Snapshot, bufferPosition.Position);
             return Position;
         }
 
@@ -113,14 +113,14 @@ namespace TestUtilities.Mocks {
 
         public CaretPosition Position {
             get { return new CaretPosition(
-                new VirtualSnapshotPoint(_position), 
+                new VirtualSnapshotPoint(_position.GetPoint(_view.TextBuffer.CurrentSnapshot)), 
                 new MockMappingPoint(), 
                 PositionAffinity.Predecessor); 
             }
         }
 
         internal void SetPosition(SnapshotPoint position) {
-            _position = position;
+            _position = new MockTrackingPoint((MockTextSnapshot)position.Snapshot, position.Position);
         }
 
         public event System.EventHandler<CaretPositionChangedEventArgs> PositionChanged {

@@ -61,7 +61,7 @@ namespace Microsoft.PythonTools.Intellisense {
             _incSearch = provider._IncrementalSearch.GetIncrementalSearch(textView);
             _textView.MouseHover += TextViewMouseHover;
             _serviceProvider = serviceProvider;
-            _expansionClient = new ExpansionClient(textView, provider._adaptersFactory);
+            _expansionClient = new ExpansionClient(textView, provider._adaptersFactory, provider._ServiceProvider);
 
             var textMgr = (IVsTextManager2)_serviceProvider.GetService(typeof(SVsTextManager));
             textMgr.GetExpansionManager(out _expansionMgr);
@@ -175,12 +175,12 @@ namespace Microsoft.PythonTools.Intellisense {
                     case '@':
                     case '.':
                     case ' ':
-                        if (PythonToolsPackage.Instance.LangPrefs.AutoListMembers) {
+                        if (_provider.PythonService.LangPrefs.AutoListMembers) {
                             TriggerCompletionSession(false);
                         }
                         break;
                     case '(':
-                        if (PythonToolsPackage.Instance.LangPrefs.AutoListParams) {
+                        if (_provider.PythonService.LangPrefs.AutoListParams) {
                             OpenParenStartSignatureSession();
                         }
                         break;
@@ -190,7 +190,7 @@ namespace Microsoft.PythonTools.Intellisense {
                             _sigHelpSession = null;
                         }
 
-                        if (PythonToolsPackage.Instance.LangPrefs.AutoListParams) {
+                        if (_provider.PythonService.LangPrefs.AutoListParams) {
                             // trigger help for outer call if there is one
                             TriggerSignatureHelp();
                         }
@@ -198,7 +198,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     case '=':
                     case ',':
                         if (_sigHelpSession == null) {
-                            if (PythonToolsPackage.Instance.LangPrefs.AutoListParams) {
+                            if (_provider.PythonService.LangPrefs.AutoListParams) {
                                 CommaStartSignatureSession();
                             }
                         } else {
@@ -236,7 +236,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         caretPoint.Value.Snapshot.TextBuffer.Delete(new Span(caretPoint.Value.Position - 1, 1));
 
                         // Pop to an outer nesting of signature help
-                        if (PythonToolsPackage.Instance.LangPrefs.AutoListParams) {
+                        if (_provider.PythonService.LangPrefs.AutoListParams) {
                             TriggerSignatureHelp();
                         }
 
@@ -297,7 +297,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
                 var span = targetPt.Value.Snapshot.CreateTrackingSpan(targetPt.Value.Position, 0, SpanTrackingMode.EdgeInclusive);
 
-                var sigs = targetPt.Value.Snapshot.GetSignatures(span);
+                var sigs = targetPt.Value.Snapshot.GetSignatures(_serviceProvider, span);
                 bool retrigger = false;
                 if (sigs.Signatures.Count == _sigHelpSession.Signatures.Count) {
                     for (int i = 0; i < sigs.Signatures.Count && !retrigger; i++) {
@@ -489,7 +489,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 
                 if (_activeSession != null && !_activeSession.IsDismissed) {
                     if (_activeSession.SelectedCompletionSet.SelectionStatus.IsSelected &&
-                        PythonToolsPackage.Instance.AdvancedEditorOptionsPage.CompletionCommittedBy.IndexOf(ch) != -1) {
+                        _provider.PythonService.AdvancedOptions.CompletionCommittedBy.IndexOf(ch) != -1) {
                         _activeSession.Commit();
                     } else if (!IsIdentifierChar(ch)) {
                         _activeSession.Dismiss();
@@ -511,7 +511,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 if (pguidCmdGroup == VSConstants.VSStd2K) {
                     switch ((VSConstants.VSStd2KCmdID)nCmdID) {
                         case VSConstants.VSStd2KCmdID.RETURN:
-                            if (PythonToolsPackage.Instance.AdvancedEditorOptionsPage.EnterCommitsIntellisense &&
+                            if (_provider.PythonService.AdvancedOptions.EnterCommitsIntellisense &&
                                 !_activeSession.IsDismissed &&
                                 _activeSession.SelectedCompletionSet.SelectionStatus.IsSelected) {
 
@@ -520,8 +520,8 @@ namespace Microsoft.PythonTools.Intellisense {
                                 // when typing "import sys[ENTER]" completion starts after the space.  After typing
                                 // sys the user wants a new line and doesn't want to type enter twice.
 
-                                bool enterOnComplete = PythonToolsPackage.Instance.AdvancedEditorOptionsPage.AddNewLineAtEndOfFullyTypedWord &&
-                                         EnterOnCompleteText();
+                                bool enterOnComplete = _provider.PythonService.AdvancedOptions.AddNewLineAtEndOfFullyTypedWord &&
+                                        EnterOnCompleteText();
 
                                 _activeSession.Commit();
 

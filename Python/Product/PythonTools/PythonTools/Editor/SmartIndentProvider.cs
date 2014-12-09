@@ -26,16 +26,24 @@ namespace Microsoft.PythonTools.Editor {
     [Export(typeof(ISmartIndentProvider))]
     [ContentType(PythonCoreConstants.ContentType)]
     public sealed class SmartIndentProvider : ISmartIndentProvider {
+        private readonly PythonToolsService _pyService;
+
+        [ImportingConstructor]
+        internal SmartIndentProvider(PythonToolsService pyService) {
+            _pyService = pyService;
+        }
 
         private sealed class Indent : ISmartIndent {
             private readonly ITextView _textView;
+            private readonly SmartIndentProvider _provider;
 
-            public Indent(ITextView view) {
+            public Indent(SmartIndentProvider provider, ITextView view) {
+                _provider = provider;
                 _textView = view;
             }
 
             public int? GetDesiredIndentation(ITextSnapshotLine line) {
-                if (PythonToolsPackage.Instance.LangPrefs.IndentMode == vsIndentStyle.vsIndentStyleSmart) {
+                if (_provider._pyService.LangPrefs.IndentMode == vsIndentStyle.vsIndentStyleSmart) {
                     return AutoIndent.GetLineIndentation(line, _textView);
                 } else {
                     return null;
@@ -47,7 +55,7 @@ namespace Microsoft.PythonTools.Editor {
         }
 
         public ISmartIndent CreateSmartIndent(ITextView textView) {
-            return new Indent(textView);
+            return new Indent(this, textView);
         }
     }
 }

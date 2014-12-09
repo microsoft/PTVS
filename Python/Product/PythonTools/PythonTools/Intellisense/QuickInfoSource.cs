@@ -42,6 +42,7 @@ namespace Microsoft.PythonTools.Intellisense {
             _curSession.Dismissed += CurSessionDismissed;
 
             var vars = _textBuffer.CurrentSnapshot.AnalyzeExpression(
+                _provider._serviceProvider,
                 session.CreateTrackingSpan(_textBuffer),
                 false
             );

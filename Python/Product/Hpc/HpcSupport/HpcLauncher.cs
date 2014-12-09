@@ -36,6 +36,7 @@ using Microsoft.Win32;
 namespace Microsoft.PythonTools.Hpc {
     class HpcLauncher : IProjectLauncher {
         private readonly IPythonProject _project;
+        private readonly PythonToolsService _pyService;
 
         private static readonly Guid _authGuid = Guid.NewGuid();
         private static Thread _listenerThread;
@@ -94,7 +95,8 @@ namespace Microsoft.PythonTools.Hpc {
 
         #endregion
 
-        public HpcLauncher(IPythonProject project) {
+        public HpcLauncher(PythonToolsService pyService, IPythonProject project) {
+            _pyService = pyService;
             _project = project;
         }
 
@@ -653,16 +655,16 @@ namespace Microsoft.PythonTools.Hpc {
         private string GetDebugOptions(ClusterEnvironment clusterEnv) {
             string options = "";
 
-            if (PythonToolsPackage.Instance.DebuggingOptionsPage.TeeStandardOutput) {
+            if (_pyService.DebuggerOptions.TeeStandardOutput) {
                 options = RedirectOutputSetting + "=True";
             }
-            if (PythonToolsPackage.Instance.DebuggingOptionsPage.BreakOnSystemExitZero) {
+            if (_pyService.DebuggerOptions.BreakOnSystemExitZero) {
                 if (!String.IsNullOrEmpty(options)) {
                     options += ";";
                 }
                 options += BreakSystemExitZero + "=True";
             }
-            if (PythonToolsPackage.Instance.DebuggingOptionsPage.DebugStdLib) {
+            if (_pyService.DebuggerOptions.DebugStdLib) {
                 if (!String.IsNullOrEmpty(options)) {
                     options += ";";
                 }
@@ -670,13 +672,13 @@ namespace Microsoft.PythonTools.Hpc {
             }
 
             if (clusterEnv.HeadNode == "localhost") { // don't wait on the cluster, there's no one to press enter.
-                if (PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnAbnormalExit) {
+                if (_pyService.DebuggerOptions.WaitOnAbnormalExit) {
                     if (!String.IsNullOrEmpty(options)) {
                         options += ";";
                     }
                     options += WaitOnAbnormalExitSetting + "=True";
                 }
-                if (PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnNormalExit) {
+                if (_pyService.DebuggerOptions.WaitOnNormalExit) {
                     if (!String.IsNullOrEmpty(options)) {
                         options += ";";
                     }

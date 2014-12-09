@@ -28,6 +28,8 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.Win32;
 
 namespace Microsoft.PythonTools.Profiling {
+    using IServiceProvider = System.IServiceProvider;
+
     /// <summary>
     /// Represents an individual profiling session.  We have nodes:
     ///     0  - the configuration for what to profile
@@ -47,6 +49,7 @@ namespace Microsoft.PythonTools.Profiling {
         internal bool _isDirty, _neverSaved;
         private bool _isReportsExpanded;
         private readonly SessionsNode _parent;
+        internal readonly IServiceProvider _serviceProvider;
         private ProfilingTarget _target;
         private AutomationSession _automationSession;
         internal readonly uint ItemId;
@@ -55,7 +58,8 @@ namespace Microsoft.PythonTools.Profiling {
         private const int ReportsItemId = 1;
         internal const uint StartingReportId = 2;
 
-        public SessionNode(SessionsNode parent, ProfilingTarget target, string filename) {
+        public SessionNode(IServiceProvider serviceProvider, SessionsNode parent, ProfilingTarget target, string filename) {
+            _serviceProvider = serviceProvider;
             _parent = parent;
             _target = target;
             _filename = filename;
@@ -64,7 +68,7 @@ namespace Microsoft.PythonTools.Profiling {
             // by responding to GetProperty for VSHPROPID_ItemDocCookie we will support Ctrl-S when one of our
             // files is dirty.
             // http://msdn.microsoft.com/en-us/library/bb164600(VS.80).aspx
-            IVsRunningDocumentTable rdt = PythonProfilingPackage.GetGlobalService(typeof(SVsRunningDocumentTable)) as IVsRunningDocumentTable;
+            IVsRunningDocumentTable rdt = _serviceProvider.GetService(typeof(SVsRunningDocumentTable)) as IVsRunningDocumentTable;
             uint cookie;
             IntPtr punkDocData = Marshal.GetIUnknownForObject(this);
             try {
@@ -252,7 +256,7 @@ namespace Microsoft.PythonTools.Profiling {
                         }
 
                         if (ctxMenu != null) {
-                            var uishell = (IVsUIShell)PythonToolsPackage.GetGlobalService(typeof(SVsUIShell));
+                            var uishell = (IVsUIShell)_serviceProvider.GetService(typeof(SVsUIShell));
                             if (uishell != null) {
                                 var pt = System.Windows.Forms.Cursor.Position;
                                 var pnts = new[] { new POINTS { x = (short)pt.X, y = (short)pt.Y } };
@@ -276,8 +280,8 @@ namespace Microsoft.PythonTools.Profiling {
         }
 
         internal ProfilingTarget OpenTargetProperties() {
-            var targetView = new ProfilingTargetView(_target);
-            var dialog = new LaunchProfiling(targetView);
+            var targetView = new ProfilingTargetView(_serviceProvider, _target);
+            var dialog = new LaunchProfiling(_serviceProvider, targetView);
             var res = dialog.ShowModal() ?? false;
             if (res && targetView.IsValid) {
                 var target = targetView.GetTarget();
@@ -296,7 +300,7 @@ namespace Microsoft.PythonTools.Profiling {
             if (!File.Exists(item.Filename)) {
                 MessageBox.Show(String.Format("Performance report no longer exits: {0}", item.Filename), "Python Tools for Visual Studio");
             } else {
-                var dte = (EnvDTE.DTE)PythonProfilingPackage.GetGlobalService(typeof(EnvDTE.DTE));
+                var dte = (EnvDTE.DTE)_serviceProvider.GetService(typeof(EnvDTE.DTE));
                 dte.ItemOperations.OpenFile(item.Filename);
             }
         }
@@ -339,7 +343,7 @@ namespace Microsoft.PythonTools.Profiling {
                             var dialog = new CompareReportsWindow(compareView);
                             var res = dialog.ShowModal() ?? false;
                             if (res && compareView.IsValid) {
-                                IVsUIShellOpenDocument sod = PythonProfilingPackage.GetGlobalService(typeof(SVsUIShellOpenDocument)) as IVsUIShellOpenDocument;
+                                IVsUIShellOpenDocument sod = _node._serviceProvider.GetService(typeof(SVsUIShellOpenDocument)) as IVsUIShellOpenDocument;
                                 if (sod == null) {
                                     return VSConstants.E_FAIL;
                                 }
@@ -466,7 +470,7 @@ namespace Microsoft.PythonTools.Profiling {
         }
 
         internal void Removed() {
-            IVsRunningDocumentTable rdt = PythonProfilingPackage.GetGlobalService(typeof(SVsRunningDocumentTable)) as IVsRunningDocumentTable;
+            IVsRunningDocumentTable rdt = _serviceProvider.GetService(typeof(SVsRunningDocumentTable)) as IVsRunningDocumentTable;
             ErrorHandler.ThrowOnFailure(rdt.UnlockDocument((uint)_VSRDTFLAGS.RDT_EditLock, _docCookie));
         }
 
@@ -483,7 +487,7 @@ namespace Microsoft.PythonTools.Profiling {
 
             if (File.Exists(report.Filename) && dwDelItemOp == (uint)__VSDELETEITEMOPERATION.DELITEMOP_DeleteFromStorage) {
                 // close the file if it's open before deleting it...
-                var dte = (EnvDTE.DTE)PythonProfilingPackage.GetGlobalService(typeof(EnvDTE.DTE));
+                var dte = (EnvDTE.DTE)_serviceProvider.GetService(typeof(EnvDTE.DTE));
                 if (dte.ItemOperations.IsFileOpen(report.Filename)) {
                     var doc = dte.Documents.Item(report.Filename);
                     doc.Close();

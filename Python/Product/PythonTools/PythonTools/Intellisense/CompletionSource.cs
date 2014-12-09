@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.Collections.Generic;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.Language.Intellisense;
@@ -22,19 +23,24 @@ using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Intellisense {
     public static class CompletionSessionExtensions {
+        [Obsolete("A IServiceProvider should be passed in")]
         public static CompletionOptions GetOptions(this ICompletionSession session) {
+            return GetOptions(session, PythonToolsPackage.Instance);
+        }
+
+        public static CompletionOptions GetOptions(this ICompletionSession session, IServiceProvider serviceProvider) {
+            var pyService = serviceProvider.GetPythonToolsService();
+
             var options = new CompletionOptions {
                 ConvertTabsToSpaces = session.TextView.Options.IsConvertTabsToSpacesEnabled(),
                 IndentSize = session.TextView.Options.GetIndentSize(),
                 TabSize = session.TextView.Options.GetTabSize()
             };
 
-            if (PythonToolsPackage.Instance != null) {
-                options.IntersectMembers = PythonToolsPackage.Instance.AdvancedEditorOptionsPage.IntersectMembers;
-                options.HideAdvancedMembers = PythonToolsPackage.Instance.LangPrefs.HideAdvancedMembers;
-                options.FilterCompletions = PythonToolsPackage.Instance.AdvancedEditorOptionsPage.FilterCompletions;
-                options.SearchMode = PythonToolsPackage.Instance.AdvancedEditorOptionsPage.SearchMode;
-            }
+            options.IntersectMembers = pyService.AdvancedOptions.IntersectMembers;
+            options.HideAdvancedMembers = pyService.LangPrefs.HideAdvancedMembers;
+            options.FilterCompletions = pyService.AdvancedOptions.FilterCompletions;
+            options.SearchMode = pyService.AdvancedOptions.SearchMode;
             return options;
         }
     }
@@ -52,8 +58,8 @@ namespace Microsoft.PythonTools.Intellisense {
             var textBuffer = _textBuffer;
             var span = session.GetApplicableSpan(textBuffer);
             var triggerPoint = session.GetTriggerPoint(textBuffer);
-            var options = session.GetOptions();
-            var provider = textBuffer.CurrentSnapshot.GetCompletions(span, triggerPoint, options);
+            var options = session.GetOptions(_provider._serviceProvider);
+            var provider = textBuffer.CurrentSnapshot.GetCompletions(_provider._serviceProvider, span, triggerPoint, options);
 
             var completions = provider.GetCompletions(_provider._glyphService);
            

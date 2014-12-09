@@ -30,7 +30,7 @@ namespace Microsoft.PythonTools.Profiling {
             Caption = Title;
         }
         
-        public override void OnToolWindowCreated() {
+        public override void OnToolWindowCreated() {            
             base.OnToolWindowCreated();
 
             var frame = (IVsWindowFrame)Frame;
@@ -39,7 +39,7 @@ namespace Microsoft.PythonTools.Profiling {
 
             // initialie w/ our hierarchy
             var hw = ouhw as IVsUIHierarchyWindow;
-            _sessions = new SessionsNode(hw);
+            _sessions = new SessionsNode(this, hw);
             object punk;
             ErrorHandler.ThrowOnFailure(hw.Init(
                 _sessions,

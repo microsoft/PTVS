@@ -34,8 +34,10 @@ namespace Microsoft.PythonTools.Django.Project {
         private PythonAnalyzer _analyzer;
         internal static readonly Dictionary<string, string> _knownTags = MakeKnownTagsTable();
         internal static readonly Dictionary<string, string> _knownFilters = MakeKnownFiltersTable();
+        internal readonly IServiceProvider _serviceProvider;
 
-        public DjangoAnalyzer() {
+        public DjangoAnalyzer(IServiceProvider serviceProvider) {
+            _serviceProvider = serviceProvider;
             foreach (var tagName in DjangoCompletionSource._nestedEndTags) {
                 _tags[tagName] = new TagInfo("");
             }

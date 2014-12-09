@@ -15,12 +15,14 @@
 using System;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
+using IServiceProvider = System.IServiceProvider;
 
 namespace Microsoft.PythonTools.Language {
     /// <summary>
@@ -28,19 +30,16 @@ namespace Microsoft.PythonTools.Language {
     /// Do not use this from VS2010, it will break debugger tooltips!
     /// </summary>
     public sealed class TextViewFilter : IOleCommandTarget, IVsTextViewFilter {
-        private static IVsEditorAdaptersFactoryService _vsEditorAdaptersFactoryService;
-        private static  IVsDebugger _debugger;
+        private IVsEditorAdaptersFactoryService _vsEditorAdaptersFactoryService;
+        private IVsDebugger _debugger;
         private readonly IOleCommandTarget _next;
         private readonly IVsTextLines _vsTextLines;
         private readonly IWpfTextView _wpfTextView;
 
-        public TextViewFilter(IVsTextView vsTextView) {
-            if (_vsEditorAdaptersFactoryService == null) {
-                _vsEditorAdaptersFactoryService = PythonToolsPackage.ComponentModel.GetService<IVsEditorAdaptersFactoryService>();
-            }
-            if (_debugger == null) {
-                _debugger = (IVsDebugger)PythonToolsPackage.GetGlobalService(typeof(IVsDebugger));
-            }
+        public TextViewFilter(IServiceProvider serviceProvider, IVsTextView vsTextView) {
+            var compModel = (IComponentModel)serviceProvider.GetService(typeof(SComponentModel));
+            _vsEditorAdaptersFactoryService = compModel.GetService<IVsEditorAdaptersFactoryService>();
+            _debugger = (IVsDebugger)serviceProvider.GetService(typeof(IVsDebugger));
 
             vsTextView.GetBuffer(out _vsTextLines);
             _wpfTextView = _vsEditorAdaptersFactoryService.GetWpfTextView(vsTextView);

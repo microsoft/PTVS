@@ -107,6 +107,7 @@
     <Compile Include="ComparePerfReports.cs" />
     <Compile Include="DefaultInterpreterSetter.cs" />
     <Compile Include="Django\NewAppDialog.cs" />
+    <Compile Include="MockPythonToolsOptionsService.cs" />
     <Compile Include="MockReplOptions.cs" />
     <Compile Include="PythonProjectDebugProperties.cs" />
     <Compile Include="FormattingOptionsTreeView.cs" />
@@ -118,6 +119,7 @@
     <Compile Include="PythonPerfTarget.cs" />
     <Compile Include="PythonPerfToolBar.cs" />
     <Compile Include="PythonProjectTest.cs" />
+    <Compile Include="PythonToolsTestUtilities.cs" />
     <Compile Include="PythonVisualStudioApp.cs" />
   </ItemGroup>
   <ItemGroup>

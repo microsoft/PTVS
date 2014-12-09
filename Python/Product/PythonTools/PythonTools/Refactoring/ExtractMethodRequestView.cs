@@ -38,6 +38,7 @@ namespace Microsoft.PythonTools.Refactoring {
 
         private readonly ReadOnlyCollection<ScopeStatement> _targetScopes;
         private readonly ScopeStatement _defaultScope;
+        private readonly IServiceProvider _serviceProvider;
         private ScopeStatement _targetScope;
         private ReadOnlyCollection<ClosureVariable> _closureVariables;
 
@@ -46,8 +47,9 @@ namespace Microsoft.PythonTools.Refactoring {
         /// <summary>
         /// Create an ExtractMethodRequestView with default values.
         /// </summary>
-        public ExtractMethodRequestView(ExtractedMethodCreator previewer) {
+        public ExtractMethodRequestView(IServiceProvider serviceProvider, ExtractedMethodCreator previewer) {
             _previewer = previewer;
+            _serviceProvider = serviceProvider;
 
             ScopeStatement lastClass = null;
             for (int i = _previewer.Scopes.Length - 1; i >= 0; i--) {
@@ -86,8 +88,8 @@ namespace Microsoft.PythonTools.Refactoring {
         /// <summary>
         /// Create an ExtractMethodRequestView with values taken from template.
         /// </summary>
-        public ExtractMethodRequestView(ExtractedMethodCreator previewer, ExtractMethodRequest template)
-            : this(previewer) {
+        public ExtractMethodRequestView(IServiceProvider serviceProvider, ExtractedMethodCreator previewer, ExtractMethodRequest template)
+            : this(serviceProvider, previewer) {
             // Access properties rather than underlying variables to ensure dependent properties
             // are also updated.
             Name = template.Name;
@@ -281,7 +283,7 @@ namespace Microsoft.PythonTools.Refactoring {
         /// </summary>
         private string GetTextEditorFont() {
             try {
-                var store = (IVsFontAndColorStorage)PythonToolsPackage.GetGlobalService(typeof(SVsFontAndColorStorage));
+                var store = (IVsFontAndColorStorage)_serviceProvider.GetService(typeof(SVsFontAndColorStorage));
                 Guid textEditorCategory = new Guid(FontsAndColorsCategory.TextEditor);
                 if (store != null && store.OpenCategory(ref textEditorCategory,
                     (uint)(__FCSTORAGEFLAGS.FCSF_LOADDEFAULTS | __FCSTORAGEFLAGS.FCSF_READONLY)) == VSConstants.S_OK) {

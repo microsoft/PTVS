@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+using System;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
@@ -20,16 +21,18 @@ namespace Microsoft.PythonTools.Refactoring {
     class CodeFormatter {
         private readonly ITextView _view;
         private readonly CodeFormattingOptions _format;
+        private readonly IServiceProvider _serviceProvider;
 
-        public CodeFormatter(ITextView view, CodeFormattingOptions format) {
+        public CodeFormatter(IServiceProvider serviceProvider, ITextView view, CodeFormattingOptions format) {
             _view = view;
             _format = format;
+            _serviceProvider = serviceProvider;
         }
 
         public void FormatCode(SnapshotSpan span, bool selectResult) {
             var snapshot = _view.TextBuffer.CurrentSnapshot;
 
-            var ast = _view.GetAnalyzer().ParseSnapshot(snapshot);
+            var ast = _view.GetAnalyzer(_serviceProvider).ParseSnapshot(snapshot);
 
             var walker = new EnclosingNodeWalker(ast, span.Start, span.End);
             ast.Walk(walker);

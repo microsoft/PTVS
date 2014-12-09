@@ -16,11 +16,21 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using Microsoft.PythonTools.Project;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project.Web {
     [Export(typeof(IPythonLauncherProvider))]
     class PythonWebLauncherProvider : IPythonLauncherProvider2 {
+        private readonly PythonToolsService _pyService;
+        private readonly IServiceProvider _serviceProvider;
+
+        [ImportingConstructor]
+        public PythonWebLauncherProvider([Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider) {
+            _serviceProvider = serviceProvider;
+            _pyService = (PythonToolsService)serviceProvider.GetService(typeof(PythonToolsService));
+        }
+
         public IPythonLauncherOptions GetLauncherOptions(IPythonProject properties) {
             return new PythonWebLauncherOptions(properties);
         }
@@ -50,7 +60,7 @@ namespace Microsoft.PythonTools.Project.Web {
         }
 
         public IProjectLauncher CreateLauncher(IPythonProject project) {
-            return new PythonWebLauncher(project);
+            return new PythonWebLauncher(_serviceProvider, _pyService, project);
         }
     }
 }

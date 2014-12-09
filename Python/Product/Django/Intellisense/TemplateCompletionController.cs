@@ -22,18 +22,22 @@ using Microsoft.Web.Editor.Intellisense;
 
 namespace Microsoft.PythonTools.Django.Intellisense {
     internal class TemplateCompletionController : CompletionController {
+        private readonly PythonToolsService _pyService;
+
         public TemplateCompletionController(
+            PythonToolsService pyService,
             ITextView textView,
             IList<ITextBuffer> subjectBuffers,
             ICompletionBroker completionBroker,
             IQuickInfoBroker quickInfoBroker,
             ISignatureHelpBroker signatureBroker) :
             base(textView, subjectBuffers, completionBroker, quickInfoBroker, signatureBroker) {
+            _pyService = pyService;
         }
 
         public override bool IsTriggerChar(char typedCharacter) {
             const string triggerChars = " |.";
-            return PythonToolsPackage.Instance.AutoListMembers && !HasActiveCompletionSession && triggerChars.IndexOf(typedCharacter) >= 0;
+            return _pyService.AdvancedOptions.AutoListMembers && !HasActiveCompletionSession && triggerChars.IndexOf(typedCharacter) >= 0;
         }
 
         public override bool IsCommitChar(char typedCharacter) {
@@ -45,7 +49,7 @@ namespace Microsoft.PythonTools.Django.Intellisense {
                 return true;
             }
 
-            return PythonToolsPackage.Instance.AdvancedEditorOptionsPage.CompletionCommittedBy.IndexOf(typedCharacter) > 0;
+            return _pyService.AdvancedOptions.CompletionCommittedBy.IndexOf(typedCharacter) > 0;
         }
 
         protected override bool IsRetriggerChar(ICompletionSession session, char typedCharacter) {

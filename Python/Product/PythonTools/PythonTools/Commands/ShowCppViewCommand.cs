@@ -17,7 +17,12 @@ using Microsoft.PythonTools.DkmDebugger;
 using Microsoft.VisualStudio.Shell;
 
 namespace Microsoft.PythonTools.Commands {
+    using DebuggerOptions = Microsoft.PythonTools.DkmDebugger.DebuggerOptions;
+
     internal class ShowCppViewCommand : DkmDebuggerCommand {
+        public ShowCppViewCommand(IServiceProvider serviceProvider) : base(serviceProvider) {
+        }
+
         public override int CommandId {
             get { return (int)PkgCmdIDList.cmdidShowCppView; }
         }
@@ -36,7 +41,7 @@ namespace Microsoft.PythonTools.Commands {
             DebuggerOptions.ShowCppViewNodes = !DebuggerOptions.ShowCppViewNodes;
 
             // A hackish way to force debugger to refresh its views, so that our EE is requeried and can use the new option value.
-            var debugger = PythonToolsPackage.Instance.DTE.Debugger;
+            var debugger = _serviceProvider.GetDTE().Debugger;
             debugger.HexDisplayMode = debugger.HexDisplayMode;
         }
     }

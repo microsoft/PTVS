@@ -40,7 +40,7 @@ using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.Project {
     sealed class CustomCommand : IAsyncCommand, IDisposable {
-        private readonly IPythonProject2 _project;
+        private readonly PythonProjectNode _project;
         private readonly string _target;
         private readonly string _label;
         private readonly ErrorListProvider _errorListProvider;
@@ -62,7 +62,7 @@ namespace Microsoft.PythonTools.Project {
         );
 
         private CustomCommand(
-            IPythonProject2 project,
+            PythonProjectNode project,
             string target,
             string label
         ) {
@@ -91,7 +91,7 @@ namespace Microsoft.PythonTools.Project {
             );
             AlternateCmdId = AddNamedCommand(project.Site, Verb);
 
-            _errorListProvider = new ErrorListProvider(PythonToolsPackage.Instance);
+            _errorListProvider = new ErrorListProvider(_project.Site);
         }
 
         public void Dispose() {
@@ -184,7 +184,7 @@ namespace Microsoft.PythonTools.Project {
 
         public static IEnumerable<CustomCommand> GetCommands(
             Microsoft.Build.Evaluation.Project project,
-            IPythonProject2 projectNode
+            PythonProjectNode projectNode
         ) {
             var commandNames = project.GetPropertyValue(PythonCommands);
             if (!string.IsNullOrEmpty(commandNames)) {
@@ -266,7 +266,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public Task ExecuteAsync(object parameter) {
-            var task = ExecuteWorker((parameter as IPythonProject2) ?? _project);
+            var task = ExecuteWorker((parameter as PythonProjectNode) ?? _project);
             
             // Ensure the exception is observed.
             // The caller can check task.Exception to do their own reporting.
@@ -308,8 +308,10 @@ namespace Microsoft.PythonTools.Project {
             private readonly string _workingDirectory;
             private readonly ErrorListProvider _errorListProvider;
             private readonly Regex _errorRegex, _warningRegex;
+            private readonly IServiceProvider _serviceProvider;
 
-            public ErrorListRedirector(IVsHierarchy hierarchy, string workingDirectory, ErrorListProvider errorListProvider, Regex errorRegex, Regex warningRegex) {
+            public ErrorListRedirector(IServiceProvider serviceProvider, IVsHierarchy hierarchy, string workingDirectory, ErrorListProvider errorListProvider, Regex errorRegex, Regex warningRegex) {
+                _serviceProvider = serviceProvider;
                 _hierarchy = hierarchy;
                 _workingDirectory = workingDirectory;
                 _errorListProvider = errorListProvider;
@@ -368,12 +370,12 @@ namespace Microsoft.PythonTools.Project {
                         // If it's not a valid path, then it's not a navigable error item.
                         return;
                     }
-                    PythonToolsPackage.NavigateTo(document, Guid.Empty, task.Line, task.Column < 0 ? 0 : task.Column);
+                    PythonToolsPackage.NavigateTo(_serviceProvider, document, Guid.Empty, task.Line, task.Column < 0 ? 0 : task.Column);
                 }
             }
         }
 
-        private async Task ExecuteWorker(IPythonProject2 project) {
+        private async Task ExecuteWorker(PythonProjectNode project) {
             _errorListProvider.Tasks.Clear();
 
             var interpFactory = project.GetInterpreterFactory();
@@ -400,6 +402,7 @@ namespace Microsoft.PythonTools.Project {
             if (startInfo.TargetType == CreatePythonCommandItem.TargetTypePip) {
                 if (startInfo.ExecuteInOutput) {
                     await Pip.Install(
+                        _project.Site,
                         interpFactory,
                         string.Format("{0} {1}", startInfo.Filename, startInfo.Arguments),
                         project.Site,
@@ -518,7 +521,7 @@ namespace Microsoft.PythonTools.Project {
             var pythonPathVarName = project.GetInterpreterFactory().Configuration.PathEnvironmentVariable;
             if (!string.IsNullOrWhiteSpace(pythonPathVarName)) {
                 var pythonPath = string.Join(";", project.GetSearchPaths());
-                if (!PythonToolsPackage.Instance.GeneralOptionsPage.ClearGlobalPythonPath) {
+                if (!_project.Site.GetPythonToolsService().GeneralOptions.ClearGlobalPythonPath) {
                     pythonPath += ";" + Environment.GetEnvironmentVariable(pythonPathVarName);
                 }
                 startInfo.EnvironmentVariables[pythonPathVarName] = pythonPath;
@@ -541,14 +544,14 @@ namespace Microsoft.PythonTools.Project {
             return startInfo;
         }
 
-        internal static string GetInterpreterPath(IPythonProject2 project, bool isWindows) {
+        internal static string GetInterpreterPath(PythonProjectNode project, bool isWindows) {
             var factory = project.GetInterpreterFactory();
 
             if (factory == null) {
                 throw new NoInterpretersException();
             }
 
-            var interpreterService = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
+            var interpreterService = project.Site.GetComponentModel().GetService<IInterpreterOptionsService>();
             if (interpreterService == null || factory == interpreterService.NoInterpretersValue) {
                 throw new NoInterpretersException();
             }
@@ -580,7 +583,7 @@ namespace Microsoft.PythonTools.Project {
 
             var replWindowId = PythonReplEvaluatorProvider.GetConfigurableReplId(ReplId + executeIn.Substring(4));
             
-            var model = PythonToolsPackage.ComponentModel;
+            var model = _project.Site.GetComponentModel();
             var replProvider = model.GetService<IReplWindowProvider>();
             if (replProvider == null) {
                 return false;
@@ -590,7 +593,7 @@ namespace Microsoft.PythonTools.Project {
             bool created = replWindow == null;
             if (created) {
                 replWindow = replProvider.CreateReplWindow(
-                    PythonToolsPackage.Instance.ContentType,
+                    _project.Site.GetPythonContentType(),
                     replTitle,
                     typeof(PythonLanguageInfo).GUID,
                     replWindowId
@@ -674,7 +677,7 @@ namespace Microsoft.PythonTools.Project {
         private async void RunInOutput(IPythonProject2 project, CommandStartInfo startInfo) {
             Redirector redirector = OutputWindowRedirector.GetGeneral(project.Site);
             if (startInfo.ErrorRegex != null || startInfo.WarningRegex != null) {
-                redirector = new TeeRedirector(redirector, new ErrorListRedirector(project as IVsHierarchy, startInfo.WorkingDirectory, _errorListProvider, startInfo.ErrorRegex, startInfo.WarningRegex));
+                redirector = new TeeRedirector(redirector, new ErrorListRedirector(_project.Site, project as IVsHierarchy, startInfo.WorkingDirectory, _errorListProvider, startInfo.ErrorRegex, startInfo.WarningRegex));
             }
             redirector.ShowAndActivate();
 

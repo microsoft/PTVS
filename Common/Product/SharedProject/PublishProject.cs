@@ -27,7 +27,7 @@ namespace Microsoft.VisualStudioTools.Project {
         private int _progress;
 
         public PublishProject(CommonProjectNode node, PublishProjectOptions options) {
-            _statusBar = (IVsStatusbar)CommonPackage.GetGlobalService(typeof(SVsStatusbar));
+            _statusBar = (IVsStatusbar)node.Site.GetService(typeof(SVsStatusbar));
             _statusBar.SetText("Starting publish...");
             _node = node;
             _options = options;

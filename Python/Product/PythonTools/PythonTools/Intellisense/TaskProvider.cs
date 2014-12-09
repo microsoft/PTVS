@@ -41,14 +41,17 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly VSTASKPRIORITY _priority;
         private readonly bool _squiggle;
         private readonly ITextSnapshot _snapshot;
+        private readonly IServiceProvider _serviceProvider;
 
         internal TaskProviderItem(
+            IServiceProvider serviceProvider,
             string message,
             SourceSpan rawSpan,
             VSTASKPRIORITY priority,
             bool squiggle,
             ITextSnapshot snapshot
         ) {
+            _serviceProvider = serviceProvider;
             _message = message;
             _rawSpan = rawSpan;
             _snapshot = snapshot;
@@ -97,6 +100,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public ErrorTaskItem ToErrorTaskItem(EntryKey key) {
             return new ErrorTaskItem(
+                _serviceProvider,
                 _rawSpan,
                 _message,
                 (key.Entry != null ? key.Entry.FilePath : null) ?? string.Empty
@@ -127,8 +131,9 @@ namespace Microsoft.PythonTools.Intellisense {
 
         #region Factory Functions
 
-        public TaskProviderItem FromParseWarning(ErrorResult result) {
+        public TaskProviderItem FromParseWarning(IServiceProvider serviceProvider, ErrorResult result) {
             return new TaskProviderItem(
+                serviceProvider,
                 result.Message,
                 result.Span,
                 VSTASKPRIORITY.TP_NORMAL,
@@ -137,8 +142,9 @@ namespace Microsoft.PythonTools.Intellisense {
             );
         }
 
-        public TaskProviderItem FromParseError(ErrorResult result) {
+        public TaskProviderItem FromParseError(IServiceProvider serviceProvider, ErrorResult result) {
             return new TaskProviderItem(
+                serviceProvider,
                 result.Message,
                 result.Span,
                 VSTASKPRIORITY.TP_HIGH,
@@ -148,6 +154,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal TaskProviderItem FromUnresolvedImport(
+            IServiceProvider serviceProvider, 
             IPythonInterpreterFactoryWithDatabase factory,
             string importName,
             SourceSpan span
@@ -160,6 +167,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             return new TaskProviderItem(
+                serviceProvider,
                 message,
                 span,
                 VSTASKPRIORITY.TP_NORMAL,
@@ -492,8 +500,10 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private void Refresh() {
-            UIThread.MustNotBeCalledFromUIThread();
-            RefreshAsync().WaitAndHandleAllExceptions(SR.ProductName, GetType());
+            if (_errorList != null && _errorProvider != null) {
+                UIThread.MustNotBeCalledFromUIThread();
+                RefreshAsync().WaitAndHandleAllExceptions(SR.ProductName, GetType());
+            }
         }
 
         private async Task RefreshAsync() {
@@ -663,11 +673,15 @@ namespace Microsoft.PythonTools.Intellisense {
     }
 
     class ErrorTaskItem : IVsTaskItem {
+        private readonly IServiceProvider _serviceProvider;
+
         public ErrorTaskItem(
+            IServiceProvider serviceProvider,
             SourceSpan span,
             string message,
             string sourceFile
         ) {
+            _serviceProvider = serviceProvider;
             Span = span;
             Message = message;
             SourceFile = sourceFile;
@@ -766,9 +780,9 @@ namespace Microsoft.PythonTools.Intellisense {
             try {
                 if (Span.Start.Line == 1 && Span.Start.Column == 1 && Span.Start.Index != 0) {
                     // we have just an absolute index, use that to naviagte
-                    PythonToolsPackage.NavigateTo(SourceFile, Guid.Empty, Span.Start.Index);
+                    PythonToolsPackage.NavigateTo(_serviceProvider, SourceFile, Guid.Empty, Span.Start.Index);
                 } else {
-                    PythonToolsPackage.NavigateTo(SourceFile, Guid.Empty, Span.Start.Line - 1, Span.Start.Column - 1);
+                    PythonToolsPackage.NavigateTo(_serviceProvider, SourceFile, Guid.Empty, Span.Start.Line - 1, Span.Start.Column - 1);
                 }
                 return VSConstants.S_OK;
             } catch (DirectoryNotFoundException) {

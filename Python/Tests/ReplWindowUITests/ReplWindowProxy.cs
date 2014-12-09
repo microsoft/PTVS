@@ -782,7 +782,7 @@ Base 0 means to interpret the base from the string as an integer literal.
 
         public void WaitForAnalysis(TimeSpan? timeout = null) {
             var stopAt = DateTime.Now.Add(timeout ?? TimeSpan.FromSeconds(60));
-            _window.TextView.GetAnalyzer().WaitForCompleteAnalysis(_ => DateTime.Now < stopAt);
+            _window.TextView.GetAnalyzer(_app.ServiceProvider).WaitForCompleteAnalysis(_ => DateTime.Now < stopAt);
             if (DateTime.Now >= stopAt) {
                 Assert.Fail("Timeout waiting for complete analysis");
             }

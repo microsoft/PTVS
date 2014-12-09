@@ -25,11 +25,21 @@ namespace Microsoft.PythonTools.InterpreterList {
             BitmapResourceID = PythonConstants.ResourceIdForReplImages;
             BitmapIndex = 0;
             Caption = SR.GetString(SR.Environments);
+        }
 
-            Content = new InterpreterList(
-                PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>(),
-                PythonToolsPackage.Instance
-            );
+        public override object Content {
+            get {
+                if (base.Content == null) {
+                    base.Content = new InterpreterList(
+                        this.GetComponentModel().GetService<IInterpreterOptionsService>(),
+                        this
+                    );
+                }
+                return base.Content;
+            }
+            set {
+                base.Content = value;
+            }
         }
     }
 }

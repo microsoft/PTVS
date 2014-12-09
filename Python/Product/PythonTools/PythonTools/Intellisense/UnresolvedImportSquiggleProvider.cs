@@ -30,10 +30,11 @@ namespace Microsoft.PythonTools.Intellisense {
     sealed class UnresolvedImportSquiggleProvider {
         // Allows test cases to skip checking user options
         internal static bool _alwaysCreateSquiggle;
-
+        private readonly IServiceProvider _serviceProvider;
         private readonly Lazy<TaskProvider> _taskProvider;
 
-        public UnresolvedImportSquiggleProvider(Lazy<TaskProvider> taskProvider) {
+        public UnresolvedImportSquiggleProvider(IServiceProvider serviceProvider, Lazy<TaskProvider> taskProvider) {
+            _serviceProvider = serviceProvider;
             _taskProvider = taskProvider;
         }
 
@@ -51,8 +52,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private void OnNewAnalysis(object sender, EventArgs e) {
             if (!_alwaysCreateSquiggle &&
-                PythonToolsPackage.Instance != null &&
-                !PythonToolsPackage.Instance.GeneralOptionsPage.UnresolvedImportWarning
+                !_serviceProvider.GetPythonToolsService().GeneralOptions.UnresolvedImportWarning
             ) {
                 return;
             }
@@ -90,6 +90,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     entry,
                     VsProjectAnalyzer.UnresolvedImportMoniker,
                     walker.Imports.Select(t => f.FromUnresolvedImport(
+                        _serviceProvider,
                         analyzer.InterpreterFactory as IPythonInterpreterFactoryWithDatabase,
                         t.Item1,
                         t.Item2.GetSpan(ast)

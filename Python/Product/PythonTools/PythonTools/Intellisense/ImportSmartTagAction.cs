@@ -34,8 +34,8 @@ namespace Microsoft.PythonTools.Intellisense {
         /// <summary>
         /// Creates a new smart tag action for an "import fob" smart tag.
         /// </summary>
-        public ImportSmartTagAction(string name, ITextBuffer buffer, ITextView view)
-            : base(RefactoringIconKind.AddUsing) {
+        public ImportSmartTagAction(string name, ITextBuffer buffer, ITextView view, IServiceProvider serviceProvider)
+            : base(serviceProvider, RefactoringIconKind.AddUsing) {
             Name = name;
             _buffer = buffer;
             _view = view;
@@ -44,8 +44,8 @@ namespace Microsoft.PythonTools.Intellisense {
         /// <summary>
         /// Creates a new smart tag action for a "from fob import oar" smart tag.
         /// </summary>
-        public ImportSmartTagAction(string fromName, string name, ITextBuffer buffer, ITextView view)
-            : base(RefactoringIconKind.AddUsing) {
+        public ImportSmartTagAction(string fromName, string name, ITextBuffer buffer, ITextView view, IServiceProvider serviceProvider)
+            : base(serviceProvider, RefactoringIconKind.AddUsing) {
             FromName = fromName;
             Name = name;
             _buffer = buffer;
@@ -53,7 +53,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public override void Invoke() {
-            var analyzer = _buffer.GetAnalyzer();
+            var analyzer = _buffer.GetAnalyzer(_serviceProvider);
             var curAst = analyzer.ParseSnapshot(_buffer.CurrentSnapshot);
 
             SuiteStatement suiteBody = curAst.Body as SuiteStatement;

@@ -63,7 +63,7 @@ namespace Microsoft.PythonTools {
         }
 
         private void OnNewAnalysis(object sender, EventArgs e) {
-            if (PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.AdvancedEditorOptionsPage.ColorNames == false) {
+            if (_provider._serviceProvider.GetPythonToolsService().AdvancedOptions.ColorNames == false) {
                 lock (_spanCacheLock) {
                     if (_spanCache != null) {
                         _spanCache = null;
@@ -82,7 +82,8 @@ namespace Microsoft.PythonTools {
                 return;
             }
 
-            var moduleAnalysis = (PythonToolsPackage.Instance == null || PythonToolsPackage.Instance.AdvancedEditorOptionsPage.ColorNamesWithAnalysis)
+
+            var moduleAnalysis = (_provider._serviceProvider.GetPythonToolsService().AdvancedOptions.ColorNamesWithAnalysis)
                 ? _entry.Analysis
                 : null;
 

@@ -81,7 +81,7 @@ namespace AzurePublishingUITests {
 
                 var factory = WebProjectTests.CreateVirtualEnvironment(pythonVersion, app, pyProj);
 
-                WebProjectTests.InstallWebFramework(moduleName, packageName ?? moduleName, factory);
+                WebProjectTests.InstallWebFramework(app, moduleName, packageName ?? moduleName, factory);
 
                 app.Dte.ExecuteCommand("Project.ConverttoWindowsAzureCloudServiceProject");
 

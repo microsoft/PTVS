@@ -18,15 +18,21 @@ using Microsoft.VisualStudio.Utilities;
 namespace TestUtilities.Mocks {
     public class MockContentType : IContentType {
         private readonly string _name;
-        private readonly IContentType[] _bases;
+        private readonly List<IContentType> _bases;
 
         public MockContentType(string name, IContentType[] bases) {
             _name = name;
-            _bases = bases;
+            _bases = new List<IContentType>(bases);
         }
 
-        public IEnumerable<IContentType> BaseTypes {
+        IEnumerable<IContentType> IContentType.BaseTypes {
             get { return _bases; }
+        }
+
+        public List<IContentType> BaseTypes {
+            get {
+                return _bases;
+            }
         }
 
         public bool IsOfType(string type) {

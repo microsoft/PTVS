@@ -32,23 +32,32 @@ namespace Microsoft.PythonTools.Commands {
     /// Provides the command for starting the Python Debug REPL window.
     /// </summary>
     class OpenDebugReplCommand : Command {
+        private readonly IServiceProvider _serviceProvider;
 
-        internal static IReplWindow/*!*/ EnsureReplWindow() {
-            var compModel = PythonToolsPackage.ComponentModel;
+        public OpenDebugReplCommand(IServiceProvider serviceProvider) {
+            _serviceProvider = serviceProvider;
+        }
+
+        internal static IReplWindow/*!*/ EnsureReplWindow(IServiceProvider serviceProvider) {
+            var compModel = serviceProvider.GetComponentModel();
             var provider = compModel.GetService<IReplWindowProvider>();
 
             string replId = PythonDebugReplEvaluatorProvider.GetDebugReplId();
             var window = provider.FindReplWindow(replId);
             if (window == null) {
-                window = provider.CreateReplWindow(PythonToolsPackage.Instance.ContentType, "Python Debug Interactive", typeof(PythonLanguageInfo).GUID, replId);
+                window = provider.CreateReplWindow(serviceProvider.GetPythonContentType(), "Python Debug Interactive", typeof(PythonLanguageInfo).GUID, replId);
 
-                window.SetOptionValue(ReplOptions.UseSmartUpDown, PythonToolsPackage.Instance.InteractiveDebugOptionsPage.Options.ReplSmartHistory);
+                var pyService = serviceProvider.GetPythonToolsService();
+                window.SetOptionValue(
+                    ReplOptions.UseSmartUpDown,
+                    pyService.DebugInteractiveOptions.ReplSmartHistory
+                );
             }
             return window;
         }
 
         public override void DoCommand(object sender, EventArgs args) {
-            var window = (IReplWindow)EnsureReplWindow();
+            var window = (IReplWindow)EnsureReplWindow(_serviceProvider);
             IVsWindowFrame windowFrame = (IVsWindowFrame)((ToolWindowPane)window).Frame;
 
             ErrorHandler.ThrowOnFailure(windowFrame.Show());

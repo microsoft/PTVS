@@ -129,6 +129,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public static async Task<bool> Install(
+            IServiceProvider provider,
             IPythonInterpreterFactory factory,
             string package,
             bool elevate,
@@ -137,7 +138,7 @@ namespace Microsoft.PythonTools.Project {
             factory.ThrowIfNotRunnable("factory");
 
             if (!factory.FindModules("pip").Any()) {
-                await InstallPip(factory, elevate, output);
+                await InstallPip(provider, factory, elevate, output);
             }
             using (var proc = Run(factory, output, elevate, "install", GetInsecureArg(factory, output), package)) {
                 await proc;
@@ -146,6 +147,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public static async Task<bool> Install(
+            IServiceProvider provider,
             IPythonInterpreterFactory factory,
             string package,
             IServiceProvider site,
@@ -162,13 +164,13 @@ namespace Microsoft.PythonTools.Project {
                         return false;
                     }
                 } else {
-                    await InstallPip(factory, elevate, output);
+                    await InstallPip(provider, factory, elevate, output);
                 }
             }
 
             if (output != null) {
                 output.WriteLine(SR.GetString(SR.PackageInstalling, package));
-                if (PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ShowOutputWindowForPackageInstallation) {
+                if (provider.GetPythonToolsService().GeneralOptions.ShowOutputWindowForPackageInstallation) {
                     output.ShowAndActivate();
                 } else {
                     output.Show();
@@ -184,7 +186,7 @@ namespace Microsoft.PythonTools.Project {
                     } else {
                         output.WriteLine(SR.GetString(SR.PackageInstallFailedExitCode, package, exitCode));
                     }
-                    if (PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ShowOutputWindowForPackageInstallation) {
+                    if (provider.GetPythonToolsService().GeneralOptions.ShowOutputWindowForPackageInstallation) {
                         output.ShowAndActivate();
                     } else {
                         output.Show();
@@ -195,6 +197,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public static async Task<bool> Uninstall(
+            IServiceProvider provider,
             IPythonInterpreterFactory factory,
             string package,
             bool elevate,
@@ -204,7 +207,7 @@ namespace Microsoft.PythonTools.Project {
 
             if (output != null) {
                 output.WriteLine(SR.GetString(SR.PackageUninstalling, package));
-                if (PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ShowOutputWindowForPackageInstallation) {
+                if (provider.GetPythonToolsService().GeneralOptions.ShowOutputWindowForPackageInstallation) {
                     output.ShowAndActivate();
                 } else {
                     output.Show();
@@ -220,7 +223,7 @@ namespace Microsoft.PythonTools.Project {
                     } else {
                         output.WriteLine(SR.GetString(SR.PackageUninstallFailedExitCode, package, exitCode));
                     }
-                    if (PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ShowOutputWindowForPackageInstallation) {
+                    if (provider.GetPythonToolsService().GeneralOptions.ShowOutputWindowForPackageInstallation) {
                         output.ShowAndActivate();
                     } else {
                         output.Show();
@@ -230,14 +233,14 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        public static async Task InstallPip(IPythonInterpreterFactory factory, bool elevate, Redirector output = null) {
+        public static async Task InstallPip(IServiceProvider provider, IPythonInterpreterFactory factory, bool elevate, Redirector output = null) {
             factory.ThrowIfNotRunnable("factory");
 
             var pipDownloaderPath = PythonToolsInstallPath.GetFile("pip_downloader.py");
 
             if (output != null) {
                 output.WriteLine(SR.GetString(SR.PipInstalling));
-                if (PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ShowOutputWindowForPackageInstallation) {
+                if (provider.GetPythonToolsService().GeneralOptions.ShowOutputWindowForPackageInstallation) {
                     output.ShowAndActivate();
                 } else {
                     output.Show();
@@ -259,7 +262,7 @@ namespace Microsoft.PythonTools.Project {
                     } else {
                         output.WriteLine(SR.GetString(SR.PipInstallFailedExitCode, exitCode));
                     }
-                    if (PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ShowOutputWindowForPackageInstallation) {
+                    if (provider.GetPythonToolsService().GeneralOptions.ShowOutputWindowForPackageInstallation) {
                         output.ShowAndActivate();
                     } else {
                         output.Show();
@@ -289,7 +292,7 @@ namespace Microsoft.PythonTools.Project {
                 throw new OperationCanceledException();
             }
 
-            return await Install(factory, package, elevate, output);
+            return await Install(site, factory, package, elevate, output);
         }
 
         public static async Task QueryInstallPip(
@@ -312,7 +315,7 @@ namespace Microsoft.PythonTools.Project {
                 throw new OperationCanceledException();
             }
 
-            await InstallPip(factory, elevate, output);
+            await InstallPip(site, factory, elevate, output);
         }
 
         /// <summary>

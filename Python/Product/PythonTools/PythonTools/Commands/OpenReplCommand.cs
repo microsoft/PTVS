@@ -33,8 +33,10 @@ namespace Microsoft.PythonTools.Commands {
     class OpenReplCommand : Command {
         private readonly int _cmdId;
         private readonly IPythonInterpreterFactory _factory;
+        private readonly IServiceProvider _serviceProvider;
 
-        public OpenReplCommand(int cmdId, IPythonInterpreterFactory factory) {
+        public OpenReplCommand(IServiceProvider serviceProvider, int cmdId, IPythonInterpreterFactory factory) {
+            _serviceProvider = serviceProvider;
             _cmdId = cmdId;
             _factory = factory;
         }
@@ -51,13 +53,13 @@ namespace Microsoft.PythonTools.Commands {
                     factory = asFactory;
                 } else if (!string.IsNullOrEmpty(args = oe.InValue as string)) {
                     string description;
-                    var parse = PythonToolsPackage.GetGlobalService(typeof(SVsParseCommandLine)) as IVsParseCommandLine;
+                    var parse = _serviceProvider.GetService(typeof(SVsParseCommandLine)) as IVsParseCommandLine;
                     if (ErrorHandler.Succeeded(parse.ParseCommandTail(args, -1)) &&
                         ErrorHandler.Succeeded(parse.EvaluateSwitches("e,env,environment:")) &&
                         ErrorHandler.Succeeded(parse.GetSwitchValue(0, out description)) &&
                         !string.IsNullOrEmpty(description)
                     ) {
-                        var service = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
+                        var service = _serviceProvider.GetComponentModel().GetService<IInterpreterOptionsService>();
                         asFactory = service.Interpreters.FirstOrDefault(
                             // Descriptions are localized strings, hence CCIC
                             f => description.Equals(f.Description, StringComparison.CurrentCultureIgnoreCase)
@@ -70,7 +72,7 @@ namespace Microsoft.PythonTools.Commands {
             }
 
             // These commands are project-insensitive, so pass null for project.
-            var window = (ToolWindowPane)ExecuteInReplCommand.EnsureReplWindow(factory, null);
+            var window = (ToolWindowPane)ExecuteInReplCommand.EnsureReplWindow(_serviceProvider, factory, null);
 
             IVsWindowFrame windowFrame = (IVsWindowFrame)window.Frame;
             ErrorHandler.ThrowOnFailure(windowFrame.Show());

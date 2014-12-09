@@ -64,8 +64,8 @@ namespace Microsoft.PythonTools.Project {
         private string _customCommandsDisplayLabel;
         private Dictionary<object, Action<object>> _actionsOnClose;
 
-        public PythonProjectNode(CommonProjectPackage package)
-            : base(package, Utilities.GetImageList(typeof(PythonProjectNode).Assembly.GetManifestResourceStream(PythonConstants.ProjectImageList))) {
+        public PythonProjectNode(IServiceProvider serviceProvider)
+            : base(serviceProvider, Utilities.GetImageList(typeof(PythonProjectNode).Assembly.GetManifestResourceStream(PythonConstants.ProjectImageList))) {
 
             Type projectNodePropsType = typeof(PythonProjectNodeProperties);
             AddCATIDMapping(projectNodePropsType, projectNodePropsType.GUID);
@@ -106,7 +106,7 @@ namespace Microsoft.PythonTools.Project {
             }
 
             // Hook up the interpreter factory provider
-            var interpreterService = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
+            var interpreterService = Site.GetComponentModel().GetService<IInterpreterOptionsService>();
             _interpreters = new MSBuildProjectInterpreterFactoryProvider(interpreterService, project);
             try {
                 _interpreters.DiscoverInterpreters();
@@ -189,7 +189,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         protected override void LinkFileAdded(string filename) {
-            if (PythonToolsPackage.Instance.DebuggingOptionsPage.UpdateSearchPathsWhenAddingLinkedFiles) {
+            if (Site.GetPythonToolsService().GeneralOptions.UpdateSearchPathsWhenAddingLinkedFiles) {
                 // update our search paths.
                 string dirToAdd;
                 try {
@@ -311,7 +311,7 @@ namespace Microsoft.PythonTools.Project {
                 !string.IsNullOrEmpty(id = GetProjectProperty(MSBuildProjectInterpreterFactoryProvider.InterpreterIdProperty))) {
                 // The interpreter in the project file has no reference, so
                 // find and add it.
-                var interpreterService = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
+                var interpreterService = Site.GetComponentModel().GetService<IInterpreterOptionsService>();
                 if (interpreterService != null) {
                     var existing = interpreterService.FindInterpreter(
                         id,
@@ -323,7 +323,7 @@ namespace Microsoft.PythonTools.Project {
                 }
             }
 
-            PythonToolsPackage.Instance.CheckSurveyNews(false);
+            Site.GetPythonToolsService().SurveyNews.CheckSurveyNews(false);
         }
 
         private void RefreshCurrentWorkingDirectory() {
@@ -688,7 +688,7 @@ namespace Microsoft.PythonTools.Project {
         public event EventHandler<AnalyzerChangingEventArgs> ProjectAnalyzerChanging;
 
         public override IProjectLauncher GetLauncher() {
-            return PythonToolsPackage.GetLauncher(this);
+            return PythonToolsPackage.GetLauncher(Site, this);
         }
 
         public void AddActionOnClose(object key, Action<object> action) {
@@ -803,10 +803,11 @@ namespace Microsoft.PythonTools.Project {
                 }
             }
 
-            var model = PythonToolsPackage.ComponentModel;
+            var model = Site.GetComponentModel();
             var interpreterService = model.GetService<IInterpreterOptionsService>();
             var factory = GetInterpreterFactory();
             var res = new VsProjectAnalyzer(
+                Site,
                 factory.CreateInterpreter(),
                 factory,
                 interpreterService.Interpreters.ToArray(),
@@ -847,20 +848,20 @@ namespace Microsoft.PythonTools.Project {
                 // May occur if we are racing with Dispose(), so the factory we
                 // return isn't important, but it has to be non-null to fulfil
                 // the contract.
-                var service = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
+                var service = Site.GetComponentModel().GetService<IInterpreterOptionsService>();
                 return service.DefaultInterpreter;
             }
 
             var fact = _interpreters.ActiveInterpreter;
 
             if (!_interpreters.IsAvailable(fact)) {
-                var service = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
+                var service = Site.GetComponentModel().GetService<IInterpreterOptionsService>();
                 if (service != null) {
                     fact = service.NoInterpretersValue;
                 }
             }
 
-            PythonToolsPackage.EnsureCompletionDb(fact);
+            PythonToolsPackage.EnsureCompletionDb(Site, fact);
 
             return fact;
         }
@@ -1018,7 +1019,7 @@ namespace Microsoft.PythonTools.Project {
                     var searchPaths = this.GetSearchPaths().ToList();
                     searchPaths.Insert(0, GetWorkingDirectory());
 
-                    if (!PythonToolsPackage.Instance.GeneralOptionsPage.ClearGlobalPythonPath) {
+                    if (!Site.GetPythonToolsService().GeneralOptions.ClearGlobalPythonPath) {
                         searchPaths.AddRange(
                             Environment.GetEnvironmentVariable(config.PathEnvironmentVariable).Split(';')
                         );
@@ -1165,7 +1166,7 @@ namespace Microsoft.PythonTools.Project {
                             if (t.Exception != null) {
                                 var ex = t.Exception.InnerException ?? t.Exception;
                                 if (ex is NoInterpretersException) {
-                                    PythonToolsPackage.OpenNoInterpretersHelpPage();
+                                    PythonToolsPackage.OpenNoInterpretersHelpPage(Site);
                                 } else {
                                     MessageBox.Show(
                                         SR.GetString(
@@ -1191,7 +1192,7 @@ namespace Microsoft.PythonTools.Project {
                         ShowAddVirtualEnvironmentWithErrorHandling((int)cmdId == PythonConstants.AddExistingVirtualEnv);
                         return VSConstants.S_OK;
                     case PythonConstants.ViewAllEnvironments:
-                        PythonToolsPackage.Instance.ShowInterpreterList();
+                        Site.ShowInterpreterList();
                         return VSConstants.S_OK;
                     case PythonConstants.AddSearchPathCommandId:
                         return AddSearchPath();
@@ -1219,7 +1220,7 @@ namespace Microsoft.PythonTools.Project {
             // First try and get the factory from the parameter
             string description;
             if (args != null && args.TryGetValue("e", out description) && !string.IsNullOrEmpty(description)) {
-                var service = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
+                var service = Site.GetComponentModel().GetService<IInterpreterOptionsService>();
 
                 factory = _interpreters.GetInterpreterFactories().FirstOrDefault(
                     // Description is a localized string, hence CCIC
@@ -1340,7 +1341,7 @@ namespace Microsoft.PythonTools.Project {
             IPythonInterpreterFactory selectedInterpreterFactory;
             GetSelectedInterpreterOrDefault(selectedNodes, args, out selectedInterpreter, out selectedInterpreterFactory);
             try {
-                var window = ExecuteInReplCommand.EnsureReplWindow(selectedInterpreterFactory, this);
+                var window = ExecuteInReplCommand.EnsureReplWindow(Site, selectedInterpreterFactory, this);
                 var pane = window as ToolWindowPane;
                 if (pane != null) {
                     ErrorHandler.ThrowOnFailure(((IVsWindowFrame)pane.Frame).Show());
@@ -1431,7 +1432,7 @@ namespace Microsoft.PythonTools.Project {
         #region Search Path support
 
         internal int AddSearchPathZip() {
-            var fileName = PythonToolsPackage.Instance.BrowseForFileOpen(
+            var fileName = Site.BrowseForFileOpen(
                 IntPtr.Zero,
                 "Zip Archives (*.zip;*.egg)|*.zip;*.egg|All Files (*.*)|*.*",
                 ProjectHome
@@ -1498,7 +1499,7 @@ namespace Microsoft.PythonTools.Project {
             IPythonInterpreterFactory selectedInterpreterFactory;
             GetSelectedInterpreterOrDefault(selectedNodes, args, out selectedInterpreter, out selectedInterpreterFactory);
             var txt = CommonUtils.GetAbsoluteFilePath(ProjectHome, "requirements.txt");
-            var elevated = PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ElevatePip;
+            var elevated = Site.GetPythonToolsService().GeneralOptions.ElevatePip;
             var name = "-r " + ProcessOutput.QuoteSingleArgument(txt);
             if (args != null && !args.ContainsKey("y")) {
                 if (!ShouldInstallRequirementsTxt(
@@ -1536,19 +1537,19 @@ namespace Microsoft.PythonTools.Project {
             IServiceProvider provider,
             InterpretersNode node = null
         ) {
-            var service = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
-            var view = InstallPythonPackage.ShowDialog(factory, service);
+            var service = provider.GetComponentModel().GetService<IInterpreterOptionsService>();
+            var view = InstallPythonPackage.ShowDialog(provider, factory, service);
             if (view == null) {
                 throw new OperationCanceledException();
             }
 
             Func<string, bool, Redirector, Task<bool>> f;
             if (view.InstallUsingConda) {
-                f = (n, e, r) => Conda.Install(factory, service, n, r);
+                f = (n, e, r) => Conda.Install(provider, factory, service, n, r);
             } else if (view.InstallUsingEasyInstall) {
-                f = (n, e, r) => EasyInstall.Install(factory, n, provider, e, r);
+                f = (n, e, r) => EasyInstall.Install(provider, factory, n, provider, e, r);
             } else {
-                f = (n, e, r) => Pip.Install(factory, n, provider, e, r);
+                f = (n, e, r) => Pip.Install(provider, factory, n, provider, e, r);
             }
 
             await InstallNewPackageAsync(factory, provider, view.Name, view.InstallElevated, f, node);
@@ -1564,7 +1565,7 @@ namespace Microsoft.PythonTools.Project {
         ) {
             var statusBar = (IVsStatusbar)provider.GetService(typeof(SVsStatusbar));
 
-            var service = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>() as IInterpreterOptionsService2;
+            var service = provider.GetComponentModel().GetService<IInterpreterOptionsService>() as IInterpreterOptionsService2;
             object cookie = null;
             if (service != null) {
                 cookie = await service.LockInterpreterAsync(
@@ -1588,7 +1589,7 @@ namespace Microsoft.PythonTools.Project {
                 if (action != null) {
                     task = action(name, elevate, redirector);
                 } else {
-                    task = Pip.Install(factory, name, elevate, redirector);
+                    task = Pip.Install(provider, factory, name, elevate, redirector);
                 }
 
                 bool success = await task;
@@ -1612,7 +1613,7 @@ namespace Microsoft.PythonTools.Project {
                         elevate,
                         success ? 0 : 1);
 
-                    PythonToolsPackage.Instance.Logger.LogEvent(Logging.PythonLogEvent.PackageInstalled, packageDetails);
+                    provider.GetPythonToolsService().Logger.LogEvent(Logging.PythonLogEvent.PackageInstalled, packageDetails);
                 }
 
             } catch (Exception ex) {
@@ -1637,7 +1638,7 @@ namespace Microsoft.PythonTools.Project {
             InterpretersNode node = null) {
             var statusBar = (IVsStatusbar)provider.GetService(typeof(SVsStatusbar));
 
-            var service = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>() as IInterpreterOptionsService2;
+            var service = provider.GetComponentModel().GetService<IInterpreterOptionsService>() as IInterpreterOptionsService2;
             object cookie = null;
             if (service != null) {
                 cookie = await service.LockInterpreterAsync(
@@ -1657,9 +1658,9 @@ namespace Microsoft.PythonTools.Project {
                 var redirector = OutputWindowRedirector.GetGeneral(provider);
                 statusBar.SetText(SR.GetString(SR.PackageUninstallingSeeOutputWindow, name));
 
-                bool elevate = PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ElevatePip;
+                bool elevate = provider.GetPythonToolsService().GeneralOptions.ElevatePip;
 
-                bool success = await Pip.Uninstall(factory, name, elevate, redirector);
+                bool success = await Pip.Uninstall(provider, factory, name, elevate, redirector);
                 statusBar.SetText(SR.GetString(
                     success ? SR.PackageUninstallSucceeded : SR.PackageUninstallFailed,
                     name
@@ -1906,7 +1907,7 @@ namespace Microsoft.PythonTools.Project {
         #region Virtual Env support
 
         private void ShowAddInterpreter() {
-            var service = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
+            var service = Site.GetComponentModel().GetService<IInterpreterOptionsService>();
 
             var result = AddInterpreter.ShowDialog(this, service);
             if (result == null) {
@@ -1933,7 +1934,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private async void ShowAddVirtualEnvironmentWithErrorHandling(bool browseForExisting) {
-            var service = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
+            var service = Site.GetComponentModel().GetService<IInterpreterOptionsService>();
             var statusBar = (IVsStatusbar)GetService(typeof(SVsStatusbar));
             object index = (short)0;
             statusBar.Animation(1, ref index);
@@ -1967,12 +1968,14 @@ namespace Microsoft.PythonTools.Project {
         ) {
             if (create && preferVEnv) {
                 await VirtualEnv.CreateWithVEnv(
+                    Site,
                     baseInterp,
                     path,
                     OutputWindowRedirector.GetGeneral(Site)
                 );
             } else if (create) {
                 await VirtualEnv.CreateAndInstallDependencies(
+                    Site,
                     baseInterp,
                     path,
                     OutputWindowRedirector.GetGeneral(Site)

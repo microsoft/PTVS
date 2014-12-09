@@ -31,7 +31,7 @@ namespace Microsoft.VisualStudioTools.Project {
         #endregion
 
         #region ctors
-        public ProjectDocumentsListenerForStartupFileUpdates(ServiceProvider serviceProvider, CommonProjectNode project)
+        public ProjectDocumentsListenerForStartupFileUpdates(System.IServiceProvider serviceProvider, CommonProjectNode project)
             : base(serviceProvider) {
             _project = project;
         }

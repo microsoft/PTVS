@@ -115,7 +115,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 return VSConstants.S_OK;
             }
 
-            if (this.isClosed || this.site == null) {
+            if (this.isClosed) {
                 return VSConstants.E_UNEXPECTED;
             }
 

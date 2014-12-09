@@ -81,7 +81,7 @@ namespace AzurePublishingUITests {
 
                 var factory = WebProjectTests.CreateVirtualEnvironment(pythonVersion, app, pyProj);
 
-                WebProjectTests.InstallWebFramework(moduleName, packageName ?? moduleName, factory);
+                WebProjectTests.InstallWebFramework(app, moduleName, packageName ?? moduleName, factory);
 
                 _webSiteToDelete = Guid.NewGuid().ToString("N");
                 var siteUri = app.PublishToAzureWebSite(_webSiteToDelete, publishSettingsFilePath);

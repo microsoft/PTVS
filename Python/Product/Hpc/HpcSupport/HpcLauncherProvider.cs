@@ -12,13 +12,22 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.ComponentModel.Composition;
 using Microsoft.PythonTools.Project;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Hpc {
     [Export(typeof(IPythonLauncherProvider))]
     class HpcLauncherProvider : IPythonLauncherProvider {
+        private readonly PythonToolsService _pyService;
+
+        [ImportingConstructor]
+        public HpcLauncherProvider([Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider) {
+            _pyService = (PythonToolsService)serviceProvider.GetService(typeof(PythonToolsService));
+        }
+
         #region IPythonLauncherProvider Members
 
         public IPythonLauncherOptions GetLauncherOptions(IPythonProject properties) {
@@ -38,7 +47,7 @@ namespace Microsoft.PythonTools.Hpc {
         }
 
         public IProjectLauncher CreateLauncher(IPythonProject project) {
-            return new HpcLauncher(project);
+            return new HpcLauncher(_pyService, project);
         }
 
         #endregion

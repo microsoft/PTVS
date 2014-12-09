@@ -140,7 +140,7 @@ plot(x, x)");
         [HostType("VSTestHost")]
         public virtual void IPythonStartInInteractive() {
             using (var interactive = PrepareIPython())
-            using (new DefaultInterpreterSetter(interactive.Window.TextView.GetAnalyzer().InterpreterFactory)) {
+            using (new DefaultInterpreterSetter(interactive.Window.TextView.GetAnalyzer(interactive.App.ServiceProvider).InterpreterFactory)) {
                 var project = interactive.App.OpenProject(@"TestData\InteractiveFile.sln");
 
                 interactive.App.ExecuteCommand("Python.ExecuteInInteractive");
@@ -152,7 +152,7 @@ plot(x, x)");
         [HostType("VSTestHost")]
         public virtual void ExecuteInIPythonReplSysArgv() {
             using (var interactive = PrepareIPython())
-            using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer().InterpreterFactory)) {
+            using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer(interactive.App.ServiceProvider).InterpreterFactory)) {
                 var project = interactive.App.OpenProject(@"TestData\SysArgvRepl.sln");
 
                 interactive.App.ExecuteCommand("Python.ExecuteInInteractive");
@@ -164,7 +164,7 @@ plot(x, x)");
         [HostType("VSTestHost")]
         public virtual void ExecuteInIPythonReplSysArgvScriptArgs() {
             using (var interactive = PrepareIPython())
-            using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer().InterpreterFactory)) {
+            using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer(interactive.App.ServiceProvider).InterpreterFactory)) {
                 var project = interactive.App.OpenProject(@"TestData\SysArgvScriptArgsRepl.sln");
 
                 interactive.App.ExecuteCommand("Python.ExecuteInInteractive");

@@ -18,16 +18,24 @@ using System.Linq;
 using System.Windows.Forms;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Repl;
+using Microsoft.VisualStudio.Shell;
 
 namespace Microsoft.PythonTools.Options {
     public partial class PythonInteractiveOptionsControl : UserControl {
         internal const string PythonExecutionModeKey = PythonCoreConstants.BaseRegistryKey + "\\ReplExecutionModes";
         private readonly ExecutionMode[] _executionModes;
+        private readonly IServiceProvider _serviceProvider;
 
-        public PythonInteractiveOptionsControl() {
+        [Obsolete("An IServiceProvider should be provided")]
+        public PythonInteractiveOptionsControl()
+            : this(PythonToolsPackage.Instance) {
+        }
+
+        public PythonInteractiveOptionsControl(IServiceProvider serviceProvider) {
+            _serviceProvider = serviceProvider;
             InitializeComponent();
 
-            _executionModes = ExecutionMode.GetRegisteredModes();
+            _executionModes = ExecutionMode.GetRegisteredModes(_serviceProvider.GetComponentModel().GetService<SVsServiceProvider>());
 
             foreach (var mode in _executionModes) {
                 // TODO: Support localizing these names...
@@ -52,7 +60,7 @@ namespace Microsoft.PythonTools.Options {
             try {
                 _showSettingsFor.Items.Clear();
 
-                foreach (var factory in OptionsPage._options.Keys.OrderBy(f => f.Description)) {
+                foreach (var factory in _serviceProvider.GetPythonToolsService().InteractiveOptions.Select(x => x.Key).OrderBy(f => f.Description)) {
                     _showSettingsFor.Items.Add(factory);
                     if (factory == previousSelection) {
                         currentSelection = factory;
@@ -82,9 +90,9 @@ namespace Microsoft.PythonTools.Options {
             base.OnVisibleChanged(e);
 
             if (Visible) {
-                var selectInterpreter = PythonToolsPackage.Instance.NextOptionsSelection ??
-                    PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>().DefaultInterpreter;
-                PythonToolsPackage.Instance.NextOptionsSelection = null;
+                var selectInterpreter = PythonInteractiveOptionsPage.NextOptionsSelection ??
+                    _serviceProvider.GetComponentModel().GetService<IInterpreterOptionsService>().DefaultInterpreter;
+                PythonInteractiveOptionsPage.NextOptionsSelection = null;
 
                 _showSettingsFor.SelectedItem = selectInterpreter;
             }
@@ -128,7 +136,7 @@ visualstudio_py_repl.BACKEND.attach()";
         private void RefreshOptions() {
             var factory = _showSettingsFor.SelectedItem as IPythonInterpreterFactory;
             if (factory != null) {
-                CurrentOptions = OptionsPage._options[factory];
+                CurrentOptions = _serviceProvider.GetPythonToolsService().GetInteractiveOptions(factory);
             } else {
                 CurrentOptions = null;
             }
@@ -165,12 +173,6 @@ visualstudio_py_repl.BACKEND.attach()";
                 } else if (CurrentOptions.ExecutionMode != null) {
                     _executionMode.Text = CurrentOptions.ExecutionMode;
                 }
-            }
-        }
-
-        private PythonInteractiveOptionsPage OptionsPage {
-            get {
-                return PythonToolsPackage.Instance.InteractiveOptionsPage;
             }
         }
 

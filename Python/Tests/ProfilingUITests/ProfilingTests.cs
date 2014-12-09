@@ -25,6 +25,7 @@ using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Profiling;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools.Project;
+using Microsoft.VisualStudioTools.VSTestHost;
 using Microsoft.Win32;
 using TestUtilities;
 using TestUtilities.Python;
@@ -44,16 +45,18 @@ namespace ProfilingUITests {
 
         [TestInitialize]
         public void TestInitialize() {
-            _waitOnNormalExit = PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnNormalExit;
-            _waitOnAbnormalExit = PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnAbnormalExit;
-            PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnNormalExit = false;
-            PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnAbnormalExit = false;
+            var pyService = (PythonToolsService)VSTestContext.ServiceProvider.GetService(typeof(PythonToolsService));
+            _waitOnNormalExit = pyService.DebuggerOptions.WaitOnNormalExit;
+            _waitOnAbnormalExit = pyService.DebuggerOptions.WaitOnAbnormalExit;
+            pyService.DebuggerOptions.WaitOnNormalExit = false;
+            pyService.DebuggerOptions.WaitOnAbnormalExit = false;
         }
 
         [TestCleanup]
         public void DeleteVspFiles() {
-            PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnNormalExit = _waitOnNormalExit;
-            PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnAbnormalExit = _waitOnAbnormalExit;
+            var pyService = (PythonToolsService)VSTestContext.ServiceProvider.GetService(typeof(PythonToolsService));
+            pyService.DebuggerOptions.WaitOnNormalExit = _waitOnNormalExit;
+            pyService.DebuggerOptions.WaitOnAbnormalExit = _waitOnAbnormalExit;
 
             try {
                 foreach (var file in Directory.EnumerateFiles(Path.GetTempPath(), "*.vsp", SearchOption.TopDirectoryOnly)) {
@@ -474,10 +477,10 @@ namespace ProfilingUITests {
             using (var app = OpenProfileTestProject(out project, out profiling, @"TestData\ProfileTestSysPath.sln")) {
                 IPythonProfileSession session = null;
                 var oldPythonPath = Environment.GetEnvironmentVariable("PYTHONPATH");
-                var oldClearPythonPath = PythonToolsPackage.Instance.GeneralOptionsPage.ClearGlobalPythonPath;
+                var oldClearPythonPath = app.ServiceProvider.GetPythonToolsService().GeneralOptions.ClearGlobalPythonPath;
                 try {
                     Environment.SetEnvironmentVariable("PYTHONPATH", TestData.GetPath(@"TestData\ProfileTestSysPath\B"));
-                    PythonToolsPackage.Instance.GeneralOptionsPage.ClearGlobalPythonPath = false;
+                    app.ServiceProvider.GetPythonToolsService().GeneralOptions.ClearGlobalPythonPath = false;
                     session = LaunchProject(app, profiling, project, TestData.GetPath(@"TestData\ProfileTestSysPath"), false);
 
                     while (profiling.IsProfiling) {
@@ -494,7 +497,7 @@ namespace ProfilingUITests {
 
                     VerifyReport(report, true, "B.mod2.func");
                 } finally {
-                    PythonToolsPackage.Instance.GeneralOptionsPage.ClearGlobalPythonPath = oldClearPythonPath;
+                    app.ServiceProvider.GetPythonToolsService().GeneralOptions.ClearGlobalPythonPath = oldClearPythonPath;
                     Environment.SetEnvironmentVariable("PYTHONPATH", oldPythonPath);
                     if (session != null) {
                         profiling.RemoveSession(session, true);
@@ -511,10 +514,10 @@ namespace ProfilingUITests {
             using (var app = OpenProfileTestProject(out project, out profiling, @"TestData\ProfileTestSysPath.sln")) {
                 IPythonProfileSession session = null;
                 var oldPythonPath = Environment.GetEnvironmentVariable("PYTHONPATH");
-                var oldClearPythonPath = PythonToolsPackage.Instance.GeneralOptionsPage.ClearGlobalPythonPath;
+                var oldClearPythonPath = app.ServiceProvider.GetPythonToolsService().GeneralOptions.ClearGlobalPythonPath;
                 try {
                     Environment.SetEnvironmentVariable("PYTHONPATH", TestData.GetPath(@"TestData\ProfileTestSysPath\B"));
-                    PythonToolsPackage.Instance.GeneralOptionsPage.ClearGlobalPythonPath = true;
+                    app.ServiceProvider.GetPythonToolsService().GeneralOptions.ClearGlobalPythonPath = true;
                     session = LaunchProject(app, profiling, project, TestData.GetPath(@"TestData\ProfileTestSysPath"), false);
 
                     while (profiling.IsProfiling) {
@@ -531,7 +534,7 @@ namespace ProfilingUITests {
 
                     VerifyReport(report, true, "A.mod.func");
                 } finally {
-                    PythonToolsPackage.Instance.GeneralOptionsPage.ClearGlobalPythonPath = oldClearPythonPath;
+                    app.ServiceProvider.GetPythonToolsService().GeneralOptions.ClearGlobalPythonPath = oldClearPythonPath;
                     Environment.SetEnvironmentVariable("PYTHONPATH", oldPythonPath);
                     if (session != null) {
                         profiling.RemoveSession(session, true);

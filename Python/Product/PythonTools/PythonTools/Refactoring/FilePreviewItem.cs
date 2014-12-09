@@ -130,7 +130,7 @@ namespace Microsoft.PythonTools.Refactoring {
             EnsureTempFile();
 
             // transfer the analyzer to the underlying buffer so we tokenize with the correct version of the language
-            var model = (IComponentModel)PythonToolsPackage.GetGlobalService(typeof(SComponentModel));
+            var model = (IComponentModel)_engine._serviceProvider.GetService(typeof(SComponentModel));
             var adapterFactory = model.GetService<IVsEditorAdaptersFactoryService>();
             var buffer = adapterFactory.GetDocumentBuffer(_buffer);
             if (buffer.Properties.ContainsProperty(typeof(VsProjectAnalyzer))) {
@@ -159,7 +159,7 @@ namespace Microsoft.PythonTools.Refactoring {
             if (_buffer == null) {
                 CreateTempFile();
 
-                var invisbleFileManager = (IVsInvisibleEditorManager)PythonToolsPackage.GetGlobalService(typeof(SVsInvisibleEditorManager));
+                var invisbleFileManager = (IVsInvisibleEditorManager)_engine._serviceProvider.GetService(typeof(SVsInvisibleEditorManager));
                 IVsInvisibleEditor editor;
                 ErrorHandler.ThrowOnFailure(invisbleFileManager.RegisterInvisibleEditor(_tempFileName, null, (uint)_EDITORREGFLAGS.RIEF_ENABLECACHING, null, out editor));
 

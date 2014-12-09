@@ -21,26 +21,26 @@ namespace Microsoft.PythonTools.Options {
             InitializeComponent();
         }
 
-        internal void SyncControlWithPageSettings(PythonAdvancedEditorOptionsPage page) {
-            _enterCommits.Checked = page.EnterCommitsIntellisense;
-            _intersectMembers.Checked = page.IntersectMembers;
-            _filterCompletions.Checked = page.FilterCompletions;
-            _completionCommitedBy.Text = page.CompletionCommittedBy;
-            _newLineAfterCompleteCompletion.Checked = page.AddNewLineAtEndOfFullyTypedWord;
-            _outliningOnOpen.Checked = page.EnterOutliningModeOnOpen;
-            _pasteRemovesReplPrompts.Checked = page.PasteRemovesReplPrompts;
-            _colorNames.Checked = page.ColorNames;
+        internal void SyncControlWithPageSettings(PythonToolsService pyService) {
+            _enterCommits.Checked = pyService.AdvancedOptions.EnterCommitsIntellisense;
+            _intersectMembers.Checked = pyService.AdvancedOptions.IntersectMembers;
+            _filterCompletions.Checked = pyService.AdvancedOptions.FilterCompletions;
+            _completionCommitedBy.Text = pyService.AdvancedOptions.CompletionCommittedBy;
+            _newLineAfterCompleteCompletion.Checked = pyService.AdvancedOptions.AddNewLineAtEndOfFullyTypedWord;
+            _outliningOnOpen.Checked = pyService.AdvancedOptions.EnterOutliningModeOnOpen;
+            _pasteRemovesReplPrompts.Checked = pyService.AdvancedOptions.PasteRemovesReplPrompts;
+            _colorNames.Checked = pyService.AdvancedOptions.ColorNames;
         }
 
-        internal void SyncPageWithControlSettings(PythonAdvancedEditorOptionsPage page) {
-            page.EnterCommitsIntellisense = _enterCommits.Checked;
-            page.IntersectMembers = _intersectMembers.Checked;
-            page.FilterCompletions = _filterCompletions.Checked;
-            page.CompletionCommittedBy = _completionCommitedBy.Text;
-            page.AddNewLineAtEndOfFullyTypedWord = _newLineAfterCompleteCompletion.Checked;
-            page.EnterOutliningModeOnOpen = _outliningOnOpen.Checked;
-            page.PasteRemovesReplPrompts = _pasteRemovesReplPrompts.Checked;
-            page.ColorNames = _colorNames.Checked;
+        internal void SyncPageWithControlSettings(PythonToolsService pyService) {
+            pyService.AdvancedOptions.EnterCommitsIntellisense = _enterCommits.Checked;
+            pyService.AdvancedOptions.IntersectMembers = _intersectMembers.Checked;
+            pyService.AdvancedOptions.FilterCompletions = _filterCompletions.Checked;
+            pyService.AdvancedOptions.CompletionCommittedBy = _completionCommitedBy.Text;
+            pyService.AdvancedOptions.AddNewLineAtEndOfFullyTypedWord = _newLineAfterCompleteCompletion.Checked;
+            pyService.AdvancedOptions.EnterOutliningModeOnOpen = _outliningOnOpen.Checked;
+            pyService.AdvancedOptions.PasteRemovesReplPrompts = _pasteRemovesReplPrompts.Checked;
+            pyService.AdvancedOptions.ColorNames = _colorNames.Checked;
         }
     }
 }

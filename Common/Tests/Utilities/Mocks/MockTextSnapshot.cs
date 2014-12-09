@@ -46,11 +46,11 @@ namespace TestUtilities.Mocks {
         }
 
         public ITrackingPoint CreateTrackingPoint(int position, PointTrackingMode trackingMode, TrackingFidelityMode trackingFidelity) {
-            return new MockTrackingPoint(this, position);
+            return new MockTrackingPoint(this, position, trackingMode, trackingFidelity);
         }
 
         public ITrackingPoint CreateTrackingPoint(int position, PointTrackingMode trackingMode) {
-            return new MockTrackingPoint(this, position);
+            return new MockTrackingPoint(this, position, trackingMode);
         }
 
         public ITrackingSpan CreateTrackingSpan(int start, int length, SpanTrackingMode trackingMode, TrackingFidelityMode trackingFidelity) {
@@ -58,7 +58,7 @@ namespace TestUtilities.Mocks {
         }
 
         public ITrackingSpan CreateTrackingSpan(int start, int length, SpanTrackingMode trackingMode) {
-            return new MockTrackingSpan(this, start, length);
+            return new MockTrackingSpan(this, start, length, trackingMode);
         }
 
         public ITrackingSpan CreateTrackingSpan(Span span, SpanTrackingMode trackingMode, TrackingFidelityMode trackingFidelity) {
@@ -66,7 +66,7 @@ namespace TestUtilities.Mocks {
         }
 
         public ITrackingSpan CreateTrackingSpan(Span span, SpanTrackingMode trackingMode) {
-            return new MockTrackingSpan(this, span.Start, span.Length);
+            return new MockTrackingSpan(this, span.Start, span.Length, trackingMode);
         }
 
         private string[] GetLines() {

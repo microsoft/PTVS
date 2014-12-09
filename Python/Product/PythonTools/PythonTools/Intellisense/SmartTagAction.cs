@@ -27,6 +27,7 @@ using Microsoft.VisualStudio.Shell.Interop;
 namespace Microsoft.PythonTools.Intellisense {
     abstract class SmartTagAction : ISmartTagAction {
         private readonly RefactoringIconKind _iconKind;
+        protected readonly IServiceProvider _serviceProvider;
 
         private static IVsResourceManager _resourceManager;
         private static Guid CmdDefUiPackageGuid = new Guid("{44E07B02-29A5-11D3-B882-00C04F79F802}");   // http://msdn.microsoft.com/en-us/library/dd891106.aspx
@@ -36,7 +37,8 @@ namespace Microsoft.PythonTools.Intellisense {
         /// <summary>
         /// Creates a new smart tag with the specified icon.
         /// </summary>
-        protected SmartTagAction(RefactoringIconKind iconKind) {
+        protected SmartTagAction(IServiceProvider serviceProvider, RefactoringIconKind iconKind) {
+            _serviceProvider = serviceProvider;
             _iconKind = iconKind;
         }
 
@@ -74,9 +76,9 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        private static bool TryGetResourceManager(out IVsResourceManager resourceManager) {
+        private bool TryGetResourceManager(out IVsResourceManager resourceManager) {
             if (_resourceManager == null) {
-                _resourceManager = PythonToolsPackage.GetGlobalService(typeof(SVsResourceManager)) as IVsResourceManager;
+                _resourceManager = _serviceProvider.GetService(typeof(SVsResourceManager)) as IVsResourceManager;
             }
 
             resourceManager = _resourceManager;

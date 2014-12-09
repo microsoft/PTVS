@@ -44,12 +44,12 @@ namespace Microsoft.PythonTools.Repl {
         private VsProjectAnalyzer _replAnalyzer;
         private bool _ownsAnalyzer, _enableAttach, _supportsMultipleCompleteStatementInputs;
 
-        public PythonReplEvaluator(IPythonInterpreterFactory interpreter, IInterpreterOptionsService interpreterService = null) 
-            : this(interpreter, new DefaultPythonReplEvaluatorOptions(() => PythonToolsPackage.Instance.InteractiveOptionsPage.GetOptions(interpreter)), interpreterService) {
+        public PythonReplEvaluator(IPythonInterpreterFactory interpreter, IServiceProvider serviceProvider, IInterpreterOptionsService interpreterService = null)
+            : this(interpreter, serviceProvider, new DefaultPythonReplEvaluatorOptions(serviceProvider, () => serviceProvider.GetPythonToolsService().GetInteractiveOptions(interpreter)), interpreterService) {
         }
 
-        public PythonReplEvaluator(IPythonInterpreterFactory interpreter, PythonReplEvaluatorOptions options, IInterpreterOptionsService interpreterService = null)
-            : base(options) {
+        public PythonReplEvaluator(IPythonInterpreterFactory interpreter, IServiceProvider serviceProvider, PythonReplEvaluatorOptions options, IInterpreterOptionsService interpreterService = null)
+            : base(serviceProvider, serviceProvider.GetPythonToolsService(), options) {
             _interpreter = interpreter;
             _interpreterService = interpreterService;
             if (_interpreterService != null) {
@@ -69,6 +69,7 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public static IPythonReplEvaluator Create(
+            IServiceProvider serviceProvider,
             string id,
             string version,
             IInterpreterOptionsService interpreterService
@@ -81,7 +82,7 @@ namespace Microsoft.PythonTools.Repl {
                     return null;
                 }
             }
-            return new PythonReplEvaluator(factory, interpreterService);
+            return new PythonReplEvaluator(factory, serviceProvider, interpreterService);
         }
 
         async void InterpretersChanged(object sender, EventArgs e) {
@@ -122,7 +123,7 @@ namespace Microsoft.PythonTools.Repl {
         internal VsProjectAnalyzer ReplAnalyzer {
             get {
                 if (_replAnalyzer == null && Interpreter != null && _interpreterService != null) {
-                    _replAnalyzer = new VsProjectAnalyzer(Interpreter, _interpreterService.Interpreters.ToArray());
+                    _replAnalyzer = new VsProjectAnalyzer(_serviceProvider, Interpreter, _interpreterService.Interpreters.ToArray());
                     _ownsAnalyzer = true;
                 }
                 return _replAnalyzer;
@@ -250,10 +251,10 @@ namespace Microsoft.PythonTools.Repl {
                 var searchPaths = CurrentOptions.SearchPaths;
 
                 if (string.IsNullOrEmpty(searchPaths)) {
-                    if (PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ClearGlobalPythonPath) {
+                    if (_serviceProvider.GetPythonToolsService().GeneralOptions.ClearGlobalPythonPath) {
                         processInfo.EnvironmentVariables[pathEnvVar] = "";
                     }
-                } else if (PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ClearGlobalPythonPath) {
+                } else if (_serviceProvider.GetPythonToolsService().GeneralOptions.ClearGlobalPythonPath) {
                     processInfo.EnvironmentVariables[pathEnvVar] = searchPaths;
                 } else {
                     processInfo.EnvironmentVariables[pathEnvVar] = searchPaths + ";" + Environment.GetEnvironmentVariable(pathEnvVar);
@@ -291,7 +292,7 @@ namespace Microsoft.PythonTools.Repl {
             bool multipleScopes = true;
             if (!String.IsNullOrWhiteSpace(CurrentOptions.ExecutionMode)) {
                 // change ID to module name if we have a registered mode
-                var modes = Microsoft.PythonTools.Options.ExecutionMode.GetRegisteredModes();
+                var modes = Microsoft.PythonTools.Options.ExecutionMode.GetRegisteredModes(_serviceProvider);
                 string modeValue = CurrentOptions.ExecutionMode;
                 foreach (var mode in modes) {
                     if (mode.Id == CurrentOptions.ExecutionMode) {
@@ -339,8 +340,8 @@ namespace Microsoft.PythonTools.Repl {
 
     [ReplRole("DontPersist")]
     class PythonReplEvaluatorDontPersist : PythonReplEvaluator {
-        public PythonReplEvaluatorDontPersist(IPythonInterpreterFactory interpreter, PythonReplEvaluatorOptions options, IInterpreterOptionsService interpreterService) :
-            base(interpreter, options, interpreterService) {
+        public PythonReplEvaluatorDontPersist(IPythonInterpreterFactory interpreter, IServiceProvider serviceProvider, PythonReplEvaluatorOptions options, IInterpreterOptionsService interpreterService) :
+            base(interpreter, serviceProvider, options, interpreterService) {
         }
     }
 
@@ -531,8 +532,10 @@ namespace Microsoft.PythonTools.Repl {
     /// </summary>
     class DefaultPythonReplEvaluatorOptions : PythonReplEvaluatorOptions {
         private readonly Func<PythonInteractiveCommonOptions> _options;
+        private readonly IServiceProvider _serviceProvider;
 
-        public DefaultPythonReplEvaluatorOptions(Func<PythonInteractiveCommonOptions> options) {
+        public DefaultPythonReplEvaluatorOptions(IServiceProvider serviceProvider, Func<PythonInteractiveCommonOptions> options) {
+            _serviceProvider = serviceProvider;
             _options = options;
         }
 
@@ -562,12 +565,12 @@ namespace Microsoft.PythonTools.Repl {
 
         public override string WorkingDirectory {
             get {
-                var startupProj = PythonToolsPackage.GetStartupProject();
+                var startupProj = PythonToolsPackage.GetStartupProject(_serviceProvider);
                 if (startupProj != null) {
                     return startupProj.GetWorkingDirectory();
                 }
 
-                var textView = CommonPackage.GetActiveTextView();
+                var textView = CommonPackage.GetActiveTextView(_serviceProvider);
                 if (textView != null) {
                     return Path.GetDirectoryName(textView.GetFilePath());
                 }
@@ -584,7 +587,7 @@ namespace Microsoft.PythonTools.Repl {
 
         public override string SearchPaths {
             get {
-                var startupProj = PythonToolsPackage.GetStartupProject() as IPythonProject;
+                var startupProj = PythonToolsPackage.GetStartupProject(_serviceProvider) as IPythonProject;
                 if (startupProj != null) {
                     return string.Join(";", startupProj.GetSearchPaths());
                 }
@@ -595,7 +598,7 @@ namespace Microsoft.PythonTools.Repl {
 
         public override string InterpreterArguments {
             get {
-                var startupProj = PythonToolsPackage.GetStartupProject();
+                var startupProj = PythonToolsPackage.GetStartupProject(_serviceProvider);
                 if (startupProj != null) {
                     return startupProj.GetProjectProperty(PythonConstants.InterpreterArgumentsSetting, true);
                 }
@@ -604,8 +607,8 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public override VsProjectAnalyzer ProjectAnalyzer {
-            get { 
-                var startupProj = PythonToolsPackage.GetStartupProject();
+            get {
+                var startupProj = PythonToolsPackage.GetStartupProject(_serviceProvider);
                 if (startupProj != null) {
                     return ((PythonProjectNode)startupProj).GetAnalyzer();
                 }

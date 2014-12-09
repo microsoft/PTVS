@@ -17,7 +17,13 @@ using Microsoft.PythonTools.DkmDebugger;
 using Microsoft.VisualStudio.Shell;
 
 namespace Microsoft.PythonTools.Commands {
+    using DebuggerOptions = Microsoft.PythonTools.DkmDebugger.DebuggerOptions;
+
     internal class UsePythonStepping : DkmDebuggerCommand {
+        public UsePythonStepping(IServiceProvider serviceProvider)
+            : base(serviceProvider) {
+        }
+
         public override int CommandId {
             get { return (int)PkgCmdIDList.cmdidUsePythonStepping; }
         }

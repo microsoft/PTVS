@@ -42,7 +42,7 @@ namespace Microsoft.PythonTools.Project {
         public override void LoadSettings() {
             Loading = true;
             try {
-                _control.PublishUrl = Project.GetProjectProperty(CommonConstants.PublishUrl);
+                _control.LoadSettings();
             } finally {
                 Loading = false;
             }

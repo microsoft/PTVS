@@ -20,12 +20,12 @@ namespace Microsoft.PythonTools.Options {
             InitializeComponent();
         }
 
-        internal void SyncControlWithPageSettings(PythonAdvancedEditorOptionsPage page) {
-            _pasteRemovesReplPrompts.Checked = page.PasteRemovesReplPrompts;
+        internal void SyncControlWithPageSettings(PythonToolsService pyService) {
+            _pasteRemovesReplPrompts.Checked = pyService.AdvancedOptions.PasteRemovesReplPrompts;
         }
 
-        internal void SyncPageWithControlSettings(PythonAdvancedEditorOptionsPage page) {
-            page.PasteRemovesReplPrompts = _pasteRemovesReplPrompts.Checked;
+        internal void SyncPageWithControlSettings(PythonToolsService pyService) {
+            pyService.AdvancedOptions.PasteRemovesReplPrompts = _pasteRemovesReplPrompts.Checked;
         }
     }
 }

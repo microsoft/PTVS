@@ -16,15 +16,22 @@ using System;
 using System.Linq;
 using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.DkmDebugger;
+using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Debugger;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudioTools;
+using Microsoft.Win32;
 
 namespace Microsoft.PythonTools.Commands {
     internal abstract class DkmDebuggerCommand : Command {
         private const string PythonDeveloperRegistryValue = "PythonDeveloper";
+        internal readonly IServiceProvider _serviceProvider;
+
+        public DkmDebuggerCommand(IServiceProvider serviceProvider) {
+            _serviceProvider = serviceProvider;
+        }
 
         protected virtual bool IsPythonDeveloperCommand {
             get { return false; }
@@ -37,10 +44,15 @@ namespace Microsoft.PythonTools.Commands {
                     cmd.Visible = false;
 
                     if (IsPythonDeveloperCommand) {
-                        var key = PythonToolsPackage.UserRegistryRoot.OpenSubKey(PythonCoreConstants.BaseRegistryKey);
-                        if (key != null) {
-                            var value = key.GetValue(PythonDeveloperRegistryValue, 0) as int?;
-                            if (value == null || value == 0) {
+                        var settings = (IVsSettingsManager)_serviceProvider.GetService(typeof(SVsSettingsManager));
+                        IVsSettingsStore store;
+                        if (ErrorHandler.Succeeded(settings.GetReadOnlySettingsStore((uint)__VsEnclosingScopes.EnclosingScopes_UserSettings, out store))) {
+                            int value;                            
+                            if (ErrorHandler.Failed(store.GetIntOrDefault(PythonCoreConstants.BaseRegistryKey, PythonDeveloperRegistryValue, 0, out value))) {
+                                return;
+                            }
+
+                            if (value == 0) {
                                 return;
                             }
                         }

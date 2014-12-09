@@ -382,7 +382,7 @@ namespace PythonToolsUITests {
         [HostType("VSTestHost")]
         public void WebProjectInstallOnNew() {
             using (var app = new PythonVisualStudioApp()) {
-                Pip.Uninstall(app.InterpreterService.DefaultInterpreter, "bottle", false).WaitAndUnwrapExceptions();
+                Pip.Uninstall(app.ServiceProvider, app.InterpreterService.DefaultInterpreter, "bottle", false).WaitAndUnwrapExceptions();
 
                 var t = Task.Run(() => app.CreateProject(
                     PythonVisualStudioApp.TemplateLanguageName,
@@ -415,7 +415,7 @@ namespace PythonToolsUITests {
                     "bottle"
                 );
 
-                Pip.Uninstall(app.InterpreterService.DefaultInterpreter, "bottle", false).WaitAndUnwrapExceptions();
+                Pip.Uninstall(app.ServiceProvider, app.InterpreterService.DefaultInterpreter, "bottle", false).WaitAndUnwrapExceptions();
             }
         }
 
@@ -552,7 +552,7 @@ namespace PythonToolsUITests {
 
                 EndToEndLog("Created virtual environment {0}", factory.Description);
 
-                InstallWebFramework(moduleName, packageName ?? moduleName, factory);
+                InstallWebFramework(app, moduleName, packageName ?? moduleName, factory);
 
                 EndToEndLog("Installed framework {0}", moduleName);
 
@@ -645,10 +645,10 @@ namespace PythonToolsUITests {
                     EndToEndLog("Building");
                     app.Dte.Solution.SolutionBuild.Build(true);
                     EndToEndLog("Updating settings");
-                    prevNormal = PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnNormalExit;
-                    prevAbnormal = PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnAbnormalExit;
-                    PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnNormalExit = false;
-                    PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnAbnormalExit = false;
+                    prevNormal = app.GetService<PythonToolsService>().DebuggerOptions.WaitOnNormalExit;
+                    prevAbnormal = app.GetService<PythonToolsService>().DebuggerOptions.WaitOnAbnormalExit;
+                    app.GetService<PythonToolsService>().DebuggerOptions.WaitOnNormalExit = false;
+                    app.GetService<PythonToolsService>().DebuggerOptions.WaitOnAbnormalExit = false;
 
                     EndToEndLog("Starting running");
                     app.Dte.Solution.SolutionBuild.Run();
@@ -673,8 +673,8 @@ namespace PythonToolsUITests {
                 EndToEndLog("Active at http://localhost:{0}/", port);
             } finally {
                 UIThread.Invoke(() => {
-                    PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnNormalExit = prevNormal;
-                    PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnAbnormalExit = prevAbnormal;
+                    app.GetService<PythonToolsService>().DebuggerOptions.WaitOnNormalExit = prevNormal;
+                    app.GetService<PythonToolsService>().DebuggerOptions.WaitOnAbnormalExit = prevAbnormal;
                 });
             }
             var text = WebDownloadUtility.GetString(new Uri(string.Format("http://localhost:{0}/", port)));
@@ -734,8 +734,8 @@ namespace PythonToolsUITests {
             return factory;
         }
 
-        internal static void InstallWebFramework(string moduleName, string packageName, IPythonInterpreterFactory factory) {
-            Pip.Install(factory, packageName, false).WaitAndUnwrapExceptions();
+        internal static void InstallWebFramework(VisualStudioApp app, string moduleName, string packageName, IPythonInterpreterFactory factory) {
+            Pip.Install(app.ServiceProvider, factory, packageName, false).WaitAndUnwrapExceptions();
             Assert.AreEqual(1, InterpreterExt.FindModules(factory, moduleName).Count);
         }
 

@@ -47,7 +47,6 @@ namespace Microsoft.VisualStudioTools.Project {
     }
 
     internal abstract class CommonProjectNode : ProjectNode, IVsProjectSpecificEditorMap2, IVsDeferredSaveProject {
-        private CommonProjectPackage/*!*/ _package;
         private Guid _mruPageGuid = new Guid(CommonConstants.AddReferenceMRUPageGuid);
         private VSLangProj.VSProject _vsProject = null;
         private static ImageList _imageList;
@@ -65,6 +64,7 @@ namespace Microsoft.VisualStudioTools.Project {
         private MSBuild.Project _userBuildProject;
         private readonly Dictionary<string, FileSystemWatcher> _symlinkWatchers = new Dictionary<string, FileSystemWatcher>();
         private DiskMerger _currentMerger;
+        private IdleManager _idleManager;
 #if DEV11_OR_LATER
         private IVsHierarchyItemManager _hierarchyManager;
         private Dictionary<uint, bool> _needBolding;
@@ -73,11 +73,10 @@ namespace Microsoft.VisualStudioTools.Project {
 #endif
         private int _idleTriggered;
 
-        public CommonProjectNode(CommonProjectPackage/*!*/ package, ImageList/*!*/ imageList) {
-            Contract.Assert(package != null);
+        public CommonProjectNode(IServiceProvider serviceProvider, ImageList/*!*/ imageList)
+            : base(serviceProvider) {
             Contract.Assert(imageList != null);
 
-            _package = package;
             CanFileNodesHaveChilds = true;
             SupportsProjectDesigner = true;
             _imageList = imageList;
@@ -88,7 +87,16 @@ namespace Microsoft.VisualStudioTools.Project {
                 ImageHandler.AddImage(img);
             }
 
-            package.OnIdle += OnIdle;
+            //Initialize a new object to track project document changes so that we can update the StartupFile Property accordingly
+            _projectDocListenerForStartupFileUpdates = new ProjectDocumentsListenerForStartupFileUpdates(Site, this);
+            _projectDocListenerForStartupFileUpdates.Init();
+
+#if DEV11_OR_LATER
+            UpdateHierarchyManager(alwaysCreate: false);
+#endif
+
+            _idleManager = new IdleManager(Site);
+            _idleManager.OnIdle += OnIdle;
         }
 
         public override int QueryService(ref Guid guidService, out object result) {
@@ -119,10 +127,6 @@ namespace Microsoft.VisualStudioTools.Project {
         #endregion
 
         #region Properties
-
-        public new CommonProjectPackage/*!*/ Package {
-            get { return _package; }
-        }
 
         public int ImageOffset {
             get { return _imageOffset; }
@@ -331,7 +335,7 @@ namespace Microsoft.VisualStudioTools.Project {
             if (!String.IsNullOrWhiteSpace(publishUrl)) {
                 var url = new Url(publishUrl);
 
-                var publishers = CommonPackage.ComponentModel.GetExtensions<IProjectPublisher>();
+                var publishers = ((IComponentModel)Site.GetService(typeof(SComponentModel))).GetExtensions<IProjectPublisher>();
                 foreach (var publisher in publishers) {
                     if (publisher.Schema == url.Uri.Scheme) {
                         var project = new PublishProject(this, publishOptions);
@@ -361,11 +365,11 @@ namespace Microsoft.VisualStudioTools.Project {
                 }
 
                 if (!found) {
-                    var statusBar = (IVsStatusbar)CommonPackage.GetGlobalService(typeof(SVsStatusbar));
+                    var statusBar = (IVsStatusbar)Site.GetService(typeof(SVsStatusbar));
                     statusBar.SetText(String.Format("Publish failed: Unknown publish scheme ({0})", url.Uri.Scheme));
                 }
             } else {
-                var statusBar = (IVsStatusbar)CommonPackage.GetGlobalService(typeof(SVsStatusbar));
+                var statusBar = (IVsStatusbar)Site.GetService(typeof(SVsStatusbar));
                 statusBar.SetText(String.Format("Project is not configured for publishing in project properties."));
             }
             return found;
@@ -525,7 +529,10 @@ namespace Microsoft.VisualStudioTools.Project {
                 if (this._userBuildProject != null) {
                     _userBuildProject.ProjectCollection.UnloadProject(_userBuildProject);
                 }
-                _package.OnIdle -= OnIdle;
+                if (_idleManager != null) {
+                    _idleManager.OnIdle -= OnIdle;
+                    _idleManager.Dispose();
+                }
             }
 
             base.Dispose(disposing);
@@ -1187,26 +1194,12 @@ namespace Microsoft.VisualStudioTools.Project {
             return new CommonProjectNodeProperties(this);
         }
 
-        public override int SetSite(Microsoft.VisualStudio.OLE.Interop.IServiceProvider site) {
-            base.SetSite(site);
-
-            //Initialize a new object to track project document changes so that we can update the StartupFile Property accordingly
-            _projectDocListenerForStartupFileUpdates = new ProjectDocumentsListenerForStartupFileUpdates((ServiceProvider)Site, this);
-            _projectDocListenerForStartupFileUpdates.Init();
-
-#if DEV11_OR_LATER
-            UpdateHierarchyManager(alwaysCreate: false);
-#endif
-
-            return VSConstants.S_OK;
-        }
-
         public override void Close() {
             if (null != _projectDocListenerForStartupFileUpdates) {
                 _projectDocListenerForStartupFileUpdates.Dispose();
                 _projectDocListenerForStartupFileUpdates = null;
             }
-            LibraryManager libraryManager = ((IServiceContainer)Package).GetService(GetLibraryManagerType()) as LibraryManager;
+            LibraryManager libraryManager = Site.GetService(GetLibraryManagerType()) as LibraryManager;
             if (null != libraryManager) {
                 libraryManager.UnregisterHierarchy(InteropSafeHierarchy);
             }

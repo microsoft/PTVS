@@ -16,6 +16,7 @@ using System;
 using System.ComponentModel.Composition;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.Repl;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text.Adornments;
 
 namespace Microsoft.PythonTools.Repl {
@@ -23,16 +24,24 @@ namespace Microsoft.PythonTools.Repl {
     using IReplEvaluator = IInteractiveEngine;
     using IReplEvaluatorProvider = IInteractiveEngineProvider;
 #endif
-    
+
     [Export(typeof(IReplEvaluatorProvider))]
     class PythonDebugReplEvaluatorProvider : IReplEvaluatorProvider {
         private const string _debugReplGuid = "BA417560-5A78-46F1-B065-638D27E1CDD0";
+        private readonly PythonToolsService _pyService;
+        private readonly IServiceProvider _serviceProvider;
+
+        [ImportingConstructor]
+        public PythonDebugReplEvaluatorProvider([Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider) {
+            _serviceProvider = serviceProvider;
+            _pyService = (PythonToolsService)serviceProvider.GetService(typeof(PythonToolsService));
+        }
 
         #region IReplEvaluatorProvider Members
 
         public IReplEvaluator GetEvaluator(string replId) {
             if (replId.StartsWith(_debugReplGuid)) {
-                return new PythonDebugReplEvaluator();
+                return new PythonDebugReplEvaluator(_serviceProvider);
             }
             return null;
         }

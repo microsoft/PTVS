@@ -135,8 +135,8 @@ namespace Microsoft.VisualStudioTools {
         /// Gets the current IWpfTextView that is the active document.
         /// </summary>
         /// <returns></returns>
-        public static IWpfTextView GetActiveTextView() {
-            var monitorSelection = (IVsMonitorSelection)Package.GetGlobalService(typeof(SVsShellMonitorSelection));
+        public static IWpfTextView GetActiveTextView(System.IServiceProvider serviceProvider) {
+            var monitorSelection = (IVsMonitorSelection)serviceProvider.GetService(typeof(SVsShellMonitorSelection));
             if (monitorSelection == null) {
                 return null;
             }
@@ -165,7 +165,7 @@ namespace Microsoft.VisualStudioTools {
                     return null;
                 }
 
-                var model = (IComponentModel)GetGlobalService(typeof(SComponentModel));
+                var model = (IComponentModel)serviceProvider.GetService(typeof(SComponentModel));
                 var adapterFactory = model.GetService<IVsEditorAdaptersFactoryService>();
                 var wpfTextView = adapterFactory.GetWpfTextView(textView);
                 return wpfTextView;
@@ -173,14 +173,15 @@ namespace Microsoft.VisualStudioTools {
             return null;
         }
 
+        [Obsolete("ComponentModel should be retrieved from an IServiceProvider")]
         public static IComponentModel ComponentModel {
             get {
                 return (IComponentModel)GetGlobalService(typeof(SComponentModel));
             }
         }
 
-        internal static CommonProjectNode GetStartupProject() {
-            var buildMgr = (IVsSolutionBuildManager)Package.GetGlobalService(typeof(IVsSolutionBuildManager));
+        internal static CommonProjectNode GetStartupProject(System.IServiceProvider serviceProvider) {
+            var buildMgr = (IVsSolutionBuildManager)serviceProvider.GetService(typeof(IVsSolutionBuildManager));
             IVsHierarchy hierarchy;
             if (buildMgr != null && ErrorHandler.Succeeded(buildMgr.get_StartupProject(out hierarchy)) && hierarchy != null) {
                 return hierarchy.GetProject().GetCommonProject();
@@ -210,9 +211,9 @@ namespace Microsoft.VisualStudioTools {
             return;
         }
 
-        internal static void OpenVsWebBrowser(string url) {
+        internal static void OpenVsWebBrowser(System.IServiceProvider serviceProvider, string url) {
             UIThread.Invoke(() => {
-                var web = GetGlobalService(typeof(SVsWebBrowsingService)) as IVsWebBrowsingService;
+                var web = serviceProvider.GetService(typeof(SVsWebBrowsingService)) as IVsWebBrowsingService;
                 if (web == null) {
                     OpenWebBrowser(url);
                     return;

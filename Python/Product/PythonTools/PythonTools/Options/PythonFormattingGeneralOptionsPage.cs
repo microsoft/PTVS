@@ -40,27 +40,27 @@ namespace Microsoft.PythonTools.Options {
         }
 
         public override void ResetSettings() {
-            PythonToolsPackage.Instance.AdvancedEditorOptionsPage.ResetSettings();
+            PyService.AdvancedOptions.Reset();
         }
 
         public override void LoadSettingsFromStorage() {
             // Load settings from storage.
-            PythonToolsPackage.Instance.AdvancedEditorOptionsPage.LoadSettingsFromStorage();
+            PyService.AdvancedOptions.Load();
             
             // Synchronize UI with backing properties.
             if (_window != null) {
-                _window.SyncControlWithPageSettings(PythonToolsPackage.Instance.AdvancedEditorOptionsPage);
+                _window.SyncControlWithPageSettings(PyService);
             }
         }
 
         public override void SaveSettingsToStorage() {
             // Synchronize backing properties with UI.
             if (_window != null) {
-                _window.SyncPageWithControlSettings(PythonToolsPackage.Instance.AdvancedEditorOptionsPage);
+                _window.SyncPageWithControlSettings(PyService);
             }
 
             // Save settings.
-            PythonToolsPackage.Instance.AdvancedEditorOptionsPage.SaveSettingsToStorage();
+            PyService.AdvancedOptions.Save();
         }
     }
 }

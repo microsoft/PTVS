@@ -44,7 +44,7 @@ namespace Microsoft.PythonTools.Django.Project {
         private static Guid PythonProjectGuid = new Guid(PythonConstants.ProjectFactoryGuid);
         private OleMenuCommandService _menuService;
         private List<OleMenuCommand> _commands = new List<OleMenuCommand>();
-        private readonly DjangoAnalyzer _analyzer = new DjangoAnalyzer();
+        private DjangoAnalyzer _analyzer;
 
 #if HAVE_ICONS
         private static ImageList _images;
@@ -55,6 +55,9 @@ namespace Microsoft.PythonTools.Django.Project {
 
         public DjangoAnalyzer Analyzer {
             get {
+                if (_analyzer == null) {
+                    _analyzer = new DjangoAnalyzer(this);
+                }
                 return _analyzer;
             }
         }
@@ -208,7 +211,8 @@ namespace Microsoft.PythonTools.Django.Project {
 
                 uint uiFlags = (uint)(__VSADDITEMFLAGS.VSADDITEM_AddNewItems | __VSADDITEMFLAGS.VSADDITEM_SuggestTemplateName | __VSADDITEMFLAGS.VSADDITEM_AllowHiddenTreeView);
 
-                IVsAddProjectItemDlg addItemDialog = (IVsAddProjectItemDlg)DjangoPackage.GetGlobalService(typeof(IVsAddProjectItemDlg));
+
+                IVsAddProjectItemDlg addItemDialog = (IVsAddProjectItemDlg)((System.IServiceProvider)this).GetService(typeof(IVsAddProjectItemDlg));
                 string filter = "";
                 // Note we pass "Web" as the default category to select. The dialog only uses it if it hasn't already saved a default value.
                 string defCategory = "Web";
@@ -701,7 +705,7 @@ namespace Microsoft.PythonTools.Django.Project {
                             // about being added as a web role.
                             if (!AddWebRoleSupportFiles()) {
                                 VsShellUtilities.ShowMessageBox(
-                                    PythonToolsPackage.Instance,
+                                    this,
                                     Resources.AddWebRoleSupportFiles,
                                     null,
                                     OLEMSGICON.OLEMSGICON_INFO,

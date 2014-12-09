@@ -14,16 +14,41 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
 
 namespace TestUtilities.Mocks {
-    public class MockServiceProvider : IServiceProvider {
-        public readonly Dictionary<string, object> Services = new Dictionary<string, object>();
+    public class MockServiceProvider : IServiceProvider, IServiceContainer {
+        public readonly Dictionary<Type, object> Services = new Dictionary<Type, object>();
         
         public object GetService(Type serviceType) {
             object service;
             Console.WriteLine("MockServiceProvider.GetService({0})", serviceType.Name);
-            Services.TryGetValue(serviceType.Name, out service);
+            Services.TryGetValue(serviceType, out service);
             return service;
+        }
+
+        public void AddService(Type serviceType, ServiceCreatorCallback callback, bool promote) {
+            Services[serviceType] = callback(this, serviceType);
+        }
+
+        public void AddService(Type serviceType, ServiceCreatorCallback callback) {
+            Services[serviceType] = callback(this, serviceType);
+        }
+
+        public void AddService(Type serviceType, object serviceInstance, bool promote) {
+            Services[serviceType] = serviceInstance;
+        }
+
+        public void AddService(Type serviceType, object serviceInstance) {
+            Services[serviceType] = serviceInstance;
+        }
+
+        public void RemoveService(Type serviceType, bool promote) {
+            Services.Remove(serviceType);
+        }
+
+        public void RemoveService(Type serviceType) {
+            Services.Remove(serviceType);
         }
     }
 }

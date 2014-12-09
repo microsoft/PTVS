@@ -41,7 +41,7 @@ namespace Microsoft.PythonTools.Profiling {
             set;
         }
 
-        internal string GetProfilingName(out bool save) {
+        internal string GetProfilingName(IServiceProvider serviceProvider, out bool save) {
             string baseName = null;
             if (ProjectTarget != null) {
                 if (!String.IsNullOrEmpty(ProjectTarget.FriendlyName)) {
@@ -59,7 +59,7 @@ namespace Microsoft.PythonTools.Profiling {
 
             baseName = baseName + ".pyperf";
 
-            var dte = (EnvDTE.DTE)PythonToolsPackage.GetGlobalService(typeof(EnvDTE.DTE));
+            var dte = (EnvDTE.DTE)serviceProvider.GetService(typeof(EnvDTE.DTE));
             if (dte.Solution.IsOpen && !String.IsNullOrEmpty(dte.Solution.FullName)) {
                 save = true;
                 return Path.Combine(Path.GetDirectoryName(dte.Solution.FullName), baseName);

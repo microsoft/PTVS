@@ -38,10 +38,14 @@ namespace Microsoft.PythonTools.Project {
     /// </summary>
     sealed class DefaultPythonLauncher : IProjectLauncher {
         private readonly IPythonProject/*!*/ _project;
+        private readonly PythonToolsService _pyService;
+        private readonly IServiceProvider _serviceProvider;
 
-        public DefaultPythonLauncher(IPythonProject/*!*/ project) {
+        public DefaultPythonLauncher(IServiceProvider serviceProvider, PythonToolsService pyService, IPythonProject/*!*/ project) {
             Utilities.ArgumentNotNull("project", project);
 
+            _serviceProvider = serviceProvider;
+            _pyService = pyService;
             _project = project;
         }
 
@@ -54,10 +58,10 @@ namespace Microsoft.PythonTools.Project {
 
         public int LaunchFile(string/*!*/ file, bool debug) {
             if (debug) {
-                PythonToolsPackage.Instance.Logger.LogEvent(Logging.PythonLogEvent.Launch, 1);
+                _pyService.Logger.LogEvent(Logging.PythonLogEvent.Launch, 1);
                 StartWithDebugger(file);
             } else {
-                PythonToolsPackage.Instance.Logger.LogEvent(Logging.PythonLogEvent.Launch, 0);
+                _pyService.Logger.LogEvent(Logging.PythonLogEvent.Launch, 0);
                 StartWithoutDebugger(file);
             }
 
@@ -84,7 +88,7 @@ namespace Microsoft.PythonTools.Project {
             }
 
             var interpreter = _project.GetInterpreterFactory();
-            var interpreterService = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
+            var interpreterService = _serviceProvider.GetComponentModel().GetService<IInterpreterOptionsService>();
             if (interpreterService == null || interpreterService.NoInterpretersValue == interpreter) {
                 throw new NoInterpretersException();
             }
@@ -152,7 +156,7 @@ namespace Microsoft.PythonTools.Project {
                     return;
                 }
 
-                LaunchDebugger(PythonToolsPackage.Instance, dbgInfo);
+                LaunchDebugger(_serviceProvider, dbgInfo);
             } finally {
                 if (dbgInfo.pClsidList != IntPtr.Zero) {
                     Marshal.FreeCoTaskMem(dbgInfo.pClsidList);
@@ -203,20 +207,20 @@ namespace Microsoft.PythonTools.Project {
                 string interpArgs = _project.GetProperty(PythonConstants.InterpreterArgumentsSetting);
                 dbgInfo.bstrOptions = AD7Engine.VersionSetting + "=" + _project.GetInterpreterFactory().GetLanguageVersion().ToString();
                 if (!isWindows) {
-                    if (PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnAbnormalExit) {
+                    if (_pyService.DebuggerOptions.WaitOnAbnormalExit) {
                         dbgInfo.bstrOptions += ";" + AD7Engine.WaitOnAbnormalExitSetting + "=True";
                     }
-                    if (PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnNormalExit) {
+                    if (_pyService.DebuggerOptions.WaitOnNormalExit) {
                         dbgInfo.bstrOptions += ";" + AD7Engine.WaitOnNormalExitSetting + "=True";
                     }
                 }
-                if (PythonToolsPackage.Instance.DebuggingOptionsPage.TeeStandardOutput) {
+                if (_pyService.DebuggerOptions.TeeStandardOutput) {
                     dbgInfo.bstrOptions += ";" + AD7Engine.RedirectOutputSetting + "=True";
                 }
-                if (PythonToolsPackage.Instance.DebuggingOptionsPage.BreakOnSystemExitZero) {
+                if (_pyService.DebuggerOptions.BreakOnSystemExitZero) {
                     dbgInfo.bstrOptions += ";" + AD7Engine.BreakSystemExitZero + "=True";
                 }
-                if (PythonToolsPackage.Instance.DebuggingOptionsPage.DebugStdLib) {
+                if (_pyService.DebuggerOptions.DebugStdLib) {
                     dbgInfo.bstrOptions += ";" + AD7Engine.DebugStdLib + "=True";
                 }
                 if (!String.IsNullOrWhiteSpace(interpArgs)) {
@@ -275,7 +279,7 @@ namespace Microsoft.PythonTools.Project {
             string pathEnvVar = _project.GetInterpreterFactory().Configuration.PathEnvironmentVariable;
             if (!string.IsNullOrWhiteSpace(pathEnvVar)) {
                 var pythonPath = string.Join(";", _project.GetSearchPaths());
-                if (!PythonToolsPackage.Instance.GeneralOptionsPage.ClearGlobalPythonPath) {
+                if (!_pyService.GeneralOptions.ClearGlobalPythonPath) {
                     pythonPath += ";" + Environment.GetEnvironmentVariable(pathEnvVar);
                 }
                 environment[pathEnvVar] = pythonPath;
@@ -295,15 +299,15 @@ namespace Microsoft.PythonTools.Project {
             }
 
             ProcessStartInfo startInfo;
-            if (!isWindows && (PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnAbnormalExit || PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnNormalExit)) {
+            if (!isWindows && (_pyService.DebuggerOptions.WaitOnAbnormalExit || _pyService.DebuggerOptions.WaitOnNormalExit)) {
                 command = "/c \"\"" + interpreter + "\" " + command;
 
-                if (PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnNormalExit &&
-                    PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnAbnormalExit) {
+                if (_pyService.DebuggerOptions.WaitOnNormalExit &&
+                    _pyService.DebuggerOptions.WaitOnAbnormalExit) {
                     command += " & pause";
-                } else if (PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnNormalExit) {
+                } else if (_pyService.DebuggerOptions.WaitOnNormalExit) {
                     command += " & if not errorlevel 1 pause";
-                } else if (PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnAbnormalExit) {
+                } else if (_pyService.DebuggerOptions.WaitOnAbnormalExit) {
                     command += " & if errorlevel 1 pause";
                 }
 

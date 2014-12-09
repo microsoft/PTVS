@@ -42,6 +42,14 @@ namespace Microsoft.PythonTools.Intellisense {
         internal IQuickInfoBroker _QuickInfoBroker = null; // Set via MEF
         [Import]
         internal IIncrementalSearchFactoryService _IncrementalSearch = null; // Set via MEF
+        internal IServiceProvider _ServiceProvider;
+        internal PythonToolsService PythonService;
+
+        [ImportingConstructor]
+        public IntellisenseControllerProvider(SVsServiceProvider serviceProvider) {
+            _ServiceProvider = serviceProvider;
+            PythonService = (PythonToolsService)serviceProvider.GetService(typeof(PythonToolsService));
+        }
 
         readonly Dictionary<ITextView, Tuple<BufferParser, VsProjectAnalyzer>> _hookedCloseEvents =
             new Dictionary<ITextView, Tuple<BufferParser, VsProjectAnalyzer>>();
@@ -49,10 +57,10 @@ namespace Microsoft.PythonTools.Intellisense {
         public IIntellisenseController TryCreateIntellisenseController(ITextView textView, IList<ITextBuffer> subjectBuffers) {
             IntellisenseController controller;
             if (!textView.Properties.TryGetProperty<IntellisenseController>(typeof(IntellisenseController), out controller)) {
-                controller = new IntellisenseController(this, textView, ServiceProvider.GlobalProvider);
+                controller = new IntellisenseController(this, textView, _ServiceProvider);
             }
 
-            var analyzer = textView.GetAnalyzer();
+            var analyzer = textView.GetAnalyzer(_ServiceProvider);
             if (analyzer != null) {
                 var buffer = subjectBuffers[0];
 
@@ -88,6 +96,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal static IntellisenseController GetOrCreateController(IComponentModel model, ITextView textView) {
+            var serviceProvider = model.GetService<IServiceProvider>();
             IntellisenseController controller;
             if (!textView.Properties.TryGetProperty<IntellisenseController>(typeof(IntellisenseController), out controller)) {
                 var intellisenseControllerProvider = (
@@ -96,7 +105,7 @@ namespace Microsoft.PythonTools.Intellisense {
                    where exportedContentType == PythonCoreConstants.ContentType && export.Value.GetType() == typeof(IntellisenseControllerProvider)
                    select export.Value
                 ).First();
-                controller = new IntellisenseController((IntellisenseControllerProvider)intellisenseControllerProvider, textView, ServiceProvider.GlobalProvider);
+                controller = new IntellisenseController((IntellisenseControllerProvider)intellisenseControllerProvider, textView, serviceProvider);
             }
             return controller;
         }

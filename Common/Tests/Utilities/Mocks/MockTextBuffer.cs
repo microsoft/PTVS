@@ -19,7 +19,8 @@ using Microsoft.VisualStudio.Utilities;
 
 namespace TestUtilities.Mocks {
     public class MockTextBuffer : ITextBuffer {
-        private readonly string _filename, _contentType;
+        private readonly string _filename;
+        private readonly IContentType _contentType;
         internal MockTextSnapshot _snapshot;
         private MockTextEdit _edit;
 
@@ -28,7 +29,16 @@ namespace TestUtilities.Mocks {
         /// </summary>
         private PropertyCollection _properties;
 
-        public MockTextBuffer(string content, string filename = "C:\\fob.py", string contentType = "Python") {
+        public MockTextBuffer(string content) {
+        }
+
+        public MockTextBuffer(string content, string contentType = "Python", string filename = "C:\\fob.py") {
+            _snapshot = new MockTextSnapshot(this, content);
+            _filename = filename;
+            _contentType = new MockContentType(contentType, new IContentType[0]);
+        }
+
+        public MockTextBuffer(string content, IContentType contentType, string filename = "C:\\fob.py") {
             _snapshot = new MockTextSnapshot(this, content);
             _filename = filename;
             _contentType = contentType;
@@ -77,8 +87,8 @@ namespace TestUtilities.Mocks {
             throw new NotImplementedException();
         }
 
-        public Microsoft.VisualStudio.Utilities.IContentType ContentType {
-            get { return new MockContentType(_contentType, new IContentType[0]); }
+        public IContentType ContentType {
+            get { return _contentType; }
         }
 
         public ITextEdit CreateEdit() {

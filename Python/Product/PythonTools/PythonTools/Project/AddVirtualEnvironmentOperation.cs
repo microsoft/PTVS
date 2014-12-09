@@ -60,7 +60,7 @@ namespace Microsoft.PythonTools.Project {
         }
         
         public async Task Run() {
-            var service = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
+            var service = _project.Site.GetComponentModel().GetService<IInterpreterOptionsService>();
 
             var factory = await _project.CreateOrAddVirtualEnvironment(
                 service,
@@ -81,6 +81,7 @@ namespace Microsoft.PythonTools.Project {
 
             WriteOutput(SR.RequirementsTxtInstalling, txt);
             if (await Pip.Install(
+                _project.Site,
                 factory,
                 "-r " + ProcessOutput.QuoteSingleArgument(txt),
                 false,  // never elevate for a virtual environment

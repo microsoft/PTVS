@@ -14,13 +14,16 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Intellisense;
@@ -29,16 +32,21 @@ using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.PythonTools.Project;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Repl;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Editor;
+using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools {
+    using Microsoft.PythonTools.InterpreterList;
+    using Task = System.Threading.Tasks.Task;
 #if INTERACTIVE_WINDOW
     using IReplEvaluator = IInteractiveEngine;
 #endif
@@ -214,12 +222,12 @@ namespace Microsoft.PythonTools {
                 .Where(p => p != null);
         }
 
-        public static IModuleContext GetModuleContext(this ITextBuffer buffer) {
+        public static IModuleContext GetModuleContext(this ITextBuffer buffer, IServiceProvider serviceProvider) {
             if (buffer == null) {
                 return null;
             }
 
-            var analyzer = buffer.GetAnalyzer();
+            var analyzer = buffer.GetAnalyzer(serviceProvider);
             if (analyzer == null) {
                 return null;
             }
@@ -244,10 +252,11 @@ namespace Microsoft.PythonTools {
             return project.GetCommonProject() as PythonProjectNode;
         }
         
-        internal static void GotoSource(this LocationInfo location) {
+        internal static void GotoSource(this LocationInfo location, IServiceProvider serviceProvider) {
             string zipFileName = VsProjectAnalyzer.GetZipFileName(location.ProjectEntry);
             if (zipFileName == null) {
                 PythonToolsPackage.NavigateTo(
+                    serviceProvider,
                     location.FilePath,
                     Guid.Empty,
                     location.Line - 1,
@@ -280,10 +289,10 @@ namespace Microsoft.PythonTools {
             return res;
         }
 
-        internal static PythonProjectNode GetProject(this ITextBuffer buffer) {
+        internal static PythonProjectNode GetProject(this ITextBuffer buffer, IServiceProvider serviceProvider) {
             var path = buffer.GetFilePath();
-            if (path != null && PythonToolsPackage.Instance != null) {
-                var sln = PythonToolsPackage.GetGlobalService(typeof(SVsSolution)) as IVsSolution;
+            if (path != null) {
+                var sln = serviceProvider.GetService(typeof(SVsSolution)) as IVsSolution;
                 if (sln != null) {
                     foreach (var proj in sln.EnumerateLoadedPythonProjects()) {
                         int found;
@@ -299,12 +308,12 @@ namespace Microsoft.PythonTools {
             return null;
         }
 
-        internal static VsProjectAnalyzer GetAnalyzer(this ITextView textView) {
+        internal static VsProjectAnalyzer GetAnalyzer(this ITextView textView, IServiceProvider serviceProvider) {
             PythonReplEvaluator evaluator;
             if (textView.Properties.TryGetProperty<PythonReplEvaluator>(typeof(PythonReplEvaluator), out evaluator)) {
                 return evaluator.ReplAnalyzer;
             }
-            return textView.TextBuffer.GetAnalyzer();
+            return textView.TextBuffer.GetAnalyzer(serviceProvider);
         }
 
         internal static SnapshotPoint? GetCaretPosition(this ITextView view) {
@@ -316,9 +325,9 @@ namespace Microsoft.PythonTools {
             );
         }
 
-        internal static ExpressionAnalysis GetExpressionAnalysis(this ITextView view) {
+        internal static ExpressionAnalysis GetExpressionAnalysis(this ITextView view, IServiceProvider serviceProvider) {
             ITrackingSpan span = GetCaretSpan(view);
-            return span.TextBuffer.CurrentSnapshot.AnalyzeExpression(span, false);
+            return span.TextBuffer.CurrentSnapshot.AnalyzeExpression(serviceProvider, span, false);
         }
 
         internal static ITrackingSpan GetCaretSpan(this ITextView view) {
@@ -410,10 +419,10 @@ namespace Microsoft.PythonTools {
             throw new InvalidOperationException();
         }
 
-        internal static VsProjectAnalyzer GetAnalyzer(this ITextBuffer buffer) {
+        internal static VsProjectAnalyzer GetAnalyzer(this ITextBuffer buffer, IServiceProvider serviceProvider) {
             PythonProjectNode pyProj;
             if (!buffer.Properties.TryGetProperty<PythonProjectNode>(typeof(PythonProjectNode), out pyProj)) {
-                pyProj = buffer.GetProject();
+                pyProj = buffer.GetProject(serviceProvider);
                 if (pyProj != null) {
                     buffer.Properties.AddProperty(typeof(PythonProjectNode), pyProj);
                 }
@@ -422,14 +431,214 @@ namespace Microsoft.PythonTools {
             if (pyProj != null) {
                 return pyProj.GetAnalyzer();
             }
-            
+
             VsProjectAnalyzer analyzer;
             // exists for tests where we don't run in VS and for the existing changes preview
             if (buffer.Properties.TryGetProperty<VsProjectAnalyzer>(typeof(VsProjectAnalyzer), out analyzer)) {
                 return analyzer;
             }
 
-            return PythonToolsPackage.Instance.DefaultAnalyzer;
+            return serviceProvider.GetPythonToolsService().DefaultAnalyzer;
+        }
+
+        internal static PythonToolsService GetPythonToolsService(this IServiceProvider serviceProvider) {
+            return (PythonToolsService)serviceProvider.GetService(typeof(PythonToolsService));
+        }
+
+        internal static IComponentModel GetComponentModel(this IServiceProvider serviceProvider) {
+            return (IComponentModel)serviceProvider.GetService(typeof(SComponentModel));
+        }
+
+        public static string BrowseForFileSave(this IServiceProvider provider, IntPtr owner, string filter, string initialPath = null) {
+            if (string.IsNullOrEmpty(initialPath)) {
+                initialPath = Environment.GetFolderPath(Environment.SpecialFolder.Personal) + Path.DirectorySeparatorChar;
+            }
+
+            IVsUIShell uiShell = provider.GetService(typeof(SVsUIShell)) as IVsUIShell;
+            if (null == uiShell) {
+                using (var sfd = new System.Windows.Forms.SaveFileDialog()) {
+                    sfd.AutoUpgradeEnabled = true;
+                    sfd.Filter = filter;
+                    sfd.FileName = Path.GetFileName(initialPath);
+                    sfd.InitialDirectory = Path.GetDirectoryName(initialPath);
+                    DialogResult result;
+                    if (owner == IntPtr.Zero) {
+                        result = sfd.ShowDialog();
+                    } else {
+                        result = sfd.ShowDialog(NativeWindow.FromHandle(owner));
+                    }
+                    if (result == DialogResult.OK) {
+                        return sfd.FileName;
+                    } else {
+                        return null;
+                    }
+                }
+            }
+
+            if (owner == IntPtr.Zero) {
+                ErrorHandler.ThrowOnFailure(uiShell.GetDialogOwnerHwnd(out owner));
+            }
+
+            VSSAVEFILENAMEW[] saveInfo = new VSSAVEFILENAMEW[1];
+            saveInfo[0].lStructSize = (uint)Marshal.SizeOf(typeof(VSSAVEFILENAMEW));
+            saveInfo[0].pwzFilter = filter.Replace('|', '\0') + "\0";
+            saveInfo[0].hwndOwner = owner;
+            saveInfo[0].nMaxFileName = 260;
+            var pFileName = Marshal.AllocCoTaskMem(520);
+            saveInfo[0].pwzFileName = pFileName;
+            saveInfo[0].pwzInitialDir = Path.GetDirectoryName(initialPath);
+            var nameArray = (Path.GetFileName(initialPath) + "\0").ToCharArray();
+            Marshal.Copy(nameArray, 0, pFileName, nameArray.Length);
+            try {
+                int hr = uiShell.GetSaveFileNameViaDlg(saveInfo);
+                if (hr == VSConstants.OLE_E_PROMPTSAVECANCELLED) {
+                    return null;
+                }
+                ErrorHandler.ThrowOnFailure(hr);
+                return Marshal.PtrToStringAuto(saveInfo[0].pwzFileName);
+            } finally {
+                if (pFileName != IntPtr.Zero) {
+                    Marshal.FreeCoTaskMem(pFileName);
+                }
+            }
+        }
+
+        public static string BrowseForFileOpen(this IServiceProvider serviceProvider, IntPtr owner, string filter, string initialPath = null) {
+            if (string.IsNullOrEmpty(initialPath)) {
+                initialPath = Environment.GetFolderPath(Environment.SpecialFolder.Personal) + Path.DirectorySeparatorChar;
+            }
+
+            IVsUIShell uiShell = serviceProvider.GetService(typeof(SVsUIShell)) as IVsUIShell;
+            if (null == uiShell) {
+                using (var sfd = new System.Windows.Forms.OpenFileDialog()) {
+                    sfd.AutoUpgradeEnabled = true;
+                    sfd.Filter = filter;
+                    sfd.FileName = Path.GetFileName(initialPath);
+                    sfd.InitialDirectory = Path.GetDirectoryName(initialPath);
+                    DialogResult result;
+                    if (owner == IntPtr.Zero) {
+                        result = sfd.ShowDialog();
+                    } else {
+                        result = sfd.ShowDialog(NativeWindow.FromHandle(owner));
+                    }
+                    if (result == DialogResult.OK) {
+                        return sfd.FileName;
+                    } else {
+                        return null;
+                    }
+                }
+            }
+
+            if (owner == IntPtr.Zero) {
+                ErrorHandler.ThrowOnFailure(uiShell.GetDialogOwnerHwnd(out owner));
+            }
+
+            VSOPENFILENAMEW[] openInfo = new VSOPENFILENAMEW[1];
+            openInfo[0].lStructSize = (uint)Marshal.SizeOf(typeof(VSOPENFILENAMEW));
+            openInfo[0].pwzFilter = filter.Replace('|', '\0') + "\0";
+            openInfo[0].hwndOwner = owner;
+            openInfo[0].nMaxFileName = 260;
+            var pFileName = Marshal.AllocCoTaskMem(520);
+            openInfo[0].pwzFileName = pFileName;
+            openInfo[0].pwzInitialDir = Path.GetDirectoryName(initialPath);
+            var nameArray = (Path.GetFileName(initialPath) + "\0").ToCharArray();
+            Marshal.Copy(nameArray, 0, pFileName, nameArray.Length);
+            try {
+                int hr = uiShell.GetOpenFileNameViaDlg(openInfo);
+                if (hr == VSConstants.OLE_E_PROMPTSAVECANCELLED) {
+                    return null;
+                }
+                ErrorHandler.ThrowOnFailure(hr);
+                return Marshal.PtrToStringAuto(openInfo[0].pwzFileName);
+            } finally {
+                if (pFileName != IntPtr.Zero) {
+                    Marshal.FreeCoTaskMem(pFileName);
+                }
+            }
+        }
+
+        internal static IContentType GetPythonContentType(this IServiceProvider provider) {
+            return provider.GetComponentModel().GetService<IContentTypeRegistryService>().GetContentType(PythonCoreConstants.ContentType);
+        }
+
+        internal static EnvDTE.DTE GetDTE(this IServiceProvider provider) {
+            return (EnvDTE.DTE)provider.GetService(typeof(EnvDTE.DTE));
+        }
+
+        internal static SolutionEventsListener GetSolutionEvents(this IServiceProvider serviceProvider) {
+            return (SolutionEventsListener)serviceProvider.GetService(typeof(SolutionEventsListener));
+        }
+
+        internal static void GlobalInvoke(this IServiceProvider serviceProvider, CommandID cmdID) {
+            OleMenuCommandService mcs = serviceProvider.GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
+            mcs.GlobalInvoke(cmdID);
+        }
+
+        internal static void GlobalInvoke(this IServiceProvider serviceProvider, CommandID cmdID, object arg) {
+            OleMenuCommandService mcs = serviceProvider.GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
+            mcs.GlobalInvoke(cmdID, arg);
+        }
+
+        internal static void ShowOptionsPage(this IServiceProvider serviceProvider, Type optionsPageType) {
+            CommandID cmd = new CommandID(VSConstants.GUID_VSStandardCommandSet97, VSConstants.cmdidToolsOptions);
+            serviceProvider.GlobalInvoke(
+                cmd,
+                optionsPageType.GUID.ToString()
+            );
+        }
+
+        internal static void ShowInterpreterList(this IServiceProvider serviceProvider) {
+            serviceProvider.ShowWindowPane(typeof(InterpreterListToolWindow), true);
+        }
+
+        internal static void ShowWindowPane(this IServiceProvider serviceProvider, Type windowPane, bool focus) {
+            var toolWindowService = (IPythonToolsToolWindowService)serviceProvider.GetService(typeof(IPythonToolsToolWindowService));
+            toolWindowService.ShowWindowPane(windowPane, focus);
+        }
+
+        public static string BrowseForDirectory(this IServiceProvider provider, IntPtr owner, string initialDirectory = null) {
+            IVsUIShell uiShell = provider.GetService(typeof(SVsUIShell)) as IVsUIShell;
+            if (null == uiShell) {
+                using (var ofd = new FolderBrowserDialog()) {
+                    ofd.RootFolder = Environment.SpecialFolder.Desktop;
+                    ofd.ShowNewFolderButton = false;
+                    DialogResult result;
+                    if (owner == IntPtr.Zero) {
+                        result = ofd.ShowDialog();
+                    } else {
+                        result = ofd.ShowDialog(NativeWindow.FromHandle(owner));
+                    }
+                    if (result == DialogResult.OK) {
+                        return ofd.SelectedPath;
+                    } else {
+                        return null;
+                    }
+                }
+            }
+
+            if (owner == IntPtr.Zero) {
+                ErrorHandler.ThrowOnFailure(uiShell.GetDialogOwnerHwnd(out owner));
+            }
+
+            VSBROWSEINFOW[] browseInfo = new VSBROWSEINFOW[1];
+            browseInfo[0].lStructSize = (uint)Marshal.SizeOf(typeof(VSBROWSEINFOW));
+            browseInfo[0].pwzInitialDir = initialDirectory;
+            browseInfo[0].hwndOwner = owner;
+            browseInfo[0].nMaxDirName = 260;
+            IntPtr pDirName = Marshal.AllocCoTaskMem(520);
+            browseInfo[0].pwzDirName = pDirName;
+            try {
+                int hr = uiShell.GetDirectoryViaBrowseDlg(browseInfo);
+                if (hr == VSConstants.OLE_E_PROMPTSAVECANCELLED) {
+                    return null;
+                }
+                ErrorHandler.ThrowOnFailure(hr);
+                return Marshal.PtrToStringAuto(browseInfo[0].pwzDirName);
+            } finally {
+                if (pDirName != IntPtr.Zero) {
+                    Marshal.FreeCoTaskMem(pDirName);
+                }
+            }
         }
 
         /// <summary>

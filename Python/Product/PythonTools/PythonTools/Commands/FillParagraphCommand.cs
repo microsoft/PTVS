@@ -31,14 +31,20 @@ namespace Microsoft.PythonTools.Commands {
     /// Provides the command to send selected text from a buffer to the remote REPL window.
     /// </summary>
     class FillParagraphCommand : Command {
+        private readonly System.IServiceProvider _serviceProvider;
+
         private const string _sentenceTerminators = ".!?";
         private static Regex _startDocStringRegex = new Regex("^[\t ]*('''|\"\"\")[\t ]*$");
         private static Regex _endDocStringRegex = new Regex("('''|\"\"\")[\t ]*$");
         private static Regex _commentRegex = new Regex("^[\t ]*#+[\t ]*");
         private static Regex _whitespaceRegex = new Regex("^[\t ]+");
 
+        public FillParagraphCommand(System.IServiceProvider serviceProvider) {
+            _serviceProvider = serviceProvider;
+        }
+
         public override void DoCommand(object sender, EventArgs args) {
-            FillCommentParagraph(CommonPackage.GetActiveTextView());
+            FillCommentParagraph(CommonPackage.GetActiveTextView(_serviceProvider));
         }
 
         /// <summary>
@@ -73,7 +79,8 @@ namespace Microsoft.PythonTools.Commands {
                 }
 
                 int curLine = 0, curOffset = fillPrefix.Prefix.Length;
-                int columnCutoff = PythonToolsPackage.Instance.GetCodeFormattingOptions().WrappingWidth - fillPrefix.Prefix.Length;
+
+                int columnCutoff = _serviceProvider.GetPythonToolsService().GetCodeFormattingOptions().WrappingWidth - fillPrefix.Prefix.Length;
                 int defaultColumnCutoff = columnCutoff;
                 StringBuilder newText = new StringBuilder(end.Position - start.Position);
                 while (curLine < lines.Length) {
@@ -308,7 +315,7 @@ namespace Microsoft.PythonTools.Commands {
         }
 
         private bool IsDocString(ITextView textWindow, SnapshotPoint point) {
-            var aggregator = CommonPackage.ComponentModel.GetService<IClassifierAggregatorService>();
+            var aggregator = _serviceProvider.GetComponentModel().GetService<IClassifierAggregatorService>();
             IClassifier classifier = aggregator.GetClassifier(textWindow.TextBuffer);
 
             var curLine = point.GetContainingLine();
@@ -331,7 +338,7 @@ namespace Microsoft.PythonTools.Commands {
         }
 
         public override int? EditFilterQueryStatus(ref VisualStudio.OLE.Interop.OLECMD cmd, IntPtr pCmdText) {
-            var activeView = CommonPackage.GetActiveTextView();
+            var activeView = CommonPackage.GetActiveTextView(_serviceProvider);
             if (activeView != null && activeView.TextBuffer.ContentType.IsOfType(PythonCoreConstants.ContentType)) {
                 cmd.cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
             } else {

@@ -32,6 +32,7 @@ using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudioTools.VSTestHost;
 using TestUtilities;
 using TestUtilities.Python;
 using TestUtilities.UI;
@@ -52,7 +53,7 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("InterpreterList")]
         [HostType("VSTestHost")]
         public void GetInstalledInterpreters() {
-            var interps = InterpreterView.GetInterpreters().ToList();
+            var interps = InterpreterView.GetInterpreters(VSTestContext.ServiceProvider).ToList();
             foreach (var ver in PythonPaths.Versions) {
                 var expected = AnalyzerStatusUpdater.GetIdentifier(ver.Id, ver.Version.ToVersion());
                 Assert.AreEqual(1, interps.Count(iv => iv.Identifier.Equals(expected, StringComparison.Ordinal)), expected);
@@ -484,7 +485,7 @@ namespace PythonToolsUITests {
                 new MockPythonInterpreterFactory(Guid.NewGuid(), "Test Factory 6", MockInterpreterConfiguration(new Version(3, 3)))
             ));
 
-            var list = new InterpreterList(mockService);
+            var list = new InterpreterList(mockService, PythonToolsTestUtilities.CreateMockServiceProvider());
 
             Assert.AreEqual(6, list.Interpreters.Count);
         }
@@ -492,7 +493,7 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("InterpreterListNonUI")]
         public void AddProviders() {
             var mockService = new MockInterpreterOptionsService();
-            var list = new InterpreterList(mockService);
+            var list = new InterpreterList(mockService, PythonToolsTestUtilities.CreateMockServiceProvider());
 
             Assert.AreEqual(0, list.Interpreters.Count);
 
@@ -516,7 +517,7 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("InterpreterListNonUI")]
         public void AddFactories() {
             var mockService = new MockInterpreterOptionsService();
-            var list = new InterpreterList(mockService);
+            var list = new InterpreterList(mockService, PythonToolsTestUtilities.CreateMockServiceProvider());
 
             Assert.AreEqual(0, list.Interpreters.Count);
 
@@ -567,7 +568,7 @@ namespace PythonToolsUITests {
             var provider = new MockPythonInterpreterFactoryProvider("Test Provider 1", fact);
             mockService.AddProvider(provider);
 
-            var list = new InterpreterList(mockService);
+            var list = new InterpreterList(mockService, PythonToolsTestUtilities.CreateMockServiceProvider());
             var listView = (System.Windows.Controls.ListView)list.FindName("interpreterList");
             var wnd = new Window() { Content = list };
             wnd.ShowInTaskbar = false;
@@ -603,7 +604,7 @@ namespace PythonToolsUITests {
             InterpreterView view = null;
             Window wnd = null;
             var t = new Thread(() => {
-                list = new InterpreterList(mockService);
+                list = new InterpreterList(mockService, PythonToolsTestUtilities.CreateMockServiceProvider());
                 view = list.Interpreters[0];
 
                 wnd = new Window {

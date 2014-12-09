@@ -24,6 +24,7 @@ using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.PlatformUI;
 using Microsoft.VisualStudio.Repl;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
@@ -34,10 +35,12 @@ namespace Microsoft.PythonTools {
     internal class PythonAnalysisClassifierProvider : IClassifierProvider {
         private Dictionary<string, IClassificationType> _categoryMap;
         private readonly IContentType _type;
+        internal readonly IServiceProvider _serviceProvider;
 
         [ImportingConstructor]
-        public PythonAnalysisClassifierProvider(IContentTypeRegistryService contentTypeRegistryService) {
+        public PythonAnalysisClassifierProvider(IContentTypeRegistryService contentTypeRegistryService, [Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider) {
             _type = contentTypeRegistryService.GetContentType(PythonCoreConstants.ContentType);
+            _serviceProvider = serviceProvider;
         }
 
         /// <summary>

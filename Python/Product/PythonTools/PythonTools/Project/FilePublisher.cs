@@ -19,6 +19,7 @@ using System.IO;
 using System.Net;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 
@@ -28,6 +29,13 @@ namespace Microsoft.PythonTools.Project {
     /// </summary>
     [Export(typeof(IProjectPublisher))]
     class FilePublisher : IProjectPublisher {
+        private readonly IServiceProvider _serviceProvider;
+
+        [ImportingConstructor]
+        public FilePublisher([Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider) {
+            _serviceProvider = serviceProvider;
+        }
+
         #region IProjectPublisher Members
 
         public void PublishFiles(IPublishProject project, Uri destination) {
@@ -43,11 +51,11 @@ namespace Microsoft.PythonTools.Project {
                     var resource = new NativeMethods._NETRESOURCE();
                     resource.dwType = NativeMethods.RESOURCETYPE_DISK;
                     resource.lpRemoteName = Path.GetPathRoot(destination.LocalPath);
-                    
+
                     NetworkCredential creds = null;
                     var res = VsCredentials.PromptForCredentials(
-                        PythonToolsPackage.Instance, 
-                        destination, 
+                        _serviceProvider,
+                        destination,
                         new[] { "NTLM" }, "", out creds);
 
                     if (res != DialogResult.OK) {
@@ -55,10 +63,10 @@ namespace Microsoft.PythonTools.Project {
                     }
 
                     var netAddRes = NativeMethods.WNetAddConnection3(
-                        Process.GetCurrentProcess().MainWindowHandle, 
+                        Process.GetCurrentProcess().MainWindowHandle,
                         ref resource,
-                        creds.Password, 
-                        creds.Domain + "\\" + creds.UserName, 
+                        creds.Password,
+                        creds.Domain + "\\" + creds.UserName,
                         0
                     );
 

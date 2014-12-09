@@ -34,6 +34,8 @@ namespace Microsoft.PythonTools.Commands {
     /// Provides the command for starting a file or the start item of a project in the REPL window.
     /// </summary>
     internal sealed class DiagnosticsCommand : Command {
+        private readonly IServiceProvider _serviceProvider;
+
         private static readonly IEnumerable<string> InterestingDteProperties = new[] {
             "InterpreterId",
             "InterpreterVersion",
@@ -72,8 +74,12 @@ namespace Microsoft.PythonTools.Commands {
             RegexOptions.IgnoreCase | RegexOptions.CultureInvariant
         );
 
+        public DiagnosticsCommand(IServiceProvider serviceProvider) {
+            _serviceProvider = serviceProvider;
+        }
+
         public override void DoCommand(object sender, EventArgs args) {
-            var dlg = new DiagnosticsForm("Gathering data...");
+            var dlg = new DiagnosticsForm(_serviceProvider, "Gathering data...");
 
             ThreadPool.QueueUserWorkItem(x => {
                 var data = GetData();
@@ -95,11 +101,11 @@ namespace Microsoft.PythonTools.Commands {
                 res.AppendLine("WARNING: IpyTools is installed on this machine.  Having both IpyTools and Python Tools for Visual Studio installed will break Python editing.");
             }
 
-            var pythonPathIsMasked = PythonToolsPackage.Instance.GeneralOptionsPage.ClearGlobalPythonPath ? " (masked)" : "";
+            var pythonPathIsMasked = _serviceProvider.GetPythonToolsService().GeneralOptions.ClearGlobalPythonPath ? " (masked)" : "";
 
-            var interpreterService = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
+            var interpreterService = _serviceProvider.GetComponentModel().GetService<IInterpreterOptionsService>();
 
-            var dte = (EnvDTE.DTE)PythonToolsPackage.GetGlobalService(typeof(EnvDTE.DTE));
+            var dte = (EnvDTE.DTE)_serviceProvider.GetService(typeof(EnvDTE.DTE));
             res.AppendLine("Projects: ");
 
             var projects = dte.Solution.Projects;
@@ -195,7 +201,7 @@ namespace Microsoft.PythonTools.Commands {
             }
 
             res.AppendLine("Launchers:");
-            var launchProviders = PythonToolsPackage.ComponentModel.GetExtensions<IPythonLauncherProvider>();
+            var launchProviders = _serviceProvider.GetComponentModel().GetExtensions<IPythonLauncherProvider>();
             foreach (var launcher in launchProviders) {
                 res.AppendLine("    Launcher: " + launcher.GetType().FullName);
                 res.AppendLine("        " + launcher.Description);
@@ -205,7 +211,7 @@ namespace Microsoft.PythonTools.Commands {
 
             try {
                 res.AppendLine("Logged events/stats:");
-                var inMemLogger = PythonToolsPackage.ComponentModel.GetService<InMemoryLogger>();
+                var inMemLogger = _serviceProvider.GetComponentModel().GetService<InMemoryLogger>();
                 res.AppendLine(inMemLogger.ToString());
                 res.AppendLine();
             } catch (Exception ex) {

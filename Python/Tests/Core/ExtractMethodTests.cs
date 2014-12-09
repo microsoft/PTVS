@@ -1670,8 +1670,9 @@ def f(x):
 
         private void ExtractMethodTest(string input, Func<Span> extract, TestResult expected, string scopeName = null, string targetName = "g", Version version = null, params string[] parameters) {
             var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version ?? new Version(2, 7));
-            using (var analyzer = new VsProjectAnalyzer(fact, new[] { fact })) {
-                var buffer = new MockTextBuffer(input);
+            var serviceProvider = PythonToolsTestUtilities.CreateMockServiceProvider();
+            using (var analyzer = new VsProjectAnalyzer(serviceProvider, fact, new[] { fact })) {
+                var buffer = new MockTextBuffer(input, "Python", "C:\\fob.py");
                 var view = new MockTextView(buffer);
                 buffer.AddProperty(typeof(VsProjectAnalyzer), analyzer);
                 var extractInput = new ExtractMethodTestInput(true, scopeName, targetName, parameters ?? new string[0]);
@@ -1681,7 +1682,7 @@ def f(x):
                     false
                 );
 
-                new MethodExtractor(view).ExtractMethod(extractInput);
+                new MethodExtractor(serviceProvider, view).ExtractMethod(extractInput);
 
                 if (expected.IsError) {
                     Assert.AreEqual(expected.Text, extractInput.FailureReason);
@@ -1724,7 +1725,7 @@ def f(x):
                 }
 
                 Assert.AreNotEqual(null, scope);
-                var requestView = new ExtractMethodRequestView(previewer);
+                var requestView = new ExtractMethodRequestView(PythonToolsTestUtilities.CreateMockServiceProvider(), previewer);
                 requestView.TargetScope = requestView.TargetScopes.Single(s => s == scope);
                 requestView.Name = _targetName;
                 foreach (var cv in requestView.ClosureVariables) {

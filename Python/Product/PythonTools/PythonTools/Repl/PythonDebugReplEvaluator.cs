@@ -42,18 +42,22 @@ namespace Microsoft.PythonTools.Repl {
         private PythonDebugProcessReplEvaluator _activeEvaluator;
         private readonly Dictionary<int, PythonDebugProcessReplEvaluator> _evaluators = new Dictionary<int, PythonDebugProcessReplEvaluator>(); // process id to evaluator
         private EnvDTE.DebuggerEvents _debuggerEvents;
-        private PythonInteractiveCommonOptions _options;
+        private readonly PythonToolsService _pyService;
+        private readonly IServiceProvider _serviceProvider;
 
         private const string currentPrefix = "=> ";
         private const string notCurrentPrefix = "   ";
 
-        public PythonDebugReplEvaluator() {
+        public PythonDebugReplEvaluator(IServiceProvider serviceProvider) {
+            _serviceProvider = serviceProvider;
+            _pyService = serviceProvider.GetPythonToolsService();
             AD7Engine.EngineAttached += new EventHandler<AD7EngineEventArgs>(OnEngineAttached);
             AD7Engine.EngineDetaching += new EventHandler<AD7EngineEventArgs>(OnEngineDetaching);
 
-            if (PythonToolsPackage.Instance != null) {
+            var dte = _serviceProvider.GetDTE();
+            if (dte != null) {
                 // running outside of VS, make this work for tests.
-                _debuggerEvents = PythonToolsPackage.Instance.DTE.Events.DebuggerEvents;
+                _debuggerEvents = dte.Events.DebuggerEvents;
                 _debuggerEvents.OnEnterBreakMode += new EnvDTE._dispDebuggerEvents_OnEnterBreakModeEventHandler(OnEnterBreakMode);
             }
         }
@@ -78,35 +82,17 @@ namespace Microsoft.PythonTools.Repl {
 
         internal PythonInteractiveCommonOptions CurrentOptions {
             get {
-                if (PythonToolsPackage.Instance == null) {
-                    // running outside of VS, make this work for tests.
-                    if (_options == null) {
-                        _options = CreatePackageOptions();
-                    }
-                    return _options;
-                }
-                return PythonToolsPackage.Instance.InteractiveDebugOptionsPage.Options;
+                return _pyService.DebugInteractiveOptions;
             }
         }
 
-        protected PythonInteractiveCommonOptions CreatePackageOptions() {
-            PythonInteractiveCommonOptions options = new PythonInteractiveCommonOptions();
-            options.PrimaryPrompt = ">>> ";
-            options.SecondaryPrompt = "... ";
-            options.InlinePrompts = true;
-            options.UseInterpreterPrompts = true;
-            options.ReplIntellisenseMode = ReplIntellisenseMode.DontEvaluateCalls;
-            options.ReplSmartHistory = true;
-            options.LiveCompletionsOnly = false;
-            return options;
-        }
-
-        private static bool IsInDebugBreakMode() {
-            if (PythonToolsPackage.Instance == null) {
+        private bool IsInDebugBreakMode() {
+            var dte = _serviceProvider.GetDTE();
+            if (dte == null) {
                 // running outside of VS, make this work for tests.
                 return true;
             }
-            return PythonToolsPackage.Instance.DTE.Debugger.CurrentMode == EnvDTE.dbgDebugMode.dbgBreakMode;
+            return dte.Debugger.CurrentMode == EnvDTE.dbgDebugMode.dbgBreakMode;
         }
 
         #region IReplEvaluator Members
@@ -140,10 +126,10 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         private void OnEnterBreakMode(EnvDTE.dbgEventReason Reason, ref EnvDTE.dbgExecutionAction ExecutionAction) {
-            int activeProcessId = PythonToolsPackage.Instance.DTE.Debugger.CurrentProcess.ProcessID;
+            int activeProcessId = _serviceProvider.GetDTE().Debugger.CurrentProcess.ProcessID;
             AD7Engine engine = AD7Engine.GetEngines().SingleOrDefault(target => target.Process != null && target.Process.Id == activeProcessId);
             if (engine != null) {
-                long? activeThreadId = ((IThreadIdMapper)engine).GetPythonThreadId((uint)PythonToolsPackage.Instance.DTE.Debugger.CurrentThread.ID);
+                long? activeThreadId = ((IThreadIdMapper)engine).GetPythonThreadId((uint)_serviceProvider.GetDTE().Debugger.CurrentThread.ID);
                 if (activeThreadId != null) {
                     AttachProcess(engine.Process, engine);
                     ChangeActiveThread(activeThreadId.Value, false);
@@ -470,7 +456,7 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             process.ProcessExited += new EventHandler<ProcessExitedEventArgs>(OnProcessExited);
-            var evaluator = new PythonDebugProcessReplEvaluator(process, threadIdMapper);
+            var evaluator = new PythonDebugProcessReplEvaluator(_serviceProvider, process, _pyService, threadIdMapper);
             evaluator.Window = _window;
             evaluator.AvailableScopesChanged += new EventHandler<EventArgs>(evaluator_AvailableScopesChanged);
             evaluator.MultipleScopeSupportChanged += new EventHandler<EventArgs>(evaluator_MultipleScopeSupportChanged);
@@ -537,8 +523,8 @@ namespace Microsoft.PythonTools.Repl {
         private int _frameId;
         private PythonLanguageVersion _languageVersion;
 
-        public PythonDebugProcessReplEvaluator(PythonProcess process, IThreadIdMapper threadIdMapper)
-            : base(GetOptions()) {
+        public PythonDebugProcessReplEvaluator(IServiceProvider serviceProvider, PythonProcess process, PythonToolsService pyService, IThreadIdMapper threadIdMapper)
+            : base(serviceProvider, pyService, GetOptions(serviceProvider, pyService)) {
             _process = process;
             _threadIdMapper = threadIdMapper;
             _threadId = process.GetThreads()[0].Id;
@@ -547,15 +533,11 @@ namespace Microsoft.PythonTools.Repl {
             EnsureConnected();
         }
 
-        private static PythonReplEvaluatorOptions GetOptions() {
-            if(PythonToolsPackage.Instance != null) {
-                return new DefaultPythonReplEvaluatorOptions(
-                    () => PythonToolsPackage.Instance.InteractiveDebugOptionsPage.Options
-                );
-            }
-
-            // running in a test, just use a simple set of options
-            return new ConfigurablePythonReplOptions();
+        private static PythonReplEvaluatorOptions GetOptions(IServiceProvider serviceProvider, PythonToolsService pyService) {
+            return new DefaultPythonReplEvaluatorOptions(
+                serviceProvider,
+                () => pyService.DebugInteractiveOptions
+            );
         }
 
         public PythonProcess Process {
@@ -632,10 +614,11 @@ namespace Microsoft.PythonTools.Repl {
             var threads = _process.GetThreads();
             PythonThread activeThread = null;
 
-            if (PythonToolsPackage.Instance != null) {
+            var dte = _serviceProvider.GetDTE();
+            if (dte != null) {
                 // If we are broken into the debugger, let's set the debug REPL active thread
                 // to be the one that is active in the debugger
-                var dteDebugger = PythonToolsPackage.Instance.DTE.Debugger;
+                var dteDebugger = dte.Debugger;
                 if (dteDebugger.CurrentMode == EnvDTE.dbgDebugMode.dbgBreakMode &&
                     dteDebugger.CurrentProcess != null &&
                     dteDebugger.CurrentThread != null) {
@@ -711,47 +694,47 @@ namespace Microsoft.PythonTools.Repl {
 
         internal void StepOut() {
             UpdateDTEDebuggerProcessAndThread();
-            PythonToolsPackage.Instance.DTE.Debugger.CurrentThread.Parent.StepOut();
+            _serviceProvider.GetDTE().Debugger.CurrentThread.Parent.StepOut();
         }
 
         internal void StepInto() {
             UpdateDTEDebuggerProcessAndThread();
-            PythonToolsPackage.Instance.DTE.Debugger.CurrentThread.Parent.StepInto();
+            _serviceProvider.GetDTE().Debugger.CurrentThread.Parent.StepInto();
         }
 
         internal void StepOver() {
             UpdateDTEDebuggerProcessAndThread();
-            PythonToolsPackage.Instance.DTE.Debugger.CurrentThread.Parent.StepOver();
+            _serviceProvider.GetDTE().Debugger.CurrentThread.Parent.StepOver();
         }
 
         internal void Resume() {
             UpdateDTEDebuggerProcessAndThread();
-            PythonToolsPackage.Instance.DTE.Debugger.CurrentThread.Parent.Go();
+            _serviceProvider.GetDTE().Debugger.CurrentThread.Parent.Go();
         }
 
         private void UpdateDTEDebuggerProcessAndThread() {
             EnvDTE.Process dteActiveProcess = null;
-            foreach (EnvDTE.Process dteProcess in PythonToolsPackage.Instance.DTE.Debugger.DebuggedProcesses) {
+            foreach (EnvDTE.Process dteProcess in _serviceProvider.GetDTE().Debugger.DebuggedProcesses) {
                 if (dteProcess.ProcessID == _process.Id) {
                     dteActiveProcess = dteProcess;
                     break;
                 }
             }
 
-            if (dteActiveProcess != PythonToolsPackage.Instance.DTE.Debugger.CurrentProcess) {
-                PythonToolsPackage.Instance.DTE.Debugger.CurrentProcess = dteActiveProcess;
+            if (dteActiveProcess != _serviceProvider.GetDTE().Debugger.CurrentProcess) {
+                _serviceProvider.GetDTE().Debugger.CurrentProcess = dteActiveProcess;
             }
 
             EnvDTE.Thread dteActiveThread = null;
-            foreach (EnvDTE.Thread dteThread in PythonToolsPackage.Instance.DTE.Debugger.CurrentProgram.Threads) {
+            foreach (EnvDTE.Thread dteThread in _serviceProvider.GetDTE().Debugger.CurrentProgram.Threads) {
                 if (_threadIdMapper.GetPythonThreadId((uint)dteThread.ID) == _threadId) {
                     dteActiveThread = dteThread;
                     break;
                 }
             }
 
-            if (dteActiveThread != PythonToolsPackage.Instance.DTE.Debugger.CurrentThread) {
-                PythonToolsPackage.Instance.DTE.Debugger.CurrentThread = dteActiveThread;
+            if (dteActiveThread != _serviceProvider.GetDTE().Debugger.CurrentThread) {
+                _serviceProvider.GetDTE().Debugger.CurrentThread = dteActiveThread;
             }
         }
     }

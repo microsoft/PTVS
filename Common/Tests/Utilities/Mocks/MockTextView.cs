@@ -25,6 +25,7 @@ namespace TestUtilities.Mocks {
         private readonly MockTextSelection _selection;
         private readonly MockTextCaret _caret;
         private readonly MockBufferGraph _bufferGraph;
+        private bool _hasFocus;
 
         public MockTextView(ITextBuffer buffer) {
             _buffer = buffer;
@@ -72,13 +73,18 @@ namespace TestUtilities.Mocks {
             throw new NotImplementedException();
         }
 
-        public event EventHandler GotAggregateFocus {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+        public event EventHandler GotAggregateFocus;
+
+        public void OnGotAggregateFocus() {
+            var gotFocus = GotAggregateFocus;
+            if (gotFocus != null) {
+                gotFocus(this, EventArgs.Empty);
+            }
+            _hasFocus = true;
         }
 
         public bool HasAggregateFocus {
-            get { throw new NotImplementedException(); }
+            get { return _hasFocus; }
         }
 
         public bool InLayout {
@@ -102,18 +108,27 @@ namespace TestUtilities.Mocks {
             get { throw new NotImplementedException(); }
         }
 
-        public event EventHandler LostAggregateFocus {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+        public event EventHandler LostAggregateFocus;
+
+        public void OnLostAggregateFocus() {
+            var lostFocus = LostAggregateFocus;
+            if (lostFocus != null) {
+                lostFocus(this, EventArgs.Empty);
+            }
+            _hasFocus = false;
         }
 
         public double MaxTextRightCoordinate {
             get { throw new NotImplementedException(); }
         }
 
-        public event EventHandler<MouseHoverEventArgs> MouseHover {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+        public event EventHandler<MouseHoverEventArgs> MouseHover;
+
+        public void HoverMouse(MouseHoverEventArgs args) {
+            var mouseHover = MouseHover;
+            if (mouseHover != null) {
+                mouseHover(this, args);
+            }
         }
 
         public IEditorOptions Options {

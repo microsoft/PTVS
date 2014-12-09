@@ -24,12 +24,18 @@ namespace Microsoft.PythonTools.Commands {
     /// Provides the command to send selected text from a buffer to the remote REPL window.
     /// </summary>
     class RemoveImportsCurrentScopeCommand : Command {
+        private readonly System.IServiceProvider _serviceProvider;
+
+        public RemoveImportsCurrentScopeCommand(System.IServiceProvider serviceProvider) {
+            _serviceProvider = serviceProvider;
+        }
+
         public override void DoCommand(object sender, EventArgs args) {
-            new ImportRemover(CommonPackage.GetActiveTextView(), false).RemoveImports();
+            new ImportRemover(_serviceProvider, CommonPackage.GetActiveTextView(_serviceProvider), false).RemoveImports();
         }
 
         public override int? EditFilterQueryStatus(ref VisualStudio.OLE.Interop.OLECMD cmd, IntPtr pCmdText) {
-            var activeView = CommonPackage.GetActiveTextView();
+            var activeView = CommonPackage.GetActiveTextView(_serviceProvider);
             if (activeView != null && activeView.TextBuffer.ContentType.IsOfType(PythonCoreConstants.ContentType)) {
                 cmd.cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
             } else {

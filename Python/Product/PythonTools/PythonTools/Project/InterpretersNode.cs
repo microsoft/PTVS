@@ -63,7 +63,7 @@ namespace Microsoft.PythonTools.Project {
             ExcludeNodeFromScc = true;
 
             _interpreters = project.Interpreters;
-            _interpreterService = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
+            _interpreterService = project.Site.GetComponentModel().GetService<IInterpreterOptionsService>();
             _factory = factory;
             _isReference = isInterpreterReference;
             _canDelete = canDelete;
@@ -215,8 +215,7 @@ namespace Microsoft.PythonTools.Project {
                         "Existing", //Installer if we tracked it
                         false, //Installer was not run elevated
                         0); //The installation already existed
-
-                    PythonToolsPackage.Instance.Logger.LogEvent(Logging.PythonLogEvent.PackageInstalled, packageDetails);
+                    ProjectMgr.Site.GetPythonToolsService().Logger.LogEvent(Logging.PythonLogEvent.PackageInstalled, packageDetails);
                 }
             }
             _checkingItems = false;

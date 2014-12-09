@@ -56,6 +56,7 @@ namespace Microsoft.PythonTools.InterpreterList {
         readonly IVsSolution _solutionService;
         readonly SolutionEventsListener _solutionEvents;
         readonly Dictionary<IVsProject, PythonProjectNode> _hookedProjects;
+        private readonly IServiceProvider _serviceProvider;
 
         public static readonly RoutedCommand RefreshCommand = new RoutedUICommand("_Refresh", "Refresh", typeof(InterpreterList));
         public static readonly RoutedCommand RegenerateCommand = new RoutedUICommand("Refresh", "Regenerate", typeof(InterpreterList));
@@ -68,13 +69,11 @@ namespace Microsoft.PythonTools.InterpreterList {
         public static readonly RoutedCommand CopyReasonCommand = new RoutedUICommand("Copy", "CopyReason", typeof(InterpreterList));
         public static readonly RoutedCommand WebChooseInterpreterCommand = new RoutedUICommand("Help me choose an interpreter", "WebChooseInterpreter", typeof(InterpreterList));
 
-        internal InterpreterList(IInterpreterOptionsService service)
-            : this(service, null, true) { }
-
         public InterpreterList(IInterpreterOptionsService service, IServiceProvider provider)
             : this(service, provider, false) { }
 
         private InterpreterList(IInterpreterOptionsService service, IServiceProvider provider, bool ignoreProvider) {
+            _serviceProvider = provider;
             _refreshTimer = new DispatcherTimer();
             _refreshTimer.Interval = TimeSpan.FromMilliseconds(500.0);
             _refreshTimer.Tick += AutoRefresh_Elapsed;
@@ -189,7 +188,7 @@ namespace Microsoft.PythonTools.InterpreterList {
 
                 _interpreters.Clear();
 
-                _interpreters.AddRange(InterpreterView.GetInterpreters(_interpreterService));
+                _interpreters.AddRange(InterpreterView.GetInterpreters(_serviceProvider, _interpreterService));
                 if (_hookedProjects != null) {
                     foreach (var project in _solutionService.EnumerateLoadedProjects()) {
                         var pyProject = project.GetPythonProject();
@@ -329,7 +328,7 @@ namespace Microsoft.PythonTools.InterpreterList {
             IReplWindow window;
 
             try {
-                window = ExecuteInReplCommand.EnsureReplWindow(interp, view.Project);
+                window = ExecuteInReplCommand.EnsureReplWindow(_serviceProvider, interp, view.Project);
             } catch (InvalidOperationException ex) {
                 MessageBox.Show(SR.GetString(SR.ErrorOpeningInteractiveWindow, ex), SR.ProductName);
                 return;
@@ -355,10 +354,10 @@ namespace Microsoft.PythonTools.InterpreterList {
                 interp = ((InterpreterView)e.Parameter).Interpreter;
             }
             if (e.Command == OpenOptionsCommand) {
-                PythonToolsPackage.Instance.ShowOptionPage(typeof(PythonInterpreterOptionsPage), interp);
+                PythonToolsPackage.ShowOptionPage(_serviceProvider, typeof(PythonInterpreterOptionsPage), interp);
 
             } else if (e.Command == OpenReplOptionsCommand) {
-                PythonToolsPackage.Instance.ShowOptionPage(typeof(PythonInteractiveOptionsPage), interp);
+                PythonToolsPackage.ShowOptionPage(_serviceProvider, typeof(PythonInteractiveOptionsPage), interp);
             }
         }
 

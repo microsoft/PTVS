@@ -12,12 +12,14 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Windows.Media;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.Language.StandardClassification;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Utilities;
@@ -42,10 +44,12 @@ namespace Microsoft.PythonTools {
         private IClassificationType _dotClassification;
         private IClassificationType _commaClassification;
         private readonly IContentType _type;
+        internal readonly IServiceProvider _serviceProvider;
 
         [ImportingConstructor]
-        public PythonClassifierProvider(IContentTypeRegistryService contentTypeRegistryService) {
+        public PythonClassifierProvider(IContentTypeRegistryService contentTypeRegistryService, [Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider) {
             _type = contentTypeRegistryService.GetContentType(PythonCoreConstants.ContentType);
+            _serviceProvider = serviceProvider;
         }
 
         /// <summary>

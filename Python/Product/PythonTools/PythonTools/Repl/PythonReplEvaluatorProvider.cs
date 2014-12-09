@@ -57,6 +57,7 @@ namespace Microsoft.PythonTools.Repl {
                 string[] components = replId.Split(new[] { ' ' }, 3);
                 if (components.Length == 3) {
                     return PythonReplEvaluator.Create(
+                        _serviceProvider,
                         components[1],
                         components[2],
                         _interpreterService
@@ -67,6 +68,7 @@ namespace Microsoft.PythonTools.Repl {
             } else if (replId.StartsWith(_configurable2Guid, StringComparison.OrdinalIgnoreCase)) {
                 return new PythonReplEvaluatorDontPersist(
                     null,
+                    _serviceProvider,
                     new ConfigurablePythonReplOptions(),
                     _interpreterService
                 );
@@ -112,6 +114,7 @@ namespace Microsoft.PythonTools.Repl {
                 if (replOptions.InterpreterFactory != null) {
                     return new PythonReplEvaluatorDontPersist(
                         replOptions.InterpreterFactory,
+                        _serviceProvider,
                         replOptions,
                         _interpreterService
                     );

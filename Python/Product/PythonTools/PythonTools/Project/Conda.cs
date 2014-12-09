@@ -103,6 +103,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public static async Task<bool> Install(
+            IServiceProvider provider,
             IPythonInterpreterFactory factory,
             IInterpreterOptionsService service,
             string package,
@@ -118,7 +119,7 @@ namespace Microsoft.PythonTools.Project {
 
             if (output != null) {
                 output.WriteLine(SR.GetString(SR.PackageInstalling, package));
-                if (PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ShowOutputWindowForPackageInstallation) {
+                if (provider.GetPythonToolsService().GeneralOptions.ShowOutputWindowForPackageInstallation) {
                     output.ShowAndActivate();
                 } else {
                     output.Show();
@@ -140,7 +141,7 @@ namespace Microsoft.PythonTools.Project {
                     } else {
                         output.WriteLine(SR.GetString(SR.PackageInstallFailedExitCode, package, exitCode));
                     }
-                    if (PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ShowOutputWindowForPackageInstallation) {
+                    if (provider.GetPythonToolsService().GeneralOptions.ShowOutputWindowForPackageInstallation) {
                         output.ShowAndActivate();
                     } else {
                         output.Show();

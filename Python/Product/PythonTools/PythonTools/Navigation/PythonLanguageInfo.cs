@@ -46,7 +46,7 @@ namespace Microsoft.PythonTools.Navigation {
             
             IVsTextView textView;
             if (ErrorHandler.Succeeded(pCodeWin.GetPrimaryView(out textView))) {
-                ppCodeWinMgr = new CodeWindowManager(pCodeWin, service.GetWpfTextView(textView));
+                ppCodeWinMgr = new CodeWindowManager(_serviceProvider, pCodeWin, service.GetWpfTextView(textView));
 
                 return VSConstants.S_OK;
             }

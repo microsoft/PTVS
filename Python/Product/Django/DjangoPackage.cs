@@ -110,7 +110,7 @@ namespace Microsoft.PythonTools.Django {
         }
 
         private void GotoTemplateSourceCode(object sender, EventArgs args) {
-            var dte = (EnvDTE.DTE)PythonToolsPackage.GetGlobalService(typeof(EnvDTE.DTE));
+            var dte = (EnvDTE.DTE)GetService(typeof(EnvDTE.DTE));
 
             var curFrame = (StackFrame2)dte.Debugger.CurrentStackFrame;
             
@@ -140,9 +140,9 @@ namespace Microsoft.PythonTools.Django {
             }
         }
 
-        internal static DjangoProject GetProject(string filename) {
+        internal static DjangoProject GetProject(IServiceProvider serviceProvider, string filename) {
             IVsHierarchy hierarchy;
-            IVsRunningDocumentTable rdt = GetGlobalService(typeof(SVsRunningDocumentTable)) as IVsRunningDocumentTable;
+            IVsRunningDocumentTable rdt = serviceProvider.GetService(typeof(SVsRunningDocumentTable)) as IVsRunningDocumentTable;
             uint itemid;
             IntPtr docData = IntPtr.Zero;
             uint cookie;

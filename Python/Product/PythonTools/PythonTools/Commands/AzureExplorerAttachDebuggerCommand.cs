@@ -40,7 +40,9 @@ namespace Microsoft.PythonTools.Commands {
     /// Provides the command to attach to an Azure web site selected in Server Explorer.
     /// </summary>
     internal class AzureExplorerAttachDebuggerCommand : Command {
-        public AzureExplorerAttachDebuggerCommand() {
+        private readonly IServiceProvider _serviceProvider;
+        public AzureExplorerAttachDebuggerCommand(IServiceProvider serviceProvider) {
+            _serviceProvider = serviceProvider;
             // Will throw PlatformNotSupportedException on any unsupported OS (Win7 and below).
             using (new ClientWebSocket()) { }
 
@@ -104,7 +106,7 @@ namespace Microsoft.PythonTools.Commands {
         private AzureWebSiteInfo GetSelectedAzureWebSite() {
             // Get the current selected node in Solution Explorer.
 
-            var shell = (IVsUIShell)PythonToolsPackage.GetGlobalService(typeof(SVsUIShell));
+            var shell = (IVsUIShell)_serviceProvider.GetService(typeof(SVsUIShell));
             var serverExplorerToolWindowGuid = new Guid(ToolWindowGuids.ServerExplorer);
             IVsWindowFrame serverExplorerFrame;
             shell.FindToolWindow(0, ref serverExplorerToolWindowGuid, out serverExplorerFrame);
@@ -188,7 +190,7 @@ namespace Microsoft.PythonTools.Commands {
         }
 
         private async Task<bool> AttachWorker(AzureWebSiteInfo webSite) {
-            using (new WaitDialog("Azure remote debugging", "Attaching to Azure web site at " + webSite.Uri, PythonToolsPackage.Instance, showProgress: true)) {
+            using (new WaitDialog("Azure remote debugging", "Attaching to Azure web site at " + webSite.Uri, _serviceProvider, showProgress: true)) {
                 // Get path (relative to site URL) for the debugger endpoint.
                 XDocument webConfig;
                 try {
@@ -231,7 +233,7 @@ namespace Microsoft.PythonTools.Commands {
                     // If we got to this point, the attach logic in debug engine will catch exceptions, display proper error message and
                     // ask the user to retry, so the only case where we actually get here is if user canceled on error. If this is the case,
                     // we don't want to pop any additional error messages, so always return true, but log the error in the Output window.
-                    var output = OutputWindowRedirector.GetGeneral(PythonToolsPackage.Instance);
+                    var output = OutputWindowRedirector.GetGeneral(_serviceProvider);
                     output.WriteErrorLine("Failed to attach to Azure web site: " + ex.Message);
                     output.ShowAndActivate();
                 }
@@ -317,7 +319,7 @@ namespace Microsoft.PythonTools.Commands {
             // Azure-type-returning async method to untyped Task first before awaiting, then use an explicit cast to Task<T> to read Result.
             // The only mentions of Azure types in the body of the method should be in casts.
 
-            object webSiteServices = PythonToolsPackage.GetGlobalService(typeof(IVsAzureServices));
+            object webSiteServices = _serviceProvider.GetService(typeof(IVsAzureServices));
             if (webSiteServices == null) {
                 return null;
             }
@@ -390,7 +392,7 @@ namespace Microsoft.PythonTools.Commands {
         }
 
         private unsafe void AttachDebugger(Uri uri) {
-            var dte = (EnvDTE.DTE)PythonToolsPackage.GetGlobalService(typeof(EnvDTE.DTE));
+            var dte = (EnvDTE.DTE)_serviceProvider.GetService(typeof(EnvDTE.DTE));
             var debugger = (EnvDTE90.Debugger3)dte.Debugger;
 
             var transports = debugger.Transports;

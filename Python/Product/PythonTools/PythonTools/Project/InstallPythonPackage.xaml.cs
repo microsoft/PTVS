@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.Threading.Tasks;
 using System.Windows;
 using Microsoft.PythonTools.Interpreter;
@@ -25,10 +26,11 @@ namespace Microsoft.PythonTools.Project {
         private readonly InstallPythonPackageView _view;
 
         public static InstallPythonPackageView ShowDialog(
+            IServiceProvider serviceProvider,
             IPythonInterpreterFactory factory,
             IInterpreterOptionsService service
         ) {
-            var wnd = new InstallPythonPackage(factory, service);
+            var wnd = new InstallPythonPackage(serviceProvider, factory, service);
             if (wnd.ShowModal() ?? false) {
                 return wnd._view;
             } else {
@@ -37,10 +39,12 @@ namespace Microsoft.PythonTools.Project {
         }
         
         private InstallPythonPackage(
+            IServiceProvider serviceProvider,
             IPythonInterpreterFactory factory,
             IInterpreterOptionsService service
         ) {
             _view = new InstallPythonPackageView(
+                serviceProvider,
                 !Pip.IsSecureInstall(factory),
                 Conda.CanInstall(factory, service)
             );

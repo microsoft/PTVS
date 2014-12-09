@@ -266,6 +266,10 @@
       <Link>SharedProject\FileWatcher.cs</Link>
       <Visible>true</Visible>
     </Compile>
+    <Compile Include="$(_ProjectSystemFilesLocation)\FlavoredProjectFactoryBase.cs">
+      <Link>SharedProject\FlavoredProjectFactoryBase.cs</Link>
+      <Visible>true</Visible>
+    </Compile>
     <Compile Include="$(_ProjectSystemFilesLocation)\DataObject.cs">
       <Link>SharedProject\DataObject.cs</Link>
       <Visible>true</Visible>
@@ -320,6 +324,10 @@
     </Compile>
     <Compile Include="$(_ProjectSystemFilesLocation)\IDEBuildLogger.cs">
       <Link>SharedProject\IDEBuildLogger.cs</Link>
+      <Visible>true</Visible>
+    </Compile>
+    <Compile Include="$(_ProjectSystemFilesLocation)\IdleManager.cs">
+      <Link>SharedProject\IdleManager.cs</Link>
       <Visible>true</Visible>
     </Compile>
     <Compile Include="$(_ProjectSystemFilesLocation)\ImageHandler.cs">

@@ -14,6 +14,7 @@
 
 using System;
 using System.Linq;
+using Microsoft.PythonTools;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreter.Default;
@@ -170,8 +171,9 @@ class Oar(object):
 
         private static void CodeFormattingTest(string input, object selection, string expected, object expectedSelection, CodeFormattingOptions options, bool selectResult = true) {
             var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(2, 7));
-            using (var analyzer = new VsProjectAnalyzer(fact, new[] { fact })) {
-                var buffer = new MockTextBuffer(input);
+            var serviceProvider = PythonToolsTestUtilities.CreateMockServiceProvider();
+            using (var analyzer = new VsProjectAnalyzer(serviceProvider, fact, new[] { fact })) {
+                var buffer = new MockTextBuffer(input, PythonCoreConstants.ContentType, "C:\\fob.py");
                 buffer.AddProperty(typeof(VsProjectAnalyzer), analyzer);
                 var view = new MockTextView(buffer);
                 var selectionSpan = new SnapshotSpan(
@@ -180,7 +182,7 @@ class Oar(object):
                 );
                 view.Selection.Select(selectionSpan, false);
 
-                new CodeFormatter(view, options).FormatCode(
+                new CodeFormatter(serviceProvider, view, options).FormatCode(
                     selectionSpan,
                     selectResult
                 );

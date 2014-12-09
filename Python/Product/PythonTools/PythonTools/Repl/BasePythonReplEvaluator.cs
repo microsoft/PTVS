@@ -59,6 +59,8 @@ namespace Microsoft.PythonTools.Repl {
         private bool _multipleScopes = true, _attached;
         internal Task<ExecutionResult> _lastExecutionResult;
         private readonly PythonReplEvaluatorOptions _options;
+        internal readonly PythonToolsService _pyService;
+        internal readonly IServiceProvider _serviceProvider;
 
         internal static readonly object InputBeforeReset = new object();    // used to mark buffers which are no longer valid because we've done a reset
 
@@ -79,8 +81,10 @@ namespace Microsoft.PythonTools.Repl {
         const string ExecuteFileEx_Module = "module";
         const string ExecuteFileEx_Process = "process";
 
-        protected BasePythonReplEvaluator(PythonReplEvaluatorOptions options) {
+        protected BasePythonReplEvaluator(IServiceProvider serviceProvider, PythonToolsService pyService, PythonReplEvaluatorOptions options) {
+            _pyService = pyService;
             _options = options;
+            _serviceProvider = serviceProvider;
         }
 
         protected abstract PythonLanguageVersion AnalyzerProjectLanguageVersion { get; }
@@ -444,11 +448,11 @@ namespace Microsoft.PythonTools.Repl {
                     pDebugInfo = Marshal.AllocCoTaskMem(Marshal.SizeOf(typeof(VsDebugTargetInfo2)));
                     Marshal.StructureToPtr(debugTarget, pDebugInfo, false);
 
-                    var debugger = (IVsDebugger2)PythonToolsPackage.GetGlobalService(typeof(SVsShellDebugger));
+                    var debugger = (IVsDebugger2)_eval._serviceProvider.GetService(typeof(SVsShellDebugger));
                     int hr = debugger.LaunchDebugTargets2(1, pDebugInfo);
 
                     if (ErrorHandler.Failed(hr)) {
-                        var uiShell = (IVsUIShell)PythonToolsPackage.GetGlobalService(typeof(SVsUIShell));
+                        var uiShell = (IVsUIShell)_eval._serviceProvider.GetService(typeof(SVsUIShell));
                         string errorText;
                         uiShell.GetErrorInfo(out errorText);
                         if (String.IsNullOrWhiteSpace(errorText)) {
@@ -1177,8 +1181,8 @@ namespace Microsoft.PythonTools.Repl {
             string startupFilename, startupDir, extraArgs = null;
             UIThread.Invoke(() => {
                 VsProjectAnalyzer analyzer;
-                if (PythonToolsPackage.TryGetStartupFileAndDirectory(out startupFilename, out startupDir, out analyzer)) {
-                    var startupProj = PythonToolsPackage.GetStartupProject();
+                if (PythonToolsPackage.TryGetStartupFileAndDirectory(_serviceProvider, out startupFilename, out startupDir, out analyzer)) {
+                    var startupProj = PythonToolsPackage.GetStartupProject(_serviceProvider);
                     if (startupProj != null) {
                         extraArgs = startupProj.GetProjectProperty(CommonConstants.CommandLineArguments, true);
                     }
@@ -1300,7 +1304,7 @@ namespace Microsoft.PythonTools.Repl {
                     return res.ToString();
                 }
             }
-            return EditFilter.RemoveReplPrompts(_window.TextView.Options.GetNewLineCharacter());
+            return EditFilter.RemoveReplPrompts(_pyService, _window.TextView.Options.GetNewLineCharacter());
         }
 
         private static string FormatItem(string item) {

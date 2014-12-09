@@ -29,13 +29,17 @@ namespace Microsoft.PythonTools.Refactoring {
     /// Handles input when running the rename refactoring within Visual Studio.
     /// </summary>
     class RenameVariableUserInput : IRenameVariableInput {
-        internal static RenameVariableUserInput Instance = new RenameVariableUserInput();
+        private readonly IServiceProvider _serviceProvider;
 
         public const string RefactorGuidStr = "{5A822660-832B-4AF0-9A86-1048D33A05E7}";
         private static readonly Guid RefactorGuid = new Guid(RefactorGuidStr);
         private const string RefactorKey = "Refactor";
         private const string RenameKey = "Rename";
         private const string PreviewChangesKey = "PreviewChanges";
+
+        public RenameVariableUserInput(IServiceProvider serviceProvider) {
+            _serviceProvider = serviceProvider;
+        }
 
         public RenameVariableRequest GetRenameInfo(string originalName, PythonLanguageVersion languageVersion) {
             var requestView = new RenameVariableRequestView(originalName, languageVersion);
@@ -71,7 +75,7 @@ namespace Microsoft.PythonTools.Refactoring {
                 }
             }
         }
-        
+
         internal bool? LoadBool(string name) {
             string res = LoadString(name);
             if (res == null) {
@@ -116,9 +120,9 @@ namespace Microsoft.PythonTools.Refactoring {
             }
         }
 
-        private static IVsOutputWindowPane GetPane() {
+        private IVsOutputWindowPane GetPane() {
             IVsOutputWindowPane pane;
-            var outWin = (IVsOutputWindow)CommonPackage.GetGlobalService(typeof(IVsOutputWindow));
+            var outWin = (IVsOutputWindow)_serviceProvider.GetService(typeof(IVsOutputWindow));
 
             char[] buffer = new char[1024];
             Guid tmp = RefactorGuid;
@@ -134,12 +138,12 @@ namespace Microsoft.PythonTools.Refactoring {
         }
 
         public ITextBuffer GetBufferForDocument(string filename) {
-            return PythonToolsPackage.GetBufferForDocument(filename);
+            return PythonToolsPackage.GetBufferForDocument(_serviceProvider, filename);
         }
 
 
         public IVsLinkedUndoTransactionManager BeginGlobalUndo() {
-            var linkedUndo = (IVsLinkedUndoTransactionManager)PythonToolsPackage.GetGlobalService(typeof(SVsLinkedUndoTransactionManager));
+            var linkedUndo = (IVsLinkedUndoTransactionManager)_serviceProvider.GetService(typeof(SVsLinkedUndoTransactionManager));
             ErrorHandler.ThrowOnFailure(linkedUndo.OpenLinkedUndo(
                 (uint)LinkedTransactionFlags2.mdtGlobal,
                 "Rename Variable"

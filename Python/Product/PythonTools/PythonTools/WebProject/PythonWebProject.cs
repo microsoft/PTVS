@@ -226,7 +226,7 @@ namespace Microsoft.PythonTools.Project.Web {
                             // about being added as a web role.
                             if (!AddWebRoleSupportFiles()) {
                                 VsShellUtilities.ShowMessageBox(
-                                    PythonToolsPackage.Instance,
+                                    this,
                                     SR.GetString(SR.AddWebRoleSupportFiles),
                                     null,
                                     OLEMSGICON.OLEMSGICON_INFO,

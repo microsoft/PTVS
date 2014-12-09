@@ -32,13 +32,14 @@ using Microsoft.VisualStudioTools;
 namespace Microsoft.PythonTools.Project {
     sealed class AddInterpreterView : DependencyObject, INotifyPropertyChanged {
         readonly IInterpreterOptionsService _interpreterService;
-
+        
         public AddInterpreterView(
+            IServiceProvider serviceProvider,
             IInterpreterOptionsService interpreterService,
             IEnumerable<IPythonInterpreterFactory> selected
         ) {
             _interpreterService = interpreterService;
-            Interpreters = new ObservableCollection<InterpreterView>(InterpreterView.GetInterpreters(interpreterService));
+            Interpreters = new ObservableCollection<InterpreterView>(InterpreterView.GetInterpreters(serviceProvider, interpreterService));
             
             var map = new Dictionary<IPythonInterpreterFactory, InterpreterView>();
             foreach (var view in Interpreters) {

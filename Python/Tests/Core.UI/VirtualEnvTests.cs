@@ -380,7 +380,7 @@ namespace PythonToolsUITests {
                 if (analysis::Microsoft.PythonTools.Interpreter.PythonInterpreterFactoryExtensions
                         .FindModules(dis.CurrentDefault, "virtualenv")
                         .Contains("virtualenv")) {
-                    Pip.Uninstall(dis.CurrentDefault, "virtualenv", false).Wait();
+                    Pip.Uninstall(app.ServiceProvider, dis.CurrentDefault, "virtualenv", false).Wait();
                 }
 
                 Assert.AreEqual(0, analysis::Microsoft.PythonTools.Interpreter.PythonInterpreterFactoryExtensions

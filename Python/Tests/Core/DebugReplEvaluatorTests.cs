@@ -67,7 +67,8 @@ namespace PythonToolsTests {
         [TestInitialize]
         public void TestInit() {
             Version.AssertInstalled();
-            _evaluator = new PythonDebugReplEvaluator();
+            var serviceProvider = PythonToolsTestUtilities.CreateMockServiceProvider();
+            _evaluator = new PythonDebugReplEvaluator(serviceProvider);
             _window = new MockReplWindow(_evaluator);
             _evaluator.Initialize(_window);
             _processes = new List<PythonProcess>();

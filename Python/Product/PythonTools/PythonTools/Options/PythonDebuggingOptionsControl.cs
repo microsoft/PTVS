@@ -22,22 +22,22 @@ namespace Microsoft.PythonTools.Options {
             InitializeComponent();
         }
 
-        internal void SyncControlWithPageSettings(PythonDebuggingOptionsPage page) {
-            _promptOnBuildError.Checked = page.PromptBeforeRunningWithBuildError;
-            _waitOnAbnormalExit.Checked = page.WaitOnAbnormalExit;
-            _waitOnNormalExit.Checked = page.WaitOnNormalExit;
-            _teeStdOut.Checked = page.TeeStandardOutput;
-            _breakOnSystemExitZero.Checked = page.BreakOnSystemExitZero;
-            _debugStdLib.Checked = page.DebugStdLib;
+        internal void SyncControlWithPageSettings(PythonToolsService pyService) {
+            _promptOnBuildError.Checked = pyService.DebuggerOptions.PromptBeforeRunningWithBuildError;
+            _waitOnAbnormalExit.Checked = pyService.DebuggerOptions.WaitOnAbnormalExit;
+            _waitOnNormalExit.Checked = pyService.DebuggerOptions.WaitOnNormalExit;
+            _teeStdOut.Checked = pyService.DebuggerOptions.TeeStandardOutput;
+            _breakOnSystemExitZero.Checked = pyService.DebuggerOptions.BreakOnSystemExitZero;
+            _debugStdLib.Checked = pyService.DebuggerOptions.DebugStdLib;
         }
 
-        internal void SyncPageWithControlSettings(PythonDebuggingOptionsPage page) {
-            page.PromptBeforeRunningWithBuildError = _promptOnBuildError.Checked;
-            page.WaitOnAbnormalExit = _waitOnAbnormalExit.Checked;
-            page.WaitOnNormalExit = _waitOnNormalExit.Checked;
-            page.TeeStandardOutput = _teeStdOut.Checked;
-            page.BreakOnSystemExitZero = _breakOnSystemExitZero.Checked;
-            page.DebugStdLib = _debugStdLib.Checked;
+        internal void SyncPageWithControlSettings(PythonToolsService pyService) {
+            pyService.DebuggerOptions.PromptBeforeRunningWithBuildError = _promptOnBuildError.Checked;
+            pyService.DebuggerOptions.WaitOnAbnormalExit = _waitOnAbnormalExit.Checked;
+            pyService.DebuggerOptions.WaitOnNormalExit = _waitOnNormalExit.Checked;
+            pyService.DebuggerOptions.TeeStandardOutput = _teeStdOut.Checked;
+            pyService.DebuggerOptions.BreakOnSystemExitZero = _breakOnSystemExitZero.Checked;
+            pyService.DebuggerOptions.DebugStdLib = _debugStdLib.Checked;
         }
     }
 }

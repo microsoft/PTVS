@@ -34,8 +34,8 @@ namespace PythonToolsTests {
         public void UpgradeCheckToolsVersion() {
             var factory = new PythonProjectFactory(null);
             var sp = new MockServiceProvider();
-            sp.Services["SVsQueryEditQuerySave"] = null;
-            sp.Services["SVsActivityLog"] = new MockActivityLog();
+            sp.Services[typeof(SVsQueryEditQuerySave)] = null;
+            sp.Services[typeof(SVsActivityLog)] = new MockActivityLog();
             factory.Site = sp;
 
             var upgrade = (IVsProjectUpgradeViaFactory)factory;
@@ -66,8 +66,8 @@ namespace PythonToolsTests {
         public void UpgradeToolsVersion() {
             var factory = new PythonProjectFactory(null);
             var sp = new MockServiceProvider();
-            sp.Services["SVsQueryEditQuerySave"] = null;
-            sp.Services["SVsActivityLog"] = new MockActivityLog();
+            sp.Services[typeof(SVsQueryEditQuerySave)] = null;
+            sp.Services[typeof(SVsActivityLog)] = new MockActivityLog();
             factory.Site = sp;
 
             var upgrade = (IVsProjectUpgradeViaFactory)factory;
@@ -119,8 +119,8 @@ namespace PythonToolsTests {
         public void UpgradeCheckUserToolsVersion() {
             var factory = new PythonProjectFactory(null);
             var sp = new MockServiceProvider();
-            sp.Services["SVsQueryEditQuerySave"] = null;
-            sp.Services["SVsActivityLog"] = new MockActivityLog();
+            sp.Services[typeof(SVsQueryEditQuerySave)] = null;
+            sp.Services[typeof(SVsActivityLog)] = new MockActivityLog();
             factory.Site = sp;
 
             var projectFile = TestData.GetPath(Path.Combine("TestData", "ProjectUpgrade", "CorrectToolsVersion.pyproj"));
@@ -169,8 +169,8 @@ namespace PythonToolsTests {
             // ensures that we upgrade projects created in 2.1 Beta 1.
             var factory = new PythonProjectFactory(null);
             var sp = new MockServiceProvider();
-            sp.Services["SVsQueryEditQuerySave"] = null;
-            sp.Services["SVsActivityLog"] = new MockActivityLog();
+            sp.Services[typeof(SVsQueryEditQuerySave)] = null;
+            sp.Services[typeof(SVsActivityLog)] = new MockActivityLog();
             factory.Site = sp;
 
             var upgrade = (IVsProjectUpgradeViaFactory)factory;
@@ -244,9 +244,9 @@ namespace PythonToolsTests {
             var sp = new MockServiceProvider();
             var shell = new MockVsShell();
 
-            sp.Services["SVsQueryEditQuerySave"] = null;
-            sp.Services["SVsActivityLog"] = new MockActivityLog();
-            sp.Services["SVsShell"] = shell;
+            sp.Services[typeof(SVsQueryEditQuerySave)] = null;
+            sp.Services[typeof(SVsActivityLog)] = new MockActivityLog();
+            sp.Services[typeof(SVsShell)] = shell;
             factory.Site = sp;
 
             var projectFile = TestData.GetPath(Path.Combine("TestData", "ProjectUpgrade", "WebProjectType.pyproj"));

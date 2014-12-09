@@ -15,25 +15,36 @@
 using System.ComponentModel;
 using System.Windows.Forms;
 using System.Drawing;
+using System;
 
 namespace Microsoft.PythonTools.Project {
     public partial class StartWithErrorsDialog : Form {
+        private readonly PythonToolsService _pyService;
 
-        public StartWithErrorsDialog() {
+        [Obsolete("Use constructor which provides a PythonToolsService instead")]
+        public StartWithErrorsDialog()
+            : this(PythonToolsPackage.Instance._pyService) {
+        }
+
+        public StartWithErrorsDialog(PythonToolsService pyService) {
+            _pyService = pyService;
             InitializeComponent();
             _icon.Image = SystemIcons.Warning.ToBitmap();
         }
 
+        [Obsolete("Use PythonToolsService.DebuggerOptions.PromptBeforeRunningWithBuildError instead")]
         public static bool ShouldShow {
             get {
-                return PythonToolsPackage.Instance.DebuggingOptionsPage.PromptBeforeRunningWithBuildError;
+                var pyService = (PythonToolsService)PythonToolsPackage.GetGlobalService(typeof(PythonToolsService));
+
+                return pyService.DebuggerOptions.PromptBeforeRunningWithBuildError;
             }
         }
 
         protected override void OnClosing(CancelEventArgs e) {
             if (_dontShowAgainCheckbox.Checked) {
-                PythonToolsPackage.Instance.DebuggingOptionsPage.PromptBeforeRunningWithBuildError = false;
-                PythonToolsPackage.Instance.DebuggingOptionsPage.SaveSettingsToStorage();
+                _pyService.DebuggerOptions.PromptBeforeRunningWithBuildError = false;
+                _pyService.DebuggerOptions.Save();
             }
         }
 
@@ -45,6 +56,12 @@ namespace Microsoft.PythonTools.Project {
         private void NoButtonClick(object sender, System.EventArgs e) {
             this.DialogResult = System.Windows.Forms.DialogResult.No;
             Close();
+        }
+
+        internal PythonToolsService PythonService {
+            get {
+                return _pyService;
+            }
         }
     }
 }

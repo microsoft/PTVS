@@ -29,7 +29,7 @@ namespace Microsoft.PythonTools.Django.Intellisense {
 
         public ProjectBlockCompletionContextBase(DjangoAnalyzer analyzer, ITextBuffer buffer, string filename) {
             _analyzer = analyzer;
-            _module = buffer.GetModuleContext();
+            _module = buffer.GetModuleContext(analyzer._serviceProvider);
             _filename = filename;
         }
 

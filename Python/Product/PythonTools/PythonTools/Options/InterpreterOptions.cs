@@ -13,6 +13,9 @@
  * ***************************************************************************/
 
 using System;
+using System.Diagnostics;
+using System.Linq;
+using System.Reflection;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Options {
@@ -21,6 +24,9 @@ namespace Microsoft.PythonTools.Options {
     /// commits the changes do we propagate these back to an interpreter.
     /// </summary>
     class InterpreterOptions {
+        private readonly PythonToolsService _pyService;
+        private readonly IPythonInterpreterFactory _interpreter;
+
         public string Display;
         public Guid Id;
         public string InterpreterPath;
@@ -35,5 +41,35 @@ namespace Microsoft.PythonTools.Options {
         public bool SupportsCompletionDb;
         public IPythonInterpreterFactory Factory;
         public PythonInteractiveOptions InteractiveOptions;
+
+        public InterpreterOptions(PythonToolsService pyService, IPythonInterpreterFactory interpreter) {
+            _pyService = pyService;
+            _interpreter = interpreter;
+        }
+
+        public void Load() {
+            var configurable = _pyService._interpreterOptionsService.KnownProviders.OfType<ConfigurablePythonInterpreterFactoryProvider>().FirstOrDefault();
+            Debug.Assert(configurable != null);
+
+            Display = _interpreter.Description;
+            Id = _interpreter.Id;
+            InterpreterPath = _interpreter.Configuration.InterpreterPath;
+            WindowsInterpreterPath = _interpreter.Configuration.WindowsInterpreterPath;
+            LibraryPath = _interpreter.Configuration.LibraryPath;
+            Version = _interpreter.Configuration.Version.ToString();
+            Architecture = FormatArchitecture(_interpreter.Configuration.Architecture);
+            PathEnvironmentVariable = _interpreter.Configuration.PathEnvironmentVariable;
+            IsConfigurable = configurable != null && configurable.IsConfigurable(_interpreter);
+            SupportsCompletionDb = _interpreter is IPythonInterpreterFactoryWithDatabase;
+            Factory = _interpreter;
+        }
+
+        private static string FormatArchitecture(ProcessorArchitecture arch) {
+            switch (arch) {
+                case ProcessorArchitecture.Amd64: return "x64";
+                case ProcessorArchitecture.X86: return "x86";
+                default: return "Unknown";
+            }
+        }
     }
 }

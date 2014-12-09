@@ -55,9 +55,9 @@ namespace Microsoft.PythonTools.Project {
         ) {
             using (var view = new AddVirtualEnvironmentView(project, service, project.Interpreters.ActiveInterpreter)) {
                 var wnd = new AddVirtualEnvironment(view);
-
+                
                 if (browseForExisting) {
-                    var path = PythonToolsPackage.Instance.BrowseForDirectory(IntPtr.Zero, project.ProjectHome);
+                    var path = project.Site.BrowseForDirectory(IntPtr.Zero, project.ProjectHome);
                     if (string.IsNullOrEmpty(path)) {
                         throw new OperationCanceledException();
                     }

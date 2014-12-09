@@ -29,7 +29,7 @@ namespace Microsoft.PythonTools.Navigation.NavigateTo {
         }
 
         public bool TryCreateNavigateToItemProvider(IServiceProvider serviceProvider, out INavigateToItemProvider provider) {
-            provider = new PythonNavigateToItemProvider(serviceProvider, _glyphService, PythonToolsPackage.Instance);
+            provider = new PythonNavigateToItemProvider(serviceProvider, _glyphService);
             return true;
         }
     }

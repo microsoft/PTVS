@@ -27,15 +27,21 @@ namespace Microsoft.PythonTools.Intellisense {
     [TextViewRole(PredefinedTextViewRoles.Editable)]
     [ContentType("xaml")]
     class XamlTextViewCreationListener : IVsTextViewCreationListener {
-        [Import]
-        internal IVsEditorAdaptersFactoryService AdapterService = null; // Set by MEF
+        internal readonly IVsEditorAdaptersFactoryService AdapterService;
+        private readonly IServiceProvider _serviceProvider;
+
+        [ImportingConstructor]
+        public XamlTextViewCreationListener(IServiceProvider serviceProvider, IVsEditorAdaptersFactoryService adapterService) {
+            _serviceProvider = serviceProvider;
+            AdapterService = adapterService;
+        }
 
         public void VsTextViewCreated(VisualStudio.TextManager.Interop.IVsTextView textViewAdapter) {
             // TODO: We should probably only track text views in Python projects or loose files.
             ITextView textView = AdapterService.GetWpfTextView(textViewAdapter);
             
             if (textView != null) {
-                var analyzer = textView.GetAnalyzer();
+                var analyzer = textView.GetAnalyzer(_serviceProvider);
                 if (analyzer != null) {
                     var monitorResult = analyzer.MonitorTextBuffer(textView, textView.TextBuffer);
                     textView.Closed += TextView_Closed;
@@ -48,7 +54,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             BufferParser bufferParser;
             if (textView.Properties.TryGetProperty<BufferParser>(typeof(BufferParser), out bufferParser)) {
-                textView.GetAnalyzer().StopMonitoringTextBuffer(bufferParser, textView);
+                textView.GetAnalyzer(_serviceProvider).StopMonitoringTextBuffer(bufferParser, textView);
             }
 
             textView.Closed -= TextView_Closed;

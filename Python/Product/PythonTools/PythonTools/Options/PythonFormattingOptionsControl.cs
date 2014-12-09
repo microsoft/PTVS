@@ -28,18 +28,21 @@ namespace Microsoft.PythonTools.Options {
     internal partial class PythonFormattingOptionsControl : UserControl {
         private readonly Dictionary<string, OptionSettingNode> _nodes = new Dictionary<string, OptionSettingNode>();
         private TreeNode _deactivatedNode;
+        private readonly IServiceProvider _serviceProvider;
         private readonly ITextBuffer _buffer;
         private const string DefaultText = "# Select an option to see a preview";
 
-        public PythonFormattingOptionsControl() {
+        public PythonFormattingOptionsControl(IServiceProvider serviceProvider) {
+            _serviceProvider = serviceProvider;
             InitializeComponent();
 
             _optionsTree.AfterSelect += AfterSelectOrCheckNode;
             _optionsTree.AfterCheck += AfterSelectOrCheckNode;
 
-            var editorFactory = PythonToolsPackage.ComponentModel.GetService<ITextEditorFactoryService>();
-            var bufferFactory = PythonToolsPackage.ComponentModel.GetService<ITextBufferFactoryService>();
-            var contentTypeRegistry = PythonToolsPackage.ComponentModel.GetService<IContentTypeRegistryService>();
+            var compModel = _serviceProvider.GetComponentModel();
+            var editorFactory = compModel.GetService<ITextEditorFactoryService>();
+            var bufferFactory = compModel.GetService<ITextBufferFactoryService>();
+            var contentTypeRegistry = compModel.GetService<IContentTypeRegistryService>();
             var textContentType = contentTypeRegistry.GetContentType("Python");
 
             _buffer = bufferFactory.CreateTextBuffer(textContentType);
@@ -50,7 +53,7 @@ namespace Microsoft.PythonTools.Options {
         }
 
         private ITextViewRoleSet/*!*/ CreateRoleSet() {
-            var textEditorFactoryService = PythonToolsPackage.ComponentModel.GetService<ITextEditorFactoryService>();
+            var textEditorFactoryService = _serviceProvider.GetComponentModel().GetService<ITextEditorFactoryService>();
             return textEditorFactoryService.CreateTextViewRoleSet(
                 PredefinedTextViewRoles.Analyzable,
                 PredefinedTextViewRoles.Editable,
@@ -82,9 +85,10 @@ namespace Microsoft.PythonTools.Options {
             } else {
                 PreviewText = DefaultText;
             }
-        }        
+        }
 
-        internal PythonFormattingOptionsControl(params OptionCategory[] options) : this() {
+        internal PythonFormattingOptionsControl(IServiceProvider serviceProvider, params OptionCategory[] options)
+            : this(serviceProvider) {
             _optionsTree.BeginUpdate();
             foreach (var cat in options) {
                 var curCat = new OptionFolderNode(cat.Description);

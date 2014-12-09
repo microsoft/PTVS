@@ -114,7 +114,7 @@
         <Reference Include="Microsoft.Windows.Design.Host, Version=4.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
           <SpecificVersion>False</SpecificVersion>
           <HintPath>$(DevEnvDir)PrivateAssemblies\Microsoft.Windows.Design.Host.dll</HintPath>
-          <Private>false</Private>
+          <Private>True</Private>
         </Reference>
       </ItemGroup>
     </Otherwise>
@@ -178,6 +178,9 @@
     <Reference Include="Microsoft.VisualStudio.Language.NavigateTo.Interfaces, Version=$(VSTarget).0.0, Culture=neutral" />
     <Reference Include="Microsoft.VisualStudio.Language.StandardClassification, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.OLE.Interop" />
+    <Reference Include="Microsoft.VisualStudio.ProjectAggregator, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+    </Reference>
     <Reference Include="Microsoft.VisualStudio.Shell.$(VSTarget), Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Shell.Design, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Shell.Immutable.11.0, Version=11.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" Condition="'$(VSTarget)' != '10.0'" />
@@ -261,10 +264,17 @@
     <Compile Include="..\Analysis\Interpreter\PythonInterpreterFactoryExtensions.cs">
       <Link>PythonInterpreterFactoryExtensions.cs</Link>
     </Compile>
+    <Compile Include="IPythonToolsToolWindowService.cs" />
+    <Compile Include="PythonTools\SurveyNewsService.cs" />
+    <Compile Include="PythonTools\Options\GlobalInterpreterOptions.cs" />
+    <Compile Include="PythonTools\Options\GeneralOptions.cs" />
+    <Compile Include="PythonTools\Options\DebuggerOptions.cs" />
+    <Compile Include="PythonTools\Options\AdvancedEditorOptions.cs" />
     <Compile Include="Legacy\ObsoleteResources.cs" />
     <Compile Include="NoInterpretersException.cs" />
     <Compile Include="ProvideLanguageTemplatesAttribute.cs" />
     <Compile Include="PythonToolsInstallPath.cs" />
+    <Compile Include="PythonToolsService.cs" />
     <Compile Include="PythonTools\AzureToolsContracts.cs" />
     <Compile Include="PythonTools\Commands\AzureExplorerAttachDebuggerCommand.cs" />
     <Compile Include="PythonTools\Intellisense\EntryEventArgs.cs" />
@@ -276,6 +286,7 @@
     <Compile Include="PythonTools\Logging\PythonLogEvent.cs" />
     <Compile Include="PythonTools\Logging\PythonToolsLogger.cs" />
     <Compile Include="PythonTools\Intellisense\ExpansionClient.cs" />
+    <Compile Include="PythonTools\Options\IPythonToolsOptionsService.cs" />
     <Compile Include="PythonTools\Options\PythonGeneralOptionsControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -285,6 +296,7 @@
     <Compile Include="PythonTools\Options\PythonGeneralOptionsPage.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="PythonTools\Options\PythonToolsOptionsService.cs" />
     <Compile Include="PythonTools\Project\AddVirtualEnvironmentOperation.cs" />
     <Compile Include="PythonTools\Project\AnalyzerChangingEventArgs.cs" />
     <Compile Include="PythonTools\Project\Attributes.cs" />

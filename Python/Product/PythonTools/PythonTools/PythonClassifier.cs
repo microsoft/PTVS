@@ -43,7 +43,7 @@ namespace Microsoft.PythonTools {
             _provider = provider;
             _buffer = buffer;
 
-            var analyzer = _buffer.GetAnalyzer();
+            var analyzer = _buffer.GetAnalyzer(provider._serviceProvider);
             Debug.Assert(analyzer != null);
             _version = analyzer.InterpreterFactory.GetLanguageVersion();
         }
@@ -51,7 +51,7 @@ namespace Microsoft.PythonTools {
         internal void NewVersion() {
             _tokenCache.Clear();
 
-            var analyzer = _buffer.GetAnalyzer();
+            var analyzer = _buffer.GetAnalyzer(_provider._serviceProvider);
             Debug.Assert(analyzer != null);
             _version = analyzer.InterpreterFactory.GetLanguageVersion();
 

@@ -22,7 +22,17 @@ using SR = Microsoft.PythonTools.Project.SR;
 
 namespace Microsoft.PythonTools.Commands {
     public partial class DiagnosticsForm : Form {
-        public DiagnosticsForm(string content) {
+        private readonly IServiceProvider _provider;
+
+        [Obsolete("Use IServiceProvider overload")]
+        public DiagnosticsForm(string content)
+#pragma warning disable 0618
+            : this(PythonToolsPackage.Instance, content) {
+#pragma warning restore 0618
+        }
+
+        public DiagnosticsForm(IServiceProvider serviceProvider, string content) {
+            _provider = serviceProvider;
             InitializeComponent();
             _textBox.Text = content;
             _copy.Enabled = false;
@@ -50,7 +60,7 @@ namespace Microsoft.PythonTools.Commands {
         }
 
         private void _save_Click(object sender, EventArgs e) {
-            var path = PythonToolsPackage.Instance.BrowseForFileSave(
+            var path = _provider.BrowseForFileSave(
                 Handle,
                 "Text Files (*.txt)|*.txt|All Files (*.*)|*.*",
                 CommonUtils.GetAbsoluteFilePath(
@@ -66,7 +76,7 @@ namespace Microsoft.PythonTools.Commands {
             try {
                 TaskDialog.CallWithRetry(
                     _ => File.WriteAllText(path, _textBox.Text),
-                    PythonToolsPackage.Instance,
+                    _provider,
                     SR.ProductName,
                     SR.GetString(SR.FailedToSaveDiagnosticInfo),
                     SR.GetString(SR.ErrorDetail),

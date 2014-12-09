@@ -64,7 +64,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 bufferParser = new BufferParser(this, dispatcher, projEntry, _parser, buffer);
 
                 var curSnapshot = buffer.CurrentSnapshot;
-                var severity = PythonToolsPackage.Instance != null ? PythonToolsPackage.Instance.DebuggingOptionsPage.IndentationInconsistencySeverity : Severity.Ignore;
+                var severity = _parser.PyService.GeneralOptions.IndentationInconsistencySeverity;
                 bufferParser.EnqueingEntry();
                 EnqueWorker(() => {
                     _parser.ParseBuffers(bufferParser, severity, curSnapshot);
@@ -81,7 +81,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// </summary>
         /// <param name="filename"></param>
         public void EnqueueFile(IProjectEntry projEntry, string filename) {
-            var severity = PythonToolsPackage.Instance != null ? PythonToolsPackage.Instance.DebuggingOptionsPage.IndentationInconsistencySeverity : Severity.Ignore;
+            var severity = _parser.PyService.GeneralOptions.IndentationInconsistencySeverity;
             EnqueWorker(() => {
                 for (int i = 0; i < 10; i++) {
                     try {
@@ -112,7 +112,7 @@ namespace Microsoft.PythonTools.Intellisense {
         public void EnqueueZipArchiveEntry(IProjectEntry projEntry, string zipFileName, ZipArchiveEntry entry, Action onComplete) {
             var pathInArchive = entry.FullName.Replace('/', '\\');
             var fileName = Path.Combine(zipFileName, pathInArchive);
-            var severity = PythonToolsPackage.Instance != null ? PythonToolsPackage.Instance.DebuggingOptionsPage.IndentationInconsistencySeverity : Severity.Ignore;
+            var severity = _parser.PyService.GeneralOptions.IndentationInconsistencySeverity;
             EnqueWorker(() => {
                 try {
                     using (var stream = entry.Open()) {
@@ -191,10 +191,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private Severity IndentationInconsistencySeverity {
             get {
-                if (PythonToolsPackage.Instance != null) {
-                    return PythonToolsPackage.Instance.DebuggingOptionsPage.IndentationInconsistencySeverity;
-                }
-                return Severity.Ignore;
+                return _parser.PyService.GeneralOptions.IndentationInconsistencySeverity;
             }
         }
 
@@ -232,7 +229,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
                 InitBuffer(textBuffer);
 
-                VsProjectAnalyzer.ConnectErrorList(_currentProjEntry, textBuffer);
+                _parser.ConnectErrorList(_currentProjEntry, textBuffer);
             }
         }
 
@@ -244,7 +241,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
                 _buffers.Remove(subjectBuffer);
 
-                VsProjectAnalyzer.DisconnectErrorList(_currentProjEntry, subjectBuffer);
+                _parser.DisconnectErrorList(_currentProjEntry, subjectBuffer);
             }
         }
 

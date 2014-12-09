@@ -42,10 +42,11 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private void Initialize() {
-            PythonToolsPackage.Instance.SolutionEvents.ActiveSolutionConfigurationChanged += EventListener_AfterActiveSolutionConfigurationChange;
-            PythonToolsPackage.Instance.SolutionEvents.BuildCompleted += EventListener_BuildCompleted;
+            var solutionEvents = ProjectMgr.Site.GetSolutionEvents();
+            solutionEvents.ActiveSolutionConfigurationChanged += EventListener_AfterActiveSolutionConfigurationChange;
+            solutionEvents.BuildCompleted += EventListener_BuildCompleted;
             _fileChangeListener.FileChangedOnDisk += FileChangedOnDisk;
-            PythonToolsPackage.Instance.SolutionEvents.ProjectLoaded += PythonProjectReferenceNode_ProjectLoaded;
+            solutionEvents.ProjectLoaded += PythonProjectReferenceNode_ProjectLoaded;
             InitializeFileChangeListener();
             AddAnalyzedAssembly(((PythonProjectNode)ProjectMgr).GetInterpreter() as IPythonInterpreterWithProjectReferences);
         }
@@ -142,9 +143,10 @@ namespace Microsoft.PythonTools.Project {
         protected override void Dispose(bool disposing) {
             base.Dispose(disposing);
 
-            PythonToolsPackage.Instance.SolutionEvents.ActiveSolutionConfigurationChanged -= EventListener_AfterActiveSolutionConfigurationChange;
-            PythonToolsPackage.Instance.SolutionEvents.BuildCompleted -= EventListener_BuildCompleted;
-            PythonToolsPackage.Instance.SolutionEvents.ProjectLoaded -= PythonProjectReferenceNode_ProjectLoaded;
+            var solutionEvents = ProjectMgr.Site.GetSolutionEvents();
+            solutionEvents.ActiveSolutionConfigurationChanged -= EventListener_AfterActiveSolutionConfigurationChange;
+            solutionEvents.BuildCompleted -= EventListener_BuildCompleted;
+            solutionEvents.ProjectLoaded -= PythonProjectReferenceNode_ProjectLoaded;
 
             _fileChangeListener.FileChangedOnDisk -= FileChangedOnDisk;
             _fileChangeListener.Dispose();

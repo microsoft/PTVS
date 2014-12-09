@@ -16,6 +16,7 @@ using System;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project {
@@ -24,7 +25,12 @@ namespace Microsoft.PythonTools.Project {
         public PublishPropertyControl(PublishPropertyPage page) {
             InitializeComponent();
 
-            var publishers = PythonToolsPackage.ComponentModel.GetExtensions<IProjectPublisher>().ToArray();
+            _page = page;
+        }
+
+        internal void LoadSettings() {
+            PublishUrl = _page.Project.GetProjectProperty(CommonConstants.PublishUrl);
+            var publishers = _page.Project.Site.GetComponentModel().GetExtensions<IProjectPublisher>().ToArray();
             string kinds;
             if (publishers.Length == 1) {
                 kinds = publishers[0].DestinationDescription;
@@ -33,7 +39,6 @@ namespace Microsoft.PythonTools.Project {
             }
 
             _publishLocationLabel.Text = "Publishing folder location (" + kinds + "): ";
-            _page = page;
         }
 
         private static string FormatPublishers(IProjectPublisher[] publishers) {

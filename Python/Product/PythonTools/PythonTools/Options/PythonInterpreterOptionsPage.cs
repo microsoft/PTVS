@@ -19,6 +19,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.VisualStudio.Shell;
 
 namespace Microsoft.PythonTools.Options {
     /// <summary>
@@ -33,16 +34,13 @@ namespace Microsoft.PythonTools.Options {
     [ComVisible(true)]
     public sealed class PythonInterpreterOptionsPage : PythonDialogPage {
         private PythonInterpreterOptionsControl _window;
-        private readonly IInterpreterOptionsService _service;
-        internal Dictionary<IPythonInterpreterFactory, InterpreterOptions> _options = new Dictionary<IPythonInterpreterFactory, InterpreterOptions>();
-        private Guid _defaultInterpreter;
-        private Version _defaultInterpreterVersion;
+        private IInterpreterOptionsService _service;
 
         public PythonInterpreterOptionsPage()
             : base("Interpreters") {
-            _service = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
-            _service.InterpretersChanged += InterpretersChanged;
         }
+
+        internal static IPythonInterpreterFactory NextOptionsSelection { get; set; }
 
         void InterpretersChanged(object sender, EventArgs e) {
             LoadSettingsFromStorage();
@@ -57,131 +55,46 @@ namespace Microsoft.PythonTools.Options {
 
         private PythonInterpreterOptionsControl GetWindow() {
             if (_window == null) {
-                _window = new PythonInterpreterOptionsControl();
+                _service = ComponentModel.GetService<IInterpreterOptionsService>();
+                _service.InterpretersChanged += InterpretersChanged;
+                _window = new PythonInterpreterOptionsControl(ComponentModel.GetService<SVsServiceProvider>());
             }
             return _window;
         }
 
         public override void ResetSettings() {
-            _defaultInterpreter = Guid.Empty;
-            _defaultInterpreterVersion = new Version();
+            PyService.GlobalInterpreterOptions.Reset();
         }
 
         public override void LoadSettingsFromStorage() {
-            var configurable = _service.KnownProviders.OfType<ConfigurablePythonInterpreterFactoryProvider>().FirstOrDefault();
-            Debug.Assert(configurable != null);
-
-            _defaultInterpreter = _service.DefaultInterpreter.Id;
-            _defaultInterpreterVersion = _service.DefaultInterpreter.Configuration.Version;
-
-            var placeholders = _options.Where(kv => kv.Key is InterpreterPlaceholder).ToArray();
-            _options.Clear();
-            foreach (var interpreter in _service.Interpreters) {
-                _options[interpreter] = new InterpreterOptions {
-                    Display = interpreter.Description,
-                    Id = interpreter.Id,
-                    InterpreterPath = interpreter.Configuration.InterpreterPath,
-                    WindowsInterpreterPath = interpreter.Configuration.WindowsInterpreterPath,
-                    LibraryPath = interpreter.Configuration.LibraryPath,
-                    Version = interpreter.Configuration.Version.ToString(),
-                    Architecture = FormatArchitecture(interpreter.Configuration.Architecture),
-                    PathEnvironmentVariable = interpreter.Configuration.PathEnvironmentVariable,
-                    IsConfigurable = configurable != null && configurable.IsConfigurable(interpreter),
-                    SupportsCompletionDb = interpreter is IPythonInterpreterFactoryWithDatabase,
-                    Factory = interpreter
-                };
-            }
-
-            foreach (var kv in placeholders) {
-                _options[kv.Key] = kv.Value;
-            }
+            PyService.GlobalInterpreterOptions.Load();
+            PyService.LoadInterpreterOptions();
 
             if (_window != null) {
                 _window.UpdateInterpreters();
             }
         }
 
-        private static string FormatArchitecture(ProcessorArchitecture arch) {
-            switch (arch) {
-                case ProcessorArchitecture.Amd64: return "x64";
-                case ProcessorArchitecture.X86: return "x86";
-                default: return "Unknown";
-            }
-        }
-
         public override void SaveSettingsToStorage() {
-            _service.BeginSuppressInterpretersChangedEvent();
-            try {
-                var configurable = _service.KnownProviders.OfType<ConfigurablePythonInterpreterFactoryProvider>().FirstOrDefault();
-                Debug.Assert(configurable != null);
+            var defaultInterpreter = GetWindow().DefaultInterpreter;
 
-                if (configurable != null) {
-                    foreach (var option in _options.Values) {
-                        if (option.Removed) {
-                            if (!option.Added) {
-                                // if it was added and then immediately removed, don't save it.
-                                configurable.RemoveInterpreter(option.Id);
-                            }
-                            continue;
-                        } else if (option.Added) {
-                            if (option.Id == Guid.Empty) {
-                                option.Id = Guid.NewGuid();
-                            }
-                            option.Added = false;
-                        }
-
-                        if (option.IsConfigurable) {
-                            // save configurable interpreter options
-                            var actualFactory = configurable.SetOptions(
-                                new InterpreterFactoryCreationOptions {
-                                    Id = option.Id,
-                                    InterpreterPath = option.InterpreterPath ?? "",
-                                    WindowInterpreterPath = option.WindowsInterpreterPath ?? "",
-                                    LibraryPath = option.LibraryPath ?? "",
-                                    PathEnvironmentVariableName = option.PathEnvironmentVariable ?? "",
-                                    ArchitectureString = option.Architecture ?? "x86",
-                                    LanguageVersionString = option.Version ?? "2.7",
-                                    Description = option.Display,
-                                }
-                            );
-                            if (option.InteractiveOptions != null) {
-                                PythonToolsPackage.Instance.InteractiveOptionsPage.SaveOptions(actualFactory, option.InteractiveOptions);
-                            }
-                        }
-                    }
-                }
-
-                var defaultInterpreter = GetWindow().DefaultInterpreter;
-
-                if (defaultInterpreter != null) {
-                    Version ver;
-                    if (defaultInterpreter is InterpreterPlaceholder) {
-                        ver = Version.Parse(_options[defaultInterpreter].Version ?? "2.7");
-                    } else {
-                        ver = defaultInterpreter.Configuration.Version;
-                    }
-
-                    // Search for the interpreter again, since it may be a
-                    // placeholder rather than the actual instance.
-                    _service.DefaultInterpreter =
-                        _service.FindInterpreter(defaultInterpreter.Id, ver) ??
-                        _service.Interpreters.LastOrDefault();
+            if (defaultInterpreter != null) {
+                Version ver;
+                if (defaultInterpreter is InterpreterPlaceholder) {
+                    ver = Version.Parse(PyService.GetInterpreterOptions(defaultInterpreter).Version ?? "2.7");
                 } else {
-                    _service.DefaultInterpreter = _service.Interpreters.LastOrDefault();
+                    ver = defaultInterpreter.Configuration.Version;
                 }
-                _defaultInterpreter = _service.DefaultInterpreter.Id;
-                _defaultInterpreterVersion = _service.DefaultInterpreter.Configuration.Version;
 
-                foreach (var factory in _options.Keys.OfType<InterpreterPlaceholder>().ToArray()) {
-                    _options.Remove(factory);
-                }
-            } finally {
-                _service.EndSuppressInterpretersChangedEvent();
+                PyService.GlobalInterpreterOptions.DefaultInterpreter = defaultInterpreter.Id;
+                PyService.GlobalInterpreterOptions.DefaultInterpreterVersion = ver;
+            } else {
+                PyService.GlobalInterpreterOptions.DefaultInterpreter = Guid.Empty;
+                PyService.GlobalInterpreterOptions.DefaultInterpreterVersion = new Version();
             }
-        }
 
-        private static string GetInterpreterSettingPath(Guid id, Version version) {
-            return id.ToString() + "\\" + version.ToString() + "\\";
+            PyService.SaveInterpreterOptions();
+            PyService.GlobalInterpreterOptions.Save();
         }
 
         /// <summary>
@@ -197,17 +110,15 @@ namespace Microsoft.PythonTools.Options {
         /// Use <see cref="IInterpreterOptionsService"/> to accurately determine
         /// the default interpreter.
         /// </remarks>
+        [Obsolete("Use PythonToolsService.GlobalInterpreterOptions instead")]
         public Guid DefaultInterpreter {
             get {
-                return _defaultInterpreter;
+                return PyService.GlobalInterpreterOptions.DefaultInterpreter;
             }
             set {
-                if (_defaultInterpreter != value) {
-                    _defaultInterpreter = value;
-                    var newDefault = _service.FindInterpreter(_defaultInterpreter, _defaultInterpreterVersion);
-                    if (newDefault != null) {
-                        _service.DefaultInterpreter = newDefault;
-                    }
+                if (PyService.GlobalInterpreterOptions.DefaultInterpreter != value) {
+                    PyService.GlobalInterpreterOptions.DefaultInterpreter = value;
+                    PyService.GlobalInterpreterOptions.UpdateInterpreter();
                 }
             }
         }
@@ -226,18 +137,16 @@ namespace Microsoft.PythonTools.Options {
         /// Use <see cref="IInterpreterOptionsService"/> to accurately determine
         /// the default interpreter.
         /// </remarks>
+        [Obsolete("Use PythonToolsService.GlobalInterpreterOptions instead")]
         public string DefaultInterpreterVersion {
             get {
-                return _defaultInterpreterVersion.ToString();
+                return PyService.GlobalInterpreterOptions.DefaultInterpreterVersion.ToString();
             }
             set {
                 var ver = Version.Parse(value);
-                if (_defaultInterpreterVersion != ver) {
-                    _defaultInterpreterVersion = ver;
-                    var newDefault = _service.FindInterpreter(_defaultInterpreter, _defaultInterpreterVersion);
-                    if (newDefault != null) {
-                        _service.DefaultInterpreter = newDefault;
-                    }
+                if (PyService.GlobalInterpreterOptions.DefaultInterpreterVersion != ver) {
+                    PyService.GlobalInterpreterOptions.DefaultInterpreterVersion = ver;
+                    PyService.GlobalInterpreterOptions.UpdateInterpreter();
                 }
             }
         }

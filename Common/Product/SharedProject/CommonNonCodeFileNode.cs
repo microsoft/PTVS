@@ -28,7 +28,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         protected override void DoDefaultAction() {
             if ("WebBrowser".Equals(SubType, StringComparison.OrdinalIgnoreCase)) {
-                CommonPackage.OpenVsWebBrowser(Url);
+                CommonPackage.OpenVsWebBrowser(ProjectMgr.Site, Url);
                 return;
             }
 

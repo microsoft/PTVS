@@ -18,6 +18,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
+using Microsoft.PythonTools;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -160,7 +161,7 @@ g()",
             var python = PythonPaths.Python27 ?? PythonPaths.Python27_x64 ?? PythonPaths.Python26 ?? PythonPaths.Python26_x64;
             python.AssertInstalled();
             var provider = new SimpleFactoryProvider(python.InterpreterPath, python.InterpreterPath);
-            return new PythonReplEvaluator(provider.GetInterpreterFactories().First(), new ReplTestReplOptions());
+            return new PythonReplEvaluator(provider.GetInterpreterFactories().First(), PythonToolsTestUtilities.CreateMockServiceProvider(), new ReplTestReplOptions());
         }
 
         class SimpleFactoryProvider : IPythonInterpreterFactoryProvider {
@@ -260,7 +261,7 @@ g()",
                     Description = "Test Interpreter"
                 }
             );
-            var replEval = new PythonReplEvaluator(emptyFact, new ReplTestReplOptions());
+            var replEval = new PythonReplEvaluator(emptyFact, PythonToolsTestUtilities.CreateMockServiceProvider(), new ReplTestReplOptions());
             var replWindow = new MockReplWindow(replEval);
             replEval.Initialize(replWindow);
             var execute = replEval.ExecuteText("42");
@@ -281,7 +282,7 @@ g()",
                     InterpreterPath = "C:\\Does\\Not\\Exist\\Some\\Interpreter.exe"
                 }
             );
-            var replEval = new PythonReplEvaluator(emptyFact, new ReplTestReplOptions());
+            var replEval = new PythonReplEvaluator(emptyFact, PythonToolsTestUtilities.CreateMockServiceProvider(), new ReplTestReplOptions());
             var replWindow = new MockReplWindow(replEval);
             replEval.Initialize(replWindow);
             var execute = replEval.ExecuteText("42");
