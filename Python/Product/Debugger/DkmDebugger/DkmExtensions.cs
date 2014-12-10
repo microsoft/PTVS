@@ -74,9 +74,18 @@ namespace Microsoft.PythonTools.DkmDebugger {
                 return new ComPtr<IDiaSymbol>();
             }
 
-            using (var diaSession = ComPtr.Create((IDiaSession)moduleInstance.Module.GetSymbolInterface(typeof(IDiaSession).GUID))) {
+            IDiaSession diaSession;
+            try {
+                diaSession = (IDiaSession)moduleInstance.Module.GetSymbolInterface(typeof(IDiaSession).GUID);
+            } catch (InvalidCastException) {
+                // GetSymbolInterface will throw this if it did locate a symbol provider object, but QueryInterface for the GUID failed with E_NOINTERFACE.
+                // Since this means that we cannot use the symbol provider for anything useful, treat it as absence of symbol information.
+                return new ComPtr<IDiaSymbol>();
+            }
+
+            using (ComPtr.Create(diaSession)) {
                 IDiaEnumSymbols exeSymEnum;
-                diaSession.Object.findChildren(null, SymTagEnum.SymTagExe, null, 0, out exeSymEnum);
+                diaSession.findChildren(null, SymTagEnum.SymTagExe, null, 0, out exeSymEnum);
                 using (ComPtr.Create(exeSymEnum)) {
                     if (exeSymEnum.count != 1) {
                         return new ComPtr<IDiaSymbol>();
@@ -143,7 +152,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
 
         public static ulong GetExportedStaticVariableAddress(this DkmNativeModuleInstance moduleInstance, string name) {
             var addr = moduleInstance.FindExportName(name, false);
-            if (addr == null) {
+            if (addr == null) { 
                 Debug.Fail("Couldn't find dllexport variable " + name + " in module " + moduleInstance.Name);
                 throw new ArgumentException();
             }

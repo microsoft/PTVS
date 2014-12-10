@@ -129,14 +129,10 @@ namespace Microsoft.PythonTools.DkmDebugger {
 
     [Serializable]
     sealed class CppEvaluationException : Exception {
-        public DkmEvaluationResult EvaluationResult {
-            get {
-                return (DkmEvaluationResult)Data[typeof(DkmEvaluationResult)];
-            }
-        }
+        public DkmEvaluationResult EvaluationResult { get; set; }
 
         public CppEvaluationException(DkmEvaluationResult evalResult = null) {
-            Data[typeof(DkmEvaluationResult)] = evalResult;
+            EvaluationResult = evalResult;
         }
     }
 }

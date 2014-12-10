@@ -56,11 +56,6 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.Dia.Interop, Version=2.0.0.0, Culture=neutral, processorArchitecture=MSIL" Condition="'$(VSTarget)' != '10.0'">
-      <SpecificVersion>False</SpecificVersion>
-      <EmbedInteropTypes>True</EmbedInteropTypes>
-      <HintPath>DkmDebugger\Microsoft.Dia.Interop.dll</HintPath>
-    </Reference>
     <Reference Include="Microsoft.VisualStudio.ComponentModelHost, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Debugger.Engine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" Condition="'$(VSTarget)' != '10.0'">
       <HintPath>$(VSSDKDir)\VisualStudioIntegration\Common\Assemblies\v4.0\Microsoft.VisualStudio.Debugger.Engine.dll</HintPath>
@@ -93,6 +88,26 @@
     <Reference Include="System.XML" />
     <Reference Include="WindowsBase" />
   </ItemGroup>
+  <Choose>
+    <When Condition="'$(VSTarget)' == '11.0' Or '$(VSTarget)' == '12.0'">
+      <ItemGroup>
+        <Reference Include="Microsoft.Dia.Interop, Version=2.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+          <SpecificVersion>False</SpecificVersion>
+          <EmbedInteropTypes>True</EmbedInteropTypes>
+          <HintPath>DkmDebugger\Microsoft.Dia.Interop.dll</HintPath>
+        </Reference>
+      </ItemGroup>
+    </When>
+    <When Condition="'$(VSTarget)' == '14.0'">
+      <ItemGroup>
+        <Reference Include="Microsoft.Dia.Interop.14.0, Version=2.0.0.0, Culture=neutral, processorArchitecture=MSIL" >
+          <SpecificVersion>False</SpecificVersion>
+          <EmbedInteropTypes>True</EmbedInteropTypes>
+          <HintPath>DkmDebugger\Microsoft.Dia.Interop.14.0.dll</HintPath>
+        </Reference>
+      </ItemGroup>
+    </When>
+  </Choose>
   <ItemGroup>
     <Compile Include="..\..\..\Common\Product\SharedProject\CommonUtils.cs">
       <Link>CommonUtils.cs</Link>
@@ -254,7 +269,7 @@
     </Content>
   </ItemGroup>
   <Import Project="..\ProjectAfter.settings" />
-  
+
   <PropertyGroup>
     <VsdConfigOutput>$(IntermediateOutputPath)\DkmDebugger.vsdconfig</VsdConfigOutput>
   </PropertyGroup>
