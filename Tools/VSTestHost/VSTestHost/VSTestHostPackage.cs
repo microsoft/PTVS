@@ -97,7 +97,8 @@ namespace Microsoft.VisualStudioTools.VSTestHost.Internal {
 #if SUPPORT_TESTEE
             // Initialize the global context used by tests to access VS services
             // and a DTE instance.
-            VSTestContext.SetServiceProvider(ServiceProvider.GlobalProvider);
+            VSTestContext.ServiceProvider = ServiceProvider.GlobalProvider;
+            VSTestContext.IsMock = false;
 #endif
         }
 

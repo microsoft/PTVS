@@ -13,13 +13,17 @@
  * ***************************************************************************/
 
 using System;
+using System.IO;
 using System.Text;
 using Microsoft.VisualStudio.Text;
 
 namespace TestUtilities.Mocks {
     public class MockTextDocument : ITextDocument {
-        private readonly string _filePath;
-        public MockTextDocument(string filePath) {
+        private string _filePath;
+        private readonly ITextBuffer _buffer;
+
+        public MockTextDocument(ITextBuffer buffer, string filePath) {
+            _buffer = buffer;
             _filePath = filePath;
         }
 
@@ -79,11 +83,11 @@ namespace TestUtilities.Mocks {
         }
 
         public void Rename(string newFilePath) {
-            throw new NotImplementedException();
+            _filePath = newFilePath;
         }
 
         public void Save() {
-            throw new NotImplementedException();
+            File.WriteAllText(_filePath, TextBuffer.CurrentSnapshot.GetText());
         }
 
         public void SaveAs(string filePath, bool overwrite, bool createFolder, Microsoft.VisualStudio.Utilities.IContentType newContentType) {
@@ -115,7 +119,7 @@ namespace TestUtilities.Mocks {
         }
 
         public ITextBuffer TextBuffer {
-            get { throw new NotImplementedException(); }
+            get { return _buffer; }
         }
 
         public void UpdateDirtyState(bool isDirty, DateTime lastContentModifiedTime) {
@@ -127,7 +131,6 @@ namespace TestUtilities.Mocks {
         #region IDisposable Members
 
         public void Dispose() {
-            throw new NotImplementedException();
         }
 
         #endregion

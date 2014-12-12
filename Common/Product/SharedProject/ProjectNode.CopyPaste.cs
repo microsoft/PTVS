@@ -171,7 +171,7 @@ namespace Microsoft.VisualStudioTools.Project {
                     OLEMSGICON icon = OLEMSGICON.OLEMSGICON_CRITICAL;
                     OLEMSGBUTTON buttons = OLEMSGBUTTON.OLEMSGBUTTON_OK;
                     OLEMSGDEFBUTTON defaultButton = OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST;
-                    VsShellUtilities.ShowMessageBox(this.Site, title, message, icon, buttons, defaultButton);
+                    Utilities.ShowMessageBox(this.Site, title, message, icon, buttons, defaultButton);
                 }
 
                 returnValue = VSConstants.E_FAIL;
@@ -279,7 +279,7 @@ namespace Microsoft.VisualStudioTools.Project {
             OLEMSGICON icon = OLEMSGICON.OLEMSGICON_WARNING;
             OLEMSGBUTTON buttons = OLEMSGBUTTON.OLEMSGBUTTON_YESNOCANCEL;
             OLEMSGDEFBUTTON defaultButton = OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST;
-            int result = VsShellUtilities.ShowMessageBox(Site, title, message, icon, buttons, defaultButton);
+            int result = Utilities.ShowMessageBox(Site, title, message, icon, buttons, defaultButton);
             switch (result) {
                 case NativeMethods.IDYES:
                     break;
@@ -548,7 +548,7 @@ namespace Microsoft.VisualStudioTools.Project {
                     if (targetFolderNode.FullPathToChildren.StartsWith(folder, StringComparison.OrdinalIgnoreCase) &&
                         !String.Equals(targetFolderNode.FullPathToChildren, folder, StringComparison.OrdinalIgnoreCase)) {
                         // dragging a folder into a child, that's not allowed
-                        VsShellUtilities.ShowMessageBox(
+                        Utilities.ShowMessageBox(
                             Project.Site,
                             SR.GetString(SR.CannotMoveIntoSubfolder, CommonUtils.GetFileOrDirectoryName(folder)),
                             null,
@@ -561,7 +561,7 @@ namespace Microsoft.VisualStudioTools.Project {
 
                 var targetPath = Path.Combine(targetFolderNode.FullPathToChildren, CommonUtils.GetFileOrDirectoryName(folder));
                 if (File.Exists(targetPath)) {
-                    VsShellUtilities.ShowMessageBox(
+                    Utilities.ShowMessageBox(
                        Project.Site,
                        SR.GetString(SR.CannotAddFileExists, CommonUtils.GetFileOrDirectoryName(folder)),
                        null,
@@ -576,7 +576,7 @@ namespace Microsoft.VisualStudioTools.Project {
                         if (targetPath == folderToAdd) {
                             CannotMoveSameLocation(folderToAdd);
                         } else {
-                            VsShellUtilities.ShowMessageBox(
+                            Utilities.ShowMessageBox(
                                Project.Site,
                                SR.GetString(SR.CannotMoveFolderExists, CommonUtils.GetFileOrDirectoryName(folder)),
                                null,
@@ -619,7 +619,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 }
 
                 if (Path.Combine(targetFolderNode.FullPathToChildren, targetFileName).Length >= NativeMethods.MAX_FOLDER_PATH) {
-                    VsShellUtilities.ShowMessageBox(
+                    Utilities.ShowMessageBox(
                         Project.Site,
                         SR.GetString(SR.FolderPathTooLongShortMessage),
                         null,
@@ -642,7 +642,7 @@ namespace Microsoft.VisualStudioTools.Project {
             }
 
             private void ReportMissingItem(string folder) {
-                VsShellUtilities.ShowMessageBox(
+                Utilities.ShowMessageBox(
                     Project.Site,
                     SR.GetString(SR.SourceUrlNotFound, CommonUtils.GetFileOrDirectoryName(folder)),
                     null,
@@ -931,7 +931,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 }
 
                 if (!File.Exists(moniker)) {
-                    VsShellUtilities.ShowMessageBox(
+                    Utilities.ShowMessageBox(
                             Project.Site,
                             String.Format("The item '{0}' does not exist in the project directory. It may have been moved, renamed or deleted.", Path.GetFileName(moniker)),
                             null,
@@ -954,7 +954,7 @@ namespace Microsoft.VisualStudioTools.Project {
                                 destinationLinkTarget = NativeMethods.GetAbsolutePathToDirectory(targetFolder);
                             } catch (FileNotFoundException) {
                                 // This can occur if the user had a symlink'd directory and deleted the backing directory.
-                                VsShellUtilities.ShowMessageBox(
+                                Utilities.ShowMessageBox(
                                             Project.Site,
                                             String.Format(
                                                 "Unable to find the destination folder."),
@@ -987,7 +987,7 @@ namespace Microsoft.VisualStudioTools.Project {
                     if (existingChild != null) {
                         if (ComUtilities.IsSameComObject(Project, project)) {
                             if (DropEffect != DropEffect.Move) {
-                                VsShellUtilities.ShowMessageBox(
+                                Utilities.ShowMessageBox(
                                         Project.Site,
                                         String.Format("Cannot copy linked files within the same project. You cannot have more than one link to the same file in a project."),
                                         null,
@@ -997,7 +997,7 @@ namespace Microsoft.VisualStudioTools.Project {
                                 return null;
                             }
                         } else {
-                            VsShellUtilities.ShowMessageBox(
+                            Utilities.ShowMessageBox(
                                     Project.Site,
                                     String.Format("There is already a link to '{0}'. You cannot have more than one link to the same file in a project.", moniker),
                                     null,
@@ -1066,7 +1066,7 @@ namespace Microsoft.VisualStudioTools.Project {
                             return SkipOverwriteAddition.Instance;
                         }
                     } else if (Directory.Exists(newPath)) {
-                        VsShellUtilities.ShowMessageBox(
+                        Utilities.ShowMessageBox(
                             Project.Site,
                             SR.GetString(SR.DirectoryExists, CommonUtils.GetFileOrDirectoryName(newPath)),
                             null,
@@ -1077,7 +1077,7 @@ namespace Microsoft.VisualStudioTools.Project {
                     }
 
                     if (newPath.Length >= NativeMethods.MAX_PATH) {
-                        VsShellUtilities.ShowMessageBox(
+                        Utilities.ShowMessageBox(
                             Project.Site,
                             SR.GetString(SR.PathTooLongShortMessage),
                             null,
@@ -1131,7 +1131,7 @@ namespace Microsoft.VisualStudioTools.Project {
             }
 
             private void CannotMoveSameLocation(string moniker) {
-                VsShellUtilities.ShowMessageBox(
+                Utilities.ShowMessageBox(
                     Project.Site,
                     SR.GetString(SR.CannotMoveIntoSameDirectory, CommonUtils.GetFileOrDirectoryName(moniker)),
                     null,
@@ -1246,7 +1246,7 @@ namespace Microsoft.VisualStudioTools.Project {
                     if (dirInfo == null) {
                         //Something went wrong and we failed to create the new directory
                         //   Inform the user and cancel the addition
-                        VsShellUtilities.ShowMessageBox(
+                        Utilities.ShowMessageBox(
                                             Project.Site,
                                             SR.GetString(SR.FolderCannotBeCreatedOnDisk, CommonUtils.GetFileOrDirectoryName(TargetFolder)),
                                             null,
@@ -1424,7 +1424,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 _copyCutState = CopyCutState.Cut;
 
                 // Add our cut item(s) to the clipboard
-                ErrorHandler.ThrowOnFailure(UnsafeNativeMethods.OleSetClipboard(dataObject));
+                Site.GetClipboardService().SetClipboard(dataObject);
 
                 // Inform VS (UiHierarchyWindow) of the cut
                 IVsUIHierWinClipboardHelper clipboardHelper = (IVsUIHierWinClipboardHelper)GetService(typeof(SVsUIHierWinClipboardHelper));
@@ -1451,7 +1451,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 _copyCutState = CopyCutState.Copied;
 
                 // Add our copy item(s) to the clipboard
-                ErrorHandler.ThrowOnFailure(UnsafeNativeMethods.OleSetClipboard(dataObject));
+                Site.GetClipboardService().SetClipboard(dataObject);
 
                 // Inform VS (UiHierarchyWindow) of the copy
                 IVsUIHierWinClipboardHelper clipboardHelper = (IVsUIHierWinClipboardHelper)GetService(typeof(SVsUIHierWinClipboardHelper));
@@ -1481,8 +1481,7 @@ namespace Microsoft.VisualStudioTools.Project {
 
             try {
                 //Get dataobject from clipboard
-                IOleDataObject dataObject;
-                ErrorHandler.ThrowOnFailure(UnsafeNativeMethods.OleGetClipboard(out dataObject));
+                IOleDataObject dataObject = Site.GetClipboardService().GetClipboard();
                 if (dataObject == null) {
                     return VSConstants.E_UNEXPECTED;
                 }
@@ -1527,9 +1526,8 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         /// <returns></returns>
         protected internal bool AllowPasteCommand() {
-            IOleDataObject dataObject = null;
             try {
-                ErrorHandler.ThrowOnFailure(UnsafeNativeMethods.OleGetClipboard(out dataObject));
+                IOleDataObject dataObject = Site.GetClipboardService().GetClipboard();
                 if (dataObject == null) {
                     return false;
                 }
@@ -1654,7 +1652,7 @@ namespace Microsoft.VisualStudioTools.Project {
                             waitDialog.EndWaitDialog(ref cancelled);
                             waitResult = VSConstants.E_FAIL; // don't end twice
 
-                            VsShellUtilities.ShowMessageBox(
+                            Utilities.ShowMessageBox(
                                 Site,
                                 SR.GetString(SR.CannotAddAsDescendantOfSelf, CommonUtils.GetFileOrDirectoryName(droppedFile)),
                                 null,
@@ -1834,8 +1832,8 @@ namespace Microsoft.VisualStudioTools.Project {
         /// Empties all the data structures added to the clipboard and flushes the clipboard.
         /// </summary>
         private void CleanAndFlushClipboard() {
-            IOleDataObject oleDataObject = null;
-            ErrorHandler.ThrowOnFailure(UnsafeNativeMethods.OleGetClipboard(out oleDataObject));
+            var clippy = Site.GetClipboardService();
+            IOleDataObject oleDataObject = clippy.GetClipboard();
             if (oleDataObject == null) {
                 return;
             }
@@ -1844,14 +1842,14 @@ namespace Microsoft.VisualStudioTools.Project {
             string sourceProjectPath = DragDropHelper.GetSourceProjectPath(oleDataObject);
 
             if (!String.IsNullOrEmpty(sourceProjectPath) && CommonUtils.IsSamePath(sourceProjectPath, this.GetMkDocument())) {
-                ErrorHandler.ThrowOnFailure(UnsafeNativeMethods.OleFlushClipboard());
-                int clipboardOpened = 0;
+                clippy.FlushClipboard();
+                bool opened = false;
                 try {
-                    ErrorHandler.ThrowOnFailure(clipboardOpened = UnsafeNativeMethods.OpenClipboard(IntPtr.Zero));
-                    ErrorHandler.ThrowOnFailure(UnsafeNativeMethods.EmptyClipboard());
+                    opened = clippy.OpenClipboard();
+                    clippy.EmptyClipboard();
                 } finally {
-                    if (clipboardOpened == 1) {
-                        ErrorHandler.ThrowOnFailure(UnsafeNativeMethods.CloseClipboard());
+                    if (opened) {
+                        clippy.CloseClipboard();
                     }
                 }
             }

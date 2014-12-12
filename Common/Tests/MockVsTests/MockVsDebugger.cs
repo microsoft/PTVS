@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.VisualStudioTools.MockVsTests {
@@ -42,7 +43,8 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         public int GetMode(DBGMODE[] pdbgmode) {
-            throw new NotImplementedException();
+            pdbgmode[0] = DBGMODE.DBGMODE_Design;
+            return VSConstants.S_OK;
         }
 
         public int InsertBreakpointByName(ref Guid guidLanguage, string pszCodeLocationText) {

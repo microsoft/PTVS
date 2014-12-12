@@ -119,7 +119,6 @@
     <Compile Include="UI\ListView.cs" />
     <Compile Include="UI\Menu.cs" />
     <Compile Include="UI\MenuItem.cs" />
-    <Compile Include="UI\MessageBoxButton.cs" />
     <Compile Include="UI\Mouse.cs" />
     <Compile Include="UI\NavigateToDialog.cs" />
     <Compile Include="UI\NewItemDialog.cs" />
@@ -142,12 +141,16 @@
     <Compile Include="UI\TypeBrowserPane.cs" />
     <Compile Include="UI\TypeNavigatorPane.cs" />
     <Compile Include="UI\VisualStudioApp.cs" />
-    <Compile Include="UI\VisualStudioSolution.cs" />
+    <Compile Include="UI\VisualStudioInstance.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(BuildRoot)\Common\Tests\Utilities\TestUtilities.csproj">
       <Project>{D092D54E-FF29-4D32-9AEE-4EF704C92F67}</Project>
       <Name>TestUtilities</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\MockVsTests\MockVsTests.csproj">
+      <Project>{a390e1c0-0d90-4a9e-8413-3e959bb07292}</Project>
+      <Name>MockVsTests</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="..\TestProjectAfter.settings" />

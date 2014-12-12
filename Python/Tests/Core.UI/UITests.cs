@@ -35,6 +35,7 @@ using TestUtilities.UI;
 using Keyboard = TestUtilities.UI.Keyboard;
 using Mouse = TestUtilities.UI.Mouse;
 using Path = System.IO.Path;
+using MessageBoxButton = TestUtilities.MessageBoxButton;
 
 namespace PythonToolsUITests {
     [TestClass]

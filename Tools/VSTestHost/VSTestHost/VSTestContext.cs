@@ -20,15 +20,7 @@ namespace Microsoft.VisualStudioTools.VSTestHost {
     public static class VSTestContext {
         private static IServiceProvider _serviceProvider;
         private static EnvDTE.DTE _dte;
-
-        internal static void SetServiceProvider(IServiceProvider provider) {
-            if (_serviceProvider != null) {
-                throw new InvalidOperationException(Internal.Resources.ServiceProviderAlreadySet);
-            }
-
-            _serviceProvider = provider;
-            _dte = (EnvDTE.DTE)provider.GetService(typeof(EnvDTE.DTE));
-        }
+        private static bool _isMock;
 
         public static IServiceProvider ServiceProvider {
             get {
@@ -36,6 +28,14 @@ namespace Microsoft.VisualStudioTools.VSTestHost {
                     throw new InvalidOperationException(Internal.Resources.NoServiceProvider);
                 }
                 return _serviceProvider;
+            }
+            set {
+                _serviceProvider = value;
+                if (_serviceProvider != null) {
+                    _dte = (EnvDTE.DTE)_serviceProvider.GetService(typeof(EnvDTE.DTE));
+                } else {
+                    _dte = null;
+                }
             }
         }
 
@@ -45,6 +45,15 @@ namespace Microsoft.VisualStudioTools.VSTestHost {
                     throw new InvalidOperationException(Internal.Resources.NoServiceProvider);
                 }
                 return _dte;
+            }
+        }
+
+        public static bool IsMock {
+            get {
+                return _isMock;
+            }
+            internal set {
+                _isMock = value;
             }
         }
     }

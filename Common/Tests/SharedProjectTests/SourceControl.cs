@@ -28,6 +28,7 @@ using TestUtilities.SharedProject;
 using TestUtilities.UI;
 using Keyboard = TestUtilities.UI.Keyboard;
 using Mouse = TestUtilities.UI.Mouse;
+using MessageBoxButton = TestUtilities.MessageBoxButton;
 
 namespace Microsoft.VisualStudioTools.SharedProjectTests {
     [TestClass]
@@ -186,7 +187,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                     using (var solution = testDef.Generate().ToVs()) {
                         TestSccProvider.DocumentEvents.Clear();
-                        var project = app.OpenProject(solution.Filename);
+                        var project = app.OpenProject(solution.SolutionFilename);
                         var window = app.SolutionExplorerTreeView;
                         var fileName = projectType.Code(@"ExcludedFile");
 
@@ -195,11 +196,11 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                             window.WaitForChildOfProject(project, fileName).Select();
                         } catch (Exception) {
                             // Show all files so we can see the excluded item if we previously couldn't
-                            solution.App.ExecuteCommand("Project.ShowAllFiles");
+                            solution.ExecuteCommand("Project.ShowAllFiles");
                             window.WaitForChildOfProject(project, fileName).Select();
                         }
 
-                        solution.App.ExecuteCommand("Project.IncludeInProject");
+                        solution.ExecuteCommand("Project.IncludeInProject");
 
                         System.Threading.Thread.Sleep(250);
 

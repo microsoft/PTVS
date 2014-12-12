@@ -91,12 +91,12 @@ namespace PythonToolsUITests {
                 foreach (var snippet in BasicSnippets) {
                     TestOneTabSnippet(solution, snippet);
 
-                    solution.App.Dte.ActiveWindow.Close(vsSaveChanges.vsSaveChangesNo);
+                    solution.CloseActiveWindow(vsSaveChanges.vsSaveChangesNo);
                 }
             }
         }
 
-        private static EditorWindow TestOneTabSnippet(VisualStudioSolution solution, Snippet snippet) {
+        private static IEditor TestOneTabSnippet(IVisualStudioInstance solution, Snippet snippet) {
             Console.WriteLine("Testing: {0}", snippet.Shortcut);
             var app = solution.OpenItem("SnippetsTest", "app.py");
             app.MoveCaret(1, 1);
@@ -106,44 +106,44 @@ namespace PythonToolsUITests {
             return VerifySnippet(snippet, "pass", app);
         }
 
-        private static EditorWindow TestOneSurroundWithSnippet(VisualStudioSolution solution, Snippet snippet, string body = "42", string file = "nonempty.py") {
+        private static IEditor TestOneSurroundWithSnippet(IVisualStudioInstance solution, Snippet snippet, string body = "42", string file = "nonempty.py") {
             Console.WriteLine("Testing: {0}", snippet.Shortcut);
             var app = solution.OpenItem("SnippetsTest", file);
             app.Select(1, 1, app.Text.Length);
             app.Invoke(() => app.TextView.Caret.EnsureVisible());
             app.SetFocus();
 
-            solution.App.ExecuteCommand("Edit.SurroundWith");
+            solution.ExecuteCommand("Edit.SurroundWith");
             return VerifySnippet(snippet, body, app);
         }
 
-        private static EditorWindow TestOneInsertSnippet(VisualStudioSolution solution, Snippet snippet, string category, string body = "42", string file = "nonempty.py") {
+        private static IEditor TestOneInsertSnippet(IVisualStudioInstance solution, Snippet snippet, string category, string body = "42", string file = "nonempty.py") {
             Console.WriteLine("Testing: {0}", snippet.Shortcut);
             var app = solution.OpenItem("SnippetsTest", file);
             app.Select(1, 1, app.Text.Length);
             app.Invoke(() => app.TextView.Caret.EnsureVisible());
             app.SetFocus();
 
-            solution.App.ExecuteCommand("Edit.InsertSnippet");
+            solution.ExecuteCommand("Edit.InsertSnippet");
             Keyboard.Type(category + "\t");
 
             return VerifySnippet(snippet, body, app);
         }
 
-        private static EditorWindow TestOneInsertSnippetMoveCaret(VisualStudioSolution solution, Snippet snippet, string category, string body = "42", string file = "nonempty.py", int line = 1) {
+        private static IEditor TestOneInsertSnippetMoveCaret(IVisualStudioInstance solution, Snippet snippet, string category, string body = "42", string file = "nonempty.py", int line = 1) {
             Console.WriteLine("Testing: {0}", snippet.Shortcut);
             var app = solution.OpenItem("SnippetsTest", file);
             app.MoveCaret(line, 1);
             app.Invoke(() => app.TextView.Caret.EnsureVisible());
             app.SetFocus();
 
-            solution.App.ExecuteCommand("Edit.InsertSnippet");
+            solution.ExecuteCommand("Edit.InsertSnippet");
             Keyboard.Type(category + "\t");
 
             return VerifySnippet(snippet, body, app);
         }
 
-        private static EditorWindow VerifySnippet(Snippet snippet, string body, EditorWindow app) {
+        private static IEditor VerifySnippet(Snippet snippet, string body, IEditor app) {
             Keyboard.Type(snippet.Shortcut + "\t");
 
             app.WaitForText(snippet.Expected.Replace("$body$", body));
@@ -174,7 +174,7 @@ namespace PythonToolsUITests {
                 Keyboard.Type("42");
                 app.WaitForText("class myclass(base):\r\n    42");
 
-                solution.App.Dte.ActiveWindow.Close(vsSaveChanges.vsSaveChangesNo);
+                solution.CloseActiveWindow(vsSaveChanges.vsSaveChangesNo);
             }
         }
 
@@ -193,7 +193,7 @@ namespace PythonToolsUITests {
                 Keyboard.Type("42");
                 app.WaitForText("if True:\r\n    class ClassName(object):\r\n        42\r\n    pass");
 
-                solution.App.Dte.ActiveWindow.Close(vsSaveChanges.vsSaveChangesNo);
+                solution.CloseActiveWindow(vsSaveChanges.vsSaveChangesNo);
             }
         }
 
@@ -204,7 +204,7 @@ namespace PythonToolsUITests {
                 foreach (var snippet in BasicSnippets) {
                     TestOneSurroundWithSnippet(solution, snippet);
 
-                    solution.App.Dte.ActiveWindow.Close(vsSaveChanges.vsSaveChangesNo);
+                    solution.CloseActiveWindow(vsSaveChanges.vsSaveChangesNo);
                 }
             }
         }
@@ -221,7 +221,7 @@ namespace PythonToolsUITests {
                         "multiline.py"
                     );
 
-                    solution.App.Dte.ActiveWindow.Close(vsSaveChanges.vsSaveChangesNo);
+                    solution.CloseActiveWindow(vsSaveChanges.vsSaveChangesNo);
                 }
             }
         }
@@ -233,7 +233,7 @@ namespace PythonToolsUITests {
                 foreach (var snippet in BasicSnippets) {
                     TestOneInsertSnippet(solution, snippet, "Python");
 
-                    solution.App.Dte.ActiveWindow.Close(vsSaveChanges.vsSaveChangesNo);
+                    solution.CloseActiveWindow(vsSaveChanges.vsSaveChangesNo);
                 }
             }
         }
@@ -249,13 +249,13 @@ namespace PythonToolsUITests {
                     app.Invoke(() => app.TextView.Caret.EnsureVisible());
                     app.SetFocus();
 
-                    solution.App.ExecuteCommand("Edit.InsertSnippet");
+                    solution.ExecuteCommand("Edit.InsertSnippet");
                     Keyboard.Type("Python\t");
 
                     Keyboard.Type(snippet.Shortcut + "\t");
                     app.WaitForText(snippet.Expected.Replace("$body$", "pass") + "\r\n" + "42");
 
-                    solution.App.Dte.ActiveWindow.Close(vsSaveChanges.vsSaveChangesNo);
+                    solution.CloseActiveWindow(vsSaveChanges.vsSaveChangesNo);
                 }
             }
         }
@@ -273,7 +273,7 @@ namespace PythonToolsUITests {
 
                 TestOneInsertSnippet(solution, snippet, "Test");
 
-                solution.App.Dte.ActiveWindow.Close(vsSaveChanges.vsSaveChangesNo);
+                solution.CloseActiveWindow(vsSaveChanges.vsSaveChangesNo);
             }
         }
 
@@ -290,7 +290,7 @@ namespace PythonToolsUITests {
 
                 TestOneInsertSnippetMoveCaret(solution, snippet, "Test", file: "badimport.py", line:2);
 
-                solution.App.Dte.ActiveWindow.Close(vsSaveChanges.vsSaveChangesNo);
+                solution.CloseActiveWindow(vsSaveChanges.vsSaveChangesNo);
             }
         }
 
@@ -307,7 +307,7 @@ namespace PythonToolsUITests {
 
                 TestOneInsertSnippetMoveCaret(solution, snippet, "Test", file: "importedas.py", line: 2);
 
-                solution.App.Dte.ActiveWindow.Close(vsSaveChanges.vsSaveChangesNo);
+                solution.CloseActiveWindow(vsSaveChanges.vsSaveChangesNo);
             }
         }
 
@@ -324,7 +324,7 @@ namespace PythonToolsUITests {
 
                 TestOneInsertSnippetMoveCaret(solution, snippet, "Test", file: "imported.py", line: 2);
 
-                solution.App.Dte.ActiveWindow.Close(vsSaveChanges.vsSaveChangesNo);
+                solution.CloseActiveWindow(vsSaveChanges.vsSaveChangesNo);
             }
         }
 
@@ -345,11 +345,11 @@ namespace PythonToolsUITests {
                 // select inserted pass
                 app.Select(2, 5, 4);
                 // start nested session
-                solution.App.ExecuteCommand("Edit.SurroundWith");
+                solution.ExecuteCommand("Edit.SurroundWith");
                 Keyboard.Type("if\t");
                 app.WaitForText("if True:\r\n    if True:\r\n        pass");
 
-                solution.App.Dte.ActiveWindow.Close(vsSaveChanges.vsSaveChangesNo);
+                solution.CloseActiveWindow(vsSaveChanges.vsSaveChangesNo);
             }
         }
 

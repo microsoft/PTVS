@@ -144,7 +144,7 @@ namespace DebuggerUITests {
                 app.Dte.ExecuteCommand("Debug.Start");
 
                 var dialog = app.WaitForDialog();
-                VisualStudioApp.CheckMessageBox(TestUtilities.UI.MessageBoxButton.Ok, "Interpreter specified in the project does not exist:", "Interpreter.exe'");
+                VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, "Interpreter specified in the project does not exist:", "Interpreter.exe'");
 
                 app.Dte.Solution.Close(false);
 

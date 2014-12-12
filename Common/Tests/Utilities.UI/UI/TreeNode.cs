@@ -15,11 +15,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows;
 using System.Windows.Automation;
+using System.Windows.Input;
 
 namespace TestUtilities.UI
 {
-    public class TreeNode : AutomationWrapper
+    public class TreeNode : AutomationWrapper, ITreeNode
     {
         public TreeNode(AutomationElement element)
             : base(element) {
@@ -50,6 +52,14 @@ namespace TestUtilities.UI
                 Mouse.Click(System.Windows.Input.MouseButton.Left);
                 System.Threading.Thread.Sleep(100);
             }
+        }
+
+        void ITreeNode.Select() {
+            base.Select();
+        }
+
+        void ITreeNode.AddToSelection() {
+            AutomationWrapper.AddToSelection(Element);
         }
 
         public void Deselect()
@@ -147,5 +157,51 @@ namespace TestUtilities.UI
             Mouse.Click(System.Windows.Input.MouseButton.Right);
             System.Threading.Thread.Sleep(100);
         }
+
+        /// <summary>
+        /// Selects the provided items with the mouse preparing for a drag and drop
+        /// </summary>
+        /// <param name="source"></param>
+        private static void SelectItemsForDragAndDrop(ITreeNode[] source) {
+            AutomationWrapper.Select(((TreeNode)source.First()).Element);
+            for (int i = 1; i < source.Length; i++) {
+                AutomationWrapper.AddToSelection(((TreeNode)source[i]).Element);
+            }
+
+            Mouse.MoveTo(((TreeNode)source.Last()).Element.GetClickablePoint());
+            Mouse.Down(MouseButton.Left);
+        }
+
+
+        public void DragOntoThis(params ITreeNode[] source) {
+            DragOntoThis(Key.None, source);
+        }
+
+        public void DragOntoThis(Key modifier, params ITreeNode[] source) {
+            SelectItemsForDragAndDrop(source);
+
+            try {
+                try {
+                    if (modifier != Key.None) {
+                        Keyboard.Press(modifier);
+                    }
+                    var dest = Element;
+                    if (source.Length == 1 && source[0] == this) {
+                        // dragging onto ourself, the mouse needs to move
+                        var point = dest.GetClickablePoint();
+                        Mouse.MoveTo(new Point(point.X + 1, point.Y + 1));
+                    } else {
+                        Mouse.MoveTo(dest.GetClickablePoint());
+                    }
+                } finally {
+                    Mouse.Up(MouseButton.Left);
+                }
+            } finally {
+                if (modifier != Key.None) {
+                    Keyboard.Release(modifier);
+                }
+            }
+        }
+
     }
 }

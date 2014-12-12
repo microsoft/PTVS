@@ -330,6 +330,14 @@
       <Link>SharedProject\IdleManager.cs</Link>
       <Visible>true</Visible>
     </Compile>
+    <Compile Include="$(_ProjectSystemFilesLocation)\IClipboardService.cs">
+      <Link>SharedProject\IClipboardService.cs</Link>
+      <Visible>true</Visible>
+    </Compile>
+    <Compile Include="$(_ProjectSystemFilesLocation)\ClipboardService.cs">
+      <Link>SharedProject\ClipboardService.cs</Link>
+      <Visible>true</Visible>
+    </Compile>
     <Compile Include="$(_ProjectSystemFilesLocation)\ImageHandler.cs">
       <Link>SharedProject\ImageHandler.cs</Link>
       <Visible>true</Visible>

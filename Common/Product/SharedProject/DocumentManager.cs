@@ -376,9 +376,8 @@ namespace Microsoft.VisualStudioTools.Project {
             }
 
             IVsRunningDocumentTable pRDT = site.GetService(typeof(SVsRunningDocumentTable)) as IVsRunningDocumentTable;
-            IVsUIShellOpenDocument doc = site.GetService(typeof(SVsUIShellOpenDocument)) as IVsUIShellOpenDocument;
 
-            if (pRDT == null || doc == null)
+            if (pRDT == null)
                 return;
 
             IVsHierarchy pIVsHierarchy;

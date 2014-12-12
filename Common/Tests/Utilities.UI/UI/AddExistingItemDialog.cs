@@ -17,7 +17,7 @@ using System.Windows.Automation;
 using System.Windows.Input;
 
 namespace TestUtilities.UI {
-    public class AddExistingItemDialog : AutomationDialog {
+    public class AddExistingItemDialog : AutomationDialog, IAddExistingItem {
         public AddExistingItemDialog(VisualStudioApp app, AutomationElement element)
             : base(app, element) {
         }

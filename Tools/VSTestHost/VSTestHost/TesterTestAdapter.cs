@@ -26,6 +26,7 @@ using System.Runtime.Remoting.Channels.Ipc;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.Common;
 using Microsoft.VisualStudio.TestTools.Execution;
 using Microsoft.VisualStudio.TestTools.TestAdapter;
@@ -43,6 +44,7 @@ namespace Microsoft.VisualStudioTools.VSTestHost {
         private Guid _runId;
         private IRunContext _runContext;
         private TesteeTestAdapter _remote;
+        private bool _mockVs;
 
         public TesterTestAdapter() { }
 
@@ -169,6 +171,18 @@ namespace Microsoft.VisualStudioTools.VSTestHost {
                     hive ?? "(null)"
                 ));
             }
+            
+            if (application == "Mock") {
+                _runContext = runContext;
+                _remote = new TesteeTestAdapter();
+                _remote.Initialize(_runContext);
+                // In the mock case tester and testee are the same process, therefore
+                // VSTestContext is in our process too.  So we can just set this value
+                // directly here.
+                VSTestContext.IsMock = true;
+                _mockVs = true;
+                return;
+            }
 
             // TODO: Detect and perform first run of VS if necessary.
             // The first time a VS hive is run, the user sees a dialog allowing
@@ -264,28 +278,30 @@ namespace Microsoft.VisualStudioTools.VSTestHost {
             bool firstAttempt = true;
 
             while (retries-- > 0) {
-                if (!firstAttempt) {
-                    // Send a message announcing that we are retrying the call
-                    SendMessage(
-                        runContext,
-                        string.Format(
-                            Resources.RetryRemoteCall,
-                            currentTest == null ? currentTest.HumanReadableId : caller
-                        ),
-                        currentTest
-                    );
-                }
-                firstAttempt = false;
+                if (!_mockVs) {
+                    if (!firstAttempt) {
+                        // Send a message announcing that we are retrying the call
+                        SendMessage(
+                            runContext,
+                            string.Format(
+                                Resources.RetryRemoteCall,
+                                currentTest == null ? currentTest.HumanReadableId : caller
+                            ),
+                            currentTest
+                        );
+                    }
+                    firstAttempt = false;
 
-                if (!IsClientAlive()) {
-                    Close();
+                    if (!IsClientAlive()) {
+                        Close();
 
-                    if (restartVS) {
-                        SendMessage(runContext, "Restarting VS", currentTest);
-                        Initialize(runContext);
-                    } else {
-                        SendMessage(runContext, Resources.NoClient, currentTest);
-                        return false;
+                        if (restartVS) {
+                            SendMessage(runContext, "Restarting VS", currentTest);
+                            Initialize(runContext);
+                        } else {
+                            SendMessage(runContext, Resources.NoClient, currentTest);
+                            return false;
+                        }
                     }
                 }
 

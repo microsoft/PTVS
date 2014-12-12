@@ -2390,7 +2390,7 @@ def g(a, b, c):
                     List<MonitoredBufferResult> analysis = new List<MonitoredBufferResult>();
                     for (int i = 0; i < inputs.Length; i++) {
                         var filename = inputs[i].Filename;
-                        buffers[i] = new MockTextBuffer(inputs[i].Input, filename: filename);
+                        buffers[i] = new MockTextBuffer(inputs[i].Input, PythonCoreConstants.ContentType, filename: filename);
                         views[i] = new MockTextView(buffers[i]);
                         buffers[i].AddProperty(typeof(VsProjectAnalyzer), analyzer);
                         classifierProvider.GetClassifier(buffers[i]);

@@ -32,7 +32,7 @@ using Microsoft.VisualStudio.Text.Tagging;
 using Microsoft.VisualStudioTools.VSTestHost;
 
 namespace TestUtilities.UI {
-    public class EditorWindow : AutomationWrapper {
+    public class EditorWindow : AutomationWrapper, IEditor {
         private readonly string _filename;
 
         public EditorWindow(string filename, AutomationElement element)
@@ -53,7 +53,7 @@ namespace TestUtilities.UI {
         }
 
         public void MoveCaret(SnapshotPoint newPoint) {
-            ((UIElement)TextView).Dispatcher.Invoke((Action)(() => {
+            Invoke((Action)(() => {
                 TextView.Caret.MoveTo(newPoint.TranslateTo(newPoint.Snapshot.TextBuffer.CurrentSnapshot, PointTrackingMode.Positive));
             }));
         }
@@ -310,6 +310,14 @@ namespace TestUtilities.UI {
                 Assert.Fail("Exception on UI thread: " + excep.ToString());
             }
             return res;
+        }
+
+        public IIntellisenseSession TopSession {
+            get { return IntellisenseSessionStack.TopSession;  }
+        }
+
+        public void Type(string text) {
+            Keyboard.Type(text);
         }
     }
 }

@@ -902,7 +902,7 @@ namespace TestUtilities.UI {
                 manageSubscriptionsDialog.SubscriptionsListBox[0].Select();
                 manageSubscriptionsDialog.ClickRemove();
                 WaitForDialogToReplace(manageSubscriptionsDialog.Element);
-                VisualStudioApp.CheckMessageBox(TestUtilities.UI.MessageBoxButton.Yes);
+                VisualStudioApp.CheckMessageBox(TestUtilities.MessageBoxButton.Yes);
             }
 
             using (var importSubscriptionDialog = manageSubscriptionsDialog.ClickImport()) {

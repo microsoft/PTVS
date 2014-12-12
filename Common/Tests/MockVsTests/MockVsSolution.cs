@@ -20,11 +20,12 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Flavor;
 using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.VisualStudioTools.MockVsTests {
-    public sealed class MockVsSolution : IVsSolution, IVsRegisterProjectTypes, IVsCreateAggregateProject {
+    public sealed class MockVsSolution : IVsSolution, IVsRegisterProjectTypes, IVsCreateAggregateProject, IVsHierarchy {
         private string _solutionFile;
         private readonly Dictionary<Guid, ProjectInfo> _projects = new Dictionary<Guid, ProjectInfo>();
         private readonly Dictionary<string, ProjectInfo> _projectByName = new Dictionary<string, ProjectInfo>();
@@ -35,13 +36,20 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             public readonly Guid ProjectGuid;
             public readonly Guid ProjectType;
             public readonly IVsHierarchy Hierarchy;
-            public readonly string Name;
+            public readonly string Name, Filename;
 
-            public ProjectInfo(Guid projectGuid, Guid typeGuid, IVsHierarchy hierarchy, string name) {
+            public ProjectInfo(Guid projectGuid, Guid typeGuid, IVsHierarchy hierarchy, string name, string filename) {
                 ProjectGuid = projectGuid;
                 ProjectType = typeGuid;
                 Hierarchy = hierarchy;
                 Name = name;
+                Filename = filename;
+            }
+        }
+
+        public string SolutionFile {
+            get {
+                return _solutionFile;
             }
         }
 
@@ -94,7 +102,23 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         public int GetItemOfProjref(string pszProjref, out IVsHierarchy ppHierarchy, out uint pitemid, out string pbstrUpdatedProjref, VSUPDATEPROJREFREASON[] puprUpdateReason) {
-            throw new NotImplementedException();
+            var comps = pszProjref.Split('|');
+            if (comps.Length == 3) {
+                foreach (var project in _projects.Values) {
+                    if (project.Filename == comps[1]) {
+                        ppHierarchy = project.Hierarchy;
+                        if (ErrorHandler.Succeeded(project.Hierarchy.ParseCanonicalName(comps[2], out pitemid))) {
+                            pbstrUpdatedProjref = pszProjref;
+                            puprUpdateReason[0] = VSUPDATEPROJREFREASON.UPR_NoUpdate;
+                            return VSConstants.S_OK;
+                        }
+                    }
+                }
+            }
+            ppHierarchy = null;
+            pitemid = 0;
+            pbstrUpdatedProjref = null;
+            return VSConstants.E_FAIL;
         }
 
         public int GetProjectEnum(uint grfEnumFlags, ref Guid rguidEnumOnlyThisType, out IEnumHierarchies ppenum) {
@@ -188,7 +212,16 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         public int GetProjrefOfItem(IVsHierarchy pHierarchy, uint itemid, out string pbstrProjref) {
-            throw new NotImplementedException();
+            foreach (var project in _projects) {
+                if (ComUtilities.IsSameComObject(pHierarchy, project.Value.Hierarchy)) {
+                    string canonicalName;
+                    ErrorHandler.ThrowOnFailure(project.Value.Hierarchy.GetCanonicalName(itemid, out canonicalName));
+                    pbstrProjref = project.Value.ProjectGuid.ToString("B") + "|" + project.Value.Filename + "|" + canonicalName;
+                    return VSConstants.S_OK;
+                }
+            }
+            pbstrProjref = null;
+            return VSConstants.E_FAIL;
         }
 
         public int GetProjrefOfProject(IVsHierarchy pHierarchy, out string pbstrProjref) {
@@ -254,12 +287,15 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
                     }
 
                     var vsProj = (IVsProject)Marshal.GetObjectForIUnknown(project);
+
                     var projectInfo = new ProjectInfo(
                         projectGuid,
                         typeGuid,
                         (IVsHierarchy)vsProj,
-                        projectName
+                        projectName,
+                        filename
                     );
+                    ErrorHandler.ThrowOnFailure(projectInfo.Hierarchy.SetProperty((uint)VSConstants.VSITEMID.Root, (int)__VSHPROPID.VSHPROPID_ParentHierarchy, this));
                     _projects[projectGuid] = projectInfo;
                     _projectByName[projectName] = projectInfo;
                 } finally {
@@ -361,5 +397,77 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         #endregion
+
+        public int AdviseHierarchyEvents(IVsHierarchyEvents pEventSink, out uint pdwCookie) {
+            throw new NotImplementedException();
+        }
+
+        public int Close() {
+            throw new NotImplementedException();
+        }
+
+        public int GetCanonicalName(uint itemid, out string pbstrName) {
+            throw new NotImplementedException();
+        }
+
+        public int GetGuidProperty(uint itemid, int propid, out Guid pguid) {
+            throw new NotImplementedException();
+        }
+
+        public int GetNestedHierarchy(uint itemid, ref Guid iidHierarchyNested, out IntPtr ppHierarchyNested, out uint pitemidNested) {
+            throw new NotImplementedException();
+        }
+
+        public int GetProperty(uint itemid, int propid, out object pvar) {
+            throw new NotImplementedException();
+        }
+
+        public int GetSite(out VisualStudio.OLE.Interop.IServiceProvider ppSP) {
+            throw new NotImplementedException();
+        }
+
+        public int ParseCanonicalName(string pszName, out uint pitemid) {
+            throw new NotImplementedException();
+        }
+
+        public int QueryClose(out int pfCanClose) {
+            throw new NotImplementedException();
+        }
+
+        public int SetGuidProperty(uint itemid, int propid, ref Guid rguid) {
+            throw new NotImplementedException();
+        }
+
+        public int SetProperty(uint itemid, int propid, object var) {
+            throw new NotImplementedException();
+        }
+
+        public int SetSite(VisualStudio.OLE.Interop.IServiceProvider psp) {
+            throw new NotImplementedException();
+        }
+
+        public int UnadviseHierarchyEvents(uint dwCookie) {
+            throw new NotImplementedException();
+        }
+
+        public int Unused0() {
+            throw new NotImplementedException();
+        }
+
+        public int Unused1() {
+            throw new NotImplementedException();
+        }
+
+        public int Unused2() {
+            throw new NotImplementedException();
+        }
+
+        public int Unused3() {
+            throw new NotImplementedException();
+        }
+
+        public int Unused4() {
+            throw new NotImplementedException();
+        }
     }
 }

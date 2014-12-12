@@ -12,7 +12,9 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.Linq;
+using System.Windows.Input;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools;
@@ -34,19 +36,56 @@ namespace PythonToolsMockTests {
                 PythonProject,
                 Compile("server")
             ).Generate();
-            
-            var vs = sln.ToMockVs();
-            Assert.IsFalse(vs.WaitForItem("HelloWorld", "Python Environments").IsNull);
-            Assert.IsFalse(vs.WaitForItem("HelloWorld", "References").IsNull);
-            Assert.IsFalse(vs.WaitForItem("HelloWorld", "Search Paths").IsNull);
-            Assert.IsFalse(vs.WaitForItem("HelloWorld", "server.py").IsNull);
-            var view = vs.OpenItem("HelloWorld", "server.py");
 
-            view.Type("import ");
+            using (var vs = sln.ToMockVs()) {
+                Assert.IsNotNull(vs.WaitForItem("HelloWorld", "Python Environments"));
+                Assert.IsNotNull(vs.WaitForItem("HelloWorld", "References"));
+                Assert.IsNotNull(vs.WaitForItem("HelloWorld", "Search Paths"));
+                Assert.IsNotNull(vs.WaitForItem("HelloWorld", "server.py"));
+                var view = vs.OpenItem("HelloWorld", "server.py");
 
-            var session = view.TopSession as ICompletionSession;
+                view.Type("import ");
 
-            AssertUtil.Contains(session.Completions(), "sys");
+                var session = view.TopSession as ICompletionSession;
+
+                AssertUtil.Contains(session.Completions(), "sys");
+            }
         }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("VSTestHost")]
+        public void CutRenamePaste() {
+            UIThread.InitializeAndNeverInvoke();
+
+            foreach (var projectType in ProjectTypes) {
+                var testDef = new ProjectDefinition("DragDropCopyCutPaste",
+                    projectType,
+                    ItemGroup(
+                        Folder("CutRenamePaste"),
+                        Compile("CutRenamePaste\\CutRenamePaste")
+                    )
+                );
+
+                using (var solution = testDef.Generate().ToMockVs()) {
+                    var project = solution.WaitForItem("DragDropCopyCutPaste");
+                    var file = solution.WaitForItem("DragDropCopyCutPaste", "CutRenamePaste", "CutRenamePaste" + projectType.CodeExtension);
+
+                    file.Select();
+                    solution.ControlX();
+
+                    file.Select();
+                    solution.Type(Key.F2);
+                    solution.Type("CutRenamePasteNewName");
+                    solution.Type(Key.Enter);
+
+                    solution.Sleep(1000);
+                    project.Select();
+                    solution.ControlV();
+
+                    solution.CheckMessageBox("The source URL 'CutRenamePaste" + projectType.CodeExtension + "' could not be found.");
+                }
+            }
+        }
+
     }
 }

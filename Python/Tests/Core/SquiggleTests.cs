@@ -119,7 +119,7 @@ namespace PythonToolsTests {
 
         [TestMethod, Priority(0)]
         public void UnresolvedImportSquiggle() {
-            var buffer = new MockTextBuffer("import fob, oar\r\nfrom baz import *\r\nfrom .spam import eggs", filename: "C:\\name.py");
+            var buffer = new MockTextBuffer("import fob, oar\r\nfrom baz import *\r\nfrom .spam import eggs", PythonCoreConstants.ContentType, filename: "C:\\name.py");
             var squiggles = AnalyzeTextBuffer(buffer).Select(FormatErrorTag).ToArray();
 
             Console.WriteLine(" Squiggles found:");

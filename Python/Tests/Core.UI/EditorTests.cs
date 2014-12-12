@@ -641,7 +641,7 @@ x\
                 var item = project.ProjectItems.Item("Program.py");
                 var windowTask = Task.Run(() => item.Open());
 
-                VisualStudioApp.CheckMessageBox(TestUtilities.UI.MessageBoxButton.Ok, "File Load", "Program.py", "ascii encoding");
+                VisualStudioApp.CheckMessageBox(TestUtilities.MessageBoxButton.Ok, "File Load", "Program.py", "ascii encoding");
 
                 var window = windowTask.Result;
                 window.Activate();

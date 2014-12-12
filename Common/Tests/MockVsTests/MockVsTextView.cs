@@ -19,21 +19,28 @@ using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.OLE.Interop;
+using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Operations;
 using Microsoft.VisualStudio.TextManager.Interop;
+using TestUtilities;
 using TestUtilities.Mocks;
 using IServiceProvider = System.IServiceProvider;
 
 namespace Microsoft.VisualStudioTools.MockVsTests {
-    public class MockVsTextView : IVsTextView, IFocusable {
+    public class MockVsTextView : IVsTextView, IFocusable, IEditor, IOleCommandTarget {
         private readonly MockTextView _view;
         private readonly IEditorOperations _editorOps;
         private readonly IServiceProvider _serviceProvider;
+        private readonly MockVs _vs;
         private IOleCommandTarget _commandTarget;
 
-        public MockVsTextView(IServiceProvider serviceProvier, MockTextView view) {
+        public MockVsTextView(IServiceProvider serviceProvier, MockVs vs, MockTextView view) {
             _view = view;
             _serviceProvider = serviceProvier;
+            _vs = vs;
             var compModel = (IComponentModel)_serviceProvider.GetService(typeof(SComponentModel));
             var editorOpsFact = compModel.GetService<IEditorOperationsFactoryService>();
             _editorOps = editorOpsFact.GetEditorOperations(_view);
@@ -65,63 +72,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
                 return View.TextBuffer.CurrentSnapshot.GetText();
             }
         }
-
-        [StructLayout(LayoutKind.Explicit, Size = 16)]
-        struct VARIANT {
-            [FieldOffset(0)]
-            public ushort vt;
-            [FieldOffset(8)]
-            public IntPtr pdispVal;
-            [FieldOffset(8)]
-            public byte ui1;
-            [FieldOffset(8)]
-            public ushort ui2;
-            [FieldOffset(8)]
-            public uint ui4;
-            [FieldOffset(8)]
-            public ulong ui8;
-            [FieldOffset(8)]
-            public float r4;
-            [FieldOffset(8)]
-            public double r8;
-        }
-
-        public void Enter() {
-            var guid = VSConstants.VSStd2K;
-            _commandTarget.Exec(ref guid, (int)VSConstants.VSStd2KCmdID.RETURN, 0, IntPtr.Zero, IntPtr.Zero);
-        }
-
-        public void Tab() {
-            var guid = VSConstants.VSStd2K;
-            _commandTarget.Exec(ref guid, (int)VSConstants.VSStd2KCmdID.TAB, 0, IntPtr.Zero, IntPtr.Zero);
-        }
-
-        public void Type(string text) {
-            var guid = VSConstants.VSStd2K;
-            var variantMem = Marshal.AllocCoTaskMem(Marshal.SizeOf(typeof(VARIANT)));
-            try {
-                for (int i = 0; i < text.Length; i++) {
-                    switch(text[i]) {
-                        case '\r': Enter(); break;
-                        case '\t': Tab(); break;
-                        default:
-                            Marshal.GetNativeVariantForObject((ushort)text[i], variantMem);
-                            _commandTarget.Exec(
-                                ref guid,
-                                (int)VSConstants.VSStd2KCmdID.TYPECHAR,
-                                0,
-                                variantMem,
-                                IntPtr.Zero
-                            );
-                            break;
-                    }
-
-                }
-            } finally {
-                Marshal.FreeCoTaskMem(variantMem);
-            }
-        }
-
+        
         int IVsTextView.AddCommandFilter(IOleCommandTarget pNewCmdTarg, out IOleCommandTarget ppNextCmdTarg) {
             ppNextCmdTarg = _commandTarget;
             _commandTarget = pNewCmdTarg;
@@ -140,8 +91,14 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             throw new NotImplementedException();
         }
 
+        public void Close() {
+            var rdt = (IVsRunningDocumentTable)_serviceProvider.GetService(typeof(SVsRunningDocumentTable));
+            ErrorHandler.ThrowOnFailure(rdt.UnlockDocument(0, ((MockVsTextLines)GetBuffer())._docCookie));        
+        }
+
         int IVsTextView.CloseView() {
-            throw new NotImplementedException();
+            Close();
+            return VSConstants.S_OK;
         }
 
         int IVsTextView.EnsureSpanVisible(TextSpan span) {
@@ -149,9 +106,15 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         int IVsTextView.GetBuffer(out IVsTextLines ppBuffer) {
+            ppBuffer = GetBuffer();
+            return VSConstants.S_OK;
+        }
+
+        private IVsTextLines GetBuffer() {
+            IVsTextLines ppBuffer;
             var compModel = (IComponentModel)_serviceProvider.GetService(typeof(SComponentModel));
             ppBuffer = (IVsTextLines)compModel.GetService<IVsEditorAdaptersFactoryService>().GetBufferAdapter(_view.TextBuffer);
-            return VSConstants.S_OK;
+            return ppBuffer;
         }
 
         int IVsTextView.GetCaretPos(out int piLine, out int piColumn) {
@@ -307,6 +270,60 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
 
         public void LostFocus() {
             _view.OnLostAggregateFocus();
+        }
+
+        public void Type(string text) {
+            _commandTarget.Type(text);
+        }
+
+        int IOleCommandTarget.Exec(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
+            return _commandTarget.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
+        }
+
+        int IOleCommandTarget.QueryStatus(ref Guid pguidCmdGroup, uint cCmds, OLECMD[] prgCmds, IntPtr pCmdText) {
+            return _commandTarget.QueryStatus(pguidCmdGroup, cCmds, prgCmds, pCmdText);
+        }
+
+        public IWpfTextView TextView {
+            get {
+                return _view;
+            }
+        }
+        public void Select(int line, int column, int length) {
+            throw new NotImplementedException();
+        }
+
+        public void WaitForText(string text) {
+            for (int i = 0; i < 100; i++) {
+                if (Text != text) {
+                    System.Threading.Thread.Sleep(100);
+                } else {
+                    break;
+                }
+            }
+
+            Assert.AreEqual(text, Text);
+        }
+
+        public void MoveCaret(int line, int column) {
+            var textLine = _view.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(line - 1);
+            if (column - 1 == textLine.Length) {
+                MoveCaret(textLine.End);
+            } else {
+                MoveCaret(new SnapshotPoint(_view.TextBuffer.CurrentSnapshot, textLine.Start + column - 1));
+            }
+        }
+
+        public void MoveCaret(SnapshotPoint newPoint) {
+            Invoke((Action)(() => {
+                _view.Caret.MoveTo(newPoint.TranslateTo(newPoint.Snapshot.TextBuffer.CurrentSnapshot, PointTrackingMode.Positive));
+            }));
+        }
+
+        public void SetFocus() {
+        }
+
+        public void Invoke(Action action) {
         }
     }
 }

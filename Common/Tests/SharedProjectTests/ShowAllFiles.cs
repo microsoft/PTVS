@@ -50,9 +50,9 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     var projectNode = solution.WaitForItem("ShowAllFiles", "SubFolder", "server" + projectType.CodeExtension);
                     AutomationWrapper.Select(projectNode);
 
-                    solution.App.Dte.ExecuteCommand("Project.ShowAllFiles"); // start showing all
+                    solution.ExecuteCommand("Project.ShowAllFiles"); // start showing all
 
-                    Assert.IsTrue(solution.Project.GetIsFolderExpanded("SubFolder"));
+                    Assert.IsTrue(solution.GetProject("ShowAllFiles").GetIsFolderExpanded("SubFolder"));
                 }
             }
         }
@@ -165,9 +165,9 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     AutomationWrapper.Select(projectNode);
 
                     Keyboard.ControlV();
-                    solution.Project.Save();
+                    solution.GetProject("ShowAllFilesLinked").Save();
 
-                    var text = File.ReadAllText(Path.Combine(solution.Directory, @"ShowAllFilesLinked\ShowAllFilesLinked" + projectType.ProjectExtension));
+                    var text = File.ReadAllText(Path.Combine(solution.SolutionDirectory, @"ShowAllFilesLinked\ShowAllFilesLinked" + projectType.ProjectExtension));
                     Assert.IsTrue(text.IndexOf("<Link>LinkedFile" + projectType.CodeExtension + "</Link>") != -1);
                 }
             }
@@ -209,7 +209,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                 using (var solution = def.Generate().ToVs()) {
                     var projectNode = solution.WaitForItem("ShowAllFilesIncludeExclude");
 
-                    var excludedFolder = solution.Project.ProjectItems.Item("ExcludeFolder1");
+                    var excludedFolder = solution.GetProject("ShowAllFilesIncludeExclude").ProjectItems.Item("ExcludeFolder1");
                     var itemTxt = excludedFolder.ProjectItems.Item("Item.txt");
                     var buildAction = itemTxt.Properties.Item("BuildAction");
                     Assert.IsNotNull(buildAction);
@@ -217,44 +217,44 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     var notInProject = solution.WaitForItem("ShowAllFilesIncludeExclude", "NotInProject" + projectType.CodeExtension);
                     AutomationWrapper.Select(notInProject);
 
-                    solution.App.Dte.ExecuteCommand("Project.SetasNode.jsStartupFile");
+                    solution.ExecuteCommand("Project.SetasNode.jsStartupFile");
                     
                     var folder = solution.WaitForItem("ShowAllFilesIncludeExclude", "ExcludeFolder1");
                     AutomationWrapper.Select(folder);
-                    solution.App.Dte.ExecuteCommand("Project.ExcludeFromProject");
+                    solution.ExecuteCommand("Project.ExcludeFromProject");
 
-                    solution.App.Dte.ExecuteCommand("Project.ShowAllFiles"); // stop showing all
+                    solution.ExecuteCommand("Project.ShowAllFiles"); // stop showing all
 
                     Assert.IsNull(solution.WaitForItemRemoved("ShowAllFilesIncludeExclude", "ExcludeFolder1"));
 
                     AutomationWrapper.Select(projectNode);
-                    solution.App.Dte.ExecuteCommand("Project.ShowAllFiles"); // start showing all again
+                    solution.ExecuteCommand("Project.ShowAllFiles"); // start showing all again
                     Assert.IsNotNull(solution.WaitForItem("ShowAllFilesIncludeExclude", "ExcludeFolder1"));
                     Assert.IsNotNull(solution.WaitForItem("ShowAllFilesIncludeExclude", "ExcludeFolder1", "Item.txt"));
 
                     // https://nodejstools.codeplex.com/workitem/250
                     var linkedFile = solution.WaitForItem("ShowAllFilesIncludeExclude", "LinkedFile" + projectType.CodeExtension);
                     AutomationWrapper.Select(linkedFile);
-                    solution.App.Dte.ExecuteCommand("Project.ExcludeFromProject");
+                    solution.ExecuteCommand("Project.ExcludeFromProject");
                     Assert.IsNull(solution.WaitForItemRemoved("ShowAllFilesIncludeExclude", "LinkedFile" + projectType.CodeExtension));
 
                     // https://pytools.codeplex.com/workitem/1153
                     // Shouldn't have a BuildAction property on excluded items
                     try {
-                        solution.Project.ProjectItems.Item("ExcludedFolder1").ProjectItems.Item("Item.txt").Properties.Item("BuildAction");
+                        solution.GetProject("ShowAllFilesIncludeExclude").ProjectItems.Item("ExcludedFolder1").ProjectItems.Item("Item.txt").Properties.Item("BuildAction");
                         Assert.Fail("Excluded item had BuildAction");
                     } catch (ArgumentException) {
                     }
 
                     var file = solution.WaitForItem("ShowAllFilesIncludeExclude", "ExcludeFolder2", "Item.txt");
                     AutomationWrapper.Select(file);
-                    solution.App.Dte.ExecuteCommand("Project.ExcludeFromProject");
+                    solution.ExecuteCommand("Project.ExcludeFromProject");
 
                     AutomationWrapper.Select(projectNode);
-                    solution.App.Dte.ExecuteCommand("Project.ShowAllFiles"); // stop showing all
+                    solution.ExecuteCommand("Project.ShowAllFiles"); // stop showing all
                     Assert.IsNull(solution.WaitForItemRemoved("ShowAllFilesIncludeExclude", "ExcludeFolder2", "Item.txt"));
                     AutomationWrapper.Select(projectNode);
-                    solution.App.Dte.ExecuteCommand("Project.ShowAllFiles"); // start showing all
+                    solution.ExecuteCommand("Project.ShowAllFiles"); // start showing all
 
                     var itemTxtNode = solution.WaitForItem("ShowAllFilesIncludeExclude", "ExcludeFolder2", "Item.txt");
                     Assert.IsNotNull(itemTxtNode);
@@ -263,7 +263,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                     // https://pytools.codeplex.com/workitem/1143
                     try {
-                        solution.App.ExecuteCommand("Project.AddNewItem");
+                        solution.ExecuteCommand("Project.AddNewItem");
                         Assert.Fail("Added a new item on excluded node");
                     } catch (COMException) {
                     }
@@ -272,7 +272,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     Assert.IsNotNull(excludedFolderNode);
                     AutomationWrapper.Select(excludedFolderNode);
                     try {
-                        solution.App.ExecuteCommand("Project.NewFolder");
+                        solution.ExecuteCommand("Project.NewFolder");
                         Assert.Fail("Added a new folder on excluded node");
                     } catch (COMException) {
                     }
@@ -280,9 +280,9 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     // include
                     folder = solution.WaitForItem("ShowAllFilesIncludeExclude", "IncludeFolder1");
                     AutomationWrapper.Select(folder);
-                    solution.App.Dte.ExecuteCommand("Project.IncludeInProject");
+                    solution.ExecuteCommand("Project.IncludeInProject");
                     AutomationWrapper.Select(projectNode);
-                    solution.App.Dte.ExecuteCommand("Project.ShowAllFiles"); // stop showing all
+                    solution.ExecuteCommand("Project.ShowAllFiles"); // stop showing all
 
                     Assert.IsNotNull(solution.WaitForItem("ShowAllFilesIncludeExclude", "IncludeFolder1"));
                     Assert.IsNotNull(solution.WaitForItem("ShowAllFilesIncludeExclude", "IncludeFolder1", "Item.txt"));
@@ -290,48 +290,48 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     // https://nodejstools.codeplex.com/workitem/242
                     // Rename Item.txt on disk
                     File.Move(
-                        Path.Combine(solution.Directory, @"ShowAllFilesIncludeExclude\IncludeFolder1\Item.txt"),
-                        Path.Combine(solution.Directory, @"ShowAllFilesIncludeExclude\IncludeFolder1\ItemNew.txt")
+                        Path.Combine(solution.SolutionDirectory, @"ShowAllFilesIncludeExclude\IncludeFolder1\Item.txt"),
+                        Path.Combine(solution.SolutionDirectory, @"ShowAllFilesIncludeExclude\IncludeFolder1\ItemNew.txt")
                     );
 
                     var includedItem = solution.WaitForItem("ShowAllFilesIncludeExclude", "IncludeFolder1", "Item.txt");
                     AutomationWrapper.Select(includedItem);
-                    solution.App.Dte.ExecuteCommand("Project.ExcludeFromProject");
+                    solution.ExecuteCommand("Project.ExcludeFromProject");
 
                     // Rename it back
                     File.Move(
-                        Path.Combine(solution.Directory, @"ShowAllFilesIncludeExclude\IncludeFolder1\ItemNew.txt"),
-                        Path.Combine(solution.Directory, @"ShowAllFilesIncludeExclude\IncludeFolder1\Item.txt")
+                        Path.Combine(solution.SolutionDirectory, @"ShowAllFilesIncludeExclude\IncludeFolder1\ItemNew.txt"),
+                        Path.Combine(solution.SolutionDirectory, @"ShowAllFilesIncludeExclude\IncludeFolder1\Item.txt")
                     );
 
                     AutomationWrapper.Select(projectNode);
-                    solution.App.Dte.ExecuteCommand("Project.ShowAllFiles"); // start showing all
+                    solution.ExecuteCommand("Project.ShowAllFiles"); // start showing all
 
                     // item should be back
                     Assert.IsNotNull(solution.WaitForItem("ShowAllFilesIncludeExclude", "IncludeFolder1", "Item.txt"));
 
                     folder = solution.WaitForItem("ShowAllFilesIncludeExclude", "IncludeFolder2", "Item.txt");
                     AutomationWrapper.Select(folder);
-                    solution.App.Dte.ExecuteCommand("Project.IncludeInProject");
+                    solution.ExecuteCommand("Project.IncludeInProject");
                     AutomationWrapper.Select(projectNode);
-                    solution.App.Dte.ExecuteCommand("Project.ShowAllFiles"); // stop showing all
+                    solution.ExecuteCommand("Project.ShowAllFiles"); // stop showing all
 
                     Assert.IsNotNull(solution.WaitForItem("ShowAllFilesIncludeExclude", "IncludeFolder2"));
                     Assert.IsNotNull(solution.WaitForItem("ShowAllFilesIncludeExclude", "IncludeFolder2", "Item.txt"));
                     Assert.IsNull(solution.WaitForItemRemoved("ShowAllFilesIncludeExclude", "IncludeFolder2", "Item2.txt"));
 
                     AutomationWrapper.Select(projectNode);
-                    solution.App.Dte.ExecuteCommand("Project.ShowAllFiles"); // start showing all
+                    solution.ExecuteCommand("Project.ShowAllFiles"); // start showing all
 
                     // exclude an item which exists, but is not on disk, it should be removed
                     var notOnDisk = solution.WaitForItem("ShowAllFilesIncludeExclude", "NotOnDisk" + projectType.CodeExtension);
                     AutomationWrapper.Select(notOnDisk);
-                    solution.App.Dte.ExecuteCommand("Project.ExcludeFromProject");
+                    solution.ExecuteCommand("Project.ExcludeFromProject");
                     Assert.IsNull(solution.WaitForItemRemoved("ShowAllFilesIncludeExclude", "NotOnDisk" + projectType.CodeExtension));
 
                     var notOnDiskFolder = solution.WaitForItem("ShowAllFilesIncludeExclude", "NotOnDiskFolder");
                     AutomationWrapper.Select(notOnDiskFolder);
-                    solution.App.Dte.ExecuteCommand("Project.ExcludeFromProject");
+                    solution.ExecuteCommand("Project.ExcludeFromProject");
                     Assert.IsNull(solution.WaitForItemRemoved("ShowAllFilesIncludeExclude", "NotOnDiskFolder"));
 
                     // https://pytools.codeplex.com/workitem/1138
@@ -347,7 +347,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     Keyboard.ControlV();
                     System.Threading.Thread.Sleep(1000);
 
-                    solution.App.Dte.ExecuteCommand("Project.ShowAllFiles"); // stop showing all
+                    solution.ExecuteCommand("Project.ShowAllFiles"); // stop showing all
 
                     // folder should now be included
                     Assert.IsNotNull(solution.WaitForItem("ShowAllFilesIncludeExclude", "IncludeFolder3"));
@@ -356,17 +356,17 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     // Excluding the startup item, and then including it again, it should be bold
                     server = solution.FindItem("ShowAllFilesIncludeExclude", "server" + projectType.CodeExtension);
                     AutomationWrapper.Select(server);
-                    solution.App.Dte.ExecuteCommand("Project.ExcludeFromProject");
+                    solution.ExecuteCommand("Project.ExcludeFromProject");
 
                     Assert.IsNull(solution.WaitForItemRemoved("ShowAllFilesIncludeExclude", "server" + projectType.CodeExtension));
-                    solution.App.Dte.ExecuteCommand("Project.ShowAllFiles"); // start showing all
+                    solution.ExecuteCommand("Project.ShowAllFiles"); // start showing all
                     server = solution.FindItem("ShowAllFilesIncludeExclude", "server" + projectType.CodeExtension);
                     AutomationWrapper.Select(server);
 
-                    solution.App.Dte.ExecuteCommand("Project.IncludeInProject");
+                    solution.ExecuteCommand("Project.IncludeInProject");
                     System.Threading.Thread.Sleep(2000);
 
-                    Assert.IsTrue(solution.Project.GetIsItemBolded("server" + projectType.CodeExtension));
+                    Assert.IsTrue(solution.GetProject("ShowAllFilesIncludeExclude").GetIsItemBolded("server" + projectType.CodeExtension));
                 }
             }
         }
@@ -379,7 +379,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     var projectNode = solution.WaitForItem("ShowAllFiles");
                     AutomationWrapper.Select(projectNode);
 
-                    var dteProject = solution.Project;
+                    var dteProject = solution.GetProject("ShowAllFiles");
 
                     Assert.IsNotNull(solution.WaitForItem("ShowAllFiles", "NotInProject" + projectType.CodeExtension));
 
@@ -391,63 +391,63 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     Assert.IsNotNull(solution.WaitForItem("ShowAllFiles", "Folder", "SubFolder", "SubFile.txt"));
                                         
                     // create some stuff, it should show up...
-                    File.WriteAllText(Path.Combine(solution.Directory, @"ShowAllFiles\NewFile.txt"), "");
+                    File.WriteAllText(Path.Combine(solution.SolutionDirectory, @"ShowAllFiles\NewFile.txt"), "");
                     Assert.IsNotNull(solution.WaitForItem("ShowAllFiles", "NewFile.txt"));
                     
-                    File.WriteAllText(Path.Combine(solution.Directory, @"ShowAllFiles\Folder\NewFile.txt"), "");
+                    File.WriteAllText(Path.Combine(solution.SolutionDirectory, @"ShowAllFiles\Folder\NewFile.txt"), "");
                     Assert.IsNotNull(solution.WaitForItem("ShowAllFiles", "Folder", "NewFile.txt"));
                     Assert.IsTrue(dteProject.GetIsFolderExpanded(@"Folder"));
 
-                    File.WriteAllText(Path.Combine(solution.Directory, @"ShowAllFiles\Folder\SubFolder\NewFile.txt"), "");
+                    File.WriteAllText(Path.Combine(solution.SolutionDirectory, @"ShowAllFiles\Folder\SubFolder\NewFile.txt"), "");
                     Assert.IsNotNull(solution.WaitForItem("ShowAllFiles", "Folder", "SubFolder", "NewFile.txt"));
 
-                    Directory.CreateDirectory(Path.Combine(solution.Directory, @"ShowAllFiles\NewFolder"));
+                    Directory.CreateDirectory(Path.Combine(solution.SolutionDirectory, @"ShowAllFiles\NewFolder"));
                     Assert.IsNotNull(solution.WaitForItem("ShowAllFiles", "NewFolder"));
                     
-                    Directory.CreateDirectory(Path.Combine(solution.Directory, @"ShowAllFiles\NewFolder\SubFolder"));
+                    Directory.CreateDirectory(Path.Combine(solution.SolutionDirectory, @"ShowAllFiles\NewFolder\SubFolder"));
                     Assert.IsNotNull(solution.WaitForItem("ShowAllFiles", "NewFolder", "SubFolder"));
                     
-                    File.WriteAllText(Path.Combine(solution.Directory, @"ShowAllFiles\NewFolder\SubFolder\NewFile.txt"), "");
+                    File.WriteAllText(Path.Combine(solution.SolutionDirectory, @"ShowAllFiles\NewFolder\SubFolder\NewFile.txt"), "");
                     Assert.IsNotNull(solution.WaitForItem("ShowAllFiles", "NewFolder", "SubFolder", "NewFile.txt"));
                     
                     // delete some stuff, it should go away
-                    File.Delete(Path.Combine(solution.Directory, @"ShowAllFiles\Folder\File.txt"));
+                    File.Delete(Path.Combine(solution.SolutionDirectory, @"ShowAllFiles\Folder\File.txt"));
                     Assert.IsNull(solution.WaitForItemRemoved("ShowAllFiles", "Folder", "File.txt"));
                     
-                    File.Delete(Path.Combine(solution.Directory, @"ShowAllFiles\NewFile.txt"));
+                    File.Delete(Path.Combine(solution.SolutionDirectory, @"ShowAllFiles\NewFile.txt"));
                     Assert.IsNull(solution.WaitForItemRemoved("ShowAllFiles", "NewFile.txt"));
                     
-                    File.Delete(Path.Combine(solution.Directory, @"ShowAllFiles\NewFolder\NewFile.txt"));
+                    File.Delete(Path.Combine(solution.SolutionDirectory, @"ShowAllFiles\NewFolder\NewFile.txt"));
                     Assert.IsNull(solution.WaitForItemRemoved("ShowAllFiles", "NewFolder", "NewFile.txt"));
                     
-                    File.Delete(Path.Combine(solution.Directory, @"ShowAllFiles\NewFolder\SubFolder\NewFile.txt"));
+                    File.Delete(Path.Combine(solution.SolutionDirectory, @"ShowAllFiles\NewFolder\SubFolder\NewFile.txt"));
                     Assert.IsNull(solution.WaitForItemRemoved("ShowAllFiles", "NewFolder", "SubFolder", "NewFile.txt"));
                     
-                    Directory.Delete(Path.Combine(solution.Directory, @"ShowAllFiles\NewFolder\SubFolder"));
+                    Directory.Delete(Path.Combine(solution.SolutionDirectory, @"ShowAllFiles\NewFolder\SubFolder"));
                     Assert.IsNull(solution.WaitForItemRemoved("ShowAllFiles", "NewFolder", "SubFolder"));
                     
-                    Directory.Delete(Path.Combine(solution.Directory, @"ShowAllFiles\NewFolder"));
+                    Directory.Delete(Path.Combine(solution.SolutionDirectory, @"ShowAllFiles\NewFolder"));
                     Assert.IsNull(solution.WaitForItemRemoved("ShowAllFiles", "NewFolder"));
                     
                     Directory.Move(
-                        Path.Combine(solution.Directory, @"MovedIntoShowAllFiles"),
-                        Path.Combine(solution.Directory, @"ShowAllFiles\MovedIntoShowAllFiles")
+                        Path.Combine(solution.SolutionDirectory, @"MovedIntoShowAllFiles"),
+                        Path.Combine(solution.SolutionDirectory, @"ShowAllFiles\MovedIntoShowAllFiles")
                     );
 
                     Assert.IsNotNull(solution.WaitForItem("ShowAllFiles", "MovedIntoShowAllFiles", "Text.txt"));
                     
                     // move it back
                     Directory.Move(
-                        Path.Combine(solution.Directory, @"ShowAllFiles\MovedIntoShowAllFiles"),
-                        Path.Combine(solution.Directory, @"MovedIntoShowAllFiles")
+                        Path.Combine(solution.SolutionDirectory, @"ShowAllFiles\MovedIntoShowAllFiles"),
+                        Path.Combine(solution.SolutionDirectory, @"MovedIntoShowAllFiles")
                     );
 
                     Assert.IsNull(solution.WaitForItemRemoved("ShowAllFiles", "MovedIntoShowAllFiles", "Text.txt"));
 
                     // and move it back into the project one more time
                     Directory.Move(
-                        Path.Combine(solution.Directory, @"MovedIntoShowAllFiles"),
-                        Path.Combine(solution.Directory, @"ShowAllFiles\MovedIntoShowAllFiles")
+                        Path.Combine(solution.SolutionDirectory, @"MovedIntoShowAllFiles"),
+                        Path.Combine(solution.SolutionDirectory, @"ShowAllFiles\MovedIntoShowAllFiles")
                     );
 
                     Assert.IsNotNull(solution.WaitForItem("ShowAllFiles", "MovedIntoShowAllFiles", "Text.txt"));
@@ -506,21 +506,21 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     Assert.IsNull(solution.FindItem("ShowAllFilesHiddenFiles", "HiddenFolder"));
 
                     // but if they change back, they should be
-                    file = Path.Combine(solution.Directory, @"ShowAllFilesHiddenFiles\NotInProject" + projectType.CodeExtension);
+                    file = Path.Combine(solution.SolutionDirectory, @"ShowAllFilesHiddenFiles\NotInProject" + projectType.CodeExtension);
                     File.SetAttributes(
                         file,
                         File.GetAttributes(file) & ~FileAttributes.Hidden
                     );
 
                     Assert.IsNotNull(solution.WaitForItem("ShowAllFilesHiddenFiles", "NotInProject" + projectType.CodeExtension));
-                    file = Path.Combine(solution.Directory, @"ShowAllFilesHiddenFiles\Folder\File.txt");
+                    file = Path.Combine(solution.SolutionDirectory, @"ShowAllFilesHiddenFiles\Folder\File.txt");
                     File.SetAttributes(
                         file,
                         File.GetAttributes(file) & ~FileAttributes.Hidden
                     );
 
                     Assert.IsNotNull(solution.WaitForItem("ShowAllFilesHiddenFiles", "Folder", "File.txt"));
-                    file = Path.Combine(solution.Directory, @"ShowAllFilesHiddenFiles\HiddenFolder");
+                    file = Path.Combine(solution.SolutionDirectory, @"ShowAllFilesHiddenFiles\HiddenFolder");
                     File.SetAttributes(
                         file,
                         File.GetAttributes(file) & ~FileAttributes.Hidden
@@ -529,7 +529,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                     // changing non-hidden items to hidden should cause them to be removed
                     Assert.IsNotNull(solution.WaitForItem("ShowAllFilesHiddenFiles", "NotInProject2" + projectType.CodeExtension));
-                    file = Path.Combine(solution.Directory, @"ShowAllFilesHiddenFiles\NotInProject2" + projectType.CodeExtension);
+                    file = Path.Combine(solution.SolutionDirectory, @"ShowAllFilesHiddenFiles\NotInProject2" + projectType.CodeExtension);
                     File.SetAttributes(
                         file,
                         File.GetAttributes(file) | FileAttributes.Hidden
@@ -537,7 +537,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     Assert.IsNull(solution.WaitForItemRemoved("ShowAllFilesHiddenFiles", "NotInProject2" + projectType.CodeExtension));
 
                     Assert.IsNotNull(solution.WaitForItem("ShowAllFilesHiddenFiles", "Folder"));
-                    file = Path.Combine(solution.Directory, @"ShowAllFilesHiddenFiles\Folder");
+                    file = Path.Combine(solution.SolutionDirectory, @"ShowAllFilesHiddenFiles\Folder");
                     File.SetAttributes(
                         file,
                         File.GetAttributes(file) | FileAttributes.Hidden
@@ -573,14 +573,14 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     Assert.IsNotNull(solution.WaitForItem("ShowAllFilesOnPerUser", "NotInProject" + projectType.CodeExtension));
 
                     // change setting, UI should be updated
-                    solution.App.Dte.ExecuteCommand("Project.ShowAllFiles");
+                    solution.ExecuteCommand("Project.ShowAllFiles");
 
                     Assert.IsNull(solution.WaitForItemRemoved("ShowAllFilesOnPerUser", "NotInProject" + projectType.CodeExtension));
 
                     // save setting, user project file should be updated
-                    solution.Project.Save();
+                    solution.GetProject("ShowAllFilesOnPerUser").Save();
 
-                    var projectText = File.ReadAllText(Path.Combine(solution.Directory, @"ShowAllFilesOnPerUser\ShowAllFilesOnPerUser" + projectType.ProjectExtension + ".user"));
+                    var projectText = File.ReadAllText(Path.Combine(solution.SolutionDirectory, @"ShowAllFilesOnPerUser\ShowAllFilesOnPerUser" + projectType.ProjectExtension + ".user"));
                     Assert.IsTrue(projectText.Contains("<ProjectView>ProjectFiles</ProjectView>"));
                 }
             }
@@ -604,14 +604,14 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     Assert.IsNotNull(solution.WaitForItem("ShowAllFilesOnPerProject", "NotInProject" + projectType.CodeExtension));
 
                     // change setting, UI should be updated
-                    solution.App.Dte.ExecuteCommand("Project.ShowAllFiles");
+                    solution.ExecuteCommand("Project.ShowAllFiles");
 
                     Assert.IsNull(solution.WaitForItemRemoved("ShowAllFilesOnPerProject", "NotInProject" + projectType.CodeExtension));
 
                     // save setting, project file should be updated
-                    solution.Project.Save();
+                    solution.GetProject("ShowAllFilesOnPerProject").Save();
 
-                    var projectText = File.ReadAllText(Path.Combine(solution.Directory, @"ShowAllFilesOnPerProject\ShowAllFilesOnPerProject" + projectType.ProjectExtension));
+                    var projectText = File.ReadAllText(Path.Combine(solution.SolutionDirectory, @"ShowAllFilesOnPerProject\ShowAllFilesOnPerProject" + projectType.ProjectExtension));
                     Assert.IsTrue(projectText.Contains("<ProjectView>ProjectFiles</ProjectView>"));
                 }
             }
@@ -643,14 +643,14 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     Assert.IsNull(solution.FindItem("ShowAllFilesOffPerUser", "NotInProject" + projectType.CodeExtension));
 
                     // change setting, UI should be updated
-                    solution.App.Dte.ExecuteCommand("Project.ShowAllFiles");
+                    solution.ExecuteCommand("Project.ShowAllFiles");
 
                     Assert.IsNotNull(solution.WaitForItem("ShowAllFilesOffPerUser", "NotInProject" + projectType.CodeExtension));
 
                     // save setting, user project file should be updated
-                    solution.Project.Save();
+                    solution.GetProject("ShowAllFilesOffPerUser").Save();
 
-                    var projectText = File.ReadAllText(Path.Combine(solution.Directory, @"ShowAllFilesOffPerUser\ShowAllFilesOffPerUser" + projectType.ProjectExtension + ".user"));
+                    var projectText = File.ReadAllText(Path.Combine(solution.SolutionDirectory, @"ShowAllFilesOffPerUser\ShowAllFilesOffPerUser" + projectType.ProjectExtension + ".user"));
                     Assert.IsTrue(projectText.Contains("<ProjectView>ShowAllFiles</ProjectView>"));
                 }
             }
@@ -674,14 +674,14 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     Assert.IsNull(solution.FindItem("ShowAllFilesOffPerProject", "NotInProject" + projectType.CodeExtension));
 
                     // change setting, UI should be updated
-                    solution.App.Dte.ExecuteCommand("Project.ShowAllFiles");
+                    solution.ExecuteCommand("Project.ShowAllFiles");
 
                     Assert.IsNotNull(solution.WaitForItem("ShowAllFilesOffPerProject", "NotInProject" + projectType.CodeExtension));
 
                     // save setting, project file should be updated
-                    solution.Project.Save();
+                    solution.GetProject("ShowAllFilesOffPerProject").Save();
 
-                    var projectText = File.ReadAllText(Path.Combine(solution.Directory, @"ShowAllFilesOffPerProject\ShowAllFilesOffPerProject" + projectType.ProjectExtension));
+                    var projectText = File.ReadAllText(Path.Combine(solution.SolutionDirectory, @"ShowAllFilesOffPerProject\ShowAllFilesOffPerProject" + projectType.ProjectExtension));
                     Assert.IsTrue(projectText.Contains("<ProjectView>ShowAllFiles</ProjectView>"));
                 }
             }
@@ -708,14 +708,14 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     Assert.IsNull(solution.FindItem("ShowAllFilesDefault", "NotInProject" + projectType.CodeExtension));
 
                     // change setting, UI should be updated
-                    solution.App.Dte.ExecuteCommand("Project.ShowAllFiles");
+                    solution.ExecuteCommand("Project.ShowAllFiles");
 
                     Assert.IsNotNull(solution.WaitForItem("ShowAllFilesDefault", "NotInProject" + projectType.CodeExtension));
 
                     // save setting, user project file should be updated
-                    solution.Project.Save();
+                    solution.GetProject("ShowAllFilesDefault").Save();
 
-                    var projectText = File.ReadAllText(Path.Combine(solution.Directory, @"ShowAllFilesDefault\ShowAllFilesDefault" + projectType.ProjectExtension + ".user"));
+                    var projectText = File.ReadAllText(Path.Combine(solution.SolutionDirectory, @"ShowAllFilesDefault\ShowAllFilesDefault" + projectType.ProjectExtension + ".user"));
                     Assert.IsTrue(projectText.Contains("<ProjectView>ShowAllFiles</ProjectView>"));
                 }
             }
@@ -755,11 +755,11 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                     Assert.IsNotNull(solution.WaitForItem("ShowAllMoveNotInProject", "Folder", "NotInProject" + projectType.CodeExtension));
 
-                    solution.App.Dte.ExecuteCommand("Project.ShowAllFiles"); // stop showing all
+                    solution.ExecuteCommand("Project.ShowAllFiles"); // stop showing all
 
                     Assert.IsNull(solution.WaitForItemRemoved("ShowAllMoveNotInProject", "Folder", "NotInProject" + projectType.CodeExtension));
 
-                    solution.App.Dte.ExecuteCommand("Project.ShowAllFiles"); // start showing again
+                    solution.ExecuteCommand("Project.ShowAllFiles"); // start showing again
 
                     var subFolder = solution.WaitForItem("ShowAllMoveNotInProject", "Folder", "SubFolder");
                     AutomationWrapper.Select(subFolder);
@@ -771,7 +771,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     Keyboard.ControlV();
                     Assert.IsNotNull(solution.WaitForItem("ShowAllMoveNotInProject", "SubFolder"));
 
-                    solution.App.Dte.ExecuteCommand("Project.ShowAllFiles"); // stop showing all
+                    solution.ExecuteCommand("Project.ShowAllFiles"); // stop showing all
 
                     Assert.IsNull(solution.WaitForItemRemoved("ShowAllMoveNotInProject", "SubFolder"));
                 }
@@ -801,7 +801,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                     var file = solution.WaitForItem("ShowAllExcludeSelected", "Folder", "File2" + projectType.CodeExtension);
                     AutomationWrapper.Select(file);
-                    solution.App.Dte.ExecuteCommand("Project.ExcludeFromProject");
+                    solution.ExecuteCommand("Project.ExcludeFromProject");
 
                     solution.WaitForItemRemoved("ShowAllExcludeSelected", "Folder", "File2" + projectType.CodeExtension);
 
@@ -809,7 +809,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                     file = solution.WaitForItem("ShowAllExcludeSelected", "Folder", "File1" + projectType.CodeExtension);
                     AutomationWrapper.Select(file);
-                    solution.App.Dte.ExecuteCommand("Project.ExcludeFromProject");
+                    solution.ExecuteCommand("Project.ExcludeFromProject");
                     solution.WaitForItemRemoved("ShowAllExcludeSelected", "Folder", "File1" + projectType.CodeExtension);
 
                     Assert.AreEqual("Folder", Path.GetFileName(GetSelectedItemName().TrimEnd('\\')));
@@ -860,7 +860,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                     List<string> addedItems = new List<string>();
                     for (int i = 0; i < 1000; i++) {
-                        var filename = Path.Combine(solution.Directory, "ShowAllFilesRapidChanges", Path.GetRandomFileName());
+                        var filename = Path.Combine(solution.SolutionDirectory, "ShowAllFilesRapidChanges", Path.GetRandomFileName());
                         File.WriteAllText(filename, "");
                         File.Delete(filename);
                         addedItems.Add(filename);
@@ -893,7 +893,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                     HashSet<string> addedItems = new HashSet<string>();
                     for (int i = 0; i < 100; i++) {
-                        var filename = Path.Combine(solution.Directory, "ShowAllFilesRapidChanges", Path.GetRandomFileName());
+                        var filename = Path.Combine(solution.SolutionDirectory, "ShowAllFilesRapidChanges", Path.GetRandomFileName());
                         File.WriteAllText(filename, "");
                         File.Delete(filename);
                         File.WriteAllText(filename, "");
@@ -941,6 +941,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     AutomationWrapper.Select(projectNode);
 
                     copier(
+                        solution,
                         solution.WaitForItem("CopyExcludedFolderWithItem", "NewFolder1"),
                         solution.WaitForItem("CopyExcludedFolderWithItem", "NewFolder2")
                     );
@@ -948,7 +949,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     Assert.IsNotNull(
                         solution.WaitForItem("CopyExcludedFolderWithItem", "NewFolder1", "NewFolder2")
                     );
-                    solution.App.Dte.ExecuteCommand("Project.ShowAllFiles"); // stop showing all
+                    solution.ExecuteCommand("Project.ShowAllFiles"); // stop showing all
                     
                     Assert.IsNull(
                         solution.WaitForItemRemoved("CopyExcludedFolderWithItem", "NewFolder1", "NewFolder2")
@@ -987,6 +988,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     AutomationWrapper.Select(projectNode);
 
                     mover(
+                        solution,
                         solution.WaitForItem("ShowAllFilesMoveExcludedItemToExcludedFolder", "NewFolder1"),
                         solution.WaitForItem("ShowAllFilesMoveExcludedItemToExcludedFolder", "server" + projectType.CodeExtension)
                     );
@@ -994,7 +996,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     Assert.IsNotNull(
                         solution.WaitForItem("ShowAllFilesMoveExcludedItemToExcludedFolder", "NewFolder1", "server" + projectType.CodeExtension)
                     );
-                    solution.App.Dte.ExecuteCommand("Project.ShowAllFiles"); // stop showing all
+                    solution.ExecuteCommand("Project.ShowAllFiles"); // stop showing all
 
                     Assert.IsNull(
                         solution.WaitForItemRemoved("ShowAllFilesMoveExcludedItemToExcludedFolder", "NewFolder1")

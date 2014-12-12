@@ -160,16 +160,16 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             try {
                 foreach (var projectType in ProjectTypes) {
                     using (var solution = BasicProject(projectType).Generate().ToVs()) {
-                        var project = solution.Project;
+                        var project = solution.GetProject("HelloWorld");
 
                         // Counts may differ between project types, so we take
                         // the initial count and check against the delta.
                         int previousCount = project.ProjectItems.Count;
 
-                        var item = project.ProjectItems.AddFromFileCopy(Path.Combine(solution.Directory, "Extra" + projectType.CodeExtension));
+                        var item = project.ProjectItems.AddFromFileCopy(Path.Combine(solution.SolutionDirectory, "Extra" + projectType.CodeExtension));
 
                         Assert.AreEqual("Extra" + projectType.CodeExtension, item.Properties.Item("FileName").Value);
-                        Assert.AreEqual(Path.Combine(solution.Directory, "HelloWorld", "Extra" + projectType.CodeExtension), item.Properties.Item("FullPath").Value);
+                        Assert.AreEqual(Path.Combine(solution.SolutionDirectory, "HelloWorld", "Extra" + projectType.CodeExtension), item.Properties.Item("FullPath").Value);
                         Assert.AreEqual(projectType.CodeExtension, item.Properties.Item("Extension").Value);
 
                         Assert.IsTrue(item.Object is VSProjectItem);
@@ -188,7 +188,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                         previousCount = project.ProjectItems.Count;
 
                         // add an existing item
-                        project.ProjectItems.AddFromFile(Path.Combine(solution.Directory, "HelloWorld", "server" + projectType.CodeExtension));
+                        project.ProjectItems.AddFromFile(Path.Combine(solution.SolutionDirectory, "HelloWorld", "server" + projectType.CodeExtension));
 
                         Assert.AreEqual(0, project.ProjectItems.Count - previousCount, "Expected no new items");
                     }
@@ -227,7 +227,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     );
                     using (var solution = proj.Generate().ToVs()) {
                         VSTestContext.DTE.ExecuteCommand("Build.CleanSolution");
-                        solution.App.WaitForOutputWindowText("Build", "Hello Clean World!");
+                        solution.WaitForOutputWindowText("Build", "Hello Clean World!");
                     }
                 }
             } finally {
@@ -265,7 +265,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     );
                     using (var solution = proj.Generate().ToVs()) {
                         VSTestContext.DTE.ExecuteCommand("Build.RebuildSolution");
-                        solution.App.WaitForOutputWindowText("Build", "Hello Build World!");
+                        solution.WaitForOutputWindowText("Build", "Hello Build World!");
                     }
                 }
             } finally {
@@ -1220,12 +1220,12 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                 using (var solution = def.Generate().ToVs()) {
                     var folder = solution.WaitForItem("HelloWorld", "Folder");
                     if (folder == null) {
-                        solution.SolutionExplorer.SelectProject(solution.Project);
-                        solution.App.ExecuteCommand("Project.ShowAllFiles");
+                        solution.SelectProject(solution.GetProject("HelloWorld"));
+                        solution.ExecuteCommand("Project.ShowAllFiles");
                         folder = solution.WaitForItem("HelloWorld", "Folder");
                     }
                     AutomationWrapper.Select(folder);
-                    solution.App.ExecuteCommand("File.OpenCommandPromptHere");
+                    solution.ExecuteCommand("File.OpenCommandPromptHere");
 
                     var after = System.Diagnostics.Process.GetProcesses();
                     var newProcs = after.Where(x => !existing.Contains(x.Id) && x.ProcessName == "cmd");
@@ -1234,7 +1234,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                     var project = solution.WaitForItem("HelloWorld");
                     AutomationWrapper.Select(folder);
-                    solution.App.ExecuteCommand("File.OpenCommandPromptHere");
+                    solution.ExecuteCommand("File.OpenCommandPromptHere");
 
                     after = System.Diagnostics.Process.GetProcesses();
                     newProcs = after.Where(x => !existing.Contains(x.Id) && x.ProcessName == "cmd");
@@ -1259,14 +1259,14 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                 );
 
                 using (var solution = def.Generate().ToVs()) {
-                    var projectDir = Path.GetDirectoryName(solution.Project.FullName);
+                    var projectDir = Path.GetDirectoryName(solution.GetProject("HelloWorld").FullName);
 
                     CheckCopyFullPath(solution.WaitForItem("HelloWorld", "IncFolder"),
                                       projectDir + "\\IncFolder\\");
                     var excFolder = solution.WaitForItem("HelloWorld", "ExcFolder");
                     if (excFolder == null) {
-                        solution.SolutionExplorer.SelectProject(solution.Project);
-                        solution.App.ExecuteCommand("Project.ShowAllFiles");
+                        solution.SelectProject(solution.GetProject("HelloWorld"));
+                        solution.ExecuteCommand("Project.ShowAllFiles");
                         excFolder = solution.WaitForItem("HelloWorld", "ExcFolder");
                     }
                     CheckCopyFullPath(excFolder, projectDir + "\\ExcFolder\\");
@@ -1281,7 +1281,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        private void CheckCopyFullPath(System.Windows.Automation.AutomationElement element, string expected) {
+        private void CheckCopyFullPath(ITreeNode element, string expected) {
             string clipboardText = "";
             Console.WriteLine("Checking CopyFullPath on:{0}", expected);
             AutomationWrapper.Select(element);
@@ -1304,11 +1304,11 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     Compile("Folder\\server", content: "// new server", isExcluded: true)
                 );
                 using (var solution = proj.Generate().ToVs()) {
-                    var window = solution.Project.ProjectItems.Item(projectType.Code("server")).Open();
+                    var window = solution.GetProject("HelloWorld").ProjectItems.Item(projectType.Code("server")).Open();
                     window.Activate();
 
-                    var docWindow = solution.App.GetDocument(window.Document.FullName);
-                    var copyPath = Path.Combine(solution.Directory, "HelloWorld", "Folder", projectType.Code("server"));
+                    var docWindow = solution.GetDocument(window.Document.FullName);
+                    var copyPath = Path.Combine(solution.SolutionDirectory, "HelloWorld", "Folder", projectType.Code("server"));
 
                     docWindow.Invoke((Action)(() => {
                         Clipboard.SetFileDropList(
@@ -1322,15 +1322,15 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                     // paste again, we should get the replace prompts...
                     VisualStudioApp.CheckMessageBox(
-                        TestUtilities.UI.MessageBoxButton.Yes,
+                        TestUtilities.MessageBoxButton.Yes,
                         "is already part of the project. Do you want to overwrite it?"
                     );
 
                     System.Threading.Thread.Sleep(1000);
                     solution.AssertFileExistsWithContent("// new server", "HelloWorld", "server" + projectType.CodeExtension);
 
-                    var dlg = solution.App.WaitForDialog(); // not a simple dialog we can check
-                    NativeMethods.EndDialog(dlg, new IntPtr((int)TestUtilities.UI.MessageBoxButton.Yes));
+                    var dlg = solution.WaitForDialog(); // not a simple dialog we can check
+                    NativeMethods.EndDialog(dlg, new IntPtr((int)TestUtilities.MessageBoxButton.Yes));
                 }
             }
         }
@@ -1395,16 +1395,16 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                 using (var solution = def.Generate().ToVs()) {
                     try {
-                        solution.Project.ProjectItems.Item("Folder");
+                        solution.GetProject("HelloWorld").ProjectItems.Item("Folder");
                         Assert.Fail("Expected ArgumentException");
                     } catch (ArgumentException ex) {
                         Console.WriteLine("Handled {0}", ex);
                     }
 
                     // This should no longer fail
-                    var item = solution.Project.ProjectItems.AddFolder("Folder");
+                    var item = solution.GetProject("HelloWorld").ProjectItems.AddFolder("Folder");
 
-                    Assert.AreEqual(item.FileNames[0], solution.Project.ProjectItems.Item("Folder").FileNames[0]);
+                    Assert.AreEqual(item.FileNames[0], solution.GetProject("HelloWorld").ProjectItems.Item("Folder").FileNames[0]);
                 }
             }
         }
@@ -1537,7 +1537,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                 using (var solution = proj.Generate().ToVs()) {
                     Console.WriteLine(projectType.ProjectExtension);
 
-                    var project = (IVsHierarchy)((dynamic)solution.Project).Project;
+                    var project = (IVsHierarchy)((dynamic)solution.GetProject("HelloWorld")).Project;
                     var hierarchyEvents = new HierarchyEvents(project, projectType.CodeExtension);
                     uint hierarchyCookie = VSConstants.VSCOOKIE_NIL;
 
@@ -1583,11 +1583,11 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     Compile("folder\\file2")
                 );
                 using (var solution = proj.Generate().ToVs()) {
-                    var project = (IVsProject)((dynamic)solution.Project).Project;
+                    var project = (IVsProject)((dynamic)solution.GetProject("HelloWorld")).Project;
                     foreach (var item in proj.Items.OfType<CompileItem>()) {
                         foreach (var name in new[] { item.Name, item.Name.Replace('\\', '/') }) {
                             string relativeName = name + projectType.CodeExtension;
-                            string absoluteName = Path.Combine(solution.Directory, proj.Name, relativeName);
+                            string absoluteName = Path.Combine(solution.SolutionDirectory, proj.Name, relativeName);
 
                             int found = 0;
                             var priority = new VSDOCUMENTPRIORITY[1];
@@ -1621,13 +1621,13 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                 using (var solution = proj.Generate().ToVs()) {
                     foreach (var item in proj.Items.OfType<CompileItem>()) {
                         foreach (var name in new[] { item.Name, item.Name.Replace('\\', '/') }) {
-                            string fullName = Path.Combine(solution.Directory, proj.Name, name) + projectType.CodeExtension;
+                            string fullName = Path.Combine(solution.SolutionDirectory, proj.Name, name) + projectType.CodeExtension;
                             File.SetAttributes(fullName, FileAttributes.ReadOnly);
                         }
                     }
 
-                    var dir = solution.Project.ProjectItems.Item("folder").FileNames[0];
-                    solution.Project.ProjectItems.Item("folder").Delete();
+                    var dir = solution.GetProject("HelloWorld").ProjectItems.Item("folder").FileNames[0];
+                    solution.GetProject("HelloWorld").ProjectItems.Item("folder").Delete();
                     Assert.IsFalse(Directory.Exists(dir), dir + " should have been deleted");
                 }
             }

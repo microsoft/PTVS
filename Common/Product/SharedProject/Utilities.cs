@@ -79,6 +79,37 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
         /// <summary>
+        /// Use this instead of VsShellUtilities.ShowMessageBox because VSU uses ThreadHelper which
+        /// uses a private interface that can't be mocked AND goes to the global service provider.
+        /// </summary>
+        public static int ShowMessageBox(IServiceProvider serviceProvider, string message, string title, OLEMSGICON icon, OLEMSGBUTTON msgButton, OLEMSGDEFBUTTON defaultButton) {
+            IVsUIShell uiShell = serviceProvider.GetService(typeof(IVsUIShell)) as IVsUIShell;
+            Debug.Assert(uiShell != null, "Could not get the IVsUIShell object from the services exposed by this serviceprovider");
+            if (uiShell == null) {
+                throw new InvalidOperationException();
+            }
+
+            Guid emptyGuid = Guid.Empty;
+            int result = 0;
+
+            UIThread.Invoke(() => {
+                ErrorHandler.ThrowOnFailure(uiShell.ShowMessageBox(
+                    0,
+                    ref emptyGuid,
+                    title,
+                    message,
+                    null,
+                    0,
+                    msgButton,
+                    defaultButton,
+                    icon,
+                    0,
+                    out result));
+            });
+            return result;
+        }
+
+        /// <summary>
         /// Creates a semicolon delinited list of strings. This can be used to provide the properties for VSHPROPID_CfgPropertyPagesCLSIDList, VSHPROPID_PropertyPagesCLSIDList, VSHPROPID_PriorityPropertyPagesCLSIDList
         /// </summary>
         /// <param name="guids">An array of Guids.</param>

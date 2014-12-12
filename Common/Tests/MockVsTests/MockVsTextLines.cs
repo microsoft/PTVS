@@ -13,14 +13,20 @@
  * ***************************************************************************/
 
 using System;
+using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.TextManager.Interop;
 using TestUtilities.Mocks;
 
 namespace Microsoft.VisualStudioTools.MockVsTests {
-    class MockVsTextLines : IVsTextLines {
+    class MockVsTextLines : IVsTextLines, IVsPersistDocData {
         private readonly MockTextBuffer _buffer;
+        private readonly IServiceProvider _serviceProvider;
+        internal uint _docCookie;
 
-        public MockVsTextLines(MockTextBuffer buffer) {
+        public MockVsTextLines(IServiceProvider serviceProvider, MockTextBuffer buffer) {
+            _serviceProvider = serviceProvider;
             _buffer = buffer;
         }
 
@@ -217,6 +223,50 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         public int UnlockBufferEx(uint dwFlags) {
+            throw new NotImplementedException();
+        }
+
+        public int Close() {
+            return VSConstants.S_OK;
+        }
+
+        public int GetGuidEditorType(out Guid pClassID) {
+            throw new NotImplementedException();
+        }
+
+        public int IsDocDataDirty(out int pfDirty) {
+            throw new NotImplementedException();
+        }
+
+        public int IsDocDataReloadable(out int pfReloadable) {
+            throw new NotImplementedException();
+        }
+
+        public int LoadDocData(string pszMkDocument) {
+            throw new NotImplementedException();
+        }
+
+        public int OnRegisterDocData(uint docCookie, IVsHierarchy pHierNew, uint itemidNew) {
+            _docCookie = docCookie;
+            return VSConstants.S_OK;
+        }
+
+        public int ReloadDocData(uint grfFlags) {
+            throw new NotImplementedException();
+        }
+
+        public int RenameDocData(uint grfAttribs, IVsHierarchy pHierNew, uint itemidNew, string pszMkDocumentNew) {
+            var textDoc = _buffer.Properties.GetProperty<ITextDocument>(typeof(ITextDocument));
+            textDoc.Rename(pszMkDocumentNew);
+            return VSConstants.S_OK;
+        }
+
+        public int SaveDocData(VSSAVEFLAGS dwSave, out string pbstrMkDocumentNew, out int pfSaveCanceled) {
+
+            throw new NotImplementedException();
+        }
+
+        public int SetUntitledDocPath(string pszDocDataPath) {
             throw new NotImplementedException();
         }
     }

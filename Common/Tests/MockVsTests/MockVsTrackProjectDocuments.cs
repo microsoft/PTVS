@@ -41,39 +41,39 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         public int OnAfterAddDirectories(IVsProject pProject, int cDirectories, string[] rgpszMkDocuments) {
-            throw new NotImplementedException();
+            return VSConstants.S_OK;
         }
 
         public int OnAfterAddDirectoriesEx(IVsProject pProject, int cDirectories, string[] rgpszMkDocuments, VSADDDIRECTORYFLAGS[] rgFlags) {
-            throw new NotImplementedException();
+            return VSConstants.S_OK;
         }
 
         public int OnAfterAddFiles(IVsProject pProject, int cFiles, string[] rgpszMkDocuments) {
-            throw new NotImplementedException();
+            return VSConstants.S_OK;
         }
 
         public int OnAfterAddFilesEx(IVsProject pProject, int cFiles, string[] rgpszMkDocuments, VSADDFILEFLAGS[] rgFlags) {
-            throw new NotImplementedException();
+            return VSConstants.S_OK;
         }
 
         public int OnAfterRemoveDirectories(IVsProject pProject, int cDirectories, string[] rgpszMkDocuments, VSREMOVEDIRECTORYFLAGS[] rgFlags) {
-            throw new NotImplementedException();
+            return VSConstants.S_OK;
         }
 
         public int OnAfterRemoveFiles(IVsProject pProject, int cFiles, string[] rgpszMkDocuments, VSREMOVEFILEFLAGS[] rgFlags) {
-            throw new NotImplementedException();
+            return VSConstants.S_OK;
         }
 
         public int OnAfterRenameDirectories(IVsProject pProject, int cDirs, string[] rgszMkOldNames, string[] rgszMkNewNames, VSRENAMEDIRECTORYFLAGS[] rgFlags) {
-            throw new NotImplementedException();
+            return VSConstants.S_OK;
         }
 
         public int OnAfterRenameFile(IVsProject pProject, string pszMkOldName, string pszMkNewName, VSRENAMEFILEFLAGS flags) {
-            throw new NotImplementedException();
+            return VSConstants.S_OK;
         }
 
         public int OnAfterRenameFiles(IVsProject pProject, int cFiles, string[] rgszMkOldNames, string[] rgszMkNewNames, VSRENAMEFILEFLAGS[] rgFlags) {
-            throw new NotImplementedException();
+            return VSConstants.S_OK;
         }
 
         public int OnAfterSccStatusChanged(IVsProject pProject, int cFiles, string[] rgpszMkDocuments, uint[] rgdwSccStatus) {
@@ -101,7 +101,8 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         public int OnQueryRenameFile(IVsProject pProject, string pszMkOldName, string pszMkNewName, VSRENAMEFILEFLAGS flags, out int pfRenameCanContinue) {
-            throw new NotImplementedException();
+            pfRenameCanContinue = 1;
+            return VSConstants.S_OK;
         }
 
         public int OnQueryRenameFiles(IVsProject pProject, int cFiles, string[] rgszMkOldNames, string[] rgszMkNewNames, VSQUERYRENAMEFILEFLAGS[] rgFlags, VSQUERYRENAMEFILERESULTS[] pSummaryResult, VSQUERYRENAMEFILERESULTS[] rgResults) {
@@ -109,7 +110,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         public int UnadviseTrackProjectDocumentsEvents(uint dwCookie) {
-            throw new NotImplementedException();
+            return VSConstants.S_OK;
         }
     }
 }

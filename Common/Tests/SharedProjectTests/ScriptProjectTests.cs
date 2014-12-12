@@ -31,13 +31,13 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                 var testDef = new ProjectDefinition("RunWithoutStartupFile", projectType);
 
                 using (var solution = testDef.Generate().ToVs()) {
-                    solution.App.OpenDialogWithDteExecuteCommand("Debug.Start");
-                    VisualStudioApp.CheckMessageBox(
+                    solution.OpenDialogWithDteExecuteCommand("Debug.Start");
+                    solution.CheckMessageBox(
                         "No startup file is defined for the startup project."
                     );
 
-                    solution.App.OpenDialogWithDteExecuteCommand("Debug.StartWithoutDebugging");
-                    VisualStudioApp.CheckMessageBox(
+                    solution.OpenDialogWithDteExecuteCommand("Debug.StartWithoutDebugging");
+                    solution.CheckMessageBox(
                         "No startup file is defined for the startup project."
                     );
                 }
@@ -61,10 +61,10 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                 );
 
                 using (var solution = testDef.Generate().ToVs()) {
-                    var folder = solution.Project.ProjectItems.Item("Folder");
+                    var folder = solution.GetProject("RenameStartupFileFolder").ProjectItems.Item("Folder");
                     folder.Name = "FolderNew";
 
-                    string startupFile = (string)solution.Project.Properties.Item("StartupFile").Value;
+                    string startupFile = (string)solution.GetProject("RenameStartupFileFolder").Properties.Item("StartupFile").Value;
                     Assert.IsTrue(
                         startupFile.EndsWith(projectType.Code("FolderNew\\server")),
                         "Expected FolderNew in path, got {0}",
@@ -87,13 +87,13 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                 );
 
                 using (var solution = testDef.Generate().ToVs()) {
-                    var file = solution.Project.ProjectItems.Item("Folder").ProjectItems.Item("server" + projectType.CodeExtension);
+                    var file = solution.GetProject("RenameStartupFileFolder").ProjectItems.Item("Folder").ProjectItems.Item("server" + projectType.CodeExtension);
                     file.Name = "server2" + projectType.CodeExtension;
 
                     Assert.AreEqual(
                         "server2" + projectType.CodeExtension,
                         Path.GetFileName(
-                            (string)solution.Project.Properties.Item("StartupFile").Value
+                            (string)solution.GetProject("RenameStartupFileFolder").Properties.Item("StartupFile").Value
                         )
                     );
                 }

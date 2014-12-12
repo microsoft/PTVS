@@ -20,6 +20,10 @@ using System.ComponentModel.Composition.Primitives;
 using System.ComponentModel.Design;
 using System.IO;
 using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Threading;
+using System.Windows.Input;
+using EnvDTE;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Editor;
@@ -34,7 +38,9 @@ using TestUtilities;
 using TestUtilities.Mocks;
 
 namespace Microsoft.VisualStudioTools.MockVsTests {
-    public class MockVs : IComponentModel {
+    using Thread = System.Threading.Thread;
+
+    public sealed class MockVs : IComponentModel, IDisposable, IVisualStudioInstance {
         internal static CachedVsInfo CachedInfo = CreateCachedVsInfo();
         public CompositionContainer Container;
         private IContentTypeRegistryService _contentTypeRegistry;
@@ -46,16 +52,37 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         internal readonly MockVsDebugger Debugger = new MockVsDebugger();
         internal readonly MockVsTrackProjectDocuments TrackDocs = new MockVsTrackProjectDocuments();
         internal readonly MockVsShell Shell = new MockVsShell();
+        internal readonly MockVsUIShell UIShell;
         public readonly MockVsSolution Solution = new MockVsSolution();
         private readonly MockVsServiceProvider _serviceProvider;
         private readonly List<MockVsTextView> _views = new List<MockVsTextView>();
+        private readonly MockVsProfferCommands _proferredCommands = new MockVsProfferCommands();
         private readonly MockOleComponentManager _compManager = new MockOleComponentManager();
-        private IFocusable _focused;
+        private readonly MockOutputWindow _outputWindow = new MockOutputWindow();
+        private readonly MockVsBuildManagerAccessor _buildManager = new MockVsBuildManagerAccessor();
+        private readonly MockUIHierWinClipboardHelper _hierClipHelper = new MockUIHierWinClipboardHelper();
+        private readonly MockVsMonitorSelection _monSel;
+        private readonly MockVsUIHierarchyWindow _uiHierarchy;
+        private readonly MockVsQueryEditQuerySave _queryEditSave = new MockVsQueryEditQuerySave();
+        private readonly MockVsRunningDocumentTable _rdt;
+        private readonly MockVsUIShellOpenDocument _shellOpenDoc = new MockVsUIShellOpenDocument();
+        private readonly MockVsSolutionBuildManager _slnBuildMgr = new MockVsSolutionBuildManager();
+        private readonly MockVsExtensibility _extensibility  = new MockVsExtensibility();
+        internal IFocusable _focused;
+        private bool _shutdown;
+        private AutoResetEvent _uiEvent = new AutoResetEvent(false);
+        private readonly List<Action> _uiEvents = new List<Action>();
+
+        private readonly Thread UIThread;
 
         public MockVs() {
             TextManager = new MockVsTextManager(this);
             Container = CreateCompositionContainer();
             var serviceProvider = _serviceProvider = Container.GetExportedValue<MockVsServiceProvider>();
+            UIShell = new MockVsUIShell(this);
+            _monSel = new MockVsMonitorSelection(this);
+            _uiHierarchy = new MockVsUIHierarchyWindow();
+            _rdt = new MockVsRunningDocumentTable(this);
             _serviceProvider.AddService(typeof(SVsTextManager), TextManager);
             _serviceProvider.AddService(typeof(SVsActivityLog), ActivityLog);
             _serviceProvider.AddService(typeof(SVsSettingsManager), SettingsManager);
@@ -68,15 +95,76 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             _serviceProvider.AddService(typeof(SVsTrackProjectDocuments), TrackDocs);
             _serviceProvider.AddService(typeof(SVsShell), Shell);
             _serviceProvider.AddService(typeof(SOleComponentManager), _compManager);
+            _serviceProvider.AddService(typeof(SVsProfferCommands), _proferredCommands);
+            _serviceProvider.AddService(typeof(SVsOutputWindow), _outputWindow);
+            _serviceProvider.AddService(typeof(SVsBuildManagerAccessor), _buildManager);
+            _serviceProvider.AddService(typeof(SVsUIHierWinClipboardHelper), _hierClipHelper);
+            _serviceProvider.AddService(typeof(IVsUIShell), UIShell);
+            _serviceProvider.AddService(typeof(IVsMonitorSelection), _monSel);
+            _serviceProvider.AddService(typeof(SVsQueryEditQuerySave), _queryEditSave);
+            _serviceProvider.AddService(typeof(SVsRunningDocumentTable), _rdt);
+            _serviceProvider.AddService(typeof(SVsUIShellOpenDocument), _shellOpenDoc);
+            _serviceProvider.AddService(typeof(SVsSolutionBuildManager), _slnBuildMgr);
+            _serviceProvider.AddService(typeof(EnvDTE.IVsExtensibility), _extensibility);
 
-            // We could do this, but people can cache results of it...
-            //((IObjectWithSite)ServiceProvider.GlobalProvider).SetSite(serviceProvider);
+            UIShell.AddToolWindow(new Guid(ToolWindowGuids80.SolutionExplorer), new MockToolWindow(new MockVsUIHierarchyWindow()));
+
+            UIThread = new Thread(UIThreadWorker);
+            UIThread.Name = "Mock UI Thread";
+            UIThread.Start();
 
             foreach (var package in Container.GetExportedValues<IMockPackage>()) {
                 package.Initialize();
             }
-
         }
+
+        private void UIThreadWorker() {
+            while (!_shutdown) {
+                _uiEvent.WaitOne();
+                Action[] events;
+                do {
+                    lock (_uiEvents) {
+                        events = _uiEvents.ToArray();
+                        _uiEvents.Clear();
+                    }
+                    foreach (var action in events) {
+                        action();
+                    }
+                } while (events.Length > 0);
+            }
+        }
+
+        public void Invoke(Action action) {
+            if (Thread.CurrentThread == UIThread) {
+                action();
+                return;
+            }
+            lock (_uiEvents) {
+                _uiEvents.Add(action);
+                _uiEvent.Set();
+            }
+        }
+
+        public T Invoke<T>(Func<T> func) {
+            if (Thread.CurrentThread == UIThread) {
+                return func();
+            }
+
+            AutoResetEvent tmp = new AutoResetEvent(false);
+            T res = default(T);
+            Action action = () => {
+                res = func();
+                tmp.Set();
+            };
+
+            lock (_uiEvents) {                
+                _uiEvents.Add(action);
+                _uiEvent.Set();
+            }
+            tmp.WaitOne();
+            return res;
+        }
+
 
         public IServiceContainer ServiceProvider {
             get {
@@ -94,6 +182,10 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         public MockVsTextView CreateTextView(string contentType, string file, string content = "") {
+            return Invoke(() => CreateTextViewWorker(contentType, file, content));
+        }
+
+        private MockVsTextView CreateTextViewWorker(string contentType, string file, string content) {
             var buffer = new MockTextBuffer(content, ContentTypeRegistry.GetContentType(contentType), file);
             foreach (var classifier in Container.GetExports<IClassifierProvider, IContentTypeMetadata>()) {
                 foreach (var targetContentType in classifier.Metadata.ContentTypes) {
@@ -104,7 +196,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             }
 
             var view = new MockTextView(buffer);
-            var res = new MockVsTextView(_serviceProvider, view);
+            var res = new MockVsTextView(_serviceProvider, this, view);
             view.Properties[typeof(MockVsTextView)] = res;
 
             // Initialize code window
@@ -117,7 +209,9 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
                 var codeWindow = new MockCodeWindow(serviceProvider, view);
                 view.Properties[typeof(MockCodeWindow)] = codeWindow;
                 if (ErrorHandler.Succeeded(langInfo.GetCodeWindowManager(codeWindow, out mgr))) {
-                    /*ErrorHandler.ThrowOnFailure(*/mgr.AddAdornments()/*)*/;
+                    if(ErrorHandler.Failed(mgr.AddAdornments()) {
+                        Console.WriteLine("Failed to add adornments to text view");
+                    }
                 }
             }
 
@@ -196,11 +290,14 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
 
                 Console.WriteLine("Including {0}", file);
                 catalogs.Add(new AssemblyCatalog(asm));
-
-                foreach (var type in asm.GetTypes()) {
-                    if (type.IsDefined(typeof(PackageRegistrationAttribute), false)) {
-                        packageTypes.Add(type);
+                try {
+                    foreach (var type in asm.GetTypes()) {
+                        if (type.IsDefined(typeof(PackageRegistrationAttribute), false)) {
+                            packageTypes.Add(type);
+                        }
                     }
+                } catch (ReflectionTypeLoadException tlx) {
+                    Console.WriteLine(tlx);
                 }
             }
 
@@ -212,6 +309,22 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
 
         #endregion
 
+        public ITreeNode WaitForItemRemoved(params string[] path) {
+            throw new NotImplementedException();
+        }
+
+        ITreeNode IVisualStudioInstance.WaitForItem(params string[] items) {
+            var res = WaitForItem(items);
+            if (res.IsNull) {
+                return null;
+            }
+            return new MockTreeNode(this, res);
+        }
+
+        public ITreeNode FindItem(params string[] items) {
+            throw new NotImplementedException();
+        }
+
         /// <summary>
         /// Gets an item from solution explorer.
         /// 
@@ -219,13 +332,20 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         /// Solution Explorer.
         /// </summary>
         public HierarchyItem WaitForItem(params string[] items) {
+            return Invoke(() => WaitForItemWorker(items));
+        }
+
+        private HierarchyItem WaitForItemWorker(string[] items) {
             IVsHierarchy hierarchy;
             if (ErrorHandler.Failed(Solution.GetProjectOfUniqueName(items[0], out hierarchy))) {
                 return new HierarchyItem();
             }
+            if (items.Length == 1) {
+                return new HierarchyItem(hierarchy, (uint)VSConstants.VSITEMID.Root);
+            }
 
             var firstItem = items[1];
-            var firstHierItem = new HierarchyItem();;
+            var firstHierItem = new HierarchyItem();
             foreach (var item in hierarchy.GetHierarchyItems()) {
                 if (item.Caption == firstItem) {
                     firstHierItem = item;
@@ -256,7 +376,15 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             return firstHierItem;
         }
 
+        IEditor IVisualStudioInstance.OpenItem(string project, params string[] path) {
+            return OpenItem(project, path);
+        }
+
         public MockVsTextView OpenItem(string project, params string[] path) {
+            return Invoke(() => OpenItemWorker(project, path));
+        }
+
+        private MockVsTextView OpenItemWorker(string project, string[] path) {
             // matching the API of VisualStudioSolution.OpenItem
             string[] temp = new string[path.Length + 1];
             temp[0] = project;
@@ -270,14 +398,41 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             if (!CachedInfo._languageNamesByExtension.TryGetValue(Path.GetExtension(item.CanonicalName), out languageName)) {
                 languageName = "code";
             }
-            
+
             var res = CreateTextView(languageName, item.CanonicalName, File.ReadAllText(item.CanonicalName));
+            SetFocus(res);
+
+            uint cookie;
+            IVsTextLines lines;
+            ErrorHandler.ThrowOnFailure(((IVsTextView)res).GetBuffer(out lines));
+            IntPtr linesPtr = Marshal.GetIUnknownForObject(lines);
+            try {
+                ErrorHandler.ThrowOnFailure(
+                    _rdt.RegisterAndLockDocument(
+                        (uint)_VSRDTFLAGS.RDT_NoLock,
+                        item.CanonicalName,
+                        item.Hierarchy,
+                        item.ItemId,
+                        linesPtr,
+                        out cookie
+                    )
+                );
+            } finally {
+                Marshal.Release(linesPtr);
+            }
+            return res;
+        }
+
+        internal void SetFocus(IFocusable res) {
+            Invoke(() =>SetFocusWorker(res));
+        }
+
+        private void SetFocusWorker(IFocusable res) {
             if (_focused != null) {
                 _focused.LostFocus();
             }
             res.GetFocus();
             _focused = res;
-            return res;
         }
 
         ComposablePartCatalog IComponentModel.DefaultCatalog {
@@ -302,6 +457,163 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
 
         T IComponentModel.GetService<T>() {
             return Container.GetExportedValue<T>();
+        }
+
+        public void Dispose() {
+            _shutdown = true;
+            _uiEvent.Set();
+        }
+
+        
+        public void Type(Key key) {
+            Invoke(() => TypeWorker(key));
+        }
+
+        private void TypeWorker(Key key) {
+            var cmdTarget = _focused as IOleCommandTarget;
+            if (cmdTarget != null) {
+                switch (key) {
+                    case Key.F2: cmdTarget.Rename(); break;
+                    case Key.Enter: cmdTarget.Enter(); break;
+                    case Key.Tab: cmdTarget.Tab(); break;
+                    default:
+                        throw new InvalidOperationException("Unmapped key " + key);
+                }
+            }
+        }
+
+        public void ControlX() {
+            Invoke(() => ControlXWorker());
+        }
+
+        private void ControlXWorker() {
+            var cmdTarget = _focused as IOleCommandTarget;
+            if (cmdTarget != null) {
+                cmdTarget.Cut();
+            }
+        }
+
+        public void ControlC() {
+            Invoke(() => ControlCWorker());
+        }
+
+        private void ControlCWorker() {
+            var cmdTarget = _focused as IOleCommandTarget;
+            if (cmdTarget != null) {
+                cmdTarget.Copy();
+            }
+        }
+
+        public void Type(string p) {
+            Invoke(() => TypeWorker(p));
+        }
+
+        private void TypeWorker(string p) {
+            var cmdTarget = _focused as IOleCommandTarget;
+            if (cmdTarget != null) {
+                cmdTarget.Type(p);
+            }
+        }
+
+        public void ControlV() {
+            Invoke(() => ControlVWorker());
+        }
+
+        private void ControlVWorker() {
+            var cmdTarget = _focused as IOleCommandTarget;
+            if (cmdTarget != null) {
+                cmdTarget.Paste();
+            }
+        }
+
+        public void CheckMessageBox(params string[] text) {
+            CheckMessageBox(MessageBoxButton.Cancel, text);
+        }
+
+        public void CheckMessageBox(MessageBoxButton button, params string[] text) {
+            UIShell.CheckMessageBox(button, text);
+        }
+
+        public void Sleep(int ms) {
+        }
+
+
+        public void ExecuteCommand(string command) {
+            throw new NotImplementedException();
+        }
+
+        public string SolutionFilename {
+            get {
+                return Solution.SolutionFile;
+            }
+        }
+
+        public string SolutionDirectory {
+            get {
+                return Path.GetDirectoryName(SolutionFilename);
+            }
+        }
+
+        public IntPtr WaitForDialog() {
+            throw new NotImplementedException();
+        }
+
+        public void WaitForDialogDismissed() {
+            throw new NotImplementedException();
+        }
+
+        public void AssertFileExists(params string[] path) {
+            throw new NotImplementedException();
+        }
+
+        public void AssertFileDoesntExist(params string[] path) {
+            throw new NotImplementedException();
+        }
+
+        public void AssertFolderExists(params string[] path) {
+            throw new NotImplementedException();
+        }
+
+        public void AssertFolderDoesntExist(params string[] path) {
+            throw new NotImplementedException();
+        }
+
+        public void AssertFileExistsWithContent(string content, params string[] path) {
+            throw new NotImplementedException();
+        }
+
+        public void CloseActiveWindow(vsSaveChanges save) {
+            throw new NotImplementedException();
+        }
+        public void WaitForOutputWindowText(string name, string containsText, int timeout = 5000) {
+            throw new NotImplementedException();
+        }
+
+        public IntPtr OpenDialogWithDteExecuteCommand(string commandName, string commandArgs = "") {
+            throw new NotImplementedException();
+        }
+
+        public void SelectSolutionNode() {
+        }
+
+        public Project GetProject(string projectName) {
+            throw new NotImplementedException();
+        }
+
+        public void SelectProject(Project project) {
+            throw new NotImplementedException();
+        }
+
+        public IEditor GetDocument(string filename) {
+            throw new NotImplementedException();
+        }
+
+        public IAddExistingItem AddExistingItem() {
+            throw new NotImplementedException();
+        }
+
+        public IOverwriteFile WaitForOverwriteFileDialog() {
+            throw new NotImplementedException();
         }
     }
 }

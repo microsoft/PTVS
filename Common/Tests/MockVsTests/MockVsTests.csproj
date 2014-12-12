@@ -21,9 +21,11 @@
   <ItemGroup>
     <Reference Include="envdte90, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <EmbedInteropTypes>False</EmbedInteropTypes>
+      <Private>True</Private>
     </Reference>
     <Reference Include="EnvDTE90a, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <EmbedInteropTypes>False</EmbedInteropTypes>
+      <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.Build, Version=$(MicrosoftBuildAssemblyVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.CSharp" />
@@ -64,8 +66,12 @@
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xaml" />
     <Reference Include="System.Xml" />
-    <Reference Include="EnvDTE" />
-    <Reference Include="EnvDTE80" />
+    <Reference Include="EnvDTE">
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="EnvDTE80">
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="UIAutomationClient" />
@@ -79,6 +85,7 @@
       <Link>DebugTimer.cs</Link>
     </Compile>
     <Compile Include="CachedVsInfo.cs" />
+    <Compile Include="CommandTargetExtensions.cs" />
     <Compile Include="HierarchyExtensions.cs" />
     <Compile Include="HierarchyItem.cs" />
     <Compile Include="IClassificationTypeDefinitionMetadata.cs" />
@@ -100,20 +107,35 @@
     <Compile Include="MockIntellisenseSessionStackMapService.cs" />
     <Compile Include="MockLocalRegistry.cs" />
     <Compile Include="MockOleComponentManager.cs" />
+    <Compile Include="MockOutputWindow.cs" />
+    <Compile Include="MockOutputWindowPane.cs" />
     <Compile Include="MockQuickInfoBroker.cs" />
     <Compile Include="MockSignatureHelpBroker.cs" />
     <Compile Include="MockSignatureHelpSession.cs" />
+    <Compile Include="MockToolWindow.cs" />
+    <Compile Include="MockTreeNode.cs" />
+    <Compile Include="MockUIHierWinClipboardHelper.cs" />
     <Compile Include="MockVs.cs" />
+    <Compile Include="MockVsBuildManagerAccessor.cs" />
     <Compile Include="MockVsDebugger.cs" />
     <Compile Include="MockVsEditorAdaptersFactoryService.cs" />
+    <Compile Include="MockVsExtensibility.cs" />
+    <Compile Include="MockVsMonitorSelection.cs" />
+    <Compile Include="MockVsProfferCommands.cs" />
+    <Compile Include="MockVsQueryEditQuerySave.cs" />
+    <Compile Include="MockVsRunningDocumentTable.cs" />
     <Compile Include="MockVsServiceProvider.cs" />
     <Compile Include="MockVsShell.cs" />
     <Compile Include="MockVsSolution.cs" />
+    <Compile Include="MockVsSolutionBuildManager.cs" />
     <Compile Include="MockVsTestExtensions.cs" />
     <Compile Include="MockVsTextLines.cs" />
     <Compile Include="MockVsTextManager.cs" />
     <Compile Include="MockVsTextView.cs" />
     <Compile Include="MockVsTrackProjectDocuments.cs" />
+    <Compile Include="MockVsUIHierarchyWindow.cs" />
+    <Compile Include="MockVsUIShell.cs" />
+    <Compile Include="MockVsUIShellOpenDocument.cs" />
     <Compile Include="ProjectAggregator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

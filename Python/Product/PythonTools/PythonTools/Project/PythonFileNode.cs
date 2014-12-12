@@ -160,7 +160,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public IProjectEntry GetProjectEntry() {
-            var textBuffer = GetTextBuffer();
+            var textBuffer = GetTextBuffer(false);
 
             IProjectEntry entry;
             if (textBuffer != null && textBuffer.TryGetProjectEntry(out entry)) {
@@ -179,7 +179,7 @@ namespace Microsoft.PythonTools.Project {
                     analyzer.UnloadFile(analysis);
                 }
 
-                var textBuffer = GetTextBuffer();
+                var textBuffer = GetTextBuffer(false);
 
                 BufferParser parser;
                 if (textBuffer != null && textBuffer.Properties.TryGetProperty<BufferParser>(typeof(BufferParser), out parser)) {

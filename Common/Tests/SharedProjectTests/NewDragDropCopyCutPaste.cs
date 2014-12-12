@@ -54,8 +54,9 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                 using (var solution = testDef.Generate().ToVs()) {
                     mover(
-                        solution.FindItem("MoveToMissingFolder", "codefile" + projectType.CodeExtension),
-                        solution.FindItem("MoveToMissingFolder", "Fob")
+                        solution,
+                        solution.FindItem("MoveToMissingFolder", "Fob"),
+                        solution.FindItem("MoveToMissingFolder", "codefile" + projectType.CodeExtension)
                     );
 
                     solution.AssertFileDoesntExist("MoveToMissingFolder", "codefile" + projectType.CodeExtension);
@@ -92,6 +93,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                 using (var solution = testDef.Generate().ToVs()) {
                     mover(
+                        solution,
                         solution.FindItem("MoveExcludedFolder", "Baz"),
                         solution.FindItem("MoveExcludedFolder", "Fob")
                     );
@@ -130,13 +132,14 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                 using (var solution = testDef.Generate().ToVs()) {
                     mover(
+                        solution,
                         solution.FindItem("MoveExcludedItemToFolder", "Folder"),
                         solution.FindItem("MoveExcludedItemToFolder", "codefile" + projectType.CodeExtension)
                     );
 
                     solution.AssertFileDoesntExist("MoveExcludedItemToFolder", "codefile" + projectType.CodeExtension);
                     solution.AssertFileExists("MoveExcludedItemToFolder", "Folder", "codefile" + projectType.CodeExtension);
-                    Assert.IsTrue(solution.Project.GetIsFolderExpanded("Folder"));
+                    Assert.IsTrue(solution.GetProject("MoveExcludedItemToFolder").GetIsFolderExpanded("Folder"));
 
                 }
             }
@@ -170,15 +173,16 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                 using (var solution = testDef.Generate().ToVs()) {
                     mover(
+                        solution,
                         solution.FindItem("MoveDuplicateFileName", "Folder"),
                         solution.FindItem("MoveDuplicateFileName", "textfile.txt")
                     );
 
-                    using (var dialog = OverwriteFileDialog.Wait(solution.App)) {
+                    using (var dialog = solution.WaitForOverwriteFileDialog()) {
                         dialog.No();
                     }
 
-                    solution.App.WaitForDialogDismissed();
+                    solution.WaitForDialogDismissed();
 
                     solution.AssertFileExistsWithContent("root", "MoveDuplicateFileName", "textfile.txt");
                     solution.AssertFileExistsWithContent("Folder", "MoveDuplicateFileName", "Folder", "textfile.txt");
@@ -218,22 +222,23 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                 using (var solution = testDef.Generate().ToVs()) {
                     mover(
+                        solution,
                         solution.FindItem("MoveDuplicateFileName", "Folder"),
                         solution.FindItem("MoveDuplicateFileName", "textfile1.txt"),
                         solution.FindItem("MoveDuplicateFileName", "textfile2.txt")
                     );
 
-                    using (var dialog = OverwriteFileDialog.Wait(solution.App)) {
+                    using (var dialog = solution.WaitForOverwriteFileDialog()) {
                         dialog.No();
                     }
 
                     System.Threading.Thread.Sleep(1000);
 
-                    using (var dialog = OverwriteFileDialog.Wait(solution.App)) {
+                    using (var dialog = solution.WaitForOverwriteFileDialog()) {
                         dialog.Yes();
                     }
 
-                    solution.App.WaitForDialogDismissed();
+                    solution.WaitForDialogDismissed();
 
                     solution.AssertFileExistsWithContent("root1", "MoveDuplicateFileName", "textfile1.txt");
                     solution.AssertFileDoesntExist("MoveDuplicateFileName", "textfile2.txt");
@@ -277,22 +282,23 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                 using (var solution = testDef.Generate().ToVs()) {
                     mover(
+                        solution,
                         solution.FindItem("MoveDuplicateFileName", "Target"),
                         solution.FindItem("MoveDuplicateFileName", "Source", "textfile1.txt"),
                         solution.FindItem("MoveDuplicateFileName", "Source", "textfile2.txt")
                     );
 
-                    using (var dialog = OverwriteFileDialog.Wait(solution.App)) {
+                    using (var dialog = solution.WaitForOverwriteFileDialog()) {
                         dialog.No();
                     }
 
                     System.Threading.Thread.Sleep(1000);
 
-                    using (var dialog = OverwriteFileDialog.Wait(solution.App)) {
+                    using (var dialog = solution.WaitForOverwriteFileDialog()) {
                         dialog.Yes();
                     }
 
-                    solution.App.WaitForDialogDismissed();
+                    solution.WaitForDialogDismissed();
 
                     solution.AssertFileExistsWithContent("source1", "MoveDuplicateFileName", "Source", "textfile1.txt");
                     solution.AssertFileDoesntExist("MoveDuplicateFileName", "textfile2.txt");
@@ -343,22 +349,23 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     var item1 = solution.FindItem("MoveDuplicateFileName", "textfile1.txt");
                     var item2 = solution.FindItem("MoveDuplicateFileName", "textfile2.txt");
                     mover(
+                        solution,
                         solution.FindItem("MoveDuplicateFileName2"),
                         item1,
                         item2
                     );
 
-                    using (var dialog = OverwriteFileDialog.Wait(solution.App)) {
+                    using (var dialog = solution.WaitForOverwriteFileDialog()) {
                         dialog.No();
                     }
 
                     System.Threading.Thread.Sleep(1000);
 
-                    using (var dialog = OverwriteFileDialog.Wait(solution.App)) {
+                    using (var dialog = solution.WaitForOverwriteFileDialog()) {
                         dialog.Yes();
                     }
 
-                    solution.App.WaitForDialogDismissed();
+                    solution.WaitForDialogDismissed();
 
                     solution.AssertFileExistsWithContent("textfile1 - lang", "MoveDuplicateFileName", "textfile1.txt");
                     solution.AssertFileExistsWithContent("textfile2 - lang", "MoveDuplicateFileName", "textfile2.txt");
@@ -405,15 +412,16 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                 using (var solution = SolutionFile.Generate("MoveDuplicateFileName", projectDefs).ToVs()) {
                     mover(
+                        solution,
                         solution.FindItem("MoveDuplicateFileName2"),
                         solution.FindItem("MoveDuplicateFileName1", "textfile.txt")
                     );
 
-                    using (var dialog = OverwriteFileDialog.Wait(solution.App)) {
+                    using (var dialog = solution.WaitForOverwriteFileDialog()) {
                         dialog.No();
                     }
 
-                    solution.App.WaitForDialogDismissed();
+                    solution.WaitForDialogDismissed();
 
                     solution.AssertFileExistsWithContent("MoveDuplicateFileName1", "MoveDuplicateFileName1", "textfile.txt");
                     solution.AssertFileExistsWithContent("MoveDuplicateFileName2", "MoveDuplicateFileName2", "textfile.txt");
@@ -457,15 +465,16 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                 using (var solution = SolutionFile.Generate("MoveDuplicateFileName", projectDefs).ToVs()) {
                     mover(
+                        solution,
                         solution.FindItem("MoveDuplicateFileNameCS"),
                         solution.FindItem("MoveDuplicateFileName1", "textfile.txt")
                     );
 
                     // say no to replacing in the C# project system
-                    solution.App.WaitForDialog();
+                    solution.WaitForDialog();
                     Keyboard.Type(Key.N);
 
-                    solution.App.WaitForDialogDismissed();
+                    solution.WaitForDialogDismissed();
 
                     solution.AssertFileExistsWithContent("MoveDuplicateFileName1", "MoveDuplicateFileName1", "textfile.txt");
                     solution.AssertFileExistsWithContent("MoveDuplicateFileNameCS", "MoveDuplicateFileNameCS", "textfile.txt");
@@ -507,15 +516,16 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                 using (var solution = SolutionFile.Generate("MoveLinkedFolder", projectDefs).ToVs()) {
                     mover(
+                        solution,
                         solution.FindItem("MoveLinkedFolder", "FolderLink"),
                         solution.FindItem("MoveLinkedFolder", "Folder", "FileInFolder.txt")
                     );
 
                     // Say okay to the error that pops up since we can't move to ourselves.
-                    solution.App.WaitForDialog();
+                    solution.WaitForDialog();
                     Keyboard.Type(Key.Enter);
 
-                    solution.App.WaitForDialogDismissed();
+                    solution.WaitForDialogDismissed();
 
                     // Verify that after the dialog our files are still present.
                     solution.AssertFileExists("MoveLinkedFolder", "FolderLink", "FileInFolder.txt");
@@ -523,6 +533,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                     // Now move the text file in the root.  Expect it to move and be in both.
                     mover(
+                        solution,
                         solution.FindItem("MoveLinkedFolder", "FolderLink"),
                         solution.FindItem("MoveLinkedFolder", "textfile.txt")
                     );
@@ -534,35 +545,10 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         }
 
         /// <summary>
-        /// Selects the provided items with the mouse preparing for a drag and drop
-        /// </summary>
-        /// <param name="source"></param>
-        private static void SelectItemsForDragAndDrop(AutomationElement[] source) {
-            AutomationWrapper.Select(source.First());
-            for (int i = 1; i < source.Length; i++) {
-                AutomationWrapper.AddToSelection(source[i]);
-            }
-
-            Mouse.MoveTo(source.Last().GetClickablePoint());
-            Mouse.Down(MouseButton.Left);
-        }
-
-        /// <summary>
         /// Moves one or more items in solution explorer to the destination using the mouse.
         /// </summary>
-        private static void MoveByMouse(AutomationElement destination, params AutomationElement[] source) {
-            SelectItemsForDragAndDrop(source);
-
-            try {
-                try {
-                    Keyboard.Press(Key.LeftShift);
-                    Mouse.MoveTo(destination.GetClickablePoint());
-                } finally {
-                    Mouse.Up(MouseButton.Left);
-                }
-            } finally {
-                Keyboard.Release(Key.LeftShift);
-            }
+        private static void MoveByMouse(IVisualStudioInstance vs, ITreeNode destination, params ITreeNode[] source) {
+            destination.DragOntoThis(Key.LeftShift, source);
         }
 
         /// <summary>
@@ -570,18 +556,18 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         /// </summary>
         /// <param name="destination"></param>
         /// <param name="source"></param>
-        private static void MoveByKeyboard(AutomationElement destination, params AutomationElement[] source) {
+        private static void MoveByKeyboard(IVisualStudioInstance vs, ITreeNode destination, params ITreeNode[] source) {
             AutomationWrapper.Select(source.First());
             for (int i = 1; i < source.Length; i++) {
                 AutomationWrapper.AddToSelection(source[i]);
             }
 
-            Keyboard.ControlX();
+            vs.ControlX();
 
             AutomationWrapper.Select(destination);
-            Keyboard.ControlV();
+            vs.ControlV();
         }
 
-        private delegate void MoveDelegate(AutomationElement destination, params AutomationElement[] source);
+        private delegate void MoveDelegate(IVisualStudioInstance vs, ITreeNode destination, params ITreeNode[] source);
     }
 }

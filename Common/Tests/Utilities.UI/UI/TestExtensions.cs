@@ -19,14 +19,18 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudioTools.MockVsTests;
 using Microsoft.VisualStudioTools.Project;
 using Microsoft.VisualStudioTools.VSTestHost;
 using TestUtilities.SharedProject;
 
 namespace TestUtilities.UI {
     public static class TestExtensions {
-        public static VisualStudioSolution ToVs(this SolutionFile self) {
-            return new VisualStudioSolution(self);
+        public static IVisualStudioInstance ToVs(this SolutionFile self) {
+            if (VSTestContext.IsMock) {
+                return self.ToMockVs();
+            }
+            return new VisualStudioInstance(self);
         }
 
         public static string[] GetDisplayTexts(this ICompletionSession completionSession) {

@@ -32,12 +32,13 @@ namespace Microsoft.VisualStudioTools {
         private uint _compId = VSConstants.VSCOOKIE_NIL;
         private readonly IServiceProvider _serviceProvider;
         private IOleComponentManager _compMgr;
+        private EventHandler<ComponentManagerEventArgs> _onIdle;
 
         public IdleManager(IServiceProvider serviceProvider) {
             _serviceProvider = serviceProvider;
         }
 
-        public void EnsureInit() {
+        private void EnsureInit() {
             if (_compId == VSConstants.VSCOOKIE_NIL) {
                 lock (this) {
                     if (_compId == VSConstants.VSCOOKIE_NIL) {
@@ -64,7 +65,7 @@ namespace Microsoft.VisualStudioTools {
         }
 
         public int FDoIdle(uint grfidlef) {
-            var onIdle = OnIdle;
+            var onIdle = _onIdle;
             if (onIdle != null) {
                 onIdle(this, new ComponentManagerEventArgs(_compMgr));
             }
@@ -72,7 +73,16 @@ namespace Microsoft.VisualStudioTools {
             return 0;
         }
 
-        internal event EventHandler<ComponentManagerEventArgs> OnIdle;
+        internal event EventHandler<ComponentManagerEventArgs> OnIdle {
+            add {
+                EnsureInit();
+                _onIdle += value;
+            }
+            remove {
+                EnsureInit();
+                _onIdle -= value;
+            }
+        }
 
         public int FPreTranslateMessage(MSG[] pMsg) {
             return 0;

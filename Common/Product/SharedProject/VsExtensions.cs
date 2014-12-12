@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 
+using System;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
@@ -87,6 +88,10 @@ namespace Microsoft.VisualStudioTools {
             } else {
                 return null;
             }
+        }
+
+        internal static IClipboardService GetClipboardService(this IServiceProvider serviceProvider) {
+            return (IClipboardService)serviceProvider.GetService(typeof(IClipboardService));
         }
     }
 }

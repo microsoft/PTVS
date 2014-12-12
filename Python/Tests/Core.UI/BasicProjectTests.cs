@@ -41,7 +41,7 @@ using TestUtilities.UI;
 using TestUtilities.UI.Python;
 using VSLangProj;
 using Keyboard = TestUtilities.UI.Keyboard;
-using MessageBoxButton = TestUtilities.UI.MessageBoxButton;
+using MessageBoxButton = TestUtilities.MessageBoxButton;
 using Mouse = TestUtilities.UI.Mouse;
 using ProcessOutput = pythontools::Microsoft.VisualStudioTools.Project.ProcessOutput;
 using Thread = System.Threading.Thread;

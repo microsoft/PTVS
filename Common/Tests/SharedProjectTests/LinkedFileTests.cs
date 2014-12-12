@@ -23,6 +23,8 @@ using TestUtilities;
 using TestUtilities.SharedProject;
 using TestUtilities.UI;
 using MSBuild = Microsoft.Build.Evaluation;
+using MessageBoxButton = TestUtilities.MessageBoxButton;
+using Microsoft.VisualStudioTools.VSTestHost;
 
 namespace VisualStudioToolsUITests {
     [TestClass]
@@ -114,7 +116,7 @@ namespace VisualStudioToolsUITests {
                     AutomationWrapper.Select(projectNode);
 
                     try {
-                        solution.App.Dte.ExecuteCommand("File.Rename");
+                        solution.ExecuteCommand("File.Rename");
                         Assert.Fail("Should have failed to rename");
                     } catch (Exception e) {
                         Debug.WriteLine(e.ToString());
@@ -127,20 +129,20 @@ namespace VisualStudioToolsUITests {
                     AutomationWrapper.Select(explicitLinkedFile);
 
                     try {
-                        solution.App.Dte.ExecuteCommand("File.Rename");
+                        solution.ExecuteCommand("File.Rename");
                         Assert.Fail("Should have failed to rename");
                     } catch (Exception e) {
                         Debug.WriteLine(e.ToString());
                     }
 
-                    var autoItem = solution.Project.ProjectItems.Item("ImplicitLinkedFile" + projectType.CodeExtension);
+                    var autoItem = solution.GetProject("LinkedFiles").ProjectItems.Item("ImplicitLinkedFile" + projectType.CodeExtension);
                     try {
                         autoItem.Properties.Item("FileName").Value = "Fob";
                         Assert.Fail("Should have failed to rename");
                     } catch (InvalidOperationException) {
                     }
 
-                    autoItem = solution.Project.ProjectItems.Item("ExplicitDir").ProjectItems.Item("ExplicitLinkedFile" + projectType.CodeExtension);
+                    autoItem = solution.GetProject("LinkedFiles").ProjectItems.Item("ExplicitDir").ProjectItems.Item("ExplicitLinkedFile" + projectType.CodeExtension);
                     try {
                         autoItem.Properties.Item("FileName").Value = "Fob";
                         Assert.Fail("Should have failed to rename");
@@ -160,34 +162,34 @@ namespace VisualStudioToolsUITests {
                     Assert.IsNotNull(projectNode, "projectNode");
                     AutomationWrapper.Select(projectNode);
 
-                    solution.App.Dte.ExecuteCommand("Edit.Cut");
+                    solution.ExecuteCommand("Edit.Cut");
 
                     var folderNode = solution.FindItem("LinkedFiles", "MoveToFolder");
                     AutomationWrapper.Select(folderNode);
 
-                    solution.App.Dte.ExecuteCommand("Edit.Paste");
+                    solution.ExecuteCommand("Edit.Paste");
 
                     // item should have moved
                     var movedLinkedFile = solution.WaitForItem("LinkedFiles", "MoveToFolder", "MovedLinkedFile" + projectType.CodeExtension);
                     Assert.IsNotNull(movedLinkedFile, "movedLinkedFile");
 
                     // file should be at the same location
-                    Assert.IsTrue(File.Exists(Path.Combine(solution.Directory, "MovedLinkedFile" + projectType.CodeExtension)));
-                    Assert.IsFalse(File.Exists(Path.Combine(solution.Directory, "MoveToFolder\\MovedLinkedFile" + projectType.CodeExtension)));
+                    Assert.IsTrue(File.Exists(Path.Combine(solution.SolutionDirectory, "MovedLinkedFile" + projectType.CodeExtension)));
+                    Assert.IsFalse(File.Exists(Path.Combine(solution.SolutionDirectory, "MoveToFolder\\MovedLinkedFile" + projectType.CodeExtension)));
 
                     // now move it back
                     AutomationWrapper.Select(movedLinkedFile);
-                    solution.App.Dte.ExecuteCommand("Edit.Cut");
+                    solution.ExecuteCommand("Edit.Cut");
 
                     var originalFolder = solution.FindItem("LinkedFiles");
                     AutomationWrapper.Select(originalFolder);
-                    solution.App.Dte.ExecuteCommand("Edit.Paste");
+                    solution.ExecuteCommand("Edit.Paste");
 
                     var movedLinkedFilePaste = solution.WaitForItem("LinkedFiles", "MovedLinkedFile" + projectType.CodeExtension);
                     Assert.IsNotNull(movedLinkedFilePaste, "movedLinkedFilePaste");
 
                     // and make sure we didn't mess up the path in the project file
-                    MSBuild.Project buildProject = new MSBuild.Project(solution.Project.FullName);
+                    MSBuild.Project buildProject = new MSBuild.Project(solution.GetProject("LinkedFiles").FullName);
                     bool found = false;
                     foreach (var item in buildProject.GetItems("Compile")) {
                         if (item.UnevaluatedInclude == "..\\MovedLinkedFile" + projectType.CodeExtension) {
@@ -211,12 +213,12 @@ namespace VisualStudioToolsUITests {
                     Assert.IsNotNull(fileNode, "projectNode");
                     AutomationWrapper.Select(fileNode);
 
-                    solution.App.Dte.ExecuteCommand("Edit.Copy");
+                    solution.ExecuteCommand("Edit.Copy");
 
                     var folderNode = solution.FindItem("LinkedFiles2");
                     AutomationWrapper.Select(folderNode);
 
-                    solution.App.Dte.ExecuteCommand("Edit.Paste");
+                    solution.ExecuteCommand("Edit.Paste");
 
                     // item should have moved
                     var copiedFile = solution.WaitForItem("LinkedFiles2", "FileNotInProject1" + projectType.CodeExtension);
@@ -224,7 +226,7 @@ namespace VisualStudioToolsUITests {
 
                     Assert.AreEqual(
                         true,
-                        solution.App.GetProject("LinkedFiles2").ProjectItems.Item("FileNotInProject1" + projectType.CodeExtension).Properties.Item("IsLinkFile").Value
+                        solution.GetProject("LinkedFiles2").ProjectItems.Item("FileNotInProject1" + projectType.CodeExtension).Properties.Item("IsLinkFile").Value
                     );
                 }
             }
@@ -240,17 +242,17 @@ namespace VisualStudioToolsUITests {
                     Assert.IsNotNull(fileNode, "projectNode");
                     AutomationWrapper.Select(fileNode);
 
-                    solution.App.Dte.ExecuteCommand("Edit.Copy");
+                    solution.ExecuteCommand("Edit.Copy");
 
                     var folderNode = solution.FindItem("LinkedFiles2");
                     AutomationWrapper.Select(folderNode);
 
-                    ThreadPool.QueueUserWorkItem(x => solution.App.ExecuteCommand("Edit.Paste"));
+                    ThreadPool.QueueUserWorkItem(x => solution.ExecuteCommand("Edit.Paste"));
 
-                    string path = Path.Combine(solution.Directory, "FileNotInProject2" + projectType.CodeExtension);
+                    string path = Path.Combine(solution.SolutionDirectory, "FileNotInProject2" + projectType.CodeExtension);
                     VisualStudioApp.CheckMessageBox(String.Format("There is already a link to '{0}'. You cannot have more than one link to the same file in a project.", path));
 
-                    solution.App.WaitForDialogDismissed();
+                    solution.WaitForDialogDismissed();
                 }
             }
         }
@@ -261,7 +263,7 @@ namespace VisualStudioToolsUITests {
             foreach (var projectType in ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
 
-                    var openWindow = solution.Project.ProjectItems.Item("MovedLinkedFileOpen" + projectType.CodeExtension).Open();
+                    var openWindow = solution.GetProject("LinkedFiles").ProjectItems.Item("MovedLinkedFileOpen" + projectType.CodeExtension).Open();
                     Assert.IsNotNull(openWindow, "openWindow");
 
                     var projectNode = solution.FindItem("LinkedFiles", "MovedLinkedFileOpen" + projectType.CodeExtension);
@@ -269,21 +271,21 @@ namespace VisualStudioToolsUITests {
                     Assert.IsNotNull(projectNode, "projectNode");
                     AutomationWrapper.Select(projectNode);
 
-                    solution.App.Dte.ExecuteCommand("Edit.Cut");
+                    solution.ExecuteCommand("Edit.Cut");
 
                     var folderNode = solution.FindItem("LinkedFiles", "MoveToFolder");
                     AutomationWrapper.Select(folderNode);
 
-                    solution.App.Dte.ExecuteCommand("Edit.Paste");
+                    solution.ExecuteCommand("Edit.Paste");
 
                     var movedLinkedFileOpen = solution.WaitForItem("LinkedFiles", "MoveToFolder", "MovedLinkedFileOpen" + projectType.CodeExtension);
                     Assert.IsNotNull(movedLinkedFileOpen, "movedLinkedFileOpen");
 
-                    Assert.IsTrue(File.Exists(Path.Combine(solution.Directory, Path.Combine(solution.Directory, "MovedLinkedFileOpen" + projectType.CodeExtension))));
-                    Assert.IsFalse(File.Exists(Path.Combine(solution.Directory, "MoveToFolder\\MovedLinkedFileOpen" + projectType.CodeExtension)));
+                    Assert.IsTrue(File.Exists(Path.Combine(solution.SolutionDirectory, Path.Combine(solution.SolutionDirectory, "MovedLinkedFileOpen" + projectType.CodeExtension))));
+                    Assert.IsFalse(File.Exists(Path.Combine(solution.SolutionDirectory, "MoveToFolder\\MovedLinkedFileOpen" + projectType.CodeExtension)));
 
                     // window sholudn't have changed.
-                    Assert.AreEqual(solution.App.Dte.Windows.Item("MovedLinkedFileOpen" + projectType.CodeExtension), openWindow);
+                    Assert.AreEqual(VSTestContext.DTE.Windows.Item("MovedLinkedFileOpen" + projectType.CodeExtension), openWindow);
                 }
             }
         }
@@ -294,7 +296,7 @@ namespace VisualStudioToolsUITests {
             foreach (var projectType in ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
 
-                    var openWindow = solution.Project.ProjectItems.Item("MovedLinkedFileOpenEdit" + projectType.CodeExtension).Open();
+                    var openWindow = solution.GetProject("LinkedFiles").ProjectItems.Item("MovedLinkedFileOpenEdit" + projectType.CodeExtension).Open();
                     Assert.IsNotNull(openWindow, "openWindow");
 
                     var selection = ((TextSelection)openWindow.Selection);
@@ -306,26 +308,26 @@ namespace VisualStudioToolsUITests {
                     Assert.IsNotNull(projectNode, "projectNode");
                     AutomationWrapper.Select(projectNode);
 
-                    solution.App.Dte.ExecuteCommand("Edit.Cut");
+                    solution.ExecuteCommand("Edit.Cut");
 
                     var folderNode = solution.FindItem("LinkedFiles", "MoveToFolder");
                     AutomationWrapper.Select(folderNode);
 
-                    solution.App.Dte.ExecuteCommand("Edit.Paste");
+                    solution.ExecuteCommand("Edit.Paste");
 
                     var movedLinkedFileOpenEdit = solution.WaitForItem("LinkedFiles", "MoveToFolder", "MovedLinkedFileOpenEdit" + projectType.CodeExtension);
                     Assert.IsNotNull(movedLinkedFileOpenEdit, "movedLinkedFileOpenEdit");
 
-                    Assert.IsTrue(File.Exists(Path.Combine(solution.Directory, "MovedLinkedFileOpenEdit" + projectType.CodeExtension)));
-                    Assert.IsFalse(File.Exists(Path.Combine(solution.Directory, "MoveToFolder\\MovedLinkedFileOpenEdit" + projectType.CodeExtension)));
+                    Assert.IsTrue(File.Exists(Path.Combine(solution.SolutionDirectory, "MovedLinkedFileOpenEdit" + projectType.CodeExtension)));
+                    Assert.IsFalse(File.Exists(Path.Combine(solution.SolutionDirectory, "MoveToFolder\\MovedLinkedFileOpenEdit" + projectType.CodeExtension)));
 
                     // window sholudn't have changed.
-                    Assert.AreEqual(solution.App.Dte.Windows.Item("MovedLinkedFileOpenEdit" + projectType.CodeExtension), openWindow);
+                    Assert.AreEqual(VSTestContext.DTE.Windows.Item("MovedLinkedFileOpenEdit" + projectType.CodeExtension), openWindow);
 
                     Assert.AreEqual(openWindow.Document.Saved, false);
                     openWindow.Document.Save();
 
-                    Assert.AreEqual(new FileInfo(Path.Combine(solution.Directory, "MovedLinkedFileOpenEdit" + projectType.CodeExtension)).Length, (long)0);
+                    Assert.AreEqual(new FileInfo(Path.Combine(solution.SolutionDirectory, "MovedLinkedFileOpenEdit" + projectType.CodeExtension)).Length, (long)0);
                 }
             }
         }
@@ -340,20 +342,20 @@ namespace VisualStudioToolsUITests {
                     Assert.IsNotNull(fileNode, "projectNode");
                     AutomationWrapper.Select(fileNode);
 
-                    solution.App.Dte.ExecuteCommand("Edit.Cut");
+                    solution.ExecuteCommand("Edit.Cut");
 
                     var folderNode = solution.FindItem("LinkedFiles", "FolderWithAFile");
                     AutomationWrapper.Select(folderNode);
 
-                    solution.App.Dte.ExecuteCommand("Edit.Paste");
+                    solution.ExecuteCommand("Edit.Paste");
 
                     // item should have moved
                     var fileNotInProject = solution.WaitForItem("LinkedFiles", "FolderWithAFile", "FileNotInProject" + projectType.CodeExtension);
                     Assert.IsNotNull(fileNotInProject, "fileNotInProject");
 
                     // but it should be the linked file on disk outside of our project, not the file that exists on disk at the same location.
-                    var autoItem = solution.Project.ProjectItems.Item("FolderWithAFile").ProjectItems.Item("FileNotInProject" + projectType.CodeExtension);
-                    Assert.AreEqual(Path.Combine(solution.Directory, "FileNotInProject" + projectType.CodeExtension), autoItem.Properties.Item("FullPath").Value);
+                    var autoItem = solution.GetProject("LinkedFiles").ProjectItems.Item("FolderWithAFile").ProjectItems.Item("FileNotInProject" + projectType.CodeExtension);
+                    Assert.AreEqual(Path.Combine(solution.SolutionDirectory, "FileNotInProject" + projectType.CodeExtension), autoItem.Properties.Item("FullPath").Value);
                 }
             }
         }
@@ -367,11 +369,11 @@ namespace VisualStudioToolsUITests {
                     Assert.IsNotNull(projectNode, "projectNode");
                     AutomationWrapper.Select(projectNode);
 
-                    solution.App.Dte.ExecuteCommand("Edit.Delete");
+                    solution.ExecuteCommand("Edit.Delete");
 
                     projectNode = solution.FindItem("LinkedFiles", "DeletedLinkedFile" + projectType.CodeExtension);
                     Assert.AreEqual(null, projectNode);
-                    Assert.IsTrue(File.Exists(Path.Combine(solution.Directory, "DeletedLinkedFile" + projectType.CodeExtension)));
+                    Assert.IsTrue(File.Exists(Path.Combine(solution.SolutionDirectory, "DeletedLinkedFile" + projectType.CodeExtension)));
                 }
             }
         }
@@ -394,7 +396,7 @@ namespace VisualStudioToolsUITests {
             foreach (var projectType in ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
 
-                    var autoItem = solution.Project.ProjectItems.Item("SaveAsCreateLink" + projectType.CodeExtension);
+                    var autoItem = solution.GetProject("LinkedFiles").ProjectItems.Item("SaveAsCreateLink" + projectType.CodeExtension);
                     var isLinkFile = autoItem.Properties.Item("IsLinkFile").Value;
                     Assert.AreEqual(isLinkFile, false);
 
@@ -403,7 +405,7 @@ namespace VisualStudioToolsUITests {
                     autoItem.SaveAs("..\\SaveAsCreateLink" + projectType.CodeExtension);
 
 
-                    autoItem = solution.Project.ProjectItems.Item("SaveAsCreateLink" + projectType.CodeExtension);
+                    autoItem = solution.GetProject("LinkedFiles").ProjectItems.Item("SaveAsCreateLink" + projectType.CodeExtension);
                     isLinkFile = autoItem.Properties.Item("IsLinkFile").Value;
                     Assert.AreEqual(isLinkFile, true);
                 }
@@ -416,15 +418,15 @@ namespace VisualStudioToolsUITests {
             foreach (var projectType in ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
 
-                    var autoItem = solution.Project.ProjectItems.Item("SaveAsCreateFile" + projectType.CodeExtension);
+                    var autoItem = solution.GetProject("LinkedFiles").ProjectItems.Item("SaveAsCreateFile" + projectType.CodeExtension);
                     var isLinkFile = autoItem.Properties.Item("IsLinkFile").Value;
                     Assert.AreEqual(isLinkFile, true);
 
                     var itemWindow = autoItem.Open();
 
-                    autoItem.SaveAs(Path.Combine(solution.Directory, "LinkedFiles\\SaveAsCreateFile" + projectType.CodeExtension));
+                    autoItem.SaveAs(Path.Combine(solution.SolutionDirectory, "LinkedFiles\\SaveAsCreateFile" + projectType.CodeExtension));
 
-                    autoItem = solution.Project.ProjectItems.Item("SaveAsCreateFile" + projectType.CodeExtension);
+                    autoItem = solution.GetProject("LinkedFiles").ProjectItems.Item("SaveAsCreateFile" + projectType.CodeExtension);
                     isLinkFile = autoItem.Properties.Item("IsLinkFile").Value;
                     Assert.AreEqual(isLinkFile, false);
                 }
@@ -437,17 +439,17 @@ namespace VisualStudioToolsUITests {
             foreach (var projectType in ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
 
-                    var autoItem = solution.Project.ProjectItems.Item("SaveAsCreateFileNewDirectory" + projectType.CodeExtension);
+                    var autoItem = solution.GetProject("LinkedFiles").ProjectItems.Item("SaveAsCreateFileNewDirectory" + projectType.CodeExtension);
                     var isLinkFile = autoItem.Properties.Item("IsLinkFile").Value;
                     Assert.AreEqual(isLinkFile, true);
 
                     var itemWindow = autoItem.Open();
 
-                    Directory.CreateDirectory(Path.Combine(solution.Directory, "LinkedFiles\\CreatedDirectory"));
-                    autoItem.SaveAs(Path.Combine(solution.Directory, "LinkedFiles\\CreatedDirectory\\SaveAsCreateFileNewDirectory" + projectType.CodeExtension));
+                    Directory.CreateDirectory(Path.Combine(solution.SolutionDirectory, "LinkedFiles\\CreatedDirectory"));
+                    autoItem.SaveAs(Path.Combine(solution.SolutionDirectory, "LinkedFiles\\CreatedDirectory\\SaveAsCreateFileNewDirectory" + projectType.CodeExtension));
 
 
-                    autoItem = solution.Project.ProjectItems.Item("CreatedDirectory").ProjectItems.Item("SaveAsCreateFileNewDirectory" + projectType.CodeExtension);
+                    autoItem = solution.GetProject("LinkedFiles").ProjectItems.Item("CreatedDirectory").ProjectItems.Item("SaveAsCreateFileNewDirectory" + projectType.CodeExtension);
                     isLinkFile = autoItem.Properties.Item("IsLinkFile").Value;
                     Assert.AreEqual(isLinkFile, false);
                 }
@@ -466,8 +468,8 @@ namespace VisualStudioToolsUITests {
                     Assert.IsNotNull(projectNode, "projectNode");
                     AutomationWrapper.Select(projectNode);
 
-                    using (var addExistingDlg = AddExistingItemDialog.FromDte(solution.App)) {
-                        addExistingDlg.FileName = Path.Combine(solution.Directory, "ExistingItem" + projectType.CodeExtension);
+                    using (var addExistingDlg = solution.AddExistingItem()) {
+                        addExistingDlg.FileName = Path.Combine(solution.SolutionDirectory, "ExistingItem" + projectType.CodeExtension);
                         addExistingDlg.AddLink();
                     }
 
@@ -489,13 +491,13 @@ namespace VisualStudioToolsUITests {
                     Assert.IsNotNull(projectNode, "projectNode");
                     AutomationWrapper.Select(projectNode);
 
-                    using (var addExistingDlg = AddExistingItemDialog.FromDte(solution.App)) {
-                        addExistingDlg.FileName = Path.Combine(solution.Directory, "FileNotInProject" + projectType.CodeExtension);
+                    using (var addExistingDlg = solution.AddExistingItem()) {
+                        addExistingDlg.FileName = Path.Combine(solution.SolutionDirectory, "FileNotInProject" + projectType.CodeExtension);
                         addExistingDlg.AddLink();
                     }
 
-                    solution.App.WaitForDialog();
-                    VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, "There is already a link to", "A project cannot have more than one link to the same file.", "FileNotInProject" + projectType.CodeExtension);
+                    solution.WaitForDialog();
+                    solution.CheckMessageBox(MessageBoxButton.Ok, "There is already a link to", "A project cannot have more than one link to the same file.", "FileNotInProject" + projectType.CodeExtension);
                 }
             }
         }
@@ -516,13 +518,13 @@ namespace VisualStudioToolsUITests {
                     Assert.IsNotNull(projectNode, "projectNode");
                     AutomationWrapper.Select(projectNode);
 
-                    using (var addExistingDlg = AddExistingItemDialog.FromDte(solution.App)) {
-                        addExistingDlg.FileName = Path.Combine(solution.Directory, "LinkedFilesDir\\SomeLinkedFile" + projectType.CodeExtension);
+                    using (var addExistingDlg = solution.AddExistingItem()) {
+                        addExistingDlg.FileName = Path.Combine(solution.SolutionDirectory, "LinkedFilesDir\\SomeLinkedFile" + projectType.CodeExtension);
                         addExistingDlg.AddLink();
                     }
 
-                    solution.App.WaitForDialog();
-                    VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, "There is already a link to", "SomeLinkedFile" + projectType.CodeExtension);
+                    solution.WaitForDialog();
+                    solution.CheckMessageBox(MessageBoxButton.Ok, "There is already a link to", "SomeLinkedFile" + projectType.CodeExtension);
                 }
             }
         }
@@ -540,13 +542,13 @@ namespace VisualStudioToolsUITests {
                     AutomationWrapper.Select(projectNode);
 
 
-                    using (var addExistingDlg = AddExistingItemDialog.FromDte(solution.App)) {
-                        addExistingDlg.FileName = Path.Combine(solution.Directory, "ExistsOnDiskButNotInProject" + projectType.CodeExtension);
+                    using (var addExistingDlg = solution.AddExistingItem()) {
+                        addExistingDlg.FileName = Path.Combine(solution.SolutionDirectory, "ExistsOnDiskButNotInProject" + projectType.CodeExtension);
                         addExistingDlg.AddLink();
                     }
 
-                    solution.App.WaitForDialog();
-                    VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, "There is already a file of the same name in this folder.");
+                    solution.WaitForDialog();
+                    solution.CheckMessageBox(MessageBoxButton.Ok, "There is already a file of the same name in this folder.");
                 }
             }
         }
@@ -564,13 +566,13 @@ namespace VisualStudioToolsUITests {
                     AutomationWrapper.Select(projectNode);
 
 
-                    using (var addExistingDlg = AddExistingItemDialog.FromDte(solution.App)) {
-                        addExistingDlg.FileName = Path.Combine(solution.Directory, "ExistsOnDiskAndInProject" + projectType.CodeExtension);
+                    using (var addExistingDlg = solution.AddExistingItem()) {
+                        addExistingDlg.FileName = Path.Combine(solution.SolutionDirectory, "ExistsOnDiskAndInProject" + projectType.CodeExtension);
                         addExistingDlg.AddLink();
                     }
 
-                    solution.App.WaitForDialog();
-                    VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, "There is already a file of the same name in this folder.");
+                    solution.WaitForDialog();
+                    solution.CheckMessageBox(MessageBoxButton.Ok, "There is already a file of the same name in this folder.");
                 }
             }
         }
@@ -587,13 +589,13 @@ namespace VisualStudioToolsUITests {
                     Assert.IsNotNull(projectNode, "projectNode");
                     AutomationWrapper.Select(projectNode);
 
-                    using (var addExistingDlg = AddExistingItemDialog.FromDte(solution.App)) {
-                        addExistingDlg.FileName = Path.Combine(solution.Directory, "ExistsInProjectButNotOnDisk" + projectType.CodeExtension);
+                    using (var addExistingDlg = solution.AddExistingItem()) {
+                        addExistingDlg.FileName = Path.Combine(solution.SolutionDirectory, "ExistsInProjectButNotOnDisk" + projectType.CodeExtension);
                         addExistingDlg.AddLink();
                     }
 
-                    solution.App.WaitForDialog();
-                    VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, "There is already a file of the same name in this folder.");
+                    solution.WaitForDialog();
+                    solution.CheckMessageBox(MessageBoxButton.Ok, "There is already a file of the same name in this folder.");
                 }
             }
         }
@@ -611,8 +613,8 @@ namespace VisualStudioToolsUITests {
                     Assert.IsNotNull(projectNode, "projectNode");
                     AutomationWrapper.Select(projectNode);
 
-                    using (var addExistingDlg = AddExistingItemDialog.FromDte(solution.App)) {
-                        addExistingDlg.FileName = Path.Combine(solution.Directory, "LinkedFiles\\Fob\\AddExistingInProjectDirButNotInProject" + projectType.CodeExtension);
+                    using (var addExistingDlg = solution.AddExistingItem()) {
+                        addExistingDlg.FileName = Path.Combine(solution.SolutionDirectory, "LinkedFiles\\Fob\\AddExistingInProjectDirButNotInProject" + projectType.CodeExtension);
                         addExistingDlg.AddLink();
                     }
 

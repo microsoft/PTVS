@@ -15,26 +15,30 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Windows.Automation;
 using System.Windows.Input;
+using EnvDTE;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools.VSTestHost;
 using TestUtilities.SharedProject;
 
 namespace TestUtilities.UI {
+    using Thread = System.Threading.Thread;
+
     /// <summary>
     /// Wrapper around a generated SolutionFile.  Provides helpers for simplifying
     /// interacting with the solution loaded into Solution Explorer.
     /// </summary>
-    public class VisualStudioSolution : IDisposable {
+    public class VisualStudioInstance : IDisposable, IVisualStudioInstance {
         private readonly SolutionFile _solution;
         private readonly VisualStudioApp _app;
         public readonly SolutionExplorerTree SolutionExplorer;
         public readonly EnvDTE.Project Project;
         private bool _disposed;
 
-        public VisualStudioSolution(SolutionFile solution) {
+        public VisualStudioInstance(SolutionFile solution) {
             _solution = solution;
             _app = new VisualStudioApp();
             Project = _app.OpenProject(solution.Filename);
@@ -48,6 +52,10 @@ namespace TestUtilities.UI {
             get {
                 return _app;
             }
+        }
+
+        IEditor IVisualStudioInstance.OpenItem(string project, params string[] path) {
+            return OpenItem(project, path);
         }
 
         /// <summary>
@@ -79,6 +87,14 @@ namespace TestUtilities.UI {
             );
         }
 
+        ITreeNode IVisualStudioInstance.FindItem(params string[] path) {
+            var res = FindItem(path);
+            if (res != null) {
+                return new TreeNode(res);
+            }
+            return null;
+        }
+
         public AutomationElement FindItem(params string[] path) {
             return SolutionExplorer.FindItem(AddSolutionToPath(path));
         }
@@ -91,17 +107,37 @@ namespace TestUtilities.UI {
             return SolutionExplorer.WaitForItem(AddSolutionToPath(path));
         }
 
+        ITreeNode IVisualStudioInstance.WaitForItemRemoved(params string[] path) {
+            var res = SolutionExplorer.WaitForItemRemoved(AddSolutionToPath(path));
+            if (res != null) {
+                return new TreeNode(res);
+            }
+            return null;
+        }
+
         public AutomationElement WaitForItemRemoved(params string[] path) {
             return SolutionExplorer.WaitForItemRemoved(AddSolutionToPath(path));
         }
 
-        public string Filename {
+        public void ExecuteCommand(string command) {
+            App.ExecuteCommand(command);
+        }
+
+        public string SolutionFilename {
             get {
                 return _solution.Filename;
             }
         }
 
-        public string Directory {
+        public IntPtr WaitForDialog() {
+            return App.WaitForDialog();
+        }
+
+        public void WaitForDialogDismissed() {
+            App.WaitForDialogDismissed();
+        }
+
+        public string SolutionDirectory {
             get {
                 return _solution.Directory;
             }
@@ -143,7 +179,7 @@ namespace TestUtilities.UI {
 
         #region IDisposable Members
 
-        ~VisualStudioSolution() {
+        ~VisualStudioInstance() {
             Dispose(false);
         }
 
@@ -166,23 +202,95 @@ namespace TestUtilities.UI {
         #endregion
 
         public void AssertFileExists(params string[] path) {
-            SolutionExplorer.AssertFileExists(Directory, AddSolutionToPath(path));
+            SolutionExplorer.AssertFileExists(SolutionDirectory, AddSolutionToPath(path));
         }
 
         public void AssertFileDoesntExist(params string[] path) {
-            SolutionExplorer.AssertFileDoesntExist(Directory, AddSolutionToPath(path));
+            SolutionExplorer.AssertFileDoesntExist(SolutionDirectory, AddSolutionToPath(path));
         }
 
         public void AssertFolderExists(params string[] path) {
-            SolutionExplorer.AssertFolderExists(Directory, AddSolutionToPath(path));
+            SolutionExplorer.AssertFolderExists(SolutionDirectory, AddSolutionToPath(path));
         }
 
         public void AssertFolderDoesntExist(params string[] path) {
-            SolutionExplorer.AssertFolderDoesntExist(Directory, AddSolutionToPath(path));
+            SolutionExplorer.AssertFolderDoesntExist(SolutionDirectory, AddSolutionToPath(path));
         }
 
         public void AssertFileExistsWithContent(string content, params string[] path) {
-            SolutionExplorer.AssertFileExistsWithContent(Directory, content, AddSolutionToPath(path));
+            SolutionExplorer.AssertFileExistsWithContent(SolutionDirectory, content, AddSolutionToPath(path));
+        }
+
+        public void CloseActiveWindow(vsSaveChanges save) {
+            App.Dte.ActiveWindow.Close(vsSaveChanges.vsSaveChangesNo);
+        }
+
+        ITreeNode IVisualStudioInstance.WaitForItem(params string[] items) {
+            var res = WaitForItem(items);
+            if (res != null) {
+                return new TreeNode(res);
+            }
+            return null;
+        }
+
+        public void Type(Key key) {
+            Keyboard.Type(key);
+        }
+
+        public void ControlC() {
+            Keyboard.ControlC();
+        }
+
+        public void ControlX() {
+            Keyboard.ControlX();
+        }
+
+        public void Type(string p) {
+            Keyboard.Type(p);
+        }
+
+        public void ControlV() {
+            Keyboard.ControlV();
+        }
+
+        public void CheckMessageBox(params string[] text) {
+            VisualStudioApp.CheckMessageBox(text);
+        }
+
+        public void CheckMessageBox(MessageBoxButton button, params string[] text) {
+            VisualStudioApp.CheckMessageBox(button, text);
+        }
+
+        public void Sleep(int ms) {
+            Thread.Sleep(ms);
+        }
+
+        public void WaitForOutputWindowText(string name, string containsText, int timeout = 5000) {
+            App.WaitForOutputWindowText(name, containsText, timeout);
+        }
+
+        public IntPtr OpenDialogWithDteExecuteCommand(string commandName, string commandArgs = "") {
+            return App.OpenDialogWithDteExecuteCommand(commandName, commandArgs);
+        }
+
+        public Project GetProject(string projectName) {
+            return App.GetProject(projectName);
+        }
+
+        public void SelectProject(Project project) {
+            SolutionExplorer.SelectProject(project);
+        }
+
+        public IEditor GetDocument(string filename) {
+            return App.GetDocument(filename);
+        }
+
+        public IAddExistingItem AddExistingItem() {
+            return AddExistingItemDialog.FromDte(App);
+        }
+
+        public IOverwriteFile WaitForOverwriteFileDialog() {
+            return OverwriteFileDialog.Wait(App);
         }
     }
 }

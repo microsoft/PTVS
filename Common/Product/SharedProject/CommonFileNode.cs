@@ -133,17 +133,17 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <summary>
         /// Gets the text buffer for the file opening the document if necessary.
         /// </summary>
-        public ITextBuffer GetTextBuffer() {
+        public ITextBuffer GetTextBuffer(bool create = true) {
             // http://pytools.codeplex.com/workitem/672
             // When we FindAndLockDocument we marshal on the main UI thread, and the docdata we get
             // back is marshalled back so that we'll marshal any calls on it back.  When we pass it
             // into IVsEditorAdaptersFactoryService we don't go through a COM boundary (it's a managed
             // call) and we therefore don't get the marshaled value, and it doesn't know what we're
             // talking about.  So run the whole operation on the UI thread.
-            return UIThread.Invoke(() => GetTextBufferOnUIThread());
+            return UIThread.Invoke(() => GetTextBufferOnUIThread(create));
         }
 
-        private ITextBuffer GetTextBufferOnUIThread() {
+        private ITextBuffer GetTextBufferOnUIThread(bool create) {
             IVsTextManager textMgr = (IVsTextManager)GetService(typeof(SVsTextManager));
             var model = GetService(typeof(SComponentModel)) as IComponentModel;
             var adapter = model.GetService<IVsEditorAdaptersFactoryService>();
@@ -161,6 +161,9 @@ namespace Microsoft.VisualStudioTools.Project {
                     //Getting a read lock on the document. Must be released later.
                     hr = rdt.FindAndLockDocument((uint)_VSRDTFLAGS.RDT_ReadLock, GetMkDocument(), out hier, out itemid, out docData, out cookie);
                     if (ErrorHandler.Failed(hr) || docData == IntPtr.Zero) {
+                        if (!create) {
+                            return null;
+                        }
                         Guid iid = VSConstants.IID_IUnknown;
                         cookie = 0;
                         docInRdt = false;

@@ -223,6 +223,14 @@ namespace TestUtilities.UI {
 
         #region Pattern Helpers
 
+        private static void CheckNullElement(ITreeNode element) {
+            if (element == null) {
+                Console.WriteLine("Attempting to invoke pattern on null node");
+                AutomationWrapper.DumpVS();
+                throw new InvalidOperationException();
+            }
+        }
+
         private static void CheckNullElement(AutomationElement element) {
             if (element == null) {
                 Console.WriteLine("Attempting to invoke pattern on null element");
@@ -248,6 +256,17 @@ namespace TestUtilities.UI {
             selectionItem.GetSelectionItemPattern().Select();
         }
 
+        public static void Select(ITreeNode selectionItem) {
+            if (selectionItem == null) {
+                if (!VSTestContext.IsMock) {
+                    CheckNullElement(selectionItem);
+                } else {
+                    throw new InvalidOperationException("Cannot select null element");
+                }
+            }
+            selectionItem.Select();
+        }
+
         public static void DoDefaultAction(AutomationElement element) {
             CheckNullElement(element);
             var accessible = NativeMethods.GetAccessibleObject(element);
@@ -263,6 +282,10 @@ namespace TestUtilities.UI {
             CheckNullElement(selectionItem);
             var selectPattern = (SelectionItemPattern)selectionItem.GetCurrentPattern(SelectionItemPattern.Pattern);
             selectPattern.AddToSelection();
+        }
+
+        public static void AddToSelection(ITreeNode selectionItem) {
+            selectionItem.AddToSelection();
         }
 
         /// <summary>

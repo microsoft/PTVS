@@ -15,6 +15,7 @@
 using System;
 using System.ComponentModel.Composition;
 using Microsoft.VisualStudio.Editor;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
 using TestUtilities.Mocks;
@@ -23,6 +24,13 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
     [Export(typeof(MockVsEditorAdaptersFactoryService))]
     [Export(typeof(IVsEditorAdaptersFactoryService))]
     class MockVsEditorAdaptersFactoryService : IVsEditorAdaptersFactoryService {
+        private readonly IServiceProvider _serviceProvider;
+        
+        [ImportingConstructor]
+        public MockVsEditorAdaptersFactoryService([Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider) {
+            _serviceProvider = serviceProvider;
+        }
+        
         public VisualStudio.TextManager.Interop.IVsCodeWindow CreateVsCodeWindowAdapter(Microsoft.VisualStudio.OLE.Interop.IServiceProvider serviceProvider) {
             throw new NotImplementedException();
         }
@@ -54,7 +62,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         public VisualStudio.TextManager.Interop.IVsTextBuffer GetBufferAdapter(VisualStudio.Text.ITextBuffer textBuffer) {
             MockVsTextLines textLines;
             if (!textBuffer.Properties.TryGetProperty<MockVsTextLines>(typeof(MockVsTextLines), out textLines)) {
-                textBuffer.Properties[typeof(MockVsTextLines)] = textLines = new MockVsTextLines((MockTextBuffer)textBuffer);
+                textBuffer.Properties[typeof(MockVsTextLines)] = textLines = new MockVsTextLines(_serviceProvider, (MockTextBuffer)textBuffer);
             }
             return textLines;
         }

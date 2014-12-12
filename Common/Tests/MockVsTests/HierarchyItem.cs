@@ -51,6 +51,15 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             }
         }
 
+        public string EditLabel {
+            get {
+                return GetProperty((int)__VSHPROPID.VSHPROPID_EditLabel) as string;
+            }
+            set {
+                Hierarchy.SetProperty(ItemId, (int)__VSHPROPID.VSHPROPID_EditLabel, value);
+            }
+        }
+
         public string Name {
             get {
                 return GetProperty((int)__VSHPROPID.VSHPROPID_Name) as string;

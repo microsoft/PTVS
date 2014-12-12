@@ -65,6 +65,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     var server2 = solution.WaitForItem("HelloWorld", "server2" + projectType.CodeExtension);
 
                     mover(
+                        solution,
                         solution.WaitForItem("HelloWorld", "SubFolder"),
                         solution.WaitForItem("HelloWorld", "server" + projectType.CodeExtension),
                         solution.WaitForItem("HelloWorld", "server2" + projectType.CodeExtension)
@@ -77,19 +78,20 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     solution.SelectSolutionNode();
 
                     mover(
+                        solution,
                         solution.WaitForItem("HelloWorld", "SubFolder"),
                         solution.WaitForItem("HelloWorld", "server" + projectType.CodeExtension),
                         solution.WaitForItem("HelloWorld", "server2" + projectType.CodeExtension)
                     );
 
                     // paste again, we should get the replace prompts...
-                    using (var dialog = OverwriteFileDialog.Wait(solution.App)) {
+                    using (var dialog = solution.WaitForOverwriteFileDialog()) {
                         dialog.Cancel();
                     }
 
                     // https://pytools.codeplex.com/workitem/1154
                     // and we shouldn't get a second dialog after cancelling...
-                    solution.App.WaitForDialogDismissed();
+                    solution.WaitForDialogDismissed();
                 }
             }
         }
@@ -115,14 +117,14 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     var file = solution.WaitForItem("DragDropCopyCutPaste", "CutPastePasteItem" + projectType.CodeExtension);
                     AutomationWrapper.Select(file);
 
-                    Keyboard.ControlX();
+                    solution.ControlX();
 
                     AutomationWrapper.Select(folder);
-                    Keyboard.ControlV();
+                    solution.ControlV();
                     solution.AssertFileExists("DragDropCopyCutPaste", "PasteFolder", "CutPastePasteItem" + projectType.CodeExtension);
 
                     AutomationWrapper.Select(project);
-                    Keyboard.ControlV();
+                    solution.ControlV();
 
                     System.Threading.Thread.Sleep(1000);
 
@@ -151,7 +153,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     var file = solution.WaitForItem("DragDropCopyCutPaste", "CutRenamePaste", "CutRenamePaste" + projectType.CodeExtension);
 
                     AutomationWrapper.Select(file);
-                    Keyboard.ControlX();
+                    solution.ControlX();
 
                     AutomationWrapper.Select(file);
                     Keyboard.Type(Key.F2);
@@ -160,7 +162,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                     System.Threading.Thread.Sleep(1000);
                     AutomationWrapper.Select(project);
-                    Keyboard.ControlV();
+                    solution.ControlV();
 
                     VisualStudioApp.CheckMessageBox("The source URL 'CutRenamePaste" + projectType.CodeExtension + "' could not be found.");
                 }
@@ -187,12 +189,12 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     var file = solution.WaitForItem("DragDropCopyCutPaste", "CutDeletePaste", "CutDeletePaste" + projectType.CodeExtension);
 
                     AutomationWrapper.Select(file);
-                    Keyboard.ControlX();
+                    solution.ControlX();
 
-                    File.Delete(Path.Combine(solution.Directory, @"DragDropCopyCutPaste\CutDeletePaste\CutDeletePaste" + projectType.CodeExtension));
+                    File.Delete(Path.Combine(solution.SolutionDirectory, @"DragDropCopyCutPaste\CutDeletePaste\CutDeletePaste" + projectType.CodeExtension));
 
                     AutomationWrapper.Select(project);
-                    Keyboard.ControlV();
+                    solution.ControlV();
 
                     VisualStudioApp.CheckMessageBox("The item 'CutDeletePaste" + projectType.CodeExtension + "' does not exist in the project directory. It may have been moved, renamed or deleted.");
 
@@ -243,12 +245,12 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     var serverNode = solution.WaitForItem("LFN", "server" + projectType.CodeExtension);
                     AutomationWrapper.Select(serverNode);
                     Keyboard.ControlC();
-                    Keyboard.ControlV();
+                    solution.ControlV();
 
                     var serverCopy = solution.WaitForItem("LFN", "server - Copy" + projectType.CodeExtension);
                     Assert.IsNotNull(serverCopy);
 
-                    copier(folderNode, serverCopy);
+                    copier(solution, folderNode, serverCopy);
 
                     // Depending on VS version/update, the message may be:
                     //  "The filename is too long."
@@ -300,12 +302,12 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     var serverNode = solution.FindItem("LFN", "server" + projectType.CodeExtension);
                     AutomationWrapper.Select(serverNode);
                     Keyboard.ControlC();
-                    Keyboard.ControlV();
+                    solution.ControlV();
 
                     var serverCopy = solution.WaitForItem("LFN", "server - Copy" + projectType.CodeExtension);
                     Assert.IsNotNull(serverCopy);
 
-                    mover(folderNode, serverCopy);
+                    mover(solution, folderNode, serverCopy);
 
                     // Depending on VS version/update, the message may be:
                     //  "The filename is too long."
@@ -334,7 +336,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     var project = solution.WaitForItem("DragDropCopyCutPaste");
                     var file = solution.WaitForItem("DragDropCopyCutPaste", "CutRenamePaste", "CutRenamePasteFolder");
                     AutomationWrapper.Select(file);
-                    Keyboard.ControlX();
+                    solution.ControlX();
 
                     Keyboard.Type(Key.F2);
                     Keyboard.Type("CutRenamePasteFolderNewName");
@@ -342,7 +344,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     System.Threading.Thread.Sleep(1000);
 
                     AutomationWrapper.Select(project);
-                    Keyboard.ControlV();
+                    solution.ControlV();
 
                     VisualStudioApp.CheckMessageBox("The source URL 'CutRenamePasteFolder' could not be found.");
                 }
@@ -380,13 +382,14 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     Keyboard.ControlC();
 
                     MoveByMouse(
+                        solution,
                         dragFolder,
                         draggedFile
                     );
 
                     var folder = solution.WaitForItem("DragDropCopyCutPaste", "PasteFolder");
                     AutomationWrapper.Select(folder);
-                    Keyboard.ControlV();
+                    solution.ControlV();
 
                     solution.AssertFileExists("DragDropCopyCutPaste", "PasteFolder", "CopiedBeforeDragPastedAfterDrop" + projectType.CodeExtension);
                     solution.AssertFileExists("DragDropCopyCutPaste", "CopiedBeforeDragPastedAfterDrop" + projectType.CodeExtension);
@@ -431,6 +434,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                 using (var solution = SolutionFile.Generate("DragDropCopyCutPaste", projects).ToVs()) {
                     mover(
+                        solution,
                         solution.WaitForItem("ConsoleApplication1"),
                         solution.WaitForItem("DragDropCopyCutPaste", "!Source", "DraggedToOtherProject" + projectType.CodeExtension)
                     );
@@ -458,6 +462,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                 using (var solution = testDef.Generate().ToVs()) {
                     MoveByKeyboard(
+                        solution,
                         solution.WaitForItem("DragDropCopyCutPaste", "CutFolderPasteOnSelf"),
                         solution.WaitForItem("DragDropCopyCutPaste", "CutFolderPasteOnSelf")
                     );
@@ -489,12 +494,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     var draggedFolder = solution.WaitForItem("DragDropCopyCutPaste", "DragFolderOntoSelf");
                     AutomationWrapper.Select(draggedFolder);
 
-                    var point = draggedFolder.GetClickablePoint();
-                    Mouse.MoveTo(point);
-                    Mouse.Down(MouseButton.Left);
-                    Mouse.MoveTo(new Point(point.X + 1, point.Y + 1));
-
-                    Mouse.Up(MouseButton.Left);
+                    draggedFolder.DragOntoThis(draggedFolder);
 
                     solution.AssertFolderExists("DragDropCopyCutPaste", "DragFolderOntoSelf");
                     solution.AssertFileExists("DragDropCopyCutPaste", "DragFolderOntoSelf", "File" + projectType.CodeExtension);
@@ -521,12 +521,13 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                 using (var solution = testDef.Generate().ToVs()) {
                     MoveByMouse(
+                        solution,
                         solution.WaitForItem("DragDropCopyCutPaste", "ParentFolder", "ChildFolder"),
                         solution.WaitForItem("DragDropCopyCutPaste", "ParentFolder")
                     );
 
                     VisualStudioApp.CheckMessageBox("Cannot move 'ParentFolder'. The destination folder is a subfolder of the source folder.");
-                    solution.App.WaitForDialogDismissed();
+                    solution.WaitForDialogDismissed();
 
                     var draggedFolder = solution.FindItem("DragDropCopyCutPaste", "ParentFolder");
                     Assert.IsNotNull(draggedFolder);
@@ -558,11 +559,12 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                 using (var solution = testDef.Generate().ToVs()) {
                     MoveByKeyboard(
+                        solution,
                         solution.WaitForItem("DragDropCopyCutPaste", "MoveDupFilename"),
                         solution.WaitForItem("DragDropCopyCutPaste", "MoveDupFilename", "Fob", "server" + projectType.CodeExtension)
                     );
 
-                    using (var dialog = OverwriteFileDialog.Wait(solution.App)) {
+                    using (var dialog = solution.WaitForOverwriteFileDialog()) {
                         dialog.Yes();
                     }
 
@@ -593,9 +595,9 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     AutomationWrapper.Select(folder);
                     AutomationWrapper.AddToSelection(file);
 
-                    Keyboard.ControlX();
+                    solution.ControlX();
                     AutomationWrapper.Select(dest);
-                    Keyboard.ControlV();
+                    solution.ControlV();
 
                     solution.AssertFileExists("DragDropCopyCutPaste", "CutFolder", "CutFolderAndFile" + projectType.CodeExtension);
                     solution.AssertFileDoesntExist("DragDropCopyCutPaste", "CutFolderAndFile", "CutFolder");
@@ -620,6 +622,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                 using (var solution = testDef.Generate().ToVs()) {
                     MoveByKeyboard(
+                        solution,
                         solution.WaitForItem("DragDropCopyCutPaste"),
                         solution.WaitForItem("DragDropCopyCutPaste", "CutFilePasteSameLocation" + projectType.CodeExtension)
                     );
@@ -651,6 +654,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                 using (var solution = testDef.Generate().ToVs()) {
                     var folder = solution.WaitForItem("DragDropCopyCutPaste", "DragFolderAndFileOntoSelf");
                     DragAndDrop(
+                        solution,
                         folder,
                         folder,
                         solution.WaitForItem("DragDropCopyCutPaste", "DragFolderAndFileOntoSelf", "File" + projectType.CodeExtension)
@@ -690,6 +694,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                 using (var solution = SolutionFile.Generate("DragDropCopyCutPaste", projects).ToVs()) {
                     CopyByKeyboard(
+                        solution,
                         solution.WaitForItem("DragDropCopyCutPaste"),
                         solution.WaitForItem("ConsoleApplication1", "CopiedFolderWithItemsNotInProject")
                     );
@@ -724,12 +729,12 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                     AutomationWrapper.Select(file);
                     Keyboard.Type(Key.Delete);
-                    solution.App.WaitForDialog();
+                    solution.WaitForDialog();
 
                     Keyboard.Type("\r");
 
                     AutomationWrapper.Select(project);
-                    Keyboard.ControlV();
+                    solution.ControlV();
 
                     VisualStudioApp.CheckMessageBox("The source URL 'CopyDeletePaste" + projectType.CodeExtension + "' could not be found.");
                 }
@@ -772,6 +777,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                 using (var solution = SolutionFile.Generate("DragDropCopyCutPaste", projects).ToVs()) {
                     mover(
+                        solution,
                         solution.WaitForItem("DragDropCopyCutPaste", "DropFolder"),
                         solution.WaitForItem("ConsoleApplication1", "CrossHierarchyFileDragAndDrop.cs")
                     );
@@ -810,6 +816,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                 using (var solution = testDef.Generate().ToVs()) {
                     mover(
+                        solution,
                         solution.WaitForItem("DragDropCopyCutPaste", "DuplicateFolderNameTarget"),
                         solution.WaitForItem("DragDropCopyCutPaste", "DuplicateFolderName")
                     );
@@ -848,11 +855,12 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                 using (var solution = testDef.Generate().ToVs()) {
                     mover(
+                        solution,
                         solution.WaitForItem("DragDropCopyCutPaste", "CopyDuplicateFolderNameTarget"),
                         solution.WaitForItem("DragDropCopyCutPaste", "CopyDuplicateFolderName")
                     );
 
-                    using (var dialog = OverwriteFileDialog.Wait(solution.App)) {
+                    using (var dialog = solution.WaitForOverwriteFileDialog()) {
                         AssertUtil.Contains(dialog.Text, "This folder already contains a folder called 'CopyDuplicateFolderName'");
                         dialog.No();
                     }
@@ -899,6 +907,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                 using (var solution = SolutionFile.Generate("DragDropCopyCutPaste", projects).ToVs()) {
                     mover(
+                        solution,
                         solution.WaitForItem("DragDropCopyCutPaste"),
                         solution.WaitForItem("ConsoleApplication1", "CrossHierarchyCut.cs")
                     );
@@ -953,12 +962,13 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                 using (var solution = project.Generate().ToVs()) {
                     mover(
+                        solution,
                         solution.WaitForItem("DragDropCopyCutPaste", "B"),
                         solution.WaitForItem("DragDropCopyCutPaste", "A", "quox.txt"),
                         solution.WaitForItem("DragDropCopyCutPaste", "quox.txt")
                     );
 
-                    using (var dialog = OverwriteFileDialog.Wait(solution.App)) {
+                    using (var dialog = solution.WaitForOverwriteFileDialog()) {
                         AssertUtil.Contains(dialog.Text, "A file with the same name 'quox.txt' already exists.");
                         dialog.Yes();
                     }
@@ -967,7 +977,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     solution.AssertFileDoesntExist("DragDropCopyCutPaste", "quox.txt");
                     solution.AssertFileDoesntExist("DragDropCopyCutPaste", "A", "quox.txt");
 
-                    Assert.AreEqual(1, solution.Project.ProjectItems.Item("B").ProjectItems.Count);
+                    Assert.AreEqual(1, solution.GetProject("DragDropCopyCutPaste").ProjectItems.Item("B").ProjectItems.Count);
                 }
             }
         }
@@ -1006,13 +1016,14 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                 using (var solution = project.Generate().ToVs()) {
                     mover(
+                        solution,
                         solution.WaitForItem("DragDropCopyCutPaste", "B"),
                         solution.WaitForItem("DragDropCopyCutPaste", "A", "quox.txt"),
                         solution.WaitForItem("DragDropCopyCutPaste", "C", "quox.txt"),
                         solution.WaitForItem("DragDropCopyCutPaste", "quox.txt")
                     );
 
-                    using (var dialog = OverwriteFileDialog.Wait(solution.App)) {
+                    using (var dialog = solution.WaitForOverwriteFileDialog()) {
                         AssertUtil.Contains(dialog.Text, "A file with the same name 'quox.txt' already exists.");
                         dialog.AllItems = true;
                         dialog.Yes();
@@ -1023,7 +1034,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     solution.AssertFileDoesntExist("DragDropCopyCutPaste", "A", "quox.txt");
                     solution.AssertFileDoesntExist("DragDropCopyCutPaste", "C", "quox.txt");
 
-                    Assert.AreEqual(1, solution.Project.ProjectItems.Item("B").ProjectItems.Count);
+                    Assert.AreEqual(1, solution.GetProject("DragDropCopyCutPaste").ProjectItems.Item("B").ProjectItems.Count);
                 }
             }
         }
@@ -1061,12 +1072,13 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                 using (var solution = project.Generate().ToVs()) {
                     mover(
+                        solution,
                         solution.WaitForItem("DragDropCopyCutPaste", "B"),
                         solution.WaitForItem("DragDropCopyCutPaste", "A", "quox.txt"),
                         solution.WaitForItem("DragDropCopyCutPaste", "quox.txt")
                     );
 
-                    using (var dialog = OverwriteFileDialog.Wait(solution.App)) {
+                    using (var dialog = solution.WaitForOverwriteFileDialog()) {
                         AssertUtil.Contains(dialog.Text, "A file with the same name 'quox.txt' already exists.");
                         dialog.No();
                     }
@@ -1079,7 +1091,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                         solution.AssertFileExists("DragDropCopyCutPaste", "A", "quox.txt");
                     }
 
-                    Assert.AreEqual(1, solution.Project.ProjectItems.Item("B").ProjectItems.Count);
+                    Assert.AreEqual(1, solution.GetProject("DragDropCopyCutPaste").ProjectItems.Item("B").ProjectItems.Count);
                 }
             }
         }
@@ -1119,32 +1131,33 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                 using (var solution = project.Generate().ToVs()) {
                     mover(
+                        solution,
                         solution.WaitForItem("DragDropCopyCutPaste", "B"),
                         solution.WaitForItem("DragDropCopyCutPaste", "A", "quox.txt"),
                         solution.WaitForItem("DragDropCopyCutPaste", "C", "quox.txt"),
                         solution.WaitForItem("DragDropCopyCutPaste", "quox.txt")
                     );
 
-                    using (var dialog = OverwriteFileDialog.Wait(solution.App)) {
+                    using (var dialog = solution.WaitForOverwriteFileDialog()) {
                         AssertUtil.Contains(dialog.Text, "A file with the same name 'quox.txt' already exists.");
                         dialog.No();
                     }
 
                     System.Threading.Thread.Sleep(1000);
 
-                    using (var dialog = OverwriteFileDialog.Wait(solution.App)) {
+                    using (var dialog = solution.WaitForOverwriteFileDialog()) {
                         AssertUtil.Contains(dialog.Text, "A file with the same name 'quox.txt' already exists.");
                         dialog.No();
                     }
 
                     solution.AssertFileExists("DragDropCopyCutPaste", "B", "quox.txt");
-                    int totalCount = solution.Project.ProjectItems.Item("A").ProjectItems.Count +
-                        solution.Project.ProjectItems.Item("B").ProjectItems.Count +
-                        solution.Project.ProjectItems.Item("C").ProjectItems.Count +
-                        solution.Project.ProjectItems.Cast<EnvDTE.ProjectItem>().Where(IsFile).Count();
+                    int totalCount = solution.GetProject("DragDropCopyCutPaste").ProjectItems.Item("A").ProjectItems.Count +
+                        solution.GetProject("DragDropCopyCutPaste").ProjectItems.Item("B").ProjectItems.Count +
+                        solution.GetProject("DragDropCopyCutPaste").ProjectItems.Item("C").ProjectItems.Count +
+                        solution.GetProject("DragDropCopyCutPaste").ProjectItems.Cast<EnvDTE.ProjectItem>().Where(IsFile).Count();
 
                     Assert.AreEqual(3, totalCount);
-                    Assert.AreEqual(1, solution.Project.ProjectItems.Item("B").ProjectItems.Count);
+                    Assert.AreEqual(1, solution.GetProject("DragDropCopyCutPaste").ProjectItems.Item("B").ProjectItems.Count);
                 }
             }
         }
@@ -1183,28 +1196,29 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                 using (var solution = project.Generate().ToVs()) {
                     mover(
+                        solution,
                         solution.WaitForItem("DragDropCopyCutPaste", "B"),
                         solution.WaitForItem("DragDropCopyCutPaste", "A", "quox.txt"),
                         solution.WaitForItem("DragDropCopyCutPaste", "C", "quox.txt"),
                         solution.WaitForItem("DragDropCopyCutPaste", "quox.txt")
                     );
 
-                    using (var dialog = OverwriteFileDialog.Wait(solution.App)) {
+                    using (var dialog = solution.WaitForOverwriteFileDialog()) {
                         AssertUtil.Contains(dialog.Text, "A file with the same name 'quox.txt' already exists.");
                         dialog.AllItems = true;
                         dialog.No();
                     }
 
-                    solution.App.WaitForDialogDismissed();
+                    solution.WaitForDialogDismissed();
 
                     solution.AssertFileExists("DragDropCopyCutPaste", "B", "quox.txt");
-                    int totalCount = solution.Project.ProjectItems.Item("A").ProjectItems.Count +
-                        solution.Project.ProjectItems.Item("B").ProjectItems.Count +
-                        solution.Project.ProjectItems.Item("C").ProjectItems.Count +
-                        solution.Project.ProjectItems.Cast<EnvDTE.ProjectItem>().Where(IsFile).Count();
+                    int totalCount = solution.GetProject("DragDropCopyCutPaste").ProjectItems.Item("A").ProjectItems.Count +
+                        solution.GetProject("DragDropCopyCutPaste").ProjectItems.Item("B").ProjectItems.Count +
+                        solution.GetProject("DragDropCopyCutPaste").ProjectItems.Item("C").ProjectItems.Count +
+                        solution.GetProject("DragDropCopyCutPaste").ProjectItems.Cast<EnvDTE.ProjectItem>().Where(IsFile).Count();
 
                     Assert.AreEqual(3, totalCount);
-                    Assert.AreEqual(1, solution.Project.ProjectItems.Item("B").ProjectItems.Count);
+                    Assert.AreEqual(1, solution.GetProject("DragDropCopyCutPaste").ProjectItems.Item("B").ProjectItems.Count);
                 }
             }
         }
@@ -1244,27 +1258,28 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                 using (var solution = project.Generate().ToVs()) {
                     mover(
+                        solution,
                         solution.WaitForItem("DragDropCopyCutPaste", "B"),
                         solution.WaitForItem("DragDropCopyCutPaste", "A", "quox.txt"),
                         solution.WaitForItem("DragDropCopyCutPaste", "C", "quox.txt"),
                         solution.WaitForItem("DragDropCopyCutPaste", "quox.txt")
                     );
 
-                    using (var dialog = OverwriteFileDialog.Wait(solution.App)) {
+                    using (var dialog = solution.WaitForOverwriteFileDialog()) {
                         AssertUtil.Contains(dialog.Text, "A file with the same name 'quox.txt' already exists.");
                         dialog.Cancel();
                     }
 
-                    solution.App.WaitForDialogDismissed();
+                    solution.WaitForDialogDismissed();
 
                     solution.AssertFileExists("DragDropCopyCutPaste", "B", "quox.txt");
-                    int totalCount = solution.Project.ProjectItems.Item("A").ProjectItems.Count +
-                        solution.Project.ProjectItems.Item("B").ProjectItems.Count +
-                        solution.Project.ProjectItems.Item("C").ProjectItems.Count +
-                        solution.Project.ProjectItems.Cast<EnvDTE.ProjectItem>().Where(IsFile).Count();
+                    int totalCount = solution.GetProject("DragDropCopyCutPaste").ProjectItems.Item("A").ProjectItems.Count +
+                        solution.GetProject("DragDropCopyCutPaste").ProjectItems.Item("B").ProjectItems.Count +
+                        solution.GetProject("DragDropCopyCutPaste").ProjectItems.Item("C").ProjectItems.Count +
+                        solution.GetProject("DragDropCopyCutPaste").ProjectItems.Cast<EnvDTE.ProjectItem>().Where(IsFile).Count();
 
                     Assert.AreEqual(3, totalCount);
-                    Assert.AreEqual(1, solution.Project.ProjectItems.Item("B").ProjectItems.Count);
+                    Assert.AreEqual(1, solution.GetProject("DragDropCopyCutPaste").ProjectItems.Item("B").ProjectItems.Count);
                 }
             }
         }
@@ -1298,6 +1313,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                 using (var solution = SolutionFile.Generate("DragDropCopyCutPaste", projects).ToVs()) {
                     mover(
+                        solution,
                         solution.WaitForItem("ConsoleApplication1"),
                         solution.WaitForItem("DragDropCopyCutPaste", "CrossHierarchyCut" + projectType.CodeExtension)
                     );
@@ -1336,6 +1352,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                 using (var solution = SolutionFile.Generate("DragDropCopyCutPaste", projects).ToVs()) {
                     DragAndDrop(
+                        solution,
                         solution.WaitForItem("ConsoleApplication1"),
                         solution.WaitForItem("DragDropCopyCutPaste", "!Source", "DoubleCrossHierarchy" + projectType.CodeExtension)
                     );
@@ -1344,6 +1361,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     solution.AssertFileExists("DragDropCopyCutPaste", "!Source", "DoubleCrossHierarchy" + projectType.CodeExtension);
 
                     DragAndDrop(
+                        solution,
                         solution.FindItem("DragDropCopyCutPaste"),
                         solution.FindItem("ConsoleApplication1", "DoubleCrossHierarchy.cs")
                     );
@@ -1379,12 +1397,13 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                 using (var solution = SolutionFile.Generate("DragDropCopyCutPaste", projects).ToVs()) {
                     for (int i = 0; i < 2; i++) {
                         DragAndDrop(
+                            solution,
                             solution.WaitForItem("DragDropCopyCutPaste"),
                             solution.WaitForItem("ConsoleApplication1", "DragTwiceAndOverwrite.cs")
                         );
                     }
 
-                    using (var dialog = OverwriteFileDialog.Wait(solution.App)) {
+                    using (var dialog = solution.WaitForOverwriteFileDialog()) {
                         AssertUtil.Contains(dialog.Text, "A file with the same name 'DragTwiceAndOverwrite.cs' already exists.");
                         dialog.Yes();
                     }
@@ -1413,6 +1432,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                 using (var solution = testDef.Generate().ToVs()) {
                     CopyByKeyboard(
+                        solution,
                         solution.WaitForItem("DragDropCopyCutPaste", "PasteFolder"),
                         solution.WaitForItem("DragDropCopyCutPaste", "CopyFolderMissingItem")
                     );
@@ -1446,6 +1466,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                 using (var solution = testDef.Generate().ToVs()) {
                     CopyByKeyboard(
+                        solution,
                         solution.WaitForItem("DragDropCopyCutPaste", "PasteFolder"),
                         solution.WaitForItem("DragDropCopyCutPaste", "MissingFile" + projectType.CodeExtension)
                     );
@@ -1475,6 +1496,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                 using (var solution = testDef.Generate().ToVs()) {
                     MoveByKeyboard(
+                        solution,
                         solution.FindItem("DragDropCopyCutPaste", "PasteFolder"),
                         solution.FindItem("DragDropCopyCutPaste", "FolderCollision")
                     );
@@ -1505,6 +1527,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                 using (var solution = testDef.Generate().ToVs()) {
                     MoveByKeyboard(
+                        solution,
                         solution.FindItem("FolderWithContentsProj", "C"),
                         solution.FindItem("FolderWithContentsProj", "A", "B")
                     );
@@ -1543,6 +1566,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                 using (var solution = SolutionFile.Generate("DragDropCopyCutPaste", projects).ToVs()) {
                     mover(
+                        solution,
                         solution.WaitForItem("SolFolder"),
                         solution.WaitForItem("DragDropCopyCutPaste")
                     );
@@ -1583,16 +1607,17 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                 };
 
                 using (var solution = SolutionFile.Generate("CopyReadOnlyFile", projects).ToVs()) {
-                    var classFile = Path.Combine(solution.Directory, "CopyReadOnlyFile", "Class" + projectType.CodeExtension);
+                    var classFile = Path.Combine(solution.SolutionDirectory, "CopyReadOnlyFile", "Class" + projectType.CodeExtension);
                     Assert.IsTrue(File.Exists(classFile));
                     File.SetAttributes(classFile, FileAttributes.ReadOnly | FileAttributes.Archive);
                     Assert.IsTrue(File.GetAttributes(classFile).HasFlag(FileAttributes.ReadOnly));
                     Assert.IsTrue(File.GetAttributes(classFile).HasFlag(FileAttributes.Archive));
 
-                    var classCopyFile = Path.Combine(solution.Directory, "CopyReadOnlyFile", "Class - Copy" + projectType.CodeExtension);
+                    var classCopyFile = Path.Combine(solution.SolutionDirectory, "CopyReadOnlyFile", "Class - Copy" + projectType.CodeExtension);
                     Assert.IsFalse(File.Exists(classCopyFile));
 
                     mover(
+                        solution,
                         solution.WaitForItem("CopyReadOnlyFile"),
                         solution.WaitForItem("CopyReadOnlyFile", "Class" + projectType.CodeExtension)
                     );
@@ -1637,6 +1662,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                 using (var solution = SolutionFile.Generate("MoveLinkedFolder", projectDefs).ToVs()) {
                     copier(
+                        solution,
                         solution.FindItem("MoveLinkedFolder", "FolderLink"),
                         solution.FindItem("MoveLinkedFolder", "Folder", "FileInFolder.txt"));
 
@@ -1651,70 +1677,45 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        internal delegate void MoveDelegate(AutomationElement destination, params AutomationElement[] source);
+        internal delegate void MoveDelegate(IVisualStudioInstance vs, ITreeNode destination, params ITreeNode[] source);
 
         /// <summary>
         /// Moves one or more items in solution explorer to the destination using the mouse.
         /// </summary>
-        internal static void MoveByMouse(AutomationElement destination, params AutomationElement[] source) {
-            SelectItemsForDragAndDrop(source);
-
-            try {
-                try {
-                    Keyboard.Press(Key.LeftShift);
-                    Mouse.MoveTo(destination.GetClickablePoint());
-                } finally {
-                    Mouse.Up(MouseButton.Left);
-                }
-            } finally {
-                Keyboard.Release(Key.LeftShift);
-            }
+        internal static void MoveByMouse(IVisualStudioInstance vs, ITreeNode destination, params ITreeNode[] source) {
+            destination.DragOntoThis(Key.LeftShift, source);
         }
 
         /// <summary>
         /// Moves or copies (taking the default behavior) one or more items in solution explorer to 
         /// the destination using the mouse.
         /// </summary>
-        private static void DragAndDrop(AutomationElement destination, params AutomationElement[] source) {
-            SelectItemsForDragAndDrop(source);
-
-            try {
-                Mouse.MoveTo(destination.GetClickablePoint());
-            } finally {
-                Mouse.Up(MouseButton.Left);
-            }
+        private static void DragAndDrop(IVisualStudioInstance vs, ITreeNode destination, params ITreeNode[] source) {
+            destination.DragOntoThis(source);
         }
 
         /// <summary>
         /// Moves one or more items in solution explorer to the destination using the mouse.
         /// </summary>
-        internal static void CopyByMouse(AutomationElement destination, params AutomationElement[] source) {
-            SelectItemsForDragAndDrop(source);
-
-            try {
-                try {
-                    Keyboard.Press(Key.LeftCtrl);
-                    Mouse.MoveTo(destination.GetClickablePoint());
-                } finally {
-                    Mouse.Up(MouseButton.Left);
-                }
-            } finally {
-                Keyboard.Release(Key.LeftCtrl);
-            }
+        internal static void CopyByMouse(IVisualStudioInstance vs, ITreeNode destination, params ITreeNode[] source) {
+            destination.DragOntoThis(Key.LeftCtrl, source);
         }
-
+        
         /// <summary>
-        /// Selects the provided items with the mouse preparing for a drag and drop
+        /// Moves one or more items in solution explorer using the keyboard to cut and paste.
         /// </summary>
+        /// <param name="destination"></param>
         /// <param name="source"></param>
-        private static void SelectItemsForDragAndDrop(AutomationElement[] source) {
+        internal static void MoveByKeyboard(IVisualStudioInstance vs, ITreeNode destination, params ITreeNode[] source) {
             AutomationWrapper.Select(source.First());
             for (int i = 1; i < source.Length; i++) {
                 AutomationWrapper.AddToSelection(source[i]);
             }
 
-            Mouse.MoveTo(source.Last().GetClickablePoint());
-            Mouse.Down(MouseButton.Left);
+            vs.ControlX();
+
+            AutomationWrapper.Select(destination);
+            vs.ControlV();
         }
 
         /// <summary>
@@ -1722,33 +1723,16 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         /// </summary>
         /// <param name="destination"></param>
         /// <param name="source"></param>
-        internal static void MoveByKeyboard(AutomationElement destination, params AutomationElement[] source) {
+        internal static void CopyByKeyboard(IVisualStudioInstance vs, ITreeNode destination, params ITreeNode[] source) {
             AutomationWrapper.Select(source.First());
             for (int i = 1; i < source.Length; i++) {
                 AutomationWrapper.AddToSelection(source[i]);
             }
 
-            Keyboard.ControlX();
+            vs.ControlC();
 
             AutomationWrapper.Select(destination);
-            Keyboard.ControlV();
-        }
-
-        /// <summary>
-        /// Moves one or more items in solution explorer using the keyboard to cut and paste.
-        /// </summary>
-        /// <param name="destination"></param>
-        /// <param name="source"></param>
-        internal static void CopyByKeyboard(AutomationElement destination, params AutomationElement[] source) {
-            AutomationWrapper.Select(source.First());
-            for (int i = 1; i < source.Length; i++) {
-                AutomationWrapper.AddToSelection(source[i]);
-            }
-
-            Keyboard.ControlC();
-
-            AutomationWrapper.Select(destination);
-            Keyboard.ControlV();
+            vs.ControlV();
         }
     }
 }

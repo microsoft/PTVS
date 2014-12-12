@@ -183,7 +183,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 if (wasCancelled) {
                     // cancelling an edit label doesn't result in the error
                     // being displayed, so we'll display one for the user.
-                    VsShellUtilities.ShowMessageBox(
+                    Utilities.ShowMessageBox(
                         ProjectMgr.Site,
                         null,
                         PathTooLongMessage,
@@ -489,7 +489,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 OLEMSGICON icon = OLEMSGICON.OLEMSGICON_CRITICAL;
                 OLEMSGBUTTON buttons = OLEMSGBUTTON.OLEMSGBUTTON_OK;
                 OLEMSGDEFBUTTON defaultButton = OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST;
-                VsShellUtilities.ShowMessageBox(this.ProjectMgr.Site, title, errorMessage, icon, buttons, defaultButton);
+                Utilities.ShowMessageBox(this.ProjectMgr.Site, title, errorMessage, icon, buttons, defaultButton);
                 return VSConstants.S_OK;
             } else {
                 throw new InvalidOperationException(errorMessage);

@@ -537,11 +537,9 @@ namespace Microsoft.PythonTools {
 
         internal event EventHandler<ComponentManagerEventArgs> OnIdle {
             add {
-                _idleManager.EnsureInit();
                 _idleManager.OnIdle += value;
             }
             remove {
-                _idleManager.EnsureInit();
                 _idleManager.OnIdle -= value;
             }
         }

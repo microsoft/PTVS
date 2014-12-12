@@ -16,10 +16,12 @@ using System;
 using System.ComponentModel.Composition;
 using System.ComponentModel.Design;
 using Microsoft.PythonTools;
+using Microsoft.PythonTools.Navigation;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.MockVsTests;
 using TestUtilities.Mocks;
 using TestUtilities.Python;
@@ -38,6 +40,7 @@ namespace PythonToolsMockTests {
             _serviceContainer.AddService(typeof(IPythonToolsOptionsService), new MockPythonToolsOptionsService());
             var errorProvider = new MockErrorProviderFactory();
             _serviceContainer.AddService(typeof(MockErrorProviderFactory), errorProvider, true);
+            _serviceContainer.AddService(typeof(IClipboardService), new MockClipboardService());
 
             _serviceContainer.AddService(
                 typeof(Microsoft.PythonTools.Intellisense.TaskProvider),
@@ -47,6 +50,8 @@ namespace PythonToolsMockTests {
 
             var pyService = new PythonToolsService(_serviceContainer);
             _serviceContainer.AddService(typeof(PythonToolsService), pyService, true);
+
+            _serviceContainer.AddService(typeof(IPythonLibraryManager), (object)null);
 
             // register our project factory...
             var regProjectTypes = (IVsRegisterProjectTypes)_serviceContainer.GetService(typeof(SVsRegisterProjectTypes));
