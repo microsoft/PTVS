@@ -209,7 +209,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
                 var codeWindow = new MockCodeWindow(serviceProvider, view);
                 view.Properties[typeof(MockCodeWindow)] = codeWindow;
                 if (ErrorHandler.Succeeded(langInfo.GetCodeWindowManager(codeWindow, out mgr))) {
-                    if(ErrorHandler.Failed(mgr.AddAdornments()) {
+                    if (ErrorHandler.Failed(mgr.AddAdornments())) {
                         Console.WriteLine("Failed to add adornments to text view");
                     }
                 }
