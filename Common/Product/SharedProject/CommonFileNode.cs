@@ -140,7 +140,7 @@ namespace Microsoft.VisualStudioTools.Project {
             // into IVsEditorAdaptersFactoryService we don't go through a COM boundary (it's a managed
             // call) and we therefore don't get the marshaled value, and it doesn't know what we're
             // talking about.  So run the whole operation on the UI thread.
-            return UIThread.Invoke(() => GetTextBufferOnUIThread(create));
+            return ProjectMgr.Site.GetUIThread().Invoke(() => GetTextBufferOnUIThread(create));
         }
 
         private ITextBuffer GetTextBufferOnUIThread(bool create) {

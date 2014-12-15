@@ -1692,7 +1692,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <param name="resetCache">True to avoid using the cache</param>
         /// <returns>null if property does not exist, otherwise value of the property</returns>
         public virtual string GetProjectProperty(string propertyName, bool resetCache) {
-            UIThread.MustBeCalledFromUIThread();
+            Site.GetUIThread().MustBeCalledFromUIThread();
 
             MSBuildExecution.ProjectPropertyInstance property = GetMsBuildProperty(propertyName, resetCache);
             if (property == null)
@@ -1708,7 +1708,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         /// <param name="propertyName">Name of the property to get</param>
         public virtual string GetUnevaluatedProperty(string propertyName) {
-            UIThread.MustBeCalledFromUIThread();
+            Site.GetUIThread().MustBeCalledFromUIThread();
 
             var res = this.buildProject.GetProperty(propertyName);
 
@@ -1725,7 +1725,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <param name="propertyValue">Value of property</param>
         public virtual void SetProjectProperty(string propertyName, string propertyValue) {
             Utilities.ArgumentNotNull("propertyName", propertyName);
-            UIThread.MustBeCalledFromUIThread();
+            Site.GetUIThread().MustBeCalledFromUIThread();
 
             var oldValue = GetUnevaluatedProperty(propertyName) ?? string.Empty;
             propertyValue = propertyValue ?? string.Empty;
@@ -2329,7 +2329,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// will reset the list of generated items/properties
         /// </remarks>
         protected virtual MSBuildResult InvokeMsBuild(string target) {
-            UIThread.MustBeCalledFromUIThread();
+            Site.GetUIThread().MustBeCalledFromUIThread();
 
             MSBuildResult result = MSBuildResult.Failed;
             const bool designTime = true;
@@ -2409,7 +2409,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 }
 
                 submission.ExecuteAsync(sub => {
-                    UIThread.Invoke(() => {
+                    Site.GetUIThread().Invoke(() => {
                         IDEBuildLogger ideLogger = this.buildLogger as IDEBuildLogger;
                         if (ideLogger != null) {
                             ideLogger.FlushBuildOutput();
@@ -2982,7 +2982,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// Overloaded method. Invokes MSBuild using the default configuration and does without logging on the output window pane.
         /// </summary>
         public MSBuildResult Build(string target) {
-            UIThread.MustBeCalledFromUIThread();
+            Site.GetUIThread().MustBeCalledFromUIThread();
 
             return this.Build(String.Empty, target);
         }
@@ -2993,7 +2993,7 @@ namespace Microsoft.VisualStudioTools.Project {
         ///  PrepareBuild mainly creates directories and cleans house if cleanBuild is true
         /// </summary>
         public virtual void PrepareBuild(string config, bool cleanBuild) {
-            UIThread.MustBeCalledFromUIThread();
+            Site.GetUIThread().MustBeCalledFromUIThread();
 
             try {
                 SetConfiguration(config);
@@ -3010,7 +3010,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// Do the build by invoking msbuild
         /// </summary>
         public virtual MSBuildResult Build(string config, string target) {
-            UIThread.MustBeCalledFromUIThread();
+            Site.GetUIThread().MustBeCalledFromUIThread();
 
             lock (ProjectNode.BuildLock) {
                 IVsOutputWindowPane output = null;
@@ -4503,7 +4503,7 @@ If the files in the existing folder have the same names as files in the folder y
         /// <param name="hwndDialog">Handle to the component picker dialog</param>
         /// <param name="pResult">Result to be returned to the caller</param>
         public virtual int AddComponent(VSADDCOMPOPERATION dwAddCompOperation, uint cComponents, System.IntPtr[] rgpcsdComponents, System.IntPtr hwndDialog, VSADDCOMPRESULT[] pResult) {
-            UIThread.MustBeCalledFromUIThread();
+            Site.GetUIThread().MustBeCalledFromUIThread();
 
             if (rgpcsdComponents == null || pResult == null) {
                 return VSConstants.E_FAIL;
@@ -4995,7 +4995,7 @@ If the files in the existing folder have the same names as files in the folder y
         /// <param name="item">msbuild item</param>
         /// <returns>parent node</returns>
         internal HierarchyNode GetItemParentNode(MSBuild.ProjectItem item) {
-            UIThread.MustBeCalledFromUIThread();
+            Site.GetUIThread().MustBeCalledFromUIThread();
 
             var link = item.GetMetadataValue(ProjectFileConstants.Link);
             HierarchyNode currentParent = this;
@@ -5412,7 +5412,7 @@ If the files in the existing folder have the same names as files in the folder y
         /// Finds a node by it's full path on disk.
         /// </summary>
         internal HierarchyNode FindNodeByFullPath(string name) {
-            UIThread.MustBeCalledFromUIThread();
+            Site.GetUIThread().MustBeCalledFromUIThread();
 
             Debug.Assert(Path.IsPathRooted(name));
 
@@ -5622,7 +5622,7 @@ If the files in the existing folder have the same names as files in the folder y
             Utilities.ArgumentNotNull("parent", parent);
             Utilities.ArgumentNotNull("child", child);
 
-            UIThread.MustBeCalledFromUIThread();
+            Site.GetUIThread().MustBeCalledFromUIThread();
 
             IDiskBasedNode diskNode = child as IDiskBasedNode;
             if (diskNode != null) {
@@ -5646,7 +5646,7 @@ If the files in the existing folder have the same names as files in the folder y
         }
 
         internal void OnItemDeleted(HierarchyNode deletedItem) {
-            UIThread.MustBeCalledFromUIThread();
+            Site.GetUIThread().MustBeCalledFromUIThread();
 
             IDiskBasedNode diskNode = deletedItem as IDiskBasedNode;
             if (diskNode != null) {
@@ -6009,7 +6009,7 @@ If the files in the existing folder have the same names as files in the folder y
         #endregion
 
         public void UpdatePathForDeferredSave(string oldPath, string newPath) {
-            UIThread.MustBeCalledFromUIThread();
+            Site.GetUIThread().MustBeCalledFromUIThread();
 
             var existing = _diskNodes[oldPath];
             _diskNodes.Remove(oldPath);

@@ -148,7 +148,7 @@ namespace Microsoft.PythonTools.Commands {
 
                     var pyProj = project.GetPythonProject();
                     if (pyProj != null) {
-                        UIThread.Invoke(() => {
+                        _serviceProvider.GetUIThread().Invoke(() => {
                             foreach (var prop in InterestingProjectProperties) {
                                 var propValue = pyProj.GetProjectProperty(prop);
                                 if (propValue != null) {

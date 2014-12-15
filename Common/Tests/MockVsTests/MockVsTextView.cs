@@ -14,6 +14,7 @@
 
 using System;
 using System.Runtime.InteropServices;
+using System.Threading;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Editor;
@@ -22,6 +23,7 @@ using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Operations;
 using Microsoft.VisualStudio.TextManager.Interop;
@@ -324,6 +326,38 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         public void Invoke(Action action) {
+            _vs.Invoke(action);
+        }
+
+        public IClassifier Classifier {
+            get {
+                var compModel = (IComponentModel)_serviceProvider.GetService(typeof(SComponentModel));
+
+                var provider = compModel.GetService<IClassifierAggregatorService>();
+                return provider.GetClassifier(TextView.TextBuffer);
+            }
+        }
+
+        public SessionHolder<T> WaitForSession<T>() where T : IIntellisenseSession {
+            var sessionStack = IntellisenseSessionStack;
+            for (int i = 0; i < 40; i++) {
+                if (sessionStack.TopSession is T) {
+                    break;
+                }
+                System.Threading.Thread.Sleep(25);
+            }
+
+            if (!(sessionStack.TopSession is T)) {
+                Console.WriteLine("Buffer text:\r\n{0}", Text);
+                Console.WriteLine("-----");
+                Assert.Fail("failed to find session " + typeof(T).FullName);
+            }
+            return new SessionHolder<T>((T)sessionStack.TopSession, this);
+        }
+
+        public void AssertNoIntellisenseSession() {
+            Thread.Sleep(500);
+            Assert.IsNull(IntellisenseSessionStack.TopSession);
         }
     }
 }

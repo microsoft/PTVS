@@ -67,7 +67,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             }
 
             Console.WriteLine("Unknown service: " + serviceType.FullName);
-            throw new NotImplementedException("Unknown service: " + serviceType.FullName);
+            return null;
         }
 
         public int QueryService(ref Guid guidService, ref Guid riid, out IntPtr ppvObject) {

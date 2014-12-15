@@ -13,13 +13,14 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Windows.Automation;
 using System.Windows.Input;
 using EnvDTE;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools.VSTestHost;
 using TestUtilities.SharedProject;
@@ -289,8 +290,20 @@ namespace TestUtilities.UI {
             return AddExistingItemDialog.FromDte(App);
         }
 
+        public IAddNewItem AddNewItem() {
+            return NewItemDialog.FromDte(App);
+        }
+
         public IOverwriteFile WaitForOverwriteFileDialog() {
             return OverwriteFileDialog.Wait(App);
+        }
+
+        public void WaitForMode(dbgDebugMode dbgDebugMode) {
+            App.WaitForMode(dbgDebugMode);
+        }
+
+        public List<IVsTaskItem> WaitForErrorListItems(int expectedItems) {
+            return App.WaitForErrorListItems(expectedItems);
         }
     }
 }

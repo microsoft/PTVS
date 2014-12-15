@@ -118,7 +118,7 @@ namespace Microsoft.PythonTools.Repl {
 
         internal void EnsureConnected() {
             if (_curListener == null) {
-                UIThread.Invoke(() => {
+                _serviceProvider.GetUIThread().Invoke(() => {
                     if (_curListener == null) {
                         Connect();
                     }
@@ -1179,7 +1179,7 @@ namespace Microsoft.PythonTools.Repl {
             EnsureConnected();
 
             string startupFilename, startupDir, extraArgs = null;
-            UIThread.Invoke(() => {
+            _serviceProvider.GetUIThread().Invoke(() => {
                 VsProjectAnalyzer analyzer;
                 if (PythonToolsPackage.TryGetStartupFileAndDirectory(_serviceProvider, out startupFilename, out startupDir, out analyzer)) {
                     var startupProj = PythonToolsPackage.GetStartupProject(_serviceProvider);
@@ -1250,7 +1250,7 @@ namespace Microsoft.PythonTools.Repl {
             _curListener.IsProcessExpectedToExit = quiet;
 
             Close();
-            await UIThread.InvokeAsync(Connect).ConfigureAwait(false);
+            await _serviceProvider.GetUIThread().InvokeAsync(Connect).ConfigureAwait(false);
 
             BufferParser parser = null;
 

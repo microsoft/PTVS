@@ -42,7 +42,6 @@ namespace PythonToolsTests {
 
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
-            UIThread.InitializeAndNeverInvoke();
             AssertListener.Initialize();
             PythonTestData.Deploy(includeTestData: false);
         }

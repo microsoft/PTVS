@@ -539,7 +539,7 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
         protected internal override int ShowAllFiles() {
-            UIThread.MustBeCalledFromUIThread();
+            Site.GetUIThread().MustBeCalledFromUIThread();
 
             if (!QueryEditProjectFile(false)) {
                 return VSConstants.E_FAIL;
@@ -727,7 +727,7 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
         private void RemoveSubTree(HierarchyNode node) {
-            UIThread.MustBeCalledFromUIThread();
+            Site.GetUIThread().MustBeCalledFromUIThread();
             foreach (var child in node.AllChildren) {
                 RemoveSubTree(child);
             }
@@ -943,7 +943,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         private void TriggerIdle() {
             if (Interlocked.CompareExchange(ref _idleTriggered, 1, 0) == 0) {
-                UIThread.InvokeAsync(Nop).DoNotWait();
+                Site.GetUIThread().InvokeAsync(Nop).DoNotWait();
             }
         }
 
@@ -1095,7 +1095,7 @@ namespace Microsoft.VisualStudioTools.Project {
             private void ChildDeleted(HierarchyNode child) {
                 if (child != null) {
                     _project.TryDeactivateSymLinkWatcher(child);
-                    UIThread.MustBeCalledFromUIThread();
+                    _project.Site.GetUIThread().MustBeCalledFromUIThread();
 
                     // rapid changes can arrive out of order, if the file or directory 
                     // actually exists ignore the event.

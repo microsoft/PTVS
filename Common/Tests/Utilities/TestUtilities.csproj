@@ -84,12 +84,14 @@
     <Compile Include="AssertListener.cs" />
     <Compile Include="FileUtils.cs" />
     <Compile Include="IAddExistingItem.cs" />
+    <Compile Include="IAddNewItem.cs" />
     <Compile Include="IEditor.cs" />
     <Compile Include="IOverwriteFile.cs" />
     <Compile Include="ITreeNode.cs" />
     <Compile Include="IVisualStudioInstance.cs" />
     <Compile Include="MessageBoxButton.cs" />
     <Compile Include="Mocks\MockVsShell.cs" />
+    <Compile Include="SessionHolder.cs" />
     <Compile Include="SharedProject\SymbolicLinkItem.cs" />
     <Compile Include="WebDownloadUtility.cs" />
     <Compile Include="Classification.cs" />

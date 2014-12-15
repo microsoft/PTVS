@@ -187,7 +187,7 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         protected override void Connect() {
-            UIThread.MustBeCalledFromUIThread();
+            _serviceProvider.GetUIThread().MustBeCalledFromUIThread();
             
             var configurableOptions = CurrentOptions as ConfigurablePythonReplOptions;
             if (configurableOptions != null) {

@@ -29,8 +29,6 @@ namespace PythonToolsMockTests {
 
         [TestMethod]
         public void BasicProjectTest() {
-            UIThread.InitializeAndNeverInvoke();
-
             var sln = new ProjectDefinition(
                 "HelloWorld",
                 PythonProject,
@@ -55,8 +53,6 @@ namespace PythonToolsMockTests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("VSTestHost")]
         public void CutRenamePaste() {
-            UIThread.InitializeAndNeverInvoke();
-
             foreach (var projectType in ProjectTypes) {
                 var testDef = new ProjectDefinition("DragDropCopyCutPaste",
                     projectType,

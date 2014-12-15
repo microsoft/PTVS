@@ -99,8 +99,6 @@ namespace Microsoft.VisualStudioTools.Project {
         /// Constructor.  Inititialize member data.
         /// </summary>
         public IDEBuildLogger(IVsOutputWindowPane output, TaskProvider taskProvider, IVsHierarchy hierarchy) {
-            UIThread.MustBeCalledFromUIThread();
-
             Utilities.ArgumentNotNull("taskProvider", taskProvider);
             Utilities.ArgumentNotNull("hierarchy", hierarchy);
 
@@ -113,6 +111,7 @@ namespace Microsoft.VisualStudioTools.Project {
             this.outputWindowPane = output;
             this.hierarchy = hierarchy;
             this.serviceProvider = new ServiceProvider(site);
+            serviceProvider.GetUIThread().MustBeCalledFromUIThread();
             this.dispatcher = Dispatcher.CurrentDispatcher;
         }
 

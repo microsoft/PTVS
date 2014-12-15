@@ -13,105 +13,39 @@
  * ***************************************************************************/
 
 using System;
-using System.Diagnostics;
+using System.ComponentModel.Design;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Shell;
-using IOleServiceProvider = Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
 using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.VisualStudioTools {
-    /// <summary>
-    /// Provides helper functions to execute code on the UI thread.
-    /// </summary>
-    /// <remarks>
-    /// Because the UI thread is determined from the global service provider,
-    /// in non-VS tests, all invocations will occur on the current thread.
-    /// To specify a UI thread, call <see cref="MakeCurrentThreadUIThread"/>.
-    /// </remarks>
-    internal static class UIThread {
-        private static ThreadHelper _invoker;
-#if DEV10
-        private static Thread _uiThread;
-#endif
+    internal class UIThread : IUIThread {
+        private readonly TaskScheduler _scheduler;
+        private readonly TaskFactory _factory;
+        private readonly Thread _uiThread;
 
-        private static bool? _tryToInvoke;
+        private UIThread() {
+            _scheduler = TaskScheduler.FromCurrentSynchronizationContext();
+            _factory = new TaskFactory(_scheduler);
+            _uiThread = Thread.CurrentThread;
+        }
 
-        /// <summary>
-        /// This function is called from the UI thread as early as possible. It
-        /// will mark this class as active and future calls to the invoke
-        /// methods will attempt to marshal to the UI thread.
-        /// </summary>
-        /// <remarks>
-        /// If <see cref="InitializeAndNeverInvoke"/> has already been called,
-        /// this method has no effect.
-        /// 
-        /// If neither Initialize method is called, attempting to call any other
-        /// method on this class will terminate the process immediately.
-        /// </remarks>
-        public static void InitializeAndAlwaysInvokeToCurrentThread() {
-            if (!_tryToInvoke.HasValue) {
-                _invoker = ThreadHelper.Generic;
-                _tryToInvoke = true;
-#if DEV10
-                Debug.Assert(_uiThread == null);
-                _uiThread = Thread.CurrentThread;
-#endif
+        public static void EnsureService(IServiceContainer container) {
+            if (container.GetService(typeof(IUIThread)) == null) {
+                container.AddService(typeof(IUIThread), new UIThread(), true);
             }
         }
 
-        /// <summary>
-        /// This function may be called from any thread and will prevent future
-        /// calls to methods on this class from trying to marshal to another
-        /// thread.
-        /// </summary>
-        /// <remarks>
-        /// If neither Initialize method is called, attempting to call any other
-        /// method on this class will terminate the process immediately.
-        /// </remarks>
-        public static void InitializeAndNeverInvoke() {
-            _tryToInvoke = false;
-        }
-
-        internal static bool InvokeRequired {
+        public bool InvokeRequired {
             get {
-                if (!_tryToInvoke.HasValue) {
-                    // One of the initialize methods needs to be called before
-                    // attempting to marshal to the UI thread.
-                    Debug.Fail("Neither UIThread.Initialize method has been called");
-                    throw new CriticalException("Neither UIThread.Initialize method has been called");
-                }
-
-                if (_tryToInvoke == false) {
-                    return false;
-                }
-#if DEV10
                 return Thread.CurrentThread != _uiThread;
-#else
-                return !ThreadHelper.CheckAccess();
-#endif
             }
         }
 
-        public static void MustBeCalledFromUIThreadOrThrow() {
-            if (InvokeRequired) {
-                const int RPC_E_WRONG_THREAD = unchecked((int)0x8001010E);
-                throw new COMException("Invalid cross-thread call", RPC_E_WRONG_THREAD);
-            }
-        }
-
-        [Conditional("DEBUG")]
-        public static void MustBeCalledFromUIThread(string message = "Invalid cross-thread call") {
-            Debug.Assert(!InvokeRequired, message);
-        }
-
-        [Conditional("DEBUG")]
-        public static void MustNotBeCalledFromUIThread(string message = "Invalid cross-thread call") {
-            if (_tryToInvoke != false) {
-                Debug.Assert(InvokeRequired, message);
-            }
+        public void MustBeCalledFromUIThreadOrThrow() {
+            const int RPC_E_WRONG_THREAD = unchecked((int)0x8001010E);
+            throw new COMException("Invalid cross-thread call", RPC_E_WRONG_THREAD);
         }
 
         /// <summary>
@@ -121,9 +55,9 @@ namespace Microsoft.VisualStudioTools {
         /// <remarks>
         /// If called from the UI thread, the action is executed synchronously.
         /// </remarks>
-        public static void Invoke(Action action) {
+        public void Invoke(Action action) {
             if (InvokeRequired) {
-                _invoker.Invoke(action);
+                _factory.StartNew(action).Wait();
             } else {
                 action();
             }
@@ -137,9 +71,11 @@ namespace Microsoft.VisualStudioTools {
         /// If called from the UI thread, the function is evaluated 
         /// synchronously.
         /// </remarks>
-        public static T Invoke<T>(Func<T> func) {
+        public T Invoke<T>(Func<T> func) {
             if (InvokeRequired) {
-                return _invoker.Invoke(func);
+                var task = _factory.StartNew(func);
+                task.Wait();
+                return task.Result;
             } else {
                 return func();
             }
@@ -152,20 +88,10 @@ namespace Microsoft.VisualStudioTools {
         /// <remarks>
         /// If called from the UI thread, the action is executed synchronously.
         /// </remarks>
-        public static Task InvokeAsync(Action action) {
+        public Task InvokeAsync(Action action) {
             var tcs = new TaskCompletionSource<object>();
             if (InvokeRequired) {
-#if DEV10
-                // VS 2010 does not have BeginInvoke, so use the thread pool
-                // to run it asynchronously.
-                ThreadPool.QueueUserWorkItem(_ => {
-                    _invoker.Invoke(() => InvokeAsyncHelper(action, tcs));
-                });
-#elif DEV11
-                _invoker.BeginInvoke(() => InvokeAsyncHelper(action, tcs));
-#else
-                _invoker.InvokeAsync(() => InvokeAsyncHelper(action, tcs));
-#endif
+                return _factory.StartNew(action);
             } else {
                 // Action is run synchronously, but we still return the task.
                 InvokeAsyncHelper(action, tcs);
@@ -181,20 +107,10 @@ namespace Microsoft.VisualStudioTools {
         /// If called from the UI thread, the function is evaluated 
         /// synchronously.
         /// </remarks>
-        public static Task<T> InvokeAsync<T>(Func<T> func) {
+        public Task<T> InvokeAsync<T>(Func<T> func) {
             var tcs = new TaskCompletionSource<T>();
             if (InvokeRequired) {
-#if DEV10
-                // VS 2010 does not have BeginInvoke, so use the thread pool
-                // to run it asynchronously.
-                ThreadPool.QueueUserWorkItem(_ => {
-                    _invoker.Invoke(() => InvokeAsyncHelper(func, tcs));
-                });
-#elif DEV11
-                _invoker.BeginInvoke(() => InvokeAsyncHelper(func, tcs));
-#else
-                _invoker.InvokeAsync(() => InvokeAsyncHelper(func, tcs));
-#endif
+                return _factory.StartNew(func);
             } else {
                 // Function is run synchronously, but we still return the task.
                 InvokeAsyncHelper(func, tcs);
@@ -211,20 +127,10 @@ namespace Microsoft.VisualStudioTools {
         /// If called from the UI thread, the function is evaluated 
         /// synchronously.
         /// </remarks>
-        public static Task InvokeTask(Func<Task> func) {
+        public Task InvokeTask(Func<Task> func) {
             var tcs = new TaskCompletionSource<object>();
             if (InvokeRequired) {
-#if DEV10
-                // VS 2010 does not have BeginInvoke, so use the thread pool
-                // to run it asynchronously.
-                ThreadPool.QueueUserWorkItem(_ => {
-                    _invoker.Invoke(() => InvokeTaskHelper(func, tcs));
-                });
-#elif DEV11
-                _invoker.BeginInvoke(() => InvokeTaskHelper(func, tcs));
-#else
-                _invoker.InvokeAsync(() => InvokeTaskHelper(func, tcs));
-#endif
+                InvokeAsync(() => InvokeTaskHelper(func, tcs));
             } else {
                 // Function is run synchronously, but we still return the task.
                 InvokeTaskHelper(func, tcs);
@@ -241,20 +147,10 @@ namespace Microsoft.VisualStudioTools {
         /// If called from the UI thread, the function is evaluated 
         /// synchronously.
         /// </remarks>
-        public static Task<T> InvokeTask<T>(Func<Task<T>> func) {
+        public Task<T> InvokeTask<T>(Func<Task<T>> func) {
             var tcs = new TaskCompletionSource<T>();
             if (InvokeRequired) {
-#if DEV10
-                // VS 2010 does not have BeginInvoke, so use the thread pool
-                // to run it asynchronously.
-                ThreadPool.QueueUserWorkItem(_ => {
-                    _invoker.Invoke(() => InvokeTaskHelper(func, tcs));
-                });
-#elif DEV11
-                _invoker.BeginInvoke(() => InvokeTaskHelper(func, tcs));
-#else
-                _invoker.InvokeAsync(() => InvokeTaskHelper(func, tcs));
-#endif
+                InvokeAsync(() => InvokeTaskHelper(func, tcs));
             } else {
                 // Function is run synchronously, but we still return the task.
                 InvokeTaskHelper(func, tcs);
@@ -264,7 +160,7 @@ namespace Microsoft.VisualStudioTools {
 
         #region Helper Functions
 
-        private static void InvokeAsyncHelper(Action action, TaskCompletionSource<object> tcs) {
+        internal static void InvokeAsyncHelper(Action action, TaskCompletionSource<object> tcs) {
             try {
                 action();
                 tcs.TrySetResult(null);
@@ -278,7 +174,7 @@ namespace Microsoft.VisualStudioTools {
             }
         }
 
-        private static void InvokeAsyncHelper<T>(Func<T> func, TaskCompletionSource<T> tcs) {
+        internal static void InvokeAsyncHelper<T>(Func<T> func, TaskCompletionSource<T> tcs) {
             try {
                 tcs.TrySetResult(func());
             } catch (OperationCanceledException) {
@@ -291,7 +187,7 @@ namespace Microsoft.VisualStudioTools {
             }
         }
 
-        private static async void InvokeTaskHelper(Func<Task> func, TaskCompletionSource<object> tcs) {
+        internal static async void InvokeTaskHelper(Func<Task> func, TaskCompletionSource<object> tcs) {
             try {
                 await func();
                 tcs.TrySetResult(null);
@@ -305,7 +201,7 @@ namespace Microsoft.VisualStudioTools {
             }
         }
 
-        private static async void InvokeTaskHelper<T>(Func<Task<T>> func, TaskCompletionSource<T> tcs) {
+        internal static async void InvokeTaskHelper<T>(Func<Task<T>> func, TaskCompletionSource<T> tcs) {
             try {
                 tcs.TrySetResult(await func());
             } catch (OperationCanceledException) {
@@ -320,63 +216,5 @@ namespace Microsoft.VisualStudioTools {
 
         #endregion
 
-        #region Test Helpers
-
-        /// <summary>
-        /// Makes the current thread the UI thread. This is done by setting
-        /// <see cref="ServiceProvider.GlobalProvider"/>.
-        /// </summary>
-        /// <param name="provider">
-        /// A service provider that may be used to fulfil queries made through
-        /// the global provider.
-        /// </param>
-        /// <remarks>
-        /// This function is intended solely for testing purposes and should
-        /// only be called from outside Visual Studio.
-        /// </remarks>
-        /// <exception cref="InvalidOperationException">
-        /// A UI thread already exists. This may indicate that the function
-        /// has been called within Visual Studio.
-        /// </exception>
-        internal static void MakeCurrentThreadUIThread(ServiceProvider provider = null) {
-            if (ServiceProvider.GlobalProvider != null) {
-                throw new InvalidOperationException("UI thread already exists");
-            }
-            ServiceProvider.CreateFromSetSite(new DummyOleServiceProvider(provider));
-        }
-
-        class DummyOleServiceProvider : IOleServiceProvider {
-            private readonly ServiceProvider _provider;
-
-            public DummyOleServiceProvider(ServiceProvider provider) {
-                _provider = provider;
-            }
-
-            public int QueryService(ref Guid guidService, ref Guid riid, out IntPtr ppvObject) {
-                if (_provider == null) {
-                    ppvObject = IntPtr.Zero;
-                    return VSConstants.E_FAIL;
-                }
-
-                object service = _provider.GetService(guidService);
-                if (service == null) {
-                    ppvObject = IntPtr.Zero;
-                    return VSConstants.E_FAIL;
-                }
-
-                ppvObject = Marshal.GetIUnknownForObject(service);
-                if (riid != VSConstants.IID_IUnknown) {
-                    var punk = ppvObject;
-                    try {
-                        Marshal.QueryInterface(punk, ref riid, out ppvObject);
-                    } finally {
-                        Marshal.Release(punk);
-                    }
-                }
-                return VSConstants.S_OK;
-            }
-        }
-
-        #endregion
     }
 }

@@ -14,6 +14,7 @@
 
 
 using System;
+using System.Diagnostics;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
@@ -93,5 +94,21 @@ namespace Microsoft.VisualStudioTools {
         internal static IClipboardService GetClipboardService(this IServiceProvider serviceProvider) {
             return (IClipboardService)serviceProvider.GetService(typeof(IClipboardService));
         }
+
+        internal static IUIThread GetUIThread(this IServiceProvider serviceProvider) {
+            return (IUIThread)serviceProvider.GetService(typeof(IUIThread));
+        }
+
+        [Conditional("DEBUG")]
+        public static void MustBeCalledFromUIThread(this IUIThread self, string message = "Invalid cross-thread call") {
+            Debug.Assert(!self.InvokeRequired, message);
+        }
+
+        [Conditional("DEBUG")]
+        public static void MustNotBeCalledFromUIThread(this IUIThread self, string message = "Invalid cross-thread call") {
+            Debug.Assert(self.InvokeRequired, message);
+        }
+
+
     }
 }

@@ -310,11 +310,13 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly uint _cookie;
         private readonly IVsTaskList _errorList;
         internal readonly IErrorProviderFactory _errorProvider;
+        private readonly IServiceProvider _serviceProvider;
 
         private bool _hasWorker;
         private readonly BlockingCollection<WorkerMessage> _workerQueue;
 
-        public TaskProvider(IVsTaskList errorList, IErrorProviderFactory errorProvider) {
+        public TaskProvider(IServiceProvider serviceProvider, IVsTaskList errorList, IErrorProviderFactory errorProvider) {
+            _serviceProvider = serviceProvider;
             _items = new Dictionary<EntryKey, List<TaskProviderItem>>();
             _errorSources = new Dictionary<EntryKey, HashSet<ITextBuffer>>();
 
@@ -501,7 +503,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private void Refresh() {
             if (_errorList != null && _errorProvider != null) {
-                UIThread.MustNotBeCalledFromUIThread();
+                
+                _serviceProvider.GetUIThread().MustNotBeCalledFromUIThread();
                 RefreshAsync().WaitAndHandleAllExceptions(SR.ProductName, GetType());
             }
         }
@@ -536,7 +539,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             }
 
-            await UIThread.InvokeAsync(() => {
+            await _serviceProvider.GetUIThread().InvokeAsync(() => {
                 if (_errorList != null) {
                     try {
                         _errorList.RefreshTasks(_cookie);

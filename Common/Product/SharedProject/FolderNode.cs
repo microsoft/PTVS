@@ -209,6 +209,7 @@ namespace Microsoft.VisualStudioTools.Project {
 
                     ProjectMgr.OnItemDeleted(this);
                     this.Parent.RemoveChild(this);
+                    ProjectMgr.Site.GetUIThread().MustBeCalledFromUIThread();
                     this.ID = ProjectMgr.ItemIdMap.Add(this);
                     this.Parent.AddChild(this);
 
@@ -467,6 +468,7 @@ namespace Microsoft.VisualStudioTools.Project {
             // Reparent the folder
             ProjectMgr.OnItemDeleted(this);
             Parent.RemoveChild(this);
+            ProjectMgr.Site.GetUIThread().MustBeCalledFromUIThread();
             ID = ProjectMgr.ItemIdMap.Add(this);
 
             ItemNode.Rename(CommonUtils.GetRelativeDirectoryPath(ProjectMgr.ProjectHome, newPath));

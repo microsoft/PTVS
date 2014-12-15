@@ -83,7 +83,7 @@ namespace TestUtilities.UI.Python {
         }
 
         private static string PropertyValue(IPythonProject project, string property, string defaultValue = "") {
-            return UIThread.Invoke(() => project.GetUnevaluatedProperty(property) ?? defaultValue);
+            return ((PythonProjectNode)project).Site.GetUIThread().Invoke(() => project.GetUnevaluatedProperty(property) ?? defaultValue);
         }
 
         public void AssertMatchesProject(IPythonProject project) {

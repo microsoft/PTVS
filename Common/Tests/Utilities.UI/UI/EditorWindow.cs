@@ -194,23 +194,6 @@ namespace TestUtilities.UI {
             return WaitForSession<ISmartTagSession>();
         }
 
-        public class SessionHolder<T> : IDisposable where T : IIntellisenseSession {
-            public readonly T Session;
-            private readonly EditorWindow _owner;
-
-            public SessionHolder(T session, EditorWindow owner) {
-                Assert.IsNotNull(session);
-                Session = session;
-                _owner = owner;
-            }
-
-            void IDisposable.Dispose() {
-                if (!Session.IsDismissed) {
-                    _owner.Invoke(() => { Session.Dismiss(); });
-                }
-            }
-        }
-
         public SessionHolder<T> WaitForSession<T>() where T : IIntellisenseSession {
             var sessionStack = IntellisenseSessionStack;
             for (int i = 0; i < 40; i++) {

@@ -45,7 +45,7 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
         public override ProjectItem AddFromDirectory(string directory) {
             CheckProjectIsValid();
 
-            return UIThread.Invoke<EnvDTE.ProjectItem>(() => {
+            return Project.ProjectNode.Site.GetUIThread().Invoke<EnvDTE.ProjectItem>(() => {
                 ProjectItem result = AddFolder(directory, null);
 
                 foreach (string subdirectory in Directory.EnumerateDirectories(directory)) {
@@ -78,7 +78,7 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
                 // We should run the wizard only if the extension is vstemplate
                 // otherwise it's a clone operation
                 VSADDITEMOPERATION op;
-                UIThread.Invoke(() => {
+                Project.ProjectNode.Site.GetUIThread().Invoke(() => {
                     if (Utilities.IsTemplateFile(fileName)) {
                         op = VSADDITEMOPERATION.VSADDITEMOP_RUNWIZARD;
                     } else {
@@ -127,7 +127,7 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
                 throw new ArgumentException("Parameter specification for AddFolder was not meet", "kind");
             }
 
-            return UIThread.Invoke<EnvDTE.ProjectItem>(() => {
+            return Project.ProjectNode.Site.GetUIThread().Invoke<EnvDTE.ProjectItem>(() => {
                 var existingChild = this.NodeWithItems.FindImmediateChildByName(name);
                 if (existingChild != null) {
                     if (existingChild.IsNonMemberItem && ErrorHandler.Succeeded(existingChild.IncludeInProject(false))) {
@@ -181,7 +181,7 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
         /// <returns>A ProjectItem object. </returns>
         protected virtual EnvDTE.ProjectItem AddItem(string path, VSADDITEMOPERATION op) {
             CheckProjectIsValid();
-            return UIThread.Invoke<EnvDTE.ProjectItem>(() => {
+            return Project.ProjectNode.Site.GetUIThread().Invoke<EnvDTE.ProjectItem>(() => {
                 ProjectNode proj = this.Project.ProjectNode;
                 EnvDTE.ProjectItem itemAdded = null;
                 using (AutomationScope scope = new AutomationScope(this.Project.ProjectNode.Site)) {
@@ -211,7 +211,7 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
         /// <param name="path">The full path of the item added.</param>
         /// <returns>A ProjectItem object.</returns>
         private EnvDTE.ProjectItem EvaluateAddResult(VSADDRESULT result, string path) {
-            return UIThread.Invoke<EnvDTE.ProjectItem>(() => {
+            return Project.ProjectNode.Site.GetUIThread().Invoke<EnvDTE.ProjectItem>(() => {
                 if (result != VSADDRESULT.ADDRESULT_Failure) {
                     if (Directory.Exists(path)) {
                         path = CommonUtils.EnsureEndSeparator(path);

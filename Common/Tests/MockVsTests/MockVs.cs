@@ -112,13 +112,29 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             UIThread = new Thread(UIThreadWorker);
             UIThread.Name = "Mock UI Thread";
             UIThread.Start();
+        }
 
-            foreach (var package in Container.GetExportedValues<IMockPackage>()) {
-                package.Initialize();
+        class MockSyncContext : SynchronizationContext {
+            private readonly MockVs _vs;
+            public MockSyncContext(MockVs vs) {
+                _vs = vs;
+            }
+
+            public override void Post(SendOrPostCallback d, object state) {
+                _vs.Invoke(() => d(state));
+            }
+
+            public override void Send(SendOrPostCallback d, object state) {
+                _vs.Invoke<object>(() => { d(state); return null; });
             }
         }
 
         private void UIThreadWorker() {
+            SynchronizationContext.SetSynchronizationContext(new MockSyncContext(this));
+            foreach (var package in Container.GetExportedValues<IMockPackage>()) {
+                package.Initialize();
+            }
+
             while (!_shutdown) {
                 _uiEvent.WaitOne();
                 Action[] events;
@@ -613,6 +629,19 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         public IOverwriteFile WaitForOverwriteFileDialog() {
+            throw new NotImplementedException();
+        }
+
+
+        public IAddNewItem AddNewItem() {
+            throw new NotImplementedException();
+        }
+
+        public void WaitForMode(dbgDebugMode dbgDebugMode) {
+            throw new NotImplementedException();
+        }
+
+        public List<IVsTaskItem> WaitForErrorListItems(int expectedCount) {
             throw new NotImplementedException();
         }
     }

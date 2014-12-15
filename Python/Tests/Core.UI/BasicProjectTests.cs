@@ -33,6 +33,7 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project.Automation;
 using Microsoft.VisualStudioTools.VSTestHost;
 using TestUtilities;
@@ -45,7 +46,6 @@ using MessageBoxButton = TestUtilities.MessageBoxButton;
 using Mouse = TestUtilities.UI.Mouse;
 using ProcessOutput = pythontools::Microsoft.VisualStudioTools.Project.ProcessOutput;
 using Thread = System.Threading.Thread;
-using UIThread = Microsoft.VisualStudioTools.UIThread;
 
 namespace PythonToolsUITests {
     [TestClass]
@@ -68,7 +68,7 @@ namespace PythonToolsUITests {
                 );
 
                 // Ensure that the user project is created
-                UIThread.Invoke(() => project.GetPythonProject().SetUserProjectProperty("Test", "Value"));
+                app.ServiceProvider.GetUIThread().Invoke(() => project.GetPythonProject().SetUserProjectProperty("Test", "Value"));
 
                 app.ExecuteCommand("File.SaveAll");
 

@@ -92,7 +92,7 @@ namespace Microsoft.VisualStudioTools.Project {
             Guid emptyGuid = Guid.Empty;
             int result = 0;
 
-            UIThread.Invoke(() => {
+            serviceProvider.GetUIThread().Invoke(() => {
                 ErrorHandler.ThrowOnFailure(uiShell.ShowMessageBox(
                     0,
                     ref emptyGuid,

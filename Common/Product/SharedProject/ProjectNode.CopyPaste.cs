@@ -1183,6 +1183,7 @@ namespace Microsoft.VisualStudioTools.Project {
                     if (existing != null) {
                         Project.OnItemDeleted(existing);
                         existing.Parent.RemoveChild(existing);
+                        Project.Site.GetUIThread().MustBeCalledFromUIThread();
                         existing.ID = Project.ItemIdMap.Add(existing);
                     } else {
                         existing = Project.CreateFileNode(Moniker);

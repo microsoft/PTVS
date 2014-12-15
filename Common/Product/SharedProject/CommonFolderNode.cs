@@ -110,7 +110,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         /// <returns></returns>
         internal override int ExcludeFromProject() {
-            UIThread.MustBeCalledFromUIThread();
+            ProjectMgr.Site.GetUIThread().MustBeCalledFromUIThread();
 
             Debug.Assert(this.ProjectMgr != null, "The project item " + this.ToString() + " has not been initialised correctly. It has a null ProjectMgr");
             if (!ProjectMgr.QueryEditProjectFile(false) ||

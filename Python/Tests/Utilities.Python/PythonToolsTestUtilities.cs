@@ -16,6 +16,7 @@ using Microsoft.PythonTools;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Options;
 using Microsoft.VisualStudio.ComponentModelHost;
+using Microsoft.VisualStudioTools;
 using TestUtilities.Mocks;
 
 namespace TestUtilities.Python {
@@ -47,10 +48,10 @@ namespace TestUtilities.Python {
             serviceProvider.AddService(typeof(SComponentModel), new MockComponentModel());
             serviceProvider.AddService(
                 typeof(TaskProvider),
-                (container, type) => new TaskProvider(null, errorProvider),
+                (container, type) => new TaskProvider(serviceProvider, null, errorProvider),
                 true
             );
-
+            serviceProvider.AddService(typeof(IUIThread), new MockUIThread());
             var optionsService = new MockPythonToolsOptionsService();
             serviceProvider.AddService(typeof(IPythonToolsOptionsService), optionsService, true);
 

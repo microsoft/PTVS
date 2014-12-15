@@ -109,6 +109,7 @@
     <Compile Include="Django\NewAppDialog.cs" />
     <Compile Include="MockPythonToolsOptionsService.cs" />
     <Compile Include="MockReplOptions.cs" />
+    <Compile Include="MockUIThread.cs" />
     <Compile Include="PythonProjectDebugProperties.cs" />
     <Compile Include="FormattingOptionsTreeView.cs" />
     <Compile Include="MockClassificationTypeRegistryService.cs" />

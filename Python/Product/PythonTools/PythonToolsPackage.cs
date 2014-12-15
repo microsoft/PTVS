@@ -365,12 +365,12 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
         }
 
         internal static IProjectLauncher GetLauncher(IServiceProvider serviceProvider, IPythonProject project) {
-            var launchProvider = UIThread.Invoke<string>(() => project.GetProperty(PythonConstants.LaunchProvider));
+            var launchProvider = serviceProvider.GetUIThread().Invoke<string>(() => project.GetProperty(PythonConstants.LaunchProvider));
 
             IPythonLauncherProvider defaultLaunchProvider = null;
             foreach (var launcher in serviceProvider.GetComponentModel().GetExtensions<IPythonLauncherProvider>()) {
                 if (launcher.Name == launchProvider) {
-                    return UIThread.Invoke<IProjectLauncher>(() => launcher.CreateLauncher(project));
+                    return serviceProvider.GetUIThread().Invoke<IProjectLauncher>(() => launcher.CreateLauncher(project));
                 }
 
                 if (launcher.Name == DefaultLauncherProvider.DefaultLauncherName) {
@@ -381,7 +381,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             // no launcher configured, use the default one.
             Debug.Assert(defaultLaunchProvider != null);
             return (defaultLaunchProvider != null) ?
-                UIThread.Invoke<IProjectLauncher>(() => defaultLaunchProvider.CreateLauncher(project)) :
+                serviceProvider.GetUIThread().Invoke<IProjectLauncher>(() => defaultLaunchProvider.CreateLauncher(project)) :
                 null;
         }
 
@@ -622,7 +622,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
                     var errorList = GetService(typeof(SVsErrorList)) as IVsTaskList;
                     var model = ComponentModel;
                     var errorProvider = model != null ? model.GetService<IErrorProviderFactory>() : null;
-                    return new Microsoft.PythonTools.Intellisense.TaskProvider(errorList, errorProvider);
+                    return new Microsoft.PythonTools.Intellisense.TaskProvider(this, errorList, errorProvider);
                 },
                 true);
 

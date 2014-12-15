@@ -139,7 +139,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private void InterpreterFactoriesChanged(object sender, EventArgs e) {
-            UIThread.Invoke(() => RefreshInterpreters());
+            Site.GetUIThread().Invoke(() => RefreshInterpreters());
         }
 
         internal MSBuildProjectInterpreterFactoryProvider Interpreters {
@@ -876,7 +876,7 @@ namespace Microsoft.PythonTools.Project {
                 return;
             }
 
-            UIThread.InvokeAsync(UpdateActiveInterpreter).DoNotWait();
+            Site.GetUIThread().InvokeAsync(UpdateActiveInterpreter).DoNotWait();
         }
 
         private void UpdateActiveInterpreter() {
@@ -2051,7 +2051,7 @@ namespace Microsoft.PythonTools.Project {
                 return;
             }
 
-            UIThread.Invoke(() => UpdateServiceDefinition(hier, roleType, Caption, Site));
+            Site.GetUIThread().Invoke(() => UpdateServiceDefinition(hier, roleType, Caption, Site));
         }
 
         private static bool TryGetItemId(object obj, out uint id) {

@@ -79,7 +79,7 @@ namespace Microsoft.PythonTools.Intellisense {
             // otherwise the environment list will be hidden immediately.
             await Task.Delay(50);
             // Should already be on the UI thread, but we'll invoke to be safe
-            UIThread.Invoke(() => {
+            _serviceProvider.GetUIThread().Invoke(() => {
                 _serviceProvider.ShowInterpreterList();
             });
         }

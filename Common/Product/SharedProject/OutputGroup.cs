@@ -129,7 +129,7 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
         public virtual IList<Output> EnumerateOutputs() {
-            UIThread.Invoke(Refresh);
+            _project.Site.GetUIThread().Invoke(Refresh);
             return _outputs;
         }
 

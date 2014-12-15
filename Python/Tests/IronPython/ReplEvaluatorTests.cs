@@ -32,7 +32,6 @@ namespace ReplWindowUITests {
     public class IronPythonReplEvaluatorTests {
         static IronPythonReplEvaluatorTests() {
             AssertListener.Initialize();
-            UIThread.InitializeAndNeverInvoke();
             PythonTestData.Deploy(includeTestData: false);
         }
 

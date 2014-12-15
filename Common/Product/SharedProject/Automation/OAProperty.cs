@@ -132,7 +132,7 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
         /// <param name="value">The value to set.</param>
         public void set_IndexedValue(object index1, object index2, object index3, object index4, object value) {
             Debug.Assert(pi.GetIndexParameters().Length == 0);
-            UIThread.Invoke(() => {
+            parent.Target.HierarchyNode.ProjectMgr.Site.GetUIThread().Invoke(() => {
                 this.Value = value;
             });
         }
@@ -143,7 +143,7 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
         public object Value {
             get {
                 using (AutomationScope scope = new AutomationScope(this.parent.Target.HierarchyNode.ProjectMgr.Site)) {
-                    return UIThread.Invoke(() => {
+                    return parent.Target.HierarchyNode.ProjectMgr.Site.GetUIThread().Invoke(() => {
                         try {
                             return pi.GetValue(this.parent.Target, null);
                         } catch (TargetInvocationException ex) {
@@ -160,7 +160,7 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
             }
             set {
                 using (AutomationScope scope = new AutomationScope(this.parent.Target.HierarchyNode.ProjectMgr.Site)) {
-                    UIThread.Invoke(() => {
+                    parent.Target.HierarchyNode.ProjectMgr.Site.GetUIThread().Invoke(() => {
                         try {
                             this.pi.SetValue(this.parent.Target, value, null);
                         } catch (TargetInvocationException ex) {

@@ -439,6 +439,7 @@ namespace Microsoft.VisualStudioTools.Project {
 
         protected HierarchyNode(ProjectNode root, ProjectElement element) {
             Utilities.ArgumentNotNull("root", root);
+            root.Site.GetUIThread().MustBeCalledFromUIThread();
 
             this.projectMgr = root;
             this.itemNode = element;
@@ -452,6 +453,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <param name="root"></param>
         protected HierarchyNode(ProjectNode root) {
             Utilities.ArgumentNotNull("root", root);
+            root.Site.GetUIThread().MustBeCalledFromUIThread();
 
             this.projectMgr = root;
             this.itemNode = new VirtualProjectElement(this.projectMgr);
@@ -485,7 +487,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <param name="node">The node to remove.</param>
         public virtual void RemoveChild(HierarchyNode node) {
             Utilities.ArgumentNotNull("node", node);
-
+            projectMgr.Site.GetUIThread().MustBeCalledFromUIThread();
             this.projectMgr.ItemIdMap.Remove(node);
 
             HierarchyNode last = null;

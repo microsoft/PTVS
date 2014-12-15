@@ -48,13 +48,13 @@ namespace PythonToolsUITests {
 
         internal void Execute(PythonProjectNode projectNode, string commandName) {
             Console.WriteLine("Executing command {0}", commandName);
-            var t = UIThread.InvokeTask(() => projectNode._customCommands.First(cc => cc.DisplayLabel == commandName).ExecuteAsync(projectNode));
+            var t = projectNode.Site.GetUIThread().InvokeTask(() => projectNode._customCommands.First(cc => cc.DisplayLabel == commandName).ExecuteAsync(projectNode));
             t.GetAwaiter().GetResult();
         }
 
         internal Task ExecuteAsync(PythonProjectNode projectNode, string commandName) {
             Console.WriteLine("Executing command {0} asynchronously", commandName);
-            return UIThread.InvokeTask(() => projectNode._customCommands.First(cc => cc.DisplayLabel == commandName).ExecuteAsync(projectNode));
+            return projectNode.Site.GetUIThread().InvokeTask(() => projectNode._customCommands.First(cc => cc.DisplayLabel == commandName).ExecuteAsync(projectNode));
         }
 
         internal void OpenProject(VisualStudioApp app, string slnName, out PythonProjectNode projectNode, out EnvDTE.Project dteProject) {
@@ -315,7 +315,7 @@ namespace PythonToolsUITests {
                     Assert.AreEqual(expectedItem.Category, (__VSERRORCATEGORY)category);
                 }
 
-                UIThread.Invoke((Action)delegate { items[0].NavigateTo(); });
+                app.ServiceProvider.GetUIThread().Invoke((Action)delegate { items[0].NavigateTo(); });
 
                 var doc = app.Dte.ActiveDocument;
                 Assert.IsNotNull(doc);

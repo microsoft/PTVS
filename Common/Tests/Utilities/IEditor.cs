@@ -14,6 +14,7 @@
 
 using System;
 using Microsoft.VisualStudio.Language.Intellisense;
+using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Editor;
 
 namespace TestUtilities {
@@ -35,7 +36,15 @@ namespace TestUtilities {
             get;
         }
 
+        IClassifier Classifier {
+            get;
+        }
+
         void WaitForText(string text);
         void Select(int line, int column, int length);
+
+        SessionHolder<T> WaitForSession<T>() where T : IIntellisenseSession;
+
+        void AssertNoIntellisenseSession();
     }
 }

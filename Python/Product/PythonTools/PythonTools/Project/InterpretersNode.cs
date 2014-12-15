@@ -157,7 +157,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private void CheckPackages(object arg) {
-            UIThread.InvokeTask(() => CheckPackagesAsync())
+            ProjectMgr.Site.GetUIThread().InvokeTask(() => CheckPackagesAsync())
                 .HandleAllExceptions(SR.ProductName, GetType())
                 .DoNotWait();
         }

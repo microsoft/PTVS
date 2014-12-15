@@ -21,9 +21,10 @@ namespace Microsoft.VisualStudioTools.Project {
         private readonly List<HierarchyNode> _ids = new List<HierarchyNode>();
         private readonly Stack<int> _freedIds = new Stack<int>();
 
+        /// <summary>
+        /// Must be called from the UI thread
+        /// </summary>
         public uint Add(HierarchyNode node) {
-            UIThread.MustBeCalledFromUIThread();
-
 #if DEBUG
             foreach (var item in _ids) {
                 Debug.Assert(node != item);
@@ -40,9 +41,10 @@ namespace Microsoft.VisualStudioTools.Project {
             }
         }
 
+        /// <summary>
+        /// Must be called from the UI thread
+        /// </summary>
         public void Remove(HierarchyNode node) {
-            UIThread.MustBeCalledFromUIThread();
-
             int i = (int)node.ID - 1;
             if(i < 0 ||
                 i >= _ids.Count ||
@@ -54,10 +56,11 @@ namespace Microsoft.VisualStudioTools.Project {
             _freedIds.Push(i);
         }
 
+        /// <summary>
+        /// Must be called from the UI thread
+        /// </summary>
         public HierarchyNode this[uint itemId] {
             get {
-                UIThread.MustBeCalledFromUIThread();
-
                 int i = (int)itemId - 1;
                 if (0 <= i && i < _ids.Count) {
                     return _ids[i];

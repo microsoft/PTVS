@@ -13,8 +13,10 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Generic;
 using System.Windows.Input;
 using EnvDTE;
+using Microsoft.VisualStudio.Shell.Interop;
 
 namespace TestUtilities {
     public interface IVisualStudioInstance : IDisposable {
@@ -76,6 +78,13 @@ namespace TestUtilities {
 
         IAddExistingItem AddExistingItem();
 
+        IAddNewItem AddNewItem();
+
         IOverwriteFile WaitForOverwriteFileDialog();
+
+        void WaitForMode(dbgDebugMode dbgDebugMode);
+
+        List<IVsTaskItem> WaitForErrorListItems(int expectedCount);
+
     }
 }

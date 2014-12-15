@@ -90,7 +90,7 @@ namespace PythonToolsUITests {
                         File.Delete(outFile);
                     }
 
-                    UIThread.Invoke(() => {
+                    app.ServiceProvider.GetUIThread().Invoke(() => {
                         proj.SetProperty("CommandLineArguments", string.Format("\"{0}\" \"{1}\"", setValue, outFile));
                         proj.FindCommand(cmdName).Execute(proj);
                     });
@@ -130,7 +130,7 @@ namespace PythonToolsUITests {
                 var proj = project.GetCommonProject();
                 Assert.IsNotNull(proj);
 
-                UIThread.Invoke(() => {
+                app.ServiceProvider.GetUIThread().Invoke(() => {
                     proj.SetProjectProperty("PythonWsgiHandler", "NoHandler");
 
                     proj.SetProjectProperty("StaticUriPattern", "");
@@ -147,7 +147,7 @@ namespace PythonToolsUITests {
                     ));
                 }
 
-                UIThread.Invoke(() => {
+                app.ServiceProvider.GetUIThread().Invoke(() => {
                     proj.SetProjectProperty("StaticUriPattern", "^static/.*$");
                 });
                 app.ExecuteCommand("Build.RebuildSolution");
@@ -167,7 +167,7 @@ namespace PythonToolsUITests {
                     ));
                 }
 
-                UIThread.Invoke(() => {
+                app.ServiceProvider.GetUIThread().Invoke(() => {
                     proj.SetProjectProperty("StaticUriRewrite", "static_files/{R:1}");
                 });
                 app.ExecuteCommand("Build.RebuildSolution");
@@ -193,7 +193,7 @@ namespace PythonToolsUITests {
                     ));
                 }
 
-                UIThread.Invoke(() => {
+                app.ServiceProvider.GetUIThread().Invoke(() => {
                     proj.SetProjectProperty("StaticUriPattern", "invalid[pattern");
                 });
                 app.ExecuteCommand("Build.RebuildSolution");
@@ -217,7 +217,7 @@ namespace PythonToolsUITests {
                 Assert.IsNotNull(proj);
 
                 for (int iteration = 0; iteration <= 2; ++iteration) {
-                    var warnings = UIThread.Invoke(() => {
+                    var warnings = app.ServiceProvider.GetUIThread().Invoke(() => {
                         var buildPane = app.GetOutputWindow("Build");
                         buildPane.Clear();
 
@@ -451,7 +451,7 @@ namespace PythonToolsUITests {
                 var sln = app.GetService<IVsSolution>(typeof(SVsSolution));
                 ErrorHandler.ThrowOnFailure(sln.GetProjectOfUniqueName(ccproj.FullName, out hier));
 
-                UIThread.Invoke(() =>
+                app.ServiceProvider.GetUIThread().Invoke(() =>
                     PythonProjectNode.UpdateServiceDefinition(hier, roleType, roleType + "Role1", app.ServiceProvider)
                 );
 
@@ -564,14 +564,14 @@ namespace PythonToolsUITests {
 
                 EndToEndLog("Aborted analysis");
 
-                UIThread.Invoke(() => {
+                app.ServiceProvider.GetUIThread().Invoke(() => {
                     pyProj.SetProjectProperty("WebBrowserPort", "23457");
                 });
                 EndToEndLog("Set WebBrowserPort to 23457");
                 LaunchAndVerifyNoDebug(app, 23457, textInResponse);
                 EndToEndLog("Verified without debugging");
 
-                UIThread.Invoke(() => {
+                app.ServiceProvider.GetUIThread().Invoke(() => {
                     pyProj.SetProjectProperty("WebBrowserPort", "23456");
                 });
                 EndToEndLog("Set WebBrowserPort to 23456");
@@ -641,7 +641,7 @@ namespace PythonToolsUITests {
 
             try {
                 EndToEndLog("Transitioning to UI thread to build");
-                UIThread.Invoke(() => {
+                app.ServiceProvider.GetUIThread().Invoke(() => {
                     EndToEndLog("Building");
                     app.Dte.Solution.SolutionBuild.Build(true);
                     EndToEndLog("Updating settings");
@@ -672,7 +672,7 @@ namespace PythonToolsUITests {
                 }
                 EndToEndLog("Active at http://localhost:{0}/", port);
             } finally {
-                UIThread.Invoke(() => {
+                app.ServiceProvider.GetUIThread().Invoke(() => {
                     app.GetService<PythonToolsService>().DebuggerOptions.WaitOnNormalExit = prevNormal;
                     app.GetService<PythonToolsService>().DebuggerOptions.WaitOnAbnormalExit = prevAbnormal;
                 });

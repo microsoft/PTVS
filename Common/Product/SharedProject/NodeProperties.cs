@@ -714,7 +714,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 return this.HierarchyNode.Caption;
             }
             set {
-                UIThread.Invoke(() => {
+                HierarchyNode.ProjectMgr.Site.GetUIThread().Invoke(() => {
                     this.HierarchyNode.SetEditLabel(value);
                     this.HierarchyNode.ProjectMgr.ReDrawNode(HierarchyNode, UIHierarchyElement.Caption);
                 });
@@ -729,7 +729,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 return this.HierarchyNode.Caption;
             }
             set {
-                UIThread.Invoke(() => {
+                HierarchyNode.ProjectMgr.Site.GetUIThread().Invoke(() => {
                     this.HierarchyNode.SetEditLabel(value);
                     this.HierarchyNode.ProjectMgr.ReDrawNode(HierarchyNode, UIHierarchyElement.Caption);
                 });

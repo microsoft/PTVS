@@ -39,7 +39,7 @@ namespace Microsoft.VisualStudioTools.Project {
         [SRDescriptionAttribute(SR.StartupFileDescription)]
         public string StartupFile {
             get {
-                return UIThread.Invoke(() => {
+                return Node.Site.GetUIThread().Invoke(() => {
                     var res = Node.ProjectMgr.GetProjectProperty(CommonConstants.StartupFile, true);
                     if (res != null && !Path.IsPathRooted(res)) {
                         res = CommonUtils.GetAbsoluteFilePath(Node.ProjectMgr.ProjectHome, res);
@@ -48,7 +48,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 });
             }
             set {
-                UIThread.Invoke(() => {
+                Node.Site.GetUIThread().Invoke(() => {
                     this.Node.ProjectMgr.SetProjectProperty(
                         CommonConstants.StartupFile,
                         CommonUtils.GetRelativeFilePath(
@@ -68,12 +68,12 @@ namespace Microsoft.VisualStudioTools.Project {
         [SRDescriptionAttribute(SR.WorkingDirectoryDescription)]
         public string WorkingDirectory {
             get {
-                return UIThread.Invoke(() => {
+                return Node.Site.GetUIThread().Invoke(() => {
                     return this.Node.ProjectMgr.GetProjectProperty(CommonConstants.WorkingDirectory, true);
                 });
             }
             set {
-                UIThread.Invoke(() => {
+                Node.Site.GetUIThread().Invoke(() => {
                     this.Node.ProjectMgr.SetProjectProperty(CommonConstants.WorkingDirectory, value);
                 });
             }
@@ -85,12 +85,12 @@ namespace Microsoft.VisualStudioTools.Project {
         [Browsable(false)]
         public string PublishUrl {
             get {
-                return UIThread.Invoke(() => {
+                return Node.Site.GetUIThread().Invoke(() => {
                     return this.Node.ProjectMgr.GetProjectProperty(CommonConstants.PublishUrl, true);
                 });
             }
             set {
-                UIThread.Invoke(() => {
+                Node.Site.GetUIThread().Invoke(() => {
                     this.Node.ProjectMgr.SetProjectProperty(CommonConstants.PublishUrl, value);
                 });
             }
@@ -365,12 +365,12 @@ namespace Microsoft.VisualStudioTools.Project {
         [Browsable(false)]
         public string StartupObject {
             get {
-                return UIThread.Invoke(() => {
+                return Node.Site.GetUIThread().Invoke(() => {
                     return Node.ProjectMgr.GetProjectProperty(CommonConstants.StartupFile);
                 });
             }
             set {
-                UIThread.Invoke(() => {
+                Node.Site.GetUIThread().Invoke(() => {
                     Node.ProjectMgr.SetProjectProperty(
                         CommonConstants.StartupFile,
                         CommonUtils.GetRelativeFilePath(Node.ProjectMgr.ProjectHome, value)

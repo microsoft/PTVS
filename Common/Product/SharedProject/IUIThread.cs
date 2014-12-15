@@ -12,17 +12,25 @@
  *
  * ***************************************************************************/
 
-using Microsoft.VisualStudio;
-using TestUtilities;
-using TestUtilities.SharedProject;
+using System;
+using System.Diagnostics;
+using System.Threading.Tasks;
 
-namespace Microsoft.VisualStudioTools.MockVsTests {
-    public static class MockVsTestExtensions {
-        public static IVisualStudioInstance ToMockVs(this SolutionFile self) {
-            MockVs vs = new MockVs();
-            vs.Invoke(() => ErrorHandler.ThrowOnFailure(vs.Solution.OpenSolutionFile(0, self.Filename)));
-            return vs;
+namespace Microsoft.VisualStudioTools {
+    /// <summary>
+    /// Provides the ability to run code on the VS UI thread.
+    /// </summary>
+    interface IUIThread {
+        void Invoke(Action action);
+        T Invoke<T>(Func<T> func);
+        Task InvokeAsync(Action action);
+        Task<T> InvokeAsync<T>(Func<T> func);
+        Task InvokeTask(Func<Task> func);
+        Task<T> InvokeTask<T>(Func<Task<T>> func);
+        void MustBeCalledFromUIThreadOrThrow();
+
+        bool InvokeRequired {
+            get;
         }
-
     }
 }

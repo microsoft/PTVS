@@ -48,14 +48,6 @@ namespace Microsoft.VisualStudioTools {
         #endregion
 
         internal CommonPackage() {
-            // This call is essential for ensuring that future calls to methods
-            // of UIThread will succeed. Unit tests can disable invoking by
-            // calling UIThread.InitializeAndNeverInvoke before or after this
-            // call. If this call does not occur here, your process will
-            // terminate immediately when an attempt is made to use the UIThread
-            // methods.
-            UIThread.InitializeAndAlwaysInvokeToCurrentThread();
-
 #if DEBUG
             AppDomain.CurrentDomain.UnhandledException += (sender, e) => {
                 if (e.IsTerminating) {
@@ -76,6 +68,7 @@ namespace Microsoft.VisualStudioTools {
 #endif
         }
 
+        
         internal static Dictionary<Command, MenuCommand> Commands {
             get {
                 return _commands;
@@ -191,7 +184,7 @@ namespace Microsoft.VisualStudioTools {
 
         protected override void Initialize() {
             var container = (IServiceContainer)this;
-            //container.AddService(GetLanguageServiceType(), CreateService, true);
+            UIThread.EnsureService(this);
             container.AddService(GetLibraryManagerType(), CreateService, true);
 
             var componentManager = _compMgr = (IOleComponentManager)GetService(typeof(SOleComponentManager));
@@ -212,7 +205,7 @@ namespace Microsoft.VisualStudioTools {
         }
 
         internal static void OpenVsWebBrowser(System.IServiceProvider serviceProvider, string url) {
-            UIThread.Invoke(() => {
+            serviceProvider.GetUIThread().Invoke(() => {
                 var web = serviceProvider.GetService(typeof(SVsWebBrowsingService)) as IVsWebBrowsingService;
                 if (web == null) {
                     OpenWebBrowser(url);

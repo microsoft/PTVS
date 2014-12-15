@@ -200,7 +200,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// Adds references to this container from a MSBuild project.
         /// </summary>
         public void LoadReferencesFromBuildProject(MSBuild.Project buildProject) {
-            UIThread.MustBeCalledFromUIThread();
+            ProjectMgr.Site.GetUIThread().MustBeCalledFromUIThread();
 
             foreach (string referenceType in SupportedReferenceTypes) {
                 IEnumerable<MSBuild.ProjectItem> referencesGroup = this.ProjectMgr.BuildProject.GetItems(referenceType);

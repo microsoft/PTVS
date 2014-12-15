@@ -40,11 +40,6 @@ namespace PythonToolsTests {
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
             PythonTestData.Deploy();
-            // This function is necessary to avoid crashing since we're running
-            // outside of devenv.exe. Its effects will last for the rest of
-            // this test assembly, which is fine since we are never running in
-            // VS in these tests.
-            UIThread.InitializeAndNeverInvoke();
         }
 
         [TestMethod, Priority(0)]
