@@ -100,6 +100,12 @@
     <Content Include="User\Images\PollsFlaskInMemoryBrowser.png" />
     <Content Include="User\Images\PollsFlaskMongoDBAbout.png" />
     <Content Include="User\Images\PollsFlaskMongoDBProjectDebugSettings.png" />
+    <Content Include="User\Images\PyKinectCode.png" />
+    <Content Include="User\Images\PyKinectConfiguration.png" />
+    <Content Include="User\Images\PyKinectDebug.png" />
+    <Content Include="User\Images\PyKinectInstall.png" />
+    <Content Include="User\Images\PyKinectNewProject.png" />
+    <Content Include="User\Images\PyKinectRun.png" />
     <Content Include="User\PollsDjangoMySql.md" />
     <Content Include="User\PollsDjangoSql.md" />
     <Content Include="User\PollsBottleMongoDB.md" />
@@ -251,6 +257,7 @@
     <Content Include="User\Images\WorkerRoleSupportFiles.png" />
     <Content Include="User\PollsFlaskAzureTableStorage.md" />
     <Content Include="User\PollsFlaskMongoDB.md" />
+    <Content Include="User\PyKinect.md" />
     <Content Include="User\PyLint.md" />
     <Content Include="User\Python Environments.md" />
     <Content Include="User\VS14.md" />

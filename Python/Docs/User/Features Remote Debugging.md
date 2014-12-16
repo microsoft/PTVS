@@ -2,7 +2,7 @@
 ===============================
 
 <p style="text-align: center">For a quick overview of Remote Debugging, please watch the video:</p>
-[video:"Remote Debugging for Windows, Linux and OS X" VTluEosS4Ts]
+[video:"Remote Debugging for Windows, Linux and OS X" VTluEosS4Ts 0.5]
 
 
 Overview

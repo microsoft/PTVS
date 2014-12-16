@@ -12,7 +12,7 @@ We'll learn how to create an Azure Storage account, how to configure the
 application to use Azure Table Storage, and how to publish the application to 
 an Azure Website.
 
-[video:"Flask and Azure Table Storage on Azure" qUtZWtPwbTk]
+[video:"Flask and Azure Table Storage on Azure" qUtZWtPwbTk 0.5]
 
 + [Prerequisites](#prerequisites)
 + [Create the Project](#create-the-project)

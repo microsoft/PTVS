@@ -2,7 +2,7 @@ The Editor
 ==========
 
 <p style="text-align: center;">For a quick overview of how we've improved the editor in PTVS 2.0, please watch the video:</p>
-[video:"Analysis and IntelliSense video" eIr9be6yroY]
+[video:"Analysis and IntelliSense video" eIr9be6yroY 0.5]
 
 When developing, most of your time is spent in the text editor.
 Python Tools provides a rich editor with functionality to help you be more productive, such as syntax highlighting, identifier and member completion, signature help, method overrides, and search and navigation.

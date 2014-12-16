@@ -1,7 +1,7 @@
 ﻿# Mixed-mode debugging
 
 <p style="text-align: center">For a quick overview of mixed-mode debugging, please watch the video:</p>
-[video:"Mixed-Mode Python/C/C++ Debugging overview" wvJaKQ94lBY]
+[video:"Mixed-Mode Python/C/C++ Debugging overview" wvJaKQ94lBY 0.5]
 
 <p style="text-align: center; color: red">
 Mixed-mode debugging is only supported on Visual Studio 2012 and above.

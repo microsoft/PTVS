@@ -12,7 +12,7 @@ We'll learn how to use one of the hosted MongoDB services on Azure, how to
 configure the application to use MongoDB, and how to publish the application 
 to an Azure Website.
 
-[video:"Bottle and MongoDB on Azure" 8hQMyf8p_Jo]
+[video:"Bottle and MongoDB on Azure" 8hQMyf8p_Jo 0.5]
 
 + [Prerequisites](#prerequisites)
 + [Create the Project](#create-the-project)

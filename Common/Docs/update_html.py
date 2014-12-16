@@ -169,7 +169,7 @@ class LinkMapper:
             (r'(?<!`)\[file\:([^\]]+)\]', self.replace_file_links, False),
             (r'(?<!`)\[wiki\:("([^"]+)"\s*)?([^\]]+)\]', self.replace_wiki_links, False),
             (r'(?<!`)\[issue\:("([^"]+)"\s*)?(\d+)\]', self.replace_issue_links, False),
-            (r'(?<!`)\[video\:(?:"([^"]+)"\s*)?(\w+)\s*(\d+(?:\.\d+)?)?\]', self.replace_video_links, True),
+            (r'(?<!`)\[video\:(?:"([^"]+)"\s*)?([A-Za-z0-9\-_]+)\s*(\d+(?:\.\d+)?)?\]', self.replace_video_links, True),
         ]
 
 
@@ -252,37 +252,36 @@ def main(start_dir, site, doc_root, list_outputs_only):
     
     for dirname, _, filenames in os.walk(sources):
         for filename in (f for f in filenames if f.upper().endswith('.MD')):
-            if not list_outputs_only:
-                print('Converting {}'.format(filename))
-                cwd = os.getcwd()
-                os.chdir(dirname)
-                try:
-                    with open(filename, 'r', encoding='utf-8-sig') as src:
-                        text = src.read()
-            
-                    # Do our own link replacements, rather than markdown2's
-                    for pattern, repl, has_outputs in link_mapper.patterns:
-                        if list_outputs_only:
-                            if has_outputs:
-                                for mo in re.finditer(pattern, text):
-                                    repl(mo)
-                        else:
-                            text = re.sub(pattern, repl, text)
-            
-                    html_filename = filename[:-3] + '.html'
+            html_filename = filename[:-3] + '.html'
+            if list_outputs_only:
+                log_output(html_filename)
+                continue
 
+            print('Converting {}'.format(filename))
+            cwd = os.getcwd()
+            os.chdir(dirname)
+            try:
+                with open(filename, 'r', encoding='utf-8-sig') as src:
+                    text = src.read()
+
+                # Do our own link replacements, rather than markdown2's
+                for pattern, repl, has_outputs in link_mapper.patterns:
                     if list_outputs_only:
-                        log_output(html_filename)
+                        if has_outputs:
+                            for mo in re.finditer(pattern, text):
+                                repl(mo)
                     else:
-                        html = markdown.convert(text)
-            
-                    # Do any post-conversion replacements
-                    for pattern, repl in HTML_PATTERNS:
-                        html = re.sub(pattern, repl, html)
-            
-                        with open(html_filename, 'w', encoding='utf-8') as dest:
-                            dest.write(HEADER)
-                            dest.write(html)
-                            dest.write(FOOTER.format(filename))
-                finally:
-                    os.chdir(cwd)
+                        text = re.sub(pattern, repl, text)
+
+                html = markdown.convert(text)
+
+                # Do any post-conversion replacements
+                for pattern, repl in HTML_PATTERNS:
+                    html = re.sub(pattern, repl, html)
+
+                    with open(html_filename, 'w', encoding='utf-8') as dest:
+                        dest.write(HEADER)
+                        dest.write(html)
+                        dest.write(FOOTER.format(filename))
+            finally:
+                os.chdir(cwd)

@@ -8,7 +8,7 @@ We'll learn how to use a SQL database hosted on Azure, how to configure the
 application to use a SQL database, and how to publish the application to an 
 Azure Website.
 
-[video:"Django and SQL Database on Azure" ZwcoGcIeHF4]
+[video:"Django and SQL Database on Azure" ZwcoGcIeHF4 0.5]
 
 + [Prerequisites](#prerequisites)
 + [Create the Project](#create-the-project)
