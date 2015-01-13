@@ -30,7 +30,7 @@ using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.VisualStudioTools.VSTestHost.Internal {
     [PackageRegistration(UseManagedResourcesOnly = true, RegisterUsing=RegistrationMethod.Assembly)]
-    [InstalledProductRegistration("#110", "#112", "1.0", IconResourceID = 400)]
+    [InstalledProductRegistration("#110", "#112", "1.0.1", IconResourceID = 400)]
     [ProvideAutoLoad(VSConstants.UICONTEXT.NoSolution_string)]
     [ProvideAutoLoad(VSConstants.UICONTEXT.SolutionExists_string)]
 #if SUPPORT_TESTER

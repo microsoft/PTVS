@@ -3,7 +3,7 @@
   <Product Id="*"
            Name="VS Test Host Adapter"
            Language="1033"
-           Version="1.0.0.0"
+           Version="1.0.1.0"
            Manufacturer="Microsoft Corporation"
            UpgradeCode="4ff73677-1aed-4738-8ac7-ffc843e1cbd0">
     <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" Platform="x86" />
@@ -125,7 +125,7 @@
   <?endif?>
   
   <?define VSHiveKey=SOFTWARE\Microsoft\$(var.VSSKU)\$(var.VSVersion).0?>
-  <?define AssemblyName=Microsoft.VisualStudioTools.VSTestHost.$(var.VSVersion).0, Version=$(var.VSVersion).0.0.0, Culture=neutral, PublicKeyToken=B03F5F7F11D50A3A?>
+  <?define AssemblyName=Microsoft.VisualStudioTools.VSTestHost.$(var.VSVersion).0, Version=$(var.VSVersion).0.1.0, Culture=neutral, PublicKeyToken=B03F5F7F11D50A3A?>
 
   <!-- 
   This component is the registration to launch unit tests

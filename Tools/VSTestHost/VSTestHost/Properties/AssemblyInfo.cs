@@ -25,12 +25,12 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyCompany("Microsoft Corporation")]
 [assembly: AssemblyProduct("VS Test Host")]
 [assembly: AssemblyCopyright("(c) Microsoft Corporation")]
-[assembly: ComVisible(false)]     
+[assembly: ComVisible(false)]
 [assembly: CLSCompliant(false)]
 [assembly: NeutralResourcesLanguage("en-US")]
 
-[assembly: AssemblyVersion(AssemblyVersionInfo.VSVersion + ".0.0.0")]
-[assembly: AssemblyFileVersion(AssemblyVersionInfo.VSVersion + ".0.0.0")]
+[assembly: AssemblyVersion(AssemblyVersionInfo.VSVersion + ".0.1.0")]
+[assembly: AssemblyFileVersion(AssemblyVersionInfo.VSVersion + ".0.1.0")]
 
 class AssemblyVersionInfo {
 #if VS10
