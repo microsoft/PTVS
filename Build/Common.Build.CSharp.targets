@@ -71,7 +71,7 @@
        To avoid spawning a new msbuild.exe process again and again unnecessarily, do a quick up-to-date check (effectively
        duplicating the one done by .csproj) on the target. -->
   <Target Name="BuildBuildTasks" Inputs="@(BuildTasksSourceFiles)" Outputs="$(BuildTasksAssembly)">
-    <Exec Command='"$(MSBuildBinPath)\msbuild.exe" "$(BuildRoot)\Tools\BuildTasks\BuildTasks.csproj" /p:Configuration=$(Configuration)'/> 
+    <Exec Command='"$(MSBuildBinPath)\msbuild.exe" "$(BuildRoot)\Tools\BuildTasks\BuildTasks.csproj" /p:Configuration=$(Configuration) /p:VSTarget=$(VSTarget)'/> 
   </Target>
 
   <UsingTask AssemblyFile="$(BuildTasksAssembly)" TaskName="Microsoft.VisualStudioTools.BuildTasks.ExtractLambdasFromXaml"/>
