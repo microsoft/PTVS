@@ -26,9 +26,9 @@ namespace Microsoft.PythonTools.Project.Web {
         private readonly IServiceProvider _serviceProvider;
 
         [ImportingConstructor]
-        public PythonWebLauncherProvider([Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider) {
+        public PythonWebLauncherProvider([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider) {
             _serviceProvider = serviceProvider;
-            _pyService = (PythonToolsService)serviceProvider.GetService(typeof(PythonToolsService));
+            _pyService = serviceProvider.GetPythonToolsService();
         }
 
         public IPythonLauncherOptions GetLauncherOptions(IPythonProject properties) {

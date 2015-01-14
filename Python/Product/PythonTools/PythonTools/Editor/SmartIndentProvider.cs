@@ -13,14 +13,12 @@
  * ***************************************************************************/
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.ComponentModel.Composition;
-using Microsoft.VisualStudio.Text.Editor;
-using Microsoft.VisualStudio.Utilities;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
+using Microsoft.VisualStudio.Utilities;
 
 namespace Microsoft.PythonTools.Editor {
     [Export(typeof(ISmartIndentProvider))]
@@ -29,8 +27,8 @@ namespace Microsoft.PythonTools.Editor {
         private readonly PythonToolsService _pyService;
 
         [ImportingConstructor]
-        internal SmartIndentProvider(PythonToolsService pyService) {
-            _pyService = pyService;
+        internal SmartIndentProvider([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider) {
+            _pyService = serviceProvider.GetPythonToolsService();
         }
 
         private sealed class Indent : ISmartIndent {

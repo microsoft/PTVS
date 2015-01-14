@@ -73,8 +73,8 @@ namespace Microsoft.PythonTools.Language {
             _textView.Properties[typeof(EditFilter)] = this;
             _editorOps = editorOps;
             _serviceProvider = serviceProvider;
-            _componentModel = (IComponentModel)_serviceProvider.GetService(typeof(SComponentModel));
-            _pyService = (PythonToolsService)_serviceProvider.GetService(typeof(PythonToolsService));
+            _componentModel = _serviceProvider.GetComponentModel();
+            _pyService = _serviceProvider.GetPythonToolsService();
 
             BraceMatcher.WatchBraceHighlights(textView, _componentModel);
         }

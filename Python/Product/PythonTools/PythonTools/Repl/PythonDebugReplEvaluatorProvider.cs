@@ -32,9 +32,9 @@ namespace Microsoft.PythonTools.Repl {
         private readonly IServiceProvider _serviceProvider;
 
         [ImportingConstructor]
-        public PythonDebugReplEvaluatorProvider([Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider) {
+        public PythonDebugReplEvaluatorProvider([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider) {
             _serviceProvider = serviceProvider;
-            _pyService = (PythonToolsService)serviceProvider.GetService(typeof(PythonToolsService));
+            _pyService = serviceProvider.GetPythonToolsService();
         }
 
         #region IReplEvaluatorProvider Members

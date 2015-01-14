@@ -35,7 +35,7 @@ namespace Microsoft.PythonTools {
         }
 
         private void BrowseSurveyNewsOnIdle(object sender, ComponentManagerEventArgs e) {
-            var pyService = (PythonToolsService)_serviceProvider.GetService(typeof(PythonToolsService));
+            var pyService = _serviceProvider.GetPythonToolsService();
             pyService.OnIdle -= BrowseSurveyNewsOnIdle;
 
             lock (_surveyNewsUrlLock) {
@@ -51,7 +51,7 @@ namespace Microsoft.PythonTools {
                 _surveyNewsUrl = url;
             }
 
-            var pyService = (PythonToolsService)_serviceProvider.GetService(typeof(PythonToolsService));
+            var pyService = _serviceProvider.GetPythonToolsService();
             pyService.OnIdle += BrowseSurveyNewsOnIdle;
         }
 

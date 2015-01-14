@@ -33,7 +33,6 @@ using Microsoft.VisualStudioTools.Project;
 using Microsoft.Win32;
 
 namespace Microsoft.IronPythonTools.Debugger {
-    [Export(typeof(IProjectLauncher))]
     class IronPythonLauncher : IProjectLauncher {
         private static Process _chironProcess;
         private static string _chironDir;

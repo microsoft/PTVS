@@ -40,9 +40,8 @@ namespace Microsoft.PythonTools.Project.Web {
     /// Web launcher.  This wraps the default launcher and provides it with a
     /// different IPythonProject which launches manage.py with the appropriate
     /// options.  Upon a successful launch we will then automatically load the
-    /// appropriate page into the users web browswer.
+    /// appropriate page into the users web browser.
     /// </summary>
-    [Export(typeof(IProjectLauncher))]
     class PythonWebLauncher : IProjectLauncher {
         private int? _testServerPort;
 

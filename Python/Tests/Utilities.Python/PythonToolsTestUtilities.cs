@@ -29,10 +29,9 @@ namespace TestUtilities.Python {
         /// isn't needed.
         /// </summary>
         /// <returns></returns>
-
         public static PythonToolsService CreatePythonService() {
             var serviceProvider = CreateMockServiceProvider();
-            return (PythonToolsService)serviceProvider.GetService(typeof(PythonToolsService));
+            return serviceProvider.GetPythonToolsService();
         }
 
         /// <summary>

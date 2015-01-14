@@ -12,7 +12,9 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.Windows.Forms;
+using Microsoft.PythonTools;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudioTools.Project;
 
@@ -28,7 +30,7 @@ namespace Microsoft.PythonTools.Project {
         public override int DebugLaunch(uint flags) {
             
             if (_project.ShouldWarnOnLaunch) {
-                var pyService = (PythonToolsService)_project.GetService(typeof(PythonToolsService));
+                var pyService = ((IServiceProvider)_project).GetPythonToolsService();
                 if (pyService.DebuggerOptions.PromptBeforeRunningWithBuildError) {
                     var res = new StartWithErrorsDialog(pyService).ShowDialog();
                     if (res == DialogResult.No) {

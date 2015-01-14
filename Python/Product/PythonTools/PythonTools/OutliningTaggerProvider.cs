@@ -34,8 +34,8 @@ namespace Microsoft.PythonTools {
         private readonly PythonToolsService _pyService;
 
         [ImportingConstructor]
-        public OutliningTaggerProvider([Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider) {
-            _pyService = (PythonToolsService)serviceProvider.GetService(typeof(PythonToolsService));
+        public OutliningTaggerProvider([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider) {
+            _pyService = serviceProvider.GetPythonToolsService();
         }
 
         #region ITaggerProvider Members
@@ -59,7 +59,7 @@ namespace Microsoft.PythonTools {
                 _buffer = buffer;
                 _buffer.Properties[typeof(OutliningTagger)] = this;
                 _enabled = _pyService.AdvancedOptions.EnterOutliningModeOnOpen;
-                _timer = new Timer(TagUpdate, null, Timeout.Infinite, Timeout.Infinite);                
+                _timer = new Timer(TagUpdate, null, Timeout.Infinite, Timeout.Infinite);
             }
 
             public bool Enabled {

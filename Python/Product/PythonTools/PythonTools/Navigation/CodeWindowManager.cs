@@ -46,7 +46,7 @@ namespace Microsoft.PythonTools.Navigation {
             _serviceProvider = serviceProvider;
             _window = codeWindow;
             _textBuffer = textView.TextBuffer;
-            _pyService = (PythonToolsService)_serviceProvider.GetService(typeof(PythonToolsService));
+            _pyService = _serviceProvider.GetPythonToolsService();
         }
         
         #region IVsCodeWindowManager Members

@@ -46,9 +46,9 @@ namespace Microsoft.PythonTools.Intellisense {
         internal PythonToolsService PythonService;
 
         [ImportingConstructor]
-        public IntellisenseControllerProvider(SVsServiceProvider serviceProvider) {
+        public IntellisenseControllerProvider([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider) {
             _ServiceProvider = serviceProvider;
-            PythonService = (PythonToolsService)serviceProvider.GetService(typeof(PythonToolsService));
+            PythonService = serviceProvider.GetPythonToolsService();
         }
 
         readonly Dictionary<ITextView, Tuple<BufferParser, VsProjectAnalyzer>> _hookedCloseEvents =

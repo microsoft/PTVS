@@ -175,7 +175,7 @@ namespace PythonToolsMockTests {
         }
 
         public static PythonToolsService GetPyService(this MockVs session) {
-            return (PythonToolsService)session.ServiceProvider.GetService(typeof(PythonToolsService));
+            return session.ServiceProvider.GetPythonToolsService();
         }
     }
 }
