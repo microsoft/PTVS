@@ -17,17 +17,15 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Debugger.Interop;
 
 namespace Microsoft.PythonTools.Debugger.DebugEngine {
-    // And implementation of IDebugCodeContext2 and IDebugMemoryContext2. 
-    // IDebugMemoryContext2 represents a position in the address space of the machine running the program being debugged.
-    // IDebugCodeContext2 represents the starting position of a code instruction. 
-    // For most run-time architectures today, a code context can be thought of as an address in a program's execution stream.
+    // An implementation of IDebugCodeContext2. 
+    // Represents the starting position of a code instruction. 
+    // For Python, this is fundamentally a specific line in the source code.
     class AD7MemoryAddress : IDebugCodeContext2, IDebugCodeContext100 {
         private readonly AD7Engine _engine;
         private readonly uint _lineNo;
         private readonly string _filename;
         private readonly PythonStackFrame _frame;
         private IDebugDocumentContext2 _documentContext;
-
 
         public AD7MemoryAddress(AD7Engine engine, string filename, uint lineno) {
             _engine = engine;
@@ -140,20 +138,18 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                 pinfo[0].dwFields |= enum_CONTEXT_INFO_FIELDS.CIF_ADDRESS;
             }
 
-            // Fields not supported by the sample
-            if ((dwFields & enum_CONTEXT_INFO_FIELDS.CIF_ADDRESSOFFSET) != 0) { }
-            if ((dwFields & enum_CONTEXT_INFO_FIELDS.CIF_ADDRESSABSOLUTE) != 0) { }
-            if ((dwFields & enum_CONTEXT_INFO_FIELDS.CIF_MODULEURL) != 0) { }
-            if ((dwFields & enum_CONTEXT_INFO_FIELDS.CIF_FUNCTION) != 0) { }
-            if ((dwFields & enum_CONTEXT_INFO_FIELDS.CIF_FUNCTIONOFFSET) != 0) { }
+            if ((dwFields & enum_CONTEXT_INFO_FIELDS.CIF_FUNCTION) != 0 && _frame != null) {
+                pinfo[0].bstrFunction = _frame.FunctionName;
+                pinfo[0].dwFields |= enum_CONTEXT_INFO_FIELDS.CIF_FUNCTION;
+            }
 
             return VSConstants.S_OK;
         }
 
-        // Gets the user-displayable name for this context
-        // This is not supported by the sample engine.
+        // Gets the user-displayable name for this context. Not supported for Python.
         public int GetName(out string pbstrName) {
-            throw new Exception("The method or operation is not implemented.");
+            pbstrName = null;
+            return VSConstants.E_NOTIMPL;
         }
 
         // Subtracts a specified value from the current context's address to create a new context.
@@ -186,9 +182,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
         #region IDebugCodeContext100 Members
 
-        // Returns the program being debugged. In the case of this sample
-        // debug engine, AD7Engine implements IDebugProgram2 which represents
-        // the program being debugged.
+        // Returns the program being debugged. For Python debug engine, AD7Engine
+        // implements IDebugProgram2 which represents the program being debugged.
         int IDebugCodeContext100.GetProgram(out IDebugProgram2 pProgram) {
             pProgram = _engine;
             return VSConstants.S_OK;
