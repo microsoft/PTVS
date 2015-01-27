@@ -16,8 +16,15 @@
 
 using System;
 using System.Collections.Generic;
+
+#if DEV14_OR_LATER
+using Microsoft.Html.Core.Artifacts;
+using Microsoft.Html.Core.Parser.Def;
+using Microsoft.Web.Core.Text;
+#else
 using Microsoft.Html.Core;
 using Microsoft.Web.Core;
+#endif
 
 namespace Microsoft.PythonTools.Django.TemplateParsing {
     /// <summary>

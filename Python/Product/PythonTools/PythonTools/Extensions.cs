@@ -175,6 +175,11 @@ namespace Microsoft.PythonTools {
             return buffer.CurrentSnapshot.CreateTrackingSpan(position, 1, SpanTrackingMode.EdgeInclusive);
         }
 
+#if DEV14_OR_LATER
+#pragma warning disable 0618
+#endif
+
+        // TODO: Switch from smart tags to Light Bulb: http://go.microsoft.com/fwlink/?LinkId=394601
         internal static ITrackingSpan CreateTrackingSpan(this ISmartTagSession session, ITextBuffer buffer) {
             var triggerPoint = session.GetTriggerPoint(buffer);
             var position = triggerPoint.GetPosition(buffer.CurrentSnapshot);
@@ -190,7 +195,11 @@ namespace Microsoft.PythonTools {
 
             return buffer.CurrentSnapshot.CreateTrackingSpan(position, 1, SpanTrackingMode.EdgeInclusive);
         }
-        
+
+#if DEV14_OR_LATER
+#pragma warning restore 0618
+#endif
+
         public static IPythonInterpreterFactory GetPythonInterpreterFactory(this IVsHierarchy self) {
             var node = (self.GetProject().GetCommonProject() as PythonProjectNode);
             if (node != null) {

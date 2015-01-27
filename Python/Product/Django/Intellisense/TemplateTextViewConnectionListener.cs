@@ -18,8 +18,15 @@ using System.ComponentModel.Composition;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
-using Microsoft.Web.Editor;
 using Microsoft.Web.Editor.ContainedLanguage;
+
+#if DEV14_OR_LATER
+using Microsoft.Web.Editor.Controller;
+using Microsoft.Web.Editor.Host;
+using Microsoft.Web.Editor.Services;
+#else
+using Microsoft.Web.Editor;
+#endif
 
 namespace Microsoft.PythonTools.Django.Intellisense {
     [Export(typeof(IWpfTextViewConnectionListener))]

@@ -22,6 +22,11 @@ using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Text;
 
 namespace Microsoft.PythonTools.Intellisense {
+#if DEV14_OR_LATER
+#pragma warning disable 0618
+#endif
+
+    // TODO: Switch from smart tags to Light Bulb: http://go.microsoft.com/fwlink/?LinkId=394601
     class SmartTagSource : ISmartTagSource {
         private readonly ITextBuffer _textBuffer;
         private readonly System.IServiceProvider _serviceProvider;

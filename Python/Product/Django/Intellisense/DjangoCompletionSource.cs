@@ -16,12 +16,19 @@
 
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.Html.Editor;
 using Microsoft.PythonTools.Django.Project;
 using Microsoft.PythonTools.Django.TemplateParsing;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
+
+#if DEV14_OR_LATER
+using Microsoft.Html.Editor.Document;
+using Microsoft.Web.Core.Text;
+#else
+using Microsoft.Html.Editor;
+using Microsoft.Web.Core;
+#endif
 
 namespace Microsoft.PythonTools.Django.Intellisense {
     internal class DjangoCompletionSource : DjangoCompletionSourceBase {
@@ -68,7 +75,7 @@ namespace Microsoft.PythonTools.Django.Intellisense {
                 yield break;
             }
 
-            var artifacts = doc.HtmlEditorTree.ArtifactCollection.ItemsInRange(new Microsoft.Web.Core.TextRange(0, triggerPoint.Position));
+            var artifacts = doc.HtmlEditorTree.ArtifactCollection.ItemsInRange(new TextRange(0, triggerPoint.Position));
             foreach (var artifact in artifacts.OfType<TemplateBlockArtifact>().Reverse()) {
                 var artifactText = doc.HtmlEditorTree.ParseTree.Text.GetText(artifact.InnerRange);
                 artifact.Parse(artifactText);

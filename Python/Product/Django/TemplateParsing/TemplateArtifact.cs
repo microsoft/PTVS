@@ -21,6 +21,11 @@ using Microsoft.Html.Core;
 using Microsoft.PythonTools.Django.Intellisense;
 using Microsoft.Web.Core;
 
+#if DEV14_OR_LATER
+using Microsoft.Html.Core.Artifacts;
+using Microsoft.Web.Core.Text;
+#endif
+
 namespace Microsoft.PythonTools.Django.TemplateParsing {
     /// <summary>
     /// A single Django template construct, such as <c>{{ var }}</c> or <c>{% endcomment %}</c>.

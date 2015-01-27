@@ -18,7 +18,12 @@ using System.Collections.Generic;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
+
+#if DEV14_OR_LATER
+using Microsoft.Web.Editor.Completion;
+#else
 using Microsoft.Web.Editor.Intellisense;
+#endif
 
 namespace Microsoft.PythonTools.Django.Intellisense {
     internal class TemplateCompletionController : CompletionController {

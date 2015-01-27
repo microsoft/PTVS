@@ -21,12 +21,12 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
-using analysis::Microsoft.VisualStudioTools;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudioTools;
 using TestUtilities;
 using TestUtilities.Python;
 using TestUtilities.UI;
@@ -404,7 +404,7 @@ namespace PythonToolsUITests {
         [HostType("VSTestHost")]
         public void AddExistingVEnv() {
             PythonPaths.Python33.AssertInstalled();
-            if (!CommonUtils.IsSameDirectory("C:\\Python33", PythonPaths.Python33.PrefixPath)) {
+            if (!analysis::Microsoft.VisualStudioTools.CommonUtils.IsSameDirectory("C:\\Python33", PythonPaths.Python33.PrefixPath)) {
                 Assert.Inconclusive("Python 3.3 not configured correctly");
             }
 

@@ -15,8 +15,14 @@
 #if DEV12_OR_LATER
 
 using System.IO;
+
+#if DEV14_OR_LATER
+using Microsoft.Html.Core.Artifacts;
+using Microsoft.Web.Core.Text;
+#else
 using Microsoft.Html.Core;
 using Microsoft.Web.Core;
+#endif
 
 namespace Microsoft.PythonTools.Django.TemplateParsing {
     /// <summary>

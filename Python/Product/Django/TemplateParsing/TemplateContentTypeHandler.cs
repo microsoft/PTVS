@@ -14,8 +14,14 @@
 
 #if DEV12_OR_LATER
 
+#if DEV14_OR_LATER
+using Microsoft.Html.Core.Artifacts;
+using Microsoft.Html.Editor.ContentType.Handlers;
+using Microsoft.Html.Editor.Tree;
+#else
 using Microsoft.Html.Core;
 using Microsoft.Html.Editor;
+#endif
 
 namespace Microsoft.PythonTools.Django.TemplateParsing {
     internal class TemplateContentTypeHandler : HtmlServerCodeContentTypeHandler {

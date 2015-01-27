@@ -16,7 +16,13 @@
 
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
+
+#if DEV14_OR_LATER
+using Microsoft.Web.Editor.Controller;
+using Microsoft.Web.Editor.Services;
+#else
 using Microsoft.Web.Editor;
+#endif
 
 namespace Microsoft.PythonTools.Django.Intellisense {
     internal class TemplateMainController : ViewController {

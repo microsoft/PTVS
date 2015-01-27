@@ -14,10 +14,18 @@
 
 #if DEV12_OR_LATER
 
-using System;
 using System.Collections.Generic;
+
+#if DEV14_OR_LATER
+using Microsoft.Html.Editor.ContainedLanguage.Generators;
+using Microsoft.Html.Editor.ContainedLanguage.Handlers;
+using Microsoft.Html.Editor.ContentType;
+using Microsoft.Html.Editor.Tree;
+#else
+using System;
 using Microsoft.Html.Editor;
 using Microsoft.Html.Editor.ContainedLanguage;
+#endif
 
 namespace Microsoft.PythonTools.Django.TemplateParsing {
     internal class TemplateBlockHandler : ArtifactBasedBlockHandler {

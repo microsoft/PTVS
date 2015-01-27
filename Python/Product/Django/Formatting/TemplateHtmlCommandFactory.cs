@@ -19,7 +19,12 @@ using System.ComponentModel.Composition;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
+
+#if DEV14_OR_LATER
+using Microsoft.Web.Editor.Controller;
+#else
 using Microsoft.Web.Editor;
+#endif
 
 namespace Microsoft.PythonTools.Django.Formatting {
     [Export(typeof(ICommandFactory))]

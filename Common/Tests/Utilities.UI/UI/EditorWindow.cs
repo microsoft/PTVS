@@ -168,6 +168,11 @@ namespace TestUtilities.UI {
             }
         }
 
+#if DEV14_OR_LATER
+#pragma warning disable 0618
+#endif
+
+        // TODO: Switch from smart tags to Light Bulb: http://go.microsoft.com/fwlink/?LinkId=394601
         public void StartSmartTagSessionNoSession() {
             ShowSmartTag();
             System.Threading.Thread.Sleep(100);
@@ -193,6 +198,9 @@ namespace TestUtilities.UI {
             ShowSmartTag();
             return WaitForSession<ISmartTagSession>();
         }
+#if DEV14_OR_LATER
+#pragma warning restore 0618
+#endif
 
         public SessionHolder<T> WaitForSession<T>() where T : IIntellisenseSession {
             var sessionStack = IntellisenseSessionStack;

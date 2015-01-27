@@ -14,11 +14,18 @@
 
 #if DEV12_OR_LATER
 
-using System.ComponentModel.Composition;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Operations;
+
+#if DEV14_OR_LATER
+using Microsoft.Web.Editor.Completion;
+using Microsoft.Web.Editor.Services;
+#else
+using System.ComponentModel.Composition;
 using Microsoft.Web.Editor;
+using Microsoft.Web.Editor.Intellisense;
+#endif
 
 namespace Microsoft.PythonTools.Django.Intellisense {
     internal class TemplateTypingCommandHandler : TypingCommandHandler {
@@ -40,7 +47,7 @@ namespace Microsoft.PythonTools.Django.Intellisense {
             _editorOptions = editorOptions;
         }
 
-        protected override Web.Editor.Intellisense.CompletionController CompletionController {
+        protected override CompletionController CompletionController {
             get {
                 return ServiceManager.GetService<TemplateCompletionController>(TextView);
             }

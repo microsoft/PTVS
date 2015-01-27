@@ -32,6 +32,14 @@ using TestUtilities;
 using TestUtilities.Python;
 using TestUtilities.UI;
 
+#if DEV14_OR_LATER
+using Microsoft.Html.Editor.Document;
+using Microsoft.Html.Editor.Settings;
+using Microsoft.Html.Editor.Tree;
+#elif DEV12_OR_LATER
+using Microsoft.Html.Editor;
+#endif
+
 namespace DjangoUITests {
     [TestClass]
     public class DjangoEditingTests {
@@ -89,7 +97,7 @@ namespace DjangoUITests {
 
         private static void WaitForHtmlTreeUpdate(IWpfTextView textView) {
 #if DEV12_OR_LATER
-            var htmlDoc = Microsoft.Html.Editor.HtmlEditorDocument.TryFromTextView(textView);
+            var htmlDoc = HtmlEditorDocument.TryFromTextView(textView);
             Assert.IsNotNull(htmlDoc);
 
             if (htmlDoc.HtmlEditorTree.IsReady) {
@@ -98,7 +106,7 @@ namespace DjangoUITests {
 
             var are = new AutoResetEvent(false);
 
-            EventHandler<Microsoft.Html.Editor.HtmlTreeUpdatedEventArgs> updateCompletedHandler = null;
+            EventHandler<HtmlTreeUpdatedEventArgs> updateCompletedHandler = null;
             updateCompletedHandler = delegate {
                 if (htmlDoc.HtmlEditorTree.IsReady) {
                     if (htmlDoc != null) {
@@ -1266,8 +1274,8 @@ namespace DjangoUITests {
             bool oldValue = false;
 #if DEV12_OR_LATER
             ThreadHelper.Generic.Invoke(() => {
-                Microsoft.Html.Editor.HtmlSettings.InsertMatchingBraces = false;
-                Microsoft.Html.Editor.HtmlSettings.InsertEndTags = false;
+                HtmlSettings.InsertMatchingBraces = false;
+                HtmlSettings.InsertEndTags = false;
             });
 #endif
             return oldValue;
