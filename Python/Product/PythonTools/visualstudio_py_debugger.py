@@ -2195,29 +2195,25 @@ def is_same_py_file(file1, file2):
     return file1 == file2
 
 
-def print_exception():
-    # count the debugger frames to be removed
-    tb = traceback.extract_tb(sys.exc_info()[2])
-    debugger_count = len(tb)
-    while debugger_count:
-        if is_same_py_file(tb[debugger_count - 1][0], __file__):
-            break
-        debugger_count -= 1
-        
+def print_exception(exc_type, exc_value, exc_tb):
+    # remove debugger frames from the top and bottom of the traceback
+    tb = traceback.extract_tb(exc_tb)
+    for i in [0, -1]:
+        while tb:
+            frame_file = path.normcase(tb[i][0])
+            if not any(is_same_py_file(frame_file, f) for f in DONT_DEBUG):
+                break
+            del tb[i]
+
     # print the traceback
-    tb = tb[debugger_count:]
     if tb:
         print('Traceback (most recent call last):')
         for out in traceback.format_list(tb):
             sys.stdout.write(out)
     
     # print the exception
-    for out in traceback.format_exception_only(sys.exc_info()[0], sys.exc_info()[1]):
+    for out in traceback.format_exception_only(exc_type, exc_value):
         sys.stdout.write(out)
-
-def silent_excepthook(exc_type, exc_value, exc_tb):
-    # Used to avoid displaying the exception twice on exit.
-    pass
 
 def debug(
     file,
@@ -2240,6 +2236,18 @@ def debug(
     BREAK_ON_SYSTEMEXIT_ZERO = break_on_systemexit_zero
     DEBUG_STDLIB = debug_stdlib
     DJANGO_DEBUG = django_debugging
+
+    def _excepthook(exc_type, exc_value, exc_tb):
+        # Display the exception and wait on exit
+        if exc_type is SystemExit:
+            if (wait_on_exception and exc_value.code != 0) or (wait_on_exit and exc_value.code == 0):
+                print_exception(exc_type, exc_value, exc_tb)
+                do_wait()
+        else:
+            print_exception(exc_type, exc_value, exc_tb)
+            if wait_on_exception:
+                do_wait()
+    sys.excepthook = sys.__excepthook__ = _excepthook
 
     attach_process(port_num, debug_id, report = True)
 
@@ -2283,25 +2291,13 @@ def debug(
 
         if wait_on_exit:
             do_wait()
-    except SystemExit:
-        if (wait_on_exception and sys.exc_info()[1].code != 0) or (wait_on_exit and sys.exc_info()[1].code == 0):
-            print_exception()
-            do_wait()
-        if sys.excepthook == sys.__excepthook__:
-            # If the user has reassigned excepthook then let theirs run.
-            # Otherwise, suppress the extra traceback.
-            sys.excepthook = silent_excepthook
+    except Exception:
+        # Handled by excepthook
         raise
     except:
-        print_exception()
-        if wait_on_exception:
-            do_wait()
-        if sys.excepthook == sys.__excepthook__:
-            # If the user has reassigned excepthook then let theirs run.
-            # Otherwise, suppress the extra traceback.
-            sys.excepthook = silent_excepthook
+        # Not handled by excepthook, so we call ours explicitly
+        _excepthook(*sys.exc_info())
         raise
-
 
 # Code objects for functions which are going to be at the bottom of the stack, right below the first
 # stack frame for user code. When we walk the stack to determine whether to report or block on a given

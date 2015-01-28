@@ -18,6 +18,7 @@ to start as first argument and directory to run from as
 the second argument.
 """
 import os
+import os.path
 import sys
 import visualstudio_py_debugger
 
@@ -65,6 +66,9 @@ filename = sys.argv[0]
 
 # fix sys.path to be the script file dir
 sys.path[0] = ''
+
+# exclude ourselves from being debugged
+visualstudio_py_debugger.DONT_DEBUG.append(os.path.normcase(__file__))
 
 # remove all state we imported
 del sys, os
