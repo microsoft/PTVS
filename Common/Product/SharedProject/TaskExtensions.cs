@@ -150,5 +150,32 @@ namespace Microsoft.VisualStudioTools {
                 }
             }
         }
+
+        /// <summary>
+        /// Silently handles the specified exception.
+        /// </summary>
+        public static Task SilenceException<T>(this Task task) where T : Exception {
+            return task.ContinueWith(t => {
+                try {
+                    t.Wait();
+                } catch (AggregateException ex) {
+                    ex.Handle(e => e is T);
+                }
+            });
+        }
+
+        /// <summary>
+        /// Silently handles the specified exception.
+        /// </summary>
+        public static Task<U> SilenceException<T, U>(this Task<U> task) where T : Exception {
+            return task.ContinueWith(t => {
+                try {
+                    return t.Result;
+                } catch (AggregateException ex) {
+                    ex.Handle(e => e is T);
+                    return default(U);
+                }
+            });
+        }
     }
 }

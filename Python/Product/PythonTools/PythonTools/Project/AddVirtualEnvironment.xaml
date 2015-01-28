@@ -25,7 +25,7 @@
         <CommandBinding Command="ApplicationCommands.Save" CanExecute="Save_CanExecute" Executed="Save_Executed" />
         <CommandBinding Command="ApplicationCommands.Close" CanExecute="Close_CanExecute" Executed="Close_Executed" />
         <CommandBinding Command="{x:Static wpf:Commands.BrowseFolder}" CanExecute="Browse_CanExecute" Executed="Browse_Executed" />
-        <CommandBinding Command="{x:Static il:InterpreterList.WebChooseInterpreterCommand}" CanExecute="WebChooseInterpreter_CanExecute" Executed="WebChooseInterpreter_Executed" />
+        <CommandBinding Command="{x:Static l:AddVirtualEnvironment.WebChooseInterpreter}" CanExecute="WebChooseInterpreter_CanExecute" Executed="WebChooseInterpreter_Executed" />
     </vstools:DialogWindowVersioningWorkaround.CommandBindings>
     <vstools:DialogWindowVersioningWorkaround.Resources>
         <ResourceDictionary>
@@ -342,7 +342,7 @@
             <Button Style="{StaticResource NavigationButton}"
                     Margin="3"
                     VerticalAlignment="Top"
-                    Command="{x:Static il:InterpreterList.WebChooseInterpreterCommand}">
+                    Command="{x:Static l:AddVirtualEnvironment.WebChooseInterpreter}">
                 Go online and help me find a Python interpreter
             </Button>
         </wpf:LabelledControl>

@@ -95,8 +95,11 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        internal static IntellisenseController GetOrCreateController(IComponentModel model, ITextView textView) {
-            var serviceProvider = model.GetService<IServiceProvider>();
+        internal static IntellisenseController GetOrCreateController(
+            IServiceProvider serviceProvider,
+            IComponentModel model,
+            ITextView textView
+        ) {
             IntellisenseController controller;
             if (!textView.Properties.TryGetProperty<IntellisenseController>(typeof(IntellisenseController), out controller)) {
                 var intellisenseControllerProvider = (

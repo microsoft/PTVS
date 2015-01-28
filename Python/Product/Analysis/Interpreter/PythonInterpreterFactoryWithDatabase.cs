@@ -32,7 +32,7 @@ namespace Microsoft.PythonTools.Interpreter {
     /// for the completion database.
     /// </summary>
     public class PythonInterpreterFactoryWithDatabase :
-        IPythonInterpreterFactoryWithDatabase,
+        IPythonInterpreterFactoryWithDatabase2,
         IDisposable
     {
         private readonly string _description;
@@ -588,6 +588,17 @@ namespace Microsoft.PythonTools.Interpreter {
             return reason + " is up to date";
         }
 
+        public IEnumerable<string> GetUpToDateModules() {
+            if (!Directory.Exists(DatabasePath)) {
+                return Enumerable.Empty<string>();
+            }
+
+            // Currently we assume that if the file exists, it's up to date.
+            // PyLibAnalyzer will perform timestamp checks if the user manually
+            // refreshes.
+            return Directory.EnumerateFiles(DatabasePath, "*.idb", SearchOption.AllDirectories)
+                .Select(f => Path.GetFileNameWithoutExtension(f));
+        }
 
         #region IDisposable Members
 

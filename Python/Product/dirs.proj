@@ -14,6 +14,8 @@
     <ProjectFile Include="Attacher\Attacher.csproj"/>
     <ProjectFile Include="AttacherX86\AttacherX86.csproj"/>
     <ProjectFile Include="Debugger\Debugger.csproj"/>
+    
+    <ProjectFile Include="EnvironmentsList\EnvironmentsList.csproj"/>
 
     <ProjectFile Include="TestAdapter\TestAdapter.csproj" Condition="$(IncludeTestAdapter)"/>
 
@@ -41,6 +43,7 @@
     
     <ProjectFile Include="AnalysisBrowser\AnalysisBrowser.csproj" />
     <ProjectFile Include="AnalysisMemoryTester\AnalysisMemoryTester.csproj" />
+    <ProjectFile Include="EnvironmentsListHost\EnvironmentsListHost.csproj" />
 
     <ProjectFile Include="ML\ML.csproj" Condition="$(IncludeML)"/>
   </ItemGroup>

@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Generic;
 
 namespace Microsoft.PythonTools.Interpreter {
     /// <summary>
@@ -80,5 +81,13 @@ namespace Microsoft.PythonTools.Interpreter {
         /// </summary>
         /// <remarks>New in 2.0</remarks>
         bool IsCheckingDatabase { get; }
+    }
+
+    public interface IPythonInterpreterFactoryWithDatabase2 : IPythonInterpreterFactoryWithDatabase {
+        /// <summary>
+        /// Returns a list of module names that are causing the database to
+        /// appear out of date.
+        /// </summary>
+        IEnumerable<string> GetUpToDateModules();
     }
 }

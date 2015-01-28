@@ -633,6 +633,10 @@
       <Link>SharedProject\Wpf\Commands.cs</Link>
       <Visible>true</Visible>
     </Compile>
+    <Compile Include="$(_ProjectSystemFilesLocation)\Wpf\ConfigurationControl.cs">
+      <Link>SharedProject\Wpf\ConfigurationControl.cs</Link>
+      <Visible>true</Visible>
+    </Compile>
     <Compile Include="$(_ProjectSystemFilesLocation)\Wpf\LabelledButton.cs">
       <Link>SharedProject\Wpf\LabelledButton.cs</Link>
       <Visible>true</Visible>

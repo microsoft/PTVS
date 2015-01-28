@@ -46,7 +46,10 @@ namespace Microsoft.PythonTools.Options {
         }
 
         protected override void Dispose(bool disposing) {
-            PyService.EnvironmentsChanged -= PyService_InteractiveWindowsChanged;
+            var service = PyService;
+            if (service != null) {
+                service.EnvironmentsChanged -= PyService_InteractiveWindowsChanged;
+            }
             base.Dispose(disposing);
         }
 

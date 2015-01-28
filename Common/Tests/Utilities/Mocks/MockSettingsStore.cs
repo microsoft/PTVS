@@ -19,7 +19,7 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 
 namespace TestUtilities.Mocks {
-    public class MockSettingsStore : IVsSettingsStore {
+    public class MockSettingsStore : IVsSettingsStore, IVsWritableSettingsStore {
         private readonly List<Tuple<string, string, object>> Settings = new List<Tuple<string, string, object>>();
 
         public void AddSetting(string path, string name, object value) {
@@ -189,6 +189,120 @@ namespace TestUtilities.Mocks {
 
         public int PropertyExists(string collectionPath, string propertyName, out int pfExists) {
             pfExists = Settings.Any(t => t.Item1 == collectionPath && t.Item2 == propertyName) ? 1 : 0;
+            return VSConstants.S_OK;
+        }
+
+
+        public int CreateCollection(string collectionPath) {
+            int exists;
+            int hr = CollectionExists(collectionPath, out exists);
+            if (ErrorHandler.Failed(hr)) {
+                return hr;
+            }
+            if (exists == 0) {
+                AddSetting(collectionPath, string.Empty, null);
+            }
+            return VSConstants.S_OK;
+        }
+
+        public int DeleteCollection(string collectionPath) {
+            if (string.IsNullOrEmpty(collectionPath)) {
+                return VSConstants.S_FALSE;
+            }
+
+            var collectionSeq = collectionPath.Split('\\');
+            return Settings.RemoveAll(t => {
+                var seq = t.Item1.Split('\\');
+                return seq.Length >= collectionSeq.Length &&
+                    seq.Take(collectionSeq.Length).SequenceEqual(collectionSeq);
+            }) > 0 ? VSConstants.S_OK : VSConstants.S_FALSE;
+        }
+
+        public int DeleteProperty(string collectionPath, string propertyName) {
+            if (string.IsNullOrEmpty(collectionPath) || string.IsNullOrEmpty(propertyName)) {
+                return VSConstants.S_FALSE;
+            }
+
+            var collectionSeq = collectionPath.Split('\\');
+            return Settings.RemoveAll(t => t.Item1 == collectionPath && t.Item2 == propertyName) > 0 ?
+                VSConstants.S_OK :
+                VSConstants.S_FALSE;
+        }
+
+        public int SetBinary(string collectionPath, string propertyName, uint byteLength, byte[] pBytes) {
+            if (DeleteProperty(collectionPath, propertyName) == VSConstants.S_FALSE) {
+                int exists;
+                if (ErrorHandler.Failed(CollectionExists(collectionPath, out exists)) || exists == 0) {
+                    return VSConstants.E_INVALIDARG;
+                }
+            }
+            Settings.Add(Tuple.Create(collectionPath, propertyName, (object)pBytes));
+            return VSConstants.S_OK;
+        }
+
+        public int SetBool(string collectionPath, string propertyName, int value) {
+            if (DeleteProperty(collectionPath, propertyName) == VSConstants.S_FALSE) {
+                int exists;
+                if (ErrorHandler.Failed(CollectionExists(collectionPath, out exists)) || exists == 0) {
+                    return VSConstants.E_INVALIDARG;
+                }
+            }
+            Settings.Add(Tuple.Create(collectionPath, propertyName, (object)value));
+            return VSConstants.S_OK;
+        }
+
+        public int SetInt(string collectionPath, string propertyName, int value) {
+            if (DeleteProperty(collectionPath, propertyName) == VSConstants.S_FALSE) {
+                int exists;
+                if (ErrorHandler.Failed(CollectionExists(collectionPath, out exists)) || exists == 0) {
+                    return VSConstants.E_INVALIDARG;
+                }
+            }
+            Settings.Add(Tuple.Create(collectionPath, propertyName, (object)value));
+            return VSConstants.S_OK;
+        }
+
+        public int SetInt64(string collectionPath, string propertyName, long value) {
+            if (DeleteProperty(collectionPath, propertyName) == VSConstants.S_FALSE) {
+                int exists;
+                if (ErrorHandler.Failed(CollectionExists(collectionPath, out exists)) || exists == 0) {
+                    return VSConstants.E_INVALIDARG;
+                }
+            }
+            Settings.Add(Tuple.Create(collectionPath, propertyName, (object)value));
+            return VSConstants.S_OK;
+        }
+
+        public int SetString(string collectionPath, string propertyName, string value) {
+            if (DeleteProperty(collectionPath, propertyName) == VSConstants.S_FALSE) {
+                int exists;
+                if (ErrorHandler.Failed(CollectionExists(collectionPath, out exists)) || exists == 0) {
+                    return VSConstants.E_INVALIDARG;
+                }
+            }
+            Settings.Add(Tuple.Create(collectionPath, propertyName, (object)value));
+            return VSConstants.S_OK;
+        }
+
+        public int SetUnsignedInt(string collectionPath, string propertyName, uint value) {
+            if (DeleteProperty(collectionPath, propertyName) == VSConstants.S_FALSE) {
+                int exists;
+                if (ErrorHandler.Failed(CollectionExists(collectionPath, out exists)) || exists == 0) {
+                    return VSConstants.E_INVALIDARG;
+                }
+            }
+            Settings.Add(Tuple.Create(collectionPath, propertyName, (object)value));
+            return VSConstants.S_OK;
+        }
+
+        public int SetUnsignedInt64(string collectionPath, string propertyName, ulong value) {
+            if (DeleteProperty(collectionPath, propertyName) == VSConstants.S_FALSE) {
+                int exists;
+                if (ErrorHandler.Failed(CollectionExists(collectionPath, out exists)) || exists == 0) {
+                    return VSConstants.E_INVALIDARG;
+                }
+            }
+            Settings.Add(Tuple.Create(collectionPath, propertyName, (object)value));
             return VSConstants.S_OK;
         }
     }

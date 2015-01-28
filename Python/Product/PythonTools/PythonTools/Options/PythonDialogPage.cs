@@ -38,13 +38,13 @@ namespace Microsoft.PythonTools.Options {
 
         internal PythonToolsService PyService {
             get {
-                return ((IServiceProvider)this).GetPythonToolsService();
+                return ((IServiceProvider)Site).GetPythonToolsService();
             }
         }
 
         internal IComponentModel ComponentModel {
             get {
-                return ((IServiceProvider)this).GetComponentModel();
+                return ((IServiceProvider)Site).GetComponentModel();
             }
         }
     }

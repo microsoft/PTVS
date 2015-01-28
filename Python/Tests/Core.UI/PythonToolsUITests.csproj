@@ -112,8 +112,8 @@
     <Compile Include="BasicProjectTests.cs" />
     <Compile Include="BuildTasksUITests.cs" />
     <Compile Include="EditorTests.cs" />
+    <Compile Include="EnvironmentListTests.cs" />
     <Compile Include="FormattingUITests.cs" />
-    <Compile Include="InterpreterListTests.cs" />
     <Compile Include="NugetTests.cs" />
     <Compile Include="ObjectBrowserTest.cs" />
     <Compile Include="ProjectHomeTests.cs" />
@@ -172,6 +172,22 @@
     <ProjectReference Include="$(BuildRoot)Python\Tests\Utilities.Python\TestUtilities.Python.csproj">
       <Project>{62641B47-1ABB-4638-A3D5-2A834D089667}</Project>
       <Name>TestUtilities.Python</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Product\EnvironmentsList\EnvironmentsList.csproj">
+      <Project>{b20e082b-4d3c-457d-b2bd-60420b434573}</Project>
+      <Name>EnvironmentsList</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Product\IronPythonResolver\IronPythonResolver.csproj">
+      <Project>{31f224b1-68da-4524-9a1c-95f22492775b}</Project>
+      <Name>IronPythonResolver</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Product\IronPython\IronPython.csproj">
+      <Project>{5ae43c93-8ef6-4d57-bc10-511035ef56c5}</Project>
+      <Name>IronPython</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Product\IronPython\IronPython.Interpreter.csproj">
+      <Project>{012293b1-168a-4c48-a678-db8361b50ba7}</Project>
+      <Name>IronPython.Interpreter</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

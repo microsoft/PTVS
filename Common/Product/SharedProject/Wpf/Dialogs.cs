@@ -161,6 +161,7 @@ namespace Microsoft.VisualStudioTools {
             if (null == uiShell) {
                 using (var ofd = new FolderBrowserDialog()) {
                     ofd.RootFolder = Environment.SpecialFolder.Desktop;
+                    ofd.SelectedPath = initialDirectory;
                     ofd.ShowNewFolderButton = false;
                     DialogResult result;
                     if (owner == IntPtr.Zero) {

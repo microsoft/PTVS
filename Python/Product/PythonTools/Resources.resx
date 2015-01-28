@@ -430,6 +430,11 @@ The web.config file will be configured to resolve URIs matching this pattern to 
   <data name="SelectZipFileForSearchPath" xml:space="preserve">
     <value>Select a .zip file to add to the Search Path</value>
   </data>
+  <data name="ReplOpeningError" xml:space="preserve">
+    <value>An error occurred opening this interactive window.
+
+{0}</value>
+  </data>
   <data name="AddReferenceExtensions" xml:space="preserve">
     <value>Python Extension Modules (*.dll;*.pyd)|*.dll;*.pyd|All Files (*.*)|*.*</value>
   </data>

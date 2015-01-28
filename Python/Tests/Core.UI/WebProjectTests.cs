@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 extern alias analysis;
+extern alias pythontools;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -38,8 +39,10 @@ using TestUtilities;
 using TestUtilities.Python;
 using TestUtilities.UI;
 using TestUtilities.UI.Python;
+using ExcExt = pythontools::Microsoft.VisualStudioTools.ExceptionExtensions;
 using InterpreterExt = analysis::Microsoft.PythonTools.Interpreter.PythonInterpreterFactoryExtensions;
 using Process = System.Diagnostics.Process;
+using TaskExt = pythontools::Microsoft.VisualStudioTools.TaskExtensions;
 using Thread = System.Threading.Thread;
 
 namespace PythonToolsUITests {
@@ -353,8 +356,7 @@ namespace PythonToolsUITests {
                     dlg.ClickButtonAndClose("Close", nameIsAutomationId: true);
                 }
                 
-                t.WaitAndUnwrapExceptions();
-                var project = t.Result;
+                var project = TaskExt.WaitAndUnwrapExceptions(t);
 
                 var provider = project.Properties.Item("InterpreterFactoryProvider").Value as MSBuildProjectInterpreterFactoryProvider;
                 for (int retries = 20; retries > 0; --retries) {
@@ -382,7 +384,9 @@ namespace PythonToolsUITests {
         [HostType("VSTestHost")]
         public void WebProjectInstallOnNew() {
             using (var app = new PythonVisualStudioApp()) {
-                Pip.Uninstall(app.ServiceProvider, app.InterpreterService.DefaultInterpreter, "bottle", false).WaitAndUnwrapExceptions();
+                TaskExt.WaitAndUnwrapExceptions(
+                    Pip.Uninstall(app.ServiceProvider, app.InterpreterService.DefaultInterpreter, "bottle", false)
+                );
 
                 var t = Task.Run(() => app.CreateProject(
                     PythonVisualStudioApp.TemplateLanguageName,
@@ -397,8 +401,7 @@ namespace PythonToolsUITests {
                     dlg.ClickButtonAndClose("CommandLink_1001", nameIsAutomationId: true);
                 }
 
-                t.WaitAndUnwrapExceptions();
-                var project = t.Result;
+                var project = TaskExt.WaitAndUnwrapExceptions(t);
 
                 var provider = project.Properties.Item("InterpreterFactoryProvider").Value as MSBuildProjectInterpreterFactoryProvider;
 
@@ -415,7 +418,9 @@ namespace PythonToolsUITests {
                     "bottle"
                 );
 
-                Pip.Uninstall(app.ServiceProvider, app.InterpreterService.DefaultInterpreter, "bottle", false).WaitAndUnwrapExceptions();
+                TaskExt.WaitAndUnwrapExceptions(
+                    Pip.Uninstall(app.ServiceProvider, app.InterpreterService.DefaultInterpreter, "bottle", false)
+                );
             }
         }
 
@@ -735,7 +740,7 @@ namespace PythonToolsUITests {
         }
 
         internal static void InstallWebFramework(VisualStudioApp app, string moduleName, string packageName, IPythonInterpreterFactory factory) {
-            Pip.Install(app.ServiceProvider, factory, packageName, false).WaitAndUnwrapExceptions();
+            TaskExt.WaitAndUnwrapExceptions(Pip.Install(app.ServiceProvider, factory, packageName, false));
             Assert.AreEqual(1, InterpreterExt.FindModules(factory, moduleName).Count);
         }
 

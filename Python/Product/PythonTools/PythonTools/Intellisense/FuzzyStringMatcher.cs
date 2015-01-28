@@ -67,11 +67,23 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         /// <summary>
-        /// Returns true if text does not match pattern well enough to be
+        /// Returns false if text does not match pattern well enough to be
         /// displayed.
         /// </summary>
         public bool IsCandidateMatch(string text, string pattern) {
-            return _matcher(text, pattern, _ignoreCase) >= pattern.Length;
+            return IsCandidateMatch(text, pattern, _matcher(text, pattern, _ignoreCase));
+        }
+
+        /// <summary>
+        /// Returns false if text does not match pattern well enough to be
+        /// displayed.
+        /// </summary>
+        /// <remarks>
+        /// Use this overload if the sort key is already available, as this will
+        /// avoid recalculating it.
+        /// </remarks>
+        public bool IsCandidateMatch(string text, string pattern, int sortKey) {
+            return sortKey >= pattern.Length;
         }
 
         static int PrefixMatch(string text, string pattern, bool ignoreCase) {

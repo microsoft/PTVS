@@ -451,10 +451,16 @@ namespace Microsoft.PythonTools {
         }
 
         internal static PythonToolsService GetPythonToolsService(this IServiceProvider serviceProvider) {
+            if (serviceProvider == null) {
+                return null;
+            }
             return (PythonToolsService)serviceProvider.GetService(typeof(PythonToolsService));
         }
 
         internal static IComponentModel GetComponentModel(this IServiceProvider serviceProvider) {
+            if (serviceProvider == null) {
+                return null;
+            }
             return (IComponentModel)serviceProvider.GetService(typeof(SComponentModel));
         }
 

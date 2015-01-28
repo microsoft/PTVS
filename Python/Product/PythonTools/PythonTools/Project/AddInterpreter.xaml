@@ -6,7 +6,6 @@
     xmlns:vstools="clr-namespace:Microsoft.VisualStudioTools"
     xmlns:ptvs="clr-namespace:Microsoft.PythonTools"
     xmlns:l="clr-namespace:Microsoft.PythonTools.Project"
-    xmlns:l2="clr-namespace:Microsoft.PythonTools.InterpreterList"
     xmlns:wpf="clr-namespace:Microsoft.VisualStudioTools.Wpf"
     Title="Add/Remove Python Environments"
     MinWidth="300" Width="500"
@@ -22,7 +21,7 @@
     <vstools:DialogWindowVersioningWorkaround.CommandBindings>
         <CommandBinding Command="ApplicationCommands.Save" CanExecute="Save_CanExecute" Executed="Save_Executed" />
         <CommandBinding Command="ApplicationCommands.Close" CanExecute="Close_CanExecute" Executed="Close_Executed" />
-        <CommandBinding Command="{x:Static l2:InterpreterList.WebChooseInterpreterCommand}" CanExecute="WebChooseInterpreter_CanExecute" Executed="WebChooseInterpreter_Executed" />
+        <CommandBinding Command="{x:Static l:AddVirtualEnvironment.WebChooseInterpreter}" CanExecute="WebChooseInterpreter_CanExecute" Executed="WebChooseInterpreter_Executed" />
     </vstools:DialogWindowVersioningWorkaround.CommandBindings>
     <vstools:DialogWindowVersioningWorkaround.Resources>
         <ResourceDictionary>
@@ -67,7 +66,7 @@
                 Style="{StaticResource NavigationButton}"
                 HorizontalAlignment="Center"
                 Margin="6"
-                Command="{x:Static l2:InterpreterList.WebChooseInterpreterCommand}">
+                Command="{x:Static l:AddVirtualEnvironment.WebChooseInterpreter}">
             Go online and help me find another one
         </Button>
 

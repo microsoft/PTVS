@@ -20,8 +20,10 @@ using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Interpreter;
 
 namespace TestUtilities.Python {
-    public class MockPythonInterpreterFactory : IPythonInterpreterFactoryWithDatabase {
+    public class MockPythonInterpreterFactory : IPythonInterpreterFactoryWithDatabase, IDisposable {
         readonly InterpreterConfiguration _config;
+        private bool _useUpdater;
+        private AnalyzerStatusUpdater _updater;
         private bool _isCurrent;
         internal bool? _success;
 
@@ -31,13 +33,27 @@ namespace TestUtilities.Python {
         public const string InvalidReason = "Database is invalid";
         public const string MissingModulesReason = "Database is missing modules";
 
-        public MockPythonInterpreterFactory(Guid id, string description, InterpreterConfiguration config) {
+        public MockPythonInterpreterFactory(
+            Guid id,
+            string description,
+            InterpreterConfiguration config,
+            bool withStatusUpdater = false
+        ) {
             _config = config;
             Id = id;
             Description = description;
 
             _isCurrent = false;
             IsCurrentReason = NoDatabaseReason;
+
+            _useUpdater = withStatusUpdater;
+        }
+
+        public void Dispose() {
+            if (_updater != null) {
+                _updater.Dispose();
+                _updater = null;
+            }
         }
 
         public string Description {
@@ -63,6 +79,15 @@ namespace TestUtilities.Python {
         public void GenerateDatabase(GenerateDatabaseOptions options, Action<int> onExit = null) {
             IsCurrentReason = GeneratingReason;
             IsCurrent = false;
+            if (_useUpdater) {
+                if (_updater != null) {
+                    _updater.Dispose();
+                }
+                _updater = new AnalyzerStatusUpdater(AnalyzerStatusUpdater.GetIdentifier(Id, _config.Version));
+                _updater.WaitForWorkerStarted();
+                _updater.ThrowPendingExceptions();
+                _updater.UpdateStatus(0, 0);
+            }
         }
 
         public void NotifyNewDatabase() {
@@ -70,12 +95,15 @@ namespace TestUtilities.Python {
         }
 
         public void EndGenerateCompletionDatabase(string id, bool success) {
-            using (var updater = new AnalyzerStatusUpdater(id)) {
+            if (_updater != null) {
                 for (int i = 0; i <= 100; i += 30) {
-                    updater.UpdateStatus(i, 100);
+                    _updater.UpdateStatus(i, 100);
                     // Need to sleep to allow the update to go through.
                     Thread.Sleep(500);
                 }
+
+                _updater.Dispose();
+                _updater = null;
             }
             // Also have to sleep after disposing to make sure that the
             // completion is picked up.

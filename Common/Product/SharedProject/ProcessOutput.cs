@@ -478,6 +478,15 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
         /// <summary>
+        /// True if the process started. False if an error occurred.
+        /// </summary>
+        public bool IsStarted {
+            get {
+                return _process != null;
+            }
+        }
+
+        /// <summary>
         /// The exit code or null if the process never started or has not
         /// exited.
         /// </summary>

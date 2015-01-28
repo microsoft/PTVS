@@ -18,7 +18,7 @@ using Microsoft.VisualStudio.Shell.Interop;
 
 namespace TestUtilities.Mocks {
     public class MockSettingsManager : IVsSettingsManager {
-        public readonly MockSettingsStore ReadOnlyStore = new MockSettingsStore();
+        public readonly MockSettingsStore Store = new MockSettingsStore();
 
         public int GetApplicationDataFolder(uint folder, out string folderPath) {
             throw new NotImplementedException();
@@ -37,12 +37,13 @@ namespace TestUtilities.Mocks {
         }
 
         public int GetReadOnlySettingsStore(uint scope, out IVsSettingsStore store) {
-            store = ReadOnlyStore;
+            store = Store;
             return VSConstants.S_OK;
         }
 
         public int GetWritableSettingsStore(uint scope, out IVsWritableSettingsStore writableStore) {
-            throw new NotImplementedException();
+            writableStore = Store;
+            return VSConstants.S_OK;
         }
     }
 }

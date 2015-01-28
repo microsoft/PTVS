@@ -1,0 +1,220 @@
+﻿<UserControl x:Class="Microsoft.PythonTools.EnvironmentsList.ToolWindow"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:l="clr-namespace:Microsoft.PythonTools.EnvironmentsList"
+             xmlns:wpf="clr-namespace:Microsoft.VisualStudioTools.Wpf"
+             xmlns:c="System.Windows.Controls"
+             xmlns:s="clr-namespace:System;assembly=mscorlib"
+             xmlns:scm="clr-namespace:System.ComponentModel;assembly=WindowsBase"
+             mc:Ignorable="d" 
+             d:DesignHeight="300" d:DesignWidth="800"
+             UseLayoutRounding="True"
+             SnapsToDevicePixels="True"
+             Background="{DynamicResource {x:Static wpf:Controls.BackgroundKey}}"
+             TextElement.Foreground="{DynamicResource {x:Static wpf:Controls.ForegroundKey}}">
+    <UserControl.CommandBindings>
+        <CommandBinding Command="{x:Static l:EnvironmentView.MakeGlobalDefault}"
+                        CanExecute="MakeGlobalDefault_CanExecute"
+                        Executed="MakeGlobalDefault_Executed" />
+        <CommandBinding Command="{x:Static l:DBExtension.StartRefreshDB}"
+                        CanExecute="StartRefreshDB_CanExecute"
+                        Executed="StartRefreshDB_Executed" />
+    </UserControl.CommandBindings>
+    
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/Microsoft.PythonTools.EnvironmentsList;component/EnvironmentView.xaml" />
+                
+                <ResourceDictionary>
+                    <CollectionViewSource x:Key="SortedExtensions"
+                                          Source="{Binding Environments.CurrentItem.Extensions}">
+                        <CollectionViewSource.SortDescriptions>
+                            <scm:SortDescription Direction="Ascending" PropertyName="SortPriority" />
+                            <scm:SortDescription Direction="Ascending" PropertyName="LocalizedDisplayName" />
+                        </CollectionViewSource.SortDescriptions>
+                    </CollectionViewSource>
+                </ResourceDictionary>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Grid HorizontalAlignment="Stretch"
+          VerticalAlignment="Stretch">
+        <Grid.Resources>
+            <Style TargetType="ContentControl" x:Key="HelpContentStyle">
+                <Style.Resources>
+                    <DataTemplate DataType="{x:Type s:String}">
+                        <TextBlock TextWrapping="Wrap"
+                                   Padding="4"
+                                   Background="{DynamicResource {x:Static wpf:Controls.TooltipBackgroundKey}}"
+                                   Foreground="{DynamicResource {x:Static wpf:Controls.TooltipTextKey}}"
+                                   Text="{Binding}" />
+                    </DataTemplate>
+                </Style.Resources>
+
+                <Setter Property="Focusable" Value="False" />
+                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type ContentControl}">
+                            <ContentControl Content="{TemplateBinding Content}"
+                                            HorizontalAlignment="{TemplateBinding HorizontalAlignment}"
+                                            HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                            VerticalAlignment="{TemplateBinding VerticalAlignment}"
+                                            VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                                            Margin="{TemplateBinding Margin}"
+                                            Padding="{TemplateBinding Padding}">
+                                <ContentControl.LayoutTransform>
+                                    <ScaleTransform x:Name="_HelpContentScale" ScaleX="1.0" ScaleY="0.0" />
+                                </ContentControl.LayoutTransform>
+                            </ContentControl>
+
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsEnabled" Value="True">
+                                    <Trigger.EnterActions>
+                                        <BeginStoryboard>
+                                            <Storyboard Storyboard.TargetName="_HelpContentScale" Storyboard.TargetProperty="ScaleY">
+                                                <DoubleAnimation Duration="0:0:0.2" From="0.0" To="1.0" />
+                                            </Storyboard>
+                                        </BeginStoryboard>
+                                    </Trigger.EnterActions>
+                                    <Trigger.ExitActions>
+                                        <BeginStoryboard>
+                                            <Storyboard Storyboard.TargetName="_HelpContentScale" Storyboard.TargetProperty="ScaleY">
+                                                <DoubleAnimation Duration="0:0:0.1" From="1.0" To="0.0" />
+                                            </Storyboard>
+                                        </BeginStoryboard>
+                                    </Trigger.ExitActions>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+        </Grid.Resources>
+        
+        <Grid x:Name="HorizontalLayout" Visibility="Collapsed">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="EnvironmentsColumn" Width="auto" />
+                <ColumnDefinition x:Name="ExtensionsColumn" Width="auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="auto" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto" />
+                <RowDefinition Height="auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <ListBox x:Name="ListOfEnvironments_Horizontal"
+                     Grid.Column="0" Grid.Row="0" Grid.RowSpan="3"
+                     Grid.IsSharedSizeScope="True"
+                     ScrollViewer.CanContentScroll="False"
+                     MaxWidth="300"
+                     VerticalAlignment="Stretch"
+                     BorderThickness="0"
+                     ItemsSource="{Binding Environments}"
+                     ItemTemplate="{StaticResource EnvironmentListItem}" />
+
+            <ListBox Grid.Column="1" Grid.Row="1" Grid.RowSpan="2"
+                     MinWidth="120" MaxWidth="250"
+                     Margin="3 0"
+                     VerticalAlignment="Stretch"
+                     BorderThickness="0"
+                     ItemsSource="{Binding Source={StaticResource SortedExtensions}}"
+                     ItemTemplate="{StaticResource ExtensionListItem}" />
+
+            <ContentControl Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2"
+                            Content="{Binding Environments.CurrentItem}"
+                            Focusable="False"
+                            ContentTemplate="{StaticResource EnvironmentHeader}" />
+
+            <CheckBox x:Name="HelpVisibility_Horizontal"
+                      Grid.Row="0" Grid.Column="3"
+                      HorizontalAlignment="Center" VerticalAlignment="Top"
+                      Style="{StaticResource HelpCheckBox}" />
+
+            <!-- These content controls are not laid out correctly when their
+                 ColumnSpan property is set, but they seem to work okay when put
+                 in their own grid. -->
+            <Grid x:Name="ContentGrid_Horizontal"
+                  Grid.Row="1" Grid.Column="2" Grid.RowSpan="2" Grid.ColumnSpan="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                
+                <ContentControl Grid.Row="0"
+                                Style="{StaticResource HelpContentStyle}"
+                                Content="{Binding CurrentItem.HelpContent,Source={StaticResource SortedExtensions}}"
+                                IsEnabled="{Binding IsChecked,ElementName=HelpVisibility_Horizontal}"/>
+
+                <ContentControl x:Name="ContentView_Horizontal"
+                                Grid.Row="1"
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Stretch"
+                                Focusable="False"
+                                Content="{Binding CurrentItem.WpfObject,Source={StaticResource SortedExtensions}}"
+                                DataContext="{Binding Environments.CurrentItem}" />
+            </Grid>
+        </Grid>
+
+        <Grid x:Name="VerticalLayout" Visibility="Collapsed">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto" />
+                <RowDefinition Height="auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="auto" />
+            </Grid.ColumnDefinitions>
+
+            <ListBox Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
+                     ScrollViewer.CanContentScroll="False"
+                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                     VerticalAlignment="Stretch"
+                     HorizontalAlignment="Stretch"
+                     MaxHeight="200"
+                     BorderThickness="0"
+                     ItemsSource="{Binding Environments}"
+                     ItemTemplate="{StaticResource EnvironmentListItem}"/>
+
+            <ComboBox Grid.Row="1" Grid.Column="0"
+                      Margin="3"
+                      HorizontalAlignment="Stretch"
+                      IsEditable="False"
+                      ItemsSource="{Binding Source={StaticResource SortedExtensions}}"
+                      ItemTemplate="{StaticResource ExtensionComboItem}"/>
+
+            <CheckBox x:Name="HelpVisibility_Vertical"
+                      Grid.Row="1" Grid.Column="1"
+                      HorizontalAlignment="Center" VerticalAlignment="Center"
+                      Style="{StaticResource HelpCheckBox}" />
+
+            <Grid x:Name="ContentGrid_Vertical"
+                  Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                
+                <ContentControl Grid.Row="0"
+                            Style="{StaticResource HelpContentStyle}"
+                            Content="{Binding CurrentItem.HelpContent,Source={StaticResource SortedExtensions}}"
+                            IsEnabled="{Binding IsChecked,ElementName=HelpVisibility_Vertical}"/>
+
+                <ContentControl x:Name="ContentView_Vertical"
+                                Grid.Row="1"
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Stretch"
+                                Focusable="False"
+                                Content="{Binding CurrentItem.WpfObject,Source={StaticResource SortedExtensions}}"
+                                DataContext="{Binding Environments.CurrentItem}" />
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

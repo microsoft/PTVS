@@ -143,6 +143,9 @@
     <Compile Include="..\..\..\Common\Product\SharedProject\Wpf\Controls.cs">
       <Link>ML\Controls\Controls.cs</Link>
     </Compile>
+    <Compile Include="..\..\..\Common\Product\SharedProject\Wpf\ConfigurationControl.cs">
+      <Link>ML\Controls\ConfigurationControl.cs</Link>
+    </Compile>
     <Compile Include="..\..\..\Common\Product\SharedProject\Wpf\Dialogs.cs">
       <Link>ML\Controls\Dialogs.cs</Link>
     </Compile>

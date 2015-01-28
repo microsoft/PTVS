@@ -39,6 +39,17 @@ namespace TestUtilities.Python {
             }
         }
 
+        public void ClearProviders() {
+            foreach (var p in _providers) {
+                p.InterpreterFactoriesChanged -= provider_InterpreterFactoriesChanged;
+            }
+            _providers.Clear();
+            var evt = InterpretersChanged;
+            if (evt != null) {
+                evt(this, EventArgs.Empty);
+            }
+        }
+
         void provider_InterpreterFactoriesChanged(object sender, EventArgs e) {
             var evt = InterpretersChanged;
             if (evt != null) {

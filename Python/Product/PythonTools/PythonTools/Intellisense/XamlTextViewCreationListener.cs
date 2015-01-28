@@ -15,6 +15,7 @@
 using System;
 using System.ComponentModel.Composition;
 using Microsoft.VisualStudio.Editor;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
 
@@ -31,7 +32,10 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly IServiceProvider _serviceProvider;
 
         [ImportingConstructor]
-        public XamlTextViewCreationListener(IServiceProvider serviceProvider, IVsEditorAdaptersFactoryService adapterService) {
+        public XamlTextViewCreationListener(
+            [Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider,
+            IVsEditorAdaptersFactoryService adapterService
+        ) {
             _serviceProvider = serviceProvider;
             AdapterService = adapterService;
         }

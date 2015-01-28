@@ -1,0 +1,246 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:l="clr-namespace:Microsoft.PythonTools.EnvironmentsList"
+                    xmlns:wpf="clr-namespace:Microsoft.VisualStudioTools.Wpf">
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="pack://application:,,,/Microsoft.PythonTools.EnvironmentsList;component/Wpf/Controls.xaml" />
+        <ResourceDictionary>
+            <Color x:Key="PTVSGreen" R="135" G="150" B="54" A="255" />
+            <SolidColorBrush x:Key="PTVSGreenBrush" Color="{StaticResource PTVSGreen}" />
+            <Pen x:Key="PTVSGreenPen" Brush="{StaticResource PTVSGreenBrush}" />
+
+            <Pen x:Key="OutlinePen" Brush="{DynamicResource {x:Static wpf:Controls.ControlBorderKey}}" Thickness="1.0" />
+
+            <Geometry x:Key="EnvironmentGeometry">
+                M0,1 H14 V15 H0 Z M3,4 H11 V6 H3 Z M3,8 H5 V12 H3 Z M7,8 H11 V12 H7 Z
+            </Geometry>
+            
+            <Geometry x:Key="ExclamationMarkGeometry">
+                F1M8.078125,29.7643737792969L9.34375,29.9674987792969 10.375,30.5456237792969 11.0625,31.4674987792969 11.3125,32.6862487792969 11.0625,33.8971862792969 10.375,34.8190612792969 9.34375,35.4049987792969 8.078125,35.6081237792969 6.8125,35.3971862792969 5.7734375,34.8034362792969 5.0703125,33.8815612792969 4.8125,32.6862487792969 5.078125,31.4674987792969 5.7890625,30.5456237792969 6.828125,29.9674987792969 8.078125,29.7643737792969z M5.09375,9.76437377929688L10.96875,9.76437377929688 10.28125,27.2643737792969 5.734375,27.2643737792969 5.4296875,18.5143737792969 5.09375,9.76437377929688z
+            </Geometry>
+
+            <Geometry x:Key="CheckMarkGeometry">
+                F1M23.078125,10.8424987792969L23.859375,10.9831237792969 24.15625,11.3581237792969 24.0625,11.7643737792969 23.78125,12.2331237792969 17.328125,22.6081237792969 14.61328125,28.1784362792969 12.28125,34.0456237792969 11.59375,34.7018737792969 9.984375,34.9206237792969 9.140625,34.8893737792969 8.5625,34.7721862792969 8.171875,34.5612487792969 7.90625,34.2487487792969 6.6015625,32.2096862792969 5.2890625,30.3737487792969 3.83593773841858,28.5768737792969 2.10937476158142,26.6549987792969 1.63281261920929,26.0924987792969 1.46874988079071,25.6393737792969 1.7421875,25.0768737792969 2.4453125,24.5768737792969 3.3828125,24.2253112792969 4.359375,24.0924987792969 5.1796875,24.2253112792969 5.796875,24.6706237792969 7.9765625,27.2565612792969 9.890625,29.9831237792969 11.765625,25.3034362792969 13.8203125,20.8815612792969 16.1484375,16.6159362792969 18.84375,12.3893737792969 20.4140625,11.2174987792969 23.078125,10.8424987792969z
+            </Geometry>
+            
+            <Geometry x:Key="PackageGeometry">
+                M0,4 H5V10H0Z M5,6H8V8H5Z M8,3H15V11H8Z
+            </Geometry>
+            
+            <Geometry x:Key="ModuleGeometry">
+                M0,2 H13V6H0Z M0,7H5V12H0Z M8,7H13V12H8Z
+            </Geometry>
+            <SolidColorBrush x:Key="ModuleGeometryBrush" Color="#00539C" />
+
+            <Geometry x:Key="InteractiveWindowGeometry1">
+                M0,0 H14 V14 H0 Z M2,4 H12 V12 H2 Z
+            </Geometry>
+            <Geometry x:Key="InteractiveWindowGeometry2">
+                M3,5 H6 M3,7 H6 M8,7 H9 M3,9 H6 M8,9 H10 M3,11 H5 M6,11 H11
+            </Geometry>
+            <SolidColorBrush x:Key="InteractiveWindowGeometryBrush2" Color="DarkGray" />
+
+            <Geometry x:Key="ClosedFolderGeometry">
+                M1,3 H6 L8,1 H15 V13 H1 Z M9,3 H13
+            </Geometry>
+            <SolidColorBrush x:Key="FolderGeometryBrush" Color="Goldenrod" />
+            
+            <Geometry x:Key="ConsoleGeometry">
+                F1 M1,1 H15 V13 H1 Z M3,3 L5,5 L3,7 M7,5 H13
+            </Geometry>
+            <SolidColorBrush x:Key="ConsoleGeometryBrush" Color="Black" />
+            
+            <Geometry x:Key="WindowsGeometry1">
+                M1,1 H15 V13 H1 Z
+            </Geometry>
+            <SolidColorBrush x:Key="WindowsGeometryBrush1" Color="Gray" />
+            
+            <Geometry x:Key="WindowsGeometry2">
+                M1,1 H15 V4 H1 Z
+            </Geometry>
+            <SolidColorBrush x:Key="WindowsGeometryBrush2" Color="Blue" />
+            
+            <Geometry x:Key="CogGeometry">
+                F1M19.390625,14.5768737792969L16.6640625,15.1315612792969 14.4375,16.6315612792969 12.9375,18.8581237792969 12.390625,21.5924987792969 12.9375,24.3190612792969 14.4375,26.5456237792969 16.6640625,28.0456237792969 19.390625,28.5924987792969 22.125,28.0456237792969 24.3515625,26.5456237792969 25.8515625,24.3190612792969 26.40625,21.5924987792969 25.8515625,18.8581237792969 24.3515625,16.6315612792969 22.125,15.1315612792969 19.390625,14.5768737792969z M17.859375,6.59249877929688L19.546875,10.0768737792969 22.21875,10.5612487792969 25.203125,7.48312377929688 29.078125,10.0768737792969 27.796875,13.5456237792969 29.078125,15.7174987792969 33.4375,15.3268737792969 34.734375,20.0768737792969 30.859375,21.7799987792969 30.375,24.3581237792969 33.84375,26.9518737792969 31.265625,31.3112487792969 27.390625,29.5299987792969 25.203125,31.3112487792969 25.609375,35.1862487792969 20.84375,36.4831237792969 19.546875,32.9987487792969 16.5625,32.5924987792969 13.984375,35.6706237792969 9.625,32.9987487792969 11.40625,29.5299987792969 9.625,27.4362487792969 5.75,27.8424987792969 4.453125,22.6706237792969 8.328125,21.3737487792969 8.328125,18.7174987792969 5.265625,16.1237487792969 7.921875,11.8424987792969 11.796875,13.5456237792969 13.5,11.8424987792969 13.09375,7.88937377929688 17.859375,6.59249877929688z
+            </Geometry>
+
+            <!-- ***********************************************************
+                 EnvironmentListItem is used to show environments in a listbox.
+                 It shows the description, a button to open the interactive
+                 window, and an indication of the DB state.
+                 *********************************************************** -->
+            <DataTemplate DataType="{x:Type l:EnvironmentView}" x:Key="EnvironmentListItem">
+                <Grid Margin="6 3 3 0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" SharedSizeGroup="EnvironmentListItem_Description" />
+                        <ColumnDefinition Width="auto" />
+                        <ColumnDefinition Width="auto" />
+                        <ColumnDefinition Width="2" />
+                        <ColumnDefinition Width="auto" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="auto" />
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0" Grid.Column="0"
+                          VerticalAlignment="Center"
+                          Margin="1"
+                          DataContext="{Binding Description,Mode=OneWay}">
+                        <TextBlock x:Name="Name_IsDefault"
+                                   Text="{Binding}"
+                                   TextTrimming="CharacterEllipsis"
+                                   FontWeight="Bold"
+                                   Visibility="Hidden" />
+                        <TextBlock x:Name="Name_IsNotDefault"
+                                   Text="{Binding}"
+                                   TextTrimming="CharacterEllipsis"
+                                   Visibility="Visible" />
+                    </Grid>
+
+                    <ProgressBar x:Name="RefreshDBProgress"
+                                 Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="5"
+                                 HorizontalAlignment="Stretch"
+                                 Height="2"
+                                 Focusable="False"
+                                 Value="{Binding RefreshDBProgress,Mode=OneWay}" Maximum="100"
+                                 IsIndeterminate="{Binding IsRefreshDBProgressIndeterminate}"
+                                 Visibility="Hidden" />
+
+                    <Border x:Name="Icon_NeedRefresh"
+                            Background="{Binding Background,RelativeSource={RelativeSource FindAncestor,AncestorType=Control}}"
+                            Grid.Column="2"
+                            IsHitTestVisible="True"
+                            Width="18" Height="18"
+                            Padding="1"
+                            Visibility="Hidden">
+                        <Path Data="{StaticResource ExclamationMarkGeometry}"
+                              Stretch="Uniform"
+                              Fill="{Binding Foreground,RelativeSource={RelativeSource FindAncestor,AncestorType=ListBoxItem}}"
+                              Stroke="{DynamicResource {x:Static wpf:Controls.ControlBorderKey}}"
+                              StrokeThickness="1.0" />
+                        <Border.ToolTip>
+                            Completion DB needs to be refreshed.
+                        </Border.ToolTip>
+                    </Border>
+
+                    <Button x:Name="InteractiveWindowButton"
+                            Grid.Column="4"
+                            Style="{StaticResource {x:Type Button}}"
+                            Cursor="Hand"
+                            Command="{x:Static l:EnvironmentView.OpenInteractiveWindow}"
+                            CommandParameter="{Binding}">
+                        <Grid>
+                            <Path Width="14" Height="14"
+                                  Stretch="None"
+                                  RenderOptions.EdgeMode="Aliased"
+                                  Data="{StaticResource InteractiveWindowGeometry1}"
+                                  Fill="{StaticResource PTVSGreenBrush}"
+                                  Stroke="{DynamicResource {x:Static wpf:Controls.ControlBorderKey}}"
+                                  StrokeThickness="1.0"/>
+                            <Path Grid.Column="0"
+                                  Margin="3 0"
+                                  Width="14" Height="14"
+                                  Stretch="None"
+                                  VerticalAlignment="Center"
+                                  RenderOptions.EdgeMode="Aliased"
+                                  Data="{StaticResource InteractiveWindowGeometry2}"
+                                  Stroke="{StaticResource InteractiveWindowGeometryBrush2}"
+                                  StrokeThickness="1.0" />
+                        </Grid>
+                        <Button.ToolTip>
+                            Open Interactive Window
+                        </Button.ToolTip>
+                    </Button>
+                </Grid>
+
+                <DataTemplate.Triggers>
+                    <Trigger SourceName="InteractiveWindowButton" Property="IsEnabled" Value="False">
+                        <Setter TargetName="InteractiveWindowButton" Property="Visibility" Value="Collapsed" />
+                    </Trigger>
+                    <DataTrigger Binding="{Binding IsDefault}" Value="True">
+                        <Setter TargetName="Name_IsDefault" Property="Visibility" Value="Visible" />
+                        <Setter TargetName="Name_IsNotDefault" Property="Visibility" Value="Collapsed" />
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding IsCurrent}" Value="False">
+                        <Setter TargetName="Icon_NeedRefresh" Property="Visibility" Value="Visible" />
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding IsCheckingDatabase}" Value="True">
+                        <Setter TargetName="Icon_NeedRefresh" Property="Visibility" Value="Hidden" />
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding IsRefreshingDB}" Value="True">
+                        <Setter TargetName="RefreshDBProgress" Property="Visibility" Value="Visible" />
+                        <Setter TargetName="Icon_NeedRefresh" Property="Visibility" Value="Hidden" />
+                    </DataTrigger>
+                </DataTemplate.Triggers>
+            </DataTemplate>
+
+            <DataTemplate x:Key="ExtensionListItem">
+                <TextBlock Text="{Binding LocalizedDisplayName}"
+                           Margin="4" />
+            </DataTemplate>
+
+            <DataTemplate x:Key="ExtensionComboItem">
+                <TextBlock Text="{Binding LocalizedDisplayName}"
+                           Margin="4" />
+            </DataTemplate>
+
+            <!-- ***********************************************************
+                 EnvironmentHeader is used for the top of the detailed
+                 display.
+                 *********************************************************** -->
+            <DataTemplate DataType="{x:Type l:EnvironmentView}" x:Key="EnvironmentHeader">
+                <TextBlock x:Name="_Description"
+                           Margin="3 0"
+                           Padding="0 3"
+                           Text="{Binding Description,Mode=OneWay}"
+                           FontSize="20" />
+            </DataTemplate>
+
+            <Style x:Key="HelpCheckBox" TargetType="CheckBox" BasedOn="{StaticResource {x:Type Control}}">
+                <Setter Property="Cursor" Value="Hand" />
+                <Setter Property="FocusVisualStyle" Value="{StaticResource EllipseFocusVisualStyle}" />
+                <Setter Property="Margin" Value="3" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="CheckBox">
+                            <Grid Width="{Binding ActualHeight,RelativeSource={RelativeSource Self}}">
+                                <Ellipse StrokeThickness="1"
+                                         Margin="1"
+                                         HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                                         Stroke="{TemplateBinding BorderBrush}"
+                                         Fill="{TemplateBinding Background}"/>
+                                <TextBlock Text="?"
+                                           HorizontalAlignment="Stretch" VerticalAlignment="Center"
+                                           TextAlignment="Center"
+                                           Margin="3 3 4 3"
+                                           FontWeight="Bold"
+                                           FontSize="14" />
+                            </Grid>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+                <Style.Triggers>
+                    <Trigger Property="IsChecked" Value="True">
+                        <Setter Property="BorderBrush" Value="{DynamicResource {x:Static wpf:Controls.ControlBorderSelectedKey}}" />
+                    </Trigger>
+                    <Trigger Property="IsMouseOver" Value="True">
+                        <Setter Property="Background" Value="{DynamicResource {x:Static wpf:Controls.ControlBackgroundHoverKey}}" />
+                        <Setter Property="BorderBrush" Value="{DynamicResource {x:Static wpf:Controls.ControlBorderHoverKey}}" />
+                    </Trigger>
+                    <Trigger Property="IsChecked" Value="True">
+                        <Setter Property="Background" Value="{DynamicResource {x:Static wpf:Controls.HighlightKey}}" />
+                        <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:Controls.HighlightTextKey}}" />
+                    </Trigger>
+                    <Trigger Property="IsEnabled" Value="False">
+                        <Setter Property="Background" Value="{DynamicResource {x:Static wpf:Controls.ControlBackgroundDisabledKey}}" />
+                        <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:Controls.ControlForegroundDisabledKey}}" />
+                        <Setter Property="BorderBrush" Value="{DynamicResource {x:Static wpf:Controls.ControlBorderDisabledKey}}" />
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+        </ResourceDictionary>
+    </ResourceDictionary.MergedDictionaries>
+    
+    
+</ResourceDictionary>

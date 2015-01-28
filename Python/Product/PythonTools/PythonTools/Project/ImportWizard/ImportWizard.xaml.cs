@@ -22,6 +22,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Interop;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudioTools;
 using WpfCommands = Microsoft.VisualStudioTools.Wpf.Commands;
@@ -73,7 +74,8 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
         }
 
         public ImportWizard(IServiceProvider serviceProvider, string sourcePath, string projectPath) {
-            ImportSettings = new ImportSettings(serviceProvider);
+            var interpreterService = serviceProvider.GetComponentModel().GetService<IInterpreterOptionsService>();
+            ImportSettings = new ImportSettings(interpreterService);
 
             _pageSequence = new CollectionViewSource {
                 Source = new ObservableCollection<Page>(new Page[] {

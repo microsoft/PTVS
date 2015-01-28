@@ -148,7 +148,7 @@ namespace FactoryProviderSuccess {
 
             var path = FactoryProviderSuccessPath;
 
-            sm.ReadOnlyStore.AddSetting(@"PythonTools\InterpreterFactories\Test", "CodeBase", path);
+            sm.Store.AddSetting(@"PythonTools\InterpreterFactories\Test", "CodeBase", path);
 
             var service = new InterpreterOptionsService(sp);
 
@@ -176,7 +176,7 @@ namespace FactoryProviderSuccess {
             File.Delete(path);
             Assert.IsFalse(File.Exists(path));
 
-            sm.ReadOnlyStore.AddSetting(@"PythonTools\InterpreterFactories\Test", "CodeBase", path);
+            sm.Store.AddSetting(@"PythonTools\InterpreterFactories\Test", "CodeBase", path);
 
             var service = new InterpreterOptionsService(sp);
 
@@ -228,7 +228,7 @@ namespace FactoryProviderSuccess {
 
             var path = FactoryProviderCorruptPath;
 
-            sm.ReadOnlyStore.AddSetting(@"PythonTools\InterpreterFactories\Test", "CodeBase", path);
+            sm.Store.AddSetting(@"PythonTools\InterpreterFactories\Test", "CodeBase", path);
 
             var service = new InterpreterOptionsService(sp);
 
@@ -280,7 +280,7 @@ namespace FactoryProviderTypeLoadException {
 
             var path = FactoryProviderTypeLoadErrorPath;
 
-            sm.ReadOnlyStore.AddSetting(@"PythonTools\InterpreterFactories\Test", "CodeBase", path);
+            sm.Store.AddSetting(@"PythonTools\InterpreterFactories\Test", "CodeBase", path);
 
             var service = new InterpreterOptionsService(sp);
 
@@ -307,8 +307,8 @@ namespace FactoryProviderTypeLoadException {
             var path1 = FactoryProviderTypeLoadErrorPath;
             var path2 = FactoryProviderSuccessPath;
 
-            sm.ReadOnlyStore.AddSetting(@"PythonTools\InterpreterFactories\Test1", "CodeBase", path1);
-            sm.ReadOnlyStore.AddSetting(@"PythonTools\InterpreterFactories\Test2", "CodeBase", path2);
+            sm.Store.AddSetting(@"PythonTools\InterpreterFactories\Test1", "CodeBase", path1);
+            sm.Store.AddSetting(@"PythonTools\InterpreterFactories\Test2", "CodeBase", path2);
 
             var service = new InterpreterOptionsService(sp);
 

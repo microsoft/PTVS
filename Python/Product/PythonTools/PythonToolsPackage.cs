@@ -248,6 +248,7 @@ namespace Microsoft.PythonTools {
     [ProvidePythonInterpreterFactoryProvider(CPythonInterpreterFactoryConstants.Id32, typeof(CPythonInterpreterFactoryConstants))]
     [ProvidePythonInterpreterFactoryProvider(CPythonInterpreterFactoryConstants.Id64, typeof(CPythonInterpreterFactoryConstants))]
     [ProvidePythonInterpreterFactoryProvider("ConfigurablePythonInterpreterFactoryProvider", typeof(ConfigurablePythonInterpreterFactoryProvider))]
+    [ProvidePythonInterpreterFactoryProvider(GuidList.guidLoadedProjectInterpreterFactoryProviderString, typeof(LoadedProjectInterpreterFactoryProvider))]
     [ProvideDiffSupportedContentType(".py;.pyw", ";")]
 #if DEV11_OR_LATER // TODO: UNSURE IF WE NEED THIS FOR DEV12
     [ProvideX64DebuggerFixForIntegratedShell]
@@ -393,12 +394,12 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
                     ErrorHandler.ThrowOnFailure(frame.Show());
                 }
                 if (focus) {
-                    var content = window.Content as System.Windows.UIElement;
-                    if (content != null) {
-                        content.Focus();
-                    }
+                var content = window.Content as System.Windows.UIElement;
+                if (content != null) {
+                    content.Focus();
                 }
             }
+        }
         }
 
         internal static void OpenNoInterpretersHelpPage(System.IServiceProvider serviceProvider) {
@@ -689,6 +690,14 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             interpreterService.InterpretersChanged += RefreshReplCommands;
             interpreterService.DefaultInterpreterChanged += RefreshReplCommands;
             interpreterService.DefaultInterpreterChanged += UpdateDefaultAnalyzer;
+
+            var loadedProjectProvider = interpreterService.KnownProviders
+                .OfType<LoadedProjectInterpreterFactoryProvider>()
+                .FirstOrDefault();
+            Debug.Assert(loadedProjectProvider != null);
+            if (loadedProjectProvider != null) {
+                loadedProjectProvider.SetSolution((IVsSolution)GetService(typeof(SVsSolution)));
+            }
         }
 
         private void RefreshReplCommands(object sender, EventArgs e) {
@@ -793,7 +802,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
         [Obsolete("Use IServiceProvider.BrowseForFileOpen extension method")]
         public string BrowseForFileOpen(IntPtr owner, string filter, string initialPath = null) {
             return ((System.IServiceProvider)this).BrowseForFileOpen(owner, filter, initialPath);
-        }
+            }
 
         [Obsolete("Use IServiceProvider.BrowseForFileSave extension method")]
         public string BrowseForFileSave(IntPtr owner, string filter, string initialPath = null) {
@@ -803,7 +812,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
         [Obsolete("Use IServiceProvider.BrowseForDirectory extension method")]
         public string BrowseForDirectory(IntPtr owner, string initialDirectory = null) {
             return ((System.IServiceProvider)this).BrowseForDirectory(owner, initialDirectory);
-        }
+            }
 
         /// <summary>
         /// Creates a new Python REPL window which is independent from the

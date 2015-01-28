@@ -22,9 +22,11 @@
     <!-- Core extension -->
     <File Include="Microsoft.PythonTools.dll;
                    Microsoft.PythonTools.Analysis.dll;
+                   Microsoft.PythonTools.EnvironmentsList.dll;
                    Microsoft.PythonTools.ImportWizard.dll;
                    Microsoft.PythonTools.ProjectWizards.dll;
                    Microsoft.PythonTools.VSInterpreters.dll;
+                   update_pip_cache.py;
                    pip_downloader.py" />
 
     <!-- Analyzer -->

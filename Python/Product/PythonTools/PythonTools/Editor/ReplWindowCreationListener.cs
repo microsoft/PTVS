@@ -54,7 +54,11 @@ namespace Microsoft.PythonTools.Editor {
             }
 
             var editFilter = new EditFilter(window.TextView, _editorOpsFactory.GetEditorOperations(textView), ServiceProvider.GlobalProvider);
-            var intellisenseController = IntellisenseControllerProvider.GetOrCreateController(model, textView);
+            var intellisenseController = IntellisenseControllerProvider.GetOrCreateController(
+                _serviceProvider,
+                model,
+                textView
+            );
 
             editFilter.AttachKeyboardFilter(vsTextView);
             intellisenseController.AttachKeyboardFilter();

@@ -76,7 +76,10 @@ namespace Microsoft.VisualStudioTools.Wpf {
                 while (!string.IsNullOrEmpty(path) && !Directory.Exists(path)) {
                     path = Path.GetDirectoryName(path);
                 }
-                path = Dialogs.BrowseForDirectory(new WindowInteropHelper(window).Handle, path);
+                path = Dialogs.BrowseForDirectory(
+                    window == null ? IntPtr.Zero : new WindowInteropHelper(window).Handle,
+                    path
+                );
                 if (path != null) {
                     tb.SetCurrentValue(TextBox.TextProperty, path);
                     var binding = BindingOperations.GetBindingExpressionBase(tb, TextBox.TextProperty);
@@ -90,7 +93,10 @@ namespace Microsoft.VisualStudioTools.Wpf {
                 while (!string.IsNullOrEmpty(path) && !Directory.Exists(path)) {
                     path = Path.GetDirectoryName(path);
                 }
-                path = Dialogs.BrowseForDirectory(new WindowInteropHelper(window).Handle, path);
+                path = Dialogs.BrowseForDirectory(
+                    window == null ? IntPtr.Zero : new WindowInteropHelper(window).Handle,
+                    path
+                );
                 if (path != null) {
                     if (string.IsNullOrEmpty(existing)) {
                         tb.SetCurrentValue(TextBox.TextProperty, path);
@@ -110,7 +116,11 @@ namespace Microsoft.VisualStudioTools.Wpf {
             var filter = (e.Parameter as string) ?? "All Files (*.*)|*.*";
 
             var path = tb.GetValue(TextBox.TextProperty) as string;
-            path = Dialogs.BrowseForFileOpen(new WindowInteropHelper(window).Handle, filter, path);
+            path = Dialogs.BrowseForFileOpen(
+                window == null ? IntPtr.Zero : new WindowInteropHelper(window).Handle,
+                filter,
+                path
+            );
             if (path != null) {
                 tb.SetCurrentValue(TextBox.TextProperty, path);
                 var binding = BindingOperations.GetBindingExpressionBase(tb, TextBox.TextProperty);
@@ -125,7 +135,11 @@ namespace Microsoft.VisualStudioTools.Wpf {
             var filter = (e.Parameter as string) ?? "All Files (*.*)|*.*";
 
             var path = tb.GetValue(TextBox.TextProperty) as string;
-            path = Dialogs.BrowseForFileSave(new WindowInteropHelper(window).Handle, filter, path);
+            path = Dialogs.BrowseForFileSave(
+                window == null ? IntPtr.Zero : new WindowInteropHelper(window).Handle,
+                filter,
+                path
+            );
             if (path != null) {
                 tb.SetCurrentValue(TextBox.TextProperty, path);
                 var binding = BindingOperations.GetBindingExpressionBase(tb, TextBox.TextProperty);

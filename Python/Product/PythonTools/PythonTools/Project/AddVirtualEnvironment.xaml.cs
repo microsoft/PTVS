@@ -37,6 +37,8 @@ namespace Microsoft.PythonTools.Project {
     /// Interaction logic for AddInterpreter.xaml
     /// </summary>
     partial class AddVirtualEnvironment : DialogWindowVersioningWorkaround {
+        public static readonly ICommand WebChooseInterpreter = new RoutedCommand();
+        
         private readonly AddVirtualEnvironmentView _view;
         private Task _currentOperation;
 
@@ -55,7 +57,7 @@ namespace Microsoft.PythonTools.Project {
         ) {
             using (var view = new AddVirtualEnvironmentView(project, service, project.Interpreters.ActiveInterpreter)) {
                 var wnd = new AddVirtualEnvironment(view);
-                
+
                 if (browseForExisting) {
                     var path = project.Site.BrowseForDirectory(IntPtr.Zero, project.ProjectHome);
                     if (string.IsNullOrEmpty(path)) {

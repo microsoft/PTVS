@@ -40,12 +40,12 @@ namespace Microsoft.PythonTools.Interpreter {
         // Two locations for specifying factory providers.
         // The first is within the VS 1x.0_Config hive, and is easiest to
         // specify in pkgdef files.
-        private const string FactoryProvidersCollection = @"PythonTools\InterpreterFactories";
+        internal const string FactoryProvidersCollection = @"PythonTools\InterpreterFactories";
         // The second is a static registry entry for the local machine and/or
         // the current user (HKCU takes precedence), intended for being set by
         // other installers.
         private const string FactoryProvidersRegKey = @"Software\Microsoft\PythonTools\" + AssemblyVersionInfo.VSVersion + @"\InterpreterFactories";
-        private const string FactoryProviderCodeBaseSetting = "CodeBase";
+        internal const string FactoryProviderCodeBaseSetting = "CodeBase";
 
 
         private const string DefaultInterpreterOptionsCollection = @"PythonTools\Options\Interpreters";
@@ -217,7 +217,8 @@ namespace Microsoft.PythonTools.Interpreter {
             string codebase,
             HashSet<string> seen,
             List<ComposablePartCatalog> catalog,
-            IVsActivityLog log) {
+            IVsActivityLog log
+        ) {
             if (string.IsNullOrEmpty(codebase)) {
                 return;
             }
@@ -292,6 +293,15 @@ namespace Microsoft.PythonTools.Interpreter {
                         }
                     }
                 }
+            }
+
+            if (!catalog.Any()) {
+                LoadOneProvider(
+                    typeof(CPythonInterpreterFactoryConstants).Assembly.CodeBase,
+                    seen,
+                    catalog,
+                    _activityLog
+                );
             }
 
             const string FailedToImportMessage = "Failed to import factory providers";

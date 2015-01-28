@@ -24,6 +24,7 @@ namespace Microsoft.PythonTools
         public const string guidPythonToolsCmdSetString = "bdfa79d2-2cd2-474a-a82a-ce8694116825";
         public const string guidPythonProjectString = "888888A0-9F3D-457C-B088-3A5042F75D52";
         public const string guidPythonLanguageService = "bf96a6ce-574f-3259-98be-503a3ad636dd";
+        public const string guidLoadedProjectInterpreterFactoryProviderString = "ADA20FE6-F50C-4ABC-A6F4-ED15EAF5A2FC";
 
         public static readonly Guid guidPythonToolsPackage = new Guid(guidPythonToolsPkgString);
         public static readonly Guid guidPythonToolsCmdSet = new Guid(guidPythonToolsCmdSetString);

@@ -245,6 +245,7 @@ $managed_files = (
     "Microsoft.PythonTools.AttacherX86.exe", 
     "Microsoft.PythonTools.BuildTasks.dll", 
     "Microsoft.PythonTools.Debugger.dll", 
+    "Microsoft.PythonTools.EnvironmentsList.dll", 
     "Microsoft.PythonTools.dll", 
     "Microsoft.PythonTools.VSInterpreters.dll",
     "Microsoft.PythonTools.TestAdapter.dll",
@@ -293,7 +294,7 @@ if (-not (Get-Command msbuild -EA 0)) {
     Throw "Visual Studio build tools are required."
 }
 
-if (-not $outdir -and -not $release) {
+if (-not $outdir -and -not $release -and -not $internal) {
     if (-not $outdir) {
         Throw "Invalid output directory '$outdir'"
     }

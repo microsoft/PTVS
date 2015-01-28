@@ -50,6 +50,16 @@ namespace TestUtilities.Python {
             return false;
         }
 
+        public void RemoveAllFactories() {
+            if (_factories.Any()) {
+                _factories.Clear();
+                var evt = InterpreterFactoriesChanged;
+                if (evt != null) {
+                    evt(this, EventArgs.Empty);
+                }
+            }
+        }
+
         public IEnumerable<IPythonInterpreterFactory> GetInterpreterFactories() {
             return _factories;
         }

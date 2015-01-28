@@ -1,0 +1,186 @@
+﻿<UserControl x:Class="Microsoft.PythonTools.EnvironmentsList.ConfigurationExtension"
+             x:ClassModifier="internal"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:s="clr-namespace:System;assembly=mscorlib"
+             xmlns:l="clr-namespace:Microsoft.PythonTools.EnvironmentsList"
+             xmlns:wpf="clr-namespace:Microsoft.VisualStudioTools.Wpf"
+             mc:Ignorable="d" 
+             d:DesignHeight="300" d:DesignWidth="300">
+    <UserControl.Resources>
+        <ResourceDictionary Source="pack://application:,,,/Microsoft.PythonTools.EnvironmentsList;component/EnvironmentView.xaml" />
+    </UserControl.Resources>
+    
+    <UserControl.CommandBindings>
+        <CommandBinding Command="{x:Static l:ConfigurationExtension.Apply}"
+                        CanExecute="Apply_CanExecute"
+                        Executed="Apply_Executed" />
+        <CommandBinding Command="{x:Static l:ConfigurationExtension.Reset}"
+                        CanExecute="Reset_CanExecute"
+                        Executed="Reset_Executed" />
+        <CommandBinding Command="{x:Static l:ConfigurationExtension.AutoDetect}"
+                        CanExecute="AutoDetect_CanExecute"
+                        Executed="AutoDetect_Executed" />
+        <CommandBinding Command="{x:Static wpf:Commands.BrowseFolder}"
+                        CanExecute="Browse_CanExecute"
+                        Executed="Browse_Executed" />
+        <CommandBinding Command="{x:Static wpf:Commands.BrowseOpenFile}"
+                        CanExecute="Browse_CanExecute"
+                        Executed="Browse_Executed" />
+    </UserControl.CommandBindings>
+    
+    <Grid x:Name="Subcontext">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="auto" />
+        </Grid.ColumnDefinitions>
+        
+        <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Hidden">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition />
+                    <RowDefinition />
+                    <RowDefinition />
+                    <RowDefinition />
+                    <RowDefinition />
+                    <RowDefinition />
+                    <RowDefinition />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                
+                <Label Grid.Column="0" Grid.Row="0">Prefix path</Label>
+                <wpf:ConfigurationTextBoxWithHelp Grid.Column="1" Grid.Row="0"
+                                                Text="{Binding PrefixPath,Mode=TwoWay}"
+                                                Watermark="e.g. C:\PythonXY"
+                                                BrowseButtonStyle="{StaticResource BrowseFolderButton}">
+                    <wpf:ConfigurationTextBoxWithHelp.HelpText>
+                        The prefix path specifies the directory containing all files
+                        needed for this environment. It may be used for searching
+                        installed libraries or deploying an environment to another
+                        machine.
+                    </wpf:ConfigurationTextBoxWithHelp.HelpText>
+                </wpf:ConfigurationTextBoxWithHelp>
+
+                <Label Grid.Column="0" Grid.Row="1">Interpreter path</Label>
+                <wpf:ConfigurationTextBoxWithHelp Grid.Column="1" Grid.Row="1"
+                                                Text="{Binding InterpreterPath,Mode=TwoWay}"
+                                                Watermark="e.g. C:\PythonXY\python.exe"
+                                                BrowseButtonStyle="{StaticResource BrowseOpenFileButton}"
+                                                BrowseCommandParameter="Executable Files (*.exe)|*.exe|All Files (*.*)|*.*">
+                    <wpf:ConfigurationTextBoxWithHelp.HelpText>
+                        The interpreter path is the executable file normally used to
+                        start Python. Normally this is called "python.exe", but it may
+                        be different for some interpreters.
+                    </wpf:ConfigurationTextBoxWithHelp.HelpText>
+                </wpf:ConfigurationTextBoxWithHelp>
+
+                <Label Grid.Column="0" Grid.Row="2">Windowed interpreter</Label>
+                <wpf:ConfigurationTextBoxWithHelp Grid.Column="1" Grid.Row="2"
+                                                Text="{Binding WindowsInterpreterPath,Mode=TwoWay}"
+                                                Watermark="e.g. C:\PythonXY\pythonw.exe"
+                                                BrowseButtonStyle="{StaticResource BrowseOpenFileButton}"
+                                                BrowseCommandParameter="Executable Files (*.exe)|*.exe|All Files (*.*)|*.*">
+                    <wpf:ConfigurationTextBoxWithHelp.HelpText>
+                        The windowed interpreter path is the executable file used to
+                        start Python without displaying a console window. Normally this
+                        is called "pythonw.exe", but it may be different for some
+                        interpreters.
+                    </wpf:ConfigurationTextBoxWithHelp.HelpText>
+                </wpf:ConfigurationTextBoxWithHelp>
+
+                <Label Grid.Column="0" Grid.Row="3">Library path</Label>
+                <wpf:ConfigurationTextBoxWithHelp Grid.Column="1" Grid.Row="3"
+                                                Text="{Binding LibraryPath,Mode=TwoWay}"
+                                                Watermark="e.g. C:\PythonXY\Lib"
+                                                BrowseButtonStyle="{StaticResource BrowseFolderButton}">
+                    <wpf:ConfigurationTextBoxWithHelp.HelpText>
+                        The library path contains the standard library and the
+                        'site-packages' folder for this environment. Packages installed
+                        into this folder will be analyzed for the completion DB.
+                    </wpf:ConfigurationTextBoxWithHelp.HelpText>
+                </wpf:ConfigurationTextBoxWithHelp>
+
+                <Label Grid.Column="0" Grid.Row="4">Language version</Label>
+                <wpf:ConfigurationComboBoxWithHelp Grid.Column="1" Grid.Row="4"
+                                                 Value="{Binding VersionName,Mode=TwoWay}"
+                                                 Values="{Binding VersionNames}"
+                                                 Watermark="Language version">
+                    <wpf:ConfigurationComboBoxWithHelp.HelpText>
+                        The language version determines whether certain syntax features
+                        are allowed or reported as errors. This should be set to match
+                        the interpreter version.
+                    </wpf:ConfigurationComboBoxWithHelp.HelpText>
+                </wpf:ConfigurationComboBoxWithHelp>
+
+                <Label Grid.Column="0" Grid.Row="5">Architecture</Label>
+                <wpf:ConfigurationComboBoxWithHelp Grid.Column="1" Grid.Row="5"
+                                                 Value="{Binding ArchitectureName,Mode=TwoWay}"
+                                                 Values="{Binding ArchitectureNames}"
+                                                 Watermark="Architecture">
+                    <wpf:ConfigurationComboBoxWithHelp.HelpText>
+                        The interpreter architecture is used when debugging and
+                        profiling. This should be set to match the target architecture
+                        of the interpreter, rather than the architecture of your
+                        operating system.
+                    </wpf:ConfigurationComboBoxWithHelp.HelpText>
+                </wpf:ConfigurationComboBoxWithHelp>
+
+                <Label Grid.Column="0" Grid.Row="6">Path environment variable</Label>
+                <wpf:ConfigurationTextBoxWithHelp Grid.Column="1" Grid.Row="6"
+                                                Text="{Binding PathEnvironmentVariable,Mode=TwoWay}"
+                                                Watermark="e.g. PYTHONPATH">
+                    <wpf:ConfigurationTextBoxWithHelp.HelpText>
+                        This environment variable is set to specify search paths that
+                        should be added to sys.path. Normally this should be set to
+                        "PYTHONPATH", but it may be different for some interpreters.
+                    </wpf:ConfigurationTextBoxWithHelp.HelpText>
+                </wpf:ConfigurationTextBoxWithHelp>
+            </Grid>
+        </ScrollViewer>
+        
+        <StackPanel Grid.Column="1"
+                    Margin="4 0 6 0"
+                    Orientation="Vertical">
+            <StackPanel.Resources>
+                <Style TargetType="{x:Type Button}" BasedOn="{StaticResource NavigationButton}">
+                    <Setter Property="Margin" Value="4" />
+                    <Setter Property="CommandParameter" Value="{Binding}" />
+                </Style>
+            </StackPanel.Resources>
+            <Button Command="{x:Static l:ConfigurationExtension.Apply}">
+                _Apply
+                <Button.ToolTip>
+                    Saves the changes that have been made.
+                </Button.ToolTip>
+            </Button>
+            <Button Command="{x:Static l:ConfigurationExtension.Reset}">
+                _Reset
+                <Button.ToolTip>
+                    Clears any changes that have been made.
+                </Button.ToolTip>
+            </Button>
+            <Button Command="{x:Static l:ConfigurationExtension.AutoDetect}">
+                A_uto Detect
+                <Button.ToolTip>
+                    Attempts to fill in blank settings based on those that are
+                    already filled in.
+                </Button.ToolTip>
+                <Button.Style>
+                    <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsAutoDetectRunning}" Value="True">
+                                <Setter Property="Content" Value="Detecting" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
+        </StackPanel>
+    </Grid>
+</UserControl>

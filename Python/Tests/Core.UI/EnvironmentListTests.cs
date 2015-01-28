@@ -1,0 +1,619 @@
+﻿/* ****************************************************************************
+ *
+ * Copyright (c) Microsoft Corporation. 
+ *
+ * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
+ * copy of the license can be found in the License.html file at the root of this distribution. If 
+ * you cannot locate the Apache License, Version 2.0, please send an email to 
+ * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
+ * by the terms of the Apache License, Version 2.0.
+ *
+ * You must not remove this notice, or any other, from this software.
+ *
+ * ***************************************************************************/
+
+extern alias analysis;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows.Input;
+using System.Windows.Threading;
+using Microsoft.IronPythonTools.Interpreter;
+using Microsoft.PythonTools.Analysis.Analyzer;
+using Microsoft.PythonTools.EnvironmentsList;
+using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Parsing;
+using Microsoft.PythonTools.Project;
+using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using TestUtilities;
+using TestUtilities.Mocks;
+using TestUtilities.Python;
+using CommonUtils = analysis::Microsoft.VisualStudioTools.CommonUtils;
+using ProcessOutput = analysis::Microsoft.VisualStudioTools.Project.ProcessOutput;
+
+namespace PythonToolsUITests {
+    [TestClass]
+    public class EnvironmentListTests {
+        [ClassInitialize]
+        public static void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
+            PythonTestData.Deploy(includeTestData: false);
+        }
+
+
+        private static InterpreterConfiguration MockInterpreterConfiguration(Version version) {
+            return new InterpreterConfiguration(version);
+        }
+
+        private static InterpreterConfiguration MockInterpreterConfiguration(string path) {
+            return new InterpreterConfiguration(Path.GetDirectoryName(path), path, "", "", "", ProcessorArchitecture.None, new Version(2, 7));
+        }
+
+        [TestMethod, Priority(0)]
+        public void HasInterpreters() {
+            var mockService = new MockInterpreterOptionsService();
+            mockService.AddProvider(new MockPythonInterpreterFactoryProvider("Test Provider 1",
+                new MockPythonInterpreterFactory(Guid.NewGuid(), "Test Factory 1", MockInterpreterConfiguration(new Version(2, 7))),
+                new MockPythonInterpreterFactory(Guid.NewGuid(), "Test Factory 2", MockInterpreterConfiguration(new Version(3, 0))),
+                new MockPythonInterpreterFactory(Guid.NewGuid(), "Test Factory 3", MockInterpreterConfiguration(new Version(3, 3)))
+            ));
+            mockService.AddProvider(new MockPythonInterpreterFactoryProvider("Test Provider 2",
+                new MockPythonInterpreterFactory(Guid.NewGuid(), "Test Factory 4", MockInterpreterConfiguration(new Version(2, 7))),
+                new MockPythonInterpreterFactory(Guid.NewGuid(), "Test Factory 5", MockInterpreterConfiguration(new Version(3, 0))),
+                new MockPythonInterpreterFactory(Guid.NewGuid(), "Test Factory 6", MockInterpreterConfiguration(new Version(3, 3)))
+            ));
+
+            using (var list = new EnvironmentListProxy()) {
+                list.Service = mockService;
+                var environments = list.Environments;
+
+                Assert.AreEqual(6, environments.Count);
+                AssertUtil.ContainsExactly(
+                    environments.Select(ev => ev.Description),
+                    Enumerable.Range(1, 6).Select(i => string.Format("Test Factory {0}", i))
+                );
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void AddFactories() {
+            var mockService = new MockInterpreterOptionsService();
+            using (var list = new EnvironmentListProxy()) {
+                list.Service = mockService;
+
+                Assert.AreEqual(0, list.Environments.Count);
+
+                var provider = new MockPythonInterpreterFactoryProvider("Test Provider 1",
+                    new MockPythonInterpreterFactory(Guid.NewGuid(), "Test Factory 1", MockInterpreterConfiguration(new Version(2, 7))),
+                    new MockPythonInterpreterFactory(Guid.NewGuid(), "Test Factory 2", MockInterpreterConfiguration(new Version(3, 0))),
+                    new MockPythonInterpreterFactory(Guid.NewGuid(), "Test Factory 3", MockInterpreterConfiguration(new Version(3, 3)))
+                );
+
+                mockService.AddProvider(provider);
+
+                Assert.AreEqual(3, list.Environments.Count);
+                provider.AddFactory(new MockPythonInterpreterFactory(Guid.NewGuid(), "Test Factory 4", MockInterpreterConfiguration(new Version(2, 7))));
+                Assert.AreEqual(4, list.Environments.Count);
+                provider.AddFactory(new MockPythonInterpreterFactory(Guid.NewGuid(), "Test Factory 5", MockInterpreterConfiguration(new Version(3, 0))));
+                Assert.AreEqual(5, list.Environments.Count);
+                provider.AddFactory(new MockPythonInterpreterFactory(Guid.NewGuid(), "Test Factory 6", MockInterpreterConfiguration(new Version(3, 3))));
+                Assert.AreEqual(6, list.Environments.Count);
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void FactoryWithInvalidPath() {
+            using (var list = new EnvironmentListProxy()) {
+                var service = new MockInterpreterOptionsService();
+                var provider = new MockPythonInterpreterFactoryProvider("Test Provider");
+                service.AddProvider(provider);
+                list.Service = service;
+
+                foreach (string invalidPath in new string[] { 
+                    null, 
+                    "", 
+                    "NOT A REAL PATH", 
+                    string.Join("\\", Path.GetInvalidPathChars().Select(c => c.ToString()))
+                }) {
+                    Console.WriteLine("Path: <{0}>", invalidPath ?? "(null)");
+                    provider.RemoveAllFactories();
+                    provider.AddFactory(new MockPythonInterpreterFactory(
+                        Guid.NewGuid(),
+                        "Test Factory",
+                        new InterpreterConfiguration(
+                            invalidPath,
+                            invalidPath,
+                            "",
+                            "",
+                            "",
+                            ProcessorArchitecture.None,
+                            new Version(2, 7)
+                        )
+                    ));
+                    var view = list.Environments.Single();
+                    Assert.IsFalse(
+                        list.CanExecute(DBExtension.StartRefreshDB, view.Object),
+                        string.Format("Should not be able to refresh DB for {0}", invalidPath)
+                    );
+                }
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void FactoryWithValidPath() {
+            using (var list = new EnvironmentListProxy()) {
+                var service = new MockInterpreterOptionsService();
+                var provider = new MockPythonInterpreterFactoryProvider("Test Provider");
+                service.AddProvider(provider);
+                list.Service = service;
+
+                foreach (var version in PythonPaths.Versions) {
+                    Console.WriteLine("Path: <{0}>", version.InterpreterPath);
+                    provider.RemoveAllFactories();
+                    provider.AddFactory(new MockPythonInterpreterFactory(
+                        Guid.NewGuid(), 
+                        "Test Factory",
+                        version.Configuration
+                    ));
+                    var view = list.Environments.Single();
+                    Assert.IsTrue(
+                        list.CanExecute(DBExtension.StartRefreshDB, view),
+                        string.Format("Cannot refresh DB for {0}", version.InterpreterPath)
+                    );
+                }
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void RefreshDBStates() {
+            using (var fact = new MockPythonInterpreterFactory(
+                Guid.NewGuid(),
+                "Test Factory 1",
+                MockInterpreterConfiguration(
+                    PythonPaths.Versions.First().InterpreterPath
+                ),
+                true
+            ))
+            using (var list = new EnvironmentListProxy()) {
+                list.CreateDBExtension = true;
+
+                var mockService = new MockInterpreterOptionsService();
+                mockService.AddProvider(new MockPythonInterpreterFactoryProvider("Test Provider 1", fact));
+                list.Service = mockService;
+                dynamic view = list.Environments.Single();
+                
+                Assert.IsFalse(view.IsRefreshingDB);
+                Assert.IsTrue(list.CanExecute(DBExtension.StartRefreshDB, view));
+                Assert.IsFalse(fact.IsCurrent);
+                Assert.AreEqual(MockPythonInterpreterFactory.NoDatabaseReason, fact.GetIsCurrentReason(null));
+
+                list.Execute(DBExtension.StartRefreshDB, view).GetAwaiter().GetResult();
+                for (int retries = 10; retries > 0 && !view.IsRefreshingDB; --retries) {
+                    Thread.Sleep(200);
+                }
+
+                Assert.IsTrue(view.IsRefreshingDB);
+                Assert.IsFalse(list.CanExecute(DBExtension.StartRefreshDB, view));
+                Assert.IsFalse(fact.IsCurrent);
+                Assert.AreEqual(MockPythonInterpreterFactory.GeneratingReason, fact.GetIsCurrentReason(null));
+
+                fact.EndGenerateCompletionDatabase(AnalyzerStatusUpdater.GetIdentifier(fact), false);
+                for (int retries = 10; retries > 0 && view.IsRefreshingDB; --retries) {
+                    Thread.Sleep(1000);
+                }
+
+                Assert.IsFalse(view.IsRefreshingDB);
+                Assert.IsTrue(list.CanExecute(DBExtension.StartRefreshDB, view));
+                Assert.IsFalse(fact.IsCurrent);
+                Assert.AreEqual(MockPythonInterpreterFactory.MissingModulesReason, fact.GetIsCurrentReason(null));
+
+                list.Execute(DBExtension.StartRefreshDB, view).GetAwaiter().GetResult();
+
+                Assert.IsTrue(view.IsRefreshingDB);
+                Assert.IsFalse(list.CanExecute(DBExtension.StartRefreshDB, view));
+                Assert.IsFalse(fact.IsCurrent);
+                Assert.AreEqual(MockPythonInterpreterFactory.GeneratingReason, fact.GetIsCurrentReason(null));
+
+                fact.EndGenerateCompletionDatabase(AnalyzerStatusUpdater.GetIdentifier(fact), true);
+                for (int retries = 10; retries > 0 && view.IsRefreshingDB; --retries) {
+                    Thread.Sleep(1000);
+                }
+
+                Assert.IsFalse(view.IsRefreshingDB);
+                Assert.IsTrue(list.CanExecute(DBExtension.StartRefreshDB, view));
+                Assert.IsTrue(fact.IsCurrent);
+                Assert.AreEqual(MockPythonInterpreterFactory.UpToDateReason, fact.GetIsCurrentReason(null));
+                Assert.AreEqual(MockPythonInterpreterFactory.UpToDateReason, fact.GetIsCurrentReason(null));
+            }
+        }
+
+
+        [TestMethod, Priority(0)]
+        public void InstalledFactories() {
+            using (var list = new EnvironmentListProxy()) {
+                list.Service = GetInterpreterOptionsService();
+
+                var expected = new HashSet<string>(PythonPaths.Versions.Select(v => v.InterpreterPath), StringComparer.OrdinalIgnoreCase);
+                var actual = new HashSet<string>(list.Environments.Select(ev => (string)ev.InterpreterPath), StringComparer.OrdinalIgnoreCase);
+
+                Console.WriteLine("Expected - Actual: " + string.Join(", ", expected.Except(actual).OrderBy(s => s)));
+                Console.WriteLine("Actual - Expected: " + string.Join(", ", actual.Except(expected).OrderBy(s => s)));
+
+                AssertUtil.ContainsExactly(
+                    expected,
+                    actual
+                );
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void AddUpdateRemoveConfigurableFactory() {
+            using (var list = new EnvironmentListProxy()) {
+                list.Service = GetInterpreterOptionsService();
+
+                var before = new HashSet<string>(list.Environments.Select(ev => (string)ev.InterpreterPath), StringComparer.OrdinalIgnoreCase);
+
+                var configurable = list.Service.KnownProviders.OfType<ConfigurablePythonInterpreterFactoryProvider>().FirstOrDefault();
+                Assert.IsNotNull(configurable, "No configurable provider available");
+                var fact = configurable.SetOptions(new InterpreterFactoryCreationOptions {
+                    Id = Guid.NewGuid(),
+                    LanguageVersionString = "2.7",
+                    // The actual file doesn't matter, except to test that it
+                    // is added
+                    InterpreterPath = TestData.GetPath("HelloWorld\\HelloWorld.pyproj")
+                });
+
+                try {
+                    var afterAdd = new HashSet<string>(list.Environments.Select(ev => (string)ev.InterpreterPath), StringComparer.OrdinalIgnoreCase);
+
+                    Assert.AreNotEqual(before.Count, afterAdd.Count, "Did not add a new environment");
+                    AssertUtil.ContainsExactly(
+                        afterAdd.Except(before),
+                        TestData.GetPath("HelloWorld\\HelloWorld.pyproj")
+                    );
+
+                    configurable.SetOptions(new InterpreterFactoryCreationOptions {
+                        Id = fact.Id,
+                        LanguageVersion = fact.Configuration.Version,
+                        InterpreterPath = TestData.GetPath("HelloWorld2\\HelloWorld.pyproj")
+                    });
+
+                    var afterUpdate = new HashSet<string>(list.Environments.Select(ev => (string)ev.InterpreterPath), StringComparer.OrdinalIgnoreCase);
+
+                    Assert.AreEqual(afterAdd.Count, afterUpdate.Count, "Should not add/remove an environment");
+                    AssertUtil.ContainsExactly(
+                        afterUpdate.Except(before),
+                        TestData.GetPath("HelloWorld2\\HelloWorld.pyproj")
+                    );
+                } finally {
+                    configurable.RemoveInterpreter(fact.Id);
+                }
+
+                var afterRemove = new HashSet<string>(list.Environments.Select(ev => (string)ev.InterpreterPath), StringComparer.OrdinalIgnoreCase);
+                AssertUtil.ContainsExactly(before, afterRemove);
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void LoadUnloadProjectFactories() {
+            var service = new MockInterpreterOptionsService();
+            var mockProvider = new MockPythonInterpreterFactoryProvider("Test Provider");
+            mockProvider.AddFactory(new MockPythonInterpreterFactory(Guid.NewGuid(), "Test Environment", MockInterpreterConfiguration(new Version(2, 7))));
+            service.AddProvider(mockProvider);
+
+            var loaded = new LoadedProjectInterpreterFactoryProvider();
+            service.AddProvider(loaded);
+            using (var list = new EnvironmentListProxy()) {
+                list.Service = service;
+
+                // List only contains one entry
+                AssertUtil.ContainsExactly(
+                    list.Environments.Select(ev => ev.Description),
+                    "Test Environment"
+                );
+
+                var project = new MockPythonInterpreterFactoryProvider("Fake Project");
+                project.AddFactory(new MockPythonInterpreterFactory(Guid.NewGuid(), "Fake Environment", MockInterpreterConfiguration(new Version(2, 7))));
+
+                loaded.ProjectLoaded(project, null);
+
+                // List now contains two entries
+                AssertUtil.ContainsExactly(
+                    list.Environments.Select(ev => ev.Description),
+                    "Test Environment",
+                    "Fake Environment"
+                );
+
+                loaded.ProjectUnloaded(project);
+
+                // List only has one entry again
+                AssertUtil.ContainsExactly(
+                    list.Environments.Select(ev => ev.Description),
+                    "Test Environment"
+                );
+            }
+        }
+
+
+        [TestMethod, Priority(0)]
+        public void AddRemoveProjectFactories() {
+            var service = new MockInterpreterOptionsService();
+            var loaded = new LoadedProjectInterpreterFactoryProvider();
+            service.AddProvider(loaded);
+            using (var list = new EnvironmentListProxy()) {
+                list.Service = service;
+
+                // List should be empty
+                AssertUtil.ContainsExactly(list.Environments);
+
+                var project = new MockPythonInterpreterFactoryProvider("Fake Project");
+
+                loaded.ProjectLoaded(project, null);
+
+                // List is still empty
+                AssertUtil.ContainsExactly(list.Environments);
+
+                project.AddFactory(new MockPythonInterpreterFactory(Guid.NewGuid(), "Fake Environment", MockInterpreterConfiguration(new Version(2, 7))));
+
+                // List now contains one project
+                AssertUtil.ContainsExactly(
+                    list.Environments.Select(ev => ev.Description),
+                    "Fake Environment"
+                );
+
+                project.RemoveAllFactories();
+
+                // List is empty again
+                AssertUtil.ContainsExactly(list.Environments);
+
+                loaded.ProjectUnloaded(project);
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void ChangeDefault() {
+            var service = GetInterpreterOptionsService();
+            using (var defaultChanged = new AutoResetEvent(false))
+            using (var list = new EnvironmentListProxy()) {
+                service.DefaultInterpreterChanged += (s, e) => { defaultChanged.Set(); };
+                list.Service = service;
+                var originalDefault = service.DefaultInterpreter;
+                try {
+                    foreach (var interpreter in service.Interpreters) {
+                        var environment = list.Environments.FirstOrDefault(ev =>
+                            ev.Factory == interpreter
+                        );
+                        Assert.IsNotNull(environment, string.Format("Did not find {0}", interpreter.Description));
+
+                        var t = list.Execute(EnvironmentView.MakeGlobalDefault, environment);
+                        Assert.IsTrue(t.Wait(TimeSpan.FromSeconds(10.0)), "Setting default took too long");
+                        Assert.IsTrue(defaultChanged.WaitOne(TimeSpan.FromSeconds(10.0)), "Setting default took too long");
+
+                        Assert.AreEqual(interpreter, service.DefaultInterpreter,
+                            string.Format(
+                                "Failed to change default from {0} to {1}",
+                                service.DefaultInterpreter.Description,
+                                interpreter.Description
+                        ));
+                    }
+                } finally {
+                    service.DefaultInterpreter = originalDefault;
+                }
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void PipExtension() {
+            var service = MakeEmptyVEnv();
+
+            using (var list = new EnvironmentListProxy()) {
+                list.CreatePipExtension = true;
+                list.Service = service;
+
+                var environment = list.Environments.Single();
+                var pip = (PipExtensionProvider)environment.GetExtensionOrAssert<PipExtensionProvider>();
+
+                Assert.IsFalse(pip.IsPipInstalled().GetAwaiter().GetResult(), "venv should not install pip");
+                var task = pip.InstallPip().ContinueWith<bool>(LogException);
+                Assert.IsTrue(task.Wait(TimeSpan.FromSeconds(120.0)), "pip install timed out");
+                Assert.IsTrue(task.Result, "pip install failed");
+                Assert.IsTrue(pip.IsPipInstalled().GetAwaiter().GetResult(), "pip was not installed");
+
+                var packages = pip.EnumeratePackages().GetAwaiter().GetResult();
+                AssertUtil.ContainsExactly(packages.Select(pv => pv.Name), "pip", "setuptools");
+
+                task = pip.InstallPackage("ptvsd", true).ContinueWith<bool>(LogException);
+                Assert.IsTrue(task.Wait(TimeSpan.FromSeconds(60.0)), "pip install ptvsd timed out");
+                Assert.IsTrue(task.Result, "pip install ptvsd failed");
+                packages = pip.EnumeratePackages().GetAwaiter().GetResult();
+                AssertUtil.ContainsAtLeast(packages.Select(pv => pv.Name), "ptvsd");
+
+                task = pip.UninstallPackage("ptvsd").ContinueWith<bool>(LogException);
+                Assert.IsTrue(task.Wait(TimeSpan.FromSeconds(60.0)), "pip uninstall ptvsd timed out");
+                Assert.IsTrue(task.Result, "pip uninstall ptvsd failed");
+                packages = pip.EnumeratePackages().GetAwaiter().GetResult();
+                AssertUtil.DoesntContain(packages.Select(pv => pv.Name), "ptvsd");
+            }
+        }
+
+        #region Test Helpers
+
+        private static bool LogException(Task task) {
+            var ex = task.Exception;
+            if (ex != null) {
+                Console.WriteLine(ex.InnerException ?? ex);
+                return false;
+            }
+            return true;
+        }
+
+        private static IInterpreterOptionsService MakeEmptyVEnv() {
+            var python = PythonPaths.Versions.FirstOrDefault(p =>
+                p.IsCPython && Directory.Exists(Path.Combine(p.LibPath, "venv"))
+            );
+            if (python == null) {
+                Assert.Inconclusive("Requires Python with venv");
+            }
+
+            var env = TestData.GetTempPath(randomSubPath: true);
+            using (var proc = ProcessOutput.RunHiddenAndCapture(
+                python.InterpreterPath, "-m", "venv", env, "--clear"
+            )) {
+                Console.WriteLine(proc.Arguments);
+                proc.Wait();
+                foreach (var line in proc.StandardOutputLines.Concat(proc.StandardErrorLines)) {
+                    Console.WriteLine(line);
+                }
+                Assert.AreEqual(0, proc.ExitCode ?? -1, "Failed to create venv");
+            }
+
+            // Forcibly remove pip so we can reinstall it
+            foreach (var dir in Directory.EnumerateDirectories(Path.Combine(env, "lib", "site-packages"))) {
+                Directory.Delete(dir, true);
+            }
+
+            var service = new MockInterpreterOptionsService();
+            var provider = new MockPythonInterpreterFactoryProvider("VEnv Provider");
+            provider.AddFactory(new MockPythonInterpreterFactory(
+                Guid.NewGuid(),
+                Path.GetFileName(CommonUtils.TrimEndSeparator(env)),
+                new InterpreterConfiguration(
+                    env,
+                    CommonUtils.FindFile(env, "python.exe"),
+                    CommonUtils.FindFile(env, "python.exe"),
+                    Path.GetDirectoryName(CommonUtils.FindFile(env, "site.py", 3)),
+                    "PYTHONPATH",
+                    python.Isx64 ? ProcessorArchitecture.Amd64 : ProcessorArchitecture.X86,
+                    python.Version.ToVersion()
+                )
+            ));
+            service.AddProvider(provider);
+            return service;
+        }
+
+        sealed class EnvironmentListProxy : IDisposable {
+            private readonly WpfProxy _proxy;
+            private readonly WpfObjectProxy<ToolWindow> _window;
+
+            public EnvironmentListProxy() {
+                var proxy = new WpfProxy();
+                try {
+                    _window = proxy.Create(() => new ToolWindow());
+                    _window.Object.ViewCreated += Window_ViewCreated;
+                } catch (Exception ex) {
+                    Console.WriteLine(ex);
+                    proxy.Dispose();
+                    throw;
+                }
+                _proxy = proxy;
+            }
+
+            public void Dispose() {
+                if (_window != null && _window.Object != null) {
+                    _window.Object.Dispose();
+                }
+                _proxy.Dispose();
+            }
+
+            public dynamic Window {
+                get { return _window; }
+            }
+
+            private void Window_ViewCreated(object sender, EnvironmentViewEventArgs e) {
+                if (CreateDBExtension) {
+                    var withDb = e.View.Factory as IPythonInterpreterFactoryWithDatabase;
+                    if (withDb != null) {
+                        e.View.Extensions.Add(new DBExtensionProvider(withDb));
+                    }
+                }
+                if (CreatePipExtension) {
+                    var pip = new PipExtensionProvider(e.View.Factory);
+                    pip.OutputTextReceived += (s, e2) => Console.WriteLine(e2.Value);
+                    e.View.Extensions.Add(pip);
+                }
+            }
+
+            public bool CreateDBExtension { get; set; }
+            public bool CreatePipExtension { get; set; }
+
+            public IInterpreterOptionsService Service {
+                get {
+                    return (IInterpreterOptionsService)Window.Service;
+                }
+                set {
+                    _proxy.Invoke(() => { Window.Service = value; });
+                }
+            }
+
+            public List<dynamic> Environments {
+                get {
+                    return new List<dynamic>(
+                        _proxy.Invoke(() => new List<dynamic>(Window._environments), DispatcherPriority.SystemIdle)
+                            .Select(view => new EnvironmentViewProxy(_proxy, view))
+                    );
+                }
+            }
+
+            public bool CanExecute(RoutedCommand command, object parameter) {
+                return _proxy.CanExecute(command, _window, parameter);
+            }
+
+            public Task Execute(RoutedCommand command, object parameter) {
+                return _proxy.Execute(command, _window, parameter);
+            }
+        }
+
+        class EnvironmentViewProxy : WpfObjectProxy<EnvironmentView> {
+            public EnvironmentViewProxy(WpfProxy provider, EnvironmentView view)
+                : base(provider, view) { }
+
+            public T GetExtensionOrDefault<T>() where T : IEnvironmentViewExtension {
+                return Dispatcher.Invoke(() => {
+                    var ext = Object.Extensions.OfType<T>().FirstOrDefault();
+                    if (ext != null) {
+                        // Get the WpfObject to ensure it is constructed on the
+                        // UI thread.
+                        var fe = ext.WpfObject;
+                    }
+                    return ext;
+                });
+            }
+
+            public T GetExtensionOrAssert<T>() where T : IEnvironmentViewExtension {
+                var ext = GetExtensionOrDefault<T>();
+                Assert.IsNotNull(ext, "Unable to get " + typeof(T).Name);
+                return ext;
+            }
+        }
+
+        static IInterpreterOptionsService GetInterpreterOptionsService() {
+            var sp = new MockServiceProvider();
+            sp.Services[typeof(SVsActivityLog)] = new MockActivityLog();
+            var settings = new MockSettingsManager();
+            sp.Services[typeof(SVsSettingsManager)] = settings;
+            settings.Store.AddSetting(
+                InterpreterOptionsService.FactoryProvidersCollection + "\\CPythonAndConfigurable",
+                InterpreterOptionsService.FactoryProviderCodeBaseSetting,
+                typeof(CPythonInterpreterFactoryConstants).Assembly.Location
+            );
+            settings.Store.AddSetting(
+                InterpreterOptionsService.FactoryProvidersCollection + "\\IronPython",
+                InterpreterOptionsService.FactoryProviderCodeBaseSetting,
+                typeof(IronPythonInterpreter).Assembly.Location
+            );
+            settings.Store.AddSetting(
+                InterpreterOptionsService.FactoryProvidersCollection + "\\LoadedProjects",
+                InterpreterOptionsService.FactoryProviderCodeBaseSetting,
+                typeof(LoadedProjectInterpreterFactoryProvider).Assembly.Location
+            );
+            return new InterpreterOptionsService(sp);
+        }
+
+        #endregion
+    }
+}
