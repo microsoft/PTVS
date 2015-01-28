@@ -58,8 +58,8 @@ namespace PythonToolsTests {
                         continue;
                     }
 
-                    // None, True and False are special
-                    if (text == "None" || text == "True" || text == "False") {
+                    // True and False are special
+                    if (text == "True" || text == "False") {
                         Assert.AreEqual("Python builtin", span.ClassificationType.Classification, text);
                         continue;
                     }
@@ -77,12 +77,6 @@ namespace PythonToolsTests {
                 foreach (var span in helper.AstClassifierSpans) {
                     var text = span.Span.GetText();
                     if (string.IsNullOrWhiteSpace(text)) {
-                        continue;
-                    }
-
-                    // None is special
-                    if (text == "None") {
-                        Assert.AreEqual("Python builtin", span.ClassificationType.Classification, text);
                         continue;
                     }
 
