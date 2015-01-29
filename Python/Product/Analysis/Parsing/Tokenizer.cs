@@ -259,7 +259,7 @@ namespace Microsoft.PythonTools.Parsing {
 
                 case TokenKind.Constant:
                     if (token == Tokens.NoneToken) {
-                        result.Category = TokenCategory.Keyword;
+                        result.Category = TokenCategory.BuiltinIdentifier;
                     } else if (token.Value is string || token.Value is AsciiString) {
                         result.Category = TokenCategory.StringLiteral;
                     } else {

@@ -252,7 +252,7 @@ namespace Microsoft.PythonTools {
     [ProvideDiffSupportedContentType(".py;.pyw", ";")]
 #if DEV11_OR_LATER // TODO: UNSURE IF WE NEED THIS FOR DEV12
     [ProvideX64DebuggerFixForIntegratedShell]
-#endif    
+#endif
     [ProvideCodeExpansions(GuidList.guidPythonLanguageService, false, 106, "Python", @"Snippets\%LCID%\SnippetsIndex.xml", @"Snippets\%LCID%\Python\")]
     [ProvideCodeExpansionPath("Python", "Test", @"Snippets\%LCID%\Test\")]
     [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",
@@ -394,12 +394,12 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
                     ErrorHandler.ThrowOnFailure(frame.Show());
                 }
                 if (focus) {
-                var content = window.Content as System.Windows.UIElement;
-                if (content != null) {
-                    content.Focus();
+                    var content = window.Content as System.Windows.UIElement;
+                    if (content != null) {
+                        content.Focus();
+                    }
                 }
             }
-        }
         }
 
         internal static void OpenNoInterpretersHelpPage(System.IServiceProvider serviceProvider) {
@@ -802,7 +802,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
         [Obsolete("Use IServiceProvider.BrowseForFileOpen extension method")]
         public string BrowseForFileOpen(IntPtr owner, string filter, string initialPath = null) {
             return ((System.IServiceProvider)this).BrowseForFileOpen(owner, filter, initialPath);
-            }
+        }
 
         [Obsolete("Use IServiceProvider.BrowseForFileSave extension method")]
         public string BrowseForFileSave(IntPtr owner, string filter, string initialPath = null) {
@@ -812,7 +812,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
         [Obsolete("Use IServiceProvider.BrowseForDirectory extension method")]
         public string BrowseForDirectory(IntPtr owner, string initialDirectory = null) {
             return ((System.IServiceProvider)this).BrowseForDirectory(owner, initialDirectory);
-            }
+        }
 
         /// <summary>
         /// Creates a new Python REPL window which is independent from the

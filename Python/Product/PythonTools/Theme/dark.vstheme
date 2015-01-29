@@ -26,7 +26,7 @@
         <Foreground Type="CT_RAW" Source="FFC8C8C8" />
       </Color>
       <Color Name="Python builtin">
-        <Foreground Type="CT_RAW" Source="FFA8CEB5" />
+        <Foreground Type="CT_RAW" Source="FFD69C56" />
       </Color>
       <Color Name="Django template tag">
         <Foreground Type="CT_RAW" Source="FFC8C8C8" />

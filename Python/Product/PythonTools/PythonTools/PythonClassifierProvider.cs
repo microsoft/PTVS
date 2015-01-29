@@ -235,8 +235,8 @@ namespace Microsoft.PythonTools {
     internal sealed class BuiltinFormat : ClassificationFormatDefinition {
         public BuiltinFormat() {
             DisplayName = SR.GetString(SR.BuiltinClassificationType);
-            // Matches "Number"
-            ForegroundColor = Colors.Black;
+            // Matches "Keyword"
+            ForegroundColor = Colors.Blue;
         }
     }
 

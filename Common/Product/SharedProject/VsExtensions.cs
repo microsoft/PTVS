@@ -96,7 +96,11 @@ namespace Microsoft.VisualStudioTools {
         }
 
         internal static IUIThread GetUIThread(this IServiceProvider serviceProvider) {
-            return (IUIThread)serviceProvider.GetService(typeof(IUIThread));
+            var uiThread = (IUIThread)serviceProvider.GetService(typeof(IUIThread));
+            if (uiThread == null) {
+                throw new InvalidOperationException("UIThread service is not available");
+            }
+            return uiThread;
         }
 
         [Conditional("DEBUG")]
