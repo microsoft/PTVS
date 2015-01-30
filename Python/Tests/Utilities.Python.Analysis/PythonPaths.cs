@@ -43,6 +43,7 @@ namespace TestUtilities {
         public static readonly PythonVersion Python32 = GetCPythonVersion(PythonLanguageVersion.V32);
         public static readonly PythonVersion Python33 = GetCPythonVersion(PythonLanguageVersion.V33);
         public static readonly PythonVersion Python34 = GetCPythonVersion(PythonLanguageVersion.V34);
+        public static readonly PythonVersion Python35 = GetCPythonVersion(PythonLanguageVersion.V35);
         public static readonly PythonVersion IronPython27 = GetIronPythonVersion(false);
         public static readonly PythonVersion Python25_x64 = GetCPythonVersion(PythonLanguageVersion.V25, true);
         public static readonly PythonVersion Python26_x64 = GetCPythonVersion(PythonLanguageVersion.V26, true);
@@ -52,6 +53,7 @@ namespace TestUtilities {
         public static readonly PythonVersion Python32_x64 = GetCPythonVersion(PythonLanguageVersion.V32, true);
         public static readonly PythonVersion Python33_x64 = GetCPythonVersion(PythonLanguageVersion.V33, true);
         public static readonly PythonVersion Python34_x64 = GetCPythonVersion(PythonLanguageVersion.V34, true);
+        public static readonly PythonVersion Python35_x64 = GetCPythonVersion(PythonLanguageVersion.V35, true);
         public static readonly PythonVersion IronPython27_x64 = GetIronPythonVersion(true);
 
         public static readonly PythonVersion Jython27 = GetJythonVersion(PythonLanguageVersion.V27);
@@ -86,7 +88,7 @@ namespace TestUtilities {
             if (!x64) {
                 foreach (var baseKey in new[] { Registry.LocalMachine, Registry.CurrentUser }) {
                     using (var python = baseKey.OpenSubKey(PythonCorePath)) {
-                        var res = TryGetCPythonPath(version, python);
+                        var res = TryGetCPythonPath(version, python, x64);
                         if (res != null) {
                             return res;
                         }
@@ -97,7 +99,7 @@ namespace TestUtilities {
             if (Environment.Is64BitOperatingSystem && x64) {
                 foreach (var baseHive in new[] { RegistryHive.LocalMachine, RegistryHive.CurrentUser }) {
                     var python64 = RegistryKey.OpenBaseKey(baseHive, RegistryView.Registry64).OpenSubKey(PythonCorePath);
-                    var res = TryGetCPythonPath(version, python64);
+                    var res = TryGetCPythonPath(version, python64, x64);
                     if (res != null) {
                         return res;
                     }
@@ -123,10 +125,13 @@ namespace TestUtilities {
             return null;
         }
 
-        private static PythonVersion TryGetCPythonPath(PythonLanguageVersion version, RegistryKey python) {
+        private static PythonVersion TryGetCPythonPath(PythonLanguageVersion version, RegistryKey python, bool x64) {
             if (python != null) {
                 string versionStr = version.ToString().Substring(1);
                 versionStr = versionStr[0] + "." + versionStr[1];
+                if (!x64 && version >= PythonLanguageVersion.V35) {
+                    versionStr += "-32";
+                }
 
                 using (var versionKey = python.OpenSubKey(versionStr + "\\InstallPath")) {
                     if (versionKey != null) {
@@ -189,6 +194,7 @@ namespace TestUtilities {
                 if (Python32 != null) yield return Python32;
                 if (Python33 != null) yield return Python33;
                 if (Python34 != null) yield return Python34;
+                if (Python35 != null) yield return Python35;
                 if (IronPython27 != null) yield return IronPython27;
                 if (Python25_x64 != null) yield return Python25_x64;
                 if (Python26_x64 != null) yield return Python26_x64;
@@ -198,6 +204,7 @@ namespace TestUtilities {
                 if (Python32_x64 != null) yield return Python32_x64;
                 if (Python33_x64 != null) yield return Python33_x64;
                 if (Python34_x64 != null) yield return Python34_x64;
+                if (Python35_x64 != null) yield return Python35_x64;
                 if (IronPython27_x64 != null) yield return IronPython27_x64;
                 if (Jython27 != null) yield return Jython27;
             }

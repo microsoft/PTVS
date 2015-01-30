@@ -18,6 +18,7 @@ using System.ComponentModel.Composition;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.VisualStudioTools;
 using Microsoft.Win32;
@@ -117,12 +118,37 @@ namespace Microsoft.PythonTools.Interpreter {
 
         #endregion
 
+        private static bool TryParsePythonVersion(string spec, out Version version, out ProcessorArchitecture? arch) {
+            version = null;
+            arch = null;
+
+            if (string.IsNullOrEmpty(spec) || spec.Length < 3) {
+                return false;
+            }
+
+            var m = Regex.Match(spec, @"^(?<ver>[23]\.[0-9]+)(?<suffix>.*)$");
+            if (!m.Success) {
+                return false;
+            }
+
+            if (!Version.TryParse(m.Groups["ver"].Value, out version)) {
+                return false;
+            }
+
+            if (m.Groups["suffix"].Value == "-32") {
+                arch = ProcessorArchitecture.X86;
+            }
+
+            return true;
+        }
+
         private bool RegisterInterpreters(HashSet<string> registeredPaths, RegistryKey python, ProcessorArchitecture? arch) {
             bool anyAdded = false;
 
             foreach (var key in python.GetSubKeyNames()) {
                 Version version;
-                if (Version.TryParse(key, out version)) {
+                ProcessorArchitecture? arch2;
+                if (TryParsePythonVersion(key, out version, out arch2)) {
                     if (version.Major == 2 && version.Minor <= 4) {
                         // 2.4 and below not supported.
                         continue;
@@ -146,7 +172,7 @@ namespace Microsoft.PythonTools.Interpreter {
                             continue;
                         }
 
-                        var actualArch = arch;
+                        var actualArch = arch ?? arch2;
                         if (!actualArch.HasValue) {
                             actualArch = NativeMethods.GetBinaryType(Path.Combine(basePath, CPythonInterpreterFactoryConstants.ConsoleExecutable));
                         }
@@ -184,6 +210,14 @@ namespace Microsoft.PythonTools.Interpreter {
         private void DiscoverInterpreterFactories() {
             bool anyAdded = false;
             HashSet<string> registeredPaths = new HashSet<string>();
+            var arch = Environment.Is64BitOperatingSystem ? null : (ProcessorArchitecture?)ProcessorArchitecture.X86;
+            using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Default))
+            using (var python = baseKey.OpenSubKey(PythonCorePath)) {
+                if (python != null) {
+                    anyAdded |= RegisterInterpreters(registeredPaths, python, arch);
+                }
+            }
+
             using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32))
             using (var python = baseKey.OpenSubKey(PythonCorePath)) {
                 if (python != null) {
@@ -197,14 +231,6 @@ namespace Microsoft.PythonTools.Interpreter {
                     if (python64 != null) {
                         anyAdded |= RegisterInterpreters(registeredPaths, python64, ProcessorArchitecture.Amd64);
                     }
-                }
-            }
-
-            var arch = Environment.Is64BitOperatingSystem ? null : (ProcessorArchitecture?)ProcessorArchitecture.X86;
-            using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Default))
-            using (var python = baseKey.OpenSubKey(PythonCorePath)) {
-                if (python != null) {
-                    anyAdded |= RegisterInterpreters(registeredPaths, python, arch);
                 }
             }
 

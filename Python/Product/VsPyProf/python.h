@@ -25,7 +25,8 @@ enum PythonVersion {
     PythonVersion_31 = 0x0301,
     PythonVersion_32 = 0x0302,
     PythonVersion_33 = 0x0303,
-    PythonVersion_34 = 0x0304
+    PythonVersion_34 = 0x0304,
+    PythonVersion_35 = 0x0305
 };
 
 
@@ -110,8 +111,8 @@ public:
     }
 };
 
-// 3.3-3.4
-class PyCodeObject33_34 : public PyObject {
+// 3.3-3.5
+class PyCodeObject33_35 : public PyObject {
 public:
     int co_argcount;            /* #arguments, except *args */
     int co_kwonlyargcount;      /* #keyword only arguments */
@@ -133,11 +134,11 @@ public:
     void *co_zombieframe;       /* for optimization only (see frameobject.c) */
 
     static bool IsFor(int majorVersion, int minorVersion) {
-        return majorVersion == 3 && (minorVersion >= 3 && minorVersion <= 4);
+        return majorVersion == 3 && (minorVersion >= 3 && minorVersion <= 5);
     }
 
     static bool IsFor(PythonVersion version) {
-        return version >= PythonVersion_33 && version <= PythonVersion_34;
+        return version >= PythonVersion_33 && version <= PythonVersion_35;
     }
 };
 
@@ -172,7 +173,7 @@ typedef struct {
     long hash;          /* Hash value; -1 if not set */
 } PyUnicodeObject;
 
-// 2.4 - 3.4 compatible
+// 2.4 - 3.5 compatible
 class PyFrameObject : public PyVarObject {
 public:
     PyFrameObject *f_back;  /* previous frame, or NULL */
@@ -213,7 +214,7 @@ public:
     }
 };
 
-class PyFrameObject34 : public PyFrameObject {
+class PyFrameObject34_35 : public PyFrameObject {
 public:
     /* Borrowed reference to a generator, or NULL */
     PyObject *f_gen;
@@ -228,14 +229,14 @@ public:
     PyObject *f_localsplus[1];    /* locals+stack, dynamically sized */
 
     static bool IsFor(int majorVersion, int minorVersion) {
-        return majorVersion == 3 && minorVersion == 4;
+        return majorVersion == 3 && minorVersion >= 4 && minorVersion <= 5;
     }
 };
 
 
 typedef void (*destructor)(PyObject *);
 
-// 2.4 - 3.4
+// 2.4 - 3.5
 class PyMethodDef {
 public:
     char    *ml_name;    /* The name of the built-in function/method */
@@ -243,7 +244,7 @@ public:
 
 
 // 
-// 2.4 - 3.4, 2.4 has different compat in 64-bit but we don't support any of the released 64-bit platforms (which includes only IA-64)
+// 2.4 - 3.5, 2.4 has different compat in 64-bit but we don't support any of the released 64-bit platforms (which includes only IA-64)
 // While these are compatible there are fields only available on later versions.
 class PyTypeObject : public PyVarObject {
 public:
@@ -325,7 +326,7 @@ public:
     unsigned int tp_version_tag;
 };
 
-// 2.4 - 3.4
+// 2.4 - 3.5
 class PyTupleObject : public PyVarObject {
 public:
     PyObject *ob_item[1];
@@ -336,7 +337,7 @@ public:
      */
 };
 
-// 2.4 - 3.4
+// 2.4 - 3.5
 class PyCFunctionObject : public PyObject {
 public:
     PyMethodDef *m_ml;      /* Description of the C function to call */
@@ -467,7 +468,7 @@ public:
     }
 };
 
-class PyThreadState_34 : public PyThreadState {
+class PyThreadState_34_35 : public PyThreadState {
 public:
     PyThreadState *prev;
     PyThreadState *next;
@@ -507,11 +508,11 @@ public:
 
     /* XXX signal handlers should also be here */
     static bool IsFor(int majorVersion, int minorVersion) {
-        return majorVersion == 3 && minorVersion == 4;
+        return majorVersion == 3 && minorVersion >= 4 && minorVersion <= 5;
     }
 
     static bool IsFor(PythonVersion version) {
-        return version == PythonVersion_34;
+        return version >= PythonVersion_34 && version <= PythonVersion_35;
     }
 };
 
@@ -563,6 +564,7 @@ static PythonVersion GetPythonVersion(HMODULE hMod) {
                 case '2': return PythonVersion_32;
                 case '3': return PythonVersion_33;
                 case '4': return PythonVersion_34;
+                case '5': return PythonVersion_35;
                 }
             }
         }
