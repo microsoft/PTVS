@@ -118,7 +118,9 @@ namespace Microsoft.PythonTools.Intellisense {
                     _workEvent.Set();
                 } catch (ObjectDisposedException) {
                 }
-                _workThread.Join();
+                if (!_workThread.Join(TimeSpan.FromSeconds(5.0))) {
+                    Trace.TraceWarning("Failed to wait for worker thread to terminate");
+                }
             }
         }
 
