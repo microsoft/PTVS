@@ -152,9 +152,7 @@
           Inputs="@(_ThemePkgDef)"
           Outputs="%(ThemePath)"
           Condition="'@(_ThemePkgDef)' != ''">
-    <Copy SourceFiles="%(_ThemePkgDef.FullPath)" DestinationFiles="%(_ThemePkgDef.ThemePath)">
-      <Output TaskParameter="CopiedFiles" ItemName="FileWrites" />
-    </Copy>
+    <Copy SourceFiles="%(_ThemePkgDef.FullPath)" DestinationFiles="%(_ThemePkgDef.ThemePath)" />
     <ItemGroup>
       <Content Include="%(_ThemePkgDef.ThemePath)">
         <IncludeInVsix>true</IncludeInVsix>
