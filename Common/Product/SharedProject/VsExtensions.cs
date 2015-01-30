@@ -15,7 +15,6 @@
 
 using System;
 using System.Diagnostics;
-using System.Threading.Tasks;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
@@ -97,13 +96,7 @@ namespace Microsoft.VisualStudioTools {
         }
 
         internal static IUIThread GetUIThread(this IServiceProvider serviceProvider) {
-            var uiThread = (IUIThread)serviceProvider.GetService(typeof(IUIThread));
-            if (uiThread == null) {
-                // TODO: Assert if VS is not actually shutting down
-                Trace.TraceWarning("Returning NoOpUIThread instance from GetUIThread");
-                return new NoOpUIThread();
-            }
-            return uiThread;
+            return (IUIThread)serviceProvider.GetService(typeof(IUIThread));
         }
 
         [Conditional("DEBUG")]
@@ -117,42 +110,5 @@ namespace Microsoft.VisualStudioTools {
         }
 
 
-        #region NoOpUIThread class
-
-        /// <summary>
-        /// Provides a no-op implementation of <see cref="IUIThread"/> that will
-        /// not execute any tasks.
-        /// </summary>
-        private sealed class NoOpUIThread : IUIThread {
-            public void Invoke(Action action) { }
-
-            public T Invoke<T>(Func<T> func) {
-                return default(T);
-            }
-
-            public Task InvokeAsync(Action action) {
-                return Task.FromResult<object>(null);
-            }
-
-            public Task<T> InvokeAsync<T>(Func<T> func) {
-                return Task.FromResult<T>(default(T));
-            }
-
-            public Task InvokeTask(Func<Task> func) {
-                return Task.FromResult<object>(null);
-            }
-
-            public Task<T> InvokeTask<T>(Func<Task<T>> func) {
-                return Task.FromResult<T>(default(T));
-            }
-
-            public void MustBeCalledFromUIThreadOrThrow() { }
-
-            public bool InvokeRequired {
-                get { return false; }
-            }
-        }
-
-        #endregion
     }
 }
