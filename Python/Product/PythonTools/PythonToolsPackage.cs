@@ -613,9 +613,9 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             // register our PythonToolsService which provides access to core PTVS functionality
             var pyService = _pyService = new PythonToolsService((IServiceContainer)this);
 
-            _autoObject = new PythonAutomation(this);
-
             ((IServiceContainer)this).AddService(typeof(PythonToolsService), pyService, true);
+
+            _autoObject = new PythonAutomation(this);
 
             ((IServiceContainer)this).AddService(
                 typeof(Microsoft.PythonTools.Intellisense.TaskProvider),

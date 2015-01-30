@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Microsoft.PythonTools.Commands;
@@ -35,6 +36,7 @@ namespace Microsoft.PythonTools {
         internal PythonAutomation(IServiceProvider serviceProvider) {
             _serviceProvider = serviceProvider;
             _pyService = serviceProvider.GetPythonToolsService();
+            Debug.Assert(_pyService != null, "Did not find PythonToolsService");
         }
 
         #region IPythonOptions Members
