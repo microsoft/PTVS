@@ -608,7 +608,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
 
             ((IServiceContainer)this).AddService(typeof(IClipboardService), new ClipboardService(), true);
 
-            ((IServiceContainer)this).AddService(typeof(IPythonToolsToolWindowService), this);
+            ((IServiceContainer)this).AddService(typeof(IPythonToolsToolWindowService), this, true);
 
             // register our PythonToolsService which provides access to core PTVS functionality
             var pyService = _pyService = new PythonToolsService((IServiceContainer)this);
@@ -632,7 +632,8 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
 
             ((IServiceContainer)this).AddService(
                 typeof(SolutionEventsListener),
-                solutionEventListener
+                solutionEventListener,
+                true
             );
 
 #if DEV11_OR_LATER
