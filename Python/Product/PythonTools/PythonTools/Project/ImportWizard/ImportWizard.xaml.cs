@@ -91,16 +91,22 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
             PageSequence.MoveCurrentToFirst();
 
             if (!string.IsNullOrEmpty(sourcePath)) {
-                ImportSettings.SourcePath = sourcePath;
+                ImportSettings.SetInitialSourcePath(sourcePath);
+                Loaded += ImportWizard_Loaded;
             }
             if (!string.IsNullOrEmpty(projectPath)) {
-                ImportSettings.ProjectPath = projectPath;
+                ImportSettings.SetInitialProjectPath(projectPath);
             }
             ImportSettings.UpdateIsValid();
 
             DataContext = this;
 
             InitializeComponent();
+        }
+
+        async void ImportWizard_Loaded(object sender, RoutedEventArgs e) {
+            Loaded -= ImportWizard_Loaded;
+            await ImportSettings.UpdateSourcePathAsync().HandleAllExceptions(SR.ProductName);
         }
 
         private void PageSequence_CurrentChanged(object sender, EventArgs e) {

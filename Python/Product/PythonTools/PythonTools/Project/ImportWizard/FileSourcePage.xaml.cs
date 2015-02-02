@@ -16,6 +16,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Windows.Controls;
 using System.Windows.Data;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Project.ImportWizard {
     /// <summary>
@@ -33,7 +34,7 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
                 (string.IsNullOrEmpty(settings.SourcePath) || Directory.Exists(settings.SourcePath)) ?
                 System.Windows.Visibility.Collapsed :
                 System.Windows.Visibility.Visible;
-            await settings.UpdateSourcePath();
+            await settings.UpdateSourcePathAsync().HandleAllExceptions(SR.ProductName);
         }
     }
 }
