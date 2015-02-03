@@ -19,6 +19,7 @@
     <ProjectFile Include="IronPython\IronPythonTests.csproj" />
     <ProjectFile Include="ReplWindowUITests\ReplWindowUITests.csproj" />
     <ProjectFile Include="Utilities.Python\TestUtilities.Python.csproj" />
+    <ProjectFile Include="PythonToolsMockTests\PythonToolsMockTests.csproj" />
   </ItemGroup>
 
   <Import Project="$(TargetsPath)\Common.Build.Traversal.targets" />

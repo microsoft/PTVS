@@ -142,24 +142,16 @@
   -->
   <ItemGroup>
     <_ThemePkgDef Include="Theme\$(TargetName).theme.v$(VSTarget).pkgdef" Condition="Exists('Theme\$(TargetName).theme.v$(VSTarget).pkgdef')">
-      <ThemeFilename>$(TargetName).theme.pkgdef</ThemeFilename>
-      <ThemePath>$(IntermediateOutputPath)$(TargetName).theme.pkgdef</ThemePath>
+      <IncludeInVsix>true</IncludeInVsix>
+      <Link>$(TargetName).theme.pkgdef</Link>
+      <VSIXSubPath>.</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </_ThemePkgDef>
   </ItemGroup>
 
-  <Target Name="DeployThemePkgdef"
-          AfterTargets="PrepareForBuild"
-          Inputs="@(_ThemePkgDef)"
-          Outputs="%(ThemePath)"
-          Condition="'@(_ThemePkgDef)' != ''">
-    <Copy SourceFiles="%(_ThemePkgDef.FullPath)" DestinationFiles="%(_ThemePkgDef.ThemePath)" />
+  <Target Name="_IncludeThemePkgdef" AfterTargets="PrepareForBuild" Condition="'@(_ThemePkgDef)' != ''">
     <ItemGroup>
-      <Content Include="%(_ThemePkgDef.ThemePath)">
-        <IncludeInVsix>true</IncludeInVsix>
-        <VSIXSubPath>.</VSIXSubPath>
-        <Link>%(_ThemePkgDef.ThemeFilename)</Link>
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
+      <Content Include="@(_ThemePkgDef)" />
     </ItemGroup>
   </Target>
 
