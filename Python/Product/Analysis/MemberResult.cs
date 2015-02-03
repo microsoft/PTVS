@@ -81,11 +81,11 @@ namespace Microsoft.PythonTools.Analysis {
                 var doc = new StringBuilder();
 
                 foreach (var ns in _vars()) {
-                    var docString = ns.Documentation;
+                    var docString = ns.Documentation ?? string.Empty;
                     if (docSeen.Add(docString)) {
                         docs.Add(docString);
                     }
-                    var typeString = ns.ShortDescription;
+                    var typeString = ns.ShortDescription ?? string.Empty;
                     if (typeSeen.Add(typeString)) {
                         types.Add(typeString);
                     }

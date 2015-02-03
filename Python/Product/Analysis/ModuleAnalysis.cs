@@ -221,15 +221,14 @@ namespace Microsoft.PythonTools.Analysis {
 
             foreach (var child in children) {
                 var mod = (ModuleInfo)child.Value;
-                
+
                 if (string.IsNullOrEmpty(mod.Name)) {
                     // Module does not have an importable name
                     continue;
                 }
 
-                var childName = mod.Name.Substring(this.GlobalScope.Name.Length + 1);
-
-                if (childName.StartsWith(names[0])) {
+                var childName = mod.Name.Split('.');
+                if (childName.Length >= 2 && childName[0] == GlobalScope.Name && childName[1] == names[0]) {
                     res.AddRange(PythonAnalyzer.GetModuleMembers(InterpreterContext, names, includeMembers, mod as IModule));
                 }
             }

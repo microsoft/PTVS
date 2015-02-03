@@ -163,6 +163,9 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private async Task CheckPackagesAsync() {
+            var uiThread = ProjectMgr.Site.GetUIThread();
+            uiThread.MustBeCalledFromUIThreadOrThrow();
+
             bool prevChecked = _checkedItems;
             // Use _checkingItems to prevent the expanded state from
             // disappearing too quickly.
@@ -177,10 +180,14 @@ namespace Microsoft.PythonTools.Project {
             HashSet<string> lines;
             bool anyChanges = false;
             try {
-                lines = await Pip.List(_factory);
+                lines = await Pip.List(_factory).ConfigureAwait(true);
             } catch (NoInterpretersException) {
                 return;
             }
+
+            // Ensure we are back on the UI thread
+            uiThread.MustBeCalledFromUIThread();
+
             if (ProjectMgr == null || ProjectMgr.IsClosed) {
                 return;
             }
