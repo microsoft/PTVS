@@ -77,6 +77,7 @@ namespace PythonToolsTests {
                 var classifierProvider = new PythonClassifierProvider(new MockContentTypeRegistryService(PythonCoreConstants.ContentType), serviceProvider);
                 classifierProvider._classificationRegistry = new MockClassificationTypeRegistryService();
                 classifierProvider.GetClassifier(buffer);
+                var squiggles = errorProvider.GetErrorTagger(buffer);
                 var textView = new MockTextView(buffer);
                 var monitoredBuffer = analyzer.MonitorTextBuffer(textView, buffer);
 
@@ -84,7 +85,6 @@ namespace PythonToolsTests {
                 buffer.GetPythonProjectEntry().OnNewAnalysis += (s, e) => tcs.SetResult(null);
                 await tcs.Task;
 
-                var squiggles = errorProvider.GetErrorTagger(buffer);
                 var snapshot = buffer.CurrentSnapshot;
                 
                 // Ensure all tasks have been updated
@@ -139,6 +139,43 @@ namespace PythonToolsTests {
                 Assert.IsTrue(i < squiggles.Length, "Not enough squiggles");
                 AssertUtil.AreEqual(new Regex(expected, RegexOptions.IgnoreCase | RegexOptions.Singleline), squiggles[i]);
                 i += 1;
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void HandledImportSquiggle() {
+            var testCases = new List<Tuple<string, string[]>>();
+            testCases.AddRange(
+                new[] { "", " BaseException", " Exception", " ImportError", " (ValueError, ImportError)" }
+                .Select(ex => Tuple.Create(
+                    string.Format("try:\r\n    import spam\r\nexcept{0}:\r\n    pass\r\n", ex),
+                    new string[0]
+                ))
+            );
+
+            testCases.Add(Tuple.Create(
+                "try:\r\n    import spam\r\nexcept ValueError:\r\n    pass\r\n",
+                new[] { @".*warning:.*spam.*\(17-21\)" }
+            ));
+
+            foreach (var testCase in testCases) {
+                var buffer = new MockTextBuffer(testCase.Item1, PythonCoreConstants.ContentType);
+                var squiggles = AnalyzeTextBuffer(buffer).Select(FormatErrorTag).ToArray();
+
+                Console.WriteLine(testCase.Item1);
+                Console.WriteLine(" Squiggles found:");
+                foreach (var actual in squiggles) {
+                    Console.WriteLine(actual);
+                }
+                Console.WriteLine(" Found {0} squiggle(s)", squiggles.Length);
+                Console.WriteLine();
+
+                int i = 0;
+                foreach (var expected in testCase.Item2) {
+                    Assert.IsTrue(i < squiggles.Length, "Not enough squiggles");
+                    AssertUtil.AreEqual(new Regex(expected, RegexOptions.IgnoreCase | RegexOptions.Singleline), squiggles[i]);
+                    i += 1;
+                }
             }
         }
     }

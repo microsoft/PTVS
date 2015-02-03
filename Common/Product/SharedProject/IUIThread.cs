@@ -33,4 +33,9 @@ namespace Microsoft.VisualStudioTools {
             get;
         }
     }
+
+    /// <summary>
+    /// Identifies mock implementations of IUIThread.
+    /// </summary>
+    interface IMockUIThread : IUIThread { }
 }

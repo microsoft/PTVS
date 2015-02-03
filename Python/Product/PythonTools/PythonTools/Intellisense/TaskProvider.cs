@@ -502,8 +502,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private void Refresh() {
-            if (_errorList != null && _errorProvider != null) {
-                
+            if (_errorList != null || _errorProvider != null) {
                 _serviceProvider.GetUIThread().MustNotBeCalledFromUIThread();
                 RefreshAsync().WaitAndHandleAllExceptions(SR.ProductName, GetType());
             }

@@ -20,8 +20,7 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudioTools;
 
 namespace TestUtilities.Mocks {
-
-    public class MockUIThread : IUIThread {
+    public class MockUIThread : IMockUIThread {
         public void Invoke(Action action) {
             action();
         }

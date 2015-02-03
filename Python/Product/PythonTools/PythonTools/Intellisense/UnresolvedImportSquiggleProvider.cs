@@ -129,6 +129,55 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
                 return base.Walk(node);
             }
+
+            private static bool IsImportError(Expression expr) {
+                var name = expr as NameExpression;
+                if (name != null) {
+                    return name.Name == "Exception" || name.Name == "BaseException" || name.Name == "ImportError";
+                }
+
+                var tuple = expr as TupleExpression;
+                if (tuple != null) {
+                    return tuple.Items.Any(IsImportError);
+                }
+
+                return false;
+            }
+
+            private static bool ShouldWalkNormally(TryStatement node) {
+                if (node.Handlers == null) {
+                    return true;
+                }
+
+                foreach (var handler in node.Handlers) {
+                    if (handler.Test == null || IsImportError(handler.Test)) {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
+            public override bool Walk(TryStatement node) {
+                if (ShouldWalkNormally(node)) {
+                    return base.Walk(node);
+                }
+
+                // Don't walk 'try' body, but walk everything else
+                if (node.Handlers != null) {
+                    foreach (var handler in node.Handlers) {
+                        handler.Walk(this);
+                    }
+                }
+                if (node.Else != null) {
+                    node.Else.Walk(this);
+                }
+                if (node.Finally != null) {
+                    node.Finally.Walk(this);
+                }
+
+                return false;
+            }
         }
     }
 }
