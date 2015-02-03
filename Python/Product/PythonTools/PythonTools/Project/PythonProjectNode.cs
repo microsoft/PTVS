@@ -766,7 +766,14 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public VsProjectAnalyzer GetAnalyzer() {
-            if (_analyzer == null) {
+            if (IsClosed) {
+                Debug.Fail("GetAnalyzer() called on closed project");
+                var service = (PythonToolsService)PythonToolsPackage.GetGlobalService(typeof(PythonToolsService));
+                if (service == null) {
+                    throw new InvalidOperationException("Called GetAnalyzer() with no Python Tools service available");
+                }
+                return service.DefaultAnalyzer;
+            } else if (_analyzer == null) {
                 _analyzer = CreateAnalyzer();
                 AnalyzeSearchPaths(ParseSearchPath());
             }
