@@ -409,7 +409,7 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         IAnalysisSet IAnalysisSet.Union(IEnumerable<AnalysisValue> items, bool canMutate) {
-            if (items.All(av => ((IAnalysisSet)this).Comparer.Equals(this, av))) {
+            if (items == null || items.All(av => ((IAnalysisSet)this).Comparer.Equals(this, av))) {
                 return this;
             }
             return AnalysisSet.Create(items).Add(this, false);

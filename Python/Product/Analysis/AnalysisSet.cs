@@ -594,7 +594,7 @@ namespace Microsoft.PythonTools.Analysis {
             public readonly HashSet<AnalysisValue> Set;
 
             public AnalysisSetManyObject(IEnumerable<AnalysisValue> items) {
-                Set = new HashSet<AnalysisValue>(items, ObjectComparer.Instance);
+                Set = new HashSet<AnalysisValue>(items ?? Enumerable.Empty<AnalysisValue>(), ObjectComparer.Instance);
             }
 
             internal AnalysisSetManyObject(AnalysisSetTwoObject firstTwo, AnalysisValue third) {
@@ -1030,7 +1030,7 @@ namespace Microsoft.PythonTools.Analysis {
             public readonly HashSet<AnalysisValue> Set;
 
             public AnalysisSetManyUnion(IEnumerable<AnalysisValue> items, UnionComparer comparer) {
-                Set = new HashSet<AnalysisValue>(items, comparer);
+                Set = new HashSet<AnalysisValue>(items ?? Enumerable.Empty<AnalysisValue>(), comparer);
             }
 
             internal AnalysisSetManyUnion(AnalysisSetTwoUnion firstTwo, AnalysisValue third, UnionComparer comparer, out bool wasChanged) {
