@@ -829,7 +829,12 @@ namespace AnalysisTests {
                     ParseFile("GroupingRecovery.py", ErrorSink.Null, version),
                     CheckSuite(
                         CheckAssignment(Fob, CheckParenExpr(CheckErrorExpr())),
-                        CheckFuncDef("f", NoParameters, CheckSuite(Pass))
+                        CheckFuncDef("f", new Action<Parameter>[] {
+                            p => {
+                                Assert.AreEqual("a", p.Name);
+                                Assert.AreEqual(15, p.StartIndex);
+                            }
+                        }, CheckSuite(Pass))
                     )
                 );
             }

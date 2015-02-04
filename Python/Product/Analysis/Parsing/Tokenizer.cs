@@ -340,6 +340,7 @@ namespace Microsoft.PythonTools.Parsing {
                 SetIndent(_state.GroupingRecovery.Spaces, _state.GroupingRecovery.Whitespace, _state.GroupingRecovery.NoAllocWhiteSpace);
                 _tokenStartIndex = _state.GroupingRecovery.NewlineStart;
                 _tokenEndIndex = _state.GroupingRecovery.NewlineStart + _state.GroupingRecovery.NewLineKind.GetSize();
+                _start = _position - (prevStart - _tokenStartIndex);
 
                 if (Verbatim) {
                     // fixup our white space, remove the newline + any indentation from the current whitespace, add the whitespace minus the
