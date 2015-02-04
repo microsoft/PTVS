@@ -1023,7 +1023,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
             return CallAndHandle(() => {
                 List<string> names = new List<string>();
                 var reflNs = (NamespaceTracker)Unwrap(ns);
-                foreach (var name in reflNs.GetMemberNames()) {
+                foreach (var name in reflNs.GetMemberNames() ?? Enumerable.Empty<string>()) {
                     if (reflNs[name] is NamespaceTracker) {
                         names.Add(name);
                     }
