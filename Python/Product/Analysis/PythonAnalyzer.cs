@@ -657,6 +657,14 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
+        /// <summary>
+        /// Returns the cached value for the provided key, creating it with
+        /// <paramref name="maker"/> if necessary. If <paramref name="maker"/>
+        /// attempts to get the same value, returns <c>null</c>.
+        /// </summary>
+        /// <param name="key">The identifier for the cached value.</param>
+        /// <param name="maker">Function to create the value.</param>
+        /// <returns>The cached value or <c>null</c>.</returns>
         internal AnalysisValue GetCached(object key, Func<AnalysisValue> maker) {
             AnalysisValue result;
             if (!_itemCache.TryGetValue(key, out result)) {
@@ -678,7 +686,7 @@ namespace Microsoft.PythonTools.Analysis {
         internal BuiltinClassInfo GetBuiltinType(IPythonType type) {
             return (BuiltinClassInfo)GetCached(type,
                 () => MakeBuiltinType(type)
-            );
+            ) ?? ClassInfos[BuiltinTypeId.Object];
         }
 
         private BuiltinClassInfo MakeBuiltinType(IPythonType type) {
@@ -722,7 +730,7 @@ namespace Microsoft.PythonTools.Analysis {
                 return GetBuiltinType((IPythonType)attr);
             } else if (attr is IPythonFunction) {
                 var bf = (IPythonFunction)attr;
-                return GetCached(attr, () => new BuiltinFunctionInfo(bf, this));
+                return GetCached(attr, () => new BuiltinFunctionInfo(bf, this)) ?? _noneInst;
             } else if (attr is IPythonMethodDescriptor) {
                 return GetCached(attr, () => {
                     var md = (IPythonMethodDescriptor)attr;
@@ -731,13 +739,13 @@ namespace Microsoft.PythonTools.Analysis {
                     } else {
                         return new BuiltinMethodInfo(md, this);
                     }
-                });
+                }) ?? _noneInst;
             } else if (attr is IBuiltinProperty) {
-                return GetCached(attr, () => new BuiltinPropertyInfo((IBuiltinProperty)attr, this));
+                return GetCached(attr, () => new BuiltinPropertyInfo((IBuiltinProperty)attr, this)) ?? _noneInst;
             } else if (attr is IPythonModule) {
                 return _modules.GetBuiltinModule((IPythonModule)attr);
             } else if (attr is IPythonEvent) {
-                return GetCached(attr, () => new BuiltinEventInfo((IPythonEvent)attr, this));
+                return GetCached(attr, () => new BuiltinEventInfo((IPythonEvent)attr, this)) ?? _noneInst;
             } else if (attr is IPythonConstant) {
                 return GetConstant((IPythonConstant)attr).First();
             } else if (attrType == typeof(bool) || attrType == typeof(int) || attrType == typeof(Complex) ||
@@ -751,7 +759,7 @@ namespace Microsoft.PythonTools.Analysis {
                 var members = multMembers.Members;
                 return GetCached(attr, () =>
                     MultipleMemberInfo.Create(members.Select(GetAnalysisValueFromObjects)).FirstOrDefault() ??
-                        GetBuiltinType(Types[BuiltinTypeId.NoneType]).Instance
+                        ClassInfos[BuiltinTypeId.NoneType].Instance
                 );
             } else {
                 var pyAttrType = GetTypeFromObject(attr);
@@ -780,12 +788,12 @@ namespace Microsoft.PythonTools.Analysis {
 
         internal IAnalysisSet GetConstant(IPythonConstant value) {
             object key = value ?? _nullKey;
-            return GetCached(key, () => new ConstantInfo(value, this)).SelfSet;
+            return GetCached(key, () => new ConstantInfo(value, this)) ?? _noneInst;
         }
 
         internal IAnalysisSet GetConstant(object value) {
             object key = value ?? _nullKey;
-            return GetCached(key, () => new ConstantInfo(value, this)).SelfSet;
+            return GetCached(key, () => new ConstantInfo(value, this)) ?? _noneInst;
         }
 
         private static void Update<K, V>(IDictionary<K, V> dict, IDictionary<K, V> newValues) {
