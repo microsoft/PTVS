@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Runtime.InteropServices;
 using EnvDTE;
 using Microsoft.VisualStudio.OLE.Interop;
@@ -131,7 +132,7 @@ namespace Microsoft.VisualStudioTools {
             return (DTE)runningObject;
         }
 
-        public bool AttachToProcess(ProcessOutput proc, Guid portSupplier, string transportQualifierUri) {
+        public bool AttachToProcess(ProcessOutput processOutput, Guid portSupplier, string transportQualifierUri) {
             var debugger3 = (EnvDTE90.Debugger3)DTE.Debugger;
             var transports = debugger3.Transports;
             EnvDTE80.Transport transport = null;
@@ -151,15 +152,41 @@ namespace Microsoft.VisualStudioTools {
                 return false;
             }
 
+            var process = processes.Item(1);
+            return AttachToProcess(processOutput, process);
+        }
+
+        public bool AttachToProcess(ProcessOutput processOutput, Guid[] engines) {
+            var debugger3 = (EnvDTE90.Debugger3)DTE.Debugger;
+            var processes = debugger3.LocalProcesses;
+            for (int i = 1; i < processes.Count; ++i) {
+                var process = processes.Item(i);
+                if (process.ProcessID == processOutput.ProcessId) {
+                    return AttachToProcess(processOutput, process, engines);
+                }
+            }
+
+            return false;
+        }
+
+        public bool AttachToProcess(ProcessOutput processOutput, EnvDTE.Process process, Guid[] engines = null) {
             // Retry the attach itself 3 times before displaying a Retry/Cancel
             // dialog to the user.
             DTE.SuppressUI = true;
             try {
                 try {
-                    processes.Item(1).Attach();
+                    if (engines == null) {
+                        process.Attach();
+                    } else {
+                        var process3 = process as EnvDTE90.Process3;
+                        if (process3 == null) {
+                            return false;
+                        }
+                        process3.Attach2(engines.Select(engine => engine.ToString("B")).ToArray());
+                    }
                     return true;
                 } catch (COMException) {
-                    if (proc.Wait(TimeSpan.FromMilliseconds(500))) {
+                    if (processOutput.Wait(TimeSpan.FromMilliseconds(500))) {
                         // Process exited while we were trying
                         return false;
                     }
@@ -169,7 +196,7 @@ namespace Microsoft.VisualStudioTools {
             }
 
             // Another attempt, but display UI.
-            processes.Item(1).Attach();
+            process.Attach();
             return true;
         }
     }

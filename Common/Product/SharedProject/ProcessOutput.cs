@@ -468,6 +468,12 @@ namespace Microsoft.VisualStudioTools.Project {
             }
         }
 
+        public int? ProcessId {
+            get {
+                return _process != null ? _process.Id : (int?)null;
+            }
+        }
+
         /// <summary>
         /// The arguments that were originally passed, including the filename.
         /// </summary>

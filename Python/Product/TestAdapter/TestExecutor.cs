@@ -25,6 +25,7 @@ using System.Text;
 using System.Threading;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Settings;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
@@ -41,6 +42,7 @@ namespace Microsoft.PythonTools.TestAdapter {
         public const string ExecutorUriString = "executor://PythonTestExecutor/v1";
         public static readonly Uri ExecutorUri = new Uri(ExecutorUriString);
         private static readonly Guid PythonRemoteDebugPortSupplierUnsecuredId = new Guid("{FEB76325-D127-4E02-B59D-B16D93D46CF5}");
+        private static readonly Guid PythonDebugEngineGuid = new Guid("EC1375B7-E2CE-43E8-BF75-DC638DE1F1F9");
         private static readonly string TestLauncherPath = PythonToolsInstallPath.GetFile("visualstudio_py_testlauncher.py");
 
         private readonly ManualResetEvent _cancelRequested = new ManualResetEvent(false);
@@ -136,11 +138,14 @@ namespace Microsoft.PythonTools.TestAdapter {
                 return;
             }
 
-            bool usePtvsd = runContext.IsBeingDebugged && _app != null;
+            var debugMode = PythonDebugMode.None;
+            if (runContext.IsBeingDebugged && _app != null) {
+                debugMode = settings.EnableNativeCodeDebugging ? PythonDebugMode.PythonAndNative : PythonDebugMode.PythonOnly;
+            }
 
-            var testCase = new PythonTestCase(settings, test, usePtvsd);
+            var testCase = new PythonTestCase(settings, test, debugMode);
 
-            if (usePtvsd) {
+            if (debugMode != PythonDebugMode.None) {
                 _app.DTE.Debugger.DetachAll();
             }
 
@@ -191,7 +196,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 #endif
 
                 proc.Wait(TimeSpan.FromMilliseconds(500));
-                if (runContext.IsBeingDebugged && _app != null) {
+                if (debugMode != PythonDebugMode.None) {
                     if (proc.ExitCode.HasValue) {
                         // Process has already exited
                         frameworkHandle.SendMessage(TestMessageLevel.Error, "Failed to attach debugger because the process has already exited.");
@@ -204,13 +209,22 @@ namespace Microsoft.PythonTools.TestAdapter {
                     }
 
                     try {
-                        string qualifierUri = string.Format("tcp://{0}@localhost:{1}", testCase.DebugSecret, testCase.DebugPort);
-
-                        while (!_app.AttachToProcess(proc, PythonRemoteDebugPortSupplierUnsecuredId, qualifierUri)) {
-                            if (proc.Wait(TimeSpan.FromMilliseconds(500))) {
-                                break;
+                        if (debugMode == PythonDebugMode.PythonOnly) {
+                            string qualifierUri = string.Format("tcp://{0}@localhost:{1}", testCase.DebugSecret, testCase.DebugPort);
+                            while (!_app.AttachToProcess(proc, PythonRemoteDebugPortSupplierUnsecuredId, qualifierUri)) {
+                                if (proc.Wait(TimeSpan.FromMilliseconds(500))) {
+                                    break;
+                                }
+                            }
+                        } else {
+                            var engines = new[] { PythonDebugEngineGuid, VSConstants.DebugEnginesGuids.NativeOnly_guid };
+                            while (!_app.AttachToProcess(proc, engines)) {
+                                if (proc.Wait(TimeSpan.FromMilliseconds(500))) {
+                                    break;
+                                }
                             }
                         }
+
 #if DEBUG
                     } catch (COMException ex) {
                         frameworkHandle.SendMessage(TestMessageLevel.Error, "Error occurred connecting to debuggee.");
@@ -284,7 +298,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 projSettings.Factory = provider.ActiveInterpreter;
 
                 projSettings.ProjectHome = Path.GetFullPath(Path.Combine(proj.DirectoryPath, proj.GetPropertyValue(PythonConstants.ProjectHomeSetting) ?? "."));
-                
+
                 bool isWindowsApplication;
                 if (bool.TryParse(proj.GetPropertyValue(PythonConstants.IsWindowsApplicationSetting), out isWindowsApplication)) {
                     projSettings.IsWindowsApplication = isWindowsApplication;
@@ -301,6 +315,13 @@ namespace Microsoft.PythonTools.TestAdapter {
                 );
 
                 projSettings.DjangoSettingsModule = proj.GetPropertyValue("DjangoSettingsModule");
+
+                bool enableNativeCodeDebugging;
+                if (bool.TryParse(proj.GetPropertyValue(PythonConstants.EnableNativeCodeDebugging), out enableNativeCodeDebugging)) {
+                    projSettings.EnableNativeCodeDebugging = enableNativeCodeDebugging;
+                } else {
+                    projSettings.EnableNativeCodeDebugging = false;
+                }
 
                 return projSettings;
             } finally {
@@ -337,11 +358,11 @@ namespace Microsoft.PythonTools.TestAdapter {
 
         class TestReceiver : ITestCaseDiscoverySink {
             public List<TestCase> Tests { get; private set; }
-            
+
             public TestReceiver() {
                 Tests = new List<TestCase>();
             }
-            
+
             public void SendTestCase(TestCase discoveredTest) {
                 Tests.Add(discoveredTest);
             }
@@ -361,6 +382,13 @@ namespace Microsoft.PythonTools.TestAdapter {
             public string WorkingDir { get; set; }
             public string ProjectHome { get; set; }
             public string DjangoSettingsModule { get; set; }
+            public bool EnableNativeCodeDebugging { get; set; }
+        }
+
+        enum PythonDebugMode {
+            None,
+            PythonOnly,
+            PythonAndNative
         }
 
         class PythonTestCase {
@@ -380,7 +408,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             public readonly IEnumerable<KeyValuePair<string, string>> Environment;
             public readonly IEnumerable<string> Arguments;
 
-            public PythonTestCase(PythonProjectSettings settings, TestCase testCase, bool usePtvsd) {
+            public PythonTestCase(PythonProjectSettings settings, TestCase testCase, PythonDebugMode debugMode) {
                 Settings = settings;
                 TestCase = testCase;
 
@@ -400,12 +428,12 @@ namespace Microsoft.PythonTools.TestAdapter {
 
                 paths.Insert(0, ModulePath.LibraryPath);
                 paths.Insert(0, WorkingDirectory);
-                if (usePtvsd) {
+                if (debugMode == PythonDebugMode.PythonOnly) {
                     paths.Insert(0, PtvsdSearchPath);
                 }
 
                 SearchPaths = string.Join(
-                    ";", 
+                    ";",
                     paths.Where(Directory.Exists).Distinct(StringComparer.OrdinalIgnoreCase)
                 );
 
@@ -415,7 +443,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                     "-t", string.Format("{0}.{1}", TestClass, TestMethod)
                 };
 
-                if (usePtvsd) {
+                if (debugMode == PythonDebugMode.PythonOnly) {
                     var secretBuffer = new byte[24];
                     RandomNumberGenerator.Create().GetNonZeroBytes(secretBuffer);
                     DebugSecret = Convert.ToBase64String(secretBuffer)
@@ -429,6 +457,8 @@ namespace Microsoft.PythonTools.TestAdapter {
                         "-s", DebugSecret,
                         "-p", DebugPort.ToString()
                     });
+                } else if (debugMode == PythonDebugMode.PythonAndNative) {
+                    arguments.Add("-x");
                 }
 
                 Arguments = arguments;

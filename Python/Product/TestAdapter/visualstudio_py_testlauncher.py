@@ -19,10 +19,11 @@ def main():
     from optparse import OptionParser
     
     parser = OptionParser(prog = 'visualstudio_py_testlauncher', usage = 'Usage: %prog [<option>] <test names>... ')
-    parser.add_option('-s', '--secret', metavar = '<secret>', help = 'restrict server to only allow clients that specify <secret> when connecting')
-    parser.add_option('-p', '--port', type='int', metavar = '<port>', help = 'listen for debugger connections on <port>')
-    parser.add_option('-t', '--test', type='str', dest = 'tests', action = 'append', help = 'specifies a test to run')
-    parser.add_option('-m', '--module', type='str', help = 'name of the module to import the tests from')
+    parser.add_option('-s', '--secret', metavar='<secret>', help='restrict server to only allow clients that specify <secret> when connecting')
+    parser.add_option('-p', '--port', type='int', metavar='<port>', help='listen for debugger connections on <port>')
+    parser.add_option('-x', '--mixed-mode', action='store_true', help='wait for mixed-mode debugger to attach')
+    parser.add_option('-t', '--test', type='str', dest='tests', action='append', help='specifies a test to run')
+    parser.add_option('-m', '--module', type='str', help='name of the module to import the tests from')
     
     (opts, _) = parser.parse_args()
     
@@ -37,7 +38,16 @@ def main():
 
         enable_attach(opts.secret, ('127.0.0.1', getattr(opts, 'port', DEFAULT_PORT)), redirect_output = True)
         wait_for_attach()
-    
+    elif opts.mixed_mode:
+        # For mixed-mode attach, there's no ptvsd and hence no wait_for_attach(), 
+        # so we have to use Win32 API in a loop to do the same thing.
+        from time import sleep
+        from ctypes import windll
+        while True:
+            if windll.kernel32.IsDebuggerPresent() != 0:
+                break
+            sleep(0.1)
+                
     __import__(opts.module)
     module = sys.modules[opts.module]
     test = unittest.defaultTestLoader.loadTestsFromNames(opts.tests, module)
