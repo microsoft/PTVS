@@ -35,7 +35,13 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         }
 
         private async void OnNewDatabaseAvailable(object sender, EventArgs e) {
-            _typeDb = _factory.GetCurrentDatabase();
+            var factory = _factory;
+            if (factory == null) {
+                // We have been disposed already, so ignore this event
+                return;
+            }
+
+            _typeDb = factory.GetCurrentDatabase();
             
             if (_references != null) {
                 _typeDb = _typeDb.Clone();
@@ -50,12 +56,12 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                         await _typeDb.LoadExtensionModuleAsync(modName, reference.Name);
                     } catch (Exception ex) {
                         try {
-                            Directory.CreateDirectory(_factory.DatabasePath);
+                            Directory.CreateDirectory(factory.DatabasePath);
                         } catch (IOException) {
                         } catch (UnauthorizedAccessException) {
                         }
-                        if (Directory.Exists(_factory.DatabasePath)) {
-                            var analysisLog = Path.Combine(_factory.DatabasePath, "AnalysisLog.txt");
+                        if (Directory.Exists(factory.DatabasePath)) {
+                            var analysisLog = Path.Combine(factory.DatabasePath, "AnalysisLog.txt");
                             for (int retries = 10; retries > 0; --retries) {
                                 try {
                                     File.AppendAllText(analysisLog, string.Format(
@@ -194,12 +200,12 @@ namespace Microsoft.PythonTools.Interpreter.Default {
 
 
         public void Dispose() {
-            if (_typeDb != null) {
-                _typeDb = null;
-            }
-            if (_factory != null) {
-                _factory.NewDatabaseAvailable -= OnNewDatabaseAvailable;
-                _factory = null;
+            _typeDb = null;
+
+            var factory = _factory;
+            _factory = null;
+            if (factory != null) {
+                factory.NewDatabaseAvailable -= OnNewDatabaseAvailable;
             }
         }
     }
