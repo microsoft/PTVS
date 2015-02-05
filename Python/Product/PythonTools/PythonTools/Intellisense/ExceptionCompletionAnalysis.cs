@@ -32,8 +32,17 @@ namespace Microsoft.PythonTools.Intellisense {
             "StopIteration", "SystemExit" };
 
         private static bool IsExceptionType(MemberResult member) {
-            if (member.MemberType != Interpreter.PythonMemberType.Class) {
-                return false;
+            switch (member.MemberType) {
+                case Interpreter.PythonMemberType.Class:
+                    // Classes need further checking
+                    break;
+                case Interpreter.PythonMemberType.Module:
+                case Interpreter.PythonMemberType.Namespace:
+                    // Always include modules
+                    return true;
+                default:
+                    // Never include anything else
+                    return false;
             }
 
             if (KnownExceptions.Contains(member.Name)) {
@@ -52,7 +61,12 @@ namespace Microsoft.PythonTools.Intellisense {
             var start = _stopwatch.ElapsedMilliseconds;
 
             var analysis = GetAnalysisEntry();
-            var index = VsProjectAnalyzer.TranslateIndex(Span.GetEndPoint(TextBuffer.CurrentSnapshot).Position, TextBuffer.CurrentSnapshot, analysis);
+            var index = VsProjectAnalyzer.TranslateIndex(
+                Span.GetEndPoint(TextBuffer.CurrentSnapshot).Position,
+                TextBuffer.CurrentSnapshot,
+                analysis
+            );
+
             var completions = analysis.GetAllAvailableMembersByIndex(index, GetMemberOptions.None)
                 .Where(IsExceptionType)
                 .Select(member => PythonCompletion(glyphService, member))

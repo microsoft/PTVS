@@ -19,28 +19,19 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading;
-using System.Windows.Forms;
-using System.Windows.Threading;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Navigation;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
-using Microsoft.PythonTools.Project;
 using Microsoft.PythonTools.Repl;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Language.Intellisense;
+using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Repl;
-using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.VisualStudio.Text.Editor;
-using Microsoft.VisualStudio.Text.Tagging;
 using Microsoft.VisualStudioTools;
-using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Intellisense {
 #if INTERACTIVE_WINDOW
@@ -1070,8 +1061,6 @@ namespace Microsoft.PythonTools.Intellisense {
                     lastClass.Span.GetText() == "@") {
 
                     return new DecoratorCompletionAnalysis(span, buffer, options);
-                } else if (CompletionAnalysis.IsKeyword(lastClass, "raise") || CompletionAnalysis.IsKeyword(lastClass, "except")) {
-                    return new ExceptionCompletionAnalysis(span, buffer, options);
                 } else if (CompletionAnalysis.IsKeyword(lastClass, "def")) {
                     return new OverrideCompletionAnalysis(span, buffer, options);
                 }
@@ -1082,6 +1071,12 @@ namespace Microsoft.PythonTools.Intellisense {
                     return ImportCompletionAnalysis.Make(tokens, span, buffer, options);
                 } else if (CompletionAnalysis.IsKeyword(first, "from")) {
                     return FromImportCompletionAnalysis.Make(tokens, span, buffer, options);
+                } else if (CompletionAnalysis.IsKeyword(first, "raise") || CompletionAnalysis.IsKeyword(first, "except")) {
+                    if (tokens.Count == 1 ||
+                        lastClass.ClassificationType.IsOfType(PythonPredefinedClassificationTypeNames.Comma) ||
+                        lastClass.IsOpenGrouping()) {
+                        return new ExceptionCompletionAnalysis(span, buffer, options);
+                    }
                 }
                 return null;
             } else if ((tokens = classifier.GetClassificationSpans(snapSpan.Start.GetContainingLine().ExtentIncludingLineBreak)).Count > 0 &&

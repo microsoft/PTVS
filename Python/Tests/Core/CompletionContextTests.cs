@@ -300,17 +300,32 @@ print
         [TestMethod, Priority(0)]
         public void ExceptionCompletions() {
             foreach (string code in new[] { 
-                @"raise None", 
-                @"try:
+                @"import sys
+raise None", 
+                @"import sys
+raise (None", 
+                @"import sys
+try:
     pass
-except None"}) {
+except None",
+                @"import sys
+try:
+    pass
+except (None",
+            @"import sys
+try:
+    pass
+except (ValueError, None"}) {
                 var completionList = GetCompletionSetCtrlSpace(code.IndexOf("None"), code).Completions.Select(x => x.DisplayText).ToArray();
 
-                AssertUtil.Contains(completionList, "Exception");
-                AssertUtil.Contains(completionList, "KeyboardInterrupt");
-                AssertUtil.Contains(completionList, "GeneratorExit");
-                AssertUtil.Contains(completionList, "StopIteration");
-                AssertUtil.Contains(completionList, "SystemExit");
+                AssertUtil.ContainsAtLeast(completionList,
+                    "Exception",
+                    "KeyboardInterrupt",
+                    "GeneratorExit",
+                    "StopIteration",
+                    "SystemExit",
+                    "sys"
+                );
 
                 AssertUtil.DoesntContain(completionList, "Warning");
                 AssertUtil.DoesntContain(completionList, "str");
@@ -318,21 +333,25 @@ except None"}) {
             }
 
             foreach (string code in new[] { 
-                @"raise (None)", 
-                @"try:
+                @"import sys
+raise (sys.None", 
+                @"import sys
+try:
     pass
-except (None)"}) {
+except (sys.None"}) {
                 var completionList = GetCompletionSetCtrlSpace(code.IndexOf("None"), code).Completions.Select(x => x.DisplayText).ToArray();
 
-                AssertUtil.Contains(completionList, "Exception");
-                AssertUtil.Contains(completionList, "KeyboardInterrupt");
-                AssertUtil.Contains(completionList, "GeneratorExit");
-                AssertUtil.Contains(completionList, "StopIteration");
-                AssertUtil.Contains(completionList, "SystemExit");
+                AssertUtil.DoesntContain(completionList, "Exception");
+                AssertUtil.DoesntContain(completionList, "KeyboardInterrupt");
+                AssertUtil.DoesntContain(completionList, "GeneratorExit");
+                AssertUtil.DoesntContain(completionList, "StopIteration");
+                AssertUtil.DoesntContain(completionList, "SystemExit");
 
-                AssertUtil.Contains(completionList, "Warning");
-                AssertUtil.Contains(completionList, "str");
-                AssertUtil.Contains(completionList, "int");
+                AssertUtil.ContainsAtLeast(completionList,
+                    "modules",
+                    "path",
+                    "version"
+                );
             }
         }
 
