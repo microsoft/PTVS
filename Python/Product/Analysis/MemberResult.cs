@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using Microsoft.PythonTools.Analysis.Values;
@@ -142,6 +143,11 @@ namespace Microsoft.PythonTools.Analysis {
             });
 
             foreach (var ns in allVars) {
+                if (ns == null) {
+                    Debug.Fail("Unexpected null AnalysisValue");
+                    continue;
+                }
+
                 var nsType = ns.MemberType;
 
                 var ci = ns as ConstantInfo;
