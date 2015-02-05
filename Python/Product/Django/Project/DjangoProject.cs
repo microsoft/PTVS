@@ -93,7 +93,7 @@ namespace Microsoft.PythonTools.Django.Project {
 
             var pyProj = _innerVsHierarchy.GetProject().GetPythonProject();
             if (pyProj != null) {
-                _analyzer.OnNewAnalyzer(pyProj.GetProjectAnalyzer().Project);
+                Analyzer.OnNewAnalyzer(pyProj.GetProjectAnalyzer().Project);
                 pyProj.ProjectAnalyzerChanging += OnProjectAnalyzerChanging;
             }
 
