@@ -177,22 +177,21 @@ namespace DjangoTests {
         public void TemplateLocals() {
             Init(DbState.OarApp);
 
-            LocalsTest("polls\\index.html", 3, new[] { "latest_poll_list" });
-            LocalsTest("polls\\index.html", 4, new[] { "forloop", "latest_poll_list", "poll" });
+            DjangoLocalsTest("polls\\index.html", 3, new[] { "latest_poll_list" });
+            DjangoLocalsTest("polls\\index.html", 4, new[] { "forloop", "latest_poll_list", "poll" });
         }
 
-        private void LocalsTest(string filename, int breakLine, string[] expectedLocals) {
+        private void DjangoLocalsTest(string filename, int breakLine, string[] expectedLocals) {
             string cwd = Path.Combine(Environment.CurrentDirectory, DebuggerTestPath);
-            LocalsTest("manage.py",
-                breakLine,
-                new string[0],
-                expectedLocals,
-                breakFilename: Path.Combine(cwd, "Templates", filename),
-                arguments: "runserver --noreload",
-                processLoaded: new WebPageRequester().DoRequest,
-                debugOptions: PythonDebugOptions.DjangoDebugging,
-                waitForExit: false
-            );
+            var test = new LocalsTest(this, "manage.py", breakLine) {
+                BreakFileName = Path.Combine(cwd, "Templates", filename),
+                Arguments = "runserver --noreload",
+                ProcessLoaded = new WebPageRequester().DoRequest,
+                DebugOptions = PythonDebugOptions.DjangoDebugging,
+                WaitForExit = false
+            };
+            test.Locals.AddRange(expectedLocals);
+            test.Run();
         }
 
         class WebPageRequester {

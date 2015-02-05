@@ -504,64 +504,6 @@ namespace DebuggerTests {
                 EvalResult.Value(expr, null, null, expected.Length, flags, allowOtherFlags: true));
         }
 
-        class EvalResult {
-            private readonly string _typeName, _repr;
-            private readonly long? _length;
-            private readonly PythonEvaluationResultFlags? _flags;
-            private readonly bool _allowOtherFlags;
-
-            public readonly string ExceptionText, Expression;
-            public readonly bool IsError;
-
-            public static EvalResult Exception(string expression, string exceptionText) {
-                return new EvalResult(expression, exceptionText, false);
-            }
-
-            public static EvalResult Value(string expression, string typeName, string repr, long? length = null, PythonEvaluationResultFlags? flags = null, bool allowOtherFlags = false) {
-                return new EvalResult(expression, typeName, repr, length, flags, allowOtherFlags);
-            }
-
-            public static EvalResult ErrorExpression(string expression, string error) {
-                return new EvalResult(expression, error, true);
-            }
-
-            EvalResult(string expression, string exceptionText, bool isError) {
-                Expression = expression;
-                ExceptionText = exceptionText;
-                IsError = isError;
-            }
-
-            EvalResult(string expression, string typeName, string repr, long? length, PythonEvaluationResultFlags? flags, bool allowOtherFlags) {
-                Expression = expression;
-                _typeName = typeName;
-                _repr = repr;
-                _length = length;
-                _flags = flags;
-                _allowOtherFlags = allowOtherFlags;
-            }
-
-            public void Validate(PythonEvaluationResult result) {
-                if (ExceptionText != null) {
-                    Assert.AreEqual(ExceptionText, result.ExceptionText);
-                } else {
-                    if (_typeName != null) {
-                        Assert.AreEqual(_typeName, result.TypeName);
-                    }
-                    Assert.AreEqual(_repr, result.StringRepr);
-                    if (_length != null) {
-                        Assert.AreEqual(_length.Value, result.Length);
-                    }
-                    if (_flags != null) {
-                        if (_allowOtherFlags) {
-                            Assert.AreEqual(_flags.Value, _flags.Value & result.Flags);
-                        } else {
-                            Assert.AreEqual(_flags.Value, result.Flags);
-                        }
-                    }
-                }
-            }
-        }
-
         private void EvalTest(string filename, int lineNo, string frameName, int frameIndex, EvalResult eval) {
             EvalTest(filename, lineNo, frameName, frameIndex, PythonEvaluationResultReprKind.Normal, eval);
         }
@@ -648,13 +590,28 @@ namespace DebuggerTests {
             }
         }
 
+        protected virtual string UnassignedLocalRepr {
+            get { return "<undefined>"; }
+        }
+
+        protected virtual string UnassignedLocalType {
+            get { return null; }
+        }
+
         [TestMethod, Priority(0)]
-        public void LocalsTest() {
-            LocalsTest("LocalsTest.py", 3, new string[] { }, new string[] { "x" });
+        public void Locals() {
+            new LocalsTest(this, "LocalsTest.py", 3) {
+                Locals = { { "x", UnassignedLocalType, UnassignedLocalRepr } }
+            }.Run();
 
-            LocalsTest("LocalsTest2.py", 2, new string[] { "x" }, new string[] { });
+            new LocalsTest(this, "LocalsTest2.py", 2) {
+                Params = { { "x", "int", "42" } }
+            }.Run();
 
-            LocalsTest("LocalsTest3.py", 2, new string[] { "x" }, new string[] { "y" });
+            new LocalsTest(this, "LocalsTest3.py", 2) {
+                Params = { { "x", "int", "42" } },
+                Locals = { { "y", UnassignedLocalType, UnassignedLocalRepr } }
+            }.Run();
         }
 
         /// <summary>
@@ -662,104 +619,94 @@ namespace DebuggerTests {
         /// </summary>
         [TestMethod, Priority(0)]
         public void LocalGlobalsTest() {
-            LocalsTest("LocalGlobalsTest.py", 3, new string[] { }, new string[] { });
-            LocalsTest("LocalGlobalsTest.py", 4, new string[] { }, new string[] { "x" });
+            var test = new LocalsTest(this, "LocalGlobalsTest.py", 3);
+            test.Run();
 
-            LocalsTest("LocalGlobalsTest.py", 5, new string[] { "self" }, new string[] { }, "LocalGlobalsTestImported.py");
-            LocalsTest("LocalGlobalsTest.py", 6, new string[] { "self" }, new string[] { "x" }, "LocalGlobalsTestImported.py");
+            test.LineNo = 4;
+            test.Locals.Add("x");
+            test.Run();
+
+            test.BreakFileName = "LocalGlobalsTestImported.py";
+            test.LineNo = 5;
+            test.Locals.Clear();
+            test.Params.Add("self");
+            test.Run();
+
+            test.LineNo = 6;
+            test.Locals.Add("x");
         }
 
         /// <summary>
         /// https://pytools.codeplex.com/workitem/1348
         /// </summary>
         [TestMethod, Priority(0)]
-        public void LocalClosureVarsTest() {
-            // IronPython doesn't expose closure variables in frame.f_locals
-            if (GetType() == typeof(DebuggerTestsIpy)) {
-                LocalsTest("LocalClosureVarsTest.py", 4, new string[] { "z" }, new string[] { });
-                LocalsTest("LocalClosureVarsTest.py", 6, new string[] { "z" }, new string[] { }, "LocalClosureVarsTestImported.py");
-                return;
-            }
+        public virtual void LocalClosureVarsTest() {
+            var test = new LocalsTest(this, "LocalClosureVarsTest.py", 4) {
+                Locals = { "x" , "y" },
+                Params = { "z"  }
+            };
+            test.Run();
 
-            LocalsTest("LocalClosureVarsTest.py", 4, new string[] { "z" }, new string[] { "x", "y" });
-            LocalsTest("LocalClosureVarsTest.py", 6, new string[] { "z" }, new string[] { "x", "y" }, "LocalClosureVarsTestImported.py");
+            test.BreakFileName = "LocalClosureVarsTestImported.py";
+            test.LineNo = 6;
+            test.Run();
         }
 
         /// <summary>
         /// https://pytools.codeplex.com/workitem/1710
         /// </summary>
         [TestMethod, Priority(0)]
-        public void LocalBuiltinUsageTest() {
-            // IronPython exposes some builtin elements in co_names not in __builtins__
-            if (GetType() == typeof(DebuggerTestsIpy)) {
-                LocalsTest("LocalBuiltinUsageTest.py", 4, new string[] { "start", "end" }, new string[] { "i", "foreach_enumerator" });
-                LocalsTest("LocalBuiltinUsageTest.py", 6, new string[] { "self", "start", "end" }, new string[] { "i", "foreach_enumerator" }, "LocalBuiltinUsageTestImported.py");
-                return;
-            }
-            LocalsTest("LocalBuiltinUsageTest.py", 4, new string[] { "start", "end" }, new string[] { "i" });
-            LocalsTest("LocalBuiltinUsageTest.py", 6, new string[] { "self", "start", "end" }, new string[] { "i" }, "LocalBuiltinUsageTestImported.py");
+        public virtual void LocalBuiltinUsageTest() {
+            var test = new LocalsTest(this, "LocalBuiltinUsageTest.py", 4) {
+                Params = { "start", "end" },
+                Locals = { "i" }
+            };
+            test.Run();
+
+            test.BreakFileName = "LocalBuiltinUsageTestImported.py";
+            test.LineNo = 6;
+            test.Params.Add("self");
+            test.Run();
         }
 
         [TestMethod, Priority(0)]
         public void GlobalsTest() {
-            if (Version.Version >= PythonLanguageVersion.V34) {
-                LocalsTest("GlobalsTest.py", 4, new string[] { }, new[] { "x", "y", "__file__", "__name__", "__package__", "__builtins__", "__doc__", "__cached__", "__loader__", "__spec__" });
-            } else if (Version.Version >= PythonLanguageVersion.V33) {
-                LocalsTest("GlobalsTest.py", 4, new string[] { }, new[] { "x", "y", "__file__", "__name__", "__package__", "__builtins__", "__doc__", "__cached__", "__loader__" });
-            } else if (Version.Version >= PythonLanguageVersion.V32) {
-                LocalsTest("GlobalsTest.py", 4, new string[] { }, new[] { "x", "y", "__file__", "__name__", "__package__", "__builtins__", "__doc__", "__cached__" });
-            } else if (Version.Version >= PythonLanguageVersion.V26) {
-                LocalsTest("GlobalsTest.py", 4, new string[] { }, new[] { "x", "y", "__file__", "__name__", "__package__", "__builtins__", "__doc__" });
-            } else {
-                LocalsTest("GlobalsTest.py", 4, new string[] { }, new[] { "x", "y", "__file__", "__name__", "__builtins__", "__doc__" });
-            }
-        }
-
-        [TestMethod, Priority(0)]
-        public void LocalBooleanTest() {
-            // https://pytools.codeplex.com/workitem/1334
-            var filename = DebuggerTestPath + "LocalBooleanTest.py";
-            var debugger = new PythonDebugger();
-
-            PythonThread thread = null;
-            AutoResetEvent loaded = new AutoResetEvent(false);
-            var process =
-                DebugProcess(
-                    debugger,
-                    filename,
-                    (newproc, newthread) => {
-                        var bp = newproc.AddBreakPoint(filename, 2);
-                        bp.Add();
-                        thread = newthread;
-                        loaded.Set();
-                    }
-                );
-
-            AutoResetEvent breakpointHit = new AutoResetEvent(false);
-            process.BreakpointHit += (sender, args) => {
-                breakpointHit.Set();
+            var test = new LocalsTest(this, "GlobalsTest.py", 4) {
+                Locals = { "x", "y", "__file__", "__name__", "__builtins__", "__doc__" }
             };
 
-            process.Start();
-            try {
-                AssertWaited(breakpointHit);
-
-                // Null hex representation flags AD7 to substitute string representation
-                var parms = thread.Frames[0].Parameters;
-                Assert.IsNull(parms[0].HexRepr);
-                Assert.IsNull(parms[1].HexRepr);
-
-                // Handle order inconsitencies accross interpreters
-                foreach (var parm in parms) {
-                    if (parm.Expression == "x") {
-                        Assert.AreEqual("True", parm.StringRepr);
-                    } else {
-                        Assert.AreEqual("False", parm.StringRepr);
-                    }
-                }
-            } finally {
-                TerminateProcess(process);
+            if (Version.Version >= PythonLanguageVersion.V26) {
+                test.Locals.Add("__package__");
             }
+            if (Version.Version >= PythonLanguageVersion.V32) {
+                test.Locals.Add("__cached__");
+            }
+            if (Version.Version >= PythonLanguageVersion.V33) {
+                test.Locals.Add("__loader__");
+            }
+            if (Version.Version >= PythonLanguageVersion.V34) {
+                test.Locals.Add("__spec__");
+            }
+
+            test.Run();
+        }
+
+        // https://pytools.codeplex.com/workitem/1334
+        [TestMethod, Priority(0)]
+        public void LocalBooleanTest() {
+            var test = new LocalsTest(this, "LocalBooleanTest.py", 2) {
+                Params = {
+                    { "x", "bool", "True" },
+                    { "y", "bool", "False" }
+                }
+            };
+
+            foreach (var p in test.Params) {
+                p.ValidateHexRepr = true;
+                p.HexRepr = null;
+            }
+
+            test.Run();
         }
 
         [TestMethod, Priority(0)]
@@ -1558,12 +1505,12 @@ namespace DebuggerTests {
             process.ExceptionRaised += (sender, args) => {
                 if (loaded) {
                     raised.Add(Tuple.Create(args.Exception.TypeName, TryGetStack(args.Thread)));
-                    }
-                    if (resumeProcess) {
-                        process.Resume();
-                    } else {
-                        args.Thread.Resume();
-                    }
+                }
+                if (resumeProcess) {
+                    process.Resume();
+                } else {
+                    args.Thread.Resume();
+                }
             };
 
             StartAndWaitForExit(process);
@@ -2844,5 +2791,39 @@ int main(int argc, char* argv[]) {
         public override void AttachThreadingStartNewThread() { }
         public override void AttachTimeoutThreadsInitialized() { }
         public override void AttachTimeout() { }
+
+        protected override string UnassignedLocalRepr {
+            get { return "None"; }
+        }
+
+        protected override string UnassignedLocalType {
+            get { return "NoneType"; }
+        }
+
+        // IronPython doesn't expose closure variables in frame.f_locals
+        public override void LocalClosureVarsTest() {
+            var test = new LocalsTest(this, "LocalClosureVarsTest.py", 4) {
+                Params = { "z" }
+            };
+            test.Run();
+
+            test.BreakFileName = "LocalClosureVarsTestImported.py";
+            test.LineNo = 6;
+            test.Run();
+        }
+
+        // IronPython exposes some builtin elements in co_names not in __builtins__
+        public override void LocalBuiltinUsageTest() {
+            var test = new LocalsTest(this, "LocalBuiltinUsageTest.py", 4) {
+                Params = { "start", "end" },
+                Locals = { "i", "foreach_enumerator" }
+            };
+            test.Run();
+
+            test.BreakFileName = "LocalBuiltinUsageTestImported.py";
+            test.LineNo = 6;
+            test.Params.Add("self");
+            test.Run();
+        }
     }
 }

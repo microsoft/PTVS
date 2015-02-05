@@ -113,10 +113,13 @@ except:
 
 # A value of a synthesized child. The string is passed through to the variable list, and type is not displayed at all.
 class SynthesizedValue(object):
-    def __init__(self, s = ''):
-        self.s = s
+    def __init__(self, repr_value='', len_value=None):
+        self.repr_value = repr_value
+        self.len_value = len_value
     def __repr__(self):
-        return self.s
+        return self.repr_value
+    def __len__(self):
+        return self.len_value
 
 # Specifies list of files not to debug. Can be extended by other modules
 # (the REPL does this for $attach support and not stepping into the REPL).
@@ -1332,7 +1335,7 @@ class Thread(object):
                 except:
                     if skip_unknown:
                         continue
-                    obj = '<undefined>'
+                    obj = SynthesizedValue('<undefined>', len_value=0)
                     type_name = 'unknown'
                 vars.append((name, type(obj), safe_repr(obj), safe_hex_repr(obj), type_name, get_object_len(obj)))
                 treated.add(name)

@@ -36,6 +36,93 @@ namespace DebuggerTests {
             }
         }
 
+        internal class EvalResult {
+            private readonly string _typeName, _repr;
+            private readonly long? _length;
+            private readonly PythonEvaluationResultFlags? _flags;
+            private readonly bool _allowOtherFlags;
+
+            public readonly string ExceptionText, Expression;
+            public readonly bool IsError;
+
+            public string HexRepr;
+            public bool ValidateRepr = true;
+            public bool ValidateHexRepr = false;
+
+            public static EvalResult Exception(string expression, string exceptionText) {
+                return new EvalResult(expression, exceptionText, false);
+            }
+
+            public static EvalResult Value(string expression, string typeName, string repr, long? length = null, PythonEvaluationResultFlags? flags = null, bool allowOtherFlags = false) {
+                return new EvalResult(expression, typeName, repr, length, flags, allowOtherFlags);
+            }
+
+            public static EvalResult ErrorExpression(string expression, string error) {
+                return new EvalResult(expression, error, true);
+            }
+
+            EvalResult(string expression, string exceptionText, bool isError) {
+                Expression = expression;
+                ExceptionText = exceptionText;
+                IsError = isError;
+            }
+
+            EvalResult(string expression, string typeName, string repr, long? length, PythonEvaluationResultFlags? flags, bool allowOtherFlags) {
+                Expression = expression;
+                _typeName = typeName;
+                _repr = repr;
+                _length = length;
+                _flags = flags;
+                _allowOtherFlags = allowOtherFlags;
+            }
+
+            public void Validate(PythonEvaluationResult result) {
+                if (ExceptionText != null) {
+                    Assert.AreEqual(ExceptionText, result.ExceptionText);
+                } else {
+                    if (_typeName != null) {
+                        Assert.AreEqual(_typeName, result.TypeName);
+                    }
+
+                    if (ValidateRepr) {
+                        Assert.AreEqual(_repr, result.StringRepr);
+                    }
+
+                    if (ValidateHexRepr) {
+                        Assert.AreEqual(HexRepr, result.HexRepr);
+                    }
+
+                    if (_length != null) {
+                        Assert.AreEqual(_length.Value, result.Length);
+                    }
+
+                    if (_flags != null) {
+                        if (_allowOtherFlags) {
+                            Assert.AreEqual(_flags.Value, _flags.Value & result.Flags);
+                        } else {
+                            Assert.AreEqual(_flags.Value, result.Flags);
+                        }
+                    }
+                }
+            }
+        }
+
+        internal class VariableCollection : List<EvalResult> {
+            public void Add(string name, string typeName = null, string repr = null) {
+                var er = EvalResult.Value(name, typeName, repr);
+                if (repr == null) {
+                    er.ValidateRepr = false;
+                }
+                Add(er);
+            }
+
+            public void AddRange(params string[] names) {
+                foreach (var name in names) {
+                    Add(name);
+                }
+            }
+        }
+
         /// <summary>
         /// Runs the given file name setting break points at linenos.  Expects to hit the lines
         /// in lineHits as break points in the order provided in lineHits.  If lineHits is negative
@@ -175,35 +262,70 @@ namespace DebuggerTests {
             return debugger.DebugProcess(Version, filename, onLoaded, resumeOnProcessLoaded, interpreterOptions, debugOptions, cwd, arguments);
         }
 
-        internal void LocalsTest(string filename, int lineNo, string[] paramNames, string[] localsNames, string breakFilename = null, string arguments = "", Action processLoaded = null, PythonDebugOptions debugOptions = PythonDebugOptions.RedirectOutput, bool waitForExit = true) {
-            PythonThread thread = RunAndBreak(filename, lineNo, breakFilename: breakFilename, arguments: arguments, processLoaded: processLoaded, debugOptions: debugOptions);
-            PythonProcess process = thread.Process;
-            try {
-                var frames = thread.Frames;
-                var localsExpected = new HashSet<string>(localsNames);
-                var paramsExpected = new HashSet<string>(paramNames);
+        internal class LocalsTest {
+            private readonly BaseDebuggerTests _tests;
 
-                string fileNameExpected;
-                if (breakFilename == null) {
-                    fileNameExpected = Path.GetFullPath(DebuggerTestPath + filename);
-                } else if (Path.IsPathRooted(breakFilename)) {
-                    fileNameExpected = breakFilename;
-                } else {
-                    fileNameExpected = Path.GetFullPath(DebuggerTestPath + breakFilename);
-                }
+            public readonly VariableCollection Locals = new VariableCollection();
+            public readonly VariableCollection Params = new VariableCollection();
 
-                AssertUtil.ContainsExactly(frames[0].Locals.Select(x => x.Expression), localsExpected);
-                AssertUtil.ContainsExactly(frames[0].Parameters.Select(x => x.Expression), paramsExpected);
-                Assert.AreEqual(frames[0].FileName, fileNameExpected, true);
+            public string FileName;
+            public int LineNo;
+            public string BreakFileName;
+            public string Arguments;
+            public Action ProcessLoaded;
+            public PythonDebugOptions DebugOptions = PythonDebugOptions.RedirectOutput;
+            public bool WaitForExit = true;
+            public bool IgnoreExtra = false;
 
-                process.Continue();
+            public LocalsTest(BaseDebuggerTests tests, string fileName, int lineNo) {
+                _tests = tests;
+                FileName = fileName;
+                LineNo = lineNo;
+            }
 
-                if (waitForExit) {
-                    WaitForExit(process);
-                }
-            } finally {
-                if (!process.HasExited) {
-                    process.Terminate();
+            public void Run() {
+                PythonThread thread = _tests.RunAndBreak(FileName, LineNo, breakFilename: BreakFileName, arguments: Arguments, processLoaded: ProcessLoaded, debugOptions: DebugOptions);
+                PythonProcess process = thread.Process;
+                try {
+                    var frames = thread.Frames;
+                    var localNamesExpected = Locals.Select(v => v.Expression).ToSet();
+                    var paramNamesExpected = Params.Select(v => v.Expression).ToSet();
+
+                    string fileNameExpected;
+                    if (BreakFileName == null) {
+                        fileNameExpected = Path.GetFullPath(_tests.DebuggerTestPath + FileName);
+                    } else if (Path.IsPathRooted(BreakFileName)) {
+                        fileNameExpected = BreakFileName;
+                    } else {
+                        fileNameExpected = Path.GetFullPath(_tests.DebuggerTestPath + BreakFileName);
+                    }
+
+                    Assert.AreEqual(frames[0].FileName, fileNameExpected, true);
+
+                    if (!IgnoreExtra) {
+                        AssertUtil.ContainsExactly(frames[0].Locals.Select(x => x.Expression), localNamesExpected);
+                        AssertUtil.ContainsExactly(frames[0].Parameters.Select(x => x.Expression), paramNamesExpected);
+                    }
+
+                    foreach (var expectedLocal in Locals) {
+                        var actualLocal = frames[0].Locals.First(v => v.Expression == expectedLocal.Expression);
+                        expectedLocal.Validate(actualLocal);
+                    }
+
+                    foreach (var expectedParam in Params) {
+                        var actualParam = frames[0].Parameters.First(v => v.Expression == expectedParam.Expression);
+                        expectedParam.Validate(actualParam);
+                    }
+
+                    process.Continue();
+
+                    if (WaitForExit) {
+                        _tests.WaitForExit(process);
+                    }
+                } finally {
+                    if (!process.HasExited) {
+                        process.Terminate();
+                    }
                 }
             }
         }
