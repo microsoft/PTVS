@@ -290,6 +290,10 @@
       <Link>SharedProject\DocumentManager.cs</Link>
       <Visible>true</Visible>
     </Compile>
+    <Compile Include="$(_ProjectSystemFilesLocation)\EnumBSTR.cs">
+      <Link>SharedProject\EnumBSTR.cs</Link>
+      <Visible>true</Visible>
+    </Compile>
     <Compile Include="$(_ProjectSystemFilesLocation)\EnumDependencies.cs">
       <Link>SharedProject\EnumDependencies.cs</Link>
       <Visible>true</Visible>

@@ -211,7 +211,12 @@ namespace TestUtilities
             if (set.ContainsExactly(expected)) {
                 return;
             }
-            Assert.Fail(String.Format("Expected {0}, got {1}", MakeText(expected), MakeText(set)));
+
+            Assert.Fail(String.Format("Expected:\n{0}\n\nActual:\n{1}\n\nExpected not in actual:\n{2}\n\nActual not in expected:\n{3}",
+                MakeText(expected),
+                MakeText(set),
+                MakeText(expected.Except(set)),
+                MakeText(set.Except(expected))));
         }
 
         [System.Diagnostics.DebuggerStepThrough]

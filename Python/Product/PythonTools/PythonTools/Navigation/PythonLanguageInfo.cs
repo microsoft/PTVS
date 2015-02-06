@@ -13,14 +13,17 @@
  * ***************************************************************************/
 
 using System;
+using System.Linq;
 using System.Runtime.InteropServices;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
+using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Navigation {
     /// <summary>
@@ -150,7 +153,23 @@ namespace Microsoft.PythonTools.Navigation {
             return null;
         }
 
+        /// <summary>
+        /// Called by debugger to get the list of expressions for the Autos debugger tool window.
+        /// </summary>
         public int GetProximityExpressions(IVsTextBuffer pBuffer, int iLine, int iCol, int cLines, out IVsEnumBSTR ppEnum) {
+            var model = _serviceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
+            var service = model.GetService<IVsEditorAdaptersFactoryService>();
+            var buffer = service.GetDataBuffer(pBuffer);
+            IPythonProjectEntry projEntry;
+            if (buffer.TryGetPythonProjectEntry(out projEntry)) {
+                var ast = projEntry.Tree;
+                var walker = new ProximityExpressionWalker(ast, iLine, iLine + cLines - 1);
+                ast.Walk(walker);
+                var exprs = walker.GetExpressions();
+                ppEnum = new EnumBSTR(exprs.ToArray());
+                return VSConstants.S_OK;
+            }
+
             ppEnum = null;
             return VSConstants.E_FAIL;
         }

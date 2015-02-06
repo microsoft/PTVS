@@ -270,6 +270,7 @@
       <Link>PythonInterpreterFactoryExtensions.cs</Link>
     </Compile>
     <Compile Include="IPythonToolsToolWindowService.cs" />
+    <Compile Include="PythonTools\Debugger\ProximityExpressionWalker.cs" />
     <Compile Include="PythonTools\SurveyNewsService.cs" />
     <Compile Include="PythonTools\Options\GlobalInterpreterOptions.cs" />
     <Compile Include="PythonTools\Options\GeneralOptions.cs" />

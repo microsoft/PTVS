@@ -27,15 +27,13 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         private readonly PythonStackFrame _frame;
         private IDebugDocumentContext2 _documentContext;
 
-        public AD7MemoryAddress(AD7Engine engine, string filename, uint lineno) {
+        public AD7MemoryAddress(AD7Engine engine, string filename, uint lineno, PythonStackFrame frame = null) {
             _engine = engine;
             _lineNo = (uint)lineno;
             _filename = filename;
-        }
 
-        public AD7MemoryAddress(AD7Engine engine, string filename, uint lineno, PythonStackFrame frame)
-            : this(engine, filename, lineno) {
-            _frame = frame;
+            var pos = new TEXT_POSITION { dwLine = lineno, dwColumn = 0 };
+            _documentContext = new AD7DocumentContext(filename, pos, pos, this, frame != null ? frame.Kind : FrameKind.None);
         }
 
         public void SetDocumentContext(IDebugDocumentContext2 docContext) {
