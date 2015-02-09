@@ -97,38 +97,14 @@ namespace Microsoft.PythonTools.Intellisense {
             var start = _stopwatch.ElapsedMilliseconds;
 
             var line = Span.GetStartPoint(TextBuffer.CurrentSnapshot).GetContainingLine();
-            int lineStart = line.Start.Position;
-            int defIndent = line.GetText().IndexOf("def");
-            
-            var pyAnalysis = TextBuffer.GetPythonProjectEntry();
-            PythonAst ast;
-            IAnalysisCookie cookie;
-            pyAnalysis.GetTreeAndCookie(out ast, out cookie);
-            var sCookie = cookie as SnapshotCookie;
-            if (sCookie != null) {
-                // Map the analysis position to its location in the analyzed
-                // snapshot, but keep the indent level unchanged. This ensures
-                // that if the user has typed 'def' before the analysis is
-                // updated they will get completions for the correct class.
-                if (sCookie.Snapshot.TextBuffer != TextBuffer) {
-                    IBufferGraph graph;
-                    if (sCookie.Snapshot.TextBuffer.Properties.TryGetProperty(typeof(IBufferGraph), out graph)) {
-                        var newLine = graph.MapDownToInsertionPoint(line.Start, PointTrackingMode.Positive, EditorExtensions.IsPythonContent);
-                        if (newLine != null) {
-                            lineStart = newLine.Value.Position;
-                        }
-                    }
-                } else if (sCookie.Snapshot != line.Snapshot) {
-                    var newLine = Span.GetStartPoint(sCookie.Snapshot).GetContainingLine();
-                    lineStart = newLine.Start.Position;
-                }
-            }
-
-            int pos = lineStart + defIndent;
+            var startPos = line.Start.Position + line.GetText().IndexOf("def");
 
             var analysis = GetAnalysisEntry();
-            var cls = analysis.GetDefinitionTreeByIndex(pos).LastOrDefault(member => member.MemberType == Interpreter.PythonMemberType.Class);
-            var members = analysis.GetOverrideableByIndex(pos).ToArray();
+            var snapshot = TextBuffer.CurrentSnapshot;
+            var pos = VsProjectAnalyzer.TranslateIndex(startPos, snapshot, analysis);
+
+            var cls = analysis.GetDefinitionTree(pos).LastOrDefault(member => member.MemberType == Interpreter.PythonMemberType.Class);
+            var members = analysis.GetOverrideable(pos).ToArray();
             var completions = members
                 .Select(member => PythonCompletion(glyphService,
                     member.Name,

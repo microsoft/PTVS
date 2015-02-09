@@ -529,11 +529,11 @@ namespace Microsoft.PythonTools.Intellisense {
             if (analysisItem != null) {
                 var analysis = ((IPythonProjectEntry)analysisItem).Analysis;
                 if (analysis != null) {
-                    int index = TranslateIndex(loc.Start, snapshot, analysis);
+                    var location = TranslateIndex(loc.Start, snapshot, analysis);
 
                     IEnumerable<IOverloadResult> sigs;
                     lock (snapshot.TextBuffer.GetAnalyzer(serviceProvider)) {
-                        sigs = analysis.GetSignaturesByIndex(text, index);
+                        sigs = analysis.GetSignatures(text, location);
                     }
                     var end = Stopwatch.ElapsedMilliseconds;
 
@@ -557,19 +557,34 @@ namespace Microsoft.PythonTools.Intellisense {
             return new SignatureAnalysis(text, paramIndex, new ISignature[0]);
         }
 
-        internal static int TranslateIndex(int index, ITextSnapshot fromSnapshot, ModuleAnalysis toAnalysisSnapshot) {
+        internal static SourceLocation TranslateIndex(int index, ITextSnapshot fromSnapshot, ModuleAnalysis toAnalysisSnapshot) {
             var snapshotCookie = toAnalysisSnapshot.AnalysisCookie as SnapshotCookie;
             // TODO: buffers differ in the REPL window case, in the future we should handle this better
             if (snapshotCookie != null &&
                 fromSnapshot != null &&
                 snapshotCookie.Snapshot.TextBuffer == fromSnapshot.TextBuffer) {
 
-                index = new SnapshotPoint(fromSnapshot, index).TranslateTo(
-                    snapshotCookie.Snapshot,
-                    PointTrackingMode.Negative
-                ).Position;
+                var fromPoint = new SnapshotPoint(fromSnapshot, index);
+                var fromLine = fromPoint.GetContainingLine();
+                var toPoint = fromPoint.TranslateTo(snapshotCookie.Snapshot, PointTrackingMode.Negative);
+                
+                return new SourceLocation(
+                    toPoint.Position,
+                    fromLine.LineNumber + 1,
+                    index - fromLine.Start.Position + 1
+                );
+            } else if (fromSnapshot != null) {
+                var fromPoint = new SnapshotPoint(fromSnapshot, index);
+                var fromLine = fromPoint.GetContainingLine();
+
+                return new SourceLocation(
+                    index,
+                    fromLine.LineNumber + 1,
+                    index - fromLine.Start.Position + 1
+                );
+            } else {
+                return new SourceLocation(index, 1, 1);
             }
-            return index;
         }
 
         internal static MissingImportAnalysis GetMissingImports(IServiceProvider serviceProvider, ITextSnapshot snapshot, ITrackingSpan span) {
@@ -594,7 +609,7 @@ namespace Microsoft.PythonTools.Intellisense {
             var index = span.GetStartPoint(snapshot).Position;
 
             var expr = Statement.GetExpression(
-                analysis.GetAstFromTextByIndex(
+                analysis.GetAstFromText(
                     text,
                     TranslateIndex(
                         index,
@@ -614,14 +629,14 @@ namespace Microsoft.PythonTools.Intellisense {
                     );
 
                     lock (snapshot.TextBuffer.GetAnalyzer(serviceProvider)) {
-                        index = TranslateIndex(
+                        var location = TranslateIndex(
                             index,
                             snapshot,
                             analysis
                         );
-                        var variables = analysis.GetVariablesByIndex(text, index).Where(IsDefinition).Count();
+                        var variables = analysis.GetVariables(text, location).Where(IsDefinition).Count();
 
-                        var values = analysis.GetValuesByIndex(text, index).ToArray();
+                        var values = analysis.GetValues(text, location).ToArray();
 
                         // if we have type information or an assignment to the variable we won't offer 
                         // an import smart tag.

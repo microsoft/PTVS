@@ -58,7 +58,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 analysis
             );
 
-            var completions = analysis.GetAllAvailableMembersByIndex(index, GetMemberOptions.None)
+            var completions = analysis.GetAllAvailableMembers(index, GetMemberOptions.None)
                 .Where(IsDecoratorType)
                 .Select(member => PythonCompletion(glyphService, member))
                 .OrderBy(completion => completion.DisplayText);

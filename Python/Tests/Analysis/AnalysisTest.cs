@@ -3682,11 +3682,10 @@ class oar(list):
     pass
 ";
             var entry = ProcessText(text);
-            AssertUtil.ContainsExactly(
-                entry.GetOverrideableByIndex(text.IndexOf("pass")).Where(res => res.Name == "__init__").Select(
-                    x => string.Join(", ", x.Parameters.Select(GetSafeParameterName))
-                ),
-                this is IronPythonAnalysisTest ? "self, enumerable" : "self, sequence"
+            var init = entry.GetOverrideableByIndex(text.IndexOf("pass")).Single(r => r.Name == "__init__");
+            AssertUtil.AreEqual(
+                init.Parameters.Select(GetSafeParameterName), 
+                "self", this is IronPythonAnalysisTest ? "enumerable" : "sequence"
             );
 
             // Ensure that nested classes are correctly resolved.
@@ -3698,13 +3697,12 @@ class oar(int):
             entry = ProcessText(text);
             var oarItems = entry.GetOverrideableByIndex(text.IndexOf("    pass")).Select(x => x.Name).ToSet();
             var fobItems = entry.GetOverrideableByIndex(text.IndexOf("pass")).Select(x => x.Name).ToSet();
-            Assert.IsFalse(oarItems.Contains("keys"));
-            Assert.IsFalse(oarItems.Contains("items"));
-            Assert.IsTrue(oarItems.Contains("bit_length"));
+            AssertUtil.DoesntContain(oarItems, "keys");
+            AssertUtil.DoesntContain(oarItems, "items");
+            AssertUtil.ContainsAtLeast(oarItems, "bit_length");
 
-            Assert.IsTrue(fobItems.Contains("keys"));
-            Assert.IsTrue(fobItems.Contains("items"));
-            Assert.IsFalse(fobItems.Contains("bit_length"));
+            AssertUtil.ContainsAtLeast(fobItems, "keys", "items");
+            AssertUtil.DoesntContain(fobItems, "bit_length");
         }
 
 
@@ -6070,7 +6068,7 @@ def f(s: lambda s: s > 0 = 123):
             var entry = ProcessText(text, PythonLanguageVersion.V33);
 
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("s", text.IndexOf("s:")), BuiltinTypeId.Int);
-            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("s", text.IndexOf("s >")));
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("s", text.IndexOf("s >")), BuiltinTypeId.NoneType);
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("s", text.IndexOf("return s")), BuiltinTypeId.Int);
         }
 

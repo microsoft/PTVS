@@ -15,6 +15,7 @@
 using System.Collections.Generic;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Analysis.Values;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio.Text;
 
@@ -65,7 +66,7 @@ namespace Microsoft.PythonTools.Intellisense {
             get {
                 if (_analysis != null) {
                     lock (_analyzer) {
-                        return _analysis.GetVariablesByIndex(_expr, TranslatedIndex);
+                        return _analysis.GetVariables(_expr, TranslatedLocation);
                     }
                 }
                 return new IAnalysisVariable[0];
@@ -79,7 +80,7 @@ namespace Microsoft.PythonTools.Intellisense {
             get {
                 if (_analysis != null) {
                     lock (_analyzer) {
-                        return _analysis.GetValuesByIndex(_expr, TranslatedIndex);
+                        return _analysis.GetValues(_expr, TranslatedLocation);
                     }
                 }
                 return new AnalysisValue[0];
@@ -87,7 +88,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public Expression GetEvaluatedExpression() {
-            return Statement.GetExpression(_analysis.GetAstFromTextByIndex(_expr, TranslatedIndex).Body);
+            return Statement.GetExpression(_analysis.GetAstFromText(_expr, TranslatedLocation).Body);
         }
 
         /// <summary>
@@ -98,10 +99,10 @@ namespace Microsoft.PythonTools.Intellisense {
         /// </summary>
         /// <returns></returns>
         public PythonAst GetEvaluatedAst() {
-            return _analysis.GetAstFromTextByIndex(_expr, TranslatedIndex);
+            return _analysis.GetAstFromText(_expr, TranslatedLocation);
         }
 
-        private int TranslatedIndex {
+        private SourceLocation TranslatedLocation {
             get {
                 return VsProjectAnalyzer.TranslateIndex(_index, _snapshot, _analysis);
             }

@@ -59,9 +59,20 @@ namespace Microsoft.PythonTools.Analysis {
         /// that the expression can evaluate to.
         /// </summary>
         /// <param name="exprText">The expression to determine the result of.</param>
-        /// <param name="index">The 0-based absolute index into the file where the expression should be evaluated within the module.</param>
+        /// <param name="index">The 0-based absolute index into the file where the expression should be evaluated.</param>
         public IEnumerable<AnalysisValue> GetValuesByIndex(string exprText, int index) {
-            var scope = FindScope(index);
+            return GetValues(exprText, _unit.Tree.IndexToLocation(index));
+        }
+
+        /// <summary>
+        /// Evaluates the given expression in at the provided line number and returns the values
+        /// that the expression can evaluate to.
+        /// </summary>
+        /// <param name="exprText">The expression to determine the result of.</param>
+        /// <param name="location">The location in the file where the expression should be evaluated.</param>
+        /// <remarks>New in 2.2</remarks>
+        public IEnumerable<AnalysisValue> GetValues(string exprText, SourceLocation location) {
+            var scope = FindScope(location);
             var privatePrefix = GetPrivatePrefixClassName(scope);
             var expr = Statement.GetExpression(GetAstFromText(exprText, privatePrefix).Body);
 
@@ -120,15 +131,39 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         /// <summary>
-        /// Gets the variables the given expression evaluates to.  Variables include parameters, locals, and fields assigned on classes, modules and instances.
+        /// Gets the variables the given expression evaluates to.  Variables
+        /// include parameters, locals, and fields assigned on classes, modules
+        /// and instances.
         /// 
-        /// Variables are classified as either definitions or references.  Only parameters have unique definition points - all other types of variables
-        /// have only one or more references.
-        /// 
-        /// index is a 0-based absolute index into the file.
+        /// Variables are classified as either definitions or references.  Only
+        /// parameters have unique definition points - all other types of
+        /// variables have only one or more references.
         /// </summary>
+        /// <param name="exprText">The expression to find variables for.</param>
+        /// <param name="index">
+        /// The 0-based absolute index into the file where the expression should
+        /// be evaluated.
+        /// </param>
         public IEnumerable<IAnalysisVariable> GetVariablesByIndex(string exprText, int index) {
-            var scope = FindScope(index);
+            return GetVariables(exprText, _unit.Tree.IndexToLocation(index));
+        }
+
+        /// <summary>
+        /// Gets the variables the given expression evaluates to.  Variables
+        /// include parameters, locals, and fields assigned on classes, modules
+        /// and instances.
+        /// 
+        /// Variables are classified as either definitions or references.  Only
+        /// parameters have unique definition points - all other types of
+        /// variables have only one or more references.
+        /// </summary>
+        /// <param name="exprText">The expression to find variables for.</param>
+        /// <param name="location">
+        /// The location in the file where the expression should be evaluated.
+        /// </param>
+        /// <remarks>New in 2.2</remarks>
+        public IEnumerable<IAnalysisVariable> GetVariables(string exprText, SourceLocation location) {
+            var scope = FindScope(location);
             string privatePrefix = GetPrivatePrefixClassName(scope);
             var expr = Statement.GetExpression(GetAstFromText(exprText, privatePrefix).Body);
 
@@ -136,7 +171,7 @@ namespace Microsoft.PythonTools.Analysis {
             NameExpression name = expr as NameExpression;
             if (name != null) {
                 var defScope = scope.EnumerateTowardsGlobal.FirstOrDefault(s =>
-                    s.Variables.ContainsKey(name.Name) && (s == scope || s.VisibleToChildren || IsFirstLineOfFunction(scope, s, index)));
+                    s.Variables.ContainsKey(name.Name) && (s == scope || s.VisibleToChildren || IsFirstLineOfFunction(scope, s, location)));
 
                 if (defScope == null) {
                     var variables = _unit.ProjectState.BuiltinModule.GetDefinitions(name.Name);
@@ -203,6 +238,10 @@ namespace Microsoft.PythonTools.Analysis {
             return result;
         }
 
+        /// <summary>
+        /// Gets the list of modules known by the current analysis.
+        /// </summary>
+        /// <param name="topLevelOnly">Only return top-level modules.</param>
         public MemberResult[] GetModules(bool topLevelOnly = false) {
             List<MemberResult> res = new List<MemberResult>(ProjectState.GetModules(topLevelOnly));
 
@@ -215,6 +254,12 @@ namespace Microsoft.PythonTools.Analysis {
             return res.ToArray();
         }
 
+        /// <summary>
+        /// Gets the list of modules and members matching the provided names.
+        /// </summary>
+        /// <param name="names">The dotted name parts to match</param>
+        /// <param name="includeMembers">Include module members that match as
+        /// well as just modules.</param>
         public MemberResult[] GetModuleMembers(string[] names, bool includeMembers = false) {
             var res = new List<MemberResult>(ProjectState.GetModuleMembers(InterpreterContext, names, includeMembers));
             var children = GlobalScope.GetChildrenPackages(InterpreterContext);
@@ -236,14 +281,13 @@ namespace Microsoft.PythonTools.Analysis {
             return res.ToArray();
         }
 
-        private static bool IsFirstLineOfFunction(InterpreterScope innerScope, InterpreterScope outerScope, int index) {
+        private static bool IsFirstLineOfFunction(InterpreterScope innerScope, InterpreterScope outerScope, SourceLocation location) {
             if (innerScope.OuterScope == outerScope && innerScope is FunctionScope) {
                 var funcScope = (FunctionScope)innerScope;
                 var def = funcScope.Function.FunctionDefinition;
 
                 // TODO: Use indexes rather than lines to check location
-                int lineNo = def.GlobalParent.IndexToLocation(index).Line;
-                if (lineNo == def.GetStart(def.GlobalParent).Line) {
+                if (location.Line == def.GetStart(def.GlobalParent).Line) {
                     return true;
                 }
             }
@@ -265,18 +309,48 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         /// <summary>
-        /// Evaluates a given expression and returns a list of members which exist in the expression.
+        /// Evaluates a given expression and returns a list of members which
+        /// exist in the expression.
         /// 
-        /// If the expression is an empty string returns all available members at that location.
-        /// 
-        /// index is a zero-based absolute index into the file.
+        /// If the expression is an empty string returns all available members
+        /// at that location.
         /// </summary>
-        public IEnumerable<MemberResult> GetMembersByIndex(string exprText, int index, GetMemberOptions options = GetMemberOptions.IntersectMultipleResults) {
+        /// <param name="exprText">The expression to find members for.</param>
+        /// <param name="index">
+        /// The 0-based absolute index into the file where the expression should
+        /// be evaluated.
+        /// </param>
+        public IEnumerable<MemberResult> GetMembersByIndex(
+            string exprText,
+            int index,
+            GetMemberOptions options = GetMemberOptions.IntersectMultipleResults
+        ) {
+            return GetMembers(exprText, _unit.Tree.IndexToLocation(index), options);
+        }
+
+        /// <summary>
+        /// Evaluates a given expression and returns a list of members which
+        /// exist in the expression.
+        /// 
+        /// If the expression is an empty string returns all available members
+        /// at that location.
+        /// </summary>
+        /// <param name="exprText">The expression to find members for.</param>
+        /// </param>
+        /// <param name="location">
+        /// The location in the file where the expression should be evaluated.
+        /// </param>
+        /// <remarks>New in 2.2</remarks>
+        public IEnumerable<MemberResult> GetMembers(
+            string exprText,
+            SourceLocation location,
+            GetMemberOptions options = GetMemberOptions.IntersectMultipleResults
+        ) {
             if (exprText.Length == 0) {
-                return GetAllAvailableMembersByIndex(index, options);
+                return GetAllAvailableMembers(location, options);
             }
 
-            var scope = FindScope(index);
+            var scope = FindScope(location);
             var privatePrefix = GetPrivatePrefixClassName(scope);
 
             var expr = Statement.GetExpression(GetAstFromText(exprText, privatePrefix).Body);
@@ -302,8 +376,18 @@ namespace Microsoft.PythonTools.Analysis {
         /// <param name="exprText">The expression to get signatures for.</param>
         /// <param name="index">The 0-based absolute index into the file.</param>
         public IEnumerable<IOverloadResult> GetSignaturesByIndex(string exprText, int index) {
+            return GetSignatures(exprText, _unit.Tree.IndexToLocation(index));
+        }
+
+        /// <summary>
+        /// Gets information about the available signatures for the given expression.
+        /// </summary>
+        /// <param name="exprText">The expression to get signatures for.</param>
+        /// <param name="location">The location in the file.</param>
+        /// <remarks>New in 2.2</remarks>
+        public IEnumerable<IOverloadResult> GetSignatures(string exprText, SourceLocation location) {
             try {
-                var scope = FindScope(index);
+                var scope = FindScope(location);
                 var unit = GetNearestEnclosingAnalysisUnit(scope);
                 var eval = new ExpressionEvaluator(unit.CopyForEval(), scope, mergeScopes: true);
                 using (var parser = Parser.CreateParser(new StringReader(exprText), _unit.ProjectState.LanguageVersion)) {
@@ -343,18 +427,25 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         /// <summary>
-        /// Gets the hierarchy of class and function definitions at the specified index.
+        /// Gets the hierarchy of class and function definitions at the
+        /// specified location.
         /// </summary>
         /// <param name="index">The 0-based absolute index into the file.</param>
         public IEnumerable<MemberResult> GetDefinitionTreeByIndex(int index) {
+            return GetDefinitionTree(_unit.Tree.IndexToLocation(index));
+        }
+
+        /// <summary>
+        /// Gets the hierarchy of class and function definitions at the
+        /// specified location.
+        /// </summary>
+        /// <param name="location">The location in the file.</param>
+        /// <remarks>New in 2.2</remarks>
+        public IEnumerable<MemberResult> GetDefinitionTree(SourceLocation location) {
             try {
-                var result = new List<MemberResult>();
-
-                foreach (var scope in FindScope(index).EnumerateTowardsGlobal) {
-                    result.Add(new MemberResult(scope.Name, scope.GetMergedAnalysisValues()));
-                }
-
-                return result;
+                return FindScope(location).EnumerateTowardsGlobal
+                    .Select(s => new MemberResult(s.Name, s.GetMergedAnalysisValues()))
+                    .ToList();
             } catch (Exception) {
                 // TODO: log exception
                 return new[] { new MemberResult("Unknown", null) };
@@ -362,14 +453,25 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         /// <summary>
-        /// Gets information about methods defined on base classes but not directly on the current class.
+        /// Gets information about methods defined on base classes but not
+        /// directly on the current class.
         /// </summary>
         /// <param name="index">The 0-based absolute index into the file.</param>
         public IEnumerable<IOverloadResult> GetOverrideableByIndex(int index) {
+            return GetOverrideable(_unit.Tree.IndexToLocation(index));
+        }
+
+        /// <summary>
+        /// Gets information about methods defined on base classes but not
+        /// directly on the current class.
+        /// </summary>
+        /// <param name="location">The location in the file.</param>
+        /// <remarks>New in 2.2</remarks>
+        public IEnumerable<IOverloadResult> GetOverrideable(SourceLocation location) {
             try {
                 var result = new List<IOverloadResult>();
 
-                var scope = FindScope(index, useIndent: true);
+                var scope = FindScope(location);
                 var cls = scope as ClassScope;
                 if (cls == null) {
                     return result;
@@ -432,10 +534,33 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         /// <summary>
-        /// Gets the available names at the given location.  This includes built-in variables, global variables, and locals.
+        /// Gets the available names at the given location.  This includes
+        /// built-in variables, global variables, and locals.
         /// </summary>
-        /// <param name="index">The 0-based absolute index into the file where the available mebmers should be looked up.</param>
-        public IEnumerable<MemberResult> GetAllAvailableMembersByIndex(int index, GetMemberOptions options = GetMemberOptions.IntersectMultipleResults) {
+        /// <param name="index">
+        /// The 0-based absolute index into the file where the available members
+        /// should be looked up.
+        /// </param>
+        public IEnumerable<MemberResult> GetAllAvailableMembersByIndex(
+            int index,
+            GetMemberOptions options = GetMemberOptions.IntersectMultipleResults
+        ) {
+            return GetAllAvailableMembers(_unit.Tree.IndexToLocation(index), options);
+        }
+
+        /// <summary>
+        /// Gets the available names at the given location.  This includes
+        /// built-in variables, global variables, and locals.
+        /// </summary>
+        /// <param name="location">
+        /// The location in the file where the available members should be
+        /// looked up.
+        /// </param>
+        /// <remarks>New in 2.2</remarks>
+        public IEnumerable<MemberResult> GetAllAvailableMembers(
+            SourceLocation location,
+            GetMemberOptions options = GetMemberOptions.IntersectMultipleResults
+        ) {
             var result = new Dictionary<string, List<AnalysisValue>>();
 
             // collect builtins
@@ -444,7 +569,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             // collect variables from user defined scopes
-            var scope = FindScope(index);
+            var scope = FindScope(location);
             foreach (var s in scope.EnumerateTowardsGlobal) {
                 foreach (var kvp in s.GetAllMergedVariables()) {
                     result[kvp.Key] = new List<AnalysisValue>(kvp.Value.TypesNoCopy);
@@ -483,14 +608,31 @@ namespace Microsoft.PythonTools.Analysis {
         #endregion
 
         /// <summary>
-        /// Returns a list of valid names available at the given position in the analyzed source code minus the builtin variables.
-        /// 
-        /// TODO: This should go away, it's only used for tests.
+        /// Gets the available names at the given location.  This includes
+        /// global variables and locals, but not built-in variables.
         /// </summary>
-        /// <param name="index">The index where the available mebmers should be looked up.</param>
+        /// <param name="index">
+        /// The 0-based absolute index into the file where the available members
+        /// should be looked up.
+        /// </param>
+        /// <remarks>TODO: Remove; this is only used for tests</remarks>
         internal IEnumerable<string> GetVariablesNoBuiltinsByIndex(int index) {
+            return GetVariablesNoBuiltins(_unit.Tree.IndexToLocation(index));
+        }
+
+        /// <summary>
+        /// Gets the available names at the given location.  This includes
+        /// global variables and locals, but not built-in variables.
+        /// </summary>
+        /// <param name="location">
+        /// The location in the file where the available members should be
+        /// looked up.
+        /// </param>
+        /// <remarks>TODO: Remove; this is only used for tests</remarks>
+        /// <remarks>New in 2.2</remarks>
+        internal IEnumerable<string> GetVariablesNoBuiltins(SourceLocation location) {
             var result = Enumerable.Empty<string>();
-            var chain = FindScope(index);
+            var chain = FindScope(location);
             foreach (var scope in chain.EnumerateFromGlobal) {
                 if (scope.VisibleToChildren || scope == chain) {
                     result = result.Concat(scope.GetAllMergedVariables().Select(val => val.Key));
@@ -523,7 +665,11 @@ namespace Microsoft.PythonTools.Analysis {
             get { return _scope; }
         }
 
-        internal IEnumerable<MemberResult> GetMemberResults(IEnumerable<AnalysisValue> vars, InterpreterScope scope, GetMemberOptions options) {
+        internal IEnumerable<MemberResult> GetMemberResults(
+            IEnumerable<AnalysisValue> vars,
+            InterpreterScope scope,
+            GetMemberOptions options
+        ) {
             IList<AnalysisValue> namespaces = new List<AnalysisValue>();
             foreach (var ns in vars) {
                 if (ns != null) {
@@ -633,23 +779,44 @@ namespace Microsoft.PythonTools.Analysis {
         /// overload will take into account the current class and therefore will
         /// work properly with name mangled private members.  
         /// </summary>
+        [Obsolete("Use GetAstFromTextByIndex")]
         public Expression GetExpressionFromText(string exprText) {
             return Statement.GetExpression(GetAstFromText(exprText, null).Body);
         }
 
         /// <summary>
-        /// Gets the AST for the given text as if it appeared at the specified line number.
+        /// Gets the AST for the given text as if it appeared at the specified
+        /// location.
         /// 
-        /// If the expression is a member expression such as "fob.__bar" and the line number is
-        /// inside of a class definition this will return a MemberExpression with the mangled name
-        /// like "fob.__ClassName_Bar".
-        /// 
-        /// index is a 0-based absolute index into the file.
-        /// 
-        /// New in 1.1.
+        /// If the expression is a member expression such as "fob.__bar" and the
+        /// line number is inside of a class definition this will return a
+        /// MemberExpression with the mangled name like "fob.__ClassName_Bar".
         /// </summary>
+        /// <param name="exprText">The expression to evaluate.</param>
+        /// <param name="index">
+        /// The 0-based index into the file where the expression should be
+        /// evaluated.
+        /// </param>
+        /// <remarks>New in 1.1</remarks>
         public PythonAst GetAstFromTextByIndex(string exprText, int index) {
-            var scopes = FindScope(index);
+            return GetAstFromText(exprText, _unit.Tree.IndexToLocation(index));
+        }
+
+        /// Gets the AST for the given text as if it appeared at the specified
+        /// location.
+        /// 
+        /// If the expression is a member expression such as "fob.__bar" and the
+        /// line number is inside of a class definition this will return a
+        /// MemberExpression with the mangled name like "fob.__ClassName_Bar".
+        /// </summary>
+        /// <param name="exprText">The expression to evaluate.</param>
+        /// <param name="index">
+        /// The 0-based index into the file where the expression should be
+        /// evaluated.
+        /// </param>
+        /// <remarks>New in 2.2</remarks>
+        public PythonAst GetAstFromText(string exprText, SourceLocation location) {
+            var scopes = FindScope(location);
             var privatePrefix = GetPrivatePrefixClassName(scopes);
 
             return GetAstFromText(exprText, privatePrefix);
@@ -680,98 +847,105 @@ namespace Microsoft.PythonTools.Analysis {
         /// <summary>
         /// Gets the chain of scopes which are associated with the given position in the code.
         /// </summary>
-        private InterpreterScope FindScope(int index, bool useIndent = false) {
-            InterpreterScope curScope = Scope;
-            InterpreterScope prevScope = null;
-            var parent = _unit.Tree;
+        private InterpreterScope FindScope(SourceLocation location) {
+            return FindScope(Scope, _unit.Tree, location);
+        }
 
-            while (curScope != prevScope) {
-                prevScope = curScope;
+        private static bool IsInFunctionParameter(InterpreterScope scope, PythonAst tree, SourceLocation location) {
+            var function = scope.Node as FunctionDefinition;
+            if (function == null) {
+                // Not a function
+                return false;
+            }
 
-                // TODO: Binary search?
-                // We currently search backwards because the end positions are sometimes unreliable
-                // and go onto the next line overlapping w/ the previous definition.  Therefore searching backwards always 
-                // hits the valid method first matching on Start.  For example:
-                // def f():  # Starts on 1, ends on 3
-                //     pass
-                // def g():  # starts on 3, ends on 4
-                //     pass
-                int lastStart = curScope.GetStart(parent) - 1;
+            if (location.Index < function.StartIndex || location.Index >= function.Body.StartIndex) {
+                // Not within the def line
+                return false;
+            }
 
-                for (int i = curScope.Children.Count - 1; i >= 0; i--) {
-                    var scope = curScope.Children[i];
-                    var curStart = scope.GetBodyStart(parent);
+            return function.Parameters != null &&
+                function.Parameters.Any(p => {
+                    var paramName = p.GetVerbatimImage(tree) ?? p.Name;
+                    return location.Index >= p.StartIndex && location.Index <= p.StartIndex + paramName.Length;
+                });
+        }
 
+        private static int GetParentScopeIndent(InterpreterScope scope, PythonAst tree) {
+            if (scope is ClassScope) {
+                // Return column of "class" statement
+                return tree.IndexToLocation(scope.GetStart(tree)).Column;
+            }
 
-                    if (curStart < index) {
-                        var curEnd = scope.GetStop(parent);
+            var function = scope as FunctionScope;
+            if (function != null && !((FunctionDefinition)function.Node).IsLambda) {
+                // Return column of "def" statement
+                return tree.IndexToLocation(scope.GetStart(tree)).Column;
+            }
 
-                        bool inScope = curEnd >= index;
-                        if (!inScope || useIndent) {
-                            // Artificially extend the scope up to the start of the following
-                            // child, but only if index is at an indentation that is not as
-                            // deep as the current child.
-                            int scopeIndent = int.MaxValue, indexIndent;
-                            if (scope.Node != null) {
-                                scopeIndent = scope.Node.GetStart(parent).Column;
-                            }
-
-                            if (index <= parent.EndIndex) {
-                                indexIndent = parent.IndexToLocation(index).Column;
-                            } else {
-                                // This implicitly includes one character for a newline.
-                                // When using CRLF, this may place the indent at one
-                                // character less than it should be, but this will only
-                                // affect scope resolution if the user is indenting by
-                                // one space instead of four.
-                                indexIndent = index - parent.EndIndex;
-                            }
-
-                            inScope = (inScope || i == curScope.Children.Count - 1 || index < lastStart) && indexIndent > scopeIndent;
-                        }
-
-                        if (inScope) {
-                            if (!(scope is StatementScope)) {
-                                curScope = scope;
-                            }
-                            break;
-                        }
-                    } else if (scope is FunctionScope) {
-                        var initialStart = scope.GetStart(parent);
-                        if (initialStart < curStart) {
-                            // we could be on a parameter or we could be on a default value.
-                            // If we're on a parameter then we're logically in the function
-                            // scope.  If we're on a default value then we're in the outer
-                            // scope.
-                            var funcDef = (FunctionDefinition)((FunctionScope)scope).Node;
-
-                            if (funcDef.Parameters != null) {
-                                bool isParam = false;
-                                foreach (var param in funcDef.Parameters) {
-                                    string paramName = param.GetVerbatimImage(_unit.Tree) ?? param.Name;
-                                    var nameStart = param.IndexSpan.Start;
-
-                                    if (index >= nameStart && index <= (nameStart + paramName.Length)) {
-                                        curScope = scope;
-                                        isParam = true;
-                                        break;
-                                    }
-
-                                }
-
-                                if (isParam) {
-                                    break;
-                                }
-                            }
-
-                        }
-                    }
-
-                    lastStart = scope.GetStart(parent);
+            var isinstance = scope as IsInstanceScope;
+            if (isinstance != null && isinstance._effectiveSuite != null) {
+                int col = tree.IndexToLocation(isinstance._startIndex).Column;
+                if (isinstance._effectiveSuite.StartIndex < isinstance._startIndex) {
+                    // "assert isinstance", so scope is before the test
+                    return col - 1;
+                } else {
+                    // "if isinstance", so scope is at the test
+                    return col;
                 }
             }
-            return curScope;
+
+            return -1;
         }
+
+        private static InterpreterScope FindScope(InterpreterScope parent, PythonAst tree, SourceLocation location) {
+            var children = parent.Children.Where(c => !(c is StatementScope)).ToList();
+
+            InterpreterScope candidate = null;
+
+            for (int i = 0; i < children.Count; ++i) {
+                if (IsInFunctionParameter(children[i], tree, location)) {
+                    // In parameter name scope, so consider the function scope.
+                    candidate = children[i];
+                    continue;
+                }
+
+                int start = children[i].GetBodyStart(tree);
+
+                if (start > location.Index) {
+                    // We've gone past index completely so our last candidate is
+                    // the best one.
+                    break;
+                }
+
+                int end = children[i].GetStop(tree);
+                if (i + 1 < children.Count) {
+                    int nextStart = children[i + 1].GetBodyStart(tree);
+                    if (nextStart > end) {
+                        end = nextStart;
+                    }
+                }
+
+                if (location.Index <= end) {
+                    candidate = children[i];
+                }
+            }
+
+            if (candidate == null) {
+                // No children, so we must belong in our parent
+                return parent;
+            }
+
+            int scopeIndent = GetParentScopeIndent(candidate, tree);
+            if (location.Column <= scopeIndent) {
+                // Candidate is at deeper indentation than location and the
+                // candidate is scoped, so return the parent instead.
+                return parent;
+            }
+
+            // Recurse to check children of candidate scope
+            return FindScope(candidate, tree, location);
+        }
+
 
         private static IEnumerable<MemberResult> MemberDictToResultList(string privatePrefix, GetMemberOptions options, Dictionary<string, List<AnalysisValue>> memberDict,
             Dictionary<string, List<AnalysisValue>> ownerDict = null, int maximumOwners = 0) {

@@ -109,7 +109,7 @@ namespace Microsoft.PythonTools.Intellisense {
                             analysis
                         );
 
-                        members = analysis.GetMembersByIndex(fixedText, index, _options.MemberOptions);
+                        members = analysis.GetMembers(fixedText, index, _options.MemberOptions);
                     }
                 }
 
@@ -124,7 +124,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     }
                 }
             } else {
-                members = analysis.GetAllAvailableMembersByIndex(
+                members = analysis.GetAllAvailableMembers(
                     VsProjectAnalyzer.TranslateIndex(
                         Span.GetStartPoint(_snapshot).Position,
                         _snapshot,
