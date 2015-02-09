@@ -305,7 +305,7 @@
   <Fragment>
     <DirectoryRef Id="TARGETDIR">
       <Component Id="PythonTools_Provider" Guid="8F19174A-E8A1-4608-9084-E9ADEDE9E4C1">
-        <dep:Provides Key="Microsoft.PythonTools,v2.1" />
+        <dep:Provides Key="Microsoft.PythonTools,v$(var.ReleaseVersion)" />
       </Component>
     </DirectoryRef>
   </Fragment>

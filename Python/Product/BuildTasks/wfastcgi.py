@@ -32,7 +32,7 @@ try:
 except ImportError:
     from _thread import start_new_thread
 
-__version__ = '2.1.1'
+__version__ = '2.2.0'
 
 # http://www.fastcgi.com/devkit/doc/fcgi-spec.html#S3
 

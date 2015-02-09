@@ -34,7 +34,7 @@ class AssemblyVersionInfo {
     // This version string (and the comment for Version) should be updated
     // manually between minor releases (e.g. from 2.0 to 2.1).
     // Servicing branches and prereleases should retain the value.
-    public const string FileVersion = "2.1";
+    public const string FileVersion = "2.2";
 
     // This version should never change from "4100.00"; BuildRelease.ps1
     // will replace it with a generated value.

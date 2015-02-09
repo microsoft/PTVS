@@ -122,7 +122,7 @@ namespace Microsoft.PythonTools.Project {
     /// <summary>
     /// Extends <see cref="IPythonProject"/>
     /// 
-    /// New in 2.1.
+    /// New in 2.1
     /// </summary>
     public interface IPythonProject2 : IPythonProject {
         /// <summary>

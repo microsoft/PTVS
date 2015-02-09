@@ -3,7 +3,7 @@
   <Identifier Id="8706DC58-B4CC-4C79-937F-B7BAC9D5EC71">
     <Name>Python Tools for Visual Studio - Machine Learning</Name>
     <Author>Microsoft</Author>
-    <Version>2.1</Version>
+    <Version>2.2</Version>
     <Description xml:space="preserve">Provides templates and support for machine learning projects written with Python.</Description>
     <Locale>1033</Locale>
     <License>Python Tools for VS License.rtf</License>
@@ -22,7 +22,7 @@
     <SupportedFrameworkRuntimeEdition MinVersion="4.0" />
   </Identifier>
   <References>
-    <Reference Id="96492FC7-7BC6-46F7-8559-66BB4E09FD1E" MinVersion="2.1">
+    <Reference Id="96492FC7-7BC6-46F7-8559-66BB4E09FD1E" MinVersion="2.2">
       <Name>Python Tools for Visual Studio</Name>
     </Reference>
   </References>

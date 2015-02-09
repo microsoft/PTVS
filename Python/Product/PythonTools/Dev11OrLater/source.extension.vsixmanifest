@@ -1,6 +1,6 @@
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
   <Metadata>
-    <Identity Id="96492FC7-7BC6-46F7-8559-66BB4E09FD1E" Version="2.1" Language="en-US" Publisher="Microsoft" />
+    <Identity Id="96492FC7-7BC6-46F7-8559-66BB4E09FD1E" Version="2.2" Language="en-US" Publisher="Microsoft" />
     <DisplayName>Python Tools for Visual Studio</DisplayName>
     <Description xml:space="preserve">Provides support for editing and debugging Python programs.</Description>
     <MoreInfo>http://pytools.codeplex.com</MoreInfo>
@@ -20,7 +20,7 @@
   <Dependencies>
     <Dependency Id="Microsoft.Framework.NDP" DisplayName="Microsoft .NET Framework" Version="4.5" />
     <Dependency Id="TestWindow.Microsoft.0771d463-d74d-4e95-aac2-39d3c7ec1f97" IsRequired="false" DisplayName="Test Explorer" Version="11.0" />
-    <Dependency Id="ce8d8e55-ad29-423e-aca2-810d0b16cdc4" IsRequired="true" DisplayName="Python Tools for Visual Studio - Interactive" Version="2.1"/>
+    <Dependency Id="ce8d8e55-ad29-423e-aca2-810d0b16cdc4" IsRequired="true" DisplayName="Python Tools for Visual Studio - Interactive" Version="2.2"/>
   </Dependencies>
   <Assets>
     <Asset Type="Microsoft.VisualStudio.Package" Path="|%CurrentProject%;PkgdefProjectOutputGroup|" />
