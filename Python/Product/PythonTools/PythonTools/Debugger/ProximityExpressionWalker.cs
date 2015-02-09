@@ -104,7 +104,7 @@ namespace Microsoft.PythonTools.Debugger {
             };
 
         public override void PostWalk(CallExpression node) {
-            if (node.Target != null) {
+            if (IsInRange(node) && node.Target != null) {
                 // For call nodes, we don't want either the call nor the called function to show up,
                 // but if it is a method, then we do want to show the object on which it is called.
                 // For example, given A.B.C(42), we want A.B to show. By the time we get here, we

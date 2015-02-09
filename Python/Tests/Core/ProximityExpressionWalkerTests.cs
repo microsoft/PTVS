@@ -44,7 +44,8 @@ namespace PythonToolsTests {
 a; b.\
 c.d[e]
 abs(f.\
-g); h";
+g); h
+len(i)";
             ProximityTest(code, 3, 4, "b.c.d[e]", "e", "abs(f.g)", "f.g");
         }
 

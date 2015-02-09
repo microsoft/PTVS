@@ -156,18 +156,25 @@ namespace Microsoft.PythonTools.Navigation {
         /// <summary>
         /// Called by debugger to get the list of expressions for the Autos debugger tool window.
         /// </summary>
+        /// <remarks>
+        /// MSDN docs specify that <paramref name="iLine"/> and <paramref name="iCol"/> specify the beginning of the span,
+        /// but they actually specify the end of it (going <paramref name="cLines"/> lines back).
+        /// </remarks>
         public int GetProximityExpressions(IVsTextBuffer pBuffer, int iLine, int iCol, int cLines, out IVsEnumBSTR ppEnum) {
             var model = _serviceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
             var service = model.GetService<IVsEditorAdaptersFactoryService>();
             var buffer = service.GetDataBuffer(pBuffer);
             IPythonProjectEntry projEntry;
             if (buffer.TryGetPythonProjectEntry(out projEntry)) {
-                var ast = projEntry.Tree;
-                var walker = new ProximityExpressionWalker(ast, iLine, iLine + cLines - 1);
-                ast.Walk(walker);
-                var exprs = walker.GetExpressions();
-                ppEnum = new EnumBSTR(exprs.ToArray());
-                return VSConstants.S_OK;
+                int startLine = Math.Max(iLine - cLines + 1, 0);
+                if (startLine <= iLine) {
+                    var ast = projEntry.Tree;
+                    var walker = new ProximityExpressionWalker(ast, startLine, iLine);
+                    ast.Walk(walker);
+                    var exprs = walker.GetExpressions();
+                    ppEnum = new EnumBSTR(exprs.ToArray());
+                    return VSConstants.S_OK;
+                }
             }
 
             ppEnum = null;
