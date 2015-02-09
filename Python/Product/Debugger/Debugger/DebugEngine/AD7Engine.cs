@@ -295,6 +295,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                     _mixedMode = true;
                     AD7EngineCreateEvent.Send(this);
                     AD7ProgramCreateEvent.Send(this);
+                    AD7LoadCompleteEvent.Send(this);
                     Debug.WriteLine("PythonEngine Attach bailing out early - mixed-mode debugging");
                     return VSConstants.S_OK;
                 }

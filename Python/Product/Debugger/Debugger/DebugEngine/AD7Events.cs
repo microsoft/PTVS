@@ -191,6 +191,12 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
         public AD7LoadCompleteEvent() {
         }
+
+        internal static void Send(AD7Engine engine) {
+            var eventObject = new AD7LoadCompleteEvent();
+            engine.Send(eventObject, IID, null);
+        }
+
     }
 
     // This interface tells the session debug manager (SDM) that an asynchronous break has been successfully completed.

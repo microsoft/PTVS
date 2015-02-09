@@ -44,8 +44,10 @@ namespace Microsoft.VisualStudioTools {
         }
 
         public void MustBeCalledFromUIThreadOrThrow() {
-            const int RPC_E_WRONG_THREAD = unchecked((int)0x8001010E);
-            throw new COMException("Invalid cross-thread call", RPC_E_WRONG_THREAD);
+            if (InvokeRequired) {
+                const int RPC_E_WRONG_THREAD = unchecked((int)0x8001010E);
+                throw new COMException("Invalid cross-thread call", RPC_E_WRONG_THREAD);
+            }
         }
 
         /// <summary>
