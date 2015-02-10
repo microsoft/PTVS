@@ -14,9 +14,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Security.AccessControl;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -26,6 +28,7 @@ using Microsoft.PythonTools.EnvironmentsList.Properties;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.Settings;
+using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.EnvironmentsList {
@@ -35,7 +38,6 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         private readonly string _indexName;
         private readonly Redirector _output;
         private FrameworkElement _wpfObject;
-        private int _updatingPackage;
 
         private readonly SemaphoreSlim _memoryCacheLock = new SemaphoreSlim(1);
         private Dictionary<string, object> _memoryCache;
@@ -46,6 +48,10 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         };
 
         private static readonly Version SupportsDashMPip = new Version(2, 7);
+
+        private int _pipLockWaitCount;
+        private readonly SemaphoreSlim _pipLock = new SemaphoreSlim(1);
+        private CancellationTokenSource _pipCancel = new CancellationTokenSource();
 
         public PipExtensionProvider(
             IPythonInterpreterFactory factory,
@@ -85,52 +91,86 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             }
         }
 
-        public bool CanUpdatePackage {
-            get { return Volatile.Read(ref _updatingPackage) == 0; }
+        #region Pip Locking
+
+        public bool IsWorking {
+            get { return Volatile.Read(ref _pipLockWaitCount) == 0; }
         }
 
-        public bool BeginUpdatePackage() {
-            if (Interlocked.Increment(ref _updatingPackage) == 1) {
-                var evt = UpdateStarted;
-                if (evt != null) {
-                    evt(this, EventArgs.Empty);
+        private async Task<IDisposable> WaitAndLockPip() {
+            int newValue = Interlocked.Increment(ref _pipLockWaitCount);
+
+            await _pipLock.WaitAsync(_pipCancel.Token);
+
+            IDisposable result = null;
+            try {
+                if (newValue == 1) {
+                    var evt = UpdateStarted;
+                    if (evt != null) {
+                        evt(this, EventArgs.Empty);
+                    }
                 }
-                return true;
+                result = new CallOnDispose(() => {
+                    try {
+                        if (Interlocked.Decrement(ref _pipLockWaitCount) == 0) {
+                            var evt = UpdateComplete;
+                            if (evt != null) {
+                                evt(this, EventArgs.Empty);
+                            }
+                        }
+                    } finally {
+                        _pipLock.Release();
+                    }
+                });
+            } finally {
+                if (result == null) {
+                    _pipLock.Release();
+                }
             }
-            return false;
+            return result;
         }
 
         public event EventHandler UpdateStarted;
-
-        public void EndUpdatePackage() {
-            if (Interlocked.Decrement(ref _updatingPackage) == 0) {
-                var evt = UpdateComplete;
-                if (evt != null) {
-                    evt(this, EventArgs.Empty);
-                }
-            }
-        }
-
         public event EventHandler UpdateComplete;
 
-        internal async Task<IList<PipPackageView>> EnumeratePackages() {
+        #endregion
+
+        internal async Task<IList<PipPackageView>> EnumeratePackages(bool includeUpdateVersion = true) {
             string[] args;
 
             if (_factory.Configuration.Version < SupportsDashMPip) {
-                args = new [] { "-c", "import pip; pip.main()", "list" };
+                args = new [] { "-c", "import pip; pip.main()", "list", "--no-index" };
             } else {
-                args = new [] { "-m", "pip", "list" };
+                args = new [] { "-m", "pip", "list", "--no-index" };
             }
+
+            PipPackageView[] packages;
 
             using (var output = ProcessOutput.RunHiddenAndCapture(_factory.Configuration.InterpreterPath, args)) {
                 if ((await output) != 0) {
                     throw new PipException(Resources.ListFailed);
                 }
 
-                return output.StandardOutputLines
+                packages = output.StandardOutputLines
                     .Select(s => new PipPackageView(s))
                     .ToArray();
             }
+
+            if (includeUpdateVersion) {
+                var context = TaskScheduler.FromCurrentSynchronizationContext();
+                foreach (var p in packages) {
+                    GetLatestPackage(p.Name).ContinueWith(t => {
+                        var latest = t.Result;
+                        if (latest != null && CompareVersions(p.Version, latest.Version) < 0) {
+                            p.UpgradeVersion = latest.Version;
+                        } else {
+                            p.UpgradeVersion = null;
+                        }
+                    }, CancellationToken.None, TaskContinuationOptions.OnlyOnRanToCompletion, context).DoNotWait();
+                }
+            }
+
+            return packages;
         }
 
         private static string BasePackageCachePath {
@@ -177,16 +217,23 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                             8,
                             FileOptions.DeleteOnClose
                         );
-                    } catch (IOException ex) {
-                        if (ex is DirectoryNotFoundException) {
-                            throw;
-                        }
+                    } catch (DirectoryNotFoundException) {
+                        throw;
+                    } catch (IOException) {
                     }
                 }
                 await Task.Delay(100);
             }
 
             return stream;
+        }
+
+        private static bool IsFileOld(string path, TimeSpan age) {
+            try {
+                return File.GetLastWriteTime(path) < DateTime.Now.Subtract(age);
+            } catch (IOException) {
+                return true;
+            }
         }
 
 
@@ -196,14 +243,18 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             if (forceUpdate) {
                 Directory.CreateDirectory(Path.GetDirectoryName(cachePath));
 
-                using (var fileLock = await LockFile(cachePath + ".lock", CancellationToken.None))
-                using (var output = ProcessOutput.RunHiddenAndCapture(
-                    _factory.Configuration.InterpreterPath,
-                    UpdatePipCachePy,
-                    cachePath,
-                    string.Format("Programming Language :: Python :: {0}", _factory.Configuration.Version)
-                )) {
-                    await output;
+                using (var fileLock = await LockFile(cachePath + ".lock", CancellationToken.None)) {
+                    // Don't force an update if it was only just updated
+                    if (IsFileOld(cachePath, TimeSpan.FromSeconds(30.0))) {
+                        using (var output = ProcessOutput.RunHiddenAndCapture(
+                            _factory.Configuration.InterpreterPath,
+                            UpdatePipCachePy,
+                            cachePath,
+                            string.Format("Programming Language :: Python :: {0}", _factory.Configuration.Version)
+                        )) {
+                            await output;
+                        }
+                    }
                 }
             }
 
@@ -361,12 +412,19 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             ).FirstOrDefault(c => c != 0);
         }
 
-        internal async Task<bool> CanUpgrade(PipPackageView package) {
+        /// <summary>
+        /// Determines the version the package can be upgraded to.
+        /// </summary>
+        /// <param name="package">The package to check.</param>
+        /// <returns>
+        /// The newer version if one is available; otherwise, <c>null</c>.
+        /// </returns>
+        internal async Task<string> GetUpgradeVersionAsync(PipPackageView package) {
             var latestView = await GetLatestPackage(package.Name);
             if (latestView == null) {
-                return false;
+                return null;
             }
-            return CompareVersions(package.Version, latestView.Version) < 0;
+            return CompareVersions(package.Version, latestView.Version) < 0 ? latestView.Version : null;
         }
 
         internal async Task<bool> IsPipInstalled() {
@@ -393,30 +451,33 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
 
         public async Task InstallPip() {
-            using (var output = ProcessOutput.Run(
-                _factory.Configuration.InterpreterPath,
-                new [] { PythonToolsInstallPath.GetFile("pip_downloader.py") },
-                _factory.Configuration.PrefixPath,
-                UnbufferedEnv,
-                false,
-                _output,
-                elevate: ShouldElevate
-            )) {
-                if (!output.IsStarted) {
-                    return;
-                }
+            using (await WaitAndLockPip()) {
                 OnOperationStarted(Resources.InstallingPipStarted);
-                bool success = true;
-                try {
-                    var exitCode = await output;
-                    if (exitCode != 0) {
-                        success = false;
-                        throw new PipException(Resources.InstallationFailed);
+                using (var output = ProcessOutput.Run(
+                    _factory.Configuration.InterpreterPath,
+                    new[] { PythonToolsInstallPath.GetFile("pip_downloader.py") },
+                    _factory.Configuration.PrefixPath,
+                    UnbufferedEnv,
+                    false,
+                    _output,
+                    elevate: ShouldElevate
+                )) {
+                    if (!output.IsStarted) {
+                        OnOperationFinished(Resources.InstallingPipFailed);
+                        return;
                     }
-                } finally {
-                    OnOperationFinished(
-                        success ? Resources.InstallingPipSuccess : Resources.InstallingPipFailed
-                    );
+                    bool success = true;
+                    try {
+                        var exitCode = await output;
+                        if (exitCode != 0) {
+                            success = false;
+                            throw new PipException(Resources.InstallationFailed);
+                        }
+                    } finally {
+                        OnOperationFinished(
+                            success ? Resources.InstallingPipSuccess : Resources.InstallingPipFailed
+                        );
+                    }
                 }
             }
         }
@@ -449,32 +510,35 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 args.Add(_index);
             }
 
-            using (var output = ProcessOutput.Run(
-                _factory.Configuration.InterpreterPath,
-                QuotedArgumentsWithPackageName(args, package),
-                _factory.Configuration.PrefixPath,
-                UnbufferedEnv,
-                false,
-                _output,
-                quoteArgs: false,
-                elevate: ShouldElevate
-            )) {
-                if (!output.IsStarted) {
-                    return;
-                }
+            using (await WaitAndLockPip()) {
                 OnOperationStarted(string.Format(Resources.InstallingPackageStarted, package));
-                bool success = true;
-                try {
-                    var exitCode = await output;
-                    if (exitCode != 0) {
-                        success = false;
-                        throw new PipException(Resources.InstallationFailed);
+                using (var output = ProcessOutput.Run(
+                    _factory.Configuration.InterpreterPath,
+                    QuotedArgumentsWithPackageName(args, package),
+                    _factory.Configuration.PrefixPath,
+                    UnbufferedEnv,
+                    false,
+                    _output,
+                    quoteArgs: false,
+                    elevate: ShouldElevate
+                )) {
+                    if (!output.IsStarted) {
+                        OnOperationFinished(string.Format(Resources.InstallingPackageFailed, package));
+                        return;
                     }
-                } finally {
-                    OnOperationFinished(string.Format(
-                        success ? Resources.InstallingPackageSuccess : Resources.InstallingPackageFailed,
-                        package
-                    ));
+                    bool success = true;
+                    try {
+                        var exitCode = await output;
+                        if (exitCode != 0) {
+                            success = false;
+                            throw new PipException(Resources.InstallationFailed);
+                        }
+                    } finally {
+                        OnOperationFinished(string.Format(
+                            success ? Resources.InstallingPackageSuccess : Resources.InstallingPackageFailed,
+                            package
+                        ));
+                    }
                 }
             }
         }
@@ -488,37 +552,41 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 args = new List<string> { "-m", "pip", "uninstall", "-y" };
             }
 
-            using (var output = ProcessOutput.Run(
-                _factory.Configuration.InterpreterPath,
-                QuotedArgumentsWithPackageName(args, package),
-                _factory.Configuration.PrefixPath,
-                UnbufferedEnv,
-                false,
-                _output,
-                quoteArgs: false,
-                elevate: ShouldElevate
-            )) {
-                if (!output.IsStarted) {
-                    return;
-                }
+            using (await WaitAndLockPip()) {
                 OnOperationStarted(string.Format(Resources.UninstallingPackageStarted, package));
-                bool success = true;
-                try {
-                    var exitCode = await output;
-                    if (exitCode != 0) {
-                        // Double check whether the package has actually been
-                        // uninstalled, to avoid reporting errors where, for all
-                        // practical purposes, there is no error.
-                        if ((await EnumeratePackages()).Select(p => p.Name).Contains(package)) {
-                            success = false;
-                            throw new PipException(Resources.UninstallationFailed);
-                        }
+                using (var output = ProcessOutput.Run(
+                    _factory.Configuration.InterpreterPath,
+                    QuotedArgumentsWithPackageName(args, package),
+                    _factory.Configuration.PrefixPath,
+                    UnbufferedEnv,
+                    false,
+                    _output,
+                    quoteArgs: false,
+                    elevate: ShouldElevate
+                )) {
+                    if (!output.IsStarted) {
+                        OnOperationFinished(string.Format(Resources.UninstallingPackageFailed, package));
+                        return;
                     }
-                } finally {
-                    OnOperationFinished(string.Format(
-                        success ? Resources.UninstallingPackageSuccess : Resources.UninstallingPackageFailed,
-                        package
-                    ));
+                    bool success = true;
+                    try {
+                        var exitCode = await output;
+                        if (exitCode != 0) {
+                            // Double check whether the package has actually
+                            // been uninstalled, to avoid reporting errors 
+                            // where, for all practical purposes, there is no
+                            // error.
+                            if ((await EnumeratePackages(includeUpdateVersion: false)).Any(p => p.Name == package)) {
+                                success = false;
+                                throw new PipException(Resources.UninstallationFailed);
+                            }
+                        }
+                    } finally {
+                        OnOperationFinished(string.Format(
+                            success ? Resources.UninstallingPackageSuccess : Resources.UninstallingPackageFailed,
+                            package
+                        ));
+                    }
                 }
             }
         }
@@ -574,14 +642,21 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 _provider.OnErrorTextReceived(line);
             }
         }
+
+        sealed class CallOnDispose : IDisposable {
+            private readonly Action _action;
+            public CallOnDispose(Action action) { _action = action; }
+            public void Dispose() { _action(); }
+        }
     }
 
-    internal sealed class PipPackageView {
+    internal sealed class PipPackageView : INotifyPropertyChanged {
         private readonly string _packageSpec;
         private readonly string _name;
         private readonly string _version;
         private readonly string _displayName;
         private readonly string _description;
+private  string _upgradeVersion;
 
         internal PipPackageView(string name, string version, string description) {
             _name = name ?? "";
@@ -630,6 +705,25 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         public string Description {
             get { return _description; }
+        }
+
+        public string UpgradeVersion {
+            get { return _upgradeVersion; }
+            set {
+                if (_upgradeVersion != value) {
+                    _upgradeVersion = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        private void OnPropertyChanged([CallerMemberName] string propertyName = null) {
+            var evt = PropertyChanged;
+            if (evt != null) {
+                evt(this, new PropertyChangedEventArgs(propertyName));
+            }
         }
     }
 

@@ -39,8 +39,6 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         private readonly PipExtensionProvider _provider;
 
-        private readonly Dictionary<PipPackageView, bool> _canUpdateCache = new Dictionary<PipPackageView, bool>();
-
         public PipExtension(PipExtensionProvider provider) {
             _provider = provider;
             DataContextChanged += PackageExtension_DataContextChanged;
@@ -61,15 +59,10 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
 
         private void UninstallPackage_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
-            e.CanExecute = _provider.CanUpdatePackage && e.Parameter is PipPackageView;
+            e.CanExecute = e.Parameter is PipPackageView;
         }
 
         private async void UninstallPackage_Executed(object sender, ExecutedRoutedEventArgs e) {
-            if (!_provider.BeginUpdatePackage()) {
-                // Only get false here if we've raced with another command.
-                return;
-            }
-
             try {
                 var view = (PipPackageView)e.Parameter;
                 await _provider.UninstallPackage(view.PackageSpec);
@@ -79,36 +72,20 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                     throw;
                 }
                 ToolWindow.UnhandledException.Execute(ExceptionDispatchInfo.Capture(ex), this);
-            } finally {
-                _provider.EndUpdatePackage();
             }
         }
 
         private void UpgradePackage_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
             var view = e.Parameter as PipPackageView;
-            if (!_provider.CanUpdatePackage || view == null) {
+            if (view == null) {
                 e.CanExecute = false;
                 return;
             }
 
-            bool canUpgrade;
-            if (_canUpdateCache.TryGetValue(view, out canUpgrade)) {
-                e.CanExecute = canUpgrade;
-                return;
-            }
-
-            _provider.CanUpgrade(view).ContinueWith(t => {
-                _canUpdateCache[view] = t.Result;
-                CommandManager.InvalidateRequerySuggested();
-            }, TaskScheduler.FromCurrentSynchronizationContext());
+            e.CanExecute = view.UpgradeVersion != null;
         }
 
         private async void UpgradePackage_Executed(object sender, ExecutedRoutedEventArgs e) {
-            if (!_provider.BeginUpdatePackage()) {
-                // Only get false here if we've raced with another command.
-                return;
-            }
-
             try {
                 var view = (PipPackageView)e.Parameter;
                 // Provide Name, not PackageSpec, or we'll upgrade to our
@@ -120,21 +97,14 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                     throw;
                 }
                 ToolWindow.UnhandledException.Execute(ExceptionDispatchInfo.Capture(ex), this);
-            } finally {
-                _provider.EndUpdatePackage();
             }
         }
 
         private void InstallPackage_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
-            e.CanExecute = _provider.CanUpdatePackage && !string.IsNullOrEmpty(e.Parameter as string);
+            e.CanExecute = !string.IsNullOrEmpty(e.Parameter as string);
         }
 
         private async void InstallPackage_Executed(object sender, ExecutedRoutedEventArgs e) {
-            if (!_provider.BeginUpdatePackage()) {
-                // Only get false here if we've raced with another command.
-                return;
-            }
-
             try {
                 await _provider.InstallPackage((string)e.Parameter, true);
             } catch (OperationCanceledException) {
@@ -143,8 +113,6 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                     throw;
                 }
                 ToolWindow.UnhandledException.Execute(ExceptionDispatchInfo.Capture(ex), this);
-            } finally {
-                _provider.EndUpdatePackage();
             }
         }
 
@@ -237,8 +205,8 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             get { return _installCommandView; }
         }
 
-        private void PipExtensionProvider_UpdateStarted(object sender, EventArgs e) {
-            IsListRefreshing = true;
+        private async void PipExtensionProvider_UpdateStarted(object sender, EventArgs e) {
+            await Dispatcher.InvokeAsync(() => { IsListRefreshing = true; });
         }
 
         private async void PipExtensionProvider_UpdateComplete(object sender, EventArgs e) {

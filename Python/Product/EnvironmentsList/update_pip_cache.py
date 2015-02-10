@@ -1,5 +1,12 @@
+from __future__ import with_statement
 import sys
 from datetime import datetime
+from threading import Thread
+
+try:
+    from queue import Queue
+except ImportError:
+    from Queue import Queue
 try:
     from cPickle import load, dump
 except ImportError:
@@ -24,6 +31,33 @@ def is_description_change(change):
 
 def is_relevant_change(change):
     return is_new_release(change) or is_description_change(change)
+
+# These workers will be network-bound, so CPU count doesn't really matter
+WORKER_THREADS = 16
+QUEUE = None
+
+def process_changelog_entry(thread_data):
+    while QUEUE:
+        item = QUEUE.get(block=True)
+        try:
+            i, change_data = item[:2]
+            package, version, timestamp, change = change_data[:4]
+            if is_new_release(change):
+                log("New release for %s %s", package, version)
+                thread_data.append((i, package, version, None))
+            elif is_description_change(change):
+                log("New description for %s %s", package, version)
+                summary = None
+                for _ in range(5):
+                    try:
+                        summary = server.release_data(package, version).get('summary', '')
+                        break
+                    except Exception:
+                        pass
+                thread_data.append((i, package, version, summary))
+        finally:
+            QUEUE.task_done()
+
 
 if __name__ == '__main__':
     cache = sys.argv[1]
@@ -57,15 +91,30 @@ if __name__ == '__main__':
         ) for p in server.search({}))
         log("Got %s packages", len(all_packages))
     
-    for change_data in server.changelog_since_serial(last_serial):
-        package, version, timestamp, change = change_data[:4]
-        if is_new_release(change):
-            log("New release for %s %s", package, version)
-            all_packages[package] = (version, all_packages.get(package, ('', ''))[1])
-        elif is_description_change(change):
-            log("New description for %s %s", package, version)
-            all_packages[package] = (version, (server.release_data(package, version) or {}).get('summary', ''))
+    threads, thread_data = [], []
+    any_items = False
+    for change_data in enumerate(server.changelog_since_serial(last_serial)):
+        if not any_items:
+            any_items = True
+            QUEUE = Queue()
+        if len(threads) < WORKER_THREADS:
+            t = Thread(target=process_changelog_entry, args=(thread_data,))
+            t.daemon = True
+            t.start()
+            threads.append(t)
+
+        QUEUE.put_nowait(change_data)
     
+    if QUEUE:
+        QUEUE.join()
+        QUEUE = None
+
+    for entry in sorted(thread_data):
+        _, package, version, summary = entry
+        if summary is None:
+            summary = all_packages.get(package, ('', ''))[1]
+        all_packages[package] = version, summary
+
     if classifier:
         data['Preferred'] = [package for package, version in server.browse([classifier])]
     elif 'Preferred' in data:
@@ -73,3 +122,5 @@ if __name__ == '__main__':
     
     with open(cache, 'wb') as f:
         data = dump(data, f, protocol=2)
+
+    sys.exit(0)

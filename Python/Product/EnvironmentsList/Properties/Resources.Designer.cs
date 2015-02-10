@@ -124,7 +124,8 @@ namespace Microsoft.PythonTools.EnvironmentsList.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to install &apos;{0}&apos;.
+        ///   Looks up a localized string similar to ----- Failed to install &apos;{0}&apos; -----
+        ///.
         /// </summary>
         internal static string InstallingPackageFailed {
             get {
@@ -133,7 +134,7 @@ namespace Microsoft.PythonTools.EnvironmentsList.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Installing &apos;{0}&apos;.
+        ///   Looks up a localized string similar to ----- Installing &apos;{0}&apos; -----.
         /// </summary>
         internal static string InstallingPackageStarted {
             get {
@@ -142,7 +143,8 @@ namespace Microsoft.PythonTools.EnvironmentsList.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Successfully installed &apos;{0}&apos;.
+        ///   Looks up a localized string similar to ----- Successfully installed &apos;{0}&apos; -----
+        ///.
         /// </summary>
         internal static string InstallingPackageSuccess {
             get {
@@ -151,7 +153,8 @@ namespace Microsoft.PythonTools.EnvironmentsList.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to install pip.
+        ///   Looks up a localized string similar to ----- Failed to install pip -----
+        ///.
         /// </summary>
         internal static string InstallingPipFailed {
             get {
@@ -160,7 +163,7 @@ namespace Microsoft.PythonTools.EnvironmentsList.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Installing pip.
+        ///   Looks up a localized string similar to ----- Installing pip -----.
         /// </summary>
         internal static string InstallingPipStarted {
             get {
@@ -169,7 +172,8 @@ namespace Microsoft.PythonTools.EnvironmentsList.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Successfully installed pip.
+        ///   Looks up a localized string similar to ----- Successfully installed pip -----
+        ///.
         /// </summary>
         internal static string InstallingPipSuccess {
             get {
@@ -232,7 +236,9 @@ namespace Microsoft.PythonTools.EnvironmentsList.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to An error occurred and &apos;{0}&apos; may not have been uninstalled completely..
+        ///   Looks up a localized string similar to ----- Error while uninstalling &apos;{0}&apos; -----
+        ///&apos;{0}&apos; may not have been uninstalled completely.
+        ///.
         /// </summary>
         internal static string UninstallingPackageFailed {
             get {
@@ -241,7 +247,7 @@ namespace Microsoft.PythonTools.EnvironmentsList.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Uninstalling &apos;{0}&apos;.
+        ///   Looks up a localized string similar to ----- Uninstalling &apos;{0}&apos; -----.
         /// </summary>
         internal static string UninstallingPackageStarted {
             get {
@@ -250,7 +256,8 @@ namespace Microsoft.PythonTools.EnvironmentsList.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &apos;{0}&apos; has been uninstalled.
+        ///   Looks up a localized string similar to ----- Successfully uninstalled &apos;{0}&apos; -----
+        ///.
         /// </summary>
         internal static string UninstallingPackageSuccess {
             get {

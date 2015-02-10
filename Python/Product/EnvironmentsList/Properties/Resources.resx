@@ -137,24 +137,35 @@
   </data>
   <data name="InstallationFailed" xml:space="preserve">
     <value>Installation failed</value>
+    <comment>Used as exception text</comment>
   </data>
   <data name="InstallingPackageFailed" xml:space="preserve">
-    <value>Failed to install '{0}'</value>
+    <value>----- Failed to install '{0}' -----
+</value>
+    <comment>Displayed in the output window</comment>
   </data>
   <data name="InstallingPackageStarted" xml:space="preserve">
-    <value>Installing '{0}'</value>
+    <value>----- Installing '{0}' -----</value>
+    <comment>Displayed in the output window</comment>
   </data>
   <data name="InstallingPackageSuccess" xml:space="preserve">
-    <value>Successfully installed '{0}'</value>
+    <value>----- Successfully installed '{0}' -----
+</value>
+    <comment>Displayed in the output window</comment>
   </data>
   <data name="InstallingPipFailed" xml:space="preserve">
-    <value>Failed to install pip</value>
+    <value>----- Failed to install pip -----
+</value>
+    <comment>Displayed in the output window</comment>
   </data>
   <data name="InstallingPipStarted" xml:space="preserve">
-    <value>Installing pip</value>
+    <value>----- Installing pip -----</value>
+    <comment>Displayed in the output window</comment>
   </data>
   <data name="InstallingPipSuccess" xml:space="preserve">
-    <value>Successfully installed pip</value>
+    <value>----- Successfully installed pip -----
+</value>
+    <comment>Displayed in the output window</comment>
   </data>
   <data name="ListFailed" xml:space="preserve">
     <value>Enumerating packages failed</value>
@@ -173,14 +184,21 @@
   </data>
   <data name="UninstallationFailed" xml:space="preserve">
     <value>Uninstallation failed</value>
+    <comment>Used as exception text</comment>
   </data>
   <data name="UninstallingPackageFailed" xml:space="preserve">
-    <value>An error occurred and '{0}' may not have been uninstalled completely.</value>
+    <value>----- Error while uninstalling '{0}' -----
+'{0}' may not have been uninstalled completely.
+</value>
+    <comment>Displayed in the output window</comment>
   </data>
   <data name="UninstallingPackageStarted" xml:space="preserve">
-    <value>Uninstalling '{0}'</value>
+    <value>----- Uninstalling '{0}' -----</value>
+    <comment>Displayed in the output window</comment>
   </data>
   <data name="UninstallingPackageSuccess" xml:space="preserve">
-    <value>'{0}' has been uninstalled</value>
+    <value>----- Successfully uninstalled '{0}' -----
+</value>
+    <comment>Displayed in the output window</comment>
   </data>
 </root>

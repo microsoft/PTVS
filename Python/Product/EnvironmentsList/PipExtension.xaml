@@ -48,16 +48,21 @@
                                     CommandParameter="{Binding}">
                                 <Button.Template>
                                     <ControlTemplate TargetType="Button">
-                                        <Canvas Width="16" Height="16">
-                                            <Ellipse Width="14" Height="14" Canvas.Left="1" Canvas.Top="1"
-                                                             Fill="{TemplateBinding Background}"
-                                                             Stroke="{TemplateBinding BorderBrush}"
-                                                             StrokeThickness="1" />
-                                            <Path Data="M5,8 L8,5 11,8 9,8 9,11 7,11 7,8 Z"
-                                                          Fill="{TemplateBinding Foreground}"
-                                                          Stroke="{TemplateBinding Foreground}"
-                                                          StrokeThickness="1" />
-                                        </Canvas>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Canvas Width="16" Height="16">
+                                                <Ellipse Width="14" Height="14" Canvas.Left="1" Canvas.Top="1"
+                                                                 Fill="{TemplateBinding Background}"
+                                                                 Stroke="{TemplateBinding BorderBrush}"
+                                                                 StrokeThickness="1" />
+                                                <Path Data="M5,8 L8,5 11,8 9,8 9,11 7,11 7,8 Z"
+                                                              Fill="{TemplateBinding Foreground}"
+                                                              Stroke="{TemplateBinding Foreground}"
+                                                              StrokeThickness="1" />
+                                            </Canvas>
+                                            <TextBlock VerticalAlignment="Center"
+                                                       Text="{Binding UpgradeVersion}"
+                                                       Margin="3 0"/>
+                                        </StackPanel>
                                         <ControlTemplate.Triggers>
                                             <Trigger Property="IsEnabled" Value="False">
                                                 <Setter Property="Visibility" Value="Hidden" />
@@ -66,7 +71,7 @@
                                     </ControlTemplate>
                                 </Button.Template>
                                 <Button.ToolTip>
-                                    Install a newer version of this package.
+                                    Upgrade to the newest version of this package.
                                 </Button.ToolTip>
                             </Button>
 
@@ -188,7 +193,7 @@
         <ProgressBar Grid.Row="1"
                      IsIndeterminate="True"
                      HorizontalAlignment="Stretch"
-                     Height="2"
+                     Height="3"
                      Focusable="False"
                      Visibility="{Binding IsListRefreshing,Converter={StaticResource VisibilityOrHidden}}" />
         

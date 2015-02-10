@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -24,6 +25,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Input;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter;
@@ -37,12 +39,18 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         private readonly DBExtensionProvider _provider;
         private readonly DBEnvironmentView _view;
+        private readonly CollectionViewSource _sortedPackages;
 
         public DBExtension(DBExtensionProvider provider) {
             _provider = provider;
             _view = new DBEnvironmentView(null, _provider);
             DataContextChanged += DBExtension_DataContextChanged;
             InitializeComponent();
+
+            // Set the default sort order
+            _sortedPackages = (CollectionViewSource)_packageList.FindResource("SortedPackages");
+            _sortedPackages.SortDescriptions.Add(new SortDescription("IsUpToDate", ListSortDirection.Ascending));
+            _sortedPackages.SortDescriptions.Add(new SortDescription("FullName", ListSortDirection.Ascending));
         }
 
         private void DBExtension_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e) {
@@ -232,7 +240,11 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public string Name { get { return _name; } }
 
         public int TotalModules { get { return _moduleCount; } }
-        public bool IsUpToDate { get { return _isUpToDate; } }
+        /// <summary>
+        /// '1' if the package is up to date; otherwise '0'. Numbers are used
+        /// instead of bool to make it easier to sort by status.
+        /// </summary>
+        public int IsUpToDate { get { return _isUpToDate ? 1 : 0; } }
     }
 
     public sealed class DBExtensionProvider : IEnvironmentViewExtension {

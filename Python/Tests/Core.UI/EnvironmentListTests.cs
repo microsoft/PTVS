@@ -68,13 +68,14 @@ namespace PythonToolsUITests {
                 new MockPythonInterpreterFactory(Guid.NewGuid(), "Test Factory 6", MockInterpreterConfiguration(new Version(3, 3)))
             ));
 
-            using (var list = new EnvironmentListProxy()) {
+            using (var wpf = new WpfProxy())
+            using (var list = new EnvironmentListProxy(wpf)) {
                 list.Service = mockService;
                 var environments = list.Environments;
 
                 Assert.AreEqual(6, environments.Count);
                 AssertUtil.ContainsExactly(
-                    environments.Select(ev => ev.Description),
+                    wpf.Invoke(() => environments.Select(ev => ev.Description).ToList()),
                     Enumerable.Range(1, 6).Select(i => string.Format("Test Factory {0}", i))
                 );
             }
@@ -83,19 +84,19 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0)]
         public void AddFactories() {
             var mockService = new MockInterpreterOptionsService();
-            using (var list = new EnvironmentListProxy()) {
-                list.Service = mockService;
-
-                Assert.AreEqual(0, list.Environments.Count);
-
+            using (var wpf = new WpfProxy())
+            using (var list = wpf.Invoke(() => new EnvironmentListProxy(wpf))) {
                 var provider = new MockPythonInterpreterFactoryProvider("Test Provider 1",
                     new MockPythonInterpreterFactory(Guid.NewGuid(), "Test Factory 1", MockInterpreterConfiguration(new Version(2, 7))),
                     new MockPythonInterpreterFactory(Guid.NewGuid(), "Test Factory 2", MockInterpreterConfiguration(new Version(3, 0))),
                     new MockPythonInterpreterFactory(Guid.NewGuid(), "Test Factory 3", MockInterpreterConfiguration(new Version(3, 3)))
                 );
 
-                mockService.AddProvider(provider);
+                list.Service = mockService;
 
+                Assert.AreEqual(0, list.Environments.Count);
+
+                mockService.AddProvider(provider);
                 Assert.AreEqual(3, list.Environments.Count);
                 provider.AddFactory(new MockPythonInterpreterFactory(Guid.NewGuid(), "Test Factory 4", MockInterpreterConfiguration(new Version(2, 7))));
                 Assert.AreEqual(4, list.Environments.Count);
@@ -108,18 +109,19 @@ namespace PythonToolsUITests {
 
         [TestMethod, Priority(0)]
         public void FactoryWithInvalidPath() {
-            using (var list = new EnvironmentListProxy()) {
+            using (var wpf = new WpfProxy())
+            using (var list = new EnvironmentListProxy(wpf)) {
                 var service = new MockInterpreterOptionsService();
                 var provider = new MockPythonInterpreterFactoryProvider("Test Provider");
                 service.AddProvider(provider);
                 list.Service = service;
 
                 foreach (string invalidPath in new string[] { 
-                    null, 
-                    "", 
-                    "NOT A REAL PATH", 
-                    string.Join("\\", Path.GetInvalidPathChars().Select(c => c.ToString()))
-                }) {
+                            null, 
+                            "", 
+                            "NOT A REAL PATH", 
+                            string.Join("\\", Path.GetInvalidPathChars().Select(c => c.ToString()))
+                        }) {
                     Console.WriteLine("Path: <{0}>", invalidPath ?? "(null)");
                     provider.RemoveAllFactories();
                     provider.AddFactory(new MockPythonInterpreterFactory(
@@ -137,7 +139,7 @@ namespace PythonToolsUITests {
                     ));
                     var view = list.Environments.Single();
                     Assert.IsFalse(
-                        list.CanExecute(DBExtension.StartRefreshDB, view.Object),
+                        list.CanExecute(DBExtension.StartRefreshDB, view),
                         string.Format("Should not be able to refresh DB for {0}", invalidPath)
                     );
                 }
@@ -146,7 +148,8 @@ namespace PythonToolsUITests {
 
         [TestMethod, Priority(0)]
         public void FactoryWithValidPath() {
-            using (var list = new EnvironmentListProxy()) {
+            using (var wpf = new WpfProxy())
+            using (var list = new EnvironmentListProxy(wpf)) {
                 var service = new MockInterpreterOptionsService();
                 var provider = new MockPythonInterpreterFactoryProvider("Test Provider");
                 service.AddProvider(provider);
@@ -156,7 +159,7 @@ namespace PythonToolsUITests {
                     Console.WriteLine("Path: <{0}>", version.InterpreterPath);
                     provider.RemoveAllFactories();
                     provider.AddFactory(new MockPythonInterpreterFactory(
-                        Guid.NewGuid(), 
+                        Guid.NewGuid(),
                         "Test Factory",
                         version.Configuration
                     ));
@@ -179,52 +182,53 @@ namespace PythonToolsUITests {
                 ),
                 true
             ))
-            using (var list = new EnvironmentListProxy()) {
+            using (var wpf = new WpfProxy())
+            using (var list = new EnvironmentListProxy(wpf)) {
                 list.CreateDBExtension = true;
 
                 var mockService = new MockInterpreterOptionsService();
                 mockService.AddProvider(new MockPythonInterpreterFactoryProvider("Test Provider 1", fact));
                 list.Service = mockService;
-                dynamic view = list.Environments.Single();
-                
-                Assert.IsFalse(view.IsRefreshingDB);
+                var view = list.Environments.Single();
+
+                Assert.IsFalse(wpf.Invoke(() => view.IsRefreshingDB));
                 Assert.IsTrue(list.CanExecute(DBExtension.StartRefreshDB, view));
                 Assert.IsFalse(fact.IsCurrent);
                 Assert.AreEqual(MockPythonInterpreterFactory.NoDatabaseReason, fact.GetIsCurrentReason(null));
 
                 list.Execute(DBExtension.StartRefreshDB, view).GetAwaiter().GetResult();
-                for (int retries = 10; retries > 0 && !view.IsRefreshingDB; --retries) {
+                for (int retries = 10; retries > 0 && !wpf.Invoke(() => view.IsRefreshingDB); --retries) {
                     Thread.Sleep(200);
                 }
 
-                Assert.IsTrue(view.IsRefreshingDB);
+                Assert.IsTrue(wpf.Invoke(() => view.IsRefreshingDB));
                 Assert.IsFalse(list.CanExecute(DBExtension.StartRefreshDB, view));
                 Assert.IsFalse(fact.IsCurrent);
                 Assert.AreEqual(MockPythonInterpreterFactory.GeneratingReason, fact.GetIsCurrentReason(null));
 
                 fact.EndGenerateCompletionDatabase(AnalyzerStatusUpdater.GetIdentifier(fact), false);
-                for (int retries = 10; retries > 0 && view.IsRefreshingDB; --retries) {
+                for (int retries = 10; retries > 0 && wpf.Invoke(() => view.IsRefreshingDB); --retries) {
                     Thread.Sleep(1000);
                 }
 
-                Assert.IsFalse(view.IsRefreshingDB);
+                Assert.IsFalse(wpf.Invoke(() => view.IsRefreshingDB));
                 Assert.IsTrue(list.CanExecute(DBExtension.StartRefreshDB, view));
                 Assert.IsFalse(fact.IsCurrent);
                 Assert.AreEqual(MockPythonInterpreterFactory.MissingModulesReason, fact.GetIsCurrentReason(null));
 
                 list.Execute(DBExtension.StartRefreshDB, view).GetAwaiter().GetResult();
 
-                Assert.IsTrue(view.IsRefreshingDB);
+                Assert.IsTrue(wpf.Invoke(() => view.IsRefreshingDB));
                 Assert.IsFalse(list.CanExecute(DBExtension.StartRefreshDB, view));
                 Assert.IsFalse(fact.IsCurrent);
                 Assert.AreEqual(MockPythonInterpreterFactory.GeneratingReason, fact.GetIsCurrentReason(null));
 
                 fact.EndGenerateCompletionDatabase(AnalyzerStatusUpdater.GetIdentifier(fact), true);
-                for (int retries = 10; retries > 0 && view.IsRefreshingDB; --retries) {
+                for (int retries = 10; retries > 0 && wpf.Invoke(() => view.IsRefreshingDB); --retries) {
                     Thread.Sleep(1000);
                 }
 
-                Assert.IsFalse(view.IsRefreshingDB);
+                Assert.IsFalse(wpf.Invoke(() => view.IsRefreshingDB));
                 Assert.IsTrue(list.CanExecute(DBExtension.StartRefreshDB, view));
                 Assert.IsTrue(fact.IsCurrent);
                 Assert.AreEqual(MockPythonInterpreterFactory.UpToDateReason, fact.GetIsCurrentReason(null));
@@ -235,11 +239,15 @@ namespace PythonToolsUITests {
 
         [TestMethod, Priority(0)]
         public void InstalledFactories() {
-            using (var list = new EnvironmentListProxy()) {
+            using (var wpf = new WpfProxy())
+            using (var list = new EnvironmentListProxy(wpf)) {
                 list.Service = GetInterpreterOptionsService();
 
                 var expected = new HashSet<string>(PythonPaths.Versions.Select(v => v.InterpreterPath), StringComparer.OrdinalIgnoreCase);
-                var actual = new HashSet<string>(list.Environments.Select(ev => (string)ev.InterpreterPath), StringComparer.OrdinalIgnoreCase);
+                var actual = wpf.Invoke(() => new HashSet<string>(
+                    list.Environments.Select(ev => (string)ev.InterpreterPath),
+                    StringComparer.OrdinalIgnoreCase
+                ));
 
                 Console.WriteLine("Expected - Actual: " + string.Join(", ", expected.Except(actual).OrderBy(s => s)));
                 Console.WriteLine("Actual - Expected: " + string.Join(", ", actual.Except(expected).OrderBy(s => s)));
@@ -253,10 +261,14 @@ namespace PythonToolsUITests {
 
         [TestMethod, Priority(0)]
         public void AddUpdateRemoveConfigurableFactory() {
-            using (var list = new EnvironmentListProxy()) {
+            using (var wpf = new WpfProxy())
+            using (var list = new EnvironmentListProxy(wpf)) {
                 list.Service = GetInterpreterOptionsService();
 
-                var before = new HashSet<string>(list.Environments.Select(ev => (string)ev.InterpreterPath), StringComparer.OrdinalIgnoreCase);
+                var before = wpf.Invoke(() => new HashSet<string>(
+                    list.Environments.Select(ev => (string)ev.InterpreterPath),
+                    StringComparer.OrdinalIgnoreCase
+                ));
 
                 var configurable = list.Service.KnownProviders.OfType<ConfigurablePythonInterpreterFactoryProvider>().FirstOrDefault();
                 Assert.IsNotNull(configurable, "No configurable provider available");
@@ -269,7 +281,10 @@ namespace PythonToolsUITests {
                 });
 
                 try {
-                    var afterAdd = new HashSet<string>(list.Environments.Select(ev => (string)ev.InterpreterPath), StringComparer.OrdinalIgnoreCase);
+                    var afterAdd = wpf.Invoke(() => new HashSet<string>(
+                        list.Environments.Select(ev => (string)ev.InterpreterPath),
+                        StringComparer.OrdinalIgnoreCase
+                    ));
 
                     Assert.AreNotEqual(before.Count, afterAdd.Count, "Did not add a new environment");
                     AssertUtil.ContainsExactly(
@@ -283,7 +298,10 @@ namespace PythonToolsUITests {
                         InterpreterPath = TestData.GetPath("HelloWorld2\\HelloWorld.pyproj")
                     });
 
-                    var afterUpdate = new HashSet<string>(list.Environments.Select(ev => (string)ev.InterpreterPath), StringComparer.OrdinalIgnoreCase);
+                    var afterUpdate = wpf.Invoke(() => new HashSet<string>(
+                        list.Environments.Select(ev => (string)ev.InterpreterPath),
+                        StringComparer.OrdinalIgnoreCase
+                    ));
 
                     Assert.AreEqual(afterAdd.Count, afterUpdate.Count, "Should not add/remove an environment");
                     AssertUtil.ContainsExactly(
@@ -294,7 +312,10 @@ namespace PythonToolsUITests {
                     configurable.RemoveInterpreter(fact.Id);
                 }
 
-                var afterRemove = new HashSet<string>(list.Environments.Select(ev => (string)ev.InterpreterPath), StringComparer.OrdinalIgnoreCase);
+                var afterRemove = wpf.Invoke(() => new HashSet<string>(
+                    list.Environments.Select(ev => (string)ev.InterpreterPath),
+                    StringComparer.OrdinalIgnoreCase
+                ));
                 AssertUtil.ContainsExactly(before, afterRemove);
             }
         }
@@ -308,12 +329,13 @@ namespace PythonToolsUITests {
 
             var loaded = new LoadedProjectInterpreterFactoryProvider();
             service.AddProvider(loaded);
-            using (var list = new EnvironmentListProxy()) {
+            using (var wpf = new WpfProxy())
+            using (var list = new EnvironmentListProxy(wpf)) {
                 list.Service = service;
 
                 // List only contains one entry
                 AssertUtil.ContainsExactly(
-                    list.Environments.Select(ev => ev.Description),
+                    wpf.Invoke(() => list.Environments.Select(ev => ev.Description).ToList()),
                     "Test Environment"
                 );
 
@@ -324,7 +346,7 @@ namespace PythonToolsUITests {
 
                 // List now contains two entries
                 AssertUtil.ContainsExactly(
-                    list.Environments.Select(ev => ev.Description),
+                    wpf.Invoke(() => list.Environments.Select(ev => ev.Description).ToList()),
                     "Test Environment",
                     "Fake Environment"
                 );
@@ -333,7 +355,7 @@ namespace PythonToolsUITests {
 
                 // List only has one entry again
                 AssertUtil.ContainsExactly(
-                    list.Environments.Select(ev => ev.Description),
+                    wpf.Invoke(() => list.Environments.Select(ev => ev.Description).ToList()),
                     "Test Environment"
                 );
             }
@@ -345,7 +367,8 @@ namespace PythonToolsUITests {
             var service = new MockInterpreterOptionsService();
             var loaded = new LoadedProjectInterpreterFactoryProvider();
             service.AddProvider(loaded);
-            using (var list = new EnvironmentListProxy()) {
+            using (var wpf = new WpfProxy())
+            using (var list = new EnvironmentListProxy(wpf)) {
                 list.Service = service;
 
                 // List should be empty
@@ -362,7 +385,7 @@ namespace PythonToolsUITests {
 
                 // List now contains one project
                 AssertUtil.ContainsExactly(
-                    list.Environments.Select(ev => ev.Description),
+                    wpf.Invoke(() => list.Environments.Select(ev => ev.Description).ToList()),
                     "Fake Environment"
                 );
 
@@ -379,7 +402,8 @@ namespace PythonToolsUITests {
         public void ChangeDefault() {
             var service = GetInterpreterOptionsService();
             using (var defaultChanged = new AutoResetEvent(false))
-            using (var list = new EnvironmentListProxy()) {
+            using (var wpf = new WpfProxy())
+            using (var list = new EnvironmentListProxy(wpf)) {
                 service.DefaultInterpreterChanged += (s, e) => { defaultChanged.Set(); };
                 list.Service = service;
                 var originalDefault = service.DefaultInterpreter;
@@ -390,8 +414,7 @@ namespace PythonToolsUITests {
                         );
                         Assert.IsNotNull(environment, string.Format("Did not find {0}", interpreter.Description));
 
-                        var t = list.Execute(EnvironmentView.MakeGlobalDefault, environment);
-                        Assert.IsTrue(t.Wait(TimeSpan.FromSeconds(10.0)), "Setting default took too long");
+                        list.Execute(EnvironmentView.MakeGlobalDefault, environment);
                         Assert.IsTrue(defaultChanged.WaitOne(TimeSpan.FromSeconds(10.0)), "Setting default took too long");
 
                         Assert.AreEqual(interpreter, service.DefaultInterpreter,
@@ -411,32 +434,33 @@ namespace PythonToolsUITests {
         public void PipExtension() {
             var service = MakeEmptyVEnv();
 
-            using (var list = new EnvironmentListProxy()) {
+            using (var wpf = new WpfProxy())
+            using (var list = new EnvironmentListProxy(wpf)) {
                 list.CreatePipExtension = true;
                 list.Service = service;
 
                 var environment = list.Environments.Single();
-                var pip = (PipExtensionProvider)environment.GetExtensionOrAssert<PipExtensionProvider>();
+                var pip = (PipExtensionProvider)list.GetExtensionOrAssert<PipExtensionProvider>(environment);
 
                 Assert.IsFalse(pip.IsPipInstalled().GetAwaiter().GetResult(), "venv should not install pip");
-                var task = pip.InstallPip().ContinueWith<bool>(LogException);
+                var task = wpf.Invoke(() => pip.InstallPip().ContinueWith<bool>(LogException));
                 Assert.IsTrue(task.Wait(TimeSpan.FromSeconds(120.0)), "pip install timed out");
                 Assert.IsTrue(task.Result, "pip install failed");
                 Assert.IsTrue(pip.IsPipInstalled().GetAwaiter().GetResult(), "pip was not installed");
 
-                var packages = pip.EnumeratePackages().GetAwaiter().GetResult();
+                var packages = pip.EnumeratePackages(includeUpdateVersion: false).GetAwaiter().GetResult();
                 AssertUtil.ContainsExactly(packages.Select(pv => pv.Name), "pip", "setuptools");
 
-                task = pip.InstallPackage("ptvsd", true).ContinueWith<bool>(LogException);
+                task = wpf.Invoke(() => pip.InstallPackage("ptvsd", true).ContinueWith<bool>(LogException));
                 Assert.IsTrue(task.Wait(TimeSpan.FromSeconds(60.0)), "pip install ptvsd timed out");
                 Assert.IsTrue(task.Result, "pip install ptvsd failed");
-                packages = pip.EnumeratePackages().GetAwaiter().GetResult();
+                packages = pip.EnumeratePackages(includeUpdateVersion: false).GetAwaiter().GetResult();
                 AssertUtil.ContainsAtLeast(packages.Select(pv => pv.Name), "ptvsd");
 
-                task = pip.UninstallPackage("ptvsd").ContinueWith<bool>(LogException);
+                task = wpf.Invoke(() => pip.UninstallPackage("ptvsd").ContinueWith<bool>(LogException));
                 Assert.IsTrue(task.Wait(TimeSpan.FromSeconds(60.0)), "pip uninstall ptvsd timed out");
                 Assert.IsTrue(task.Result, "pip uninstall ptvsd failed");
-                packages = pip.EnumeratePackages().GetAwaiter().GetResult();
+                packages = pip.EnumeratePackages(includeUpdateVersion: false).GetAwaiter().GetResult();
                 AssertUtil.DoesntContain(packages.Select(pv => pv.Name), "ptvsd");
             }
         }
@@ -498,29 +522,21 @@ namespace PythonToolsUITests {
 
         sealed class EnvironmentListProxy : IDisposable {
             private readonly WpfProxy _proxy;
-            private readonly WpfObjectProxy<ToolWindow> _window;
+            private readonly ToolWindow _window;
 
-            public EnvironmentListProxy() {
-                var proxy = new WpfProxy();
-                try {
-                    _window = proxy.Create(() => new ToolWindow());
-                    _window.Object.ViewCreated += Window_ViewCreated;
-                } catch (Exception ex) {
-                    Console.WriteLine(ex);
-                    proxy.Dispose();
-                    throw;
-                }
+            public EnvironmentListProxy(WpfProxy proxy) {
                 _proxy = proxy;
+                _window = proxy.InvokeWithRetry(() => new ToolWindow());
+                _window.ViewCreated += Window_ViewCreated;
             }
 
             public void Dispose() {
-                if (_window != null && _window.Object != null) {
-                    _window.Object.Dispose();
+                if (_window != null) {
+                    _proxy.Invoke(() => _window.Dispose());
                 }
-                _proxy.Dispose();
             }
 
-            public dynamic Window {
+            public ToolWindow Window {
                 get { return _window; }
             }
 
@@ -543,19 +559,16 @@ namespace PythonToolsUITests {
 
             public IInterpreterOptionsService Service {
                 get {
-                    return (IInterpreterOptionsService)Window.Service;
+                    return _proxy.Invoke(() => Window.Service);
                 }
                 set {
                     _proxy.Invoke(() => { Window.Service = value; });
                 }
             }
 
-            public List<dynamic> Environments {
+            public List<EnvironmentView> Environments {
                 get {
-                    return new List<dynamic>(
-                        _proxy.Invoke(() => new List<dynamic>(Window._environments), DispatcherPriority.SystemIdle)
-                            .Select(view => new EnvironmentViewProxy(_proxy, view))
-                    );
+                    return _proxy.Invoke(() => Window._environments.ToList());
                 }
             }
 
@@ -566,26 +579,19 @@ namespace PythonToolsUITests {
             public Task Execute(RoutedCommand command, object parameter) {
                 return _proxy.Execute(command, _window, parameter);
             }
-        }
 
-        class EnvironmentViewProxy : WpfObjectProxy<EnvironmentView> {
-            public EnvironmentViewProxy(WpfProxy provider, EnvironmentView view)
-                : base(provider, view) { }
-
-            public T GetExtensionOrDefault<T>() where T : IEnvironmentViewExtension {
-                return Dispatcher.Invoke(() => {
-                    var ext = Object.Extensions.OfType<T>().FirstOrDefault();
-                    if (ext != null) {
-                        // Get the WpfObject to ensure it is constructed on the
-                        // UI thread.
-                        var fe = ext.WpfObject;
-                    }
-                    return ext;
-                });
+            public T GetExtensionOrDefault<T>(EnvironmentView view) where T : IEnvironmentViewExtension {
+                var ext = _proxy.Invoke(() => view.Extensions.OfType<T>().FirstOrDefault());
+                if (ext != null) {
+                    // Get the WpfObject to ensure it is constructed on the
+                    // UI thread.
+                    var fe = _proxy.Invoke(() => ext.WpfObject);
+                }
+                return ext;
             }
 
-            public T GetExtensionOrAssert<T>() where T : IEnvironmentViewExtension {
-                var ext = GetExtensionOrDefault<T>();
+             public T GetExtensionOrAssert<T>(EnvironmentView view) where T : IEnvironmentViewExtension {
+                var ext = GetExtensionOrDefault<T>(view);
                 Assert.IsNotNull(ext, "Unable to get " + typeof(T).Name);
                 return ext;
             }

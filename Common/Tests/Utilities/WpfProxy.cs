@@ -39,9 +39,21 @@ namespace TestUtilities {
                 _thread.Start(ready);
                 ready.WaitOne();
             }
-            for (int retries = 10; (_dispatcher = Dispatcher.FromThread(_thread)) == null; --retries) {
+            for (int retries = 10; (_dispatcher = Dispatcher.FromThread(_thread)) == null && retries > 0; --retries) {
                 Thread.Sleep(10);
                 Console.WriteLine("Retry {0}", retries);
+            }
+            if (_dispatcher == null) {
+                _thread.Abort();
+                throw new InvalidOperationException("Unable to get dispatcher");
+            }
+
+            for (int retries = 10; retries > 0; --retries) {
+                try {
+                    _dispatcher.Invoke(() => { });
+                    break;
+                } catch (OperationCanceledException) {
+                }
             }
         }
 
@@ -102,6 +114,26 @@ namespace TestUtilities {
         public bool IsDisposed {
             get { return _isDisposed; }
         }
+
+        public void InvokeWithRetry(Action action, DispatcherPriority priority = DispatcherPriority.Normal) {
+            for (int retries = 10; retries > 0; --retries) {
+                try {
+                    _dispatcher.Invoke(action, priority);
+                    return;
+                } catch (OperationCanceledException) {
+                }
+            }
+        }
+
+        public T InvokeWithRetry<T>(Func<T> action, DispatcherPriority priority = DispatcherPriority.Normal) {
+            for (int retries = 10; retries > 0; --retries) {
+                try {
+                    return _dispatcher.Invoke(action, priority);
+                } catch (OperationCanceledException) { }
+            }
+            throw new OperationCanceledException();
+        }
+
 
         public void Invoke(Action action, DispatcherPriority priority = DispatcherPriority.Normal) {
             _dispatcher.Invoke(action, priority);

@@ -6,6 +6,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:l="clr-namespace:Microsoft.PythonTools.EnvironmentsList"
              xmlns:s="clr-namespace:System;assembly=mscorlib"
+             xmlns:scm="clr-namespace:System.ComponentModel;assembly=System"
              xmlns:wpf="clr-namespace:Microsoft.VisualStudioTools.Wpf"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
@@ -67,7 +68,7 @@
                             <DataTrigger Binding="{Binding TotalModules,Mode=OneWay}" Value="1">
                                 <Setter TargetName="ModuleCount" Property="Visibility" Value="Collapsed" />
                             </DataTrigger>
-                            <DataTrigger Binding="{Binding IsUpToDate,Mode=OneWay}" Value="False">
+                            <DataTrigger Binding="{Binding IsUpToDate,Mode=OneWay}" Value="0">
                                 <Setter TargetName="IsUpToDate" Property="Visibility" Value="Hidden" />
                                 <Setter TargetName="IsNotUpToDate" Property="Visibility" Value="Visible" />
                             </DataTrigger>
@@ -121,16 +122,21 @@
             <RowDefinition Height="auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
+        
+        <Grid.Resources>
+            <CollectionViewSource x:Key="SortedPackages" Source="{Binding Packages}" />
+        </Grid.Resources>
 
         <ContentControl Content="{Binding}"
                         ContentTemplate="{StaticResource ProgressView}"
                         Focusable="False"/>
         
         <ListBox Grid.Row="2"
+                 x:Name="_packageList"
                  IsTextSearchEnabled="True"
                  IsTextSearchCaseSensitive="False"
                  ScrollViewer.CanContentScroll="False"
                  TextSearch.TextPath="Name"
-                 ItemsSource="{Binding Packages}" />
+                 ItemsSource="{Binding Source={StaticResource SortedPackages}}" />
     </Grid>
 </UserControl>
