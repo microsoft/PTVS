@@ -59,7 +59,7 @@ namespace Microsoft.VisualStudioTools {
         /// </remarks>
         public void Invoke(Action action) {
             if (InvokeRequired) {
-                _factory.StartNew(action).Wait();
+                _factory.StartNew(action).GetAwaiter().GetResult();
             } else {
                 action();
             }
@@ -75,9 +75,7 @@ namespace Microsoft.VisualStudioTools {
         /// </remarks>
         public T Invoke<T>(Func<T> func) {
             if (InvokeRequired) {
-                var task = _factory.StartNew(func);
-                task.Wait();
-                return task.Result;
+                return _factory.StartNew(func).GetAwaiter().GetResult();
             } else {
                 return func();
             }
