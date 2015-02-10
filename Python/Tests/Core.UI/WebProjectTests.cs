@@ -332,7 +332,7 @@ namespace PythonToolsUITests {
                 AssertUtil.ContainsExactly(newItems.Select(i => i.Name), "bin");
 
                 var children = newItems[0].ProjectItems.Cast<ProjectItem>().Select(i => i.Name).ToSet(StringComparer.CurrentCultureIgnoreCase);
-                AssertUtil.ContainsExactly(children, "ConfigureCloudService.ps1", "ps.cmd", "Readme.txt");
+                AssertUtil.ContainsExactly(children, "ConfigureCloudService.ps1", "ps.cmd", "Readme.mht");
             }
         }
 
@@ -359,7 +359,7 @@ namespace PythonToolsUITests {
                 AssertUtil.ContainsExactly(newItems.Select(i => i.Name), "bin");
 
                 var children = newItems[0].ProjectItems.Cast<ProjectItem>().Select(i => i.Name).ToSet(StringComparer.CurrentCultureIgnoreCase);
-                AssertUtil.ContainsExactly(children, "ConfigureCloudService.ps1", "LaunchWorker.ps1", "ps.cmd", "Readme.txt");
+                AssertUtil.ContainsExactly(children, "ConfigureCloudService.ps1", "LaunchWorker.ps1", "ps.cmd", "Readme.mht");
             }
         }
 
@@ -485,9 +485,9 @@ namespace PythonToolsUITests {
                 var sln = app.GetService<IVsSolution>(typeof(SVsSolution));
                 ErrorHandler.ThrowOnFailure(sln.GetProjectOfUniqueName(ccproj.FullName, out hier));
 
-                app.ServiceProvider.GetUIThread().Invoke(() =>
+                app.ServiceProvider.GetUIThread().InvokeAsync(() =>
                     PythonProjectNode.UpdateServiceDefinition(hier, roleType, roleType + "Role1", app.ServiceProvider)
-                );
+                ).GetAwaiter().GetResult();
 
                 var doc = new XmlDocument();
                 for (int retries = 5; retries > 0; --retries) {
@@ -649,7 +649,7 @@ namespace PythonToolsUITests {
             EndToEndLog(text);
             Assert.IsTrue(text.Contains(textInResponse), text);
 
-            for (retries = 10;
+            for (retries = 20;
                 retries > 0 &&
                     (app.Dte.Debugger.CurrentMode != EnvDTE.dbgDebugMode.dbgRunMode ||
                     !IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners().All(p => p.Port != port));
@@ -668,79 +668,53 @@ namespace PythonToolsUITests {
             int port,
             string textInResponse
         ) {
-            var pythonProcessIds = new HashSet<int>(Process.GetProcessesByName("python").Select(p => p.Id));
-            Process[] newProcesses;
             bool prevNormal = true, prevAbnormal = true;
+            string text;
             int retries;
 
             try {
-                EndToEndLog("Transitioning to UI thread to build");
-                app.ServiceProvider.GetUIThread().Invoke(() => {
-                    EndToEndLog("Building");
-                    app.Dte.Solution.SolutionBuild.Build(true);
-                    EndToEndLog("Updating settings");
-                    prevNormal = app.GetService<PythonToolsService>().DebuggerOptions.WaitOnNormalExit;
-                    prevAbnormal = app.GetService<PythonToolsService>().DebuggerOptions.WaitOnAbnormalExit;
-                    app.GetService<PythonToolsService>().DebuggerOptions.WaitOnNormalExit = false;
-                    app.GetService<PythonToolsService>().DebuggerOptions.WaitOnAbnormalExit = false;
+                using (var processes = new ProcessScope("python")) {
+                    EndToEndLog("Transitioning to UI thread to build");
+                    app.ServiceProvider.GetUIThread().Invoke(() => {
+                        EndToEndLog("Building");
+                        app.Dte.Solution.SolutionBuild.Build(true);
+                        EndToEndLog("Updating settings");
+                        prevNormal = app.GetService<PythonToolsService>().DebuggerOptions.WaitOnNormalExit;
+                        prevAbnormal = app.GetService<PythonToolsService>().DebuggerOptions.WaitOnAbnormalExit;
+                        app.GetService<PythonToolsService>().DebuggerOptions.WaitOnNormalExit = false;
+                        app.GetService<PythonToolsService>().DebuggerOptions.WaitOnAbnormalExit = false;
 
-                    EndToEndLog("Starting running");
-                    app.Dte.Solution.SolutionBuild.Run();
-                    EndToEndLog("Running");
-                });
+                        EndToEndLog("Starting running");
+                        app.Dte.Solution.SolutionBuild.Run();
+                        EndToEndLog("Running");
+                    });
 
-                newProcesses = new Process[0];
-                for (int i = 20;
-                    i > 0 && !newProcesses.Any();
-                    --i, newProcesses = Process.GetProcessesByName("python").Where(p => !pythonProcessIds.Contains(p.Id)).ToArray()) {
-                    Thread.Sleep(500);
+                    var newProcesses = processes.WaitForNewProcess(TimeSpan.FromSeconds(30)).ToList();
+                    Assert.IsTrue(newProcesses.Any(), "Did not find new Python process");
+                    EndToEndLog("Found new processes with IDs {0}", string.Join(", ", newProcesses.Select(p => p.Id.ToString())));
+
+                    for (retries = 100;
+                        retries > 0 &&
+                            !IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners().Any(p => p.Port == port);
+                        --retries) {
+                        Thread.Sleep(300);
+                    }
+                    EndToEndLog("Active at http://localhost:{0}/", port);
+
+                    text = WebDownloadUtility.GetString(new Uri(string.Format("http://localhost:{0}/", port)));
                 }
-                Assert.IsTrue(newProcesses.Any(), "Did not find new Python process");
-                EndToEndLog("Found new processes with IDs {0}", string.Join(", ", newProcesses.Select(p => p.Id.ToString())));
-
-                for (retries = 100;
-                    retries > 0 &&
-                        !IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners().Any(p => p.Port == port);
-                    --retries) {
-                    Thread.Sleep(300);
-                }
-                EndToEndLog("Active at http://localhost:{0}/", port);
             } finally {
                 app.ServiceProvider.GetUIThread().Invoke(() => {
                     app.GetService<PythonToolsService>().DebuggerOptions.WaitOnNormalExit = prevNormal;
                     app.GetService<PythonToolsService>().DebuggerOptions.WaitOnAbnormalExit = prevAbnormal;
                 });
             }
-            var text = WebDownloadUtility.GetString(new Uri(string.Format("http://localhost:{0}/", port)));
-
-            for (retries = 10; retries >= 0; --retries) {
-                bool allKilled = true;
-                for (int j = 0; j < newProcesses.Length; ++j) {
-                    try {
-                        if (newProcesses[j] != null) {
-                            if (!newProcesses[j].HasExited) {
-                                newProcesses[j].Kill();
-                            }
-                            newProcesses[j] = null;
-                        }
-                    } catch (Exception ex) {
-                        EndToEndLog("Failed to kill {0}", newProcesses[j]);
-                        EndToEndLog(ex.ToString() + Environment.NewLine);
-                        allKilled = false;
-                    }
-                }
-                if (allKilled) {
-                    break;
-                }
-                Thread.Sleep(100);
-                Assert.AreNotEqual(0, retries, "Failed to kill process.");
-            }
 
             EndToEndLog("Response from http://localhost:{0}/", port);
             EndToEndLog(text);
             Assert.IsTrue(text.Contains(textInResponse), text);
 
-            for (retries = 10;
+            for (retries = 20;
                 retries > 0 && !IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners().All(p => p.Port != port);
                 --retries) {
                 Thread.Sleep(500);
@@ -753,23 +727,38 @@ namespace PythonToolsUITests {
         }
 
         internal static IPythonInterpreterFactory CreateVirtualEnvironment(string pythonVersion, VisualStudioApp app, PythonProjectNode pyProj) {
-            var model = app.GetService<IComponentModel>(typeof(SComponentModel));
-            var service = model.GetService<IInterpreterOptionsService>();
-            var task = pyProj.CreateOrAddVirtualEnvironment(
-                service,
-                true,
-                Path.Combine(pyProj.ProjectHome, "env"),
-                service.FindInterpreter(PythonPaths.CPythonGuid, pythonVersion),
-                Version.Parse(pythonVersion) >= new Version(3, 3)
-            );
-            task.Wait();
+            var uiThread = app.ServiceProvider.GetUIThread();
+            var task = uiThread.InvokeTask(() => {
+                var model = app.GetService<IComponentModel>(typeof(SComponentModel));
+                var service = model.GetService<IInterpreterOptionsService>();
+
+                return pyProj.CreateOrAddVirtualEnvironment(
+                    service,
+                    true,
+                    Path.Combine(pyProj.ProjectHome, "env"),
+                    service.FindInterpreter(PythonPaths.CPythonGuid, pythonVersion),
+                    Version.Parse(pythonVersion) >= new Version(3, 3)
+                );
+            });
+            try {
+                Assert.IsTrue(task.Wait(TimeSpan.FromMinutes(2.0)), "Timed out waiting for venv");
+            } catch (AggregateException ex) {
+                throw ex.InnerException;
+            }
             var factory = task.Result;
-            Assert.IsTrue(factory.Id == pyProj.GetInterpreterFactory().Id);
+            Assert.IsTrue(uiThread.Invoke(() => factory.Id == pyProj.GetInterpreterFactory().Id));
             return factory;
         }
 
         internal static void InstallWebFramework(VisualStudioApp app, string moduleName, string packageName, IPythonInterpreterFactory factory) {
-            TaskExt.WaitAndUnwrapExceptions(Pip.Install(app.ServiceProvider, factory, packageName, false));
+            var task = app.ServiceProvider.GetUIThread().InvokeTask(() =>
+                Pip.Install(app.ServiceProvider, factory, packageName, false)
+            );
+            try {
+                Assert.IsTrue(task.Wait(TimeSpan.FromMinutes(1.0)), "Timed out waiting for install " + packageName);
+            } catch (AggregateException ex) {
+                throw ex.InnerException;
+            }
             Assert.AreEqual(1, InterpreterExt.FindModules(factory, moduleName).Count);
         }
 

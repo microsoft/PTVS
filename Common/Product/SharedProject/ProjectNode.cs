@@ -448,11 +448,17 @@ namespace Microsoft.VisualStudioTools.Project {
 
         public override string Caption {
             get {
-                // Default to file name
-                string caption = this.buildProject.FullPath;
+                var project = this.buildProject;
+                if (project == null) {
+                    // Project is not available, which probably means we are
+                    // in the process of closing
+                    return string.Empty;
+                }
+                // Use file name
+                string caption = project.FullPath;
                 if (String.IsNullOrEmpty(caption)) {
-                    if (this.buildProject.GetProperty(ProjectFileConstants.Name) != null) {
-                        caption = this.buildProject.GetProperty(ProjectFileConstants.Name).EvaluatedValue;
+                    if (project.GetProperty(ProjectFileConstants.Name) != null) {
+                        caption = project.GetProperty(ProjectFileConstants.Name).EvaluatedValue;
                         if (caption == null || caption.Length == 0) {
                             caption = this.ItemNode.GetMetadata(ProjectFileConstants.Include);
                         }

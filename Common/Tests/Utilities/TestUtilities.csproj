@@ -92,6 +92,7 @@
     <Compile Include="IVisualStudioInstance.cs" />
     <Compile Include="MessageBoxButton.cs" />
     <Compile Include="Mocks\MockVsShell.cs" />
+    <Compile Include="ProcessScope.cs" />
     <Compile Include="SessionHolder.cs" />
     <Compile Include="SharedProject\SymbolicLinkItem.cs" />
     <Compile Include="WebDownloadUtility.cs" />

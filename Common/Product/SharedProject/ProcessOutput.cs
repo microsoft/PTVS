@@ -110,6 +110,7 @@ namespace Microsoft.VisualStudioTools.Project {
         private bool _isDisposed;
         private bool _seenNullInOutput, _seenNullInError;
         private bool _haveRaisedExitedEvent;
+        private Task<int> _awaiter;
 
         private static readonly char[] EolChars = new[] { '\r', '\n' };
         private static readonly char[] _needToBeQuoted = new[] { ' ', '"' };
@@ -626,22 +627,30 @@ namespace Microsoft.VisualStudioTools.Project {
         /// Enables using 'await' on this object.
         /// </summary>
         public TaskAwaiter<int> GetAwaiter() {
-            var tcs = new TaskCompletionSource<int>();
-
-            if (_process == null) {
-                tcs.SetCanceled();
-            } else {
-                Exited += (s, e) => {
+            if (_awaiter == null) {
+                if (_process == null) {
+                    var tcs = new TaskCompletionSource<int>();
+                    tcs.SetCanceled();
+                    _awaiter = tcs.Task;
+                } else if (_process.HasExited) {
                     FlushAndCloseOutput();
-                    tcs.TrySetResult(_process.ExitCode);
-                };
-                if (_process.HasExited) {
-                    FlushAndCloseOutput();
-                    tcs.TrySetResult(_process.ExitCode);
+                    var tcs = new TaskCompletionSource<int>();
+                    tcs.SetResult(_process.ExitCode);
+                    _awaiter = tcs.Task;
+                } else {
+                    var wh = WaitHandle;
+                    _awaiter = Task.Run(() => {
+                        try {
+                            wh.WaitOne();
+                        } catch (ObjectDisposedException) {
+                            throw new OperationCanceledException();
+                        }
+                        return _process.ExitCode;
+                    });
                 }
             }
 
-            return tcs.Task.GetAwaiter();
+            return _awaiter.GetAwaiter();
         }
 
         /// <summary>

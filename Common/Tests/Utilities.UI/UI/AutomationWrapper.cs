@@ -47,7 +47,7 @@ namespace TestUtilities.UI {
                 TreeScope.Descendants,
                 new AndCondition(
                     new PropertyCondition(AutomationElement.AutomationIdProperty, automationId),
-                    new PropertyCondition(AutomationElement.ClassNameProperty, "Button")
+                    new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Button)
                 )
             ));
         }
@@ -62,7 +62,7 @@ namespace TestUtilities.UI {
                 TreeScope.Descendants,
                 new AndCondition(
                     new PropertyCondition(AutomationElement.NameProperty, name),
-                    new PropertyCondition(AutomationElement.ClassNameProperty, "Button")
+                    new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Button)
                 )
             ));
         }
