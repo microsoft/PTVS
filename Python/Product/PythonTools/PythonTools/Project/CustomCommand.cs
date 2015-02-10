@@ -527,6 +527,17 @@ namespace Microsoft.PythonTools.Project {
                 startInfo.EnvironmentVariables[pythonPathVarName] = pythonPath;
             }
 
+            // Fill other environment variables from project properties.
+            string userEnv = project.GetProperty(PythonConstants.EnvironmentSetting);
+            if (userEnv != null) {
+                foreach (var envVar in userEnv.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)) {
+                    var nameValue = envVar.Split(new[] { '=' }, 2);
+                    if (nameValue.Length == 2) {
+                        startInfo.EnvironmentVariables[nameValue[0]] = nameValue[1];
+                    }
+                }
+            }
+
             var environment = item.GetMetadata(BuildTasks.CreatePythonCommandItem.EnvironmentKey);
             foreach (var line in environment.Split('\r', '\n')) {
                 int equals = line.IndexOf('=');

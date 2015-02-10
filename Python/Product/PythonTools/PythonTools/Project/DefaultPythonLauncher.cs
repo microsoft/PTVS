@@ -284,6 +284,16 @@ namespace Microsoft.PythonTools.Project {
                 }
                 environment[pathEnvVar] = pythonPath;
             }
+
+            string userEnv = _project.GetProperty(PythonConstants.EnvironmentSetting);
+            if (userEnv != null) {
+                foreach (var envVar in userEnv.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)) {
+                    var nameValue = envVar.Split(new[] { '=' }, 2);
+                    if (nameValue.Length == 2) {
+                        environment[nameValue[0]] = nameValue[1];
+                    }
+                }
+            }
         }
 
         /// <summary>

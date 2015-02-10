@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
@@ -25,24 +26,9 @@ namespace Microsoft.PythonTools.Project {
         public DefaultPythonLauncherOptions(IPythonProject properties) {
             _properties = properties;
             InitializeComponent();
-            const string searchPathHelp = "Specifies additional directories which are added to sys.path for making libraries available for importing.";
-            const string argumentsHelp = "Specifies arguments which are passed to the script and available via sys.argv.";
-            const string interpArgsHelp = "Specifies arguments which alter how the interpreter is started (for example, -O to generate optimized byte code).";
-            const string interpPathHelp = "Overrides the interpreter executable which is used for launching the project.";
-
-            _toolTip.SetToolTip(_searchPathLabel, searchPathHelp);
-            _toolTip.SetToolTip(_searchPaths, searchPathHelp);
-
-            _toolTip.SetToolTip(_arguments, argumentsHelp);
-            _toolTip.SetToolTip(_argumentsLabel, argumentsHelp);
-
-            _toolTip.SetToolTip(_interpArgsLabel, interpArgsHelp);
-            _toolTip.SetToolTip(_interpArgs, interpArgsHelp);
-
-            _toolTip.SetToolTip(_interpreterPath, interpPathHelp);
-            _toolTip.SetToolTip(_interpreterPathLabel, interpPathHelp);
 
 #if DEV11_OR_LATER
+            _debugGroup.Visible = true;
             _mixedMode.Visible = true;
 #endif
         }
@@ -55,6 +41,7 @@ namespace Microsoft.PythonTools.Project {
             _properties.SetProperty(PythonConstants.InterpreterPathSetting, InterpreterPath);
             _properties.SetProperty(PythonConstants.InterpreterArgumentsSetting, InterpreterArguments);
             _properties.SetProperty(PythonConstants.EnableNativeCodeDebugging, EnableNativeCodeDebugging.ToString());
+            _properties.SetProperty(PythonConstants.EnvironmentSetting, Environment);
             RaiseIsSaved();
         }
 
@@ -64,6 +51,7 @@ namespace Microsoft.PythonTools.Project {
             InterpreterPath = _properties.GetUnevaluatedProperty(PythonConstants.InterpreterPathSetting);
             Arguments = _properties.GetUnevaluatedProperty(CommonConstants.CommandLineArguments);
             InterpreterArguments = _properties.GetUnevaluatedProperty(PythonConstants.InterpreterArgumentsSetting);
+            Environment = _properties.GetUnevaluatedProperty(PythonConstants.EnvironmentSetting);
 
             bool enableNativeCodeDebugging;
             bool.TryParse(_properties.GetUnevaluatedProperty(PythonConstants.EnableNativeCodeDebugging), out enableNativeCodeDebugging);
@@ -76,6 +64,9 @@ namespace Microsoft.PythonTools.Project {
             switch (settingName) {
                 case PythonConstants.SearchPathSetting:
                     SearchPaths = _properties.GetUnevaluatedProperty(PythonConstants.SearchPathSetting);
+                    break;
+                case PythonConstants.EnvironmentSetting:
+                    Environment = _properties.GetUnevaluatedProperty(PythonConstants.EnvironmentSetting);
                     break;
             }
         }
@@ -106,6 +97,17 @@ namespace Microsoft.PythonTools.Project {
         public string InterpreterArguments {
             get { return _interpArgs.Text; }
             set { _interpArgs.Text = value; }
+        }
+
+        private static Regex lfToCrLfRegex = new Regex(@"(?<!\r)\n");
+
+        public string Environment {
+            get { return _envVars.Text; }
+            set {
+                // TextBox requires \r\n for line separators, but XML can have either \n or \r\n, and we should treat those equally.
+                // (It will always have \r\n when we write it out, but users can edit it by other means.)
+                _envVars.Text = lfToCrLfRegex.Replace(value ?? String.Empty, "\r\n");
+            }
         }
 
         public bool EnableNativeCodeDebugging {
@@ -146,6 +148,10 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private void _mixedMode_CheckedChanged(object sender, EventArgs e) {
+            RaiseIsDirty();
+        }
+
+        private void _envVars_TextChanged(object sender, EventArgs e) {
             RaiseIsDirty();
         }
     }

@@ -38,6 +38,7 @@ using Microsoft.VisualStudioTools.Project.Automation;
 using Microsoft.VisualStudioTools.VSTestHost;
 using TestUtilities;
 using TestUtilities.Python;
+using TestUtilities.SharedProject;
 using TestUtilities.UI;
 using TestUtilities.UI.Python;
 using VSLangProj;
@@ -49,7 +50,9 @@ using Thread = System.Threading.Thread;
 
 namespace PythonToolsUITests {
     [TestClass]
-    public class BasicProjectTests {
+    public class BasicProjectTests : SharedProjectTest {
+        public static ProjectType PythonProject = ProjectTypes.First(x => x.ProjectExtension == ".pyproj");
+
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
@@ -1355,6 +1358,76 @@ namespace PythonToolsUITests {
 
                 allItems = app.WaitForErrorListItems(0);
                 Assert.AreEqual(0, allItems.Count);
+            }
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("VSTestHost")]
+        public void EnvironmentVariablesWithDebugging() {
+            var filename = Path.Combine(TestData.GetTempPath(), Path.GetRandomFileName());
+            Console.WriteLine("Temp file is: {0}", filename);
+            var code = String.Format(@"
+from os import environ
+f = open('{0}', 'w')
+f.write(environ['fob'] + environ['oar'] + environ['baz'])
+f.close()
+while True: pass
+", filename.Replace("\\", "\\\\"));
+
+            var project = new ProjectDefinition("EnvironmentVariables", PythonProject,
+                Compile("main", code),
+                Property(PythonConstants.EnvironmentSetting, "fob=1\noar=2;3\r\nbaz=4"),
+                Property(CommonConstants.StartupFile, "main.py")
+            );
+
+            using (var solution = project.Generate().ToVs()) {
+                solution.ExecuteCommand("Debug.Start");
+                solution.WaitForMode(dbgDebugMode.dbgRunMode);
+
+                for (int i = 0; i < 10 && !File.Exists(filename); i++) {
+                    System.Threading.Thread.Sleep(1000);
+                }
+                Assert.IsTrue(File.Exists(filename), "environment variables not written out");
+                solution.ExecuteCommand("Debug.StopDebugging");
+
+                Assert.AreEqual(
+                    File.ReadAllText(filename),
+                    "12;34"
+                );
+            }
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("VSTestHost")]
+        public void EnvironmentVariablesWithoutDebugging() {
+            var filename = Path.Combine(TestData.GetTempPath(), Path.GetRandomFileName());
+            Console.WriteLine("Temp file is: {0}", filename);
+            var code = String.Format(@"
+from os import environ
+f = open('{0}', 'w')
+f.write(environ['fob'] + environ['oar'] + environ['baz'])
+f.close()
+while True: pass
+", filename.Replace("\\", "\\\\"));
+
+            var project = new ProjectDefinition("EnvironmentVariables", PythonProject,
+                Compile("main", code),
+                Property(PythonConstants.EnvironmentSetting, "fob=1\noar=2;3\r\nbaz=4"),
+                Property(CommonConstants.StartupFile, "main.py")
+            );
+
+            using (var solution = project.Generate().ToVs()) {
+                solution.ExecuteCommand("Debug.StartWithoutDebugging");
+
+                for (int i = 0; i < 10 && !File.Exists(filename); i++) {
+                    System.Threading.Thread.Sleep(1000);
+                }
+                Assert.IsTrue(File.Exists(filename), "environment variables not written out");
+
+                Assert.AreEqual(
+                    File.ReadAllText(filename),
+                    "12;34"
+                );
             }
         }
 

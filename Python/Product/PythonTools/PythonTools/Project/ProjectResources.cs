@@ -116,21 +116,6 @@ namespace Microsoft.PythonTools.Project {
         public const string StaticPatternError = "StaticPatternError";
         public const string WsgiHandlerHelp = "WsgiHandlerHelp";
 
-        public const string WebLauncherSearchPathHelp = "WebLauncherSearchPathHelp";
-        public const string WebLauncherArgumentsHelp = "WebLauncherArgumentsHelp";
-        public const string WebLauncherInterpreterArgumentsHelp = "WebLauncherInterpreterArgumentsHelp";
-        public const string WebLauncherInterpreterPathHelp = "WebLauncherInterpreterPathHelp";
-        public const string WebLauncherPortNumberHelp = "WebLauncherPortNumberHelp";
-        public const string WebLauncherLaunchUrlHelp = "WebLauncherLaunchUrlHelp";
-        public const string WebLauncherRunServerTargetHelp = "WebLauncherRunServerTargetHelp";
-        public const string WebLauncherRunServerTargetTypeHelp = "WebLauncherRunServerTargetTypeHelp";
-        public const string WebLauncherRunServerArgumentsHelp = "WebLauncherRunServerArgumentsHelp";
-        public const string WebLauncherRunServerEnvironmentHelp = "WebLauncherRunServerEnvironmentHelp";
-        public const string WebLauncherDebugServerTargetHelp = "WebLauncherDebugServerTargetHelp";
-        public const string WebLauncherDebugServerTargetTypeHelp = "WebLauncherDebugServerTargetTypeHelp";
-        public const string WebLauncherDebugServerArgumentsHelp = "WebLauncherDebugServerArgumentsHelp";
-        public const string WebLauncherDebugServerEnvironmentHelp = "WebLauncherDebugServerEnvironmentHelp";
-
         public const string DebugLaunchWorkingDirectoryMissing = "DebugLaunchWorkingDirectoryMissing";
         public const string DebugLaunchInterpreterMissing = "DebugLaunchInterpreterMissing";
 

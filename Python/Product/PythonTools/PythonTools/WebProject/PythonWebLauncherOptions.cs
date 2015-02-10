@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Project;
@@ -23,6 +24,7 @@ namespace Microsoft.PythonTools.Project.Web {
     public partial class PythonWebLauncherOptions : UserControl, IPythonLauncherOptions {
         private readonly Dictionary<string, TextBox> _textBoxMap;
         private readonly Dictionary<string, ComboBox> _comboBoxMap;
+        private readonly HashSet<string> _multilineProps;
         private readonly IPythonProject _properties;
         private bool _loadingSettings;
 
@@ -36,6 +38,7 @@ namespace Microsoft.PythonTools.Project.Web {
                 { PythonConstants.InterpreterArgumentsSetting, _interpArgs },
                 { PythonConstants.WebBrowserUrlSetting, _launchUrl },
                 { PythonConstants.WebBrowserPortSetting, _portNumber },
+                { PythonConstants.EnvironmentSetting, _environment },
                 { PythonWebLauncher.RunWebServerTargetProperty, _runServerTarget },
                 { PythonWebLauncher.RunWebServerArgumentsProperty, _runServerArguments },
                 { PythonWebLauncher.RunWebServerEnvironmentProperty, _runServerEnvironment },
@@ -49,45 +52,11 @@ namespace Microsoft.PythonTools.Project.Web {
                 { PythonWebLauncher.DebugWebServerTargetTypeProperty, _debugServerTargetType }
             };
 
-            _toolTip.SetToolTip(_searchPathLabel, SR.GetString(SR.WebLauncherSearchPathHelp));
-            _toolTip.SetToolTip(_searchPaths, SR.GetString(SR.WebLauncherSearchPathHelp));
-
-            _toolTip.SetToolTip(_arguments, SR.GetString(SR.WebLauncherArgumentsHelp));
-            _toolTip.SetToolTip(_argumentsLabel, SR.GetString(SR.WebLauncherArgumentsHelp));
-
-            _toolTip.SetToolTip(_interpArgsLabel, SR.GetString(SR.WebLauncherInterpreterArgumentsHelp));
-            _toolTip.SetToolTip(_interpArgs, SR.GetString(SR.WebLauncherInterpreterArgumentsHelp));
-
-            _toolTip.SetToolTip(_interpreterPath, SR.GetString(SR.WebLauncherInterpreterPathHelp));
-            _toolTip.SetToolTip(_interpreterPathLabel, SR.GetString(SR.WebLauncherInterpreterPathHelp));
-
-            _toolTip.SetToolTip(_launchUrl, SR.GetString(SR.WebLauncherLaunchUrlHelp));
-            _toolTip.SetToolTip(_launchUrlLabel, SR.GetString(SR.WebLauncherLaunchUrlHelp));
-
-            _toolTip.SetToolTip(_portNumber, SR.GetString(SR.WebLauncherPortNumberHelp));
-            _toolTip.SetToolTip(_portNumberLabel, SR.GetString(SR.WebLauncherPortNumberHelp));
-
-            _toolTip.SetToolTip(_runServerTarget, SR.GetString(SR.WebLauncherRunServerTargetHelp));
-            _toolTip.SetToolTip(_runServerTargetLabel, SR.GetString(SR.WebLauncherRunServerTargetHelp));
-
-            _toolTip.SetToolTip(_runServerTargetType, SR.GetString(SR.WebLauncherRunServerTargetTypeHelp));
-
-            _toolTip.SetToolTip(_runServerArguments, SR.GetString(SR.WebLauncherRunServerArgumentsHelp));
-            _toolTip.SetToolTip(_runServerArgumentsLabel, SR.GetString(SR.WebLauncherRunServerArgumentsHelp));
-
-            _toolTip.SetToolTip(_runServerEnvironment, SR.GetString(SR.WebLauncherRunServerEnvironmentHelp));
-            _toolTip.SetToolTip(_runServerEnvironmentLabel, SR.GetString(SR.WebLauncherRunServerEnvironmentHelp));
-
-            _toolTip.SetToolTip(_debugServerTarget, SR.GetString(SR.WebLauncherDebugServerTargetHelp));
-            _toolTip.SetToolTip(_debugServerTargetLabel, SR.GetString(SR.WebLauncherDebugServerTargetHelp));
-
-            _toolTip.SetToolTip(_debugServerTargetType, SR.GetString(SR.WebLauncherDebugServerTargetTypeHelp));
-
-            _toolTip.SetToolTip(_debugServerArguments, SR.GetString(SR.WebLauncherDebugServerArgumentsHelp));
-            _toolTip.SetToolTip(_debugServerArgumentsLabel, SR.GetString(SR.WebLauncherDebugServerArgumentsHelp));
-
-            _toolTip.SetToolTip(_debugServerEnvironment, SR.GetString(SR.WebLauncherDebugServerEnvironmentHelp));
-            _toolTip.SetToolTip(_debugServerEnvironmentLabel, SR.GetString(SR.WebLauncherDebugServerEnvironmentHelp));
+            _multilineProps = new HashSet<string> {
+                PythonConstants.EnvironmentSetting,
+                PythonWebLauncher.RunWebServerEnvironmentProperty,
+                PythonWebLauncher.DebugWebServerEnvironmentProperty
+            };
         }
 
         public PythonWebLauncherOptions(IPythonProject properties)
@@ -113,7 +82,11 @@ namespace Microsoft.PythonTools.Project.Web {
         public void LoadSettings() {
             _loadingSettings = true;
             foreach (var propTextBox in _textBoxMap) {
-                propTextBox.Value.Text = _properties.GetUnevaluatedProperty(propTextBox.Key);
+                string value = _properties.GetUnevaluatedProperty(propTextBox.Key);
+                if (_multilineProps.Contains(propTextBox.Key)) {
+                    value = FixLineEndings(value);
+                }
+                propTextBox.Value.Text = value;
             }
             foreach (var propComboBox in _comboBoxMap) {
                 int index = propComboBox.Value.FindString(_properties.GetUnevaluatedProperty(propComboBox.Key));
@@ -126,7 +99,11 @@ namespace Microsoft.PythonTools.Project.Web {
             TextBox textBox;
             ComboBox comboBox;
             if (_textBoxMap.TryGetValue(settingName, out textBox)) {
-                textBox.Text = _properties.GetUnevaluatedProperty(settingName);
+                string value = _properties.GetUnevaluatedProperty(settingName);
+                if (_multilineProps.Contains(settingName)) {
+                    value = FixLineEndings(value);
+                }
+                textBox.Text = value;
             } else if (_comboBoxMap.TryGetValue(settingName, out comboBox)) {
                 int index = comboBox.FindString(_properties.GetUnevaluatedProperty(settingName));
                 comboBox.SelectedIndex = index >= 0 ? index : 0;
@@ -140,6 +117,14 @@ namespace Microsoft.PythonTools.Project.Web {
         }
 
         #endregion
+
+        private static Regex lfToCrLfRegex = new Regex(@"(?<!\r)\n");
+
+        private static string FixLineEndings(string value) {
+            // TextBox requires \r\n for line separators, but XML can have either \n or \r\n, and we should treat those equally.
+            // (It will always have \r\n when we write it out, but users can edit it by other means.)
+            return lfToCrLfRegex.Replace(value ?? String.Empty, "\r\n");
+        }
 
         private void RaiseIsSaved() {
             var isDirty = DirtyChanged;

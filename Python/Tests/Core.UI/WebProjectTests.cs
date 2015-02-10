@@ -121,6 +121,35 @@ namespace PythonToolsUITests {
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("VSTestHost")]
+        public void WebProjectEnvironment() {
+            using (var app = new VisualStudioApp()) {
+                var project = app.OpenProject(@"TestData\CheckEnvironment.sln");
+
+                var proj = project.GetCommonProject() as IPythonProject2;
+                Assert.IsNotNull(proj);
+
+                var outFile = Path.Combine(Path.GetDirectoryName(project.FullName), "output.txt");
+                                if (File.Exists(outFile)) {
+                    File.Delete(outFile);
+                }
+
+                app.ServiceProvider.GetUIThread().Invoke(() => {
+                    proj.SetProperty("CommandLineArguments", '"' + outFile + '"');
+                    proj.SetProperty("Environment", "FOB=123\nOAR=456\r\nBAZ=789");
+                });
+
+                app.ExecuteCommand("Debug.StartWithoutDebugging");
+
+                for (int retries = 10; retries > 0 && !File.Exists(outFile); --retries) {
+                    Thread.Sleep(300);
+                }
+
+                Assert.AreEqual("FOB=123\r\nOAR=456\r\nBAZ=789", File.ReadAllText(outFile).Trim());
+            }
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("VSTestHost")]
         public void WebProjectStaticUri() {
             using (var app = new VisualStudioApp()) {
                 var project = app.CreateProject(

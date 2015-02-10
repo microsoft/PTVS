@@ -1,0 +1,18 @@
+
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "CheckEnvironment", "WebProject\CheckEnvironment.pyproj", "{c204540a-fb1c-4e06-8068-c2dcc28f6daf}"
+EndProject
+Global
+    GlobalSection(SolutionConfigurationPlatforms) = preSolution
+        Debug|Any CPU = Debug|Any CPU
+        Release|Any CPU = Release|Any CPU
+    EndGlobalSection
+    GlobalSection(ProjectConfigurationPlatforms) = postSolution
+        {c204540a-fb1c-4e06-8068-c2dcc28f6daf}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+        {c204540a-fb1c-4e06-8068-c2dcc28f6daf}.Release|Any CPU.ActiveCfg = Release|Any CPU
+    EndGlobalSection
+    GlobalSection(SolutionProperties) = preSolution
+        HideSolutionNode = FALSE
+    EndGlobalSection
+EndGlobal

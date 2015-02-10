@@ -114,6 +114,7 @@ namespace Microsoft.PythonTools {
         public const string CommandLineArgumentsSetting = "CommandLineArguments";
         public const string StartupFileSetting = "StartupFile";
         public const string IsWindowsApplicationSetting = "IsWindowsApplication";
+        public const string EnvironmentSetting = "Environment";
 
         /// <summary>
         /// Specifies port to which to open web browser on launch.
@@ -130,7 +131,7 @@ namespace Microsoft.PythonTools {
         /// </summary>
         public const string WebServerHostSetting = "WebServerHost";
 
-        //Mixed-mode debugging project property
+        // Mixed-mode debugging project property
         public const string EnableNativeCodeDebugging = "EnableNativeCodeDebugging";
 
         public const string WorkingDirectorySetting = "WorkingDirectory";
