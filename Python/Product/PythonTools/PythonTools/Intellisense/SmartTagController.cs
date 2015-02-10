@@ -85,8 +85,18 @@ namespace Microsoft.PythonTools.Intellisense {
                 // caret / text hasn't changed since we last computed the smart tag, don't bother computing again.
                 return;
             }
+            
+            if (_textView.IsClosed) {
+                // pending call from the idle loop but the editor was closed
+                return;
+            }
+            var model = _textView.TextViewModel;
+            if (model == null) {
+                // may have been nulled out if we're racing with close
+                return;
+            }
 
-            ITextSnapshot snapshot = _textView.TextViewModel.DataBuffer.CurrentSnapshot;
+            ITextSnapshot snapshot = model.DataBuffer.CurrentSnapshot;
             SnapshotPoint? caretPoint = _textView.Caret.Position.Point.GetPoint(snapshot, PositionAffinity.Successor);
             if (caretPoint != null &&
                 _curSession != null &&
