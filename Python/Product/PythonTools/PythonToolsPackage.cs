@@ -402,8 +402,8 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             }
         }
 
-        internal static void OpenNoInterpretersHelpPage(System.IServiceProvider serviceProvider) {
-            OpenVsWebBrowser(serviceProvider, PythonToolsInstallPath.GetFile("NoInterpreters.mht"));
+        internal static void OpenNoInterpretersHelpPage(System.IServiceProvider serviceProvider, string page = null) {
+            OpenVsWebBrowser(serviceProvider, page ?? PythonToolsInstallPath.GetFile("NoInterpreters.mht"));
         }
 
         public static string InterpreterHelpUrl {

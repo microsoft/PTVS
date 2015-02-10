@@ -1172,8 +1172,9 @@ namespace Microsoft.PythonTools.Project {
                         command.ExecuteAsync(null).ContinueWith(t => {
                             if (t.Exception != null) {
                                 var ex = t.Exception.InnerException ?? t.Exception;
-                                if (ex is NoInterpretersException) {
-                                    PythonToolsPackage.OpenNoInterpretersHelpPage(Site);
+                                var niex = ex as NoInterpretersException;
+                                if (niex != null) {
+                                    PythonToolsPackage.OpenNoInterpretersHelpPage(Site, niex.HelpPage);
                                 } else {
                                     MessageBox.Show(
                                         SR.GetString(

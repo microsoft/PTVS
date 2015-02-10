@@ -18,7 +18,8 @@
 
     <!-- Resources -->
     <File Include="PythonProject.ico;
-                   PythonProjectBig.ico" />
+                   PythonProjectBig.ico;
+                   NoIronPython.mht" />
 
     <!-- Templates -->
     <ItemTemplate Include="ItemTemplates\Python\WpfWindow.zip" />

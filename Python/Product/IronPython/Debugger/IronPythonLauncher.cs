@@ -57,13 +57,25 @@ namespace Microsoft.IronPythonTools.Debugger {
             return LaunchFile(startupFile, debug);
         }
 
+        private string NoIronPythonHelpPage {
+            get {
+                try {
+                    var path = Path.GetDirectoryName(typeof(IronPythonLauncher).Assembly.Location);
+                    return Path.Combine(path, "NoIronPython.mht");
+                } catch (ArgumentException) {
+                } catch (NotSupportedException) {
+                }
+                return null;
+            }
+        }
+
         public int LaunchFile(string file, bool debug) {
             var factory = _project.GetInterpreterFactory();
 
             if (factory == null ||
                 factory.Configuration == null ||
                 !File.Exists(factory.Configuration.InterpreterPath)) {
-                throw new NoInterpretersException();
+                throw new NoInterpretersException(null, NoIronPythonHelpPage);
             }
 
             if (factory.Id == _cpyInterpreterGuid || factory.Id == _cpy64InterpreterGuid) {

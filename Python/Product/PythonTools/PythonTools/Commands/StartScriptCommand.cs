@@ -50,8 +50,8 @@ namespace Microsoft.PythonTools.Commands {
             var launcher = PythonToolsPackage.GetLauncher(_serviceProvider, pythonProject);
             try {
                 launcher.LaunchFile(file, CommandId == CommonConstants.StartDebuggingCmdId);
-            } catch (NoInterpretersException) {
-                PythonToolsPackage.OpenNoInterpretersHelpPage(_serviceProvider);
+            } catch (NoInterpretersException ex) {
+                PythonToolsPackage.OpenNoInterpretersHelpPage(_serviceProvider, ex.HelpPage);
             }
         }
 

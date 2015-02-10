@@ -18,9 +18,19 @@ using Microsoft.PythonTools.Project;
 namespace Microsoft.PythonTools {
     [Serializable]
     public class NoInterpretersException : Exception {
+        private readonly string _helpPage;
+
         public NoInterpretersException() : this(SR.GetString(SR.NoInterpretersAvailable)) { }
         public NoInterpretersException(string message) : base(message) { }
         public NoInterpretersException(string message, Exception inner) : base(message, inner) { }
+
+        public NoInterpretersException(string message, string helpPage)
+            : base(message) {
+            _helpPage = helpPage;
+        }
+
+        public string HelpPage { get { return _helpPage; } }
+
         protected NoInterpretersException(
           System.Runtime.Serialization.SerializationInfo info,
           System.Runtime.Serialization.StreamingContext context)

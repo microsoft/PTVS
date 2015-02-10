@@ -41,8 +41,8 @@ namespace Microsoft.PythonTools.Project {
 
             try {
                 return base.DebugLaunch(flags);
-            } catch (NoInterpretersException) {
-                PythonToolsPackage.OpenNoInterpretersHelpPage(ProjectMgr.Site);
+            } catch (NoInterpretersException ex) {
+                PythonToolsPackage.OpenNoInterpretersHelpPage(ProjectMgr.Site, ex.HelpPage);
                 return VSConstants.S_OK;
             }
         }

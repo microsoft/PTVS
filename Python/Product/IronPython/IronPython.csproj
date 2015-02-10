@@ -171,6 +171,7 @@
       <IncludeInVSIX>true</IncludeInVSIX>
       <VSIXSubPath>.</VSIXSubPath>
     </Content>
+    <None Include="NoIronPython.html" />
   </ItemGroup>
   <ItemDefinitionGroup>
     <ZipProject>
@@ -191,6 +192,10 @@
     <ZipProject Include="Templates\Projects\WinformsProject\Program.py" />
     <ZipProject Include="Templates\Projects\WinformsProject\WinformsApp.vstemplate" />
     <ZipProject Include="Templates\Projects\WpfProject\WpfApp.vstemplate" />
+    <Content Include="NoIronPython.mht">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
     <None Include="source.extension.vsixmanifest">
       <SubType>Designer</SubType>
     </None>
