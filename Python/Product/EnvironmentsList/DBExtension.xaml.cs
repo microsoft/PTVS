@@ -20,6 +20,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -31,7 +32,6 @@ using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudioTools;
 using Resources = Microsoft.PythonTools.EnvironmentsList.Properties.Resources;
-
 
 namespace Microsoft.PythonTools.EnvironmentsList {
     internal partial class DBExtension : UserControl {
@@ -95,21 +95,37 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 if (_packages == null) {
                     lock (_packagesLock) {
                         _packages = _packages ?? new ObservableCollection<DBPackageView>();
-                        RefreshPackages()
-                            .HandleAllExceptions(Resources.PythonToolsForVisualStudio, GetType())
-                            .ContinueWith(t => { t.Wait(); });
+                        RefreshPackages();
                     }
                 }
                 return _packages;
             }
         }
 
-        private async Task RefreshPackages() {
-            var views = DBPackageView.FromModuleList(
-                await _provider.EnumerateAllModules(),
-                await _provider.EnumerateStdLibModules(),
-                _provider.Factory
-            ).ToArray();
+        private async void RefreshPackages() {
+            try {
+                await RefreshPackagesAsync();
+            } catch (OperationCanceledException) {
+            } catch (Exception ex) {
+                if (ex.IsCriticalException()) {
+                    throw;
+                }
+                ToolWindow.SendUnhandledException(_provider.WpfObject, ExceptionDispatchInfo.Capture(ex));
+            }
+        }
+
+        private async Task RefreshPackagesAsync() {
+            IEnumerable<DBPackageView> views;
+            try {
+                views = DBPackageView.FromModuleList(
+                    await _provider.EnumerateAllModules(),
+                    await _provider.EnumerateStdLibModules(),
+                    _provider.Factory
+                ).ToList();
+            } catch (InvalidOperationException) {
+                // Configuration is invalid, so don't display any packages
+                return;
+            }
 
             if (_packages == null) {
                 lock (_packagesLock) {
@@ -130,8 +146,13 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         private async void Provider_ModulesChanged(object sender, EventArgs e) {
             try {
-                await RefreshPackages();
+                await RefreshPackagesAsync();
             } catch (OperationCanceledException) {
+            } catch (Exception ex) {
+                if (ex.IsCriticalException()) {
+                    throw;
+                }
+                ToolWindow.SendUnhandledException(_provider.WpfObject, ExceptionDispatchInfo.Capture(ex));
             }
         }
 
@@ -295,6 +316,14 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             }
         }
 
+        private void AbortOnInvalidConfiguration() {
+            if (_factory == null || _factory.Configuration == null ||
+                string.IsNullOrEmpty(_factory.Configuration.InterpreterPath)) {
+                throw new InvalidOperationException(Resources.MisconfiguredEnvironment);
+            }
+        }
+
+
         private static IEnumerable<string> GetParentModuleNames(string fullname) {
             var sb = new StringBuilder();
             foreach (var bit in fullname.Split('.')) {
@@ -313,6 +342,8 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
 
         public async Task<List<string>> EnumerateAllModules(bool refresh = false) {
+            AbortOnInvalidConfiguration();
+
             if (_modules == null || refresh) {
                 var stdLibPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
                 stdLibPaths.Add(_factory.Configuration.LibraryPath);

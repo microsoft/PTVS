@@ -155,9 +155,6 @@
                 </Grid>
 
                 <DataTemplate.Triggers>
-                    <Trigger SourceName="InteractiveWindowButton" Property="IsEnabled" Value="False">
-                        <Setter TargetName="InteractiveWindowButton" Property="Visibility" Value="Collapsed" />
-                    </Trigger>
                     <DataTrigger Binding="{Binding IsDefault}" Value="True">
                         <Setter TargetName="Name_IsDefault" Property="Visibility" Value="Visible" />
                         <Setter TargetName="Name_IsNotDefault" Property="Visibility" Value="Collapsed" />

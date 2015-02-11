@@ -19,6 +19,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Runtime.ExceptionServices;
 using System.Security.AccessControl;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -428,15 +429,13 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
 
         internal async Task<bool> IsPipInstalled() {
+            AbortOnInvalidConfiguration();
+
             using (var output = ProcessOutput.RunHiddenAndCapture(
                 _factory.Configuration.InterpreterPath,
                 "-c", "import pip"
             )) {
-                try {
-                    return (await output) == 0;
-                } catch (OperationCanceledException) {
-                    return false;
-                }
+                return (await output) == 0;
             }
         }
 
@@ -454,7 +453,27 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             }
         }
 
+        public bool CanExecute {
+            get {
+                if (_factory == null || _factory.Configuration == null ||
+                    string.IsNullOrEmpty(_factory.Configuration.InterpreterPath)) {
+                    return false;
+                }
+
+                return true;
+            }
+        }
+
+        private void AbortOnInvalidConfiguration() {
+            if (_factory == null || _factory.Configuration == null ||
+                string.IsNullOrEmpty(_factory.Configuration.InterpreterPath)) {
+                throw new InvalidOperationException(Resources.MisconfiguredEnvironment);
+            }
+        }
+
         public async Task InstallPip() {
+            AbortOnInvalidConfiguration();
+            
             using (await WaitAndLockPip()) {
                 OnOperationStarted(Resources.InstallingPipStarted);
                 using (var output = ProcessOutput.Run(
@@ -466,10 +485,6 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                     _output,
                     elevate: ShouldElevate
                 )) {
-                    if (!output.IsStarted) {
-                        OnOperationFinished(Resources.InstallingPipFailed);
-                        return;
-                    }
                     bool success = true;
                     try {
                         var exitCode = await output;
@@ -477,6 +492,14 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                             success = false;
                             throw new PipException(Resources.InstallationFailed);
                         }
+                    } catch (OperationCanceledException) {
+                        success = false;
+                    } catch (Exception ex) {
+                        success = false;
+                        if (ex.IsCriticalException()) {
+                            throw;
+                        }
+                        ToolWindow.UnhandledException.Execute(ExceptionDispatchInfo.Capture(ex), WpfObject);
                     } finally {
                         OnOperationFinished(
                             success ? Resources.InstallingPipSuccess : Resources.InstallingPipFailed

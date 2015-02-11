@@ -79,7 +79,9 @@
                         <Grid>
                             <Button x:Name="_Button"
                                     Command="{x:Static l:DBExtension.StartRefreshDB}"
-                                    CommandParameter="{Binding EnvironmentView}">
+                                    CommandParameter="{Binding EnvironmentView}"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center">
                                 Refresh DB
                             </Button>
 

@@ -170,6 +170,10 @@
   <data name="ListFailed" xml:space="preserve">
     <value>Enumerating packages failed</value>
   </data>
+  <data name="MisconfiguredEnvironment" xml:space="preserve">
+    <value>Operation cannot be started because the environment is not configured.</value>
+    <comment>Used as exception text</comment>
+  </data>
   <data name="PipDefaultIndexName" xml:space="preserve">
     <value>PyPI</value>
   </data>

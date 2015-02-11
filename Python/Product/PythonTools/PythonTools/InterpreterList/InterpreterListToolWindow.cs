@@ -29,6 +29,7 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 using SR = Microsoft.PythonTools.Project.SR;
 
@@ -149,12 +150,15 @@ namespace Microsoft.PythonTools.InterpreterList {
         private void UnhandledException_Executed(object sender, ExecutedRoutedEventArgs e) {
             var ex = (ExceptionDispatchInfo)e.Parameter;
             Debug.Assert(ex != null, "Unhandled exception with no exception object");
-            try {
-                ex.Throw();
-            } catch (PipException) {
-                // Don't rethrow Pip exceptions. The output messages have
+            if (ex.SourceException is PipException) {
+                // Don't report Pip exceptions. The output messages have
                 // already been handled.
+                return;
             }
+
+            var td = TaskDialog.ForException(_site, ex.SourceException, String.Empty, PythonConstants.IssueTrackerUrl);
+            td.Title = SR.ProductName;
+            td.ShowModal();
         }
 
         private void OpenInteractiveWindow_CanExecute(object sender, CanExecuteRoutedEventArgs e) {

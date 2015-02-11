@@ -191,6 +191,15 @@ namespace Microsoft.PythonTools.EnvironmentsList.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Operation cannot be started because the environment is not configured..
+        /// </summary>
+        internal static string MisconfiguredEnvironment {
+            get {
+                return ResourceManager.GetString("MisconfiguredEnvironment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to PyPI.
         /// </summary>
         internal static string PipDefaultIndexName {

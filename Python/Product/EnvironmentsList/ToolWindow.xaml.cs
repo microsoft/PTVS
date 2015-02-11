@@ -18,6 +18,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -55,6 +56,16 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             InitializeComponent();
             CreateListener();
             SizeChanged += ToolWindow_SizeChanged;
+        }
+
+        internal static async void SendUnhandledException(UIElement element, ExceptionDispatchInfo edi) {
+            try {
+                await element.Dispatcher.InvokeAsync(() => {
+                    UnhandledException.Execute(edi, element);
+                });
+            } catch (InvalidOperationException) {
+                UnhandledException.Execute(edi, element);
+            }
         }
 
         void ToolWindow_SizeChanged(object sender, SizeChangedEventArgs e) {
