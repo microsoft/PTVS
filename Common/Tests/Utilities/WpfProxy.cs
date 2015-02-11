@@ -48,11 +48,13 @@ namespace TestUtilities {
                 throw new InvalidOperationException("Unable to get dispatcher");
             }
 
-            for (int retries = 10; retries > 0; --retries) {
+            // Allow plenty of time for the dispatcher to start responding
+            for (int retries = 50; retries > 0; --retries) {
                 try {
                     _dispatcher.Invoke(() => { });
                     break;
                 } catch (OperationCanceledException) {
+                    Thread.Sleep(100);
                 }
             }
         }
@@ -72,15 +74,7 @@ namespace TestUtilities {
         }
 
         public dynamic Create<T>(Func<T> creator) where T : DependencyObject {
-            for (int retries = 10; retries > 0; --retries) {
-                try {
-                    return new WpfObjectProxy<T>(this, Invoke(creator));
-                } catch (OperationCanceledException) {
-                    Trace.WriteLine("Creation was aborted. Retrying");
-                    Thread.Sleep(100);
-                }
-            }
-            throw new OperationCanceledException("Failed to create instance of " + typeof(T).FullName);
+            return new WpfObjectProxy<T>(this, InvokeWithRetry(creator));
         }
 
         public void Dispose() {
@@ -116,20 +110,24 @@ namespace TestUtilities {
         }
 
         public void InvokeWithRetry(Action action, DispatcherPriority priority = DispatcherPriority.Normal) {
-            for (int retries = 10; retries > 0; --retries) {
+            for (int retries = 100; retries > 0; --retries) {
                 try {
                     _dispatcher.Invoke(action, priority);
                     return;
                 } catch (OperationCanceledException) {
+                    Thread.Sleep(10);
                 }
             }
+            throw new OperationCanceledException();
         }
 
         public T InvokeWithRetry<T>(Func<T> action, DispatcherPriority priority = DispatcherPriority.Normal) {
-            for (int retries = 10; retries > 0; --retries) {
+            for (int retries = 100; retries > 0; --retries) {
                 try {
                     return _dispatcher.Invoke(action, priority);
-                } catch (OperationCanceledException) { }
+                } catch (OperationCanceledException) {
+                    Thread.Sleep(10);
+                }
             }
             throw new OperationCanceledException();
         }

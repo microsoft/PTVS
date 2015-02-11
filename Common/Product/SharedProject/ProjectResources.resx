@@ -649,7 +649,7 @@ Run Visual Studio with the /Log option and check ActivityLog.xml for more detail
   </data>
   <data name="FolderCannotBeCreatedOnDisk" xml:space="preserve">
     <value>The folder '{0}' does not exist on disk and could not be created.</value>
-  </data>    
+  </data>
   <data name="FolderPathTooLongShortMessage" xml:space="preserve">
     <value>The folder name is too long.</value>
   </data>
@@ -661,5 +661,10 @@ folder you are copying, do you want to replace the existing files?</value>
   </data>
   <data name="SourceUrlNotFound" xml:space="preserve">
     <value>The source URL '{0}' could not be found.</value>
+  </data>
+  <data name="SeeActivityLog" xml:space="preserve">
+    <value>An unexpected error occurred.
+
+You can get more information by running Visual Studio with the /log parameter on the command line, and then examining the file '{0}'.</value>
   </data>
 </root>

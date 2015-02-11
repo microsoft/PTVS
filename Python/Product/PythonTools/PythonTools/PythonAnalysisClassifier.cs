@@ -439,10 +439,12 @@ namespace Microsoft.PythonTools {
                 }
             }
             if (node.Names != null) {
-                foreach (var dottedName in node.Names) {
+                for (int i = 0; i < node.Names.Count; ++i) {
+                    var dottedName = node.Names[i];
+                    var hasAsName = (node.AsNames != null && node.AsNames.Count > i) ? node.AsNames[i] != null : false;
                     foreach (var name in dottedName.Names) {
                         if (name != null && !string.IsNullOrEmpty(name.Name)) {
-                            if (node.AsNames == null) {
+                            if (!hasAsName) {
                                 _head.Modules.Add(name.Name);
                                 _head.Names.Add(Tuple.Create(name.Name, Span.FromBounds(name.StartIndex, name.EndIndex)));
                             } else {

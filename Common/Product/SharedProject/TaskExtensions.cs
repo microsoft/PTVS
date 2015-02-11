@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
@@ -22,6 +23,8 @@ using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.VisualStudioTools {
     static class TaskExtensions {
+        private static readonly HashSet<string> _displayedMessages = new HashSet<string>();
+
         /// <summary>
         /// Suppresses warnings about unawaited tasks and ensures that unhandled
         /// errors will cause the process to terminate.
@@ -145,6 +148,10 @@ namespace Microsoft.VisualStudioTools {
 
                 try {
                     ActivityLog.LogError(productTitle, message);
+                    if (_displayedMessages.Add(string.Format("{0}:{1}", callerFile, callerLineNumber))) {
+                        // First time we've seen this error, so let the user know
+                        System.Windows.Forms.MessageBox.Show(SR.GetString(SR.SeeActivityLog, ActivityLog.LogFilePath), productTitle);
+                    }
                 } catch (InvalidOperationException) {
                     // Activity Log is unavailable.
                 }

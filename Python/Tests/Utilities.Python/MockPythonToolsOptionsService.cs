@@ -23,19 +23,19 @@ namespace TestUtilities.Python {
     public sealed class MockPythonToolsOptionsService : IPythonToolsOptionsService {
         private Dictionary<string, Dictionary<string, string>> _options = new Dictionary<string, Dictionary<string, string>>(StringComparer.OrdinalIgnoreCase);
 
-        public void SaveString(string name, string value, string cat) {
-            Dictionary<string, string> category;
-            if (!_options.TryGetValue(cat, out category)) {
-                _options[cat] = category = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        public void SaveString(string name, string category, string value) {
+            Dictionary<string, string> catDict;
+            if (!_options.TryGetValue(category, out catDict)) {
+                _options[category] = catDict = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             }
-            category[name] = value;
+            catDict[name] = value;
         }
 
-        public string LoadString(string name, string cat) {
-            Dictionary<string, string> category;
+        public string LoadString(string name, string category) {
+            Dictionary<string, string> catDict;
             string res;
-            if (!_options.TryGetValue(cat, out category) ||
-                !category.TryGetValue(name, out res)) {
+            if (!_options.TryGetValue(category, out catDict) ||
+                !catDict.TryGetValue(name, out res)) {
                 return null;
             }
 

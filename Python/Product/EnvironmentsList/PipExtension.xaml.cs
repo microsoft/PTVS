@@ -31,7 +31,7 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.EnvironmentsList {
-    internal partial class PipExtension : UserControl {
+    internal sealed partial class PipExtension : UserControl {
         public static readonly ICommand InstallPackage = new RoutedCommand();
         public static readonly ICommand UpgradePackage = new RoutedCommand();
         public static readonly ICommand UninstallPackage = new RoutedCommand();
@@ -195,6 +195,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public void Dispose() {
             _provider.UpdateStarted -= PipExtensionProvider_UpdateStarted;
             _provider.UpdateComplete -= PipExtensionProvider_UpdateComplete;
+            _installableViewRefreshTimer.Dispose();
         }
 
         public EnvironmentView EnvironmentView {

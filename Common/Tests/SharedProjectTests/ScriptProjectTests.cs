@@ -32,14 +32,10 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                 using (var solution = testDef.Generate().ToVs()) {
                     solution.OpenDialogWithDteExecuteCommand("Debug.Start");
-                    solution.CheckMessageBox(
-                        "No startup file is defined for the startup project."
-                    );
+                    solution.CheckMessageBox("startup file");
 
                     solution.OpenDialogWithDteExecuteCommand("Debug.StartWithoutDebugging");
-                    solution.CheckMessageBox(
-                        "No startup file is defined for the startup project."
-                    );
+                    solution.CheckMessageBox("startup file");
                 }
             }
         }

@@ -174,7 +174,6 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                         Assert.IsTrue(item.Object is VSProjectItem);
                         var vsProjItem = (VSProjectItem)item.Object;
-                        Assert.AreEqual(vsProjItem.DTE, VSTestContext.DTE);
                         Assert.AreEqual(vsProjItem.ContainingProject, project);
                         Assert.AreEqual(vsProjItem.ProjectItem.ContainingProject, project);
                         vsProjItem.ProjectItem.Open();
@@ -182,7 +181,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                         Assert.AreEqual(true, vsProjItem.ProjectItem.Saved);
                         vsProjItem.ProjectItem.Document.Close(vsSaveChanges.vsSaveChangesNo);
                         Assert.AreEqual(false, vsProjItem.ProjectItem.IsOpen);
-                        Assert.AreEqual(VSTestContext.DTE, vsProjItem.ProjectItem.DTE);
+                        Assert.AreEqual(vsProjItem.DTE, vsProjItem.ProjectItem.DTE);
 
                         Assert.AreEqual(1, project.ProjectItems.Count - previousCount, "Expected one new item");
                         previousCount = project.ProjectItems.Count;
@@ -1242,54 +1241,6 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     newProcs.First().Kill();
                 }
             }
-        }
-
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
-        public void CopyFullPath() {
-            foreach (var projectType in ProjectTypes) {
-                var def = new ProjectDefinition(
-                    "HelloWorld",
-                    projectType,
-                    Compile("server"),
-                    Folder("IncFolder", isExcluded: false),
-                    Folder("ExcFolder", isExcluded: true),
-                    Compile("app", isExcluded: true),
-                    Compile("missing", isMissing: true)
-                );
-
-                using (var solution = def.Generate().ToVs()) {
-                    var projectDir = Path.GetDirectoryName(solution.GetProject("HelloWorld").FullName);
-
-                    CheckCopyFullPath(solution.WaitForItem("HelloWorld", "IncFolder"),
-                                      projectDir + "\\IncFolder\\");
-                    var excFolder = solution.WaitForItem("HelloWorld", "ExcFolder");
-                    if (excFolder == null) {
-                        solution.SelectProject(solution.GetProject("HelloWorld"));
-                        solution.ExecuteCommand("Project.ShowAllFiles");
-                        excFolder = solution.WaitForItem("HelloWorld", "ExcFolder");
-                    }
-                    CheckCopyFullPath(excFolder, projectDir + "\\ExcFolder\\");
-                    CheckCopyFullPath(solution.WaitForItem("HelloWorld", "server" + def.ProjectType.CodeExtension),
-                                      projectDir + "\\server" + def.ProjectType.CodeExtension);
-                    CheckCopyFullPath(solution.WaitForItem("HelloWorld", "app" + def.ProjectType.CodeExtension),
-                                      projectDir + "\\app" + def.ProjectType.CodeExtension);
-                    CheckCopyFullPath(solution.WaitForItem("HelloWorld", "missing" + def.ProjectType.CodeExtension),
-                                      projectDir + "\\missing" + def.ProjectType.CodeExtension);
-
-                }
-            }
-        }
-
-        private void CheckCopyFullPath(ITreeNode element, string expected) {
-            string clipboardText = "";
-            Console.WriteLine("Checking CopyFullPath on:{0}", expected);
-            AutomationWrapper.Select(element);
-            VSTestContext.DTE.ExecuteCommand("File.CopyFullPath");
-
-            ThreadHelper.Generic.Invoke(() => clipboardText = System.Windows.Clipboard.GetText());
-
-            Assert.AreEqual(expected, clipboardText);
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]

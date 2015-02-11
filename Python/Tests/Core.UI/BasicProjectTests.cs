@@ -239,7 +239,6 @@ namespace PythonToolsUITests {
 
                 Assert.IsTrue(item.Object is VSProjectItem);
                 var vsProjItem = (VSProjectItem)item.Object;
-                Assert.AreEqual(vsProjItem.DTE, app.Dte);
                 Assert.AreEqual(vsProjItem.ContainingProject, project);
                 Assert.AreEqual(vsProjItem.ProjectItem.ContainingProject, project);
                 vsProjItem.ProjectItem.Open();
@@ -247,7 +246,7 @@ namespace PythonToolsUITests {
                 Assert.AreEqual(true, vsProjItem.ProjectItem.Saved);
                 vsProjItem.ProjectItem.Document.Close(vsSaveChanges.vsSaveChangesNo);
                 Assert.AreEqual(false, vsProjItem.ProjectItem.IsOpen);
-                Assert.AreEqual(app.Dte, vsProjItem.ProjectItem.DTE);
+                Assert.AreEqual(vsProjItem.DTE, vsProjItem.ProjectItem.DTE);
 
                 Assert.AreEqual(5, project.ProjectItems.Count);
 
@@ -1493,6 +1492,59 @@ while True: pass
         }
 
 #endif
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("VSTestHost")]
+        public void CopyFullPath() {
+            foreach (var projectType in ProjectTypes) {
+                var def = new ProjectDefinition(
+                    "HelloWorld",
+                    projectType,
+                    Compile("server"),
+                    Folder("IncFolder", isExcluded: false),
+                    Folder("ExcFolder", isExcluded: true),
+                    Compile("app", isExcluded: true),
+                    Compile("missing", isMissing: true)
+                );
+
+                using (var solution = def.Generate().ToVs()) {
+                    var projectDir = Path.GetDirectoryName(solution.GetProject("HelloWorld").FullName);
+
+                    CheckCopyFullPath(solution,
+                                      solution.WaitForItem("HelloWorld", "IncFolder"),
+                                      projectDir + "\\IncFolder\\");
+                    var excFolder = solution.WaitForItem("HelloWorld", "ExcFolder");
+                    if (excFolder == null) {
+                        solution.SelectProject(solution.GetProject("HelloWorld"));
+                        solution.ExecuteCommand("Project.ShowAllFiles");
+                        excFolder = solution.WaitForItem("HelloWorld", "ExcFolder");
+                    }
+                    CheckCopyFullPath(solution, excFolder, projectDir + "\\ExcFolder\\");
+                    CheckCopyFullPath(solution,
+                                      solution.WaitForItem("HelloWorld", "server" + def.ProjectType.CodeExtension),
+                                      projectDir + "\\server" + def.ProjectType.CodeExtension);
+                    CheckCopyFullPath(solution,
+                                      solution.WaitForItem("HelloWorld", "app" + def.ProjectType.CodeExtension),
+                                      projectDir + "\\app" + def.ProjectType.CodeExtension);
+                    CheckCopyFullPath(solution,
+                                      solution.WaitForItem("HelloWorld", "missing" + def.ProjectType.CodeExtension),
+                                      projectDir + "\\missing" + def.ProjectType.CodeExtension);
+                }
+            }
+        }
+
+        private void CheckCopyFullPath(IVisualStudioInstance vs, ITreeNode element, string expected) {
+            string clipboardText = "";
+            Console.WriteLine("Checking CopyFullPath on:{0}", expected);
+            AutomationWrapper.Select(element);
+            VSTestContext.DTE.ExecuteCommand("Python.CopyFullPath");
+
+            var app = ((VisualStudioInstance)vs).App;
+            app.ServiceProvider.GetUIThread().Invoke(() => clipboardText = System.Windows.Clipboard.GetText());
+
+            Assert.AreEqual(expected, clipboardText);
+        }
+
 
         private static void CountIs(Dictionary<string, int> count, string key, int expected) {
             int actual;

@@ -599,9 +599,9 @@ namespace PythonToolsUITests {
 
         static IInterpreterOptionsService GetInterpreterOptionsService() {
             var sp = new MockServiceProvider();
-            sp.Services[typeof(SVsActivityLog)] = new MockActivityLog();
+            sp.Services[typeof(SVsActivityLog).GUID] = new MockActivityLog();
             var settings = new MockSettingsManager();
-            sp.Services[typeof(SVsSettingsManager)] = settings;
+            sp.Services[typeof(SVsSettingsManager).GUID] = settings;
             settings.Store.AddSetting(
                 InterpreterOptionsService.FactoryProvidersCollection + "\\CPythonAndConfigurable",
                 InterpreterOptionsService.FactoryProviderCodeBaseSetting,

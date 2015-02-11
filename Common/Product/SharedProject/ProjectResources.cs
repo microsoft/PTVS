@@ -146,6 +146,7 @@ namespace Microsoft.VisualStudioTools.Project {
         internal const string SaveOfProjectFileOutsideCurrentDirectory = "SaveOfProjectFileOutsideCurrentDirectory";
         internal const string ScriptArguments = "ScriptArguments";
         internal const string ScriptArgumentsDescription = "ScriptArgumentsDescription";
+        internal const string SeeActivityLog = "SeeActivityLog";
         internal const string Settings = "Settings";
         internal const string SourceUrlNotFound = "SourceUrlNotFound";
         internal const string StandardEditorViewError = "StandardEditorViewError";

@@ -29,16 +29,16 @@ namespace Microsoft.PythonTools.Options {
             _settingsStore = settingsManager.GetWritableSettingsStore(SettingsScope.UserSettings);
         }
 
-        public void SaveString(string name, string value, string cat) {
-            _settingsStore.SetString(GetCollectionPath(cat), name, value);
+        public void SaveString(string name, string category, string value) {
+            _settingsStore.SetString(GetCollectionPath(category), name, value);
         }
 
-        private static string GetCollectionPath(string cat) {
-            return PythonCoreConstants.BaseRegistryKey + "\\" + _optionsKey + "\\" + cat;
+        private static string GetCollectionPath(string category) {
+            return PythonCoreConstants.BaseRegistryKey + "\\" + _optionsKey + "\\" + category;
         }
 
-        public string LoadString(string name, string cat) {
-            var res = _settingsStore.GetString(GetCollectionPath(cat), name, null);
+        public string LoadString(string name, string category) {
+            var res = _settingsStore.GetString(GetCollectionPath(category), name, null);
             return res;
         }
     }

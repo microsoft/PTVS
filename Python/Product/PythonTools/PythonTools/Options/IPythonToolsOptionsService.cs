@@ -15,7 +15,7 @@
 
 namespace Microsoft.PythonTools.Options {
     interface IPythonToolsOptionsService {
-        void SaveString(string name, string value, string category);
+        void SaveString(string name, string category, string value);
         string LoadString(string name, string category);
     }
 }

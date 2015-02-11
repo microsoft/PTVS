@@ -196,7 +196,7 @@ namespace TestUtilities.UI {
                 foreach (var ex in ae.InnerExceptions) {
                     Console.WriteLine(ex.ToString());
                 }
-                throw;
+                throw ae.InnerException;
             }
 
             if (timedOut) {

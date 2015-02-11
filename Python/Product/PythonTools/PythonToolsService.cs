@@ -34,11 +34,14 @@ using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools {
+    using System.Diagnostics.CodeAnalysis;
     using IServiceProvider = System.IServiceProvider;
 
     /// <summary>
     /// Provides services and state which need to be available to various PTVS components.
     /// </summary>
+    [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",
+        Justification = "Object will never be disposed")]
     public sealed class PythonToolsService {
         private readonly IServiceContainer _container;
         private LanguagePreferences _langPrefs;
@@ -242,7 +245,7 @@ namespace Microsoft.PythonTools {
                 throw new InvalidOperationException("Unknown option " + name);
             }
 
-            SaveString(name, option.SerializeOptionValue(value), _formattingCat);
+            SaveString(name, _formattingCat, option.SerializeOptionValue(value));
         }
 
         /// <summary>
@@ -464,11 +467,11 @@ namespace Microsoft.PythonTools {
         }
 
         internal void SaveString(string name, string category, string value) {
-            _optionsService.SaveString(name, value, category);
+            _optionsService.SaveString(name, category, value);
         }
 
-        internal string LoadString(string name, string cat) {
-            return _optionsService.LoadString(name, cat);
+        internal string LoadString(string name, string category) {
+            return _optionsService.LoadString(name, category);
         }
 
         internal void SaveEnum<T>(string name, string category, T value) where T : struct {

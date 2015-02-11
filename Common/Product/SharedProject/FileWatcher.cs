@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -104,6 +105,8 @@ namespace Microsoft.VisualStudioTools {
             }
         }
 
+        [SuppressMessage("Microsoft.Usage", "CA2213:DisposableFieldsShouldBeDisposed", MessageId = "_fsw",
+            Justification = "Will be disposed on a separate thread to avoid deadlocks")]
         public void Dispose() {
             if (!IsDisposing) {
                 IsDisposing = true;

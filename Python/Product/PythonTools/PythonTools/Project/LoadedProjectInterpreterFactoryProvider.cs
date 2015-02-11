@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Microsoft.PythonTools.Interpreter;
@@ -22,6 +23,8 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Project {
+    [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",
+        Justification = "Object is owned by MEF and will never be disposed")]
     [Guid(GuidList.guidLoadedProjectInterpreterFactoryProviderString)]
     [Export(typeof(IPythonInterpreterFactoryProvider))]
     [PartCreationPolicy(CreationPolicy.Shared)]

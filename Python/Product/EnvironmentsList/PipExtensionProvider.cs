@@ -432,7 +432,11 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 _factory.Configuration.InterpreterPath,
                 "-c", "import pip"
             )) {
-                return (await output) == 0;
+                try {
+                    return (await output) == 0;
+                } catch (OperationCanceledException) {
+                    return false;
+                }
             }
         }
 

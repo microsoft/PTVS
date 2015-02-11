@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.Runtime.Serialization;
 using Microsoft.PythonTools.Project;
 
 namespace Microsoft.PythonTools {
@@ -29,11 +30,24 @@ namespace Microsoft.PythonTools {
             _helpPage = helpPage;
         }
 
+        public override void GetObjectData(SerializationInfo info, StreamingContext context) {
+            base.GetObjectData(info, context);
+            if (!string.IsNullOrEmpty(_helpPage)) {
+                try {
+                    info.AddValue("HelpPage", _helpPage);
+                } catch (SerializationException) {
+                }
+            }
+        }
+
         public string HelpPage { get { return _helpPage; } }
 
-        protected NoInterpretersException(
-          System.Runtime.Serialization.SerializationInfo info,
-          System.Runtime.Serialization.StreamingContext context)
-            : base(info, context) { }
+        protected NoInterpretersException(SerializationInfo info, StreamingContext context)
+            : base(info, context) {
+            try {
+                _helpPage = info.GetString("HelpPage");
+            } catch (SerializationException) {
+            }
+        }
     }
 }

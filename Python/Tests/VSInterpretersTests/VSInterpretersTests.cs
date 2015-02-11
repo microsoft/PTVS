@@ -142,9 +142,9 @@ namespace FactoryProviderSuccess {
         public void ProviderLoadLog_Success() {
             var sp = new MockServiceProvider();
             var log = new MockActivityLog();
-            sp.Services[typeof(SVsActivityLog)] = log;
+            sp.Services[typeof(SVsActivityLog).GUID] = log;
             var sm = new MockSettingsManager();
-            sp.Services[typeof(SVsSettingsManager)] = sm;
+            sp.Services[typeof(SVsSettingsManager).GUID] = sm;
 
             var path = FactoryProviderSuccessPath;
 
@@ -168,9 +168,9 @@ namespace FactoryProviderSuccess {
         public void ProviderLoadLog_FileNotFound() {
             var sp = new MockServiceProvider();
             var log = new MockActivityLog();
-            sp.Services[typeof(SVsActivityLog)] = log;
+            sp.Services[typeof(SVsActivityLog).GUID] = log;
             var sm = new MockSettingsManager();
-            sp.Services[typeof(SVsSettingsManager)] = sm;
+            sp.Services[typeof(SVsSettingsManager).GUID] = sm;
 
             var path = Path.ChangeExtension(Path.GetTempFileName(), "dll");
             File.Delete(path);
@@ -222,9 +222,9 @@ namespace FactoryProviderSuccess {
         public void ProviderLoadLog_CorruptImage() {
             var sp = new MockServiceProvider();
             var log = new MockActivityLog();
-            sp.Services[typeof(SVsActivityLog)] = log;
+            sp.Services[typeof(SVsActivityLog).GUID] = log;
             var sm = new MockSettingsManager();
-            sp.Services[typeof(SVsSettingsManager)] = sm;
+            sp.Services[typeof(SVsSettingsManager).GUID] = sm;
 
             var path = FactoryProviderCorruptPath;
 
@@ -274,9 +274,9 @@ namespace FactoryProviderTypeLoadException {
         public void ProviderLoadLog_TypeLoadException() {
             var sp = new MockServiceProvider();
             var log = new MockActivityLog();
-            sp.Services[typeof(SVsActivityLog)] = log;
+            sp.Services[typeof(SVsActivityLog).GUID] = log;
             var sm = new MockSettingsManager();
-            sp.Services[typeof(SVsSettingsManager)] = sm;
+            sp.Services[typeof(SVsSettingsManager).GUID] = sm;
 
             var path = FactoryProviderTypeLoadErrorPath;
 
@@ -300,9 +300,9 @@ namespace FactoryProviderTypeLoadException {
         public void ProviderLoadLog_SuccessAndFailure() {
             var sp = new MockServiceProvider();
             var log = new MockActivityLog();
-            sp.Services[typeof(SVsActivityLog)] = log;
+            sp.Services[typeof(SVsActivityLog).GUID] = log;
             var sm = new MockSettingsManager();
-            sp.Services[typeof(SVsSettingsManager)] = sm;
+            sp.Services[typeof(SVsSettingsManager).GUID] = sm;
 
             var path1 = FactoryProviderTypeLoadErrorPath;
             var path2 = FactoryProviderSuccessPath;

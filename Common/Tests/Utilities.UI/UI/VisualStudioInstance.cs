@@ -35,8 +35,8 @@ namespace TestUtilities.UI {
     public class VisualStudioInstance : IDisposable, IVisualStudioInstance {
         private readonly SolutionFile _solution;
         private readonly VisualStudioApp _app;
-        public readonly SolutionExplorerTree SolutionExplorer;
         public readonly EnvDTE.Project Project;
+        private SolutionExplorerTree _solutionExplorer;
         private bool _disposed;
 
         public VisualStudioInstance(SolutionFile solution) {
@@ -45,13 +45,19 @@ namespace TestUtilities.UI {
             Project = _app.OpenProject(solution.Filename);
 
             ThreadHelper.Generic.Invoke(Keyboard.Reset);
-            SolutionExplorer = _app.OpenSolutionExplorer();
+            _solutionExplorer = _app.OpenSolutionExplorer();
             SelectSolutionNode();
         }
 
         public VisualStudioApp App {
             get {
                 return _app;
+            }
+        }
+
+        public SolutionExplorerTree SolutionExplorer {
+            get {
+                return _solutionExplorer;
             }
         }
 
@@ -172,6 +178,9 @@ namespace TestUtilities.UI {
         /// see the bad behavior.
         /// </summary>
         public void SelectSolutionNode() {
+            // May need to reopen Solution Explorer so we can find a clickable
+            // point.
+            _solutionExplorer = _app.OpenSolutionExplorer();
             var item = SolutionExplorer.WaitForItem(SolutionNodeText);
             SolutionExplorer.CenterInView(item);
             Mouse.MoveTo(item.GetClickablePoint());

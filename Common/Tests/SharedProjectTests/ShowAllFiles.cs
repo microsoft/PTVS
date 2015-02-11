@@ -217,8 +217,6 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     var notInProject = solution.WaitForItem("ShowAllFilesIncludeExclude", "NotInProject" + projectType.CodeExtension);
                     AutomationWrapper.Select(notInProject);
 
-                    solution.ExecuteCommand("Project.SetasNode.jsStartupFile");
-                    
                     var folder = solution.WaitForItem("ShowAllFilesIncludeExclude", "ExcludeFolder1");
                     AutomationWrapper.Select(folder);
                     solution.ExecuteCommand("Project.ExcludeFromProject");

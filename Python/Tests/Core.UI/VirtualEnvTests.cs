@@ -382,9 +382,9 @@ namespace PythonToolsUITests {
                     Pip.Uninstall(app.ServiceProvider, dis.CurrentDefault, "virtualenv", false).Wait();
                 }
 
-                Assert.AreEqual(0, analysis::Microsoft.PythonTools.Interpreter.PythonInterpreterFactoryExtensions
-                    .FindModules(dis.CurrentDefault, "virtualenv").Count,
-                    string.Format("FindModules thinks 'virtualenv' is installed into {0}", dis.CurrentDefault.Configuration.PrefixPath)
+                Assert.AreEqual(0, Microsoft.PythonTools.Analysis.ModulePath.GetModulesInLib(dis.CurrentDefault)
+                    .Count(mp => mp.FullName == "virtualenv"),
+                    string.Format("Failed to uninstall 'virtualenv' from {0}", dis.CurrentDefault.Configuration.PrefixPath)
                 );
 
                 var project = CreateTemporaryProject(app);

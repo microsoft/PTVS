@@ -66,7 +66,9 @@
     </ResolveEnvironment>
 
     <PropertyGroup>
-      <ActualPrefix>$(SystemDrive)\Python27\</ActualPrefix>
+      <ActualPrefix>$(SystemDrive)\Python27_x86\</ActualPrefix>
+      <ActualPrefix Condition="!Exists($(ActualPrefix))">$(SystemDrive)\Python27_32\</ActualPrefix>
+      <ActualPrefix Condition="!Exists($(ActualPrefix))">$(SystemDrive)\Python27\</ActualPrefix>
     </PropertyGroup>
 
     <Error Condition="'$(ActualPrefix)' != '$(PrefixPath)'" Text="Incorrect PrefixPath: $(PrefixPath)" />
