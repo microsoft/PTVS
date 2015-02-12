@@ -30,7 +30,7 @@ using Microsoft.VisualStudio.PlatformUI;
 using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Project {
-    sealed class AddInterpreterView : DependencyObject, INotifyPropertyChanged {
+    sealed class AddInterpreterView : DependencyObject, INotifyPropertyChanged, IDisposable {
         readonly IInterpreterOptionsService _interpreterService;
         
         public AddInterpreterView(
@@ -61,24 +61,23 @@ namespace Microsoft.PythonTools.Project {
             _interpreterService.InterpretersChanged += OnInterpretersChanged;
         }
 
+        public void Dispose() {
+            if (_interpreterService != null) {
+                _interpreterService.InterpretersChanged -= OnInterpretersChanged;
+            }
+        }
+
         private void OnInterpretersChanged(object sender, EventArgs e) {
             if (!Dispatcher.CheckAccess()) {
                 Dispatcher.BeginInvoke((Action)(() => OnInterpretersChanged(sender, e)));
                 return;
             }
-            var existing = Interpreters.Where(iv => iv.Interpreter != null).ToDictionary(iv => iv.Interpreter);
             var def = _interpreterService.DefaultInterpreter;
-
-            int i = 0;
-            foreach (var interp in _interpreterService.Interpreters) {
-                if (!existing.Remove(interp)) {
-                    Interpreters.Insert(i, new InterpreterView(interp, interp.Description, interp == def));
-                }
-                i += 1;
-            }
-            foreach (var kv in existing) {
-                Interpreters.Remove(kv.Value);
-            }
+            Interpreters.Merge(
+                _interpreterService.Interpreters.Select(i => new InterpreterView(i, i.Description, i == def)),
+                InterpreterView.EqualityComparer,
+                InterpreterView.Comparer
+            );
         }
 
         public ObservableCollection<InterpreterView> Interpreters {

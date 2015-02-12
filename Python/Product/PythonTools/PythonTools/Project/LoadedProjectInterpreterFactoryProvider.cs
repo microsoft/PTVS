@@ -125,7 +125,18 @@ namespace Microsoft.PythonTools.Project {
                 providers = _providers.Keys.ToArray();
             }
 
-            return providers.SelectMany(p => p.GetInterpreterFactories());
+            foreach (var pif in providers) {
+                var msb = pif as MSBuildProjectInterpreterFactoryProvider;
+                if (msb != null) {
+                    foreach (var f in msb.GetProjectSpecificInterpreterFactories()) {
+                        yield return f;
+                    }
+                } else {
+                    foreach (var f in pif.GetInterpreterFactories()) {
+                        yield return f;
+                    }
+                }
+            }
         }
 
         private void OnInterpreterFactoriesChanged() {

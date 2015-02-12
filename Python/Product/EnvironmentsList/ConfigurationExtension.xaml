@@ -38,12 +38,15 @@
         </Grid.ColumnDefinitions>
         
         <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Hidden">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="auto" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
+            <Grid Grid.IsSharedSizeScope="True">
                 <Grid.RowDefinitions>
+                    <RowDefinition />
+                    <RowDefinition />
+                    <RowDefinition />
+                    <RowDefinition />
+                    <RowDefinition />
+                    <RowDefinition />
+                    <RowDefinition />
                     <RowDefinition />
                     <RowDefinition />
                     <RowDefinition />
@@ -55,7 +58,7 @@
                 </Grid.RowDefinitions>
                 
                 <Label Grid.Column="0" Grid.Row="0">Prefix path</Label>
-                <wpf:ConfigurationTextBoxWithHelp Grid.Column="1" Grid.Row="0"
+                <wpf:ConfigurationTextBoxWithHelp Grid.Column="0" Grid.Row="1"
                                                 Text="{Binding PrefixPath,Mode=TwoWay}"
                                                 Watermark="e.g. C:\PythonXY"
                                                 BrowseButtonStyle="{StaticResource BrowseFolderButton}">
@@ -67,8 +70,8 @@
                     </wpf:ConfigurationTextBoxWithHelp.HelpText>
                 </wpf:ConfigurationTextBoxWithHelp>
 
-                <Label Grid.Column="0" Grid.Row="1">Interpreter path</Label>
-                <wpf:ConfigurationTextBoxWithHelp Grid.Column="1" Grid.Row="1"
+                <Label Grid.Column="0" Grid.Row="2">Interpreter path</Label>
+                <wpf:ConfigurationTextBoxWithHelp Grid.Column="0" Grid.Row="3"
                                                 Text="{Binding InterpreterPath,Mode=TwoWay}"
                                                 Watermark="e.g. C:\PythonXY\python.exe"
                                                 BrowseButtonStyle="{StaticResource BrowseOpenFileButton}"
@@ -80,8 +83,8 @@
                     </wpf:ConfigurationTextBoxWithHelp.HelpText>
                 </wpf:ConfigurationTextBoxWithHelp>
 
-                <Label Grid.Column="0" Grid.Row="2">Windowed interpreter</Label>
-                <wpf:ConfigurationTextBoxWithHelp Grid.Column="1" Grid.Row="2"
+                <Label Grid.Column="0" Grid.Row="4">Windowed interpreter</Label>
+                <wpf:ConfigurationTextBoxWithHelp Grid.Column="0" Grid.Row="5"
                                                 Text="{Binding WindowsInterpreterPath,Mode=TwoWay}"
                                                 Watermark="e.g. C:\PythonXY\pythonw.exe"
                                                 BrowseButtonStyle="{StaticResource BrowseOpenFileButton}"
@@ -94,8 +97,8 @@
                     </wpf:ConfigurationTextBoxWithHelp.HelpText>
                 </wpf:ConfigurationTextBoxWithHelp>
 
-                <Label Grid.Column="0" Grid.Row="3">Library path</Label>
-                <wpf:ConfigurationTextBoxWithHelp Grid.Column="1" Grid.Row="3"
+                <Label Grid.Column="0" Grid.Row="6">Library path</Label>
+                <wpf:ConfigurationTextBoxWithHelp Grid.Column="0" Grid.Row="7"
                                                 Text="{Binding LibraryPath,Mode=TwoWay}"
                                                 Watermark="e.g. C:\PythonXY\Lib"
                                                 BrowseButtonStyle="{StaticResource BrowseFolderButton}">
@@ -106,8 +109,8 @@
                     </wpf:ConfigurationTextBoxWithHelp.HelpText>
                 </wpf:ConfigurationTextBoxWithHelp>
 
-                <Label Grid.Column="0" Grid.Row="4">Language version</Label>
-                <wpf:ConfigurationComboBoxWithHelp Grid.Column="1" Grid.Row="4"
+                <Label Grid.Column="0" Grid.Row="8">Language version</Label>
+                <wpf:ConfigurationComboBoxWithHelp Grid.Column="0" Grid.Row="9"
                                                  Value="{Binding VersionName,Mode=TwoWay}"
                                                  Values="{Binding VersionNames}"
                                                  Watermark="Language version">
@@ -118,8 +121,8 @@
                     </wpf:ConfigurationComboBoxWithHelp.HelpText>
                 </wpf:ConfigurationComboBoxWithHelp>
 
-                <Label Grid.Column="0" Grid.Row="5">Architecture</Label>
-                <wpf:ConfigurationComboBoxWithHelp Grid.Column="1" Grid.Row="5"
+                <Label Grid.Column="0" Grid.Row="10">Architecture</Label>
+                <wpf:ConfigurationComboBoxWithHelp Grid.Column="0" Grid.Row="11"
                                                  Value="{Binding ArchitectureName,Mode=TwoWay}"
                                                  Values="{Binding ArchitectureNames}"
                                                  Watermark="Architecture">
@@ -131,8 +134,8 @@
                     </wpf:ConfigurationComboBoxWithHelp.HelpText>
                 </wpf:ConfigurationComboBoxWithHelp>
 
-                <Label Grid.Column="0" Grid.Row="6">Path environment variable</Label>
-                <wpf:ConfigurationTextBoxWithHelp Grid.Column="1" Grid.Row="6"
+                <Label Grid.Column="0" Grid.Row="12">Path environment variable</Label>
+                <wpf:ConfigurationTextBoxWithHelp Grid.Column="0" Grid.Row="13"
                                                 Text="{Binding PathEnvironmentVariable,Mode=TwoWay}"
                                                 Watermark="e.g. PYTHONPATH">
                     <wpf:ConfigurationTextBoxWithHelp.HelpText>

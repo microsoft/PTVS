@@ -17,7 +17,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 
-namespace Microsoft.PythonTools.EnvironmentsList {
+namespace Microsoft.VisualStudioTools {
     static class ObservableCollectionExtensions {
         public static void Merge<T>(
             this ObservableCollection<T> left,

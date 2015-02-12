@@ -34,10 +34,8 @@ namespace Microsoft.PythonTools.Project {
     /// <summary>
     /// Interaction logic for AddInterpreter.xaml
     /// </summary>
-    partial class AddInterpreter : DialogWindowVersioningWorkaround {
-        const double OutputTextBoxWidth = 350.0;
-
-        readonly AddInterpreterView _view;
+    sealed partial class AddInterpreter : DialogWindowVersioningWorkaround, IDisposable {
+        private readonly AddInterpreterView _view;
 
         private AddInterpreter(PythonProjectNode project, IInterpreterOptionsService service) {
             _view = new AddInterpreterView(project.Site, service, project.Interpreters.GetInterpreterFactories());
@@ -47,12 +45,18 @@ namespace Microsoft.PythonTools.Project {
             InitializeComponent();
         }
 
+        public void Dispose() {
+            _view.PropertyChanged -= View_PropertyChanged;
+            _view.Dispose();
+        }
+
         public static IEnumerable<IPythonInterpreterFactory> ShowDialog(
             PythonProjectNode project,
             IInterpreterOptionsService service) {
-            var wnd = new AddInterpreter(project, service);
-            if (wnd.ShowModal() ?? false) {
-                return wnd._view.Interpreters.Where(iv => iv.IsSelected).Select(iv => iv.Interpreter);
+            using (var wnd = new AddInterpreter(project, service)) {
+                if (wnd.ShowModal() ?? false) {
+                    return wnd._view.Interpreters.Where(iv => iv.IsSelected).Select(iv => iv.Interpreter);
+                }
             }
             return null;
         }

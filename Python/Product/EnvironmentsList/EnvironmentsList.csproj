@@ -134,6 +134,9 @@
     <Compile Include="..\..\..\Common\Product\SharedProject\ExceptionExtensions.cs">
       <Link>ExceptionExtensions.cs</Link>
     </Compile>
+    <Compile Include="..\..\..\Common\Product\SharedProject\ObservableCollectionExtensions.cs">
+      <Link>ObservableCollectionExtensions.cs</Link>
+    </Compile>
     <Compile Include="..\..\..\Common\Product\SharedProject\ProcessOutput.cs">
       <Link>ProcessOutput.cs</Link>
     </Compile>
@@ -196,7 +199,6 @@
     </Compile>
     <Compile Include="EnvironmentView.cs" />
     <Compile Include="IEnvironmentViewExtension.cs" />
-    <Compile Include="ObservableCollectionExtensions.cs" />
     <Compile Include="PipExtensionProvider.cs" />
     <Compile Include="ToolWindow.xaml.cs">
       <DependentUpon>ToolWindow.xaml</DependentUpon>

@@ -164,7 +164,7 @@
 
         <Grid x:Name="VerticalLayout" Visibility="Collapsed">
             <Grid.RowDefinitions>
-                <RowDefinition Height="auto" />
+                <RowDefinition Height="*" MaxHeight="200" />
                 <RowDefinition Height="auto" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
@@ -178,7 +178,6 @@
                      ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                      VerticalAlignment="Stretch"
                      HorizontalAlignment="Stretch"
-                     MaxHeight="200"
                      BorderThickness="0"
                      ItemsSource="{Binding Environments}"
                      ItemTemplate="{StaticResource EnvironmentListItem}"/>

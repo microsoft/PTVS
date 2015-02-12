@@ -567,15 +567,22 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         public IEnumerable<IPythonInterpreterFactory> GetInterpreterFactories() {
-            return GetInterpreterFactoriesEnumerable()
-                .OrderBy(f => f.Description)
-                .ThenBy(f => f.Configuration.Version);
-        }
-
-        private IEnumerable<IPythonInterpreterFactory> GetInterpreterFactoriesEnumerable() {
             lock (_factoriesLock) {
                 if (_factories != null) {
-                    return _factories.Keys.ToArray();
+                    return _factories.Keys.ToList();
+                }
+            }
+            return Enumerable.Empty<IPythonInterpreterFactory>();
+        }
+
+        public IEnumerable<IPythonInterpreterFactory> GetProjectSpecificInterpreterFactories() {
+            lock (_factoriesLock) {
+                if (_factories != null) {
+                    return _factories
+                        .Where(kv => kv.Value != null && kv.Value.ProjectItem != null &&
+                            kv.Value.ProjectItem.ItemType.Equals(InterpreterItem))
+                        .Select(kv => kv.Key)
+                        .ToList();
                 }
             }
             return Enumerable.Empty<IPythonInterpreterFactory>();

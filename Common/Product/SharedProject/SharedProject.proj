@@ -394,6 +394,10 @@
       <Link>SharedProject\NodeProperties.cs</Link>
       <Visible>true</Visible>
     </Compile>
+    <Compile Include="$(_ProjectSystemFilesLocation)\ObservableCollectionExtensions.cs">
+      <Link>SharedProject\ObservableCollectionExtensions.cs</Link>
+      <Visible>true</Visible>
+    </Compile>
     <Compile Include="$(_ProjectSystemFilesLocation)\OleServiceProvider.cs">
       <Link>SharedProject\OleServiceProvider.cs</Link>
       <Visible>true</Visible>

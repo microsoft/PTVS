@@ -28,6 +28,9 @@ namespace Microsoft.PythonTools {
         private DateTime _expectFirstUpdateBy;
         private bool _isRunning;
 
+        public static readonly IEqualityComparer<InterpreterView> EqualityComparer = new InterpreterViewComparer();
+        public static readonly IComparer<InterpreterView> Comparer = (IComparer<InterpreterView>)EqualityComparer;
+
         public static IEnumerable<InterpreterView> GetInterpreters(
             IServiceProvider serviceProvider,
             IInterpreterOptionsService interpreterService = null
@@ -303,5 +306,25 @@ namespace Microsoft.PythonTools {
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
+
+        private sealed class InterpreterViewComparer : IEqualityComparer<InterpreterView>, IComparer<InterpreterView> {
+            public bool Equals(InterpreterView x, InterpreterView y) {
+                return ReferenceEquals(
+                    x == null ? null : x.Interpreter,
+                    y == null ? null : y.Interpreter
+                );
+            }
+
+            public int GetHashCode(InterpreterView obj) {
+                return obj == null || obj.Interpreter == null ? 0 : obj.Interpreter.GetHashCode();
+            }
+
+            public int Compare(InterpreterView x, InterpreterView y) {
+                return StringComparer.CurrentCultureIgnoreCase.Compare(
+                    x == null ? "" : x.Name,
+                    y == null ? "" : y.Name
+                );
+            }
+        }
     }
 }
