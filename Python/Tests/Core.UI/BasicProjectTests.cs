@@ -29,6 +29,7 @@ using Microsoft.PythonTools;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Parsing;
+using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -945,6 +946,12 @@ namespace PythonToolsUITests {
                 app.Dte.Solution.SolutionBuild.Build(true);
 
                 Assert.IsTrue(File.Exists(TestData.GetPath(@"TestData\ProjectReference\Debug\native_module.pyd")), ".pyd was not created");
+
+                string[] searchPaths = null;
+                app.ServiceProvider.GetUIThread().Invoke(() => {
+                    searchPaths = (project.GetPythonProject() as IPythonProject).GetSearchPaths().ToArray();
+                });
+                AssertUtil.ContainsExactly(searchPaths, TestData.GetPath(@"TestData\ProjectReference\Debug\"));
             }
         }
 

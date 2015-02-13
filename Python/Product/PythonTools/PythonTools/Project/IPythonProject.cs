@@ -173,15 +173,15 @@ namespace Microsoft.PythonTools.Project {
         event EventHandler<AnalyzerChangingEventArgs> ProjectAnalyzerChanging;
     }
 
-
     public static class IPythonProjectExtensions {
         /// <summary>
         /// Returns a sequence of absolute search paths for the provided project.
         /// </summary>
         public static IEnumerable<string> GetSearchPaths(this IPythonProject project) {
+            var seen = new HashSet<string>();
+            
             var paths = project.GetProperty(PythonConstants.SearchPathSetting);
             if (!string.IsNullOrEmpty(paths)) {
-                var seen = new HashSet<string>();
                 foreach (var path in paths.Split(';')) {
                     if (string.IsNullOrEmpty(path)) {
                         continue;
@@ -190,6 +190,27 @@ namespace Microsoft.PythonTools.Project {
                     var absPath = CommonUtils.GetAbsoluteFilePath(project.ProjectDirectory, path);
                     if (seen.Add(absPath)) {
                         yield return absPath;
+                    }
+                }
+            }
+
+            var interp = project.GetProjectAnalyzer().Interpreter as IPythonInterpreterWithProjectReferences2;
+            if (interp != null) {
+                foreach (var r in interp.GetReferences()) {
+                    if (r.Kind == ProjectReferenceKind.ExtensionModule) {
+                        string absPath;
+                        try {
+                            absPath = CommonUtils.GetAbsoluteFilePath(project.ProjectDirectory, r.Name);
+                        } catch (InvalidOperationException) {
+                            continue;
+                        }
+
+                        if (!string.IsNullOrEmpty(absPath)) {
+                            var parentPath = CommonUtils.GetParent(absPath);
+                            if (!string.IsNullOrEmpty(parentPath) && seen.Add(parentPath)) {
+                                yield return parentPath;
+                            }
+                        }
                     }
                 }
             }

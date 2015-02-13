@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -30,5 +31,9 @@ namespace Microsoft.PythonTools.Interpreter {
         /// </summary>
         /// <remarks>New in 2.0.</remarks>
         void RemoveReference(ProjectReference reference);
+    }
+
+    public interface IPythonInterpreterWithProjectReferences2 : IPythonInterpreterWithProjectReferences {
+        IEnumerable<ProjectReference> GetReferences();
     }
 }

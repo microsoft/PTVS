@@ -15,13 +15,14 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Interpreter.Default {
-    class CPythonInterpreter : IPythonInterpreter, IPythonInterpreterWithProjectReferences, IDisposable {
+    class CPythonInterpreter : IPythonInterpreter, IPythonInterpreterWithProjectReferences2, IDisposable {
         readonly Version _langVersion;
         private PythonInterpreterFactoryWithDatabase _factory;
         private PythonTypeDatabase _typeDb;
@@ -175,6 +176,10 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                     }
                     break;
             }
+        }
+
+        public IEnumerable<ProjectReference> GetReferences() {
+            return _references != null ? _references : Enumerable.Empty<ProjectReference>();
         }
 
         private static Task MakeExceptionTask(Exception e) {
