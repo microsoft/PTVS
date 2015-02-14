@@ -30,7 +30,11 @@ namespace Microsoft.PythonTools.Options {
         }
 
         public void SaveString(string name, string category, string value) {
-            _settingsStore.SetString(GetCollectionPath(category), name, value);
+            var path = GetCollectionPath(category);
+            if (!_settingsStore.CollectionExists(path)) {
+                _settingsStore.CreateCollection(path);
+            }
+            _settingsStore.SetString(path, name, value);
         }
 
         private static string GetCollectionPath(string category) {
@@ -38,8 +42,11 @@ namespace Microsoft.PythonTools.Options {
         }
 
         public string LoadString(string name, string category) {
-            var res = _settingsStore.GetString(GetCollectionPath(category), name, null);
-            return res;
+            var path = GetCollectionPath(category);
+            if (!_settingsStore.CollectionExists(category)) {
+                return null;
+            }
+            return _settingsStore.GetString(path, name, null);
         }
     }
 }
