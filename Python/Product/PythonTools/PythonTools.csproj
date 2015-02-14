@@ -266,6 +266,9 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="..\Analysis\IEnumerableExtensions.cs">
+      <Link>IEnumerableExtensions.cs</Link>
+    </Compile>
     <Compile Include="..\Analysis\Interpreter\PythonInterpreterFactoryExtensions.cs">
       <Link>PythonInterpreterFactoryExtensions.cs</Link>
     </Compile>
@@ -1288,15 +1291,6 @@
   <ItemGroup>
     <Folder Include="Templates\Files\EmptyPackage\package\" />
   </ItemGroup>
-  <PropertyGroup>
-    <!--
-    To specify a different registry root to register your package, uncomment the TargetRegistryRoot
-    tag and specify a registry root in it.
-    <TargetRegistryRoot></TargetRegistryRoot>
-    -->
-    <RegisterOutputPackage>true</RegisterOutputPackage>
-    <RegisterWithCodebase>true</RegisterWithCodebase>
-  </PropertyGroup>
   <Import Project="$(BuildRoot)\Common\Product\SharedProject\SharedProject.proj" />
   <Import Project="..\ProjectAfter.settings" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

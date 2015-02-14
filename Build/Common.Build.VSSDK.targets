@@ -17,6 +17,15 @@
     <IncludeVSIXItemsFromTargets>BuiltVsixTemplateItems</IncludeVSIXItemsFromTargets>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <!--
+    To specify a different registry root to register your package, uncomment the TargetRegistryRoot
+    tag and specify a registry root in it.
+    <TargetRegistryRoot></TargetRegistryRoot>
+    -->
+    <RegisterWithCodebase Condition="'$(RegisterWithCodebase)' == ''">true</RegisterWithCodebase>
+  </PropertyGroup>
+
   <!--
   Inside Visual Studio, we want to deploy to the experimental hive when
   building for ease of debugging.
@@ -26,6 +35,7 @@
     <DeployVSTemplates Condition="'$(DeployVSTemplates)' == ''">false</DeployVSTemplates>
     <CreateVsixContainer Condition="'$(CreateVsixContainer)' == ''">false</CreateVsixContainer>
     <CopyVsixManifestToOutput Condition="'$(CopyVsixManifestToOutput)' == ''">true</CopyVsixManifestToOutput>
+    <RegisterOutputPackage Condition="'$(RegisterOutputPackage)' == ''">true</RegisterOutputPackage>
   </PropertyGroup>
   
   <!--
@@ -37,6 +47,7 @@
     <DeployVSTemplates Condition="'$(DeployVSTemplates)' == ''">false</DeployVSTemplates>
     <CreateVsixContainer Condition="'$(CreateVsixContainer)' == ''">false</CreateVsixContainer>
     <CopyVsixManifestToOutput Condition="'$(CopyVsixManifestToOutput)' == ''">true</CopyVsixManifestToOutput>
+    <RegisterOutputPackage Condition="'$(RegisterOutputPackage)' == ''">false</RegisterOutputPackage>
   </PropertyGroup>
 
   <!--
