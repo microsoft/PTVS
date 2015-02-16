@@ -162,13 +162,18 @@
   <?foreach VSVersion in $(var.SupportedVSVersions)?>
   <Fragment>
     <Property Id="VS$(var.VSVersion)TARGET" Secure="yes">
-      <RegistrySearch Id="VSInstallDir_$(var.VSVersion)" Root="HKLM" Key="Software\Microsoft\VisualStudio\$(var.VSVersion).0" Name="InstallDir" Type="directory" />
+      <RegistrySearch Id="VSInstallDir_$(var.VSVersion)" Root="HKLM" Key="Software\Microsoft\VisualStudio\$(var.VSVersion).0\Setup\VS" Name="ProductDir" Type="directory" />
     </Property>
     <DirectoryRef Id="TARGETDIR">
       <Directory Id="VS$(var.VSVersion)TARGET">
-        <Directory Id="VS$(var.VSVersion)CommonExtensions" Name="CommonExtensions">
-          <Directory Id="VS$(var.VSVersion)Microsoft" Name="Microsoft">
-            <Directory Id="VS$(var.VSVersion)Target" Name="VSTestHost" />
+        <Directory Id="VS$(var.VSVersion)Common7" Name="Common7">
+          <Directory Id="VS$(var.VSVersion)IDE" Name="IDE">
+            <Directory Id="VS$(var.VSVersion)CommonExtensions" Name="CommonExtensions">
+              <!-- Shouldn't really be installing here, but it's the easiest
+                   way to be loaded in Express SKUs without having to install
+                   multiple files. -->
+              <Directory Id="VS$(var.VSVersion)Target" Name="Platform" />
+            </Directory>
           </Directory>
         </Directory>
       </Directory>
@@ -191,7 +196,7 @@
   <Fragment>
     <Property Id="VWD$(var.VSVersion)INSTALLED" Secure="yes">
       <RegistrySearch Id="WDInstalled_$(var.VSVersion)" Root="HKLM" Key="Software\Microsoft\VWDExpress\$(var.VSVersion).0" Name="InstallDir" Type="directory">
-        <FileSearch Id="vwdexpress_$(var.VSVersion)" Name="wdexpress.exe"/>
+        <FileSearch Id="vwdexpress_$(var.VSVersion)" Name="vwdexpress.exe"/>
       </RegistrySearch>
     </Property>
   </Fragment>
