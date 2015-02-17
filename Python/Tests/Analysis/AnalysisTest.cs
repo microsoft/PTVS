@@ -1523,6 +1523,27 @@ b = x.b
         }
 
         [TestMethod, Priority(0)]
+        public void NoGetAttrForSlots() {
+            var code = @"class A(object):
+    def __getattr__(self, key):
+        return f
+
+def f(x, y):
+    x # should be unknown
+    y # should be int
+
+a = A()
+a(123, None)
+a.__call__(None, 123)
+";
+            var entry = ProcessText(code);
+
+            // FIXME: https://pytools.codeplex.com/workitem/2898 (for IronPython only)
+            AssertUtil.DoesntContain(entry.GetTypeIdsByIndex("x", code.IndexOf("x #")), BuiltinTypeId.Int);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("y", code.IndexOf("y #")), BuiltinTypeId.Int);
+        }
+
+        [TestMethod, Priority(0)]
         public void VarsSpecialization() {
             var entry = ProcessText(@"
 x = vars()

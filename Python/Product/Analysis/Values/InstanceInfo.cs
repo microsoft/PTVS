@@ -115,7 +115,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
             if (Push()) {
                 try {
-                    var callRes = GetMember(node, unit, "__call__");
+                    var callRes = GetTypeMember(node, unit, "__call__");
                     if (callRes.Any()) {
                         res = res.Union(callRes.Call(node, unit, args, keywordArgNames));
                     }
@@ -125,6 +125,24 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
 
             return res;
+        }
+
+        internal IAnalysisSet GetTypeMember(Node node, AnalysisUnit unit, string name) {
+            var result = AnalysisSet.Empty;
+            
+            var classMem = _classInfo.GetMemberNoReferences(node, unit, name);
+            if (classMem.Count > 0) {
+                result = classMem.GetDescriptor(node, this, _classInfo, unit);
+                if (result.Count > 0) {
+                    // TODO: Check if it's a data descriptor...
+                }
+                return result;
+            } else {
+                // if the class gets a value later we need to be re-analyzed
+                _classInfo.Scope.CreateEphemeralVariable(node, unit, name, false).AddDependency(unit);
+            }
+
+            return result;
         }
 
         public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
@@ -155,27 +173,13 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
             def.AddReference(node, unit);
             def.AddDependency(unit);
-            getattrRes = getattrRes.Union(def.TypesNoCopy);
 
             // now check class members
-            var classMem = _classInfo.GetMemberNoReferences(node, unit, name);
-            if (classMem.Count > 0) {
-                var desc = classMem.GetDescriptor(node, this, _classInfo, unit);
-                if (desc.Count > 0) {
-                    // TODO: Check if it's a data descriptor...
-                    getattrRes = getattrRes.Union(desc);
-                }
-            } else {
-                // if the class gets a value later we need to be re-analyzed
-                _classInfo.Scope.CreateEphemeralVariable(node, unit, name, false).AddDependency(unit);
-            }
+            var res = GetTypeMember(node, unit, name);
 
-            if (getattrRes.Count > 0) {
-                return getattrRes;
-            }
-           
+            res = res.Union(def.Types);
+
             // check and see if it's defined in a base class instance as well...
-            var res = def.Types;
             foreach (var b in _classInfo.Bases) {
                 foreach (var ns in b) {
                     if (ns.Push()) {
@@ -192,7 +196,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     }
                 }
             }
-            
+
             if (res.Count == 0) {
                 // and if that doesn't exist fall back to __getattr__
                 var getAttr = _classInfo.GetMemberNoReferences(node, unit, "__getattr__");
@@ -209,7 +213,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override IAnalysisSet GetDescriptor(Node node, AnalysisValue instance, AnalysisValue context, AnalysisUnit unit) {
-            var getter = _classInfo.GetMemberNoReferences(node, unit, "__get__");
+            var getter = GetTypeMember(node, unit, "__get__");
             if (getter.Count > 0) {
                 var get = getter.GetDescriptor(node, this, _classInfo, unit);
                 return get.Call(node, unit, new[] { instance, context }, ExpressionEvaluator.EmptyNames);
@@ -253,7 +257,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             
             string methodName = UnaryOpToString(unit.ProjectState, operation);
             if (methodName != null) {
-                var method = GetMember(node, unit, methodName);
+                var method = GetTypeMember(node, unit, methodName);
                 if (method.Count > 0) {
                     var res = method.Call(
                         node,
@@ -283,7 +287,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             string op = BinaryOpToString(operation);
 
             if (op != null) {
-                var invokeMem = GetMember(node, unit, op);
+                var invokeMem = GetTypeMember(node, unit, op);
                 if (invokeMem.Count > 0) {
                     // call __*__ method
                     return invokeMem.Call(node, unit, new[] { rhs }, ExpressionEvaluator.EmptyNames);
@@ -317,7 +321,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             string op = ReverseBinaryOpToString(operation);
 
             if (op != null) {
-                var invokeMem = GetMember(node, unit, op);
+                var invokeMem = GetTypeMember(node, unit, op);
                 if (invokeMem.Count > 0) {
                     // call __r*__ method
                     return invokeMem.Call(node, unit, new[] { rhs }, ExpressionEvaluator.EmptyNames);
