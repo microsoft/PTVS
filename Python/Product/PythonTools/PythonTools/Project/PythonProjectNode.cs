@@ -429,6 +429,15 @@ namespace Microsoft.PythonTools.Project {
                         ));
                     }
                 }
+
+                if (interpreters.IsActiveInterpreterGlobalDefault) {
+                    var fact = interpreters.ActiveInterpreter;
+                    if (!remaining.Remove(fact)) {
+                        node.AddChild(new InterpretersNode(
+                            this, null, fact, true, false, false, SR.GetString(SR.GlobalDefaultSuffix)
+                        ));
+                    }
+                }
             }
 
             foreach (var child in remaining.Values) {
@@ -1490,14 +1499,20 @@ namespace Microsoft.PythonTools.Project {
                     name,
                     elevated,
                     node: selectedInterpreter
-                ).HandleAllExceptions(SR.ProductName).DoNotWait();
+                )
+                    .SilenceException<OperationCanceledException>()
+                    .HandleAllExceptions(SR.ProductName)
+                    .DoNotWait();
             } else {
                 // Prompt the user
                 InstallNewPackageAsync(
                     selectedInterpreterFactory,
                     Site,
                     selectedInterpreter
-                ).HandleAllExceptions(SR.ProductName).DoNotWait();
+                )
+                    .SilenceException<OperationCanceledException>()
+                    .HandleAllExceptions(SR.ProductName)
+                    .DoNotWait();
             }
             return VSConstants.S_OK;
         }
@@ -1525,7 +1540,10 @@ namespace Microsoft.PythonTools.Project {
                 name,
                 elevated,
                 node: selectedInterpreter
-            ).HandleAllExceptions(SR.ProductName).DoNotWait();
+            )
+                .SilenceException<OperationCanceledException>()
+                .HandleAllExceptions(SR.ProductName)
+                .DoNotWait();
 
             return VSConstants.S_OK;
         }
@@ -1537,7 +1555,10 @@ namespace Microsoft.PythonTools.Project {
             string name,
             InterpretersNode node = null
         ) {
-            UninstallPackageAsync(factory, provider, name, node).HandleAllExceptions(SR.ProductName).DoNotWait();
+            UninstallPackageAsync(factory, provider, name, node)
+                .SilenceException<OperationCanceledException>()
+                .HandleAllExceptions(SR.ProductName)
+                .DoNotWait();
         }
 
         internal static async Task InstallNewPackageAsync(
@@ -1734,7 +1755,9 @@ namespace Microsoft.PythonTools.Project {
             GetSelectedInterpreterOrDefault(selectedNodes, args, out selectedInterpreter, out selectedInterpreterFactory);
             if (selectedInterpreterFactory != null) {
                 GenerateRequirementsTxtAsync(selectedInterpreterFactory)
-                    .HandleAllExceptions(SR.ProductName).DoNotWait();
+                    .SilenceException<OperationCanceledException>()
+                    .HandleAllExceptions(SR.ProductName)
+                    .DoNotWait();
             }
             return VSConstants.S_OK;
         }
@@ -1746,19 +1769,15 @@ namespace Microsoft.PythonTools.Project {
             string[] existing = null;
             bool addNew = false;
             if (File.Exists(txt)) {
-                try {
-                    existing = TaskDialog.CallWithRetry(
-                        _ => File.ReadAllLines(txt),
-                        Site,
-                        SR.ProductName,
-                        SR.GetString(SR.RequirementsTxtFailedToRead),
-                        SR.GetString(SR.ErrorDetail),
-                        SR.GetString(SR.Retry),
-                        SR.GetString(SR.Cancel)
-                    );
-                } catch (OperationCanceledException) {
-                    return;
-                }
+                existing = TaskDialog.CallWithRetry(
+                    _ => File.ReadAllLines(txt),
+                    Site,
+                    SR.ProductName,
+                    SR.GetString(SR.RequirementsTxtFailedToRead),
+                    SR.GetString(SR.ErrorDetail),
+                    SR.GetString(SR.Retry),
+                    SR.GetString(SR.Cancel)
+                );
 
                 var td = new TaskDialog(Site) {
                     Title = SR.ProductName,
@@ -1801,55 +1820,48 @@ namespace Microsoft.PythonTools.Project {
                 return;
             }
 
-            try {
-                TaskDialog.CallWithRetry(
-                    _ => {
-                        if (items.Any()) {
-                            File.WriteAllLines(txt, MergeRequirements(existing, items, addNew));
-                        } else if (existing == null) {
-                            File.WriteAllText(txt, "");
-                        }
-                    },
-                    Site,
-                    SR.ProductName,
-                    SR.GetString(SR.RequirementsTxtFailedToWrite),
-                    SR.GetString(SR.ErrorDetail),
-                    SR.GetString(SR.Retry),
-                    SR.GetString(SR.Cancel)
-                );
-            } catch (OperationCanceledException) {
-                return;
-            }
+            TaskDialog.CallWithRetry(
+                _ => {
+                    if (items.Any()) {
+                        File.WriteAllLines(txt, MergeRequirements(existing, items, addNew));
+                    } else if (existing == null) {
+                        File.WriteAllText(txt, "");
+                    }
+                },
+                Site,
+                SR.ProductName,
+                SR.GetString(SR.RequirementsTxtFailedToWrite),
+                SR.GetString(SR.ErrorDetail),
+                SR.GetString(SR.Retry),
+                SR.GetString(SR.Cancel)
+            );
 
             var existingNode = FindNodeByFullPath(txt);
             if (existingNode == null || existingNode.IsNonMemberItem) {
                 if (!QueryEditProjectFile(false)) {
                     return;
                 }
-                try {
-                    existingNode = TaskDialog.CallWithRetry(
-                        _ => {
-                            ErrorHandler.ThrowOnFailure(AddItem(
-                                ID,
-                                VSADDITEMOPERATION.VSADDITEMOP_LINKTOFILE,
-                                Path.GetFileName(txt),
-                                1,
-                                new[] { txt },
-                                IntPtr.Zero,
-                                new VSADDRESULT[1]
-                            ));
+                existingNode = TaskDialog.CallWithRetry(
+                    _ => {
+                        ErrorHandler.ThrowOnFailure(AddItem(
+                            ID,
+                            VSADDITEMOPERATION.VSADDITEMOP_LINKTOFILE,
+                            Path.GetFileName(txt),
+                            1,
+                            new[] { txt },
+                            IntPtr.Zero,
+                            new VSADDRESULT[1]
+                        ));
 
-                            return FindNodeByFullPath(txt);
-                        },
-                        Site,
-                        SR.ProductName,
-                        SR.GetString(SR.RequirementsTxtFailedToAddToProject),
-                        SR.GetString(SR.ErrorDetail),
-                        SR.GetString(SR.Retry),
-                        SR.GetString(SR.Cancel)
-                    );
-                } catch (OperationCanceledException) {
-                }
+                        return FindNodeByFullPath(txt);
+                    },
+                    Site,
+                    SR.ProductName,
+                    SR.GetString(SR.RequirementsTxtFailedToAddToProject),
+                    SR.GetString(SR.ErrorDetail),
+                    SR.GetString(SR.Retry),
+                    SR.GetString(SR.Cancel)
+                );
             }
         }
 

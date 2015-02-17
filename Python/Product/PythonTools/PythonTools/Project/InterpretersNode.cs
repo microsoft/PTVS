@@ -45,7 +45,8 @@ namespace Microsoft.PythonTools.Project {
         private readonly IInterpreterOptionsService _interpreterService;
         internal readonly IPythonInterpreterFactory _factory;
         private readonly bool _isReference;
-        private readonly bool _canDelete;
+        private readonly bool _canDelete, _canRemove;
+        private readonly string _captionSuffix;
         private readonly FileSystemWatcher _fileWatcher;
         private readonly Timer _timer;
         private bool _checkedItems, _checkingItems, _disposed;
@@ -57,7 +58,9 @@ namespace Microsoft.PythonTools.Project {
             ProjectItem item,
             IPythonInterpreterFactory factory,
             bool isInterpreterReference,
-            bool canDelete
+            bool canDelete,
+            bool canRemove = true,
+            string captionSuffix = null
         )
             : base(project, ChooseElement(project, item)) {
             ExcludeNodeFromScc = true;
@@ -67,6 +70,8 @@ namespace Microsoft.PythonTools.Project {
             _factory = factory;
             _isReference = isInterpreterReference;
             _canDelete = canDelete;
+            _canRemove = canRemove;
+            _captionSuffix = captionSuffix ?? "";
 
             if (Directory.Exists(_factory.Configuration.LibraryPath)) {
                 // TODO: Need to handle watching for creation
@@ -298,8 +303,8 @@ namespace Microsoft.PythonTools.Project {
 
             if (deleteOperation == __VSDELETEITEMOPERATION.DELITEMOP_RemoveFromProject) {
                 // Interpreter and InterpreterReference can both be removed from
-                // the project.
-                return true;
+                // the project, but the default environment cannot
+                return _canRemove;
             } else if (deleteOperation == __VSDELETEITEMOPERATION.DELITEMOP_DeleteFromStorage) {
                 // Only Interpreter can be deleted.
                 return _canDelete;
@@ -313,6 +318,12 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private void Remove(bool removeFromStorage, bool showPrompt) {
+            if (!_canRemove || (removeFromStorage && !_canDelete)) {
+                // Prevent the environment from being deleted or removed if not
+                // supported.
+                throw new NotSupportedException();
+            }
+
             var service = _interpreterService as IInterpreterOptionsService2;
             if (service != null && service.IsInterpreterLocked(_factory, InstallPackageLockMoniker)) {
                 // Prevent the environment from being deleted while installing.
@@ -352,7 +363,7 @@ namespace Microsoft.PythonTools.Project {
         /// </summary>
         public override string Caption {
             get {
-                return _factory.Description;
+                return _factory.Description + _captionSuffix;
             }
         }
 

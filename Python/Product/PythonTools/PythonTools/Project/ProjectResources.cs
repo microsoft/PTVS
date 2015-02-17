@@ -37,6 +37,7 @@ namespace Microsoft.PythonTools.Project {
         public const string EnvironmentRemoveConfirmation = "EnvironmentRemoveConfirmation";
         public const string EnvironmentDeleteConfirmation = "EnvironmentDeleteConfirmation";
         public const string EnvironmentDeleteError = "EnvironmentDeleteError";
+        public const string GlobalDefaultSuffix = "GlobalDefaultSuffix";
 
         public const string PackageFullName = "PackageFullName";
         public const string PackageFullNameDescription = "PackageFullNameDescription";
