@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudioTools.Project;
 using Task = System.Threading.Tasks.Task;
@@ -95,11 +96,21 @@ namespace Microsoft.VisualStudioTools {
                 // somebody out there listening.
                 Trace.TraceError(message);
 
+                lock (_displayedMessages) {
+                    if (_displayedMessages.Add(string.Format("{0}:{1}", callerFile, callerLineNumber))) {
+                        // First time we've seen this error, so let the user know
+                        MessageBox.Show(SR.GetString(SR.SeeActivityLog, ActivityLog.LogFilePath), productTitle);
+                    }
+                }
+
                 try {
                     ActivityLog.LogError(productTitle, message);
                 } catch (InvalidOperationException) {
                     // Activity Log is unavailable.
                 }
+
+                // In debug builds let the user know immediately
+                Debug.Fail(message);
             }
             return result;
         }
@@ -146,15 +157,21 @@ namespace Microsoft.VisualStudioTools {
                 // somebody out there listening.
                 Trace.TraceError(message);
 
-                try {
-                    ActivityLog.LogError(productTitle, message);
+                lock (_displayedMessages) {
                     if (_displayedMessages.Add(string.Format("{0}:{1}", callerFile, callerLineNumber))) {
                         // First time we've seen this error, so let the user know
-                        System.Windows.Forms.MessageBox.Show(SR.GetString(SR.SeeActivityLog, ActivityLog.LogFilePath), productTitle);
+                        MessageBox.Show(SR.GetString(SR.SeeActivityLog, ActivityLog.LogFilePath), productTitle);
                     }
+                }
+
+                try {
+                    ActivityLog.LogError(productTitle, message);
                 } catch (InvalidOperationException) {
                     // Activity Log is unavailable.
                 }
+
+                // In debug builds let the user know immediately
+                Debug.Fail(message);
             }
         }
 

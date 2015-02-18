@@ -104,8 +104,12 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private void Close_Executed(object sender, ExecutedRoutedEventArgs e) {
-            DialogResult = false;
-            Close();
+            try {
+                DialogResult = false;
+                Close();
+            } catch (InvalidOperationException) {
+                // Dialog is already closed by the user
+            }
         }
 
         private void Save_CanExecute(object sender, CanExecuteRoutedEventArgs e) {

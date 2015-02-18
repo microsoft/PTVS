@@ -525,6 +525,7 @@ namespace Microsoft.PythonTools.Project {
                     OutputWindowRedirector.GetGeneral(_project.Site)
                 );
                 await op.Run();
+            } catch (OperationCanceledException) {
             } finally {
                 IsWorking = false;
                 RefreshCanCreateVirtualEnv(VirtualEnvPath);
