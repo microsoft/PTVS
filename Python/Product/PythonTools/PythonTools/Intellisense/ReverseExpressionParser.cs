@@ -56,6 +56,33 @@ namespace Microsoft.PythonTools.Intellisense {
             return GetExpressionRange(nesting, out dummy, out dummyPoint, out lastKeywordArg, out isParameterName, forCompletion);
         }
 
+        internal static IEnumerator<ClassificationSpan> ForwardClassificationSpanEnumerator(PythonClassifier classifier, SnapshotPoint startPoint) {
+            var startLine = startPoint.GetContainingLine();
+            int curLine = startLine.LineNumber;
+            if (startPoint > startLine.End) {
+                // May occur if startPoint is between \r and \n
+                startPoint = startLine.End;
+            }
+            var tokens = classifier.GetClassificationSpans(new SnapshotSpan(startPoint, startLine.End));
+
+            for (; ; ) {
+                for (int i = 0; i < tokens.Count; ++i) {
+                    yield return tokens[i];
+                }
+
+                // indicate the line break
+                yield return null;
+
+                ++curLine;
+                if (curLine < startPoint.Snapshot.LineCount) {
+                    var nextLine = startPoint.Snapshot.GetLineFromLineNumber(curLine);
+                    tokens = classifier.GetClassificationSpans(nextLine.Extent);
+                } else {
+                    break;
+                }
+            }
+        }
+
         internal static IEnumerator<ClassificationSpan> ReverseClassificationSpanEnumerator(PythonClassifier classifier, SnapshotPoint startPoint) {
             var startLine = startPoint.GetContainingLine();
             int curLine = startLine.LineNumber;
@@ -449,6 +476,94 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             }
             return false;
+        }
+
+        internal SnapshotSpan? GetStatementRange() {
+            var tokenStack = new Stack<ClassificationSpan>();
+            bool eol = false, finishLine = false;
+
+            // Collect all the tokens until we know we're not in any groupings
+            foreach (var token in this) {
+                if (eol) {
+                    eol = false;
+                    if (!IsExplicitLineJoin(token)) {
+                        tokenStack.Push(null);
+                        if (finishLine) {
+                            break;
+                        }
+                    }
+                }
+
+                if (token == null) {
+                    eol = true;
+                    continue;
+                }
+
+                tokenStack.Push(token);
+                if (token.ClassificationType.IsOfType(PredefinedClassificationTypeNames.Keyword) &&
+                    PythonKeywords.IsOnlyStatementKeyword(token.Span.GetText())) {
+                    finishLine = true;
+                }
+            }
+
+            if (tokenStack.Count == 0) {
+                return null;
+            }
+
+            // Now scan forward through the tokens setting our current statement
+            // start point.
+            SnapshotPoint start = new SnapshotPoint(_snapshot, 0);
+            SnapshotPoint end = start;
+            bool setStart = true;
+            int nesting = 0;
+            foreach (var token in tokenStack) {
+                if (setStart && token != null) {
+                    start = token.Span.Start;
+                    setStart = false;
+                }
+                if (token == null) {
+                    if (nesting == 0) {
+                        setStart = true;
+                    }
+                } else {
+                    end = token.Span.End;
+                    if (token.IsOpenGrouping()) {
+                        ++nesting;
+                    } else if (token.IsCloseGrouping()) {
+                        --nesting;
+                    }
+                }
+            }
+
+            // Keep going to find the end of the statement
+            using (var e = ForwardClassificationSpanEnumerator(_classifier, Span.GetStartPoint(Snapshot))) {
+                eol = false;
+                while (e.MoveNext()) {
+                    if (e.Current == null) {
+                        eol = true;
+                        if (nesting == 0) {
+                            break;
+                        }
+                    } else {
+                        eol = false;
+                        if (setStart) {
+                            // Final token was EOL, so our start is the first
+                            // token moving forwards
+                            start = e.Current.Span.Start;
+                            setStart = false;
+                        }
+                        end = e.Current.Span.End;
+                    }
+                }
+                if (setStart) {
+                    start = Span.GetStartPoint(Snapshot);
+                }
+                if (eol) {
+                    end = Span.GetEndPoint(Snapshot);
+                }
+            }
+
+            return new SnapshotSpan(start, end);
         }
     }
 }

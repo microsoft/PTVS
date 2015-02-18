@@ -144,8 +144,7 @@ namespace PythonToolsTests {
             AssertUtil.DoesntContain(completionList, "yield");
             AssertUtil.DoesntContain(completionList, "return");
 
-            AssertUtil.Contains(completionList, "assert");
-            AssertUtil.Contains(completionList, "and");
+            AssertUtil.ContainsAtLeast(completionList, "assert", "and");
 
             code = @"def f():
     |
@@ -153,15 +152,14 @@ namespace PythonToolsTests {
 
             completionList = GetCompletionSetCtrlSpace(code.IndexOf("|"), code.Replace("|", "")).Completions.Select(x => x.DisplayText).ToArray();
 
-            AssertUtil.Contains(completionList, "yield");
-            AssertUtil.Contains(completionList, "return");
+            AssertUtil.ContainsAtLeast(completionList, "yield", "return");
 
 
             code = @"x = (abc, oar, )";
 
             completionList = GetCompletionSetCtrlSpace(code.IndexOf("oar,") + 5, code).Completions.Select(x => x.DisplayText).ToArray();
 
-            AssertUtil.Contains(completionList, "and");
+            AssertUtil.ContainsAtLeast(completionList, "and");
             AssertUtil.DoesntContain(completionList, "def");
         }
 
@@ -359,7 +357,7 @@ except (sys.None"}) {
         public void MemberCompletions() {
             // TODO: Negative tests
             //       Import / from import tests
-            MemberCompletionTest(-1, "x = 2\r\nx.", "x.");
+            MemberCompletionTest(-1, "x = 2\r\nx.", "x");
 
             // combining various partial expressions with previous expressions
             var prefixes = new[] { "", "(", "a = ", "f(", "l[", "{", "if " };
@@ -382,7 +380,7 @@ except (sys.None"}) {
                 foreach (var expr in exprs) {
                     string test = prefix + expr;
                     Console.WriteLine("   -- {0}", test);
-                    MemberCompletionTest(-1, test, expr);
+                    MemberCompletionTest(-1, test, expr.TrimEnd('.'));
                 }
             }
         }
@@ -861,16 +859,14 @@ class B(dict):
             var editInsert = code.IndexOf("pass") + 4;
             var completions = EditAndGetCompletions(code, editText, editInsert, "def ");
 
-            AssertUtil.Contains(completions, "bit_length");
-            AssertUtil.Contains(completions, "conjugate");
+            AssertUtil.ContainsAtLeast(completions, "bit_length", "conjugate");
             AssertUtil.DoesntContain(completions, "keys");
 
             editText = "\r\n\r\n\r\n\r\n\r\n    def ";
             editInsert = code.IndexOf("pass", editInsert) + 4;
             completions = EditAndGetCompletions(code, editText, editInsert, "def ");
 
-            AssertUtil.Contains(completions, "keys");
-            AssertUtil.Contains(completions, "__contains__");
+            AssertUtil.ContainsAtLeast(completions, "keys", "__contains__");
             AssertUtil.DoesntContain(completions, "bit_length");
         }
 
@@ -968,6 +964,45 @@ def func(a):
             Assert.AreEqual(1, sigs.Signatures.Count);
             Assert.AreEqual(1, sigs.Signatures[0].Parameters.Count);
             Assert.AreEqual(expected2, sigs.Signatures[0].Documentation);
+        }
+
+        [TestMethod, Priority(0)]
+        public void ClassCompletionOutsideFunction() {
+            // Note that "eggs_and_spam" is longer than the indentation of each
+            // scope.
+            string code = @"
+eggs_and_spam = 'abc'
+
+class Spam(object):
+    eggs_and_spam = 123
+
+    def f(self, eggs_and_spam = 3.14):
+        #1
+        pass
+
+    #2
+
+#3
+";
+
+            var testCode = code.Replace("#1", "eggs_and_spam.");
+            var completionList = GetCompletionSetCtrlSpace(testCode.IndexOf("eggs_and_spam.") + 14, testCode)
+                .Completions.Select(x => x.DisplayText).ToArray();
+
+            AssertUtil.ContainsAtLeast(completionList, "real", "imag");
+            AssertUtil.DoesntContain(completionList, "lower");
+
+            testCode = code.Replace("#2", "eggs_and_spam.");
+            completionList = GetCompletionSetCtrlSpace(testCode.IndexOf("eggs_and_spam.") + 14, testCode)
+                .Completions.Select(x => x.DisplayText).ToArray();
+
+            AssertUtil.ContainsAtLeast(completionList, "bit_length");
+
+            testCode = code.Replace("#3", "eggs_and_spam.");
+            completionList = GetCompletionSetCtrlSpace(testCode.IndexOf("eggs_and_spam.") + 14, testCode)
+                .Completions.Select(x => x.DisplayText).ToArray();
+
+            AssertUtil.ContainsAtLeast(completionList, "lower", "center");
         }
 
 
@@ -1151,7 +1186,11 @@ def func(a):
             var context = GetCompletions(location, sourceCode);
             Assert.IsInstanceOfType(context, typeof(NormalCompletionAnalysis));
             var normalContext = (NormalCompletionAnalysis)context;
-            Assert.AreEqual(expectedExpression, normalContext.PrecedingExpression);
+            
+            string text;
+            SnapshotSpan statementExtent;
+            normalContext.GetPrecedingExpression(out text, out statementExtent);
+            Assert.AreEqual(expectedExpression, text);
         }
 
         private static CompletionAnalysis GetCompletions(int location, string sourceCode, bool intersectMembers = true) {

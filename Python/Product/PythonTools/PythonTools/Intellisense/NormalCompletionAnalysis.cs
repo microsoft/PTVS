@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Repl;
@@ -39,42 +40,43 @@ namespace Microsoft.PythonTools.Intellisense {
             _serviceProvider = serviceProvider;
         }
 
-        private string FixupCompletionText(string exprText) {
-            if (exprText.EndsWith(".")) {
-                exprText = exprText.Substring(0, exprText.Length - 1);
-                if (exprText.Length == 0) {
-                    // don't return all available members on empty dot.
-                    return null;
-                }
-            } else {
-                int cut = exprText.LastIndexOfAny(new[] { '.', ']', ')' });
-                if (cut != -1) {
-                    exprText = exprText.Substring(0, cut);
-                } else {
-                    exprText = String.Empty;
+        internal bool GetPrecedingExpression(out string text, out SnapshotSpan statementExtent) {
+            text = string.Empty;
+            statementExtent = default(SnapshotSpan);
+
+            var startSpan = _snapshot.CreateTrackingSpan(Span.GetSpan(_snapshot).Start.Position, 0, SpanTrackingMode.EdgeInclusive);
+            var parser = new ReverseExpressionParser(_snapshot, _snapshot.TextBuffer, startSpan);
+            using (var e = parser.GetEnumerator()) {
+                if (e.MoveNext() &&
+                    e.Current != null &&
+                    e.Current.ClassificationType.IsOfType(PredefinedClassificationTypeNames.Number)) {
+                    return false;
                 }
             }
-            return exprText;
-        }
 
-        internal string PrecedingExpression {
-            get {
-                var startSpan = _snapshot.CreateTrackingSpan(Span.GetSpan(_snapshot).Start.Position, 0, SpanTrackingMode.EdgeInclusive);
-                var parser = new ReverseExpressionParser(_snapshot, _snapshot.TextBuffer, startSpan);
-                using (var e = parser.GetEnumerator()) {
-                    if (e.MoveNext() &&
-                        e.Current != null &&
-                        e.Current.ClassificationType.IsOfType(PredefinedClassificationTypeNames.Number)) {
-                        return null;
+            var sourceSpan = parser.GetExpressionRange();
+            if (sourceSpan.HasValue && sourceSpan.Value.Length > 0) {
+                text = sourceSpan.Value.GetText();
+                if (text.EndsWith(".")) {
+                    text = text.Substring(0, text.Length - 1);
+                    if (text.Length == 0) {
+                        // don't return all available members on empty dot.
+                        return false;
+                    }
+                } else {
+                    int cut = text.LastIndexOfAny(new[] { '.', ']', ')' });
+                    if (cut != -1) {
+                        text = text.Substring(0, cut);
+                    } else {
+                        text = String.Empty;
                     }
                 }
-
-                var sourceSpan = parser.GetExpressionRange();
-                if (sourceSpan.HasValue && sourceSpan.Value.Length > 0) {
-                    return sourceSpan.Value.GetText();
-                }
-                return string.Empty;
             }
+
+
+            statementExtent = parser.GetStatementRange() ?? default(SnapshotSpan);
+
+            return true;
         }
 
         public override CompletionSet GetCompletions(IGlyphService glyphService) {
@@ -90,31 +92,36 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             var analysis = GetAnalysisEntry();
-            var text = PrecedingExpression;
-            if (text == null) {
+            string text;
+            SnapshotSpan statementRange;
+            if (!GetPrecedingExpression(out text, out statementRange)) {
                 return null;
-            } else if (!string.IsNullOrEmpty(text)) {
-                string fixedText = FixupCompletionText(text);
-                if (fixedText == null) {
-                    // The expression is invalid so we shouldn't provide a
-                    // completion set at all.
-                    return null;
+            } else if (string.IsNullOrEmpty(text)) {
+                if (analysis != null) {
+                    lock (_analyzer) {
+                        var location = VsProjectAnalyzer.TranslateIndex(
+                            statementRange.Start.Position,
+                            statementRange.Snapshot,
+                            analysis
+                        );
+                        members = analysis.GetAllAvailableMembers(location, _options.MemberOptions);
+                    }
                 }
-
+            } else {
                 if (analysis != null && (pyReplEval == null || !pyReplEval.LiveCompletionsOnly)) {
                     lock (_analyzer) {
-                        var index = VsProjectAnalyzer.TranslateIndex(
-                            Span.GetEndPoint(_snapshot).Position,
-                            _snapshot,
+                        var location = VsProjectAnalyzer.TranslateIndex(
+                            statementRange.Start.Position,
+                            statementRange.Snapshot,
                             analysis
                         );
 
-                        members = analysis.GetMembers(fixedText, index, _options.MemberOptions);
+                        members = analysis.GetMembers(text, location, _options.MemberOptions);
                     }
                 }
 
-                if (pyReplEval != null && _snapshot.TextBuffer.GetAnalyzer(_serviceProvider).ShouldEvaluateForCompletion(fixedText)) {
-                    var replMembers = pyReplEval.GetMemberNames(fixedText);
+                if (pyReplEval != null && _snapshot.TextBuffer.GetAnalyzer(_serviceProvider).ShouldEvaluateForCompletion(text)) {
+                    var replMembers = pyReplEval.GetMemberNames(text);
                     if (replMembers != null) {
                         if (members != null) {
                             members = members.Union(replMembers, CompletionComparer.MemberEquality);
@@ -123,15 +130,6 @@ namespace Microsoft.PythonTools.Intellisense {
                         }
                     }
                 }
-            } else {
-                members = analysis.GetAllAvailableMembers(
-                    VsProjectAnalyzer.TranslateIndex(
-                        Span.GetStartPoint(_snapshot).Position,
-                        _snapshot,
-                        analysis
-                    ),
-                    _options.MemberOptions
-                );
             }
 
             var end = _stopwatch.ElapsedMilliseconds;

@@ -129,7 +129,7 @@ namespace TestUtilities.Mocks {
                                 insert.Position,
                                 0
                             ),
-                            insert.Position + adjust,
+                            insert.Position,
                             insert.Text
                         )
                     );

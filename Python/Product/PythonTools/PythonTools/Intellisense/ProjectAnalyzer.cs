@@ -567,10 +567,11 @@ namespace Microsoft.PythonTools.Intellisense {
                 var fromPoint = new SnapshotPoint(fromSnapshot, index);
                 var fromLine = fromPoint.GetContainingLine();
                 var toPoint = fromPoint.TranslateTo(snapshotCookie.Snapshot, PointTrackingMode.Negative);
+                var toLine = toPoint.GetContainingLine();
                 
                 return new SourceLocation(
                     toPoint.Position,
-                    fromLine.LineNumber + 1,
+                    toLine.LineNumber + 1,
                     index - fromLine.Start.Position + 1
                 );
             } else if (fromSnapshot != null) {
@@ -1046,17 +1047,14 @@ namespace Microsoft.PythonTools.Intellisense {
             if (classifier == null) {
                 return null;
             }
-            var start = snapSpan.Start;
 
             var parser = new ReverseExpressionParser(snapshot, buffer, span);
-            if (parser.IsInGrouping()) {
-                var range = parser.GetExpressionRange(nesting: 1);
-                if (range != null) {
-                    start = range.Value.Start;
-                }
+            var statementRange = parser.GetStatementRange();
+            if (!statementRange.HasValue) {
+                statementRange = snapSpan.Start.GetContainingLine().Extent;
             }
 
-            var tokens = classifier.GetClassificationSpans(new SnapshotSpan(start.GetContainingLine().Start, snapSpan.Start));
+            var tokens = classifier.GetClassificationSpans(new SnapshotSpan(statementRange.Value.Start, snapSpan.Start));
             if (tokens.Count > 0) {
                 // Check for context-sensitive intellisense
                 var lastClass = tokens[tokens.Count - 1];

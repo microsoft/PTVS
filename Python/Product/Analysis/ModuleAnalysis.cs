@@ -919,7 +919,7 @@ namespace Microsoft.PythonTools.Analysis {
 
                 int end = children[i].GetStop(tree);
                 if (i + 1 < children.Count) {
-                    int nextStart = children[i + 1].GetBodyStart(tree);
+                    int nextStart = children[i + 1].GetStart(tree);
                     if (nextStart > end) {
                         end = nextStart;
                     }
