@@ -33,7 +33,7 @@ namespace Microsoft.PythonTools.EnvironmentsList.Host {
 
         void EnvironmentsToolWindow_ViewCreated(object sender, EnvironmentViewEventArgs e) {
             e.View.Extensions.Add(new PipExtensionProvider(e.View.Factory));
-            var withDb = e.View.Factory as IPythonInterpreterFactoryWithDatabase;
+            var withDb = e.View.Factory as PythonInterpreterFactoryWithDatabase;
             if (withDb != null) {
                 e.View.Extensions.Add(new DBExtensionProvider(withDb));
             }
