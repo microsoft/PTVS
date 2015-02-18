@@ -44,6 +44,7 @@
       <Link>Python Tools for VS License.rtf</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>.</VSIXSubPath>
     </Content>
     <None Include="source.extension.vsixmanifest">
       <SubType>Designer</SubType>
