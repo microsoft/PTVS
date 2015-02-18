@@ -142,12 +142,26 @@ def g():
 f()
 g()",
                     Expected = new[] { "def f():\r\n    pass\r\n", "f()", "f()", "def g():\r\n    pass\r\n", "f()", "g()" }
+                },
+                new {
+                    Code = @"    def f():
+        pass
+
+    f()
+    f()
+
+    def g():
+        pass
+
+    f()
+    g()",
+                    Expected = new[] { "def f():\r\n    pass\r\n", "f()", "f()", "def g():\r\n    pass\r\n", "f()", "g()" }
                 }
             };
 
             using (var evaluator = MakeEvaluator()) {
                 foreach (var testCase in testCases) {
-                    AssertUtil.AreEqual(evaluator.SplitCode(testCase.Code), testCase.Expected);
+                    AssertUtil.AreEqual(evaluator.JoinCode(evaluator.SplitCode(testCase.Code)), testCase.Expected);
                 }
             }
         }

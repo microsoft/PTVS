@@ -1467,12 +1467,22 @@ namespace Microsoft.PythonTools.Repl {
             return _curListener.DoDebugAttach();
         }
 
-        internal IEnumerable<string> SplitCode(IEnumerable<string> lines) {
-            if (SupportsMultipleCompleteStatementInputs) {
-                yield return string.Join(Environment.NewLine, lines);
-                yield break;
-            }
+        internal IEnumerable<string> TrimIndent(IEnumerable<string> lines) {
+            string indent = null;
+            foreach (var line in lines) {
+                if (indent == null) {
+                    indent = line.Substring(0, line.TakeWhile(char.IsWhiteSpace).Count());
+                }
 
+                if (line.StartsWith(indent)) {
+                    yield return line.Substring(indent.Length);
+                } else {
+                    yield return line.TrimStart();
+                }
+            }
+        }
+
+        internal static IEnumerable<string> JoinCodeLines(IEnumerable<string> lines, PythonLanguageVersion version) {
             StringBuilder temp = new StringBuilder();
             string prevText = null;
             ParseResult? prevParseResult = null;
@@ -1490,7 +1500,7 @@ namespace Microsoft.PythonTools.Repl {
                     }
                     string newCode = temp.ToString();
 
-                    var parser = Parser.CreateParser(new StringReader(newCode), LanguageVersion);
+                    var parser = Parser.CreateParser(new StringReader(newCode), version);
                     ParseResult result;
                     parser.ParseInteractiveCode(out result);
 
@@ -1536,10 +1546,15 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         internal IEnumerable<string> SplitCode(string code) {
+            return code.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
+        }
+
+        internal IEnumerable<string> JoinCode(IEnumerable<string> code) {
+            var split = JoinCodeLines(TrimIndent(code), LanguageVersion);
             if (SupportsMultipleCompleteStatementInputs) {
-                return Enumerable.Repeat(code, 1);
+                return Enumerable.Repeat(string.Join(Environment.NewLine, split), 1);
             } else {
-                return SplitCode(code.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None));
+                return split;
             }
         }
 

@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
@@ -62,11 +63,7 @@ namespace Microsoft.PythonTools.Commands {
         }
 
         private static IEnumerable<string> GetActiveInputs(IWpfTextView activeView, PythonReplEvaluator eval) {
-            foreach (var span in activeView.Selection.SelectedSpans) {
-                foreach (var input in eval.SplitCode(span.GetText())) {
-                    yield return input;
-                }
-            }
+            return eval.JoinCode(activeView.Selection.SelectedSpans.SelectMany(s => eval.SplitCode(s.GetText())));
         }
 
         private bool IsRealInterpreter(IPythonInterpreterFactory factory) {

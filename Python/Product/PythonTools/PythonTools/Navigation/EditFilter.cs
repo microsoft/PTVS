@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Windows;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Editor;
@@ -784,7 +785,7 @@ namespace Microsoft.PythonTools.Language {
                 curBuffer.CurrentSnapshot.Length - inputPoint.Value);
 
 
-            var splitCode = new List<string>(eval.SplitCode(startText + pasting + endText));
+            var splitCode = eval.JoinCode(eval.SplitCode(startText + pasting + endText)).ToList();
             curBuffer.Delete(new Span(0, curBuffer.CurrentSnapshot.Length));
 
             if (splitCode.Count == 1) {

@@ -55,7 +55,7 @@ namespace Microsoft.VisualStudio.Repl {
             IEnumerable<string> submissions;
 
             if (eval != null) {
-                submissions = eval.SplitCode(lines).Where(CommentPrefixPredicate);
+                submissions = eval.JoinCode(lines).Where(CommentPrefixPredicate);
             } else {
                 // v1 behavior, will probably never be hit, but if someone was developing their own IReplEvaluator
                 // and using this class it would be hit.
