@@ -3,7 +3,17 @@
      xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
   <Fragment>
     <Property Id="UpgradeVersionsDummyProperty" Value="0" />
-    <?if "$(var.VSTargetVersion)" = "12.0" ?>
+    <?if "$(var.VSTargetVersion)" = "14.0" ?>
+    <Upgrade Id="{C742FF6A-0212-465E-A604-62B673BA6E1E}">
+      <UpgradeVersion Property="REMOVE_TEMPLATE" Maximum="$(var.MsiVersion)" ExcludeLanguages="yes"/>
+    </Upgrade>
+    <Upgrade Id="{4649F0BB-4E71-42D5-B716-2C925F2C4F94}">
+      <UpgradeVersion Property="REMOVE_WDEXPRESS_TEMPLATE" Maximum="$(var.MsiVersion)" ExcludeLanguages="yes"/>
+    </Upgrade>
+    <Upgrade Id="{419CC5C5-2A98-4EF9-8D52-987703C3C7AF}">
+      <UpgradeVersion Property="REMOVE_VWDEXPRESS_TEMPLATE" Maximum="$(var.MsiVersion)" ExcludeLanguages="yes"/>
+    </Upgrade>
+    <?elif "$(var.VSTargetVersion)" = "12.0" ?>
     <Upgrade Id="{C0FB1AC9-C1EA-4FBE-857C-114DD719B41C}">
       <UpgradeVersion Property="REMOVE_TEMPLATE" Maximum="$(var.MsiVersion)" ExcludeLanguages="yes"/>
     </Upgrade>
