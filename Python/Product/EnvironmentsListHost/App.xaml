@@ -22,6 +22,22 @@
         <SolidColorBrush x:Key="{x:Static wpf:Controls.ControlBorderPressedKey}" Color="{x:Static SystemColors.ControlDarkDarkColor}" />
         <SolidColorBrush x:Key="{x:Static wpf:Controls.ControlBorderSelectedKey}" Color="{x:Static SystemColors.ControlDarkDarkColor}" />
 
+        <SolidColorBrush x:Key="{x:Static wpf:Controls.ComboBoxPopupBackgroundKey}" Color="{x:Static SystemColors.WindowColor}" />
+        <SolidColorBrush x:Key="{x:Static wpf:Controls.ComboBoxPopupBorderKey}" Color="{x:Static SystemColors.WindowFrameColor}" />
+
+        <SolidColorBrush x:Key="{x:Static wpf:Controls.ScrollBarBackgroundKey}" Color="{x:Static SystemColors.ScrollBarColor}" />
+        <SolidColorBrush x:Key="{x:Static wpf:Controls.ScrollBarThumbBackgroundKey}" Color="{x:Static SystemColors.ControlDarkColor}" />
+        <SolidColorBrush x:Key="{x:Static wpf:Controls.ScrollBarThumbBackgroundHoverKey}" Color="{x:Static SystemColors.ControlLightColor}" />
+        <SolidColorBrush x:Key="{x:Static wpf:Controls.ScrollBarThumbBackgroundPressedKey}" Color="{x:Static SystemColors.ControlDarkDarkColor}" />
+        <SolidColorBrush x:Key="{x:Static wpf:Controls.ScrollBarArrowKey}" Color="{x:Static SystemColors.ControlTextColor}" />
+        <!--<SolidColorBrush x:Key="{x:Static wpf:Controls.ScrollBarArrowHoverKey}" Color="{x:Static SystemColors.ControlTextColor}" />
+        <SolidColorBrush x:Key="{x:Static wpf:Controls.ScrollBarArrowPressedKey}" Color="{x:Static SystemColors.ControlColor}" />
+        <SolidColorBrush x:Key="{x:Static wpf:Controls.ScrollBarArrowDisabledKey}" Color="{x:Static SystemColors.GrayTextColor}" />-->
+        <SolidColorBrush x:Key="{x:Static wpf:Controls.ScrollBarArrowBackgroundKey}" Color="{x:Static SystemColors.ControlColor}" />
+        <SolidColorBrush x:Key="{x:Static wpf:Controls.ScrollBarArrowBackgroundHoverKey}" Color="{x:Static SystemColors.ControlLightColor}" />
+        <SolidColorBrush x:Key="{x:Static wpf:Controls.ScrollBarArrowBackgroundPressedKey}" Color="{x:Static SystemColors.ControlTextColor}" />
+        <!--<SolidColorBrush x:Key="{x:Static wpf:Controls.ScrollBarArrowBackgroundDisabledKey}" Color="{x:Static SystemColors.ControlColor}" />-->
+
         <SolidColorBrush x:Key="{x:Static wpf:Controls.HyperlinkKey}" Color="Blue" />
         <SolidColorBrush x:Key="{x:Static wpf:Controls.HyperlinkHoverKey}" Color="Green" />
 

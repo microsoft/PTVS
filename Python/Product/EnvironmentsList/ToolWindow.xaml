@@ -21,6 +21,9 @@
         <CommandBinding Command="{x:Static l:DBExtension.StartRefreshDB}"
                         CanExecute="StartRefreshDB_CanExecute"
                         Executed="StartRefreshDB_Executed" />
+        <CommandBinding Command="ApplicationCommands.New"
+                        CanExecute="AddCustomEnvironment_CanExecute"
+                        Executed="AddCustomEnvironment_Executed" />
     </UserControl.CommandBindings>
     
     <UserControl.Resources>
@@ -116,8 +119,13 @@
                      MaxWidth="300"
                      VerticalAlignment="Stretch"
                      BorderThickness="0"
-                     ItemsSource="{Binding Environments}"
-                     ItemTemplate="{StaticResource EnvironmentListItem}" />
+                     SelectionChanged="EnvironmentsList_SelectionChanged"
+                     ItemsSource="{Binding Environments}">
+                <ListBox.ItemTemplateSelector>
+                    <l:EnvironmentViewTemplateSelector AddNewEnvironment="{StaticResource AddNewEnvironmentListItem}"
+                                                       Environment="{StaticResource EnvironmentListItem}" />
+                </ListBox.ItemTemplateSelector>
+            </ListBox>
 
             <ListBox Grid.Column="1" Grid.Row="1" Grid.RowSpan="2"
                      MinWidth="120" MaxWidth="250"
@@ -164,9 +172,9 @@
 
         <Grid x:Name="VerticalLayout" Visibility="Collapsed">
             <Grid.RowDefinitions>
-                <RowDefinition Height="*" MaxHeight="200" />
+                <RowDefinition Height="*" MinHeight="36" MaxHeight="200" />
                 <RowDefinition Height="auto" />
-                <RowDefinition Height="*" />
+                <RowDefinition Height="2*" />
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
@@ -179,8 +187,13 @@
                      VerticalAlignment="Stretch"
                      HorizontalAlignment="Stretch"
                      BorderThickness="0"
-                     ItemsSource="{Binding Environments}"
-                     ItemTemplate="{StaticResource EnvironmentListItem}"/>
+                     SelectionChanged="EnvironmentsList_SelectionChanged"
+                     ItemsSource="{Binding Environments}">
+                <ListBox.ItemTemplateSelector>
+                    <l:EnvironmentViewTemplateSelector AddNewEnvironment="{StaticResource AddNewEnvironmentListItem}"
+                                                       Environment="{StaticResource EnvironmentListItem}" />
+                </ListBox.ItemTemplateSelector>
+            </ListBox>
 
             <ComboBox Grid.Row="1" Grid.Column="0"
                       Margin="3"

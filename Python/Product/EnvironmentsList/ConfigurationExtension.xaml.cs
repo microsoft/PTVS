@@ -34,6 +34,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public static readonly ICommand Apply = new RoutedCommand();
         public static readonly ICommand Reset = new RoutedCommand();
         public static readonly ICommand AutoDetect = new RoutedCommand();
+        public static readonly ICommand Remove = new RoutedCommand();
 
         private readonly ConfigurationExtensionProvider _provider;
         
@@ -58,20 +59,36 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         private void Apply_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
             var view = e.Parameter as ConfigurationEnvironmentView;
             e.CanExecute = view != null && _provider.IsConfigurationChanged(view);
+            e.Handled = true;
         }
 
         private void Apply_Executed(object sender, ExecutedRoutedEventArgs e) {
             _provider.ApplyConfiguration((ConfigurationEnvironmentView)e.Parameter);
+            e.Handled = true;
         }
 
         private void Reset_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
             var view = e.Parameter as ConfigurationEnvironmentView;
             e.CanExecute = view != null && _provider.IsConfigurationChanged(view);
+            e.Handled = true;
         }
 
         private void Reset_Executed(object sender, ExecutedRoutedEventArgs e) {
             _provider.ResetConfiguration((ConfigurationEnvironmentView)e.Parameter);
+            e.Handled = true;
         }
+
+        private void Remove_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+            var view = e.Parameter as ConfigurationEnvironmentView;
+            e.CanExecute = view != null;
+            e.Handled = true;
+        }
+
+        private void Remove_Executed(object sender, ExecutedRoutedEventArgs e) {
+            _provider.RemoveConfiguration((ConfigurationEnvironmentView)e.Parameter);
+            e.Handled = true;
+        }
+
 
         private void Browse_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
             Commands.CanExecute(null, sender, e);
@@ -154,7 +171,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             if (!Directory.Exists(view.LibraryPath)) {
                 var sitePy = CommonUtils.FindFile(
                     view.PrefixPath,
-                    "site.py",
+                    "os.py",
                     firstCheck: new[] { "lib" }
                 );
                 if (File.Exists(sitePy)) {
@@ -229,6 +246,11 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             view.PathEnvironmentVariable = factory.Configuration.PathEnvironmentVariable;
             view.ArchitectureName = factory.Configuration.Architecture == ProcessorArchitecture.Amd64 ? "64-bit" : "32-bit";
             view.VersionName = factory.Configuration.Version.ToString();
+        }
+
+        public void RemoveConfiguration(ConfigurationEnvironmentView view) {
+            var factory = view.EnvironmentView.Factory;
+            _factoryProvider.RemoveInterpreter(factory.Id);
         }
 
         public int SortPriority {

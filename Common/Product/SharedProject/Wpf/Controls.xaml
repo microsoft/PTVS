@@ -422,6 +422,7 @@
                           TextElement.Foreground="{TemplateBinding Foreground}">
                         <ContentPresenter Content="{TemplateBinding Content}"
                                           ContentTemplate="{TemplateBinding ContentTemplate}"
+                                          ContentTemplateSelector="{TemplateBinding ContentTemplateSelector}"
                                           HorizontalAlignment="Stretch"/>
                     </Grid>
                     <ControlTemplate.Triggers>

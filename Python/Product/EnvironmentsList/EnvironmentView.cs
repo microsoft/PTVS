@@ -13,10 +13,12 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudioTools;
@@ -28,6 +30,9 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public static readonly RoutedCommand OpenInteractiveOptions = new RoutedCommand();
         public static readonly RoutedCommand MakeGlobalDefault = new RoutedCommand();
         public static readonly RoutedCommand MakeActiveInCurrentProject = new RoutedCommand();
+
+        public static readonly EnvironmentView AddNewEnvironmentView = new EnvironmentView();
+        public static readonly IEnumerable<EnvironmentView> AddNewEnvironmentViewOnce = new[] { AddNewEnvironmentView };
 
         /// <summary>
         /// Used with <see cref="CommonUtils.FindFile"/> to more efficiently
@@ -45,6 +50,8 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         private readonly IPythonInterpreterFactoryWithDatabase _withDb;
 
         public IPythonInterpreterFactory Factory { get; private set; }
+
+        private EnvironmentView() { }
 
         internal EnvironmentView(
             IInterpreterOptionsService service,
@@ -216,5 +223,21 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
 
         #endregion
+    }
+
+    public sealed class EnvironmentViewTemplateSelector : DataTemplateSelector {
+        public DataTemplate Environment { get; set; }
+
+        public DataTemplate AddNewEnvironment { get; set; }
+
+        public override DataTemplate SelectTemplate(object item, DependencyObject container) {
+            if (object.ReferenceEquals(item, EnvironmentView.AddNewEnvironmentView) && AddNewEnvironment != null) {
+                return AddNewEnvironment;
+            }
+            if (item is EnvironmentView && Environment != null) {
+                return Environment;
+            }
+            return base.SelectTemplate(item, container);
+        }
     }
 }

@@ -23,6 +23,9 @@
         <CommandBinding Command="{x:Static l:ConfigurationExtension.AutoDetect}"
                         CanExecute="AutoDetect_CanExecute"
                         Executed="AutoDetect_Executed" />
+        <CommandBinding Command="{x:Static l:ConfigurationExtension.Remove}"
+                        CanExecute="Remove_CanExecute"
+                        Executed="Remove_Executed" />
         <CommandBinding Command="{x:Static wpf:Commands.BrowseFolder}"
                         CanExecute="Browse_CanExecute"
                         Executed="Browse_Executed" />
@@ -60,11 +63,22 @@
                     <RowDefinition Height="auto" />
                     <RowDefinition Height="auto" />
                     <RowDefinition Height="auto" />
+                    <RowDefinition Height="auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
                 
                 <Label Grid.Column="0" Grid.Row="0">Prefix path</Label>
                 <wpf:ConfigurationTextBoxWithHelp Grid.Column="0" Grid.Row="1"
+                                                Text="{Binding Description,Mode=TwoWay}"
+                                                Watermark="e.g. My Custom Environment">
+                    <wpf:ConfigurationTextBoxWithHelp.HelpText>
+                        The description is displayed throughout Visual Studio to
+                        help you identify the environment.
+                    </wpf:ConfigurationTextBoxWithHelp.HelpText>
+                </wpf:ConfigurationTextBoxWithHelp>
+
+                <Label Grid.Column="0" Grid.Row="2">Prefix path</Label>
+                <wpf:ConfigurationTextBoxWithHelp Grid.Column="0" Grid.Row="3"
                                                 Text="{Binding PrefixPath,Mode=TwoWay}"
                                                 Watermark="e.g. C:\PythonXY"
                                                 BrowseButtonStyle="{StaticResource BrowseFolderButton}">
@@ -76,8 +90,8 @@
                     </wpf:ConfigurationTextBoxWithHelp.HelpText>
                 </wpf:ConfigurationTextBoxWithHelp>
 
-                <Label Grid.Column="0" Grid.Row="2">Interpreter path</Label>
-                <wpf:ConfigurationTextBoxWithHelp Grid.Column="0" Grid.Row="3"
+                <Label Grid.Column="0" Grid.Row="4">Interpreter path</Label>
+                <wpf:ConfigurationTextBoxWithHelp Grid.Column="0" Grid.Row="5"
                                                 Text="{Binding InterpreterPath,Mode=TwoWay}"
                                                 Watermark="e.g. C:\PythonXY\python.exe"
                                                 BrowseButtonStyle="{StaticResource BrowseOpenFileButton}"
@@ -89,8 +103,8 @@
                     </wpf:ConfigurationTextBoxWithHelp.HelpText>
                 </wpf:ConfigurationTextBoxWithHelp>
 
-                <Label Grid.Column="0" Grid.Row="4">Windowed interpreter</Label>
-                <wpf:ConfigurationTextBoxWithHelp Grid.Column="0" Grid.Row="5"
+                <Label Grid.Column="0" Grid.Row="6">Windowed interpreter</Label>
+                <wpf:ConfigurationTextBoxWithHelp Grid.Column="0" Grid.Row="7"
                                                 Text="{Binding WindowsInterpreterPath,Mode=TwoWay}"
                                                 Watermark="e.g. C:\PythonXY\pythonw.exe"
                                                 BrowseButtonStyle="{StaticResource BrowseOpenFileButton}"
@@ -103,8 +117,8 @@
                     </wpf:ConfigurationTextBoxWithHelp.HelpText>
                 </wpf:ConfigurationTextBoxWithHelp>
 
-                <Label Grid.Column="0" Grid.Row="6">Library path</Label>
-                <wpf:ConfigurationTextBoxWithHelp Grid.Column="0" Grid.Row="7"
+                <Label Grid.Column="0" Grid.Row="8">Library path</Label>
+                <wpf:ConfigurationTextBoxWithHelp Grid.Column="0" Grid.Row="9"
                                                 Text="{Binding LibraryPath,Mode=TwoWay}"
                                                 Watermark="e.g. C:\PythonXY\Lib"
                                                 BrowseButtonStyle="{StaticResource BrowseFolderButton}">
@@ -115,8 +129,8 @@
                     </wpf:ConfigurationTextBoxWithHelp.HelpText>
                 </wpf:ConfigurationTextBoxWithHelp>
 
-                <Label Grid.Column="0" Grid.Row="8">Language version</Label>
-                <wpf:ConfigurationComboBoxWithHelp Grid.Column="0" Grid.Row="9"
+                <Label Grid.Column="0" Grid.Row="10">Language version</Label>
+                <wpf:ConfigurationComboBoxWithHelp Grid.Column="0" Grid.Row="11"
                                                  Value="{Binding VersionName,Mode=TwoWay}"
                                                  Values="{Binding VersionNames}"
                                                  Watermark="Language version">
@@ -127,8 +141,8 @@
                     </wpf:ConfigurationComboBoxWithHelp.HelpText>
                 </wpf:ConfigurationComboBoxWithHelp>
 
-                <Label Grid.Column="0" Grid.Row="10">Architecture</Label>
-                <wpf:ConfigurationComboBoxWithHelp Grid.Column="0" Grid.Row="11"
+                <Label Grid.Column="0" Grid.Row="12">Architecture</Label>
+                <wpf:ConfigurationComboBoxWithHelp Grid.Column="0" Grid.Row="13"
                                                  Value="{Binding ArchitectureName,Mode=TwoWay}"
                                                  Values="{Binding ArchitectureNames}"
                                                  Watermark="Architecture">
@@ -140,8 +154,8 @@
                     </wpf:ConfigurationComboBoxWithHelp.HelpText>
                 </wpf:ConfigurationComboBoxWithHelp>
 
-                <Label Grid.Column="0" Grid.Row="12">Path environment variable</Label>
-                <wpf:ConfigurationTextBoxWithHelp Grid.Column="0" Grid.Row="13"
+                <Label Grid.Column="0" Grid.Row="14">Path environment variable</Label>
+                <wpf:ConfigurationTextBoxWithHelp Grid.Column="0" Grid.Row="15"
                                                 Text="{Binding PathEnvironmentVariable,Mode=TwoWay}"
                                                 Watermark="e.g. PYTHONPATH">
                     <wpf:ConfigurationTextBoxWithHelp.HelpText>
@@ -189,6 +203,13 @@
                         </Style.Triggers>
                     </Style>
                 </Button.Style>
+            </Button>
+            <Border Height="16" Background="Transparent" />
+            <Button Command="{x:Static l:ConfigurationExtension.Remove}">
+                Re_move
+                <Button.ToolTip>
+                    Removes the environment. This operation cannot be undone.
+                </Button.ToolTip>
             </Button>
         </StackPanel>
     </Grid>

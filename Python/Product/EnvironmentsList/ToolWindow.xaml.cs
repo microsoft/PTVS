@@ -77,8 +77,8 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
 
         void UpdateLayout(double width, double previousWidth = 0.0) {
-            var lowTrigger = EnvironmentsColumn.ActualWidth + ExtensionsColumn.ActualWidth;
-            var highTrigger = lowTrigger * 1.5;
+            var lowTrigger = (EnvironmentsColumn.ActualWidth + ExtensionsColumn.ActualWidth) * 1.5;
+            var highTrigger = lowTrigger * 1.2;
             if (previousWidth <= 0) {
                 if (width <= highTrigger) {
                     SwitchToVerticalLayout();
@@ -251,6 +251,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         private async void StartRefreshDB_Executed(object sender, ExecutedRoutedEventArgs e) {
             var view = (EnvironmentView)e.Parameter;
             await StartRefreshDBAsync(view)
+                .SilenceException<OperationCanceledException>()
                 .HandleAllExceptions(Properties.Resources.PythonToolsForVisualStudio);
         }
 
@@ -265,11 +266,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                     GenerateDatabaseOptions.SkipUnchanged,
                 tcs.SetResult
             );
-            try {
-                await tcs.Task;
-            } catch (OperationCanceledException) {
-                return;
-            }
+            await tcs.Task;
 
             // Ensure that the factory is added to the list of those currently
             // being refreshed. This ensures that if the task completes before
@@ -281,7 +278,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             }
         }
 
-        private void UpdateEnvironments() {
+        private void UpdateEnvironments(IPythonInterpreterFactory select = null) {
             if (_service == null) {
                 lock (_environmentsLock) {
                     _environments.Clear();
@@ -295,14 +292,25 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                         var view = new EnvironmentView(_service, f, null);
                         OnViewCreated(view);
                         return view;
-                    }),
+                    })
+                    .Concat(EnvironmentView.AddNewEnvironmentViewOnce),
                     EnvironmentComparer.Instance,
                     EnvironmentComparer.Instance
                 );
 
-                var defaultView = _environments.FirstOrDefault(v => v.IsDefault);
-                if (defaultView != null && _environmentsView.View.CurrentItem == null) {
-                    _environmentsView.View.MoveCurrentTo(defaultView);
+                if (select != null) {
+                    var selectView = _environments.FirstOrDefault(v => v.Factory == select);
+                    if (selectView == null) {
+                        select = null;
+                    } else {
+                        _environmentsView.View.MoveCurrentTo(selectView);
+                    }
+                }
+                if (select == null) {
+                    var defaultView = _environments.FirstOrDefault(v => v.IsDefault);
+                    if (defaultView != null && _environmentsView.View.CurrentItem == null) {
+                        _environmentsView.View.MoveCurrentTo(defaultView);
+                    }
                 }
             }
         }
@@ -347,7 +355,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         private async void Service_InterpretersChanged(object sender, EventArgs e) {
             try {
-                await Dispatcher.InvokeAsync(UpdateEnvironments);
+                await Dispatcher.InvokeAsync(() => UpdateEnvironments());
             } catch (OperationCanceledException) {
             }
         }
@@ -370,23 +378,102 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             }
         }
 
+        private void AddCustomEnvironment_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+            if (_service == null) {
+                e.CanExecute = false;
+                e.Handled = true;
+                return;
+            }
+
+            var configurable = _service.KnownProviders
+                .OfType<ConfigurablePythonInterpreterFactoryProvider>()
+                .FirstOrDefault();
+
+            if (configurable == null) {
+                e.CanExecute = false;
+                e.Handled = true;
+                return;
+            }
+
+            e.CanExecute = true;
+            // Not handled, in case another handler wants to suppress
+            return;
+        }
+
+        private async void AddCustomEnvironment_Executed(object sender, ExecutedRoutedEventArgs e) {
+            var configurable = _service == null ? null : _service.KnownProviders
+                .OfType<ConfigurablePythonInterpreterFactoryProvider>()
+                .FirstOrDefault();
+            
+            if (configurable == null) {
+                return;
+            }
+
+            const string fmt = "New Environment {0}";
+            HashSet<string> names;
+            lock (_environmentsLock) {
+                names = new HashSet<string>(_environments.Select(view => view.Description));
+            }
+            var name = string.Format(fmt, 1);
+            for (int i = 2; names.Contains(name) && i < int.MaxValue; ++i) {
+                name = string.Format(fmt, i);
+            }
+
+            var factory = configurable.SetOptions(new InterpreterFactoryCreationOptions {
+                Id = Guid.NewGuid(),
+                Description = name
+            });
+
+            UpdateEnvironments(factory);
+
+            await Dispatcher.InvokeAsync(() => {
+                var coll = TryFindResource("SortedExtensions") as CollectionViewSource;
+                if (coll != null) {
+                    var select = coll.View.OfType<ConfigurationExtensionProvider>().FirstOrDefault();
+                    if (select != null) {
+                        coll.View.MoveCurrentTo(select);
+                    }
+                }
+            }, DispatcherPriority.Normal);
+        }
+
         class EnvironmentComparer : IEqualityComparer<EnvironmentView>, IComparer<EnvironmentView> {
             public static readonly EnvironmentComparer Instance = new EnvironmentComparer();
 
             public bool Equals(EnvironmentView x, EnvironmentView y) {
-                return x.Factory.Id == y.Factory.Id &&
-                    x.Factory.Configuration.Version == y.Factory.Configuration.Version;
+                return object.ReferenceEquals(x, y) || (
+                    x.Factory.Id == y.Factory.Id &&
+                    x.Factory.Configuration.Version == y.Factory.Configuration.Version
+                );
             }
 
             public int GetHashCode(EnvironmentView obj) {
-                return obj.Factory.GetHashCode();
+                return obj.Factory != null ? obj.Factory.GetHashCode() : 0;
             }
 
             public int Compare(EnvironmentView x, EnvironmentView y) {
+                if (object.ReferenceEquals(x, y)) {
+                    return 0;
+                }
+
+                if (object.ReferenceEquals(x, EnvironmentView.AddNewEnvironmentView)) {
+                    return 1;
+                } else if (object.ReferenceEquals(y, EnvironmentView.AddNewEnvironmentView)) {
+                    return -1;
+                }
+
                 return StringComparer.CurrentCultureIgnoreCase.Compare(
                     x.Description,
                     y.Description
                 );
+            }
+        }
+
+        private void EnvironmentsList_SelectionChanged(object sender, SelectionChangedEventArgs e) {
+            var list = sender as ListBox;
+            if (list != null && e.AddedItems.Count > 0) {
+                list.ScrollIntoView(e.AddedItems[0]);
+                e.Handled = true;
             }
         }
     }

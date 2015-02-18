@@ -316,7 +316,42 @@ namespace PythonToolsUITests {
                     list.Environments.Select(ev => (string)ev.InterpreterPath),
                     StringComparer.OrdinalIgnoreCase
                 ));
-                AssertUtil.ContainsExactly(before, afterRemove);
+                AssertUtil.ContainsExactly(afterRemove, before);
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public async Task AddUpdateRemoveConfigurableFactoryThroughUI() {
+            using (var wpf = new WpfProxy())
+            using (var list = new EnvironmentListProxy(wpf)) {
+                list.Service = GetInterpreterOptionsService();
+
+                var before = wpf.Invoke(() => new HashSet<Guid>(list.Environments.Where(ev => ev.Factory != null).Select(ev => ev.Factory.Id)));
+
+                var configurable = list.Service.KnownProviders.OfType<ConfigurablePythonInterpreterFactoryProvider>().FirstOrDefault();
+                Assert.IsNotNull(configurable, "No configurable provider available");
+
+                await list.Execute(ApplicationCommands.New, null);
+                var afterAdd = wpf.Invoke(() => new HashSet<Guid>(list.Environments.Where(ev => ev.Factory != null).Select(ev => ev.Factory.Id)));
+
+                var difference = new HashSet<Guid>(afterAdd);
+                difference.ExceptWith(before);
+
+                Console.WriteLine("Added {0}", AssertUtil.MakeText(difference));
+                Assert.AreEqual(1, difference.Count, "Did not add a new environment");
+                var newEnv = list.Service.Interpreters.Single(f => difference.Contains(f.Id));
+
+                Assert.IsTrue(configurable.IsConfigurable(newEnv), "Did not add a configurable environment");
+
+                // To remove the environment, we need to trigger the Remove
+                // command on the ConfigurationExtensionProvider's control
+                var view = wpf.Invoke(() => list.Environments.First(ev => ev.Factory == newEnv));
+                var extView = wpf.Invoke(() => view.Extensions.OfType<ConfigurationExtensionProvider>().First().WpfObject);
+                var confView = wpf.Invoke(() => (ConfigurationEnvironmentView)((System.Windows.Controls.Grid)extView.FindName("Subcontext")).DataContext);
+                await wpf.Execute((RoutedCommand)ConfigurationExtension.Remove, extView, confView);
+
+                var afterRemove = wpf.Invoke(() => new HashSet<Guid>(list.Environments.Where(ev => ev.Factory != null).Select(ev => ev.Factory.Id)));
+                AssertUtil.ContainsExactly(afterRemove, before);
             }
         }
 
