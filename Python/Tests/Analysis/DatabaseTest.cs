@@ -13,7 +13,10 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.IronPythonTools.Interpreter;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter;
@@ -179,7 +182,147 @@ namespace AnalysisTests {
                 Assert.AreEqual("property of type int", prop.Description);
             }
         }
+    }
 
+    [TestClass]
+    public class DatabaseTest27 {
+        static DatabaseTest27() {
+            AssertListener.Initialize();
+            PythonTestData.Deploy(includeTestData: false);
+        }
+
+        public virtual PythonVersion Python {
+            get { return PythonPaths.Python27 ?? PythonPaths.Python27_x64; }
+        }
+
+        [TestMethod]
+        public async Task GetSearchPaths() {
+            Python.AssertInstalled();
+
+            var paths = await PythonTypeDatabase.GetUncachedDatabaseSearchPathsAsync(Python.InterpreterPath);
+            Console.WriteLine("Paths for {0}", Python.InterpreterPath);
+            foreach (var path in paths) {
+                Console.WriteLine("{0} {1}", path.Path, path.IsStandardLibrary ? "(stdlib)" : "");
+            }
+
+            // Python.PrefixPath and LibraryPath should be included.
+            // We can't assume anything else
+            AssertUtil.ContainsAtLeast(paths.Select(p => p.Path.ToLowerInvariant().TrimEnd('\\')),
+                Python.PrefixPath.ToLowerInvariant().TrimEnd('\\'),
+                Python.LibPath.ToLowerInvariant().TrimEnd('\\')
+            );
+            
+            // All paths should exist
+            AssertUtil.ArrayEquals(paths.Where(p => !Directory.Exists(p.Path)).ToList(), new PythonLibraryPath[0]);
+
+            // Ensure we can round-trip the entries via ToString/Parse
+            var asStrings = paths.Select(p => p.ToString()).ToList();
+            var asPaths = asStrings.Select(PythonLibraryPath.Parse).ToList();
+            var asStrings2 = asPaths.Select(p => p.ToString()).ToList();
+            AssertUtil.ArrayEquals(asStrings, asStrings2);
+            AssertUtil.ArrayEquals(paths, asPaths, (o1, o2) => {
+                PythonLibraryPath p1 = (PythonLibraryPath)o1, p2 = (PythonLibraryPath)o2;
+                return p1.Path == p2.Path && p1.IsStandardLibrary == p2.IsStandardLibrary;
+            });
+
+            var dbPath = TestData.GetTempPath(randomSubPath: true);
+            Assert.IsNull(PythonTypeDatabase.GetCachedDatabaseSearchPaths(dbPath),
+                "Should not have found cached paths in an empty directory");
+
+            PythonTypeDatabase.WriteDatabaseSearchPaths(dbPath, paths);
+            Assert.IsTrue(File.Exists(Path.Combine(dbPath, "database.path")));
+            var paths2 = PythonTypeDatabase.GetCachedDatabaseSearchPaths(dbPath);
+            AssertUtil.ArrayEquals(paths, paths2, (o1, o2) => {
+                PythonLibraryPath p1 = (PythonLibraryPath)o1, p2 = (PythonLibraryPath)o2;
+                return p1.Path == p2.Path && p1.IsStandardLibrary == p2.IsStandardLibrary;
+            });
+        }
+
+        [TestMethod]
+        public async Task GetExpectedDatabaseModules() {
+            Python.AssertInstalled();
+
+            var db = PythonTypeDatabase.GetDatabaseExpectedModules(
+                Python.Version.ToVersion(),
+                await PythonTypeDatabase.GetUncachedDatabaseSearchPathsAsync(Python.InterpreterPath)
+            ).ToList();
+
+            var stdlib = db[0];
+            AssertUtil.ContainsAtLeast(stdlib.Select(mp => mp.FullName),
+                "os", "ctypes.__init__", "encodings.utf_8", "ntpath"
+            );
+
+        }
+    }
+
+    [TestClass]
+    public class DatabaseTest25 : DatabaseTest27 {
+        public override PythonVersion Python {
+            get { return PythonPaths.Python25 ?? PythonPaths.Python25_x64; }
+        }
+    }
+
+    [TestClass]
+    public class DatabaseTest26 : DatabaseTest27 {
+        public override PythonVersion Python {
+            get { return PythonPaths.Python26 ?? PythonPaths.Python26_x64; }
+        }
+    }
+
+    [TestClass]
+    public class DatabaseTest30 : DatabaseTest27 {
+        public override PythonVersion Python {
+            get { return PythonPaths.Python30 ?? PythonPaths.Python30_x64; }
+        }
+    }
+
+    [TestClass]
+    public class DatabaseTest31 : DatabaseTest27 {
+        public override PythonVersion Python {
+            get { return PythonPaths.Python31 ?? PythonPaths.Python31_x64; }
+        }
+    }
+
+    [TestClass]
+    public class DatabaseTest32 : DatabaseTest27 {
+        public override PythonVersion Python {
+            get { return PythonPaths.Python32 ?? PythonPaths.Python32_x64; }
+        }
+    }
+
+    [TestClass]
+    public class DatabaseTest33 : DatabaseTest27 {
+        public override PythonVersion Python {
+            get { return PythonPaths.Python33 ?? PythonPaths.Python33_x64; }
+        }
+    }
+
+    [TestClass]
+    public class DatabaseTest34 : DatabaseTest27 {
+        public override PythonVersion Python {
+            get { return PythonPaths.Python34 ?? PythonPaths.Python34_x64; }
+        }
+    }
+
+    [TestClass]
+    public class DatabaseTest35 : DatabaseTest27 {
+        public override PythonVersion Python {
+            get { return PythonPaths.Python35 ?? PythonPaths.Python35_x64; }
+        }
+    }
+
+    [TestClass]
+    public class DatabaseTestIPy27 : DatabaseTest27 {
+        public override PythonVersion Python {
+            get { return PythonPaths.IronPython27; }
+        }
+    }
+
+    [TestClass]
+    public class DatabaseTestIPy27x64 : DatabaseTest27 {
+        public override PythonVersion Python {
+            get { return PythonPaths.IronPython27_x64; }
+        }
     }
 
 }

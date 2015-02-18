@@ -18,6 +18,7 @@ using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Interpreter {
@@ -54,22 +55,32 @@ namespace Microsoft.PythonTools.Interpreter {
         /// </summary>
         /// <returns>The names of the modules that were found.</returns>
         internal static HashSet<string> FindModules(this IPythonInterpreterFactory factory, params string[] moduleNames) {
-            var expected = new HashSet<string>(moduleNames);
-            var result = new HashSet<string>();
             var withDb = factory as PythonInterpreterFactoryWithDatabase;
             if (withDb != null && withDb.IsCurrent) {
                 var db = withDb.GetCurrentDatabase();
                 var set = new HashSet<string>(moduleNames.Where(m => db.GetModule(m) != null));
                 return set;
-            } else {
-                foreach (var mp in ModulePath.GetModulesInLib(factory)) {
-                    if (expected.Count == 0) {
-                        break;
-                    }
+            }
 
-                    if (expected.Remove(mp.ModuleName)) {
-                        result.Add(mp.ModuleName);
-                    }
+            var expected = new HashSet<string>(moduleNames);
+
+            if (withDb != null) {
+                var paths = PythonTypeDatabase.GetCachedDatabaseSearchPaths(withDb.DatabasePath);
+                var db = PythonTypeDatabase.GetDatabaseExpectedModules(withDb.Configuration.Version, paths)
+                    .SelectMany()
+                    .Select(g => g.ModuleName);
+                expected.IntersectWith(db);
+                return expected;
+            }
+
+            var result = new HashSet<string>();
+            foreach (var mp in ModulePath.GetModulesInLib(factory)) {
+                if (expected.Count == 0) {
+                    break;
+                }
+
+                if (expected.Remove(mp.ModuleName)) {
+                    result.Add(mp.ModuleName);
                 }
             }
             return result;

@@ -100,6 +100,17 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         /// <summary>
+        /// Determines whether instances of this factory should assume that
+        /// libraries are laid out exactly as CPython. If false, the interpreter
+        /// will be queried for its search paths.
+        /// </summary>
+        public virtual bool AssumeSimpleLibraryLayout {
+            get {
+                return true;
+            }
+        }
+
+        /// <summary>
         /// Returns a new interpreter created with the specified factory.
         /// </summary>
         /// <remarks>
@@ -211,7 +222,8 @@ namespace Microsoft.PythonTools.Interpreter {
             var req = new PythonTypeDatabaseCreationRequest {
                 Factory = this,
                 OutputPath = DatabasePath,
-                SkipUnchanged = options.HasFlag(GenerateDatabaseOptions.SkipUnchanged)
+                SkipUnchanged = options.HasFlag(GenerateDatabaseOptions.SkipUnchanged),
+                DetectLibraryPath = !AssumeSimpleLibraryLayout
             };
 
             GenerateDatabase(req, onExit);
@@ -454,10 +466,21 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         private string[] GetMissingModules(HashSet<string> existingDatabase) {
-            return ModulePath.GetModulesInLib(this)
+            List<PythonLibraryPath> searchPaths;
+            try {
+                searchPaths = PythonTypeDatabase.GetCachedDatabaseSearchPaths(DatabasePath);
+            } catch (IOException) {
+                return existingDatabase
+                    .Except(RequiredBuiltinModules)
+                    .OrderBy(name => name, StringComparer.InvariantCultureIgnoreCase)
+                    .ToArray();
+            }
+            
+            return PythonTypeDatabase.GetDatabaseExpectedModules(_config.Version, searchPaths)
+                .SelectMany()
                 .Select(mp => mp.ModuleName)
                 .Concat(RequiredBuiltinModules)
-                .Where(name => !existingDatabase.Contains(name))
+                .Where(m => !existingDatabase.Contains(m))
                 .OrderBy(name => name, StringComparer.InvariantCultureIgnoreCase)
                 .ToArray();
         }

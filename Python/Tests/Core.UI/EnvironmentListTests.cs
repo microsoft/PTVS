@@ -542,7 +542,7 @@ namespace PythonToolsUITests {
 
             private void Window_ViewCreated(object sender, EnvironmentViewEventArgs e) {
                 if (CreateDBExtension) {
-                    var withDb = e.View.Factory as IPythonInterpreterFactoryWithDatabase;
+                    var withDb = e.View.Factory as PythonInterpreterFactoryWithDatabase;
                     if (withDb != null) {
                         e.View.Extensions.Add(new DBExtensionProvider(withDb));
                     }

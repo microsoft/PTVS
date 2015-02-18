@@ -18,6 +18,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -156,9 +157,9 @@ namespace AnalysisTests {
                 Assert.IsTrue(File.Exists(path), path);
                 path = Path.Combine(libDb.Database, "A2.a.idb");
                 Assert.IsTrue(File.Exists(path), path);
-                path = Path.Combine(libDb.Database, "site-packages_B", "B.idb");
+                path = Path.Combine(libDb.Database, "B", "B.idb");
                 Assert.IsTrue(File.Exists(path), path);
-                path = Path.Combine(libDb.Database, "site-packages_B", "B.b.idb");
+                path = Path.Combine(libDb.Database, "B", "B.b.idb");
                 Assert.IsTrue(File.Exists(path), path);
 
                 var path1 = Path.Combine(libDb.Library, "a.py");
@@ -187,13 +188,13 @@ namespace AnalysisTests {
         };
 
         [TestMethod, Priority(0)]
-        public void NoFilesOutOfDate() {
+        public async Task NoFilesOutOfDate() {
             var files = BasicFiles;
             using (var libDb = new TemporaryLibAndDB(files))
             using (var analyzer = libDb.Analyzer) {
                 libDb.TouchLibrary(LastWeek, files);
                 libDb.TouchDatabase(Yesterday, files);
-                Assert.IsFalse(analyzer.Prepare(true));
+                Assert.IsFalse(await analyzer.Prepare(true));
 
                 Assert.AreEqual(files.Count(), libDb.FilesInDatabase.Count());
                 Assert.AreEqual(0, analyzer._analyzeFileGroups.Count);
@@ -203,12 +204,12 @@ namespace AnalysisTests {
 
 
         [TestMethod, Priority(0)]
-        public void AllFilesOutOfDate() {
+        public async Task AllFilesOutOfDate() {
             var files = BasicFiles;
             using (var libDb = new TemporaryLibAndDB(files))
             using (var analyzer = libDb.Analyzer) {
                 libDb.TouchLibrary(files);
-                Assert.IsTrue(analyzer.Prepare(true));
+                Assert.IsTrue(await analyzer.Prepare(true));
 
                 Assert.AreEqual(0, libDb.FilesInDatabase.Count());
                 Assert.AreEqual(2, analyzer._analyzeFileGroups.Count);
@@ -219,13 +220,13 @@ namespace AnalysisTests {
         }
 
         [TestMethod, Priority(0)]
-        public void FileInStdLibMissing() {
+        public async Task FileInStdLibMissing() {
             var files = BasicFiles;
             using (var libDb = new TemporaryLibAndDB(files))
             using (var analyzer = libDb.Analyzer) {
                 libDb.DeleteLibrary("a.py");
 
-                Assert.IsFalse(analyzer.Prepare(true));
+                Assert.IsFalse(await analyzer.Prepare(true));
 
                 // This is the result we'd expect.
                 //Assert.AreEqual(files.Count() - 1, libDb.FilesInDatabase.Count())
@@ -242,13 +243,13 @@ namespace AnalysisTests {
         }
 
         [TestMethod, Priority(0)]
-        public void FileInSitePackageMissing() {
+        public async Task FileInSitePackageMissing() {
             var files = BasicFiles;
             using (var libDb = new TemporaryLibAndDB(files))
             using (var analyzer = libDb.Analyzer) {
                 libDb.DeleteLibrary("site-packages\\B\\b.py");
 
-                Assert.IsFalse(analyzer.Prepare(true));
+                Assert.IsFalse(await analyzer.Prepare(true));
 
                 Assert.AreEqual(files.Count() - 1, libDb.FilesInDatabase.Count());
                 Assert.AreEqual(0, analyzer._analyzeFileGroups.Count);
@@ -257,13 +258,13 @@ namespace AnalysisTests {
         }
 
         [TestMethod, Priority(0)]
-        public void FileInStdLibOutOfDate() {
+        public async Task FileInStdLibOutOfDate() {
             var files = BasicFiles;
             using (var libDb = new TemporaryLibAndDB(files))
             using (var analyzer = libDb.Analyzer) {
                 libDb.TouchLibrary("a.py");
 
-                Assert.IsTrue(analyzer.Prepare(true));
+                Assert.IsTrue(await analyzer.Prepare(true));
 
                 Assert.AreEqual(0, libDb.FilesInDatabase.Count());
                 Assert.AreEqual(2, analyzer._analyzeFileGroups.Count);
@@ -274,13 +275,13 @@ namespace AnalysisTests {
         }
 
         [TestMethod, Priority(0)]
-        public void FileInSitePackageOutOfDate() {
+        public async Task FileInSitePackageOutOfDate() {
             var files = BasicFiles;
             using (var libDb = new TemporaryLibAndDB(files))
             using (var analyzer = libDb.Analyzer) {
                 libDb.TouchLibrary("site-packages\\B\\__init__.py");
 
-                Assert.IsTrue(analyzer.Prepare(true));
+                Assert.IsTrue(await analyzer.Prepare(true));
 
                 Assert.AreEqual(files.Count() - 2, libDb.FilesInDatabase.Count());
                 Assert.AreEqual(1, analyzer._analyzeFileGroups.Count);
@@ -290,13 +291,13 @@ namespace AnalysisTests {
         }
 
         [TestMethod, Priority(0)]
-        public void IdbInStdLibMissing() {
+        public async Task IdbInStdLibMissing() {
             var files = BasicFiles;
             using (var libDb = new TemporaryLibAndDB(files))
             using (var analyzer = libDb.Analyzer) {
                 libDb.DeleteDatabase("a.py");
 
-                Assert.IsTrue(analyzer.Prepare(true));
+                Assert.IsTrue(await analyzer.Prepare(true));
 
                 Assert.AreEqual(0, libDb.FilesInDatabase.Count());
                 Assert.AreEqual(2, analyzer._analyzeFileGroups.Count);
@@ -307,13 +308,13 @@ namespace AnalysisTests {
         }
 
         [TestMethod, Priority(0)]
-        public void IdbInSitePackageMissing() {
+        public async Task IdbInSitePackageMissing() {
             var files = BasicFiles;
             using (var libDb = new TemporaryLibAndDB(files))
             using (var analyzer = libDb.Analyzer) {
                 libDb.DeleteDatabase("site-packages\\B\\__init__.py");
 
-                Assert.IsTrue(analyzer.Prepare(true));
+                Assert.IsTrue(await analyzer.Prepare(true));
 
                 Assert.AreEqual(files.Count() - 2, libDb.FilesInDatabase.Count());
                 Assert.AreEqual(1, analyzer._analyzeFileGroups.Count);
@@ -323,7 +324,7 @@ namespace AnalysisTests {
         }
 
         [TestMethod, Priority(0)]
-        public void SitePackageAdded() {
+        public async Task SitePackageAdded() {
             var files = BasicFiles;
             using (var libDb = new TemporaryLibAndDB(files))
             using (var analyzer = libDb.Analyzer) {
@@ -332,7 +333,7 @@ namespace AnalysisTests {
                 File.WriteAllText(Path.Combine(path, "__init__.py"), "Not a real .py file");
                 File.WriteAllText(Path.Combine(path, "newMod.py"), "Not a real .py file");
 
-                Assert.IsTrue(analyzer.Prepare(true));
+                Assert.IsTrue(await analyzer.Prepare(true));
 
                 // Nothing deleted, and only one analysis group queued.
                 Assert.AreEqual(files.Count(), libDb.FilesInDatabase.Count());
@@ -343,14 +344,14 @@ namespace AnalysisTests {
         }
 
         [TestMethod, Priority(0)]
-        public void SitePackageRemoved() {
+        public async Task SitePackageRemoved() {
             var files = BasicFiles;
             using (var libDb = new TemporaryLibAndDB(files))
             using (var analyzer = libDb.Analyzer) {
                 var path = Path.Combine(libDb.Library, "site-packages", "B");
                 Directory.Delete(path, true);
 
-                Assert.IsFalse(analyzer.Prepare(true));
+                Assert.IsFalse(await analyzer.Prepare(true));
 
                 // Two files deleted and nothing queued.
                 Assert.AreEqual(files.Count() - 2, libDb.FilesInDatabase.Count());
@@ -361,7 +362,7 @@ namespace AnalysisTests {
 
 
         [TestMethod, Priority(0)]
-        public void ConflictingPyAndPyd() {
+        public async Task ConflictingPyAndPyd() {
             var files = new[] {
                 "a.py",
                 "a.pyd",
@@ -372,7 +373,7 @@ namespace AnalysisTests {
             using (var analyzer = libDb.Analyzer) {
                 libDb.DeleteDatabase(files);
 
-                Assert.IsTrue(analyzer.Prepare(true));
+                Assert.IsTrue(await analyzer.Prepare(true));
 
                 Assert.AreEqual(0, analyzer._analyzeFileGroups.Count);
                 Assert.AreEqual(1, analyzer._scrapeFileGroups.Count);
@@ -381,7 +382,7 @@ namespace AnalysisTests {
         }
 
         [TestMethod, Priority(0)]
-        public void ChangeAllToTrueOnSecondGroup() {
+        public async Task ChangeAllToTrueOnSecondGroup() {
             var files = new[] {
                 "a.py",
                 "site-packages\\b.py",
@@ -392,7 +393,7 @@ namespace AnalysisTests {
             using (var analyzer = libDb.Analyzer) {
                 Assert.IsTrue(analyzer.SkipUnchanged);
 
-                Assert.IsTrue(analyzer.Prepare(true));
+                Assert.IsTrue(await analyzer.Prepare(true));
 
                 Assert.IsFalse(analyzer.SkipUnchanged);
                 Assert.AreEqual(3, analyzer._analyzeFileGroups.Count);
@@ -400,7 +401,7 @@ namespace AnalysisTests {
         }
 
         [TestMethod, Priority(0)]
-        public void SitePackagesInPthFile() {
+        public async Task SitePackagesInPthFile() {
             var files = new[] {
                 "a.py",
                 "site-packages\\b.py",
@@ -412,7 +413,7 @@ namespace AnalysisTests {
                 libDb.AddFileToLibrary("site-packages\\self.pth", ".");
 
                 using (var analyzer = libDb.Analyzer) {
-                    Assert.IsTrue(analyzer.Prepare(true));
+                    Assert.IsTrue(await analyzer.Prepare(true));
 
                     // Expect four groups, whereas if self.pth was allowed we'd
                     // only see three.
@@ -490,7 +491,10 @@ namespace AnalysisTests {
                     return new PyLibAnalyzer(Guid.Empty,
                         new Version(2, 7),
                         null,
-                        Library,
+                        new [] {
+                            new PythonLibraryPath(Library, true, null),
+                            new PythonLibraryPath(Path.Combine(Library, "site-packages"), false, null),
+                        },
                         null,
                         Database,
                         null,
@@ -512,7 +516,7 @@ namespace AnalysisTests {
                         lastDot = file.LastIndexOf('.');
                     if (firstDot != lastDot) {
                         file = Path.Combine(
-                            "site-packages_" + file.Substring(firstDot + 1, secondDot - firstDot),
+                            file.Substring(firstDot + 1, secondDot - firstDot),
                             file.Substring(firstDot + 1)
                         );
                     }

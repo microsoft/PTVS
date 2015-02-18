@@ -49,5 +49,11 @@ namespace Microsoft.IronPythonTools.Interpreter {
         public override IPythonInterpreter MakeInterpreter(PythonInterpreterFactoryWithDatabase factory) {
             return new IronPythonInterpreter(factory);
         }
+
+        public override bool AssumeSimpleLibraryLayout {
+            get {
+                return false;
+            }
+        }
     }
 }

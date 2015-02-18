@@ -269,12 +269,12 @@ namespace Microsoft.PythonTools.EnvironmentsList {
     }
 
     public sealed class DBExtensionProvider : IEnvironmentViewExtension {
-        private readonly IPythonInterpreterFactoryWithDatabase _factory;
+        private readonly PythonInterpreterFactoryWithDatabase _factory;
         private FrameworkElement _wpfObject;
         private List<string> _modules;
         private List<string> _stdLibModules;
 
-        public DBExtensionProvider(IPythonInterpreterFactoryWithDatabase factory) {
+        public DBExtensionProvider(PythonInterpreterFactoryWithDatabase factory) {
             _factory = factory;
             _factory.IsCurrentChanged += Factory_IsCurrentChanged;
         }
@@ -351,19 +351,44 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 stdLibPaths.Add(Path.GetDirectoryName(_factory.Configuration.InterpreterPath));
 
                 var results = await Task.Run(() => {
-                    var seenModules = new HashSet<string>(StringComparer.Ordinal);
-                    var stdLibModules = new List<string>();
-
-                    var modules = ModulePath.GetModulesInLib(_factory)
-                        .Select(mp => {
-                            if (stdLibPaths.Contains(mp.LibraryPath)) {
-                                stdLibModules.Add(mp.ModuleName);
+                    List<PythonLibraryPath> paths;
+                    if (_factory.AssumeSimpleLibraryLayout) {
+                        paths = PythonTypeDatabase.GetDefaultDatabaseSearchPaths(_factory.Configuration.LibraryPath);
+                    } else {
+                        paths = PythonTypeDatabase.GetCachedDatabaseSearchPaths(_factory.DatabasePath);
+                        if (paths == null) {
+                            paths = PythonTypeDatabase.GetUncachedDatabaseSearchPathsAsync(
+                                _factory.Configuration.InterpreterPath
+                            ).WaitAndUnwrapExceptions();
+                            try {
+                                PythonTypeDatabase.WriteDatabaseSearchPaths(_factory.DatabasePath, paths);
+                            } catch (Exception ex) {
+                                if (ex.IsCriticalException()) {
+                                    throw;
+                                }
                             }
-                            return mp.ModuleName;
-                        })
-                        .Where(name => seenModules.Add(name))
-                        .OrderBy(name => name)
-                        .ToList();
+                        }
+                    }
+
+                    var groups = PythonTypeDatabase.GetDatabaseExpectedModules(
+                        _factory.Configuration.Version,
+                        paths
+                    ).ToList();
+
+                    var stdLibModules = groups[0].Select(mp => mp.ModuleName).ToList();
+                    var modules = groups.SelectMany().Select(mp => mp.ModuleName).ToList();
+                    stdLibModules.Sort();
+                    modules.Sort();
+                    for (int i = stdLibModules.Count - 1; i > 0; --i) {
+                        if (stdLibModules[i - 1] == stdLibModules[i]) {
+                            stdLibModules.RemoveAt(i);
+                        }
+                    }
+                    for (int i = modules.Count - 1; i > 0; --i) {
+                        if (modules[i - 1] == modules[i]) {
+                            modules.RemoveAt(i);
+                        }
+                    }
 
                     return Tuple.Create(modules, stdLibModules);
                 });

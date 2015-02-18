@@ -171,7 +171,8 @@ namespace Microsoft.PythonTools.Interpreter {
             var req = new PythonTypeDatabaseCreationRequest {
                 Factory = this,
                 OutputPath = DatabasePath,
-                SkipUnchanged = options.HasFlag(GenerateDatabaseOptions.SkipUnchanged)
+                SkipUnchanged = options.HasFlag(GenerateDatabaseOptions.SkipUnchanged),
+                DetectLibraryPath = !AssumeSimpleLibraryLayout
             };
 
             req.ExtraInputDatabases.Add(_base.DatabasePath);

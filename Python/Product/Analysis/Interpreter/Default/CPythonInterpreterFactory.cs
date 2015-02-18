@@ -43,11 +43,10 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                     version),
                 watchForNewModules) { }
 
-        static string GetDirectoryName(string path) {
-            if (CommonUtils.IsValidPath(path)) {
-                return Path.GetDirectoryName(path);
+        public override bool AssumeSimpleLibraryLayout {
+            get {
+                return false;
             }
-            return string.Empty;
         }
     }
 }

@@ -18,10 +18,13 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Security;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Interpreter.Default;
+using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Interpreter {
@@ -373,7 +376,7 @@ namespace Microsoft.PythonTools.Interpreter {
         /// for the interpreter factory.
         /// </summary>
         public const int AlreadyGeneratingExitCode = -3;
-        
+
         /// <summary>
         /// The exit code returned when a database cannot be created for the
         /// interpreter factory.
@@ -408,7 +411,8 @@ namespace Microsoft.PythonTools.Interpreter {
                 "/id", fact.Id.ToString("B"),
                 "/version", fact.Configuration.Version.ToString(),
                 "/python", fact.Configuration.InterpreterPath,
-                "/library", fact.Configuration.LibraryPath,
+                request.DetectLibraryPath ? null : "/library",
+                request.DetectLibraryPath ? null : fact.Configuration.LibraryPath,
                 "/outdir", outPath,
                 "/basedb", baseDb,
                 (request.SkipUnchanged ? null : "/all"),  // null will be filtered out; empty strings are quoted
@@ -622,6 +626,235 @@ namespace Microsoft.PythonTools.Interpreter {
             return Directory.Exists(databasePath) &&
                 File.Exists(Path.Combine(databasePath, "database.pid"));
         }
+
+        /// <summary>
+        /// Gets the default set of search paths based on the path to the root
+        /// of the standard library.
+        /// </summary>
+        /// <param name="library">Root of the standard library.</param>
+        /// <returns>A list of search paths for the interpreter.</returns>
+        /// <remarks>New in 2.2</remarks>
+        public static List<PythonLibraryPath> GetDefaultDatabaseSearchPaths(string library) {
+            var result = new List<PythonLibraryPath>();
+            if (!Directory.Exists(library)) {
+                return result;
+            }
+
+            result.Add(new PythonLibraryPath(library, true, null));
+
+            var sitePackages = Path.Combine(library, "site-packages");
+            if (!Directory.Exists(sitePackages)) {
+                return result;
+            }
+
+            result.Add(new PythonLibraryPath(sitePackages, false, null));
+            result.AddRange(ModulePath.ExpandPathFiles(sitePackages)
+                .Select(p => new PythonLibraryPath(p, false, null))
+            );
+
+            return result;
+        }
+
+        /// <summary>
+        /// Gets the set of search paths by running the interpreter.
+        /// </summary>
+        /// <param name="interpreter">Path to the interpreter.</param>
+        /// <returns>A list of search paths for the interpreter.</returns>
+        /// <remarks>Added in 2.2</remarks>
+        public static async Task<List<PythonLibraryPath>> GetUncachedDatabaseSearchPathsAsync(string interpreter) {
+            List<string> lines;
+
+            // sys.path will include the working directory, so we make an empty
+            // path that we can filter out later
+            var tempWorkingDir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+            Directory.CreateDirectory(tempWorkingDir);
+
+            try {
+                using (var proc = ProcessOutput.Run(
+                    interpreter,
+                    new[] {
+                        "-S",   // don't import site - we do that in code
+                        "-E",   // ignore environment
+                        "-c", "import sys;print('\\n'.join(sys.path));print('-');import site;site.main();print('\\n'.join(sys.path))"
+                    },
+                    tempWorkingDir,
+                    null,
+                    false,
+                    null
+                )) {
+                    if (await proc != 0) {
+                        throw new InvalidOperationException(string.Format(
+                            "Cannot obtain list of paths{0}{1}",
+                            Environment.NewLine,
+                            string.Join(Environment.NewLine, proc.StandardErrorLines))
+                        );
+                    }
+
+                    lines = proc.StandardOutputLines.ToList();
+                }
+            } finally {
+                try {
+                    Directory.Delete(tempWorkingDir, true);
+                } catch (Exception ex) {
+                    if (ex.IsCriticalException()) {
+                        throw;
+                    }
+                }
+            }
+
+            var result = new List<PythonLibraryPath>();
+            var treatPathsAsStandardLibrary = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            bool builtinLibraries = true;
+            foreach (var p in lines) {
+                if (p == "-") {
+                    if (builtinLibraries) {
+                        // Seen all the builtins
+                        builtinLibraries = false;
+                        continue;
+                    } else {
+                        // Extra hyphen, so stop processing
+                        break;
+                    }
+                }
+
+                if (string.IsNullOrEmpty(p) || p == ".") {
+                    continue;
+                }
+
+                string path;
+                try {
+                    if (!Path.IsPathRooted(p)) {
+                        path = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(interpreter), p));
+                    } else {
+                        path = Path.GetFullPath(p);
+                    }
+                } catch (ArgumentException) {
+                    continue;
+                } catch (PathTooLongException) {
+                    continue;
+                }
+
+                if (string.Equals(p, tempWorkingDir, StringComparison.OrdinalIgnoreCase)) {
+                    continue;
+                }
+
+                if (Directory.Exists(path)) {
+                    if (builtinLibraries) {
+                        // Looking at first section of output, which are
+                        // considered to be the "standard library"
+                        treatPathsAsStandardLibrary.Add(path);
+                    } else {
+                        // Looking at second section of output, which
+                        // includes site-packages and .pth files
+                        result.Add(new PythonLibraryPath(path, treatPathsAsStandardLibrary.Contains(path), null));
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Gets the set of search paths that were last saved for a database.
+        /// </summary>
+        /// <param name="databasePath">Path containing the database.</param>
+        /// <returns>The cached list of search paths.</returns>
+        /// <remarks>Added in 2.2</remarks>
+        public static List<PythonLibraryPath> GetCachedDatabaseSearchPaths(string databasePath) {
+            StreamReader file;
+            try {
+                file = File.OpenText(Path.Combine(databasePath, "database.path"));
+            } catch (IOException) {
+                return null;
+            }
+
+            var result = new List<PythonLibraryPath>();
+
+            using (file) {
+                string line;
+                while ((line = file.ReadLine()) != null) {
+                    try {
+                        result.Add(PythonLibraryPath.Parse(line));
+                    } catch (FormatException) {
+                        Debug.Fail("Invalid format: " + line);
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Saves search paths for a database.
+        /// </summary>
+        /// <param name="databasePath">The path to the database.</param>
+        /// <param name="paths">The list of search paths.</param>
+        /// <remarks>Added in 2.2</remarks>
+        public static void WriteDatabaseSearchPaths(string databasePath, IEnumerable<PythonLibraryPath> paths) {
+            using (var file = new StreamWriter(Path.Combine(databasePath, "database.path"))) {
+                foreach (var path in paths) {
+                    file.WriteLine(path.ToString());
+                }
+            }
+        }
+
+        /// <summary>
+        /// Returns ModulePaths representing the modules that should be analyzed
+        /// for the given search paths.
+        /// </summary>
+        /// <param name="languageVersion">
+        /// The Python language version to assume. This affects whether
+        /// namespace packages are supported or not.
+        /// </param>
+        /// <param name="searchPaths">A sequence of paths to search.</param>
+        /// <returns>
+        /// All the expected modules, grouped based on codependency. When
+        /// analyzing modules, all those in the same list should be analyzed
+        /// together.
+        /// </returns>
+        /// <remarks>Added in 2.2</remarks>
+        public static IEnumerable<List<ModulePath>> GetDatabaseExpectedModules(
+            Version languageVersion,
+            IEnumerable<PythonLibraryPath> searchPaths
+        ) {
+            var requireInitPy = ModulePath.PythonVersionRequiresInitPyFiles(languageVersion);
+
+            var stdlibGroup = new List<ModulePath>();
+            var packages = new List<List<ModulePath>> { stdlibGroup };
+
+            foreach (var path in searchPaths ?? Enumerable.Empty<PythonLibraryPath>()) {
+                if (path.IsStandardLibrary) {
+                    stdlibGroup.AddRange(ModulePath.GetModulesInPath(
+                        path.Path,
+                        includeTopLevelFiles: true,
+                        recurse: true,
+                        // Always require __init__.py for stdlib folders
+                        // Otherwise we will probably include libraries multiple
+                        // times, and while Python 3.3+ allows this, it's really
+                        // not a good idea.
+                        requireInitPy: true
+                    ));
+                } else {
+                    packages.Add(ModulePath.GetModulesInPath(
+                        path.Path,
+                        includeTopLevelFiles: true,
+                        recurse: false,
+                        basePackage: path.ModulePrefix
+                    ).ToList());
+                    packages.AddRange(ModulePath.GetModulesInPath(
+                        path.Path,
+                        includeTopLevelFiles: false,
+                        recurse: true,
+                        basePackage: path.ModulePrefix,
+                        requireInitPy: requireInitPy
+                    ).GroupBy(g => g.LibraryPath).Select(g => g.ToList()));
+                }
+            }
+
+            return packages;
+        }
+
     }
 
 }

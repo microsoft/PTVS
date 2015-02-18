@@ -105,7 +105,7 @@ namespace Microsoft.PythonTools.InterpreterList {
             pep.OperationFinished += PipExtensionProvider_OperationFinished;
 
             view.Extensions.Add(pep);
-            var _withDb = view.Factory as IPythonInterpreterFactoryWithDatabase;
+            var _withDb = view.Factory as PythonInterpreterFactoryWithDatabase;
             if (_withDb != null) {
                 view.Extensions.Add(new DBExtensionProvider(_withDb));
             }

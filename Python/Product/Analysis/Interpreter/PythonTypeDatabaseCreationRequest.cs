@@ -23,6 +23,7 @@ namespace Microsoft.PythonTools.Interpreter {
     public sealed class PythonTypeDatabaseCreationRequest {
         public PythonTypeDatabaseCreationRequest() {
             ExtraInputDatabases = new List<string>();
+            DetectLibraryPath = true;
         }
 
         /// <summary>
@@ -58,5 +59,11 @@ namespace Microsoft.PythonTools.Interpreter {
         /// is an error code.
         /// </summary>
         public Action<int> OnExit { get; set; }
+
+        /// <summary>
+        /// True to automatically detect the library rather than using the
+        /// environment setting.
+        /// </summary>
+        public bool DetectLibraryPath { get; set; }
     }
 }

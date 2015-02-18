@@ -149,6 +149,11 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(0)]
+        public void TestOpen35() {
+            TestOpen(PythonPaths.Python35 ?? PythonPaths.Python35_x64);
+        }
+
+        [TestMethod, Priority(0)]
         public void TestPthFiles() {
             var outputPath = TestData.GetTempPath(randomSubPath: true);
             Console.WriteLine("Writing to: " + outputPath);

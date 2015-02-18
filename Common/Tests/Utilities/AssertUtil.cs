@@ -234,7 +234,13 @@ namespace TestUtilities
             if (set.IsSupersetOf(values)) {
                 return;
             }
-            Assert.Fail(String.Format("Expected at least {0}, got {1}", MakeText(values), MakeText(set)));
+            var missing = new HashSet<T>(values);
+            missing.ExceptWith(set);
+            Assert.Fail(String.Format("Expected at least {0}, didn't find {1}. All: {2}",
+                MakeText(values),
+                MakeText(missing),
+                MakeText(set)
+            ));
         }
 
         public static string MakeText<T>(IEnumerable<T> values) {

@@ -179,6 +179,9 @@
     <Compile Include="..\..\..\Common\Product\SharedProject\Wpf\NativeMethods.cs">
       <Link>Wpf\NativeMethods.cs</Link>
     </Compile>
+    <Compile Include="..\Analysis\IEnumerableExtensions.cs">
+      <Link>IEnumerableExtensions.cs</Link>
+    </Compile>
     <Compile Include="..\PythonTools\PythonToolsInstallPath.cs">
       <Link>PythonToolsInstallPath.cs</Link>
     </Compile>
