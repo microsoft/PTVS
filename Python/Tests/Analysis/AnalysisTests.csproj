@@ -90,6 +90,7 @@
     <Compile Include="DatabaseTest.cs" />
     <Compile Include="DeserializationTests.cs" />
     <Compile Include="DotNetAnalysis\Generics.cs" />
+    <Compile Include="ModulePathTests.cs" />
     <Compile Include="ProcessOutputTests.cs" />
     <Compile Include="IronPythonAnalysisTest.cs" />
     <Compile Include="MutateStdLibTest.cs" />

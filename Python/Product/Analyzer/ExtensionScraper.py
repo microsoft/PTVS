@@ -51,10 +51,17 @@ if mod_name and mod_name != '-':
             PythonScraper.write_analysis(output_path, {"members": {}, "doc": "Could not import compiled module"})
 elif mod_path and mod_path != '-':
     try:
-        import imp
         import os.path
-        mod_name = os.path.splitext(os.path.split(mod_path)[1])[0]
-        module = imp.load_dynamic(mod_name, mod_path)
+        mod_name = os.path.split(mod_path)[1].partition('.')[0]
+        try:
+            import importlib
+            module = importlib.import_module(mod_name)
+        except ImportError:
+            # Don't really care which import failed - we'll try imp
+            pass
+        if not module:
+            import imp
+            module = imp.load_dynamic(mod_name, mod_path)
     finally:
         if not module:
             print('imp.load_dynamic("' + mod_name + '", "' + mod_path + '")')
@@ -62,5 +69,6 @@ elif mod_path and mod_path != '-':
 else:
     raise ValueError('No module name or path provided')
 
-analysis = PythonScraper.generate_module(module)
-PythonScraper.write_analysis(output_path, analysis)
+if module:
+    analysis = PythonScraper.generate_module(module)
+    PythonScraper.write_analysis(output_path, analysis)

@@ -91,7 +91,18 @@ namespace Microsoft.PythonTools.Analysis {
         /// <summary>
         /// True if the module is a binary file.
         /// </summary>
+        /// <remarks>Changed in 2.2 to include .pyc and .pyo files.</remarks>
         public bool IsCompiled {
+            get {
+                return PythonCompiledRegex.IsMatch(Path.GetFileName(SourceFile));
+            }
+        }
+
+        /// <summary>
+        /// True if the module is a native extension module.
+        /// </summary>
+        /// <remarks>New in 2.2</remarks>
+        public bool IsNativeExtension {
             get {
                 return PythonBinaryRegex.IsMatch(Path.GetFileName(SourceFile));
             }
@@ -118,9 +129,9 @@ namespace Microsoft.PythonTools.Analysis {
             RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
         private static readonly Regex PythonFileRegex = new Regex(@"^(?!\d)(?<name>(\w|_)+)\.pyw?$",
             RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
-        private static readonly Regex PythonBinaryRegex = new Regex(@"^(?!\d)(?<name>(\w|_)+)\.pyd$",
+        private static readonly Regex PythonBinaryRegex = new Regex(@"^(?!\d)(?<name>(\w|_)+)\.((\w|_|-)+?\.)?pyd$",
             RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
-        private static readonly Regex PythonCompiledRegex = new Regex(@"^(?!\d)(?<name>(\w|_)+)\.py[dco]$",
+        private static readonly Regex PythonCompiledRegex = new Regex(@"^(?!\d)(?<name>(\w|_)+)\.(((\w|_|-)+?\.)?pyd|py[co])$",
             RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
 
         private static IEnumerable<ModulePath> GetModuleNamesFromPathHelper(
@@ -145,7 +156,11 @@ namespace Microsoft.PythonTools.Analysis {
                         match = PythonBinaryRegex.Match(filename);
                     }
                     if (match.Success) {
-                        yield return new ModulePath(baseModule + match.Groups["name"].Value, file, libPath ?? path);
+                        var name = match.Groups["name"].Value;
+                        if (name.EndsWith("_d") && file.EndsWith(".pyd", StringComparison.OrdinalIgnoreCase)) {
+                            name = name.Remove(name.Length - 2);
+                        }
+                        yield return new ModulePath(baseModule + name, file, libPath ?? path);
                     }
                 }
             }

@@ -185,6 +185,10 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
                 lock (_environmentsLock) {
                     foreach (var env in _environments) {
+                        if (env.Factory == null) {
+                            continue;
+                        }
+
                         AnalysisProgress progress;
                         if (status.TryGetValue(AnalyzerStatusUpdater.GetIdentifier(env.Factory), out progress)) {
                             _currentlyRefreshing.Add(env.Factory);
