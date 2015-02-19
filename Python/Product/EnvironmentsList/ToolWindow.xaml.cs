@@ -416,7 +416,10 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             const string fmt = "New Environment {0}";
             HashSet<string> names;
             lock (_environmentsLock) {
-                names = new HashSet<string>(_environments.Select(view => view.Description));
+                names = new HashSet<string>(_environments
+                    .Where(view => view.Factory != null)
+                    .Select(view => view.Factory.Description)
+                );
             }
             var name = string.Format(fmt, 1);
             for (int i = 2; names.Contains(name) && i < int.MaxValue; ++i) {
