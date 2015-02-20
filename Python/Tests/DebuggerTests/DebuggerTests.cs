@@ -1120,14 +1120,15 @@ namespace DebuggerTests {
         public void BreakpointNonMainFileRemoved() {
             // http://pytools.codeplex.com/workitem/638
 
-            BreakpointTest(
-                Path.Combine(DebuggerTestPath, "BreakpointNonMainFileRemoved.py"),
-                new[] { 2 },
-                new[] { -2 },
-                cwd: DebuggerTestPath,
-                breakFilename: Path.Combine(DebuggerTestPath, "BreakpointNonMainFileRemovedImported.py"),
-                checkBound: false,
-                checkThread: false);
+            new BreakpointTest(this, Path.Combine(DebuggerTestPath, "BreakpointNonMainFileRemoved.py")) {
+                WorkingDirectory = DebuggerTestPath,
+                BreakFileName = Path.Combine(DebuggerTestPath, "BreakpointNonMainFileRemovedImported.py"),
+                Breakpoints = {
+                    new Breakpoint(2) { RemoveWhenHit = true }
+                },
+                ExpectedHits = { 0 },
+                IsBindFailureExpected = true
+            }.Run();
         }
 
 
@@ -1135,59 +1136,53 @@ namespace DebuggerTests {
         public void BreakpointNonMainThreadMainThreadExited() {
             // http://pytools.codeplex.com/workitem/638
 
-            BreakpointTest(
-                Path.Combine(DebuggerTestPath, "BreakpointMainThreadExited.py"),
-                new[] { 8 },
-                new[] { 8, 8, 8, 8, 8 },
-                cwd: DebuggerTestPath,
-                breakFilename: Path.Combine(DebuggerTestPath, "BreakpointMainThreadExited.py"),
-                checkBound: false,
-                checkThread: false);
+            new BreakpointTest(this, Path.Combine(DebuggerTestPath, "BreakpointMainThreadExited.py")) {
+                WorkingDirectory = DebuggerTestPath,
+                Breakpoints = { 8 },
+                ExpectedHits = { 0, 0, 0, 0, 0 },
+                ExpectHitOnMainThread = false
+            }.Run();
         }
 
         [TestMethod, Priority(0)]
         public void TestBreakpointsCollidingFilenames() {
             // http://pytools.codeplex.com/workitem/565
 
-            BreakpointTest(
-                Path.Combine(DebuggerTestPath, "BreakpointFilenames.py"),
-                new[] { 4 },
-                new int[0],
-                cwd: DebuggerTestPath,
-                breakFilename: Path.Combine(DebuggerTestPath, "B", "module1.py"),
-                checkBound: false);
+            new BreakpointTest(this, Path.Combine(DebuggerTestPath, "BreakpointFilenames.py")) {
+                WorkingDirectory = DebuggerTestPath,
+                BreakFileName = Path.Combine(DebuggerTestPath, "B", "module1.py"),
+                Breakpoints = { 4 },
+                ExpectedHits = { },
+                IsBindFailureExpected = true
+            }.Run();
+
         }
 
         [TestMethod, Priority(0)]
         public void TestBreakpointsRelativePathTopLevel() {
             // http://pytools.codeplex.com/workitem/522
 
-            BreakpointTest(
-                Path.Combine(DebuggerTestPath, "SimpleFilenameBreakpoint.py"),
-                new[] { 4, 10 },
-                new[] { 4, 10 },
-                cwd: Path.GetDirectoryName(DebuggerTestPath),
-                breakFilename: Path.Combine(DebuggerTestPath, "CompiledCodeFile.py"),
-                checkBound: false);
+            new BreakpointTest(this, Path.Combine(DebuggerTestPath, "SimpleFilenameBreakpoint.py")) {
+                WorkingDirectory = DebuggerTestPath,
+                BreakFileName = Path.Combine(DebuggerTestPath,  "CompiledCodeFile.py"),
+                Breakpoints = { 4, 10 },
+                ExpectedHits = { 0, 1 },
+                IsBindFailureExpected = true
+            }.Run();
         }
 
         [TestMethod, Priority(0)]
         public void TestBreakpointsRelativePathInPackage() {
             // http://pytools.codeplex.com/workitem/522
 
-            var xFrames = (Version == PythonPaths.IronPython27 || Version == PythonPaths.IronPython27_x64) ?
-                "-X:Frames" :
-                "";
-
-            BreakpointTest(
-                Path.Combine(DebuggerTestPath, "BreakpointRelativePathInPackage.py"),
-                new[] { 6 },
-                new[] { 6, 6 },
-                cwd: Path.GetDirectoryName(DebuggerTestPath),
-                breakFilename: Path.Combine(DebuggerTestPath, "A", "relpath.py"),
-                checkBound: false,
-                interpreterOptions: xFrames
-            );
+            new BreakpointTest(this, Path.Combine(DebuggerTestPath, "BreakpointRelativePathInPackage.py")) {
+                WorkingDirectory = DebuggerTestPath,
+                BreakFileName = Path.Combine(DebuggerTestPath, "A", "relpath.py"),
+                Breakpoints = { 6 },
+                ExpectedHits = { 0, 0 },
+                InterpreterOptions = Version.IsIronPython ? "-X:Frames" : "",
+                IsBindFailureExpected = true
+            }.Run();
         }
 
         [TestMethod, Priority(0)]
@@ -1242,32 +1237,154 @@ namespace DebuggerTests {
 
         [TestMethod, Priority(0)]
         public void TestBreakpoints() {
-            BreakpointTest("BreakpointTest.py", new[] { 1 }, new[] { 1 });
+            new BreakpointTest(this, "BreakpointTest.py") {
+                Breakpoints = { 1 },
+                ExpectedHits = { 0 }
+            }.Run();
         }
 
         [TestMethod, Priority(0)]
         public void TestBreakpoints2() {
-            BreakpointTest("BreakpointTest2.py", new[] { 3 }, new[] { 3, 3, 3 });
+            new BreakpointTest(this, "BreakpointTest2.py") {
+                Breakpoints = { 3 },
+                ExpectedHits = { 0, 0, 0 }
+            }.Run();
         }
 
         [TestMethod, Priority(0)]
         public void TestBreakpoints3() {
-            BreakpointTest("BreakpointTest3.py", new[] { 1 }, new[] { 1 });
+            new BreakpointTest(this, "BreakpointTest3.py") {
+                Breakpoints = { 1 },
+                ExpectedHits = { 0 }
+            }.Run();
         }
 
         [TestMethod, Priority(0)]
-        public void TestBreakpointsConditional() {
-            BreakpointTest("BreakpointTest2.py", new[] { 3 }, new[] { 3 }, new[] { "i == 1" });
+        public void TestBreakpointsConditionalWhenTrue() {
+            new BreakpointTest(this, "BreakpointTest2.py") {
+                Breakpoints = { 
+                    new Breakpoint(3) {
+                        ConditionKind = PythonBreakpointConditionKind.WhenTrue,
+                        Condition = "i == 1",
+                        OnHit = args => {
+                            Assert.AreEqual("1", args.Thread.Frames[0].Locals.Single(er => er.ChildName == "i").StringRepr);
+                        }
+                    }
+                },
+                ExpectedHits = { 0 },
+            }.Run();
         }
 
         [TestMethod, Priority(0)]
-        public void TestBreakpointsConditionalOnChange() {
-            BreakpointTest("BreakpointTest5.py", new[] { 4 }, new[] { 4, 4, 4, 4, 4 }, new[] { "j" }, new[] { true });
+        public void TestBreakpointsConditionalWhenChanged() {
+            var expectedReprs = new Queue<string>(new[] { "0", "2", "4", "6", "8" });
+
+            new BreakpointTest(this, "BreakpointTest5.py") {
+                Breakpoints = {
+                    new Breakpoint(4) {
+                        ConditionKind = PythonBreakpointConditionKind.WhenChanged,
+                        Condition = "j",
+                        OnHit = args => {
+                            Assert.AreEqual(expectedReprs.Dequeue(), args.Thread.Frames[0].Locals.Single(er => er.ChildName == "i").StringRepr);
+                        }
+                    }
+                },
+                ExpectedHits = { 0, 0, 0, 0, 0 }
+            }.Run();
+
+            Assert.AreEqual(0, expectedReprs.Count);
+        }
+
+        [TestMethod, Priority(0)]
+        public void TestBreakpointsPassCountEvery() {
+            var expectedReprs = new Queue<string>(new[] { "2", "5", "8" });
+            var expectedHitCounts = new Queue<int>(new[] { 3, 6, 9 });
+
+            new BreakpointTest(this, "BreakpointTest5.py") {
+                Breakpoints = { 
+                    new Breakpoint(3) {
+                        PassCountKind = PythonBreakpointPassCountKind.Every,
+                        PassCount = 3,
+                        OnHit = args => {
+                            Assert.AreEqual(expectedReprs.Dequeue(), args.Thread.Frames[0].Locals.Single(er => er.ChildName == "i").StringRepr);
+                            args.Breakpoint.GetHitCountAsync().ContinueWith(t => Assert.AreEqual(expectedHitCounts.Dequeue(), t.Result));
+                        }
+                    }
+                },
+                ExpectedHits = { 0, 0, 0 },
+            }.Run();
+
+            Assert.AreEqual(0, expectedReprs.Count);
+            Assert.AreEqual(0, expectedHitCounts.Count);
+        }
+
+        [TestMethod, Priority(0)]
+        public void TestBreakpointsPassCountWhenEqual() {
+            new BreakpointTest(this, "BreakpointTest5.py") {
+                Breakpoints = { 
+                    new Breakpoint(3) {
+                        PassCountKind = PythonBreakpointPassCountKind.WhenEqual,
+                        PassCount = 5,
+                        OnHit = args => {
+                            Assert.AreEqual("4", args.Thread.Frames[0].Locals.Single(er => er.ChildName == "i").StringRepr);
+                            args.Breakpoint.GetHitCountAsync().ContinueWith(t => Assert.AreEqual(5, t.Result));
+                        }
+                    }
+                },
+                ExpectedHits = { 0 },
+            }.Run();
+        }
+
+        [TestMethod, Priority(0)]
+        public void TestBreakpointsPassCountWhenEqualOrGreater() {
+            var expectedReprs = new Queue<string>(new[] { "7", "8", "9" });
+            var expectedHitCounts = new Queue<int>(new[] { 8, 9, 10 });
+
+            new BreakpointTest(this, "BreakpointTest5.py") {
+                Breakpoints = { 
+                    new Breakpoint(3) {
+                        PassCountKind = PythonBreakpointPassCountKind.WhenEqualOrGreater,
+                        PassCount = 8,
+                        OnHit = args => {
+                            Assert.AreEqual(expectedReprs.Dequeue(), args.Thread.Frames[0].Locals.Single(er => er.ChildName == "i").StringRepr);
+                            args.Breakpoint.GetHitCountAsync().ContinueWith(t => Assert.AreEqual(expectedHitCounts.Dequeue(), t.Result));
+                        }
+                    }
+                },
+                ExpectedHits = { 0, 0, 0 },
+            }.Run();
+
+            Assert.AreEqual(0, expectedReprs.Count);
+            Assert.AreEqual(0, expectedHitCounts.Count);
+        }
+
+        [TestMethod, Priority(0)]
+        public void TestBreakpointsPassCountAndCondition() {
+            new BreakpointTest(this, "BreakpointTest5.py") {
+                Breakpoints = { 
+                    new Breakpoint(3) {
+                        ConditionKind = PythonBreakpointConditionKind.WhenTrue,
+                        Condition = "i % 2 == 0",
+                        PassCountKind = PythonBreakpointPassCountKind.WhenEqual,
+                        PassCount = 3,
+                        OnHit = args => {
+                            Assert.AreEqual("4", args.Thread.Frames[0].Locals.Single(er => er.ChildName == "i").StringRepr);
+                            args.Breakpoint.GetHitCountAsync().ContinueWith(t => Assert.AreEqual(3, t.Result));
+                        }
+                    }
+                },
+                ExpectedHits = { 0 },
+            }.Run();
         }
 
         [TestMethod, Priority(0)]
         public void TestBreakpointRemove() {
-            BreakpointTest("BreakpointTest2.py", new[] { 3 }, new[] { -3 });
+            new BreakpointTest(this, "BreakpointTest2.py") {
+                Breakpoints = {
+                    new Breakpoint(3) { RemoveWhenHit = true }
+                },
+                ExpectedHits = { 0 }
+            }.Run();
         }
 
         [TestMethod, Priority(0)]

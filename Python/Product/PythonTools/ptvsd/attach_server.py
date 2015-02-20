@@ -70,7 +70,7 @@ from ptvsd.visualstudio_py_util import to_bytes, read_bytes, read_int, read_stri
 
 PTVS_VER = '2.2'
 DEFAULT_PORT = 5678
-PTVSDBG_VER = 4 # must be kept in sync with DebuggerProtocolVersion in PythonRemoteProcess.cs
+PTVSDBG_VER = 5 # must be kept in sync with DebuggerProtocolVersion in PythonRemoteProcess.cs
 PTVSDBG = to_bytes('PTVSDBG')
 ACPT = to_bytes('ACPT')
 RJCT = to_bytes('RJCT')

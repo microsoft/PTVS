@@ -20,7 +20,6 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using DebuggerTests;
-using Microsoft.PythonTools;
 using Microsoft.PythonTools.Debugger;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools.Project;
@@ -159,18 +158,20 @@ namespace DjangoTests {
 
             string cwd = Path.Combine(Environment.CurrentDirectory, DebuggerTestPath);
             
-            BreakpointTest(
-                "manage.py",
-                new[] { 1, 3, 4 },
-                new[] { 1, 3, 4 },
-                breakFilename: Path.Combine(cwd, "Templates", "polls", "index.html"),
-                arguments: "runserver --noreload",
-                checkBound: false,
-                checkThread: false,
-                onProcessLoaded: new WebPageRequester().DoRequest,
-                debugOptions: PythonDebugOptions.DjangoDebugging,
-                waitForExit: false
-            );
+            new BreakpointTest(this, "manage.py") {
+                BreakFileName = Path.Combine(cwd, "Templates", "polls", "index.html"),
+                Breakpoints = {
+                    new DjangoBreakpoint(1),
+                    new DjangoBreakpoint(3),
+                    new DjangoBreakpoint(4)
+                },
+                ExpectedHits = { 0, 1, 2 },
+                Arguments = "runserver --noreload",
+                ExpectHitOnMainThread = false,
+                WaitForExit = false,
+                DebugOptions = PythonDebugOptions.DjangoDebugging,
+                OnProcessLoaded = proc => new WebPageRequester().DoRequest()
+            }.Run();
         }
 
         [TestMethod, Priority(0)]

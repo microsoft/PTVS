@@ -126,12 +126,69 @@ class SynthesizedValue(object):
 DONT_DEBUG = [path.normcase(__file__), path.normcase(_vspu.__file__)]
 if sys.version_info >= (3, 3):
     DONT_DEBUG.append(path.normcase('<frozen importlib._bootstrap>'))
-
-# dictionary of line no to break point info
+# Contains information about all breakpoints in the process. Keys are line numbers on which
+# there are breakpoints in any file, and values are dicts. For every line number, the
+# corresponding dict contains all the breakpoints that fall on that line. The keys in that
+# dict are tuples of the form (filename, breakpoint_id), each entry representing a single
+# breakpoint, and values are BreakpointInfo objects.
+#
+# For example, given the following breakpoints:
+#
+#   1. In 'main.py' at line 10.
+#   2. In 'main.py' at line 20.
+#   3. In 'module.py' at line 10.
+#
+# the contents of BREAKPOINTS would be:
+# {10: {('main.py', 1): ..., ('module.py', 3): ...}, 20: {('main.py', 2): ... }}
 BREAKPOINTS = {}
-DJANGO_BREAKPOINTS = {}
 
-BREAK_WHEN_CHANGED_DUMMY = object()
+# Contains information about all pending (i.e. not yet bound) breakpoints in the process.
+# Elements are BreakpointInfo objects.
+PENDING_BREAKPOINTS = set()
+
+# Must be in sync with enum PythonBreakpointConditionKind in PythonBreakpoint.cs
+BREAKPOINT_CONDITION_ALWAYS = 0
+BREAKPOINT_CONDITION_WHEN_TRUE = 1
+BREAKPOINT_CONDITION_WHEN_CHANGED = 2
+
+# Must be in sync with enum PythonBreakpointPassCountKind in PythonBreakpoint.cs
+BREAKPOINT_PASS_COUNT_ALWAYS = 0
+BREAKPOINT_PASS_COUNT_EVERY = 1
+BREAKPOINT_PASS_COUNT_WHEN_EQUAL = 2
+BREAKPOINT_PASS_COUNT_WHEN_EQUAL_OR_GREATER = 3
+
+class BreakpointInfo(object):
+    __slots__ = [
+        'breakpoint_id', 'filename', 'lineno', 'condition_kind', 'condition',
+        'pass_count_kind', 'pass_count', 'is_bound', 'last_condition_value',
+        'hit_count'
+    ]
+
+    # For "when changed" breakpoints, this is used as the initial value of last_condition_value,
+    # such that it is guaranteed to not compare equal to any other value that it will get later.
+    _DUMMY_LAST_VALUE = object()
+
+    def __init__(self, breakpoint_id, filename, lineno, condition_kind, condition, pass_count_kind, pass_count):
+        self.breakpoint_id = breakpoint_id
+        self.filename = filename
+        self.lineno = lineno
+        self.condition_kind = condition_kind
+        self.condition = condition
+        self.pass_count_kind = pass_count_kind
+        self.pass_count = pass_count
+        self.is_bound = False
+        self.last_condition_value = BreakpointInfo._DUMMY_LAST_VALUE
+        self.hit_count = 0
+
+    @staticmethod
+    def find_by_id(breakpoint_id):
+        for line, bp_dict in BREAKPOINTS.items():
+            for (filename, bp_id), bp in bp_dict.items():
+                if bp_id == breakpoint_id:
+                    return bp
+        return None
+
+
 # lock for calling .send on the socket
 send_lock = thread.allocate_lock()
 
@@ -270,6 +327,8 @@ STPD = to_bytes('STPD')
 BRKS = to_bytes('BRKS')
 BRKF = to_bytes('BRKF')
 BRKH = to_bytes('BRKH')
+BRKC = to_bytes('BRKC')
+BKHC = to_bytes('BKHC')
 LOAD = to_bytes('LOAD')
 EXCE = to_bytes('EXCE')
 EXCR = to_bytes('EXCR')
@@ -537,7 +596,8 @@ def update_all_thread_stacks(blocking_thread = None, check_is_blocked = True):
                 cur_thread.send_frame_list(frames)
     
         cur_thread._block_starting_lock.release()
-
+        
+DJANGO_BREAKPOINTS = {}
 
 class DjangoBreakpointInfo(object):
     def __init__(self, filename):
@@ -773,11 +833,10 @@ class Thread(object):
 
                 # see if this module causes new break points to be bound
                 bound = set()
-                global PENDING_BREAKPOINTS
                 for pending_bp in PENDING_BREAKPOINTS:
-                    if check_break_point(code.co_filename, module, pending_bp.brkpt_id, pending_bp.lineNo, pending_bp.filename, pending_bp.condition, pending_bp.break_when_changed):
+                    if try_bind_break_point(code.co_filename, module, pending_bp):
                         bound.add(pending_bp)
-                PENDING_BREAKPOINTS -= bound
+                PENDING_BREAKPOINTS.difference_update(bound)
 
         stepping = self.stepping
         if stepping is not STEPPING_NONE and should_debug_code(frame.f_code):
@@ -854,24 +913,62 @@ class Thread(object):
             if BREAKPOINTS and handle_breakpoints:
                 bp = BREAKPOINTS.get(frame.f_lineno)
                 if bp is not None:
-                    for (filename, bp_id), (condition, bound) in bp.items():
-                        if filename == frame.f_code.co_filename or (not bound and breakpoint_path_match(filename, frame.f_code.co_filename)):
-                            if condition:
-                                try:
-                                    res = eval(condition.condition, frame.f_globals, frame.f_locals)
-                                    if condition.break_when_changed:
-                                        block = condition.last_value != res
-                                        condition.last_value = res
-                                    else:
-                                        block = res
-                                except:
-                                    block = True
-                            else:
-                                block = True
+                    for (filename, bp_id), bp in bp.items():
+                        if filename != frame.f_code.co_filename:
+                            # When the breakpoint is bound, the filename is updated to match co_filename of
+                            # the module to which it was bound, so only exact matches are considered hits.
+                            if bp.is_bound:
+                                continue
+                            # Otherwise, use relaxed path check that tries to handle differences between 
+                            # local and remote filesystems for remote scenarios:
+                            if not breakpoint_path_match(filename, frame.f_code.co_filename):
+                                continue
 
-                            if block:
-                                hit_bp_id = bp_id
-                                break
+                        # If we got here, filename and line number both match.
+
+                        # Check condition to see if we actually hit this breakpoint.
+                        if bp.condition_kind != BREAKPOINT_CONDITION_ALWAYS:
+                            try:
+                                res = eval(bp.condition, frame.f_globals, frame.f_locals)
+                                if bp.condition_kind == BREAKPOINT_CONDITION_WHEN_CHANGED:
+                                    last_val = bp.last_condition_value
+                                    bp.last_condition_value = res
+                                    if last_val == res:
+                                        # Condition didn't change, breakpoint not hit.
+                                        continue
+                                else:
+                                    if not res:
+                                        # Condition isn't true, breakpoint not hit.
+                                        continue
+                            except:
+                                # If anything goes wrong while evaluating condition, breakpoint is hit.
+                                pass
+
+                        # If we got here, then condition matched, and we need to update the hit count
+                        # (even if we don't end up signaling the breakpoint because of pass count).
+                        bp.hit_count += 1
+
+                        # Check the new hit count against pass count.
+                        if bp.pass_count_kind != BREAKPOINT_PASS_COUNT_ALWAYS:
+                            pass_count_kind = bp.pass_count_kind
+                            pass_count = bp.pass_count
+                            hit_count = bp.hit_count
+                            if pass_count_kind == BREAKPOINT_PASS_COUNT_EVERY:
+                                if (hit_count % pass_count) != 0:
+                                    continue
+                            elif pass_count_kind == BREAKPOINT_PASS_COUNT_WHEN_EQUAL:
+                                if hit_count != pass_count:
+                                    continue
+                            elif pass_count_kind == BREAKPOINT_PASS_COUNT_WHEN_EQUAL_OR_GREATER:
+                                if hit_count < pass_count:
+                                    continue
+
+                        # If we got here, then condition and pass count both match, so we should notify VS.
+                        hit_bp_id = bp_id
+
+                        # There may be other breakpoints for the same file/line, and we need to update
+                        # their hit counts, too, so keep looping. If more than one is hit, it's fine,
+                        # we will just signal the last one.
 
             if hit_bp_id is not None:
                 # handle case where both hitting a breakpoint and step complete by reporting the breakpoint
@@ -1391,46 +1488,26 @@ class Module(object):
         self.filename = filename
 
 
-class ConditionInfo(object):
-    def __init__(self, condition, break_when_changed):
-        self.condition = condition
-        self.break_when_changed = break_when_changed
-        self.last_value = BREAK_WHEN_CHANGED_DUMMY
-
 def get_code(func):
     return getattr(func, 'func_code', None) or getattr(func, '__code__', None)
 
 
 class DebuggerExitException(Exception): pass
 
-def add_break_point(modFilename, break_when_changed, condition, lineNo, brkpt_id, bound = True):
-    cur_bp = BREAKPOINTS.get(lineNo)
+def add_break_point(bp):
+    cur_bp = BREAKPOINTS.get(bp.lineno)
     if cur_bp is None:
-        cur_bp = BREAKPOINTS[lineNo] = dict()
-    
-    cond_info = None
-    if condition:
-        cond_info = ConditionInfo(condition, break_when_changed)
-    
-    cur_bp[(modFilename, brkpt_id)] = cond_info, bound
+        cur_bp = BREAKPOINTS[bp.lineno] = dict()
+    cur_bp[(bp.filename, bp.breakpoint_id)] = bp
 
-def check_break_point(modFilename, module, brkpt_id, lineNo, filename, condition, break_when_changed):
-    if module.filename.lower() == path.abspath(filename).lower():
-        add_break_point(modFilename, break_when_changed, condition, lineNo, brkpt_id)
-        report_breakpoint_bound(brkpt_id)
+def try_bind_break_point(mod_filename, module, bp):
+    if module.filename.lower() == path.abspath(bp.filename).lower():
+        bp.filename = mod_filename
+        bp.is_bound = True
+        add_break_point(bp)
+        report_breakpoint_bound(bp.breakpoint_id)
         return True
     return False
-
-
-class PendingBreakPoint(object):
-    def __init__(self, brkpt_id, lineNo, filename, condition, break_when_changed):
-        self.brkpt_id = brkpt_id
-        self.lineNo = lineNo
-        self.filename = filename
-        self.condition = condition
-        self.break_when_changed = break_when_changed
-
-PENDING_BREAKPOINTS = set()
 
 def mark_all_threads_for_break(stepping = STEPPING_BREAK, skip_thread = None):
     THREADS_LOCK.acquire()
@@ -1439,6 +1516,7 @@ def mark_all_threads_for_break(stepping = STEPPING_BREAK, skip_thread = None):
             continue
         thread.stepping = stepping
     THREADS_LOCK.release()
+
 
 class DebuggerLoop(object):
 
@@ -1454,6 +1532,9 @@ class DebuggerLoop(object):
             to_bytes('stpv') : self.command_step_over,
             to_bytes('brkp') : self.command_set_breakpoint,
             to_bytes('brkc') : self.command_set_breakpoint_condition,
+            to_bytes('bkpc') : self.command_set_breakpoint_pass_count,
+            to_bytes('bkgh') : self.command_get_breakpoint_hit_count,
+            to_bytes('bksh') : self.command_set_breakpoint_hit_count,
             to_bytes('brkr') : self.command_remove_breakpoint,
             to_bytes('brka') : self.command_break_all,
             to_bytes('resa') : self.command_resume_all,
@@ -1524,62 +1605,96 @@ class DebuggerLoop(object):
             self.command_resume_all()
 
     def command_set_breakpoint(self):
-        brkpt_id = read_int(self.conn)
-        lineNo = read_int(self.conn)
+        breakpoint_id = read_int(self.conn)
+        lineno = read_int(self.conn)
         filename = read_string(self.conn)
+        condition_kind = read_int(self.conn)
         condition = read_string(self.conn)
-        break_when_changed = read_int(self.conn)
-                                
-        for modFilename, module in MODULES:
-            if check_break_point(modFilename, module, brkpt_id, lineNo, filename, condition, break_when_changed):
+        pass_count_kind = read_int(self.conn)
+        pass_count = read_int(self.conn)
+        bp = BreakpointInfo(breakpoint_id, filename, lineno, condition_kind, condition, pass_count_kind, pass_count)
+
+        for mod_filename, module in MODULES:
+            if try_bind_break_point(mod_filename, module, bp):
                 break
         else:
-            # failed to set break point
-            add_break_point(filename, break_when_changed, condition, lineNo, brkpt_id, False)
-            PENDING_BREAKPOINTS.add(PendingBreakPoint(brkpt_id, lineNo, filename, condition, break_when_changed))
-            report_breakpoint_failed(brkpt_id)
+            # Failed to bind break point (e.g. module is not loaded yet); report as pending.
+            add_break_point(bp)
+            PENDING_BREAKPOINTS.add(bp)
+            report_breakpoint_failed(breakpoint_id)
 
     def command_set_breakpoint_condition(self):
-        brkpt_id = read_int(self.conn)
+        breakpoint_id = read_int(self.conn)
+        kind = read_int(self.conn)
         condition = read_string(self.conn)
-        break_when_changed = read_int(self.conn)
         
-        for line, bp_dict in BREAKPOINTS.items():
-            for filename, id in bp_dict:
-                if id == brkpt_id:
-                    bp_dict[filename, id] = ConditionInfo(condition, break_when_changed), bp_dict[filename, id][1]
-                    break
+        bp = BreakpointInfo.find_by_id(breakpoint_id)
+        if bp is not None:
+            bp.condition_kind = kind
+            bp.condition = condition
+
+    def command_set_breakpoint_pass_count(self):
+        breakpoint_id = read_int(self.conn)
+        kind = read_int(self.conn)
+        count = read_int(self.conn)
+
+        bp = BreakpointInfo.find_by_id(breakpoint_id)
+        if bp is not None:
+            bp.pass_count_kind = kind
+            bp.pass_count = count
+
+    def command_set_breakpoint_hit_count(self):
+        breakpoint_id = read_int(self.conn)
+        count = read_int(self.conn)
+        
+        bp = BreakpointInfo.find_by_id(breakpoint_id)
+        if bp is not None:
+            bp.hit_count = count
+
+    def command_get_breakpoint_hit_count(self):
+        req_id = read_int(self.conn)
+        breakpoint_id = read_int(self.conn)
+        
+        bp = BreakpointInfo.find_by_id(breakpoint_id)
+        count = 0
+        if bp is not None:
+            count = bp.hit_count
+
+        with _SendLockCtx:
+            write_bytes(conn, BKHC)
+            write_int(conn, req_id)
+            write_int(conn, count)
 
     def command_remove_breakpoint(self):
-        lineNo = read_int(self.conn)
+        line_no = read_int(self.conn)
         brkpt_id = read_int(self.conn)
-        cur_bp = BREAKPOINTS.get(lineNo)
+        cur_bp = BREAKPOINTS.get(line_no)
         if cur_bp is not None:
             for file, id in cur_bp:
                 if id == brkpt_id:
                     del cur_bp[file, id]
                     if not cur_bp:
-                        del BREAKPOINTS[lineNo]
+                        del BREAKPOINTS[line_no]
                     break
 
     def command_remove_django_breakpoint(self):
-        lineNo = read_int(self.conn)
+        line_no = read_int(self.conn)
         brkpt_id = read_int(self.conn)
         filename = read_string(self.conn)
 
         bp_info = DJANGO_BREAKPOINTS.get(filename.lower())
         if bp_info is not None:
-            bp_info.remove_breakpoint(lineNo)
+            bp_info.remove_breakpoint(line_no)
 
     def command_add_django_breakpoint(self):
         brkpt_id = read_int(self.conn)
-        lineNo = read_int(self.conn)
+        line_no = read_int(self.conn)
         filename = read_string(self.conn)
         bp_info = DJANGO_BREAKPOINTS.get(filename.lower())
         if bp_info is None:
             DJANGO_BREAKPOINTS[filename.lower()] = bp_info = DjangoBreakpointInfo(filename)
 
-        bp_info.add_breakpoint(lineNo, brkpt_id)
+        bp_info.add_breakpoint(line_no, brkpt_id)
 
     def command_connect_repl(self):
         port_num = read_int(self.conn)

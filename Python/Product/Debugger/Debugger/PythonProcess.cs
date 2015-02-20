@@ -18,13 +18,10 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
-using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
-using Microsoft.Win32;
-using Microsoft.Win32.SafeHandles;
 
 namespace Microsoft.PythonTools.Debugger {
     /// <summary>
@@ -40,6 +37,7 @@ namespace Microsoft.PythonTools.Debugger {
         private readonly AutoResetEvent _lineEvent = new AutoResetEvent(false);         // set when result of setting current line returns
         private readonly Dictionary<int, CompletionInfo> _pendingExecutes = new Dictionary<int, CompletionInfo>();
         private readonly Dictionary<int, ChildrenInfo> _pendingChildEnums = new Dictionary<int, ChildrenInfo>();
+        private readonly Dictionary<int, TaskCompletionSource<int>> _pendingGetHitCountRequests = new Dictionary<int, TaskCompletionSource<int>>();
         private readonly PythonLanguageVersion _langVersion;
         private readonly Guid _processGuid = Guid.NewGuid();
         private readonly List<string[]> _dirMapping;
@@ -325,16 +323,23 @@ namespace Microsoft.PythonTools.Debugger {
             Resume();
         }
 
-        public PythonBreakpoint AddBreakPoint(string filename, int lineNo, string condition = "", bool breakWhenChanged = false) {
+        public PythonBreakpoint AddBreakPoint(
+            string filename,
+            int lineNo,
+            PythonBreakpointConditionKind conditionKind = PythonBreakpointConditionKind.Always,
+            string condition = "",
+            PythonBreakpointPassCountKind passCountKind = PythonBreakpointPassCountKind.Always,
+            int passCount = 0
+        ) {
             int id = _breakpointCounter++;
-            var res = new PythonBreakpoint(this, filename, lineNo, condition, breakWhenChanged, id);
+            var res = new PythonBreakpoint(this, filename, lineNo, conditionKind, condition, passCountKind, passCount, id);
             _breakpoints[id] = res;
             return res;
         }
 
         public PythonBreakpoint AddDjangoBreakPoint(string filename, int lineNo) {
             int id = _breakpointCounter++;
-            var res = new PythonBreakpoint(this, filename, lineNo, null, false, id, true);
+            var res = new PythonBreakpoint(this, filename, lineNo, PythonBreakpointConditionKind.Always, "", PythonBreakpointPassCountKind.Always, 0 , id, true);
             _breakpoints[id] = res;
             return res;
         }
@@ -436,6 +441,7 @@ namespace Microsoft.PythonTools.Debugger {
                         case "STPD": HandleStepDone(stream); break;
                         case "BRKS": HandleBreakPointSet(stream); break;
                         case "BRKF": HandleBreakPointFailed(stream); break;
+                        case "BKHC": HandleBreakPointHitCount(stream); break;
                         case "LOAD": HandleProcessLoad(stream); break;
                         case "THRF": HandleThreadFrameList(stream); break;
                         case "EXCR": HandleExecutionResult(stream); break;
@@ -789,6 +795,16 @@ namespace Microsoft.PythonTools.Debugger {
             }
         }
 
+        private void HandleBreakPointHitCount(Stream stream) {
+            // break point hit count retrieved
+            int reqId = stream.ReadInt32();
+            int hitCount = stream.ReadInt32();
+            TaskCompletionSource<int> tcs;
+            if (_pendingGetHitCountRequests.TryGetValue(reqId, out tcs)) {
+                tcs.SetResult(hitCount);
+            }
+        }
+
         private void HandleStepDone(Stream stream) {
             // stepping done
             long threadId = stream.ReadInt64();
@@ -958,6 +974,7 @@ namespace Microsoft.PythonTools.Debugger {
                 _stream.WriteString(MapFile(breakpoint.Filename));
                 if (!breakpoint.IsDjangoBreakpoint) {
                     SendCondition(breakpoint);
+                    SendPassCount(breakpoint);
                 }
             }
         }
@@ -1005,8 +1022,8 @@ namespace Microsoft.PythonTools.Debugger {
 
         private void SendCondition(PythonBreakpoint breakpoint) {
             DebugWriteCommand("Send BP Condition");
+            _stream.WriteInt32((int)breakpoint.ConditionKind);
             _stream.WriteString(breakpoint.Condition ?? "");
-            _stream.WriteInt32(breakpoint.BreakWhenChanged ? 1 : 0);
         }
 
         internal void SetBreakPointCondition(PythonBreakpoint breakpoint) {
@@ -1016,6 +1033,45 @@ namespace Microsoft.PythonTools.Debugger {
                 _stream.WriteInt32(breakpoint.Id);
                 SendCondition(breakpoint);
             }
+        }
+
+        private void SendPassCount(PythonBreakpoint breakpoint) {
+            DebugWriteCommand("Send BP pass count");
+            _stream.WriteInt32((int)breakpoint.PassCountKind);
+            _stream.WriteInt32(breakpoint.PassCount);
+        }
+
+        internal void SetBreakPointPassCount(PythonBreakpoint breakpoint) {
+            DebugWriteCommand("Set BP pass count");
+            lock (_streamLock) {
+                _stream.Write(SetBreakPointPassCountCommandBytes);
+                _stream.WriteInt32(breakpoint.Id);
+                SendPassCount(breakpoint);
+            }
+        }
+
+        internal void SetBreakPointHitCount(PythonBreakpoint breakpoint, int count) {
+            DebugWriteCommand("Set BP hit count");
+            lock (_streamLock) {
+                _stream.Write(SetBreakPointHitCountCommandBytes);
+                _stream.WriteInt32(breakpoint.Id);
+                _stream.WriteInt32(count);
+            }
+        }
+
+        internal Task<int> GetBreakPointHitCountAsync(PythonBreakpoint breakpoint) {
+            DebugWriteCommand("Get BP hit count");
+
+            int reqId = _ids.Allocate();
+            lock (_streamLock) {
+                _stream.Write(GetBreakPointHitCountCommandBytes);
+                _stream.WriteInt32(reqId);
+                _stream.WriteInt32(breakpoint.Id);
+            }
+
+            var tcs = new TaskCompletionSource<int>();
+            _pendingGetHitCountRequests[reqId] = tcs;
+            return tcs.Task;
         }
 
         internal void ExecuteText(string text, PythonEvaluationResultReprKind reprKind, PythonStackFrame pythonStackFrame, Action<PythonEvaluationResult> completion) {
@@ -1133,6 +1189,9 @@ namespace Microsoft.PythonTools.Debugger {
         private static byte[] BreakAllCommandBytes = MakeCommand("brka");
         private static byte[] SetBreakPointCommandBytes = MakeCommand("brkp");
         private static byte[] SetBreakPointConditionCommandBytes = MakeCommand("brkc");
+        private static byte[] SetBreakPointPassCountCommandBytes = MakeCommand("bkpc");
+        private static byte[] GetBreakPointHitCountCommandBytes = MakeCommand("bkgh");
+        private static byte[] SetBreakPointHitCountCommandBytes = MakeCommand("bksh");
         private static byte[] RemoveBreakPointCommandBytes = MakeCommand("brkr");
         private static byte[] ResumeAllCommandBytes = MakeCommand("resa");
         private static byte[] GetThreadFramesCommandBytes = MakeCommand("thrf");

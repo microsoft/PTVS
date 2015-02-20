@@ -49,7 +49,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         }
 
         private bool CanBind() {
-            // The sample engine only supports breakpoints on a file and line number. No other types of breakpoints are supported.
+            // The Python engine only supports breakpoints on a file and line number. No other types of breakpoints are supported.
             if (_deleted || _bpRequestInfo.bpLocation.bpLocationType != (uint)enum_BP_LOCATION_TYPE.BPLT_CODE_FILE_LINE) {
                 return false;
             }
@@ -112,9 +112,10 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                         var bp = _engine.Process.AddBreakPoint(
                             documentName,
                             (int)(startPosition[0].dwLine + 1),
+                            _bpRequestInfo.bpCondition.styleCondition.ToPython(),
                             _bpRequestInfo.bpCondition.bstrCondition,
-                            _bpRequestInfo.bpCondition.styleCondition == enum_BP_COND_STYLE.BP_COND_WHEN_TRUE ? false : true
-                        );
+                            _bpRequestInfo.bpPassCount.stylePassCount.ToPython(),
+                            (int)_bpRequestInfo.bpPassCount.dwPassCount);
 
                         AD7BreakpointResolution breakpointResolution = new AD7BreakpointResolution(_engine, bp, GetDocumentContext(bp));
                         AD7BoundBreakpoint boundBreakpoint = new AD7BoundBreakpoint(_engine, bp, this, breakpointResolution, _enabled);
@@ -149,9 +150,10 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             }
 
             // The breakpoint could not be bound. This may occur for many reasons such as an invalid location, an invalid expression, etc...
-            // The sample engine does not support this, but a real world engine will want to send an instance of IDebugBreakpointErrorEvent2 to the
-            // UI and return a valid instance of IDebugErrorBreakpoint2 from IDebugPendingBreakpoint2::EnumErrorBreakpoints. The debugger will then
-            // display information about why the breakpoint did not bind to the user.
+            // The Python engine does not support this.
+            // TODO: send an instance of IDebugBreakpointErrorEvent2 to the UI and return a valid instance of IDebugErrorBreakpoint2 from
+            // IDebugPendingBreakpoint2::EnumErrorBreakpoints. The debugger will then display information about why the breakpoint did not
+            // bind to the user.
             return VSConstants.S_FALSE;            
         }
 
@@ -162,8 +164,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             if (!CanBind()) {
                 // Called to determine if a pending breakpoint can be bound. 
                 // The breakpoint may not be bound for many reasons such as an invalid location, an invalid expression, etc...
-                // The sample engine does not support this, but a real world engine will want to return a valid enumeration of IDebugErrorBreakpoint2.
-                // The debugger will then display information about why the breakpoint did not bind to the user.
+                // TODO: return a valid enumeration of IDebugErrorBreakpoint2. The debugger will then display information about why
+                // the breakpoint did not bind to the user.
                 ppErrorEnum = null;
                 return VSConstants.S_FALSE;
             }
@@ -207,9 +209,9 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         // Enumerates all error breakpoints that resulted from this pending breakpoint.
         int IDebugPendingBreakpoint2.EnumErrorBreakpoints(enum_BP_ERROR_TYPE bpErrorType, out IEnumDebugErrorBreakpoints2 ppEnum) {
             // Called when a pending breakpoint could not be bound. This may occur for many reasons such as an invalid location, an invalid expression, etc...
-            // The sample engine does not support this, but a real world engine will want to send an instance of IDebugBreakpointErrorEvent2 to the
-            // UI and return a valid enumeration of IDebugErrorBreakpoint2 from IDebugPendingBreakpoint2::EnumErrorBreakpoints. The debugger will then
-            // display information about why the breakpoint did not bind to the user.
+            // TODO: send an instance of IDebugBreakpointErrorEvent2 to the UI and return a valid enumeration of IDebugErrorBreakpoint2
+            // from IDebugPendingBreakpoint2::EnumErrorBreakpoints. The debugger will then display information about why the breakpoint
+            // did not bind to the user.
             ppEnum = null;
             return VSConstants.E_NOTIMPL;
         }
@@ -233,24 +235,53 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             return VSConstants.S_OK;
         }
 
-        // The sample engine does not support conditions on breakpoints.
         int IDebugPendingBreakpoint2.SetCondition(BP_CONDITION bpCondition) {
             _bpRequestInfo.bpCondition = bpCondition;
             return VSConstants.S_OK;
         }
 
-        // The sample engine does not support pass counts on breakpoints.
         int IDebugPendingBreakpoint2.SetPassCount(BP_PASSCOUNT bpPassCount) {
-            throw new NotImplementedException();
+            _bpRequestInfo.bpPassCount = bpPassCount;
+            return VSConstants.S_OK;
         }
 
         // Toggles the virtualized state of this pending breakpoint. When a pending breakpoint is virtualized, 
         // the debug engine will attempt to bind it every time new code loads into the program.
-        // The sample engine will does not support this.
+        // The Python engine does not support this.
         int IDebugPendingBreakpoint2.Virtualize(int fVirtualize) {
             return VSConstants.S_OK;
         }
 
         #endregion
+    }
+
+    static class BreakpointEnumExtensions {
+        public static PythonBreakpointConditionKind ToPython(this enum_BP_COND_STYLE style) {
+            switch (style) {
+                case enum_BP_COND_STYLE.BP_COND_NONE:
+                    return PythonBreakpointConditionKind.Always;
+                case enum_BP_COND_STYLE.BP_COND_WHEN_CHANGED:
+                    return PythonBreakpointConditionKind.WhenChanged;
+                case enum_BP_COND_STYLE.BP_COND_WHEN_TRUE:
+                    return PythonBreakpointConditionKind.WhenTrue;
+                default:
+                    throw new ArgumentException("Unrecognized enum_BP_COND_STYLE value");
+            }
+        }
+
+        public static PythonBreakpointPassCountKind ToPython(this enum_BP_PASSCOUNT_STYLE style) {
+            switch (style) {
+                case enum_BP_PASSCOUNT_STYLE.BP_PASSCOUNT_NONE:
+                    return PythonBreakpointPassCountKind.Always;
+                case enum_BP_PASSCOUNT_STYLE.BP_PASSCOUNT_MOD:
+                    return PythonBreakpointPassCountKind.Every;
+                case enum_BP_PASSCOUNT_STYLE.BP_PASSCOUNT_EQUAL:
+                    return PythonBreakpointPassCountKind.WhenEqual;
+                case enum_BP_PASSCOUNT_STYLE.BP_PASSCOUNT_EQUAL_OR_GREATER:
+                    return PythonBreakpointPassCountKind.WhenEqualOrGreater;
+                default:
+                    throw new ArgumentException("Unrecognized enum_BP_PASSCOUNT_STYLE value");
+            }
+        }
     }
 }

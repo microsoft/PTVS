@@ -14,16 +14,13 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using EnvDTE90;
+using System.Threading.Tasks;
 using Microsoft.PythonTools.Debugger;
-using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.Win32;
 using TestUtilities;
 
 namespace DebuggerTests {
@@ -123,143 +120,252 @@ namespace DebuggerTests {
             }
         }
 
-        /// <summary>
-        /// Runs the given file name setting break points at linenos.  Expects to hit the lines
-        /// in lineHits as break points in the order provided in lineHits.  If lineHits is negative
-        /// expects to hit the positive number and then removes the break point.
-        /// </summary>
-        internal void BreakpointTest(string filename, int[] linenos, int[] lineHits, string[] conditions = null, bool[] breakWhenChanged = null,
-                                     string cwd = null, string breakFilename = null, bool checkBound = true, bool checkThread = true, string arguments = "",
-                                     Action onProcessLoaded = null, PythonDebugOptions debugOptions = PythonDebugOptions.RedirectOutput,
-                                     bool waitForExit = true, string interpreterOptions = null) {
-            var debugger = new PythonDebugger();
-            PythonThread thread = null;
-            string rootedFilename = filename;
-            if (!Path.IsPathRooted(filename)) {
-                rootedFilename = DebuggerTestPath + filename;
+        internal class BreakpointBase {
+            public string FileName; // if null, BreakpointTest.BreakFileName is used instead
+            public int LineNumber;
+            public bool? ExpectHitOnMainThread;
+            public bool RemoveWhenHit;
+            public Action<BreakpointHitEventArgs> OnHit;
+        }
+
+        internal class Breakpoint : BreakpointBase {
+            public PythonBreakpointConditionKind ConditionKind;
+            public string Condition;
+            public PythonBreakpointPassCountKind PassCountKind;
+            public int PassCount;
+            public bool? IsBindFailureExpected;
+
+            public Breakpoint(int lineNumber) {
+                LineNumber = lineNumber;
             }
 
-            var lineList = new List<int>(linenos);
-            var breakpointsToBeBound = lineList.Count;
-
-            AutoResetEvent processLoaded = new AutoResetEvent(false);
-            var process = DebugProcess(
-                debugger,
-                rootedFilename,
-                cwd: cwd,
-                arguments: arguments,
-                resumeOnProcessLoaded: false,
-                onLoaded: (newproc, newthread) => {
-                    for (int i = 0; i < linenos.Length; i++) {
-                        var line = linenos[i];
-
-                        int finalLine = line;
-                        if (finalLine < 0) {
-                            finalLine = -finalLine;
-                        }
-
-                        PythonBreakpoint breakPoint;
-                        var finalBreakFilename = breakFilename ?? rootedFilename;
-
-                        if (conditions != null) {
-                            if (breakWhenChanged != null) {
-                                breakPoint = newproc.AddBreakPoint(finalBreakFilename, line, conditions[i], breakWhenChanged[i]);
-                            } else {
-                                breakPoint = newproc.AddBreakPoint(finalBreakFilename, line, conditions[i]);
-                            }
-                        } else {
-                            breakPoint = newproc.AddBreakPointByFileExtension(line, finalBreakFilename);
-                        }
-
-                        breakPoint.Add();
-
-                        // Django breakpoints are never bound
-                        if (breakPoint.IsDjangoBreakpoint) {
-                            --breakpointsToBeBound;
-                        }
-                    }
-                    thread = newthread;
-
-                    if (onProcessLoaded != null) {
-                        onProcessLoaded();
-                    }
-                    processLoaded.Set();
-                },
-                interpreterOptions: interpreterOptions
-            );
-
-            int breakpointsBound = 0;
-            int breakpointsNotBound = 0;
-            AutoResetEvent allBreakpointBindResults = new AutoResetEvent(breakpointsToBeBound == 0);
-            int breakpointHit = 0;
-            AutoResetEvent allBreakpointsHit = new AutoResetEvent(false);
-
-            try {
-                process.BreakpointBindFailed += (sender, args) => {
-                    if (checkBound) {
-                        Assert.Fail("unexpected bind failure");
-                    }
-                    ++breakpointsNotBound;
-                    if (breakpointsBound + breakpointsNotBound == breakpointsToBeBound) {
-                        allBreakpointBindResults.Set();
-                    }
-                };
-
-                process.BreakpointBindSucceeded += (sender, args) => {
-                    Assert.AreEqual(args.Breakpoint.Filename, breakFilename ?? rootedFilename);
-                    int index = lineList.IndexOf(args.Breakpoint.LineNo);
-                    Assert.IsTrue(index != -1);
-                    lineList[index] = -1;
-                    breakpointsBound++;
-                    if (breakpointsBound + breakpointsNotBound == breakpointsToBeBound) {
-                        allBreakpointBindResults.Set();
-                    }
-                };
-
-                process.BreakpointHit += (sender, args) => {
-                    if (breakpointHit < lineHits.Length) {
-                        if (lineHits[breakpointHit] < 0) {
-                            Assert.AreEqual(args.Breakpoint.LineNo, -lineHits[breakpointHit++]);
-                            try {
-                                args.Breakpoint.Remove();
-                            } catch {
-                                Debug.Assert(false);
-                            }
-                        } else {
-                            Assert.AreEqual(args.Breakpoint.LineNo, lineHits[breakpointHit++]);
-                        }
-                        if (checkThread) {
-                            Assert.AreEqual(args.Thread, thread);
-                        }
-                        if (breakpointHit == lineHits.Length) {
-                            allBreakpointsHit.Set();
-                        }
-                    }
-                    process.Continue();
-                };
-
-                process.Start();
-                AssertWaited(processLoaded);
-                process.AutoResumeThread(thread.Id);
-                if (breakpointsToBeBound > 0) {
-                    AssertWaited(allBreakpointBindResults);
-                }
-            } finally {
-                if (waitForExit) {
-                    WaitForExit(process);
-                } else {
-                    allBreakpointsHit.WaitOne(20000);
-                    process.Terminate();
-                }
+            public Breakpoint(string fileName, int lineNumber) {
+                Assert.IsTrue(fileName.EndsWith(".py"));
+                FileName = fileName;
+                LineNumber = lineNumber;
             }
-            Assert.AreEqual(lineHits.Length, breakpointHit);
-            if (checkBound) {
-                Assert.AreEqual(linenos.Length, breakpointsBound);
+        }
+
+        internal class DjangoBreakpoint : BreakpointBase {
+            public DjangoBreakpoint(int lineNumber) {
+                LineNumber = lineNumber;
+            }
+        }
+
+        internal class BreakpointCollection : List<BreakpointBase> {
+            public void Add(int lineNumber) {
+                Add(new Breakpoint(lineNumber));
+            }
+
+            public void AddRange(params int[] lineNumbers) {
+                foreach (var lineNumber in lineNumbers) {
+                    Add(lineNumber);
+                }
             }
         }
 
         internal PythonProcess DebugProcess(PythonDebugger debugger, string filename, Action<PythonProcess, PythonThread> onLoaded = null, bool resumeOnProcessLoaded = true, string interpreterOptions = null, PythonDebugOptions debugOptions = PythonDebugOptions.RedirectOutput, string cwd = null, string arguments = "") {
             return debugger.DebugProcess(Version, filename, onLoaded, resumeOnProcessLoaded, interpreterOptions, debugOptions, cwd, arguments);
+        }
+
+        internal class BreakpointTest {
+            private readonly BaseDebuggerTests _tests;
+
+            public readonly BreakpointCollection Breakpoints = new BreakpointCollection();
+            public readonly List<int> ExpectedHits = new List<int>(); // indices into Breakpoints
+
+            public string WorkingDirectory;
+            public string RunFileName;
+            public string BreakFileName; // if null, RunFileName is used instead
+            public PythonDebugOptions DebugOptions = PythonDebugOptions.RedirectOutput;
+            public bool WaitForExit = true;
+            public bool ExpectHitOnMainThread = true;
+            public bool IsBindFailureExpected = false;
+            public string Arguments = "";
+            public string InterpreterOptions = null;
+            public Action<PythonProcess> OnProcessLoaded;
+
+            public BreakpointTest(BaseDebuggerTests tests, string runFileName) {
+                _tests = tests;
+                RunFileName = runFileName;
+
+            }
+
+            public void Run() {
+                string runFileName = RunFileName;
+                if (!Path.IsPathRooted(runFileName)) {
+                    runFileName = _tests.DebuggerTestPath + runFileName;
+                }
+
+                string breakFileName = BreakFileName;
+                if (breakFileName != null && !Path.IsPathRooted(breakFileName)) {
+                    breakFileName = _tests.DebuggerTestPath + breakFileName;
+                }
+
+                foreach (var bp in Breakpoints) {
+                    var fileName = bp.FileName ?? breakFileName ?? runFileName;
+                    if (fileName.EndsWith(".py")) {
+                        Assert.IsTrue(bp is Breakpoint);
+                    } else {
+                        Assert.IsTrue(bp is DjangoBreakpoint);
+                    }
+                }
+
+                var bps = new Dictionary<PythonBreakpoint, BreakpointBase>();
+                var unboundBps = new HashSet<Breakpoint>();
+                var breakpointsToBeBound = Breakpoints.Count;
+
+                var debugger = new PythonDebugger();
+                PythonThread thread = null;
+
+                // Used to signal exceptions from debugger event handlers that run on a background thread.
+                var backgroundException = new TaskCompletionSource<bool>();
+
+                var processLoaded = new TaskCompletionSource<bool>();
+                var process = _tests.DebugProcess(
+                    debugger,
+                    runFileName,
+                    cwd: WorkingDirectory,
+                    arguments: Arguments,
+                    resumeOnProcessLoaded: false,
+                    onLoaded: (newproc, newthread) => {
+                        try {
+                            foreach (var bp in Breakpoints) {
+                                var fileName = bp.FileName ?? breakFileName ?? runFileName;
+
+                                PythonBreakpoint breakpoint;
+                                var pyBP = bp as Breakpoint;
+                                if (pyBP != null) {
+                                    breakpoint = newproc.AddBreakPoint(fileName, pyBP.LineNumber, pyBP.ConditionKind, pyBP.Condition, pyBP.PassCountKind, pyBP.PassCount);
+                                    unboundBps.Add(pyBP);
+                                } else {
+                                    var djangoBP = bp as DjangoBreakpoint;
+                                    if (djangoBP != null) {
+                                        breakpoint = newproc.AddDjangoBreakPoint(fileName, djangoBP.LineNumber);
+                                        // Django breakpoints are never bound.
+                                        --breakpointsToBeBound;
+                                    } else {
+                                        Assert.Fail("Unknown breakpoint type.");
+                                        return;
+                                    }
+                                }
+
+                                breakpoint.Add();
+                                bps.Add(breakpoint, bp);
+                            }
+
+                            if (OnProcessLoaded != null) {
+                                OnProcessLoaded(newproc);
+                            }
+
+                            thread = newthread;
+                            processLoaded.SetResult(true);
+                        } catch (Exception ex) {
+                            backgroundException.SetException(ex);
+                        }
+                    },
+                    interpreterOptions: InterpreterOptions
+                );
+
+                int breakpointsBound = 0;
+                int breakpointsNotBound = 0;
+                int nextExpectedHit = 0;
+
+                var allBreakpointsHit = new TaskCompletionSource<bool>();
+                var allBreakpointBindResults = new TaskCompletionSource<bool>();
+                if (breakpointsToBeBound == 0) {
+                    allBreakpointBindResults.SetResult(true);
+                }
+
+                try {
+                    process.BreakpointBindFailed += (sender, args) => {
+                        try {
+                            var bp = (Breakpoint)bps[args.Breakpoint];
+                            if (bp != null && !(bp.IsBindFailureExpected ?? IsBindFailureExpected)) {
+                                Assert.Fail("Breakpoint at {0}:{1} failed to bind.", bp.FileName ?? breakFileName ?? runFileName, bp.LineNumber);
+                            }
+                            ++breakpointsNotBound;
+                            if (breakpointsBound + breakpointsNotBound == breakpointsToBeBound) {
+                                allBreakpointBindResults.SetResult(true);
+                            }
+                        } catch (Exception ex) {
+                            backgroundException.SetException(ex);
+                        }
+                    };
+
+                    process.BreakpointBindSucceeded += (sender, args) => {
+                        try {
+                            var bp = (Breakpoint)bps[args.Breakpoint];
+                            Assert.AreEqual(bp.FileName ?? breakFileName ?? runFileName, args.Breakpoint.Filename);
+                            Assert.IsTrue(unboundBps.Remove(bp));
+                            ++breakpointsBound;
+                            if (breakpointsBound + breakpointsNotBound == breakpointsToBeBound) {
+                                allBreakpointBindResults.SetResult(true);
+                            }
+                        } catch (Exception ex) {
+                            backgroundException.SetException(ex);
+                        }
+                    };
+
+                    process.BreakpointHit += (sender, args) => {
+                        try {
+                            if (nextExpectedHit < ExpectedHits.Count) {
+                                var bp = Breakpoints[ExpectedHits[nextExpectedHit]];
+                                Assert.AreSame(bp, bps[args.Breakpoint]);
+
+                                if (bp.RemoveWhenHit) {
+                                    args.Breakpoint.Remove();
+                                }
+
+                                if (bp.ExpectHitOnMainThread ?? ExpectHitOnMainThread) {
+                                    Assert.AreSame(thread, args.Thread);
+                                }
+
+                                if (bp.OnHit != null) {
+                                   bp.OnHit(args);
+                                }
+
+                                if (++nextExpectedHit == ExpectedHits.Count) {
+                                    allBreakpointsHit.SetResult(true);
+                                }
+                            }
+                            process.Continue();
+                        } catch (Exception ex) {
+                            backgroundException.SetException(ex);
+                        }
+                    };
+
+                    process.Start();
+                    WaitForAny(10000, processLoaded.Task, backgroundException.Task);
+
+                    process.AutoResumeThread(thread.Id);
+                    if (breakpointsToBeBound > 0) {
+                        WaitForAny(10000, allBreakpointBindResults.Task, backgroundException.Task);
+                    }
+                } finally {
+                    if (WaitForExit) {
+                        _tests.WaitForExit(process);
+                    } else {
+                        WaitForAny(10000, allBreakpointsHit.Task, backgroundException.Task);
+                        process.Terminate();
+                    }
+                }
+
+                if (backgroundException.Task.IsFaulted) {
+                    backgroundException.Task.GetAwaiter().GetResult();
+                }
+
+                Assert.AreEqual(ExpectedHits.Count, nextExpectedHit);
+                Assert.IsTrue(unboundBps.All(bp => bp.IsBindFailureExpected ?? IsBindFailureExpected));
+            }
+
+            private static void WaitForAny(int timeout, params Task[] tasks) {
+                Task.WhenAny(tasks.Concat(new[] { Task.Delay(Timeout.Infinite, new CancellationTokenSource(timeout).Token) }))
+                    .GetAwaiter().GetResult()
+                    // At this point we have the task that ran to completion first. Now we need to
+                    // get its result to get an exception if that task failed or got canceled.
+                    .GetAwaiter().GetResult();
+            }
         }
 
         internal class LocalsTest {
@@ -545,6 +651,10 @@ namespace DebuggerTests {
                 Console.WriteLine(ex);
             }
             p.Dispose();
+        }
+
+        internal object DebugProcess(PythonDebugger debugger, string runFileName, string cwd, string arguments, bool resumeOnProcessLoaded, object onLoaded, string interpreterOptions) {
+            throw new NotImplementedException();
         }
     }
 }

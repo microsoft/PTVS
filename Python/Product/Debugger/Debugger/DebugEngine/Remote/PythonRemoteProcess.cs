@@ -25,7 +25,7 @@ using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Debugger.Remote {
     internal class PythonRemoteProcess : PythonProcess {
-        public const byte DebuggerProtocolVersion = 4; // must be kept in sync with PTVSDBG_VER in attach_server.py
+        public const byte DebuggerProtocolVersion = 5; // must be kept in sync with PTVSDBG_VER in attach_server.py
         public const string DebuggerSignature = "PTVSDBG";
         public const string Accepted = "ACPT";
         public const string Rejected = "RJCT";

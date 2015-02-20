@@ -12,7 +12,6 @@
  *
  * ***************************************************************************/
 
-using System;
 using System.Diagnostics;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Debugger.Interop;
@@ -103,32 +102,24 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             return VSConstants.S_OK;
         }
 
-        // The sample engine does not support hit counts on breakpoints. A real-world debugger will want to keep track 
-        // of how many times a particular bound breakpoint has been hit and return it here.
-        int IDebugBoundBreakpoint2.GetHitCount(out uint pdwHitCount) {
-            pdwHitCount = 0;
-            return VSConstants.E_NOTIMPL;
-        }
-
-        // The sample engine does not support conditions on breakpoints.
-        // A real-world debugger will use this to specify when a breakpoint will be hit
-        // and when it should be ignored.
         int IDebugBoundBreakpoint2.SetCondition(BP_CONDITION bpCondition) {
-            _breakpoint.SetCondition(bpCondition.bstrCondition, bpCondition.styleCondition == enum_BP_COND_STYLE.BP_COND_WHEN_CHANGED ? true : false);
+            _breakpoint.SetCondition(bpCondition.styleCondition.ToPython(), bpCondition.bstrCondition);
             return VSConstants.S_OK;
         }
 
-        // The sample engine does not support hit counts on breakpoints. A real-world debugger will want to keep track 
-        // of how many times a particular bound breakpoint has been hit. The debugger calls SetHitCount when the user 
-        // resets a breakpoint's hit count.
-        int IDebugBoundBreakpoint2.SetHitCount(uint dwHitCount) {
-            throw new NotImplementedException();
+        int IDebugBoundBreakpoint2.GetHitCount(out uint pdwHitCount) {
+            pdwHitCount = (uint)_breakpoint.GetHitCountAsync().GetAwaiter().GetResult();
+            return VSConstants.S_OK;
         }
 
-        // The sample engine does not support pass counts on breakpoints.
-        // This is used to specify the breakpoint hit count condition.
+        int IDebugBoundBreakpoint2.SetHitCount(uint dwHitCount) {
+            _breakpoint.SetHitCount((int)dwHitCount);
+            return VSConstants.S_OK;
+        }
+
         int IDebugBoundBreakpoint2.SetPassCount(BP_PASSCOUNT bpPassCount) {
-            throw new NotImplementedException();
+            _breakpoint.SetPassCount(bpPassCount.stylePassCount.ToPython(), (int)bpPassCount.dwPassCount);
+            return VSConstants.S_OK;
         }
 
         #endregion
