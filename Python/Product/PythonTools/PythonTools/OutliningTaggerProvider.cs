@@ -100,8 +100,8 @@ namespace Microsoft.PythonTools {
                     entry.GetTreeAndCookie(out ast, out cookie);
                     SnapshotCookie snapCookie = cookie as SnapshotCookie;
 
-                    if (ast != null && 
-                        snapCookie != null && 
+                    if (ast != null &&
+                        snapCookie != null &&
                         snapCookie.Snapshot.TextBuffer == spans[0].Snapshot.TextBuffer) {   // buffer could have changed if file was closed and re-opened
                         return ProcessSuite(spans, ast, ast.Body as SuiteStatement, snapCookie.Snapshot, true);
                     }
@@ -127,104 +127,12 @@ namespace Microsoft.PythonTools {
             }
 
             private IEnumerable<ITagSpan<IOutliningRegionTag>> ProcessSuite(NormalizedSnapshotSpanCollection spans, PythonAst ast, SuiteStatement suite, ITextSnapshot snapshot, bool isTopLevel) {
-                if (suite != null) {
-                    // TODO: Binary search the statements?  The perf of this seems fine for the time being
-                    // w/ a 5000+ line file though.
-                    foreach (var statement in suite.Statements) {
-                        SnapshotSpan? span = ShouldInclude(statement, spans);
-                        if (span == null) {
-                            continue;
-                        }
-
-                        FunctionDefinition funcDef = statement as FunctionDefinition;
-                        if (funcDef != null) {
-                            TagSpan tagSpan = GetFunctionSpan(ast, snapshot, funcDef);
-
-                            if (tagSpan != null) {
-                                yield return tagSpan;
-                            }
-
-                            // recurse into the class definition and outline it's members
-                            foreach (var v in ProcessSuite(spans, ast, funcDef.Body as SuiteStatement, snapshot, false)) {
-                                yield return v;
-                            }
-                        }
-
-                        ClassDefinition classDef = statement as ClassDefinition;
-                        if (classDef != null) {
-                            TagSpan tagSpan = GetClassSpan(ast, snapshot, classDef);
-
-                            if (tagSpan != null) {
-                                yield return tagSpan;
-                            }
-
-                            // recurse into the class definition and outline it's members
-                            foreach (var v in ProcessSuite(spans, ast, classDef.Body as SuiteStatement, snapshot, false)) {
-                                yield return v;
-                            }
-                        }
-
-                        if (isTopLevel) {
-                            IfStatement ifStmt = statement as IfStatement;
-                            if (ifStmt != null) {
-                                TagSpan tagSpan = GetIfSpan(ast, snapshot, ifStmt);
-
-                                if (tagSpan != null) {
-                                    yield return tagSpan;
-                                }
-                            }
-
-                            WhileStatement whileStatment = statement as WhileStatement;
-                            if (whileStatment != null) {
-                                TagSpan tagSpan = GetWhileSpan(ast, snapshot, whileStatment);
-
-                                if (tagSpan != null) {
-                                    yield return tagSpan;
-                                }
-                            }
-
-                            ForStatement forStatement = statement as ForStatement;
-                            if (forStatement != null) {
-                                TagSpan tagSpan = GetForSpan(ast, snapshot, forStatement);
-
-                                if (tagSpan != null) {
-                                    yield return tagSpan;
-                                }
-                            }
-                        }
-                    }
-                }
+                var walker = new OutliningWalker(snapshot);
+                ast.Walk(walker);
+                return walker.TagSpans;
             }
 
-            private static TagSpan GetForSpan(PythonAst ast, ITextSnapshot snapshot, ForStatement forStmt) {
-                if (forStmt.List != null) {
-                    return GetTagSpan(snapshot, forStmt.StartIndex, forStmt.EndIndex, forStmt.List.EndIndex);
-                }
-                return null;
-            }
-
-            private static TagSpan GetWhileSpan(PythonAst ast, ITextSnapshot snapshot, WhileStatement whileStmt) {
-                return GetTagSpan(
-                    snapshot, 
-                    whileStmt.StartIndex, 
-                    whileStmt.EndIndex, 
-                    whileStmt.Test.EndIndex
-                );
-            }
-
-            private static TagSpan GetIfSpan(PythonAst ast, ITextSnapshot snapshot, IfStatement ifStmt) {
-                return GetTagSpan(snapshot, ifStmt.StartIndex, ifStmt.EndIndex, ifStmt.Tests[0].HeaderIndex);
-            }
-
-            private static TagSpan GetFunctionSpan(PythonAst ast, ITextSnapshot snapshot, FunctionDefinition funcDef) {
-                return GetTagSpan(snapshot, funcDef.StartIndex, funcDef.EndIndex, funcDef.HeaderIndex, funcDef.Decorators);
-            }
-
-            private static TagSpan GetClassSpan(PythonAst ast, ITextSnapshot snapshot, ClassDefinition classDef) {
-                return GetTagSpan(snapshot, classDef.StartIndex, classDef.EndIndex, classDef.HeaderIndex, classDef.Decorators);
-            }
-
-            private static TagSpan GetTagSpan(ITextSnapshot snapshot, int start, int end, int headerIndex, DecoratorStatement decorators = null) {
+            internal static TagSpan GetTagSpan(ITextSnapshot snapshot, int start, int end, int headerIndex = -1, DecoratorStatement decorators = null) {
                 TagSpan tagSpan = null;
                 try {
                     if (decorators != null) {
@@ -232,6 +140,13 @@ namespace Microsoft.PythonTools {
                         // we base our starting position on where the decorators end.
                         start = decorators.EndIndex + 1;
                     }
+
+                    // if the user provided a -1, we should figure out the end of the first line
+                    if (headerIndex < 0) {
+                        int startLineEnd = snapshot.GetLineFromPosition(start).End.Position;
+                        headerIndex = startLineEnd;
+                    }
+
                     int testLen = headerIndex - start + 1;
                     if (start != -1 && end != -1) {
                         int length = end - start - testLen;
@@ -286,7 +201,184 @@ namespace Microsoft.PythonTools {
             #endregion
         }
 
-        class TagSpan : ITagSpan<IOutliningRegionTag> {
+        class OutliningWalker : PythonWalker {
+            public readonly List<TagSpan> TagSpans = new List<TagSpan>();
+            readonly ITextSnapshot _snapshot;
+
+            public OutliningWalker(ITextSnapshot snapshot) {
+                this._snapshot = snapshot;
+            }
+
+            // Compound Statements: if, while, for, try, with, func, class, decorated
+            public override bool Walk(IfStatement node) {
+                if (node.ElseStatement != null) {
+                    AddTagIfNecessaryShowLineAbove(node.ElseStatement, "else");
+                }
+
+                return base.Walk(node);
+            }
+            
+            public override bool Walk(IfStatementTest node) {
+                if (node.Test != null && node.Body != null) {
+                    AddTagIfNecessary(node.Test.StartIndex, node.Body.EndIndex);
+                    // Don't walk test condition.
+                    node.Body.Walk(this);
+                }
+                return false;
+            }
+
+            public override bool Walk(WhileStatement node) {
+                // Walk while statements manually so we don't traverse the test.
+                // This prevents the test from being collapsed ever.
+                if (node.Body != null) {
+                    AddTagIfNecessary(
+                        node.StartIndex, 
+                        node.Body.EndIndex, 
+                        _snapshot.GetLineFromPosition(node.StartIndex).End);
+                    node.Body.Walk(this);
+                }
+                if (node.ElseStatement != null) {
+                    AddTagIfNecessaryShowLineAbove(node.ElseStatement, "else");
+                    node.ElseStatement.Walk(this);
+                }
+                return false;
+            }
+
+            public override bool Walk(ForStatement node) {
+                // Walk for statements manually so we don't traverse the list.  
+                // This prevents the list and/or left from being collapsed ever.
+                if (node.Body != null) {
+                    AddTagIfNecessary(
+                        node.StartIndex, 
+                        node.Body.EndIndex, 
+                        _snapshot.GetLineFromPosition(node.StartIndex).End);
+                    node.Body.Walk(this);
+                }
+                if (node.Else != null) {
+                    AddTagIfNecessaryShowLineAbove(node.Else, "else");
+                    node.Else.Walk(this);
+                }
+                return false;
+            }
+
+            public override bool Walk(TryStatement node) {
+                if (node.Body != null) {
+                    AddTagIfNecessaryShowLineAbove(node.Body, "try");
+                }
+                foreach (var h in node.Handlers) {
+                    AddTagIfNecessaryShowLineAbove(h, "except");
+                }
+                if (node.Finally != null) {
+                    AddTagIfNecessaryShowLineAbove(node.Finally, "finally");
+                }
+
+                return base.Walk(node);
+            }
+
+            public override bool Walk(WithStatement node) {
+                AddTagIfNecessary(node);
+                return base.Walk(node);
+            }
+
+            public override bool Walk(FunctionDefinition node) {
+                // Walk manually so collapsing is not enabled for params.
+                if (node.Body != null) {
+                    AddTagIfNecessary(
+                        node.StartIndex, 
+                        node.Body.EndIndex, 
+                        _snapshot.GetLineFromPosition(node.StartIndex).End, 
+                        node.Decorators);
+                    node.Body.Walk(this);
+                }
+               
+                return false;
+            }
+
+            public override bool Walk(ClassDefinition node) {
+                AddTagIfNecessary(node, node.HeaderIndex, node.Decorators);
+
+                return base.Walk(node);
+            }
+
+            public override bool Walk(DecoratorStatement node) {
+                AddTagIfNecessary(node);
+                return base.Walk(node);
+            }
+
+            // Not-Compound Statements
+            public override bool Walk(ExpressionStatement node) {
+                AddTagIfNecessary(node);
+                return base.Walk(node);
+            }
+
+            public override bool Walk(AssignmentStatement node) {
+                AddTagIfNecessary(node);
+                return base.Walk(node);
+            }
+
+            public override bool Walk(ListExpression node) {
+                AddTagIfNecessary(node);
+                return base.Walk(node);
+            }
+
+            public override bool Walk(TupleExpression node) {
+                AddTagIfNecessary(node);
+                return base.Walk(node);
+            }
+
+            public override bool Walk(DictionaryExpression node) {
+                AddTagIfNecessary(node);
+                return base.Walk(node);
+            }
+
+            public override bool Walk(Parameter node) {
+                AddTagIfNecessary(node);
+                return base.Walk(node);
+            }
+
+            private void AddTagIfNecessary(Node node, int headerIndex = -1, DecoratorStatement decorator = null) {
+                AddTagIfNecessary(node.StartIndex, node.EndIndex, headerIndex, decorator);
+            }
+
+            private void AddTagIfNecessary(int startIndex, int endIndex, int headerIndex = -1, DecoratorStatement decorator = null, int minLinesToCollapse = 3) {
+                var startLine = _snapshot.GetLineFromPosition(startIndex).LineNumber;
+                var endLine = _snapshot.GetLineFromPosition(endIndex).LineNumber;
+                var lines = endLine - startLine + 1;
+
+                // Collapse if more than 3 lines.
+                if (lines >= minLinesToCollapse) {
+                    TagSpan tagSpan = OutliningTagger.GetTagSpan(
+                        _snapshot,
+                        startIndex,
+                        endIndex,
+                        headerIndex,
+                        decorator);
+                    TagSpans.Add(tagSpan);
+                }
+            }
+
+            /// <summary>
+            /// Given a node and lineAboveText enable collapsing for line
+            /// showing the line above text.
+            /// </summary>
+            /// <param name="node"></param>
+            /// <param name="lineAboveText"></param>
+            private void AddTagIfNecessaryShowLineAbove(Node node, string lineAboveText) {
+                int line = _snapshot.GetLineNumberFromPosition(node.StartIndex);
+                var startsWithElse = _snapshot.GetLineFromLineNumber(line).GetText().Trim().StartsWith(lineAboveText);
+                if (startsWithElse) {
+                    // this line starts with the 'above' line, don't adjust line
+                    int startIndex = _snapshot.GetLineFromLineNumber(line).Start.Position;
+                    AddTagIfNecessary(startIndex, node.EndIndex);
+                } else {
+                    // line is below the 'above' line
+                    int startIndex = _snapshot.GetLineFromLineNumber(line - 1).Start.Position;
+                    AddTagIfNecessary(startIndex, node.EndIndex);
+                }
+            }
+        }
+
+        internal class TagSpan : ITagSpan<IOutliningRegionTag> {
             private readonly SnapshotSpan _span;
             private readonly OutliningTag _tag;
 
@@ -308,7 +400,7 @@ namespace Microsoft.PythonTools {
             #endregion
         }
 
-        class OutliningTag : IOutliningRegionTag {
+        internal class OutliningTag : IOutliningRegionTag {
             private readonly ITextSnapshot _snapshot;
             private readonly Span _span;
             private readonly bool _isImplementation;
