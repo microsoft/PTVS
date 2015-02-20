@@ -265,11 +265,16 @@ namespace Microsoft.PythonTools {
                 if (node.Body != null) {
                     AddTagIfNecessaryShowLineAbove(node.Body, "try");
                 }
-                foreach (var h in node.Handlers) {
-                    AddTagIfNecessaryShowLineAbove(h, "except");
+                if (node.Handlers != null) {
+                    foreach (var h in node.Handlers) {
+                        AddTagIfNecessaryShowLineAbove(h, "except");
+                    }
                 }
                 if (node.Finally != null) {
                     AddTagIfNecessaryShowLineAbove(node.Finally, "finally");
+                }
+                if (node.Else != null) {
+                    AddTagIfNecessaryShowLineAbove(node.Finally, "else");
                 }
 
                 return base.Walk(node);
@@ -300,18 +305,13 @@ namespace Microsoft.PythonTools {
                 return base.Walk(node);
             }
 
-            public override bool Walk(DecoratorStatement node) {
-                AddTagIfNecessary(node);
-                return base.Walk(node);
-            }
-
             // Not-Compound Statements
-            public override bool Walk(ExpressionStatement node) {
+            public override bool Walk(CallExpression node) {
                 AddTagIfNecessary(node);
                 return base.Walk(node);
             }
 
-            public override bool Walk(AssignmentStatement node) {
+            public override bool Walk(FromImportStatement node){
                 AddTagIfNecessary(node);
                 return base.Walk(node);
             }
@@ -331,7 +331,12 @@ namespace Microsoft.PythonTools {
                 return base.Walk(node);
             }
 
-            public override bool Walk(Parameter node) {
+            public override bool Walk(SetExpression node) {
+                AddTagIfNecessary(node);
+                return base.Walk(node);
+            }
+
+            public override bool Walk(ParenthesisExpression node) {
                 AddTagIfNecessary(node);
                 return base.Walk(node);
             }
