@@ -38,6 +38,7 @@ namespace Microsoft.PythonTools.Debugger {
         private readonly Dictionary<int, CompletionInfo> _pendingExecutes = new Dictionary<int, CompletionInfo>();
         private readonly Dictionary<int, ChildrenInfo> _pendingChildEnums = new Dictionary<int, ChildrenInfo>();
         private readonly Dictionary<int, TaskCompletionSource<int>> _pendingGetHitCountRequests = new Dictionary<int, TaskCompletionSource<int>>();
+        private readonly object _pendingGetHitCountRequestsLock = new object();
         private readonly PythonLanguageVersion _langVersion;
         private readonly Guid _processGuid = Guid.NewGuid();
         private readonly List<string[]> _dirMapping;
@@ -799,9 +800,18 @@ namespace Microsoft.PythonTools.Debugger {
             // break point hit count retrieved
             int reqId = stream.ReadInt32();
             int hitCount = stream.ReadInt32();
+
             TaskCompletionSource<int> tcs;
-            if (_pendingGetHitCountRequests.TryGetValue(reqId, out tcs)) {
+            lock (_pendingGetHitCountRequestsLock) {
+                if (_pendingGetHitCountRequests.TryGetValue(reqId, out tcs)) {
+                    _pendingGetHitCountRequests.Remove(reqId);
+                }
+            }
+
+            if (tcs != null) {
                 tcs.SetResult(hitCount);
+            } else {
+                Debug.Fail("Breakpoint hit count response for unknown request ID.");
             }
         }
 
@@ -1063,14 +1073,17 @@ namespace Microsoft.PythonTools.Debugger {
             DebugWriteCommand("Get BP hit count");
 
             int reqId = _ids.Allocate();
+            var tcs = new TaskCompletionSource<int>();
+            lock (_pendingGetHitCountRequestsLock) {
+                _pendingGetHitCountRequests[reqId] = tcs;
+            }
+
             lock (_streamLock) {
                 _stream.Write(GetBreakPointHitCountCommandBytes);
                 _stream.WriteInt32(reqId);
                 _stream.WriteInt32(breakpoint.Id);
             }
 
-            var tcs = new TaskCompletionSource<int>();
-            _pendingGetHitCountRequests[reqId] = tcs;
             return tcs.Task;
         }
 
