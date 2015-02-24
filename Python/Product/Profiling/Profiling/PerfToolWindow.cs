@@ -35,11 +35,11 @@ namespace Microsoft.PythonTools.Profiling {
 
             var frame = (IVsWindowFrame)Frame;
             object ouhw;
-            Microsoft.VisualStudio.ErrorHandler.ThrowOnFailure(frame.GetProperty((int)__VSFPROPID.VSFPROPID_DocView, out ouhw));
+            ErrorHandler.ThrowOnFailure(frame.GetProperty((int)__VSFPROPID.VSFPROPID_DocView, out ouhw));
 
             // initialie w/ our hierarchy
             var hw = ouhw as IVsUIHierarchyWindow;
-            _sessions = new SessionsNode(this, hw);
+            _sessions = new SessionsNode((IServiceProvider)Package, hw);
             object punk;
             ErrorHandler.ThrowOnFailure(hw.Init(
                 _sessions,
@@ -51,10 +51,10 @@ namespace Microsoft.PythonTools.Profiling {
 
             // add our toolbar which  is defined in our VSCT file
             object otbh;
-            Microsoft.VisualStudio.ErrorHandler.ThrowOnFailure(frame.GetProperty((int)__VSFPROPID.VSFPROPID_ToolbarHost, out otbh));
+            ErrorHandler.ThrowOnFailure(frame.GetProperty((int)__VSFPROPID.VSFPROPID_ToolbarHost, out otbh));
             IVsToolWindowToolbarHost tbh = otbh as IVsToolWindowToolbarHost;
             Guid guidPerfMenuGroup = GuidList.guidPythonProfilingCmdSet;
-            Microsoft.VisualStudio.ErrorHandler.ThrowOnFailure(tbh.AddToolbar(VSTWT_LOCATION.VSTWT_TOP, ref guidPerfMenuGroup, PkgCmdIDList.menuIdPerfToolbar));
+            ErrorHandler.ThrowOnFailure(tbh.AddToolbar(VSTWT_LOCATION.VSTWT_TOP, ref guidPerfMenuGroup, PkgCmdIDList.menuIdPerfToolbar));
         }
 
         public SessionsNode Sessions {

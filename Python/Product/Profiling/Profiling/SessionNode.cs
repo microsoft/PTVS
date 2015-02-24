@@ -64,15 +64,24 @@ namespace Microsoft.PythonTools.Profiling {
             _target = target;
             _filename = filename;
 
-            // Register this with the running document table.  This will prompt for save when the file is dirty and
-            // by responding to GetProperty for VSHPROPID_ItemDocCookie we will support Ctrl-S when one of our
-            // files is dirty.
+            // Register this with the running document table.  This will prompt
+            // for save when the file is dirty and by responding to GetProperty
+            // for VSHPROPID_ItemDocCookie we will support Ctrl-S when one of
+            // our files is dirty.
             // http://msdn.microsoft.com/en-us/library/bb164600(VS.80).aspx
-            IVsRunningDocumentTable rdt = _serviceProvider.GetService(typeof(SVsRunningDocumentTable)) as IVsRunningDocumentTable;
+            var rdt = (IVsRunningDocumentTable)_serviceProvider.GetService(typeof(SVsRunningDocumentTable));
+            Debug.Assert(rdt != null, "_serviceProvider has no RDT service");
             uint cookie;
             IntPtr punkDocData = Marshal.GetIUnknownForObject(this);
             try {
-                ErrorHandler.ThrowOnFailure(rdt.RegisterAndLockDocument((uint)(_VSRDTFLAGS.RDT_VirtualDocument | _VSRDTFLAGS.RDT_EditLock | _VSRDTFLAGS.RDT_CanBuildFromMemory), filename, this, VSConstants.VSITEMID_ROOT, punkDocData, out cookie));
+                ErrorHandler.ThrowOnFailure(rdt.RegisterAndLockDocument(
+                    (uint)(_VSRDTFLAGS.RDT_VirtualDocument | _VSRDTFLAGS.RDT_EditLock | _VSRDTFLAGS.RDT_CanBuildFromMemory),
+                    filename,
+                    this,
+                    VSConstants.VSITEMID_ROOT,
+                    punkDocData,
+                    out cookie
+                ));
             } finally {
                 if (punkDocData != IntPtr.Zero) {
                     Marshal.Release(punkDocData);

@@ -12,15 +12,22 @@ def hidden_frame(func, posargs, kwargs):
     func(*posargs, **kwargs)
 
 # set up tracing so we pick up other threads...
-def new_thread(func, *posargs, **kwargs):
+def new_thread_wrapper(func, posargs, kwargs):
     handle = start_profiling()
     try:
         hidden_frame(func, posargs, kwargs)
     finally:
         pyprofdll.CloseThread(handle)
 
-def start_new_thread(func, args, kwargs = {}):
-    return _start_new_thread(new_thread, (func, ) + args, kwargs)
+def start_new_thread(func, args, kwargs = {}, *extra_args):
+    if not isinstance(args, tuple):
+        # args is not a tuple. This may be because we have become bound to a
+        # class, which has offset our arguments by one.
+        if isinstance(kwargs, tuple):
+            func, args = args, kwargs
+            kwargs = extra_args[0] if len(extra_args) > 0 else {}
+
+    return _start_new_thread(new_thread_wrapper, (func, args, kwargs))
 
 _start_new_thread = thread.start_new_thread
 thread.start_new_thread = start_new_thread
