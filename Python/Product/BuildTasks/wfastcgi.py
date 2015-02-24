@@ -343,7 +343,7 @@ def maybe_log(txt):
     except:
         pass
 
-def send_response(stream, req_id, resp_type, content, streaming = True):
+def send_response(stream, req_id, resp_type, content, streaming=True):
     """sends a response w/ the given id, type, and content to the server.
     If the content is streaming then an empty record is sent at the end to 
     terminate the stream"""
@@ -354,7 +354,8 @@ def send_response(stream, req_id, resp_type, content, streaming = True):
     while True:
         len_remaining = max(min(len(content) - offset, 0xFFFF), 0)
 
-        data = struct.pack('>BBHHBB',
+        data = struct.pack(
+            '>BBHHBB',
             FCGI_VERSION_1,     # version
             resp_type,          # type
             req_id,             # requestIdB1:B0
@@ -401,34 +402,43 @@ ReadDirectoryChangesW.argtypes  = [
     ctypes.c_void_p,     # LPOVERLAPPED lpOverlapped
     ctypes.c_void_p      # LPOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine
 ]
+try:
+    from _winapi import (CreateFile, CloseHandle, GetLastError, ExitProcess,
+                         WaitForSingleObject, INFINITE, OPEN_EXISTING)
+except ImportError:
+    CreateFile = ctypes.windll.kernel32.CreateFileW
+    CreateFile.restype = ctypes.c_void_p
+    CreateFile.argtypes  = [
+        ctypes.c_wchar_p,     # lpFilename
+        ctypes.c_uint32,      # dwDesiredAccess
+        ctypes.c_uint32,      # dwShareMode
+        ctypes.c_void_p,      # LPSECURITY_ATTRIBUTES,
+        ctypes.c_uint32,      # dwCreationDisposition,
+        ctypes.c_uint32,      # dwFlagsAndAttributes,
+        ctypes.c_void_p       # hTemplateFile
+    ]
 
-CreateFile = ctypes.windll.kernel32.CreateFileW
-CreateFile.restype = ctypes.c_void_p
-CreateFile.argtypes  = [
-    ctypes.c_wchar_p,     # lpFilename
-    ctypes.c_uint32,      # dwDesiredAccess
-    ctypes.c_uint32,      # dwShareMode
-    ctypes.c_voidp,       # LPSECURITY_ATTRIBUTES,
-    ctypes.c_uint32,      # dwCreationDisposition,
-    ctypes.c_uint32,      # dwFlagsAndAttributes,
-    ctypes.c_void_p       # hTemplateFile
-]
+    CloseHandle = ctypes.windll.kernel32.CloseHandle
+    CloseHandle.argtypes = [ctypes.c_void_p]
 
-CloseHandle = ctypes.windll.kernel32.CloseHandle
-CloseHandle.argtypes = [ctypes.c_void_p]
+    GetLastError = ctypes.windll.kernel32.GetLastError
+    GetLastError.restype = ctypes.c_uint32
 
-GetLastError = ctypes.windll.kernel32.GetLastError
-GetLastError.restype = ctypes.c_uint32
+    ExitProcess = ctypes.windll.kernel32.ExitProcess
+    ExitProcess.restype = ctypes.c_void_p
+    ExitProcess.argtypes  = [ctypes.c_uint32]
 
-ExitProcess = ctypes.windll.kernel32.ExitProcess
-ExitProcess.restype = ctypes.c_void_p
-ExitProcess.argtypes  = [ctypes.c_uint32]
+    WaitForSingleObject = ctypes.windll.kernel32.WaitForSingleObject
+    WaitForSingleObject.argtypes = [ctypes.c_void_p, ctypes.c_uint32]
+    WaitForSingleObject.restype = ctypes.c_uint32
+
+    OPEN_EXISTING = 3
+    INFINITE = -1
 
 FILE_LIST_DIRECTORY = 1
 FILE_SHARE_READ = 0x00000001
 FILE_SHARE_WRITE = 0x00000002
 FILE_SHARE_DELETE = 0x00000004
-OPEN_EXISTING = 3
 FILE_FLAG_BACKUP_SEMANTICS = 0x02000000
 MAX_PATH = 260
 FILE_NOTIFY_CHANGE_LAST_WRITE  = 0x10
@@ -441,10 +451,39 @@ class FILE_NOTIFY_INFORMATION(ctypes.Structure):
                 ('FileNameLength', ctypes.c_uint32),
                 ('Filename', ctypes.c_wchar)]
 
-def start_file_watcher(path, restartRegex):
-    if restartRegex is None:
-        restartRegex = ".*((\\.py)|(\\.config))$"
-    elif not restartRegex:
+_ON_EXIT_TASKS = None
+def run_exit_tasks():
+    global _ON_EXIT_TASKS
+    maybe_log("Running on_exit tasks")
+    while _ON_EXIT_TASKS:
+        tasks, _ON_EXIT_TASKS = _ON_EXIT_TASKS, []
+        for t in tasks:
+            try:
+                t()
+            except Exception:
+                maybe_log("Error in exit task: " + traceback.format_exc())
+
+def on_exit(task):
+    global _ON_EXIT_TASKS
+    if _ON_EXIT_TASKS is None:
+        _ON_EXIT_TASKS = tasks = []
+        try:
+            evt = int(os.getenv('_FCGI_SHUTDOWN_EVENT_'))
+        except (TypeError, ValueError):
+            maybe_log("Could not wait on event %s" % evt)
+        else:
+            def _wait_for_exit():
+                WaitForSingleObject(evt, INFINITE)
+                run_exit_tasks()
+                ExitProcess(0)
+
+            start_new_thread(_wait_for_exit, ())
+    _ON_EXIT_TASKS.append(task)
+
+def start_file_watcher(path, restart_regex):
+    if restart_regex is None:
+        restart_regex = ".*((\\.py)|(\\.config))$"
+    elif not restart_regex:
         # restart regex set to empty string, no restart behavior
         return
     
@@ -458,17 +497,22 @@ def start_file_watcher(path, restartRegex):
         buffer = ctypes.create_string_buffer(32 * 1024)
         bytes_ret = ctypes.c_uint32()
 
-        the_dir = CreateFile(
-            path, 
-            FILE_LIST_DIRECTORY, 
-            FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-            None,
-            OPEN_EXISTING,
-            FILE_FLAG_BACKUP_SEMANTICS,
-            None,
-        )
+        try:
+            the_dir = CreateFile(
+                path, 
+                FILE_LIST_DIRECTORY, 
+                FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                0,
+                OPEN_EXISTING,
+                FILE_FLAG_BACKUP_SEMANTICS,
+                0,
+            )
+        except OSError:
+            maybe_log("Unable to create watcher")
+            return
 
         if not the_dir or the_dir == INVALID_HANDLE_VALUE:
+            maybe_log("Unable to create watcher")
             return
 
         while True:
@@ -501,19 +545,21 @@ def start_file_watcher(path, restartRegex):
                 CloseHandle(the_dir)
                 return
 
-    log('wfastcgi.py will restart when files in %s are changed: %s' % (path, restartRegex))
+    log('wfastcgi.py will restart when files in %s are changed: %s' % (path, restart_regex))
     def watcher(path, restart):
         for filename in enum_changes(path):
             if not filename:
                 log('wfastcgi.py exiting because the buffer was full')
+                run_exit_tasks()
                 ExitProcess(0)
             elif restart.match(filename):
-                log('wfastcgi.py exiting because %s has changed, matching %s' % (filename, restartRegex))
+                log('wfastcgi.py exiting because %s has changed, matching %s' % (filename, restart_regex))
                 # we call ExitProcess directly to quickly shutdown the whole process
                 # because sys.exit(0) won't have an effect on the main thread.
+                run_exit_tasks()
                 ExitProcess(0)
 
-    restart = re.compile(restartRegex)
+    restart = re.compile(restart_regex)
     start_new_thread(watcher, (path, restart))
 
 def get_wsgi_handler(handler_name):
@@ -564,8 +610,22 @@ def read_wsgi_handler(physical_path):
         )
         sys.path.extend(fs_encode(p) for p in expanded_path.split(';') if p)
     
-    handler_name = os.getenv('WSGI_HANDLER')
-    return env, get_wsgi_handler(handler_name)
+    handler = get_wsgi_handler(os.getenv('WSGI_HANDLER'))
+    instr_key = env.get("APPINSIGHTS_INSTRUMENTATIONKEY")
+    if instr_key:
+        try:
+            # Attempt the import after updating sys.path- sites must
+            # include applicationinsights themselves.
+            from applicationinsights.requests import WSGIApplication
+        except ImportError:
+            maybe_log("Failed to import applicationinsights: " + traceback.format_exc())
+            pass
+        else:
+            handler = applicationinsights.requests.WSGIApplication(instr_key, handler)
+            # Ensure we will flush any remaining events when we exit
+            on_exit(handler.client.flush)
+
+    return env, handler
 
 class handle_response(object):
     """A context manager for handling the response. This will ensure that
@@ -663,7 +723,7 @@ class handle_response(object):
 
         return lambda content: self.send(FCGI_STDOUT, content)
 
-    def send(self, resp_type, content, streaming = True):
+    def send(self, resp_type, content, streaming=True):
         '''Sends part of the response.'''
         if not self.sent_headers:
             if not self.header_bytes:
@@ -733,6 +793,7 @@ def main():
                 # Send each part of the response to FCGI_STDOUT.
                 # Exceptions raised in the handler will be logged by the context
                 # manager and we will then wait for the next record.
+
                 result = handler(record.params, response.start)
                 try:
                     for part in result:
@@ -743,9 +804,13 @@ def main():
                         result.close()
     except _ExitException:
         pass
-    except:
+    except Exception:
         maybe_log('Unhandled exception in wfastcgi.py: ' + traceback.format_exc())
+    except BaseException:
+        maybe_log('Unhandled exception in wfastcgi.py: ' + traceback.format_exc())
+        raise
     finally:
+        run_exit_tasks()
         maybe_log('wfastcgi.py %s closed' % __version__)
 
 if __name__ == '__main__':

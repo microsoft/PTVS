@@ -73,14 +73,14 @@
     <CustomAction
       Id="AppCmd_RegCmd_$(var.ver)"
       Property="AppCmd_Reg_$(var.ver)"
-      Value='"[APPCMD_PATH]" set config /section:system.webServer/fastCGI "/+[\[]fullPath=&apos;[PYTHON_INSTALL_PATH_$(var.ver)]python.exe&apos;, arguments=&apos;[#wfastcgi.py_$(var.ver)]&apos;[\]]"'
+      Value='"[APPCMD_PATH]" set config /section:system.webServer/fastCGI "/+[\[]fullPath=&apos;[PYTHON_INSTALL_PATH_$(var.ver)]python.exe&apos;, arguments=&apos;[#wfastcgi.py_$(var.ver)]&apos;, signalBeforeTerminateSeconds=&apos;30&apos;[\]]"'
       Execute="immediate" />
     <CustomAction Id="AppCmd_Reg_$(var.ver)" BinaryKey="WixCA" DllEntry="CAQuietExec" Execute="deferred" Return="ignore" Impersonate="no"/>
 
     <CustomAction
       Id="AppCmd_UnRegCmd_$(var.ver)"
       Property="AppCmd_UnReg_$(var.ver)"
-      Value='"[APPCMD_PATH]" set config /section:system.webServer/fastCGI "/-[\[]fullPath=&apos;[PYTHON_INSTALL_PATH_$(var.ver)]python.exe&apos;, arguments=&apos;[#wfastcgi.py_$(var.ver)]&apos;[\]]"'
+      Value='"[APPCMD_PATH]" set config /section:system.webServer/fastCGI "/-[\[]fullPath=&apos;[PYTHON_INSTALL_PATH_$(var.ver)]python.exe&apos;, arguments=&apos;[#wfastcgi.py_$(var.ver)]&apos;, signalBeforeTerminateSeconds=&apos;30&apos;[\]]"'
       Execute="immediate" />
     <CustomAction Id="AppCmd_UnReg_$(var.ver)" BinaryKey="WixCA" DllEntry="CAQuietExec" Execute="deferred" Return="ignore" Impersonate="no"/>
 

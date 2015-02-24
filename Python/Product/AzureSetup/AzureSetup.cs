@@ -301,7 +301,7 @@ namespace AzureSetup {
             fastCgiPath = Escape(fastCgiPath);
 
             RunAppCmd(appCmd,
-                "set config /section:system.webServer/fastCGI \"/+[fullPath='{0}', arguments='{1}', instanceMaxRequests='{2}']\"",
+                "set config /section:system.webServer/fastCGI \"/+[fullPath='{0}', arguments='{1}', instanceMaxRequests='{2}', signalBeforeTerminateSeconds='30']\"",
                 interpreter,
                 fastCgiPath,
                 isDebug ? "1" : "10000"

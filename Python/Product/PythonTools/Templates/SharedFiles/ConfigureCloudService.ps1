@@ -230,7 +230,7 @@ if ($is_web) {
         $max_requests = 1000
     }
 
-    iex "appcmd $appcmdargs set config /section:system.webServer/fastCGI ""/+[fullPath='$interp',arguments='\""""$wfastcgi\""""',instanceMaxRequests='$max_requests']"""
+    iex "appcmd $appcmdargs set config /section:system.webServer/fastCGI ""/+[fullPath='$interp',arguments='\""""$wfastcgi\""""',instanceMaxRequests='$max_requests',signalBeforeTerminateSeconds='30']"""
 
     if ($is_emulated) {
         $webconfig = gi web.config -EA Stop
