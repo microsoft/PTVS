@@ -75,11 +75,16 @@ namespace Microsoft.PythonTools.Analysis {
         /// reference.
         /// </returns>
         public bool TryImport(string name, out ModuleReference res) {
+            bool firstImport = false;
             if (!_modules.TryGetValue(name, out res) || res == null) {
                 _modules[name] = res = new ModuleReference(GetBuiltinModule(_interpreter.ImportModule(name)));
+                firstImport = true;
             }
             if (res != null && res.Module == null) {
                 res.Module = GetBuiltinModule(_interpreter.ImportModule(name));
+            }
+            if (firstImport && res != null && res.Module != null) {
+                _analyzer.DoDelayedSpecialization(name);
             }
             return res != null && res.Module != null;
         }

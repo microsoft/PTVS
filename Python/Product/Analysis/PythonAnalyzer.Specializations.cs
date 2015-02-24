@@ -66,14 +66,14 @@ namespace Microsoft.PythonTools.Analysis {
 
             int lastDot;
             string realModName = null;
-            if (Modules.TryImport(moduleName, out module)) {
+            if (Modules.TryGetImportedModule(moduleName, out module)) {
                 IModule mod = module.Module as IModule;
                 if (mod != null) {
                     mod.SpecializeFunction(name, callable, mergeOriginalAnalysis);
                     return;
                 }
             } else if ((lastDot = moduleName.LastIndexOf('.')) != -1 &&
-                Modules.TryImport(realModName = moduleName.Substring(0, lastDot), out module)) {
+                Modules.TryGetImportedModule(realModName = moduleName.Substring(0, lastDot), out module)) {
 
                 IModule mod = module.Module as IModule;
                 if (mod != null) {
@@ -91,7 +91,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// Processes any delayed specialization for when a module is added for the 1st time.
         /// </summary>
         /// <param name="moduleName"></param>
-        private void DoDelayedSpecialization(string moduleName) {
+        internal void DoDelayedSpecialization(string moduleName) {
             lock (_specializationInfo) {
                 List<SpecializationInfo> specInfo;
                 if (_specializationInfo.TryGetValue(moduleName, out specInfo)) {
