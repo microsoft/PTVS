@@ -89,7 +89,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 return;
             }
 
-            e.CanExecute = view.UpgradeVersion != null;
+            e.CanExecute = !view.UpgradeVersion.IsEmpty && view.UpgradeVersion.CompareTo(view.Version) > 0;
             e.Handled = true;
         }
 
@@ -392,7 +392,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
 
         private async Task RefreshInstalledPackages() {
-            var installed = await _provider.EnumeratePackages();
+            var installed = await _provider.GetInstalledPackagesAsync();
 
             await Dispatcher.InvokeAsync(() => {
                 lock (_installed) {
@@ -402,14 +402,16 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
 
         private async Task RefreshInstallablePackages() {
-            var installable = (await _provider.EnumeratePreferredPackages())
-                .Select(p => new PackageResultView(this, p));
+            var installable = await _provider.GetAvailablePackagesAsync();
 
             lock (_installable) {
                 _installable.Clear();
-                _installable.AddRange(installable);
+                _installable.AddRange(installable.Select(pv => new PackageResultView(this, pv)));
             }
-            _installableViewRefreshTimer.Change(100, Timeout.Infinite);
+            try {
+                _installableViewRefreshTimer.Change(100, Timeout.Infinite);
+            } catch (ObjectDisposedException) {
+            }
         }
 
         public bool IsListRefreshing {
@@ -488,6 +490,10 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         public PipEnvironmentView View {
             get { return _view; }
+        }
+
+        public string PackageSpec {
+            get { return _package.PackageSpec; }
         }
 
         public string IndexName {

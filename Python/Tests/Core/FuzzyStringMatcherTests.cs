@@ -12,10 +12,11 @@
  *
  * ***************************************************************************/
 
+extern alias pythontools;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.PythonTools.Intellisense;
+using pythontools::Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace PythonToolsTests {

@@ -112,7 +112,6 @@
     <Compile Include="BasicProjectTests.cs" />
     <Compile Include="BuildTasksUITests.cs" />
     <Compile Include="EditorTests.cs" />
-    <Compile Include="EnvironmentListTests.cs" />
     <Compile Include="FormattingUITests.cs" />
     <Compile Include="NugetTests.cs" />
     <Compile Include="ObjectBrowserTest.cs" />

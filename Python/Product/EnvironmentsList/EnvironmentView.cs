@@ -31,8 +31,10 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public static readonly RoutedCommand MakeGlobalDefault = new RoutedCommand();
         public static readonly RoutedCommand MakeActiveInCurrentProject = new RoutedCommand();
 
-        public static readonly EnvironmentView AddNewEnvironmentView = new EnvironmentView();
-        public static readonly IEnumerable<EnvironmentView> AddNewEnvironmentViewOnce = new[] { AddNewEnvironmentView };
+        public static readonly Lazy<EnvironmentView> AddNewEnvironmentView =
+            new Lazy<EnvironmentView>(() => new EnvironmentView());
+        public static readonly Lazy<IEnumerable<EnvironmentView>> AddNewEnvironmentViewOnce =
+            new Lazy<IEnumerable<EnvironmentView>>(() => new[] { AddNewEnvironmentView.Value });
 
         /// <summary>
         /// Used with <see cref="CommonUtils.FindFile"/> to more efficiently
@@ -58,9 +60,16 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             IPythonInterpreterFactory factory,
             Redirector redirector
         ) {
+            if (service == null) {
+                throw new ArgumentNullException("service");
+            }
+            if (factory == null) {
+                throw new ArgumentNullException("factory");
+            }
+
             _service = service;
             Factory = factory;
-            
+
             _withDb = factory as IPythonInterpreterFactoryWithDatabase;
             if (_withDb != null) {
                 _withDb.IsCurrentChanged += Factory_IsCurrentChanged;
@@ -91,6 +100,13 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             if (IsConfigurable) {
                 Extensions.Add(new ConfigurationExtensionProvider(configurableProvider));
             }
+        }
+
+        public override string ToString() {
+            return string.Format(
+                "{{{0}:{1}}}", GetType().FullName,
+                _withDb == null ? "(null)" : _withDb.Description
+            );
         }
 
         public ObservableCollection<object> Extensions { get; private set; }
@@ -130,48 +146,48 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public static readonly DependencyProperty IsRefreshDBProgressIndeterminateProperty = IsRefreshDBProgressIndeterminatePropertyKey.DependencyProperty;
 
         public bool IsConfigurable {
-            get { return (bool)GetValue(IsConfigurableProperty); }
-            set { SetValue(IsConfigurablePropertyKey, value); }
+            get { return Factory == null ? false : (bool)GetValue(IsConfigurableProperty); }
+            set { if (Factory != null) { SetValue(IsConfigurablePropertyKey, value); } }
         }
 
         public bool CanBeDefault {
-            get { return (bool)GetValue(CanBeDefaultProperty); }
-            set { SetValue(CanBeDefaultPropertyKey, value); }
+            get { return Factory == null ? false : (bool)GetValue(CanBeDefaultProperty); }
+            set { if (Factory != null) { SetValue(CanBeDefaultPropertyKey, value); } }
         }
 
         public bool IsDefault {
-            get { return (bool)GetValue(IsDefaultProperty); }
-            internal set { SetValue(IsDefaultPropertyKey, value); }
+            get { return Factory == null ? false : (bool)GetValue(IsDefaultProperty); }
+            internal set { if (Factory != null) { SetValue(IsDefaultPropertyKey, value); } }
         }
 
         public bool IsCurrent {
-            get { return (bool)GetValue(IsCurrentProperty); }
-            internal set { SetValue(IsCurrentPropertyKey, value); }
+            get { return Factory == null ? true : (bool)GetValue(IsCurrentProperty); }
+            internal set { if (Factory != null) { SetValue(IsCurrentPropertyKey, value); } }
         }
 
         public bool IsCheckingDatabase {
-            get { return (bool)GetValue(IsCheckingDatabaseProperty); }
-            internal set { SetValue(IsCheckingDatabasePropertyKey, value); }
+            get { return Factory == null ? false : (bool)GetValue(IsCheckingDatabaseProperty); }
+            internal set { if (Factory != null) { SetValue(IsCheckingDatabasePropertyKey, value); } }
         }
 
         public int RefreshDBProgress {
-            get { return (int)GetValue(RefreshDBProgressProperty); }
-            internal set { SetValue(RefreshDBProgressPropertyKey, value); }
+            get { return Factory == null ? 0 : (int)GetValue(RefreshDBProgressProperty); }
+            internal set { if (Factory != null) { SetValue(RefreshDBProgressPropertyKey, value); } }
         }
 
         public string RefreshDBMessage {
-            get { return (string)GetValue(RefreshDBMessageProperty); }
-            internal set { SetValue(RefreshDBMessagePropertyKey, value); }
+            get { return Factory == null ? string.Empty : (string)GetValue(RefreshDBMessageProperty); }
+            internal set { if (Factory != null) { SetValue(RefreshDBMessagePropertyKey, value); } }
         }
 
         public bool IsRefreshingDB {
-            get { return (bool)GetValue(IsRefreshingDBProperty); }
-            internal set { SetValue(IsRefreshingDBPropertyKey, value); }
+            get { return Factory == null ? false : (bool)GetValue(IsRefreshingDBProperty); }
+            internal set { if (Factory != null) { SetValue(IsRefreshingDBPropertyKey, value); } }
         }
 
         public bool IsRefreshDBProgressIndeterminate {
-            get { return (bool)GetValue(IsRefreshDBProgressIndeterminateProperty); }
-            internal set { SetValue(IsRefreshDBProgressIndeterminatePropertyKey, value); }
+            get { return Factory == null ? false : (bool)GetValue(IsRefreshDBProgressIndeterminateProperty); }
+            internal set { if (Factory != null) { SetValue(IsRefreshDBProgressIndeterminatePropertyKey, value); } }
         }
 
         #endregion
@@ -193,33 +209,33 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public static readonly DependencyProperty PathEnvironmentVariableProperty = PathEnvironmentVariablePropertyKey.DependencyProperty;
 
         public string Description {
-            get { return (string)GetValue(DescriptionProperty); }
-            set { SetValue(DescriptionPropertyKey, value); }
+            get { return Factory == null ? string.Empty : (string)GetValue(DescriptionProperty); }
+            set { if (Factory != null) { SetValue(DescriptionPropertyKey, value); } }
         }
 
         public string PrefixPath {
-            get { return (string)GetValue(PrefixPathProperty); }
-            set { SetValue(PrefixPathPropertyKey, value); }
+            get { return Factory == null ? string.Empty : (string)GetValue(PrefixPathProperty); }
+            set { if (Factory != null) { SetValue(PrefixPathPropertyKey, value); } }
         }
 
         public string InterpreterPath {
-            get { return (string)GetValue(InterpreterPathProperty); }
-            set { SetValue(InterpreterPathPropertyKey, value); }
+            get { return Factory == null ? string.Empty : (string)GetValue(InterpreterPathProperty); }
+            set { if (Factory != null) { SetValue(InterpreterPathPropertyKey, value); } }
         }
 
         public string WindowsInterpreterPath {
-            get { return (string)GetValue(WindowsInterpreterPathProperty); }
-            set { SetValue(WindowsInterpreterPathPropertyKey, value); }
+            get { return Factory == null ? string.Empty : (string)GetValue(WindowsInterpreterPathProperty); }
+            set { if (Factory != null) { SetValue(WindowsInterpreterPathPropertyKey, value); } }
         }
 
         public string LibraryPath {
-            get { return (string)GetValue(LibraryPathProperty); }
-            set { SetValue(LibraryPathPropertyKey, value); }
+            get { return Factory == null ? string.Empty : (string)GetValue(LibraryPathProperty); }
+            set { if (Factory != null) { SetValue(LibraryPathPropertyKey, value); } }
         }
 
         public string PathEnvironmentVariable {
-            get { return (string)GetValue(PathEnvironmentVariableProperty); }
-            set { SetValue(PathEnvironmentVariablePropertyKey, value); }
+            get { return Factory == null ? string.Empty : (string)GetValue(PathEnvironmentVariableProperty); }
+            set { if (Factory != null) { SetValue(PathEnvironmentVariablePropertyKey, value); } }
         }
 
         #endregion
@@ -231,8 +247,11 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public DataTemplate AddNewEnvironment { get; set; }
 
         public override DataTemplate SelectTemplate(object item, DependencyObject container) {
-            if (object.ReferenceEquals(item, EnvironmentView.AddNewEnvironmentView) && AddNewEnvironment != null) {
-                return AddNewEnvironment;
+            if (EnvironmentView.AddNewEnvironmentView.IsValueCreated) {
+                if (object.ReferenceEquals(item, EnvironmentView.AddNewEnvironmentView.Value) &&
+                    AddNewEnvironment != null) {
+                    return AddNewEnvironment;
+                }
             }
             if (item is EnvironmentView && Environment != null) {
                 return Environment;

@@ -117,7 +117,7 @@
                             <TextBlock>
                                 <Run>"pip install</Run>
                                 <Run Text="{Binding View.SearchQuery,Mode=OneWay}" /><Run>" from</Run>
-                                <Run Text="{Binding IndexName,Mode=OneWay,FallbackValue='PyPI'}" />
+                                <Run Text="{Binding IndexName,Mode=OneWay}" />
                             </TextBlock>
                         </Button>
                         <DataTemplate.Triggers>
@@ -132,7 +132,7 @@
                                 HorizontalAlignment="Left"
                                 Style="{StaticResource NavigationButtonInList}"
                                 Command="{x:Static l:PipExtension.InstallPackage}"
-                                CommandParameter="{Binding Package.PackageSpec,Mode=OneWay}"
+                                CommandParameter="{Binding PackageSpec,Mode=OneWay}"
                                 ToolTip="{Binding Package.Description}"
                                 Margin="3">
                             <TextBlock>

@@ -297,7 +297,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                         OnViewCreated(view);
                         return view;
                     })
-                    .Concat(EnvironmentView.AddNewEnvironmentViewOnce),
+                    .Concat(EnvironmentView.AddNewEnvironmentViewOnce.Value),
                     EnvironmentComparer.Instance,
                     EnvironmentComparer.Instance
                 );
@@ -349,11 +349,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                     _service.DefaultInterpreterChanged += Service_DefaultInterpreterChanged;
                     _service.InterpretersChanged += Service_InterpretersChanged;
                 }
-                if (Dispatcher.CheckAccess()) {
-                    FirstUpdateEnvironments();
-                } else {
-                    var t = Dispatcher.InvokeAsync(FirstUpdateEnvironments);
-                }
+                Dispatcher.InvokeAsync(FirstUpdateEnvironments).Task.DoNotWait();
             }
         }
 
@@ -463,10 +459,12 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                     return 0;
                 }
 
-                if (object.ReferenceEquals(x, EnvironmentView.AddNewEnvironmentView)) {
-                    return 1;
-                } else if (object.ReferenceEquals(y, EnvironmentView.AddNewEnvironmentView)) {
-                    return -1;
+                if (EnvironmentView.AddNewEnvironmentView.IsValueCreated) {
+                    if (object.ReferenceEquals(x, EnvironmentView.AddNewEnvironmentView.Value)) {
+                        return 1;
+                    } else if (object.ReferenceEquals(y, EnvironmentView.AddNewEnvironmentView.Value)) {
+                        return -1;
+                    }
                 }
 
                 return StringComparer.CurrentCultureIgnoreCase.Compare(

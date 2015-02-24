@@ -22,7 +22,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using System.Windows.Threading;
-using Microsoft.IronPythonTools.Interpreter;
 using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.EnvironmentsList;
 using Microsoft.PythonTools.Interpreter;
@@ -117,11 +116,11 @@ namespace PythonToolsUITests {
                 list.Service = service;
 
                 foreach (string invalidPath in new string[] { 
-                            null, 
-                            "", 
-                            "NOT A REAL PATH", 
-                            string.Join("\\", Path.GetInvalidPathChars().Select(c => c.ToString()))
-                        }) {
+                    null, 
+                    "", 
+                    "NOT A REAL PATH", 
+                    string.Join("\\", Path.GetInvalidPathChars().Select(c => c.ToString()))
+                }) {
                     Console.WriteLine("Path: <{0}>", invalidPath ?? "(null)");
                     provider.RemoveAllFactories();
                     provider.AddFactory(new MockPythonInterpreterFactory(
@@ -243,7 +242,12 @@ namespace PythonToolsUITests {
             using (var list = new EnvironmentListProxy(wpf)) {
                 list.Service = GetInterpreterOptionsService();
 
-                var expected = new HashSet<string>(PythonPaths.Versions.Select(v => v.InterpreterPath), StringComparer.OrdinalIgnoreCase);
+                var expected = new HashSet<string>(
+                    PythonPaths.Versions
+                        .Where(v => !v.IsIronPython)
+                        .Select(v => v.InterpreterPath),
+                    StringComparer.OrdinalIgnoreCase
+                );
                 var actual = wpf.Invoke(() => new HashSet<string>(
                     list.Environments.Select(ev => (string)ev.InterpreterPath),
                     StringComparer.OrdinalIgnoreCase
@@ -483,20 +487,77 @@ namespace PythonToolsUITests {
                 Assert.IsTrue(task.Result, "pip install failed");
                 Assert.IsTrue(pip.IsPipInstalled().GetAwaiter().GetResult(), "pip was not installed");
 
-                var packages = pip.EnumeratePackages(includeUpdateVersion: false).GetAwaiter().GetResult();
+                var packages = pip.GetInstalledPackagesAsync().GetAwaiter().GetResult();
                 AssertUtil.ContainsExactly(packages.Select(pv => pv.Name), "pip", "setuptools");
 
                 task = wpf.Invoke(() => pip.InstallPackage("ptvsd", true).ContinueWith<bool>(LogException));
                 Assert.IsTrue(task.Wait(TimeSpan.FromSeconds(60.0)), "pip install ptvsd timed out");
                 Assert.IsTrue(task.Result, "pip install ptvsd failed");
-                packages = pip.EnumeratePackages(includeUpdateVersion: false).GetAwaiter().GetResult();
+                packages = pip.GetInstalledPackagesAsync().GetAwaiter().GetResult();
                 AssertUtil.ContainsAtLeast(packages.Select(pv => pv.Name), "ptvsd");
 
                 task = wpf.Invoke(() => pip.UninstallPackage("ptvsd").ContinueWith<bool>(LogException));
                 Assert.IsTrue(task.Wait(TimeSpan.FromSeconds(60.0)), "pip uninstall ptvsd timed out");
                 Assert.IsTrue(task.Result, "pip uninstall ptvsd failed");
-                packages = pip.EnumeratePackages(includeUpdateVersion: false).GetAwaiter().GetResult();
+                packages = pip.GetInstalledPackagesAsync().GetAwaiter().GetResult();
                 AssertUtil.DoesntContain(packages.Select(pv => pv.Name), "ptvsd");
+            }
+        }
+
+        [TestMethod]
+        public async Task SaveLoadCache() {
+            var cachePath = Path.Combine(TestData.GetTempPath(randomSubPath: true), "pip.cache");
+            using (var cache = new TestPipPackageCache(cachePath)) {
+                AssertUtil.ContainsExactly(await cache.TestGetAllPackageNamesAsync());
+
+                var p = await cache.TestInjectPackageAsync("azure==0.9");
+                p.Description = "azure description";
+
+                p = await cache.TestInjectPackageAsync("ptvsd==1.0");
+                p.Description = "ptvsd description";
+                p.UpgradeVersion = p.Version;
+
+                // Descriptions are URL encoded
+                // Only UpgradeVersion is stored
+                AssertUtil.ContainsExactly(await cache.TestGetAllPackageSpecsAsync(),
+                    "azure:azure%20description",
+                    "ptvsd==1.0:ptvsd%20description"
+                );
+
+                await cache.TestWriteCacheToDiskAsync();
+            }
+
+            using (var cache = new TestPipPackageCache(cachePath)) {
+                AssertUtil.ContainsExactly(await cache.TestGetAllPackageNamesAsync());
+
+                await cache.TestReadCacheFromDiskAsync();
+
+                AssertUtil.ContainsExactly(await cache.TestGetAllPackageSpecsAsync(),
+                    "azure:azure%20description",
+                    "ptvsd==1.0:ptvsd%20description"
+                );
+
+            }
+        }
+
+        [TestMethod]
+        public async Task UpdatePackageInfo() {
+            using (var cache = new TestPipPackageCache()) {
+                AssertUtil.ContainsExactly(await cache.TestGetAllPackageNamesAsync());
+
+                var p = await cache.TestInjectPackageAsync("ptvsd==1.0");
+
+                AssertUtil.ContainsExactly(await cache.TestGetAllPackageNamesAsync(), "ptvsd");
+
+                var changes = new List<string>();
+                p.PropertyChanged += (s, e) => { changes.Add(e.PropertyName); };
+
+                await cache.UpdatePackageInfoAsync(p, CancellationToken.None);
+
+                AssertUtil.ContainsExactly(changes, "Description", "UpgradeVersion");
+                Assert.IsTrue(p.UpgradeVersion.CompareTo(p.Version) > 0,
+                    string.Format("Expected {0} > {1}", p.UpgradeVersion, p.Version)
+                );
             }
         }
 
@@ -603,7 +664,9 @@ namespace PythonToolsUITests {
 
             public List<EnvironmentView> Environments {
                 get {
-                    return _proxy.Invoke(() => Window._environments.ToList());
+                    return _proxy.Invoke(() => 
+                        Window._environments.Except(EnvironmentView.AddNewEnvironmentViewOnce.Value).ToList()
+                    );
                 }
             }
 
@@ -643,11 +706,6 @@ namespace PythonToolsUITests {
                 typeof(CPythonInterpreterFactoryConstants).Assembly.Location
             );
             settings.Store.AddSetting(
-                InterpreterOptionsService.FactoryProvidersCollection + "\\IronPython",
-                InterpreterOptionsService.FactoryProviderCodeBaseSetting,
-                typeof(IronPythonInterpreter).Assembly.Location
-            );
-            settings.Store.AddSetting(
                 InterpreterOptionsService.FactoryProvidersCollection + "\\LoadedProjects",
                 InterpreterOptionsService.FactoryProviderCodeBaseSetting,
                 typeof(LoadedProjectInterpreterFactoryProvider).Assembly.Location
@@ -656,5 +714,76 @@ namespace PythonToolsUITests {
         }
 
         #endregion
+    }
+
+    class TestPipPackageCache : PipPackageCache {
+        public TestPipPackageCache(string cachePath = null) : base(
+            null, null,
+            cachePath ?? Path.Combine(TestData.GetTempPath(randomSubPath: true), "test.cache")
+        ) {
+            _userCount = 1;
+        }
+
+        internal async Task<PipPackageView> TestInjectPackageAsync(string packageSpec) {
+            await _cacheLock.WaitAsync();
+            try {
+                var p = new PipPackageView(this, packageSpec);
+                _cache[p.Name] = p;
+                _cacheAge = DateTime.Now;
+                return p;
+            } finally {
+                _cacheLock.Release();
+            }
+        }
+
+        internal async Task TestClearPackagesAsync() {
+            await _cacheLock.WaitAsync();
+            try {
+                _cache.Clear();
+                _cacheAge = DateTime.MinValue;
+            } finally {
+                _cacheLock.Release();
+            }
+        }
+
+        internal async Task<List<string>> TestGetAllPackageNamesAsync() {
+            await _cacheLock.WaitAsync();
+            try {
+                return _cache.Keys.ToList();
+            } finally {
+                _cacheLock.Release();
+            }
+        }
+
+        internal async Task<List<string>> TestGetAllPackageSpecsAsync() {
+            await _cacheLock.WaitAsync();
+            try {
+                return _cache.Values.Select(p => p.GetPackageSpec(true, true)).ToList();
+            } finally {
+                _cacheLock.Release();
+            }
+        }
+
+        internal async Task TestWriteCacheToDiskAsync() {
+            await _cacheLock.WaitAsync();
+            try {
+                using (var cts = new CancellationTokenSource(5000)) {
+                    await WriteCacheToDiskAsync(cts.Token);
+                }
+            } finally {
+                _cacheLock.Release();
+            }
+        }
+
+        internal async Task TestReadCacheFromDiskAsync() {
+            await _cacheLock.WaitAsync();
+            try {
+                using (var cts = new CancellationTokenSource(5000)) {
+                    await ReadCacheFromDiskAsync(cts.Token);
+                }
+            } finally {
+                _cacheLock.Release();
+            }
+        }
     }
 }

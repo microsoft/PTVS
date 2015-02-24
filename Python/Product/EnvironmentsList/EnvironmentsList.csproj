@@ -73,6 +73,7 @@
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
@@ -194,6 +195,7 @@
     <Compile Include="DBExtension.xaml.cs">
       <DependentUpon>DBExtension.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Pep440Version.cs" />
     <Compile Include="PipExtension.xaml.cs">
       <DependentUpon>PipExtension.xaml</DependentUpon>
     </Compile>
@@ -203,6 +205,8 @@
     <Compile Include="EnvironmentView.cs" />
     <Compile Include="IEnvironmentViewExtension.cs" />
     <Compile Include="PipExtensionProvider.cs" />
+    <Compile Include="PipPackageCache.cs" />
+    <Compile Include="PipPackageView.cs" />
     <Compile Include="ToolWindow.xaml.cs">
       <DependentUpon>ToolWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
@@ -236,12 +240,6 @@
       <Project>{815db0cd-c0dd-4997-b43c-abee4dbeffe7}</Project>
       <Name>Microsoft.PythonTools.VSInterpreters</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="update_pip_cache.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
   </ItemGroup>
   <Import Project="..\ProjectAfter.settings" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

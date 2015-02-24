@@ -94,10 +94,13 @@
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.11.0, Version=11.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
     <Reference Include="System" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
+    <Reference Include="System.Xaml" />
     <Reference Include="System.XML" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="WindowsBase" />
@@ -118,10 +121,12 @@
     <Compile Include="CompletionContextTests.cs" />
     <Compile Include="CPythonInterpreterTests.cs" />
     <Compile Include="DebugReplEvaluatorTests.cs" />
+    <Compile Include="EnvironmentListTests.cs" />
     <Compile Include="ExtractMethodTests.cs" />
     <Compile Include="FuzzyStringMatcherTests.cs" />
     <Compile Include="ImportWizardTests.cs" />
     <Compile Include="LauncherTests.cs" />
+    <Compile Include="Pep440VersionTests.cs" />
     <Compile Include="ProjectUpgradeTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ProximityExpressionWalkerTests.cs" />
@@ -173,6 +178,10 @@
     <ProjectReference Include="$(BuildRoot)Python\Tests\Utilities.Python\TestUtilities.Python.csproj">
       <Project>{62641b47-1abb-4638-a3d5-2a834d089667}</Project>
       <Name>TestUtilities.Python</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Product\EnvironmentsList\EnvironmentsList.csproj">
+      <Project>{b20e082b-4d3c-457d-b2bd-60420b434573}</Project>
+      <Name>EnvironmentsList</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="..\TestProjectAfter.settings" />
