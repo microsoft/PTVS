@@ -17,6 +17,8 @@ using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
@@ -53,6 +55,8 @@ namespace Microsoft.PythonTools {
             private readonly Timer _timer;
             private readonly PythonToolsService _pyService;
             private bool _enabled, _eventHooked;
+            private static readonly Regex _openingRegionRegex = new Regex(@"^\s*#\s*region($|\s+.*$)");
+            private static readonly Regex _closingRegionRegex = new Regex(@"^\s*#\s*endregion($|\s+.*$)");
 
             public OutliningTagger(PythonToolsService pyService, ITextBuffer buffer) {
                 _pyService = pyService;
@@ -103,7 +107,7 @@ namespace Microsoft.PythonTools {
                     if (ast != null &&
                         snapCookie != null &&
                         snapCookie.Snapshot.TextBuffer == spans[0].Snapshot.TextBuffer) {   // buffer could have changed if file was closed and re-opened
-                        return ProcessSuite(spans, ast, ast.Body as SuiteStatement, snapCookie.Snapshot, true);
+                        return ProcessSuite(ast, snapCookie.Snapshot);
                     }
                 }
 
@@ -126,10 +130,30 @@ namespace Microsoft.PythonTools {
                 }
             }
 
-            private IEnumerable<ITagSpan<IOutliningRegionTag>> ProcessSuite(NormalizedSnapshotSpanCollection spans, PythonAst ast, SuiteStatement suite, ITextSnapshot snapshot, bool isTopLevel) {
+            private IEnumerable<ITagSpan<IOutliningRegionTag>> ProcessSuite(PythonAst ast, ITextSnapshot snapshot) {
+                return ProcessOutliningTags(ast, snapshot).Concat(ProcessRegionTags(snapshot));
+            }
+
+            internal static IEnumerable<TagSpan> ProcessOutliningTags(PythonAst ast, ITextSnapshot snapshot) {
                 var walker = new OutliningWalker(snapshot);
                 ast.Walk(walker);
                 return walker.TagSpans;
+            }
+
+            internal static IEnumerable<TagSpan> ProcessRegionTags(ITextSnapshot snapshot){
+                Stack<ITextSnapshotLine> regions = new Stack<ITextSnapshotLine>();
+                // Walk lines and attempt to find '#region'/'#endregion' tags
+                foreach (var line in snapshot.Lines) {
+                    var lineText = line.GetText();
+                    if (_openingRegionRegex.IsMatch(lineText)) {
+                        regions.Push(line);
+                    } else if (_closingRegionRegex.IsMatch(lineText) && regions.Count > 0) {
+                        var openLine = regions.Pop();
+                        var outline = GetTagSpan(snapshot, openLine.Start, line.End);
+
+                        yield return outline;
+                    }
+                }
             }
 
             internal static TagSpan GetTagSpan(ITextSnapshot snapshot, int start, int end, int headerIndex = -1, DecoratorStatement decorators = null) {
@@ -274,7 +298,7 @@ namespace Microsoft.PythonTools {
                     AddTagIfNecessaryShowLineAbove(node.Finally, "finally");
                 }
                 if (node.Else != null) {
-                    AddTagIfNecessaryShowLineAbove(node.Finally, "else");
+                    AddTagIfNecessaryShowLineAbove(node.Else, "else");
                 }
 
                 return base.Walk(node);
@@ -290,9 +314,8 @@ namespace Microsoft.PythonTools {
                 if (node.Body != null) {
                     AddTagIfNecessary(
                         node.StartIndex, 
-                        node.Body.EndIndex, 
-                        _snapshot.GetLineFromPosition(node.StartIndex).End, 
-                        node.Decorators);
+                        node.Body.EndIndex,
+                        decorator: node.Decorators);
                     node.Body.Walk(this);
                 }
                

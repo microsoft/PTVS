@@ -1,29 +1,47 @@
 def f():
-    pass
+    print('hello')
+    print('world')
+    print('!')
 #comment
 
 class C:
-    pass
+    print('hello')
+    print('world')
+    print('!')
 #comment
 
 if True:
-    pass
+    print('hello')
+    print('world')
+    print('!')
 #comment
 
 if True:
-    pass
+    print('hello')
+    print('world')
+    print('!')
 else:
-    pass
+    print('hello')
+    print('world')
+    print('!')
 #comment
 
 if True:
-    pass
+    print('hello')
+    print('world')
+    print('!')
 elif True:
-    pass
+    print('hello')
+    print('world')
+    print('!')
 #comment
         
 for i in xrange(100):
     print('hello')
+    print('world')
+    print('!')
     
 while True:
     print('hello')
+    print('world')
+    print('!')

@@ -72,13 +72,15 @@ namespace PythonToolsUITests {
         [HostType("VSTestHost")]
         public void OutliningTest() {
             OutlineTest("Program.py",
-                new ExpectedTag(8, 18, "\r\n    pass"),
-                new ExpectedTag(40, 50, "\r\n    pass"),
-                new ExpectedTag(72, 82, "\r\n    pass"),
-                new ExpectedTag(104, 131, "\r\n    pass\r\nelse:\r\n    pass"),
-                new ExpectedTag(153, 185, "\r\n    pass\r\nelif True:\r\n    pass"),
-                new ExpectedTag(228, 248, "\r\n    print('hello')"),
-                new ExpectedTag(267, 287, "\r\n    print('hello')")
+                new ExpectedTag(9, 64, "\n    print('hello')\r\n    print('world')\r\n    print('!')"),
+                new ExpectedTag(86, 142, "\r\n    print('hello')\r\n    print('world')\r\n    print('!')"),
+                new ExpectedTag(165, 220, "\n    print('hello')\r\n    print('world')\r\n    print('!')"),
+                new ExpectedTag(306, 361, "\n    print('hello')\r\n    print('world')\r\n    print('!')"),
+                new ExpectedTag(243, 298, "\n    print('hello')\r\n    print('world')\r\n    print('!')"),
+                new ExpectedTag(384, 439, "\n    print('hello')\r\n    print('world')\r\n    print('!')"),
+                new ExpectedTag(452, 507, "\n    print('hello')\r\n    print('world')\r\n    print('!')"),
+                new ExpectedTag(551, 606, "\n    print('hello')\r\n    print('world')\r\n    print('!')"),
+                new ExpectedTag(626, 681, "\n    print('hello')\r\n    print('world')\r\n    print('!')")
             );
         }
 
@@ -86,11 +88,8 @@ namespace PythonToolsUITests {
         [HostType("VSTestHost")]
         public void OutlineNestedFuncDef() {
             OutlineTest("NestedFuncDef.py",
-                new ExpectedTag(8, 36, @"
-    def g():
-        pass"),
-                new ExpectedTag(22, 36, @"
-        pass"));
+                new ExpectedTag(9, 90, "\n    def g():\r\n        print('hello')\r\n        print('world')\r\n        print('!')"),
+                new ExpectedTag(23, 90, "\n        print('hello')\r\n        print('world')\r\n        print('!')"));
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
@@ -124,7 +123,6 @@ namespace PythonToolsUITests {
                 }
             }
         }
-
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("VSTestHost")]

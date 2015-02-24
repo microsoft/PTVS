@@ -1,3 +1,5 @@
 def f():
     def g():
-        pass
+        print('hello')
+        print('world')
+        print('!')
