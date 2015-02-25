@@ -26,7 +26,6 @@
                    Microsoft.PythonTools.ImportWizard.dll;
                    Microsoft.PythonTools.ProjectWizards.dll;
                    Microsoft.PythonTools.VSInterpreters.dll;
-                   update_pip_cache.py;
                    pip_downloader.py" />
 
     <!-- Analyzer -->
