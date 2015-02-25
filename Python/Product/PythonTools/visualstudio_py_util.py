@@ -111,7 +111,7 @@ def exec_module(module, global_variables):
     Python 2.5.
     '''
     import runpy
-    runpy.run_module(module, global_variables, alter_sys = True)
+    runpy.run_module(module, global_variables, run_name=global_variables.get('__name__'), alter_sys=True)
 
 UNICODE_PREFIX = to_bytes('U')
 ASCII_PREFIX = to_bytes('A')
