@@ -77,8 +77,19 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
 
         void UpdateLayout(double width, double previousWidth = 0.0) {
-            var lowTrigger = (EnvironmentsColumn.ActualWidth + ExtensionsColumn.ActualWidth) * 1.5;
-            var highTrigger = lowTrigger * 1.2;
+            if (double.IsNaN(width)) {
+                return;
+            }
+            
+            var lowTrigger = (EnvironmentsColumn.ActualWidth + ExtensionsColumn.ActualWidth) * 1.8;
+            var highTrigger = lowTrigger * 1.1;
+
+            if (highTrigger < 10.0) {
+                // Very small highTrigger probably means that the columns are
+                // not initialized yet, so we don't want to set the layout.
+                return;
+            }
+
             if (previousWidth <= 0) {
                 if (width <= highTrigger) {
                     SwitchToVerticalLayout();
@@ -323,7 +334,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             UpdateEnvironments();
 
             UpdateLayout();
-            UpdateLayout(Width);
+            UpdateLayout(ActualWidth);
         }
 
         private void OnViewCreated(EnvironmentView view) {

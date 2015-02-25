@@ -133,13 +133,18 @@
                                 Style="{StaticResource NavigationButtonInList}"
                                 Command="{x:Static l:PipExtension.InstallPackage}"
                                 CommandParameter="{Binding PackageSpec,Mode=OneWay}"
-                                ToolTip="{Binding Package.Description}"
+                                ToolTip="{Binding Package.Description,Mode=OneWay}"
                                 Margin="3">
                             <TextBlock>
                                 <Run>Install</Run>
                                 <Run Text="{Binding Package.DisplayName,Mode=OneWay}" />
                             </TextBlock>
                         </Button>
+                        <DataTemplate.Triggers>
+                            <DataTrigger Binding="{Binding Package.Description}" Value="">
+                                <Setter TargetName="InstallButton" Property="ToolTip" Value="{x:Null}" />
+                            </DataTrigger>
+                        </DataTemplate.Triggers>
                     </DataTemplate>
                 </ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>
@@ -159,6 +164,9 @@
         <CommandBinding Command="{x:Static l:PipExtension.UpgradePackage}"
                         CanExecute="UpgradePackage_CanExecute"
                         Executed="UpgradePackage_Executed" />
+        <CommandBinding Command="ApplicationCommands.Delete"
+                        CanExecute="Delete_CanExecute"
+                        Executed="Delete_Executed" />
     </UserControl.CommandBindings>
     
     <Grid x:Name="Subcontext">
@@ -176,9 +184,46 @@
             <wpf:Lambda x:Key="Collapsed">(bool b) => b ? Visibility.Collapsed : Visibility.Visible</wpf:Lambda>
         </Grid.Resources>
 
-        <TextBox x:Name="SearchQueryText" Grid.Row="0"
-                 Margin="2"
-                 Text="{Binding SearchQuery,UpdateSourceTrigger=PropertyChanged}" />
+        <Border Grid.Row="0" Style="{StaticResource ControlLike}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition />
+                    <ColumnDefinition Width="auto" />
+                </Grid.ColumnDefinitions>
+                
+                <Button Grid.Column="1"
+                        VerticalAlignment="Center"
+                        Focusable="False"
+                        Cursor="Hand"
+                        Command="ApplicationCommands.Delete"
+                        CommandTarget="{Binding ElementName=SearchQueryText}">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border Background="Transparent" Width="16" Height="16">
+                                <Path Data="M0,0 L8,8 M0,8 L8,0"
+                                      Margin="3"
+                                      Stretch="Uniform"
+                                      HorizontalAlignment="Center" VerticalAlignment="Center"
+                                      Stroke="{TemplateBinding BorderBrush}"
+                                      StrokeThickness="2" />
+                            </Border>
+                        </ControlTemplate>
+                    </Button.Template>
+                    <Button.ToolTip>
+                        Clear search filter
+                    </Button.ToolTip>
+                </Button>
+                <TextBox x:Name="SearchQueryText"
+                         Margin="2"
+                         Background="Transparent"
+                         BorderBrush="Transparent"
+                         Text="{Binding SearchQuery,UpdateSourceTrigger=PropertyChanged}">
+                    <TextBox.InputBindings>
+                        <KeyBinding Key="Escape" Command="ApplicationCommands.Delete" CommandTarget="{Binding ElementName=SearchQueryText}" />
+                    </TextBox.InputBindings>
+                </TextBox>
+            </Grid>
+        </Border>
 
         <TextBlock Grid.Row="0"
                    HorizontalAlignment="Left"

@@ -142,6 +142,30 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             }
         }
 
+        /// <summary>
+        /// Use some rough heuristicts to try and only show the first section of
+        /// a package description.
+        /// 
+        /// Most descriptions start with a summary line or title, followed by a
+        /// blank line or "====..." style separator.
+        /// </summary>
+        private static bool IsSeparatorLine(string s) {
+            if (string.IsNullOrWhiteSpace(s)) {
+                return true;
+            }
+
+            if (s.Length > 2) {
+                var first = s.FirstOrDefault(c => !char.IsWhiteSpace(c));
+                if (first != default(char)) {
+                    if (s.All(c => char.IsWhiteSpace(c) || c == first)) {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
         public async Task UpdatePackageInfoAsync(PipPackageView package, CancellationToken cancel) {
             string description = null;
             List<string> versions = null;
@@ -152,6 +176,13 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 try {
                     using (var reader = JsonReaderWriterFactory.CreateJsonReader(data, new XmlDictionaryReaderQuotas())) {
                         var doc = XDocument.Load(reader);
+
+                        // TODO: Get package URL
+                        //url = (string)doc.Document
+                        //    .Elements("root")
+                        //    .Elements("info")
+                        //    .Elements("package_url")
+                        //    .FirstOrDefault();
 
                         description = (string)doc.Document
                             .Elements("root")
@@ -183,8 +214,20 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 }
 
                 if (!string.IsNullOrEmpty(description)) {
-                    inCache.Description = description;
-                    package.Description = description;
+                    var lines = description.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+                    var firstLine = string.Join(
+                        " ",
+                        lines.TakeWhile(s => !IsSeparatorLine(s)).Select(s => s.Trim())
+                    );
+                    if (firstLine.Length > 500) {
+                        firstLine = firstLine.Substring(0, 497) + "...";
+                    }
+                    if (firstLine == "UNKNOWN") {
+                        firstLine = string.Empty;
+                    }
+
+                    inCache.Description = firstLine;
+                    package.Description = firstLine;
                     changed = true;
                 }
 
@@ -224,7 +267,12 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                             FileOptions.DeleteOnClose
                         );
                     } catch (DirectoryNotFoundException) {
-                        throw;
+                        var dir = CommonUtils.GetParent(filename);
+                        if (!Directory.Exists(dir)) {
+                            Directory.CreateDirectory(dir);
+                        } else {
+                            throw;
+                        }
                     } catch (IOException) {
                     }
                 }
@@ -307,7 +355,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 using (var file = new StreamWriter(_cachePath, false, Encoding.UTF8)) {
                     foreach (var keyValue in _cache) {
                         cancel.ThrowIfCancellationRequested();
-                        await file.WriteLineAsync(keyValue.Value.GetPackageSpec(true, true));
+                        await file.WriteLineAsync(keyValue.Value.GetPackageSpec(false, true));
                     }
                 }
             } catch (IOException ex) {

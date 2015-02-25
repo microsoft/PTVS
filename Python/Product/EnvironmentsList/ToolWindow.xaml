@@ -99,7 +99,7 @@
             </Style>
         </Grid.Resources>
         
-        <Grid x:Name="HorizontalLayout" Visibility="Collapsed">
+        <Grid x:Name="HorizontalLayout">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition x:Name="EnvironmentsColumn" Width="auto" />
                 <ColumnDefinition x:Name="ExtensionsColumn" Width="auto" />

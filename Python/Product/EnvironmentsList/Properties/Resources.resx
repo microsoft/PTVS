@@ -170,6 +170,9 @@
   <data name="ListFailed" xml:space="preserve">
     <value>Enumerating packages failed</value>
   </data>
+  <data name="LoadingDescription" xml:space="preserve">
+    <value>(Loading description...)</value>
+  </data>
   <data name="MisconfiguredEnvironment" xml:space="preserve">
     <value>Operation cannot be started because the environment is not configured.</value>
     <comment>Used as exception text</comment>

@@ -18,6 +18,7 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using System.Threading;
+using Microsoft.PythonTools.EnvironmentsList.Properties;
 using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.EnvironmentsList {
@@ -156,9 +157,23 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             }
         }
 
+        private async void TriggerDescriptionUpdate() {
+            try {
+                await _provider.UpdatePackageInfoAsync(this, CancellationToken.None);
+            } catch (Exception ex) {
+                if (ex.IsCriticalException()) {
+                    throw;
+                }
+                Description = string.Empty;
+            }
+        }
+
         public string Description {
             get {
-
+                if (_description == null) {
+                    _description = Resources.LoadingDescription;
+                    TriggerDescriptionUpdate();
+                }
                 return _description;
             }
             set {

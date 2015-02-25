@@ -532,9 +532,10 @@ namespace PythonToolsUITests {
 
                 await cache.TestReadCacheFromDiskAsync();
 
+                // Descriptions are not cached
                 AssertUtil.ContainsExactly(await cache.TestGetAllPackageSpecsAsync(),
-                    "azure:azure%20description",
-                    "ptvsd==1.0:ptvsd%20description"
+                    "azure",
+                    "ptvsd==1.0"
                 );
 
             }

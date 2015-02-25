@@ -113,6 +113,25 @@
         </Style.Triggers>
     </Style>
     
+    <!-- This style should match Control as much as possible -->
+    <Style x:Key="ControlLike" TargetType="{x:Type Border}">
+        <Setter Property="Background" Value="{DynamicResource {x:Static wpf:Controls.ControlBackgroundKey}}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource {x:Static wpf:Controls.ControlBorderKey}}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Style.Triggers>
+            <Trigger Property="IsFocused" Value="True">
+                <Setter Property="BorderBrush" Value="{DynamicResource {x:Static wpf:Controls.ControlBorderSelectedKey}}" />
+            </Trigger>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="{DynamicResource {x:Static wpf:Controls.ControlBackgroundHoverKey}}" />
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False">
+                <Setter Property="Background" Value="{DynamicResource {x:Static wpf:Controls.ControlBackgroundDisabledKey}}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource {x:Static wpf:Controls.ControlBorderDisabledKey}}" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+    
     <Style x:Key="TooltipBorder" TargetType="{x:Type Border}">
         <Setter Property="Background" Value="{DynamicResource {x:Static wpf:Controls.TooltipBackgroundKey}}" />
         <Setter Property="BorderBrush" Value="{DynamicResource {x:Static wpf:Controls.TooltipBackgroundKey}}" />

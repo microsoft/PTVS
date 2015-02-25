@@ -150,6 +150,24 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             ) { RoutedEvent = UIElement.MouseWheelEvent });
             e.Handled = true;
         }
+
+        private void Delete_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+            var tb = e.OriginalSource as TextBox;
+            if (tb != null) {
+                e.Handled = true;
+                e.CanExecute = !string.IsNullOrEmpty(tb.Text);
+                return;
+            }
+        }
+
+        private void Delete_Executed(object sender, ExecutedRoutedEventArgs e) {
+            var tb = e.OriginalSource as TextBox;
+            if (tb != null) {
+                tb.Clear();
+                e.Handled = true;
+                return;
+            }
+        }
     }
 
     sealed class PipEnvironmentView : DependencyObject, IDisposable {
@@ -377,7 +395,10 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
 
         private async Task RefreshPackages() {
-            await Dispatcher.InvokeAsync(() => { IsListRefreshing = true; });
+            await Dispatcher.InvokeAsync(() => {
+                IsListRefreshing = true;
+                CommandManager.InvalidateRequerySuggested();
+            });
             try {
                 await Task.WhenAll(
                     RefreshInstalledPackages(),
@@ -423,7 +444,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             "IsListRefreshing",
             typeof(bool),
             typeof(PipEnvironmentView),
-            new PropertyMetadata(false, Filter_Changed)
+            new PropertyMetadata(true, Filter_Changed)
         );
         public static readonly DependencyProperty IsListRefreshingProperty =
             IsListRefreshingPropertyKey.DependencyProperty;
