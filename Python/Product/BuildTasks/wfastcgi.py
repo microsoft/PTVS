@@ -34,6 +34,14 @@ except ImportError:
 
 __version__ = '2.2.0'
 
+if sys.version_info[0] == 3:
+    def to_str(value):
+        return value.decode(sys.getfilesystemencoding())
+else:
+    def to_str(value):
+        return value.encode(sys.getfilesystemencoding())
+
+
 # http://www.fastcgi.com/devkit/doc/fcgi-spec.html#S3
 
 FCGI_VERSION_1 = 1
@@ -470,7 +478,7 @@ def on_exit(task):
         try:
             evt = int(os.getenv('_FCGI_SHUTDOWN_EVENT_'))
         except (TypeError, ValueError):
-            maybe_log("Could not wait on event %s" % evt)
+            maybe_log("Could not wait on event %s" % os.getenv('_FCGI_SHUTDOWN_EVENT_'))
         else:
             def _wait_for_exit():
                 WaitForSingleObject(evt, INFINITE)
@@ -567,20 +575,19 @@ def get_wsgi_handler(handler_name):
         raise Exception('WSGI_HANDLER env var must be set')
     
     if not isinstance(handler_name, str):
-        if sys.version_info >= (3,):
-            handler_name = handler_name.decode(sys.getfilesystemencoding())
-        else:
-            handler_name = handler_name.encode(sys.getfilesystemencoding())
+        handler_name = to_str(handler_name)
     
     module_name, _, callable_name = handler_name.rpartition('.')
     should_call = callable_name.endswith('()')
     callable_name = callable_name[:-2] if should_call else callable_name
     name_list = [(callable_name, should_call)]
     handler = None
+    last_tb = ''
 
     while module_name:
         try:
             handler = __import__(module_name, fromlist=[name_list[0][0]])
+            last_tb = ''
             for name, should_call in name_list:
                 handler = getattr(handler, name)
                 if should_call:
@@ -592,9 +599,10 @@ def get_wsgi_handler(handler_name):
             callable_name = callable_name[:-2] if should_call else callable_name
             name_list.insert(0, (callable_name, should_call))
             handler = None
+            last_tb = ': ' + traceback.format_exc()
     
     if handler is None:
-        raise ValueError('"%s" could not be imported' % handler_name)
+        raise ValueError('"%s" could not be imported%s' % (handler_name, last_tb))
     
     return handler
 
@@ -621,7 +629,7 @@ def read_wsgi_handler(physical_path):
             maybe_log("Failed to import applicationinsights: " + traceback.format_exc())
             pass
         else:
-            handler = applicationinsights.requests.WSGIApplication(instr_key, handler)
+            handler = WSGIApplication(instr_key, handler)
             # Ensure we will flush any remaining events when we exit
             on_exit(handler.client.flush)
 
