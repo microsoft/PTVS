@@ -328,6 +328,18 @@ as c";
                 new ExpectedTag(4, 13, "\n 2,\r\n 3}"));
         }
 
+        [TestMethod, Priority(0), TestCategory("Core")]
+        public void OutlineConstantExpression() {
+            string content = @"'''this
+is
+a
+multiline
+string'''";
+
+            SnapshotOutlineTest(content,
+                new ExpectedTag(8, 36, "\nis\r\na\r\nmultiline\r\nstring'''"));
+        }
+
         private void SnapshotOutlineTest(string fileContents, params ExpectedTag[] expected) {
             var snapshot = new TestUtilities.Mocks.MockTextSnapshot(new TestUtilities.Mocks.MockTextBuffer(fileContents), fileContents);
             var ast = Parser.CreateParser(new TextSnapshotToTextReader(snapshot), PythonLanguageVersion.V34).ParseFile();

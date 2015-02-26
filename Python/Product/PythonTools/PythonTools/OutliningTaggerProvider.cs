@@ -241,7 +241,7 @@ namespace Microsoft.PythonTools {
 
                 return base.Walk(node);
             }
-            
+
             public override bool Walk(IfStatementTest node) {
                 if (node.Test != null && node.Body != null) {
                     AddTagIfNecessary(node.Test.StartIndex, node.Body.EndIndex);
@@ -360,6 +360,11 @@ namespace Microsoft.PythonTools {
             }
 
             public override bool Walk(ParenthesisExpression node) {
+                AddTagIfNecessary(node);
+                return base.Walk(node);
+            }
+
+            public override bool Walk(ConstantExpression node) {
                 AddTagIfNecessary(node);
                 return base.Walk(node);
             }
