@@ -13,7 +13,6 @@
  * ***************************************************************************/
 
 using System;
-using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Utilities;
 

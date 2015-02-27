@@ -91,6 +91,9 @@
     <Compile Include="ITreeNode.cs" />
     <Compile Include="IVisualStudioInstance.cs" />
     <Compile Include="MessageBoxButton.cs" />
+    <Compile Include="Mocks\IClassificationTypeDefinitionMetadata.cs" />
+    <Compile Include="Mocks\MockClassificationTypeRegistryService.cs" />
+    <Compile Include="Mocks\MockTextViewModel.cs" />
     <Compile Include="Mocks\MockVsShell.cs" />
     <Compile Include="ProcessScope.cs" />
     <Compile Include="SessionHolder.cs" />

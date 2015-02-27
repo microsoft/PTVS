@@ -88,13 +88,11 @@
     <Compile Include="CommandTargetExtensions.cs" />
     <Compile Include="HierarchyExtensions.cs" />
     <Compile Include="HierarchyItem.cs" />
-    <Compile Include="IClassificationTypeDefinitionMetadata.cs" />
     <Compile Include="IContentTypeDefinitionMetadata.cs" />
     <Compile Include="IContentTypeMetadata.cs" />
     <Compile Include="IFocusable.cs" />
     <Compile Include="IMockPackage.cs" />
     <Compile Include="LanguageServiceInfo.cs" />
-    <Compile Include="MockClassificationTypeRegistryService.cs" />
     <Compile Include="MockCodeWindow.cs" />
     <Compile Include="MockCompletionBroker.cs" />
     <Compile Include="MockCompletionSession.cs" />
@@ -112,6 +110,8 @@
     <Compile Include="MockQuickInfoBroker.cs" />
     <Compile Include="MockSignatureHelpBroker.cs" />
     <Compile Include="MockSignatureHelpSession.cs" />
+    <Compile Include="MockSmartTagBroker.cs" />
+    <Compile Include="MockSmartTagSession.cs" />
     <Compile Include="MockToolWindow.cs" />
     <Compile Include="MockTreeNode.cs" />
     <Compile Include="MockUIHierWinClipboardHelper.cs" />

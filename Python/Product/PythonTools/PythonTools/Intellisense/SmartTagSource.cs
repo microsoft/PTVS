@@ -16,10 +16,13 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-using Microsoft.PythonTools.Analysis;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.VisualStudio.Language.Intellisense;
-using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Editor;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Intellisense {
 #if DEV14_OR_LATER
@@ -27,90 +30,108 @@ namespace Microsoft.PythonTools.Intellisense {
 #endif
 
     // TODO: Switch from smart tags to Light Bulb: http://go.microsoft.com/fwlink/?LinkId=394601
-    class SmartTagSource : ISmartTagSource {
-        private readonly ITextBuffer _textBuffer;
-        private readonly System.IServiceProvider _serviceProvider;
-        
-        public SmartTagSource(System.IServiceProvider serviceProvider, ITextBuffer textBuffer) {
-            _textBuffer = textBuffer;
-            _serviceProvider = serviceProvider;
+
+    sealed class SmartTagAugmentTask {
+        private readonly Task<ReadOnlyCollection<ISmartTagAction>> _task;
+        private readonly CancellationTokenSource _cancel;
+
+        public readonly ITrackingSpan ApplicableToSpan;
+
+        public SmartTagAugmentTask(
+            IServiceProvider serviceProvider,
+            ITextBuffer textBuffer,
+            ITextView textView,
+            MissingImportAnalysis imports
+        ) {
+            ApplicableToSpan = imports.ApplicableToSpan;
+            _cancel = new CancellationTokenSource();
+            _task = Task.Run(() => GetImportTags(
+                serviceProvider,
+                textBuffer,
+                textView,
+                imports,
+                _cancel.Token
+            ), _cancel.Token);
         }
 
-        public void AugmentSmartTagSession(ISmartTagSession session, IList<SmartTagActionSet> smartTagActionSets) {
-            AddImportTags(session, smartTagActionSets);
-        }
+        private static ReadOnlyCollection<ISmartTagAction> GetImportTags(
+            IServiceProvider serviceProvider,
+            ITextBuffer textBuffer,
+            ITextView textView,
+            MissingImportAnalysis imports,
+            CancellationToken cancel
+        ) {
+            var actions = new List<ISmartTagAction>();
 
-        private void AddImportTags(ISmartTagSession session, IList<SmartTagActionSet> smartTagActionSets) {
-            var textBuffer = _textBuffer;
-            var span = session.CreateTrackingSpan(textBuffer);
-            var imports = textBuffer.CurrentSnapshot.GetMissingImports(_serviceProvider, span);
-            IOleComponentManager compMgr;
-            SmartTagController controller;
-
-            session.Properties.TryGetProperty<IOleComponentManager>(typeof(SmartTagController), out compMgr);
-            session.Properties.TryGetProperty<SmartTagController>(typeof(SmartTagSource.AbortedAugmentInfo), out controller);
-
-            if (imports != MissingImportAnalysis.Empty) {
-                session.ApplicableToSpan = imports.ApplicableToSpan;
-
-                // When doing idle processing we can keep getting kicked out and come back.  The whole process
-                // of getting the import smart tags is done lazily through iterators.  If we keep trying again
-                // and not getting enough idle time we'll never work away through the full list when it's large
-                // (for example 'sys' in a large distro which is imported and exported everywhere).  So as long
-                // as we're working on the same location (our SmartTagController tracks this) then we'll keep working
-                // through the same enumerator so we make progress over time.   So we'll read the AbortedAugment
-                // here and continue working, and if we run out of idletime we'll add or update the aborted augment.
-                List<ImportSmartTagAction> actions;
-                IEnumerator<ExportedMemberInfo> importsEnum;
-
-                if (controller == null || controller._abortedAugment == null) {
-                    actions = new List<ImportSmartTagAction>();
-                    importsEnum = imports.AvailableImports.GetEnumerator();
-                } else {
-                    // continue processing of the old imports
-                    importsEnum = controller._abortedAugment.Imports;
-                    actions = controller._abortedAugment.Actions;
-                }
-
-                bool aborted = false;
-                while (importsEnum.MoveNext()) {
-                    var import = importsEnum.Current;
+            try {
+                foreach (var import in imports.AvailableImports) {
+                    cancel.ThrowIfCancellationRequested();
 
                     if (import.IsDefinedInModule) {
                         int lastDot;
 
                         if ((lastDot = import.Name.LastIndexOf('.')) == -1) {
                             // simple import
-                            actions.Add(new ImportSmartTagAction(import.Name, _textBuffer, session.TextView, _serviceProvider));
+                            actions.Add(new ImportSmartTagAction(import.Name, textBuffer, textView, serviceProvider));
                         } else {
                             // importing a package or member of a module
-                            actions.Add(new ImportSmartTagAction(import.Name.Substring(0, lastDot), import.Name.Substring(lastDot + 1), _textBuffer, session.TextView, _serviceProvider));
+                            actions.Add(new ImportSmartTagAction(
+                                import.Name.Substring(0, lastDot),
+                                import.Name.Substring(lastDot + 1),
+                                textBuffer,
+                                textView,
+                                serviceProvider
+                            ));
                         }
-                    }
-
-                    if (compMgr != null && compMgr.FContinueIdle() == 0) {
-                        // we've run out of time, save our progress...
-                        if (controller != null) {
-                            controller._sessionIsInvalid = true;
-                            controller._abortedAugment = new AbortedAugmentInfo(importsEnum, actions);
-                        }
-                        aborted = true;
-                        break;
                     }
                 }
 
-                if (!aborted && controller != null) {
-                    controller._abortedAugment = null;
-                }
-
-                if (actions.Count > 0 && !aborted) {
+                if (actions.Any()) {
                     actions.Sort(SmartTagComparer);
-                    smartTagActionSets.Add(new SmartTagActionSet(new ReadOnlyCollection<ISmartTagAction>(actions.ToArray())));
                 }
+
+                return new ReadOnlyCollection<ISmartTagAction>(actions);
+            } catch (OperationCanceledException) {
+                throw;
+            } catch (Exception ex) {
+                if (ex.IsCriticalException()) {
+                    throw;
+                }
+                Debug.Fail(ex.ToString());
+                return null;
             }
         }
 
-        private int SmartTagComparer(ImportSmartTagAction left, ImportSmartTagAction right) {
+        public SmartTagActionSet GetResultIfComplete() {
+            if (IsAborted) {
+                return null;
+            }
+            if (_task.IsCanceled) {
+                IsAborted = true;
+                return null;
+            }
+            if (!_task.IsCompleted) {
+                return null;
+            }
+            return new SmartTagActionSet(_task.Result);
+        }
+
+        public bool IsAborted { get; private set; }
+
+        public void Abort() {
+            IsAborted = true;
+            _cancel.Cancel();
+        }
+
+        private static int SmartTagComparer(ISmartTagAction x, ISmartTagAction y) {
+            var left = x as ImportSmartTagAction;
+            var right = y as ImportSmartTagAction;
+            if (left == null) {
+                return right == null ? 0 : 1;
+            } else if (right == null) {
+                return -1;
+            }
+
             if (left.FromName == null) {
                 if (right.FromName != null) {
                     // left is import <fob>, order it first
@@ -128,17 +149,73 @@ namespace Microsoft.PythonTools.Intellisense {
             return String.Compare(left.FromName, right.FromName);
         }
 
-        public void Dispose() {
+    }
+
+    sealed class SmartTagSource : ISmartTagSource {
+        private readonly ITextBuffer _textBuffer;
+        private readonly IServiceProvider _serviceProvider;
+        
+        public SmartTagSource(IServiceProvider serviceProvider, ITextBuffer textBuffer) {
+            _textBuffer = textBuffer;
+            _serviceProvider = serviceProvider;
         }
 
-        internal class AbortedAugmentInfo {
-            public readonly IEnumerator<ExportedMemberInfo> Imports;
-            public readonly List<ImportSmartTagAction> Actions;
+        public void AugmentSmartTagSession(ISmartTagSession session, IList<SmartTagActionSet> smartTagActionSets) {
+            AddImportTags(session, smartTagActionSets);
+        }
 
-            public AbortedAugmentInfo(IEnumerator<ExportedMemberInfo> importsEnum, List<ImportSmartTagAction> actions) {
-                Imports = importsEnum;
-                Actions  = actions;
+        private void AddImportTags(ISmartTagSession session, IList<SmartTagActionSet> smartTagActionSets) {
+            var textBuffer = _textBuffer;
+            var span = session.CreateTrackingSpan(textBuffer);
+            var imports = textBuffer.CurrentSnapshot.GetMissingImports(_serviceProvider, span);
+
+            if (imports == MissingImportAnalysis.Empty) {
+                return;
             }
+
+            SmartTagController controller;
+            session.Properties.TryGetProperty<SmartTagController>(typeof(SmartTagController), out controller);
+
+            var task = Volatile.Read(ref controller._curTask);
+            var origTask = task;
+
+            var snapshot = textBuffer.CurrentSnapshot;
+            if (task != null &&
+                task.ApplicableToSpan.GetSpan(snapshot) != imports.ApplicableToSpan.GetSpan(snapshot)) {
+                // Previous task is invalid, so abort it and we'll start a
+                // new one.
+                task.Abort();
+                session.Properties.RemoveProperty(typeof(SmartTagAugmentTask));
+                task = null;
+            }
+                
+            if (task == null) {
+                task = new SmartTagAugmentTask(
+                    _serviceProvider,
+                    textBuffer,
+                    session.TextView,
+                    imports
+                );
+                if (Interlocked.CompareExchange(ref controller._curTask, task, origTask) != origTask) {
+                    // Item has been changed by someone else, so abort
+                    // Except we should always be on the UI thread here, so
+                    // there should be no races.
+                    Debug.Fail("Race in AugmentSmartTagSession");
+                    return;
+                }
+            }
+                
+            session.ApplicableToSpan = imports.ApplicableToSpan;
+
+            var result = task.GetResultIfComplete();
+            if (result != null && Interlocked.CompareExchange(ref controller._curTask, null, task) == task) {
+                // Provide results if we were the current task and we are
+                // now complete
+                smartTagActionSets.Add(result);
+            }
+        }
+
+        public void Dispose() {
         }
     }
 }

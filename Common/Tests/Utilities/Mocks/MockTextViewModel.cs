@@ -14,41 +14,40 @@
 
 using System;
 using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Projection;
+using Microsoft.VisualStudio.Text.Editor;
+using Microsoft.VisualStudio.Utilities;
 
 namespace TestUtilities.Mocks {
-    public class MockMappingPoint : IMappingPoint {
-        private readonly ITrackingPoint _trackingPoint;
+    public class MockTextViewModel : ITextViewModel {
+        public ITextBuffer DataBuffer { get; set; }
 
-        public MockMappingPoint(ITrackingPoint trackingPoint) {
-            _trackingPoint = trackingPoint;
-        }
-
-        public ITextBuffer AnchorBuffer {
+        public ITextDataModel DataModel {
             get { throw new NotImplementedException(); }
         }
 
-        public IBufferGraph BufferGraph {
+        public ITextBuffer EditBuffer { get; set; }
+
+        public SnapshotPoint GetNearestPointInVisualBuffer(SnapshotPoint editBufferPoint) {
+            throw new NotImplementedException();
+        }
+
+        public SnapshotPoint GetNearestPointInVisualSnapshot(SnapshotPoint editBufferPoint, ITextSnapshot targetVisualSnapshot, PointTrackingMode trackingMode) {
+            throw new NotImplementedException();
+        }
+
+        public bool IsPointInVisualBuffer(SnapshotPoint editBufferPoint, PositionAffinity affinity) {
+            throw new NotImplementedException();
+        }
+
+        public ITextBuffer VisualBuffer {
             get { throw new NotImplementedException(); }
         }
 
-        public SnapshotPoint? GetInsertionPoint(Predicate<ITextBuffer> match) {
-            throw new NotImplementedException();
+        public PropertyCollection Properties {
+            get { throw new NotImplementedException(); }
         }
 
-        public SnapshotPoint? GetPoint(Predicate<ITextBuffer> match, PositionAffinity affinity) {
-            throw new NotImplementedException();
-        }
-
-        public SnapshotPoint? GetPoint(ITextSnapshot targetSnapshot, PositionAffinity affinity) {
-            try {
-                return _trackingPoint.GetPoint(targetSnapshot);
-            } catch (ArgumentException) {
-                return null;
-            }
-        }
-
-        public SnapshotPoint? GetPoint(ITextBuffer targetBuffer, PositionAffinity affinity) {
+        public void Dispose() {
             throw new NotImplementedException();
         }
     }

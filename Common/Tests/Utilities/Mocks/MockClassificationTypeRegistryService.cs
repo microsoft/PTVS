@@ -19,20 +19,22 @@ using System.Linq;
 using System.Reflection;
 using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Text.Classification;
-using Microsoft.VisualStudioTools.MockVsTests;
 
 namespace TestUtilities.Mocks {
     [Export(typeof(IClassificationTypeRegistryService))]
     public class MockClassificationTypeRegistryService : IClassificationTypeRegistryService {
         static Dictionary<string, MockClassificationType> _types = new Dictionary<string, MockClassificationType>();
 
-        [ImportingConstructor]
-        public MockClassificationTypeRegistryService([ImportMany]IEnumerable<Lazy<ClassificationTypeDefinition, IClassificationTypeDefinitionMetadata>> classTypeDefs) {
+        public MockClassificationTypeRegistryService() {
             foreach (FieldInfo fi in typeof(PredefinedClassificationTypeNames).GetFields()) {
                 string name = (string)fi.GetValue(null);
                 _types[name] = new MockClassificationType(name, new IClassificationType[0]);
             }
+        }
 
+        [ImportingConstructor]
+        public MockClassificationTypeRegistryService([ImportMany]IEnumerable<Lazy<ClassificationTypeDefinition, IClassificationTypeDefinitionMetadata>> classTypeDefs)
+            : this() {
             foreach (var def in classTypeDefs) {
                 string name = def.Metadata.Name;
                 var type = GetClasificationType(name);

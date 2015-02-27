@@ -149,7 +149,9 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                 }
                 _hiddenMembers[memberName] = type;
             } else {
-                _members[memberName] = value;
+                lock (_members) {
+                    _members[memberName] = value;
+                }
             }
         }
 
@@ -189,17 +191,19 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             if (_loadState != LoadState.Loaded) {
                 // avoid deserializing all of the member list if we're just checking if
                 // a member exists.
-                if (_members.Count > 0 || File.Exists(_dbFile + ".$memlist")) {
-                    if (_members.Count == 0) {
-                        // populate members dict w/ list of members
-                        foreach (var line in File.ReadLines(_dbFile + ".$memlist")) {
-                            _members[line] = null;
+                lock (_members) {
+                    if (_members.Count > 0 || File.Exists(_dbFile + ".$memlist")) {
+                        if (_members.Count == 0) {
+                            // populate members dict w/ list of members
+                            foreach (var line in File.ReadLines(_dbFile + ".$memlist")) {
+                                _members[line] = null;
+                            }
                         }
-                    }
 
-                    if (!_members.ContainsKey(name)) {
-                        // the member doesn't exist, no need to load all of the data
-                        return null;
+                        if (!_members.ContainsKey(name)) {
+                            // the member doesn't exist, no need to load all of the data
+                            return null;
+                        }
                     }
                 }
 
@@ -209,8 +213,10 @@ namespace Microsoft.PythonTools.Interpreter.Default {
 
             Debug.Assert(_loadState == LoadState.Loaded);
             IMember res;
-            if (_members.TryGetValue(name, out res)) {
-                return res;
+            lock (_members) {
+                if (_members.TryGetValue(name, out res)) {
+                    return res;
+                }
             }
             return null;
         }
@@ -219,7 +225,9 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             EnsureLoaded();
 
             Debug.Assert(_loadState == LoadState.Loaded);
-            return _members.Keys;
+            lock (_members) {
+                return _members.Keys.ToList();
+            }
         }
 
         #endregion

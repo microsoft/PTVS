@@ -26,6 +26,9 @@ namespace TestUtilities.Mocks {
         private readonly MockTextCaret _caret;
         private readonly MockBufferGraph _bufferGraph;
         private bool _hasFocus;
+        private ITextViewModel _textViewModel;
+
+        private static readonly ITextViewModel _notImplementedTextViewModel = new MockTextViewModel();
 
         public MockTextView(ITextBuffer buffer) {
             _buffer = buffer;
@@ -49,13 +52,14 @@ namespace TestUtilities.Mocks {
         }
 
         public void Close() {
-            throw new NotImplementedException();
+            IsClosed = true;
+            var evt = Closed;
+            if (evt != null) {
+                evt(this, EventArgs.Empty);
+            }
         }
 
-        public event EventHandler Closed {
-            add {  }
-            remove {  }
-        }
+        public event EventHandler Closed;
 
         public void DisplayTextLineContainingBufferPosition(Microsoft.VisualStudio.Text.SnapshotPoint bufferPosition, double verticalDistance, ViewRelativePosition relativeTo, double? viewportWidthOverride, double? viewportHeightOverride) {
             throw new NotImplementedException();
@@ -91,9 +95,7 @@ namespace TestUtilities.Mocks {
             get { throw new NotImplementedException(); }
         }
 
-        public bool IsClosed {
-            get { throw new NotImplementedException(); }
-        }
+        public bool IsClosed { get; set; }
 
         public bool IsMouseOverViewOrAdornments {
             get { throw new NotImplementedException(); }
@@ -173,7 +175,17 @@ namespace TestUtilities.Mocks {
         }
 
         public ITextViewModel TextViewModel {
-            get { throw new NotImplementedException(); }
+            get {
+                if (_textViewModel == _notImplementedTextViewModel) {
+                    // To avoid the NotImplementedException, you should set
+                    // TextViewModel as part of initializing the test
+                    throw new NotImplementedException();
+                }
+                return _textViewModel;
+            }
+            set {
+                _textViewModel = value;
+            }
         }
 
         public IViewScroller ViewScroller {

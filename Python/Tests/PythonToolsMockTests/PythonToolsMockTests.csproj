@@ -117,6 +117,7 @@
     <Compile Include="MockClipboardService.cs" />
     <Compile Include="MockPythonToolsPackage.cs" />
     <Compile Include="ProjectTests.cs" />
+    <Compile Include="SmartTagTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(BuildRoot)Common\Tests\MockVsTests\MockVsTests.csproj">

@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Text;
@@ -30,19 +31,28 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly ITextView _textView;
         private ISmartTagSession _curSession;
         private string _curSessionText;
-        internal bool _sessionIsInvalid;
-        internal SmartTagSource.AbortedAugmentInfo _abortedAugment;
+        internal SmartTagAugmentTask _curTask;
 
         public SmartTagController(ISmartTagBroker broker, ITextView textView) {
             _broker = broker;
             _textView = textView;
             _textView.Caret.PositionChanged += Caret_PositionChanged;
-            _sessionIsInvalid = true;
         }
 
         private void Caret_PositionChanged(object sender, CaretPositionChangedEventArgs e) {
-            _sessionIsInvalid = true;
-            _abortedAugment = null;
+            var session = _curSession;
+            if (session == null || session.IsDismissed) {
+                return;
+            }
+
+            var snapshot = _textView.TextSnapshot;
+            var caret = e.NewPosition.Point.GetPoint(snapshot, PositionAffinity.Successor);
+            if (caret.HasValue && session.ApplicableToSpan.GetSpan(snapshot).Contains(caret.Value)) {
+                return;
+            }
+
+            session.Dismiss();
+            Interlocked.CompareExchange(ref _curSession, null, session);
         }
 
         static internal SmartTagController CreateInstance(ISmartTagBroker broker, ITextView textView, IList<ITextBuffer> subjectBuffers) {
@@ -68,8 +78,13 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         void SubjectBufferChangedLowPriority(object sender, TextContentChangedEventArgs e) {
-            _sessionIsInvalid = true;
-            _abortedAugment = null;
+            var session = _curSession;
+            if (session == null || session.IsDismissed) {
+                return;
+            }
+
+            session.Dismiss();
+            Interlocked.CompareExchange(ref _curSession, null, session);
         }
 
         public void Detach(ITextView textView) {
@@ -80,12 +95,7 @@ namespace Microsoft.PythonTools.Intellisense {
             subjectBuffer.ChangedLowPriority -= SubjectBufferChangedLowPriority;
         }
 
-        internal void ShowSmartTag(IOleComponentManager compMgr = null) {
-            if (!_sessionIsInvalid) {
-                // caret / text hasn't changed since we last computed the smart tag, don't bother computing again.
-                return;
-            }
-            
+        internal void ShowSmartTag() {
             if (_textView.IsClosed) {
                 // pending call from the idle loop but the editor was closed
                 return;
@@ -96,39 +106,54 @@ namespace Microsoft.PythonTools.Intellisense {
                 return;
             }
 
-            ITextSnapshot snapshot = model.DataBuffer.CurrentSnapshot;
-            SnapshotPoint? caretPoint = _textView.Caret.Position.Point.GetPoint(snapshot, PositionAffinity.Successor);
-            if (caretPoint != null &&
-                _curSession != null &&
-                !_curSession.IsDismissed &&
-                _curSession.ApplicableToSpan != null &&
-                _curSession.ApplicableToSpan.GetText(snapshot) == _curSessionText &&
-                _curSession.ApplicableToSpan.GetSpan(snapshot).Contains(caretPoint.Value.Position)) {
+            var session = _curSession;
+            var task = Volatile.Read(ref _curTask);
+            if (session != null && !session.IsDismissed) {
+                // Check whether the task has completed, and if so, recalculate
+                // the contents.
+                if (task != null) {
+                    if (!task.IsAborted) {
+                        session.Recalculate();
+                        return;
+                    }
+                    // Task is aborted, so clear it out unless someone has
+                    // already switched it up
+                    if (Interlocked.CompareExchange(ref _curTask, null, task) != task) {
+                        return;
+                    }
+                    // Otherwise, dismiss the session so we can create a new one
+                    session.Dismiss();
+                } else {
+                    // Task was completed, so leave it alone
                     return;
+                }
             }
-
-            _sessionIsInvalid = false;
 
             // Figure out the point in the buffer where we are triggering.
             // We need to use the view's data buffer as the source location
-            if (_curSession != null && !_curSession.IsDismissed) {
-                _curSession.Dismiss();
-                _curSessionText = null;
-            }
-
-
+            var snapshot = model.DataBuffer.CurrentSnapshot;
+            var caretPoint = _textView.Caret.Position.Point.GetPoint(snapshot, PositionAffinity.Successor);
             if (!caretPoint.HasValue) {
                 return;
             }
 
-            ITrackingPoint triggerPoint = snapshot.CreateTrackingPoint(caretPoint.Value, PointTrackingMode.Positive);
-            ISmartTagSession newSession = _curSession = _broker.CreateSmartTagSession(_textView, SmartTagType.Factoid, triggerPoint, SmartTagState.Collapsed);
-            newSession.Properties.AddProperty(typeof(SmartTagController), compMgr);
-            newSession.Properties.AddProperty(typeof(SmartTagSource.AbortedAugmentInfo), this);
+            var triggerPoint = snapshot.CreateTrackingPoint(caretPoint.Value, PointTrackingMode.Positive);
+            var newSession = _broker.CreateSmartTagSession(
+                _textView,
+                SmartTagType.Factoid,
+                triggerPoint,
+                SmartTagState.Collapsed
+            );
+            newSession.Properties.AddProperty(typeof(SmartTagController), this);
 
-            newSession.Start();
-            if (newSession.ApplicableToSpan != null) {
-                _curSessionText = newSession.ApplicableToSpan.GetText(snapshot);
+            var orig = Interlocked.CompareExchange(ref _curSession, newSession, session);
+            if (orig == session) {
+                newSession.Start();
+                if (newSession.ApplicableToSpan != null) {
+                    _curSessionText = newSession.ApplicableToSpan.GetText(snapshot);
+                }
+            } else {
+                newSession.Dismiss();
             }
         }
     }

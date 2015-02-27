@@ -14,7 +14,7 @@
 
 using System.Collections.Generic;
 
-namespace Microsoft.VisualStudioTools.MockVsTests {
+namespace TestUtilities.Mocks {
     public interface IClassificationTypeDefinitionMetadata {
         string Name { get; }
         [System.ComponentModel.DefaultValue(null)]

@@ -1003,13 +1003,13 @@ namespace Microsoft.PythonTools.Language {
         }
 
         internal void DoIdle(IOleComponentManager compMgr) {
-            UpdateSmartTags(compMgr);
+            UpdateSmartTags();
         }
 
-        private void UpdateSmartTags(IOleComponentManager compMgr = null) {
+        private void UpdateSmartTags() {
             SmartTagController controller;
             if (_textView.Properties.TryGetProperty<SmartTagController>(typeof(SmartTagController), out controller)) {
-                controller.ShowSmartTag(compMgr);
+                controller.ShowSmartTag();
             }
         }
     }
