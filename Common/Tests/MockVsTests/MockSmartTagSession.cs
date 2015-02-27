@@ -23,6 +23,10 @@ using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
 
 namespace Microsoft.VisualStudioTools.MockVsTests {
+#if DEV14_OR_LATER
+#pragma warning disable 0618
+#endif
+
     class MockSmartTagSession : ISmartTagSession {
         private ITrackingSpan _applicableToSpan;
         private ImageSource _iconSource;

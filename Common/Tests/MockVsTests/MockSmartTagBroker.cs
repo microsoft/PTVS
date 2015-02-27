@@ -22,6 +22,10 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 
 namespace Microsoft.VisualStudioTools.MockVsTests {
+#if DEV14_OR_LATER
+#pragma warning disable 0618
+#endif
+
     [Export(typeof(ISmartTagBroker))]
     public class MockSmartTagBroker : ISmartTagBroker {
         private readonly List<KeyValuePair<ITextView, ISmartTagSession>> _sessions = new List<KeyValuePair<ITextView, ISmartTagSession>>();
