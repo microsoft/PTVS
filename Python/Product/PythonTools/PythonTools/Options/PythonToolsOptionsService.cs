@@ -43,7 +43,7 @@ namespace Microsoft.PythonTools.Options {
 
         public string LoadString(string name, string category) {
             var path = GetCollectionPath(category);
-            if (!_settingsStore.CollectionExists(category)) {
+            if (!_settingsStore.CollectionExists(path)) {
                 return null;
             }
             return _settingsStore.GetString(path, name, null);
