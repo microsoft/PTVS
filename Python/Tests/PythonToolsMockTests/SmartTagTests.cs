@@ -30,6 +30,10 @@ using TestUtilities.Mocks;
 using TestUtilities.Python;
 
 namespace PythonToolsTests {
+#if DEV14_OR_LATER
+#pragma warning disable 0618
+#endif
+
     [TestClass]
     public class SmartTagTests {
         public static IContentType PythonContentType = new MockContentType(
