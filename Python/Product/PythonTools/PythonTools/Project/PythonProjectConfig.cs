@@ -30,7 +30,7 @@ namespace Microsoft.PythonTools.Project {
         public override int DebugLaunch(uint flags) {
             
             if (_project.ShouldWarnOnLaunch) {
-                var pyService = ((IServiceProvider)_project).GetPythonToolsService();
+                var pyService = ProjectMgr.Site.GetPythonToolsService();
                 if (pyService.DebuggerOptions.PromptBeforeRunningWithBuildError) {
                     var res = new StartWithErrorsDialog(pyService).ShowDialog();
                     if (res == DialogResult.No) {
