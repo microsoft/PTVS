@@ -37,6 +37,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 case PythonOperator.Add:
                 case PythonOperator.Subtract:
                 case PythonOperator.Multiply:
+                case PythonOperator.MatMultiply:
                 case PythonOperator.Divide:
                 case PythonOperator.Mod:
                 case PythonOperator.BitwiseAnd:

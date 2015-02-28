@@ -835,6 +835,7 @@ namespace Microsoft.PythonTools.Parsing {
                 case TokenKind.AddEqual: return PythonOperator.Add;
                 case TokenKind.SubtractEqual: return PythonOperator.Subtract;
                 case TokenKind.MultiplyEqual: return PythonOperator.Multiply;
+                case TokenKind.MatMultiplyEqual: return PythonOperator.MatMultiply;
                 case TokenKind.DivideEqual: return TrueDivision ? PythonOperator.TrueDivide : PythonOperator.Divide;
                 case TokenKind.ModEqual: return PythonOperator.Mod;
                 case TokenKind.BitwiseAndEqual: return PythonOperator.BitwiseAnd;
@@ -854,6 +855,7 @@ namespace Microsoft.PythonTools.Parsing {
                 case TokenKind.Add: return PythonOperator.Add;
                 case TokenKind.Subtract: return PythonOperator.Subtract;
                 case TokenKind.Multiply: return PythonOperator.Multiply;
+                case TokenKind.MatMultiply: return PythonOperator.MatMultiply;
                 case TokenKind.Divide: return TrueDivision ? PythonOperator.TrueDivide : PythonOperator.Divide;
                 case TokenKind.Mod: return PythonOperator.Mod;
                 case TokenKind.BitwiseAnd: return PythonOperator.BitwiseAnd;
@@ -2790,7 +2792,7 @@ namespace Microsoft.PythonTools.Parsing {
         and_expr: shift_expr ('&' shift_expr)*
         shift_expr: arith_expr (('<<'|'>>') arith_expr)*
         arith_expr: term (('+'|'-') term)*
-        term: factor (('*'|'/'|'%'|'//') factor)*
+        term: factor (('*'|'@'|'/'|'%'|'//') factor)*
         */
         private Expression ParseExpr() {
             return ParseExpr(0);
@@ -2800,6 +2802,9 @@ namespace Microsoft.PythonTools.Parsing {
             Expression ret = ParseFactor();
             while (true) {
                 Token t = PeekToken();
+                if (_langVersion >= PythonLanguageVersion.V35 && t.Kind == TokenKind.At) {
+                    t = Tokens.MatMultiplyToken;
+                }
                 OperatorToken ot = t as OperatorToken;
                 if (ot == null) return ret;
 

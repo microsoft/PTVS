@@ -301,6 +301,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             string op = null;
             switch (operation) {
                 case PythonOperator.Multiply: op = "__mul__"; break;
+                case PythonOperator.MatMultiply: op = "__matmul__"; break;
                 case PythonOperator.Add: op = "__add__"; break;
                 case PythonOperator.Subtract: op = "__sub__"; break;
                 case PythonOperator.Xor: op = "__xor__"; break;
@@ -335,6 +336,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             string op = null;
             switch (operation) {
                 case PythonOperator.Multiply: op = "__rmul__"; break;
+                case PythonOperator.MatMultiply: op = "__rmatmul__"; break;
                 case PythonOperator.Add: op = "__radd__"; break;
                 case PythonOperator.Subtract: op = "__rsub__"; break;
                 case PythonOperator.Xor: op = "__rxor__"; break;

@@ -1073,7 +1073,11 @@ namespace Microsoft.PythonTools.Intellisense {
                 } else if (lastClass.ClassificationType == classifier.Provider.Operator &&
                     lastClass.Span.GetText() == "@") {
 
-                    return new DecoratorCompletionAnalysis(span, buffer, options);
+                    if (tokens.Count == 1) {
+                        return new DecoratorCompletionAnalysis(span, buffer, options);
+                    }
+                    // TODO: Handle completions automatically popping up
+                    // after '@' when it is used as a binary operator.
                 } else if (CompletionAnalysis.IsKeyword(lastClass, "def")) {
                     return new OverrideCompletionAnalysis(span, buffer, options);
                 }

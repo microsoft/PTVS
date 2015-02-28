@@ -37,18 +37,19 @@ namespace AnalysisTests {
             PythonTestData.Deploy();
         }
 
-        internal static readonly PythonLanguageVersion[] AllVersions = new[] { PythonLanguageVersion.V24, PythonLanguageVersion.V25, PythonLanguageVersion.V26, PythonLanguageVersion.V27, PythonLanguageVersion.V30, PythonLanguageVersion.V31, PythonLanguageVersion.V32, PythonLanguageVersion.V33 };
-        internal static readonly PythonLanguageVersion[] V25AndUp = new[] { PythonLanguageVersion.V25, PythonLanguageVersion.V26, PythonLanguageVersion.V27, PythonLanguageVersion.V30, PythonLanguageVersion.V31, PythonLanguageVersion.V32, PythonLanguageVersion.V33 };
-        internal static readonly PythonLanguageVersion[] V26AndUp = new[] { PythonLanguageVersion.V26, PythonLanguageVersion.V27, PythonLanguageVersion.V30, PythonLanguageVersion.V31, PythonLanguageVersion.V32, PythonLanguageVersion.V33 };
-        internal static readonly PythonLanguageVersion[] V27AndUp = new[] { PythonLanguageVersion.V27, PythonLanguageVersion.V30, PythonLanguageVersion.V31, PythonLanguageVersion.V32, PythonLanguageVersion.V33 };
-        internal static readonly PythonLanguageVersion[] V2Versions = new[] { PythonLanguageVersion.V24, PythonLanguageVersion.V25, PythonLanguageVersion.V26, PythonLanguageVersion.V27,  };
-        internal static readonly PythonLanguageVersion[] V24_V26Versions = new[] { PythonLanguageVersion.V24, PythonLanguageVersion.V25, PythonLanguageVersion.V26 };
-        internal static readonly PythonLanguageVersion[] V24_V25Versions = new[] { PythonLanguageVersion.V24, PythonLanguageVersion.V25 };
-        internal static readonly PythonLanguageVersion[] V25_V27Versions = new[] { PythonLanguageVersion.V25, PythonLanguageVersion.V26, PythonLanguageVersion.V27 };
-        internal static readonly PythonLanguageVersion[] V26_V27Versions = new[] { PythonLanguageVersion.V26, PythonLanguageVersion.V27 };
-        internal static readonly PythonLanguageVersion[] V30_V32Versions = new[] { PythonLanguageVersion.V30, PythonLanguageVersion.V31, PythonLanguageVersion.V32 };
-        internal static readonly PythonLanguageVersion[] V3Versions = new[] { PythonLanguageVersion.V30, PythonLanguageVersion.V31, PythonLanguageVersion.V32, PythonLanguageVersion.V33 };
-        internal static readonly PythonLanguageVersion[] V33AndUp = new[] { PythonLanguageVersion.V33 };
+        internal static readonly PythonLanguageVersion[] AllVersions = new[] { PythonLanguageVersion.V24, PythonLanguageVersion.V25, PythonLanguageVersion.V26, PythonLanguageVersion.V27, PythonLanguageVersion.V30, PythonLanguageVersion.V31, PythonLanguageVersion.V32, PythonLanguageVersion.V33, PythonLanguageVersion.V34, PythonLanguageVersion.V35 };
+        internal static readonly PythonLanguageVersion[] V25AndUp = AllVersions.Where(v => v >= PythonLanguageVersion.V25).ToArray();
+        internal static readonly PythonLanguageVersion[] V26AndUp = AllVersions.Where(v => v >= PythonLanguageVersion.V26).ToArray();
+        internal static readonly PythonLanguageVersion[] V27AndUp = AllVersions.Where(v => v >= PythonLanguageVersion.V27).ToArray();
+        internal static readonly PythonLanguageVersion[] V2Versions = AllVersions.Where(v => v <= PythonLanguageVersion.V27).ToArray();
+        internal static readonly PythonLanguageVersion[] V24_V26Versions = AllVersions.Where(v => v <= PythonLanguageVersion.V26).ToArray();
+        internal static readonly PythonLanguageVersion[] V24_V25Versions = AllVersions.Where(v => v <= PythonLanguageVersion.V25).ToArray();
+        internal static readonly PythonLanguageVersion[] V25_V27Versions = AllVersions.Where(v => v >= PythonLanguageVersion.V25 && v <= PythonLanguageVersion.V27).ToArray();
+        internal static readonly PythonLanguageVersion[] V26_V27Versions = AllVersions.Where(v => v >= PythonLanguageVersion.V26 && v <= PythonLanguageVersion.V27).ToArray();
+        internal static readonly PythonLanguageVersion[] V30_V32Versions = AllVersions.Where(v => v >= PythonLanguageVersion.V30 && v <= PythonLanguageVersion.V32).ToArray();
+        internal static readonly PythonLanguageVersion[] V3Versions = AllVersions.Where(v => v >= PythonLanguageVersion.V30).ToArray();
+        internal static readonly PythonLanguageVersion[] V33AndUp = AllVersions.Where(v => v >= PythonLanguageVersion.V33).ToArray();
+        internal static readonly PythonLanguageVersion[] V35AndUp = AllVersions.Where(v => v >= PythonLanguageVersion.V35).ToArray();
 
         #region Test Cases
 
@@ -551,7 +552,7 @@ namespace AnalysisTests {
                         CheckConstantStmtAndRepr(new Complex(0, 1e100), "1e+100j", version),
                         CheckConstantStmtAndRepr(new Complex(0, 3.14e-10), "3.14e-10j", version),
                         CheckConstantStmtAndRepr(-2147483648, "-2147483648", version),
-                        CheckUnaryStmt(PythonOperator.Negate, CheckConstant(100))                        
+                        CheckUnaryStmt(PythonOperator.Negate, CheckConstant(100))
                     )
                 );
             }
@@ -590,13 +591,13 @@ namespace AnalysisTests {
                         CheckUnaryStmt(PythonOperator.Negate, CheckConstant(new BigInteger(2147483648))),
                         CheckUnaryStmt(PythonOperator.Negate, CheckConstant(new BigInteger(2147483648))),
                         CheckConstantStmt(464),
-                        CheckUnaryStmt(PythonOperator.Negate, CheckConstant(new BigInteger(100)))    
+                        CheckUnaryStmt(PythonOperator.Negate, CheckConstant(new BigInteger(100)))
                     )
                 );
             }
 
             foreach (var version in V30_V32Versions) {
-                ParseErrors("LiteralsV2.py", 
+                ParseErrors("LiteralsV2.py",
                     version,
                     new ErrorInfo("invalid token", 4, 1, 5, 5, 1, 6),
                     new ErrorInfo("invalid syntax", 8, 2, 2, 24, 2, 18),
@@ -793,10 +794,10 @@ namespace AnalysisTests {
                         CheckBinaryStmt(One, PythonOperator.Equal, Two),
                         CheckBinaryStmt(One, PythonOperator.NotEqual, Two),
                         CheckBinaryStmt(One, PythonOperator.Is, Two),
-                        CheckBinaryStmt(One, PythonOperator.IsNot, Two),                        
+                        CheckBinaryStmt(One, PythonOperator.IsNot, Two),
                         CheckExprStmt(CheckOrExpression(One, Two)),
                         CheckExprStmt(CheckAndExpression(One, Two)),
-                        CheckBinaryStmt(One, PythonOperator.In, Two),                    
+                        CheckBinaryStmt(One, PythonOperator.In, Two),
                         CheckBinaryStmt(One, PythonOperator.NotIn, Two)
                     )
                 );
@@ -813,11 +814,29 @@ namespace AnalysisTests {
                     )
                 );
             }
-            
+
             foreach (var version in V3Versions) {
                 ParseErrors("BinaryOperatorsV2.py", version, new[] { 
                     new ErrorInfo("unexpected token '>'", 3, 1, 4, 4, 1, 5),
                     new ErrorInfo("invalid syntax", 5, 1, 6, 6, 1, 7)
+                });
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void MatMulOperator() {
+            foreach (var version in V35AndUp) {
+                CheckAst(
+                    ParseFile("MatMulOperator.py", ErrorSink.Null, version),
+                    CheckSuite(
+                        CheckBinaryStmt(One, PythonOperator.MatMultiply, Two)
+                    )
+                );
+            }
+
+            foreach (var version in V3Versions.Except(V35AndUp)) {
+                ParseErrors("MatMulOperator.py", version, new[] { 
+                    new ErrorInfo("unexpected token '@'", 2, 1, 3, 3, 1, 4)
                 });
             }
         }
@@ -1004,7 +1023,7 @@ namespace AnalysisTests {
                 ParseErrors(
                     "DelimitersV2.py",
                     version,
-                    new [] { 
+                    new[] { 
                         new ErrorInfo("unexpected token '`'", 0, 1, 1, 1, 1, 2),
                         new ErrorInfo("unexpected token 'fob'", 1, 1, 2, 4, 1, 5),
                         new ErrorInfo("unexpected token '`'", 4, 1, 5, 5, 1, 6)
@@ -1138,7 +1157,7 @@ namespace AnalysisTests {
                 CheckAst(
                     ParseFile("YieldStmt.py", ErrorSink.Null, version),
                     CheckSuite(
-                        CheckFuncDef("f", NoParameters, 
+                        CheckFuncDef("f", NoParameters,
                             CheckSuite(
                                 CheckYieldStmt(One),
                                 CheckYieldStmt(CheckTupleExpr(One, Two))
@@ -1338,7 +1357,7 @@ namespace AnalysisTests {
                         ),
                         CheckFuncDef("f", NoParameters,
                             CheckSuite(
-                                CheckClassDef("C", 
+                                CheckClassDef("C",
                                     CheckSuite(
                                         CheckNonlocal("fob"),
                                         CheckAssignment(Fob, One)
@@ -1420,7 +1439,7 @@ namespace AnalysisTests {
                     ParseFile("TryStmt.py", ErrorSink.Null, version),
                     CheckSuite(
                         CheckTryStmt(
-                            CheckSuite(Pass), 
+                            CheckSuite(Pass),
                             new[] { CheckHandler(null, null, CheckSuite(Pass)) }
                         ),
                         CheckTryStmt(
@@ -1442,7 +1461,7 @@ namespace AnalysisTests {
                 );
             }
 
-            foreach(var version in V26_V27Versions) {
+            foreach (var version in V26_V27Versions) {
                 TryStmtV2(version);
                 TryStmtV3(version);
             }
@@ -1493,7 +1512,7 @@ namespace AnalysisTests {
                 );
             }
 
-            foreach(var version in V2Versions) {
+            foreach (var version in V2Versions) {
                 CheckAst(
                     ParseFile("RaiseStmtV2.py", ErrorSink.Null, version),
                     CheckSuite(
@@ -1531,7 +1550,7 @@ namespace AnalysisTests {
                     ParseFile("PrintStmt.py", ErrorSink.Null, version),
                     CheckSuite(
                         CheckPrintStmt(new Action<Expression>[0]),
-                        CheckPrintStmt(new [] { One }),
+                        CheckPrintStmt(new[] { One }),
                         CheckPrintStmt(new[] { One }, trailingComma: true),
                         CheckPrintStmt(new[] { One, Two }),
                         CheckPrintStmt(new[] { One, Two }, trailingComma: true),
@@ -1615,7 +1634,7 @@ namespace AnalysisTests {
                         CheckExprStmt(CheckGeneratorComp(Fob, CompFor(Fob, Oar), CompIf(Baz))),
                         CheckExprStmt(CheckGeneratorComp(Fob, CompFor(Fob, Oar), CompFor(Baz, Quox))),
                         CheckCallStmt(Baz, PositionalArg(CheckGeneratorComp(Fob, CompFor(Fob, Oar))))
-                    )                    
+                    )
                 );
             }
         }
@@ -1713,7 +1732,7 @@ namespace AnalysisTests {
                         CheckFromImport("....fob", new[] { "oar" }),
                         CheckFromImport("......fob", new[] { "oar" }),
                         CheckFromImport(".......fob", new[] { "oar" }),
-                        CheckFromImport("fob", new[] { "fob", "baz" }, new string[] { "oar", "quox"})
+                        CheckFromImport("fob", new[] { "fob", "baz" }, new string[] { "oar", "quox" })
                     )
                 );
             }
@@ -1722,7 +1741,7 @@ namespace AnalysisTests {
                 CheckAst(
                     ParseFile("FromImportStmtV2.py", ErrorSink.Null, version),
                     CheckSuite(
-                        CheckFuncDef("f", NoParameters, 
+                        CheckFuncDef("f", NoParameters,
                             CheckSuite(CheckFromImport("sys", new[] { "*" }))
                         ),
                         CheckClassDef("C",
@@ -1734,7 +1753,7 @@ namespace AnalysisTests {
 
             foreach (var version in V3Versions) {
                 ParseErrors(
-                    "FromImportStmtV2.py", 
+                    "FromImportStmtV2.py",
                     version,
                     new ErrorInfo("import * only allowed at module level", 14, 2, 5, 31, 2, 22),
                     new ErrorInfo("import * only allowed at module level", 49, 5, 5, 66, 5, 22)
@@ -1759,7 +1778,7 @@ namespace AnalysisTests {
                 );
             }
         }
-        
+
         [TestMethod, Priority(0)]
         public void FromImportStmtIncomplete() {
 
@@ -1815,7 +1834,7 @@ namespace AnalysisTests {
             }
 
             foreach (var version in V24_V25Versions) {
-                ParseErrors("DecoratorsClassDef.py", 
+                ParseErrors("DecoratorsClassDef.py",
                     version,
                     new ErrorInfo("invalid syntax, class decorators require 2.6 or later.", 6, 2, 1, 11, 2, 6),
                     new ErrorInfo("invalid syntax, class decorators require 2.6 or later.", 33, 5, 1, 38, 5, 6),
@@ -1906,7 +1925,7 @@ namespace AnalysisTests {
                     ParseFile("FuncDef.py", ErrorSink.Null, version),
                     CheckSuite(
                         CheckFuncDef("f", NoParameters, CheckSuite(Pass)),
-                        CheckFuncDef("f", new [] { CheckParameter("a") }, CheckSuite(Pass)),
+                        CheckFuncDef("f", new[] { CheckParameter("a") }, CheckSuite(Pass)),
                         CheckFuncDef("f", new[] { CheckParameter("a"), CheckParameter("b", ParameterKind.List) }, CheckSuite(Pass)),
                         CheckFuncDef("f", new[] { CheckParameter("a"), CheckParameter("b", ParameterKind.List), CheckParameter("c", ParameterKind.Dictionary) }, CheckSuite(Pass)),
                         CheckFuncDef("f", new[] { CheckParameter("a", ParameterKind.List) }, CheckSuite(Pass)),
@@ -1932,7 +1951,7 @@ namespace AnalysisTests {
 
             foreach (var version in V3Versions) {
                 ParseErrors("FuncDefV2.py", version,
-                    new ErrorInfo("sublist parameters are not supported in 3.x",  9, 1, 10, 14, 1, 15)
+                    new ErrorInfo("sublist parameters are not supported in 3.x", 9, 1, 10, 14, 1, 15)
                 );
             }
         }
@@ -2011,11 +2030,11 @@ namespace AnalysisTests {
                         CheckClassDef("C", CheckSuite(Pass)),
                         CheckClassDef("C", CheckSuite(Pass), new[] { CheckArg("object") }),
                         CheckClassDef("C", CheckSuite(Pass), new[] { CheckArg("list"), CheckArg("object") }),
-                        CheckClassDef("C", 
+                        CheckClassDef("C",
                             CheckSuite(
-                                CheckClassDef("_C__D", 
+                                CheckClassDef("_C__D",
                                     CheckSuite(
-                                        CheckClassDef("_D__E", 
+                                        CheckClassDef("_D__E",
                                             CheckSuite(Pass)
                                         )
                                     )
@@ -2076,8 +2095,8 @@ namespace AnalysisTests {
                         CheckAssignment(CheckTupleExpr(Fob, Oar), Baz),
                         CheckAssignment(CheckListExpr(Fob, Oar), CheckTupleExpr(One, Two)),
                         CheckAssignment(CheckListExpr(Fob, Oar), Baz),
-                        CheckAssignment(new [] { Fob, Oar }, Baz)
-                    )   
+                        CheckAssignment(new[] { Fob, Oar }, Baz)
+                    )
                 );
             }
         }
@@ -2120,19 +2139,19 @@ namespace AnalysisTests {
                 new ErrorInfo("invalid syntax", 46, 3, 18, 47, 3, 19)
             );
         }
-        
+
         [TestMethod, Priority(0)]
         public void AssignStmtV3() {
             foreach (var version in V3Versions) {
                 CheckAst(
                     ParseFile("AssignStmtV3.py", ErrorSink.Null, version),
                     CheckSuite(
-                        CheckAssignment( CheckTupleExpr(CheckStarExpr(Fob), Oar, Baz), CheckTupleExpr(One, Two, Three, Four)),
-                        CheckAssignment( CheckTupleExpr(Fob, CheckStarExpr(Oar), Baz), CheckTupleExpr(One, Two, Three, Four) ),
-                        CheckAssignment( CheckListExpr(Fob, CheckStarExpr(Oar), Baz), CheckTupleExpr(One, Two, Three, Four) ),
-                        CheckAssignment( CheckListExpr(CheckStarExpr(Fob), Oar, Baz), CheckTupleExpr(One, Two, Three, Four) )
+                        CheckAssignment(CheckTupleExpr(CheckStarExpr(Fob), Oar, Baz), CheckTupleExpr(One, Two, Three, Four)),
+                        CheckAssignment(CheckTupleExpr(Fob, CheckStarExpr(Oar), Baz), CheckTupleExpr(One, Two, Three, Four)),
+                        CheckAssignment(CheckListExpr(Fob, CheckStarExpr(Oar), Baz), CheckTupleExpr(One, Two, Three, Four)),
+                        CheckAssignment(CheckListExpr(CheckStarExpr(Fob), Oar, Baz), CheckTupleExpr(One, Two, Three, Four))
                     )
-                );                
+                );
             }
 
             foreach (var version in V2Versions) {
@@ -2166,7 +2185,7 @@ namespace AnalysisTests {
 
         [TestMethod, Priority(0)]
         public void AssignStmtIllegal() {
-           foreach (var version in AllVersions) {
+            foreach (var version in AllVersions) {
                 CheckAst(
                     ParseFile("AssignStmtIllegal.py", ErrorSink.Null, version),
                     CheckSuite(
@@ -2176,8 +2195,8 @@ namespace AnalysisTests {
                         CheckAssignment(Two, One),
                         CheckAssignment(CheckGeneratorComp(Fob, CompFor(Fob, Oar)), One),
                         CheckAssignment(CheckTupleExpr(Fob, Oar), PythonOperator.Add, One),
-                        CheckFuncDef("f", NoParameters, 
-                            CheckSuite(    
+                        CheckFuncDef("f", NoParameters,
+                            CheckSuite(
                                 CheckAssignment(CheckYieldExpr(Fob), One)
                             )
                         )
@@ -2294,14 +2313,14 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod,  Priority(0), Timeout(10 * 60 * 1000)]
+        [TestMethod, Priority(0), Timeout(10 * 60 * 1000)]
         public void StdLib() {
             foreach (var curVersion in PythonPaths.Versions) {
                 Debug.WriteLine("Running: {0}", curVersion.Version);
 
                 var files = new List<string>();
                 try {
-                    CollectFiles(curVersion.LibPath, files, new[] { "site-packages"});
+                    CollectFiles(curVersion.LibPath, files, new[] { "site-packages" });
                 } catch (DirectoryNotFoundException) {
                     continue;
                 }
@@ -2379,6 +2398,7 @@ namespace AnalysisTests {
             }
 
             string finalErrors = foundErrors.ToString();
+            Console.WriteLine(finalErrors);
             Assert.AreEqual(errors.Length, sink.Errors.Count, "Version: " + version + Environment.NewLine + "Unexpected errors: " + Environment.NewLine + finalErrors);
 
             for (int i = 0; i < errors.Length; i++) {
@@ -2548,7 +2568,7 @@ namespace AnalysisTests {
             };
         }
 
-        private static Action<Statement> CheckPrintStmt(Action<Expression>[] expressions,  Action<Expression> destination = null, bool trailingComma = false) {
+        private static Action<Statement> CheckPrintStmt(Action<Expression>[] expressions, Action<Expression> destination = null, bool trailingComma = false) {
             return stmt => {
                 Assert.AreEqual(typeof(PrintStatement), stmt.GetType());
                 var printStmt = (PrintStatement)stmt;
@@ -2559,7 +2579,7 @@ namespace AnalysisTests {
                 for (int i = 0; i < expressions.Length; i++) {
                     expressions[i](printStmt.Expressions[i]);
                 }
-                
+
                 if (destination != null) {
                     destination(printStmt.Destination);
                 } else {
@@ -2862,7 +2882,7 @@ namespace AnalysisTests {
         private static Action<Statement> CheckCallStmt(Action<Expression> target, params Action<Arg>[] args) {
             return CheckExprStmt(CheckCallExpression(target, args));
         }
-        
+
         private static Action<Expression> CheckCallExpression(Action<Expression> target, params Action<Arg>[] args) {
             return expr => {
                 Assert.AreEqual(typeof(CallExpression), expr.GetType());
@@ -3073,7 +3093,7 @@ namespace AnalysisTests {
                 Assert.AreEqual(typeof(ContinueStatement), expr.GetType());
             };
         }
-        
+
         private static Action<Statement> CheckAssignment(Action<Expression> lhs, PythonOperator op, Action<Expression> rhs) {
             return stmt => {
                 Assert.AreEqual(typeof(AugmentedAssignStatement), stmt.GetType());
@@ -3081,7 +3101,7 @@ namespace AnalysisTests {
 
                 Assert.AreEqual(assign.Operator, op);
 
-                lhs(assign.Left);                
+                lhs(assign.Left);
                 rhs(assign.Right);
             };
         }
@@ -3325,7 +3345,7 @@ namespace AnalysisTests {
                 }
             };
         }
-        
+
 
         private Action<ComprehensionIterator> CompFor(Action<Expression> lhs, Action<Expression> list) {
             return iter => {

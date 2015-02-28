@@ -2110,18 +2110,19 @@ b = {1}{1}C()
         [TestMethod, Priority(0)]
         public void BinaryOperators() {
             var operators = new[] {
-                new { Method = "add", Operator = "+" },
-                new { Method = "sub", Operator = "-" },
-                new { Method = "mul", Operator = "*" },
-                new { Method = "div", Operator = "/" },
-                new { Method = "mod", Operator = "%" },
-                new { Method = "and", Operator = "&" },
-                new { Method = "or", Operator = "|" },
-                new { Method = "xor", Operator = "^" },
-                new { Method = "lshift", Operator = "<<" },
-                new { Method = "rshift", Operator = ">>" },
-                new { Method = "pow", Operator = "**" },
-                new { Method = "floordiv", Operator = "//" },
+                new { Method = "add", Operator = "+", Version = PythonLanguageVersion.V27 },
+                new { Method = "sub", Operator = "-", Version = PythonLanguageVersion.V27 },
+                new { Method = "mul", Operator = "*", Version = PythonLanguageVersion.V27 },
+                new { Method = "div", Operator = "/", Version = PythonLanguageVersion.V27 },
+                new { Method = "mod", Operator = "%", Version = PythonLanguageVersion.V27 },
+                new { Method = "and", Operator = "&", Version = PythonLanguageVersion.V27 },
+                new { Method = "or", Operator = "|", Version = PythonLanguageVersion.V27 },
+                new { Method = "xor", Operator = "^", Version = PythonLanguageVersion.V27 },
+                new { Method = "lshift", Operator = "<<", Version = PythonLanguageVersion.V27 },
+                new { Method = "rshift", Operator = ">>", Version = PythonLanguageVersion.V27 },
+                new { Method = "pow", Operator = "**", Version = PythonLanguageVersion.V27 },
+                new { Method = "floordiv", Operator = "//", Version = PythonLanguageVersion.V27 },
+                new { Method = "matmul", Operator = "@", Version = PythonLanguageVersion.V35 },
             };
 
             var text = @"
@@ -2150,11 +2151,13 @@ i = C() {1} 42L
 j = 42L {1} C()
 k = C() {1} 42j
 l = 42j {1} C()
+m = C()
+m {1}= m
 ";
 
             foreach (var test in operators) {
                 Console.WriteLine(test.Operator);
-                var entry = ProcessText(String.Format(text, test.Method, test.Operator));
+                var entry = ProcessText(String.Format(text, test.Method, test.Operator), test.Version);
 
                 AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("a", text.IndexOf("a =")), "ForwardResult instance");
                 AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("b", text.IndexOf("b =")), "ReverseResult instance");
@@ -2168,6 +2171,8 @@ l = 42j {1} C()
                 AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("j", text.IndexOf("j =")), "ReverseResult instance");
                 AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("k", text.IndexOf("k =")), "ForwardResult instance");
                 AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("l", text.IndexOf("l =")), "ReverseResult instance");
+                // We assume that augmented assignments keep their type
+                AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("m", text.IndexOf("m " + test.Operator)), "C instance");
             }
         }
 

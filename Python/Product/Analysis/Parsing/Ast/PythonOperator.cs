@@ -51,6 +51,8 @@ namespace Microsoft.PythonTools.Parsing {
         IsNot,
         Is,
 
+        // Matrix Multiplication (new in 2.2)
+        MatMultiply,
 
         // Aliases
         ExclusiveOr = Xor,
@@ -68,6 +70,7 @@ namespace Microsoft.PythonTools.Parsing {
                 case PythonOperator.Add: return "+";
                 case PythonOperator.Subtract: return "-";
                 case PythonOperator.Multiply: return "*";
+                case PythonOperator.MatMultiply: return "@";
                 case PythonOperator.Divide: return "/";
                 case PythonOperator.TrueDivide: return "/";
                 case PythonOperator.Mod: return "%";
