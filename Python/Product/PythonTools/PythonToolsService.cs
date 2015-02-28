@@ -88,6 +88,7 @@ namespace Microsoft.PythonTools {
             _interpreterOptionsService = compModel.GetService<IInterpreterOptionsService>();
             if (_interpreterOptionsService != null) {   // not available in some test cases...
                 _interpreterOptionsService.InterpretersChanged += InterpretersChanged;
+                _interpreterOptionsService.DefaultInterpreterChanged += UpdateDefaultAnalyzer;
             }
 
             _idleManager = new IdleManager(container);
@@ -122,6 +123,48 @@ namespace Microsoft.PythonTools {
             _logger.LogEvent(PythonLogEvent.SurveyNewsFrequency, GeneralOptions.SurveyNewsCheck);
         }
 
+        private void UpdateDefaultAnalyzer(object sender, EventArgs args) {
+            // no need to update if analyzer isn't created yet.
+            if (_analyzer == null) {
+                return;
+            }
+
+            _container.GetUIThread().InvokeAsync(() => {
+                if (_analyzer != null) {
+                    var analyzer = CreateAnalyzer();
+
+                    if (_analyzer != null) {
+                        analyzer.SwitchAnalyzers(_analyzer);
+                    }
+                    _analyzer = analyzer;
+                }
+            }).DoNotWait();
+        }
+
+        /// <summary>
+        /// Asks the interpreter to generate its completion database if the
+        /// option is enabled (the default) and the database is not current.
+        /// </summary>
+        internal void EnsureCompletionDb(IPythonInterpreterFactory factory) {
+            if (GeneralOptions.AutoAnalyzeStandardLibrary) {
+                var withDb = factory as IPythonInterpreterFactoryWithDatabase;
+                if (withDb != null && !withDb.IsCurrent) {
+                    withDb.GenerateDatabase(GenerateDatabaseOptions.SkipUnchanged);
+                }
+            }
+        }
+
+        private VsProjectAnalyzer CreateAnalyzer() {
+            var defaultFactory = _interpreterOptionsService.DefaultInterpreter;
+            EnsureCompletionDb(defaultFactory);
+            return new VsProjectAnalyzer(
+                _container,
+                defaultFactory.CreateInterpreter(),
+                defaultFactory,
+                _interpreterOptionsService.Interpreters.ToArray()
+            );
+        }
+
         internal PythonToolsLogger Logger {
             get {
                 return _logger;
@@ -140,7 +183,7 @@ namespace Microsoft.PythonTools {
         public VsProjectAnalyzer DefaultAnalyzer {
             get {
                 if (_analyzer == null) {
-                    _analyzer = PythonToolsPackage.CreateAnalyzer(_container, ComponentModel);
+                    _analyzer = _container.GetUIThread().Invoke(() => CreateAnalyzer());
                 }
                 return _analyzer;
             }

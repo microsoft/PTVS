@@ -260,7 +260,6 @@ namespace Microsoft.PythonTools {
     public sealed class PythonToolsPackage : CommonPackage, IVsComponentSelectorProvider, IPythonToolsToolWindowService {
         [Obsolete("Services should be queried from an IServiceProvider flowed into the requesting component")]
         public static PythonToolsPackage Instance;
-        private VsProjectAnalyzer _analyzer;
         private PythonAutomation _autoObject;
         private IContentType _contentType;
         private PackageContainer _packageContainer;
@@ -527,53 +526,9 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             }
         }
 
-        internal void RecreateAnalyzer() {
-            if (_analyzer != null) {
-                _analyzer.Dispose();
-            }
-            _analyzer = CreateAnalyzer(this, ComponentModel);
-        }
-
         internal PythonToolsService PythonService {
             get {
                 return _pyService;
-            }
-        }
-
-        internal static VsProjectAnalyzer CreateAnalyzer(System.IServiceProvider serviceProvider, IComponentModel compModel) {
-            var interpreterService = compModel.GetService<IInterpreterOptionsService>();
-            var defaultFactory = interpreterService.DefaultInterpreter;
-            EnsureCompletionDb(serviceProvider, defaultFactory);
-            return new VsProjectAnalyzer(
-                serviceProvider,
-                defaultFactory.CreateInterpreter(),
-                defaultFactory,
-                interpreterService.Interpreters.ToArray()
-            );
-        }
-
-        /// <summary>
-        /// Asks the interpreter to generate its completion database if the
-        /// option is enabled (the default) and the database is not current.
-        /// </summary>
-        internal static void EnsureCompletionDb(System.IServiceProvider serviceProvider, IPythonInterpreterFactory factory) {
-            if (serviceProvider.GetPythonToolsService().GeneralOptions.AutoAnalyzeStandardLibrary) {
-                var withDb = factory as IPythonInterpreterFactoryWithDatabase;
-                if (withDb != null && !withDb.IsCurrent) {
-                    withDb.GenerateDatabase(GenerateDatabaseOptions.SkipUnchanged);
-                }
-            }
-        }
-
-        private void UpdateDefaultAnalyzer(object sender, EventArgs args) {
-            // no need to update if analyzer isn't created yet.
-            if (_analyzer != null) {
-                var analyzer = CreateAnalyzer(this, ComponentModel);
-
-                if (_analyzer != null) {
-                    analyzer.SwitchAnalyzers(_analyzer);
-                }
-                _analyzer = analyzer;
             }
         }
 
@@ -690,7 +645,6 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             var interpreterService = ComponentModel.GetService<IInterpreterOptionsService>();
             interpreterService.InterpretersChanged += RefreshReplCommands;
             interpreterService.DefaultInterpreterChanged += RefreshReplCommands;
-            interpreterService.DefaultInterpreterChanged += UpdateDefaultAnalyzer;
 
             var loadedProjectProvider = interpreterService.KnownProviders
                 .OfType<LoadedProjectInterpreterFactoryProvider>()

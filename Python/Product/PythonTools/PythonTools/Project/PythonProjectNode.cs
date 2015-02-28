@@ -877,7 +877,7 @@ namespace Microsoft.PythonTools.Project {
                 }
             }
 
-            PythonToolsPackage.EnsureCompletionDb(Site, fact);
+            Site.GetPythonToolsService().EnsureCompletionDb(fact);
 
             return fact;
         }
