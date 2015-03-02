@@ -304,14 +304,22 @@ namespace TestUtilities.UI.Python {
                 createVenv.ClickButtonAndClose("Close", nameIsAutomationId: true);
             }
 
-            var nowRunning = Process.GetProcessesByName("python").Where(p => !alreadyRunning.Contains(p.Id)).ToArray();
+            List<Process> nowRunning = null;
+            for (int retries = 100; retries > 0 && (nowRunning == null || !nowRunning.Any()); --retries) {
+                System.Threading.Thread.Sleep(100);
+                nowRunning = Process.GetProcessesByName("python").Where(p => !alreadyRunning.Contains(p.Id)).ToList();
+            }
+            if (nowRunning == null || !nowRunning.Any()) {
+                Assert.Fail("Failed to see python process start to create virtualenv");
+            }
             foreach (var p in nowRunning) {
                 if (p.HasExited) {
                     continue;
                 }
                 try {
                     p.WaitForExit(30000);
-                } catch (Win32Exception) {
+                } catch (Win32Exception ex) {
+                    Console.WriteLine("Error waiting for process ID {0}\n{1}", p.Id, ex);
                 }
             }
             

@@ -546,6 +546,8 @@ namespace Microsoft.PythonTools.Project {
                 }
             }
 
+            startInfo.EnvironmentVariables["PYTHONUNBUFFERED"] = "1";
+
             if (string.IsNullOrEmpty(startInfo.WorkingDirectory)) {
                 startInfo.WorkingDirectory = project.ProjectHome ?? string.Empty;
             } else if (!Path.IsPathRooted(startInfo.WorkingDirectory)) {

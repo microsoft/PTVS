@@ -105,7 +105,7 @@ namespace Microsoft.VisualStudioTools.Project {
         private readonly Process _process;
         private readonly string _arguments;
         private readonly List<string> _output, _error;
-        private ProcessWaitHandle _waitHandle;
+        private ManualResetEvent _waitHandleEvent;
         private readonly Redirector _redirector;
         private bool _isDisposed;
         private bool _seenNullInOutput, _seenNullInError;
@@ -561,6 +561,13 @@ namespace Microsoft.VisualStudioTools.Project {
                     // Reader has already been cancelled
                 }
             }
+
+            if (_waitHandleEvent != null) {
+                try {
+                    _waitHandleEvent.Set();
+                } catch (ObjectDisposedException) {
+                }
+            }
         }
 
         /// <summary>
@@ -588,10 +595,13 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         public WaitHandle WaitHandle {
             get {
-                if (_waitHandle == null && _process != null) {
-                    _waitHandle = new ProcessWaitHandle(_process);
+                if (_process == null) {
+                    return null;
                 }
-                return _waitHandle;
+                if (_waitHandleEvent == null) {
+                    _waitHandleEvent = new ManualResetEvent(false);
+                }
+                return _waitHandleEvent;
             }
         }
 
@@ -638,11 +648,10 @@ namespace Microsoft.VisualStudioTools.Project {
                     tcs.SetResult(_process.ExitCode);
                     _awaiter = tcs.Task;
                 } else {
-                    var wh = WaitHandle;
                     _awaiter = Task.Run(() => {
                         try {
-                            wh.WaitOne();
-                        } catch (ObjectDisposedException) {
+                            Wait();
+                        } catch (Win32Exception) {
                             throw new OperationCanceledException();
                         }
                         return _process.ExitCode;
@@ -673,16 +682,10 @@ namespace Microsoft.VisualStudioTools.Project {
                 return;
             }
             _haveRaisedExitedEvent = true;
+            FlushAndCloseOutput();
             var evt = Exited;
             if (evt != null) {
                 evt(this, e);
-            }
-        }
-
-        class ProcessWaitHandle : WaitHandle {
-            public ProcessWaitHandle(Process process) {
-                Debug.Assert(process != null);
-                SafeWaitHandle = new SafeWaitHandle(process.Handle, false); // Process owns the handle
             }
         }
 
@@ -705,8 +708,9 @@ namespace Microsoft.VisualStudioTools.Project {
                 if (disp != null) {
                     disp.Dispose();
                 }
-                if (_waitHandle != null) {
-                    _waitHandle.Dispose();
+                if (_waitHandleEvent != null) {
+                    _waitHandleEvent.Set();
+                    _waitHandleEvent.Dispose();
                 }
             }
         }

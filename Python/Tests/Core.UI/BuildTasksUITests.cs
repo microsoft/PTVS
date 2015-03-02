@@ -286,6 +286,13 @@ namespace PythonToolsUITests {
 
                 Execute(node, "Produce Errors");
                 var items = app.WaitForErrorListItems(3);
+                Console.WriteLine("Got errors:");
+                foreach (var item in items) {
+                    string document, text;
+                    Assert.AreEqual(0, item.Document(out document), "HRESULT getting document");
+                    Assert.AreEqual(0, item.get_Text(out text), "HRESULT getting message");
+                    Console.WriteLine("  {0}: {1}", document ?? "(null)", text ?? "(null)");
+                }
                 Assert.AreEqual(expectedItems.Length, items.Count);
 
                 // Second invoke should replace the error items in the list, not add new ones to those already existing.
