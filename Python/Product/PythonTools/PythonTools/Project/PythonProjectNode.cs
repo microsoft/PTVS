@@ -402,6 +402,16 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
+        private static bool RemoveFirst<T>(List<T> list, Func<T, bool> condition) {
+            for (int i = 0; i < list.Count; ++i) {
+                if (condition(list[i])) {
+                    list.RemoveAt(i);
+                    return true;
+                }
+            }
+            return false;
+        }
+
         private void RefreshInterpreters(bool alwaysCollapse = false) {
             if (IsClosed) {
                 return;
@@ -412,27 +422,27 @@ namespace Microsoft.PythonTools.Project {
                 return;
             }
 
-            var remaining = node.AllChildren.OfType<InterpretersNode>().ToDictionary(n => n._factory);
+            var remaining = node.AllChildren.OfType<InterpretersNode>().ToList();
 
             var interpreters = Interpreters;
             if (interpreters != null) {
-                foreach (var fact in interpreters.GetInterpreterFactories()) {
-                    if (!remaining.Remove(fact)) {
-                        node.AddChild(new InterpretersNode(
-                            this,
-                            Interpreters.GetProjectItem(fact),
-                            fact,
-                            isInterpreterReference: !interpreters.IsProjectSpecific(fact),
-                            canDelete:
-                                interpreters.IsProjectSpecific(fact) &&
-                                Directory.Exists(fact.Configuration.PrefixPath)
-                        ));
+                if (!interpreters.IsActiveInterpreterGlobalDefault) {
+                    foreach (var fact in interpreters.GetInterpreterFactories()) {
+                        if (!RemoveFirst(remaining, n => n._factory == fact)) {
+                            node.AddChild(new InterpretersNode(
+                                this,
+                                Interpreters.GetProjectItem(fact),
+                                fact,
+                                isInterpreterReference: !interpreters.IsProjectSpecific(fact),
+                                canDelete:
+                                    interpreters.IsProjectSpecific(fact) &&
+                                    Directory.Exists(fact.Configuration.PrefixPath)
+                            ));
+                        }
                     }
-                }
-
-                if (interpreters.IsActiveInterpreterGlobalDefault) {
+                } else {
                     var fact = interpreters.ActiveInterpreter;
-                    if (!remaining.Remove(fact)) {
+                    if (!RemoveFirst(remaining, n => n._factory == fact)) {
                         node.AddChild(new InterpretersNode(
                             this, null, fact, true, false, false, SR.GetString(SR.GlobalDefaultSuffix)
                         ));
@@ -440,7 +450,7 @@ namespace Microsoft.PythonTools.Project {
                 }
             }
 
-            foreach (var child in remaining.Values) {
+            foreach (var child in remaining) {
                 node.RemoveChild(child);
             }
 
