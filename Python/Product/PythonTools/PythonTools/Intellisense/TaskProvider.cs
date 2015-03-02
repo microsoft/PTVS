@@ -26,6 +26,7 @@ using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Adornments;
@@ -39,6 +40,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly ITrackingSpan _span;
         private readonly SourceSpan _rawSpan;
         private readonly VSTASKPRIORITY _priority;
+        private readonly VSTASKCATEGORY _category;
         private readonly bool _squiggle;
         private readonly ITextSnapshot _snapshot;
         private readonly IServiceProvider _serviceProvider;
@@ -48,6 +50,7 @@ namespace Microsoft.PythonTools.Intellisense {
             string message,
             SourceSpan rawSpan,
             VSTASKPRIORITY priority,
+            VSTASKCATEGORY category,
             bool squiggle,
             ITextSnapshot snapshot
         ) {
@@ -58,6 +61,7 @@ namespace Microsoft.PythonTools.Intellisense {
             _span = snapshot != null ? CreateSpan(snapshot, rawSpan) : null;
             _rawSpan = rawSpan;
             _priority = priority;
+            _category = category;
             _squiggle = squiggle;
         }
 
@@ -77,7 +81,6 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         #region Conversion Functions
-
         
         public bool IsValid {
             get {
@@ -104,7 +107,10 @@ namespace Microsoft.PythonTools.Intellisense {
                 _rawSpan,
                 _message,
                 (key.Entry != null ? key.Entry.FilePath : null) ?? string.Empty
-            ) { Priority = _priority };
+            ) {
+                Priority = _priority,
+                Category = _category
+            };
         }
 
         #endregion
@@ -131,23 +137,13 @@ namespace Microsoft.PythonTools.Intellisense {
 
         #region Factory Functions
 
-        public TaskProviderItem FromParseWarning(IServiceProvider serviceProvider, ErrorResult result) {
+        public TaskProviderItem FromErrorResult(IServiceProvider serviceProvider, ErrorResult result, VSTASKPRIORITY priority, VSTASKCATEGORY category) {
             return new TaskProviderItem(
                 serviceProvider,
                 result.Message,
                 result.Span,
-                VSTASKPRIORITY.TP_NORMAL,
-                true,
-                _snapshot
-            );
-        }
-
-        public TaskProviderItem FromParseError(IServiceProvider serviceProvider, ErrorResult result) {
-            return new TaskProviderItem(
-                serviceProvider,
-                result.Message,
-                result.Span,
-                VSTASKPRIORITY.TP_HIGH,
+                priority,
+                category,
                 true,
                 _snapshot
             );
@@ -171,6 +167,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 message,
                 span,
                 VSTASKPRIORITY.TP_NORMAL,
+                VSTASKCATEGORY.CAT_BUILDCOMPILE,
                 true,
                 _snapshot
             );
@@ -303,46 +300,53 @@ namespace Microsoft.PythonTools.Intellisense {
         }
     }
 
-    sealed class TaskProvider : IVsTaskProvider, IDisposable {
+    abstract class TaskProvider : IVsTaskProvider, IDisposable {
         private readonly Dictionary<EntryKey, List<TaskProviderItem>> _items;
         private readonly Dictionary<EntryKey, HashSet<ITextBuffer>> _errorSources;
         private readonly object _itemsLock = new object();
         private readonly uint _cookie;
-        private readonly IVsTaskList _errorList;
+        private readonly IVsTaskList _taskList;
         internal readonly IErrorProviderFactory _errorProvider;
-        private readonly IServiceProvider _serviceProvider;
+        protected readonly IServiceProvider _serviceProvider;
 
         private bool _hasWorker;
         private readonly BlockingCollection<WorkerMessage> _workerQueue;
 
-        public TaskProvider(IServiceProvider serviceProvider, IVsTaskList errorList, IErrorProviderFactory errorProvider) {
+        public TaskProvider(IServiceProvider serviceProvider, IVsTaskList taskList, IErrorProviderFactory errorProvider) {
             _serviceProvider = serviceProvider;
             _items = new Dictionary<EntryKey, List<TaskProviderItem>>();
             _errorSources = new Dictionary<EntryKey, HashSet<ITextBuffer>>();
 
-            _errorList = errorList;
-            if (_errorList != null) {
-                ErrorHandler.ThrowOnFailure(_errorList.RegisterTaskProvider(this, out _cookie));
+            _taskList = taskList;
+            if (_taskList != null) {
+                ErrorHandler.ThrowOnFailure(_taskList.RegisterTaskProvider(this, out _cookie));
             }
             _errorProvider = errorProvider;
             _workerQueue = new BlockingCollection<WorkerMessage>();
         }
 
         public void Dispose() {
-            lock (_workerQueue) {
-                if (_hasWorker) {
-                    _hasWorker = false;
-                    _workerQueue.CompleteAdding();
-                } else {
-                    _workerQueue.Dispose();
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing) {
+            if (disposing) {
+                lock (_workerQueue) {
+                    if (_hasWorker) {
+                        _hasWorker = false;
+                        _workerQueue.CompleteAdding();
+                    } else {
+                        _workerQueue.Dispose();
+                    }
                 }
-            }
-            lock (_itemsLock) {
-                _items.Clear();
-            }
-            RefreshAsync().DoNotWait();
-            if (_errorList != null) {
-                _errorList.UnregisterTaskProvider(_cookie);
+                lock (_itemsLock) {
+                    _items.Clear();
+                }
+                RefreshAsync().DoNotWait();
+                if (_taskList != null) {
+                    _taskList.UnregisterTaskProvider(_cookie);
+                }
             }
         }
 
@@ -502,7 +506,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private void Refresh() {
-            if (_errorList != null || _errorProvider != null) {
+            if (_taskList != null || _errorProvider != null) {
                 _serviceProvider.GetUIThread().MustNotBeCalledFromUIThread();
                 RefreshAsync().WaitAndHandleAllExceptions(SR.ProductName, GetType());
             }
@@ -539,9 +543,9 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             await _serviceProvider.GetUIThread().InvokeAsync(() => {
-                if (_errorList != null) {
+                if (_taskList != null) {
                     try {
-                        _errorList.RefreshTasks(_cookie);
+                        _taskList.RefreshTasks(_cookie);
                     } catch (InvalidComObjectException) {
                         // DevDiv2 759317 - Watson bug, COM object can go away...
                     }
@@ -626,7 +630,6 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         #endregion
-
     }
 
     class TaskEnum : IVsEnumTaskItems {
@@ -865,6 +868,64 @@ namespace Microsoft.PythonTools.Intellisense {
             }
             Message = bstrName;
             return VSConstants.S_OK;
+        }
+    }
+
+    // Two distinct types are used to distinguish the two in the VS service registry.
+
+    sealed class ErrorTaskProvider : TaskProvider {
+        public ErrorTaskProvider(IServiceProvider serviceProvider, IVsTaskList taskList, IErrorProviderFactory errorProvider)
+            : base(serviceProvider, taskList, errorProvider) {
+        }
+    }
+
+    sealed class CommentTaskProvider : TaskProvider, IVsTaskListEvents {
+        private volatile Dictionary<string, VSTASKPRIORITY> _tokens;
+
+        public CommentTaskProvider(IServiceProvider serviceProvider, IVsTaskList taskList, IErrorProviderFactory errorProvider)
+            : base(serviceProvider, taskList, errorProvider) {
+            RefreshTokens();
+        }
+
+        public Dictionary<string, VSTASKPRIORITY> Tokens {
+            get { return _tokens; }
+        }
+
+        public event EventHandler TokensChanged;
+
+        public int OnCommentTaskInfoChanged() {
+            RefreshTokens();
+            return VSConstants.S_OK;
+        }
+
+        // Retrieves token settings as defined by user in Tools -> Options -> Environment -> Task List.
+        private void RefreshTokens() {
+            var taskInfo = (IVsCommentTaskInfo)_serviceProvider.GetService(typeof(SVsTaskList));
+            if (taskInfo == null) {
+                return;
+            }
+
+            IVsEnumCommentTaskTokens enumTokens;
+            ErrorHandler.ThrowOnFailure(taskInfo.EnumTokens(out enumTokens));
+
+            var newTokens = new Dictionary<string, VSTASKPRIORITY>();
+
+            var token = new IVsCommentTaskToken[1];
+            uint fetched;
+            string text;
+            var priority = new VSTASKPRIORITY[1];
+            while (ErrorHandler.ThrowOnFailure(enumTokens.Next(1, token, out fetched)) != VSConstants.S_FALSE && fetched > 0) {
+                ErrorHandler.ThrowOnFailure(token[0].Text(out text));
+                ErrorHandler.ThrowOnFailure(token[0].Priority(priority));
+                newTokens[text] = priority[0];
+            }
+
+            _tokens = newTokens;
+
+            var tokensChanged = TokensChanged;
+            if (tokensChanged != null) {
+                tokensChanged(this, EventArgs.Empty);
+            }
         }
     }
 }

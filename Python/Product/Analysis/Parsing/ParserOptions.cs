@@ -12,6 +12,8 @@
  *
  * ***************************************************************************/
 
+using System;
+
 namespace Microsoft.PythonTools.Parsing {
     public sealed class ParserOptions {
         internal static ParserOptions Default = new ParserOptions();
@@ -19,8 +21,10 @@ namespace Microsoft.PythonTools.Parsing {
             ErrorSink = ErrorSink.Null;
         }
 
-        public ErrorSink ErrorSink { set; get; }
+        public ErrorSink ErrorSink { get; set; }
+
         public Severity IndentationInconsistencySeverity { set; get; }
+
         public bool Verbatim { get; set; }
 
         /// <summary>
@@ -37,5 +41,26 @@ namespace Microsoft.PythonTools.Parsing {
         /// </summary>
         public string PrivatePrefix { get; set; }
 
+        /// <summary>
+        /// An event that is raised for every comment in the source as it is parsed.
+        /// </summary>
+        public event EventHandler<CommentEventArgs> ProcessComment;
+
+        internal void RaiseProcessComment(object sender, CommentEventArgs e) {
+            var handler = ProcessComment;
+            if (handler != null) {
+                handler(sender, e);
+            }
+        }
+    }
+
+    public class CommentEventArgs : EventArgs {
+        public SourceSpan Span { get; private set; }
+        public string Text { get; private set; }
+
+        public CommentEventArgs(SourceSpan span, string text) {
+            Span = span;
+            Text = text;
+        }
     }
 }

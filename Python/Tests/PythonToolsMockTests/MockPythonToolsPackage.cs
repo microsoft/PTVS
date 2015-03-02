@@ -42,9 +42,16 @@ namespace PythonToolsMockTests {
             _serviceContainer.AddService(typeof(MockErrorProviderFactory), errorProvider, true);
             _serviceContainer.AddService(typeof(IClipboardService), new MockClipboardService());
             UIThread.EnsureService(_serviceContainer);
+
             _serviceContainer.AddService(
-                typeof(Microsoft.PythonTools.Intellisense.TaskProvider),
-                new ServiceCreatorCallback((container, type) => new Microsoft.PythonTools.Intellisense.TaskProvider(_serviceContainer, null, errorProvider)), 
+                typeof(Microsoft.PythonTools.Intellisense.ErrorTaskProvider),
+                new ServiceCreatorCallback((container, type) => new Microsoft.PythonTools.Intellisense.ErrorTaskProvider(_serviceContainer, null, errorProvider)), 
+                true
+            );
+
+            _serviceContainer.AddService(
+                typeof(Microsoft.PythonTools.Intellisense.CommentTaskProvider),
+                new ServiceCreatorCallback((container, type) => new Microsoft.PythonTools.Intellisense.CommentTaskProvider(_serviceContainer, null, errorProvider)),
                 true
             );
 

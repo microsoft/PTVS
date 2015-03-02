@@ -912,7 +912,13 @@ namespace TestUtilities.UI {
         }
 
         public List<IVsTaskItem> WaitForErrorListItems(int expectedCount) {
-            var errorList = GetService<IVsTaskList>(typeof(SVsErrorList));
+            return WaitForTaskListItems(typeof(SVsErrorList), expectedCount, exactMatch: false);
+        }
+
+        public List<IVsTaskItem> WaitForTaskListItems(Type taskListService, int expectedCount, bool exactMatch = true) {
+            Console.Write("Waiting for {0} items on {1} ... ", expectedCount, taskListService.Name);
+
+            var errorList = GetService<IVsTaskList>(taskListService);
             var allItems = new List<IVsTaskItem>();
 
             if (expectedCount == 0) {
@@ -939,6 +945,11 @@ namespace TestUtilities.UI {
                 // give time for errors to process...
                 System.Threading.Thread.Sleep(1000);
             }
+
+            if (exactMatch) {
+                Assert.AreEqual(expectedCount, allItems.Count);
+            }
+
             return allItems;
         }
 

@@ -212,7 +212,7 @@ namespace TestUtilities
                 return;
             }
 
-            Assert.Fail(String.Format("Expected:\n{0}\n\nActual:\n{1}\n\nExpected not in actual:\n{2}\n\nActual not in expected:\n{3}",
+            Assert.Fail(String.Format("ContainsExactly failed.\n\nExpected:\n{0}\n\nActual:\n{1}\n\nExpected not in actual:\n{2}\n\nActual not in expected:\n{3}",
                 MakeText(expected),
                 MakeText(set),
                 MakeText(expected.Except(set)),
@@ -244,15 +244,29 @@ namespace TestUtilities
         }
 
         public static string MakeText<T>(IEnumerable<T> values) {
+            var ss = values.Select(x => x == null ? "(null)" : x.ToString()).ToArray();
+            bool multiline = ss.Sum(s => s.Length) > 60;
+
             var sb = new StringBuilder("{");
-            foreach (var value in values) {
-                if (sb.Length > 1) {
-                    sb.Append(", ");
-                }
-                sb.Append(value == null ? "(null)" : value.ToString());
+            if (multiline) {
+                sb.Append("\n");
             }
-        
+
+            bool first = true;
+            foreach (var s in ss) {
+                if (first) {
+                    first = false;
+                } else {
+                    sb.Append(multiline ? ",\n" : ", ");
+                }
+                sb.Append(s);
+            }
+
+            if (multiline) {
+                sb.Append("\n");
+            }
             sb.Append("}");
+
             return sb.ToString();
         }
 

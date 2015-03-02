@@ -46,8 +46,13 @@ namespace TestUtilities.Python {
             serviceProvider.AddService(typeof(MockErrorProviderFactory), errorProvider, true);
             serviceProvider.AddService(typeof(SComponentModel), new MockComponentModel());
             serviceProvider.AddService(
-                typeof(TaskProvider),
-                (container, type) => new TaskProvider(serviceProvider, null, errorProvider),
+                typeof(ErrorTaskProvider),
+                (container, type) => new ErrorTaskProvider(serviceProvider, null, errorProvider),
+                true
+            );
+            serviceProvider.AddService(
+                typeof(CommentTaskProvider),
+                (container, type) => new CommentTaskProvider(serviceProvider, null, errorProvider),
                 true
             );
             serviceProvider.AddService(typeof(IUIThread), new MockUIThread());

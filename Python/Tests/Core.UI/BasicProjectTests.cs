@@ -30,7 +30,6 @@ using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Project;
-using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -174,14 +173,14 @@ namespace PythonToolsUITests {
                 // Skip this part if we have admin privileges
                 if (!hasAdmin) {
                     try {
-                        project.SaveAs("C:\\TempFile.pyproj");
+                    project.SaveAs("C:\\TempFile.pyproj");
                         Assert.Fail("Did not throw UnauthorizedAccessException for protected path");
-                    } catch (UnauthorizedAccessException e) {
-                        // Saving to a new location is now permitted, but this location will not succeed.
-                        Assert.IsTrue(e.ToString().Contains("Access to the path 'C:\\TempFile.pyproj' is denied."));
-                    } //catch (InvalidOperationException e) {
-                    //    Assert.IsTrue(e.ToString().Contains("The project file can only be saved into the project location"));
-                    //}
+                } catch (UnauthorizedAccessException e) {
+                    // Saving to a new location is now permitted, but this location will not succeed.
+                    Assert.IsTrue(e.ToString().Contains("Access to the path 'C:\\TempFile.pyproj' is denied."));
+                } //catch (InvalidOperationException e) {
+                //    Assert.IsTrue(e.ToString().Contains("The project file can only be saved into the project location"));
+                //}
                 }
 
                 project.SaveAs(TestData.GetPath(@"TestData\TempFile.pyproj"));
@@ -888,7 +887,7 @@ namespace PythonToolsUITests {
             string loc = typeof(string).Assembly.Location;
             using (var proc = ProcessOutput.Run(
                 Path.Combine(Path.GetDirectoryName(loc), "csc.exe"),
-                new[] { "/nologo", "/target:library",  "/out:" + outname, file },
+                new[] { "/nologo", "/target:library", "/out:" + outname, file },
                 TestData.GetPath(@"TestData\AssemblyReference\PythonApplication"),
                 null,
                 false,
@@ -1265,118 +1264,6 @@ namespace PythonToolsUITests {
                 CountIs(itemCount, "Program.py", 1);
                 CountIs(itemCount, "HelloWorld.pyproj", 1);
                 CountIs(itemCount, "HelloWorld.py", 0);     // not included because the actual name is Program.py
-            }
-        }
-
-
-        /// <summary>
-        /// Make sure errors in a file show up in the error list window
-        /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
-        public void TestProjectWithErrors_ErrorList() {
-            using (var app = new VisualStudioApp()) {
-                var project = app.OpenProject(@"TestData\ErrorProject.sln");
-
-                const int expectedItems = 6;
-                List<IVsTaskItem> allItems = app.WaitForErrorListItems(expectedItems);
-                Assert.AreEqual(expectedItems, allItems.Count);
-            }
-        }
-
-        /// <summary>
-        /// Make sure deleting a project clears the error list
-        /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
-        public void TestProjectWithErrorsDeleteProject() {
-            using (var app = new VisualStudioApp()) {
-                var project = app.OpenProject(@"TestData\ErrorProjectDelete.sln");
-
-                const int expectedItems = 6;
-                List<IVsTaskItem> allItems = app.WaitForErrorListItems(expectedItems);
-                Assert.AreEqual(expectedItems, allItems.Count);
-
-                app.Dte.Solution.Remove(project);
-
-                allItems = app.WaitForErrorListItems(0);
-                Assert.AreEqual(0, allItems.Count);
-            }
-        }
-
-        /// <summary>
-        /// Make sure deleting a project clears the error list
-        /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
-        public void TestProjectWithErrorsUnloadProject() {
-            using (var app = new VisualStudioApp()) {
-                var project = app.OpenProject(@"TestData\ErrorProjectDelete.sln");
-
-                const int expectedItems = 6;
-                var allItems = app.WaitForErrorListItems(expectedItems);
-                Assert.AreEqual(expectedItems, allItems.Count);
-
-                IVsSolution solutionService = app.GetService<IVsSolution>(typeof(SVsSolution));
-                Assert.IsNotNull(solutionService);
-
-                IVsHierarchy selectedHierarchy;
-                ErrorHandler.ThrowOnFailure(solutionService.GetProjectOfUniqueName(project.UniqueName, out selectedHierarchy));
-                Assert.IsNotNull(selectedHierarchy);
-
-                ErrorHandler.ThrowOnFailure(solutionService.CloseSolutionElement((uint)__VSSLNCLOSEOPTIONS.SLNCLOSEOPT_UnloadProject, selectedHierarchy, 0));
-
-                allItems = app.WaitForErrorListItems(0);
-                Assert.AreEqual(0, allItems.Count);
-            }
-        }
-
-        /// <summary>
-        /// Make sure deleting a project clears the error list when there are errors in multiple files
-        /// 
-        /// Take 2 of https://pytools.codeplex.com/workitem/1523
-        /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
-        public void TestProjectWithErrorsMultipleFilesUnloadProject() {
-            using (var app = new VisualStudioApp()) {
-                var project = app.OpenProject(@"TestData\ErrorProjectMultipleFiles.sln");
-
-                const int expectedItems = 12;
-                var allItems = app.WaitForErrorListItems(expectedItems);
-                Assert.AreEqual(expectedItems, allItems.Count);
-
-                var solutionService = app.GetService<IVsSolution>(typeof(SVsSolution));
-                Assert.IsNotNull(solutionService);
-
-                IVsHierarchy selectedHierarchy;
-                ErrorHandler.ThrowOnFailure(solutionService.GetProjectOfUniqueName(project.UniqueName, out selectedHierarchy));
-                Assert.IsNotNull(selectedHierarchy);
-
-                ErrorHandler.ThrowOnFailure(solutionService.CloseSolutionElement((uint)__VSSLNCLOSEOPTIONS.SLNCLOSEOPT_UnloadProject, selectedHierarchy, 0));
-
-                allItems = app.WaitForErrorListItems(0);
-                Assert.AreEqual(0, allItems.Count);
-            }
-        }
-
-        /// <summary>
-        /// Make sure deleting a file w/ errors clears the error list
-        /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
-        public void TestProjectWithErrorsDeleteFile() {
-            using (var app = new PythonVisualStudioApp()) {
-                var project = app.OpenProject(@"TestData\ErrorProjectDeleteFile.sln");
-
-                const int expectedItems = 6;
-                var allItems = app.WaitForErrorListItems(expectedItems);
-                Assert.AreEqual(expectedItems, allItems.Count);
-
-                project.ProjectItems.Item("Program.py").Delete();
-
-                allItems = app.WaitForErrorListItems(0);
-                Assert.AreEqual(0, allItems.Count);
             }
         }
 

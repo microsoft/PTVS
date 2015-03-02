@@ -557,44 +557,56 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             Trace.WriteLine(string.Format(CultureInfo.CurrentCulture, "Entering Initialize() of: {0}", this.ToString()));
             base.Initialize();
 
+            var services = (IServiceContainer)this;
+
             // register our options service which provides registry access for various options
             var optionsService = new PythonToolsOptionsService(this);
-            ((IServiceContainer)this).AddService(typeof(IPythonToolsOptionsService), optionsService, true);
+            services.AddService(typeof(IPythonToolsOptionsService), optionsService, promote: true);
 
-            ((IServiceContainer)this).AddService(typeof(IClipboardService), new ClipboardService(), true);
+            services.AddService(typeof(IClipboardService), new ClipboardService(), promote: true);
 
-            ((IServiceContainer)this).AddService(typeof(IPythonToolsToolWindowService), this, true);
+            services.AddService(typeof(IPythonToolsToolWindowService), this, promote: true);
 
             // register our PythonToolsService which provides access to core PTVS functionality
-            var pyService = _pyService = new PythonToolsService((IServiceContainer)this);
+            var pyService = _pyService = new PythonToolsService(services);
 
-            ((IServiceContainer)this).AddService(typeof(PythonToolsService), pyService, true);
+            services.AddService(typeof(PythonToolsService), pyService, promote: true);
 
             _autoObject = new PythonAutomation(this);
 
-            ((IServiceContainer)this).AddService(
-                typeof(Microsoft.PythonTools.Intellisense.TaskProvider),
+            services.AddService(
+                typeof(ErrorTaskProvider),
                 (container, serviceType) => {
                     var errorList = GetService(typeof(SVsErrorList)) as IVsTaskList;
                     var model = ComponentModel;
                     var errorProvider = model != null ? model.GetService<IErrorProviderFactory>() : null;
-                    return new Microsoft.PythonTools.Intellisense.TaskProvider(this, errorList, errorProvider);
+                    return new ErrorTaskProvider(this, errorList, errorProvider);
                 },
-                true);
+                promote: true);
+
+            services.AddService(
+                typeof(CommentTaskProvider),
+                (container, serviceType) => {
+                    var taskList = GetService(typeof(SVsTaskList)) as IVsTaskList;
+                    var model = ComponentModel;
+                    var errorProvider = model != null ? model.GetService<IErrorProviderFactory>() : null;
+                    return new CommentTaskProvider(this, taskList, errorProvider);
+                },
+                promote: true);
 
             var solutionEventListener = new SolutionEventsListener(this);
             solutionEventListener.StartListeningForChanges();
 
-            ((IServiceContainer)this).AddService(
+            services.AddService(
                 typeof(SolutionEventsListener),
                 solutionEventListener,
-                true
+                promote: true
             );
 
 #if DEV11_OR_LATER
             // Register custom debug event service
             var customDebuggerEventHandler = new CustomDebuggerEventHandler(this);
-            ((IServiceContainer)this).AddService(customDebuggerEventHandler.GetType(), customDebuggerEventHandler, promote: true);
+            services.AddService(customDebuggerEventHandler.GetType(), customDebuggerEventHandler, promote: true);
 
             // Enable the mixed-mode debugger UI context
             UIContext.FromUIContextGuid(DkmEngineId.NativeEng).IsActive = true;

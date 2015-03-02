@@ -16,11 +16,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using System.Threading;
 using System.Threading.Tasks;
 using IronPython.Hosting;
 using Microsoft.PythonTools;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
@@ -29,7 +27,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Tagging;
 using Microsoft.VisualStudio.Utilities;
-using Microsoft.VisualStudioTools.Project;
 using TestUtilities;
 using TestUtilities.Mocks;
 using TestUtilities.Python;
@@ -88,7 +85,7 @@ namespace PythonToolsTests {
                 var snapshot = buffer.CurrentSnapshot;
                 
                 // Ensure all tasks have been updated
-                var taskProvider = (TaskProvider)serviceProvider.GetService(typeof(TaskProvider));
+                var taskProvider = (ErrorTaskProvider)serviceProvider.GetService(typeof(ErrorTaskProvider));
                 var time = await taskProvider.FlushAsync();
                 Console.WriteLine("TaskProvider.FlushAsync took {0}ms", time.TotalMilliseconds);
 

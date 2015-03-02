@@ -44,6 +44,7 @@ namespace Microsoft.PythonTools.Parsing {
         private int _position, _end, _tokenEnd, _start, _tokenStartIndex, _tokenEndIndex;
         private bool _bufferResized;
         private readonly TokenizerOptions _options;
+        private readonly Action<SourceSpan, string> _commentProcessor;
 
         private const int EOF = -1;
         private const int MaxIndent = 80;
@@ -55,10 +56,13 @@ namespace Microsoft.PythonTools.Parsing {
         // precalcuated strings for space indentation strings so we usually don't allocate.
         private static readonly string[] SpaceIndentation, TabIndentation;
 
-        public Tokenizer(PythonLanguageVersion version, ErrorSink errorSink = null, TokenizerOptions options = TokenizerOptions.None) {
-            errorSink = errorSink ?? ErrorSink.Null;
+        public Tokenizer(PythonLanguageVersion version, ErrorSink errorSink = null, TokenizerOptions options = TokenizerOptions.None)
+            : this(version, errorSink, options, null) {
+        }
 
-            _errors = errorSink;
+        public Tokenizer(PythonLanguageVersion version, ErrorSink errorSink, TokenizerOptions options, Action<SourceSpan, string> commentProcessor) {
+            _errors = errorSink ?? ErrorSink.Null;
+            _commentProcessor = commentProcessor;
             _state = new State(options);
             _printFunction = false;
             _unicodeLiterals = false;
@@ -69,7 +73,7 @@ namespace Microsoft.PythonTools.Parsing {
 
         static Tokenizer() {
             SpaceIndentation = new String[80];
-            for (int i = 0; i < 80;  i++) {
+            for (int i = 0; i < 80; i++) {
                 SpaceIndentation[i] = new string(' ', i + 1);
             }
             TabIndentation = new String[10];
@@ -197,7 +201,7 @@ namespace Microsoft.PythonTools.Parsing {
 
             Debug.Assert(_reader == null, "Must uninitialize tokenizer before reinitializing");
             _reader = reader;
-            
+
             if (_buffer == null || _buffer.Length < bufferCapacity) {
                 _buffer = new char[bufferCapacity];
             }
@@ -327,8 +331,8 @@ namespace Microsoft.PythonTools.Parsing {
         }
 
         private Token TransformStatementToken(Token token) {
-            if (GroupingLevel > 0 && 
-                (_options & TokenizerOptions.GroupingRecovery) != 0 && 
+            if (GroupingLevel > 0 &&
+                (_options & TokenizerOptions.GroupingRecovery) != 0 &&
                 _state.GroupingRecovery != null &&
                 _state.GroupingRecovery.TokenStart == _tokenStartIndex) {
 
@@ -350,7 +354,7 @@ namespace Microsoft.PythonTools.Parsing {
                     _state.NextWhiteSpace.Insert(0, _state.CurWhiteSpace.ToString(nextWhiteSpaceStart, _state.CurWhiteSpace.Length - nextWhiteSpaceStart));
                     _state.CurWhiteSpace.Remove(_state.GroupingRecovery.VerbatimWhiteSpaceLength, _state.CurWhiteSpace.Length - nextWhiteSpaceStart + _state.GroupingRecovery.NewLineKind.GetSize());
                 }
-                
+
                 var nlKind = _state.GroupingRecovery.NewLineKind;
                 _state.GroupingRecovery = null;
                 return NewLineKindToToken(nlKind);
@@ -635,7 +639,7 @@ namespace Microsoft.PythonTools.Parsing {
                 if (Verbatim) {
                     _state.CurWhiteSpace.Append((char)ch);
                 }
-                ch = NextChar(); 
+                ch = NextChar();
             } while (ch == ' ' || ch == '\t');
 
             BufferBack();
@@ -650,10 +654,22 @@ namespace Microsoft.PythonTools.Parsing {
             return ch;
         }
 
+        private void ProcessComment() {
+            if (_commentProcessor != null) {
+                var tokenSpan = TokenSpan;
+                if (tokenSpan.Length > 0) {
+                    var span = new SourceSpan(IndexToLocation(tokenSpan.Start), IndexToLocation(tokenSpan.End));
+                    var text = GetTokenString();
+                    _commentProcessor(span, text);
+                }
+            }
+        }
+
         private int SkipSingleLineComment() {
             // do single-line comment:
             int ch = ReadLine();
             MarkTokenEnd();
+            ProcessComment();
 
             // discard token '# ...':
             DiscardToken();
@@ -666,6 +682,7 @@ namespace Microsoft.PythonTools.Parsing {
             // do single-line comment:
             ch = ReadLine();
             MarkTokenEnd();
+            ProcessComment();
 
             return new CommentToken(GetTokenString());
         }
@@ -819,7 +836,7 @@ namespace Microsoft.PythonTools.Parsing {
 
                 } else if (ch == '\\') {
                     ch = NextChar();
-                    
+
                     if (ch == EOF) {
                         BufferBack();
 
@@ -855,7 +872,7 @@ namespace Microsoft.PythonTools.Parsing {
                     _newLineLocations.Add(CurrentIndex);
                     if (!isTriple) {
                         // backup over the eoln:
-                        
+
                         MarkTokenEnd();
                         UnexpectedEndOfString(isTriple, false);
 
@@ -889,12 +906,12 @@ namespace Microsoft.PythonTools.Parsing {
                     _errors.Add(e.Message, _newLineLocations.ToArray(), _tokenStartIndex, _tokenEndIndex, ErrorCodes.SyntaxError, Severity.Error);
                     contents = "";
                 }
-                
+
                 if (Verbatim) {
                     return new VerbatimUnicodeStringToken(contents, GetTokenString());
                 }
                 return new UnicodeStringToken(contents);
-            } else {                
+            } else {
                 var data = LiteralParser.ParseBytes(_buffer, start, length, isRaw, !_disableLineFeedLineSeparator);
                 if (data.Count == 0) {
                     if (Verbatim) {
@@ -961,10 +978,9 @@ namespace Microsoft.PythonTools.Parsing {
                         return new ConstantValueToken(LiteralParser.ParseImaginary(GetTokenString()));
 
                     case 'l':
-                    case 'L':
-                        {
+                    case 'L': {
                             MarkTokenEnd();
-                            
+
                             if (_langVersion.Is3x()) {
                                 ReportSyntaxError(new IndexSpan(_tokenEndIndex - 1, 1), "invalid token", ErrorCodes.SyntaxError);
                             }
@@ -1140,7 +1156,7 @@ namespace Microsoft.PythonTools.Parsing {
                         if (_langVersion.Is3x()) {
                             ReportSyntaxError(new IndexSpan(_tokenEndIndex - 1, 1), "invalid token", ErrorCodes.SyntaxError);
                         }
-                        
+
                         // TODO: parse in place
                         if (Verbatim) {
                             return new VerbatimConstantValueToken(LiteralParser.ParseBigInteger(GetTokenSubstring(2, TokenLength - 3), 16), GetTokenString());
@@ -1484,7 +1500,7 @@ namespace Microsoft.PythonTools.Parsing {
                 string name = GetTokenString();
                 token = _names[name] = new NameToken(name);
             }
-            
+
             return token;
         }
 
@@ -1789,26 +1805,21 @@ namespace Microsoft.PythonTools.Parsing {
                             sb = new StringBuilder();
                             sb.Append(noAllocWhiteSpace);
                         }
-                        sb.Append('\f'); 
+                        sb.Append('\f');
                         break;
-
                     case '#':
-
                         if ((_options & TokenizerOptions.VerbatimCommentsAndLineJoins) != 0) {
                             BufferBack();
                             MarkTokenEnd();
                             return true;
-                        } else if ((_options & TokenizerOptions.Verbatim) != 0) {
+                        } else {
                             BufferBack();
                             DiscardToken();
-
-                            var commentRes = ReadSingleLineComment(out ch);                            
-                            _state.NextWhiteSpace.Append(commentRes.VerbatimImage);
+                            var commentRes = ReadSingleLineComment(out ch);
+                            if ((_options & TokenizerOptions.Verbatim) != 0) {
+                                _state.NextWhiteSpace.Append(commentRes.VerbatimImage);
+                            }
                             DiscardToken();
-                            //SeekRelative(+1);
-                        } else {
-                            ch = ReadLine();
-                            break;
                         }
                         break;
                     default:
@@ -1828,13 +1839,13 @@ namespace Microsoft.PythonTools.Parsing {
                             if ((_options & TokenizerOptions.GroupingRecovery) != 0) {
                                 int tokenEnd = System.Math.Min(_position, _end);
                                 int tokenLength = tokenEnd - _start;
-                                
+
                                 _state.GroupingRecovery = new GroupingRecovery(
-                                    startingKind, 
-                                    noAllocWhiteSpace, 
-                                    spaces, 
-                                    sb, 
-                                    _tokenStartIndex, 
+                                    startingKind,
+                                    noAllocWhiteSpace,
+                                    spaces,
+                                    sb,
+                                    _tokenStartIndex,
                                     startingWhiteSpace,
                                     _tokenStartIndex + tokenLength
                                 );
@@ -1860,7 +1871,7 @@ namespace Microsoft.PythonTools.Parsing {
                             if (spaces < _state.Indent[_state.IndentLevel]) {
                                 if (_kind == SourceCodeKind.InteractiveCode ||
                                     _kind == SourceCodeKind.Statements) {
-                                        SetIndent(spaces, sb, noAllocWhiteSpace, indentStart);
+                                    SetIndent(spaces, sb, noAllocWhiteSpace, indentStart);
                                 } else {
                                     DoDedent(spaces, _state.Indent[_state.IndentLevel]);
                                 }
@@ -1876,7 +1887,7 @@ namespace Microsoft.PythonTools.Parsing {
 
         private static int PreviousIndentLength(object previousIndent) {
             string prevStr = previousIndent as string;
-            if(prevStr != null) {
+            if (prevStr != null) {
                 return prevStr.Length;
             }
 
@@ -2064,7 +2075,7 @@ namespace Microsoft.PythonTools.Parsing {
                 IncompleteString = state.IncompleteString;
                 if (verbatim) {
                     CurWhiteSpace = new StringBuilder(state.CurWhiteSpace.ToString());
-                    NextWhiteSpace = new StringBuilder(state.NextWhiteSpace.ToString());                
+                    NextWhiteSpace = new StringBuilder(state.NextWhiteSpace.ToString());
                 } else {
                     CurWhiteSpace = null;
                     NextWhiteSpace = null;
@@ -2323,7 +2334,7 @@ namespace Microsoft.PythonTools.Parsing {
             CheckInvariants();
         }
 
-        
+
         private NewLineKind ReadEolnOpt(int current) {
             if (current == '\n') {
                 return NewLineKind.LineFeed;
@@ -2364,7 +2375,7 @@ namespace Microsoft.PythonTools.Parsing {
                 _start = 0;
                 _bufferResized = true;
             }
-            
+
             // make the buffer full:
             try {
                 int count = _reader.Read(_buffer, _end, _buffer.Length - _end);
@@ -2374,8 +2385,8 @@ namespace Microsoft.PythonTools.Parsing {
                 if (streamReader != null && streamReader.CurrentEncoding != PythonAsciiEncoding.SourceEncoding) {
                     _errors.Add(
                         String.Format(
-                            "(unicode error) '{0}' codec can't decode byte 0x{1:x} in position {2}", 
-                            Parser.NormalizeEncodingName(streamReader.CurrentEncoding.WebName), 
+                            "(unicode error) '{0}' codec can't decode byte 0x{1:x} in position {2}",
+                            Parser.NormalizeEncodingName(streamReader.CurrentEncoding.WebName),
                             bse.BadByte,
                             bse.Index + CurrentIndex
                         ),
@@ -2442,9 +2453,9 @@ namespace Microsoft.PythonTools.Parsing {
 
         public static string GetString(this NewLineKind kind) {
             switch (kind) {
-                case NewLineKind.CarriageReturn: return "\r"; 
-                case NewLineKind.CarriageReturnLineFeed: return "\r\n"; 
-                case NewLineKind.LineFeed: return "\n"; 
+                case NewLineKind.CarriageReturn: return "\r";
+                case NewLineKind.CarriageReturnLineFeed: return "\r\n";
+                case NewLineKind.LineFeed: return "\n";
             }
             throw new InvalidOperationException();
         }

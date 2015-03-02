@@ -63,12 +63,18 @@ namespace Microsoft.PythonTools.Project {
         internal List<CustomCommand> _customCommands;
         private string _customCommandsDisplayLabel;
         private Dictionary<object, Action<object>> _actionsOnClose;
+        private readonly CommentTaskProvider _commentTaskProvider;
 
         public PythonProjectNode(IServiceProvider serviceProvider)
             : base(serviceProvider, Utilities.GetImageList(typeof(PythonProjectNode).Assembly.GetManifestResourceStream(PythonConstants.ProjectImageList))) {
 
             Type projectNodePropsType = typeof(PythonProjectNodeProperties);
             AddCATIDMapping(projectNodePropsType, projectNodePropsType.GUID);
+
+            _commentTaskProvider = ((CommentTaskProvider)serviceProvider.GetService(typeof(CommentTaskProvider)));
+            if (_commentTaskProvider != null) {
+                _commentTaskProvider.TokensChanged += CommentTaskTokensChanged;
+            }
         }
 
         private static KeyValuePair<string, string>[] outputGroupNames = {
@@ -735,6 +741,10 @@ namespace Microsoft.PythonTools.Project {
                     }
                 }
 
+                if (_commentTaskProvider != null) {
+                    _commentTaskProvider.TokensChanged -= CommentTaskTokensChanged;
+                }
+
                 if (_analyzer != null) {
                     UnHookErrorsAndWarnings(_analyzer);
                     _analyzer.ClearAllTasks();
@@ -902,10 +912,14 @@ namespace Microsoft.PythonTools.Project {
                 return;
             }
 
-            Site.GetUIThread().InvokeAsync(UpdateActiveInterpreter).DoNotWait();
+            Site.GetUIThread().InvokeAsync(ReanalyzeProject).DoNotWait();
         }
 
-        private void UpdateActiveInterpreter() {
+        private void CommentTaskTokensChanged(object sender, EventArgs e) {
+            ReanalyzeProject();
+        }
+
+        private void ReanalyzeProject() {
             if (IsClosing || IsClosed) {
                 // This deferred event is no longer important.
                 return;

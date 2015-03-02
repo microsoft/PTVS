@@ -93,21 +93,23 @@ namespace Microsoft.PythonTools.Parsing {
 
             var options = parserOptions ?? ParserOptions.Default;
 
-            Tokenizer tokenizer = new Tokenizer(version, options.ErrorSink, (options.Verbatim ? TokenizerOptions.Verbatim : TokenizerOptions.None) | TokenizerOptions.GroupingRecovery);
-
+            Parser parser = null;
+            var tokenizer = new Tokenizer(
+                version, options.ErrorSink,
+                (options.Verbatim ? TokenizerOptions.Verbatim : TokenizerOptions.None) | TokenizerOptions.GroupingRecovery,
+                (span, text) => options.RaiseProcessComment(parser, new CommentEventArgs(span, text)));
             tokenizer.Initialize(null, reader, SourceLocation.MinValue);
-            tokenizer.IndentationInconsistencySeverity = options.IndentationInconsistencySeverity;            
+            tokenizer.IndentationInconsistencySeverity = options.IndentationInconsistencySeverity;
 
-            Parser result = new Parser(tokenizer, 
-                options.ErrorSink ?? ErrorSink.Null, 
-                version, 
+            parser = new Parser(
+                tokenizer,
+                options.ErrorSink ?? ErrorSink.Null,
+                version,
                 options.Verbatim,
                 options.BindReferences,
                 options.PrivatePrefix
-            );
-
-            result._sourceReader = reader;
-            return result;
+            ) { _sourceReader = reader };
+            return parser;
         }
 
         public static Parser CreateParser(Stream stream, PythonLanguageVersion version) {

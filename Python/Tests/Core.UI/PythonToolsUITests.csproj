@@ -109,6 +109,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AddImportTests.cs" />
+    <Compile Include="ErrorListTaskListTests.cs" />
     <Compile Include="BasicProjectTests.cs" />
     <Compile Include="BuildTasksUITests.cs" />
     <Compile Include="EditorTests.cs" />
