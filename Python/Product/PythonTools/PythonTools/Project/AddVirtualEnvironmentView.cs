@@ -37,6 +37,7 @@ namespace Microsoft.PythonTools.Project {
         private readonly PythonProjectNode _project;
         internal readonly string _projectHome;
         private readonly SemaphoreSlim _ready = new SemaphoreSlim(1);
+        private InterpreterView _lastUserSelectedBaseInterpreter;
 
         // These interpreter IDs are known to support virtualenv.
         private static readonly IEnumerable<Guid> SupportsVirtualEnv = new[] {
@@ -226,10 +227,17 @@ namespace Microsoft.PythonTools.Project {
                 var options = VirtualEnv.FindInterpreterOptions(path, _interpreterService);
                 if (options != null && File.Exists(options.InterpreterPath)) {
                     var baseInterp = _interpreterService.FindInterpreter(options.Id, options.LanguageVersion);
-                    BaseInterpreter = baseInterp != null ?
-                        Interpreters.FirstOrDefault(iv => iv.Interpreter == baseInterp) :
-                        null;
-                    WillAddVirtualEnv = (BaseInterpreter != null);
+                    InterpreterView baseInterpView;
+                    if (baseInterp != null &&
+                        (baseInterpView = Interpreters.FirstOrDefault(iv => iv.Interpreter == baseInterp)) != null) {
+                        if (_lastUserSelectedBaseInterpreter == null) {
+                            _lastUserSelectedBaseInterpreter = BaseInterpreter;
+                        }
+                        BaseInterpreter = baseInterpView;
+                        WillAddVirtualEnv = true;
+                    } else {
+                        WillAddVirtualEnv = false;
+                    }
                 } else {
                     WillAddVirtualEnv = false;
                 }
@@ -240,6 +248,10 @@ namespace Microsoft.PythonTools.Project {
                 WillAddVirtualEnv = false;
                 CannotCreateVirtualEnv = false;
                 NoInterpretersInstalled = false;
+                if (_lastUserSelectedBaseInterpreter != null) {
+                    BaseInterpreter = _lastUserSelectedBaseInterpreter;
+                    _lastUserSelectedBaseInterpreter = null;
+                }
             }
 
         }
