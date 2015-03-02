@@ -86,5 +86,8 @@ namespace TestUtilities {
 
         List<IVsTaskItem> WaitForErrorListItems(int expectedCount);
 
+        DTE Dte { get; }
+
+        void OnDispose(Action action);
     }
 }

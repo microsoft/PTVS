@@ -46,7 +46,10 @@ namespace Microsoft.PythonTools.Options {
             if (!_settingsStore.CollectionExists(path)) {
                 return null;
             }
-            return _settingsStore.GetString(path, name, null);
+            if (!_settingsStore.PropertyExists(category, name)) {
+                return null;
+            }
+            return _settingsStore.GetString(path, name, "");
         }
     }
 }

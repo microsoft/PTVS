@@ -31,6 +31,7 @@ using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
@@ -155,21 +156,33 @@ namespace PythonToolsUITests {
                 // try too long of a file
                 try {
                     project.SaveAs("TempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFile.pyproj");
-                    Assert.Fail();
+                    Assert.Fail("Did not throw InvalidOperationException for long filename");
                 } catch (InvalidOperationException e) {
                     Assert.IsTrue(e.ToString().Contains("exceeds the maximum number of"));
                 }
 
                 // save to a new location
+                bool hasAdmin = false;
                 try {
-                    project.SaveAs("C:\\TempFile.pyproj");
-                    Assert.Fail();
-                } catch (UnauthorizedAccessException e) {
-                    // Saving to a new location is now permitted, but this location will not succeed.
-                    Assert.IsTrue(e.ToString().Contains("Access to the path 'C:\\TempFile.pyproj' is denied."));
-                } //catch (InvalidOperationException e) {
-                //    Assert.IsTrue(e.ToString().Contains("The project file can only be saved into the project location"));
-                //}
+                    var path = "C:\\" + Guid.NewGuid().ToString("N");
+                    File.WriteAllText(path, "");
+                    File.Delete(path);
+                    hasAdmin = true;
+                } catch (UnauthorizedAccessException) {
+                }
+
+                // Skip this part if we have admin privileges
+                if (!hasAdmin) {
+                    try {
+                        project.SaveAs("C:\\TempFile.pyproj");
+                        Assert.Fail("Did not throw UnauthorizedAccessException for protected path");
+                    } catch (UnauthorizedAccessException e) {
+                        // Saving to a new location is now permitted, but this location will not succeed.
+                        Assert.IsTrue(e.ToString().Contains("Access to the path 'C:\\TempFile.pyproj' is denied."));
+                    } //catch (InvalidOperationException e) {
+                    //    Assert.IsTrue(e.ToString().Contains("The project file can only be saved into the project location"));
+                    //}
+                }
 
                 project.SaveAs(TestData.GetPath(@"TestData\TempFile.pyproj"));
                 project.Save("");   // empty string means just save
@@ -285,7 +298,7 @@ namespace PythonToolsUITests {
                 AssertNotImplemented(() => folder.SaveAs(""));
                 AssertNotImplemented(() => folder.Save());
                 AssertNotImplemented(() => { var tmp = folder.IsOpen; });
-                Assert.AreEqual(0, folder.Collection.Count);
+                Assert.AreEqual(2, folder.Collection.Count);
                 Assert.AreEqual(true, folder.Saved);
 
                 Assert.AreEqual("{6bb5f8ef-4483-11d3-8bcf-00c04f8ec28c}", folder.Kind);
@@ -566,17 +579,17 @@ namespace PythonToolsUITests {
                         }
                     }
 
-                    Assert.AreEqual(app.Dte, project.Properties.Item(propCount + 1).DTE);
+                    Assert.IsTrue(ComUtilities.IsSameComObject(app.Dte, project.Properties.Item(propCount + 1).DTE));
                     Assert.AreEqual(0, project.Properties.Item(propCount + 1).NumIndices);
-                    Assert.AreNotEqual(null, project.Properties.Item(propCount + 1).Parent);
-                    Assert.AreEqual(null, project.Properties.Item(propCount + 1).Application);
-                    Assert.AreNotEqual(null, project.Properties.Item(propCount + 1).Collection);
+                    Assert.IsNotNull(project.Properties.Item(propCount + 1).Parent);
+                    Assert.IsNull(project.Properties.Item(propCount + 1).Application);
+                    Assert.IsNotNull(project.Properties.Item(propCount + 1).Collection);
                     propCount++;
                 }
 
                 Assert.AreEqual(propCount, project.Properties.Count);
 
-                Assert.AreEqual(project.Properties.DTE, app.Dte);
+                Assert.IsTrue(ComUtilities.IsSameComObject(app.Dte, project.Properties.DTE));
             }
         }
 
@@ -613,7 +626,7 @@ namespace PythonToolsUITests {
                     break;
                 }
 
-                Assert.AreEqual(app.Dte, project.ProjectItems.DTE, "project.ProjectItems.DTE");
+                Assert.IsTrue(ComUtilities.IsSameComObject(app.Dte, project.ProjectItems.DTE), "project.ProjectItems.DTE");
                 Assert.AreEqual(project, project.ProjectItems.Parent, "project.ProjectItems.Parent");
                 Assert.IsNull(project.ProjectItems.Kind, "project.ProjectItems.Kind");
 
@@ -629,12 +642,12 @@ namespace PythonToolsUITests {
                 var project = app.OpenProject(@"TestData\HelloWorld.sln");
 
                 var item = project.ProjectItems.Item("Program.py");
-                Assert.AreEqual(null, item.ExtenderNames);
-                Assert.AreEqual(null, item.ExtenderCATID);
-                Assert.AreEqual(null, item.SubProject);
+                Assert.IsNull(item.ExtenderNames);
+                Assert.IsNull(item.ExtenderCATID);
+                Assert.IsNull(item.SubProject);
                 Assert.AreEqual("{6bb5f8ee-4483-11d3-8bcf-00c04f8ec28c}", item.Kind);
-                Assert.AreEqual(null, item.ConfigurationManager);
-                Assert.AreNotEqual(null, item.Collection.Item("Program.py"));
+                Assert.IsNull(item.ConfigurationManager);
+                Assert.IsNotNull(item.Collection.Item("Program.py"));
                 AssertError<ArgumentOutOfRangeException>(() => item.get_FileNames(-1));
                 AssertNotImplemented(() => item.Saved = false);
 
@@ -677,7 +690,7 @@ namespace PythonToolsUITests {
                 Assert.AreEqual("Any CPU", ((object[])project.ConfigurationManager.PlatformNames)[0]);
                 Assert.AreEqual("Any CPU", ((object[])project.ConfigurationManager.SupportedPlatforms)[0]);
 
-                Assert.AreEqual(null, project.ConfigurationManager.ActiveConfiguration.Object);
+                Assert.IsNull(project.ConfigurationManager.ActiveConfiguration.Object);
 
                 //var workingDir = project.ConfigurationManager.ActiveConfiguration.Properties.Item("WorkingDirectory");
                 //Assert.AreEqual(".", workingDir);
@@ -694,10 +707,10 @@ namespace PythonToolsUITests {
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\XamlProject.sln");
 
-                Assert.AreNotEqual(null, project.ProjectItems.Item("Program.py").ProjectItems.Item("Program.xaml"));
+                Assert.IsNotNull(project.ProjectItems.Item("Program.py").ProjectItems.Item("Program.xaml"));
                 project.ProjectItems.Item("Program.py").Name = "NewProgram.py";
 
-                Assert.AreNotEqual(null, project.ProjectItems.Item("NewProgram.py").ProjectItems.Item("NewProgram.xaml"));
+                Assert.IsNotNull(project.ProjectItems.Item("NewProgram.py").ProjectItems.Item("NewProgram.xaml"));
             }
         }
 
@@ -1101,7 +1114,7 @@ namespace PythonToolsUITests {
                 string fullPath = TestData.GetPath(@"TestData\AddExistingFolder.sln");
 
                 Assert.AreEqual(5, project.ProjectItems.Count);
-                Assert.AreEqual(7, app.OpenSolutionExplorer().ExpandAll());
+                Assert.AreEqual(8, app.OpenSolutionExplorer().ExpandAll());
 
                 var item = project.ProjectItems.AddFromFile(TestData.GetPath(@"TestData\AddExistingFolder\TestFolder\TestFile.txt"));
 
@@ -1111,7 +1124,7 @@ namespace PythonToolsUITests {
 
                 Assert.AreEqual(6, project.ProjectItems.Count);
                 // Two more items, because we've added the file and its folder
-                Assert.AreEqual(9, app.OpenSolutionExplorer().ExpandAll());
+                Assert.AreEqual(10, app.OpenSolutionExplorer().ExpandAll());
 
                 var folder = project.ProjectItems.Item("TestFolder");
                 Assert.IsNotNull(folder);
@@ -1130,7 +1143,7 @@ namespace PythonToolsUITests {
                 var project = app.OpenProject(@"TestData\HelloWorld.sln");
                 // "Python Environments", "References", "Search Paths", "Program.py"
                 Assert.AreEqual(4, project.ProjectItems.Count);
-                Assert.AreEqual(6, app.OpenSolutionExplorer().ExpandAll());
+                Assert.AreEqual(7, app.OpenSolutionExplorer().ExpandAll());
 
                 try {
                     File.Delete(TestData.GetPath(@"TestData\HelloWorld\LocalsTest.py"));
@@ -1140,7 +1153,7 @@ namespace PythonToolsUITests {
 
                 Assert.IsNotNull(item);
                 Assert.AreEqual(5, project.ProjectItems.Count);
-                Assert.AreEqual(7, app.OpenSolutionExplorer().ExpandAll());
+                Assert.AreEqual(8, app.OpenSolutionExplorer().ExpandAll());
 
                 Assert.AreEqual("LocalsTest.py", item.Properties.Item("FileName").Value);
 

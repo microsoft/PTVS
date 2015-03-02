@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+using System.Threading;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Input;
@@ -59,12 +60,13 @@ namespace TestUtilities.UI {
 
         public string FileName { 
             get {
-                var filename = (ValuePattern)GetFilenameEditBox().GetCurrentPattern(ValuePattern.Pattern);
-                return filename.Current.Value;
+                return GetFilenameEditBox().GetValuePattern().Current.Value;
             }
-            set { 
-                var filename = (ValuePattern)GetFilenameEditBox().GetCurrentPattern(ValuePattern.Pattern);
-                filename.SetValue(value);
+            set {
+                for (int retries = 10; retries > 0 && FileName != value; --retries) {
+                    GetFilenameEditBox().GetValuePattern().SetValue(value);
+                    Thread.Sleep(100);
+                }
             }
         }
 

@@ -644,5 +644,14 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         public List<IVsTaskItem> WaitForErrorListItems(int expectedCount) {
             throw new NotImplementedException();
         }
+
+
+        public DTE Dte {
+            get { throw new NotImplementedException(); }
+        }
+
+        public void OnDispose(Action action) {
+            
+        }
     }
 }

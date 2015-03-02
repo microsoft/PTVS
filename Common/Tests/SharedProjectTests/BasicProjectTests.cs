@@ -202,76 +202,62 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("VSTestHost")]
         public void CleanSolution() {
-            var msbuildLogProperty = VSTestContext.DTE
-                .get_Properties("Environment", "ProjectsAndSolution")
-                .Item("MSBuildOutputVerbosity");
-            var originalValue = msbuildLogProperty.Value;
-            msbuildLogProperty.Value = 2;
-            try {
-                foreach (var projectType in ProjectTypes) {
-                    var proj = new ProjectDefinition(
-                        "HelloWorld",
-                        projectType,
-                        Property("OutputPath", "."),
-                        Compile("server"),
-                        Target(
-                            "Clean",
-                            Tasks.Message("Hello Clean World!", importance: "high")
-                        ),
-                        Target(
-                            "CoreCompile",
-                            Tasks.Message("CoreCompile", importance: "high")
-                        )
+            foreach (var projectType in ProjectTypes) {
+                var proj = new ProjectDefinition(
+                    "HelloWorld",
+                    projectType,
+                    Property("OutputPath", "."),
+                    Compile("server"),
+                    Target(
+                        "Clean",
+                        Tasks.Message("Hello Clean World!", importance: "high")
+                    ),
+                    Target(
+                        "CoreCompile",
+                        Tasks.Message("CoreCompile", importance: "high")
+                    )
 
-                    );
-                    using (var solution = proj.Generate().ToVs()) {
-                        VSTestContext.DTE.ExecuteCommand("Build.CleanSolution");
-                        solution.WaitForOutputWindowText("Build", "Hello Clean World!");
-                    }
+                );
+                using (var app = proj.Generate().ToVs()) {
+                    var msbuildLogProperty = app.Dte.get_Properties("Environment", "ProjectsAndSolution").Item("MSBuildOutputVerbosity");
+                    var originalValue = msbuildLogProperty.Value;
+                    msbuildLogProperty.Value = 2;
+                    app.OnDispose(() => msbuildLogProperty.Value = originalValue);
+
+                    app.ExecuteCommand("Build.CleanSolution");
+                    app.WaitForOutputWindowText("Build", "Hello Clean World!");
                 }
-            } finally {
-                msbuildLogProperty.Value = originalValue;
-                VSTestContext.DTE.Solution.Close();
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
             }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("VSTestHost")]
         public void BuildSolution() {
-            var msbuildLogProperty = VSTestContext.DTE
-                .get_Properties("Environment", "ProjectsAndSolution")
-                .Item("MSBuildOutputVerbosity");
-            var originalValue = msbuildLogProperty.Value;
-            msbuildLogProperty.Value = 2;
-            try {
-                foreach (var projectType in ProjectTypes) {
-                    var proj = new ProjectDefinition(
-                        "HelloWorld",
-                        projectType,
-                        Property("OutputPath", "."),
-                        Compile("server"),
-                        Target(
-                            "Build",
-                            Tasks.Message("Hello Build World!", importance: "high")
-                        ),
-                        Target(
-                            "CoreCompile",
-                            Tasks.Message("CoreCompile", importance: "high")
-                        ),
-                        Target("CreateManifestResourceNames")
-                    );
-                    using (var solution = proj.Generate().ToVs()) {
-                        VSTestContext.DTE.ExecuteCommand("Build.RebuildSolution");
-                        solution.WaitForOutputWindowText("Build", "Hello Build World!");
-                    }
+            foreach (var projectType in ProjectTypes) {
+                var proj = new ProjectDefinition(
+                    "HelloWorld",
+                    projectType,
+                    Property("OutputPath", "."),
+                    Compile("server"),
+                    Target(
+                        "Build",
+                        Tasks.Message("Hello Build World!", importance: "high")
+                    ),
+                    Target(
+                        "CoreCompile",
+                        Tasks.Message("CoreCompile", importance: "high")
+                    ),
+                    Target("CreateManifestResourceNames")
+                );
+                using (var app = proj.Generate().ToVs()) {
+                    var msbuildLogProperty = app.Dte.get_Properties("Environment", "ProjectsAndSolution").Item("MSBuildOutputVerbosity");
+                    var originalValue = msbuildLogProperty.Value;
+                    msbuildLogProperty.Value = 2;
+                    app.OnDispose(() => msbuildLogProperty.Value = originalValue);
+
+                    app.ExecuteCommand("Build.RebuildSolution");
+                    app.WaitForOutputWindowText("Build", "Hello Build World!");
                 }
-            } finally {
-                msbuildLogProperty.Value = originalValue;
-                VSTestContext.DTE.Solution.Close();
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
             }
         }
 #if FALSE

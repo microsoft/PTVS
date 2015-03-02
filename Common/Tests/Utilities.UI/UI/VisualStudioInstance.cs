@@ -314,5 +314,13 @@ namespace TestUtilities.UI {
         public List<IVsTaskItem> WaitForErrorListItems(int expectedItems) {
             return App.WaitForErrorListItems(expectedItems);
         }
+
+        public DTE Dte {
+            get { return App.Dte; }
+        }
+
+        public void OnDispose(Action action) {
+            App.OnDispose(action);
+        }
     }
 }
