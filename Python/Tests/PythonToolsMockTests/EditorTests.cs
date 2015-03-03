@@ -17,7 +17,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.PythonTools;
-using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools.MockVsTests;
@@ -151,6 +150,14 @@ namespace PythonToolsMockTests {
             var session = view.TopSession as ICompletionSession;
 
             AssertUtil.ContainsAtLeast(session.Completions(), "property", "staticmethod");
+        }
+
+        [TestMethod]
+        public void DecoratorNonCompletions() {
+            var view = CreateViewAndAnalyze();
+            view.Type("a = b @");
+
+            Assert.IsNull(view.TopSession as ICompletionSession);
         }
 
         private static MockVsTextView CreateViewAndAnalyze(MockVs vs = null) {

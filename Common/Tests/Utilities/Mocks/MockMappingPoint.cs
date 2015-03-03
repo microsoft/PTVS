@@ -49,7 +49,7 @@ namespace TestUtilities.Mocks {
         }
 
         public SnapshotPoint? GetPoint(ITextBuffer targetBuffer, PositionAffinity affinity) {
-            throw new NotImplementedException();
+            return GetPoint(targetBuffer.CurrentSnapshot, affinity);
         }
     }
 }

@@ -155,12 +155,21 @@ namespace Microsoft.PythonTools.Intellisense {
             // We should only receive pre-process events from our text view
             Debug.Assert(sender == _textView);
 
-            // TODO: We should handle = for signature completion of keyword arguments
-
             string text = e.Text;
             if (text.Length == 1) {
                 HandleChar(text[0]);
             }
+        }
+
+        private string GetTextBeforeCaret(int includeCharsAfter = 0) {
+            var maybePt = _textView.Caret.Position.Point.GetPoint(_textView.TextBuffer, PositionAffinity.Predecessor);
+            if (!maybePt.HasValue) {
+                return string.Empty;
+            }
+            var pt = maybePt.Value + includeCharsAfter;
+
+            var span = new SnapshotSpan(pt.GetContainingLine().Start, pt);
+            return span.GetText();
         }
 
         private void HandleChar(char ch) {
@@ -173,6 +182,10 @@ namespace Microsoft.PythonTools.Intellisense {
             if (!_incSearch.IsActive) {
                 switch (ch) {
                     case '@':
+                        if (!string.IsNullOrWhiteSpace(GetTextBeforeCaret(-1))) {
+                            break;
+                        }
+                        goto case '.';
                     case '.':
                     case ' ':
                         if (_provider.PythonService.LangPrefs.AutoListMembers) {
@@ -488,7 +501,8 @@ namespace Microsoft.PythonTools.Intellisense {
                 var ch = (char)(ushort)System.Runtime.InteropServices.Marshal.GetObjectForNativeVariant(pvaIn);
                 
                 if (_activeSession != null && !_activeSession.IsDismissed) {
-                    if (_activeSession.SelectedCompletionSet.SelectionStatus.IsSelected &&
+                    if (_activeSession.SelectedCompletionSet != null &&
+                        _activeSession.SelectedCompletionSet.SelectionStatus.IsSelected &&
                         _provider.PythonService.AdvancedOptions.CompletionCommittedBy.IndexOf(ch) != -1) {
                         _activeSession.Commit();
                     } else if (!IsIdentifierChar(ch)) {
