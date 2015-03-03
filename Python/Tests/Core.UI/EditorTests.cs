@@ -50,7 +50,7 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("VSTestHost")]
         public void UnregisteredFileExtensionEditor() {
-            using (var app = new VisualStudioApp()) {
+            using (var app = new PythonVisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\UnregisteredFileExtension.sln");
 
                 var item = project.ProjectItems.Item("Fob.unregfileext");
@@ -100,7 +100,7 @@ namespace PythonToolsUITests {
         }
 
         private void OutlineTest(string filename, params ExpectedTag[] expected) {
-            using (var app = new VisualStudioApp()) {
+            using (var app = new PythonVisualStudioApp()) {
 
                 var prevOption = app.GetService<PythonToolsService>().AdvancedOptions.EnterOutliningModeOnOpen;
                 try {
@@ -179,7 +179,7 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("VSTestHost")]
         public void SignaturesTest() {
-            using (var app = new VisualStudioApp()) {
+            using (var app = new PythonVisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\Signatures.sln");
 
                 var item = project.ProjectItems.Item("sigs.py");
@@ -220,7 +220,7 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("VSTestHost")]
         public void MultiLineSignaturesTest() {
-            using (var app = new VisualStudioApp()) {
+            using (var app = new PythonVisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\Signatures.sln");
 
                 var item = project.ProjectItems.Item("multilinesigs.py");
@@ -273,7 +273,7 @@ namespace PythonToolsUITests {
         [HostType("VSTestHost")]
         public void CompletionsCaseSensitive() {
             // http://pytools.codeplex.com/workitem/457
-            using (var app = new VisualStudioApp()) {
+            using (var app = new PythonVisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\Completions.sln");
 
                 var item = project.ProjectItems.Item("oar.py");
@@ -295,7 +295,7 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("VSTestHost")]
         public void AutoIndent() {
-            using (var app = new VisualStudioApp()) {
+            using (var app = new PythonVisualStudioApp()) {
                 var prevSetting = app.GetService<PythonToolsService>().AdvancedOptions.AddNewLineAtEndOfFullyTypedWord;
                 app.OnDispose(() => app.GetService<PythonToolsService>().AdvancedOptions.AddNewLineAtEndOfFullyTypedWord = prevSetting);
                 app.GetService<PythonToolsService>().AdvancedOptions.AddNewLineAtEndOfFullyTypedWord = true;
@@ -464,7 +464,7 @@ pass");
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("VSTestHost")]
         public void AutoIndentExisting() {
-            using (var app = new VisualStudioApp()) {
+            using (var app = new PythonVisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\AutoIndent.sln");
 
                 // http://pytools.codeplex.com/workitem/138
@@ -545,7 +545,7 @@ pass");
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("VSTestHost")]
         public void TypingTest() {
-            using (var app = new VisualStudioApp()) {
+            using (var app = new PythonVisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\EditorTests.sln");
 
                 // http://pytools.codeplex.com/workitem/139
@@ -582,7 +582,7 @@ def f(): pass
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("VSTestHost")]
         public void CompletionTests() {
-            using (var app = new VisualStudioApp()) {
+            using (var app = new PythonVisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\EditorTests.sln");
 
                 TypingTest(app, project, "BackslashCompletion.py", 2, 0, @"x = 42
@@ -634,7 +634,7 @@ x\
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("VSTestHost")]
         public void OpenInvalidUnicodeFile() {
-            using (var app = new VisualStudioApp()) {
+            using (var app = new PythonVisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\ErrorProjectUnicode.sln");
                 var item = project.ProjectItems.Item("Program.py");
                 var windowTask = Task.Run(() => item.Open());
@@ -853,7 +853,7 @@ x\
         }
 
         private static IList<ClassificationSpan> GetClassifications(string filename) {
-            using (var app = new VisualStudioApp()) {
+            using (var app = new PythonVisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\Classification.sln");
 
                 var item = project.ProjectItems.Item(filename);

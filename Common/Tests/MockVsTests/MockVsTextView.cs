@@ -357,7 +357,10 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
 
         public void AssertNoIntellisenseSession() {
             Thread.Sleep(500);
-            Assert.IsNull(IntellisenseSessionStack.TopSession);
+            var session = IntellisenseSessionStack.TopSession;
+            if (session != null) {
+                Assert.Fail("Expected no Intellisense session, but got " + session.GetType().ToString());
+            }
         }
     }
 }

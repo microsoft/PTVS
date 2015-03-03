@@ -110,7 +110,10 @@ namespace TestUtilities.Mocks {
         }
 
         public ITextSnapshot Delete(Span deleteSpan) {
-            throw new NotImplementedException();
+            using (var edit = CreateEdit()) {
+                edit.Delete(deleteSpan);
+                return edit.Apply();
+            }
         }
 
         public bool EditInProgress {

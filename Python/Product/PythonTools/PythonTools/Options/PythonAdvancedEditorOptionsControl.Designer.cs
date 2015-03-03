@@ -39,6 +39,7 @@
             this._pasteRemovesReplPrompts = new System.Windows.Forms.CheckBox();
             this._colorNames = new System.Windows.Forms.CheckBox();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
+            this._autoListIdentifiers = new System.Windows.Forms.CheckBox();
             this._selectionInCompletionGroupBox.SuspendLayout();
             this.tableLayoutPanel3.SuspendLayout();
             this._completionResultsGroupBox.SuspendLayout();
@@ -100,7 +101,7 @@
             this._selectionInCompletionGroupBox.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this._selectionInCompletionGroupBox.Controls.Add(this.tableLayoutPanel3);
             this._selectionInCompletionGroupBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this._selectionInCompletionGroupBox.Location = new System.Drawing.Point(6, 74);
+            this._selectionInCompletionGroupBox.Location = new System.Drawing.Point(6, 97);
             this._selectionInCompletionGroupBox.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
             this._selectionInCompletionGroupBox.Name = "_selectionInCompletionGroupBox";
             this._selectionInCompletionGroupBox.Size = new System.Drawing.Size(476, 104);
@@ -150,7 +151,7 @@
             this._completionResultsGroupBox.Location = new System.Drawing.Point(6, 3);
             this._completionResultsGroupBox.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
             this._completionResultsGroupBox.Name = "_completionResultsGroupBox";
-            this._completionResultsGroupBox.Size = new System.Drawing.Size(476, 65);
+            this._completionResultsGroupBox.Size = new System.Drawing.Size(476, 88);
             this._completionResultsGroupBox.TabIndex = 0;
             this._completionResultsGroupBox.TabStop = false;
             this._completionResultsGroupBox.Text = "Completion Results";
@@ -163,14 +164,16 @@
             this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.tableLayoutPanel2.Controls.Add(this._intersectMembers, 0, 0);
             this.tableLayoutPanel2.Controls.Add(this._filterCompletions, 0, 1);
+            this.tableLayoutPanel2.Controls.Add(this._autoListIdentifiers, 0, 2);
             this.tableLayoutPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel2.Location = new System.Drawing.Point(3, 16);
             this.tableLayoutPanel2.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.tableLayoutPanel2.Name = "tableLayoutPanel2";
-            this.tableLayoutPanel2.RowCount = 2;
+            this.tableLayoutPanel2.RowCount = 3;
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel2.Size = new System.Drawing.Size(470, 46);
+            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.tableLayoutPanel2.Size = new System.Drawing.Size(470, 69);
             this.tableLayoutPanel2.TabIndex = 0;
             // 
             // _filterCompletions
@@ -191,7 +194,7 @@
             this._miscOptionsGroupBox.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this._miscOptionsGroupBox.Controls.Add(this.tableLayoutPanel4);
             this._miscOptionsGroupBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this._miscOptionsGroupBox.Location = new System.Drawing.Point(6, 184);
+            this._miscOptionsGroupBox.Location = new System.Drawing.Point(6, 207);
             this._miscOptionsGroupBox.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
             this._miscOptionsGroupBox.Name = "_miscOptionsGroupBox";
             this._miscOptionsGroupBox.Size = new System.Drawing.Size(476, 88);
@@ -274,8 +277,20 @@
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 22F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(488, 297);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(488, 320);
             this.tableLayoutPanel1.TabIndex = 0;
+            // 
+            // _autoListIdentifiers
+            // 
+            this._autoListIdentifiers.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this._autoListIdentifiers.AutoSize = true;
+            this._autoListIdentifiers.Location = new System.Drawing.Point(6, 49);
+            this._autoListIdentifiers.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
+            this._autoListIdentifiers.Name = "_autoListIdentifiers";
+            this._autoListIdentifiers.Size = new System.Drawing.Size(250, 17);
+            this._autoListIdentifiers.TabIndex = 2;
+            this._autoListIdentifiers.Text = "A&utomatically show completions for all identifiers";
+            this._autoListIdentifiers.UseVisualStyleBackColor = true;
             // 
             // PythonAdvancedEditorOptionsControl
             // 
@@ -286,7 +301,7 @@
             this.Controls.Add(this.tableLayoutPanel1);
             this.Margin = new System.Windows.Forms.Padding(6, 8, 6, 8);
             this.Name = "PythonAdvancedEditorOptionsControl";
-            this.Size = new System.Drawing.Size(488, 297);
+            this.Size = new System.Drawing.Size(488, 320);
             this._selectionInCompletionGroupBox.ResumeLayout(false);
             this._selectionInCompletionGroupBox.PerformLayout();
             this.tableLayoutPanel3.ResumeLayout(false);
@@ -324,5 +339,6 @@
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.CheckBox _filterCompletions;
         private System.Windows.Forms.CheckBox _colorNames;
+        private System.Windows.Forms.CheckBox _autoListIdentifiers;
     }
 }

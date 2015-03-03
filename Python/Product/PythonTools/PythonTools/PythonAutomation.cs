@@ -46,7 +46,7 @@ namespace Microsoft.PythonTools {
         }
 
         IPythonInteractiveOptions IPythonOptions.GetInteractiveOptions(string interpreterName) {
-            var interpreters = _pyService.InterpreterOptions.Select(x => x.Key);
+            var interpreters = _pyService.ComponentModel.GetService<IInterpreterOptionsService>().Interpreters;
             var factory = interpreters.FirstOrDefault(i => i.Description == interpreterName);
 
             return factory == null ? null : new AutomationInterpreterOptions(_serviceProvider, factory);
@@ -153,6 +153,16 @@ namespace Microsoft.PythonTools {
             }
             set {
                 _pyService.AdvancedOptions.CompletionCommittedBy = value;
+                _pyService.AdvancedOptions.Save();
+            }
+        }
+
+        bool IPythonIntellisenseOptions.AutoListIdentifiers {
+            get {
+                return _pyService.AdvancedOptions.AutoListIdentifiers;
+            }
+            set {
+                _pyService.AdvancedOptions.AutoListIdentifiers = value;
                 _pyService.AdvancedOptions.Save();
             }
         }

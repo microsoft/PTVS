@@ -71,6 +71,7 @@ namespace Microsoft.PythonTools.Options {
         bool EnterCommitsCompletion { get; set; }
         bool UseMemberIntersection { get; set; }
         string CompletionCommittedBy { get; set; }
+        bool AutoListIdentifiers { get; set; }
     }
 
     [Guid("6DCCD6E9-FAC4-4EFA-9243-AE1A71D8923D")]

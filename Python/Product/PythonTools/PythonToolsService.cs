@@ -16,10 +16,11 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Design;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
+using System.Threading;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
@@ -34,8 +35,6 @@ using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools {
-    using System.Diagnostics.CodeAnalysis;
-    using IServiceProvider = System.IServiceProvider;
 
     /// <summary>
     /// Provides services and state which need to be available to various PTVS components.
@@ -60,6 +59,10 @@ namespace Microsoft.PythonTools {
         private readonly IdleManager _idleManager;
         private Func<CodeFormattingOptions> _optionsFactory;
         private const string _formattingCat = "Formatting";
+
+        private readonly object _suppressEnvironmentsLock = new object();
+        private int _suppressEnvironmentsChanged;
+        private bool _environmentsChangedWasSuppressed;
 
         private static readonly Dictionary<string, OptionInfo> _allFormattingOptions = new Dictionary<string, OptionInfo>();
 
@@ -324,14 +327,19 @@ namespace Microsoft.PythonTools {
         #region Interpreter Options
 
         internal void LoadInterpreterOptions() {
-            var placeholders = InterpreterOptions.Where(kv => kv.Key is InterpreterPlaceholder).ToArray();
-            ClearInterpreterOptions();
-            foreach (var interpreter in _interpreterOptionsService.Interpreters) {
-                GetInterpreterOptions(interpreter);
-            }
+            BeginSuppressRaiseEnvironmentsChanged();
+            try {
+                var placeholders = InterpreterOptions.Where(kv => kv.Key is InterpreterPlaceholder).ToArray();
+                ClearInterpreterOptions();
+                foreach (var interpreter in _interpreterOptionsService.Interpreters) {
+                    GetInterpreterOptions(interpreter);
+                }
 
-            foreach (var kv in placeholders) {
-                AddInterpreterOptions(kv.Key, kv.Value);
+                foreach (var kv in placeholders) {
+                    AddInterpreterOptions(kv.Key, kv.Value);
+                }
+            } finally {
+                EndSuppressRaiseEnvironmentsChanged();
             }
         }
 
@@ -397,6 +405,7 @@ namespace Microsoft.PythonTools {
                 var path = GetInteractivePath(interpreterFactory);
                 _interpreterOptions[interpreterFactory] = options = new InterpreterOptions(this, interpreterFactory);
                 options.Load();
+                RaiseEnvironmentsChanged();
             }
             return options;
         }
@@ -407,6 +416,7 @@ namespace Microsoft.PythonTools {
 
         private void ClearInterpreterOptions() {
             _interpreterOptions.Clear();
+            RaiseEnvironmentsChanged();
         }
 
         internal void AddInterpreterOptions(IPythonInterpreterFactory interpreterFactory, InterpreterOptions options, bool addInteractive = false) {
@@ -428,7 +438,33 @@ namespace Microsoft.PythonTools {
             RaiseEnvironmentsChanged();
         }
 
+        private void BeginSuppressRaiseEnvironmentsChanged() {
+            lock (_suppressEnvironmentsLock) {
+                _suppressEnvironmentsChanged += 1;
+            }
+        }
+
+        private void EndSuppressRaiseEnvironmentsChanged() {
+            bool raiseEvent = false;
+            lock (_suppressEnvironmentsLock) {
+                if (--_suppressEnvironmentsChanged == 0) {
+                    raiseEvent = _environmentsChangedWasSuppressed;
+                    _environmentsChangedWasSuppressed = false;
+                }
+            }
+
+            if (raiseEvent) {
+                RaiseEnvironmentsChanged();
+            }
+        }
+
         private void RaiseEnvironmentsChanged() {
+            lock (_suppressEnvironmentsLock) {
+                if (_suppressEnvironmentsChanged > 0) {
+                    _environmentsChangedWasSuppressed = true;
+                    return;
+                }
+            }
             var changed = EnvironmentsChanged;
             if (changed != null) {
                 changed(this, EventArgs.Empty);
@@ -588,6 +624,22 @@ namespace Microsoft.PythonTools {
             remove {
                 _idleManager.OnIdle -= value;
             }
+        }
+
+        #endregion
+
+        #region Language Preferences
+
+        internal LANGPREFERENCES2 GetLanguagePreferences() {
+            var txtMgr = (IVsTextManager2)_container.GetService(typeof(SVsTextManager));
+            var langPrefs = new[] { new LANGPREFERENCES2 { guidLang = GuidList.guidPythonLanguageServiceGuid } };
+            ErrorHandler.ThrowOnFailure(txtMgr.GetUserPreferences2(null, null, langPrefs, null));
+            return langPrefs[0];
+        }
+
+        internal void SetLanguagePreferences(LANGPREFERENCES2 langPrefs) {
+            var txtMgr = (IVsTextManager2)_container.GetService(typeof(SVsTextManager));
+            ErrorHandler.ThrowOnFailure(txtMgr.SetUserPreferences2(null, null, new [] { langPrefs }, null));
         }
 
         #endregion

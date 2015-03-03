@@ -249,6 +249,7 @@ Base 0 means to interpret the base from the string as an integer literal.
 
             var automation = (IVsPython)app.Dte.GetObject("VsPython");
             var options = ((IPythonOptions)automation).GetInteractiveOptions(description);
+            Assert.IsNotNull(options, "Could not find options for " + description);
 
             options.InlinePrompts = settings.InlinePrompts;
             options.UseInterpreterPrompts = settings.UseInterpreterPrompts;

@@ -22,6 +22,7 @@ using System.Windows.Automation;
 using System.Windows.Input;
 using System.Windows.Interop;
 using EnvDTE;
+using Microsoft.PythonTools;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Parsing;
@@ -38,8 +39,16 @@ namespace TestUtilities.UI.Python {
         private bool _deletePerformanceSessions;
         private PythonPerfExplorer _perfTreeView;
         private PythonPerfToolBar _perfToolBar;
+        
         public PythonVisualStudioApp(DTE dte = null)
             : base(dte) {
+
+            var service = ServiceProvider.GetPythonToolsService();
+            
+            // Disable AutoListIdentifiers for tests
+            var oldALI = service.AdvancedOptions.AutoListIdentifiers;
+            OnDispose(() => service.AdvancedOptions.AutoListIdentifiers = oldALI);
+            service.AdvancedOptions.AutoListIdentifiers = false;
         }
 
         protected override void Dispose(bool disposing) {

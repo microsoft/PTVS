@@ -30,6 +30,7 @@ namespace Microsoft.PythonTools.Options {
             _outliningOnOpen.Checked = pyService.AdvancedOptions.EnterOutliningModeOnOpen;
             _pasteRemovesReplPrompts.Checked = pyService.AdvancedOptions.PasteRemovesReplPrompts;
             _colorNames.Checked = pyService.AdvancedOptions.ColorNames;
+            _autoListIdentifiers.Checked = pyService.AdvancedOptions.AutoListIdentifiers;
         }
 
         internal void SyncPageWithControlSettings(PythonToolsService pyService) {
@@ -41,6 +42,7 @@ namespace Microsoft.PythonTools.Options {
             pyService.AdvancedOptions.EnterOutliningModeOnOpen = _outliningOnOpen.Checked;
             pyService.AdvancedOptions.PasteRemovesReplPrompts = _pasteRemovesReplPrompts.Checked;
             pyService.AdvancedOptions.ColorNames = _colorNames.Checked;
+            pyService.AdvancedOptions.AutoListIdentifiers = _autoListIdentifiers.Checked;
         }
     }
 }

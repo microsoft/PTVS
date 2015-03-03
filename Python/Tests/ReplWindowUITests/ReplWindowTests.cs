@@ -216,7 +216,7 @@ namespace ReplWindowUITests {
 
         /// <summary>
         /// "x = 42"
-        /// "x " should not being up any completions.
+        /// "x " should not bring up any completions.
         /// </summary>
         [TestMethod, Priority(0)]
         [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
@@ -315,6 +315,43 @@ namespace ReplWindowUITests {
                 interactive.WaitForText(">" + code, ">x.real", "42", ">");
             }
         }
+
+        /// <summary>
+        /// With AutoListIdentifiers on, all [a-zA-Z_] should bring up
+        /// completions
+        /// </summary>
+        [TestMethod, Priority(0)]
+        [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
+        [HostType("VSTestHost")]
+        public virtual void AutoListIdentifierCompletions() {
+            using (var interactive = Prepare()) {
+                // the App instance preserves this property for us already
+                interactive.App.Options.Intellisense.AutoListIdentifiers = true;
+
+                foreach (var c in "abcdefghijklmnopqrstuvwxyz_ABCDEFGHIJKLMNOPQRSTUVWXYZ") {
+                    // x<space> should bring up a completion session
+                    Keyboard.Type(c.ToString());
+
+                    using (var sh = interactive.WaitForSession<ICompletionSession>()) {
+                        sh.Dismiss();
+                    }
+
+                    Keyboard.Backspace();
+                }
+
+                // x<space> should not bring up a completion session
+                // Don't check too many items, since asserting that no session
+                // starts is slow.
+                foreach (var c in "1([{") {
+                    Keyboard.Type(c.ToString());
+
+                    interactive.AssertNoSession();
+
+                    Keyboard.Backspace();
+                }
+            }
+        }
+
 
         #endregion
 

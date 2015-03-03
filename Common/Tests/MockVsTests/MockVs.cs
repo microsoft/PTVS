@@ -112,6 +112,9 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             UIThread = new Thread(UIThreadWorker);
             UIThread.Name = "Mock UI Thread";
             UIThread.Start();
+            // Wait for UI thread to start before returning. This ensures that
+            // any packages we have are loaded and have published their services
+            _uiEvent.WaitOne();
         }
 
         class MockSyncContext : SynchronizationContext {
@@ -134,6 +137,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             foreach (var package in Container.GetExportedValues<IMockPackage>()) {
                 package.Initialize();
             }
+            _uiEvent.Set();
 
             while (!_shutdown) {
                 _uiEvent.WaitOne();

@@ -218,6 +218,13 @@ namespace Microsoft.PythonTools.Intellisense {
                             UpdateCurrentParameter();
                         }
                         break;
+                    default:
+                        if (IsIdentifierFirstChar(ch) && _activeSession == null &&
+                            _provider.PythonService.AdvancedOptions.AutoListIdentifiers &&
+                            _provider.PythonService.AdvancedOptions.AutoListMembers) {
+                            TriggerCompletionSession(false);
+                        }
+                        break;
                 }
             }
         }
@@ -697,8 +704,12 @@ namespace Microsoft.PythonTools.Intellisense {
             return _provider._adaptersFactory.GetViewAdapter(_textView);
         }
 
+        private static bool IsIdentifierFirstChar(char ch) {
+            return ch == '_' || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z');
+        }
+
         private static bool IsIdentifierChar(char ch) {
-            return ch == '_' || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9');
+            return IsIdentifierFirstChar(ch) || (ch >= '0' && ch <= '9');
         }
 
         private bool EnterOnCompleteText() {

@@ -30,6 +30,7 @@ namespace Microsoft.PythonTools.Options {
         private const string SearchModeSetting = "SearchMode";
         private const string ColorNamesSetting = "ColorNames";
         private const string ColorNamesWithAnalysisSetting = "ColorNamesWithAnalysis";
+        private const string AutoListIdentifiersSetting = "AutoListIdentifiers";
 
         private const string _defaultCompletionChars = "{}[]().,:;+-*/%&|^~=<>#'\"\\";
 
@@ -49,6 +50,7 @@ namespace Microsoft.PythonTools.Options {
             SearchMode = _service.LoadEnum<FuzzyMatchMode>(SearchModeSetting, Category) ?? FuzzyMatchMode.Default;
             ColorNames = _service.LoadBool(ColorNamesSetting, Category) ?? true;
             ColorNamesWithAnalysis = _service.LoadBool(ColorNamesWithAnalysisSetting, Category) ?? true;
+            AutoListIdentifiers = _service.LoadBool(AutoListIdentifiersSetting, Category) ?? true;
         }
 
         public void Save() {
@@ -62,6 +64,7 @@ namespace Microsoft.PythonTools.Options {
             _service.SaveEnum(SearchModeSetting, Category, SearchMode);
             _service.SaveBool(ColorNamesSetting, Category, ColorNames);
             _service.SaveBool(ColorNamesWithAnalysisSetting, Category, ColorNamesWithAnalysis);
+            _service.SaveBool(AutoListIdentifiersSetting, Category, AutoListIdentifiers);
         }
 
         public void Reset() {
@@ -75,6 +78,7 @@ namespace Microsoft.PythonTools.Options {
             SearchMode = FuzzyMatchMode.Default;
             ColorNames = true;
             ColorNamesWithAnalysis = true;
+            AutoListIdentifiers = true;
         }
 
         public string CompletionCommittedBy {
@@ -131,6 +135,33 @@ namespace Microsoft.PythonTools.Options {
             get {
                 return _service.LangPrefs.AutoListMembers;
             }
+            set {
+                var prefs = _service.GetLanguagePreferences();
+                var val = value ? 1u : 0u;
+                if (prefs.fAutoListMembers != val) {
+                    prefs.fAutoListMembers = val;
+                    _service.SetLanguagePreferences(prefs);
+                }
+            }
+        }
+
+        public bool HideAdvancedMembers {
+            get {
+                return _service.LangPrefs.HideAdvancedMembers;
+            }
+            set {
+                var prefs = _service.GetLanguagePreferences();
+                var val = value ? 1u : 0u;
+                if (prefs.fHideAdvancedAutoListMembers != val) {
+                    prefs.fHideAdvancedAutoListMembers = val;
+                    _service.SetLanguagePreferences(prefs);
+                }
+            }
+        }
+
+        public bool AutoListIdentifiers {
+            get;
+            set;
         }
     }
 }

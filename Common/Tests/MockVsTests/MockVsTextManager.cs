@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.TextManager.Interop;
@@ -22,6 +23,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
     class MockVsTextManager : IVsTextManager, IVsTextManager2, IVsExpansionManager, IConnectionPointContainer {
         private readonly MockVs _vs;
         private Dictionary<Guid, LANGPREFERENCES2> _langPrefs = new Dictionary<Guid, LANGPREFERENCES2>();
+        private ConnectionPoint _ppCP;
 
         public MockVsTextManager(MockVs vs) {
             _vs = vs;
@@ -40,6 +42,50 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
                     IndentStyle = type.ShowSmartIndent ? vsIndentStyle.vsIndentStyleSmart : vsIndentStyle.vsIndentStyleDefault
                 };
             }
+        }
+
+        private static LANGPREFERENCES2 FromLangPrefs(LANGPREFERENCES langPrefs) {
+            return new LANGPREFERENCES2 {
+                fAutoListMembers = langPrefs.fAutoListMembers,
+                fAutoListParams = langPrefs.fAutoListParams,
+                fDropdownBar = langPrefs.fDropdownBar,
+                fHideAdvancedAutoListMembers = langPrefs.fHideAdvancedAutoListMembers,
+                fHotURLs = langPrefs.fHotURLs,
+                fInsertTabs = langPrefs.fInsertTabs,
+                fLineNumbers = langPrefs.fLineNumbers,
+                fShowCompletion = langPrefs.fShowCompletion,
+                fShowSmartIndent = langPrefs.fShowSmartIndent,
+                fTwoWayTreeview = langPrefs.fTwoWayTreeview,
+                fVirtualSpace = langPrefs.fVirtualSpace,
+                fWordWrap = langPrefs.fWordWrap,
+                IndentStyle = langPrefs.IndentStyle,
+                guidLang = langPrefs.guidLang,
+                szFileType = langPrefs.szFileType,
+                uIndentSize = langPrefs.uIndentSize,
+                uTabSize = langPrefs.uTabSize
+            };
+        }
+
+        private static LANGPREFERENCES FromLangPrefs2(LANGPREFERENCES2 langPrefs) {
+            return new LANGPREFERENCES {
+                fAutoListMembers = langPrefs.fAutoListMembers,
+                fAutoListParams = langPrefs.fAutoListParams,
+                fDropdownBar = langPrefs.fDropdownBar,
+                fHideAdvancedAutoListMembers = langPrefs.fHideAdvancedAutoListMembers,
+                fHotURLs = langPrefs.fHotURLs,
+                fInsertTabs = langPrefs.fInsertTabs,
+                fLineNumbers = langPrefs.fLineNumbers,
+                fShowCompletion = langPrefs.fShowCompletion,
+                fShowSmartIndent = langPrefs.fShowSmartIndent,
+                fTwoWayTreeview = langPrefs.fTwoWayTreeview,
+                fVirtualSpace = langPrefs.fVirtualSpace,
+                fWordWrap = langPrefs.fWordWrap,
+                IndentStyle = langPrefs.IndentStyle,
+                guidLang = langPrefs.guidLang,
+                szFileType = langPrefs.szFileType,
+                uIndentSize = langPrefs.uIndentSize,
+                uTabSize = langPrefs.uTabSize
+            };
         }
 
         public int AttemptToCheckOutBufferFromScc3(IVsTextBuffer pBuffer, string pszFileName, uint dwQueryEditFlags, out int pbCheckoutSucceeded, out int piStatusFlags) {
@@ -92,7 +138,23 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         public int SetUserPreferences2(VIEWPREFERENCES2[] pViewPrefs, FRAMEPREFERENCES2[] pFramePrefs, LANGPREFERENCES2[] pLangPrefs, FONTCOLORPREFERENCES2[] pColorPrefs) {
-            throw new NotImplementedException();
+            if (pViewPrefs != null || pFramePrefs != null || pColorPrefs != null) {
+                throw new NotImplementedException();
+            }
+
+            foreach(var langPrefs in pLangPrefs) {
+                _langPrefs[langPrefs.guidLang] = langPrefs;
+            }
+
+            if (_ppCP != null) {
+                foreach (var sink in _ppCP.GetSinks<IVsTextManagerEvents>()) {
+                    sink.OnUserPreferencesChanged(null, null, pLangPrefs.Select(FromLangPrefs2).ToArray(), null);
+                }
+                foreach (var sink in _ppCP.GetSinks<IVsTextManagerEvents2>()) {
+                    sink.OnUserPreferencesChanged2(null, null, pLangPrefs, null);
+                }
+            }
+            return VSConstants.S_OK;
         }
 
         public int EnumerateExpansions(Guid guidLang, int fShortCutOnly, string[] bstrTypes, int iCountTypes, int fIncludeNULLType, int fIncludeDuplicates, out IVsExpansionEnumeration pEnum) {
@@ -247,7 +309,23 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         public int SetUserPreferences(VIEWPREFERENCES[] pViewPrefs, FRAMEPREFERENCES[] pFramePrefs, LANGPREFERENCES[] pLangPrefs, FONTCOLORPREFERENCES[] pColorPrefs) {
-            throw new NotImplementedException();
+            if (pViewPrefs != null || pFramePrefs != null || pColorPrefs != null) {
+                throw new NotImplementedException();
+            }
+            foreach (var langPrefs in pLangPrefs) {
+                _langPrefs[langPrefs.guidLang] = FromLangPrefs(langPrefs);
+            }
+
+            if (_ppCP != null) {
+                foreach (var sink in _ppCP.GetSinks<IVsTextManagerEvents>()) {
+                    sink.OnUserPreferencesChanged(null, null, pLangPrefs, null);
+                }
+                foreach (var sink in _ppCP.GetSinks<IVsTextManagerEvents2>()) {
+                    sink.OnUserPreferencesChanged2(null, null, pLangPrefs.Select(FromLangPrefs).ToArray(), null);
+                }
+            }
+
+            return VSConstants.S_OK;
         }
 
         public int SuspendFileChangeAdvise(string pszFileName, int fSuspend) {
@@ -271,7 +349,10 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         public void FindConnectionPoint(ref Guid riid, out IConnectionPoint ppCP) {
-            ppCP = new ConnectionPoint();
+            if (_ppCP == null) {
+                _ppCP = new ConnectionPoint();
+            }
+            ppCP = _ppCP;
         }
 
         class ConnectionPoint : IConnectionPoint {
@@ -280,6 +361,10 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             public void Advise(object pUnkSink, out uint pdwCookie) {
                 _sinks.Add(pUnkSink);
                 pdwCookie = (uint)_sinks.Count;
+            }
+
+            public IEnumerable<T> GetSinks<T>() {
+                return _sinks.OfType<T>();
             }
 
             public void EnumConnections(out IEnumConnections ppEnum) {
