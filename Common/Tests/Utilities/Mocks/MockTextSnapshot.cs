@@ -38,7 +38,7 @@ namespace TestUtilities.Mocks {
         }
 
         public Microsoft.VisualStudio.Utilities.IContentType ContentType {
-            get { throw new NotImplementedException(); }
+            get { return _buffer.ContentType; }
         }
 
         public void CopyTo(int sourceIndex, char[] destination, int destinationIndex, int count) {

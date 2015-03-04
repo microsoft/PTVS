@@ -45,9 +45,10 @@ namespace TestUtilities.Mocks {
         public void ChangeContentType(Microsoft.VisualStudio.Utilities.IContentType newContentType, object editTag) {
             throw new NotImplementedException();
         }
-#pragma warning disable 67
+
         public event EventHandler<TextContentChangedEventArgs> Changed;
 
+#pragma warning disable 67
         public event EventHandler<TextContentChangedEventArgs> ChangedHighPriority;
 
         public event EventHandler<TextContentChangedEventArgs> ChangedLowPriority;
@@ -120,8 +121,12 @@ namespace TestUtilities.Mocks {
             get { return _edit != null; }
         }
 
-        internal void EditApplied() {
+        internal void EditApplied(ITextSnapshot previous) {
             _edit = null;
+            var evt = Changed;
+            if (evt != null) {
+                evt(this, new TextContentChangedEventArgs(previous, _snapshot, new EditOptions(), null));
+            }
         }
 
         public NormalizedSpanCollection GetReadOnlyExtents(Span span) {

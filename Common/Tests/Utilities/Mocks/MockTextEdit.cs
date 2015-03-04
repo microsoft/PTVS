@@ -149,6 +149,7 @@ namespace TestUtilities.Mocks {
                 }
             }
 
+            var previous = _snapshot;
             var res = ((MockTextBuffer)_snapshot.TextBuffer)._snapshot = new MockTextSnapshot(
                 (MockTextBuffer)_snapshot.TextBuffer,
                 text.ToString(),
@@ -156,7 +157,7 @@ namespace TestUtilities.Mocks {
                 changes.ToArray()
             );
             _applied = true;
-            ((MockTextBuffer)_snapshot.TextBuffer).EditApplied();
+            ((MockTextBuffer)_snapshot.TextBuffer).EditApplied(previous);
             return res;
         }
 

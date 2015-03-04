@@ -112,6 +112,7 @@
     <Compile Include="MockSignatureHelpSession.cs" />
     <Compile Include="MockSmartTagBroker.cs" />
     <Compile Include="MockSmartTagSession.cs" />
+    <Compile Include="MockTextMarkerProviderFactory.cs" />
     <Compile Include="MockToolWindow.cs" />
     <Compile Include="MockTreeNode.cs" />
     <Compile Include="MockUIHierWinClipboardHelper.cs" />

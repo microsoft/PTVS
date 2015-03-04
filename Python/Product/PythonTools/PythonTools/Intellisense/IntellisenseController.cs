@@ -13,16 +13,22 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Windows.Input;
 using Microsoft.PythonTools.Editor.Core;
+using Microsoft.PythonTools.Parsing;
+using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Language.Intellisense;
+using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.IncrementalSearch;
 using Microsoft.VisualStudio.Text.Operations;
@@ -219,13 +225,138 @@ namespace Microsoft.PythonTools.Intellisense {
                         }
                         break;
                     default:
-                        if (IsIdentifierFirstChar(ch) && _activeSession == null &&
-                            _provider.PythonService.AdvancedOptions.AutoListIdentifiers &&
-                            _provider.PythonService.AdvancedOptions.AutoListMembers) {
+                        if (IsIdentifierFirstChar(ch) &&
+                            (_activeSession == null || _activeSession.CompletionSets.Count == 0) &&
+                            ShouldTriggerIdentifierCompletionSession()) {
                             TriggerCompletionSession(false);
                         }
                         break;
                 }
+            }
+        }
+
+        private bool ShouldTriggerIdentifierCompletionSession() {
+            if (!_provider.PythonService.AdvancedOptions.AutoListIdentifiers ||
+                !_provider.PythonService.AdvancedOptions.AutoListMembers) {
+                return false;
+            }
+
+            SnapshotPoint? caretPoint = _textView.BufferGraph.MapDownToFirstMatch(
+                _textView.Caret.Position.BufferPosition,
+                PointTrackingMode.Positive,
+                EditorExtensions.IsPythonContent,
+                PositionAffinity.Predecessor
+            );
+            if (!caretPoint.HasValue) {
+                return false;
+            }
+
+            var snapshot = caretPoint.Value.Snapshot;
+
+            var statement = new ReverseExpressionParser(
+                snapshot,
+                snapshot.TextBuffer,
+                snapshot.CreateTrackingSpan(caretPoint.Value.Position, 0, SpanTrackingMode.EdgeNegative)
+            ).GetStatementRange();
+            if (!statement.HasValue) {
+                return false;
+            }
+
+            var languageVersion = _bufferParser._parser.InterpreterFactory.Configuration.Version.ToLanguageVersion();
+            PythonAst ast;
+            using (var parser = Parser.CreateParser(new StringReader(statement.Value.GetText()), languageVersion, new ParserOptions())) {
+                ast = parser.ParseSingleStatement();
+            }
+
+            var walker = new ExpressionCompletionWalker(caretPoint.Value.Position - statement.Value.Start.Position);
+            ast.Walk(walker);
+            return walker.CanComplete;
+        }
+
+        private class ExpressionCompletionWalker : PythonWalker {
+            public bool CanComplete = false;
+            private readonly int _caretIndex;
+
+            public ExpressionCompletionWalker(int caretIndex) {
+                _caretIndex = caretIndex;
+            }
+
+            public override bool Walk(AssignmentStatement node) {
+                CanComplete = true;
+                return base.Walk(node);
+            }
+
+            public override bool Walk(Arg node) {
+                CanComplete = true;
+                return base.Walk(node);
+            }
+
+            public override bool Walk(ClassDefinition node) {
+                CanComplete = false;
+                return base.Walk(node);
+            }
+
+            public override bool Walk(FunctionDefinition node) {
+                if (node.Parameters != null) {
+                    CanComplete = false;
+                    foreach (var p in node.Parameters) {
+                        p.Walk(this);
+                    }
+                }
+                if (node.Decorators != null) {
+                    node.Decorators.Walk(this);
+                }
+                if (node.ReturnAnnotation != null) {
+                    CanComplete = true;
+                    node.ReturnAnnotation.Walk(this);
+                }
+                if (node.Body != null && !(node.Body is ErrorStatement)) {
+                    CanComplete = node.IsLambda;
+                    node.Body.Walk(this);
+                }
+
+                return false;
+            }
+
+            public override bool Walk(Parameter node) {
+                var afterName = node.Annotation ?? node.DefaultValue;
+                CanComplete = afterName != null && afterName.StartIndex <= _caretIndex;
+                return base.Walk(node);
+            }
+
+            public override bool Walk(ComprehensionFor node) {
+                CanComplete = true;
+                return base.Walk(node);
+            }
+
+            public override bool Walk(ComprehensionIf node) {
+                CanComplete = true;
+                return base.Walk(node);
+            }
+
+            public override bool Walk(ListExpression node) {
+                CanComplete = true;
+                return base.Walk(node);
+            }
+
+            public override bool Walk(DictionaryExpression node) {
+                CanComplete = true;
+                return base.Walk(node);
+            }
+
+            public override bool Walk(SetExpression node) {
+                CanComplete = true;
+                return base.Walk(node);
+            }
+
+            public override bool Walk(TupleExpression node) {
+                CanComplete = true;
+                return base.Walk(node);
+            }
+
+            public override bool Walk(ParenthesisExpression node) {
+                CanComplete = true;
+                return base.Walk(node);
             }
         }
 
@@ -439,14 +570,14 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        private void OnCompletionSessionDismissedOrCommitted(object sender, System.EventArgs e) {
+        private void OnCompletionSessionDismissedOrCommitted(object sender, EventArgs e) {
             // We've just been told that our active session was dismissed.  We should remove all references to it.
             _activeSession.Committed -= OnCompletionSessionDismissedOrCommitted;
             _activeSession.Dismissed -= OnCompletionSessionDismissedOrCommitted;
             _activeSession = null;
         }
 
-        private void OnSignatureSessionDismissed(object sender, System.EventArgs e) {
+        private void OnSignatureSessionDismissed(object sender, EventArgs e) {
             // We've just been told that our active session was dismissed.  We should remove all references to it.
             _sigHelpSession.Dismissed -= OnSignatureSessionDismissed;
             _sigHelpSession = null;

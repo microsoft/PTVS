@@ -189,7 +189,7 @@ namespace Microsoft.PythonTools.Navigation {
             var wpfTextView = VsEditorAdaptersFactoryService.GetWpfTextView(vsTextView);
             if (wpfTextView != null) {
                 var factory = ComponentModel.GetService<IEditorOperationsFactoryService>();
-                var editFilter = new EditFilter(wpfTextView, factory.GetEditorOperations(wpfTextView), ServiceProvider.GlobalProvider);
+                var editFilter = new EditFilter(wpfTextView, factory.GetEditorOperations(wpfTextView), _serviceProvider);
                 editFilter.AttachKeyboardFilter(vsTextView);
 #if DEV11_OR_LATER
                 new TextViewFilter(_serviceProvider, vsTextView);

@@ -80,7 +80,24 @@ namespace TestUtilities.Mocks {
         }
 
         public SnapshotPoint? MapDownToInsertionPoint(SnapshotPoint position, PointTrackingMode trackingMode, Predicate<ITextSnapshot> match) {
-            throw new NotImplementedException();
+            var snapshot = position.Snapshot;
+            var buffer = snapshot.TextBuffer;
+            int pos = position.TranslateTo(snapshot, trackingMode);
+            while (!match(snapshot)) {
+                var projBuffer = buffer as IProjectionBufferBase;
+                if (projBuffer == null) {
+                    return null;
+                }
+                var projSnapshot = projBuffer.CurrentSnapshot;
+                if (projSnapshot.SourceSnapshots.Count == 0) {
+                    return null;
+                }
+                var pt = projSnapshot.MapToSourceSnapshot(pos);
+                pos = pt.Position;
+                snapshot = pt.Snapshot;
+                buffer = snapshot.TextBuffer;
+            }
+            return new SnapshotPoint(snapshot, pos);
         }
 
         public NormalizedSnapshotSpanCollection MapDownToSnapshot(SnapshotSpan span, SpanTrackingMode trackingMode, ITextSnapshot targetSnapshot) {

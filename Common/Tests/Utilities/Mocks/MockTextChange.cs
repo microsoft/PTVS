@@ -20,6 +20,7 @@ namespace TestUtilities.Mocks {
         private readonly SnapshotSpan _removed;
         private readonly string _inserted;
         private readonly int _newStart;
+        private static readonly string[] NewLines = new[] { "\r\n", "\r", "\n"};
 
         public MockTextChange(SnapshotSpan removedSpan, int newStart, string insertedText) {
             _removed = removedSpan;
@@ -32,7 +33,10 @@ namespace TestUtilities.Mocks {
         }
 
         public int LineCountDelta {
-            get { throw new NotImplementedException(); }
+            get {
+                return _inserted.Split(NewLines, StringSplitOptions.None).Length -
+                    _removed.GetText().Split(NewLines, StringSplitOptions.None).Length;
+            }
         }
 
         public int NewEnd {

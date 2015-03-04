@@ -208,6 +208,7 @@ namespace PythonToolsMockTests {
                 vs.OnDispose(() => options.AutoListIdentifiers = oldALI);
 
                 var view = CreateViewAndAnalyze(vs);
+                view.Type("a = ");
 
                 foreach (var c in "abcdefghijklmnopqrstuvwxyz_ABCDEFGHIJKLMNOPQRSTUVWXYZ") {
                     // x<space> should bring up a completion session
@@ -235,6 +236,88 @@ namespace PythonToolsMockTests {
                     view.Backspace();
                 }
             }
+        }
+
+        private void AutoListTest(string code, params int[] triggerAtIndex) {
+            using (var vs = new MockVs()) {
+                var options = vs.GetPyService().AdvancedOptions;
+                var oldALI = options.AutoListIdentifiers;
+                var oldALM = options.AutoListMembers;
+                options.AutoListIdentifiers = true;
+                options.AutoListMembers = true;
+                vs.OnDispose(() => {
+                    options.AutoListIdentifiers = oldALI;
+                    options.AutoListMembers = oldALM;
+                });
+
+                var view = CreateViewAndAnalyze(vs);
+
+                int lastStart = 0;
+                string text;
+                foreach (var expected in triggerAtIndex.OrderBy(i => i)) {
+                    text = code.Substring(lastStart, expected - lastStart);
+                    Console.WriteLine("Typing '{0}' [{1}, {2})", text, lastStart, expected);
+                    view.Type(text);
+
+                    view.AssertNoIntellisenseSession();
+
+                    text = code.Substring(expected, 1);
+                    Console.WriteLine("Typing '{0}' [{1}, {2}) and expect completions", text, expected, expected + 1);
+                    view.Type(text);
+
+                    using (var sh = view.WaitForSession<ICompletionSession>()) {
+                        sh.Session.Dismiss();
+                    }
+
+                    lastStart = expected + 1;
+                }
+                text = code.Substring(lastStart);
+                if (!string.IsNullOrEmpty(text)) {
+                    Console.WriteLine("Typing '{0}' [{1}, {2})", text, lastStart, code.Length);
+                    view.Type(text);
+
+                    view.AssertNoIntellisenseSession();
+                }
+            }
+        }
+
+        [TestMethod]
+        public void AutoListInDef() {
+            AutoListTest("def fn(p:a, q=b) -> x", 9, 14, 20);
+        }
+
+        [TestMethod]
+        public void AutoListInAssignment() {
+            AutoListTest("a, b, c = a, b, c", 10, 13, 16);
+        }
+
+        [TestMethod]
+        public void AutoListInClass() {
+            AutoListTest("class F(o, p):", 8, 11);
+        }
+
+        [TestMethod]
+        public void AutoListInLambda() {
+            AutoListTest("a = lambda x, y: p", 4, 17);
+        }
+
+        [TestMethod]
+        public void AutoListInLiterals() {
+            AutoListTest("[a, b, c]", 1, 4, 7);
+            AutoListTest("{a, b, c}", 1, 4, 7);
+            AutoListTest("(a, b, c)", 1, 4, 7);
+            AutoListTest("{a: b, c: d, e: f}", 1, 4, 7, 10, 13, 16);
+        }
+
+        [TestMethod]
+        public void AutoListInComprehensions() {
+            // TODO: Make completions trigger after spaces
+            // eg: AutoListTest("[a for a in b]", 1, 3, 9, 12);
+
+            AutoListTest("[a for a in b for c in d if x]", 1, 12, 23, 28);
+            AutoListTest("{a for a in b for c in d if x}", 1, 12, 23, 28);
+            AutoListTest("(a for a in b for c in d if x)", 1, 12, 23, 28);
+            AutoListTest("{a: b for a, b in b for c, d in e if x}", 1, 4, 18, 32, 37);
         }
 
         [TestMethod]
@@ -275,7 +358,7 @@ namespace PythonToolsMockTests {
             }
             var view = vs.CreateTextView(
                 PythonCoreConstants.ContentType,
-                Path.Combine(Environment.CurrentDirectory, "foo.py")
+                Path.Combine(Environment.CurrentDirectory, Path.GetRandomFileName(), "foo.py")
             );
             view.View.GetAnalyzer(vs.ServiceProvider).WaitForCompleteAnalysis(x => true);
             return view;

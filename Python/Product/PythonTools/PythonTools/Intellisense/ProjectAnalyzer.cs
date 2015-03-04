@@ -941,9 +941,11 @@ namespace Microsoft.PythonTools.Intellisense {
         private void ProcessComment(List<TaskProviderItem> commentTasks, ITextSnapshot snapshot, SourceSpan span, string text) {
             if (text.Length > 0) {
                 var tokens = _commentTaskProvider.Value.Tokens;
-                foreach (var kv in tokens) {
-                    if (text.IndexOf(kv.Key, StringComparison.OrdinalIgnoreCase) >= 0) {
-                        commentTasks.Add(new TaskProviderItem(_serviceProvider, text.Substring(1).Trim(), span, kv.Value, VSTASKCATEGORY.CAT_COMMENTS, false, snapshot));
+                if (tokens != null) {
+                    foreach (var kv in tokens) {
+                        if (text.IndexOf(kv.Key, StringComparison.OrdinalIgnoreCase) >= 0) {
+                            commentTasks.Add(new TaskProviderItem(_serviceProvider, text.Substring(1).Trim(), span, kv.Value, VSTASKCATEGORY.CAT_COMMENTS, false, snapshot));
+                        }
                     }
                 }
             }
