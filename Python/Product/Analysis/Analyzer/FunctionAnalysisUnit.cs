@@ -70,7 +70,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             scope.UpdateParameters(this, callArgs, false, originalUnit.Scope as FunctionScope);
             _scope = scope;
 
-            var walker = new OverviewWalker(originalUnit.ProjectEntry, this);
+            var walker = new OverviewWalker(_originalUnit.ProjectEntry, this, Tree);
             if (Ast.Body != null) {
                 Ast.Body.Walk(walker);
             }

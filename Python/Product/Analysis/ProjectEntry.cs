@@ -219,7 +219,7 @@ namespace Microsoft.PythonTools.Analysis {
             MyScope.ClearUnresolvedModules();
             
             // collect top-level definitions first
-            var walker = new OverviewWalker(this, _unit);
+            var walker = new OverviewWalker(this, _unit, tree);
             tree.Walk(walker);
             _myScope.Specialize();
 
