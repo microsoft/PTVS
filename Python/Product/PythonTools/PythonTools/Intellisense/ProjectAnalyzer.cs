@@ -261,9 +261,8 @@ namespace Microsoft.PythonTools.Intellisense {
         internal MonitoredBufferResult MonitorTextBuffer(ITextView textView, ITextBuffer buffer) {
             IProjectEntry projEntry = CreateProjectEntry(buffer, new SnapshotCookie(buffer.CurrentSnapshot));
 
-            ConnectErrorList(projEntry, buffer);
-
             if (!buffer.Properties.ContainsProperty(typeof(IReplEvaluator))) {
+                ConnectErrorList(projEntry, buffer);
                 _errorProvider.Value.AddBufferForErrorSource(projEntry, UnresolvedImportMoniker, buffer);
                 _unresolvedSquiggles.ListenForNextNewAnalysis(projEntry as IPythonProjectEntry);
             }

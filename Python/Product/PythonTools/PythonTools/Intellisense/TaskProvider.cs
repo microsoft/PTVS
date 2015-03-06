@@ -914,7 +914,9 @@ namespace Microsoft.PythonTools.Intellisense {
             uint fetched;
             string text;
             var priority = new VSTASKPRIORITY[1];
-            while (ErrorHandler.ThrowOnFailure(enumTokens.Next(1, token, out fetched)) != VSConstants.S_FALSE && fetched > 0) {
+
+            // DevDiv bug 1135485: EnumCommentTaskTokens.Next returns E_FAIL instead of S_FALSE
+            while (enumTokens.Next(1, token, out fetched) == VSConstants.S_OK && fetched > 0) {
                 ErrorHandler.ThrowOnFailure(token[0].Text(out text));
                 ErrorHandler.ThrowOnFailure(token[0].Priority(priority));
                 newTokens[text] = priority[0];
