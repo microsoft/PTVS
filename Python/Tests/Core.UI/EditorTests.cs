@@ -628,7 +628,7 @@ x\
                 }
                 System.Threading.Thread.Sleep(100);
             }
-            Assert.AreEqual(actual, expectedText);
+            Assert.AreEqual(expectedText, actual);
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]

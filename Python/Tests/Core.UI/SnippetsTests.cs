@@ -18,7 +18,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using EnvDTE;
+using Microsoft.PythonTools;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudioTools.VSTestHost;
 using TestUtilities;
 using TestUtilities.Python;
 using TestUtilities.SharedProject;
@@ -27,6 +29,23 @@ using TestUtilities.UI;
 namespace PythonToolsUITests {
     [TestClass]
     public class SnippetsTests : PythonProjectTest {
+        private bool _previousALI;
+        
+        [TestInitialize]
+        public void UpdateSettings() {
+            // TODO: Update tests to use PythonVisualStudioApp and remove this
+            var props = VSTestContext.ServiceProvider.GetPythonToolsService().AdvancedOptions;
+            _previousALI = props.AutoListIdentifiers;
+            props.AutoListIdentifiers = false;
+        }
+
+        [TestCleanup]
+        public void RestoreSettings() {
+            // TODO: Update tests to use PythonVisualStudioApp and remove this
+            var props = VSTestContext.ServiceProvider.GetPythonToolsService().AdvancedOptions;
+            props.AutoListIdentifiers = _previousALI;
+        }
+
         private static ProjectDefinition BasicProject = Project(
             "SnippetsTest",
             Compile("app", ""),
