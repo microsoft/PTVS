@@ -18,6 +18,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Microsoft.PythonTools;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools;
@@ -239,7 +240,17 @@ namespace PythonToolsMockTests {
         }
 
         private void AutoListTest(string code, params int[] triggerAtIndex) {
+            AutoListTest(code, PythonLanguageVersion.V33, triggerAtIndex);
+        }
+
+        private void AutoListTest(string code, PythonLanguageVersion version, params int[] triggerAtIndex) {
             using (var vs = new MockVs()) {
+                var interpreterService = vs.GetPyService()._interpreterOptionsService;
+                var oldDefault = interpreterService.DefaultInterpreter;
+                interpreterService.DefaultInterpreter = interpreterService.Interpreters
+                    .First(i => i.Configuration.Version == version.ToVersion());
+                vs.OnDispose(() => interpreterService.DefaultInterpreter = oldDefault);
+
                 var options = vs.GetPyService().AdvancedOptions;
                 var oldALI = options.AutoListIdentifiers;
                 var oldALM = options.AutoListMembers;
@@ -254,22 +265,28 @@ namespace PythonToolsMockTests {
 
                 int lastStart = 0;
                 string text;
-                foreach (var expected in triggerAtIndex.OrderBy(i => i)) {
+                foreach (var _i in triggerAtIndex) {
+                    bool expectCompletions = _i >= 0;
+                    int expected = _i > 0 ? _i : -_i;
+
                     text = code.Substring(lastStart, expected - lastStart);
                     Console.WriteLine("Typing '{0}' [{1}, {2})", text, lastStart, expected);
                     view.Type(text);
 
                     view.AssertNoIntellisenseSession();
+                    lastStart = expected;
 
-                    text = code.Substring(expected, 1);
-                    Console.WriteLine("Typing '{0}' [{1}, {2}) and expect completions", text, expected, expected + 1);
-                    view.Type(text);
+                    if (expectCompletions) {
+                        text = code.Substring(expected, 1);
+                        Console.WriteLine("Typing '{0}' [{1}, {2}) and expect completions", text, expected, expected + 1);
+                        view.Type(text);
 
-                    using (var sh = view.WaitForSession<ICompletionSession>()) {
-                        sh.Session.Dismiss();
+                        using (var sh = view.WaitForSession<ICompletionSession>()) {
+                            sh.Session.Dismiss();
+                        }
+
+                        lastStart = expected + 1;
                     }
-
-                    lastStart = expected + 1;
                 }
                 text = code.Substring(lastStart);
                 if (!string.IsNullOrEmpty(text)) {
@@ -302,6 +319,11 @@ namespace PythonToolsMockTests {
         }
 
         [TestMethod]
+        public void AutoListInWith() {
+            AutoListTest("with a as b, c as d:", 5, 13);
+        }
+
+        [TestMethod]
         public void AutoListInLiterals() {
             AutoListTest("[a, b, c]", 1, 4, 7);
             AutoListTest("{a, b, c}", 1, 4, 7);
@@ -318,6 +340,22 @@ namespace PythonToolsMockTests {
             AutoListTest("{a for a in b for c in d if x}", 1, 12, 23, 28);
             AutoListTest("(a for a in b for c in d if x)", 1, 12, 23, 28);
             AutoListTest("{a: b for a, b in b for c, d in e if x}", 1, 4, 18, 32, 37);
+        }
+
+        [TestMethod]
+        public void AutoListInStatements() {
+            AutoListTest("assert a", -6, 7);
+            AutoListTest("a += b", 5);
+            AutoListTest("del a", -3, 4);
+            AutoListTest("exec a", PythonLanguageVersion.V27, -4, 5);
+            AutoListTest("for a in b", -3, -5, 9);
+            AutoListTest("if a", -2, 3);
+            AutoListTest("global a", -6, 7);
+            AutoListTest("nonlocal a", PythonLanguageVersion.V33, -8, 9);
+            AutoListTest("print a", PythonLanguageVersion.V27, -5, 6);
+            AutoListTest("return a", -6, 7);
+            AutoListTest("while a", -5, 6);
+            AutoListTest("yield a", -5, 6);
         }
 
         [TestMethod]

@@ -281,6 +281,24 @@ namespace Microsoft.PythonTools.Intellisense {
                 _caretIndex = caretIndex;
             }
 
+            private static bool IsActualExpression(Expression node) {
+                return node != null && !(node is ErrorExpression);
+            }
+
+            private static bool IsActualExpression(IList<NameExpression> expressions) {
+                return expressions != null && expressions.Count > 0;
+            }
+
+            private static bool IsActualExpression(IList<Expression> expressions) {
+                return expressions != null &&
+                    expressions.Count > 0 &&
+                    !(expressions[0] is ErrorExpression);
+            }
+
+            public override bool Walk(ErrorExpression node) {
+                return false;
+            }
+
             public override bool Walk(AssignmentStatement node) {
                 CanComplete = true;
                 return base.Walk(node);
@@ -325,7 +343,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             public override bool Walk(ComprehensionFor node) {
-                CanComplete = true;
+                CanComplete = IsActualExpression(node.List);
                 return base.Walk(node);
             }
 
@@ -356,6 +374,79 @@ namespace Microsoft.PythonTools.Intellisense {
 
             public override bool Walk(ParenthesisExpression node) {
                 CanComplete = true;
+                return base.Walk(node);
+            }
+
+            public override bool Walk(AssertStatement node) {
+                CanComplete = IsActualExpression(node.Test);
+                return base.Walk(node);
+            }
+
+            public override bool Walk(AugmentedAssignStatement node) {
+                CanComplete = IsActualExpression(node.Right);
+                return base.Walk(node);
+            }
+
+            public override bool Walk(DelStatement node) {
+                CanComplete = IsActualExpression(node.Expressions);
+                return base.Walk(node);
+            }
+
+            public override bool Walk(ExecStatement node) {
+                CanComplete = IsActualExpression(node.Code);
+                return base.Walk(node);
+            }
+
+            public override bool Walk(ForStatement node) {
+                CanComplete = IsActualExpression(node.List);
+                return base.Walk(node);
+            }
+
+            public override bool Walk(IfStatementTest node) {
+                CanComplete = IsActualExpression(node.Test);
+                return base.Walk(node);
+            }
+
+            public override bool Walk(GlobalStatement node) {
+                CanComplete = IsActualExpression(node.Names);
+                return base.Walk(node);
+            }
+
+            public override bool Walk(NonlocalStatement node) {
+                CanComplete = IsActualExpression(node.Names);
+                return base.Walk(node);
+            }
+
+            public override bool Walk(PrintStatement node) {
+                CanComplete = IsActualExpression(node.Expressions);
+                return base.Walk(node);
+            }
+
+            public override bool Walk(ReturnStatement node) {
+                CanComplete = IsActualExpression(node.Expression);
+                return base.Walk(node);
+            }
+
+            public override bool Walk(WhileStatement node) {
+                CanComplete = IsActualExpression(node.Test);
+                return base.Walk(node);
+            }
+
+            public override bool Walk(WithStatement node) {
+                CanComplete = true;
+                if (node.Items != null) {
+                    var item = node.Items.LastOrDefault();
+                    CanComplete = item != null && item.Variable == null;
+                }
+                return base.Walk(node);
+            }
+
+            public override bool Walk(YieldExpression node) {
+                if (IsActualExpression(node.Expression)) {
+                    // "yield" is valid and has implied None following it
+                    var ce = node.Expression as ConstantExpression;
+                    CanComplete = ce == null || ce.Value != null;
+                }
                 return base.Walk(node);
             }
         }
