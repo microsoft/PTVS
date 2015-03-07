@@ -349,7 +349,7 @@ def should_send_frame(frame):
             frame.f_code not in DEBUG_ENTRYPOINTS and
             path.normcase(frame.f_code.co_filename) not in DONT_DEBUG)
 
-KNOWN_DIRECTORIES = set()
+KNOWN_DIRECTORIES = set((None, ''))
 KNOWN_ZIPS = set()
 
 def is_file_in_zip(filename):
