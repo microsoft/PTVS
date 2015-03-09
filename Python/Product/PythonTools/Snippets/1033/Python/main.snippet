@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CodeSnippets xmlns="http://schemas.microsoft.com/VisualStudio/2005/CodeSnippet">
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>main function</Title>
+      <Shortcut>main</Shortcut>
+      <Description>Code snippet for a main function</Description>
+      <Author>Microsoft Corporation</Author>
+      <SnippetTypes>
+        <SnippetType>SurroundsWithStatement</SnippetType>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Imports>
+        <Import>
+          <Namespace>sys</Namespace>
+        </Import>
+      </Imports>
+      <Code Language="Python"><![CDATA[def main():
+    $selected$
+
+if __name__ == "__main__":
+    sys.exit(int(main() or 0))]]></Code>
+    </Snippet>  
+  </CodeSnippet>
+</CodeSnippets>
