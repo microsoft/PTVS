@@ -18,6 +18,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
@@ -30,6 +31,7 @@ using Microsoft.VisualStudio.TextManager.Interop;
 namespace Microsoft.PythonTools.Intellisense {
     class ExpansionClient : IVsExpansionClient {
         private readonly IVsTextLines _lines;
+        private readonly IVsExpansion _expansion;
         private readonly IVsTextView _view;
         private readonly ITextView _textView;
         private readonly IVsEditorAdaptersFactoryService _adapterFactory;
@@ -48,6 +50,10 @@ namespace Microsoft.PythonTools.Intellisense {
             _adapterFactory = adapterFactory;
             _view = _adapterFactory.GetViewAdapter(_textView);
             _lines = (IVsTextLines)_adapterFactory.GetBufferAdapter(_textView.TextBuffer);
+            _expansion = _lines as IVsExpansion;
+            if (_expansion == null) {
+                throw new ArgumentException("TextBuffer does not support expansions");
+            }
         }
 
         public bool InSession {
@@ -317,32 +323,29 @@ namespace Microsoft.PythonTools.Intellisense {
                 _session = null;
             }
 
-            IVsExpansion expansion = _lines as IVsExpansion;
-            if (expansion != null) {
-                var selection = _textView.Selection;
-                var snapshot = selection.Start.Position.Snapshot;
+            var selection = _textView.Selection;
+            var snapshot = selection.Start.Position.Snapshot;
 
-                _selectionStart = snapshot.CreateTrackingPoint(selection.Start.Position, VisualStudio.Text.PointTrackingMode.Positive);
-                _selectionEnd = snapshot.CreateTrackingPoint(selection.End.Position, VisualStudio.Text.PointTrackingMode.Negative);
-                _selectEndSpan = _sessionEnded = false;
+            _selectionStart = snapshot.CreateTrackingPoint(selection.Start.Position, VisualStudio.Text.PointTrackingMode.Positive);
+            _selectionEnd = snapshot.CreateTrackingPoint(selection.End.Position, VisualStudio.Text.PointTrackingMode.Negative);
+            _selectEndSpan = _sessionEnded = false;
 
-                int hr = expansion.InsertNamedExpansion(
-                    pszTitle,
-                    pszPath,
-                    textSpan,
-                    this,
-                    GuidList.guidPythonLanguageServiceGuid,
-                    0,
-                    out _session
-                );
+            int hr = _expansion.InsertNamedExpansion(
+                pszTitle,
+                pszPath,
+                textSpan,
+                this,
+                GuidList.guidPythonLanguageServiceGuid,
+                0,
+                out _session
+            );
 
-                if (ErrorHandler.Succeeded(hr)) {
-                    if (_sessionEnded) {
-                        _session = null;
-                    }
+            if (ErrorHandler.Succeeded(hr)) {
+                if (_sessionEnded) {
+                    _session = null;
                 }
             }
-            return VSConstants.S_OK;
+            return hr;
         }
 
         public int NextField() {

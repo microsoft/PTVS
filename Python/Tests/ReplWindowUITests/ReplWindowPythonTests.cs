@@ -262,6 +262,26 @@ repl is not None");
             }
         }
 
+        [TestMethod, Priority(0)]
+        [HostType("VSTestHost")]
+        public virtual void NoSnippets() {
+            // https://pytools.codeplex.com/workitem/2945 is the reason for
+            // disabling snippets; https://pytools.codeplex.com/workitem/2947 is
+            // where we will re-enable them when they work properly.
+            using (var interactive = Prepare()) {
+                int spaces = interactive.TextView.Options.GetOptionValue(DefaultOptions.IndentSizeOptionId);
+                int textWidth = interactive.Settings.PrimaryPrompt.Length + 3;
+
+                int totalChars = spaces;
+                while (totalChars < textWidth) {
+                    totalChars += spaces;
+                }
+
+                Keyboard.Type("def\t");
+                interactive.WaitForText(">def" + new string(' ', totalChars - textWidth));
+            }
+        }
+
 
         #region Helper Methods
 

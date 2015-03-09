@@ -67,10 +67,16 @@ namespace Microsoft.PythonTools.Intellisense {
             _incSearch = provider._IncrementalSearch.GetIncrementalSearch(textView);
             _textView.MouseHover += TextViewMouseHover;
             _serviceProvider = serviceProvider;
-            _expansionClient = new ExpansionClient(textView, provider._adaptersFactory, provider._ServiceProvider);
-
-            var textMgr = (IVsTextManager2)_serviceProvider.GetService(typeof(SVsTextManager));
-            textMgr.GetExpansionManager(out _expansionMgr);
+            if (textView.TextBuffer.IsPythonContent()) {
+                try {
+                    _expansionClient = new ExpansionClient(textView, provider._adaptersFactory, provider._ServiceProvider);
+                    var textMgr = (IVsTextManager2)_serviceProvider.GetService(typeof(SVsTextManager));
+                    textMgr.GetExpansionManager(out _expansionMgr);
+                } catch (ArgumentException ex) {
+                    // No expansion client for this buffer, but we can continue without it
+                    Debug.Fail(ex.ToString());
+                }
+            }
 
             textView.Properties.AddProperty(typeof(IntellisenseController), this);  // added so our key processors can get back to us
         }
@@ -829,12 +835,12 @@ namespace Microsoft.PythonTools.Intellisense {
                 if (pguidCmdGroup == VSConstants.VSStd2K) {
                     switch ((VSConstants.VSStd2KCmdID)nCmdID) {
                         case VSConstants.VSStd2KCmdID.RETURN:
-                            if (_expansionClient.InSession && ErrorHandler.Succeeded(_expansionClient.EndCurrentExpansion(false))) {
+                            if (_expansionMgr != null && _expansionClient.InSession && ErrorHandler.Succeeded(_expansionClient.EndCurrentExpansion(false))) {
                                 return VSConstants.S_OK;
                             }
                             break;
                         case VSConstants.VSStd2KCmdID.TAB:
-                            if (_expansionClient.InSession && ErrorHandler.Succeeded(_expansionClient.NextField())) {
+                            if (_expansionMgr != null && _expansionClient.InSession && ErrorHandler.Succeeded(_expansionClient.NextField())) {
                                 return VSConstants.S_OK;
                             }
                             if (_textView.Selection.IsEmpty && _textView.Caret.Position.BufferPosition > 0) {
@@ -844,7 +850,7 @@ namespace Microsoft.PythonTools.Intellisense {
                             }
                             break;
                         case VSConstants.VSStd2KCmdID.BACKTAB:
-                            if (_expansionClient.InSession && ErrorHandler.Succeeded(_expansionClient.PreviousField())) {
+                            if (_expansionMgr != null && _expansionClient.InSession && ErrorHandler.Succeeded(_expansionClient.PreviousField())) {
                                 return VSConstants.S_OK;
                             }
                             break;
