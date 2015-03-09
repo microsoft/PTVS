@@ -599,7 +599,7 @@ namespace Microsoft.VisualStudioTools.Project {
                     return null;
                 }
                 if (_waitHandleEvent == null) {
-                    _waitHandleEvent = new ManualResetEvent(false);
+                    _waitHandleEvent = new ManualResetEvent(_haveRaisedExitedEvent);
                 }
                 return _waitHandleEvent;
             }
@@ -611,7 +611,8 @@ namespace Microsoft.VisualStudioTools.Project {
         public void Wait() {
             if (_process != null) {
                 _process.WaitForExit();
-                FlushAndCloseOutput();
+                // Should have already been called, in which case this is a no-op
+                OnExited(this, EventArgs.Empty);
             }
         }
 
@@ -626,7 +627,8 @@ namespace Microsoft.VisualStudioTools.Project {
             if (_process != null) {
                 bool exited = _process.WaitForExit((int)timeout.TotalMilliseconds);
                 if (exited) {
-                    FlushAndCloseOutput();
+                    // Should have already been called, in which case this is a no-op
+                    OnExited(this, EventArgs.Empty);
                 }
                 return exited;
             }
@@ -643,7 +645,8 @@ namespace Microsoft.VisualStudioTools.Project {
                     tcs.SetCanceled();
                     _awaiter = tcs.Task;
                 } else if (_process.HasExited) {
-                    FlushAndCloseOutput();
+                    // Should have already been called, in which case this is a no-op
+                    OnExited(this, EventArgs.Empty);
                     var tcs = new TaskCompletionSource<int>();
                     tcs.SetResult(_process.ExitCode);
                     _awaiter = tcs.Task;
@@ -668,7 +671,8 @@ namespace Microsoft.VisualStudioTools.Project {
         public void Kill() {
             if (_process != null) {
                 _process.Kill();
-                FlushAndCloseOutput();
+                // Should have already been called, in which case this is a no-op
+                OnExited(this, EventArgs.Empty);
             }
         }
 

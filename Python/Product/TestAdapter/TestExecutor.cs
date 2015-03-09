@@ -346,16 +346,6 @@ namespace Microsoft.PythonTools.TestAdapter {
             frameworkHandle.RecordEnd(test, outcome);
         }
 
-        class DataReceiver {
-            public readonly StringBuilder Data = new StringBuilder();
-
-            public void DataReceived(object sender, DataReceivedEventArgs e) {
-                if (e.Data != null) {
-                    Data.AppendLine(e.Data);
-                }
-            }
-        }
-
         class TestReceiver : ITestCaseDiscoverySink {
             public List<TestCase> Tests { get; private set; }
 
