@@ -462,10 +462,10 @@ namespace PythonToolsUITests {
                 .OfType<AssemblyFileVersionAttribute>()
                 .Any(a => {
                     Version ver;
-                    return Version.TryParse(a.Version, out ver) && ver < new Version(2, 4);
+                    return Version.TryParse(a.Version, out ver) && ver < new Version(2, 5);
                 })
             ) {
-                Assert.Inconclusive("Test requires Microsoft Azure Tools 2.4 or later");
+                Assert.Inconclusive("Test requires Microsoft Azure Tools 2.5 or later");
             }
 
             using (var app = new VisualStudioApp())
