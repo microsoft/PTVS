@@ -295,6 +295,13 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             }
 
             lock (_environmentsLock) {
+                if (select == null) {
+                    var selectView = _environmentsView.View.CurrentItem as EnvironmentView;
+                    if (selectView != null) {
+                        select = selectView.Factory;
+                    }
+                }
+
                 _environments.Merge(
                     _service.Interpreters.Distinct().Select(f => {
                         var view = new EnvironmentView(_service, f, null);
@@ -307,7 +314,8 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 );
 
                 if (select != null) {
-                    var selectView = _environments.FirstOrDefault(v => v.Factory == select);
+                    var selectView = _environments.FirstOrDefault(v => v.Factory != null &&
+                        v.Factory.Id == select.Id && v.Factory.Configuration.Version == select.Configuration.Version);
                     if (selectView == null) {
                         select = null;
                     } else {

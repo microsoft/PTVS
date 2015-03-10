@@ -1024,7 +1024,7 @@
                                  x:Name="_TextBox"
                                  Margin="4 4 1 4"
                                  VerticalAlignment="Center"
-                                 Text="{Binding Text,Mode=TwoWay,RelativeSource={RelativeSource TemplatedParent}}"
+                                 Text="{Binding Text,Mode=TwoWay,RelativeSource={RelativeSource TemplatedParent},UpdateSourceTrigger=PropertyChanged}"
                                  AutomationProperties.HelpText="{TemplateBinding HelpText}">
                             <TextBox.ToolTip>
                                 <ToolTip Placement="Bottom" Content="{TemplateBinding HelpText}">
@@ -1081,15 +1081,15 @@
                         </Grid.ColumnDefinitions>
 
                         <ComboBox Grid.Column="0"
-                                                  x:Name="_ComboBox"
-                                                  IsEditable="False"
-                                                  Margin="4 4 1 4"
-                                                  VerticalAlignment="Center"
-                                                  ItemsSource="{TemplateBinding Values}"
-                                                  SelectedValue="{Binding Value,Mode=TwoWay,RelativeSource={RelativeSource TemplatedParent}}"
-                                                  IsTextSearchEnabled="True"
-                                                  IsTextSearchCaseSensitive="False"
-                                                  AutomationProperties.HelpText="{TemplateBinding HelpText}">
+                                  x:Name="_ComboBox"
+                                  IsEditable="False"
+                                  Margin="4 4 1 4"
+                                  VerticalAlignment="Center"
+                                  ItemsSource="{TemplateBinding Values}"
+                                  SelectedValue="{Binding Value,Mode=TwoWay,RelativeSource={RelativeSource TemplatedParent}}"
+                                  IsTextSearchEnabled="True"
+                                  IsTextSearchCaseSensitive="False"
+                                  AutomationProperties.HelpText="{TemplateBinding HelpText}">
                             <ComboBox.ToolTip>
                                 <ToolTip Placement="Bottom" Content="{TemplateBinding HelpText}">
                                     <ToolTip.ContentTemplate>

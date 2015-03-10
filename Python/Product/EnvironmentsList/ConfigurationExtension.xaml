@@ -67,10 +67,10 @@
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
                 
-                <Label Grid.Column="0" Grid.Row="0">Prefix path</Label>
+                <Label Grid.Column="0" Grid.Row="0">Description</Label>
                 <wpf:ConfigurationTextBoxWithHelp Grid.Column="0" Grid.Row="1"
-                                                Text="{Binding Description,Mode=TwoWay}"
-                                                Watermark="e.g. My Custom Environment">
+                                                  Text="{Binding Description,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
+                                                  Watermark="e.g. My Custom Environment">
                     <wpf:ConfigurationTextBoxWithHelp.HelpText>
                         The description is displayed throughout Visual Studio to
                         help you identify the environment.
@@ -79,9 +79,9 @@
 
                 <Label Grid.Column="0" Grid.Row="2">Prefix path</Label>
                 <wpf:ConfigurationTextBoxWithHelp Grid.Column="0" Grid.Row="3"
-                                                Text="{Binding PrefixPath,Mode=TwoWay}"
-                                                Watermark="e.g. C:\PythonXY"
-                                                BrowseButtonStyle="{StaticResource BrowseFolderButton}">
+                                                  Text="{Binding PrefixPath,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
+                                                  Watermark="e.g. C:\PythonXY"
+                                                  BrowseButtonStyle="{StaticResource BrowseFolderButton}">
                     <wpf:ConfigurationTextBoxWithHelp.HelpText>
                         The prefix path specifies the directory containing all files
                         needed for this environment. It may be used for searching
@@ -92,10 +92,10 @@
 
                 <Label Grid.Column="0" Grid.Row="4">Interpreter path</Label>
                 <wpf:ConfigurationTextBoxWithHelp Grid.Column="0" Grid.Row="5"
-                                                Text="{Binding InterpreterPath,Mode=TwoWay}"
-                                                Watermark="e.g. C:\PythonXY\python.exe"
-                                                BrowseButtonStyle="{StaticResource BrowseOpenFileButton}"
-                                                BrowseCommandParameter="Executable Files (*.exe)|*.exe|All Files (*.*)|*.*">
+                                                  Text="{Binding InterpreterPath,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
+                                                  Watermark="e.g. C:\PythonXY\python.exe"
+                                                  BrowseButtonStyle="{StaticResource BrowseOpenFileButton}"
+                                                  BrowseCommandParameter="Executable Files (*.exe)|*.exe|All Files (*.*)|*.*">
                     <wpf:ConfigurationTextBoxWithHelp.HelpText>
                         The interpreter path is the executable file normally used to
                         start Python. Normally this is called "python.exe", but it may
@@ -105,10 +105,10 @@
 
                 <Label Grid.Column="0" Grid.Row="6">Windowed interpreter</Label>
                 <wpf:ConfigurationTextBoxWithHelp Grid.Column="0" Grid.Row="7"
-                                                Text="{Binding WindowsInterpreterPath,Mode=TwoWay}"
-                                                Watermark="e.g. C:\PythonXY\pythonw.exe"
-                                                BrowseButtonStyle="{StaticResource BrowseOpenFileButton}"
-                                                BrowseCommandParameter="Executable Files (*.exe)|*.exe|All Files (*.*)|*.*">
+                                                  Text="{Binding WindowsInterpreterPath,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
+                                                  Watermark="e.g. C:\PythonXY\pythonw.exe"
+                                                  BrowseButtonStyle="{StaticResource BrowseOpenFileButton}"
+                                                  BrowseCommandParameter="Executable Files (*.exe)|*.exe|All Files (*.*)|*.*">
                     <wpf:ConfigurationTextBoxWithHelp.HelpText>
                         The windowed interpreter path is the executable file used to
                         start Python without displaying a console window. Normally this
@@ -119,9 +119,9 @@
 
                 <Label Grid.Column="0" Grid.Row="8">Library path</Label>
                 <wpf:ConfigurationTextBoxWithHelp Grid.Column="0" Grid.Row="9"
-                                                Text="{Binding LibraryPath,Mode=TwoWay}"
-                                                Watermark="e.g. C:\PythonXY\Lib"
-                                                BrowseButtonStyle="{StaticResource BrowseFolderButton}">
+                                                  Text="{Binding LibraryPath,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
+                                                  Watermark="e.g. C:\PythonXY\Lib"
+                                                  BrowseButtonStyle="{StaticResource BrowseFolderButton}">
                     <wpf:ConfigurationTextBoxWithHelp.HelpText>
                         The library path contains the standard library and the
                         'site-packages' folder for this environment. Packages installed
@@ -131,9 +131,9 @@
 
                 <Label Grid.Column="0" Grid.Row="10">Language version</Label>
                 <wpf:ConfigurationComboBoxWithHelp Grid.Column="0" Grid.Row="11"
-                                                 Value="{Binding VersionName,Mode=TwoWay}"
-                                                 Values="{Binding VersionNames}"
-                                                 Watermark="Language version">
+                                                   Value="{Binding VersionName,Mode=TwoWay}"
+                                                   Values="{Binding VersionNames}"
+                                                   Watermark="Language version">
                     <wpf:ConfigurationComboBoxWithHelp.HelpText>
                         The language version determines whether certain syntax features
                         are allowed or reported as errors. This should be set to match
@@ -143,9 +143,9 @@
 
                 <Label Grid.Column="0" Grid.Row="12">Architecture</Label>
                 <wpf:ConfigurationComboBoxWithHelp Grid.Column="0" Grid.Row="13"
-                                                 Value="{Binding ArchitectureName,Mode=TwoWay}"
-                                                 Values="{Binding ArchitectureNames}"
-                                                 Watermark="Architecture">
+                                                   Value="{Binding ArchitectureName,Mode=TwoWay}"
+                                                   Values="{Binding ArchitectureNames}"
+                                                   Watermark="Architecture">
                     <wpf:ConfigurationComboBoxWithHelp.HelpText>
                         The interpreter architecture is used when debugging and
                         profiling. This should be set to match the target architecture
@@ -156,8 +156,8 @@
 
                 <Label Grid.Column="0" Grid.Row="14">Path environment variable</Label>
                 <wpf:ConfigurationTextBoxWithHelp Grid.Column="0" Grid.Row="15"
-                                                Text="{Binding PathEnvironmentVariable,Mode=TwoWay}"
-                                                Watermark="e.g. PYTHONPATH">
+                                                  Text="{Binding PathEnvironmentVariable,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
+                                                  Watermark="e.g. PYTHONPATH">
                     <wpf:ConfigurationTextBoxWithHelp.HelpText>
                         This environment variable is set to specify search paths that
                         should be added to sys.path. Normally this should be set to
