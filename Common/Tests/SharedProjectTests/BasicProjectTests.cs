@@ -226,6 +226,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                     app.ExecuteCommand("Build.CleanSolution");
                     app.WaitForOutputWindowText("Build", "Hello Clean World!");
+                    app.WaitForOutputWindowText("Build", "1 succeeded");
                 }
             }
         }
@@ -257,6 +258,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                     app.ExecuteCommand("Build.RebuildSolution");
                     app.WaitForOutputWindowText("Build", "Hello Build World!");
+                    app.WaitForOutputWindowText("Build", "1 succeeded");
                 }
             }
         }
