@@ -23,13 +23,18 @@
         <Edition>WDExpress</Edition>
         <Edition>VWDExpress</Edition>
       </VisualStudio>
+      <VisualStudio Version="14.0">
+        <Edition>IntegratedShell</Edition>
+        <Edition>WDExpress</Edition>
+        <Edition>VWDExpress</Edition>
+      </VisualStudio>
     </SupportedProducts>
-    <SupportedFrameworkRuntimeEdition MinVersion="4.0" />
+    <SupportedFrameworkRuntimeEdition MinVersion="4.5" />
   </Identifier>
   <References>
     <Reference Id="96492FC7-7BC6-46F7-8559-66BB4E09FD1E" MinVersion="2.2" MaxVersion="2.2">
       <Name>Python Tools for Visual Studio</Name>
-      <MoreInfoUrl>http://pytools.codeplex.com/</MoreInfoUrl>
+      <MoreInfoUrl>http://aka.ms/ptvs</MoreInfoUrl>
     </Reference>  
   </References>
   <Content>

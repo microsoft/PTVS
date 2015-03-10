@@ -3,8 +3,8 @@
     <Identity Id="96492FC7-7BC6-46F7-8559-66BB4E09FD1E" Version="2.2" Language="en-US" Publisher="Microsoft" />
     <DisplayName>Python Tools for Visual Studio</DisplayName>
     <Description xml:space="preserve">Provides support for editing and debugging Python programs.</Description>
-    <MoreInfo>http://pytools.codeplex.com</MoreInfo>
-    <GettingStartedGuide>http://pytools.codeplex.com</GettingStartedGuide>
+    <MoreInfo>http://aka.ms/ptvs</MoreInfo>
+    <GettingStartedGuide>http://aka.ms/ptvs</GettingStartedGuide>
     <Icon>PythonProject.ico</Icon>
     <PreviewImage>PythonProjectBig.ico</PreviewImage>
   </Metadata>
