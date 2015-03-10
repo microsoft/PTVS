@@ -53,8 +53,14 @@ namespace Microsoft.PythonTools.Project {
         // be upgraded automatically.
         private const string Ptvs21BetaBottleTargets = @"$(VSToolsPath)\Python Tools\Microsoft.PythonTools.Bottle.targets";
         private const string Ptvs21BetaFlaskTargets = @"$(VSToolsPath)\Python Tools\Microsoft.PythonTools.Flask.targets";
+        
+        // These targets files existed in early PTVS versions but are no longer
+        // suitable and need to be replaced with our own targets file.
+        internal const string CommonTargets = @"$(MSBuildToolsPath)\Microsoft.Common.targets";
+        internal const string CommonProps = @"$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props";
 
-        private const string WebTargets = @"$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.Web.targets";
+        internal const string PtvsTargets = @"$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets";
+        internal const string WebTargets = @"$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.Web.targets";
 
         public PythonProjectFactory(IServiceProvider/*!*/ package)
             : base(package) {
@@ -107,11 +113,15 @@ namespace Microsoft.PythonTools.Project {
             }
 #endif
 
+            var imports = new HashSet<string>(projectXml.Imports.Select(p => p.Project), StringComparer.OrdinalIgnoreCase);
             // Importing a targets file from 2.1 Beta
-            if (projectXml.Imports.Any(p =>
-                p.Project.Equals(Ptvs21BetaBottleTargets, StringComparison.OrdinalIgnoreCase) ||
-                p.Project.Equals(Ptvs21BetaFlaskTargets, StringComparison.OrdinalIgnoreCase))) {
+            if (imports.Contains(Ptvs21BetaBottleTargets) || imports.Contains(Ptvs21BetaFlaskTargets)) {
                 return ProjectUpgradeState.SafeRepair;
+            }
+
+            // Only importing the Common targets and/or props.
+            if (imports.Contains(CommonProps) || imports.Contains(CommonTargets) && imports.Count == 1) {
+                return ProjectUpgradeState.OneWayUpgrade;
             }
 
             // ToolsVersion less than 4.0 (or unspecified) is not supported, so
@@ -168,6 +178,23 @@ namespace Microsoft.PythonTools.Project {
                 log(__VSUL_ERRORLEVEL.VSUL_INFORMATIONAL, SR.GetString(SR.UpgradedFlaskImports));
             }
 
+            var commonPropsImports = projectXml.Imports.Where(p => p.Project.Equals(CommonProps, StringComparison.OrdinalIgnoreCase)).ToList();
+            foreach (var p in commonPropsImports) {
+                projectXml.RemoveChild(p);
+                log(__VSUL_ERRORLEVEL.VSUL_INFORMATIONAL, SR.GetString(SR.UpgradedRemoveCommonProps));
+            }
+            
+            if (projectXml.Imports.Count == 1 && projectXml.Imports.First().Project.Equals(CommonTargets, StringComparison.OrdinalIgnoreCase)) {
+                projectXml.RemoveChild(projectXml.Imports.First());
+                var group = projectXml.AddPropertyGroup();
+                if (!projectXml.Properties.Any(p => p.Name == "VisualStudioVersion")) {
+                    group.AddProperty("VisualStudioVersion", "10.0").Condition = "'$(VisualStudioVersion)' == ''";
+                }
+                group.AddProperty("PtvsTargetsFile", PtvsTargets);
+                projectXml.AddImport("$(PtvsTargetsFile)").Condition = "Exists($(PtvsTargetsFile))";
+                projectXml.AddImport(CommonTargets).Condition = "!Exists($(PtvsTargetsFile))";
+                log(__VSUL_ERRORLEVEL.VSUL_INFORMATIONAL, SR.GetString(SR.UpgradedRemoveCommonTargets));
+            }
 
 #if !DEV12_OR_LATER
             if (userProjectXml != null) {

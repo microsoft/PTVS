@@ -547,4 +547,10 @@ Packages that cannot be installed using pip may prevent all listed packages from
   <data name="GlobalDefaultSuffix" xml:space="preserve">
     <value> (global default)</value>
   </data>
+  <data name="UpgradedRemoveCommonProps" xml:space="preserve">
+    <value>This project has had old build references removed and may no longer work with prior PTVS versions.</value>
+  </data>
+  <data name="UpgradedRemoveCommonTargets" xml:space="preserve">
+    <value>This project has been upgraded and may no longer work with prior PTVS versions.</value>
+  </data>
 </root>

@@ -224,6 +224,94 @@ namespace PythonToolsTests {
             }
         }
 
+        [TestMethod, Priority(1)]
+        public void CommonPropsProjectUpgrade() {
+            var factory = new PythonProjectFactory(null);
+            var sp = new MockServiceProvider();
+            sp.Services[typeof(SVsQueryEditQuerySave).GUID] = null;
+            sp.Services[typeof(SVsActivityLog).GUID] = new MockActivityLog();
+            factory.Site = sp;
+
+            var upgrade = (IVsProjectUpgradeViaFactory)factory;
+            var origProject = TestData.GetPath("TestData\\ProjectUpgrade\\OldCommonProps.pyproj");
+            var tempProject = Path.Combine(TestData.GetTempPath("ProjectUpgrade"), "OldCommonProps.pyproj");
+            File.Copy(origProject, tempProject);
+
+            int actual;
+            Guid factoryGuid;
+            string newLocation;
+
+            var hr = upgrade.UpgradeProject(
+                tempProject,
+                0u,  // no backups
+                null,
+                out newLocation,
+                null,
+                out actual,
+                out factoryGuid
+            );
+
+            Assert.AreEqual(0, hr, string.Format("Wrong HR for OldCommonProps.pyproj"));
+            Assert.AreEqual(1, actual, string.Format("Wrong result for OldCommonProps.pyproj"));
+            Assert.AreEqual(tempProject, newLocation, string.Format("Wrong location for OldCommonProps.pyproj"));
+
+            Assert.IsFalse(
+                File.ReadAllText(tempProject).Contains("<Import Project=\"" + PythonProjectFactory.CommonProps),
+                string.Format("Upgraded OldCommonProps.pyproj should not import from $(VSToolsPath)")
+            );
+            Assert.AreEqual(typeof(PythonProjectFactory).GUID, factoryGuid);
+        }
+
+        [TestMethod, Priority(1)]
+        public void CommonTargetsProjectUpgrade() {
+            var factory = new PythonProjectFactory(null);
+            var sp = new MockServiceProvider();
+            sp.Services[typeof(SVsQueryEditQuerySave).GUID] = null;
+            sp.Services[typeof(SVsActivityLog).GUID] = new MockActivityLog();
+            factory.Site = sp;
+
+            var upgrade = (IVsProjectUpgradeViaFactory)factory;
+            var origProject = TestData.GetPath("TestData\\ProjectUpgrade\\OldCommonTargets.pyproj");
+            var tempProject = Path.Combine(TestData.GetTempPath("ProjectUpgrade"), "OldCommonTargets.pyproj");
+            File.Copy(origProject, tempProject);
+
+            int actual;
+            Guid factoryGuid;
+            string newLocation;
+
+            var hr = upgrade.UpgradeProject(
+                tempProject,
+                0u,  // no backups
+                null,
+                out newLocation,
+                null,
+                out actual,
+                out factoryGuid
+            );
+
+            Assert.AreEqual(0, hr, string.Format("Wrong HR for OldCommonTargets.pyproj"));
+            Assert.AreEqual(1, actual, string.Format("Wrong result for OldCommonTargets.pyproj"));
+            Assert.AreEqual(tempProject, newLocation, string.Format("Wrong location for OldCommonTargets.pyproj"));
+
+            Assert.IsTrue(
+                File.ReadAllText(tempProject).Contains("<Import Project=\"" + PythonProjectFactory.CommonTargets + "\" Condition=\"!Exists($(PtvsTargetsFile)"),
+                string.Format("Upgraded OldCommonTargets.pyproj should conditionally import from $(VSToolsPath)")
+            );
+            Assert.IsTrue(
+                File.ReadAllText(tempProject).Contains("<VisualStudioVersion"),
+                string.Format("Upgraded OldCommonTargets.pyproj should define $(VisualStudioVersion)")
+            );
+            Assert.IsTrue(
+                File.ReadAllText(tempProject).Contains("<PtvsTargetsFile>" + PythonProjectFactory.PtvsTargets),
+                string.Format("Upgraded OldCommonTargets.pyproj should define $(PtvsTargetsFile)")
+            );
+            Assert.IsTrue(
+                File.ReadAllText(tempProject).Contains("<Import Project=\"$(PtvsTargetsFile)\" Condition=\"Exists($(PtvsTargetsFile))\""),
+                string.Format("Upgraded OldCommonTargets.pyproj should import $(PtvsTargetsFile)")
+            );
+            Assert.AreEqual(typeof(PythonProjectFactory).GUID, factoryGuid);
+        }
+
 #if DEV12_OR_LATER
         [TestMethod, Priority(0)]
         public void WebProjectCompatibility() {

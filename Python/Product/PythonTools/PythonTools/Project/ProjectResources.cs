@@ -129,6 +129,8 @@ namespace Microsoft.PythonTools.Project {
         public const string UpgradedUserToolsVersion = "UpgradedUserToolsVersion";
         public const string UpgradedBottleImports = "UpgradedBottleImports";
         public const string UpgradedFlaskImports = "UpgradedFlaskImports";
+        public const string UpgradedRemoveCommonProps = "UpgradedRemoveCommonProps";
+        public const string UpgradedRemoveCommonTargets = "UpgradedRemoveCommonTargets";
 
         public const string ProjectRequiresVWDExpress = "ProjectRequiresVWDExpress";
         public const string AddWebRoleSupportFiles = "AddWebRoleSupportFiles";
