@@ -803,9 +803,19 @@ namespace TestUtilities.UI {
 
             Project project = GetProject(projectName);
 
-            Assert.IsNotNull(project, "No project loaded");
-            Assert.IsNotNull(project.Properties, "No project loaded");
-            Assert.IsTrue(project.Properties.GetEnumerator().MoveNext(), "No project loaded");
+            string outputText = "(unable to get Solution output)";
+            try {
+                outputText = GetOutputWindowText("Solution");
+            } catch (Exception) {
+            }
+            Assert.IsNotNull(project, "No project loaded: " + outputText);
+            // HACK: Testing whether Properties is just slow to initialize
+            for (int retries = 10; retries > 0 && project.Properties == null; --retries) {
+                Trace.TraceWarning("Waiting for project.Properties to become non-null");
+                System.Threading.Thread.Sleep(250);
+            }
+            Assert.IsNotNull(project.Properties, "No project properties: " + outputText);
+            Assert.IsTrue(project.Properties.GetEnumerator().MoveNext(), "No items in project properties: " + outputText);
 
             if (startItem != null && setStartupItem) {
                 project.SetStartupFile(startItem);

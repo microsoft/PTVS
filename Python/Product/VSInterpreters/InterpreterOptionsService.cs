@@ -313,18 +313,18 @@ namespace Microsoft.PythonTools.Interpreter {
 
             foreach (var part in catalog) {
                 var container = new CompositionContainer(part, serviceProviderProvider);
-                foreach (var provider in container.GetExports<IPythonInterpreterFactoryProvider>()) {
-                    try {
+                try {
+                    foreach (var provider in container.GetExports<IPythonInterpreterFactoryProvider>()) {
                         if (provider.Value != null) {
                             providers.Add(provider.Value);
                         }
-                    } catch (CompositionException ex) {
-                        LogException(_activityLog, FailedToImportMessage, null, ex, ex.Errors);
-                    } catch (ReflectionTypeLoadException ex) {
-                        LogException(_activityLog, FailedToImportMessage, null, ex, ex.LoaderExceptions);
-                    } catch (Exception ex) {
-                        LogException(_activityLog, FailedToImportMessage, null, ex);
                     }
+                } catch (CompositionException ex) {
+                    LogException(_activityLog, FailedToImportMessage, null, ex, ex.Errors);
+                } catch (ReflectionTypeLoadException ex) {
+                    LogException(_activityLog, FailedToImportMessage, null, ex, ex.LoaderExceptions);
+                } catch (Exception ex) {
+                    LogException(_activityLog, FailedToImportMessage, null, ex);
                 }
             }
 

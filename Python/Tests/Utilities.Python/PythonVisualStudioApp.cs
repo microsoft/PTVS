@@ -44,11 +44,14 @@ namespace TestUtilities.UI.Python {
             : base(dte) {
 
             var service = ServiceProvider.GetPythonToolsService();
+            Assert.IsNotNull(service, "Failed to get PythonToolsService");
             
             // Disable AutoListIdentifiers for tests
-            var oldALI = service.AdvancedOptions.AutoListIdentifiers;
-            OnDispose(() => service.AdvancedOptions.AutoListIdentifiers = oldALI);
-            service.AdvancedOptions.AutoListIdentifiers = false;
+            var ao = service.AdvancedOptions;
+            Assert.IsNotNull(ao, "Failed to get AdvancedOptions");
+            var oldALI = ao.AutoListIdentifiers;
+            OnDispose(() => ao.AutoListIdentifiers = oldALI);
+            ao.AutoListIdentifiers = false;
         }
 
         protected override void Dispose(bool disposing) {
