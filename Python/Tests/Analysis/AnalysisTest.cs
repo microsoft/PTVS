@@ -6412,6 +6412,21 @@ p3 = a.abc
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("p2", 0), BuiltinTypeId.Int, BuiltinTypeId.Float);
         }
 
+        [TestMethod, Priority(0)]
+        public void RecursiveGetDescriptor() {
+            // see https://pytools.codeplex.com/workitem/2955
+            var entry = ProcessText(@"
+class WithGet:
+    __get__ = WithGet()
+
+class A:
+    wg = WithGet()
+
+x = A().wg");
+
+            Assert.IsNotNull(entry);
+        }
+
         #endregion
 
         #region Helpers

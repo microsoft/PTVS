@@ -129,7 +129,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         internal IAnalysisSet GetTypeMember(Node node, AnalysisUnit unit, string name) {
             var result = AnalysisSet.Empty;
-            
             var classMem = _classInfo.GetMemberNoReferences(node, unit, name);
             if (classMem.Count > 0) {
                 result = classMem.GetDescriptor(node, this, _classInfo, unit);
@@ -202,9 +201,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 var getAttr = _classInfo.GetMemberNoReferences(node, unit, "__getattr__");
                 if (getAttr.Count > 0) {
                     foreach (var getAttrFunc in getAttr) {
-                        // TODO: We should really do a get descriptor / call here
-                        //FIXME: new string[0]
-                        getattrRes = getattrRes.Union(getAttrFunc.Call(node, unit, new[] { SelfSet, _classInfo.AnalysisUnit.ProjectState.ClassInfos[BuiltinTypeId.Str].Instance.SelfSet }, ExpressionEvaluator.EmptyNames));
+                        getattrRes = getattrRes.Union(getAttr.Call(node, unit, new[] { SelfSet, _classInfo.AnalysisUnit.ProjectState.ClassInfos[BuiltinTypeId.Str].Instance.SelfSet }, ExpressionEvaluator.EmptyNames));
                     }
                 }
                 return getattrRes;
@@ -213,10 +210,16 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override IAnalysisSet GetDescriptor(Node node, AnalysisValue instance, AnalysisValue context, AnalysisUnit unit) {
-            var getter = GetTypeMember(node, unit, "__get__");
-            if (getter.Count > 0) {
-                var get = getter.GetDescriptor(node, this, _classInfo, unit);
-                return get.Call(node, unit, new[] { instance, context }, ExpressionEvaluator.EmptyNames);
+            if (Push()) {
+                try {
+                    var getter = GetTypeMember(node, unit, "__get__");
+                    if (getter.Count > 0) {
+                        var get = getter.GetDescriptor(node, this, _classInfo, unit);
+                        return get.Call(node, unit, new[] { instance, context }, ExpressionEvaluator.EmptyNames);
+                    }
+                } finally {
+                    Pop();
+                }
             }
             return SelfSet;
         }
