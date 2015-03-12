@@ -163,7 +163,10 @@ namespace Microsoft.PythonTools.InterpreterList {
 
         private void OpenInteractiveWindow_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
             var view = e.Parameter as EnvironmentView;
-            e.CanExecute = view != null && File.Exists(view.InterpreterPath);
+            e.CanExecute = view != null &&
+                view.Factory != null && 
+                view.Factory.Configuration != null &&
+                File.Exists(view.Factory.Configuration.InterpreterPath);
         }
 
         private void OpenInteractiveWindow_Executed(object sender, ExecutedRoutedEventArgs e) {
@@ -192,7 +195,8 @@ namespace Microsoft.PythonTools.InterpreterList {
         }
 
         private void OpenInteractiveOptions_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
-            e.CanExecute = e.Parameter is EnvironmentView;
+            var view = e.Parameter as EnvironmentView;
+            e.CanExecute = view != null && view.Factory != null;
         }
 
         private void OpenInteractiveOptions_Executed(object sender, ExecutedRoutedEventArgs e) {
@@ -204,7 +208,11 @@ namespace Microsoft.PythonTools.InterpreterList {
         }
 
         private void StartInterpreter_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
-            e.CanExecute = e.Parameter is EnvironmentView;
+            var view = e.Parameter as EnvironmentView;
+            e.CanExecute = view != null && File.Exists(e.Command == EnvironmentPathsExtension.StartInterpreter ?
+                view.Factory.Configuration.InterpreterPath :
+                view.Factory.Configuration.WindowsInterpreterPath);
+            e.Handled = true;
         }
 
         private void StartInterpreter_Executed(object sender, ExecutedRoutedEventArgs e) {
