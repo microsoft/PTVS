@@ -56,7 +56,7 @@ namespace Microsoft.PythonTools.Options {
                     multipleScopes = true;
                 }
 
-                value = store.GetString(PythonInteractiveOptionsControl.PythonExecutionModeKey + "\\" + modeID, "SupportsMultipleScopes", "True");
+                value = store.GetString(PythonInteractiveOptionsControl.PythonExecutionModeKey + "\\" + modeID, "SupportsMultipleCompleteStatementInputs", "True");
                 bool supportsMultipleCompleteStatementInputs;
                 if (!Boolean.TryParse(value, out supportsMultipleCompleteStatementInputs)) {
                     supportsMultipleCompleteStatementInputs = false;
