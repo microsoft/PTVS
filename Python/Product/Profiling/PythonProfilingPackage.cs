@@ -268,7 +268,7 @@ namespace Microsoft.PythonTools.Profiling {
             }
 
             var env = new Dictionary<string, string>();
-            if (!String.IsNullOrWhiteSpace(pathEnvVarName)) {
+            if (!String.IsNullOrWhiteSpace(pathEnvVarName) && !String.IsNullOrEmpty(searchPath)) {
                 var searchPaths = searchPath.Split(';').ToList();
                 var pyService = (PythonToolsService)session._serviceProvider.GetService(typeof(PythonToolsService));
                 if (!pyService.GeneralOptions.ClearGlobalPythonPath) {
@@ -308,7 +308,14 @@ namespace Microsoft.PythonTools.Profiling {
 
 
         private static void RunProfiler(SessionNode session, string interpreter, string script, string arguments, string workingDir, Dictionary<string, string> env, bool openReport, ProcessorArchitecture arch) {
-            var process = new ProfiledProcess((PythonToolsService)session._serviceProvider.GetService(typeof(PythonToolsService)), interpreter, String.Format("\"{0}\" {1}", script, arguments), workingDir, env, arch);
+            var process = new ProfiledProcess(
+                (PythonToolsService)session._serviceProvider.GetService(typeof(PythonToolsService)),
+                interpreter,
+                String.Format("\"{0}\" {1}", script, arguments ?? string.Empty),
+                workingDir,
+                env,
+                arch
+            );
 
             string baseName = Path.GetFileNameWithoutExtension(session.Filename);
             string date = DateTime.Now.ToString("yyyyMMdd");
