@@ -42,6 +42,9 @@ def is_ipython_versionorgreater(major, minor):
 
     return False
 
+if is_ipython_versionorgreater(3, 0):
+    raise UnsupportedReplException('IPython 3.0 is not yet supported. See http://pytools.codeplex.com/workitem/2961')
+
 try:
     if is_ipython_versionorgreater(1, 0):
         from IPython.kernel import KernelManager, KernelClient
