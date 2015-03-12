@@ -18,12 +18,12 @@
       </VisualStudio>
       <VisualStudio Version="12.0">
         <Edition>IntegratedShell</Edition>
-        <Edition>WDExpress</Edition>
+        <Edition>VSWinDesktopExpress</Edition>
         <Edition>VWDExpress</Edition>
       </VisualStudio>
       <VisualStudio Version="14.0">
         <Edition>IntegratedShell</Edition>
-        <Edition>WDExpress</Edition>
+        <Edition>VSWinDesktopExpress</Edition>
         <Edition>VWDExpress</Edition>
       </VisualStudio>
     </SupportedProducts>
