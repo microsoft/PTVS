@@ -983,6 +983,11 @@
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Snippets\1033\Python\main.snippet">
+      <SubType>Designer</SubType>
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="Templates\SharedFiles\Readme\WorkerRoleConfiguration.html" />
     <SharedTemplateFile Include="Templates\SharedFiles\ConfigureCloudService.ps1">
       <IncludeInWebRoleTemplates>true</IncludeInWebRoleTemplates>
