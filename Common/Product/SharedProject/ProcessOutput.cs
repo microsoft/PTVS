@@ -108,6 +108,7 @@ namespace Microsoft.VisualStudioTools.Project {
         private ManualResetEvent _waitHandleEvent;
         private readonly Redirector _redirector;
         private bool _isDisposed;
+        private readonly object _seenNullLock = new object();
         private bool _seenNullInOutput, _seenNullInError;
         private bool _haveRaisedExitedEvent;
         private Task<int> _awaiter;
@@ -431,8 +432,12 @@ namespace Microsoft.VisualStudioTools.Project {
             }
 
             if (e.Data == null) {
-                _seenNullInOutput = true;
-                if (_seenNullInError || !_process.StartInfo.RedirectStandardError) {
+                bool shouldExit;
+                lock (_seenNullLock) {
+                    _seenNullInOutput = true;
+                    shouldExit = _seenNullInError || !_process.StartInfo.RedirectStandardError;
+                }
+                if (shouldExit) {
                     OnExited(_process, EventArgs.Empty);
                 }
             } else if (!string.IsNullOrEmpty(e.Data)) {
@@ -453,8 +458,12 @@ namespace Microsoft.VisualStudioTools.Project {
             }
 
             if (e.Data == null) {
-                _seenNullInError = true;
-                if (_seenNullInOutput || !_process.StartInfo.RedirectStandardOutput) {
+                bool shouldExit;
+                lock (_seenNullLock) {
+                    _seenNullInError = true;
+                    shouldExit = _seenNullInOutput || !_process.StartInfo.RedirectStandardOutput;
+                }
+                if (shouldExit) {
                     OnExited(_process, EventArgs.Empty);
                 }
             } else if (!string.IsNullOrEmpty(e.Data)) {
