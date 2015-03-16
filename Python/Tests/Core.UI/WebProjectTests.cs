@@ -16,6 +16,7 @@ extern alias analysis;
 extern alias pythontools;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.NetworkInformation;
@@ -59,7 +60,7 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("VSTestHost")]
         public void LoadWebFlavoredProject() {
-            using (var app = new VisualStudioApp()) {
+            using (var app = new PythonVisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\EmptyWebProject.sln");
                 Assert.AreEqual("EmptyWebProject.pyproj", Path.GetFileName(project.FileName), "Wrong project file name");
 
@@ -78,7 +79,7 @@ namespace PythonToolsUITests {
         }
 
         private static void CheckCommandLineArgs(string setValue, string expectedValue = null) {
-            using (var app = new VisualStudioApp()) {
+            using (var app = new PythonVisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\CheckCommandLineArgs.sln");
 
                 var proj = project.GetCommonProject() as IPythonProject2;
@@ -122,7 +123,7 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("VSTestHost")]
         public void WebProjectEnvironment() {
-            using (var app = new VisualStudioApp()) {
+            using (var app = new PythonVisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\CheckEnvironment.sln");
 
                 var proj = project.GetCommonProject() as IPythonProject2;
@@ -151,7 +152,7 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("VSTestHost")]
         public void WebProjectStaticUri() {
-            using (var app = new VisualStudioApp()) {
+            using (var app = new PythonVisualStudioApp()) {
                 var project = app.CreateProject(
                     PythonVisualStudioApp.TemplateLanguageName,
                     PythonVisualStudioApp.EmptyWebProjectTemplate,
@@ -312,7 +313,7 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("VSTestHost")]
         public void WebProjectAddSupportFiles() {
-            using (var app = new VisualStudioApp()) {
+            using (var app = new PythonVisualStudioApp()) {
                 var project = app.CreateProject(
                     PythonVisualStudioApp.TemplateLanguageName,
                     PythonVisualStudioApp.EmptyWebProjectTemplate,
@@ -339,7 +340,7 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("VSTestHost")]
         public void WorkerProjectAddSupportFiles() {
-            using (var app = new VisualStudioApp()) {
+            using (var app = new PythonVisualStudioApp()) {
                 var project = app.CreateProject(
                     PythonVisualStudioApp.TemplateLanguageName,
                     PythonVisualStudioApp.PythonApplicationTemplate,
@@ -366,7 +367,7 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("VSTestHost")]
         public void WebProjectCreateVirtualEnvOnNew() {
-            using (var app = new VisualStudioApp()) {
+            using (var app = new PythonVisualStudioApp()) {
                 var t = Task.Run(() => app.CreateProject(
                     PythonVisualStudioApp.TemplateLanguageName,
                     PythonVisualStudioApp.FlaskWebProjectTemplate,
@@ -462,7 +463,7 @@ namespace PythonToolsUITests {
                 Assert.Inconclusive("Test requires Microsoft Azure Tools 2.5 or later");
             }
 
-            using (var app = new VisualStudioApp())
+            using (var app = new PythonVisualStudioApp())
             using (FileUtils.Backup(TestData.GetPath(@"TestData\CloudProject\ServiceDefinition.csdef"))) {
                 app.OpenProject("TestData\\CloudProject.sln", expectedProjects: 3);
 
@@ -564,7 +565,7 @@ namespace PythonToolsUITests {
             string packageName = null
         ) {
             EndToEndLog("Starting {0} {1}", templateName, pythonVersion);
-            using (var app = new VisualStudioApp()) {
+            using (var app = new PythonVisualStudioApp()) {
                 var pyProj = app.CreateProject(
                     PythonVisualStudioApp.TemplateLanguageName,
                     templateName,
@@ -744,9 +745,30 @@ namespace PythonToolsUITests {
             return factory;
         }
 
+        class TraceRedirector : pythontools::Microsoft.VisualStudioTools.Project.Redirector {
+            private readonly string _prefix;
+
+            public TraceRedirector(string prefix = "") {
+                if (string.IsNullOrEmpty(prefix)) {
+                    _prefix = "";
+                } else {
+                    _prefix = prefix + ": ";
+                }
+            }
+
+            public override void WriteLine(string line) {
+                Trace.WriteLine(_prefix + line);
+            }
+
+            public override void WriteErrorLine(string line) {
+                Trace.WriteLine(_prefix + "[ERROR] " + line);
+            }
+        }
+
         internal static void InstallWebFramework(VisualStudioApp app, string moduleName, string packageName, IPythonInterpreterFactory factory) {
+            var redirector = new TraceRedirector("pip install " + packageName);
             var task = app.ServiceProvider.GetUIThread().InvokeTask(() =>
-                Pip.Install(app.ServiceProvider, factory, packageName, false)
+                Pip.Install(app.ServiceProvider, factory, packageName, false, redirector)
             );
             try {
                 Assert.IsTrue(task.Wait(TimeSpan.FromMinutes(1.0)), "Timed out waiting for install " + packageName);
