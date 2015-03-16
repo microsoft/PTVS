@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.IO;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Utilities;
 
@@ -30,15 +31,21 @@ namespace TestUtilities.Mocks {
         public MockTextBuffer(string content) {
         }
 
-        public MockTextBuffer(string content, string contentType, string filename = "C:\\fob.py") {
+        public MockTextBuffer(string content, string contentType, string filename = null) {
             _snapshot = new MockTextSnapshot(this, content);
             _contentType = new MockContentType(contentType, new IContentType[0]);
+            if (filename == null) {
+                filename = Path.Combine(TestData.GetTempPath(), Path.GetRandomFileName(), "file.py");
+            }
             Properties[typeof(ITextDocument)] = new MockTextDocument(this, filename);
         }
 
-        public MockTextBuffer(string content, IContentType contentType, string filename = "C:\\fob.py") {
+        public MockTextBuffer(string content, IContentType contentType, string filename = null) {
             _snapshot = new MockTextSnapshot(this, content);
             _contentType = contentType;
+            if (filename == null) {
+                filename = Path.Combine(TestData.GetTempPath(), Path.GetRandomFileName(), "file.py");
+            }
             Properties[typeof(ITextDocument)] = new MockTextDocument(this, filename);
         }
 

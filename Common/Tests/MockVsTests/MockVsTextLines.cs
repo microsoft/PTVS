@@ -20,7 +20,7 @@ using Microsoft.VisualStudio.TextManager.Interop;
 using TestUtilities.Mocks;
 
 namespace Microsoft.VisualStudioTools.MockVsTests {
-    class MockVsTextLines : IVsTextLines, IVsPersistDocData {
+    class MockVsTextLines : IVsTextLines, IVsPersistDocData, IVsExpansion {
         private readonly MockTextBuffer _buffer;
         private readonly IServiceProvider _serviceProvider;
         internal uint _docCookie;
@@ -267,6 +267,18 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         public int SetUntitledDocPath(string pszDocDataPath) {
+            throw new NotImplementedException();
+        }
+
+        public int InsertExpansion(TextSpan tsContext, TextSpan tsInsertPos, IVsExpansionClient pExpansionClient, Guid guidLang, out IVsExpansionSession pSession) {
+            throw new NotImplementedException();
+        }
+
+        public int InsertNamedExpansion(string bstrTitle, string bstrPath, TextSpan tsInsertPos, IVsExpansionClient pExpansionClient, Guid guidLang, int fShowDisambiguationUI, out IVsExpansionSession pSession) {
+            throw new NotImplementedException();
+        }
+
+        public int InsertSpecificExpansion(MSXML.IXMLDOMNode pSnippet, TextSpan tsInsertPos, IVsExpansionClient pExpansionClient, Guid guidLang, string pszRelativePath, out IVsExpansionSession pSession) {
             throw new NotImplementedException();
         }
     }

@@ -394,10 +394,7 @@ namespace PythonToolsMockTests {
                 opts.AutoListMembers = true;
                 opts.AutoListIdentifiers = false;
             }
-            var view = vs.CreateTextView(
-                PythonCoreConstants.ContentType,
-                Path.Combine(Environment.CurrentDirectory, Path.GetRandomFileName(), "foo.py")
-            );
+            var view = vs.CreateTextView(PythonCoreConstants.ContentType, "");
             view.View.GetAnalyzer(vs.ServiceProvider).WaitForCompleteAnalysis(x => true);
             return view;
         }

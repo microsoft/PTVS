@@ -141,6 +141,7 @@ namespace Microsoft.PythonTools {
 
                         IClassificationType classification;
                         if (_provider.CategoryMap.TryGetValue(cc.Classification, out classification)) {
+                            Debug.Assert(classification != null, "Did not find " + cc.Classification);
                             classifications.Add(new ClassificationSpan(cc.Span.GetSpan(snapshot), classification));
                         }
                     }
