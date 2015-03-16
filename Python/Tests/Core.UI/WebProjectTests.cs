@@ -397,15 +397,12 @@ namespace PythonToolsUITests {
                 Assert.IsTrue(provider.IsProjectSpecific(provider.ActiveInterpreter), "Did not have virtualenv");
                 
                 for (int retries = 60; retries > 0; --retries) {
-                    if (InterpreterExt.FindModules(provider.ActiveInterpreter, "flask").Any()) {
+                    if (provider.ActiveInterpreter.FindModules("flask").Any()) {
                         break;
                     }
                     Thread.Sleep(1000);
                 }
-                AssertUtil.ContainsExactly(
-                    InterpreterExt.FindModules(provider.ActiveInterpreter, "flask"),
-                    "flask"
-                );
+                AssertUtil.ContainsExactly(provider.ActiveInterpreter.FindModules("flask"), "flask");
             }
         }
 
@@ -437,15 +434,12 @@ namespace PythonToolsUITests {
                 Assert.AreSame(app.InterpreterService.DefaultInterpreter, provider.ActiveInterpreter);
 
                 for (int retries = 60; retries > 0; --retries) {
-                    if (InterpreterExt.FindModules(provider.ActiveInterpreter, "bottle").Any()) {
+                    if (provider.ActiveInterpreter.FindModules("bottle").Any()) {
                         break;
                     }
                     Thread.Sleep(1000);
                 }
-                AssertUtil.ContainsExactly(
-                    InterpreterExt.FindModules(provider.ActiveInterpreter, "bottle"),
-                    "bottle"
-                );
+                AssertUtil.ContainsExactly(provider.ActiveInterpreter.FindModules("bottle"), "bottle");
 
                 TaskExt.WaitAndUnwrapExceptions(
                     Pip.Uninstall(app.ServiceProvider, app.InterpreterService.DefaultInterpreter, "bottle", false)
@@ -759,7 +753,7 @@ namespace PythonToolsUITests {
             } catch (AggregateException ex) {
                 throw ex.InnerException;
             }
-            Assert.AreEqual(1, InterpreterExt.FindModules(factory, moduleName).Count);
+            Assert.AreEqual(1, factory.FindModules(moduleName).Count);
         }
 
         #endregion

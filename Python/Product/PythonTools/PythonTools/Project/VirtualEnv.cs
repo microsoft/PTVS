@@ -112,10 +112,6 @@ namespace Microsoft.PythonTools.Project {
             return ContinueCreate(provider, factory, path, true, output);
         }
 
-        internal static Task<HashSet<string>> FindPipAndVirtualEnv(IPythonInterpreterFactory factory) {
-            return Task.Run(() => factory.FindModules("pip", "virtualenv", "venv"));
-        }
-
         /// <summary>
         /// Creates a virtual environment. If virtualenv or pip are not
         /// installed then they are downloaded and installed automatically.
@@ -128,7 +124,7 @@ namespace Microsoft.PythonTools.Project {
         ) {
             factory.ThrowIfNotRunnable("factory");
 
-            var modules = await FindPipAndVirtualEnv(factory);
+            var modules = await factory.FindModulesAsync("pip", "virtualenv", "venv");
             bool hasPip = modules.Contains("pip");
             bool hasVirtualEnv = modules.Contains("virtualenv") || modules.Contains("venv");
 

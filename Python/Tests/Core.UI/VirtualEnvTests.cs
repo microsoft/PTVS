@@ -376,9 +376,7 @@ namespace PythonToolsUITests {
         public void CreateVEnv() {
             using (var app = new PythonVisualStudioApp())
             using (var dis = Init(app, PythonPaths.Python33 ?? PythonPaths.Python33_x64, false)) {
-                if (analysis::Microsoft.PythonTools.Interpreter.PythonInterpreterFactoryExtensions
-                        .FindModules(dis.CurrentDefault, "virtualenv")
-                        .Contains("virtualenv")) {
+                if (dis.CurrentDefault.FindModules("virtualenv").Contains("virtualenv")) {
                     Pip.Uninstall(app.ServiceProvider, dis.CurrentDefault, "virtualenv", false).Wait();
                 }
 

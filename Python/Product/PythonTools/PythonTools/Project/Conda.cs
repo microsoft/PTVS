@@ -28,20 +28,17 @@ namespace Microsoft.PythonTools.Project {
             new KeyValuePair<string, string>("PYTHONUNBUFFERED", "1")
         };
 
-        private static bool TryGetCondaFactory(
+        private static async Task<IPythonInterpreterFactory> TryGetCondaFactoryAsync(
             IPythonInterpreterFactory target,
-            IInterpreterOptionsService service,
-            out IPythonInterpreterFactory factory
+            IInterpreterOptionsService service
         ) {
-            factory = null;
-
             var condaMetaPath = CommonUtils.GetAbsoluteDirectoryPath(
                 target.Configuration.PrefixPath,
                 "conda-meta"
             );
 
             if (!Directory.Exists(condaMetaPath)) {
-                return false;
+                return null;
             }
 
             string metaFile;
@@ -51,7 +48,7 @@ namespace Microsoft.PythonTools.Project {
                 if (ex.IsCriticalException()) {
                     throw;
                 }
-                return false;
+                return null;
             }
 
             if (!string.IsNullOrEmpty(metaFile)) {
@@ -68,26 +65,26 @@ namespace Microsoft.PythonTools.Project {
                 if (m.Success) {
                     var pkg = m.Groups[1].Value;
                     if (!Directory.Exists(pkg)) {
-                        return false;
+                        return null;
                     }
 
                     var prefix = Path.GetDirectoryName(Path.GetDirectoryName(pkg));
-                    factory = service.Interpreters.FirstOrDefault(
+                    var factory = service.Interpreters.FirstOrDefault(
                         f => CommonUtils.IsSameDirectory(f.Configuration.PrefixPath, prefix)
                     );
 
-                    if (factory != null && !factory.FindModules("conda").Any()) {
+                    if (factory != null && !(await factory.FindModulesAsync("conda")).Any()) {
                         factory = null;
                     }
 
-                    return factory != null;
+                    return factory;
                 }
             }
 
-            if (target.FindModules("conda").Any()) {
-                factory = target;
+            if ((await target.FindModulesAsync("conda")).Any()) {
+                return target;
             }
-            return factory != null;
+            return null;
         }
 
         public static bool CanInstall(
@@ -98,8 +95,7 @@ namespace Microsoft.PythonTools.Project {
                 return false;
             }
 
-            IPythonInterpreterFactory dummy;
-            return TryGetCondaFactory(factory, service, out dummy);
+            return TryGetCondaFactoryAsync(factory, service).WaitAndUnwrapExceptions() != null;
         }
 
         public static async Task<bool> Install(
@@ -111,8 +107,8 @@ namespace Microsoft.PythonTools.Project {
         ) {
             factory.ThrowIfNotRunnable("factory");
 
-            IPythonInterpreterFactory condaFactory;
-            if (!TryGetCondaFactory(factory, service, out condaFactory)) {
+            var condaFactory = await TryGetCondaFactoryAsync(factory, service); ;
+            if (condaFactory == null) {
                 throw new InvalidOperationException("Cannot find conda");
             }
             condaFactory.ThrowIfNotRunnable();

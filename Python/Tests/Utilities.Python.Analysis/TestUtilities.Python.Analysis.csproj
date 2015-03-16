@@ -72,6 +72,7 @@
     <Compile Include="PythonPaths.cs" />
     <Compile Include="MockCompletionDB.cs" />
     <Compile Include="PythonTestData.cs" />
+    <Compile Include="PythonTestExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(BuildRoot)Python\Product\Analysis\Analysis.csproj">

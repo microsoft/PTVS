@@ -54,7 +54,7 @@ namespace Microsoft.PythonTools.Interpreter {
         /// modules.
         /// </summary>
         /// <returns>The names of the modules that were found.</returns>
-        internal static HashSet<string> FindModules(this IPythonInterpreterFactory factory, params string[] moduleNames) {
+        internal static async Task<HashSet<string>> FindModulesAsync(this IPythonInterpreterFactory factory, params string[] moduleNames) {
             var withDb = factory as PythonInterpreterFactoryWithDatabase;
             if (withDb != null && withDb.IsCurrent) {
                 var db = withDb.GetCurrentDatabase();
@@ -65,7 +65,8 @@ namespace Microsoft.PythonTools.Interpreter {
             var expected = new HashSet<string>(moduleNames);
 
             if (withDb != null) {
-                var paths = PythonTypeDatabase.GetCachedDatabaseSearchPaths(withDb.DatabasePath);
+                var paths = PythonTypeDatabase.GetCachedDatabaseSearchPaths(withDb.DatabasePath) ??
+                    await PythonTypeDatabase.GetUncachedDatabaseSearchPathsAsync(withDb.Configuration.InterpreterPath).ConfigureAwait(false);
                 var db = PythonTypeDatabase.GetDatabaseExpectedModules(withDb.Configuration.Version, paths)
                     .SelectMany()
                     .Select(g => g.ModuleName);
@@ -73,17 +74,19 @@ namespace Microsoft.PythonTools.Interpreter {
                 return expected;
             }
 
-            var result = new HashSet<string>();
-            foreach (var mp in ModulePath.GetModulesInLib(factory)) {
-                if (expected.Count == 0) {
-                    break;
-                }
+            return await Task.Run(() => {
+                var result = new HashSet<string>();
+                foreach (var mp in ModulePath.GetModulesInLib(factory)) {
+                    if (expected.Count == 0) {
+                        break;
+                    }
 
-                if (expected.Remove(mp.ModuleName)) {
-                    result.Add(mp.ModuleName);
+                    if (expected.Remove(mp.ModuleName)) {
+                        result.Add(mp.ModuleName);
+                    }
                 }
-            }
-            return result;
+                return result;
+            });
         }
 
         /// <summary>

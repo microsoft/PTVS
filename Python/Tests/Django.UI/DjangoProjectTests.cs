@@ -85,7 +85,7 @@ namespace DjangoUITests {
             using (var app = new PythonVisualStudioApp()) {
                 var service = app.GetService<IComponentModel>(typeof(SComponentModel)).GetService<IInterpreterOptionsService>();
 
-                var envWithDjango = service.Interpreters.LastOrDefault(env => env.FindModules("django").Contains("django"));
+                var envWithDjango = service.Interpreters.LastOrDefault(env => env.FindModulesAsync("django").WaitAndUnwrapExceptions().Contains("django"));
                 if (envWithDjango == null) {
                     Assert.Inconclusive("No available environments have Django installed");
                 }

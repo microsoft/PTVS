@@ -137,7 +137,7 @@ namespace Microsoft.PythonTools.Project {
         ) {
             factory.ThrowIfNotRunnable("factory");
 
-            if (!factory.FindModules("pip").Any()) {
+            if (!(await factory.FindModulesAsync("pip")).Any()) {
                 await InstallPip(provider, factory, elevate, output);
             }
             using (var proc = Run(factory, output, elevate, "install", GetInsecureArg(factory, output), package)) {
@@ -156,7 +156,7 @@ namespace Microsoft.PythonTools.Project {
         ) {
             factory.ThrowIfNotRunnable("factory");
 
-            if (!factory.FindModules("pip").Any()) {
+            if (!(await factory.FindModulesAsync("pip")).Any()) {
                 if (site != null) {
                     try {
                         await QueryInstallPip(factory, site, SR.GetString(SR.InstallPip), elevate, output);
