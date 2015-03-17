@@ -771,7 +771,7 @@ namespace PythonToolsUITests {
                 Pip.Install(app.ServiceProvider, factory, packageName, false, redirector)
             );
             try {
-                Assert.IsTrue(task.Wait(TimeSpan.FromMinutes(1.0)), "Timed out waiting for install " + packageName);
+                Assert.IsTrue(task.Wait(TimeSpan.FromMinutes(3.0)), "Timed out waiting for install " + packageName);
             } catch (AggregateException ex) {
                 throw ex.InnerException;
             }
