@@ -1,4 +1,5 @@
 .hg
 .hgignore
+.git
 BuildOutput
 Python\TestResults
