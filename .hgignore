@@ -9,3 +9,4 @@ obj/
 TestResults/
 *.vspscc
 *.user
+.git
