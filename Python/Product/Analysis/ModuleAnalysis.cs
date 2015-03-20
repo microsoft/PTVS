@@ -925,7 +925,7 @@ namespace Microsoft.PythonTools.Analysis {
                     }
                 }
 
-                if (location.Index <= end) {
+                if (location.Index <= end || i + 1 == children.Count) {
                     candidate = children[i];
                 }
             }

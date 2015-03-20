@@ -18,9 +18,12 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Microsoft.PythonTools;
+using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Language.Intellisense;
+using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.MockVsTests;
 using TestUtilities;
@@ -384,8 +387,35 @@ namespace PythonToolsMockTests {
             }
         }
 
+        [TestMethod]
+        public void CompletionsAtEndOfLastChildScope() {
+            using (var vs = new MockVs()) {
+                var view = CreateViewAndAnalyze(vs, @"class A:
+    def f(param1, param2):
+        y = 234
 
-        private static MockVsTextView CreateViewAndAnalyze(MockVs vs = null) {
+        
+
+class B:
+    pass
+");
+
+                view.MoveCaret(5, 9);
+                view.Type("p");
+                var controller = view.View.Properties.GetProperty<IntellisenseController>(typeof(IntellisenseController));
+                controller.TriggerCompletionSession(false);
+                using (var sh = view.WaitForSession<ICompletionSession>()) {
+                    AssertUtil.ContainsAtLeast(
+                        sh.Session.Completions(),
+                        "param1",
+                        "param2"
+                    );
+                }
+            }
+        }
+
+
+        private static MockVsTextView CreateViewAndAnalyze(MockVs vs = null, string content = null) {
             if (vs == null) {
                 vs = new MockVs();
                 // Ensure these options are set correctly if we're creating the
@@ -394,7 +424,7 @@ namespace PythonToolsMockTests {
                 opts.AutoListMembers = true;
                 opts.AutoListIdentifiers = false;
             }
-            var view = vs.CreateTextView(PythonCoreConstants.ContentType, "");
+            var view = vs.CreateTextView(PythonCoreConstants.ContentType, content ?? "");
             view.View.GetAnalyzer(vs.ServiceProvider).WaitForCompleteAnalysis(x => true);
             return view;
         }
