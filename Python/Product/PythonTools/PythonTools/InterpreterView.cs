@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Windows;
 using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Interpreter;
@@ -38,16 +39,16 @@ namespace Microsoft.PythonTools {
             if (interpreterService == null) {
                 interpreterService = serviceProvider.GetComponentModel().GetService<IInterpreterOptionsService>();
                 if (interpreterService == null) {
-                    yield break;
+                    return Enumerable.Empty<InterpreterView>();
                 }
             }
 
-            foreach (var interp in interpreterService.Interpreters) {
-                yield return new InterpreterView(
-                    interp,
-                    interp.Description,
-                    interp == interpreterService.DefaultInterpreter);
-            }
+            return interpreterService.KnownProviders
+                .Where(p => !(p is LoadedProjectInterpreterFactoryProvider))
+                .SelectMany(p => p.GetInterpreterFactories())
+                .OrderBy(fact => fact.Description)
+                .ThenBy(fact => fact.Configuration.Version)
+                .Select(i => new InterpreterView(i, i.Description, i == interpreterService.DefaultInterpreter));
         }
 
         public InterpreterView(IPythonInterpreterFactory interpreter, string name, PythonProjectNode project)

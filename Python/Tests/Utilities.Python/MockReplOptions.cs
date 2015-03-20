@@ -22,8 +22,14 @@ using Microsoft.PythonTools.Repl;
 
 namespace TestUtilities.Python {
     internal class ReplTestReplOptions : PythonReplEvaluatorOptions {
+        private bool _enableAttach;
+
+        public ReplTestReplOptions(bool enableAttach = true) {
+            _enableAttach = enableAttach;
+        }
+
         public override bool EnableAttach {
-            get { return true; }
+            get { return _enableAttach; }
         }
 
         public override string InterpreterOptions {

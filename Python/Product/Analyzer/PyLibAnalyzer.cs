@@ -141,37 +141,15 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         private async Task<int> Run() {
-            while (true) {
-                try {
-                    await StartTraceListener();
-                    break;
-                } catch (IOException) {
-                }
-                await Task.Delay(20000);
-            }
-
-            LogToGlobal("START_STDLIB");
-
 #if DEBUG
             // Running with the debugger attached will skip the
             // unhandled exception handling to allow easier debugging.
             if (Debugger.IsAttached) {
-                // Ensure that this code block matches the protected one
-                // below.
-
-                for (int i = 0; i < _repeatCount && await Prepare(i == 0); ++i) {
-                    await Scrape();
-                    await Analyze();
-                }
-                await Epilogue();
+                await RunWorker();
             } else {
 #endif
                 try {
-                    for (int i = 0; i < _repeatCount && await Prepare(i == 0); ++i) {
-                        await Scrape();
-                        await Analyze();
-                    }
-                    await Epilogue();
+                    await RunWorker();
                 } catch (IdentifierInUseException) {
                     // Database is currently being analyzed
                     Console.Error.WriteLine("This interpreter is already being analyzed.");
@@ -189,6 +167,27 @@ namespace Microsoft.PythonTools.Analysis {
             LogToGlobal("DONE_STDLIB");
 
             return 0;
+        }
+
+        private async Task RunWorker() {
+            WaitForOtherRun();
+
+            while (true) {
+                try {
+                    await StartTraceListener();
+                    break;
+                } catch (IOException) {
+                }
+                await Task.Delay(20000);
+            }
+
+            LogToGlobal("START_STDLIB");
+
+            for (int i = 0; i < _repeatCount && await Prepare(i == 0); ++i) {
+                await Scrape();
+                await Analyze();
+            }
+            await Epilogue();
         }
 
         public PyLibAnalyzer(
@@ -453,41 +452,45 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        internal async Task<bool> Prepare(bool firstRun) {
-            if (firstRun && !string.IsNullOrEmpty(_waitForAnalysis)) {
-                if (_updater != null) {
-                    _updater.UpdateStatus(0, 0, "Waiting for another refresh to start.");
-                }
+        internal void WaitForOtherRun() {
+            if (string.IsNullOrEmpty(_waitForAnalysis)) {
+                return;
+            }
 
-                bool everSeen = false;
-                using (var evt = new AutoResetEvent(false))
-                using (var listener = new AnalyzerStatusListener(d => {
-                    AnalysisProgress progress;
-                    if (d.TryGetValue(_waitForAnalysis, out progress)) {
-                        everSeen = true;
-                        var message = "Waiting for another refresh to complete.";
-                        if (!string.IsNullOrEmpty(progress.Message)) {
-                            message += Environment.NewLine + progress.Message;
-                        }
-                        _updater.UpdateStatus(progress.Progress, progress.Maximum, message);
-                    } else if (everSeen) {
-                        try {
-                            evt.Set();
-                        } catch (ObjectDisposedException) {
-                            // Event arrived after timeout and/or disposal of
-                            // listener.
-                        }
+            if (_updater != null) {
+                _updater.UpdateStatus(0, 0, "Waiting for another refresh to start.");
+            }
+
+            bool everSeen = false;
+            using (var evt = new AutoResetEvent(false))
+            using (var listener = new AnalyzerStatusListener(d => {
+                AnalysisProgress progress;
+                if (d.TryGetValue(_waitForAnalysis, out progress)) {
+                    everSeen = true;
+                    var message = "Waiting for another refresh";
+                    if (!string.IsNullOrEmpty(progress.Message)) {
+                        message += ": " + progress.Message;
                     }
-                }, TimeSpan.FromSeconds(1.0))) {
-                    if (!evt.WaitOne(TimeSpan.FromSeconds(60.0))) {
-                        if (everSeen) {
-                            // Running, but not finished yet
-                            evt.WaitOne();
-                        }
+                    _updater.UpdateStatus(progress.Progress, progress.Maximum, message);
+                } else if (everSeen) {
+                    try {
+                        evt.Set();
+                    } catch (ObjectDisposedException) {
+                        // Event arrived after timeout and/or disposal of
+                        // listener.
+                    }
+                }
+            }, TimeSpan.FromSeconds(1.0))) {
+                if (!evt.WaitOne(TimeSpan.FromSeconds(60.0))) {
+                    if (everSeen) {
+                        // Running, but not finished yet
+                        evt.WaitOne();
                     }
                 }
             }
-            
+        }
+
+        internal async Task<bool> Prepare(bool firstRun) {
             if (_updater != null) {
                 _updater.UpdateStatus(0, 0, "Collecting files");
             }

@@ -577,18 +577,18 @@ namespace PythonToolsUITests {
 
                 Assert.IsInstanceOfType(pyProj.GetLauncher(), typeof(PythonWebLauncher));
 
-                var factory = CreateVirtualEnvironment(pythonVersion, app, pyProj);
-
-                EndToEndLog("Created virtual environment {0}", factory.Description);
-
-                InstallWebFramework(app, moduleName, packageName ?? moduleName, factory);
-
-                EndToEndLog("Installed framework {0}", moduleName);
+                IPythonInterpreterFactory factory;
 
                 // Abort analysis so we don't have too many python.exe processes
                 // floating around.
-                foreach (var p in Process.GetProcessesByName("Microsoft.PythonTools.Analyzer")) {
-                    p.Kill();
+                using (new ProcessScope("Microsoft.PythonTools.Analyzer")) {
+                    factory = CreateVirtualEnvironment(pythonVersion, app, pyProj);
+
+                    EndToEndLog("Created virtual environment {0}", factory.Description);
+
+                    InstallWebFramework(app, moduleName, packageName ?? moduleName, factory);
+
+                    EndToEndLog("Installed framework {0}", moduleName);
                 }
 
                 EndToEndLog("Aborted analysis");
