@@ -69,6 +69,9 @@ namespace AnalysisTests {
 
             // mixed on same line, tabs first
             ParseErrors("MixedWhitespace5.py", PythonLanguageVersion.V27, Severity.Error);
+
+            // mixed on a comment line - should not crash
+            ParseErrors("MixedWhitespace6.py", PythonLanguageVersion.V27, Severity.Error, new ErrorInfo("inconsistent whitespace", 126, 8, 17, 128, 9, 2));
         }
 
         [TestMethod, Priority(0)]
