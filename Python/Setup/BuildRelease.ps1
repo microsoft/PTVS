@@ -641,6 +641,10 @@ try {
     
     after-build-all $buildroot $outdir
     
+    if ($signedBuild) {
+        check_signing $outdir
+    }
+    
     if ($scorch) {
         tfpt scorch $buildroot /noprompt
     }
