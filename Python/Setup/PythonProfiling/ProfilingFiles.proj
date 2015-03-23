@@ -18,9 +18,9 @@
     <File Include="Microsoft.PythonTools.Profiling.pkgdef" />
 
     <!-- Core extension -->
-    <File Include="Microsoft.PythonTools.Profiling.dll;
-                   VsPyProf.dll;
-                   VsPyProfX86.dll;
+    <File Include="!(bindpath.bin)\Microsoft.PythonTools.Profiling.dll;
+                   !(bindpath.bin)\VsPyProf.dll;
+                   !(bindpath.bin)\VsPyProfX86.dll;
                    vspyprof.py;
                    proflaun.py" />
 

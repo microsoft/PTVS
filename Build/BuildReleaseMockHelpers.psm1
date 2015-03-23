@@ -32,6 +32,22 @@ function _find_sdk_tool {
             }
         }
     }
+    foreach ($ver in ("KitsRoot81", "KitsRoot")) {
+        $_kit_path = (Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows Kits\Installed Roots" -Name $ver -EA 0).$ver
+        if (-not $_kit_path) {
+            $_kit_path = (Get-ItemProperty "HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows Kits\Installed Roots" -Name $ver -EA 0).$ver
+        }
+
+        foreach ($kit in ("x64", "x86")) {
+            if ($_kit_path -and (Test-Path "$_kit_path\bin\$kit")) {
+                $_tool_item = Get-Item "$_kit_path\bin\$kit\$tool.exe" -EA 0
+                if (-not (Test-Path alias:\$tool) -and $_tool_item) {
+                    Set-Alias -Name $tool -Value $_tool_item.FullName -Scope Global
+                    return
+                }
+            }
+        }
+    }
 }
 
 function begin_sign_files {

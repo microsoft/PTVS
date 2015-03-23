@@ -20,7 +20,7 @@
     <File Include="Microsoft.PythonTools.Django.pkgdef" />
 
     <!-- Core extension -->
-    <File Include="Microsoft.PythonTools.Django.dll" />
+    <File Include="!(bindpath.bin)\Microsoft.PythonTools.Django.dll" />
 
     <!-- Resources -->
     <File Include="PythonProject.ico;

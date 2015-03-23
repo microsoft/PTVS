@@ -20,8 +20,19 @@
     4. Setup output directory (for merge modules)
   -->
   <Target Name="_SetBindInputPaths" BeforeTargets="Link">
+    <PropertyGroup>
+      <CopyOutputsToPath Condition="'$(CopyOutputsToPath)' != '' and !HasTrailingSlash($(CopyOutputsToPath))">$(CopyOutputsToPath)\</CopyOutputsToPath>
+    </PropertyGroup>
     <ItemGroup>
-      <LinkerBindInputPaths Include="$(SignedBinariesPath)" Condition="'$(SignedBinariesPath)' != ''" />
+      <LinkerBindInputPaths Include="$(SignedBinariesPath)" Condition="'$(SignedBinariesPath)' != ''">
+        <BindName>bin</BindName>
+      </LinkerBindInputPaths>
+      <LinkerBindInputPaths Include="$(CopyOutputsToPath)UnsignedBinaries" Condition="'$(SignedBinariesPath)' == '' and '$(CopyOutputsToPath)' != ''">
+        <BindName>bin</BindName>
+      </LinkerBindInputPaths>
+      <LinkerBindInputPaths Include="$([System.IO.Directory]::GetDirectories(`$(BuildOutputRoot)\Binaries`))" Condition="'$(ReleaseBuild)' != 'true' and Exists('$(BuildOutputRoot)\Binaries') and '$(SignedBinariesPath)$(CopyOutputsToPath)' == ''">
+        <BindName>bin</BindName>
+      </LinkerBindInputPaths>
       <LinkerBindInputPaths Include="$(BuildOutputRoot)Binaries\" />
       <LinkerBindInputPaths Include="$([System.IO.Directory]::GetDirectories(`$(BuildOutputRoot)\Binaries`))" Condition="Exists('$(BuildOutputRoot)\Binaries')" />
       <LinkerBindInputPaths Include="$(BuildOutputRoot)Setup\" />
