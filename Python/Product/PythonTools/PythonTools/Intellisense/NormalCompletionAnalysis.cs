@@ -15,9 +15,12 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
+using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Repl;
@@ -92,6 +95,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             var analysis = GetAnalysisEntry();
+
             string text;
             SnapshotSpan statementRange;
             if (!GetPrecedingExpression(out text, out statementRange)) {
@@ -104,7 +108,10 @@ namespace Microsoft.PythonTools.Intellisense {
                             statementRange.Snapshot,
                             analysis
                         );
-                        members = analysis.GetAllAvailableMembers(location, _options.MemberOptions);
+                        var parameters = GetParameterNames(analysis, location)
+                            .Select(n => new MemberResult(n, PythonMemberType.Field));
+                        members = analysis.GetAllAvailableMembers(location, _options.MemberOptions)
+                            .Union(parameters, CompletionComparer.MemberEquality);
                     }
                 }
             } else {
@@ -170,6 +177,52 @@ namespace Microsoft.PythonTools.Intellisense {
 
             return result;
         }
+
+        private IEnumerable<string> GetParameterNames(ModuleAnalysis analysis, SourceLocation location) {
+            var argsParser = new ReverseExpressionParser(_snapshot, _snapshot.TextBuffer, Span);
+            
+            int index;
+            SnapshotPoint? sigStart;
+            string lastKeywordArg;
+            bool isParameterName;
+            var span = argsParser.GetExpressionRange(1, out index, out sigStart, out lastKeywordArg, out isParameterName);
+
+            string target = null;
+            if (sigStart.HasValue && string.IsNullOrEmpty(lastKeywordArg)) {
+                var applicableTo = _snapshot.GetApplicableSpan(sigStart.Value.Position - 1);
+                if (applicableTo != null) {
+                    target = applicableTo.GetText(_snapshot);
+                }
+            }
+
+            if (string.IsNullOrEmpty(target)) {
+                return Enumerable.Empty<string>();
+            }
+
+            return analysis.GetSignatures(target, location)
+                .SelectMany(s => s.Parameters)
+                .Select(p => p.Name)
+                .Distinct();
+        }
+
+        class FindCurrentCalleeWalker : PythonWalkerWithLocation {
+            public FindCurrentCalleeWalker(int location) : base(location) { }
+
+            public Expression Callee { get; private set; }
+
+            public override bool Walk(CallExpression node) {
+                if (base.Walk(node)) {
+                    Callee = node.Target;
+                    return true;
+                }
+                return false;
+            }
+
+            public override void PostWalk(CallExpression node) {
+                base.PostWalk(node);
+            }
+        }
+
 
     }
 }

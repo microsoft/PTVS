@@ -500,8 +500,11 @@ namespace Microsoft.PythonTools.Intellisense {
                 msg.Apply(_items, _itemsLock);
             }
 
-            if (_workerQueue.IsCompleted) {
-                _workerQueue.Dispose();
+            try {
+                if (_workerQueue.IsCompleted) {
+                    _workerQueue.Dispose();
+                }
+            } catch (ObjectDisposedException) {
             }
         }
 
@@ -582,7 +585,7 @@ namespace Microsoft.PythonTools.Intellisense {
             lock (_workerQueue) {
                 try {
                     _workerQueue.Add(message);
-                } catch (ObjectDisposedException) {
+                } catch (InvalidOperationException) {
                     return;
                 }
                 if (!_hasWorker) {

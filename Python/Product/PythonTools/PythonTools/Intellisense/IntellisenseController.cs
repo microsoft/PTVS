@@ -734,7 +734,7 @@ namespace Microsoft.PythonTools.Intellisense {
         public int Exec(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
             if (pguidCmdGroup == VSConstants.VSStd2K && nCmdID == (int)VSConstants.VSStd2KCmdID.TYPECHAR) {
                 var ch = (char)(ushort)System.Runtime.InteropServices.Marshal.GetObjectForNativeVariant(pvaIn);
-                
+
                 if (_activeSession != null && !_activeSession.IsDismissed) {
                     if (_activeSession.SelectedCompletionSet != null &&
                         _activeSession.SelectedCompletionSet.SelectionStatus.IsSelected &&

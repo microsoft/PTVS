@@ -96,10 +96,18 @@ namespace Microsoft.VisualStudioTools {
                 // somebody out there listening.
                 Trace.TraceError(message);
 
+                string logFile;
+                try {
+                    logFile = ActivityLog.LogFilePath;
+                } catch (InvalidOperationException) {
+                    logFile = null;
+                }
+
                 lock (_displayedMessages) {
-                    if (_displayedMessages.Add(string.Format("{0}:{1}", callerFile, callerLineNumber))) {
+                    if (!string.IsNullOrEmpty(logFile) &&
+                        _displayedMessages.Add(string.Format("{0}:{1}", callerFile, callerLineNumber))) {
                         // First time we've seen this error, so let the user know
-                        MessageBox.Show(SR.GetString(SR.SeeActivityLog, ActivityLog.LogFilePath), productTitle);
+                        MessageBox.Show(SR.GetString(SR.SeeActivityLog, logFile), productTitle);
                     }
                 }
 
@@ -157,10 +165,18 @@ namespace Microsoft.VisualStudioTools {
                 // somebody out there listening.
                 Trace.TraceError(message);
 
+                string logFile;
+                try {
+                    logFile = ActivityLog.LogFilePath;
+                } catch (InvalidOperationException) {
+                    logFile = null;
+                }
+
                 lock (_displayedMessages) {
-                    if (_displayedMessages.Add(string.Format("{0}:{1}", callerFile, callerLineNumber))) {
+                    if (!string.IsNullOrEmpty(logFile) &&
+                        _displayedMessages.Add(string.Format("{0}:{1}", callerFile, callerLineNumber))) {
                         // First time we've seen this error, so let the user know
-                        MessageBox.Show(SR.GetString(SR.SeeActivityLog, ActivityLog.LogFilePath), productTitle);
+                        MessageBox.Show(SR.GetString(SR.SeeActivityLog, logFile), productTitle);
                     }
                 }
 

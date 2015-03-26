@@ -24,6 +24,7 @@ using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Analysis {
     /// <summary>
@@ -36,6 +37,9 @@ namespace Microsoft.PythonTools.Analysis {
         private readonly InterpreterScope _scope;
         private readonly IAnalysisCookie _cookie;
         private static Regex _otherPrivateRegex = new Regex("^_[a-zA-Z_]\\w*__[a-zA-Z_]\\w*$");
+
+        private static readonly IEnumerable<IOverloadResult> GetSignaturesError =
+            new[] { new SimpleOverloadResult(new ParameterResult[0], "Unknown", "IntellisenseError_Sigs") };
 
         internal ModuleAnalysis(AnalysisUnit unit, InterpreterScope scope, IAnalysisCookie cookie) {
             _unit = unit;
@@ -420,9 +424,12 @@ namespace Microsoft.PythonTools.Analysis {
 
                     return result;
                 }
-            } catch (Exception) {
-                // TODO: log exception
-                return new[] { new SimpleOverloadResult(new ParameterResult[0], "Unknown", "IntellisenseError_Sigs") };
+            } catch (Exception ex) {
+                if (ex.IsCriticalException()) {
+                    throw;
+                }
+                Debug.Fail(ex.ToString());
+                return GetSignaturesError;
             }
         }
 
@@ -557,11 +564,8 @@ namespace Microsoft.PythonTools.Analysis {
         /// looked up.
         /// </param>
         /// <remarks>New in 2.2</remarks>
-        public IEnumerable<MemberResult> GetAllAvailableMembers(
-            SourceLocation location,
-            GetMemberOptions options = GetMemberOptions.IntersectMultipleResults
-        ) {
-            var result = new Dictionary<string, List<AnalysisValue>>();
+        public IEnumerable<MemberResult> GetAllAvailableMembers(SourceLocation location, GetMemberOptions options = GetMemberOptions.IntersectMultipleResults) {
+            var result = new Dictionary<string, IEnumerable<AnalysisValue>>();
 
             // collect builtins
             foreach (var variable in ProjectState.BuiltinModule.GetAllMembers(ProjectState._defaultContext)) {
@@ -572,6 +576,7 @@ namespace Microsoft.PythonTools.Analysis {
             var scope = FindScope(location);
             foreach (var s in scope.EnumerateTowardsGlobal) {
                 foreach (var kvp in s.GetAllMergedVariables()) {
+                    // deliberately overwrite variables from outer scopes
                     result[kvp.Key] = new List<AnalysisValue>(kvp.Value.TypesNoCopy);
                 }
             }
@@ -583,6 +588,7 @@ namespace Microsoft.PythonTools.Analysis {
 
             return res;
         }
+
 
         private IEnumerable<MemberResult> GetKeywordMembers(GetMemberOptions options, InterpreterScope scope) {
             IEnumerable<string> keywords = null;
@@ -687,8 +693,8 @@ namespace Microsoft.PythonTools.Analysis {
                 return SingleMemberResult(GetPrivatePrefix(scope), options, newMembers);
             }
 
-            Dictionary<string, List<AnalysisValue>> memberDict = null;
-            Dictionary<string, List<AnalysisValue>> ownerDict = null;
+            Dictionary<string, IEnumerable<AnalysisValue>> memberDict = null;
+            Dictionary<string, IEnumerable<AnalysisValue>> ownerDict = null;
             HashSet<string> memberSet = null;
             int namespacesCount = namespaces.Count;
             foreach (AnalysisValue ns in namespaces) {
@@ -706,8 +712,8 @@ namespace Microsoft.PythonTools.Analysis {
                 if (memberSet == null) {
                     // first namespace, add everything
                     memberSet = new HashSet<string>(newMembers.Keys);
-                    memberDict = new Dictionary<string, List<AnalysisValue>>();
-                    ownerDict = new Dictionary<string, List<AnalysisValue>>();
+                    memberDict = new Dictionary<string, IEnumerable<AnalysisValue>>();
+                    ownerDict = new Dictionary<string, IEnumerable<AnalysisValue>>();
                     foreach (var kvp in newMembers) {
                         var tmp = new List<AnalysisValue>(kvp.Value);
                         memberDict[kvp.Key] = tmp;
@@ -740,15 +746,23 @@ namespace Microsoft.PythonTools.Analysis {
 
                     // update memberDict
                     foreach (var name in adding) {
-                        List<AnalysisValue> values;
+                        IEnumerable<AnalysisValue> values;
+                        List<AnalysisValue> valueList;
                         if (!memberDict.TryGetValue(name, out values)) {
                             memberDict[name] = values = new List<AnalysisValue>();
                         }
-                        values.AddRange(newMembers[name]);
+                        if ((valueList = values as List<AnalysisValue>) == null) {
+                            memberDict[name] = valueList = new List<AnalysisValue>(values);
+                        }
+                        valueList.AddRange(newMembers[name]);
+
                         if (!ownerDict.TryGetValue(name, out values)) {
                             ownerDict[name] = values = new List<AnalysisValue>();
                         }
-                        values.Add(ns);
+                        if ((valueList = values as List<AnalysisValue>) == null) {
+                            ownerDict[name] = valueList = new List<AnalysisValue>(values);
+                        }
+                        valueList.Add(ns);
                     }
 
                     if (toRemove != null) {
@@ -802,6 +816,7 @@ namespace Microsoft.PythonTools.Analysis {
             return GetAstFromText(exprText, _unit.Tree.IndexToLocation(index));
         }
 
+        /// <summary>
         /// Gets the AST for the given text as if it appeared at the specified
         /// location.
         /// 
@@ -848,7 +863,9 @@ namespace Microsoft.PythonTools.Analysis {
         /// Gets the chain of scopes which are associated with the given position in the code.
         /// </summary>
         private InterpreterScope FindScope(SourceLocation location) {
-            return FindScope(Scope, _unit.Tree, location);
+            var res = FindScope(Scope, _unit.Tree, location);
+            Debug.Assert(res != null, "Should never return null from FindScope");
+            return res;
         }
 
         private static bool IsInFunctionParameter(InterpreterScope scope, PythonAst tree, SourceLocation location) {
@@ -947,15 +964,20 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
 
-        private static IEnumerable<MemberResult> MemberDictToResultList(string privatePrefix, GetMemberOptions options, Dictionary<string, List<AnalysisValue>> memberDict,
-            Dictionary<string, List<AnalysisValue>> ownerDict = null, int maximumOwners = 0) {
+        private static IEnumerable<MemberResult> MemberDictToResultList(
+            string privatePrefix,
+            GetMemberOptions options,
+            Dictionary<string, IEnumerable<AnalysisValue>> memberDict,
+            Dictionary<string, IEnumerable<AnalysisValue>> ownerDict = null,
+            int maximumOwners = 0
+        ) {
             foreach (var kvp in memberDict) {
                 string name = GetMemberName(privatePrefix, options, kvp.Key);
                 string completion = name;
                 if (name != null) {
-                    List<AnalysisValue> owners;
+                    IEnumerable<AnalysisValue> owners;
                     if (ownerDict != null && ownerDict.TryGetValue(kvp.Key, out owners) &&
-                        owners.Count >= 1 && owners.Count < maximumOwners) {
+                        owners.Any() && owners.Count() < maximumOwners) {
                         // This member came from less than the full set of types.
                         var seenNames = new HashSet<string>();
                         var newName = new StringBuilder(name);

@@ -116,12 +116,14 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
 
             _throwExceptionsOn = Thread.CurrentThread;
 
-            UIThread = new Thread(UIThreadWorker);
-            UIThread.Name = "Mock UI Thread";
-            UIThread.Start();
-            // Wait for UI thread to start before returning. This ensures that
-            // any packages we have are loaded and have published their services
-            _uiEvent.WaitOne();
+            using (var e = new AutoResetEvent(false)) {
+                UIThread = new Thread(UIThreadWorker);
+                UIThread.Name = "Mock UI Thread";
+                UIThread.Start((object)e);
+                // Wait for UI thread to start before returning. This ensures that
+                // any packages we have are loaded and have published their services
+                e.WaitOne();
+            }
             ThrowPendingException();
         }
 
@@ -140,13 +142,15 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             }
         }
 
-        private void UIThreadWorker() {
+        private void UIThreadWorker(object evt) {
             try {
                 SynchronizationContext.SetSynchronizationContext(new MockSyncContext(this));
+                var packages = new List<IMockPackage>();
                 foreach (var package in Container.GetExportedValues<IMockPackage>()) {
+                    packages.Add(package);
                     package.Initialize();
                 }
-                _uiEvent.Set();
+                ((AutoResetEvent)evt).Set();
 
                 while (!_shutdown) {
                     _uiEvent.WaitOne();
@@ -160,6 +164,10 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
                             action();
                         }
                     } while (events.Length > 0);
+                }
+
+                foreach (var package in packages) {
+                    package.Dispose();
                 }
             } catch (Exception ex) {
                 Trace.TraceError("Captured exception on mock UI thread: {0}", ex);
@@ -208,7 +216,14 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
                     _uiEvents.Add(action);
                     _uiEvent.Set();
                 }
-                tmp.WaitOne();
+
+                while (!tmp.WaitOne(100)) {
+                    if (!UIThread.IsAlive) {
+                        ThrowPendingException(checkThread: false);
+                        Debug.Fail("UIThread was terminated");
+                        return res;
+                    }
+                }
             }
             ThrowPendingException(checkThread: false);
             return res;
@@ -301,6 +316,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
                 }
             }
 
+            OnDispose(() => res.Close());
             return res;
         }
 
@@ -344,6 +360,10 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             List<AssemblyCatalog> catalogs = new List<AssemblyCatalog>();
             List<Type> packageTypes = new List<Type>();
             foreach (var file in Directory.GetFiles(runningLoc, "*.dll")) {
+                if (file.EndsWith("VsLogger.dll", StringComparison.OrdinalIgnoreCase)) {
+                    continue;
+                }
+                
                 Assembly asm;
                 try {
                     asm = Assembly.Load(Path.GetFileNameWithoutExtension(file));
@@ -526,6 +546,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             _shutdown = true;
             _uiEvent.Set();
             ThrowPendingException();
+            AssertListener.ThrowUnhandled();
         }
 
         

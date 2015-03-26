@@ -95,11 +95,13 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         public void RemoveService(Type serviceType, bool promote) {
-            throw new NotImplementedException();
+            _servicesByType.Remove(serviceType);
+            _servicesByGuid.Remove(serviceType.GUID);
         }
 
         public void RemoveService(Type serviceType) {
-            throw new NotImplementedException();
+            _servicesByType.Remove(serviceType);
+            _servicesByGuid.Remove(serviceType.GUID);
         }
     }
 }
