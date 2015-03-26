@@ -32,6 +32,7 @@
     <VSTarget Condition="$(VSTarget)==''">10.0</VSTarget>
     <BuildingInsideVisualStudio Condition="'$(BuildingInsideVisualStudio)' == ''">false</BuildingInsideVisualStudio>
     
+    <TargetFrameworkVersion Condition="'$(TargetFrameworkVersion)' == '' and $(VSTarget)=='14.0'">v4.5.1</TargetFrameworkVersion>
     <TargetFrameworkVersion Condition="'$(TargetFrameworkVersion)' == ''">v4.5</TargetFrameworkVersion>
     
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
