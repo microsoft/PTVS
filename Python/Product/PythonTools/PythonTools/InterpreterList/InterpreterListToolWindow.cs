@@ -85,6 +85,11 @@ namespace Microsoft.PythonTools.InterpreterList {
                 StartInterpreter_CanExecute
             ));
             list.CommandBindings.Add(new CommandBinding(
+                ApplicationCommands.Help,
+                OnlineHelp_Executed,
+                OnlineHelp_CanExecute
+            ));
+            list.CommandBindings.Add(new CommandBinding(
                 ToolWindow.UnhandledException,
                 UnhandledException_Executed,
                 UnhandledException_CanExecute
@@ -242,6 +247,14 @@ namespace Microsoft.PythonTools.InterpreterList {
             Process.Start(psi);
         }
 
+        private void OnlineHelp_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+            e.CanExecute = _site != null;
+            e.Handled = true;
+        }
 
+        private void OnlineHelp_Executed(object sender, ExecutedRoutedEventArgs e) {
+            CommonPackage.OpenVsWebBrowser(_site, PythonToolsPackage.InterpreterHelpUrl);
+            e.Handled = true;
+        }
     }
 }

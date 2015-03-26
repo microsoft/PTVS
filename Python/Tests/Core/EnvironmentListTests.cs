@@ -666,7 +666,10 @@ namespace PythonToolsUITests {
             public List<EnvironmentView> Environments {
                 get {
                     return _proxy.Invoke(() => 
-                        Window._environments.Except(EnvironmentView.AddNewEnvironmentViewOnce.Value).ToList()
+                        Window._environments
+                            .Except(EnvironmentView.AddNewEnvironmentViewOnce.Value)
+                            .Except(EnvironmentView.OnlineHelpViewOnce.Value)
+                            .ToList()
                     );
                 }
             }

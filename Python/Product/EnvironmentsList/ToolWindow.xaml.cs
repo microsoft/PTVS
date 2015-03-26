@@ -308,7 +308,8 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                         OnViewCreated(view);
                         return view;
                     })
-                    .Concat(EnvironmentView.AddNewEnvironmentViewOnce.Value),
+                    .Concat(EnvironmentView.AddNewEnvironmentViewOnce.Value)
+                    .Concat(EnvironmentView.OnlineHelpViewOnce.Value),
                     EnvironmentComparer.Instance,
                     EnvironmentComparer.Instance
                 );
@@ -457,6 +458,8 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
             public bool Equals(EnvironmentView x, EnvironmentView y) {
                 return object.ReferenceEquals(x, y) || (
+                    x.Factory != null && x.Factory.Configuration != null &&
+                    y.Factory != null && y.Factory.Configuration != null &&
                     x.Factory.Id == y.Factory.Id &&
                     x.Factory.Configuration.Version == y.Factory.Configuration.Version
                 );
@@ -475,6 +478,13 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                     if (object.ReferenceEquals(x, EnvironmentView.AddNewEnvironmentView.Value)) {
                         return 1;
                     } else if (object.ReferenceEquals(y, EnvironmentView.AddNewEnvironmentView.Value)) {
+                        return -1;
+                    }
+                }
+                if (EnvironmentView.OnlineHelpView.IsValueCreated) {
+                    if (object.ReferenceEquals(x, EnvironmentView.OnlineHelpView.Value)) {
+                        return 1;
+                    } else if (object.ReferenceEquals(y, EnvironmentView.OnlineHelpView.Value)) {
                         return -1;
                     }
                 }

@@ -215,6 +215,25 @@
                     
                 </Button>
             </DataTemplate>
+
+            <DataTemplate DataType="{x:Type l:EnvironmentView}" x:Key="OnlineHelpListItem">
+                <Button Style="{StaticResource NavigationButtonInList}"
+                        Margin="6"
+                        Name="Button"
+                        Command="ApplicationCommands.Help">
+                    <Grid Background="Transparent">
+                        <Label VerticalAlignment="Center"
+                               Foreground="{Binding Foreground,ElementName=Button}">
+                            Go online and help me find other environments
+                        </Label>
+                    </Grid>
+                </Button>
+                <DataTemplate.Triggers>
+                    <Trigger Property="IsEnabled" Value="false">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                    </Trigger>
+                </DataTemplate.Triggers>
+            </DataTemplate>
             
             <DataTemplate x:Key="ExtensionListItem">
                 <TextBlock Text="{Binding LocalizedDisplayName}"
