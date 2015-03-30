@@ -171,7 +171,13 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             List<string> versions = null;
 
             using (var client = new WebClient()) {
-                var data = await client.OpenReadTaskAsync(new Uri(_index ?? DefaultIndex, package.Name + "/json"));
+                Stream data;
+                try {
+                    data = await client.OpenReadTaskAsync(new Uri(_index ?? DefaultIndex, package.Name + "/json"));
+                } catch (WebException) {
+                    // No net access
+                    return;
+                }
 
                 try {
                     using (var reader = JsonReaderWriterFactory.CreateJsonReader(data, new XmlDictionaryReaderQuotas())) {
@@ -285,11 +291,18 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         private async Task RefreshCacheAsync(CancellationToken cancel) {
             Debug.Assert(_cacheLock.CurrentCount == 0, "Cache must be locked before calling RefreshCacheAsync");
 
-            var client = new WebClient();
-            // ../simple is a list of <a href="package">package</a>
-            var htmlList = await client.DownloadStringTaskAsync(
-                new Uri(_index ?? DefaultIndex, "../simple")
-            ).ConfigureAwait(false);
+            string htmlList;
+            using (var client = new WebClient()) {
+                // ../simple is a list of <a href="package">package</a>
+                try {
+                    htmlList = await client.DownloadStringTaskAsync(
+                        new Uri(_index ?? DefaultIndex, "../simple")
+                    ).ConfigureAwait(false);
+                } catch (WebException) {
+                    // No net access, so can't refresh
+                    return;
+                }
+            }
 
             bool changed = false;
             var toRemove = new HashSet<string>(_cache.Keys);

@@ -34,7 +34,7 @@
                             
                             <TextBlock Grid.Column="1"
                                        Margin="2"
-                                       HorizontalAlignment="Left"
+                                       HorizontalAlignment="Stretch"
                                        VerticalAlignment="Center"
                                        TextTrimming="CharacterEllipsis"
                                        Text="{Binding DisplayName}" />

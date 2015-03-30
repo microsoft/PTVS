@@ -76,8 +76,7 @@
             <DataTemplate DataType="{x:Type l:EnvironmentView}" x:Key="EnvironmentListItem">
                 <Grid Margin="6 3 3 0">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" SharedSizeGroup="EnvironmentListItem_Description" />
-                        <ColumnDefinition Width="auto" />
+                        <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="auto" />
                         <ColumnDefinition Width="auto" />
                     </Grid.ColumnDefinitions>
@@ -88,6 +87,7 @@
 
                     <Grid Grid.Row="0" Grid.Column="0"
                           VerticalAlignment="Center"
+                          HorizontalAlignment="Stretch"
                           Margin="1"
                           DataContext="{Binding Description,Mode=OneWay}">
                         <TextBlock x:Name="Name_IsDefault"
@@ -102,7 +102,7 @@
                     </Grid>
 
                     <ProgressBar x:Name="RefreshDBProgress"
-                                 Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="5"
+                                 Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3"
                                  HorizontalAlignment="Stretch"
                                  Height="3"
                                  BorderBrush="Transparent"
@@ -117,7 +117,7 @@
                     </ProgressBar>
 
                     <Button x:Name="Icon_NeedRefresh"
-                            Grid.Column="2"
+                            Grid.Column="1"
                             IsHitTestVisible="True"
                             VerticalAlignment="Stretch"
                             Width="{Binding ActualHeight,RelativeSource={RelativeSource Self}}"
@@ -129,7 +129,7 @@
                         <Path Width="14" Height="14"
                               Data="{StaticResource ExclamationMarkGeometry}"
                               Stretch="Uniform"
-                              Fill="{Binding Foreground,RelativeSource={RelativeSource FindAncestor,AncestorType=ListBoxItem}}"
+                              Fill="{DynamicResource {x:Static wpf:Controls.ControlForegroundKey}}"
                               Stroke="{DynamicResource {x:Static wpf:Controls.ControlBorderKey}}"
                               StrokeThickness="1.0" />
                         <Button.ToolTip>
@@ -138,7 +138,7 @@
                     </Button>
 
                     <Button x:Name="InteractiveWindowButton"
-                            Grid.Column="3"
+                            Grid.Column="2"
                             Style="{StaticResource {x:Type Button}}"
                             Cursor="Hand"
                             Margin="1"

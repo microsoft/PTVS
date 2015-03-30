@@ -81,7 +81,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 return;
             }
             
-            var trigger = (EnvironmentsColumn.ActualWidth + ExtensionsColumn.ActualWidth) * 1.8;
+            var trigger = EnvironmentsColumn.MaxWidth + ExtensionsColumn.MaxWidth * 1.5;
 
             if (trigger < 10.0) {
                 // Very small trigger probably means that the columns are
