@@ -1,8 +1,5 @@
 #include <Windows.h>
-
-#undef _DEBUG
 #include <Python.h>
-#define _DEBUG
 
 PyObject *success(PyObject *, PyObject *) {
     return PyLong_FromLong(1234567L);

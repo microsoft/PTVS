@@ -938,17 +938,24 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("VSTestHost")]
         public void CProjectReference() {
-            var python = PythonPaths.Versions.LastOrDefault(p => p.Version.Is3x() && !p.Isx64);
-            python.AssertInstalled();
+            var pythons = PythonPaths.Versions.Where(p => p.Version.Is3x() && !p.Isx64).Reverse().Take(2).ToList();
+            if (pythons.Count != 2) {
+                pythons = PythonPaths.Versions.Where(p => p.Version.Is3x() && p.Isx64).Reverse().Take(2).ToList();
+            }
+            Assert.AreEqual(2, pythons.Count, "Two different Python 3 interpreters required");
+            var buildPython = pythons[0];
+            var testPython = pythons[1];
+            buildPython.AssertInstalled();
+            testPython.AssertInstalled();
 
             var vcproj = TestData.GetPath(@"TestData\ProjectReference\NativeModule\NativeModule.vcxproj");
             File.WriteAllText(vcproj, File.ReadAllText(vcproj)
-                .Replace("$(PYTHON_INCLUDE)", Path.Combine(python.PrefixPath, "include"))
-                .Replace("$(PYTHON_LIB)", Path.Combine(python.PrefixPath, "libs"))
+                .Replace("$(PYTHON_INCLUDE)", Path.Combine(buildPython.PrefixPath, "include"))
+                .Replace("$(PYTHON_LIB)", Path.Combine(buildPython.PrefixPath, "libs"))
             );
 
             using (var app = new PythonVisualStudioApp())
-            using (app.SelectDefaultInterpreter(python)) {
+            using (var dis = app.SelectDefaultInterpreter(buildPython)) {
                 var project = app.OpenProject(@"TestData\ProjectReference\CProjectReference.sln", projectName: "PythonApplication2", expectedProjects: 2);
 
                 var sln = app.GetService<IVsSolution4>(typeof(SVsSolution));
@@ -964,6 +971,22 @@ namespace PythonToolsUITests {
                     searchPaths = (project.GetPythonProject() as IPythonProject).GetSearchPaths().ToArray();
                 });
                 AssertUtil.ContainsExactly(searchPaths, TestData.GetPath(@"TestData\ProjectReference\Debug\"));
+                
+                var pyproj = project.GetPythonProject();
+                var interp = pyproj.GetInterpreter();
+                Assert.IsNotNull(interp.ImportModule("native_module"), "module was not loaded");
+
+                using (var evt = new AutoResetEvent(false)) {
+                    pyproj.ProjectAnalyzerChanged += (s, e) => { try { evt.Set(); } catch { } };
+                    dis.SetDefault(app.InterpreterService.FindInterpreter(testPython.Id, testPython.Version.ToVersion()));
+                    Assert.IsTrue(evt.WaitOne(10000), "Timed out waiting for analyzer change");
+                }
+
+                interp = pyproj.GetInterpreter();
+                for (int retries = 10; retries > 0 && interp.ImportModule("native_module") == null; --retries) {
+                    Thread.Sleep(500);
+                }
+                Assert.IsNotNull(interp.ImportModule("native_module"), "module was not reloadod");
             }
         }
 

@@ -249,7 +249,8 @@ namespace TestUtilities.UI.Python {
         /// </remarks>
         public DefaultInterpreterSetter SelectDefaultInterpreter(PythonVersion python) {
             return new DefaultInterpreterSetter(
-                InterpreterService.FindInterpreter(python.Id, python.Version.ToVersion())
+                InterpreterService.FindInterpreter(python.Id, python.Version.ToVersion()),
+                ServiceProvider
             );
         }
 

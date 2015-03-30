@@ -963,7 +963,7 @@ namespace Microsoft.PythonTools.Project {
                     ));
                 }
 
-                Reanalyze(this, analyzer);
+                Reanalyze(analyzer);
                 if (_analyzer != null) {
                     analyzer.SwitchAnalyzers(_analyzer);
                     if (_analyzer.RemoveUser()) {
@@ -986,17 +986,23 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        private void Reanalyze(HierarchyNode node, VsProjectAnalyzer newAnalyzer) {
-            if (node != null) {
-                for (var child = node.FirstChild; child != null; child = child.NextSibling) {
-                    if (child.IsNonMemberItem) {
-                        continue;
-                    }
-                    if (child is FileNode) {
-                        newAnalyzer.AnalyzeFile(child.Url);
-                    }
+        private void Reanalyze(VsProjectAnalyzer newAnalyzer) {
+            foreach (var child in AllVisibleDescendants.OfType<FileNode>()) {
+                newAnalyzer.AnalyzeFile(child.Url);
+            }
 
-                    Reanalyze(child, newAnalyzer);
+            var references = GetReferenceContainer();
+            var interp = newAnalyzer.Interpreter as IPythonInterpreterWithProjectReferences;
+            if (references != null && interp != null) {
+                foreach (var child in GetReferenceContainer().EnumReferences()) {
+                    var pyd = child as PythonExtensionReferenceNode;
+                    if (pyd != null) {
+                        pyd.AnalyzeReference(interp);
+                    }
+                    var pyproj = child as PythonProjectReferenceNode;
+                    if (pyproj != null) {
+                        pyproj.AddAnalyzedAssembly(interp).DoNotWait();
+                    }
                 }
             }
         }

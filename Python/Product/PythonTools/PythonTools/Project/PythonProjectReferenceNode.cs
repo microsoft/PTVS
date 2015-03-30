@@ -48,24 +48,24 @@ namespace Microsoft.PythonTools.Project {
             _fileChangeListener.FileChangedOnDisk += FileChangedOnDisk;
             solutionEvents.ProjectLoaded += PythonProjectReferenceNode_ProjectLoaded;
             InitializeFileChangeListener();
-            AddAnalyzedAssembly(((PythonProjectNode)ProjectMgr).GetInterpreter() as IPythonInterpreterWithProjectReferences);
+            AddAnalyzedAssembly(((PythonProjectNode)ProjectMgr).GetInterpreter() as IPythonInterpreterWithProjectReferences).DoNotWait();
         }
 
         private void EventListener_BuildCompleted(object sender, EventArgs e) {
             InitializeFileChangeListener();
-            AddAnalyzedAssembly(((PythonProjectNode)ProjectMgr).GetInterpreter() as IPythonInterpreterWithProjectReferences);
+            AddAnalyzedAssembly(((PythonProjectNode)ProjectMgr).GetInterpreter() as IPythonInterpreterWithProjectReferences).DoNotWait();
             ProjectMgr.OnInvalidateItems(Parent);
         }
 
         private void PythonProjectReferenceNode_ProjectLoaded(object sender, ProjectEventArgs e) {
             InitializeFileChangeListener();
-            AddAnalyzedAssembly(((PythonProjectNode)ProjectMgr).GetInterpreter() as IPythonInterpreterWithProjectReferences);
+            AddAnalyzedAssembly(((PythonProjectNode)ProjectMgr).GetInterpreter() as IPythonInterpreterWithProjectReferences).DoNotWait();
             ProjectMgr.OnInvalidateItems(Parent);
         }
 
         private void EventListener_AfterActiveSolutionConfigurationChange(object sender, EventArgs e) {
             InitializeFileChangeListener();
-            AddAnalyzedAssembly(((PythonProjectNode)ProjectMgr).GetInterpreter() as IPythonInterpreterWithProjectReferences);
+            AddAnalyzedAssembly(((PythonProjectNode)ProjectMgr).GetInterpreter() as IPythonInterpreterWithProjectReferences).DoNotWait();
             ProjectMgr.OnInvalidateItems(Parent);
         }
 
@@ -87,7 +87,7 @@ namespace Microsoft.PythonTools.Project {
 
             if ((e.FileChangeFlag & (VisualStudio.Shell.Interop._VSFILECHANGEFLAGS.VSFILECHG_Add | VisualStudio.Shell.Interop._VSFILECHANGEFLAGS.VSFILECHG_Time | VisualStudio.Shell.Interop._VSFILECHANGEFLAGS.VSFILECHG_Size)) != 0) {
                 // kick off the analysis of the new assembly...
-                AddAnalyzedAssembly(interp);
+                AddAnalyzedAssembly(interp).DoNotWait();
             }
         }
 
@@ -100,7 +100,7 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        private async void AddAnalyzedAssembly(IPythonInterpreterWithProjectReferences interp) {
+        internal async Task AddAnalyzedAssembly(IPythonInterpreterWithProjectReferences interp) {
             if (interp != null) {
                 var asmName = AssemblyName;
                 var outFile = ReferencedProjectOutputPath;

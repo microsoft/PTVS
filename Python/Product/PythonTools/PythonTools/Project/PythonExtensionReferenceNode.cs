@@ -45,7 +45,7 @@ namespace Microsoft.PythonTools.Project {
             InitializeFileChangeEvents();
         }
 
-        private void AnalyzeReference(IPythonInterpreterWithProjectReferences interp) {
+        internal void AnalyzeReference(IPythonInterpreterWithProjectReferences interp) {
             if (interp == null) {
                 _failedToAnalyze = true;
                 return;
