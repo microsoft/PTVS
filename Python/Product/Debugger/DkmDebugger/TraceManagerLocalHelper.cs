@@ -468,7 +468,15 @@ namespace Microsoft.PythonTools.DkmDebugger {
             try {
                 var typeObject = exc_type as PyTypeObject;
                 if (typeObject != null) {
-                    typeName = typeObject.__module__ + "." + typeObject.__name__;
+                    var mod = typeObject.__module__;
+                    var ver = _process.GetPythonRuntimeInfo().LanguageVersion;
+                    if ((mod == "builtins" && ver >= PythonLanguageVersion.V30) ||
+                        (mod == "exceptions" && ver < PythonLanguageVersion.V30)) {
+                        
+                        typeName = typeObject.__name__;
+                    } else {
+                        typeName = mod + "." + typeObject.__name__;
+                    }
                 }
 
                 var exc = exc_value as PyBaseExceptionObject;
