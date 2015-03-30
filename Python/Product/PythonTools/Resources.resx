@@ -402,10 +402,10 @@ The web.config file will be configured to resolve URIs matching this pattern to 
 {0}</value>
   </data>
   <data name="DebugLaunchInterpreterMissing" xml:space="preserve">
-    <value>The specified interpreter "{0}" does not exist.</value>
+    <value>The project cannot be launched because no Python interpreter is specified. Please check the Python Environments window and ensure the version of Python is installed and has all settings specified.</value>
   </data>
   <data name="DebugLaunchWorkingDirectoryMissing" xml:space="preserve">
-    <value>The specified working directory "{0}" does not exist.</value>
+    <value>The project cannot be launched because the specified working directory "{0}" does not exist. Please check the Project Properties window and correct any configuration errors.</value>
   </data>
   <data name="ErrorOpeningInteractiveWindow" xml:space="preserve">
     <value>An error occurred opening this interactive window:
@@ -552,5 +552,11 @@ Packages that cannot be installed using pip may prevent all listed packages from
   </data>
   <data name="UpgradedRemoveCommonTargets" xml:space="preserve">
     <value>This project has been upgraded and may no longer work with prior PTVS versions.</value>
+  </data>
+  <data name="DebugLaunchInterpreterMissing_Path" xml:space="preserve">
+    <value>The project cannot be launched because no Python interpreter is available at "{0}". Please check the Python Environments window and ensure the version of Python is installed and has all settings specified.</value>
+  </data>
+  <data name="MissingEnvironment" xml:space="preserve">
+    <value>The environment "{0}" appears to be incorrectly configured or missing. You may need to install Python {1} or re-create a virtual environment.</value>
   </data>
 </root>

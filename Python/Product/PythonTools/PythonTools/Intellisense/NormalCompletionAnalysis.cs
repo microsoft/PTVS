@@ -86,6 +86,7 @@ namespace Microsoft.PythonTools.Intellisense {
             var start1 = _stopwatch.ElapsedMilliseconds;
 
             IEnumerable<MemberResult> members = null;
+            IEnumerable<MemberResult> replMembers = null;
 
             IReplEvaluator eval;
             IPythonReplIntellisense pyReplEval = null;
@@ -114,6 +115,10 @@ namespace Microsoft.PythonTools.Intellisense {
                             .Union(parameters, CompletionComparer.MemberEquality);
                     }
                 }
+
+                if (pyReplEval != null) {
+                    replMembers = pyReplEval.GetMemberNames(string.Empty);
+                }
             } else {
                 if (analysis != null && (pyReplEval == null || !pyReplEval.LiveCompletionsOnly)) {
                     lock (_analyzer) {
@@ -128,14 +133,15 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
 
                 if (pyReplEval != null && _snapshot.TextBuffer.GetAnalyzer(_serviceProvider).ShouldEvaluateForCompletion(text)) {
-                    var replMembers = pyReplEval.GetMemberNames(text);
-                    if (replMembers != null) {
-                        if (members != null) {
-                            members = members.Union(replMembers, CompletionComparer.MemberEquality);
-                        } else {
-                            members = replMembers;
-                        }
-                    }
+                    replMembers = pyReplEval.GetMemberNames(text);
+                }
+            }
+
+            if (replMembers != null) {
+                if (members != null) {
+                    members = members.Union(replMembers, CompletionComparer.MemberEquality);
+                } else {
+                    members = replMembers;
                 }
             }
 

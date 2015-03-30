@@ -346,11 +346,7 @@ namespace Microsoft.PythonTools.Project {
                 redirector: null,
                 quoteArgs: true)
             ) {
-                try {
-                    return await proc == 0;
-                } catch (NoInterpretersException) {
-                    return false;
-                }
+                return await proc == 0;
             }
         }
     }

@@ -186,6 +186,8 @@ namespace Microsoft.PythonTools.Project {
             bool anyChanges = false;
             try {
                 lines = await Pip.List(_factory).ConfigureAwait(true);
+            } catch (MissingInterpreterException) {
+                return;
             } catch (NoInterpretersException) {
                 return;
             }

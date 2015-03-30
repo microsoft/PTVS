@@ -28,7 +28,6 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public override int DebugLaunch(uint flags) {
-            
             if (_project.ShouldWarnOnLaunch) {
                 var pyService = ProjectMgr.Site.GetPythonToolsService();
                 if (pyService.DebuggerOptions.PromptBeforeRunningWithBuildError) {
@@ -41,6 +40,9 @@ namespace Microsoft.PythonTools.Project {
 
             try {
                 return base.DebugLaunch(flags);
+            } catch (MissingInterpreterException ex) {
+                MessageBox.Show(ex.Message, SR.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                return VSConstants.S_OK;
             } catch (NoInterpretersException ex) {
                 PythonToolsPackage.OpenNoInterpretersHelpPage(ProjectMgr.Site, ex.HelpPage);
                 return VSConstants.S_OK;

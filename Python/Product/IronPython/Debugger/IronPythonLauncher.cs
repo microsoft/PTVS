@@ -25,6 +25,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
 using Microsoft.PythonTools;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
@@ -70,12 +71,22 @@ namespace Microsoft.IronPythonTools.Debugger {
         }
 
         public int LaunchFile(string file, bool debug) {
-            var factory = _project.GetInterpreterFactory();
+            IPythonInterpreterFactory factory;
+            var ipp3 = _project as IPythonProject3;
+            if (ipp3 != null) {
+                try {
+                    factory = ipp3.GetInterpreterFactoryOrThrow();
+                } catch (NoInterpretersException) {
+                    throw new NoInterpretersException(null, NoIronPythonHelpPage);
+                }
+            } else {
+                factory = _project.GetInterpreterFactory();
 
-            if (factory == null ||
-                factory.Configuration == null ||
-                !File.Exists(factory.Configuration.InterpreterPath)) {
-                throw new NoInterpretersException(null, NoIronPythonHelpPage);
+                if (factory == null ||
+                    factory.Configuration == null ||
+                    !File.Exists(factory.Configuration.InterpreterPath)) {
+                    throw new NoInterpretersException(null, NoIronPythonHelpPage);
+                }
             }
 
             if (factory.Id == _cpyInterpreterGuid || factory.Id == _cpy64InterpreterGuid) {
@@ -286,12 +297,20 @@ You may need to download it from http://ironpython.codeplex.com.");
 
         private string InterpreterExecutable {
             get {
+                var ipp3 = _project as IPythonProject3;
+                if (ipp3 != null) {
+                    return ipp3.GetInterpreterFactoryOrThrow().Configuration.InterpreterPath;
+                }
                 return _project.GetInterpreterFactory().Configuration.InterpreterPath;
             }
         }
 
         private string WindowsInterpreterExecutable {
             get {
+                var ipp3 = _project as IPythonProject3;
+                if (ipp3 != null) {
+                    return ipp3.GetInterpreterFactoryOrThrow().Configuration.WindowsInterpreterPath;
+                }
                 return _project.GetInterpreterFactory().Configuration.WindowsInterpreterPath;
             }
         }

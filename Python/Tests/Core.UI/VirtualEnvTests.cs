@@ -32,6 +32,7 @@ using TestUtilities.Python;
 using TestUtilities.UI;
 using TestUtilities.UI.Python;
 using Path = System.IO.Path;
+using Task = System.Threading.Tasks.Task;
 
 namespace PythonToolsUITests {
     [TestClass]
@@ -420,6 +421,17 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("VSTestHost")]
+        public void LaunchUnknownEnvironment() {
+            using (var app = new PythonVisualStudioApp()) {
+                var project = app.OpenProject(@"TestData\Environments\Unknown.sln");
+
+                app.ExecuteCommand("Debug.Start");
+                PythonVisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, "Unknown Python 2.7", "incorrectly configured");
+            }
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
         public void UnavailableEnvironments() {
             var collection = new Microsoft.Build.Evaluation.ProjectCollection();
             try {
@@ -458,14 +470,15 @@ namespace PythonToolsUITests {
                             typeof(MSBuildProjectInterpreterFactoryProvider.NotFoundInterpreterFactory),
                             string.Format("{0} was not correct type", fact.Description)
                         );
+                        Assert.IsFalse(provider.IsAvailable(fact), string.Format("{0} was not unavailable", fact.Description));
                     }
 
                     AssertUtil.AreEqual(factories.Select(f => f.Description),
-                        "Absent BaseInterpreter (unavailable)",
                         "Invalid BaseInterpreter (unavailable)",
                         "Invalid InterpreterPath (unavailable)",
-                        "Invalid LibraryPath (unavailable)",
                         "Invalid WindowsInterpreterPath (unavailable)",
+                        "Invalid LibraryPath (unavailable)",
+                        "Absent BaseInterpreter (unavailable)",
                         "Unknown Python 2.7"
                     );
                 }
