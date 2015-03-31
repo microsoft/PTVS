@@ -109,8 +109,15 @@ namespace Microsoft.PythonTools.Intellisense {
                             statementRange.Snapshot,
                             analysis
                         );
-                        var parameters = GetParameterNames(analysis, location)
-                            .Select(n => new MemberResult(n, PythonMemberType.Field));
+                        var parameters = Enumerable.Empty<MemberResult>();
+                        var sigs = VsProjectAnalyzer.GetSignatures(_serviceProvider, _snapshot, Span);
+                        if (sigs.Signatures.Any()) {
+                            parameters = sigs.Signatures
+                                .SelectMany(s => s.Parameters)
+                                .Select(p => p.Name)
+                                .Distinct()
+                                .Select(n => new MemberResult(n, PythonMemberType.Field));
+                        }
                         members = analysis.GetAllAvailableMembers(location, _options.MemberOptions)
                             .Union(parameters, CompletionComparer.MemberEquality);
                     }
@@ -183,52 +190,5 @@ namespace Microsoft.PythonTools.Intellisense {
 
             return result;
         }
-
-        private IEnumerable<string> GetParameterNames(ModuleAnalysis analysis, SourceLocation location) {
-            var argsParser = new ReverseExpressionParser(_snapshot, _snapshot.TextBuffer, Span);
-            
-            int index;
-            SnapshotPoint? sigStart;
-            string lastKeywordArg;
-            bool isParameterName;
-            var span = argsParser.GetExpressionRange(1, out index, out sigStart, out lastKeywordArg, out isParameterName);
-
-            string target = null;
-            if (sigStart.HasValue && string.IsNullOrEmpty(lastKeywordArg)) {
-                var applicableTo = _snapshot.GetApplicableSpan(sigStart.Value.Position - 1);
-                if (applicableTo != null) {
-                    target = applicableTo.GetText(_snapshot);
-                }
-            }
-
-            if (string.IsNullOrEmpty(target)) {
-                return Enumerable.Empty<string>();
-            }
-
-            return analysis.GetSignatures(target, location)
-                .SelectMany(s => s.Parameters)
-                .Select(p => p.Name)
-                .Distinct();
-        }
-
-        class FindCurrentCalleeWalker : PythonWalkerWithLocation {
-            public FindCurrentCalleeWalker(int location) : base(location) { }
-
-            public Expression Callee { get; private set; }
-
-            public override bool Walk(CallExpression node) {
-                if (base.Walk(node)) {
-                    Callee = node.Target;
-                    return true;
-                }
-                return false;
-            }
-
-            public override void PostWalk(CallExpression node) {
-                base.PostWalk(node);
-            }
-        }
-
-
     }
 }

@@ -980,6 +980,21 @@ x = f(";
             }
         }
 
+        [TestMethod, Priority(0)]
+        public void MethodArgumentNameCompletion() {
+            const string code = @"
+class MyClass:
+    def f(self, param1 = 123, param2 : int = 234):
+        pass
+
+m = MyClass()
+x = m.f(";
+
+            using (var view = new PythonEditor(code)) {
+                AssertUtil.ContainsAtLeast(view.GetCompletions(-1), "param1", "param2");
+                AssertUtil.DoesntContain(view.GetCompletions(0), "param1");
+            }
+        }
 
         private static IEnumerable<string> EditAndGetCompletions(
             MockVs vs,
