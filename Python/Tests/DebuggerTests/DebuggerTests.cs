@@ -2786,7 +2786,7 @@ int main(int argc, char* argv[]) {
 
         internal override PythonVersion Version {
             get {
-                return PythonPaths.Python26;
+                return PythonPaths.Python26 ?? PythonPaths.Python26_x64;;
             }
         }
     }
@@ -2820,7 +2820,7 @@ int main(int argc, char* argv[]) {
 
         internal override PythonVersion Version {
             get {
-                return PythonPaths.Python30;
+                return PythonPaths.Python30 ?? PythonPaths.Python30_x64;;
             }
         }
     }
@@ -2835,7 +2835,7 @@ int main(int argc, char* argv[]) {
 
         internal override PythonVersion Version {
             get {
-                return PythonPaths.Python31;
+                return PythonPaths.Python31 ?? PythonPaths.Python31_x64;;
             }
         }
     }
@@ -2850,7 +2850,7 @@ int main(int argc, char* argv[]) {
 
         internal override PythonVersion Version {
             get {
-                return PythonPaths.Python32;
+                return PythonPaths.Python32 ?? PythonPaths.Python32_x64;;
             }
         }
 
@@ -2869,7 +2869,7 @@ int main(int argc, char* argv[]) {
 
         internal override PythonVersion Version {
             get {
-                return PythonPaths.Python33;
+                return PythonPaths.Python33 ?? PythonPaths.Python33_x64;;
             }
         }
 
@@ -2894,7 +2894,32 @@ int main(int argc, char* argv[]) {
 
         internal override PythonVersion Version {
             get {
-                return PythonPaths.Python34;
+                return PythonPaths.Python34 ?? PythonPaths.Python34_x64;;
+            }
+        }
+
+        public override string CreateString {
+            get {
+                return "PyUnicode_FromString";
+            }
+        }
+
+        public override void AttachNewThread_PyThreadState_New() {
+            // PyEval_AcquireLock deprecated in 3.2
+        }
+    }
+
+    [TestClass]
+    public class DebuggerTests35 : DebuggerTests3x {
+        [ClassInitialize]
+        public static new void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
+            PythonTestData.Deploy();
+        }
+
+        internal override PythonVersion Version {
+            get {
+                return PythonPaths.Python35 ?? PythonPaths.Python35_x64;;
             }
         }
 
@@ -2919,7 +2944,7 @@ int main(int argc, char* argv[]) {
 
         internal override PythonVersion Version {
             get {
-                return PythonPaths.Python27;
+                return PythonPaths.Python27 ?? PythonPaths.Python27_x64;;
             }
         }
     }
@@ -2934,7 +2959,7 @@ int main(int argc, char* argv[]) {
 
         internal override PythonVersion Version {
             get {
-                return PythonPaths.Python25;
+                return PythonPaths.Python25 ?? PythonPaths.Python25_x64;;
             }
         }
     }
@@ -2949,7 +2974,7 @@ int main(int argc, char* argv[]) {
 
         internal override PythonVersion Version {
             get {
-                return PythonPaths.IronPython27;
+                return PythonPaths.IronPython27 ?? PythonPaths.IronPython27_x64;
             }
         }
 
