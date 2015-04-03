@@ -163,7 +163,7 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
         }
     }
 
-    [StructProxy(MinVersion = PythonLanguageVersion.V33)]
+    [StructProxy(MinVersion = PythonLanguageVersion.V33, StructName = "_dictkeysobject")]
     internal class PyDictKeysObject : StructProxy {
         private class Fields {
             public StructField<SSizeTProxy> dk_size;
