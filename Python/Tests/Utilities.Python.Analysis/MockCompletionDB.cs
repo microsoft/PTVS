@@ -65,7 +65,7 @@ namespace TestUtilities.Mocks {
         /// <param name="factory">The factory to use for the analyzer. If
         /// omitted, <see cref="Factory"/> will be used.</param>
         public PythonAnalyzer MakeAnalyzer(IPythonInterpreterFactory factory = null) {
-            return new PythonAnalyzer(factory ?? Factory);
+            return PythonAnalyzer.CreateSynchronously(factory ?? Factory);
         }
 
         /// <summary>

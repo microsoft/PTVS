@@ -25,6 +25,7 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Navigation;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
+using Microsoft.PythonTools.Project;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Repl;
@@ -113,7 +114,8 @@ namespace Microsoft.PythonTools.Intellisense {
             _implicitProject = implicitProject;
 
             if (interpreter != null) {
-                _pyAnalyzer = new PythonAnalyzer(factory, interpreter);
+                _pyAnalyzer = PythonAnalyzer.Create(factory, interpreter);
+                _pyAnalyzer.ReloadModulesAsync().HandleAllExceptions(SR.ProductName, GetType()).DoNotWait();
                 interpreter.ModuleNamesChanged += OnModulesChanged;
             }
 
@@ -174,7 +176,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             lock (_contentsLock) {
-                _pyAnalyzer.ReloadModules();
+                _pyAnalyzer.ReloadModulesAsync().WaitAndUnwrapExceptions();
 
                 // re-analyze all of the modules when we get a new set of modules loaded...
                 foreach (var nameAndEntry in _projectFiles) {
@@ -363,7 +365,11 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private void QueueDirectoryAnalysis(string path) {
-            ThreadPool.QueueUserWorkItem(x => { lock (_contentsLock) { AnalyzeDirectory(CommonUtils.NormalizeDirectoryPath(Path.GetDirectoryName(path))); } });
+            ThreadPool.QueueUserWorkItem(x => {
+                lock (_contentsLock) {
+                    AnalyzeDirectory(CommonUtils.NormalizeDirectoryPath(Path.GetDirectoryName(path)));
+                }
+            });
         }
 
         private bool ShouldAnalyzePath(string path) {

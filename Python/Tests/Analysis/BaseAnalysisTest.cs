@@ -24,6 +24,7 @@ using Microsoft.PythonTools.Interpreter.Default;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.PyAnalysis;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudioTools;
 using TestUtilities;
 using TestUtilities.Python;
 
@@ -91,7 +92,7 @@ namespace AnalysisTests {
                 fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version.ToVersion());
                 interp = fact.CreateInterpreter();
             }
-            var state = new PythonAnalyzer(fact, interp, "__builtin__");
+            var state = PythonAnalyzer.CreateSynchronously(fact, interp, "__builtin__");
 
             if (version.Is3x() || this is IronPythonAnalysisTest) {
                 var types = (KnownTypes)state.Types;

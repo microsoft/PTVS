@@ -22,6 +22,7 @@ using Microsoft.PythonTools.Django.Project;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudioTools;
 using TestUtilities;
 using TestUtilities.Python;
 
@@ -122,7 +123,7 @@ namespace DjangoTests {
             );
 
             var serviceProvider = PythonToolsTestUtilities.CreateMockServiceProvider();
-            PythonAnalyzer analyzer = new PythonAnalyzer(testFact);
+            PythonAnalyzer analyzer = PythonAnalyzer.CreateAsync(testFact).WaitAndUnwrapExceptions();
             DjangoAnalyzer djangoAnalyzer = new DjangoAnalyzer(serviceProvider);
             djangoAnalyzer.OnNewAnalyzer(analyzer);
 

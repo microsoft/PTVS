@@ -1117,7 +1117,7 @@ namespace Microsoft.PythonTools.Analysis {
                     null,
                     new[] { _outDir, outDir }.Concat(_baseDb.Skip(1)).Distinct(StringComparer.OrdinalIgnoreCase).ToArray()
                 ))
-                using (var projectState = new PythonAnalyzer(factory)) {
+                using (var projectState = PythonAnalyzer.CreateAsync(factory).WaitAndUnwrapExceptions()) {
                     int? mostItemsInQueue = null;
                     if (_updater != null) {
                         projectState.SetQueueReporting(itemsInQueue => {

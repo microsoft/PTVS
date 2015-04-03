@@ -23,6 +23,7 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreter.Default;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudioTools;
 using TestUtilities;
 using TestUtilities.Python;
 using Assert = Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
@@ -472,6 +473,7 @@ sys.modules['test.imported'] = test_import_2
             }
 
             var state = new PythonAnalyzer(fact, interp, SharedDatabaseState.BuiltinName2x);
+            state.ReloadModulesAsync().WaitAndUnwrapExceptions();
             for (int i = 0; i < modules.Length; i++) {
                 entries[i] = state.AddModule(modules[i].ModuleName, modules[i].Filename);
                 Prepare(entries[i], new StringReader(modules[i].Code), version);
@@ -489,7 +491,7 @@ sys.modules['test.imported'] = test_import_2
             File.Copy(Path.Combine(PythonTypeDatabase.BaselineDatabasePath, "__builtin__.idb"), Path.Combine(tmpFolder, "__builtin__.idb"), true);
 
             return new SaveLoadResult(
-                new PythonAnalyzer(InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version.ToVersion(), null, tmpFolder)),
+                PythonAnalyzer.CreateSynchronously(InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version.ToVersion(), null, tmpFolder)),
                 tmpFolder
             );
         }

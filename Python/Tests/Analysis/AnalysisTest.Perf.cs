@@ -26,6 +26,7 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.Scripting;
+using Microsoft.VisualStudioTools;
 using TestUtilities;
 
 namespace AnalysisTests {
@@ -63,7 +64,7 @@ import System
             var text = File.ReadAllText(Path.Combine(merlin + @"\External.LCA_RESTRICTED\Languages\IronPython\27\Lib\decimal.py"));
 
             var sourceUnit = GetSourceUnit(text);
-            var projectState = new PythonAnalyzer(InterpreterFactory, Interpreter);
+            var projectState = PythonAnalyzer.CreateSynchronously(InterpreterFactory, Interpreter);
             Stopwatch sw = new Stopwatch();
             var entry = projectState.AddModule("decimal", "decimal", null);
             Prepare(entry, sourceUnit);
@@ -225,6 +226,7 @@ import System
             // interpreter for all versions.
             var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version.ToVersion());
             var projectState = new PythonAnalyzer(fact, fact.CreateInterpreter(), "__builtin__");
+            projectState.ReloadModulesAsync().WaitAndUnwrapExceptions();
 
             projectState.Limits = AnalysisLimits.GetStandardLibraryLimits();
 

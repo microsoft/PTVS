@@ -66,10 +66,10 @@ namespace AnalysisTests {
                 var factory = new IronPythonInterpreterFactory();
                 // Explicitly create an IronPythonInterpreter from factory that
                 // will use the database in db.Factory.
-                var analyzer = new PythonAnalyzer(factory, factory.MakeInterpreter(db.Factory));
-
-                // String type should have been loaded anyway
-                Assert.IsNotNull(analyzer.ClassInfos[BuiltinTypeId.Str]);
+                using (var analyzer = PythonAnalyzer.CreateSynchronously(factory, factory.MakeInterpreter(db.Factory))) {
+                    // String type should have been loaded anyway
+                    Assert.IsNotNull(analyzer.ClassInfos[BuiltinTypeId.Str]);
+                }
             }
         }
 

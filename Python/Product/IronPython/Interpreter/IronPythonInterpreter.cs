@@ -495,6 +495,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
         class DomainUnloader : IDisposable {
             private readonly AppDomain _domain;
+            private bool _isDisposed;
 
             public DomainUnloader(AppDomain domain) {
                 _domain = domain;
@@ -519,8 +520,11 @@ namespace Microsoft.IronPythonTools.Interpreter {
             #region IDisposable Members
 
             public void Dispose() {
-                AppDomain.Unload(_domain);
-                GC.SuppressFinalize(this);
+                if (!_isDisposed) {
+                    _isDisposed = true;
+                    AppDomain.Unload(_domain);
+                    GC.SuppressFinalize(this);
+                }
             }
 
             #endregion
