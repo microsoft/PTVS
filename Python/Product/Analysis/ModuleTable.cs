@@ -88,7 +88,7 @@ namespace Microsoft.PythonTools.Analysis {
                 res.Module = GetBuiltinModule(mod);
             }
             if (firstImport && res != null && res.Module != null) {
-                _analyzer.DoDelayedSpecialization(name);
+                await Task.Run(() => _analyzer.DoDelayedSpecialization(name));
             }
             if (res != null && res.Module == null) {
                 return null;

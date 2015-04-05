@@ -946,6 +946,14 @@ namespace Microsoft.PythonTools.Project {
                 return;
             }
 
+            var statusBar = Site.GetService(typeof(SVsStatusbar)) as IVsStatusbar;
+            if (statusBar != null) {
+                statusBar.SetText(SR.GetString(SR.AnalyzingProject));
+                object index = (short)0;
+                statusBar.Animation(1, ref index);
+                statusBar.FreezeOutput(1);
+            }
+
             try {
                 RefreshInterpreters();
 
@@ -983,6 +991,13 @@ namespace Microsoft.PythonTools.Project {
                 }
             } catch (ObjectDisposedException) {
                 // Raced with project disposal
+            } finally {
+                if (statusBar != null) {
+                    statusBar.FreezeOutput(0);
+                    object index = (short)0;
+                    statusBar.Animation(0, ref index);
+                    statusBar.Clear();
+                }
             }
         }
 

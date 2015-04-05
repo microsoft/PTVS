@@ -145,14 +145,28 @@ namespace Microsoft.PythonTools.Analysis {
 
             _evalUnit = new AnalysisUnit(null, null, new ModuleInfo("$global", new ProjectEntry(this, "$global", String.Empty, null), _defaultContext).Scope, true);
             AnalysisLog.NewUnit(_evalUnit);
+
+            LoadInitialKnownTypes();
+        }
+
+        private void LoadInitialKnownTypes() {
+            if (_builtinModule != null) {
+                Debug.Fail("LoadInitialKnownTypes should only be called once");
+                return;
+            }
+
+            var fallbackDb = PythonTypeDatabase.CreateDefaultTypeDatabase(LanguageVersion.ToVersion());
+            _builtinModule = _modules.GetBuiltinModule(fallbackDb.GetModule(SharedDatabaseState.BuiltinName2x));
+
+            FinishLoadKnownTypes(fallbackDb);
         }
 
         private async Task LoadKnownTypesAsync() {
             _itemCache.Clear();
 
+            Debug.Assert(_builtinModule != null, "LoadInitialKnownTypes was not called");
             if (_builtinModule == null) {
-                var fallbackDb = PythonTypeDatabase.CreateDefaultTypeDatabase(LanguageVersion.ToVersion());
-                _builtinModule = _modules.GetBuiltinModule(fallbackDb.GetModule(SharedDatabaseState.BuiltinName2x));
+                LoadInitialKnownTypes();
             }
 
             var moduleRef = await Modules.TryImportAsync(_builtinName);
@@ -162,17 +176,7 @@ namespace Microsoft.PythonTools.Analysis {
                 Modules[_builtinName] = new ModuleReference(_builtinModule);
             }
 
-            Types = new KnownTypes(this);
-            ClassInfos = (IKnownClasses)Types;
-
-            _noneInst = (ConstantInfo)GetCached(_nullKey, () => new ConstantInfo(ClassInfos[BuiltinTypeId.NoneType], (object)null));
-
-            DoNotUnionInMro = AnalysisSet.Create(new AnalysisValue[] {
-                ClassInfos[BuiltinTypeId.Object],
-                ClassInfos[BuiltinTypeId.Type]
-            });
-
-            AddBuiltInSpecializations();
+            FinishLoadKnownTypes(null);
 
             var sysModule = await _modules.TryImportAsync("sys");
             if (sysModule != null) {
@@ -181,6 +185,27 @@ namespace Microsoft.PythonTools.Analysis {
                     sysModule.Module = new SysModuleInfo(bm);
                 }
             }
+        }
+
+        private void FinishLoadKnownTypes(PythonTypeDatabase db) {
+            _itemCache.Clear();
+
+            if (db == null) {
+                db = PythonTypeDatabase.CreateDefaultTypeDatabase(LanguageVersion.ToVersion());
+                Types = KnownTypes.Create(this, db);
+            } else {
+                Types = KnownTypes.CreateDefault(this, db);
+            }
+
+            ClassInfos = (IKnownClasses)Types;
+            _noneInst = (ConstantInfo)GetCached(_nullKey, () => new ConstantInfo(ClassInfos[BuiltinTypeId.NoneType], (object)null));
+
+            DoNotUnionInMro = AnalysisSet.Create(new AnalysisValue[] {
+                ClassInfos[BuiltinTypeId.Object],
+                ClassInfos[BuiltinTypeId.Type]
+            });
+
+            AddBuiltInSpecializations();
         }
 
         /// <summary>
