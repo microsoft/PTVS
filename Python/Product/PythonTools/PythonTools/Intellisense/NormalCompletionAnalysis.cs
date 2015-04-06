@@ -15,9 +15,12 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
+using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Repl;
@@ -83,6 +86,7 @@ namespace Microsoft.PythonTools.Intellisense {
             var start1 = _stopwatch.ElapsedMilliseconds;
 
             IEnumerable<MemberResult> members = null;
+            IEnumerable<MemberResult> replMembers = null;
 
             IReplEvaluator eval;
             IPythonReplIntellisense pyReplEval = null;
@@ -92,6 +96,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             var analysis = GetAnalysisEntry();
+
             string text;
             SnapshotSpan statementRange;
             if (!GetPrecedingExpression(out text, out statementRange)) {
@@ -104,8 +109,22 @@ namespace Microsoft.PythonTools.Intellisense {
                             statementRange.Snapshot,
                             analysis
                         );
-                        members = analysis.GetAllAvailableMembers(location, _options.MemberOptions);
+                        var parameters = Enumerable.Empty<MemberResult>();
+                        var sigs = VsProjectAnalyzer.GetSignatures(_serviceProvider, _snapshot, Span);
+                        if (sigs.Signatures.Any()) {
+                            parameters = sigs.Signatures
+                                .SelectMany(s => s.Parameters)
+                                .Select(p => p.Name)
+                                .Distinct()
+                                .Select(n => new MemberResult(n, PythonMemberType.Field));
+                        }
+                        members = analysis.GetAllAvailableMembers(location, _options.MemberOptions)
+                            .Union(parameters, CompletionComparer.MemberEquality);
                     }
+                }
+
+                if (pyReplEval != null) {
+                    replMembers = pyReplEval.GetMemberNames(string.Empty);
                 }
             } else {
                 if (analysis != null && (pyReplEval == null || !pyReplEval.LiveCompletionsOnly)) {
@@ -121,14 +140,15 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
 
                 if (pyReplEval != null && _snapshot.TextBuffer.GetAnalyzer(_serviceProvider).ShouldEvaluateForCompletion(text)) {
-                    var replMembers = pyReplEval.GetMemberNames(text);
-                    if (replMembers != null) {
-                        if (members != null) {
-                            members = members.Union(replMembers, CompletionComparer.MemberEquality);
-                        } else {
-                            members = replMembers;
-                        }
-                    }
+                    replMembers = pyReplEval.GetMemberNames(text);
+                }
+            }
+
+            if (replMembers != null) {
+                if (members != null) {
+                    members = members.Union(replMembers, CompletionComparer.MemberEquality);
+                } else {
+                    members = replMembers;
                 }
             }
 
@@ -170,6 +190,5 @@ namespace Microsoft.PythonTools.Intellisense {
 
             return result;
         }
-
     }
 }

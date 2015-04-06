@@ -528,4 +528,206 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         public override bool Walk(DecoratorStatement node) { return false; }
         public override void PostWalk(DecoratorStatement node) { }
     }
+
+    /// <summary>
+    /// PythonWalkerWithLocation class - The Python AST Walker (default result
+    /// is true if the node contains Location, otherwise false)
+    /// </summary>
+    public class PythonWalkerWithLocation : PythonWalker {
+        public readonly int Location;
+
+        public PythonWalkerWithLocation(int location) {
+            Location = location;
+        }
+
+        // AndExpression
+        public override bool Walk(AndExpression node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // BackQuoteExpression
+        public override bool Walk(BackQuoteExpression node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // BinaryExpression
+        public override bool Walk(BinaryExpression node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // CallExpression
+        public override bool Walk(CallExpression node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // ConditionalExpression
+        public override bool Walk(ConditionalExpression node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // ConstantExpression
+        public override bool Walk(ConstantExpression node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // DictionaryComprehension
+        public override bool Walk(DictionaryComprehension node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // DictionaryExpression
+        public override bool Walk(DictionaryExpression node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // ErrorExpression
+        public override bool Walk(ErrorExpression node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // GeneratorExpression
+        public override bool Walk(GeneratorExpression node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // IndexExpression
+        public override bool Walk(IndexExpression node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // LambdaExpression
+        public override bool Walk(LambdaExpression node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // ListComprehension
+        public override bool Walk(ListComprehension node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // ListExpression
+        public override bool Walk(ListExpression node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // MemberExpression
+        public override bool Walk(MemberExpression node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // NameExpression
+        public override bool Walk(NameExpression node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // OrExpression
+        public override bool Walk(OrExpression node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // ParenthesisExpression
+        public override bool Walk(ParenthesisExpression node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // SetComprehension
+        public override bool Walk(SetComprehension node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // SetExpression
+        public override bool Walk(SetExpression node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // SliceExpression
+        public override bool Walk(SliceExpression node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // TupleExpression
+        public override bool Walk(TupleExpression node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // UnaryExpression
+        public override bool Walk(UnaryExpression node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // YieldExpression
+        public override bool Walk(YieldExpression node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // YieldFromExpression
+        public override bool Walk(YieldFromExpression node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // StarredExpression
+        public override bool Walk(StarredExpression node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // AssertStatement
+        public override bool Walk(AssertStatement node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // AssignmentStatement
+        public override bool Walk(AssignmentStatement node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // AugmentedAssignStatement
+        public override bool Walk(AugmentedAssignStatement node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // BreakStatement
+        public override bool Walk(BreakStatement node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // ClassDefinition
+        public override bool Walk(ClassDefinition node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // ContinueStatement
+        public override bool Walk(ContinueStatement node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // DelStatement
+        public override bool Walk(DelStatement node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // EmptyStatement
+        public override bool Walk(EmptyStatement node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // ExecStatement
+        public override bool Walk(ExecStatement node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // ExpressionStatement
+        public override bool Walk(ExpressionStatement node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // ForStatement
+        public override bool Walk(ForStatement node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // FromImportStatement
+        public override bool Walk(FromImportStatement node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // FunctionDefinition
+        public override bool Walk(FunctionDefinition node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // GlobalStatement
+        public override bool Walk(GlobalStatement node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // NonlocalStatement
+        public override bool Walk(NonlocalStatement node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // IfStatement
+        public override bool Walk(IfStatement node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // ImportStatement
+        public override bool Walk(ImportStatement node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // PrintStatement
+        public override bool Walk(PrintStatement node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // PythonAst
+        public override bool Walk(PythonAst node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // RaiseStatement
+        public override bool Walk(RaiseStatement node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // ReturnStatement
+        public override bool Walk(ReturnStatement node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // SuiteStatement
+        public override bool Walk(SuiteStatement node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // TryStatement
+        public override bool Walk(TryStatement node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // WhileStatement
+        public override bool Walk(WhileStatement node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // WithStatement
+        public override bool Walk(WithStatement node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // Arg
+        public override bool Walk(Arg node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // ComprehensionFor
+        public override bool Walk(ComprehensionFor node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // ComprehensionIf
+        public override bool Walk(ComprehensionIf node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // DottedName
+        public override bool Walk(DottedName node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // IfStatementTest
+        public override bool Walk(IfStatementTest node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // ModuleName
+        public override bool Walk(ModuleName node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // Parameter
+        public override bool Walk(Parameter node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // RelativeModuleName
+        public override bool Walk(RelativeModuleName node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // SublistParameter
+        public override bool Walk(SublistParameter node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // TryStatementHandler
+        public override bool Walk(TryStatementHandler node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // ErrorStatement
+        public override bool Walk(ErrorStatement node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // DecoratorStatement
+        public override bool Walk(DecoratorStatement node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+    }
+
 }

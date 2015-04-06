@@ -123,6 +123,7 @@
                      ItemsSource="{Binding Environments}">
                 <ListBox.ItemTemplateSelector>
                     <l:EnvironmentViewTemplateSelector AddNewEnvironment="{StaticResource AddNewEnvironmentListItem}"
+                                                       OnlineHelp="{StaticResource OnlineHelpListItem}"
                                                        Environment="{StaticResource EnvironmentListItem}" />
                 </ListBox.ItemTemplateSelector>
             </ListBox>
@@ -191,6 +192,7 @@
                      ItemsSource="{Binding Environments}">
                 <ListBox.ItemTemplateSelector>
                     <l:EnvironmentViewTemplateSelector AddNewEnvironment="{StaticResource AddNewEnvironmentListItem}"
+                                                       OnlineHelp="{StaticResource OnlineHelpListItem}"
                                                        Environment="{StaticResource EnvironmentListItem}" />
                 </ListBox.ItemTemplateSelector>
             </ListBox>

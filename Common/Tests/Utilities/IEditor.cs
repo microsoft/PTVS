@@ -44,6 +44,7 @@ namespace TestUtilities {
         void Select(int line, int column, int length);
 
         SessionHolder<T> WaitForSession<T>() where T : IIntellisenseSession;
+        SessionHolder<T> WaitForSession<T>(bool assertIfNoSession) where T : IIntellisenseSession;
 
         void AssertNoIntellisenseSession();
     }

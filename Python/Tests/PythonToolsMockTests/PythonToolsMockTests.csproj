@@ -113,10 +113,13 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ClassifierTests.cs" />
+    <Compile Include="CompletionTests.cs" />
     <Compile Include="EditorTests.cs" />
     <Compile Include="MockClipboardService.cs" />
     <Compile Include="MockPythonToolsPackage.cs" />
     <Compile Include="ProjectTests.cs" />
+    <Compile Include="PythonEditor.cs" />
     <Compile Include="SmartTagTests.cs" />
   </ItemGroup>
   <ItemGroup>

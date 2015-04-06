@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Microsoft.VisualStudio.Text;
 
 namespace TestUtilities.Mocks {
@@ -31,11 +32,16 @@ namespace TestUtilities.Mocks {
         }
 
         private SnapshotPoint GetPoint(ITextVersion version) {
+            if (version.TextBuffer != _snapshot.TextBuffer) {
+                Debug.Fail("Mismatched buffers");
+                throw new ArgumentException("Mismatched text buffers");
+            }
+            
+            var newPos = _position;
             var current = _snapshot.Version;
             var target = version;
-            if (current.VersionNumber == target.VersionNumber) {
-                return new SnapshotPoint(_snapshot, _position);
-            } else if (current.VersionNumber > target.VersionNumber) {
+            var toSnapshot = ((MockTextVersion)target)._snapshot;
+            if (current.VersionNumber > target.VersionNumber) {
                 // Apply the changes in reverse
                 var changesStack = new Stack<INormalizedTextChangeCollection>();
 
@@ -43,7 +49,6 @@ namespace TestUtilities.Mocks {
                     changesStack.Push(v.Changes);
                 }
 
-                var newPos = _position;
 
                 while (changesStack.Count > 0) {
                     foreach (var change in changesStack.Pop()) {
@@ -59,11 +64,8 @@ namespace TestUtilities.Mocks {
                         }
                     }
                 }
-
-                return new SnapshotPoint(((MockTextVersion)target)._snapshot, newPos);
-            } else {
+            } else if (current.VersionNumber < target.VersionNumber) {
                 // Apply the changes normally
-                var newPos = _position;
                 for (var v = current; v.VersionNumber < target.VersionNumber; v = v.Next) {
                     foreach (var change in v.Changes) {
                         if (change.Delta < 0 && change.OldPosition <= newPos && change.OldPosition - change.Delta > newPos) {
@@ -78,9 +80,11 @@ namespace TestUtilities.Mocks {
                         }
                     }
                 }
-
-                return new SnapshotPoint(((MockTextVersion)target)._snapshot, newPos);
             }
+
+            Debug.Assert(newPos >= 0, string.Format("new point '{0}' should be zero or greater", newPos));
+            Debug.Assert(newPos <= toSnapshot.Length, string.Format("new point '{0}' should be {1} or less", newPos, toSnapshot.Length));
+            return new SnapshotPoint(toSnapshot, newPos);
         }
 
         public SnapshotPoint GetPoint(ITextSnapshot snapshot) {

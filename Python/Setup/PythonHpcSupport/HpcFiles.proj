@@ -12,8 +12,8 @@
     <File Include="Microsoft.PythonTools.Hpc.pkgdef" />
 
     <!-- Core extension -->
-    <File Include="Microsoft.PythonTools.Hpc.dll;
-                   Microsoft.PythonTools.MpiShim.exe" />
+    <File Include="!(bindpath.bin)\Microsoft.PythonTools.Hpc.dll;
+                   !(bindpath.bin)\Microsoft.PythonTools.MpiShim.exe" />
 
     <!-- Resources -->
     <File Include="PythonProject.ico;

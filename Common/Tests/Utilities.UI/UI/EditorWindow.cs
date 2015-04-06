@@ -203,6 +203,10 @@ namespace TestUtilities.UI {
 #endif
 
         public SessionHolder<T> WaitForSession<T>() where T : IIntellisenseSession {
+            return WaitForSession<T>(true);
+        }
+
+        public SessionHolder<T> WaitForSession<T>(bool assertIfNoSession) where T : IIntellisenseSession {
             var sessionStack = IntellisenseSessionStack;
             for (int i = 0; i < 40; i++) {
                 if (sessionStack.TopSession is T) {
@@ -212,10 +216,14 @@ namespace TestUtilities.UI {
             }
 
             if (!(sessionStack.TopSession is T)) {
-                Console.WriteLine("Buffer text:\r\n{0}", Text);
-                Console.WriteLine("-----");
-                AutomationWrapper.DumpVS();
-                Assert.Fail("failed to find session " + typeof(T).FullName);
+                if (assertIfNoSession) {
+                    Console.WriteLine("Buffer text:\r\n{0}", Text);
+                    Console.WriteLine("-----");
+                    AutomationWrapper.DumpVS();
+                    Assert.Fail("failed to find session " + typeof(T).FullName);
+                } else {
+                    return null;
+                }
             }
             return new SessionHolder<T>((T)sessionStack.TopSession, this);
         }

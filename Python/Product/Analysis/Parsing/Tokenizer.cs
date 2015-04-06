@@ -1855,12 +1855,16 @@ namespace Microsoft.PythonTools.Parsing {
                         _state.GroupingRecovery = null;
                         MarkTokenEnd();
 
-                        // We've captured a line of significant identation (i.e. not pure whitespace).
-                        // Check that any of this indentation that's in common with the current indent
-                        // level is constructed in exactly the same way (i.e. has the same mix of spaces
-                        // and tabs etc.).
-                        if (IndentationInconsistencySeverity != Severity.Ignore) {
-                            CheckIndent(sb, noAllocWhiteSpace);
+                        if (_tokenEndIndex != _tokenStartIndex) {
+                            // We've captured a line of significant identation
+                            // (i.e. not pure whitespace or comment). Check that
+                            // any of this indentation that's in common with the
+                            // current indent level is constructed in exactly
+                            // the same way (i.e. has the same mix of spaces and
+                            // tabs etc.).
+                            if (IndentationInconsistencySeverity != Severity.Ignore) {
+                                CheckIndent(sb, noAllocWhiteSpace);
+                            }
                         }
 
                         // if there's a blank line then we don't want to mess w/ the
@@ -1920,6 +1924,7 @@ namespace Microsoft.PythonTools.Parsing {
                             _tokenEndIndex,
                             ErrorCodes.TabError, _indentationInconsistencySeverity
                         );
+                        break;
                     }
                 }
             }

@@ -51,7 +51,6 @@ namespace PythonToolsMockTests {
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
         public void CutRenamePaste() {
             foreach (var projectType in ProjectTypes) {
                 var testDef = new ProjectDefinition("DragDropCopyCutPaste",

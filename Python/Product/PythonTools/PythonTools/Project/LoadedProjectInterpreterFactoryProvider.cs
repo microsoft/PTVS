@@ -23,17 +23,21 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Project {
-    [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",
-        Justification = "Object is owned by MEF and will never be disposed")]
     [Guid(GuidList.guidLoadedProjectInterpreterFactoryProviderString)]
     [Export(typeof(IPythonInterpreterFactoryProvider))]
     [PartCreationPolicy(CreationPolicy.Shared)]
-    sealed class LoadedProjectInterpreterFactoryProvider : IPythonInterpreterFactoryProvider {
+    sealed class LoadedProjectInterpreterFactoryProvider : IPythonInterpreterFactoryProvider, IDisposable {
         private SolutionEventsListener _listener;
         private readonly Dictionary<IPythonInterpreterFactoryProvider, IVsProject> _providers;
 
         public LoadedProjectInterpreterFactoryProvider() {
             _providers = new Dictionary<IPythonInterpreterFactoryProvider, IVsProject>();
+        }
+
+        public void Dispose() {
+            if (_listener != null) {
+                _listener.Dispose();
+            }
         }
 
         public void SetSolution(IVsSolution solution) {

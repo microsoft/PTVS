@@ -38,6 +38,9 @@ using TestUtilities;
 using TestUtilities.Mocks;
 
 namespace Microsoft.VisualStudioTools.MockVsTests {
+    using System.Diagnostics;
+    using System.Runtime.ExceptionServices;
+    using Microsoft.VisualStudio.Text;
     using Thread = System.Threading.Thread;
 
     public sealed class MockVs : IComponentModel, IDisposable, IVisualStudioInstance {
@@ -72,6 +75,8 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         private bool _shutdown;
         private AutoResetEvent _uiEvent = new AutoResetEvent(false);
         private readonly List<Action> _uiEvents = new List<Action>();
+        private readonly Thread _throwExceptionsOn;
+        private ExceptionDispatchInfo _edi;
 
         private readonly Thread UIThread;
 
@@ -109,12 +114,17 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
 
             UIShell.AddToolWindow(new Guid(ToolWindowGuids80.SolutionExplorer), new MockToolWindow(new MockVsUIHierarchyWindow()));
 
-            UIThread = new Thread(UIThreadWorker);
-            UIThread.Name = "Mock UI Thread";
-            UIThread.Start();
-            // Wait for UI thread to start before returning. This ensures that
-            // any packages we have are loaded and have published their services
-            _uiEvent.WaitOne();
+            _throwExceptionsOn = Thread.CurrentThread;
+
+            using (var e = new AutoResetEvent(false)) {
+                UIThread = new Thread(UIThreadWorker);
+                UIThread.Name = "Mock UI Thread";
+                UIThread.Start((object)e);
+                // Wait for UI thread to start before returning. This ensures that
+                // any packages we have are loaded and have published their services
+                e.WaitOne();
+            }
+            ThrowPendingException();
         }
 
         class MockSyncContext : SynchronizationContext {
@@ -132,29 +142,50 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             }
         }
 
-        private void UIThreadWorker() {
-            SynchronizationContext.SetSynchronizationContext(new MockSyncContext(this));
-            foreach (var package in Container.GetExportedValues<IMockPackage>()) {
-                package.Initialize();
-            }
-            _uiEvent.Set();
+        private void UIThreadWorker(object evt) {
+            try {
+                SynchronizationContext.SetSynchronizationContext(new MockSyncContext(this));
+                var packages = new List<IMockPackage>();
+                foreach (var package in Container.GetExportedValues<IMockPackage>()) {
+                    packages.Add(package);
+                    package.Initialize();
+                }
+                ((AutoResetEvent)evt).Set();
 
-            while (!_shutdown) {
-                _uiEvent.WaitOne();
-                Action[] events;
-                do {
-                    lock (_uiEvents) {
-                        events = _uiEvents.ToArray();
-                        _uiEvents.Clear();
-                    }
-                    foreach (var action in events) {
-                        action();
-                    }
-                } while (events.Length > 0);
+                while (!_shutdown) {
+                    _uiEvent.WaitOne();
+                    Action[] events;
+                    do {
+                        lock (_uiEvents) {
+                            events = _uiEvents.ToArray();
+                            _uiEvents.Clear();
+                        }
+                        foreach (var action in events) {
+                            action();
+                        }
+                    } while (events.Length > 0);
+                }
+
+                foreach (var package in packages) {
+                    package.Dispose();
+                }
+            } catch (Exception ex) {
+                Trace.TraceError("Captured exception on mock UI thread: {0}", ex);
+                _edi = ExceptionDispatchInfo.Capture(ex);
+            }
+        }
+
+        private void ThrowPendingException(bool checkThread = true) {
+            if (!checkThread || _throwExceptionsOn == Thread.CurrentThread) {
+                var edi = Interlocked.Exchange(ref _edi, null);
+                if (edi != null) {
+                    edi.Throw();
+                }
             }
         }
 
         public void Invoke(Action action) {
+            ThrowPendingException();
             if (Thread.CurrentThread == UIThread) {
                 action();
                 return;
@@ -166,22 +197,35 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         public T Invoke<T>(Func<T> func) {
+            ThrowPendingException();
             if (Thread.CurrentThread == UIThread) {
                 return func();
             }
 
-            AutoResetEvent tmp = new AutoResetEvent(false);
             T res = default(T);
-            Action action = () => {
-                res = func();
-                tmp.Set();
-            };
+            using (var tmp = new AutoResetEvent(false)) {
+                Action action = () => {
+                    try {
+                        res = func();
+                    } finally {
+                        tmp.Set();
+                    }
+                };
 
-            lock (_uiEvents) {                
-                _uiEvents.Add(action);
-                _uiEvent.Set();
+                lock (_uiEvents) {
+                    _uiEvents.Add(action);
+                    _uiEvent.Set();
+                }
+
+                while (!tmp.WaitOne(100)) {
+                    if (!UIThread.IsAlive) {
+                        ThrowPendingException(checkThread: false);
+                        Debug.Fail("UIThread was terminated");
+                        return res;
+                    }
+                }
             }
-            tmp.WaitOne();
+            ThrowPendingException(checkThread: false);
             return res;
         }
 
@@ -201,12 +245,30 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         public void DoIdle() {
         }
 
-        public MockVsTextView CreateTextView(string contentType, string file, string content = "") {
-            return Invoke(() => CreateTextViewWorker(contentType, file, content));
+        public MockVsTextView CreateTextView(
+            string contentType,
+            string content,
+            Action<MockVsTextView> onCreate = null,
+            string file = null
+        ) {
+            return Invoke(() => CreateTextViewWorker(contentType, content, onCreate, file));
         }
 
-        private MockVsTextView CreateTextViewWorker(string contentType, string file, string content) {
+        private MockVsTextView CreateTextViewWorker(
+            string contentType,
+            string content,
+            Action<MockVsTextView> onCreate,
+            string file = null
+        ) {
             var buffer = new MockTextBuffer(content, ContentTypeRegistry.GetContentType(contentType), file);
+
+            var view = new MockTextView(buffer);
+            var res = new MockVsTextView(_serviceProvider, this, view);
+            view.Properties[typeof(MockVsTextView)] = res;
+            if (onCreate != null) {
+                onCreate(res);
+            }
+
             foreach (var classifier in Container.GetExports<IClassifierProvider, IContentTypeMetadata>()) {
                 foreach (var targetContentType in classifier.Metadata.ContentTypes) {
                     if (buffer.ContentType.IsOfType(targetContentType)) {
@@ -214,10 +276,6 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
                     }
                 }
             }
-
-            var view = new MockTextView(buffer);
-            var res = new MockVsTextView(_serviceProvider, this, view);
-            view.Properties[typeof(MockVsTextView)] = res;
 
             // Initialize code window
             LanguageServiceInfo info;
@@ -258,6 +316,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
                 }
             }
 
+            OnDispose(() => res.Close());
             return res;
         }
 
@@ -301,6 +360,10 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             List<AssemblyCatalog> catalogs = new List<AssemblyCatalog>();
             List<Type> packageTypes = new List<Type>();
             foreach (var file in Directory.GetFiles(runningLoc, "*.dll")) {
+                if (file.EndsWith("VsLogger.dll", StringComparison.OrdinalIgnoreCase)) {
+                    continue;
+                }
+                
                 Assembly asm;
                 try {
                     asm = Assembly.Load(Path.GetFileNameWithoutExtension(file));
@@ -419,7 +482,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
                 languageName = "code";
             }
 
-            var res = CreateTextView(languageName, item.CanonicalName, File.ReadAllText(item.CanonicalName));
+            var res = CreateTextView(languageName, File.ReadAllText(item.CanonicalName), null, item.CanonicalName);
             SetFocus(res);
 
             uint cookie;
@@ -482,6 +545,8 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         public void Dispose() {
             _shutdown = true;
             _uiEvent.Set();
+            ThrowPendingException();
+            AssertListener.ThrowUnhandled();
         }
 
         

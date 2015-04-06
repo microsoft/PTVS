@@ -172,7 +172,7 @@ if ($release -or $mockrelease) {
     $global_msbuild_options += "/p:ReleaseBuild=true"
 }
 
-if (Test-Path Internal\Python\VsLogger\VsLogger.csproj) {
+if (Test-Path $buildroot\Internal\Python\VsLogger\VsLogger.csproj) {
     $global_msbuild_options += "/p:IncludeVsLogger=true"
 }
 
@@ -640,6 +640,10 @@ try {
     }
     
     after-build-all $buildroot $outdir
+    
+    if ($signedBuild) {
+        check_signing $outdir
+    }
     
     if ($scorch) {
         tfpt scorch $buildroot /noprompt

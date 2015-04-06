@@ -418,9 +418,7 @@ namespace Microsoft.PythonTools.Project {
 
                 var libPath = interp.Configuration.LibraryPath;
                 if (Directory.Exists(libPath)) {
-                    var installed = await Task.Run((Func<HashSet<string>>)(() =>
-                        interp.FindModules("pip", "virtualenv", "venv")
-                    )).ConfigureAwait(true);
+                    var installed = await interp.FindModulesAsync("pip", "virtualenv", "venv");
 
                     if (installed.Contains("venv") || installed.Contains("virtualenv")) {
                         WillInstallPip = false;

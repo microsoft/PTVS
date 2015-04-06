@@ -47,6 +47,9 @@ namespace Microsoft.PythonTools.Interpreter {
         private const string FactoryProvidersRegKey = @"Software\Microsoft\PythonTools\" + AssemblyVersionInfo.VSVersion + @"\InterpreterFactories";
         internal const string FactoryProviderCodeBaseSetting = "CodeBase";
 
+        // If this collection exists in the settings provider, no factories will
+        // be loaded. This is meant for tests.
+        private const string SuppressFactoryProvidersCollection = @"PythonTools\NoInterpreterFactories";
 
         private const string DefaultInterpreterOptionsCollection = @"PythonTools\Options\Interpreters";
         private const string DefaultInterpreterSetting = "DefaultInterpreter";
@@ -264,6 +267,10 @@ namespace Microsoft.PythonTools.Interpreter {
             var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             var catalog = new List<ComposablePartCatalog>();
 
+            if (store.CollectionExists(SuppressFactoryProvidersCollection)) {
+                return new IPythonInterpreterFactoryProvider[0];
+            }
+
             if (store.CollectionExists(FactoryProvidersCollection)) {
                 foreach (var idStr in store.GetSubCollectionNames(FactoryProvidersCollection)) {
                     var key = FactoryProvidersCollection + "\\" + idStr;
@@ -297,7 +304,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
             if (!catalog.Any()) {
                 LoadOneProvider(
-                    typeof(CPythonInterpreterFactoryConstants).Assembly.CodeBase,
+                    typeof(CPythonInterpreterFactoryConstants).Assembly.Location,
                     seen,
                     catalog,
                     _activityLog

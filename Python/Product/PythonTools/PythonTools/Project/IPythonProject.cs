@@ -173,6 +173,23 @@ namespace Microsoft.PythonTools.Project {
         event EventHandler<AnalyzerChangingEventArgs> ProjectAnalyzerChanging;
     }
 
+    /// <summary>
+    /// Extends <see cref="IPythonProject2"/>
+    /// 
+    /// New in 2.2
+    /// </summary>
+    public interface IPythonProject3 : IPythonProject2 {
+        /// <summary>
+        /// Gets the interpreter factory for this project and throws if it is
+        /// unusable.
+        /// </summary>
+        /// <exception cref="NoInterpretersException">No interpreters are
+        /// available.</exception>
+        /// <exception cref="MissingInterpreterException">The active interpreter
+        /// is not available.</exception>
+        IPythonInterpreterFactory GetInterpreterFactoryOrThrow();
+    }
+
     public static class IPythonProjectExtensions {
         /// <summary>
         /// Returns a sequence of absolute search paths for the provided project.

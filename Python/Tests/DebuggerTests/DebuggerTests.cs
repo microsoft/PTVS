@@ -25,6 +25,7 @@ using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools;
+using Microsoft.VisualStudioTools.Project;
 using Microsoft.Win32;
 using TestUtilities;
 using TestUtilities.Python;
@@ -2198,7 +2199,6 @@ int main(int argc, char* argv[]) {
 
             var hostCode = @"#include <Windows.h>
 #include <process.h>
-#undef _DEBUG
 #include <Python.h>
 
 PyObject *g_pFunc;
@@ -2265,10 +2265,10 @@ void main()
     Py_Finalize();
     return;
 }".Replace("CREATE_STRING", CreateString);
-            CompileCode(hostCode);
+            var exe = CompileCode(hostCode);
 
             // start the test process w/ our handle
-            Process p = RunHost("test.exe");
+            Process p = RunHost(exe);
             try {
                 System.Threading.Thread.Sleep(1500);
 
@@ -2315,7 +2315,6 @@ void main()
 
             var hostCode = @"#include <Windows.h>
 #include <process.h>
-#undef _DEBUG
 #include <Python.h>
 
 PyObject *g_pFunc;
@@ -2390,10 +2389,10 @@ void main()
     Py_Finalize();
     return;
 }".Replace("CREATE_STRING", CreateString);
-            CompileCode(hostCode);
+            var exe = CompileCode(hostCode);
 
             // start the test process w/ our handle
-            Process p = RunHost("test.exe");
+            Process p = RunHost(exe);
             try {
                 System.Threading.Thread.Sleep(1500);
 
@@ -2466,12 +2465,12 @@ int main(int argc, char* argv[]) {
         }
 
         private void AttachTest(string hostCode) {
-            CompileCode(hostCode);
+            var exe = CompileCode(hostCode);
 
             // start the test process w/ our handle
             var eventName = Guid.NewGuid().ToString();
             EventWaitHandle handle = new EventWaitHandle(false, EventResetMode.AutoReset, eventName);
-            ProcessStartInfo psi = new ProcessStartInfo("test.exe", eventName);
+            ProcessStartInfo psi = new ProcessStartInfo(exe, eventName);
             psi.UseShellExecute = false;
             psi.RedirectStandardError = psi.RedirectStandardOutput = true;
             psi.CreateNoWindow = true;
@@ -2511,55 +2510,72 @@ int main(int argc, char* argv[]) {
             }
         }
 
-        private void CompileCode(string hostCode) {
-            File.WriteAllText("test.cpp", hostCode);
+
+        class TraceRedirector : Redirector {
+            private readonly string _prefix;
+
+            public TraceRedirector(string prefix = "") {
+                if (string.IsNullOrEmpty(prefix)) {
+                    _prefix = "";
+                } else {
+                    _prefix = prefix + ": ";
+                }
+            }
+
+            public override void WriteLine(string line) {
+                Trace.WriteLine(_prefix + line);
+            }
+
+            public override void WriteErrorLine(string line) {
+                Trace.WriteLine(_prefix + "[ERROR] " + line);
+            }
+        }
+
+        private string CompileCode(string hostCode) {
+            var buildDir = TestData.GetTempPath(randomSubPath: true);
+            File.WriteAllText(Path.Combine(buildDir, "test.cpp"), hostCode);
 
             // compile our host code...
-            var startInfo = new ProcessStartInfo(
-                Path.Combine(GetVCBinDir(), "cl.exe"),
-                String.Format("/I{0}\\Include test.cpp /link /libpath:{0}\\libs", Path.GetDirectoryName(Version.InterpreterPath))
-            );
+            var env = new Dictionary<string, string>();
+            env["PATH"] = Environment.GetEnvironmentVariable("PATH") + ";" + GetVSIDEInstallDir() + ";" + GetVCBinDirForPath();
 
-            startInfo.EnvironmentVariables["PATH"] = Environment.GetEnvironmentVariable("PATH") + ";" + GetVSIDEInstallDir();
+            env["INCLUDE"] = GetVCIncludeDir() + ";" + string.Join(";", WindowsSdk.Latest.IncludePaths);
+            var libs = Version.Isx64 ? WindowsSdk.Latest.X64LibPaths : WindowsSdk.Latest.X86LibPaths;
+            env["LIB"] = GetVCLibDir() + ";" + string.Join(";", libs);
 
-            startInfo.EnvironmentVariables["INCLUDE"] = GetVCIncludeDir() + ";" +
-                string.Join(";", WindowsSdk.Latest.IncludePaths);
-            startInfo.EnvironmentVariables["LIB"] = GetVCLibDir() + ";" +
-                (Version.Isx64 ? WindowsSdk.Latest.X64LibPath : WindowsSdk.Latest.X86LibPath);
-
-            Console.WriteLine("\n\nPATH:\n" + startInfo.EnvironmentVariables["PATH"]);
-            Console.WriteLine("\n\nINCLUDE:\n" + startInfo.EnvironmentVariables["INCLUDE"]);
-            Console.WriteLine("\n\nLIB:\n" + startInfo.EnvironmentVariables["LIB"]);
-
-            startInfo.UseShellExecute = false;
-            startInfo.RedirectStandardError = true;
-            startInfo.RedirectStandardOutput = true;
-            startInfo.CreateNoWindow = true;
-            var compileProcess = Process.Start(startInfo);
-            try {
-                var outputReceiver = new OutputReceiver();
-                compileProcess.OutputDataReceived += outputReceiver.OutputDataReceived; // for debugging if you change the code...
-                compileProcess.ErrorDataReceived += outputReceiver.OutputDataReceived;
-                compileProcess.BeginErrorReadLine();
-                compileProcess.BeginOutputReadLine();
-                Assert.IsTrue(compileProcess.WaitForExit(DefaultWaitForExitTimeout), "Timeout while waiting for compiler process to exit.");
-
-                Assert.AreEqual(0, compileProcess.ExitCode,
-                    "Incorrect exit code: " + compileProcess.ExitCode + Environment.NewLine +
-                    outputReceiver.Output.ToString()
-                );
-            } finally {
-                if (!compileProcess.HasExited) {
-                    compileProcess.Kill();
-                }
-                compileProcess.Dispose();
+            foreach(var kv in env) {
+                Trace.TraceInformation("SET {0}={1}", kv.Key, kv.Value);
             }
+
+            using (var p = ProcessOutput.Run(
+                Path.Combine(GetVCBinDir(), "cl.exe"),
+                new[] {
+                    "/I" + Version.PrefixPath + "\\Include",
+                    "/MD",
+                    "test.cpp",
+                    "/link",
+                    "/libpath:" + Version.PrefixPath + "\\libs"
+                },
+                buildDir,
+                env,
+                false,
+                new TraceRedirector()
+            )) {
+                Trace.TraceInformation(p.Arguments);
+                if (!p.Wait(TimeSpan.FromMilliseconds(DefaultWaitForExitTimeout))) {
+                    p.Kill();
+                    Assert.Fail("Timeout while waiting for compiler");
+                }
+                Assert.AreEqual(0, p.ExitCode ?? -1, "Incorrect exit code from compiler");
+            }
+
+            return Path.Combine(buildDir, "test.exe");
         }
 
         private Process RunHost(string hostExe) {
             var psi = new ProcessStartInfo(hostExe) { UseShellExecute = false };
             // Add Python to PATH so that the host can locate the DLL in case it's not in \Windows\System32 (e.g. for EPD)
-            psi.EnvironmentVariables["PATH"] = Environment.GetEnvironmentVariable("PATH") + ";" + Path.GetDirectoryName(Version.InterpreterPath);
+            psi.EnvironmentVariables["PATH"] = Environment.GetEnvironmentVariable("PATH") + ";" + Version.PrefixPath;
             return Process.Start(psi);
         }
 
@@ -2568,6 +2584,14 @@ int main(int argc, char* argv[]) {
             return Version.Isx64 ?
                 Path.Combine(installDir, "bin", "x86_amd64") :
                 Path.Combine(installDir, "bin");
+        }
+
+        private string GetVCBinDirForPath() {
+            var installDir = GetVCInstallDir();
+            var binDir = Path.Combine(installDir, "bin");
+            return Version.Isx64 ?
+                Path.Combine(binDir, "x86_amd64") + ";" + binDir :
+                binDir;
         }
 
         private string GetVCIncludeDir() {
@@ -2588,18 +2612,20 @@ int main(int argc, char* argv[]) {
         }
 
         class WindowsSdk {
-            public string X86LibPath { get; private set; }
-            public string X64LibPath { get; private set; }
+            public string[] X86LibPaths { get; private set; }
+            public string[] X64LibPaths { get; private set; }
             public string[] IncludePaths { get; private set; }
 
             public static WindowsSdk Sdk70 = FindWindowsSdk("v7.0");
             public static WindowsSdk Sdk70a = FindWindowsSdk("v7.0A");
             public static WindowsSdk Sdk80a = FindWindowsSdk("v8.0A");
-            public static WindowsSdk Kits80 = FindWindowsKits("KitsRoot", "win8");
-            public static WindowsSdk Kits81 = FindWindowsKits("KitsRoot81", "winv6.3");
+            public static WindowsSdk Kits80 = FindWindows8Kits("KitsRoot", "win8\\um");
+            public static WindowsSdk Kits81 = FindWindows8Kits("KitsRoot81", "winv6.3\\um");
+            public static WindowsSdk Kits100 = FindWindows10Kits("KitsRoot10", "winv10\\ucrt", "KitsRoot81", "winv6.3\\um");
 
             public static WindowsSdk Latest {
                 get {
+                    if (Kits100 != null) return Kits100;
                     if (Kits81 != null) return Kits81;
                     if (Kits80 != null) return Kits80;
                     if (Sdk80a != null) return Sdk80a;
@@ -2610,10 +2636,10 @@ int main(int argc, char* argv[]) {
                 }
             }
 
-            private WindowsSdk(string x86libPath, string x64LibPath, params string[] includePaths) {
-                X86LibPath = x86libPath;
-                X64LibPath = x64LibPath;
-                IncludePaths = includePaths;
+            private WindowsSdk(IEnumerable<string> x86libPaths, IEnumerable<string> x64LibPaths, IEnumerable<string> includePaths) {
+                X86LibPaths = (x86libPaths ?? Enumerable.Empty<string>()).Where(Directory.Exists).ToArray();
+                X64LibPaths = (x64LibPaths ?? Enumerable.Empty<string>()).Where(Directory.Exists).ToArray();
+                IncludePaths = (includePaths ?? Enumerable.Empty<string>()).Where(Directory.Exists).ToArray();
             }
 
             private static WindowsSdk FindWindowsSdk(string version) {
@@ -2626,28 +2652,31 @@ int main(int argc, char* argv[]) {
                     var rootPath = regValue.ToString();
                     if (Directory.Exists(Path.Combine(rootPath, "Include"))) {
                         return new WindowsSdk(
-                            Path.Combine(rootPath, "Lib"),
-                            Path.Combine(rootPath, "Include"));
+                            new[] { Path.Combine(rootPath, "Lib") },
+                            null,
+                            new[] { Path.Combine(rootPath, "Include") }
+                        );
                     }
                 }
 
                 string[] wellKnownLocations = new[] {
-                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Microsoft SDKs", "Windows", version),
-                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Microsoft SDKs", "Windows", version)
+                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Microsoft SDKs", "Windows", version),
+                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Microsoft SDKs", "Windows", version)
                 };
 
                 foreach (var rootPath in wellKnownLocations) {
                     if (Directory.Exists(Path.Combine(rootPath, "Include")))
                         return new WindowsSdk(
-                            Path.Combine(rootPath, "Lib"),
-                            Path.Combine(rootPath, "Lib", "x64"),
-                            Path.Combine(rootPath, "Include"));
+                            new[] { Path.Combine(rootPath, "Lib") },
+                            new[] { Path.Combine(rootPath, "Lib", "x64") },
+                            new[] { Path.Combine(rootPath, "Include") }
+                        );
                 }
 
                 return null;
             }
 
-            private static WindowsSdk FindWindowsKits(string version, string libFolderName) {
+            private static WindowsSdk FindWindows8Kits(string version, string libFolderName) {
                 var regValue = Registry.GetValue(
                     "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows Kits\\Installed Roots",
                     version,
@@ -2657,14 +2686,41 @@ int main(int argc, char* argv[]) {
                     var rootPath = regValue.ToString();
                     if (Directory.Exists(Path.Combine(rootPath, "Include"))) {
                         return new WindowsSdk(
-                            Path.Combine(rootPath, "Lib", libFolderName, "um", "x86"),
-                            Path.Combine(rootPath, "Lib", libFolderName, "um", "x64"),
-                            Path.Combine(rootPath, "Include", "shared"),
-                            Path.Combine(rootPath, "Include", "um"));
+                            new[] {Path.Combine(rootPath, "Lib", libFolderName, "x86")},
+                            new[] {Path.Combine(rootPath, "Lib", libFolderName, "x64")},
+                            new[] {
+                                Path.Combine(rootPath, "Include", "shared"),
+                                Path.Combine(rootPath, "Include", "um")
+                            }
+                        );
                     }
                 }
 
                 return null;
+            }
+
+            private static WindowsSdk FindWindows10Kits(string version, string libDir, string prevVersion, string prevLibDir) {
+                // Need to merge two Win8 style kits
+                var win10Base = FindWindows8Kits(version, libDir);
+                var win8Base = FindWindows8Kits(prevVersion, prevLibDir);
+
+                if (win10Base == null || win8Base == null) {
+                    return null;
+                }
+
+                var actualIncludes = win10Base.IncludePaths.ToList();
+                if (!actualIncludes.Any()) {
+                    return null;
+                }
+
+                actualIncludes.Insert(0, Path.Combine(actualIncludes[0], "..", "ucrt"));
+                actualIncludes.AddRange(win8Base.IncludePaths);
+
+                return new WindowsSdk(
+                    win10Base.X86LibPaths.Concat(win8Base.X86LibPaths),
+                    win10Base.X64LibPaths.Concat(win8Base.X64LibPaths),
+                    actualIncludes
+                );
             }
         }
 
@@ -2730,7 +2786,7 @@ int main(int argc, char* argv[]) {
 
         internal override PythonVersion Version {
             get {
-                return PythonPaths.Python26;
+                return PythonPaths.Python26 ?? PythonPaths.Python26_x64;;
             }
         }
     }
@@ -2764,7 +2820,7 @@ int main(int argc, char* argv[]) {
 
         internal override PythonVersion Version {
             get {
-                return PythonPaths.Python30;
+                return PythonPaths.Python30 ?? PythonPaths.Python30_x64;;
             }
         }
     }
@@ -2779,7 +2835,7 @@ int main(int argc, char* argv[]) {
 
         internal override PythonVersion Version {
             get {
-                return PythonPaths.Python31;
+                return PythonPaths.Python31 ?? PythonPaths.Python31_x64;;
             }
         }
     }
@@ -2794,7 +2850,7 @@ int main(int argc, char* argv[]) {
 
         internal override PythonVersion Version {
             get {
-                return PythonPaths.Python32;
+                return PythonPaths.Python32 ?? PythonPaths.Python32_x64;;
             }
         }
 
@@ -2813,7 +2869,7 @@ int main(int argc, char* argv[]) {
 
         internal override PythonVersion Version {
             get {
-                return PythonPaths.Python33;
+                return PythonPaths.Python33 ?? PythonPaths.Python33_x64;;
             }
         }
 
@@ -2838,7 +2894,32 @@ int main(int argc, char* argv[]) {
 
         internal override PythonVersion Version {
             get {
-                return PythonPaths.Python34;
+                return PythonPaths.Python34 ?? PythonPaths.Python34_x64;;
+            }
+        }
+
+        public override string CreateString {
+            get {
+                return "PyUnicode_FromString";
+            }
+        }
+
+        public override void AttachNewThread_PyThreadState_New() {
+            // PyEval_AcquireLock deprecated in 3.2
+        }
+    }
+
+    [TestClass]
+    public class DebuggerTests35 : DebuggerTests3x {
+        [ClassInitialize]
+        public static new void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
+            PythonTestData.Deploy();
+        }
+
+        internal override PythonVersion Version {
+            get {
+                return PythonPaths.Python35 ?? PythonPaths.Python35_x64;;
             }
         }
 
@@ -2863,7 +2944,7 @@ int main(int argc, char* argv[]) {
 
         internal override PythonVersion Version {
             get {
-                return PythonPaths.Python27;
+                return PythonPaths.Python27 ?? PythonPaths.Python27_x64;;
             }
         }
     }
@@ -2878,7 +2959,7 @@ int main(int argc, char* argv[]) {
 
         internal override PythonVersion Version {
             get {
-                return PythonPaths.Python25;
+                return PythonPaths.Python25 ?? PythonPaths.Python25_x64;;
             }
         }
     }
@@ -2893,7 +2974,7 @@ int main(int argc, char* argv[]) {
 
         internal override PythonVersion Version {
             get {
-                return PythonPaths.IronPython27;
+                return PythonPaths.IronPython27 ?? PythonPaths.IronPython27_x64;
             }
         }
 

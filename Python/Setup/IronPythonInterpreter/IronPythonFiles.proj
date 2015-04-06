@@ -12,9 +12,9 @@
     <File Include="Microsoft.PythonTools.IronPython.pkgdef" />
 
     <!-- Core extension -->
-    <File Include="Microsoft.PythonTools.IronPython.dll;
-                   Microsoft.PythonTools.IronPython.Interpreter.dll;
-                   Microsoft.IronPythonTools.Resolver.dll" />
+    <File Include="!(bindpath.bin)\Microsoft.PythonTools.IronPython.dll;
+                   !(bindpath.bin)\Microsoft.PythonTools.IronPython.Interpreter.dll;
+                   !(bindpath.bin)\Microsoft.IronPythonTools.Resolver.dll" />
 
     <!-- Resources -->
     <File Include="PythonProject.ico;

@@ -114,11 +114,9 @@
     </Compile>
     <Compile Include="BuildTasksTests.cs" />
     <Compile Include="EditorTests.cs" />
-    <Compile Include="ClassifierTests.cs" />
     <Compile Include="CodeFormatterTests.cs" />
     <Compile Include="CommentBlockTests.cs" />
     <Compile Include="CommonUtilsTests.cs" />
-    <Compile Include="CompletionContextTests.cs" />
     <Compile Include="CPythonInterpreterTests.cs" />
     <Compile Include="DebugReplEvaluatorTests.cs" />
     <Compile Include="EnvironmentListTests.cs" />

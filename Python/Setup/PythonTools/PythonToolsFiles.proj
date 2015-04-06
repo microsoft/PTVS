@@ -9,9 +9,9 @@
 
 
   <ItemGroup>
-    <GACAssembly Include="Microsoft.PythonTools.Analysis.dll;
-                          Microsoft.PythonTools.Attacher.exe;
-                          Microsoft.PythonTools.Debugger.dll" />
+    <GACAssembly Include="!(bindpath.bin)\Microsoft.PythonTools.Analysis.dll;
+                          !(bindpath.bin)\Microsoft.PythonTools.Attacher.exe;
+                          !(bindpath.bin)\Microsoft.PythonTools.Debugger.dll" />
 
     <!-- Registration files -->
     <File Include="PythonTools\extension.vsixmanifest" />
@@ -20,16 +20,16 @@
           Include="Microsoft.PythonTools.theme.pkgdef" />
 
     <!-- Core extension -->
-    <File Include="Microsoft.PythonTools.dll;
-                   Microsoft.PythonTools.Analysis.dll;
-                   Microsoft.PythonTools.EnvironmentsList.dll;
-                   Microsoft.PythonTools.ImportWizard.dll;
-                   Microsoft.PythonTools.ProjectWizards.dll;
-                   Microsoft.PythonTools.VSInterpreters.dll;
+    <File Include="!(bindpath.bin)\Microsoft.PythonTools.dll;
+                   !(bindpath.bin)\Microsoft.PythonTools.Analysis.dll;
+                   !(bindpath.bin)\Microsoft.PythonTools.EnvironmentsList.dll;
+                   !(bindpath.bin)\Microsoft.PythonTools.ImportWizard.dll;
+                   !(bindpath.bin)\Microsoft.PythonTools.ProjectWizards.dll;
+                   !(bindpath.bin)\Microsoft.PythonTools.VSInterpreters.dll;
                    pip_downloader.py" />
 
     <!-- Analyzer -->
-    <File Include="Microsoft.PythonTools.Analyzer.exe;
+    <File Include="!(bindpath.bin)\Microsoft.PythonTools.Analyzer.exe;
                    Microsoft.PythonTools.Analyzer.exe.config;
                    PythonScraper.py;
                    ExtensionScraper.py;
@@ -37,11 +37,11 @@
                    BuiltinScraper.py" />
     
     <!-- Debugger -->
-    <File Include="Microsoft.PythonTools.Debugger.dll;
-                   Microsoft.PythonTools.Attacher.exe;
-                   Microsoft.PythonTools.AttacherX86.exe;
-                   PyDebugAttach.dll;
-                   PyDebugAttachX86.dll;
+    <File Include="!(bindpath.bin)\Microsoft.PythonTools.Debugger.dll;
+                   !(bindpath.bin)\Microsoft.PythonTools.Attacher.exe;
+                   !(bindpath.bin)\Microsoft.PythonTools.AttacherX86.exe;
+                   !(bindpath.bin)\PyDebugAttach.dll;
+                   !(bindpath.bin)\PyDebugAttachX86.dll;
                    visualstudio_py_repl.py;
                    visualstudio_ipython_repl.py;
                    visualstudio_py_launcher.py;
@@ -137,7 +137,7 @@
     </File>
   
     <!-- Build Tasks -->
-    <File Include="Microsoft.PythonTools.BuildTasks.dll" />
+    <File Include="!(bindpath.bin)\Microsoft.PythonTools.BuildTasks.dll" />
     <MSBuildFile Include="Microsoft.PythonTools.targets;
                           Microsoft.PythonTools.Web.targets;
                           Microsoft.PythonTools.Worker.targets;
@@ -145,22 +145,22 @@
                           web_config.xml;
                           web_debug_config.xml;
                           ptvs_virtualenv_proxy.py;
-                          Microsoft.PythonTools.WebRole.dll;
-                          Microsoft.PythonTools.AzureSetup.exe;
+                          !(bindpath.bin)\Microsoft.PythonTools.WebRole.dll;
+                          !(bindpath.bin)\Microsoft.PythonTools.AzureSetup.exe;
                           Microsoft.PythonTools.AzureSetup.exe.config" />
     
     <!-- Mixed-mode Debugging -->
     <File Condition="$(VSTarget) != '10.0'"
-          Include="Microsoft.PythonTools.Debugger.Helper.x86.dll;
+          Include="!(bindpath.bin)\Microsoft.PythonTools.Debugger.Helper.x86.dll;
                    Microsoft.PythonTools.Debugger.Helper.x86.pdb;
-                   Microsoft.PythonTools.Debugger.Helper.x64.dll;
+                   !(bindpath.bin)\Microsoft.PythonTools.Debugger.Helper.x64.dll;
                    Microsoft.PythonTools.Debugger.Helper.x64.pdb;
                    DkmDebugger.vsdconfig;
                    Visualizers\PythonDkm.natvis" />
     
     <!-- Unit Test Adapter -->
     <File Condition="$(VSTarget) != '10.0'"
-          Include="Microsoft.PythonTools.TestAdapter.dll;
+          Include="!(bindpath.bin)\Microsoft.PythonTools.TestAdapter.dll;
                    visualstudio_py_testlauncher.py" />
     <ItemTemplate Condition="$(VSTarget) != '10.0'"
                   Include="ItemTemplates\Python\UnitTestFile.zip" />

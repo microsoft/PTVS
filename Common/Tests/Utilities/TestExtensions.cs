@@ -39,6 +39,14 @@ namespace TestUtilities {
             }
         }
 
+        public static int IndexOfEnd(this string s, string substring) {
+            int i = s.IndexOf(substring);
+            if (i < 0) {
+                return i;
+            }
+            return i + substring.Length;
+        }
+
         public static HashSet<T> ToSet<T>(this IEnumerable<T> enumeration) {
             return new HashSet<T>(enumeration);
         }

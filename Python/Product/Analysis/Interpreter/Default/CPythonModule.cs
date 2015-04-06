@@ -55,7 +55,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
 
             // If we're loading or not loaded, we need to take this lock.
             if (!_typeDb.BeginModuleLoad(this, 10000)) {
-                Debug.Fail("Timeout loading {0}", _modName);
+                Debug.Fail(string.Format("Timeout loading {0}", _modName));
                 //throw new InvalidOperationException("Cannot load module at this time");
                 return;
             }

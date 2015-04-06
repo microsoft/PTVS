@@ -166,13 +166,13 @@ namespace Microsoft.PythonTools.Project.Web {
             if (debug) {
                 _pyService.Logger.LogEvent(Logging.PythonLogEvent.Launch, 1);
 
-                using (var dsi = CreateDebugTargetInfo(startInfo, GetInterpreterPath(_project, isWindows))) {
+                using (var dsi = CreateDebugTargetInfo(startInfo, GetInterpreterPath(isWindows))) {
                     dsi.Launch(_serviceProvider);
                 }
             } else {
                 _pyService.Logger.LogEvent(Logging.PythonLogEvent.Launch, 0);
 
-                var psi = CreateProcessStartInfo(startInfo, GetInterpreterPath(_project, isWindows));
+                var psi = CreateProcessStartInfo(startInfo, GetInterpreterPath(isWindows));
 
                 var process = Process.Start(psi);
                 if (process != null) {
@@ -187,16 +187,34 @@ namespace Microsoft.PythonTools.Project.Web {
             return new DefaultPythonLauncher(_serviceProvider, _pyService, _project).LaunchFile(file, debug);
         }
 
-        private string GetInterpreterPath(IPythonProject project, bool isWindows) {
-            var factory = project.GetInterpreterFactory();
+        private string GetInterpreterPath(bool isWindows) {
+            string result;
+            result = (_project.GetProperty(PythonConstants.InterpreterPathSetting) ?? string.Empty).Trim();
+            if (!String.IsNullOrEmpty(result)) {
+                result = CommonUtils.GetAbsoluteFilePath(_project.ProjectDirectory, result);
 
-            if (factory == null) {
-                throw new NoInterpretersException();
+                if (!File.Exists(result)) {
+                    throw new FileNotFoundException(SR.GetString(SR.DebugLaunchInterpreterMissing_Path, result));
+                }
+
+                return result;
             }
 
-            var interpreterService = _serviceProvider.GetComponentModel().GetService<IInterpreterOptionsService>();
-            if (interpreterService == null || factory == interpreterService.NoInterpretersValue) {
-                throw new NoInterpretersException();
+            IPythonInterpreterFactory factory;
+            var ipp3 = _project as IPythonProject3;
+            if (ipp3 != null) {
+                factory = ipp3.GetInterpreterFactoryOrThrow();
+            } else {
+                factory = _project.GetInterpreterFactory();
+
+                if (factory == null) {
+                    throw new NoInterpretersException();
+                }
+
+                var interpreterService = _serviceProvider.GetComponentModel().GetService<IInterpreterOptionsService>();
+                if (interpreterService == null || factory == interpreterService.NoInterpretersValue) {
+                    throw new NoInterpretersException();
+                }
             }
 
             return isWindows ?
@@ -248,9 +266,13 @@ namespace Microsoft.PythonTools.Project.Web {
                 if (!Directory.Exists(UnquotePath(Info.bstrCurDir))) {
                     return SR.GetString(SR.DebugLaunchWorkingDirectoryMissing, Info.bstrCurDir);
                 }
-                
-                if (!File.Exists(UnquotePath(Info.bstrExe))) {
-                    return SR.GetString(SR.DebugLaunchInterpreterMissing, Info.bstrExe);
+
+                var exe = UnquotePath(Info.bstrExe);
+                if (string.IsNullOrEmpty(exe)) {
+                    return SR.GetString(SR.DebugLaunchInterpreterMissing);
+                }
+                if (!File.Exists(exe)) {
+                    return SR.GetString(SR.DebugLaunchInterpreterMissing, exe);
                 }
 
                 return null;

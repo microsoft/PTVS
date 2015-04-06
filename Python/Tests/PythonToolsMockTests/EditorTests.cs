@@ -18,9 +18,13 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Microsoft.PythonTools;
+using Microsoft.PythonTools.Intellisense;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Language.Intellisense;
+using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.MockVsTests;
 using TestUtilities;
@@ -35,148 +39,146 @@ namespace PythonToolsMockTests {
         
         [TestMethod]
         public void BuiltinFunctionSigHelp() {
-            var view = CreateViewAndAnalyze();
-            view.Type("min(");
+            using (var view = new PythonEditor()) {
+                view.Type("min(");
 
-            var session = view.TopSession as ISignatureHelpSession;
-            Assert.IsNotNull(session);
-
-            AssertUtil.AreEqual(new Regex(@".+?min\(x\: object\).+?"), session.Signatures[0].Documentation);
+                for (int retries = 10; retries > 0; --retries) {
+                    using (var sh = view.View.WaitForSession<ISignatureHelpSession>()) {
+                        var doc = sh.Session.Signatures[0].Documentation;
+                        if (doc.Contains("still being calculated")) {
+                            view.VS.Sleep(100);
+                            continue;
+                        }
+                        AssertUtil.AreEqual(new Regex(@"^min\(x\: object\).+?"), doc);
+                        break;
+                    }
+                }
+            }
         }
 
         [TestMethod]
         public void BuiltinFunctionCompletions() {
-            var view = CreateViewAndAnalyze();
-            view.Type("min.");
+            using (var view = new PythonEditor()) {
+                view.Type("min.");
 
-            var session = view.TopSession as ICompletionSession;
-            
-            AssertUtil.Contains(session.Completions(), "__call__");
+                using (var sh = view.View.WaitForSession<ICompletionSession>()) {
+                    AssertUtil.Contains(sh.Session.Completions(), "__call__");
+                }
+            }
         }
 
         [TestMethod]
         public void FilterCompletions() {
-            var view = CreateViewAndAnalyze();
-            view.Type("min.");
+            using (var view = new PythonEditor()) {
+                view.Type("min.");
 
-            var session = view.TopSession as ICompletionSession;
+                using (var sh = view.View.WaitForSession<ICompletionSession>()) {
+                    AssertUtil.Contains(sh.Session.Completions(), "__call__");
 
-            AssertUtil.Contains(session.Completions(), "__call__");
+                    view.Type("class");
 
-            view.Type("class");
-
-            AssertUtil.DoesntContain(session.Completions(), "__call__");
+                    AssertUtil.DoesntContain(sh.Session.Completions(), "__call__");
+                }
+            }
         }
 
         [TestMethod]
         public void DotCompletes() {
-            var view = CreateViewAndAnalyze();
-            view.Type("min.");
+            using (var view = new PythonEditor()) {
+                view.Type("min.");
 
-            var session = view.TopSession as ICompletionSession;
+                using (var sh = view.View.WaitForSession<ICompletionSession>()) {
+                    AssertUtil.Contains(sh.Session.Completions(), "__call__");
 
-            AssertUtil.Contains(session.Completions(), "__call__");
+                    view.Type("class.");
 
-            view.Type("class.");
-
-            Assert.AreEqual("min.__class__.", view.Text);
+                    Assert.AreEqual("min.__class__.", view.Text);
+                }
+            }
         }
 
         [TestMethod]
         public void NonIdentifierDismisses() {
-            var view = CreateViewAndAnalyze();
-            view.Type("min.");
+            using (var view = new PythonEditor()) {
+                view.Type("min.");
 
-            var session = view.TopSession as ICompletionSession;
-            AssertUtil.Contains(session.Completions(), "__call__");
+                using (var sh = view.View.WaitForSession<ICompletionSession>()) {
+                    AssertUtil.Contains(sh.Session.Completions(), "__call__");
 
-            view.Type("#");
+                    view.Type("#");
 
-            Assert.IsNull(view.TopSession);
-            Assert.AreEqual("min.#", view.Text);
+                    Assert.IsTrue(sh.Session.IsDismissed);
+                }
+                view.View.AssertNoIntellisenseSession();
+                Assert.AreEqual("min.#", view.Text);
+            }
         }
 
         [TestMethod]
         public void EnterCommits() {
-            var view = CreateViewAndAnalyze();
-            view.Type("min.");
+            using (var view = new PythonEditor()) {
+                view.Type("min.");
 
-            var session = view.TopSession as ICompletionSession;
+                using (var sh = view.View.WaitForSession<ICompletionSession>()) {
+                    AssertUtil.ContainsAtLeast(sh.Session.Completions(), "__class__");
+                    view.Type("class\r");
+                }
 
-            view.Type("class\r");
-
-            Assert.AreEqual("min.__class__", view.Text);
+                Assert.AreEqual("min.__class__", view.Text);
+            }
         }
 
         [TestMethod]
         public void EnterDismisses() {
-            var vs = new MockVs();
-            vs.GetPyService().AdvancedOptions.EnterCommitsIntellisense = false;
-            vs.GetPyService().AdvancedOptions.AutoListMembers = true;
-            var view = CreateViewAndAnalyze(vs);
-            view.Type("min.");
+            using (var view = new PythonEditor()) {
+                view.AdvancedOptions.EnterCommitsIntellisense = false;
+                view.AdvancedOptions.AutoListMembers = true;
 
-            var session = view.TopSession as ICompletionSession;
+                view.Type("min.");
 
-            view.Type("class\r");
+                using (var sh = view.View.WaitForSession<ICompletionSession>()) {
+                    AssertUtil.ContainsAtLeast(sh.Session.Completions(), "__class__");
 
-            Assert.AreEqual("min.class\r\n", view.Text);
+                    view.Type("class\r");
+                }
+                Assert.AreEqual("min.class\r\n", view.Text);
+            }
         }
 
         [TestMethod]
         public void EnterCommitsCompleteNoNewLine() {
-            using (var vs = new MockVs()) {
-                var opts = vs.GetPyService().AdvancedOptions;
-                bool oldANL = opts.AddNewLineAtEndOfFullyTypedWord;
-                bool oldALM = opts.AutoListMembers;
-                bool oldALI = opts.AutoListIdentifiers;
-                bool oldHAM = opts.HideAdvancedMembers;
-                opts.AddNewLineAtEndOfFullyTypedWord = true;
-                opts.AutoListMembers = true;
-                opts.AutoListIdentifiers = false;
-                opts.HideAdvancedMembers = false;
-                vs.OnDispose(() => {
-                    opts.AddNewLineAtEndOfFullyTypedWord = oldANL;
-                    opts.AutoListMembers = oldALM;
-                    opts.AutoListIdentifiers = oldALI;
-                    opts.HideAdvancedMembers = oldHAM;
-                });
-                var view = CreateViewAndAnalyze(vs);
+            using (var view = new PythonEditor()) {
+                view.AdvancedOptions.AddNewLineAtEndOfFullyTypedWord = true;
+                view.AdvancedOptions.AutoListMembers = true;
+                view.AdvancedOptions.AutoListIdentifiers = false;
+                view.AdvancedOptions.HideAdvancedMembers = false;
+
                 view.Type("min.");
 
-                var session = view.TopSession as ICompletionSession;
+                using (var sh = view.View.WaitForSession<ICompletionSession>()) {
+                    AssertUtil.ContainsAtLeast(sh.Session.Completions(), "__class__");
 
-                view.Type("__class__\r");
-
+                    view.Type("__class__\r");
+                }
                 Assert.AreEqual("min.__class__\r\n", view.Text);
             }
         }
 
         [TestMethod]
         public void TabCommits() {
-            using (var vs = new MockVs()) {
-                var opts = vs.GetPyService().AdvancedOptions;
-                bool oldECI = opts.EnterCommitsIntellisense;
-                bool oldALM = opts.AutoListMembers;
-                bool oldALI = opts.AutoListIdentifiers;
-                bool oldHAM = opts.HideAdvancedMembers;
-                opts.EnterCommitsIntellisense = false;
-                opts.AutoListMembers = true;
-                opts.AutoListIdentifiers = false;
-                opts.HideAdvancedMembers = false;
-                vs.OnDispose(() => {
-                    opts.EnterCommitsIntellisense = oldECI;
-                    opts.AutoListMembers = oldALM;
-                    opts.AutoListIdentifiers = oldALI;
-                    opts.HideAdvancedMembers = oldHAM;
-                });
+            using (var view = new PythonEditor()) {
+                view.AdvancedOptions.EnterCommitsIntellisense = false;
+                view.AdvancedOptions.AutoListMembers = true;
+                view.AdvancedOptions.AutoListIdentifiers = false;
+                view.AdvancedOptions.HideAdvancedMembers = false;
 
-                var view = CreateViewAndAnalyze(vs);
                 view.Type("min.");
 
-                var session = view.TopSession as ICompletionSession;
-                Console.WriteLine(string.Join("\n", session.Completions()));
-                view.Type("class\t");
+                using (var sh = view.View.WaitForSession<ICompletionSession>()) {
+                    AssertUtil.ContainsAtLeast(sh.Session.Completions(), "__class__");
+
+                    view.Type("class\t");
+                }
 
                 Assert.AreEqual("min.__class__", view.Text);
             }
@@ -184,31 +186,29 @@ namespace PythonToolsMockTests {
 
         [TestMethod]
         public void DecoratorCompletions() {
-            var view = CreateViewAndAnalyze();
-            view.Type("@");
+            using (var view = new PythonEditor()) {
+                view.Type("@");
 
-            var session = view.TopSession as ICompletionSession;
-
-            AssertUtil.ContainsAtLeast(session.Completions(), "property", "staticmethod");
+                using (var sh = view.View.WaitForSession<ICompletionSession>()) {
+                    AssertUtil.ContainsAtLeast(sh.Session.Completions(), "property", "staticmethod");
+                }
+            }
         }
 
         [TestMethod]
         public void DecoratorNonCompletions() {
-            var view = CreateViewAndAnalyze();
-            view.Type("a = b @");
+            using (var view = new PythonEditor()) {
+                view.Type("a = b @");
 
-            Assert.IsNull(view.TopSession as ICompletionSession);
+                view.View.AssertNoIntellisenseSession();
+            }
         }
 
         [TestMethod]
         public void AutoListIdentifierCompletions() {
-            using (var vs = new MockVs()) {
-                var options = vs.GetPyService().AdvancedOptions;
-                var oldALI = options.AutoListIdentifiers;
-                options.AutoListIdentifiers = true;
-                vs.OnDispose(() => options.AutoListIdentifiers = oldALI);
+            using (var view = new PythonEditor()) {
+                view.AdvancedOptions.AutoListIdentifiers = true;
 
-                var view = CreateViewAndAnalyze(vs);
                 view.Type("a = ");
 
                 foreach (var c in "abcdefghijklmnopqrstuvwxyz_ABCDEFGHIJKLMNOPQRSTUVWXYZ") {
@@ -216,14 +216,14 @@ namespace PythonToolsMockTests {
                     Console.WriteLine("Typing {0}", c);
                     view.Type(c.ToString());
 
-                    using (var sh = view.WaitForSession<ICompletionSession>()) {
+                    using (var sh = view.View.WaitForSession<ICompletionSession>()) {
                         sh.Session.Dismiss();
                     }
 
-                    view.Backspace();
+                    view.View.Backspace();
                 }
 
-                view.AssertNoIntellisenseSession();
+                view.View.AssertNoIntellisenseSession();
 
                 // x<space> should not bring up a completion session
                 // Don't check too many items, since asserting that no session
@@ -232,9 +232,9 @@ namespace PythonToolsMockTests {
                     Console.WriteLine("Typing {0}", c);
                     view.Type(c.ToString());
 
-                    view.AssertNoIntellisenseSession();
+                    view.View.AssertNoIntellisenseSession();
 
-                    view.Backspace();
+                    view.View.Backspace();
                 }
             }
         }
@@ -244,24 +244,9 @@ namespace PythonToolsMockTests {
         }
 
         private void AutoListTest(string code, PythonLanguageVersion version, params int[] triggerAtIndex) {
-            using (var vs = new MockVs()) {
-                var interpreterService = vs.GetPyService()._interpreterOptionsService;
-                var oldDefault = interpreterService.DefaultInterpreter;
-                interpreterService.DefaultInterpreter = interpreterService.Interpreters
-                    .First(i => i.Configuration.Version == version.ToVersion());
-                vs.OnDispose(() => interpreterService.DefaultInterpreter = oldDefault);
-
-                var options = vs.GetPyService().AdvancedOptions;
-                var oldALI = options.AutoListIdentifiers;
-                var oldALM = options.AutoListMembers;
-                options.AutoListIdentifiers = true;
-                options.AutoListMembers = true;
-                vs.OnDispose(() => {
-                    options.AutoListIdentifiers = oldALI;
-                    options.AutoListMembers = oldALM;
-                });
-
-                var view = CreateViewAndAnalyze(vs);
+            using (var view = new PythonEditor(version: version)) {
+                view.AdvancedOptions.AutoListIdentifiers = true;
+                view.AdvancedOptions.AutoListMembers = true;
 
                 int lastStart = 0;
                 string text;
@@ -273,7 +258,7 @@ namespace PythonToolsMockTests {
                     Console.WriteLine("Typing '{0}' [{1}, {2})", text, lastStart, expected);
                     view.Type(text);
 
-                    view.AssertNoIntellisenseSession();
+                    view.View.AssertNoIntellisenseSession();
                     lastStart = expected;
 
                     if (expectCompletions) {
@@ -281,7 +266,7 @@ namespace PythonToolsMockTests {
                         Console.WriteLine("Typing '{0}' [{1}, {2}) and expect completions", text, expected, expected + 1);
                         view.Type(text);
 
-                        using (var sh = view.WaitForSession<ICompletionSession>()) {
+                        using (var sh = view.View.WaitForSession<ICompletionSession>()) {
                             sh.Session.Dismiss();
                         }
 
@@ -293,7 +278,7 @@ namespace PythonToolsMockTests {
                     Console.WriteLine("Typing '{0}' [{1}, {2})", text, lastStart, code.Length);
                     view.Type(text);
 
-                    view.AssertNoIntellisenseSession();
+                    view.View.AssertNoIntellisenseSession();
                 }
             }
         }
@@ -360,46 +345,39 @@ namespace PythonToolsMockTests {
 
         [TestMethod]
         public void DisableAutoCompletions() {
-            using (var vs = new MockVs()) {
-                var options = vs.GetPyService().AdvancedOptions;
-                var oldALM = options.AutoListMembers;
-                var oldALI = options.AutoListIdentifiers;
-                options.AutoListMembers = false;
-                options.AutoListIdentifiers = false;
-                vs.OnDispose(() => {
-                    options.AutoListMembers = oldALM;
-                    options.AutoListIdentifiers = oldALI;
-                });
-
-                var view = CreateViewAndAnalyze(vs);
+            using (var view = new PythonEditor()) {
+                view.AdvancedOptions.AutoListMembers = false;
+                view.AdvancedOptions.AutoListIdentifiers = false;
 
                 foreach (var t in new[] { "a", "a.", "import " }) {
                     Console.WriteLine("Typed " + t);
                     view.Type(t);
 
-                    view.AssertNoIntellisenseSession();
+                    view.View.AssertNoIntellisenseSession();
 
-                    view.Clear();
+                    view.View.Clear();
                 }
             }
         }
 
+        [TestMethod]
+        public void CompletionsAtEndOfLastChildScope() {
+            using (var view = new PythonEditor(@"class A:
+    def f(param1, param2):
+        y = 234
 
-        private static MockVsTextView CreateViewAndAnalyze(MockVs vs = null) {
-            if (vs == null) {
-                vs = new MockVs();
-                // Ensure these options are set correctly if we're creating the
-                // instance. Otherwise, the caller is responsible.
-                var opts = vs.GetPyService().AdvancedOptions;
-                opts.AutoListMembers = true;
-                opts.AutoListIdentifiers = false;
+        
+
+class B:
+    pass
+")) {
+                view.View.MoveCaret(5, 9);
+                view.Type("p");
+                view.View.MemberList();
+                using (var sh = view.View.WaitForSession<ICompletionSession>()) {
+                    AssertUtil.ContainsAtLeast(sh.Session.Completions(), "param1", "param2");
+                }
             }
-            var view = vs.CreateTextView(
-                PythonCoreConstants.ContentType,
-                Path.Combine(Environment.CurrentDirectory, Path.GetRandomFileName(), "foo.py")
-            );
-            view.View.GetAnalyzer(vs.ServiceProvider).WaitForCompleteAnalysis(x => true);
-            return view;
         }
     }
 

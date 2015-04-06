@@ -12,15 +12,15 @@
  *
  * ***************************************************************************/
 
-using Microsoft.VisualStudio.Text.Adornments;
-using Microsoft.VisualStudio.Text.Tagging;
+using System;
+using System.ComponentModel.Composition;
+using Microsoft.VisualStudio.Text.Projection;
 
-namespace TestUtilities.Mocks {
-    public class MockErrorProviderFactory : IErrorProviderFactory {
-        public SimpleTagger<ErrorTag> GetErrorTagger(Microsoft.VisualStudio.Text.ITextBuffer textBuffer) {
-            return textBuffer.Properties.GetOrCreateSingletonProperty<SimpleTagger<ErrorTag>>(
-                () => new SimpleTagger<ErrorTag>(textBuffer)
-            );
+namespace Microsoft.VisualStudioTools.MockVsTests {
+    [Export(typeof(IBufferGraphFactoryService))]
+    class MockBufferGraphFactoryService : IBufferGraphFactoryService {
+        public IBufferGraph CreateBufferGraph(VisualStudio.Text.ITextBuffer textBuffer) {
+            throw new NotImplementedException();
         }
     }
 }

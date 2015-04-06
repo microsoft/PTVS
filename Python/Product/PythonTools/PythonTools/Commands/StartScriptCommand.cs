@@ -20,6 +20,7 @@ using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
+using SR = Microsoft.PythonTools.Project.SR;
 
 namespace Microsoft.PythonTools.Commands {
     /// <summary>
@@ -50,6 +51,8 @@ namespace Microsoft.PythonTools.Commands {
             var launcher = PythonToolsPackage.GetLauncher(_serviceProvider, pythonProject);
             try {
                 launcher.LaunchFile(file, CommandId == CommonConstants.StartDebuggingCmdId);
+            } catch (MissingInterpreterException ex) {
+                MessageBox.Show(ex.Message, SR.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
             } catch (NoInterpretersException ex) {
                 PythonToolsPackage.OpenNoInterpretersHelpPage(_serviceProvider, ex.HelpPage);
             }

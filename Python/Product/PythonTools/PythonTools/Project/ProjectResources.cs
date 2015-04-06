@@ -87,6 +87,7 @@ namespace Microsoft.PythonTools.Project {
 
         public const string NoInterpretersAvailable = "NoInterpretersAvailable";
         public const string NoStartupFileAvailable = "NoStartupFileAvailable";
+        public const string MissingEnvironment = "MissingEnvironment";
         
         public const string ErrorImportWizardUnauthorizedAccess = "ErrorImportWizardUnauthorizedAccess";
         public const string ErrorImportWizardException = "ErrorImportWizardException";
@@ -119,6 +120,8 @@ namespace Microsoft.PythonTools.Project {
 
         public const string DebugLaunchWorkingDirectoryMissing = "DebugLaunchWorkingDirectoryMissing";
         public const string DebugLaunchInterpreterMissing = "DebugLaunchInterpreterMissing";
+        public const string DebugLaunchInterpreterMissing_Path = "DebugLaunchInterpreterMissing_Path";
+        public const string DebugLaunchEnvironmentMissing = "DebugLaunchEnvironmentMissing";
 
         public const string UnresolvedModuleTooltip = "UnresolvedModuleTooltip";
         public const string UnresolvedModuleTooltipRefreshing = "UnresolvedModuleTooltipRefreshing";

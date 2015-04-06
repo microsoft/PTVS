@@ -275,7 +275,9 @@ namespace Microsoft.PythonTools.Project {
                     t.Wait();
                 } catch (AggregateException ex) {
                     var exception = ex.InnerException;
-                    if (exception is NoInterpretersException || exception is TaskCanceledException) {
+                    if (exception is NoInterpretersException ||
+                        exception is MissingInterpreterException ||
+                        exception is TaskCanceledException) {
                         // No need to log this exception or disable the command.
                         return;
                     }
@@ -378,7 +380,7 @@ namespace Microsoft.PythonTools.Project {
         private async Task ExecuteWorker(PythonProjectNode project) {
             _errorListProvider.Tasks.Clear();
 
-            var interpFactory = project.GetInterpreterFactory();
+            var interpFactory = project.GetInterpreterFactoryOrThrow();
             var startInfo = GetStartInfo(project);
 
             var packagesToInstall = new List<string>();
@@ -558,16 +560,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         internal static string GetInterpreterPath(PythonProjectNode project, bool isWindows) {
-            var factory = project.GetInterpreterFactory();
-
-            if (factory == null) {
-                throw new NoInterpretersException();
-            }
-
-            var interpreterService = project.Site.GetComponentModel().GetService<IInterpreterOptionsService>();
-            if (interpreterService == null || factory == interpreterService.NoInterpretersValue) {
-                throw new NoInterpretersException();
-            }
+            var factory = project.GetInterpreterFactoryOrThrow();
 
             return isWindows ?
                 factory.Configuration.WindowsInterpreterPath :
@@ -632,7 +625,12 @@ namespace Microsoft.PythonTools.Project {
                 throw new InvalidOperationException(SR.GetString(SR.ErrorCommandAlreadyRunning));
             }
 
-            options.InterpreterFactory = project.GetInterpreterFactory();
+            var ipp3 = project as IPythonProject3;
+            if (ipp3 != null) {
+                options.InterpreterFactory = ipp3.GetInterpreterFactoryOrThrow();
+            } else {
+                options.InterpreterFactory = project.GetInterpreterFactory();
+            }
             options.Project = project as PythonProjectNode;
             options._workingDir = startInfo.WorkingDirectory;
             options._envVars = startInfo.EnvironmentVariables;

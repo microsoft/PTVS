@@ -734,7 +734,7 @@ namespace Microsoft.PythonTools.Intellisense {
         public int Exec(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
             if (pguidCmdGroup == VSConstants.VSStd2K && nCmdID == (int)VSConstants.VSStd2KCmdID.TYPECHAR) {
                 var ch = (char)(ushort)System.Runtime.InteropServices.Marshal.GetObjectForNativeVariant(pvaIn);
-                
+
                 if (_activeSession != null && !_activeSession.IsDismissed) {
                     if (_activeSession.SelectedCompletionSet != null &&
                         _activeSession.SelectedCompletionSet.SelectionStatus.IsSelected &&
@@ -919,8 +919,13 @@ namespace Microsoft.PythonTools.Intellisense {
                         out expansionPath,
                         out title
                     );
-                    if (ErrorHandler.Succeeded(hr) &&
-                        ErrorHandler.Succeeded(_expansionClient.InsertNamedExpansion(title, expansionPath, textSpan[0]))) {
+                    if (ErrorHandler.Succeeded(hr)) {
+                        // hr may be S_FALSE if there are multiple expansions,
+                        // so we don't want to InsertNamedExpansion yet. VS will
+                        // pop up a selection dialog in this case.
+                        if (hr == VSConstants.S_OK) {
+                            return ErrorHandler.Succeeded(_expansionClient.InsertNamedExpansion(title, expansionPath, textSpan[0]));
+                        }
                         return true;
                     }
                 }

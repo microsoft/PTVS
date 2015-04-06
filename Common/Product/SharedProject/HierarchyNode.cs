@@ -278,6 +278,41 @@ namespace Microsoft.VisualStudioTools.Project {
             }
         }
 
+        public IEnumerable<HierarchyNode> AllDescendants {
+            get {
+                var queue = new Queue<HierarchyNode>();
+                queue.Enqueue(this);
+                while (queue.Count > 0) {
+                    var node = queue.Dequeue();
+                    for (var child = node.firstChild; child != null; child = child.nextSibling) {
+                        yield return child;
+                        if (child.firstChild != null) {
+                            queue.Enqueue(child);
+                        }
+                    }
+                }
+            }
+        }
+
+        public IEnumerable<HierarchyNode> AllVisibleDescendants {
+            get {
+                var queue = new Queue<HierarchyNode>();
+                queue.Enqueue(this);
+                while (queue.Count > 0) {
+                    var node = queue.Dequeue();
+                    for (var child = node.firstChild; child != null; child = child.nextSibling) {
+                        if (child.IsNonMemberItem) {
+                            continue;
+                        }
+                        yield return child;
+                        if (child.firstChild != null) {
+                            queue.Enqueue(child);
+                        }
+                    }
+                }
+            }
+        }
+
         /// <summary>
         /// Gets or sets whether the node is currently visible in the hierarchy.
         /// 

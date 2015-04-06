@@ -121,7 +121,11 @@ namespace TestUtilities.Mocks {
                     Debug.Assert(position <= res.EndIncludingLineBreak);
                     return res;
                 }
-                curPos += 2; // skip newline
+                if (_text[curPos] == '\n') {
+                    curPos += 1;
+                } else {
+                    curPos += 2;
+                }
                 lineNo++;
             }
 

@@ -100,7 +100,7 @@
     </When>
     <When Condition="'$(VSTarget)' == '14.0'">
       <ItemGroup>
-        <Reference Include="Microsoft.Dia.Interop.14.0, Version=2.0.0.0, Culture=neutral, processorArchitecture=MSIL" >
+        <Reference Include="Microsoft.Dia.Interop.14.0, Version=2.0.0.0, Culture=neutral, processorArchitecture=MSIL">
           <SpecificVersion>False</SpecificVersion>
           <EmbedInteropTypes>True</EmbedInteropTypes>
           <HintPath>DkmDebugger\Microsoft.Dia.Interop.14.0.dll</HintPath>
@@ -268,8 +268,10 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Visualizers\" />
+  </ItemGroup>
   <Import Project="..\ProjectAfter.settings" />
-
   <PropertyGroup>
     <VsdConfigOutput>$(IntermediateOutputPath)\DkmDebugger.vsdconfig</VsdConfigOutput>
   </PropertyGroup>
@@ -277,7 +279,7 @@
     <PropertyGroup>
       <_Arguments>@(VsdConfigXml, ' ') @(IntermediateAssembly->'"%(FullPath)"', ' ') "$(VsdConfigOutput)"</_Arguments>
     </PropertyGroup>
-    <Exec Command='"$(VSSDKDir)VisualStudioIntegration\Tools\Bin\vsdconfigtool.exe" $(_Arguments)' />
+    <Exec Command="&quot;$(VSSDKDir)VisualStudioIntegration\Tools\Bin\vsdconfigtool.exe&quot; $(_Arguments)" />
   </Target>
   <Target Name="IncludeVsdConfig" BeforeTargets="AssignTargetPaths;GetVSIXSourceItems" Condition="$(VSTarget) != '10.0'">
     <ItemGroup>

@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -24,6 +25,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace TestUtilities {
     public class AssertListener : TraceListener {
         private readonly SynchronizationContext _testContext;
+        private readonly List<ExceptionDispatchInfo> _unhandled = new List<ExceptionDispatchInfo>();
 
         private AssertListener() {
             _testContext = SynchronizationContext.Current;
@@ -40,6 +42,21 @@ namespace TestUtilities {
                 Debug.Listeners.Remove("Default");
 
                 AppDomain.CurrentDomain.FirstChanceException += CurrentDomain_FirstChanceException;
+            }
+        }
+
+        public static void ThrowUnhandled() {
+            var ex = Debug.Listeners.OfType<AssertListener>().SelectMany(al => {
+                lock (al._unhandled) {
+                    var r = al._unhandled.ToArray();
+                    al._unhandled.Clear();
+                    return r;
+                }
+            }).ToArray();
+            if (ex.Length > 1) {
+                throw new AggregateException(ex.Select(e => e.SourceException));
+            } else if (ex.Length == 1) {
+                ex[0].Throw();
             }
         }
 
@@ -80,20 +97,23 @@ namespace TestUtilities {
                 } else if (mi.DeclaringType == typeof(System.RuntimeMethodHandle)) {
                     break;
                 } else {
+                    var filename = frame.GetFileName();
                     Trace.WriteLine(string.Format(
                         " at {0}.{1}({2}) in {3}:line {4}",
                         mi.DeclaringType.FullName,
                         mi.Name,
                         string.Join(", ", mi.GetParameters().Select(p => p.ToString())),
-                        frame.GetFileName(),
+                        filename ?? "<unknown>",
                         frame.GetFileLineNumber()
                     ));
-                    try {
-                        Trace.WriteLine(
-                            "    " +
-                            File.ReadLines(frame.GetFileName()).ElementAt(frame.GetFileLineNumber() - 1).Trim()
-                        );
-                    } catch {
+                    if (!string.IsNullOrEmpty(filename)) {
+                        try {
+                            Trace.WriteLine(
+                                "    " +
+                                File.ReadLines(filename).ElementAt(frame.GetFileLineNumber() - 1).Trim()
+                            );
+                        } catch {
+                        }
                     }
                 }
             }
@@ -103,7 +123,15 @@ namespace TestUtilities {
                 Debugger.Break();
             }
 
-            if (_testContext != null && _testContext != SynchronizationContext.Current) {
+            if (_testContext == null) {
+                lock (_unhandled) {
+                    try {
+                        Assert.Fail(message);
+                    } catch (AssertFailedException ex) {
+                        _unhandled.Add(ExceptionDispatchInfo.Capture(ex));
+                    }
+                }
+            } else if (_testContext != SynchronizationContext.Current) {
                 _testContext.Post(_ => Assert.Fail(message), null);
             } else {
                 Assert.Fail(message);

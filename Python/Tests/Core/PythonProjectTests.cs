@@ -20,6 +20,9 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml;
+using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Intellisense;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
@@ -31,7 +34,7 @@ namespace PythonToolsTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            PythonTestData.Deploy(includeTestData: false);
+            PythonTestData.Deploy();
         }
 
         public TestContext TestContext { get; set; }
@@ -259,5 +262,57 @@ namespace PythonToolsTests {
   </WebRole>
 </ServiceDefinition>", doc);
         }
+
+        [TestMethod, Priority(0)]
+        public void LoadAndUnloadModule() {
+            var factories = new[] { InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(3, 3)) };
+            using (var analyzer = new VsProjectAnalyzer(PythonToolsTestUtilities.CreateMockServiceProvider(), factories[0], factories)) {
+                var m1Path = TestData.GetPath("TestData\\SimpleImport\\module1.py");
+                var m2Path = TestData.GetPath("TestData\\SimpleImport\\module2.py");
+
+                var entry1 = analyzer.AnalyzeFile(m1Path) as IPythonProjectEntry;
+                var entry2 = analyzer.AnalyzeFile(m2Path) as IPythonProjectEntry;
+                analyzer.WaitForCompleteAnalysis(_ => true);
+
+                AssertUtil.ContainsExactly(
+                    analyzer.Project.GetEntriesThatImportModule("module1", true).Select(m => m.ModuleName),
+                    "module2"
+                );
+
+                AssertUtil.ContainsExactly(
+                    entry2.Analysis.GetValuesByIndex("x", 0).Select(v => v.TypeId),
+                    BuiltinTypeId.Int
+                );
+
+                analyzer.UnloadFile(entry1);
+                analyzer.WaitForCompleteAnalysis(_ => true);
+
+                // Even though module1 has been unloaded, we still know that
+                // module2 imports it.
+                AssertUtil.ContainsExactly(
+                    analyzer.Project.GetEntriesThatImportModule("module1", true).Select(m => m.ModuleName),
+                    "module2"
+                );
+
+                AssertUtil.ContainsExactly(
+                    entry2.Analysis.GetValuesByIndex("x", 0).Select(v => v.TypeId)
+                );
+
+                analyzer.AnalyzeFile(m1Path);
+                analyzer.WaitForCompleteAnalysis(_ => true);
+
+                AssertUtil.ContainsExactly(
+                    analyzer.Project.GetEntriesThatImportModule("module1", true).Select(m => m.ModuleName),
+                    "module2"
+                );
+
+                AssertUtil.ContainsExactly(
+                    entry2.Analysis.GetValuesByIndex("x", 0).Select(v => v.TypeId),
+                    BuiltinTypeId.Int
+                );
+            }
+        }
+
+
     }
 }

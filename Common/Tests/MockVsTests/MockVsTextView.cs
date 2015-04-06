@@ -32,12 +32,13 @@ using TestUtilities.Mocks;
 using IServiceProvider = System.IServiceProvider;
 
 namespace Microsoft.VisualStudioTools.MockVsTests {
-    public class MockVsTextView : IVsTextView, IFocusable, IEditor, IOleCommandTarget {
+    public class MockVsTextView : IVsTextView, IFocusable, IEditor, IOleCommandTarget, IDisposable {
         private readonly MockTextView _view;
         private readonly IEditorOperations _editorOps;
         private readonly IServiceProvider _serviceProvider;
         private readonly MockVs _vs;
         private IOleCommandTarget _commandTarget;
+        private bool _isDisposed;
 
         public MockVsTextView(IServiceProvider serviceProvier, MockVs vs, MockTextView view) {
             _view = view;
@@ -52,6 +53,13 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         public MockTextView View {
             get {
                 return _view;
+            }
+        }
+
+        public void Dispose() {
+            if (!_isDisposed) {
+                _isDisposed = true;
+                Close();
             }
         }
 
@@ -95,7 +103,8 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
 
         public void Close() {
             var rdt = (IVsRunningDocumentTable)_serviceProvider.GetService(typeof(SVsRunningDocumentTable));
-            ErrorHandler.ThrowOnFailure(rdt.UnlockDocument(0, ((MockVsTextLines)GetBuffer())._docCookie));        
+            rdt.UnlockDocument(0, ((MockVsTextLines)GetBuffer())._docCookie);
+            _view.Close();
         }
 
         int IVsTextView.CloseView() {
@@ -316,10 +325,8 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             }
         }
 
-        public void MoveCaret(SnapshotPoint newPoint) {
-            Invoke((Action)(() => {
-                _view.Caret.MoveTo(newPoint.TranslateTo(newPoint.Snapshot.TextBuffer.CurrentSnapshot, PointTrackingMode.Positive));
-            }));
+        public CaretPosition MoveCaret(SnapshotPoint newPoint) {
+            return _vs.Invoke(() => _view.Caret.MoveTo(newPoint.TranslateTo(newPoint.Snapshot.TextBuffer.CurrentSnapshot, PointTrackingMode.Positive)));
         }
 
         public void SetFocus() {
@@ -339,6 +346,10 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         public SessionHolder<T> WaitForSession<T>() where T : IIntellisenseSession {
+            return WaitForSession<T>(true);
+        }
+
+        public SessionHolder<T> WaitForSession<T>(bool assertIfNoSession) where T : IIntellisenseSession {
             var sessionStack = IntellisenseSessionStack;
             for (int i = 0; i < 40; i++) {
                 if (sessionStack.TopSession is T) {
@@ -348,9 +359,13 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             }
 
             if (!(sessionStack.TopSession is T)) {
-                Console.WriteLine("Buffer text:\r\n{0}", Text);
-                Console.WriteLine("-----");
-                Assert.Fail("failed to find session " + typeof(T).FullName);
+                if (assertIfNoSession) {
+                    Console.WriteLine("Buffer text:\r\n{0}", Text);
+                    Console.WriteLine("-----");
+                    Assert.Fail("failed to find session " + typeof(T).FullName);
+                } else {
+                    return null;
+                }
             }
             return new SessionHolder<T>((T)sessionStack.TopSession, this);
         }

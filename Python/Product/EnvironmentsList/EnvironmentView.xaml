@@ -76,10 +76,8 @@
             <DataTemplate DataType="{x:Type l:EnvironmentView}" x:Key="EnvironmentListItem">
                 <Grid Margin="6 3 3 0">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" SharedSizeGroup="EnvironmentListItem_Description" />
+                        <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="auto" />
-                        <ColumnDefinition Width="auto" />
-                        <ColumnDefinition Width="2" />
                         <ColumnDefinition Width="auto" />
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
@@ -89,6 +87,7 @@
 
                     <Grid Grid.Row="0" Grid.Column="0"
                           VerticalAlignment="Center"
+                          HorizontalAlignment="Stretch"
                           Margin="1"
                           DataContext="{Binding Description,Mode=OneWay}">
                         <TextBlock x:Name="Name_IsDefault"
@@ -103,35 +102,46 @@
                     </Grid>
 
                     <ProgressBar x:Name="RefreshDBProgress"
-                                 Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="5"
+                                 Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3"
                                  HorizontalAlignment="Stretch"
-                                 Height="2"
+                                 Height="3"
+                                 BorderBrush="Transparent"
+                                 BorderThickness="0"
                                  Focusable="False"
                                  Value="{Binding RefreshDBProgress,Mode=OneWay}" Maximum="100"
                                  IsIndeterminate="{Binding IsRefreshDBProgressIndeterminate}"
-                                 Visibility="Hidden" />
+                                 Visibility="Hidden">
+                        <ProgressBar.ToolTip>
+                            Refreshing completion DB
+                        </ProgressBar.ToolTip>
+                    </ProgressBar>
 
-                    <Border x:Name="Icon_NeedRefresh"
-                            Background="{Binding Background,RelativeSource={RelativeSource FindAncestor,AncestorType=Control}}"
-                            Grid.Column="2"
+                    <Button x:Name="Icon_NeedRefresh"
+                            Grid.Column="1"
                             IsHitTestVisible="True"
-                            Width="18" Height="18"
-                            Padding="1"
+                            VerticalAlignment="Stretch"
+                            Width="{Binding ActualHeight,RelativeSource={RelativeSource Self}}"
+                            Cursor="Hand"
+                            Margin="1"
+                            Command="{x:Static l:DBExtension.StartRefreshDB}"
+                            CommandParameter="{Binding}"
                             Visibility="Hidden">
-                        <Path Data="{StaticResource ExclamationMarkGeometry}"
+                        <Path Width="14" Height="14"
+                              Data="{StaticResource ExclamationMarkGeometry}"
                               Stretch="Uniform"
-                              Fill="{Binding Foreground,RelativeSource={RelativeSource FindAncestor,AncestorType=ListBoxItem}}"
+                              Fill="{DynamicResource {x:Static wpf:Controls.ControlForegroundKey}}"
                               Stroke="{DynamicResource {x:Static wpf:Controls.ControlBorderKey}}"
                               StrokeThickness="1.0" />
-                        <Border.ToolTip>
-                            Completion DB needs to be refreshed.
-                        </Border.ToolTip>
-                    </Border>
+                        <Button.ToolTip>
+                            Completion DB is not up to date. Click to start refreshing.
+                        </Button.ToolTip>
+                    </Button>
 
                     <Button x:Name="InteractiveWindowButton"
-                            Grid.Column="4"
+                            Grid.Column="2"
                             Style="{StaticResource {x:Type Button}}"
                             Cursor="Hand"
+                            Margin="1"
                             Command="{x:Static l:EnvironmentView.OpenInteractiveWindow}"
                             CommandParameter="{Binding}">
                         <Grid>
@@ -173,6 +183,9 @@
                         <Setter TargetName="RefreshDBProgress" Property="Visibility" Value="Visible" />
                         <Setter TargetName="Icon_NeedRefresh" Property="Visibility" Value="Hidden" />
                     </DataTrigger>
+                    <Trigger SourceName="Icon_NeedRefresh" Property="IsEnabled" Value="False">
+                        <Setter TargetName="Icon_NeedRefresh" Property="Visibility" Value="Hidden" />
+                    </Trigger>
                 </DataTemplate.Triggers>
             </DataTemplate>
 
@@ -201,6 +214,25 @@
                     </Grid>
                     
                 </Button>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type l:EnvironmentView}" x:Key="OnlineHelpListItem">
+                <Button Style="{StaticResource NavigationButtonInList}"
+                        Margin="6"
+                        Name="Button"
+                        Command="ApplicationCommands.Help">
+                    <Grid Background="Transparent">
+                        <Label VerticalAlignment="Center"
+                               Foreground="{Binding Foreground,ElementName=Button}">
+                            Go online and help me find other environments
+                        </Label>
+                    </Grid>
+                </Button>
+                <DataTemplate.Triggers>
+                    <Trigger Property="IsEnabled" Value="false">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                    </Trigger>
+                </DataTemplate.Triggers>
             </DataTemplate>
             
             <DataTemplate x:Key="ExtensionListItem">

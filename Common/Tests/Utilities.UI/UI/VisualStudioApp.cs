@@ -302,7 +302,8 @@ namespace TestUtilities.UI {
         }
 
         /// <summary>
-        /// Selects the given source control provider.  Name merely needs to be enough text to disambiguate from other source control providers.
+        /// Selects the given source control provider.  Name merely needs to be
+        /// enough text to disambiguate from other source control providers.
         /// </summary>
         public void SelectSourceControlProvider(string providerName) {
             Element.SetFocus();

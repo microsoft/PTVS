@@ -466,10 +466,10 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         private string[] GetMissingModules(HashSet<string> existingDatabase) {
-            List<PythonLibraryPath> searchPaths;
-            try {
-                searchPaths = PythonTypeDatabase.GetCachedDatabaseSearchPaths(DatabasePath);
-            } catch (IOException) {
+            var searchPaths = PythonTypeDatabase.GetCachedDatabaseSearchPaths(DatabasePath);
+
+            if (searchPaths == null) {
+                // No cached search paths means our database is out of date.
                 return existingDatabase
                     .Except(RequiredBuiltinModules)
                     .OrderBy(name => name, StringComparer.InvariantCultureIgnoreCase)

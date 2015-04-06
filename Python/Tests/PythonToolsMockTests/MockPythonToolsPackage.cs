@@ -13,12 +13,15 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.ComponentModel.Design;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Navigation;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Project;
+using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Settings;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
@@ -28,8 +31,9 @@ using TestUtilities.Python;
 
 namespace PythonToolsMockTests {
     [Export(typeof(IMockPackage))]
-    class MockPythonToolsPackage : IMockPackage {
+    sealed class MockPythonToolsPackage : IMockPackage {
         private readonly IServiceContainer _serviceContainer;
+        private readonly List<Action> _onDispose = new List<Action>();
 
         [ImportingConstructor]
         public MockPythonToolsPackage([Import(typeof(SVsServiceProvider))]IServiceContainer serviceProvider) {
@@ -37,6 +41,14 @@ namespace PythonToolsMockTests {
         }
 
         public void Initialize() {
+            // Specifiy PythonTools\NoInterpreterFactories to suppress loading
+            // all providers in tests.
+            var settings = (IVsSettingsManager)_serviceContainer.GetService(typeof(SVsSettingsManager));
+            IVsWritableSettingsStore store;
+            ErrorHandler.ThrowOnFailure(settings.GetWritableSettingsStore((uint)SettingsScope.Configuration, out store));
+            ErrorHandler.ThrowOnFailure(store.CreateCollection(@"PythonTools\NoInterpreterFactories"));
+            
+            
             _serviceContainer.AddService(typeof(IPythonToolsOptionsService), new MockPythonToolsOptionsService());
             var errorProvider = new MockErrorProviderFactory();
             _serviceContainer.AddService(typeof(MockErrorProviderFactory), errorProvider, true);
@@ -45,13 +57,25 @@ namespace PythonToolsMockTests {
 
             _serviceContainer.AddService(
                 typeof(Microsoft.PythonTools.Intellisense.ErrorTaskProvider),
-                new ServiceCreatorCallback((container, type) => new Microsoft.PythonTools.Intellisense.ErrorTaskProvider(_serviceContainer, null, errorProvider)), 
+                new ServiceCreatorCallback((container, type) => {
+                    var p = new Microsoft.PythonTools.Intellisense.ErrorTaskProvider(_serviceContainer, null, errorProvider);
+                    lock (_onDispose) {
+                        _onDispose.Add(() => p.Dispose());
+                    }
+                    return p;
+                }), 
                 true
             );
 
             _serviceContainer.AddService(
                 typeof(Microsoft.PythonTools.Intellisense.CommentTaskProvider),
-                new ServiceCreatorCallback((container, type) => new Microsoft.PythonTools.Intellisense.CommentTaskProvider(_serviceContainer, null, errorProvider)),
+                new ServiceCreatorCallback((container, type) => {
+                    var p = new Microsoft.PythonTools.Intellisense.CommentTaskProvider(_serviceContainer, null, errorProvider);
+                    lock (_onDispose) {
+                        _onDispose.Add(() => p.Dispose());
+                    }
+                    return p;
+                }),
                 true
             );
 
@@ -69,6 +93,22 @@ namespace PythonToolsMockTests {
                 new PythonProjectFactory(_serviceContainer),
                 out cookie
             );
+        }
+
+        public void RemoveService(Type type) {
+            _serviceContainer.RemoveService(type);
+        }
+
+        public void Dispose() {
+            List<Action> tasks;
+            lock (_onDispose) {
+                tasks = new List<Action>(_onDispose);
+                _onDispose.Clear();
+            }
+
+            foreach (var t in tasks) {
+                t();
+            }
         }
     }
 }

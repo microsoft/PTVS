@@ -142,7 +142,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
 
         private void WriteBreakpoints() {
             int maxLineNumber = _breakpoints.Keys.Select(loc => loc.LineNumber).DefaultIfEmpty().Max();
-            var lineNumbersStream = new MemoryStream(maxLineNumber * sizeof(int));
+            var lineNumbersStream = new MemoryStream((maxLineNumber + 1) * sizeof(int));
             var lineNumbersWriter = new BinaryWriter(lineNumbersStream);
 
             var stringsStream = new MemoryStream();
@@ -201,16 +201,16 @@ namespace Microsoft.PythonTools.DkmDebugger {
             bpData.maxLineNumber = maxLineNumber;
             if (lineNumbersStream.Length > 0) {
                 bpData.lineNumbers = _process.AllocateVirtualMemory(0, (int)lineNumbersStream.Length, NativeMethods.MEM_COMMIT | NativeMethods.MEM_RESERVE, NativeMethods.PAGE_READWRITE);
-                _process.WriteMemory(bpData.lineNumbers, lineNumbersStream.GetBuffer());
+                _process.WriteMemory(bpData.lineNumbers, lineNumbersStream.ToArray());
             } else {
                 bpData.lineNumbers = 0;
             }
 
             bpData.fileNamesOffsets = _process.AllocateVirtualMemory(0, (int)fileNamesOffsetsStream.Length, NativeMethods.MEM_COMMIT | NativeMethods.MEM_RESERVE, NativeMethods.PAGE_READWRITE);
-            _process.WriteMemory(bpData.fileNamesOffsets, fileNamesOffsetsStream.GetBuffer());
+            _process.WriteMemory(bpData.fileNamesOffsets, fileNamesOffsetsStream.ToArray());
 
             bpData.strings = _process.AllocateVirtualMemory(0, (int)stringsStream.Length, NativeMethods.MEM_COMMIT | NativeMethods.MEM_RESERVE, NativeMethods.PAGE_READWRITE);
-            _process.WriteMemory(bpData.strings, stringsStream.GetBuffer());
+            _process.WriteMemory(bpData.strings, stringsStream.ToArray());
 
             bpDataProxy.Write(bpData);
         }

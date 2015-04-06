@@ -18,6 +18,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Repl;
@@ -97,6 +98,19 @@ namespace PythonToolsTests {
                 Assert.IsTrue(evaluator.CanExecuteText("try:\r\n    print 'hello'\r\nfinally:\r\n    print 'goodbye'\r\n    \r\n    "));
                 Assert.IsFalse(evaluator.CanExecuteText("x = \\"));
                 Assert.IsTrue(evaluator.CanExecuteText("x = \\\r\n42\r\n\r\n"));
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public async Task TestGetAllMembers() {
+            using (var evaluator = MakeEvaluator()) {
+                var window = new MockReplWindow(evaluator);
+                await evaluator.Initialize(window);
+
+                await evaluator.ExecuteText("globals()['my_new_value'] = 123");
+                var names = evaluator.GetMemberNames("");
+                Assert.IsNotNull(names);
+                AssertUtil.ContainsAtLeast(names.Select(m => m.Name), "my_new_value");
             }
         }
 

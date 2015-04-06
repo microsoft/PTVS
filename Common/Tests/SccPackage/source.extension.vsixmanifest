@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Vsix Version="1.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2010">
-  <Identifier Id="49e63f87-6b69-42ca-9496-1e20a919ef1f">
+  <Identifier Id="394d1b85-f4a7-4af2-9078-e4aab7673b22">
     <Name>SccPackage</Name>
     <Author>Microsoft</Author>
     <Version>2.2</Version>

@@ -12,15 +12,13 @@
  *
  * ***************************************************************************/
 
-using Microsoft.VisualStudio.Text.Adornments;
-using Microsoft.VisualStudio.Text.Tagging;
+using System.Collections.Generic;
+using Microsoft.PythonTools.Interpreter;
 
-namespace TestUtilities.Mocks {
-    public class MockErrorProviderFactory : IErrorProviderFactory {
-        public SimpleTagger<ErrorTag> GetErrorTagger(Microsoft.VisualStudio.Text.ITextBuffer textBuffer) {
-            return textBuffer.Properties.GetOrCreateSingletonProperty<SimpleTagger<ErrorTag>>(
-                () => new SimpleTagger<ErrorTag>(textBuffer)
-            );
+namespace TestUtilities.Python {
+    public static class PythonTestExtensions {
+        public static HashSet<string> FindModules(this IPythonInterpreterFactory factory, params string[] moduleNames) {
+            return factory.FindModulesAsync(moduleNames).GetAwaiter().GetResult();
         }
     }
 }

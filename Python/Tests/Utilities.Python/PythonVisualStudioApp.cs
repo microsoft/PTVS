@@ -50,8 +50,18 @@ namespace TestUtilities.UI.Python {
             var ao = service.AdvancedOptions;
             Assert.IsNotNull(ao, "Failed to get AdvancedOptions");
             var oldALI = ao.AutoListIdentifiers;
-            OnDispose(() => ao.AutoListIdentifiers = oldALI);
             ao.AutoListIdentifiers = false;
+
+            var orwoodProp = Dte.Properties["Environment", "ProjectsAndSolution"].Item("OnRunWhenOutOfDate");
+            Assert.IsNotNull(orwoodProp, "Failed to get OnRunWhenOutOfDate property");
+            var oldOrwood = orwoodProp.Value;
+            orwoodProp.Value = 1;
+
+            OnDispose(() => {
+                ao.AutoListIdentifiers = oldALI;
+                orwoodProp.Value = oldOrwood;
+            });
+
         }
 
         protected override void Dispose(bool disposing) {
@@ -239,7 +249,8 @@ namespace TestUtilities.UI.Python {
         /// </remarks>
         public DefaultInterpreterSetter SelectDefaultInterpreter(PythonVersion python) {
             return new DefaultInterpreterSetter(
-                InterpreterService.FindInterpreter(python.Id, python.Version.ToVersion())
+                InterpreterService.FindInterpreter(python.Id, python.Version.ToVersion()),
+                ServiceProvider
             );
         }
 

@@ -762,27 +762,24 @@ namespace Microsoft.PythonTools.Interpreter {
         /// <returns>The cached list of search paths.</returns>
         /// <remarks>Added in 2.2</remarks>
         public static List<PythonLibraryPath> GetCachedDatabaseSearchPaths(string databasePath) {
-            StreamReader file;
             try {
-                file = File.OpenText(Path.Combine(databasePath, "database.path"));
+                var result = new List<PythonLibraryPath>();
+
+                using (var file = File.OpenText(Path.Combine(databasePath, "database.path"))) {
+                    string line;
+                    while ((line = file.ReadLine()) != null) {
+                        try {
+                            result.Add(PythonLibraryPath.Parse(line));
+                        } catch (FormatException) {
+                            Debug.Fail("Invalid format: " + line);
+                        }
+                    }
+                }
+
+                return result;
             } catch (IOException) {
                 return null;
             }
-
-            var result = new List<PythonLibraryPath>();
-
-            using (file) {
-                string line;
-                while ((line = file.ReadLine()) != null) {
-                    try {
-                        result.Add(PythonLibraryPath.Parse(line));
-                    } catch (FormatException) {
-                        Debug.Fail("Invalid format: " + line);
-                    }
-                }
-            }
-
-            return result;
         }
 
         /// <summary>

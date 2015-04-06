@@ -54,6 +54,19 @@ namespace Microsoft.VisualStudioTools {
             }
         }
 
+        public bool BreakByDefault {
+            get {
+                return _state.HasFlag(enum_EXCEPTION_STATE.EXCEPTION_STOP_USER_UNCAUGHT);
+            }
+            set {
+                if (value) {
+                    _state |= enum_EXCEPTION_STATE.EXCEPTION_STOP_USER_UNCAUGHT;
+                } else {
+                    _state &= ~enum_EXCEPTION_STATE.EXCEPTION_STOP_USER_UNCAUGHT;
+                }
+            }
+        }
+
         public override void Register(RegistrationAttribute.RegistrationContext context) {
             var engineKey = context.CreateKey("AD7Metrics\\Exception\\" + _engineGuid);
             var key = engineKey;

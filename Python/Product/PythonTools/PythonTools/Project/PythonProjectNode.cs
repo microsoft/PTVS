@@ -23,6 +23,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Forms;
 using System.Xml;
 using System.Xml.XPath;
 using Microsoft.Build.Execution;
@@ -39,6 +40,7 @@ using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 using IServiceProvider = System.IServiceProvider;
+using MessageBox = System.Windows.Forms.MessageBox;
 using NativeMethods = Microsoft.VisualStudioTools.Project.NativeMethods;
 using Task = System.Threading.Tasks.Task;
 using VsCommands2K = Microsoft.VisualStudio.VSConstants.VSStd2KCmdID;
@@ -46,7 +48,7 @@ using VsMenus = Microsoft.VisualStudioTools.Project.VsMenus;
 
 namespace Microsoft.PythonTools.Project {
     [Guid(PythonConstants.ProjectNodeGuid)]
-    internal class PythonProjectNode : CommonProjectNode, IPythonProject2, IAzureRoleProject {
+    internal class PythonProjectNode : CommonProjectNode, IPythonProject3, IAzureRoleProject {
         // For files that are analyzed because they were directly or indirectly referenced in the search path, store the information
         // about the directory from the search path that referenced them in IProjectEntry.Properties[_searchPathEntryKey], so that
         // they can be located and removed when that directory is removed from the path.
@@ -890,11 +892,30 @@ namespace Microsoft.PythonTools.Project {
 
             var fact = _interpreters.ActiveInterpreter;
 
-            if (!_interpreters.IsAvailable(fact)) {
-                var service = Site.GetComponentModel().GetService<IInterpreterOptionsService>();
-                if (service != null) {
-                    fact = service.NoInterpretersValue;
-                }
+            Site.GetPythonToolsService().EnsureCompletionDb(fact);
+
+            return fact;
+        }
+
+        public IPythonInterpreterFactory GetInterpreterFactoryOrThrow() {
+            var interpreters = _interpreters;
+            var service = Site.GetComponentModel().GetService<IInterpreterOptionsService>();
+
+            if (interpreters == null) {
+                // May occur if we are racing with Dispose(), so the factory we
+                // return isn't important, but it has to be non-null to fulfil
+                // the contract.
+                return service.DefaultInterpreter;
+            }
+
+            var fact = _interpreters.ActiveInterpreter;
+            if (fact == service.NoInterpretersValue) {
+                throw new NoInterpretersException();
+            }
+            if (!interpreters.IsAvailable(fact) || !File.Exists(fact.Configuration.InterpreterPath)) {
+                throw new MissingInterpreterException(
+                    SR.GetString(SR.MissingEnvironment, fact.Description, fact.Configuration.Version)
+                );
             }
 
             Site.GetPythonToolsService().EnsureCompletionDb(fact);
@@ -942,7 +963,7 @@ namespace Microsoft.PythonTools.Project {
                     ));
                 }
 
-                Reanalyze(this, analyzer);
+                Reanalyze(analyzer);
                 if (_analyzer != null) {
                     analyzer.SwitchAnalyzers(_analyzer);
                     if (_analyzer.RemoveUser()) {
@@ -965,17 +986,23 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        private void Reanalyze(HierarchyNode node, VsProjectAnalyzer newAnalyzer) {
-            if (node != null) {
-                for (var child = node.FirstChild; child != null; child = child.NextSibling) {
-                    if (child.IsNonMemberItem) {
-                        continue;
-                    }
-                    if (child is FileNode) {
-                        newAnalyzer.AnalyzeFile(child.Url);
-                    }
+        private void Reanalyze(VsProjectAnalyzer newAnalyzer) {
+            foreach (var child in AllVisibleDescendants.OfType<FileNode>()) {
+                newAnalyzer.AnalyzeFile(child.Url);
+            }
 
-                    Reanalyze(child, newAnalyzer);
+            var references = GetReferenceContainer();
+            var interp = newAnalyzer.Interpreter as IPythonInterpreterWithProjectReferences;
+            if (references != null && interp != null) {
+                foreach (var child in GetReferenceContainer().EnumReferences()) {
+                    var pyd = child as PythonExtensionReferenceNode;
+                    if (pyd != null) {
+                        pyd.AnalyzeReference(interp);
+                    }
+                    var pyproj = child as PythonProjectReferenceNode;
+                    if (pyproj != null) {
+                        pyproj.AddAnalyzedAssembly(interp).DoNotWait();
+                    }
                 }
             }
         }
@@ -1191,6 +1218,25 @@ namespace Microsoft.PythonTools.Project {
             return base.QueryStatusSelectionOnNodes(selectedNodes, cmdGroup, cmd, pCmdText);
         }
 
+        private async Task ExecuteCustomCommandAsync(CustomCommand command) {
+            try {
+                await command.ExecuteAsync(null);
+            } catch (MissingInterpreterException ex) {
+                MessageBox.Show(ex.Message, SR.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+            } catch (NoInterpretersException ex) {
+                PythonToolsPackage.OpenNoInterpretersHelpPage(Site, ex.HelpPage);
+            } catch (Exception ex) {
+                MessageBox.Show(
+                    SR.GetString(
+                        SR.ErrorRunningCustomCommand,
+                        command.DisplayLabelWithoutAccessKeys,
+                        ex.Message
+                    ),
+                    SR.ProductName
+                );
+            }
+        }
+
         protected override int ExecCommandIndependentOfSelection(Guid cmdGroup, uint cmdId, uint cmdExecOpt, IntPtr vaIn, IntPtr vaOut, CommandOrigin commandOrigin, out bool handled) {
             if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
                 var command = GetCustomCommand(cmdId);
@@ -1202,24 +1248,7 @@ namespace Microsoft.PythonTools.Project {
                             return VSConstants.S_OK;
                         }
 
-                        command.ExecuteAsync(null).ContinueWith(t => {
-                            if (t.Exception != null) {
-                                var ex = t.Exception.InnerException ?? t.Exception;
-                                var niex = ex as NoInterpretersException;
-                                if (niex != null) {
-                                    PythonToolsPackage.OpenNoInterpretersHelpPage(Site, niex.HelpPage);
-                                } else {
-                                    MessageBox.Show(
-                                        SR.GetString(
-                                            SR.ErrorRunningCustomCommand,
-                                            command.DisplayLabelWithoutAccessKeys,
-                                            ex.Message
-                                        ),
-                                        SR.ProductName
-                                    );
-                                }
-                            }
-                        });
+                        ExecuteCustomCommandAsync(command).DoNotWait();
                     }
                     return VSConstants.S_OK;
                 }

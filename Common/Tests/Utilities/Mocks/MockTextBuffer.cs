@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.IO;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Utilities;
 
@@ -30,15 +31,21 @@ namespace TestUtilities.Mocks {
         public MockTextBuffer(string content) {
         }
 
-        public MockTextBuffer(string content, string contentType, string filename = "C:\\fob.py") {
+        public MockTextBuffer(string content, string contentType, string filename = null) {
             _snapshot = new MockTextSnapshot(this, content);
             _contentType = new MockContentType(contentType, new IContentType[0]);
+            if (filename == null) {
+                filename = Path.Combine(TestData.GetTempPath(), Path.GetRandomFileName(), "file.py");
+            }
             Properties[typeof(ITextDocument)] = new MockTextDocument(this, filename);
         }
 
-        public MockTextBuffer(string content, IContentType contentType, string filename = "C:\\fob.py") {
+        public MockTextBuffer(string content, IContentType contentType, string filename = null) {
             _snapshot = new MockTextSnapshot(this, content);
             _contentType = contentType;
+            if (filename == null) {
+                filename = Path.Combine(TestData.GetTempPath(), Path.GetRandomFileName(), "file.py");
+            }
             Properties[typeof(ITextDocument)] = new MockTextDocument(this, filename);
         }
 
@@ -48,11 +55,11 @@ namespace TestUtilities.Mocks {
 
         public event EventHandler<TextContentChangedEventArgs> Changed;
 
-#pragma warning disable 67
         public event EventHandler<TextContentChangedEventArgs> ChangedHighPriority;
 
         public event EventHandler<TextContentChangedEventArgs> ChangedLowPriority;
 
+#pragma warning disable 67
         public event EventHandler<TextContentChangingEventArgs> Changing;
 
         public event EventHandler PostChanged;
@@ -123,9 +130,11 @@ namespace TestUtilities.Mocks {
 
         internal void EditApplied(ITextSnapshot previous) {
             _edit = null;
-            var evt = Changed;
-            if (evt != null) {
-                evt(this, new TextContentChangedEventArgs(previous, _snapshot, new EditOptions(), null));
+            var e = new TextContentChangedEventArgs(previous, _snapshot, new EditOptions(), null);
+            foreach (var evt in new[] { ChangedHighPriority, Changed, ChangedLowPriority }) {
+                if (evt != null) {
+                    evt(this, e);
+                }
             }
         }
 

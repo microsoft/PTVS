@@ -36,6 +36,11 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public static readonly Lazy<IEnumerable<EnvironmentView>> AddNewEnvironmentViewOnce =
             new Lazy<IEnumerable<EnvironmentView>>(() => new[] { AddNewEnvironmentView.Value });
 
+        public static readonly Lazy<EnvironmentView> OnlineHelpView =
+            new Lazy<EnvironmentView>(() => new EnvironmentView());
+        public static readonly Lazy<IEnumerable<EnvironmentView>> OnlineHelpViewOnce =
+            new Lazy<IEnumerable<EnvironmentView>>(() => new[] { OnlineHelpView.Value });
+
         /// <summary>
         /// Used with <see cref="CommonUtils.FindFile"/> to more efficiently
         /// find interpreter executables.
@@ -246,11 +251,19 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         public DataTemplate AddNewEnvironment { get; set; }
 
+        public DataTemplate OnlineHelp { get; set; }
+
         public override DataTemplate SelectTemplate(object item, DependencyObject container) {
             if (EnvironmentView.AddNewEnvironmentView.IsValueCreated) {
                 if (object.ReferenceEquals(item, EnvironmentView.AddNewEnvironmentView.Value) &&
                     AddNewEnvironment != null) {
                     return AddNewEnvironment;
+                }
+            }
+            if (EnvironmentView.OnlineHelpView.IsValueCreated) {
+                if (object.ReferenceEquals(item, EnvironmentView.OnlineHelpView.Value) &&
+                    OnlineHelp != null) {
+                    return OnlineHelp;
                 }
             }
             if (item is EnvironmentView && Environment != null) {

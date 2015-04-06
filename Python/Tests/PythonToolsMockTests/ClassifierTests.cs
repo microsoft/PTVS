@@ -14,7 +14,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Composition.Hosting;
 using System.ComponentModel.Design;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -31,15 +33,14 @@ using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudioTools;
+using Microsoft.VisualStudioTools.MockVsTests;
 using TestUtilities;
 using TestUtilities.Mocks;
 using TestUtilities.Python;
 
-namespace PythonToolsTests {
+namespace PythonToolsMockTests {
     [TestClass]
     public class ClassifierTests {
-        public static IContentType PythonContentType = new MockContentType("Python", new IContentType[0]);
-
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
@@ -51,7 +52,7 @@ namespace PythonToolsTests {
             var code = string.Join(Environment.NewLine, PythonKeywords.All(PythonLanguageVersion.V27));
             code += "\r\nTrue\r\nFalse";
 
-            using (var helper = new ClassifierHelper(MockTextBuffer(code), PythonLanguageVersion.V27)) {
+            using (var helper = new ClassifierHelper(code, PythonLanguageVersion.V27)) {
                 foreach (var span in helper.AstClassifierSpans) {
                     var text = span.Span.GetText();
                     if (string.IsNullOrWhiteSpace(text)) {
@@ -73,7 +74,7 @@ namespace PythonToolsTests {
         public void KeywordClassification33() {
             var code = string.Join(Environment.NewLine, PythonKeywords.All(PythonLanguageVersion.V33));
 
-            using (var helper = new ClassifierHelper(MockTextBuffer(code), PythonLanguageVersion.V33)) {
+            using (var helper = new ClassifierHelper(code, PythonLanguageVersion.V33)) {
                 foreach (var span in helper.AstClassifierSpans) {
                     var text = span.Span.GetText();
                     if (string.IsNullOrWhiteSpace(text)) {
@@ -101,7 +102,7 @@ os.path = ntpath
 abc = 123
 abc = True
 ";
-            using (var helper = new ClassifierHelper(MockTextBuffer(code), PythonLanguageVersion.V27)) {
+            using (var helper = new ClassifierHelper(code, PythonLanguageVersion.V27)) {
                 helper.CheckAstClassifierSpans("ki ki ki i.i=i i=n i=b");
 
                 helper.Analyze();
@@ -124,7 +125,7 @@ x
 os
 fdopen
 ";
-            using (var helper = new ClassifierHelper(MockTextBuffer(code), PythonLanguageVersion.V27)) {
+            using (var helper = new ClassifierHelper(code, PythonLanguageVersion.V27)) {
                 helper.CheckAstClassifierSpans("kiki kiki i i i i");
 
                 helper.Analyze();
@@ -143,7 +144,7 @@ MyClassAlias = MyClass
 mca = MyClassAlias()
 MyClassType = type(mc)
 ";
-            using (var helper = new ClassifierHelper(MockTextBuffer(code), PythonLanguageVersion.V27)) {
+            using (var helper = new ClassifierHelper(code, PythonLanguageVersion.V27)) {
                 helper.CheckAstClassifierSpans("ki(i): k i=i() i=i i=i() i=i(i)");
                 helper.AnalysisClassifierSpans.ToArray();
 
@@ -164,7 +165,7 @@ f(a, b, c)
 a = b
 b = c
 ";
-            using (var helper = new ClassifierHelper(MockTextBuffer(code), PythonLanguageVersion.V27)) {
+            using (var helper = new ClassifierHelper(code, PythonLanguageVersion.V27)) {
                 helper.CheckAstClassifierSpans("ki(i,i,i): i=i i=i ki i(i,i,i) i=i i=i");
 
                 helper.Analyze();
@@ -177,11 +178,11 @@ b = c
         public void TrueFalseClassification() {
             var code = "True False";
 
-            using (var helper = new ClassifierHelper(MockTextBuffer(code), PythonLanguageVersion.V27)) {
+            using (var helper = new ClassifierHelper(code, PythonLanguageVersion.V27)) {
                 helper.CheckAstClassifierSpans("b<True> b<False>");
             }
 
-            using (var helper = new ClassifierHelper(MockTextBuffer(code), PythonLanguageVersion.V33)) {
+            using (var helper = new ClassifierHelper(code, PythonLanguageVersion.V33)) {
                 helper.CheckAstClassifierSpans("k<True> k<False>");
             }
         }
@@ -189,72 +190,70 @@ b = c
         #region ClassifierHelper class
 
         private class ClassifierHelper : IDisposable {
-            private readonly MockContentTypeRegistryService _contentRegistry;
-            private readonly MockClassificationTypeRegistryService _classificationRegistry;
+            private readonly MockVs _vs;
             private readonly PythonClassifierProvider _provider1;
             private readonly PythonAnalysisClassifierProvider _provider2;
 
-            private readonly MockTextBuffer _buffer;
-            private readonly MockTextView _view;
-            private readonly IPythonInterpreterFactory _factory;
-            private MonitoredBufferResult _parser;
+            private readonly MockVsTextView _view;
+            private readonly VsProjectAnalyzer _analyzer;
 
-            public ClassifierHelper(MockTextBuffer buffer, PythonLanguageVersion version) {
-                var serviceProvider = PythonToolsTestUtilities.CreateMockServiceProvider();
+            public ClassifierHelper(string code, PythonLanguageVersion version) {
+                _vs = new MockVs();
 
-                _contentRegistry = new MockContentTypeRegistryService(PythonCoreConstants.ContentType);
-                _classificationRegistry = new MockClassificationTypeRegistryService();
-                _provider1 = new PythonClassifierProvider(_contentRegistry, serviceProvider) { _classificationRegistry = _classificationRegistry };
-                _provider2 = new PythonAnalysisClassifierProvider(_contentRegistry, serviceProvider) { _classificationRegistry = _classificationRegistry };
+                var reg = _vs.ContentTypeRegistry;
+                var providers = _vs.ComponentModel.GetExtensions<IClassifierProvider>().ToArray();
+                _provider1 = providers.OfType<PythonClassifierProvider>().Single();
+                _provider2 = providers.OfType<PythonAnalysisClassifierProvider>().Single();
 
-                _buffer = buffer;
-                _factory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version.ToVersion());
-
-                var analyzer = new VsProjectAnalyzer(serviceProvider, _factory, new[] { _factory });
-                _buffer.AddProperty(typeof(VsProjectAnalyzer), analyzer);
-
-                _view = new MockTextView(_buffer);
+                var factory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version.ToVersion());
+                _analyzer = new VsProjectAnalyzer(_vs.ServiceProvider, factory, new[] { factory });
+                
+                _view = _vs.CreateTextView(PythonCoreConstants.ContentType, code, v => {
+                    v.TextView.TextBuffer.Properties.AddProperty(typeof(VsProjectAnalyzer), _analyzer);
+                });
             }
 
             public void Dispose() {
+                _vs.Dispose();
+                _analyzer.Dispose();
             }
 
             public ITextView TextView {
                 get {
-                    return _view;
+                    return _view.TextView;
                 }
             }
 
             public ITextBuffer TextBuffer {
                 get {
-                    return _buffer;
+                    return _view.TextView.TextBuffer;
                 }
             }
 
             public IClassifier AstClassifier {
                 get {
-                    return _provider1.GetClassifier(_buffer);
+                    return _provider1.GetClassifier(TextBuffer);
                 }
             }
 
             public IEnumerable<ClassificationSpan> AstClassifierSpans {
                 get {
                     return AstClassifier.GetClassificationSpans(
-                        new SnapshotSpan(_buffer.CurrentSnapshot, 0, _buffer.CurrentSnapshot.Length)
+                        new SnapshotSpan(TextBuffer.CurrentSnapshot, 0, TextBuffer.CurrentSnapshot.Length)
                     ).OrderBy(s => s.Span.Start.Position);
                 }
             }
 
             public IClassifier AnalysisClassifier {
                 get {
-                    return _provider2.GetClassifier(_buffer);
+                    return _provider2.GetClassifier(TextBuffer);
                 }
             }
 
             public IEnumerable<ClassificationSpan> AnalysisClassifierSpans {
                 get {
                     return AnalysisClassifier.GetClassificationSpans(
-                        new SnapshotSpan(_buffer.CurrentSnapshot, 0, _buffer.CurrentSnapshot.Length)
+                        new SnapshotSpan(TextBuffer.CurrentSnapshot, 0, TextBuffer.CurrentSnapshot.Length)
                     ).OrderBy(s => s.Span.Start.Position);
                 }
             }
@@ -347,44 +346,21 @@ b = c
 
             public VsProjectAnalyzer Analyzer {
                 get {
-                    return _buffer.Properties.GetProperty<VsProjectAnalyzer>(typeof(VsProjectAnalyzer));
-                }
-            }
-
-            public bool MonitorTextBuffer {
-                get {
-                    return _parser.BufferParser != null;
-                }
-                set {
-                    if (value == MonitorTextBuffer) {
-                        return;
-                    }
-                    var analyzer = Analyzer;
-                    if (value) {
-                        _parser = analyzer.MonitorTextBuffer(_view, _buffer);
-                    } else {
-                        analyzer.StopMonitoringTextBuffer(_parser.BufferParser, _view);
-                        _parser = default(MonitoredBufferResult);
-                    }
+                    return _analyzer;
                 }
             }
 
             public void Analyze() {
-                var analyzer = Analyzer;
-
-                var wasMonitoring = MonitorTextBuffer;
-                MonitorTextBuffer = true;
                 var classifier = AnalysisClassifier;
                 using (var evt = new ManualResetEventSlim()) {
                     classifier.ClassificationChanged += (o, e) => evt.Set();
                     var ensureClassifier = AnalysisClassifierSpans.ToArray();
-                    _buffer.GetPythonProjectEntry().Analyze(CancellationToken.None, true);
-                    analyzer.WaitForCompleteAnalysis(_ => true);
-                    while (_buffer.GetPythonProjectEntry().Analysis == null) {
+                    TextBuffer.GetPythonProjectEntry().Analyze(CancellationToken.None, true);
+                    _analyzer.WaitForCompleteAnalysis(_ => true);
+                    while (TextBuffer.GetPythonProjectEntry().Analysis == null) {
                         Thread.Sleep(500);
                     }
                     Assert.IsTrue(evt.Wait(10000));
-                    MonitorTextBuffer = wasMonitoring;
                 }
             }
         }

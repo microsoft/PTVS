@@ -20,7 +20,21 @@ the second argument.
 import os
 import os.path
 import sys
-import visualstudio_py_debugger
+import traceback
+try:
+    import visualstudio_py_debugger
+except:
+    traceback.print_exc()
+    print('''
+Internal error detected. Please copy the above traceback and report at
+http://go.microsoft.com/fwlink/?LinkId=293415
+
+Press Enter to close. . .''')
+    try:
+        raw_input()
+    except NameError:
+        input()
+    sys.exit(1)
 
 # arguments are working dir, port, normal arguments which should include a filename to execute
 

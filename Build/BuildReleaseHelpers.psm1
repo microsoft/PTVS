@@ -34,6 +34,23 @@ function _find_sdk_tool {
                 $_tool_item = Get-Item "$($_kit_path.InstallationFolder)\$tool.exe" -EA 0
                 if (-not (Test-Path alias:\$tool) -and $_tool_item) {
                     Set-Alias -Name $tool -Value $_tool_item.FullName -Scope Global
+                    return
+                }
+            }
+        }
+    }
+    foreach ($ver in ("KitsRoot81", "KitsRoot")) {
+        $_kit_path = (Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows Kits\Installed Roots" -Name $ver -EA 0).$ver
+        if (-not $_kit_path) {
+            $_kit_path = (Get-ItemProperty "HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows Kits\Installed Roots" -Name $ver -EA 0).$ver
+        }
+
+        foreach ($kit in ("x64", "x86")) {
+            if ($_kit_path -and (Test-Path "$_kit_path\bin\$kit")) {
+                $_tool_item = Get-Item "$_kit_path\bin\$kit\$tool.exe" -EA 0
+                if (-not (Test-Path alias:\$tool) -and $_tool_item) {
+                    Set-Alias -Name $tool -Value $_tool_item.FullName -Scope Global
+                    return
                 }
             }
         }
@@ -54,7 +71,8 @@ function begin_sign_files {
         if (Test-Path alias:\sn) {
             $not_delay_signed = $files | %{ gi $_.path } | ?{ sn -q -v $_ }
             if ($not_delay_signed) {
-                Write-Error "Delay-signed check failed: $($not_delay_signed | %{ $_.Name })" -EA Stop
+                Throw "Delay-signed check failed: $($not_delay_signed.Name -join '
+')"
             }
         }
     }
@@ -163,4 +181,60 @@ function start_virus_scan {
     $xml.root.path = $path
     
     Invoke-WebRequest "http://vcs/process.asp" -Method Post -Body $xml -ContentType "text/xml" -UseDefaultCredentials -UseBasicParsing
+}
+
+function check_signing {
+    param($outdir)
+
+    _find_sdk_tool "signtool"
+
+    $unsigned = @()
+
+    $msis = gci $outdir\*.msi
+    foreach ($m in $msis) {
+        Write-Host "Checking signatures for $m"
+        & signtool verify /pa "$m" 2>&1 | Out-Null
+        if (-not $?) {
+            $unsigned += "$m"
+        }
+
+        $dir = mkdir -fo "${env:TEMP}\msi_test"
+        & msiexec /q /a "$m" TARGETDIR="$dir" | Out-Null
+        
+        foreach ($f in (gci $dir\*.exe, $dir\*.dll -r)) {
+            & signtool verify /pa "$f" 2>&1 | Out-Null
+            if (-not $?) {
+                $unsigned += "$m - $($f.Name)"
+            }
+        }
+        
+        rmdir -r -fo $dir
+    }
+
+    Add-Type -assembly "System.IO.Compression.FileSystem"
+    $zips = gci $outdir\*.vsix
+    foreach ($m in $zips) {
+        Write-Host "Checking signatures for $m"
+        $dir = mkdir -fo "${env:TEMP}\msi_test"
+        [IO.Compression.ZipFile]::ExtractToDirectory($m, $dir)
+        
+        if (-not (Test-Path "$dir\package\services\digital-signature\xml-signature")) {
+            $unsigned += "$m"
+        }
+
+        foreach ($f in (gci $dir\*.exe, $dir\*.dll -r)) {
+            & signtool verify /pa "$f" 2>&1 | Out-Null
+            if (-not $?) {
+                $unsigned += "$m - $($f.Name)"
+            }
+        }
+        
+        rmdir -r -fo $dir
+    }
+
+    if ($unsigned) {
+        throw "Following files have invalid signatures: 
+$(($unsigned | select -unique) -join '
+')"
+    }
 }

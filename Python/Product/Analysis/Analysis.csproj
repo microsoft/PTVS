@@ -90,6 +90,7 @@
     <Compile Include="Analyzer\IsInstanceScope.cs" />
     <Compile Include="Analyzer\StatementScope.cs" />
     <Compile Include="AssemblyInfo.cs" />
+    <Compile Include="IEnumerableExtensions.cs" />
     <Compile Include="Interpreter\Default\AnalysisOnlyInterpreterFactory.cs" />
     <Compile Include="Interpreter\Default\CPythonInterpreterFactory.cs" />
     <Compile Include="Interpreter\Default\CPythonSequenceType.cs" />
@@ -108,7 +109,6 @@
     <Compile Include="Parsing\CodeFormattingExampleAttribute.cs" />
     <Compile Include="Parsing\CodeFormattingOptions.cs" />
     <Compile Include="IdDispenser.cs" />
-    <Compile Include="IEnumerableExtensions.cs" />
     <Compile Include="Interpreter\ProjectAssemblyReference.cs" />
     <Compile Include="Interpreter\CannotAnalyzeExtensionException.cs" />
     <Compile Include="Interpreter\ITypeDatabaseReader.cs" />
