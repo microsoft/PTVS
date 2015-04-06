@@ -442,9 +442,18 @@ namespace Microsoft.PythonTools.Intellisense {
                 CanComplete = true;
                 if (node.Items != null) {
                     var item = node.Items.LastOrDefault();
-                    CanComplete = item != null && item.Variable == null;
+                    if (item != null) {
+                        if (item.Variable != null) {
+                            CanComplete = false;
+                        } else {
+                            item.Walk(this);
+                        }
+                    }
                 }
-                return base.Walk(node);
+                if (node.Body != null) {
+                    node.Body.Walk(this);
+                }
+                return false;
             }
 
             public override bool Walk(YieldExpression node) {

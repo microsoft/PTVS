@@ -305,7 +305,7 @@ namespace PythonToolsMockTests {
 
         [TestMethod]
         public void AutoListInWith() {
-            AutoListTest("with a as b, c as d:", 5, 13);
+            AutoListTest("with a as b, c(x) as d:", 5, 13, -22);
         }
 
         [TestMethod]
