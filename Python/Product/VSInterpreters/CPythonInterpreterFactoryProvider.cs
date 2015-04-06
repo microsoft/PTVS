@@ -43,18 +43,18 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         private void StartWatching(RegistryHive hive, RegistryView view) {
-            try {
-                RegistryWatcher.Instance.Add(hive, view, PythonCorePath, Registry_PythonCorePath_Changed,
-                    recursive: true, notifyValueChange: true, notifyKeyChange: true);
-            } catch (ArgumentException) {
-                try {
-                    RegistryWatcher.Instance.Add(hive, view, PythonPath, Registry_PythonPath_Changed,
-                        recursive: false, notifyValueChange: false, notifyKeyChange: true);
-                } catch (ArgumentException) {
-                    RegistryWatcher.Instance.Add(hive, view, "Software", Registry_Software_Changed,
-                        recursive: false, notifyValueChange: false, notifyKeyChange: true);
-                }
-            }
+            var tag = RegistryWatcher.Instance.TryAdd(
+                hive, view, PythonCorePath, Registry_PythonCorePath_Changed,
+                recursive: true, notifyValueChange: true, notifyKeyChange: true
+            ) ??
+            RegistryWatcher.Instance.TryAdd(
+                hive, view, PythonPath, Registry_PythonPath_Changed,
+                recursive: false, notifyValueChange: false, notifyKeyChange: true
+            ) ??
+            RegistryWatcher.Instance.Add(
+                hive, view, "Software", Registry_Software_Changed,
+                recursive: false, notifyValueChange: false, notifyKeyChange: true
+            );
         }
 
         #region Registry Watching
@@ -78,21 +78,21 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         private void Registry_PythonPath_Changed(object sender, RegistryChangedEventArgs e) {
-            using (var root = RegistryKey.OpenBaseKey(e.Hive, e.View))
-            using (var key = root.OpenSubKey(PythonCorePath)) {
-                if (key != null) {
-                    // PythonCore key now exists, so start watching it and also
-                    // discover any interpreters.
-                    RegistryWatcher.Instance.Add(e.Hive, e.View, PythonCorePath, Registry_PythonCorePath_Changed,
-                        recursive: true, notifyValueChange: true, notifyKeyChange: true);
+            if (Exists(e)) {
+                if (RegistryWatcher.Instance.TryAdd(
+                    e.Hive, e.View, PythonCorePath, Registry_PythonCorePath_Changed,
+                    recursive: true, notifyValueChange: true, notifyKeyChange: true
+                ) != null) {
+                    // PythonCore key now exists, so start watching it,
+                    // discover any interpreters, and cancel this watcher.
                     e.CancelWatcher = true;
                     DiscoverInterpreterFactories();
-                } else if (!Exists(e)) {
-                    // Python key no longer exists, so go back to watching
-                    // Software.
-                    e.CancelWatcher = true;
-                    StartWatching(e.Hive, e.View);
                 }
+            } else {
+                // Python key no longer exists, so go back to watching
+                // Software.
+                e.CancelWatcher = true;
+                StartWatching(e.Hive, e.View);
             }
         }
 
@@ -104,15 +104,13 @@ namespace Microsoft.PythonTools.Interpreter {
                 return;
             }
 
-            using (var root = RegistryKey.OpenBaseKey(e.Hive, e.View))
-            using (var key = root.OpenSubKey(PythonPath)) {
-                if (key != null) {
-                    // Python exists, but not PythonCore, so watch Python until
-                    // PythonCore is created.
-                    RegistryWatcher.Instance.Add(e.Hive, e.View, PythonPath, Registry_PythonPath_Changed,
-                        recursive: false, notifyValueChange: false, notifyKeyChange: true);
-                    e.CancelWatcher = true;
-                }
+            if (RegistryWatcher.Instance.TryAdd(
+                e.Hive, e.View, PythonPath, Registry_PythonPath_Changed,
+                recursive: false, notifyValueChange: false, notifyKeyChange: true
+            ) != null) {
+                // Python exists, but not PythonCore, so watch Python until
+                // PythonCore is created.
+                e.CancelWatcher = true;
             }
         }
 

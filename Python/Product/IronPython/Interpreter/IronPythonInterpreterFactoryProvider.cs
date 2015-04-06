@@ -31,15 +31,15 @@ namespace Microsoft.IronPythonTools.Interpreter {
         public IronPythonInterpreterFactoryProvider() {
             DiscoverInterpreterFactories();
             if (_interpreter == null) {
-                try {
-                    RegistryWatcher.Instance.Add(RegistryHive.LocalMachine, RegistryView.Registry32, IronPythonCorePath,
-                        Registry_Changed,
-                        recursive: true, notifyValueChange: true, notifyKeyChange: true);
-                } catch (ArgumentException) {
-                    RegistryWatcher.Instance.Add(RegistryHive.LocalMachine, RegistryView.Registry32, "Software",
-                        Registry_Software_Changed,
-                        recursive: false, notifyValueChange: false, notifyKeyChange: true);
-                }
+                var token = RegistryWatcher.Instance.TryAdd(
+                    RegistryHive.LocalMachine, RegistryView.Registry32, IronPythonCorePath,
+                    Registry_Changed,
+                    recursive: true, notifyValueChange: true, notifyKeyChange: true
+                ) ?? RegistryWatcher.Instance.Add(
+                    RegistryHive.LocalMachine, RegistryView.Registry32, "Software",
+                    Registry_Software_Changed,
+                    recursive: false, notifyValueChange: false, notifyKeyChange: true
+                );
             }
         }
 
@@ -47,9 +47,11 @@ namespace Microsoft.IronPythonTools.Interpreter {
             if (!Exists(e)) {
                 // IronPython key no longer exists, so go back to watching
                 // Software.
-                RegistryWatcher.Instance.Add(RegistryHive.LocalMachine, RegistryView.Registry32, "Software",
+                RegistryWatcher.Instance.Add(
+                    RegistryHive.LocalMachine, RegistryView.Registry32, "Software",
                     Registry_Software_Changed,
-                    recursive: false, notifyValueChange: false, notifyKeyChange: true);
+                    recursive: false, notifyValueChange: false, notifyKeyChange: true
+                );
                 e.CancelWatcher = true;
             } else {
                 DiscoverInterpreterFactories();
@@ -67,14 +69,12 @@ namespace Microsoft.IronPythonTools.Interpreter {
         }
 
         private void Registry_Software_Changed(object sender, RegistryChangedEventArgs e) {
-            using (var root = RegistryKey.OpenBaseKey(e.Hive, e.View))
-            using (var key = root.OpenSubKey(IronPythonCorePath)) {
-                if (key != null) {
-                    RegistryWatcher.Instance.Add(e.Hive, e.View, IronPythonCorePath, Registry_Changed,
-                        recursive: true, notifyValueChange: true, notifyKeyChange: true);
-                    e.CancelWatcher = true;
-                    Registry_Changed(sender, e);
-                }
+            if (RegistryWatcher.Instance.TryAdd(
+                e.Hive, e.View, IronPythonCorePath, Registry_Changed,
+                recursive: true, notifyValueChange: true, notifyKeyChange: true
+            ) != null) {
+                e.CancelWatcher = true;
+                Registry_Changed(sender, e);
             }
         }
 

@@ -159,15 +159,65 @@ namespace Microsoft.PythonTools {
         /// <param name="tag">
         /// An arbitrary identifier to include with any raised events.
         /// </param>
+        /// <exception cref="ArgumentException">
+        /// The specified registry key does not exist.
+        /// </exception>
         /// <returns>An opaque token that can be pased to Remove.</returns>
-        public object Add(RegistryHive hive,
-                          RegistryView view,
-                          string key,
-                          RegistryChangedEventHandler handler,
-                          bool recursive = false,
-                          bool notifyValueChange = true,
-                          bool notifyKeyChange = true,
-                          object tag = null) {
+        /// <remarks>
+        /// This is a thin layer over <see cref="TryAdd"/> that will throw an
+        /// exception when the return value would be null.
+        /// </remarks>
+        public object Add(
+            RegistryHive hive,
+            RegistryView view,
+            string key,
+            RegistryChangedEventHandler handler,
+            bool recursive = false,
+            bool notifyValueChange = true,
+            bool notifyKeyChange = true,
+            object tag = null
+        ) {
+            var res = TryAdd(hive, view, key, handler, recursive, notifyValueChange, notifyKeyChange, tag);
+            if (res == null) {
+                throw new ArgumentException("Key does not exist");
+            }
+            return res;
+        }
+
+        /// <summary>
+        /// Starts listening for notifications in the specified registry key.
+        /// 
+        /// Each part of the key must be provided separately so that the watcher
+        /// can open its own handle.
+        /// </summary>
+        /// <param name="hive">The hive to watch</param>
+        /// <param name="view">The view to watch</param>
+        /// <param name="key">The key to watch</param>
+        /// <param name="handler">The event handler to invoke</param>
+        /// <param name="recursive">True to watch all subkeys as well</param>
+        /// <param name="notifyValueChange">
+        /// True to notify if a value is added, removed or updated.
+        /// </param>
+        /// <param name="notifyKeyChange">
+        /// True to notify if a subkey is added or removed.
+        /// </param>
+        /// <param name="tag">
+        /// An arbitrary identifier to include with any raised events.
+        /// </param>
+        /// <returns>
+        /// An opaque token that can be pased to Remove, or null if the watcher
+        /// could not be added.
+        /// </returns>
+        public object TryAdd(
+            RegistryHive hive,
+            RegistryView view,
+            string key,
+            RegistryChangedEventHandler handler,
+            bool recursive = false,
+            bool notifyValueChange = true,
+            bool notifyKeyChange = true,
+            object tag = null
+        ) {
             if (key == null) {
                 throw new ArgumentNullException("key");
             }
@@ -190,8 +240,9 @@ namespace Microsoft.PythonTools {
 
             int currentWatcher = -1;
             RegistryWatcher watcher;
-            var token = AddInternal(handler, args);
-            while (token == null) {
+            bool needNewThread;
+            var token = TryAddInternal(handler, args, out needNewThread);
+            while (needNewThread) {
                 if (_extraWatchers == null) {
                     _extraWatchers = new List<RegistryWatcher>();
                 }
@@ -202,19 +253,28 @@ namespace Microsoft.PythonTools {
                 } else {
                     watcher = _extraWatchers[currentWatcher];
                 }
-                token = watcher.AddInternal(handler, args);
+                token = watcher.TryAddInternal(handler, args, out needNewThread);
             }
             return token;
         }
 
-        private object AddInternal(RegistryChangedEventHandler handler, RegistryChangedEventArgs args) {
+        private object TryAddInternal(
+            RegistryChangedEventHandler handler,
+            RegistryChangedEventArgs args,
+            out bool needNewThread
+        ) {
             WatchEntry newEntry;
+            needNewThread = false;
 
             lock (_eventsLock) {
                 if (_entries.Count >= MAXIMUM_WAIT_OBJECTS) {
+                    needNewThread = true;
                     return null;
                 }
-                newEntry = new WatchEntry(handler, args);
+                newEntry = WatchEntry.TryCreate(handler, args);
+                if (newEntry == null) {
+                    return null;
+                }
                 _entries.Add(newEntry);
             }
 
@@ -292,17 +352,27 @@ namespace Microsoft.PythonTools {
                 _eventHandle = new AutoResetEvent(false);
             }
 
-            public WatchEntry(RegistryChangedEventHandler callback, RegistryChangedEventArgs args) {
-                using (var baseKey = RegistryKey.OpenBaseKey(args.Hive, args.View)) {
-                    _key = baseKey.OpenSubKey(args.Key, RegistryKeyPermissionCheck.Default, RegistryRights.Notify);
-                }
-                if (_key == null) {
-                    throw new ArgumentException("Key does not exist");
-                }
+            private WatchEntry(
+                RegistryKey key,
+                RegistryChangedEventHandler callback,
+                RegistryChangedEventArgs args
+            ) {
+                _key = key;
                 _eventHandle = new AutoResetEvent(false);
                 _callback = callback;
                 _args = args;
                 Register();
+            }
+
+            public static WatchEntry TryCreate(RegistryChangedEventHandler callback, RegistryChangedEventArgs args) {
+                RegistryKey key;
+                using (var baseKey = RegistryKey.OpenBaseKey(args.Hive, args.View)) {
+                    key = baseKey.OpenSubKey(args.Key, RegistryKeyPermissionCheck.Default, RegistryRights.Notify);
+                }
+                if (key == null) {
+                    return null;
+                }
+                return new WatchEntry(key, callback, args);
             }
 
             public void Dispose() {

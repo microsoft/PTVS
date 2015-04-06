@@ -130,18 +130,20 @@ namespace Microsoft.PythonTools.Interpreter {
                 RegistryView view;
                 string keyName;
                 if (RegistryWatcher.GetRegistryKeyLocation(userSettingsKey, out hive, out view, out keyName)) {
-                    try {
-                        RegistryWatcher.Instance.Add(hive, view, keyName + "\\" + DefaultInterpreterOptionsCollection,
-                            DefaultInterpreterRegistry_Changed,
-                            recursive: false, notifyValueChange: true, notifyKeyChange: false);
-                    } catch (ArgumentException) {
+                    if (RegistryWatcher.Instance.TryAdd(
+                        hive, view, keyName + "\\" + DefaultInterpreterOptionsCollection,
+                        DefaultInterpreterRegistry_Changed,
+                        recursive: false, notifyValueChange: true, notifyKeyChange: false
+                    ) == null) {
                         // DefaultInterpreterOptions subkey does not exist yet, so
                         // create it and then start the watcher.
                         SaveDefaultInterpreter();
 
-                        RegistryWatcher.Instance.Add(hive, view, keyName + "\\" + DefaultInterpreterOptionsCollection,
+                        RegistryWatcher.Instance.Add(
+                            hive, view, keyName + "\\" + DefaultInterpreterOptionsCollection,
                             DefaultInterpreterRegistry_Changed,
-                            recursive: false, notifyValueChange: true, notifyKeyChange: false);
+                            recursive: false, notifyValueChange: true, notifyKeyChange: false
+                        );
                     }
                 }
             }
