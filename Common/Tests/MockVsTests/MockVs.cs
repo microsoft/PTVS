@@ -379,6 +379,8 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
                             packageTypes.Add(type);
                         }
                     }
+                } catch (TypeInitializationException tix) {
+                    Console.WriteLine(tix);
                 } catch (ReflectionTypeLoadException tlx) {
                     Console.WriteLine(tlx);
                 }

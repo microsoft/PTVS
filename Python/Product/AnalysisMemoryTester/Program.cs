@@ -23,6 +23,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Analysis.MemoryTester {
     class Program {
@@ -112,7 +113,7 @@ namespace Microsoft.PythonTools.Analysis.MemoryTester {
             Console.WriteLine("Using database in {0}", dbPath);
 
             using (var factory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version, "Test Factory", dbPath))
-            using (var analyzer = new PythonAnalyzer(factory)) {
+            using (var analyzer = PythonAnalyzer.CreateAsync(factory).WaitAndUnwrapExceptions()) {
                 var modules = new Dictionary<string, IPythonProjectEntry>();
 
                 foreach (var tuple in SplitCommands(commands)) {

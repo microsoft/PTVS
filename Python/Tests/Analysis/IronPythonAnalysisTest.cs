@@ -26,6 +26,7 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
+using TestUtilities.Python;
 
 namespace AnalysisTests {
     /// <summary>
@@ -34,6 +35,11 @@ namespace AnalysisTests {
     [TestClass]
     public class IronPythonAnalysisTest : AnalysisTest {
         private string[] _objectMembersClr, _strMembersClr;
+
+        [ClassInitialize]
+        public static void DoDeployment(TestContext context) {
+            PythonTestData.Deploy();
+        }
 
         public IronPythonAnalysisTest()
             : base(new IronPythonInterpreterFactory(ProcessorArchitecture.X86), CreateInterpreter()) {
@@ -462,19 +468,20 @@ from System.Windows.Media import Colors
         public void XamlEmptyXName() {
             // [Python Tools] Adding attribute through XAML in IronPython application crashes VS.
             // http://pytools.codeplex.com/workitem/743
-            PythonAnalyzer analyzer = new PythonAnalyzer(InterpreterFactory, Interpreter);
-            string xamlPath = TestData.GetPath(@"TestData\Xaml\EmptyXName.xaml");
-            string pyPath = TestData.GetPath(@"TestData\Xaml\EmptyXName.py");
-            var xamlEntry = analyzer.AddXamlFile(xamlPath);
-            var pyEntry = analyzer.AddModule("EmptyXName", pyPath);
+            using (var analyzer = PythonAnalyzer.CreateSynchronously(InterpreterFactory, Interpreter)) {
+                string xamlPath = TestData.GetPath(@"TestData\Xaml\EmptyXName.xaml");
+                string pyPath = TestData.GetPath(@"TestData\Xaml\EmptyXName.py");
+                var xamlEntry = analyzer.AddXamlFile(xamlPath);
+                var pyEntry = analyzer.AddModule("EmptyXName", pyPath);
 
-            xamlEntry.ParseContent(new FileStreamReader(xamlPath), null);
+                xamlEntry.ParseContent(new FileStreamReader(xamlPath), null);
 
-            using (var parser = Parser.CreateParser(new FileStreamReader(pyPath), PythonLanguageVersion.V27, new ParserOptions() { BindReferences = true })) {
-                pyEntry.UpdateTree(parser.ParseFile(), null);
+                using (var parser = Parser.CreateParser(new FileStreamReader(pyPath), PythonLanguageVersion.V27, new ParserOptions() { BindReferences = true })) {
+                    pyEntry.UpdateTree(parser.ParseFile(), null);
+                }
+
+                pyEntry.Analyze(CancellationToken.None);
             }
-
-            pyEntry.Analyze(CancellationToken.None);
         }
     }
 }

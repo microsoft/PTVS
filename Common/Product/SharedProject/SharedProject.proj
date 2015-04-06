@@ -637,6 +637,10 @@
       <Link>SharedProject\TaskExtensions.cs</Link>
       <Visible>true</Visible>
     </Compile>
+    <Compile Include="$(_ProjectSystemFilesLocation)\VsTaskExtensions.cs">
+      <Link>SharedProject\VsTaskExtensions.cs</Link>
+      <Visible>true</Visible>
+    </Compile>
     <Compile Include="$(_ProjectSystemFilesLocation)\Wpf\Commands.cs">
       <Link>SharedProject\Wpf\Commands.cs</Link>
       <Visible>true</Visible>

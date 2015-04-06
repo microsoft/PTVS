@@ -37,7 +37,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             string codeFileBasePath,
             Uri executorUri
         ) {
-            _analyzer = new PythonAnalyzer(factory);
+            _analyzer = PythonAnalyzer.CreateAsync(factory).WaitAndUnwrapExceptions();
             _analyzer.Limits = AnalysisLimits.GetStandardLibraryLimits();
 
             _containerFilePath = containerFilePath;

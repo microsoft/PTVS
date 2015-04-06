@@ -147,6 +147,9 @@
     <Compile Include="..\..\..\Common\Product\SharedProject\TaskExtensions.cs">
       <Link>TaskExtensions.cs</Link>
     </Compile>
+    <Compile Include="..\..\..\Common\Product\SharedProject\VsTaskExtensions.cs">
+      <Link>VsTaskExtensions.cs</Link>
+    </Compile>
     <Compile Include="..\..\..\Common\Product\SharedProject\Wpf\Commands.cs">
       <Link>Wpf\Commands.cs</Link>
     </Compile>

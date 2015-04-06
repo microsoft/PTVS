@@ -22,11 +22,13 @@ using System.Linq;
 using System.Numerics;
 using System.Security;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.PyAnalysis;
+using Microsoft.VisualStudioTools;
 using Microsoft.Win32;
 
 namespace Microsoft.PythonTools.Analysis {
@@ -35,6 +37,7 @@ namespace Microsoft.PythonTools.Analysis {
     /// </summary>
     public partial class PythonAnalyzer : IGroupableAnalysisProject, IDisposable {
         private readonly IPythonInterpreter _interpreter;
+        private readonly bool _disposeInterpreter;
         private readonly IPythonInterpreterFactory _interpreterFactory;
         private readonly ModuleTable _modules;
         private readonly ConcurrentDictionary<string, ModuleInfo> _modulesByFilename;
@@ -55,21 +58,69 @@ namespace Microsoft.PythonTools.Analysis {
         private Dictionary<string, List<SpecializationInfo>> _specializationInfo = new Dictionary<string, List<SpecializationInfo>>();  // delayed specialization information, for modules not yet loaded...
         private AnalysisLimits _limits;
         private static object _nullKey = new object();
+        private readonly SemaphoreSlim _reloadLock = new SemaphoreSlim(1, 1);
 
         private const string AnalysisLimitsKey = @"Software\Microsoft\PythonTools\" + AssemblyVersionInfo.VSVersion +
             @"\Analysis\Project";
 
+        /// <summary>
+        /// Creates a new analyzer that is ready for use.
+        /// </summary>
+        public static async Task<PythonAnalyzer> CreateAsync(
+            IPythonInterpreterFactory factory,
+            IPythonInterpreter interpreter = null
+        ) {
+            var res = new PythonAnalyzer(factory, interpreter, null);
+            try {
+                await res.ReloadModulesAsync();
+                var r = res;
+                res = null;
+                return r;
+            } finally {
+                if (res != null) {
+                    res.Dispose();
+                }
+            }
+        }
+
+        // Test helper method
+        internal static PythonAnalyzer CreateSynchronously(
+            IPythonInterpreterFactory factory,
+            IPythonInterpreter interpreter = null,
+            string builtinName = null
+        ) {
+            var res = new PythonAnalyzer(factory, interpreter, null);
+            try {
+                res.ReloadModulesAsync().WaitAndUnwrapExceptions();
+                var r = res;
+                res = null;
+                return r;
+            } finally {
+                if (res != null) {
+                    res.Dispose();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Creates a new analyzer that is not ready for use. You must call and
+        /// wait for <see cref="ReloadModulesAsync"/> to complete before using.
+        /// </summary>
+        public static PythonAnalyzer Create(IPythonInterpreterFactory factory, IPythonInterpreter interpreter = null) {
+            return new PythonAnalyzer(factory, interpreter, null);
+        }
+
+        [Obsolete("Use CreateAsync instead")]
         public PythonAnalyzer(IPythonInterpreterFactory factory, IPythonInterpreter interpreter = null)
-            : this(factory, interpreter ?? factory.CreateInterpreter(), null) {
+            : this(factory, interpreter, null) {
+            ReloadModulesAsync().WaitAndUnwrapExceptions();
         }
 
         internal PythonAnalyzer(IPythonInterpreterFactory factory, IPythonInterpreter pythonInterpreter, string builtinName) {
-            if (pythonInterpreter == null) {
-                throw new ArgumentNullException("pythonInterpreter");
-            }
             _interpreterFactory = factory;
             _langVersion = factory.GetLanguageVersion();
-            _interpreter = pythonInterpreter;
+            _disposeInterpreter = pythonInterpreter == null;
+            _interpreter = pythonInterpreter ?? factory.CreateInterpreter();
             _builtinName = builtinName ?? (_langVersion.Is3x() ? SharedDatabaseState.BuiltinName3x : SharedDatabaseState.BuiltinName2x);
             _modules = new ModuleTable(this, _interpreter);
             _modulesByFilename = new ConcurrentDictionary<string, ModuleInfo>(StringComparer.OrdinalIgnoreCase);
@@ -90,31 +141,63 @@ namespace Microsoft.PythonTools.Analysis {
 
             _queue = new Deque<AnalysisUnit>();
 
-            LoadKnownTypes();
-
-            pythonInterpreter.Initialize(this);
-
             _defaultContext = _interpreter.CreateModuleContext();
 
             _evalUnit = new AnalysisUnit(null, null, new ModuleInfo("$global", new ProjectEntry(this, "$global", String.Empty, null), _defaultContext).Scope, true);
             AnalysisLog.NewUnit(_evalUnit);
+
+            LoadInitialKnownTypes();
         }
 
-        private void LoadKnownTypes() {
+        private void LoadInitialKnownTypes() {
+            if (_builtinModule != null) {
+                Debug.Fail("LoadInitialKnownTypes should only be called once");
+                return;
+            }
+
+            var fallbackDb = PythonTypeDatabase.CreateDefaultTypeDatabase(LanguageVersion.ToVersion());
+            _builtinModule = _modules.GetBuiltinModule(fallbackDb.GetModule(SharedDatabaseState.BuiltinName2x));
+
+            FinishLoadKnownTypes(fallbackDb);
+        }
+
+        private async Task LoadKnownTypesAsync() {
             _itemCache.Clear();
 
-            ModuleReference moduleRef;
-            if (Modules.TryImport(_builtinName, out moduleRef)) {
+            Debug.Assert(_builtinModule != null, "LoadInitialKnownTypes was not called");
+            if (_builtinModule == null) {
+                LoadInitialKnownTypes();
+            }
+
+            var moduleRef = await Modules.TryImportAsync(_builtinName);
+            if (moduleRef != null) {
                 _builtinModule = (BuiltinModule)moduleRef.Module;
             } else {
-                var fallbackDb = PythonTypeDatabase.CreateDefaultTypeDatabase(LanguageVersion.ToVersion());
-                _builtinModule = _modules.GetBuiltinModule(fallbackDb.GetModule(SharedDatabaseState.BuiltinName2x));
                 Modules[_builtinName] = new ModuleReference(_builtinModule);
             }
 
-            Types = new KnownTypes(this);
-            ClassInfos = (IKnownClasses)Types;
+            FinishLoadKnownTypes(null);
 
+            var sysModule = await _modules.TryImportAsync("sys");
+            if (sysModule != null) {
+                var bm = sysModule.AnalysisModule as BuiltinModule;
+                if (bm != null) {
+                    sysModule.Module = new SysModuleInfo(bm);
+                }
+            }
+        }
+
+        private void FinishLoadKnownTypes(PythonTypeDatabase db) {
+            _itemCache.Clear();
+
+            if (db == null) {
+                db = PythonTypeDatabase.CreateDefaultTypeDatabase(LanguageVersion.ToVersion());
+                Types = KnownTypes.Create(this, db);
+            } else {
+                Types = KnownTypes.CreateDefault(this, db);
+            }
+
+            ClassInfos = (IKnownClasses)Types;
             _noneInst = (ConstantInfo)GetCached(_nullKey, () => new ConstantInfo(ClassInfos[BuiltinTypeId.NoneType], (object)null));
 
             DoNotUnionInMro = AnalysisSet.Create(new AnalysisValue[] {
@@ -123,14 +206,6 @@ namespace Microsoft.PythonTools.Analysis {
             });
 
             AddBuiltInSpecializations();
-
-            ModuleReference sysModule;
-            if (_modules.TryImport("sys", out sysModule)) {
-                var bm = sysModule.AnalysisModule as BuiltinModule;
-                if (bm != null) {
-                    sysModule.Module = new SysModuleInfo(bm);
-                }
-            }
         }
 
         /// <summary>
@@ -139,14 +214,26 @@ namespace Microsoft.PythonTools.Analysis {
         /// This method should be called on the analysis thread and is usually invoked
         /// when the interpreter signals that it's modules have changed.
         /// </summary>
-        public void ReloadModules() {
-            _modules.ReInit();
-            LoadKnownTypes();
+        public async Task ReloadModulesAsync() {
+            if (!_reloadLock.Wait(0)) {
+                // If we don't lock immediately, wait for the current reload to
+                // complete and then return.
+                await _reloadLock.WaitAsync();
+                _reloadLock.Release();
+                return;
+            }
 
-            _interpreter.Initialize(this);
+            try {
+                _modules.ReInit();
+                await LoadKnownTypesAsync();
 
-            foreach (var mod in _modulesByFilename.Values) {
-                mod.Clear();
+                _interpreter.Initialize(this);
+
+                foreach (var mod in _modulesByFilename.Values) {
+                    mod.Clear();
+                }
+            } finally {
+                _reloadLock.Release();
             }
         }
 
@@ -841,6 +928,12 @@ namespace Microsoft.PythonTools.Analysis {
             if (cancel.IsCancellationRequested) {
                 return;
             }
+
+            if (_builtinModule == null) {
+                Debug.Fail("Used analyzer without reloading modules");
+                ReloadModulesAsync().WaitAndUnwrapExceptions();
+            }
+            
             var ddg = new DDG();
             ddg.Analyze(Queue, cancel, _reportQueueSize, _reportQueueInterval);
             foreach (var entry in ddg.AnalyzedEntries) {
@@ -912,7 +1005,7 @@ namespace Microsoft.PythonTools.Analysis {
         protected virtual void Dispose(bool disposing) {
             if (disposing) {
                 IDisposable interpreter = _interpreter as IDisposable;
-                if (interpreter != null) {
+                if (_disposeInterpreter && interpreter != null) {
                     interpreter.Dispose();
                 }
             }

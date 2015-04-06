@@ -27,6 +27,7 @@ namespace Microsoft.PythonTools.Project {
         public const string NoCompletionsCompletion = "NoCompletionsCompletion";
         public const string WarningUnknownType = "WarningUnknownType";
         public const string WarningAnalysisNotCurrent = "WarningAnalysisNotCurrent";
+        public const string AnalyzingProject = "AnalyzingProject";
 
         public const string SearchPaths = "SearchPaths";
         public const string SearchPathContainerProperties = "SearchPathProperties";

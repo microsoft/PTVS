@@ -69,6 +69,20 @@ namespace Microsoft.PythonTools.DkmDebugger {
             public DkmThread SuspendedThread { get; set; }
         }
 
+        private static string GetPyInitializeObjectFile(PythonLanguageVersion version) {
+            switch (version) {
+                case PythonLanguageVersion.V27:
+                case PythonLanguageVersion.V33:
+                case PythonLanguageVersion.V34:
+                    return "pythonrun.obj";
+                case PythonLanguageVersion.V35:
+                    return "pylifecycle.obj";
+                default:
+                    Debug.Fail("Unsupported Python version");
+                    return string.Empty;
+            }
+        }
+
         private static void InjectHelperDll(DkmProcess process) {
             var injectionData = process.GetDataItem<HelperDllInjectionDataHolder>();
             if (injectionData != null) {
@@ -97,7 +111,10 @@ namespace Microsoft.PythonTools.DkmDebugger {
             // asynchronous, and so there's no user expectation that breakpoints light up instantly.
 
             // If Python is already initialized, this is attach-to-running-process - don't block.
-            var initialized = pyrtInfo.DLLs.Python.GetStaticVariable<Int32Proxy>("initialized", "pythonrun.obj");
+            var initialized = pyrtInfo.DLLs.Python.GetStaticVariable<Int32Proxy>(
+                "initialized",
+                GetPyInitializeObjectFile(pyrtInfo.LanguageVersion)
+            );
             if (initialized.Read() == 0) {
                 // When Py_InitializeEx is hit, suspend the thread.
                 DkmRuntimeBreakpoint makePendingCallsBP = null;

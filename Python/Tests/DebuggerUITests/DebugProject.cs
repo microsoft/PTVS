@@ -442,13 +442,13 @@ namespace DebuggerUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("VSTestHost")]
         public void TestException() {
-            ExceptionTest("SimpleException.py", "Exception occurred", "", "exceptions.Exception", 3);
+            ExceptionTest("SimpleException.py", "Exception occurred", "", "Exception", 3);
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("VSTestHost")]
         public void TestException2() {
-            ExceptionTest("SimpleException2.py", "ValueError occurred", "bad value", "exceptions.ValueError", 3);
+            ExceptionTest("SimpleException2.py", "ValueError occurred", "bad value", "ValueError", 3);
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
@@ -457,7 +457,7 @@ namespace DebuggerUITests {
             var waitOnAbnormalExit = GetOptions().WaitOnAbnormalExit;
             GetOptions().WaitOnAbnormalExit = false;
             try {
-                ExceptionTest("SimpleExceptionUnhandled.py", "ValueError was unhandled by user code", "bad value", "exceptions.ValueError", 2);
+                ExceptionTest("SimpleExceptionUnhandled.py", "ValueError was unhandled by user code", "bad value", "ValueError", 2);
             } finally {
                 GetOptions().WaitOnAbnormalExit = waitOnAbnormalExit;
             }

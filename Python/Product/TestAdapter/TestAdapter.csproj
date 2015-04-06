@@ -128,6 +128,9 @@
     <Compile Include="..\..\..\Common\Product\SharedProject\ProcessOutput.cs">
       <Link>ProcessOutput.cs</Link>
     </Compile>
+    <Compile Include="..\..\..\Common\Product\SharedProject\TaskExtensions.cs">
+      <Link>TaskExtensions.cs</Link>
+    </Compile>
     <Compile Include="..\PythonTools\PythonConstants.cs">
       <Link>PythonConstants.cs</Link>
     </Compile>
