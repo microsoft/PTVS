@@ -304,7 +304,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly Dictionary<EntryKey, List<TaskProviderItem>> _items;
         private readonly Dictionary<EntryKey, HashSet<ITextBuffer>> _errorSources;
         private readonly object _itemsLock = new object();
-        private readonly uint _cookie;
+        private uint _cookie;
         private readonly IVsTaskList _taskList;
         internal readonly IErrorProviderFactory _errorProvider;
         protected readonly IServiceProvider _serviceProvider;
@@ -318,9 +318,6 @@ namespace Microsoft.PythonTools.Intellisense {
             _errorSources = new Dictionary<EntryKey, HashSet<ITextBuffer>>();
 
             _taskList = taskList;
-            if (_taskList != null) {
-                ErrorHandler.ThrowOnFailure(_taskList.RegisterTaskProvider(this, out _cookie));
-            }
             _errorProvider = errorProvider;
             _workerQueue = new BlockingCollection<WorkerMessage>();
         }
@@ -547,6 +544,9 @@ namespace Microsoft.PythonTools.Intellisense {
 
             await _serviceProvider.GetUIThread().InvokeAsync(() => {
                 if (_taskList != null) {
+                    if (_cookie == 0) {
+                        ErrorHandler.ThrowOnFailure(_taskList.RegisterTaskProvider(this, out _cookie));
+                    }
                     try {
                         _taskList.RefreshTasks(_cookie);
                     } catch (InvalidComObjectException) {
