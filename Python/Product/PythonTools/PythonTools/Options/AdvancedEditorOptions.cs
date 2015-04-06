@@ -32,7 +32,8 @@ namespace Microsoft.PythonTools.Options {
         private const string ColorNamesWithAnalysisSetting = "ColorNamesWithAnalysis";
         private const string AutoListIdentifiersSetting = "AutoListIdentifiers";
 
-        private const string _defaultCompletionChars = "{}[]().,:;+-*/%&|^~=<>#'\"\\";
+        private const string _oldDefaultCompletionChars = "{}[]().,:;+-*/%&|^~=<>#'\"\\";
+        private const string _defaultCompletionChars = "{}[]().,:;+-*/%&|^~=<>#@\\";
 
         internal AdvancedEditorOptions(PythonToolsService service) {
             _service = service;
@@ -43,7 +44,11 @@ namespace Microsoft.PythonTools.Options {
             EnterCommitsIntellisense = _service.LoadBool(EnterCommitsSetting, Category) ?? true;
             IntersectMembers = _service.LoadBool(IntersectMembersSetting, Category) ?? false;
             AddNewLineAtEndOfFullyTypedWord = _service.LoadBool(NewLineAtEndOfWordSetting, Category) ?? false;
-            CompletionCommittedBy = _service.LoadString("CompletionCommittedBy", Category) ?? _defaultCompletionChars;
+            CompletionCommittedBy = _service.LoadString(CompletionCommittedBySetting, Category) ?? _defaultCompletionChars;
+            if (CompletionCommittedBy == _oldDefaultCompletionChars) {
+                CompletionCommittedBy = _defaultCompletionChars;
+                _service.SaveString(CompletionCommittedBySetting, Category, CompletionCommittedBy);
+            }
             EnterOutliningModeOnOpen = _service.LoadBool(EnterOutlingModeOnOpenSetting, Category) ?? true;
             PasteRemovesReplPrompts = _service.LoadBool(PasteRemovesReplPromptsSetting, Category) ?? true;
             FilterCompletions = _service.LoadBool(FilterCompletionsSetting, Category) ?? true;
