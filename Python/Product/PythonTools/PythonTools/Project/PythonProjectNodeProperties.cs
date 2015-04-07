@@ -100,6 +100,13 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
+        [Browsable(false)]
+        public string Environment {
+            get {
+                return this.Node.ProjectMgr.GetProjectProperty(PythonConstants.EnvironmentSetting, true);
+            }
+        }
+
         [PropertyNameAttribute("WebApplication.AspNetDebugging")]
         [Browsable(false)]
         public bool AspNetDebugging {

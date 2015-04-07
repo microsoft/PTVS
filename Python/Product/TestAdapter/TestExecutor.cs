@@ -173,6 +173,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 }
                 env[pythonPathVar] = pythonPath;
             }
+
             foreach (var envVar in testCase.Environment) {
                 env[envVar.Key] = envVar.Value;
             }
@@ -323,6 +324,16 @@ namespace Microsoft.PythonTools.TestAdapter {
                     projSettings.EnableNativeCodeDebugging = false;
                 }
 
+                var userEnv = proj.GetPropertyValue(PythonConstants.EnvironmentSetting);
+                if (userEnv != null) {
+                    foreach (var envVar in userEnv.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)) {
+                        var nameValue = envVar.Split(new[] { '=' }, 2);
+                        if (nameValue.Length == 2) {
+                            projSettings.Environment[nameValue[0]] = nameValue[1];
+                        }
+                    }
+                }
+
                 return projSettings;
             } finally {
                 if (provider != null) {
@@ -364,6 +375,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 WorkingDir = String.Empty;
                 ProjectHome = String.Empty;
                 DjangoSettingsModule = String.Empty;
+                Environment = new Dictionary<string, string>();
             }
 
             public IPythonInterpreterFactory Factory { get; set; }
@@ -373,6 +385,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             public string ProjectHome { get; set; }
             public string DjangoSettingsModule { get; set; }
             public bool EnableNativeCodeDebugging { get; set; }
+            public Dictionary<string, string> Environment { get; set; }
         }
 
         enum PythonDebugMode {
@@ -395,7 +408,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
             public readonly string WorkingDirectory;
             public readonly string SearchPaths;
-            public readonly IEnumerable<KeyValuePair<string, string>> Environment;
+            public readonly IDictionary<string, string> Environment;
             public readonly IEnumerable<string> Arguments;
 
             public PythonTestCase(PythonProjectSettings settings, TestCase testCase, PythonDebugMode debugMode) {
@@ -453,11 +466,13 @@ namespace Microsoft.PythonTools.TestAdapter {
 
                 Arguments = arguments;
 
+                Environment = new Dictionary<string, string>();
                 if (!string.IsNullOrEmpty(settings.DjangoSettingsModule)) {
-                    Environment = new[] { new KeyValuePair<string, string>("DJANGO_SETTINGS_MODULE", settings.DjangoSettingsModule) };
+                    Environment["DJANGO_SETTINGS_MODULE"] = settings.DjangoSettingsModule;
                 }
-
-                Environment = Environment ?? Enumerable.Empty<KeyValuePair<string, string>>();
+                foreach (var envVar in settings.Environment) {
+                    Environment[envVar.Key] = envVar.Value;
+                }
             }
 
             private static int GetFreePort() {

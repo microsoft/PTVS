@@ -282,6 +282,17 @@ namespace Microsoft.PythonTools.Profiling {
                     .Distinct(StringComparer.OrdinalIgnoreCase)
                 );
             }
+
+            var userEnv = projectToProfile.Properties.Item("Environment").Value as string;
+            if (userEnv != null) {
+                foreach (var envVar in userEnv.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)) {
+                    var nameValue = envVar.Split(new[] { '=' }, 2);
+                    if (nameValue.Length == 2) {
+                        env[nameValue[0]] = nameValue[1];
+                    }
+                }
+            }
+
             RunProfiler(session, interpreterPath, startupFile, args, workingDir, env, openReport, arch);
         }
 

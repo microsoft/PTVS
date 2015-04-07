@@ -125,5 +125,8 @@ namespace TestAdapterTests {
                 return new[] { MultiprocessingSuccess };
             }
         }
+
+        public static string TestAdapterEnvironmentProject = TestData.GetPath(@"TestData\TestAdapterTests\EnvironmentTest.pyproj");
+        public static TestInfo EnvironmentTestSuccess = TestInfo.FromRelativePaths("EnvironmentTests", "test_environ", @"TestData\TestAdapterTests\EnvironmentTest.pyproj", @"TestData\TestAdapterTests\EnvironmentTest.py", 5, TestOutcome.Passed);
     }
 }

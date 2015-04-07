@@ -546,6 +546,31 @@ namespace ProfilingUITests {
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("VSTestHost")]
+        public void LaunchProjectWithEnvironment() {
+            EnvDTE.Project project;
+            IPythonProfiling profiling;
+            using (var app = OpenProfileTestProject(out project, out profiling, @"TestData\ProfileTestEnvironment.sln")) {
+                var session = LaunchProject(app, profiling, project, TestData.GetPath(@"TestData\ProfileTestEnvironment"), false);
+                try {
+                    while (profiling.IsProfiling) {
+                        Thread.Sleep(100);
+                    }
+
+                    var report = session.GetReport(1);
+                    var filename = report.Filename;
+                    Assert.IsTrue(filename.Contains("HelloWorld"));
+                    Assert.IsNull(session.GetReport(2));
+                    Assert.IsNotNull(session.GetReport(report.Filename));
+
+                    VerifyReport(report, true, "Program.user_env_var_valid");
+                } finally {
+                    profiling.RemoveSession(session, true);
+                }
+            }
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("VSTestHost")]
         public void TestSaveDirtySession() {
             EnvDTE.Project project;
             IPythonProfiling profiling;
