@@ -2221,6 +2221,22 @@ namespace AnalysisTests {
         }
 
         [TestMethod, Priority(0)]
+        public void ConditionalExpr() {
+            foreach (var version in AllVersions) {
+                CheckAst(
+                    ParseFile("ConditionalExpr.py", ErrorSink.Null, version),
+                    CheckSuite(
+                        CheckExprStmt(CheckConditionalExpression(One, Two, Three)),
+                        CheckExprStmt(CheckConditionalExpression(One, Two, Three)),
+                        CheckExprStmt(CheckConditionalExpression(One, Two, Three)),
+                        CheckExprStmt(CheckConditionalExpression(CheckConstant(1.0), CheckConstant(2e10), Three)),
+                        CheckExprStmt(CheckConditionalExpression(One, CheckConstant(2.0), Three))
+                    )
+                );
+            }
+        }
+
+        [TestMethod, Priority(0)]
         public void ExecStmt() {
             foreach (var version in V2Versions) {
                 CheckAst(
@@ -2636,6 +2652,17 @@ namespace AnalysisTests {
                 } else {
                     Assert.AreEqual(null, ifStmt.ElseStatement);
                 }
+            };
+        }
+
+        private static Action<Expression> CheckConditionalExpression(Action<Expression> trueExpression, Action<Expression> test, Action<Expression> falseExpression) {
+            return expr => {
+                Assert.AreEqual(typeof(ConditionalExpression), expr.GetType(), "Not a Conditional Expression");
+                var condExpr = (ConditionalExpression)expr;
+
+                test(condExpr.Test);
+                trueExpression(condExpr.TrueExpression);
+                falseExpression(condExpr.FalseExpression);
             };
         }
 

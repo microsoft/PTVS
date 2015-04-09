@@ -1198,7 +1198,7 @@ namespace Microsoft.PythonTools.Parsing {
 
                     case 'e':
                     case 'E':
-                        return ReadExponent();
+                        return ReadExponent(true);
 
                     case 'j':
                     case 'J':
@@ -1225,14 +1225,16 @@ namespace Microsoft.PythonTools.Parsing {
             }
         }
 
-        private Token ReadExponent() {
+        private Token ReadExponent(bool leftIsFloat = false) {
             int ch = NextChar();
 
             if (ch == '-' || ch == '+') {
                 ch = NextChar();
             }
 
+            var iter = 0;
             while (true) {
+                iter++;
                 switch (ch) {
                     case '0':
                     case '1':
@@ -1257,17 +1259,35 @@ namespace Microsoft.PythonTools.Parsing {
                             return new VerbatimConstantValueToken(LiteralParser.ParseImaginary(tokenStr), tokenStr);
                         }
                         return new ConstantValueToken(LiteralParser.ParseImaginary(GetTokenString()));
-
                     default:
-                        BufferBack();
-                        MarkTokenEnd();
+                        if (iter <= 1){
+                            // CPython Issue 21642 allows entries such as 1else which should be
+                            // parsed as '1 else' and not '1e lse'.  Back the buffer to before the e.
+                            BufferBack(-2);
+                            MarkTokenEnd();
 
-                        // TODO: parse in place
-                        if (Verbatim) {
+                            // since we are ignoring the e this could be either a float or int
+                            // depending on the lhs of the e
                             string tokenStr = GetTokenString();
-                            return new VerbatimConstantValueToken(ParseFloat(tokenStr), tokenStr);
+                            object parsed = leftIsFloat ? ParseFloat(tokenStr) : ParseInteger(tokenStr, 10);
+                            // TODO: parse in place
+                            if (Verbatim) {
+                                return new VerbatimConstantValueToken(parsed, tokenStr);
+                            }
+                            return new ConstantValueToken(parsed);
+                        } else {
+                            // we have a valid exponent but it is against a variable and are on the e.
+                            // For example 1e23else.
+                            BufferBack();
+                            MarkTokenEnd();
+
+                            // TODO: parse in place
+                            string tokenStr = GetTokenString();
+                            if (Verbatim) {
+                                return new VerbatimConstantValueToken(ParseFloat(tokenStr), tokenStr);
+                            }
+                            return new ConstantValueToken(ParseFloat(tokenStr));
                         }
-                        return new ConstantValueToken(ParseFloat(GetTokenString()));
                 }
             }
         }
@@ -2258,8 +2278,8 @@ namespace Microsoft.PythonTools.Parsing {
             Console.WriteLine("--> `{0}` {1}", GetTokenString().Replace("\r", "\\r").Replace("\n", "\\n").Replace("\t", "\\t"), TokenSpan);
         }
 
-        private void BufferBack() {
-            SeekRelative(-1);
+        private void BufferBack(int count = -1) {
+            SeekRelative(count);
         }
 
         internal string GetTokenString() {
