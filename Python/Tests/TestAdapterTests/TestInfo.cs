@@ -128,5 +128,8 @@ namespace TestAdapterTests {
 
         public static string TestAdapterEnvironmentProject = TestData.GetPath(@"TestData\TestAdapterTests\EnvironmentTest.pyproj");
         public static TestInfo EnvironmentTestSuccess = TestInfo.FromRelativePaths("EnvironmentTests", "test_environ", @"TestData\TestAdapterTests\EnvironmentTest.pyproj", @"TestData\TestAdapterTests\EnvironmentTest.py", 5, TestOutcome.Passed);
+
+        public static string TestAdapterExtensionReferenceProject = TestData.GetPath(@"TestData\TestAdapterTests\ExtensionReferenceTest.pyproj");
+        public static TestInfo ExtensionReferenceTestSuccess = TestInfo.FromRelativePaths("SpamTests", "test_spam", @"TestData\TestAdapterTests\ExtensionReferenceTest.pyproj", @"TestData\TestAdapterTests\ExtensionReferenceTest.py", 5, TestOutcome.Passed);
     }
 }

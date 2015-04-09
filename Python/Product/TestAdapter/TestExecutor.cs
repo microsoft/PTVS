@@ -315,6 +315,28 @@ namespace Microsoft.PythonTools.TestAdapter {
                         .Select(path => Path.GetFullPath(Path.Combine(projSettings.ProjectHome, path)))
                 );
 
+                // Add all extension <Reference> items to search path.
+                foreach (var item in proj.GetItems(ProjectFileConstants.Reference)) {
+                    string path = item.GetMetadataValue(PythonConstants.PythonExtension);
+                    if (string.IsNullOrWhiteSpace(path)) {
+                        continue;
+                    }
+
+                    string absPath;
+                    try {
+                        absPath = CommonUtils.GetAbsoluteFilePath(projSettings.ProjectHome, path);
+                    } catch (InvalidOperationException) {
+                        continue;
+                    }
+
+                    if (!string.IsNullOrEmpty(absPath)) {
+                        string parentPath = CommonUtils.GetParent(absPath);
+                        if (!string.IsNullOrEmpty(parentPath)) {
+                            projSettings.SearchPath.Add(parentPath);
+                        }
+                    }
+                }
+
                 projSettings.DjangoSettingsModule = proj.GetPropertyValue("DjangoSettingsModule");
 
                 bool enableNativeCodeDebugging;
