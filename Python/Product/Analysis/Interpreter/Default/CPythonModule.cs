@@ -71,6 +71,10 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                 // completes.
                 _loadState = LoadState.Loading;
 
+                // Will be set to true if we should delete this file and then
+                // trigger a corruption notification.
+                bool deleteFile = false;
+
                 using (var stream = new FileStream(_dbFile, FileMode.Open, FileAccess.Read, FileShare.Read)) {
                     Dictionary<string, object> contents = null;
                     try {
@@ -84,7 +88,28 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                     }
 
                     if (contents != null) {
+                        object obj;
+                        string filename;
+                        if (contents.TryGetValue("filename", out obj)) {
+                            filename = obj as string;
+                            if (!string.IsNullOrEmpty(filename) && !File.Exists(filename)) {
+                                // Issue 2358 - must refresh DB after it moves
+                                // on disk.
+                                deleteFile = true;
+                            }
+                        }
+
                         LoadModule(contents);
+                    }
+                }
+
+                if (deleteFile) {
+                    // Only notify if we actually remove the file
+                    try {
+                        File.Delete(_dbFile);
+                        _typeDb.OnDatabaseCorrupt();
+                    } catch (IOException) {
+                    } catch (UnauthorizedAccessException) {
                     }
                 }
             } catch (FileNotFoundException) {
