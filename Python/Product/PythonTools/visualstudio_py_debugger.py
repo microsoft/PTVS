@@ -2382,40 +2382,32 @@ def debug(
     # now execute main file
     globals_obj = {'__name__': '__main__'}
     try:
-        try:
-            if run_as == 'module':
-                exec_module(file, globals_obj)
-            elif run_as == 'code':
-                exec_code(file, '<string>', globals_obj)
-            else:
-                exec_file(file, globals_obj)
-        finally:
-            sys.settrace(None)
-            THREADS_LOCK.acquire()
-            del THREADS[cur_thread.id]
-            THREADS_LOCK.release()
-            report_thread_exit(cur_thread)
+        if run_as == 'module':
+            exec_module(file, globals_obj)
+        elif run_as == 'code':
+            exec_code(file, '<string>', globals_obj)
+        else:
+            exec_file(file, globals_obj)
+    finally:
+        sys.settrace(None)
+        THREADS_LOCK.acquire()
+        del THREADS[cur_thread.id]
+        THREADS_LOCK.release()
+        report_thread_exit(cur_thread)
 
-            # Give VS debugger a chance to process commands
-            # by waiting for ack of "last" command
-            global threading
-            if threading is None:
-                import threading
-            global last_ack_event
-            last_ack_event = threading.Event()
-            with _SendLockCtx:
-                write_bytes(conn, LAST)
-            last_ack_event.wait(5)
+        # Give VS debugger a chance to process commands
+        # by waiting for ack of "last" command
+        global threading
+        if threading is None:
+            import threading
+        global last_ack_event
+        last_ack_event = threading.Event()
+        with _SendLockCtx:
+            write_bytes(conn, LAST)
+        last_ack_event.wait(5)
 
-        if wait_on_exit:
-            do_wait()
-    except Exception:
-        # Handled by excepthook
-        raise
-    except:
-        # Not handled by excepthook, so we call ours explicitly
-        _excepthook(*sys.exc_info())
-        raise
+    if wait_on_exit:
+        do_wait()
 
 # Code objects for functions which are going to be at the bottom of the stack, right below the first
 # stack frame for user code. When we walk the stack to determine whether to report or block on a given

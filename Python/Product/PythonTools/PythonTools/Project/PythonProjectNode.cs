@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -440,7 +441,7 @@ namespace Microsoft.PythonTools.Project {
             if (interpreters != null) {
                 if (!interpreters.IsActiveInterpreterGlobalDefault) {
                     foreach (var fact in interpreters.GetInterpreterFactories()) {
-                        if (!RemoveFirst(remaining, n => n._factory == fact)) {
+                        if (!RemoveFirst(remaining, n => !n._isGlobalDefault && n._factory == fact)) {
                             node.AddChild(new InterpretersNode(
                                 this,
                                 Interpreters.GetProjectItem(fact),
@@ -454,10 +455,8 @@ namespace Microsoft.PythonTools.Project {
                     }
                 } else {
                     var fact = interpreters.ActiveInterpreter;
-                    if (!RemoveFirst(remaining, n => n._factory == fact)) {
-                        node.AddChild(new InterpretersNode(
-                            this, null, fact, true, false, false, SR.GetString(SR.GlobalDefaultSuffix)
-                        ));
+                    if (!RemoveFirst(remaining, n => n._isGlobalDefault && n._factory == fact)) {
+                        node.AddChild(new InterpretersNode(this, null, fact, true, false, true));
                     }
                 }
             }
@@ -1083,38 +1082,31 @@ namespace Microsoft.PythonTools.Project {
             psi.UseShellExecute = false;
             psi.WorkingDirectory = path;
 
-            var config = (factory ?? GetInterpreterFactory()).Configuration;
+            factory = factory ?? GetInterpreterFactory();
+            var config = factory == null ? null : factory.Configuration;
             if (config != null) {
                 psi.Arguments = string.Format("/K \"title {0} Command Prompt\"",
                     string.IsNullOrEmpty(subtitle) ? Caption : subtitle
                 );
 
+                var props = PythonProjectLaunchProperties.Create(this);
+                var env = new Dictionary<string, string>(props.GetEnvironment(true));
+
                 var paths = new List<string>();
-                if (File.Exists(config.InterpreterPath)) {
-                    paths.Add(Path.GetDirectoryName(config.InterpreterPath));
+                paths.Add(CommonUtils.GetParent(((IPythonProjectLaunchProperties)this).GetInterpreterPath()));
+                paths.Add(CommonUtils.GetParent(config.InterpreterPath));
+                paths.Add(CommonUtils.GetAbsoluteDirectoryPath(config.PrefixPath, "Scripts"));
+                if (psi.EnvironmentVariables.ContainsKey("PATH")) {
+                    paths.AddRange(psi.EnvironmentVariables["PATH"].Split(Path.PathSeparator));
                 }
-                paths.Add(Path.Combine(config.PrefixPath, "Scripts"));
                 paths.AddRange(Environment.GetEnvironmentVariable("PATH").Split(Path.PathSeparator));
 
-                psi.EnvironmentVariables["PATH"] = string.Join(
-                    new string(Path.PathSeparator, 1),
-                    paths.Where(Directory.Exists).Distinct()
-                );
+                PythonProjectLaunchProperties.MergeEnvironmentBelow(env, new[]{ new KeyValuePair<string, string>(
+                    "PATH", string.Join(new string(Path.PathSeparator, 1), paths.Where(Directory.Exists).Distinct())
+                )}, true);
 
-                if (!string.IsNullOrWhiteSpace(config.PathEnvironmentVariable)) {
-                    var searchPaths = this.GetSearchPaths().ToList();
-                    searchPaths.Insert(0, GetWorkingDirectory());
-
-                    if (!Site.GetPythonToolsService().GeneralOptions.ClearGlobalPythonPath) {
-                        searchPaths.AddRange(
-                            Environment.GetEnvironmentVariable(config.PathEnvironmentVariable).Split(';')
-                        );
-                    }
-
-                    psi.EnvironmentVariables[config.PathEnvironmentVariable] = string.Join(
-                        new string(Path.PathSeparator, 1),
-                        searchPaths.Where(Directory.Exists).Distinct()
-                    );
+                foreach (var kv in env) {
+                    psi.EnvironmentVariables[kv.Key] = kv.Value;
                 }
             }
 
@@ -2447,7 +2439,7 @@ namespace Microsoft.PythonTools.Project {
             var res = PythonProjectLaunchProperties.ParseEnvironment(GetProjectProperty(PythonConstants.EnvironmentSetting));
 
             if (includeSearchPaths) {
-                PythonProjectLaunchProperties.AddSearchPaths(res, this);
+                PythonProjectLaunchProperties.AddSearchPaths(res, this, Site);
             }
 
             return res;
@@ -2462,7 +2454,7 @@ namespace Microsoft.PythonTools.Project {
                 }
                 return str;
             }
-            
+
             var factory = GetInterpreterFactoryOrThrow();
             if (((IPythonProjectLaunchProperties)this).GetIsWindowsApplication() ?? false) {
                 return factory.Configuration.WindowsInterpreterPath;

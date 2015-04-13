@@ -7,14 +7,12 @@
              xmlns:wpf="clr-namespace:Microsoft.VisualStudioTools.Wpf"
              UseLayoutRounding="True"
              mc:Ignorable="d" 
+             Focusable="False"
              d:DesignHeight="300" d:DesignWidth="300">
     <UserControl.CommandBindings>
         <CommandBinding Command="{x:Static l:EnvironmentPathsExtension.OpenInFileExplorer}"
                         CanExecute="OpenInFileExplorer_CanExecute"
                         Executed="OpenInFileExplorer_Executed" />
-        <CommandBinding Command="{x:Static l:EnvironmentPathsExtension.CopyToClipboard}"
-                        CanExecute="CopyToClipboard_CanExecute"
-                        Executed="CopyToClipboard_Executed" />
     </UserControl.CommandBindings>
     <UserControl.Resources>
         <ResourceDictionary>
@@ -199,9 +197,14 @@
                                 </Grid>
                                 <Button.ContextMenu>
                                     <ContextMenu>
+                                        <ContextMenu.CommandBindings>
+                                            <CommandBinding Command="ApplicationCommands.Copy"
+                                                            CanExecute="CopyToClipboard_CanExecute"
+                                                            Executed="CopyToClipboard_Executed" />
+                                        </ContextMenu.CommandBindings>
                                         <MenuItem Header="_Copy path"
                                                   InputGestureText=""
-                                                  Command="{x:Static l:EnvironmentPathsExtension.CopyToClipboard}"
+                                                  Command="ApplicationCommands.Copy"
                                                   CommandParameter="{Binding PrefixPath,Mode=OneWay}"/>
                                     </ContextMenu>
                                 </Button.ContextMenu>
@@ -233,9 +236,14 @@
                                 </Grid>
                                 <Button.ContextMenu>
                                     <ContextMenu>
+                                        <ContextMenu.CommandBindings>
+                                            <CommandBinding Command="ApplicationCommands.Copy"
+                                                            CanExecute="CopyToClipboard_CanExecute"
+                                                            Executed="CopyToClipboard_Executed" />
+                                        </ContextMenu.CommandBindings>
                                         <MenuItem Header="_Copy path"
                                                   InputGestureText=""
-                                                  Command="{x:Static l:EnvironmentPathsExtension.CopyToClipboard}"
+                                                  Command="ApplicationCommands.Copy"
                                                   CommandParameter="{Binding InterpreterPath,Mode=OneWay}"/>
                                     </ContextMenu>
                                 </Button.ContextMenu>
@@ -279,9 +287,14 @@
                                 </Grid>
                                 <Button.ContextMenu>
                                     <ContextMenu>
+                                        <ContextMenu.CommandBindings>
+                                            <CommandBinding Command="ApplicationCommands.Copy"
+                                                            CanExecute="CopyToClipboard_CanExecute"
+                                                            Executed="CopyToClipboard_Executed" />
+                                        </ContextMenu.CommandBindings>
                                         <MenuItem Header="_Copy path"
                                                   InputGestureText=""
-                                                  Command="{x:Static l:EnvironmentPathsExtension.CopyToClipboard}"
+                                                  Command="ApplicationCommands.Copy"
                                                   CommandParameter="{Binding WindowsInterpreterPath,Mode=OneWay}"/>
                                     </ContextMenu>
                                 </Button.ContextMenu>

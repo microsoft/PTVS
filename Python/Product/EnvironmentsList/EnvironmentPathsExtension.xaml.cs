@@ -49,7 +49,6 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public static readonly ICommand OpenInFileExplorer = new RoutedCommand();
         public static readonly ICommand StartInterpreter = new RoutedCommand();
         public static readonly ICommand StartWindowsInterpreter = new RoutedCommand();
-        public static readonly ICommand CopyToClipboard = new RoutedCommand();
 
         public EnvironmentPathsExtension() {
             InitializeComponent();
@@ -77,6 +76,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         private void CopyToClipboard_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
             e.CanExecute = e.Parameter is string || e.Parameter is IDataObject;
+            e.Handled = true;
         }
 
         private void CopyToClipboard_Executed(object sender, ExecutedRoutedEventArgs e) {

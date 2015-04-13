@@ -50,6 +50,7 @@ namespace Microsoft.PythonTools.Project {
         private readonly FileSystemWatcher _fileWatcher;
         private readonly Timer _timer;
         private bool _checkedItems, _checkingItems, _disposed;
+        internal readonly bool _isGlobalDefault;
 
         public static readonly object InstallPackageLockMoniker = new object();
 
@@ -59,8 +60,7 @@ namespace Microsoft.PythonTools.Project {
             IPythonInterpreterFactory factory,
             bool isInterpreterReference,
             bool canDelete,
-            bool canRemove = true,
-            string captionSuffix = null
+            bool isGlobalDefault = false
         )
             : base(project, ChooseElement(project, item)) {
             ExcludeNodeFromScc = true;
@@ -70,8 +70,9 @@ namespace Microsoft.PythonTools.Project {
             _factory = factory;
             _isReference = isInterpreterReference;
             _canDelete = canDelete;
-            _canRemove = canRemove;
-            _captionSuffix = captionSuffix ?? "";
+            _isGlobalDefault = isGlobalDefault;
+            _canRemove = !isGlobalDefault;
+            _captionSuffix = isGlobalDefault ? SR.GetString(SR.GlobalDefaultSuffix) : "";
 
             if (Directory.Exists(_factory.Configuration.LibraryPath)) {
                 // TODO: Need to handle watching for creation

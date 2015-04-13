@@ -32,12 +32,12 @@
                                   Stroke="{DynamicResource {x:Static wpf:Controls.ControlBorderKey}}"
                                   StrokeThickness="1.0" />
                             
-                            <TextBlock Grid.Column="1"
-                                       Margin="2"
-                                       HorizontalAlignment="Stretch"
-                                       VerticalAlignment="Center"
-                                       TextTrimming="CharacterEllipsis"
-                                       Text="{Binding DisplayName}" />
+                            <Grid Grid.Column="1"
+                                  Margin="2"
+                                  HorizontalAlignment="Stretch"
+                                  VerticalAlignment="Center">
+                                <TextBlock TextTrimming="CharacterEllipsis" Text="{Binding DisplayName}" />
+                            </Grid>
 
                             <Button Grid.Column="2"
                                     VerticalAlignment="Center"
@@ -65,7 +65,7 @@
                                         </StackPanel>
                                         <ControlTemplate.Triggers>
                                             <Trigger Property="IsEnabled" Value="False">
-                                                <Setter Property="Visibility" Value="Hidden" />
+                                                <Setter Property="Visibility" Value="Collapsed" />
                                             </Trigger>
                                         </ControlTemplate.Triggers>
                                     </ControlTemplate>
@@ -257,17 +257,28 @@
         </Button>
 
         <ScrollViewer x:Name="PackagesList"
+                      HorizontalAlignment="Stretch"
+                      CanContentScroll="False"
+                      HorizontalScrollBarVisibility="Disabled"
+                      VerticalScrollBarVisibility="Auto"
                       Grid.Row="3"
                       BorderThickness="0">
             <StackPanel Orientation="Vertical">
-                <ListBox BorderThickness="0"
-                         ItemsSource="{Binding InstalledPackages}"
-                         PreviewMouseWheel="ForwardMouseWheel" />
+                <StackPanel.Resources>
+                    <Style TargetType="ListBox" BasedOn="{StaticResource {x:Type ListBox}}">
+                        <Setter Property="BorderThickness" Value="0" />
+                        <Setter Property="Focusable" Value="False" />
+                        <Setter Property="HorizontalAlignment" Value="Stretch" />
+                        <Setter Property="ScrollViewer.CanContentScroll" Value="False" />
+                        <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
+                        <EventSetter Event="PreviewMouseWheel" Handler="ForwardMouseWheel" />
+                    </Style>
+                </StackPanel.Resources>
+                <ListBox ItemsSource="{Binding InstalledPackages}" />
                 <ContentControl Content="{Binding InstallCommand}"
+                                HorizontalAlignment="Stretch"
                                 PreviewMouseWheel="ForwardMouseWheel" />
-                <ListBox BorderThickness="0"
-                         ItemsSource="{Binding InstallablePackages}"
-                         PreviewMouseWheel="ForwardMouseWheel" />
+                <ListBox ItemsSource="{Binding InstallablePackages}" />
             </StackPanel>
         </ScrollViewer>
     </Grid>
