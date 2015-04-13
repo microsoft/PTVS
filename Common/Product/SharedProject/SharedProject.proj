@@ -354,6 +354,10 @@
       <Link>SharedProject\IProjectLauncher.cs</Link>
       <Visible>true</Visible>
     </Compile>
+    <Compile Include="$(_ProjectSystemFilesLocation)\IProjectLaunchProperties.cs">
+      <Link>SharedProject\IProjectLaunchProperties.cs</Link>
+      <Visible>true</Visible>
+    </Compile>
     <Compile Include="$(_ProjectSystemFilesLocation)\IProjectPublisher.cs">
       <Link>SharedProject\IProjectPublisher.cs</Link>
       <Visible>true</Visible>

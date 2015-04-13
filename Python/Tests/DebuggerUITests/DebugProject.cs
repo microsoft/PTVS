@@ -752,6 +752,35 @@ namespace DebuggerUITests {
         }
 
         /// <summary>
+        /// Start with debuggging, with script in subfolder project.
+        /// </summary>
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("VSTestHost")]
+        public void StartWithDebuggingSubfolderInProject() {
+            string scriptFilePath = TestData.GetPath(@"TestData\DebuggerProject\Sub\paths.py");
+
+            using (var app = new VisualStudioApp()) {
+                OpenDebuggerProject(app);
+
+                app.Dte.ItemOperations.OpenFile(scriptFilePath);
+                app.Dte.Debugger.Breakpoints.Add(File: scriptFilePath, Line: 3);
+                app.Dte.ExecuteCommand("Project.StartWithDebugging");
+                WaitForMode(app, dbgDebugMode.dbgBreakMode);
+                Assert.AreEqual(dbgDebugMode.dbgBreakMode, app.Dte.Debugger.CurrentMode);
+                AssertUtil.ContainsAtLeast(
+                    app.Dte.Debugger.GetExpression("sys.path").DataMembers.Cast<Expression>().Select(e => e.Value),
+                    "'" + TestData.GetPath(@"TestData\DebuggerProject").Replace("\\", "\\\\") + "'"
+                );
+                Assert.AreEqual(
+                    "'" + TestData.GetPath(@"TestData\DebuggerProject\Sub").Replace("\\", "\\\\") + "'",
+                    app.Dte.Debugger.GetExpression("os.path.abspath(os.curdir)").Value
+                );
+                app.Dte.Debugger.Go(WaitForBreakOrEnd: true);
+                Assert.AreEqual(dbgDebugMode.dbgDesignMode, app.Dte.Debugger.CurrentMode);
+            }
+        }
+
+        /// <summary>
         /// Start without debuggging, with script in project.
         /// </summary>
         [TestMethod, Priority(0), TestCategory("Core")]

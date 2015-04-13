@@ -92,7 +92,21 @@ namespace Microsoft.PythonTools.Project {
                                 return VSConstants.E_ABORT;
                             }
 
-                            starter.LaunchFile(this.Url, cmd == CommonConstants.StartDebuggingCmdId);
+                            var starter2 = starter as IProjectLauncher2;
+                            if (starter2 != null) {
+                                starter2.LaunchFile(
+                                    this.Url,
+                                    cmd == CommonConstants.StartDebuggingCmdId,
+                                    new Microsoft.PythonTools.Commands.StartScriptCommand.LaunchFileProperties(
+                                        null,
+                                        CommonUtils.GetParent(this.Url),
+                                        ((PythonProjectNode)ProjectMgr).GetInterpreterFactory().Configuration.PathEnvironmentVariable,
+                                        ProjectMgr.GetWorkingDirectory()
+                                    )
+                                );
+                            } else {
+                                starter.LaunchFile(this.Url, cmd == CommonConstants.StartDebuggingCmdId);
+                            }
                         }
                         return VSConstants.S_OK;
                 }

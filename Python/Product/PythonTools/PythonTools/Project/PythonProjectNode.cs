@@ -48,7 +48,11 @@ using VsMenus = Microsoft.VisualStudioTools.Project.VsMenus;
 
 namespace Microsoft.PythonTools.Project {
     [Guid(PythonConstants.ProjectNodeGuid)]
-    internal class PythonProjectNode : CommonProjectNode, IPythonProject3, IAzureRoleProject {
+    internal class PythonProjectNode :
+        CommonProjectNode,
+        IPythonProject3,
+        IAzureRoleProject,
+        IPythonProjectLaunchProperties {
         // For files that are analyzed because they were directly or indirectly referenced in the search path, store the information
         // about the directory from the search path that referenced them in IProjectEntry.Properties[_searchPathEntryKey], so that
         // they can be located and removed when that directory is removed from the path.
@@ -2429,6 +2433,57 @@ namespace Microsoft.PythonTools.Project {
             nav.AppendChildElement(null, "RoleInstanceValue", null, null);
             nav = nav.SelectSingleNode("sd:RoleInstanceValue", ns);
             nav.CreateAttribute(null, "xpath", null, "/RoleEnvironment/Deployment/@emulated");
+        }
+
+        string IProjectLaunchProperties.GetArguments() {
+            return GetProjectProperty(CommonConstants.CommandLineArguments);
+        }
+
+        string IProjectLaunchProperties.GetWorkingDirectory() {
+            return GetWorkingDirectory();
+        }
+
+        IDictionary<string, string> IProjectLaunchProperties.GetEnvironment(bool includeSearchPaths) {
+            var res = PythonProjectLaunchProperties.ParseEnvironment(GetProjectProperty(PythonConstants.EnvironmentSetting));
+
+            if (includeSearchPaths) {
+                PythonProjectLaunchProperties.AddSearchPaths(res, this);
+            }
+
+            return res;
+        }
+
+        string IPythonProjectLaunchProperties.GetInterpreterPath() {
+            var str = GetProjectProperty(PythonConstants.InterpreterPathSetting);
+            if (!string.IsNullOrEmpty(str)) {
+                str = CommonUtils.GetAbsoluteFilePath(ProjectHome, str);
+                if (!File.Exists(str)) {
+                    throw new MissingInterpreterException(SR.GetString(SR.DebugLaunchInterpreterMissing_Path, str));
+                }
+                return str;
+            }
+            
+            var factory = GetInterpreterFactoryOrThrow();
+            if (((IPythonProjectLaunchProperties)this).GetIsWindowsApplication() ?? false) {
+                return factory.Configuration.WindowsInterpreterPath;
+            }
+            return factory.Configuration.InterpreterPath;
+        }
+
+        string IPythonProjectLaunchProperties.GetInterpreterArguments() {
+            return GetProjectProperty(PythonConstants.InterpreterArgumentsSetting);
+        }
+
+        bool? IPythonProjectLaunchProperties.GetIsWindowsApplication() {
+            var str = GetProjectProperty(PythonConstants.IsWindowsApplicationSetting);
+            bool isWindowsApp;
+            return bool.TryParse(str, out isWindowsApp) ? (bool?)isWindowsApp : null;
+        }
+
+        bool? IPythonProjectLaunchProperties.GetIsNativeDebuggingEnabled() {
+            var str = GetProjectProperty(PythonConstants.EnableNativeCodeDebugging);
+            bool isNativeDebug;
+            return bool.TryParse(str, out isNativeDebug) ? (bool?)isNativeDebug : null;
         }
     }
 }

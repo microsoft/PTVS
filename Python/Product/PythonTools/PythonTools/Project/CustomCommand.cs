@@ -486,6 +486,7 @@ namespace Microsoft.PythonTools.Project {
 
         public CommandStartInfo GetStartInfo(IPythonProject2 project) {
             var outputs = BuildTarget(project, _target);
+            var config = PythonProjectLaunchProperties.Create(project);
 
             var item = outputs.Values
                 .SelectMany(result => result.Items)
@@ -502,7 +503,7 @@ namespace Microsoft.PythonTools.Project {
                 Filename = item.ItemSpec,
                 Arguments = item.GetMetadata(BuildTasks.CreatePythonCommandItem.ArgumentsKey),
                 WorkingDirectory = item.GetMetadata(BuildTasks.CreatePythonCommandItem.WorkingDirectoryKey),
-                EnvironmentVariables = new Dictionary<string, string>(),
+                EnvironmentVariables = PythonProjectLaunchProperties.ParseEnvironment(item.GetMetadata(BuildTasks.CreatePythonCommandItem.EnvironmentKey)),
                 TargetType = item.GetMetadata(BuildTasks.CreatePythonCommandItem.TargetTypeKey),
                 ExecuteIn = item.GetMetadata(BuildTasks.CreatePythonCommandItem.ExecuteInKey),
                 RequiredPackages = item.GetMetadata(BuildTasks.CreatePythonCommandItem.RequiredPackagesKey).Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries)
@@ -518,43 +519,11 @@ namespace Microsoft.PythonTools.Project {
                 startInfo.WarningRegex = new Regex(warningRegex);
             }
 
-            // Fill PYTHONPATH from interpreter settings before we load values from Environment metadata item,
-            // so that commands can explicitly override it if they want to.
-            var pythonPathVarName = project.GetInterpreterFactory().Configuration.PathEnvironmentVariable;
-            if (!string.IsNullOrWhiteSpace(pythonPathVarName)) {
-                var pythonPath = string.Join(";", project.GetSearchPaths());
-                if (!_project.Site.GetPythonToolsService().GeneralOptions.ClearGlobalPythonPath) {
-                    pythonPath += ";" + Environment.GetEnvironmentVariable(pythonPathVarName);
-                }
-                startInfo.EnvironmentVariables[pythonPathVarName] = pythonPath;
-            }
-
-            // Fill other environment variables from project properties.
-            string userEnv = project.GetProperty(PythonConstants.EnvironmentSetting);
-            if (userEnv != null) {
-                foreach (var envVar in userEnv.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)) {
-                    var nameValue = envVar.Split(new[] { '=' }, 2);
-                    if (nameValue.Length == 2) {
-                        startInfo.EnvironmentVariables[nameValue[0]] = nameValue[1];
-                    }
-                }
-            }
-
-            var environment = item.GetMetadata(BuildTasks.CreatePythonCommandItem.EnvironmentKey);
-            foreach (var line in environment.Split('\r', '\n')) {
-                int equals = line.IndexOf('=');
-                if (equals > 0) {
-                    startInfo.EnvironmentVariables[line.Substring(0, equals)] = line.Substring(equals + 1);
-                }
-            }
-
             startInfo.EnvironmentVariables["PYTHONUNBUFFERED"] = "1";
+            startInfo.AddPropertiesAfter(PythonProjectLaunchProperties.Create(project));
 
-            if (string.IsNullOrEmpty(startInfo.WorkingDirectory)) {
-                startInfo.WorkingDirectory = project.ProjectHome ?? string.Empty;
-            } else if (!Path.IsPathRooted(startInfo.WorkingDirectory)) {
-                startInfo.WorkingDirectory = CommonUtils.GetAbsoluteDirectoryPath(project.ProjectHome, startInfo.WorkingDirectory);
-            }
+            Debug.Assert(!string.IsNullOrEmpty(startInfo.WorkingDirectory));
+            Debug.Assert(Path.IsPathRooted(startInfo.WorkingDirectory));
 
             return startInfo;
         }
@@ -720,11 +689,11 @@ namespace Microsoft.PythonTools.Project {
         }
     }
 
-    class CommandStartInfo {
+    class CommandStartInfo : IProjectLaunchProperties {
         public string Filename;
         public string Arguments;
         public string WorkingDirectory;
-        public Dictionary<string, string> EnvironmentVariables;
+        public IDictionary<string, string> EnvironmentVariables;
         public string ExecuteIn;
         public string TargetType;
         public Regex ErrorRegex, WarningRegex;
@@ -883,6 +852,27 @@ namespace Microsoft.PythonTools.Project {
                     return EnvironmentVariables.TryGetValue(m.Groups[1].Value, out envVar) ? envVar : string.Empty;
                 });
             }
+        }
+
+        string IProjectLaunchProperties.GetArguments() {
+            return Arguments;
+        }
+
+        string IProjectLaunchProperties.GetWorkingDirectory() {
+            return WorkingDirectory;
+        }
+
+        IDictionary<string, string> IProjectLaunchProperties.GetEnvironment(bool includeSearchPaths) {
+            return EnvironmentVariables;
+        }
+
+        internal void AddPropertiesAfter(IProjectLaunchProperties projectLaunchProperties) {
+            // Fill PYTHONPATH from interpreter settings before we load values from Environment metadata item,
+            // so that commands can explicitly override it if they want to.
+            var props = PythonProjectLaunchProperties.Merge(this, projectLaunchProperties);
+            Arguments = props.GetArguments();
+            WorkingDirectory = props.GetWorkingDirectory();
+            EnvironmentVariables = props.GetEnvironment(true);
         }
     }
 }

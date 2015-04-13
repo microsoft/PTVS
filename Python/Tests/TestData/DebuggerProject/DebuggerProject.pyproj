@@ -53,6 +53,10 @@
     <None Include="UnicodeException.py" />
     <None Include="BreakpointInfo.py" />
     <None Include="StepBreakBreak.py" />
+    <Node Include="Sub\paths.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Sub" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

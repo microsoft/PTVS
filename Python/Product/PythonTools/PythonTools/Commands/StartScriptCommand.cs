@@ -13,11 +13,14 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Forms;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 using SR = Microsoft.PythonTools.Project.SR;
@@ -33,6 +36,31 @@ namespace Microsoft.PythonTools.Commands {
             _serviceProvider = serviceProvider;
         }
 
+        internal class LaunchFileProperties : IProjectLaunchProperties {
+            private readonly string _arguments, _workingDir;
+            private readonly Dictionary<string, string> _environment;
+            
+            public LaunchFileProperties(string arguments, string workingDir, string searchPathVar, string searchPath) {
+                _arguments = arguments;
+                _workingDir = workingDir;
+                _environment = new Dictionary<string, string> {
+                    { searchPathVar, searchPath }
+                };
+            }
+            
+            public string GetArguments() {
+                return _arguments;
+            }
+
+            public string GetWorkingDirectory() {
+                return _workingDir;
+            }
+
+            public IDictionary<string, string> GetEnvironment(bool includeSearchPaths) {
+                return includeSearchPaths ? _environment : new Dictionary<string, string>();
+            }
+        }
+
         public override void DoCommand(object sender, EventArgs args) {
             if (!Utilities.SaveDirtyFiles()) {
                 // Abort
@@ -42,15 +70,31 @@ namespace Microsoft.PythonTools.Commands {
             // Launch with project context if there is one and it contains the active document
             // Fallback to using default python project
             var file = CommonPackage.GetActiveTextView(_serviceProvider).GetFilePath();
-            var pythonProjectNode = CommonPackage.GetStartupProject(_serviceProvider) as PythonProjectNode;
-            if ((pythonProjectNode != null) && (pythonProjectNode.FindNodeByFullPath(file) == null)) {
-                pythonProjectNode = null;
-            }
-            IPythonProject pythonProject = pythonProjectNode as IPythonProject ?? new DefaultPythonProject(_serviceProvider, file);
+            var sln = (IVsSolution)_serviceProvider.GetService(typeof(SVsSolution));
+            var projects = _serviceProvider.GetDTE().ActiveSolutionProjects as System.Collections.IEnumerable;
+
+            var pythonProject = (projects == null ? null : projects.OfType<EnvDTE.Project>()
+                .Select(p => p.GetPythonProject())
+                .FirstOrDefault(p => p != null && p.FindNodeByFullPath(file) != null) as IPythonProject)
+                ?? new DefaultPythonProject(_serviceProvider, file);
 
             var launcher = PythonToolsPackage.GetLauncher(_serviceProvider, pythonProject);
             try {
-                launcher.LaunchFile(file, CommandId == CommonConstants.StartDebuggingCmdId);
+                var launcher2 = launcher as IProjectLauncher2;
+                if (launcher2 != null) {
+                    launcher2.LaunchFile(
+                        file,
+                        CommandId == CommonConstants.StartDebuggingCmdId,
+                        new LaunchFileProperties(
+                            null,
+                            CommonUtils.GetParent(file),
+                            pythonProject.GetInterpreterFactory().Configuration.PathEnvironmentVariable,
+                            pythonProject.GetWorkingDirectory()
+                        )
+                    );
+                } else {
+                    launcher.LaunchFile(file, CommandId == CommonConstants.StartDebuggingCmdId);
+                }
             } catch (MissingInterpreterException ex) {
                 MessageBox.Show(ex.Message, SR.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
             } catch (NoInterpretersException ex) {

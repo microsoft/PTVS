@@ -42,7 +42,7 @@ namespace Microsoft.PythonTools.Project.Web {
     /// options.  Upon a successful launch we will then automatically load the
     /// appropriate page into the users web browser.
     /// </summary>
-    class PythonWebLauncher : IProjectLauncher {
+    class PythonWebLauncher : IProjectLauncher2 {
         private int? _testServerPort;
 
         public const string RunWebServerCommand = "PythonRunWebServerCommand";
@@ -86,12 +86,7 @@ namespace Microsoft.PythonTools.Project.Web {
 
         #region IPythonLauncher Members
 
-        public int LaunchProject(bool debug) {
-            bool isWindows;
-            if (!Boolean.TryParse(_project.GetProperty(CommonConstants.IsWindowsApplication) ?? Boolean.FalseString, out isWindows)) {
-                isWindows = false;
-            }
-
+        private CommandStartInfo GetStartInfo(bool debug, bool runUnknownCommands = true) {
             var cmd = debug ? _debugServerCommand : _runServerCommand;
             var customCmd = cmd as CustomCommand;
             if (customCmd == null && cmd != null) {
@@ -99,8 +94,10 @@ namespace Microsoft.PythonTools.Project.Web {
                 // but won't start debugging. The (presumably) flavored project
                 // that provided the command is responsible for handling the
                 // attach.
-                cmd.Execute(null);
-                return VSConstants.S_OK;
+                if (runUnknownCommands) {
+                    cmd.Execute(null);
+                }
+                return null;
             }
 
             CommandStartInfo startInfo = null;
@@ -111,7 +108,7 @@ namespace Microsoft.PythonTools.Project.Web {
                 try {
                     startInfo = customCmd.GetStartInfo(project2);
                 } catch (InvalidOperationException ex) {
-                    var target = _project.GetProperty(debug ? 
+                    var target = _project.GetProperty(debug ?
                         DebugWebServerTargetProperty :
                         RunWebServerTargetProperty
                     );
@@ -123,8 +120,8 @@ namespace Microsoft.PythonTools.Project.Web {
                         throw;
                     }
                 }
-            } 
-            
+            }
+
             if (startInfo == null) {
                 if (!File.Exists(_project.GetStartupFile())) {
                     throw new InvalidOperationException(SR.GetString(SR.NoStartupFileAvailable));
@@ -142,7 +139,14 @@ namespace Microsoft.PythonTools.Project.Web {
                 };
             }
 
-            if (isWindows) {
+            return startInfo;
+        }
+
+        public int LaunchProject(bool debug) {
+            var startInfo = GetStartInfo(debug);
+            var props = PythonProjectLaunchProperties.Create(_project, _serviceProvider, null);
+
+            if (props.GetIsWindowsApplication() ?? false) {
                 // Must run hidden if running with pythonw
                 startInfo.ExecuteIn = "hidden";
             }
@@ -166,13 +170,13 @@ namespace Microsoft.PythonTools.Project.Web {
             if (debug) {
                 _pyService.Logger.LogEvent(Logging.PythonLogEvent.Launch, 1);
 
-                using (var dsi = CreateDebugTargetInfo(startInfo, GetInterpreterPath(isWindows))) {
+                using (var dsi = CreateDebugTargetInfo(startInfo, props)) {
                     dsi.Launch(_serviceProvider);
                 }
             } else {
                 _pyService.Logger.LogEvent(Logging.PythonLogEvent.Launch, 0);
 
-                var psi = CreateProcessStartInfo(startInfo, GetInterpreterPath(isWindows));
+                var psi = CreateProcessStartInfo(startInfo, props);
 
                 var process = Process.Start(psi);
                 if (process != null) {
@@ -184,8 +188,19 @@ namespace Microsoft.PythonTools.Project.Web {
         }
 
         public int LaunchFile(string file, bool debug) {
-            return new DefaultPythonLauncher(_serviceProvider, _pyService, _project).LaunchFile(file, debug);
+            return LaunchFile(file, debug, null);
         }
+
+        public int LaunchFile(string file, bool debug, IProjectLaunchProperties props) {
+            var startInfo = GetStartInfo(debug, runUnknownCommands: false);
+            
+            return new DefaultPythonLauncher(_serviceProvider, _pyService, _project).LaunchFile(
+                file,
+                debug,
+                props == null ? startInfo : PythonProjectLaunchProperties.Merge(props, startInfo)
+            );
+        }
+
 
         private string GetInterpreterPath(bool isWindows) {
             string result;
@@ -344,21 +359,16 @@ namespace Microsoft.PythonTools.Project.Web {
 
         private unsafe DebugTargetInfo CreateDebugTargetInfo(
             CommandStartInfo startInfo,
-            string interpreterPath
+            IPythonProjectLaunchProperties props
         ) {
             var dti = new DebugTargetInfo();
 
             var alwaysPause = startInfo.ExecuteInConsoleAndPause;
             // We only want to debug a web server in a console.
             startInfo.ExecuteIn = "console";
-            startInfo.AdjustArgumentsForProcessStartInfo(interpreterPath, handleConsoleAndPause: false);
+            startInfo.AdjustArgumentsForProcessStartInfo(props.GetInterpreterPath(), handleConsoleAndPause: false);
 
             try {
-                bool enableNativeCodeDebugging = false;
-#if DEV11_OR_LATER
-                bool.TryParse(_project.GetProperty(PythonConstants.EnableNativeCodeDebugging), out enableNativeCodeDebugging);
-#endif
-
                 dti.Info.dlo = DEBUG_LAUNCH_OPERATION.DLO_CreateProcess;
                 dti.Info.bstrExe = startInfo.Filename;
                 dti.Info.bstrCurDir = startInfo.WorkingDirectory;
@@ -366,7 +376,7 @@ namespace Microsoft.PythonTools.Project.Web {
                 dti.Info.bstrRemoteMachine = null;
                 dti.Info.fSendStdoutToOutputWindow = 0;
 
-                if (!enableNativeCodeDebugging) {
+                if (!(props.GetIsNativeDebuggingEnabled() ?? false)) {
                     dti.Info.bstrOptions = string.Join(";",
                         GetGlobalDebuggerOptions(true, alwaysPause)
                             .Concat(GetProjectDebuggerOptions())
@@ -389,16 +399,12 @@ namespace Microsoft.PythonTools.Project.Web {
 
                 dti.Info.bstrArg = startInfo.Arguments;
 
-                if (enableNativeCodeDebugging) {
-#if DEV11_OR_LATER
+                if (props.GetIsNativeDebuggingEnabled() ?? false) {
                     dti.Info.dwClsidCount = 2;
                     dti.Info.pClsidList = Marshal.AllocCoTaskMem(sizeof(Guid) * 2);
                     var engineGuids = (Guid*)dti.Info.pClsidList;
                     engineGuids[0] = dti.Info.clsidCustom = DkmEngineId.NativeEng;
                     engineGuids[1] = AD7Engine.DebugEngineGuid;
-#else
-                    Debug.Fail("enableNativeCodeDebugging cannot be true in VS 2010");
-#endif
                 } else {
                     // Set the Python debugger
                     dti.Info.clsidCustom = new Guid(AD7Engine.DebugEngineId);
@@ -418,12 +424,12 @@ namespace Microsoft.PythonTools.Project.Web {
 
         private ProcessStartInfo CreateProcessStartInfo(
             CommandStartInfo startInfo,
-            string interpreterPath
+            IPythonProjectLaunchProperties props
         ) {
             bool alwaysPause = startInfo.ExecuteInConsoleAndPause;
             // We only want to run the webserver in a console.
             startInfo.ExecuteIn = "console";
-            startInfo.AdjustArgumentsForProcessStartInfo(interpreterPath, handleConsoleAndPause: false);
+            startInfo.AdjustArgumentsForProcessStartInfo(props.GetInterpreterPath(), handleConsoleAndPause: false);
 
             var psi = new ProcessStartInfo {
                 FileName = startInfo.Filename,
@@ -432,20 +438,14 @@ namespace Microsoft.PythonTools.Project.Web {
                 UseShellExecute = false
             };
 
-            if (startInfo.EnvironmentVariables != null) {
-                foreach (var kv in startInfo.EnvironmentVariables) {
-                    psi.EnvironmentVariables[kv.Key] = kv.Value;
-                }
-            }
-            if (!psi.EnvironmentVariables.ContainsKey("SERVER_HOST") ||
-                string.IsNullOrEmpty(psi.EnvironmentVariables["SERVER_HOST"])) {
-                psi.EnvironmentVariables["SERVER_HOST"] = "localhost";
-            }
-            int dummyInt;
-            if (!psi.EnvironmentVariables.ContainsKey("SERVER_PORT") ||
-                string.IsNullOrEmpty(psi.EnvironmentVariables["SERVER_PORT"]) ||
-                !int.TryParse(psi.EnvironmentVariables["SERVER_PORT"], out dummyInt)) {
-                    psi.EnvironmentVariables["SERVER_PORT"] = TestServerPortString;
+            var env = new Dictionary<string, string>(startInfo.EnvironmentVariables);
+            PythonProjectLaunchProperties.MergeEnvironmentBelow(env, new Dictionary<string, string> {
+                { "SERVER_HOST", "localhost" },
+                { "SERVER_PORT", TestServerPortString }
+            }, true);
+
+            foreach(var kv in env) {
+                psi.EnvironmentVariables[kv.Key] = kv.Value;
             }
 
             // Pause if the user has requested it.
