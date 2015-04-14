@@ -29,6 +29,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public BuiltinNamespace(MemberContainerType pythonType, PythonAnalyzer projectState) {
             _projectState = projectState;
             _type = pythonType;
+            // Ideally we'd assert here whenever pythonType is null, but that
+            // makes debug builds unusable because it happens so often.
         }
 
         public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
@@ -40,6 +42,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 return specializedRes;
             }
 
+            if (_type == null) {
+                return unit.ProjectState.ClassInfos[BuiltinTypeId.NoneType].Instance;
+            }
+
             var member = _type.GetMember(unit.DeclaringModule.InterpreterContext, name);
             if (member != null) {
                 res = ProjectState.GetAnalysisValueFromObjects(member);
@@ -48,6 +54,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext moduleContext) {
+            if (_type == null) {
+                return new Dictionary<string, IAnalysisSet>();
+            }
             return ProjectState.GetAllMembers(_type, moduleContext);
         }
 
@@ -72,6 +81,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
             if (_specializedValues != null && _specializedValues.TryGetValue(name, out res)) {
                 value = res;
                 return true;
+            }
+            if (_type == null) {
+                value = null;
+                return false;
             }
             var member = _type.GetMember(ProjectState._defaultContext, name);
             if (member != null) {
