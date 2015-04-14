@@ -44,6 +44,8 @@ namespace Microsoft.PythonTools.Debugger {
         private readonly List<string[]> _dirMapping;
         private readonly bool _delayUnregister;
         private readonly object _streamLock = new object();
+        private readonly Dictionary<string, PythonAst> _astCache = new Dictionary<string, PythonAst>();
+        private readonly object _astCacheLock = new object();
 
         private int _pid;
         private bool _sentExited, _startedProcess;
@@ -501,16 +503,35 @@ namespace Microsoft.PythonTools.Debugger {
             return threads;
         }
 
+        internal PythonAst GetAst(string filename) {
+            PythonAst ast;
+            lock (_astCacheLock) {
+                _astCache.TryGetValue(filename, out ast);
+            }
+
+            if (ast == null) {
+                using (var source = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.Read)) {
+                    ast = Parser.CreateParser(source, LanguageVersion).ParseFile();
+                    lock (_astCacheLock) {
+                        _astCache[filename] = ast;
+                    }
+                }
+            }
+
+            return ast;
+        }
+
         internal IList<Tuple<int, int, IList<string>>> GetHandledExceptionRanges(string filename) {
             PythonAst ast;
             TryHandlerWalker walker = new TryHandlerWalker();
             var statements = new List<Tuple<int, int, IList<string>>>();
 
             try {
-                using (var source = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.Read)) {
-                    ast = Parser.CreateParser(source, LanguageVersion).ParseFile();
-                    ast.Walk(walker);
+                ast = GetAst(filename);
+                if (ast == null) {
+                    return statements;
                 }
+                ast.Walk(walker);
             } catch (Exception ex) {
                 Debug.WriteLine("Exception in GetHandledExceptionRanges:");
                 Debug.WriteLine(string.Format("Filename: {0}", filename));

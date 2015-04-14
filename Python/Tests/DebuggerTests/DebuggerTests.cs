@@ -1413,6 +1413,33 @@ namespace DebuggerTests {
 
         #endregion
 
+        #region Call Stack Tests
+
+        [TestMethod, Priority(0)]
+        public void TestCallStackFunctionNames() {
+            var expectedNames = new[] {
+                "InnerClass.InnermostClass.innermost_method in nested_function in OuterClass.outer_method",
+                "nested_function in OuterClass.outer_method",
+                "OuterClass.outer_method",
+                "<module>"
+            };
+
+            new BreakpointTest(this, "CallStackTest.py") {
+                WaitForExit = false,
+                Breakpoints = { 
+                    new Breakpoint(7) {
+                        OnHit = args => {
+                            var actualNames = args.Thread.Frames.Select(f => f.GetQualifiedFunctionName());
+                            AssertUtil.AreEqual(actualNames, expectedNames);
+                        }
+                    }
+                },
+                ExpectedHits = { 0 },
+            }.Run();
+        }
+
+        #endregion
+
         #region Exception Tests
 
         class ExceptionInfo {

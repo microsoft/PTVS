@@ -19,6 +19,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Parsing;
+using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Debugger {
     class PythonStackFrame {
@@ -185,13 +186,80 @@ namespace Microsoft.PythonTools.Debugger {
         public bool SetLineNumber(int lineNo) {
             return _thread.Process.SetLineNumber(this, lineNo);
         }
+
+        /// <summary>
+        /// Computes the fully qualified function name, including name of the enclosing class for methods,
+        /// and, recursively, names of any outer functions.
+        /// </summary>
+        /// <example>
+        /// Given this code:
+        /// <code>
+        /// class A:
+        ///   def b(self):
+        ///     def c():
+        ///       class D:
+        ///         def e(self):
+        ///           pass
+        /// </code>
+        /// And with the current statement being <c>pass</c>, the qualified name is "D.e in c in A.b".
+        /// </example>
+        public string GetQualifiedFunctionName() {
+            var ast = _thread.Process.GetAst(_filename);
+            if (ast == null) {
+                return FunctionName;
+            }
+
+            var walker = new QualifiedFunctionNameWalker(ast, LineNo);
+            ast.Walk(walker);
+
+            string qualName = walker.Name;
+            if (string.IsNullOrEmpty(qualName)) {
+                return FunctionName;
+            }
+
+            return qualName;
+        }
+
+        private class QualifiedFunctionNameWalker : PythonWalker {
+            private PythonAst _ast;
+            private int _lineNumber;
+            private StringBuilder _name = new StringBuilder();
+
+            public QualifiedFunctionNameWalker(PythonAst ast, int lineNumber) {
+                _ast = ast;
+                _lineNumber = lineNumber;
+            }
+
+            public string Name {
+                get { return _name.ToString(); }
+            }
+
+            public override void PostWalk(FunctionDefinition node) {
+                int start = node.GetStart(_ast).Line;
+                int end = node.Body.GetEnd(_ast).Line + 1;
+                if (_lineNumber < start || _lineNumber >= end) {
+                    return;
+                }
+
+                string funcName = node.Name;
+                for (var classDef = node.Parent as ClassDefinition; classDef != null; classDef = classDef.Parent as ClassDefinition) {
+                    funcName = classDef.Name + "." + funcName;
+                }
+
+                if (_name.Length != 0) {
+                    _name.Append(" in ");
+                }
+                _name.Append(funcName);
+            }
+        }
+
     }
 
     class DjangoStackFrame : PythonStackFrame {
         private readonly string _sourceFile;
         private readonly int _sourceLine;
 
-        public DjangoStackFrame(PythonThread thread, string frameName, string filename, int startLine, int endLine, int lineNo, int argCount, int frameId, string sourceFile, int sourceLine) 
+        public DjangoStackFrame(PythonThread thread, string frameName, string filename, int startLine, int endLine, int lineNo, int argCount, int frameId, string sourceFile, int sourceLine)
             : base(thread, frameName, filename, startLine, endLine, lineNo, argCount, frameId, FrameKind.Django) {
             _sourceFile = sourceFile;
             _sourceLine = sourceLine;

@@ -70,7 +70,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             // There are several optional parts to this name including the module, argument types and values, and line numbers.
             // The optional information is requested by setting flags in the dwFieldSpec parameter.
             if ((dwFieldSpec & enum_FRAMEINFO_FLAGS.FIF_FUNCNAME) != 0) {
-                string funcName = _stackFrame.FunctionName;
+                string funcName = _stackFrame.GetQualifiedFunctionName();
                 if (funcName == "<module>") {
                     if (CommonUtils.IsValidPath(_stackFrame.FileName)) {
                         funcName = Path.GetFileNameWithoutExtension(_stackFrame.FileName) + " module";
