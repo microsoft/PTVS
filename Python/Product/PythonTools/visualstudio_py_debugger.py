@@ -2278,6 +2278,9 @@ class _DebuggerOutput(object):
         else:
             return "<stderr>"
 
+    def __getattr__(self, name):
+        return getattr(self.old_out, name)
+
 class DebuggerBuffer(object):
     def __init__(self, old_buffer):
         self.buffer = old_buffer
