@@ -321,12 +321,8 @@ Please update the environment in Tools-&gt;Options-&gt;Python Tools-&gt;Environm
   <data name="ReplInitializationMessage" xml:space="preserve">
     <value>Python interactive window. Type $help for a list of commands.</value>
   </data>
-  <data name="CustomCommandPrerequisitesInstallPrompt" xml:space="preserve">
-    <value>The following packages will be installed from PyPI in order to run this command:
-
-{0}
-
-Do you want to continue?</value>
+  <data name="CustomCommandPrerequisitesContent" xml:space="preserve">
+    <value>'{0}' command requires some packages that are not installed in your Python environment. Those packages need to be installed first before the command can be run.</value>
   </data>
   <data name="UnresolvedModuleTooltip" xml:space="preserve">
     <value>Unable to resolve "{0}". IntelliSense may be missing for this module.</value>
@@ -561,5 +557,20 @@ Packages that cannot be installed using pip may prevent all listed packages from
   </data>
   <data name="AnalyzingProject" xml:space="preserve">
     <value>Analyzing current project. IntelliSense will be limited.</value>
+  </data>
+  <data name="CustomCommandPrerequisitesDoNotRun" xml:space="preserve">
+    <value>Do not run the command</value>
+  </data>
+  <data name="CustomCommandPrerequisitesInstallMissing" xml:space="preserve">
+    <value>Install missing packages and then run the command</value>
+  </data>
+  <data name="CustomCommandPrerequisitesInstallMissingSubtext" xml:space="preserve">
+    <value>The following packages will be installed using pip:</value>
+  </data>
+  <data name="CustomCommandPrerequisitesInstruction" xml:space="preserve">
+    <value>The packages required to run this command are missing</value>
+  </data>
+  <data name="CustomCommandPrerequisitesRunAnyway" xml:space="preserve">
+    <value>Run the command without installing the packages</value>
   </data>
 </root>

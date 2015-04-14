@@ -391,14 +391,32 @@ namespace Microsoft.PythonTools.Project {
             }
 
             if (packagesToInstall.Any()) {
-                await Pip.QueryInstall(
-                    interpFactory,
-                    string.Join(" ", packagesToInstall),
-                    project.Site,
-                    SR.GetString(SR.CustomCommandPrerequisitesInstallPrompt, string.Join("\r\n", packagesToInstall)),
-                    false,
-                    OutputWindowRedirector.GetGeneral(project.Site)
-                );
+                var installMissingButton = new TaskDialogButton(
+                    SR.GetString(SR.CustomCommandPrerequisitesInstallMissing),
+                    SR.GetString(SR.CustomCommandPrerequisitesInstallMissingSubtext) + "\r\n\r\n" + string.Join("\r\n", packagesToInstall));
+                var runAnywayButton = new TaskDialogButton(SR.GetString(SR.CustomCommandPrerequisitesRunAnyway));
+                var doNotRunButton = new TaskDialogButton(SR.GetString(SR.CustomCommandPrerequisitesDoNotRun));
+
+                var taskDialog = new TaskDialog(project.Site) {
+                    Title = SR.ProductName,
+                    MainInstruction = SR.GetString(SR.CustomCommandPrerequisitesInstruction),
+                    Content = SR.GetString(SR.CustomCommandPrerequisitesContent, DisplayLabelWithoutAccessKeys),
+                    AllowCancellation = true,
+                    Buttons = { installMissingButton, runAnywayButton, doNotRunButton, TaskDialogButton.Cancel }
+                };
+
+                var selectedButton = taskDialog.ShowModal();
+                if (selectedButton == installMissingButton) {
+                    await Pip.Install(
+                        project.Site,
+                        interpFactory,
+                        string.Join(" ", packagesToInstall),
+                        false,
+                        OutputWindowRedirector.GetGeneral(project.Site));
+                } else if (selectedButton == runAnywayButton) {
+                } else {
+                    return;
+                }
             }
 
             if (startInfo.TargetType == CreatePythonCommandItem.TargetTypePip) {

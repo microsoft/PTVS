@@ -83,7 +83,12 @@ namespace Microsoft.PythonTools.Project {
         public const string FailedToReadResource = "FailedToReadResource";
 
         public const string CustomCommandReplTitle = "CustomCommandReplTitle";
-        public const string CustomCommandPrerequisitesInstallPrompt = "CustomCommandPrerequisitesInstallPrompt";
+        public const string CustomCommandPrerequisitesContent = "CustomCommandPrerequisitesContent";
+        public const string CustomCommandPrerequisitesInstruction = "CustomCommandPrerequisitesInstruction";
+        public const string CustomCommandPrerequisitesInstallMissing = "CustomCommandPrerequisitesInstallMissing";
+        public const string CustomCommandPrerequisitesInstallMissingSubtext = "CustomCommandPrerequisitesInstallMissingSubtext";
+        public const string CustomCommandPrerequisitesRunAnyway = "CustomCommandPrerequisitesRunAnyway";
+        public const string CustomCommandPrerequisitesDoNotRun = "CustomCommandPrerequisitesDoNotRun";
         public const string PythonMenuLabel = "PythonMenuLabel";
 
         public const string NoInterpretersAvailable = "NoInterpretersAvailable";
