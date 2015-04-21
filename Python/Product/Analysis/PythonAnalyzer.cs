@@ -72,7 +72,7 @@ namespace Microsoft.PythonTools.Analysis {
         ) {
             var res = new PythonAnalyzer(factory, interpreter, null);
             try {
-                await res.ReloadModulesAsync();
+                await res.ReloadModulesAsync().ConfigureAwait(false);
                 var r = res;
                 res = null;
                 return r;
@@ -169,7 +169,7 @@ namespace Microsoft.PythonTools.Analysis {
                 LoadInitialKnownTypes();
             }
 
-            var moduleRef = await Modules.TryImportAsync(_builtinName);
+            var moduleRef = await Modules.TryImportAsync(_builtinName).ConfigureAwait(false);
             if (moduleRef != null) {
                 _builtinModule = (BuiltinModule)moduleRef.Module;
             } else {
@@ -178,7 +178,7 @@ namespace Microsoft.PythonTools.Analysis {
 
             FinishLoadKnownTypes(null);
 
-            var sysModule = await _modules.TryImportAsync("sys");
+            var sysModule = await _modules.TryImportAsync("sys").ConfigureAwait(false);
             if (sysModule != null) {
                 var bm = sysModule.AnalysisModule as BuiltinModule;
                 if (bm != null) {
@@ -218,14 +218,14 @@ namespace Microsoft.PythonTools.Analysis {
             if (!_reloadLock.Wait(0)) {
                 // If we don't lock immediately, wait for the current reload to
                 // complete and then return.
-                await _reloadLock.WaitAsync();
+                await _reloadLock.WaitAsync().ConfigureAwait(false);
                 _reloadLock.Release();
                 return;
             }
 
             try {
                 _modules.ReInit();
-                await LoadKnownTypesAsync();
+                await LoadKnownTypesAsync().ConfigureAwait(false);
 
                 _interpreter.Initialize(this);
 

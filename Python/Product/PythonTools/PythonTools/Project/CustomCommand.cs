@@ -527,6 +527,11 @@ namespace Microsoft.PythonTools.Project {
                 RequiredPackages = item.GetMetadata(BuildTasks.CreatePythonCommandItem.RequiredPackagesKey).Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries)
             };
 
+            try {
+                startInfo.WorkingDirectory = CommonUtils.GetAbsoluteFilePath(project.ProjectHome, startInfo.WorkingDirectory);
+            } catch (ArgumentException) {
+            }
+
             string errorRegex = item.GetMetadata(BuildTasks.CreatePythonCommandItem.ErrorRegexKey);
             if (!string.IsNullOrEmpty(errorRegex)) {
                 startInfo.ErrorRegex = new Regex(errorRegex);
