@@ -149,7 +149,7 @@ namespace Microsoft.PythonTools.Project {
                     if (joinEnv.Contains(kv.Key) && env.TryGetValue(kv.Key, out existing)) {
                         env[kv.Key] = kv.Value + Path.PathSeparator.ToString() + existing;
                     } else {
-                        env[kv.Key] = env[kv.Value];
+                        env[kv.Key] = kv.Value;
                     }
                 }
             }
