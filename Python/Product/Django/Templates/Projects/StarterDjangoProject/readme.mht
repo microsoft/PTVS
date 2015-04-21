@@ -1,19 +1,19 @@
 From: "Saved by Internet Explorer 11"
 Subject: Django Web App Configuration
-Date: Thu, 12 Jun 2014 13:12:45 -0700
+Date: Tue, 21 Apr 2015 10:19:10 -0700
 MIME-Version: 1.0
 Content-Type: multipart/related;
 	type="text/html";
-	boundary="----=_NextPart_000_0000_01CF8640.005D7EF0"
-X-MimeOLE: Produced By Microsoft MimeOLE V6.3.9600.16384
+	boundary="----=_NextPart_000_0000_01D07C1C.9B574260"
+X-MimeOLE: Produced By Microsoft MimeOLE V6.3.9600.17728
 
 This is a multi-part message in MIME format.
 
-------=_NextPart_000_0000_01CF8640.005D7EF0
+------=_NextPart_000_0000_01D07C1C.9B574260
 Content-Type: text/html;
 	charset="utf-8"
 Content-Transfer-Encoding: quoted-printable
-Content-Location: file://D:\PTVS\Main\Python\Product\Django\Templates\Projects\StarterDjangoProject\Readme\readme.html
+Content-Location: file://C:\DevDiv\Offcycle\xTVS\Open_Source\Python_Main\Python\Product\Django\Templates\Projects\StarterDjangoProject\Readme\readme.html
 
 =EF=BB=BF<!DOCTYPE HTML>
 <!DOCTYPE html PUBLIC "" ""><!--=0A=
@@ -37,28 +37,29 @@ http-equiv=3D"X-UA-Compatible">
     =20
 <META charset=3D"utf-8">     <TITLE>Django Web App Configuration</TITLE> =
     <LINK=20
-href=3D"file:///D:/PTVS/Main/Python/Product/PythonTools/ReadmeStyle.css" =
-rel=3D"stylesheet"=20
-type=3D"text/css">=20
-<META name=3D"GENERATOR" content=3D"MSHTML 11.00.9600.17126"></HEAD>=20
+href=3D"file:///C:/DevDiv/Offcycle/xTVS/Open_Source/Python_Main/Python/Pr=
+oduct/PythonTools/ReadmeStyle.css"=20
+rel=3D"stylesheet" type=3D"text/css">=20
+<META name=3D"GENERATOR" content=3D"MSHTML 11.00.9600.17728"></HEAD>=20
 <BODY>
 <H1 class=3D"top">One more thing...</H1>
-<P>        Before running this project, you need to <STRONG>synchronize =
-the     =20
-  database</STRONG>.     </P>
+<P>        Before running this project, you may want to create a super =
+user by=20
+<STRONG>synchronizing the        database</STRONG>.     </P>
 <H1>Synchronize the Database</H1>
 <P>        This project has default settings for the database (it uses =
 sqlite). =20
-      You'll need to create the database before running the project.     =
-</P>
+      If you need a super user, you'll need to sync the database before =
+running=20
+the project.     </P>
 <OL>
   <LI>Open Solution Explorer.</LI>
   <LI>
   <P>Right-click the project node and select Python-&gt;Django Sync =
 DB.</P><IMG=20
   =
-src=3D"file:///D:/PTVS/Main/Python/Product/Django/Templates/Projects/Star=
-terDjangoProject/Readme/SyncDB.png">=20
+src=3D"file:///C:/DevDiv/Offcycle/xTVS/Open_Source/Python_Main/Python/Pro=
+duct/Django/Templates/Projects/StarterDjangoProject/Readme/SyncDB.png">=20
           </LI>
   <LI>You will be prompted to create a super user, enter yes.</LI>
   <LI>            Enter a user name, email and password when prompted. =
@@ -67,10 +68,10 @@ The=20
 account.   =20
        </LI></OL></BODY></HTML>
 
-------=_NextPart_000_0000_01CF8640.005D7EF0
+------=_NextPart_000_0000_01D07C1C.9B574260
 Content-Type: image/png
 Content-Transfer-Encoding: base64
-Content-Location: file:///D:/PTVS/Main/Python/Product/Django/Templates/Projects/StarterDjangoProject/Readme/SyncDB.png
+Content-Location: file:///C:/DevDiv/Offcycle/xTVS/Open_Source/Python_Main/Python/Product/Django/Templates/Projects/StarterDjangoProject/Readme/SyncDB.png
 
 iVBORw0KGgoAAAANSUhEUgAAAlcAAAEECAYAAAAFyRFAAAAAAXNSR0IArs4c6QAAAARnQU1BAACx
 jwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAWdEVYdFNvZnR3YXJlAHBhaW50Lm5ldCA0LjA7
@@ -321,11 +322,11 @@ rY89k9z0O2eOOQw6z3z7KgDAJMgYg1ztSpNcmW02x4xWdIrtul236mZ8jTPiaOVKxOqf/N5fJff/
 oMiUrFaxcgUAxwTjHMD0HKVcCXbFSmHQAYC1wzgHMD1HK1c8cwUAx4iMcwAwPaVcJTf9f5cWl7hK
 +pW5AAAAAElFTkSuQmCC
 
-------=_NextPart_000_0000_01CF8640.005D7EF0
+------=_NextPart_000_0000_01D07C1C.9B574260
 Content-Type: text/css;
 	charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
-Content-Location: file:///D:/PTVS/Main/Python/Product/PythonTools/ReadmeStyle.css
+Content-Location: file:///C:/DevDiv/Offcycle/xTVS/Open_Source/Python_Main/Python/Product/PythonTools/ReadmeStyle.css
 
 body {
 	font-family: "Segoe UI", Arial, Helvetica, sans-serif; font-size: 11pt; =
@@ -369,4 +370,4 @@ li > img {
 	vertical-align: middle;
 }
 
-------=_NextPart_000_0000_01CF8640.005D7EF0--
+------=_NextPart_000_0000_01D07C1C.9B574260--

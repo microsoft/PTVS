@@ -15,6 +15,7 @@
     <Project File="StarterDjangoProject.pyproj" ReplaceParameters="true">
       <ProjectItem OpenInWebBrowser="true">readme.mht</ProjectItem>
       <ProjectItem>requirements.txt</ProjectItem>
+      <ProjectItem>db.sqlite3</ProjectItem>
       <ProjectItem ReplaceParameters="true">manage.py</ProjectItem>
       <ProjectItem ReplaceParameters="true" TargetFileName="$safeprojectname$\__init__.py">project-__init__.py</ProjectItem>
       <ProjectItem ReplaceParameters="true" TargetFileName="$safeprojectname$\settings.py">project-settings.py</ProjectItem>

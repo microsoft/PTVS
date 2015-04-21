@@ -400,6 +400,7 @@
     <ZipProject Include="Templates\Projects\DjangoProject\requirements.txt" />
     <Resource Include="Templates\Projects\StarterDjangoProject\Readme\SyncDB.png" />
     <ZipProject Include="Templates\Projects\StarterDjangoProject\readme.mht" />
+    <ZipProject Include="Templates\Projects\StarterDjangoProject\db.sqlite3" />
     <None Include="Templates\Projects\StarterDjangoProject\Readme\readme.html" />
     <Resource Include="Legacy\ReadMe.txt" />
     <Content Include="Microsoft.PythonTools.Django.targets">
