@@ -1543,7 +1543,11 @@ namespace DebuggerTests {
                     new ExceptionInfo("ValueError", 12)
                 );
                 TestException(debugger, Path.Combine(DebuggerTestPath, "UnhandledException4.py"), i == 0, ExceptionMode.Unhandled, null,
-                    new ExceptionInfo("OSError", 17)
+                    // On IronPython, an unhandled exception will be repeatedly reported as raised as it bubbles up the stack.
+                    // Everywhere else, it will only be reported once at the point where it is initially raised. 
+                    this is DebuggerTestsIpy ?
+                    new[] { new ExceptionInfo("OSError", 17), new ExceptionInfo("OSError", 32), new ExceptionInfo("OSError", 55) } :
+                    new[] { new ExceptionInfo("OSError", 17) }
                 );
                 TestException(debugger, Path.Combine(DebuggerTestPath, "UnhandledException5.py"), i == 0, ExceptionMode.Unhandled, null,
                     new ExceptionInfo("ValueError", 4)
