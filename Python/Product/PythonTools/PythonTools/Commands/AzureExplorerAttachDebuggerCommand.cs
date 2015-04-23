@@ -151,14 +151,16 @@ namespace Microsoft.PythonTools.Commands {
                 return null;
             }
 
-            // We need to find out whether this is an Azure website object. We can't do a type check because the type of the 
+            // We need to find out whether this is an Azure Website object. We can't do a type check because the type of the 
             // browse object is private. We can, however, query for properties with specific names, and we can check the types
-            // of those properties. In particular, WebSiteState is a public enum type that is a part of Azure Explorer public
-            // contract, so we can check for it, and we can be reasonably sure that it is only exposed by web site nodes.
+            // of those properties. In particular, WebSiteState is a public enum type that is a part of the Azure Explorer contract, 
+            // so we can check for it, and we can be reasonably sure that it is only exposed by website nodes. It seems that
+            // the namespace is subject to change, however, as it was marked internal in VS2015.
 
             var statusProp = obj.GetType().GetProperty("Status");
             if (statusProp == null ||
-                statusProp.PropertyType.FullName != "Microsoft.VisualStudio.Web.WindowsAzure.Contracts.WebSiteState"
+                (statusProp.PropertyType.FullName != "Microsoft.VisualStudio.Web.WindowsAzure.Contracts.WebSiteState" &&
+                statusProp.PropertyType.FullName != "Microsoft.VisualStudio.Web.Internal.Contracts.WebSiteState")
             ) {
                 return null;
             }
