@@ -1,3 +1,0 @@
-markdown2
-pygments
-Pillow
