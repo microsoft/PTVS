@@ -98,6 +98,7 @@
     <Compile Include="ProcessScope.cs" />
     <Compile Include="SessionHolder.cs" />
     <Compile Include="SharedProject\SymbolicLinkItem.cs" />
+    <Compile Include="VCCompiler.cs" />
     <Compile Include="WebDownloadUtility.cs" />
     <Compile Include="Classification.cs" />
     <Compile Include="IWarningLogger.cs" />

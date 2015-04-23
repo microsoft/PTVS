@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Threading;
@@ -643,8 +644,8 @@ namespace DebuggerTests {
         [TestMethod, Priority(0)]
         public virtual void LocalClosureVarsTest() {
             var test = new LocalsTest(this, "LocalClosureVarsTest.py", 4) {
-                Locals = { "x" , "y" },
-                Params = { "z"  }
+                Locals = { "x", "y" },
+                Params = { "z" }
             };
             test.Run();
 
@@ -1165,7 +1166,7 @@ namespace DebuggerTests {
 
             new BreakpointTest(this, Path.Combine(DebuggerTestPath, "SimpleFilenameBreakpoint.py")) {
                 WorkingDirectory = DebuggerTestPath,
-                BreakFileName = Path.Combine(DebuggerTestPath,  "CompiledCodeFile.py"),
+                BreakFileName = Path.Combine(DebuggerTestPath, "CompiledCodeFile.py"),
                 Breakpoints = { 4, 10 },
                 ExpectedHits = { 0, 1 },
                 IsBindFailureExpected = true
@@ -2184,6 +2185,7 @@ namespace DebuggerTests {
 #include <stdio.h>
 
 int main(int argc, char* argv[]) {
+    Py_SetPythonHome($PYTHON_HOME);
     Py_Initialize();
     auto event = OpenEventA(EVENT_ALL_ACCESS, FALSE, argv[1]);
     if(!event) {
@@ -2213,15 +2215,9 @@ int main(int argc, char* argv[]) {
         /// </summary>
         [TestMethod, Priority(0)]
         public virtual void AttachNewThread_PyGILState_Ensure() {
-            File.WriteAllText("gilstate_attach.py", @"def test():
-    for i in range(10):
-        print(i)
-
-    return 0");
-
-            var hostCode = @"#include <Windows.h>
+            var hostCode = @"#include <Python.h>
+#include <Windows.h>
 #include <process.h>
-#include <Python.h>
 
 PyObject *g_pFunc;
 
@@ -2252,6 +2248,7 @@ void main()
 {
     PyObject *pName, *pModule;
 
+    Py_SetPythonHome($PYTHON_HOME);
     Py_Initialize();
     PyEval_InitThreads();
     pName = CREATE_STRING(""gilstate_attach"");
@@ -2288,6 +2285,15 @@ void main()
     return;
 }".Replace("CREATE_STRING", CreateString);
             var exe = CompileCode(hostCode);
+
+            File.WriteAllText(Path.Combine(Path.GetDirectoryName(exe), "gilstate_attach.py"), @"def test():
+    import sys
+    print('\n'.join(sys.path))
+    for i in range(10):
+        print(i)
+
+    return 0");
+
 
             // start the test process w/ our handle
             Process p = RunHost(exe);
@@ -2329,12 +2335,6 @@ void main()
         /// </summary>
         [TestMethod, Priority(0)]
         public virtual void AttachNewThread_PyThreadState_New() {
-            File.WriteAllText("gilstate_attach.py", @"def test():
-    for i in range(10):
-        print(i)
-
-    return 0");
-
             var hostCode = @"#include <Windows.h>
 #include <process.h>
 #include <Python.h>
@@ -2376,6 +2376,7 @@ void main()
 {
     PyObject *pName, *pModule;
 
+    Py_SetPythonHome($PYTHON_HOME);
     Py_Initialize();
     PyEval_InitThreads();
     pName = CREATE_STRING(""gilstate_attach"");
@@ -2412,6 +2413,13 @@ void main()
     return;
 }".Replace("CREATE_STRING", CreateString);
             var exe = CompileCode(hostCode);
+
+            File.WriteAllText(Path.Combine(Path.GetDirectoryName(exe), "gilstate_attach.py"), @"def test():
+    for i in range(10):
+        print(i)
+
+    return 0");
+
 
             // start the test process w/ our handle
             Process p = RunHost(exe);
@@ -2466,6 +2474,7 @@ void main()
 #include <windows.h>
 
 int main(int argc, char* argv[]) {
+    Py_SetPythonHome($PYTHON_HOME);
     Py_Initialize();
     PyEval_InitThreads();
 
@@ -2555,29 +2564,46 @@ int main(int argc, char* argv[]) {
 
         private string CompileCode(string hostCode) {
             var buildDir = TestData.GetTempPath(randomSubPath: true);
+
+            var pythonHome = "\"" + Version.PrefixPath.Replace("\\", "\\\\") + "\"";
+            if (Version.Version >= PythonLanguageVersion.V30) {
+                pythonHome = "L" + pythonHome;
+            }
+            hostCode = hostCode.Replace("$PYTHON_HOME", pythonHome);
+
             File.WriteAllText(Path.Combine(buildDir, "test.cpp"), hostCode);
+
+            VCCompiler vc;
+
+            if (Version.Version <= PythonLanguageVersion.V32) {
+                vc = Version.Isx64
+                    ? (VCCompiler.VC12_X64 ?? VCCompiler.VC11_X64 ?? VCCompiler.VC10_X64)
+                    : (VCCompiler.VC12_X86 ?? VCCompiler.VC11_X86 ?? VCCompiler.VC10_X86);
+            } else if (Version.Version <= PythonLanguageVersion.V34) {
+                vc = Version.Isx64
+                    ? (VCCompiler.VC10_X64 ?? VCCompiler.VC12_X64 ?? VCCompiler.VC11_X64)
+                    : (VCCompiler.VC10_X86 ?? VCCompiler.VC12_X86 ?? VCCompiler.VC11_X86);
+            } else {
+                vc = Version.Isx64 ? VCCompiler.VC14_X64 : VCCompiler.VC14_X86;
+            }
+
+            if (vc == null) {
+                Assert.Inconclusive("VC not installed for " + Version.Version);
+            }
 
             // compile our host code...
             var env = new Dictionary<string, string>();
-            env["PATH"] = Environment.GetEnvironmentVariable("PATH") + ";" + GetVSIDEInstallDir() + ";" + GetVCBinDirForPath();
+            env["PATH"] = Environment.GetEnvironmentVariable("PATH") + ";" + vc.BinPaths;
+            env["INCLUDE"] = vc.IncludePaths + ";" + Path.Combine(Version.PrefixPath, "Include");
+            env["LIB"] = vc.LibPaths + ";" + Path.Combine(Version.PrefixPath, "libs");
 
-            env["INCLUDE"] = GetVCIncludeDir() + ";" + string.Join(";", WindowsSdk.Latest.IncludePaths);
-            var libs = Version.Isx64 ? WindowsSdk.Latest.X64LibPaths : WindowsSdk.Latest.X86LibPaths;
-            env["LIB"] = GetVCLibDir() + ";" + string.Join(";", libs);
-
-            foreach(var kv in env) {
+            foreach (var kv in env) {
                 Trace.TraceInformation("SET {0}={1}", kv.Key, kv.Value);
             }
 
             using (var p = ProcessOutput.Run(
-                Path.Combine(GetVCBinDir(), "cl.exe"),
-                new[] {
-                    "/I" + Version.PrefixPath + "\\Include",
-                    "/MD",
-                    "test.cpp",
-                    "/link",
-                    "/libpath:" + Version.PrefixPath + "\\libs"
-                },
+                Path.Combine(vc.BinPath, "cl.exe"),
+                new[] { "/MD", "test.cpp" },
                 buildDir,
                 env,
                 false,
@@ -2598,158 +2624,10 @@ int main(int argc, char* argv[]) {
             var psi = new ProcessStartInfo(hostExe) { UseShellExecute = false };
             // Add Python to PATH so that the host can locate the DLL in case it's not in \Windows\System32 (e.g. for EPD)
             psi.EnvironmentVariables["PATH"] = Environment.GetEnvironmentVariable("PATH") + ";" + Version.PrefixPath;
+            if (psi.EnvironmentVariables.ContainsKey("PYTHONPATH")) {
+                psi.EnvironmentVariables.Remove("PYTHONPATH");
+            }
             return Process.Start(psi);
-        }
-
-        private string GetVCBinDir() {
-            var installDir = GetVCInstallDir();
-            return Version.Isx64 ?
-                Path.Combine(installDir, "bin", "x86_amd64") :
-                Path.Combine(installDir, "bin");
-        }
-
-        private string GetVCBinDirForPath() {
-            var installDir = GetVCInstallDir();
-            var binDir = Path.Combine(installDir, "bin");
-            return Version.Isx64 ?
-                Path.Combine(binDir, "x86_amd64") + ";" + binDir :
-                binDir;
-        }
-
-        private string GetVCIncludeDir() {
-            return Path.Combine(GetVCInstallDir(), "include");
-        }
-
-        private string GetVCLibDir() {
-            var installDir = GetVCInstallDir();
-            return Version.Isx64 ?
-                Path.Combine(installDir, "lib", "amd64") :
-                Path.Combine(installDir, "lib");
-        }
-
-        private static string GetVCInstallDir() {
-            using (var key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32).OpenSubKey("SOFTWARE\\Microsoft\\VisualStudio\\" + AssemblyVersionInfo.VSVersion + "\\Setup\\VC")) {
-                return key.GetValue("ProductDir").ToString();
-            }
-        }
-
-        class WindowsSdk {
-            public string[] X86LibPaths { get; private set; }
-            public string[] X64LibPaths { get; private set; }
-            public string[] IncludePaths { get; private set; }
-
-            public static WindowsSdk Sdk70 = FindWindowsSdk("v7.0");
-            public static WindowsSdk Sdk70a = FindWindowsSdk("v7.0A");
-            public static WindowsSdk Sdk80a = FindWindowsSdk("v8.0A");
-            public static WindowsSdk Kits80 = FindWindows8Kits("KitsRoot", "win8\\um");
-            public static WindowsSdk Kits81 = FindWindows8Kits("KitsRoot81", "winv6.3\\um");
-            public static WindowsSdk Kits100 = FindWindows10Kits("KitsRoot10", "winv10\\ucrt", "KitsRoot81", "winv6.3\\um");
-
-            public static WindowsSdk Latest {
-                get {
-                    if (Kits100 != null) return Kits100;
-                    if (Kits81 != null) return Kits81;
-                    if (Kits80 != null) return Kits80;
-                    if (Sdk80a != null) return Sdk80a;
-                    if (Sdk70a != null) return Sdk70a;
-                    if (Sdk70 != null) return Sdk70;
-                    Assert.Fail("Windows SDK is not installed");
-                    return null;
-                }
-            }
-
-            private WindowsSdk(IEnumerable<string> x86libPaths, IEnumerable<string> x64LibPaths, IEnumerable<string> includePaths) {
-                X86LibPaths = (x86libPaths ?? Enumerable.Empty<string>()).Where(Directory.Exists).ToArray();
-                X64LibPaths = (x64LibPaths ?? Enumerable.Empty<string>()).Where(Directory.Exists).ToArray();
-                IncludePaths = (includePaths ?? Enumerable.Empty<string>()).Where(Directory.Exists).ToArray();
-            }
-
-            private static WindowsSdk FindWindowsSdk(string version) {
-                var regValue = Registry.GetValue(
-                    "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Microsoft SDKs\\Windows\\" + version,
-                    "InstallationFolder",
-                    null);
-
-                if (regValue != null) {
-                    var rootPath = regValue.ToString();
-                    if (Directory.Exists(Path.Combine(rootPath, "Include"))) {
-                        return new WindowsSdk(
-                            new[] { Path.Combine(rootPath, "Lib") },
-                            null,
-                            new[] { Path.Combine(rootPath, "Include") }
-                        );
-                    }
-                }
-
-                string[] wellKnownLocations = new[] {
-                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Microsoft SDKs", "Windows", version),
-                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Microsoft SDKs", "Windows", version)
-                };
-
-                foreach (var rootPath in wellKnownLocations) {
-                    if (Directory.Exists(Path.Combine(rootPath, "Include")))
-                        return new WindowsSdk(
-                            new[] { Path.Combine(rootPath, "Lib") },
-                            new[] { Path.Combine(rootPath, "Lib", "x64") },
-                            new[] { Path.Combine(rootPath, "Include") }
-                        );
-                }
-
-                return null;
-            }
-
-            private static WindowsSdk FindWindows8Kits(string version, string libFolderName) {
-                var regValue = Registry.GetValue(
-                    "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows Kits\\Installed Roots",
-                    version,
-                    null);
-
-                if (regValue != null) {
-                    var rootPath = regValue.ToString();
-                    if (Directory.Exists(Path.Combine(rootPath, "Include"))) {
-                        return new WindowsSdk(
-                            new[] {Path.Combine(rootPath, "Lib", libFolderName, "x86")},
-                            new[] {Path.Combine(rootPath, "Lib", libFolderName, "x64")},
-                            new[] {
-                                Path.Combine(rootPath, "Include", "shared"),
-                                Path.Combine(rootPath, "Include", "um")
-                            }
-                        );
-                    }
-                }
-
-                return null;
-            }
-
-            private static WindowsSdk FindWindows10Kits(string version, string libDir, string prevVersion, string prevLibDir) {
-                // Need to merge two Win8 style kits
-                var win10Base = FindWindows8Kits(version, libDir);
-                var win8Base = FindWindows8Kits(prevVersion, prevLibDir);
-
-                if (win10Base == null || win8Base == null) {
-                    return null;
-                }
-
-                var actualIncludes = win10Base.IncludePaths.ToList();
-                if (!actualIncludes.Any()) {
-                    return null;
-                }
-
-                actualIncludes.Insert(0, Path.Combine(actualIncludes[0], "..", "ucrt"));
-                actualIncludes.AddRange(win8Base.IncludePaths);
-
-                return new WindowsSdk(
-                    win10Base.X86LibPaths.Concat(win8Base.X86LibPaths),
-                    win10Base.X64LibPaths.Concat(win8Base.X64LibPaths),
-                    actualIncludes
-                );
-            }
-        }
-
-        private static string GetVSIDEInstallDir() {
-            using (var key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32).OpenSubKey("SOFTWARE\\Microsoft\\VisualStudio\\" + AssemblyVersionInfo.VSVersion + "\\Setup\\VS")) {
-                return key.GetValue("EnvironmentDirectory").ToString();
-            }
         }
 
         #endregion
@@ -2808,7 +2686,7 @@ int main(int argc, char* argv[]) {
 
         internal override PythonVersion Version {
             get {
-                return PythonPaths.Python26 ?? PythonPaths.Python26_x64;;
+                return PythonPaths.Python26 ?? PythonPaths.Python26_x64;
             }
         }
     }
@@ -2842,7 +2720,7 @@ int main(int argc, char* argv[]) {
 
         internal override PythonVersion Version {
             get {
-                return PythonPaths.Python30 ?? PythonPaths.Python30_x64;;
+                return PythonPaths.Python30 ?? PythonPaths.Python30_x64;
             }
         }
     }
@@ -2857,7 +2735,7 @@ int main(int argc, char* argv[]) {
 
         internal override PythonVersion Version {
             get {
-                return PythonPaths.Python31 ?? PythonPaths.Python31_x64;;
+                return PythonPaths.Python31 ?? PythonPaths.Python31_x64;
             }
         }
     }
@@ -2872,7 +2750,7 @@ int main(int argc, char* argv[]) {
 
         internal override PythonVersion Version {
             get {
-                return PythonPaths.Python32 ?? PythonPaths.Python32_x64;;
+                return PythonPaths.Python32 ?? PythonPaths.Python32_x64;
             }
         }
 
@@ -2891,7 +2769,7 @@ int main(int argc, char* argv[]) {
 
         internal override PythonVersion Version {
             get {
-                return PythonPaths.Python33 ?? PythonPaths.Python33_x64;;
+                return PythonPaths.Python33 ?? PythonPaths.Python33_x64;
             }
         }
 
@@ -2916,7 +2794,7 @@ int main(int argc, char* argv[]) {
 
         internal override PythonVersion Version {
             get {
-                return PythonPaths.Python34 ?? PythonPaths.Python34_x64;;
+                return PythonPaths.Python34 ?? PythonPaths.Python34_x64;
             }
         }
 
@@ -2941,7 +2819,7 @@ int main(int argc, char* argv[]) {
 
         internal override PythonVersion Version {
             get {
-                return PythonPaths.Python35 ?? PythonPaths.Python35_x64;;
+                return PythonPaths.Python35 ?? PythonPaths.Python35_x64;
             }
         }
 
@@ -2966,7 +2844,7 @@ int main(int argc, char* argv[]) {
 
         internal override PythonVersion Version {
             get {
-                return PythonPaths.Python27 ?? PythonPaths.Python27_x64;;
+                return PythonPaths.Python27 ?? PythonPaths.Python27_x64;
             }
         }
     }
@@ -2981,7 +2859,7 @@ int main(int argc, char* argv[]) {
 
         internal override PythonVersion Version {
             get {
-                return PythonPaths.Python25 ?? PythonPaths.Python25_x64;;
+                return PythonPaths.Python25 ?? PythonPaths.Python25_x64;
             }
         }
     }
