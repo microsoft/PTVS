@@ -93,8 +93,13 @@ namespace Microsoft.PythonTools.Analysis {
         /// <param name="moduleName"></param>
         internal void DoDelayedSpecialization(string moduleName) {
             lock (_specializationInfo) {
+                int lastDot;
+                string realModName = null;
                 List<SpecializationInfo> specInfo;
-                if (_specializationInfo.TryGetValue(moduleName, out specInfo)) {
+                if (_specializationInfo.TryGetValue(moduleName, out specInfo) ||
+                    ((lastDot = moduleName.LastIndexOf('.')) != -1 &&
+                    !string.IsNullOrEmpty(realModName = moduleName.Remove(lastDot)) &&
+                    _specializationInfo.TryGetValue(realModName, out specInfo))) {
                     foreach (var curSpec in specInfo) {
                         SpecializeFunction(curSpec.ModuleName, curSpec.Name, curSpec.Callable, curSpec.SuppressOriginalAnalysis, save: false);
                     }

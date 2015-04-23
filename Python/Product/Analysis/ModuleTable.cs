@@ -204,6 +204,7 @@ namespace Microsoft.PythonTools.Analysis {
                         var mod = value as IModule;
                         if (mod != null) {
                             _modules[fullname] = new ModuleReference(mod);
+                            _analyzer.DoDelayedSpecialization(fullname);
                         }
                     }
                 }

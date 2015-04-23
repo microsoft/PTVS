@@ -39,6 +39,7 @@ namespace DjangoTests {
             var proj = AnalyzerTest(TestData.GetPath("TestData\\DjangoAnalysisTestApp"));
 
             var vars = proj.GetVariablesForTemplateFile(TestData.GetPath("TestData\\DjangoAnalysisTestApp\\test_render\\templates\\" + template));
+            Assert.IsNotNull(vars, "No variables found for " + template);
 
             HashSet<AnalysisValue> values;
             Assert.IsTrue(vars.TryGetValue("content", out values), "content was missing");
