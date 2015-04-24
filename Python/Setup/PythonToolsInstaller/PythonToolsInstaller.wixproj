@@ -89,7 +89,7 @@
       <Name>DjangoMsm</Name>
       <Project>{16671BE6-DD23-41D9-841A-0B80D47A090D}</Project>
     </ProjectReference>
-    <ProjectReference Include="$(BuildRoot)\Internal\Python\VsLoggerSetup\VsLogger.wixproj" Condition="'$(IncludeVsLogger)' == 'True'">
+    <ProjectReference Include="$(PTVSPRPath)VsLoggerSetup\VsLogger.wixproj" Condition="'$(IncludeVsLogger)' == 'True'">
       <Name>VsLoggerMsm</Name>
       <Project>{639BFC80-B31B-4D3F-9DF3-A65913000B4B}</Project>
     </ProjectReference>

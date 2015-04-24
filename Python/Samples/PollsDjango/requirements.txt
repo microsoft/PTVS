@@ -1,2 +1,0 @@
-django<2
-pytz

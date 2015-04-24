@@ -41,6 +41,9 @@
     <BuildRoot Condition="!HasTrailingSlash($(BuildRoot))">$(BuildRoot)\</BuildRoot>
     <TargetsPath>$(BuildRoot)Build</TargetsPath>
 
+    <PTVSPRPath Condition="'$(PTVSPRPath)' == ''">$(BuildRoot)..\PTVS-pr\</PTVSPRPath>
+    <PTVSSamplesPath Condition="'$(PTVSSamplesPath)' == ''">$(BuildRoot)..\PTVS-Samples\</PTVSSamplesPath>
+
     <!-- BuildOutputRoot contains all build files.
     
     Rather than customizing OutputPath or IntermediateOutputPath in projects,

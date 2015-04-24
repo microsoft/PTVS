@@ -20,7 +20,7 @@
     <ProjectFile Include="PythonTools\PythonTools.wixproj"/>
     <ProjectFile Include="PythonProfiling\PythonProfiling.wixproj"/>
     <ProjectFile Include="PythonHpcSupport\PythonHpcSupport.wixproj" Condition="$(IncludeHpc)"/>
-    <ProjectFile Include="..\..\Internal\Python\VsLoggerSetup\VsLogger.wixproj" Condition="'$(IncludeVsLogger)' == 'True'"/>
+    <ProjectFile Include="$(PTVSPRPath)VsLoggerSetup\VsLogger.wixproj" Condition="'$(IncludeVsLogger)' == 'True'"/>
     <ProjectFile Include="PythonToolsInstaller\PythonToolsInstaller.wixproj"/>
     <ProjectFile Include="FastCgiInstaller\FastCgi.wixproj" Condition="$(IncludeWFastCgi)"/>
   </ItemGroup>

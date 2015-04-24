@@ -172,7 +172,7 @@ if ($release -or $mockrelease) {
     $global_msbuild_options += "/p:ReleaseBuild=true"
 }
 
-if (Test-Path $buildroot\Internal\Python\VsLogger\VsLogger.csproj) {
+if (Test-Path $buildroot\..\PTVS-pr\VsLogger\VsLogger.csproj) {
     $global_msbuild_options += "/p:IncludeVsLogger=true"
 }
 
