@@ -73,25 +73,17 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 return;
             }
 
-            UpdateLayout(e.NewSize.Width);
+            UpdateLayout(e.NewSize.Width, e.NewSize.Height);
         }
 
-        void UpdateLayout(double width) {
-            if (double.IsNaN(width)) {
+        void UpdateLayout(double width, double height) {
+            if (double.IsNaN(width) || double.IsNaN(height)) {
                 return;
             }
             
-            var trigger = EnvironmentsColumn.MaxWidth + ExtensionsColumn.MaxWidth * 1.5;
-
-            if (trigger < 10.0) {
-                // Very small trigger probably means that the columns are
-                // not initialized yet, so we don't want to set the layout.
-                return;
-            }
-
-            if (width <= trigger) {
+            if (width <= height * 0.9) {
                 SwitchToVerticalLayout();
-            } else {
+            } else if (width >= height * 1.1) {
                 SwitchToHorizontalLayout();
             }
         }
@@ -336,7 +328,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             UpdateEnvironments();
 
             UpdateLayout();
-            UpdateLayout(ActualWidth);
+            UpdateLayout(ActualWidth, ActualHeight);
         }
 
         private void OnViewCreated(EnvironmentView view) {
