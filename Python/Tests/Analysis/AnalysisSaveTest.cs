@@ -472,28 +472,37 @@ sys.modules['test.imported'] = test_import_2
                 interp = fact.CreateInterpreter();
             }
 
-            var state = new PythonAnalyzer(fact, interp, SharedDatabaseState.BuiltinName2x);
-            state.ReloadModulesAsync().WaitAndUnwrapExceptions();
+            var codeFolder = TestData.GetTempPath(randomSubPath: true);
+            var dbFolder = Path.Combine(codeFolder, "DB");
+            Directory.CreateDirectory(codeFolder);
+            Directory.CreateDirectory(dbFolder);
+
+            var state = PythonAnalyzer.CreateSynchronously(fact, interp, SharedDatabaseState.BuiltinName2x);
             for (int i = 0; i < modules.Length; i++) {
-                entries[i] = state.AddModule(modules[i].ModuleName, modules[i].Filename);
+                var fullname = Path.Combine(codeFolder, modules[i].Filename);
+                File.WriteAllText(fullname, modules[i].Code);
+                entries[i] = state.AddModule(modules[i].ModuleName, fullname);
                 Prepare(entries[i], new StringReader(modules[i].Code), version);
             }
 
             for (int i = 0; i < modules.Length; i++) {
-                entries[i].Analyze(CancellationToken.None);
+                entries[i].Analyze(CancellationToken.None, false);
             }
 
-            string tmpFolder = TestData.GetTempPath("6666d700-a6d8-4e11-8b73-3ba99a61e27b");
-            Directory.CreateDirectory(tmpFolder);
+            new SaveAnalysis().Save(state, dbFolder);
 
-            new SaveAnalysis().Save(state, tmpFolder);
-
-            File.Copy(Path.Combine(PythonTypeDatabase.BaselineDatabasePath, "__builtin__.idb"), Path.Combine(tmpFolder, "__builtin__.idb"), true);
-
-            return new SaveLoadResult(
-                PythonAnalyzer.CreateSynchronously(InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version.ToVersion(), null, tmpFolder)),
-                tmpFolder
+            File.Copy(
+                Path.Combine(PythonTypeDatabase.BaselineDatabasePath, "__builtin__.idb"),
+                Path.Combine(dbFolder, "__builtin__.idb"),
+                true
             );
+
+            var loadFactory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(
+                version.ToVersion(),
+                null,
+                dbFolder
+            );
+            return new SaveLoadResult(PythonAnalyzer.CreateSynchronously(loadFactory), codeFolder);
         }
 
         class AnalysisModule {

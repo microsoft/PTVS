@@ -88,11 +88,13 @@ namespace AnalysisTests {
             // the interpreter for each version like we should be.
             var fact = InterpreterFactory;
             var interp = Interpreter;
+            var builtinsName = "__builtin__";
             if (version != fact.GetLanguageVersion()) {
                 fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version.ToVersion());
                 interp = fact.CreateInterpreter();
+                builtinsName = null;
             }
-            var state = PythonAnalyzer.CreateSynchronously(fact, interp, "__builtin__");
+            var state = PythonAnalyzer.CreateSynchronously(fact, interp, builtinsName);
 
             if (version.Is3x() || this is IronPythonAnalysisTest) {
                 var types = (KnownTypes)state.Types;

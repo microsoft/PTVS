@@ -170,8 +170,10 @@ namespace AnalysisTests {
                 Assert.IsInstanceOfType(propObj, typeof(IBuiltinProperty));
                 var prop = (IBuiltinProperty)propObj;
 
-                Assert.IsNull(prop.Type, "Expected null property type");
-                Assert.AreEqual("property of unknown type", prop.Description);
+                // The type is unspecified in the DB, so it should be object
+                Assert.IsNotNull(prop.Type, "Property type should never be null");
+                Assert.AreEqual(BuiltinTypeId.Object, prop.Type.TypeId, "Property should be of type object");
+                Assert.AreEqual("property of type object", prop.Description);
 
                 // Ensure that we are still getting properties at all
                 propObj = ((IPythonType)cls).GetMember(null, "with_return");

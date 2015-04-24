@@ -563,6 +563,11 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             }
 
+            if (end <= start) {
+                // No statement here
+                return null;
+            }
+
             return new SnapshotSpan(start, end);
         }
     }

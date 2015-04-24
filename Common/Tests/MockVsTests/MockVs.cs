@@ -383,6 +383,8 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
                     Console.WriteLine(tix);
                 } catch (ReflectionTypeLoadException tlx) {
                     Console.WriteLine(tlx);
+                } catch (IOException iox) {
+                    Console.WriteLine(iox);
                 }
             }
 

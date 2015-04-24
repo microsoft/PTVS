@@ -61,7 +61,6 @@ namespace TestUtilities.UI.Python {
                 ao.AutoListIdentifiers = oldALI;
                 orwoodProp.Value = oldOrwood;
             });
-
         }
 
         protected override void Dispose(bool disposing) {
@@ -304,53 +303,59 @@ namespace TestUtilities.UI.Python {
             );
             environmentsNode.Select();
 
-            var alreadyRunning = new HashSet<int>(Process.GetProcessesByName("python").Select(p => p.Id));
+            using (var pss = new ProcessScope("python")) {
+                using (var createVenv = AutomationDialog.FromDte(this, "Python.AddVirtualEnvironment")) {
+                    envPath = new TextBox(createVenv.FindByAutomationId("VirtualEnvPath")).GetValue();
+                    var baseInterp = new ComboBox(createVenv.FindByAutomationId("BaseInterpreter")).GetSelectedItemName();
 
-            using (var createVenv = AutomationDialog.FromDte(this, "Python.AddVirtualEnvironment")) {
-                envPath = new TextBox(createVenv.FindByAutomationId("VirtualEnvPath")).GetValue();
-                var baseInterp = new ComboBox(createVenv.FindByAutomationId("BaseInterpreter")).GetSelectedItemName();
+                    envName = string.Format("{0} ({1})", envPath, baseInterp);
 
-                envName = string.Format("{0} ({1})", envPath, baseInterp);
+                    Console.WriteLine("Expecting environment named: {0}", envName);
 
-                Console.WriteLine("Expecting environment named: {0}", envName);
+                    // Force a wait for the view to be updated.
+                    var wnd = (DialogWindowVersioningWorkaround)HwndSource.FromHwnd(
+                        new IntPtr(createVenv.Element.Current.NativeWindowHandle)
+                    ).RootVisual;
+                    wnd.Dispatcher.Invoke(() => {
+                        var view = (AddVirtualEnvironmentView)wnd.DataContext;
+                        return view.UpdateInterpreter(view.BaseInterpreter);
+                    }).Wait();
 
-                // Force a wait for the view to be updated.
-                var wnd = (DialogWindowVersioningWorkaround)HwndSource.FromHwnd(
-                    new IntPtr(createVenv.Element.Current.NativeWindowHandle)
-                ).RootVisual;
-                wnd.Dispatcher.Invoke(() => {
-                    var view = (AddVirtualEnvironmentView)wnd.DataContext;
-                    return view.UpdateInterpreter(view.BaseInterpreter);
-                }).Wait();
-
-                createVenv.ClickButtonByAutomationId("Create");
-                createVenv.ClickButtonAndClose("Close", nameIsAutomationId: true);
-            }
-
-            List<Process> nowRunning = null;
-            for (int retries = 100; retries > 0 && (nowRunning == null || !nowRunning.Any()); --retries) {
-                System.Threading.Thread.Sleep(100);
-                nowRunning = Process.GetProcessesByName("python").Where(p => !alreadyRunning.Contains(p.Id)).ToList();
-            }
-            if (nowRunning == null || !nowRunning.Any()) {
-                Assert.Fail("Failed to see python process start to create virtualenv");
-            }
-            foreach (var p in nowRunning) {
-                if (p.HasExited) {
-                    continue;
+                    createVenv.ClickButtonByAutomationId("Create");
+                    createVenv.ClickButtonAndClose("Close", nameIsAutomationId: true);
                 }
-                try {
-                    p.WaitForExit(30000);
-                } catch (Win32Exception ex) {
-                    Console.WriteLine("Error waiting for process ID {0}\n{1}", p.Id, ex);
+
+                var nowRunning = pss.WaitForNewProcess(TimeSpan.FromMinutes(1));
+                if (nowRunning == null || !nowRunning.Any()) {
+                    Assert.Fail("Failed to see python process start to create virtualenv");
+                }
+                foreach (var p in nowRunning) {
+                    if (p.HasExited) {
+                        continue;
+                    }
+                    try {
+                        p.WaitForExit(30000);
+                    } catch (Win32Exception ex) {
+                        Console.WriteLine("Error waiting for process ID {0}\n{1}", p.Id, ex);
+                    }
                 }
             }
-            
-            return OpenSolutionExplorer().WaitForChildOfProject(
-                project,
-                SR.GetString(SR.Environments),
-                envName
-            );
+
+            try {
+                return OpenSolutionExplorer().WaitForChildOfProject(
+                    project,
+                    SR.GetString(SR.Environments),
+                    envName
+                );
+            } finally {
+                var text = GetOutputWindowText("General");
+                if (!string.IsNullOrEmpty(text)) {
+                    Console.WriteLine("** Output Window text");
+                    Console.WriteLine(text);
+                    Console.WriteLine("***");
+                    Console.WriteLine();
+                }
+            }
         }
 
         public TreeNode AddExistingVirtualEnvironment(EnvDTE.Project project, string envPath, out string envName) {
