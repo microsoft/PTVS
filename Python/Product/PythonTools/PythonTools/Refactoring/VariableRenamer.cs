@@ -58,7 +58,7 @@ namespace Microsoft.PythonTools.Refactoring {
                     originalName = me.Name;
                 }
 
-                if (ast.PrivatePrefix != null && originalName.StartsWith("_" + ast.PrivatePrefix)) {
+                if (ast.PrivatePrefix != null && originalName != null && originalName.StartsWith("_" + ast.PrivatePrefix)) {
                     originalName = originalName.Substring(ast.PrivatePrefix.Length + 1);
                     privatePrefix = ast.PrivatePrefix;
                 }
