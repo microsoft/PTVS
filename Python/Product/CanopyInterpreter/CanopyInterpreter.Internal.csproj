@@ -45,10 +45,6 @@
     <ProjectGuid>{59DFC2CF-B7D0-4D5A-B1BC-EB6EE8C92F9D}</ProjectGuid>
     <DefineConstants>$(DefineConstants);$(SignedSym)</DefineConstants>
     <SignAssembly>false</SignAssembly>
-    <SccProjectName>SAK</SccProjectName>
-    <SccLocalPath>SAK</SccLocalPath>
-    <SccAuxPath>SAK</SccAuxPath>
-    <SccProvider>SAK</SccProvider>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>

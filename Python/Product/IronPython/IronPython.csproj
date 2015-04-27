@@ -45,10 +45,6 @@
     <RootNamespace>Microsoft.IronPythonTools</RootNamespace>
     <AssemblyName>Microsoft.PythonTools.IronPython</AssemblyName>
     <FileAlignment>512</FileAlignment>
-    <SccProjectName>SAK</SccProjectName>
-    <SccLocalPath>SAK</SccLocalPath>
-    <SccAuxPath>SAK</SccAuxPath>
-    <SccProvider>SAK</SccProvider>
     <UseVSSDK>true</UseVSSDK>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">

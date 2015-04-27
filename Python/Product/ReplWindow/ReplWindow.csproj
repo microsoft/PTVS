@@ -44,10 +44,6 @@
     <RootNamespace>Microsoft.VisualStudio</RootNamespace>
     <AssemblyName Condition="'$(InteractiveWindow)' == ''">Microsoft.VisualStudio.ReplWindow</AssemblyName>
     <AssemblyName Condition="'$(InteractiveWindow)' != ''">Microsoft.VisualStudio.InteractiveWindow</AssemblyName>
-    <SccProjectName>SAK</SccProjectName>
-    <SccLocalPath>SAK</SccLocalPath>
-    <SccAuxPath>SAK</SccAuxPath>
-    <SccProvider>SAK</SccProvider>
     <StartAction>Program</StartAction>
     <StartProgram>$(DevEnvDir)devenv.exe</StartProgram>
     <StartArguments>/rootsuffix Exp</StartArguments>

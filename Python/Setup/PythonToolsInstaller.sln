@@ -27,39 +27,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	EndProjectSection
 EndProject
 Global
-	GlobalSection(TeamFoundationVersionControl) = preSolution
-		SccNumberOfProjects = 10
-		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
-		SccTeamFoundationServer = http://vstfdevdiv:8080/devdiv2
-		SccProjectUniqueName0 = PythonToolsInstaller\\PythonToolsInstaller.wixproj
-		SccProjectName0 = PythonToolsInstaller
-		SccLocalPath0 = PythonToolsInstaller
-		SccProjectUniqueName1 = Django\\Django.wixproj
-		SccProjectName1 = Django
-		SccLocalPath1 = Django
-		SccProjectUniqueName2 = FastCgiInstaller\\FastCgi.wixproj
-		SccProjectName2 = FastCgiInstaller
-		SccLocalPath2 = FastCgiInstaller
-		SccProjectUniqueName3 = IronPythonInterpreter\\IronPythonInterpreter.wixproj
-		SccProjectName3 = IronPythonInterpreter
-		SccLocalPath3 = IronPythonInterpreter
-		SccProjectUniqueName4 = PythonHpcSupport\\PythonHpcSupport.wixproj
-		SccProjectName4 = PythonHpcSupport
-		SccLocalPath4 = PythonHpcSupport
-		SccProjectUniqueName5 = PythonProfiling\\PythonProfiling.wixproj
-		SccProjectName5 = PythonProfiling
-		SccLocalPath5 = PythonProfiling
-		SccProjectUniqueName6 = PythonTools\\PythonTools.wixproj
-		SccProjectName6 = PythonTools
-		SccLocalPath6 = PythonTools
-		SccProjectUniqueName7 = ReplWindow\\ReplWindow.wixproj
-		SccProjectName7 = ReplWindow
-		SccLocalPath7 = ReplWindow
-		SccProjectUniqueName8 = ..\\..\\Internal\\Python\\VsLoggerSetup\\VsLogger.wixproj
-		SccProjectName8 = ../../Internal/Python/VsLoggerSetup
-		SccLocalPath8 = ..\\..\\Internal\\Python\\VsLoggerSetup
-		SccLocalPath9 = .
-	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x86 = Debug|x86
 		Release|x86 = Release|x86
