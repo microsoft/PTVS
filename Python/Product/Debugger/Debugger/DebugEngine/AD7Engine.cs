@@ -1180,9 +1180,16 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
             EngineUtils.RequireOk(eventObject.GetAttributes(out attributes));
 
+            var events = _events;
+            if (events == null) {
+                // Probably racing with the end of the process.
+                Debug.Fail("_events is null");
+                return;
+            }
+
             Debug.WriteLine(String.Format("Sending Event: {0} {1}", eventObject.GetType(), iidEvent));
             try {
-                EngineUtils.RequireOk(_events.Event(this, null, program, thread, eventObject, ref riidEvent, attributes));
+                EngineUtils.RequireOk(events.Event(this, null, program, thread, eventObject, ref riidEvent, attributes));
             } catch (InvalidCastException) {
                 // COM object has gone away
             }
