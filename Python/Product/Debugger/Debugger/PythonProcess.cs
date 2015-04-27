@@ -506,16 +506,23 @@ namespace Microsoft.PythonTools.Debugger {
         internal PythonAst GetAst(string filename) {
             PythonAst ast;
             lock (_astCacheLock) {
-                _astCache.TryGetValue(filename, out ast);
+                if (_astCache.TryGetValue(filename, out ast)) {
+                    return ast;
+                }
             }
 
-            if (ast == null) {
+            try {
                 using (var source = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.Read)) {
                     ast = Parser.CreateParser(source, LanguageVersion).ParseFile();
-                    lock (_astCacheLock) {
-                        _astCache[filename] = ast;
-                    }
                 }
+            } catch (IOException) {
+            } catch (UnauthorizedAccessException) {
+            } catch (NotSupportedException) {
+            } catch (System.Security.SecurityException) {
+            }
+
+            lock (_astCacheLock) {
+                _astCache[filename] = ast;
             }
 
             return ast;
