@@ -109,6 +109,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="images\images.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="PipExtension.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -239,6 +243,32 @@
       <Project>{815db0cd-c0dd-4997-b43c-abee4dbeffe7}</Project>
       <Name>Microsoft.PythonTools.VSInterpreters</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="images\Settings.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="images\PYApplication.png" />
+    <Resource Include="images\PYConsoleApplication.png" />
+    <Resource Include="images\PYInteractiveWindow.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="images\FolderClosed.png" />
+    <Resource Include="images\FolderOpened.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="images\ActiveEnvironment.png" />
+    <Resource Include="images\PYEnvironment.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="images\PythonPackage.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="images\Checkmark.png" />
+    <Resource Include="images\ExclamationPoint.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="images\Refresh.png" />
   </ItemGroup>
   <Import Project="..\ProjectAfter.settings" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
