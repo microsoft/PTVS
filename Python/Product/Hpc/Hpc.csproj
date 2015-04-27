@@ -45,10 +45,6 @@
     <RootNamespace>Microsoft.PythonTools</RootNamespace>
     <AssemblyName>Microsoft.PythonTools.Hpc</AssemblyName>
     <FileAlignment>512</FileAlignment>
-    <SccProjectName>SAK</SccProjectName>
-    <SccLocalPath>SAK</SccLocalPath>
-    <SccAuxPath>SAK</SccAuxPath>
-    <SccProvider>SAK</SccProvider>
     <UseVSSDK>true</UseVSSDK>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">

@@ -8,10 +8,6 @@
     <OutputName>PythonToolsInstaller</OutputName>
     <OutputType>Package</OutputType>
     <DefineSolutionProperties>false</DefineSolutionProperties>
-    <SccProjectName>SAK</SccProjectName>
-    <SccProvider>SAK</SccProvider>
-    <SccAuxPath>SAK</SccAuxPath>
-    <SccLocalPath>SAK</SccLocalPath>
     <DefineConstants>
       $(DefineConstants);
       IncludeVsLogger=$(IncludeVsLogger);

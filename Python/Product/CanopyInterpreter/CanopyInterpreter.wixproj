@@ -11,10 +11,6 @@
     <OutputPath>bin\$(Configuration)$(VSTarget)\</OutputPath>
     <IntermediateOutputPath>obj\$(Configuration)$(VSTarget)\</IntermediateOutputPath>
     <DefineSolutionProperties>false</DefineSolutionProperties>
-    <SccProjectName>SAK</SccProjectName>
-    <SccProvider>SAK</SccProvider>
-    <SccAuxPath>SAK</SccAuxPath>
-    <SccLocalPath>SAK</SccLocalPath>
     <DefineConstants>
       VSTargetVersion=$(VSTarget)
     </DefineConstants>

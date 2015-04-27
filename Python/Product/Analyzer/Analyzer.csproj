@@ -45,10 +45,6 @@
     <RootNamespace>Microsoft.PythonTools.Analysis</RootNamespace>
     <AssemblyName>Microsoft.PythonTools.Analyzer</AssemblyName>
     <FileAlignment>512</FileAlignment>
-    <SccProjectName>SAK</SccProjectName>
-    <SccLocalPath>SAK</SccLocalPath>
-    <SccAuxPath>SAK</SccAuxPath>
-    <SccProvider>SAK</SccProvider>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'x86' ">

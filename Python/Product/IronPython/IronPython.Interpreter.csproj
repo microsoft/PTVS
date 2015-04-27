@@ -43,10 +43,6 @@
     <RootNamespace>Microsoft.IronPythonTools.Interpreter</RootNamespace>
     <AssemblyName>Microsoft.PythonTools.IronPython.Interpreter</AssemblyName>
     <ProjectGuid>{012293B1-168A-4C48-A678-DB8361B50BA7}</ProjectGuid>
-    <SccProjectName>SAK</SccProjectName>
-    <SccLocalPath>SAK</SccLocalPath>
-    <SccAuxPath>SAK</SccAuxPath>
-    <SccProvider>SAK</SccProvider>
     <DefineConstants>$(DefineConstants);$(SignedSym)</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">

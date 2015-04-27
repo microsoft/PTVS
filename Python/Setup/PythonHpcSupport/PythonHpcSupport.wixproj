@@ -9,10 +9,6 @@
     <OutputType>Module</OutputType>
     <DefineSolutionProperties>false</DefineSolutionProperties>
     <DefineConstants>$(DefineConstants);ProductSuffix=Hpc</DefineConstants>
-    <SccProjectName>SAK</SccProjectName>
-    <SccProvider>SAK</SccProvider>
-    <SccAuxPath>SAK</SccAuxPath>
-    <SccLocalPath>SAK</SccLocalPath>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="PythonHpcSupport.wxs" />

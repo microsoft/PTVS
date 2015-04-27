@@ -43,10 +43,6 @@
     <RootNamespace>Microsoft.PythonTools.Interpreter</RootNamespace>
     <AssemblyName>Microsoft.PythonTools.VSInterpreters</AssemblyName>
     <ProjectGuid>{815DB0CD-C0DD-4997-B43C-ABEE4DBEFFE7}</ProjectGuid>
-    <SccProjectName>SAK</SccProjectName>
-    <SccLocalPath>SAK</SccLocalPath>
-    <SccAuxPath>SAK</SccAuxPath>
-    <SccProvider>SAK</SccProvider>
     <DefineConstants>$(DefineConstants);$(SignedSym)</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
