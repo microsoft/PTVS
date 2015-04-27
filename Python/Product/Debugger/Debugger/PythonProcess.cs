@@ -515,6 +515,7 @@ namespace Microsoft.PythonTools.Debugger {
                 using (var source = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.Read)) {
                     ast = Parser.CreateParser(source, LanguageVersion).ParseFile();
                 }
+            } catch (ArgumentException) {
             } catch (IOException) {
             } catch (UnauthorizedAccessException) {
             } catch (NotSupportedException) {
