@@ -372,13 +372,13 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
                 }
 
                 Console.WriteLine("Including {0}", file);
-                catalogs.Add(new AssemblyCatalog(asm));
                 try {
                     foreach (var type in asm.GetTypes()) {
                         if (type.IsDefined(typeof(PackageRegistrationAttribute), false)) {
                             packageTypes.Add(type);
                         }
                     }
+                    catalogs.Add(new AssemblyCatalog(asm));
                 } catch (TypeInitializationException tix) {
                     Console.WriteLine(tix);
                 } catch (ReflectionTypeLoadException tlx) {
