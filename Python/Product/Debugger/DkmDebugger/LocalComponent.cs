@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.Serialization;
@@ -28,12 +29,16 @@ using Microsoft.VisualStudio.Debugger.CallStack;
 using Microsoft.VisualStudio.Debugger.ComponentInterfaces;
 using Microsoft.VisualStudio.Debugger.DefaultPort;
 using Microsoft.VisualStudio.Debugger.Evaluation;
+using Microsoft.VisualStudio.Debugger.Evaluation.IL;
 using Microsoft.VisualStudio.Debugger.Native;
 using Microsoft.VisualStudio.Debugger.Symbols;
 
 namespace Microsoft.PythonTools.DkmDebugger {
     public class LocalComponent :
         ComponentBase,
+#if DEV14_OR_LATER
+        IDkmIntrinsicFunctionEvaluator140,
+#endif
         IDkmModuleSymbolsLoadedNotification,
         IDkmRuntimeInstanceLoadNotification,
         IDkmCallStackFilter,
@@ -43,7 +48,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
         IDkmSymbolCompilerIdQuery,
         IDkmSymbolDocumentCollectionQuery,
         IDkmSymbolDocumentSpanQuery,
-        IDkmSymbolQuery {
+        IDkmSymbolQuery { 
 
         public LocalComponent()
             : base(Guids.LocalComponentGuid) {
@@ -501,6 +506,15 @@ namespace Microsoft.PythonTools.DkmDebugger {
             var natVis = visualizedExpression.StackFrame.Process.GetOrCreateDataItem(() => new PyObjectNativeVisualizer());
             natVis.UseDefaultEvaluationBehavior(visualizedExpression, out useDefaultEvaluationBehavior, out defaultEvaluationResult);
         }
+
+#if DEV14_OR_LATER 
+
+        DkmILEvaluationResult[] IDkmIntrinsicFunctionEvaluator140.Execute(DkmILExecuteIntrinsic executeIntrinsic, DkmILContext iLContext, DkmCompiledILInspectionQuery inspectionQuery, DkmILEvaluationResult[] arguments, ReadOnlyCollection<DkmCompiledInspectionQuery> subroutines, out DkmILFailureReason failureReason) {
+            var natVis = iLContext.StackFrame.Process.GetOrCreateDataItem(() => new PyObjectNativeVisualizer());
+            return natVis.Execute(executeIntrinsic, iLContext, inspectionQuery, arguments, subroutines, out failureReason);
+        }
+
+#endif
 
         DkmCompilerId IDkmSymbolCompilerIdQuery.GetCompilerId(DkmInstructionSymbol instruction, DkmInspectionSession inspectionSession) {
             return new DkmCompilerId(Guids.MicrosoftVendorGuid, Guids.PythonLanguageGuid);

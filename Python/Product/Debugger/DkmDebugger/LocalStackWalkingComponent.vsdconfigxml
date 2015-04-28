@@ -12,7 +12,9 @@
   You must not remove this notice, or any other, from this software.
  
 -->
-<Configuration xmlns="http://schemas.microsoft.com/vstudio/vsdconfig/2008">
+<Configuration xmlns="http://schemas.microsoft.com/vstudio/vsdconfig/2008"
+               xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+               xsl:version="1.0">
 
   <DefineGuid Name="guidPythonDebugLocalStackWalkingCompId" Value="538659BC-990B-4F53-B3C8-834D54397E15"/>
   <DefineGuid Name="guidPythonEngineId" Value="EC1375B7-E2CE-43E8-BF75-DC638DE1F1F9"/>

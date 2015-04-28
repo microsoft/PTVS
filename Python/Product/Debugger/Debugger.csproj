@@ -53,7 +53,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.VisualStudio.ComponentModelHost, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
-    <Reference Include="Microsoft.VisualStudio.Debugger.Engine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" Condition="'$(VSTarget)' != '10.0'">
+    <Reference Include="Microsoft.VisualStudio.Debugger.Engine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>$(VSSDKDir)\VisualStudioIntegration\Common\Assemblies\v4.0\Microsoft.VisualStudio.Debugger.Engine.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.OLE.Interop, Version=7.1.40304.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
@@ -62,7 +62,7 @@
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.10.0, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
-    <Reference Include="Microsoft.VisualStudio.Shell.Interop.11.0, Version=11.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" Condition="'$(VSTarget)' != '10.0'">
+    <Reference Include="Microsoft.VisualStudio.Shell.Interop.11.0, Version=11.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.8.0, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
@@ -171,8 +171,6 @@
     <Compile Include="Debugger\TryHandlerWalker.cs" />
     <Compile Include="Debugger\FrameKind.cs" />
     <Compile Include="DkmDebugger\ComPtr.cs" />
-  </ItemGroup>
-  <ItemGroup Condition="'$(VSTarget)' != '10.0'">
     <Compile Include="DkmDebugger\ComponentBase.cs" />
     <Compile Include="DkmDebugger\CppExpressionEvaluator.cs" />
     <Compile Include="DkmDebugger\DebuggerOptions.cs" />
@@ -237,6 +235,8 @@
     <None Include="DkmDebugger\RemoteComponent.vsdconfigxml">
       <SubType>Designer</SubType>
     </None>
+    <Content Include="DkmDebugger\PythonDkm_12.0.natvis" />
+    <Content Include="DkmDebugger\PythonDkm.natvis" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Analysis\Analysis.csproj">
@@ -253,31 +253,46 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="DkmDebugger\Microsoft.Dia.Interop.dll" />
+    <Content Include="DkmDebugger\Microsoft.Dia.Interop.14.0.dll" />
   </ItemGroup>
   <!-- .vsdconfigxml -> .vsdconfig -->
   <ItemGroup>
-    <VsdConfigXml Include="DkmDebugger\*.vsdconfigxml" />
-    <Content Include="DkmDebugger\PythonDkm.natvis">
-      <Link>Visualizers\PythonDkm.natvis</Link>
-      <IncludeInVSIX>true</IncludeInVSIX>
-      <VSIXSubPath>.</VSIXSubPath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    <VsdConfigXml Include="DkmDebugger\*.vsdconfigxml"/>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Visualizers\" />
   </ItemGroup>
   <Import Project="..\ProjectAfter.settings" />
+  <ItemGroup>
+    <VsdConfigXmlTransformed Include="@(VsdConfigXml->'$(IntermediateOutputPath)\%(Filename)%(Extension)')" />
+  </ItemGroup>
   <PropertyGroup>
     <VsdConfigOutput>$(IntermediateOutputPath)\DkmDebugger.vsdconfig</VsdConfigOutput>
+    <NatvisOutput>$(IntermediateOutputPath)\PythonDkm.natvis</NatvisOutput>
   </PropertyGroup>
-  <Target Name="GenerateVsdConfig" Inputs="@(VsdConfigXml)" Outputs="$(VsdConfigOutput)" AfterTargets="CoreCompile" Condition="$(VSTarget) != '10.0'">
+  <Target Name="CopyNatvis" Inputs="DkmDebugger\*.natvis" Outputs="$(NatvisOutput)" AfterTargets="CoreCompile">
+    <Copy SourceFiles="DkmDebugger\PythonDkm_12.0.natvis" DestinationFiles="$(NatvisOutput)"
+          Condition="'$(VSTarget)' == '12.0'" />
+    <Copy SourceFiles="DkmDebugger\PythonDkm.natvis" DestinationFiles="$(NatvisOutput)"
+          Condition="'$(VSTarget)' != '12.0'" />
+  </Target>
+  <Target Name="TransformVsdConfigXml"
+          Inputs="%(VsdConfigXml.Identity)"
+          Outputs="$(IntermediateOutputPath)\%(VsdConfigXml.Filename)%(VsdConfigXml.Extension)"
+          AfterTargets="CoreCompile">
+    <Message Text="Transforming @(VsdConfigXml)" />
+    <XslTransformation XslInputPath="@(VsdConfigXml)"
+                       XmlContent="&lt;Properties VSTarget='$(VSTarget)' /&gt;"
+                       OutputPaths="$(IntermediateOutputPath)\%(VsdConfigXml.Filename)%(VsdConfigXml.Extension)"
+                       Parameters="VsdConfigXmlTransformParameters" /> 
+  </Target>
+  <Target Name="GenerateVsdConfig" Inputs="@(VsdConfigXmlTransformed)" Outputs="$(VsdConfigOutput)" AfterTargets="TransformVsdConfigXml">
     <PropertyGroup>
-      <_Arguments>@(VsdConfigXml, ' ') @(IntermediateAssembly->'"%(FullPath)"', ' ') "$(VsdConfigOutput)"</_Arguments>
+      <_Arguments>@(VsdConfigXmlTransformed, ' ') @(IntermediateAssembly->'"%(FullPath)"', ' ') "$(VsdConfigOutput)"</_Arguments>
     </PropertyGroup>
     <Exec Command="&quot;$(VSSDKDir)VisualStudioIntegration\Tools\Bin\vsdconfigtool.exe&quot; $(_Arguments)" />
   </Target>
-  <Target Name="IncludeVsdConfig" BeforeTargets="AssignTargetPaths;GetVSIXSourceItems" Condition="$(VSTarget) != '10.0'">
+  <Target Name="IncludeVsdConfigAndNatvis" BeforeTargets="AssignTargetPaths;GetVSIXSourceItems">
     <ItemGroup>
       <Content Include="$(VsdConfigOutput)">
         <IncludeInVSIX>true</IncludeInVSIX>
@@ -285,7 +300,14 @@
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         <Link>$([System.IO.Path]::GetFileName($(VsdConfigOutput)))</Link>
       </Content>
+      <Content Include="$(NatvisOutput)">
+        <IncludeInVSIX>true</IncludeInVSIX>
+        <VSIXSubPath>.</VSIXSubPath>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        <Link>Visualizers\$([System.IO.Path]::GetFileName($(NatvisOutput)))</Link>
+      </Content>
     </ItemGroup>
     <Message Text="VsdConfigOutput: $(VsdConfigOutput)" Importance="high" />
+    <Message Text="NatvisOutput: $(NatvisOutput)" Importance="high" />
   </Target>
 </Project>

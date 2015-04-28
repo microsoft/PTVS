@@ -179,7 +179,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
                     var cppEvalResult = cppEval.TryEvaluateObject(CppTypeModuleName, CppTypeName, obj.Address, ",!") as DkmSuccessEvaluationResult;
                     if (cppEvalResult != null) {
                         var evalResult = DkmSuccessEvaluationResult.Create(
-                            inspectionContext, stackFrame, "[C++ view]", null,
+                            inspectionContext, stackFrame, "[C++ view]", "{C++}" + cppEvalResult.FullName,
                             DkmEvaluationResultFlags.ReadOnly | DkmEvaluationResultFlags.Expandable,
                             cppEvalResult.Value, null, cppEvalResult.Type,
                             DkmEvaluationResultCategory.Property,

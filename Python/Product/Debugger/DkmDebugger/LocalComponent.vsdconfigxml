@@ -12,7 +12,9 @@
   You must not remove this notice, or any other, from this software.
  
 -->
-<Configuration xmlns="http://schemas.microsoft.com/vstudio/vsdconfig/2008">
+<Configuration xmlns="http://schemas.microsoft.com/vstudio/vsdconfig/2008"
+               xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+               xsl:version="1.0">
 
   <DefineGuid Name="guidPythonDebugRemoteCompId" Value="BCFD7074-A4D3-42A9-B1B6-C975304C882A"/>
   <DefineGuid Name="guidPythonDebugLocalCompId" Value="E42AC982-8F0B-45DE-8F22-EC045687F2EC"/>
@@ -22,6 +24,7 @@
   <DefineGuid Name="guidPythonSymbolProviderId" Value="4C802B60-6E39-4CE0-8FE8-F77F83458399"/>
   <DefineGuid Name="guidPythonExceptionCategory" Value="49AA3BE8-B743-49C1-B5F7-5BA85F9D6F96"/>
   <DefineGuid Name="guidPythonNativeVisualizerId" Value="C85DBEDF-48BA-4BC8-ADC7-B3A7B70D692A"/>
+  <DefineGuid Name="guidPythonIntrinsicFunctionsSourceId" Value="27BEB234-72EC-4249-89F3-4298266AE282"/>
 
   <ManagedComponent
     ComponentId="guidPythonDebugLocalCompId"
@@ -66,6 +69,16 @@
           </Filter>
           <Interface Name="IDkmCustomVisualizer"/>
         </InterfaceGroup>
+
+        <xsl:if test="/Properties/@VSTarget != '12.0'">
+          <InterfaceGroup>
+            <Filter>
+              <LanguageId RequiredValue="guidPythonLanguageId"/>
+              <SourceId RequiredValue="guidPythonIntrinsicFunctionsSourceId"/>
+            </Filter>
+            <Interface Name="IDkmIntrinsicFunctionEvaluator140"/>
+          </InterfaceGroup>
+        </xsl:if>
 
         <InterfaceGroup>
           <Filter>
