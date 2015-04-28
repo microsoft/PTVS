@@ -176,6 +176,13 @@ namespace Microsoft.PythonTools.DkmDebugger {
                         }
                     }
 
+#if DEV14_OR_LATER
+                    string cppExpr = CppExpressionEvaluator.GetExpressionForObject(CppTypeModuleName, CppTypeName, obj.Address, ",!");
+                    var evalResult = DkmIntermediateEvaluationResult.Create(
+                        inspectionContext, stackFrame, "[C++ view]", "{C++}" + cppExpr, cppExpr,
+                        CppExpressionEvaluator.CppLanguage, stackFrame.Process.GetNativeRuntimeInstance(), null);
+                    evalResults.Add(evalResult);
+#else
                     var cppEvalResult = cppEval.TryEvaluateObject(CppTypeModuleName, CppTypeName, obj.Address, ",!") as DkmSuccessEvaluationResult;
                     if (cppEvalResult != null) {
                         var evalResult = DkmSuccessEvaluationResult.Create(
@@ -190,6 +197,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
                             new CppViewEvaluationResult { CppEvaluationResult = cppEvalResult });
                         evalResults.Add(evalResult);
                     }
+#endif
                 }
 
                 int i = 0;
