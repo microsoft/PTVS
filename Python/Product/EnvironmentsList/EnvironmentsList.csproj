@@ -95,6 +95,39 @@
       </ItemGroup>
     </Otherwise>
   </Choose>
+  <Choose>
+    <When Condition="'$(VSTarget)' == '14.0'">
+      <ItemGroup>
+        <Reference Include="Microsoft.VisualStudio.ImageCatalog, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+        <Reference Include="Microsoft.VisualStudio.Imaging, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+        <Reference Include="Microsoft.VisualStudio.Utilities, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+      </ItemGroup>
+    </When>
+  </Choose>
+  <ItemGroup>
+    <None Include="images14.0\images.xaml">
+      <SubType>Designer</SubType>
+    </None>
+  <Page Include="images\images.xaml">
+    <SubType>Designer</SubType>
+    <Generator>MSBuild:Compile</Generator>
+    <TargetPath>images\images.xaml</TargetPath>
+  </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="images\ActiveEnvironment.png" />
+    <Resource Include="images\Checkmark.png" />
+    <Resource Include="images\ExclamationPoint.png" />
+    <Resource Include="images\FolderClosed.png" />
+    <Resource Include="images\FolderOpened.png" />
+    <Resource Include="images\PYApplication.png" />
+    <Resource Include="images\PYConsoleApplication.png" />
+    <Resource Include="images\PYEnvironment.png" />
+    <Resource Include="images\PYInteractiveWindow.png" />
+    <Resource Include="images\PythonPackage.png" />
+    <Resource Include="images\Refresh.png" />
+    <Resource Include="images\Settings.png" />
+  </ItemGroup>
   <ItemGroup>
     <Page Include="..\..\..\Common\Product\SharedProject\Wpf\Controls.xaml">
       <Link>Wpf\Controls.xaml</Link>
@@ -106,10 +139,6 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="DBExtension.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="images\images.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -244,32 +273,6 @@
       <Name>Microsoft.PythonTools.VSInterpreters</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Resource Include="images\Settings.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="images\PYApplication.png" />
-    <Resource Include="images\PYConsoleApplication.png" />
-    <Resource Include="images\PYInteractiveWindow.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="images\FolderClosed.png" />
-    <Resource Include="images\FolderOpened.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="images\ActiveEnvironment.png" />
-    <Resource Include="images\PYEnvironment.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="images\PythonPackage.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="images\Checkmark.png" />
-    <Resource Include="images\ExclamationPoint.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="images\Refresh.png" />
-  </ItemGroup>
   <Import Project="..\ProjectAfter.settings" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
@@ -278,4 +281,16 @@
   <Target Name="AfterBuild">
   </Target>
   -->
+  <Target Name="_TransformImages" AfterTargets="PrepareForBuild" Condition="$(VSTarget) != '12.0'">
+    <ItemGroup>
+      <Page Remove="images\images.xaml" />
+      <!--<Resource Remove="images\*.png" />-->
+      <Page Include="images$(VSTarget)\images.xaml">
+        <SubType>Designer</SubType>
+        <Generator>MSBuild:Compile</Generator>
+        <TargetPath>images\images.xaml</TargetPath>
+      </Page>
+    </ItemGroup>
+
+  </Target>
 </Project>
