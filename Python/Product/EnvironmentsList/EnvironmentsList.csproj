@@ -283,12 +283,12 @@
   -->
   <Target Name="_TransformImages" AfterTargets="PrepareForBuild" Condition="$(VSTarget) != '12.0'">
     <ItemGroup>
-      <Page Remove="images\images.xaml" />
-      <!--<Resource Remove="images\*.png" />-->
+      <Page Remove="images\images.xaml;images$(VSTarget)\images.xaml" />
+      <Resource Remove="images\*.png" />
       <Page Include="images$(VSTarget)\images.xaml">
         <SubType>Designer</SubType>
         <Generator>MSBuild:Compile</Generator>
-        <TargetPath>images\images.xaml</TargetPath>
+        <Link>images\images.xaml</Link>
       </Page>
     </ItemGroup>
 
