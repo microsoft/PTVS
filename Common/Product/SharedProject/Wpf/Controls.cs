@@ -24,6 +24,7 @@ using Microsoft.VisualStudio.Shell;
 namespace Microsoft.VisualStudioTools.Wpf {
     public static class Controls {
         public static readonly object BackgroundKey = VsBrushes.WindowKey;
+        public static readonly object BackgroundColorKey = VsColors.WindowKey;
         public static readonly object BackgroundAccentKey = VsBrushes.ButtonFaceKey;
         public static readonly object ForegroundKey = VsBrushes.WindowTextKey;
         public static readonly object GrayTextKey = VsBrushes.GrayTextKey;

@@ -32,16 +32,9 @@
                                         <ColumnDefinition Width="auto" />
                                         <ColumnDefinition />
                                     </Grid.ColumnDefinitions>
-                                    <Path Grid.Column="0"
-                                          Margin="3 0"
-                                          Width="16" Height="16"
-                                          VerticalAlignment="Center"
-                                          Data="{StaticResource EnvironmentGeometry}"
-                                          Stretch="Uniform"
-                                          RenderOptions.EdgeMode="Aliased"
-                                          Fill="{DynamicResource {x:Static wpf:Controls.ControlForegroundKey}}"
-                                          Stroke="{DynamicResource {x:Static wpf:Controls.ControlBorderKey}}"
-                                          StrokeThickness="1.0" />
+                                    <ContentControl Grid.Column="0"
+                                                    Margin="3 0"
+                                                    Style="{StaticResource PythonEnvironmentImage}" />
                                     <TextBlock Grid.Column="1" TextWrapping="WrapWithOverflow">
                                         Make this the default environment for new projects
                                     </TextBlock>
@@ -54,16 +47,9 @@
                                     <ColumnDefinition />
                                 </Grid.ColumnDefinitions>
 
-                                <Path Grid.Column="0"
-                                      Margin="3 0"
-                                      Width="16" Height="16"
-                                      VerticalAlignment="Center"
-                                      Data="{StaticResource EnvironmentGeometry}"
-                                      Stretch="Uniform"
-                                      RenderOptions.EdgeMode="Aliased"
-                                      Fill="{DynamicResource PTVSGreenBrush}"
-                                      Stroke="{DynamicResource {x:Static wpf:Controls.ControlBorderKey}}"
-                                      StrokeThickness="1.0" />
+                                <ContentControl Grid.Column="0"
+                                                Margin="3 0"
+                                                Style="{StaticResource ActiveEnvironmentImage}" />
                                 <TextBlock Grid.Column="1" TextWrapping="WrapWithOverflow">
                                     This is the default environment for new projects
                                 </TextBlock>
@@ -75,16 +61,10 @@
                                     <ColumnDefinition />
                                 </Grid.ColumnDefinitions>
 
-                                <Path Grid.Column="0"
-                                      Margin="3 0"
-                                      Width="16" Height="16"
-                                      VerticalAlignment="Center"
-                                      Data="{StaticResource EnvironmentGeometry}"
-                                      Stretch="Uniform"
-                                      RenderOptions.EdgeMode="Aliased"
-                                      Fill="{DynamicResource PTVSGreenBrush}"
-                                      Stroke="{DynamicResource {x:Static wpf:Controls.ControlBorderKey}}"
-                                      StrokeThickness="1.0" />
+                                <ContentControl Grid.Column="0"
+                                                Margin="3 0"
+                                                Opacity="0.5"
+                                                Style="{StaticResource PythonEnvironmentImage}" />
                                 <TextBlock Grid.Column="1" TextWrapping="WrapWithOverflow">
                                     This environment cannot be made the default.
                                 </TextBlock>
@@ -115,25 +95,9 @@
                                         <ColumnDefinition Width="auto" />
                                         <ColumnDefinition />
                                     </Grid.ColumnDefinitions>
-                                    <Path Grid.Column="0"
-                                          Margin="3 0"
-                                          Width="16" Height="16"
-                                          Stretch="None"
-                                          HorizontalAlignment="Center" VerticalAlignment="Center"
-                                          RenderOptions.EdgeMode="Aliased"
-                                          Data="{StaticResource InteractiveWindowGeometry1}"
-                                          Fill="{StaticResource PTVSGreenBrush}"
-                                          Stroke="{DynamicResource {x:Static wpf:Controls.ControlBorderKey}}"
-                                          StrokeThickness="1.0" />
-                                    <Path Grid.Column="0"
-                                          Margin="3 0"
-                                          Width="16" Height="16"
-                                          Stretch="None"
-                                          HorizontalAlignment="Center" VerticalAlignment="Center"
-                                          RenderOptions.EdgeMode="Aliased"
-                                          Data="{StaticResource InteractiveWindowGeometry2}"
-                                          Stroke="{StaticResource InteractiveWindowGeometryBrush2}"
-                                          StrokeThickness="1.0" />
+                                    <Control Grid.Column="0"
+                                             Margin="3 0"
+                                             Style="{StaticResource InteractiveWindowImage}" />
                                     <TextBlock Grid.Column="1" TextWrapping="WrapWithOverflow">
                                         Open interactive window
                                     </TextBlock>
@@ -150,16 +114,9 @@
                                         <ColumnDefinition Width="auto" />
                                         <ColumnDefinition />
                                     </Grid.ColumnDefinitions>
-                                    <Path Grid.Column="0"
-                                          Margin="3 0"
-                                          Width="16" Height="16"
-                                          Stretch="Uniform"
-                                          VerticalAlignment="Center"
-                                          RenderOptions.EdgeMode="Aliased"
-                                          Data="{StaticResource CogGeometry}"
-                                          Fill="Gray"
-                                          Stroke="{DynamicResource {x:Static wpf:Controls.ControlBorderKey}}"
-                                          StrokeThickness="1.0"/>
+                                    <Control Grid.Column="0"
+                                             Margin="3 0"
+                                             Style="{StaticResource SettingsImage}" />
                                     <TextBlock Grid.Column="1" TextWrapping="WrapWithOverflow">
                                         Configure interactive window
                                     </TextBlock>
@@ -181,16 +138,9 @@
                                         <ColumnDefinition Width="auto" />
                                         <ColumnDefinition />
                                     </Grid.ColumnDefinitions>
-                                    <Path Grid.Column="0"
-                                          Margin="3 0"
-                                          Width="16" Height="16"
-                                          Stretch="Uniform"
-                                          VerticalAlignment="Center"
-                                          RenderOptions.EdgeMode="Aliased"
-                                          Data="{StaticResource ClosedFolderGeometry}"
-                                          Fill="{DynamicResource FolderGeometryBrush}"
-                                          Stroke="{DynamicResource {x:Static wpf:Controls.ControlBorderKey}}"
-                                          StrokeThickness="1.0" />
+                                    <ContentControl Grid.Column="0"
+                                                    Margin="3 0"
+                                                    Style="{StaticResource FolderClosedImage}" />
                                     <TextBlock Grid.Column="1"
                                                Text="{Binding PrefixPath,Mode=OneWay}"
                                                TextTrimming="CharacterEllipsis" />
@@ -221,15 +171,9 @@
                                         <ColumnDefinition Width="auto" />
                                         <ColumnDefinition />
                                     </Grid.ColumnDefinitions>
-                                    <Path Grid.Column="0"
-                                          Margin="3 0"
-                                          Width="16" Height="16"
-                                          Stretch="Uniform"
-                                          VerticalAlignment="Center"
-                                          Data="{StaticResource ConsoleGeometry}"
-                                          Fill="{DynamicResource ConsoleGeometryBrush}"
-                                          Stroke="{DynamicResource {x:Static wpf:Controls.ControlBorderKey}}"
-                                          StrokeThickness="1.0" />
+                                    <ContentControl Grid.Column="0"
+                                                    Margin="3 0"
+                                                    Style="{StaticResource PythonConsoleApplicationImage}" />
                                     <TextBlock Grid.Column="1"
                                                Text="{Binding InterpreterPath,Mode=OneWay}"
                                                TextTrimming="CharacterEllipsis" />
@@ -260,27 +204,9 @@
                                         <ColumnDefinition Width="auto" />
                                         <ColumnDefinition />
                                     </Grid.ColumnDefinitions>
-                                    <Grid Grid.Column="0"
-                                          Margin="3 0"
-                                          Width="16" Height="16"
-                                          VerticalAlignment="Center">
-                                        <Path Width="16" Height="16"
-                                              Stretch="Uniform"
-                                              VerticalAlignment="Top"
-                                              RenderOptions.EdgeMode="Aliased"
-                                              Data="{StaticResource WindowsGeometry1}"
-                                              Fill="{DynamicResource WindowsGeometryBrush1}"
-                                              Stroke="{DynamicResource {x:Static wpf:Controls.ControlBorderKey}}"
-                                              StrokeThickness="1.0" />
-                                        <Path Width="16" Height="16"
-                                              Stretch="Uniform"
-                                              VerticalAlignment="Top"
-                                              RenderOptions.EdgeMode="Aliased"
-                                              Data="{StaticResource WindowsGeometry2}"
-                                              Fill="{DynamicResource WindowsGeometryBrush2}"
-                                              Stroke="{DynamicResource {x:Static wpf:Controls.ControlBorderKey}}"
-                                              StrokeThickness="1.0" />
-                                    </Grid>
+                                    <ContentControl Grid.Column="0"
+                                                    Margin="3 0"
+                                                    Style="{StaticResource PythonApplicationImage}" />
                                     <TextBlock Grid.Column="1"
                                                Text="{Binding WindowsInterpreterPath,Mode=OneWay}"
                                                TextTrimming="CharacterEllipsis" />

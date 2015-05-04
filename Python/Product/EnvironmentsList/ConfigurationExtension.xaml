@@ -40,7 +40,9 @@
             <ColumnDefinition Width="auto" />
         </Grid.ColumnDefinitions>
         
-        <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Hidden">
+        <ScrollViewer Grid.Column="0"
+                      CanContentScroll="False"
+                      VerticalScrollBarVisibility="Auto">
             <Grid Grid.IsSharedSizeScope="True">
                 <Grid.Resources>
                     <Style TargetType="{x:Type Label}" BasedOn="{StaticResource {x:Type Label}}">
