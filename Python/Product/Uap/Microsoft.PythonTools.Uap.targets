@@ -1,0 +1,66 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <!-- Gets the fully qualified path to the project home.  -->
+  <PropertyGroup>
+    <AvailablePlatforms>ARM,x86,x64</AvailablePlatforms>
+    <QualifiedProjectHome>$(MSBuildProjectDirectory)</QualifiedProjectHome>
+    <QualifiedProjectHome Condition="'$(ProjectHome)' != '' and '$(ProjectHome)' != '.'">$([System.IO.Path]::GetFullPath($([System.IO.Path]::Combine($(MSBuildProjectDirectory), $(ProjectHome)))))</QualifiedProjectHome>
+    <QualifiedProjectHome Condition="!HasTrailingSlash('$(QualifiedProjectHome)')">$(QualifiedProjectHome)\</QualifiedProjectHome>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <BuiltProjectOutputGroupDependsOn>
+      BuiltProjectOutputGroupFast;
+      $(BuiltProjectOutputGroupDependsOn)
+    </BuiltProjectOutputGroupDependsOn>
+  </PropertyGroup>
+  
+  <Target Name="BuiltProjectOutputGroupFast"
+          Returns="@(BuiltProjectOutputGroupFastOutput)"
+          DependsOnTargets="$(BuiltProjectOutputGroupFastDependsOn)">
+    <ItemGroup>
+      <BuiltProjectOutputGroupFastOutput Remove="@(BuiltProjectOutputGroupFastOutput)" />
+      <_BuiltProjectOutputGroupFastOutput Remove="@(_BuiltProjectOutputGroupFastOutput)" />
+    </ItemGroup>
+
+    <AssignTargetPath RootFolder="$(QualifiedProjectHome)" Files="$(AppxPackageRecipe)">
+      <Output TaskParameter="AssignedFiles" ItemName="_BuiltProjectOutputGroupFastOutput" />
+    </AssignTargetPath>
+
+    <ItemGroup>
+      <BuiltProjectOutputGroupFastOutput Include="@(_BuiltProjectOutputGroupFastOutput->'%(FullPath)')" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="BuiltProjectOutputGroup"
+          Returns="@(BuiltProjectOutputGroupOutput)"
+          DependsOnTargets="$(BuiltProjectOutputGroupDependsOn)">
+    <ItemGroup>
+      <BuiltProjectOutputGroupOutput Remove="@(BuiltProjectOutputGroupOutput)" />
+      <BuiltProjectOutputGroupOutput Include="@(BuiltProjectOutputGroupFastOutput)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="SourceFilesProjectOutputGroup"
+          Returns="@(SourceFilesProjectOutputGroupOutput)"
+          DependsOnTargets="$(SourceFilesProjectOutputGroupDependsOn)">
+    <ItemGroup>
+      <SourceFilesProjectOutputGroupOutput Remove="@(SourceFilesProjectOutputGroupOutput)" />
+      <_SourceFilesProjectOutputGroupOutput Remove="@(_SourceFilesProjectOutputGroupOutput)" />
+    </ItemGroup>
+
+    <AssignTargetPath RootFolder="$(QualifiedProjectHome)" Files="@(Compile);@(Content);@(InputFiles);$(MSBuildProjectFile);@(PythonHost);@(PtvsdFiles);@(VisualStudioPyFiles)">
+      <Output TaskParameter="AssignedFiles" ItemName="_SourceFilesProjectOutputGroupOutput" />
+    </AssignTargetPath>
+
+    <ItemGroup>
+      <SourceFilesProjectOutputGroupOutput Include="@(_SourceFilesProjectOutputGroupOutput->'%(FullPath)')" />
+    </ItemGroup>
+  </Target>
+
+  <ItemGroup>
+    <InterpreterReference Include="{86767848-40B4-4007-8BCC-A3835EDF0E69}\3.5" />
+  </ItemGroup>
+
+</Project>

@@ -204,7 +204,7 @@ namespace Microsoft.PythonTools.Debugger {
         /// And with the current statement being <c>pass</c>, the qualified name is "D.e in c in A.b".
         /// </example>
         public string GetQualifiedFunctionName() {
-            var ast = _thread.Process.GetAst(_filename);
+            var ast = _thread.Process.GetAst(FileName);
             if (ast == null) {
                 return FunctionName;
             }

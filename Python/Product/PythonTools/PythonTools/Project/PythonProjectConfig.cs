@@ -21,10 +21,33 @@ using Microsoft.VisualStudioTools.Project;
 namespace Microsoft.PythonTools.Project {
     class PythonProjectConfig : CommonProjectConfig {
         private readonly PythonProjectNode _project;
+        private string _platform;
 
         public PythonProjectConfig(PythonProjectNode project, string configuration)
             : base(project, configuration) {
             _project = project;
+        }
+
+        public override string Platform {
+            get {
+                return _platform;
+            }
+            set {
+                _platform = value;
+            }
+        }
+
+        /// <summary>
+        /// The display name is a two part item
+        /// first part is the config name, 2nd part is the platform name
+        /// </summary>
+        public override int get_DisplayName(out string name) {
+            if (!string.IsNullOrEmpty(Platform)) {
+                name = ConfigName + "|" + Platform;
+                return VSConstants.S_OK;
+            } else {
+                return base.get_DisplayName(out name);
+            }
         }
 
         public override int DebugLaunch(uint flags) {
