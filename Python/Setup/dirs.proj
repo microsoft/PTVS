@@ -16,7 +16,7 @@
   <ItemGroup>
     <ProjectFile Include="..\Product\dirs.proj"/>
     <ProjectFile Include="setup.proj"/>
-    <ProjectFile Include="$(PTVSSamplesPath)dirs.proj"/>
+    <ProjectFile Include="$(PTVSSamplesPath)dirs.proj" Condition="Exists($(PTVSSamplesPath))" />
   </ItemGroup>
 
   <Import Project="$(TargetsPath)\Common.Build.Traversal.targets" />
