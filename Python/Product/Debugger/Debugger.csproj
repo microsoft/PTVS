@@ -82,6 +82,7 @@
       <Aliases>global</Aliases>
     </Reference>
     <Reference Include="System.XML" />
+    <Reference Include="System.Xml.Linq" />
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <Choose>

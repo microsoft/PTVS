@@ -1153,6 +1153,10 @@
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="visualstudio_py_remote_launcher.py">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <EmbeddedResource Include="..\Icons\Dev$(VSTarget)\PythonImageList.bmp" Condition="'$(VSTarget)' == '10.0'" />
     <EmbeddedResource Include="..\Icons\Dev$(VSTarget)\PythonImageList.png" Condition="'$(VSTarget)' != '10.0'" />
     <Resource Include="..\Icons\Dev$(VSTarget)\PyFile.png" />

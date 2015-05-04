@@ -21,7 +21,7 @@ namespace Microsoft.PythonTools.Debugger.Transports {
         public const ushort DefaultPort = 5678;
 
         public Exception Validate(Uri uri) {
-            if (uri.PathAndQuery != "/") {
+            if (uri.AbsolutePath != "/") {
                 return new FormatException("tcp:// URI cannot contain a path");
             }
             return null;

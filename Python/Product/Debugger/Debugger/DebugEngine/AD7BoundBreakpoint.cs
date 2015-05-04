@@ -108,7 +108,16 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         }
 
         int IDebugBoundBreakpoint2.GetHitCount(out uint pdwHitCount) {
-            pdwHitCount = (uint)_breakpoint.GetHitCountAsync().GetAwaiter().GetResult();
+            var remoteProcess = _engine.Process as Remote.PythonRemoteProcess;
+            if (remoteProcess != null && remoteProcess.TargetHostType == AD7Engine.TargetUap) {
+                // Target is UAP host and we will just assume breakpoint hit count is 1 from this
+                // remote debug type due to issues with communicating this command
+                pdwHitCount = 1;
+            } else {
+                var task = _breakpoint.GetHitCountAsync();
+                pdwHitCount = (uint)task.GetAwaiter().GetResult();
+            }
+
             return VSConstants.S_OK;
         }
 
