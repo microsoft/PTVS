@@ -36,22 +36,28 @@ namespace Microsoft.VisualStudioTools {
                 return _dte;
             }
         }
-
-        public static VisualStudioApp FromCommandLineArgs(string[] commandLineArgs) {
-            for (int i = 0; i < commandLineArgs.Length - 1; ++i) {
-                int processId;
-                if (commandLineArgs[i].Equals("/parentProcessId", StringComparison.InvariantCultureIgnoreCase) &&
-                    int.TryParse(commandLineArgs[i + 1], out processId)) {
-                    VisualStudioApp inst;
-                    lock (_knownInstances) {
-                        if (!_knownInstances.TryGetValue(processId, out inst)) {
-                            _knownInstances[processId] = inst = new VisualStudioApp(processId);
-                        }
-                    }
-                    return inst;
+        public static VisualStudioApp FromProcessId(int processId) {
+            VisualStudioApp inst;
+            lock (_knownInstances) {
+                if (!_knownInstances.TryGetValue(processId, out inst)) {
+                    _knownInstances[processId] = inst = new VisualStudioApp(processId);
                 }
             }
-            return null;
+            return inst;
+        }
+
+        public static VisualStudioApp FromEnvironmentVariable() {
+            string ptvsPid = Environment.GetEnvironmentVariable("_PTVS_PID");
+            if (ptvsPid == null) {
+                return null;
+            }
+
+            int processId;
+            if (!int.TryParse(ptvsPid, out processId)) {
+                return null;
+            }
+
+            return FromProcessId(processId);
         }
 
         public VisualStudioApp(int processId) {
