@@ -73,7 +73,13 @@ namespace Microsoft.PythonTools {
     [PackageRegistration(UseManagedResourcesOnly = true)]       // This attribute tells the PkgDef creation utility (CreatePkgDef.exe) that this class is a package.
     // This attribute is used to register the informations needed to show the this package in the Help/About dialog of Visual Studio.
     [InstalledProductRegistration("#110", "#112", AssemblyVersionInfo.Version, IconResourceID = 400)]
-    [ProvideMenuResource(1000, 1)]                              // This attribute is needed to let the shell know that this package exposes some menus.
+
+    // This attribute is needed to let the shell know that this package exposes some menus.
+#if DEV14_OR_LATER
+    [ProvideMenuResource(1000, 1, IconMappingFilename = "PythonTools_iconmap.csv")]
+#else
+    [ProvideMenuResource(1000, 1)]
+#endif
     [ProvideAutoLoad(Microsoft.VisualStudio.Shell.Interop.UIContextGuids.NoSolution)]
     [ProvideAutoLoad(Microsoft.VisualStudio.Shell.Interop.UIContextGuids.SolutionExists)]
     [Description("Python Tools Package")]
@@ -102,7 +108,7 @@ namespace Microsoft.PythonTools {
     [ProvidePythonExecutionMode(ExecutionMode.StandardModeId, "Standard", "Standard")]
     [ProvidePythonExecutionMode("{91BB0245-B2A9-47BF-8D76-DD428C6D8974}", "IPython", "visualstudio_ipython_repl.IPythonBackend", supportsMultipleScopes: false, supportsMultipleCompleteStatementInputs: true)]
     [ProvidePythonExecutionMode("{3E390328-A806-4250-ACAD-97B5B37076E2}", "IPython w/o PyLab", "visualstudio_ipython_repl.IPythonBackendWithoutPyLab", supportsMultipleScopes: false, supportsMultipleCompleteStatementInputs: true)]
-    #region Exception List
+#region Exception List
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions")]
 
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions", "ArithmeticError")]
@@ -171,7 +177,7 @@ namespace Microsoft.PythonTools {
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions", "Warning")]
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions", "WindowsError")]
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions", "ZeroDivisionError")]
-    #endregion
+#endregion
     [ProvideComponentPickerPropertyPage(typeof(PythonToolsPackage), typeof(WebPiComponentPickerControl), "WebPi", DefaultPageNameValue = "#4000")]
     [ProvideToolWindow(typeof(InterpreterListToolWindow), Style = VsDockStyle.Linked, Window = ToolWindowGuids80.SolutionExplorer)]
     [ProvidePythonInterpreterFactoryProvider(CPythonInterpreterFactoryConstants.Id32, typeof(CPythonInterpreterFactoryConstants))]
@@ -778,7 +784,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
         }
 
 
-        #region IVsComponentSelectorProvider Members
+#region IVsComponentSelectorProvider Members
 
         public int GetComponentSelectorPage(ref Guid rguidPage, VSPROPSHEETPAGE[] ppage) {
             if (rguidPage == typeof(WebPiComponentPickerControl).GUID) {
@@ -847,6 +853,6 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             }
         }
 
-        #endregion
+#endregion
     }
 }

@@ -910,6 +910,10 @@
   </ItemGroup>
   <ItemGroup>
     <!-- VSIX -->
+    <Content Include="PythonTools_iconmap.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
     <None Include="Theme\contrast.vstheme" />
     <None Include="NoSurveyNewsFeed.html" />
     <None Include="NoInterpreters.html" />
