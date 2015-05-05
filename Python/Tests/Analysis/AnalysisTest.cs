@@ -4926,8 +4926,8 @@ def decorator_b(fn):
 
             PermutedTest("mod", new[] { text1, text2 }, (pe) => {
                 // Neither decorator is callable, but at least analysis completed
-                Assert.AreEqual(0, pe[0].Analysis.GetValuesByIndex("decorator_a", 1).Count());
-                Assert.AreEqual(0, pe[1].Analysis.GetValuesByIndex("decorator_b", 1).Count());
+                AssertUtil.ContainsExactly(pe[0].Analysis.GetTypeIdsByIndex("decorator_a", 1));
+                AssertUtil.ContainsExactly(pe[1].Analysis.GetTypeIdsByIndex("decorator_b", 1));
             });
         }
 
@@ -4976,6 +4976,7 @@ def my_fn():
             var entry = state.AddModule("fob", "fob", null);
             Prepare(entry, sourceUnit);
             entry.Analyze(CancellationToken.None);
+            state.Limits.ProcessCustomDecorators = true;
 
             AssertUtil.ContainsExactly(
                 entry.Analysis.GetTypeIdsByIndex("my_fn", 0),
@@ -6534,6 +6535,8 @@ x = A().wg");
             foreach (var p in Permutations(code.Length)) {
                 var result = new IPythonProjectEntry[code.Length];
                 using (var state = PythonAnalyzer.CreateSynchronously(InterpreterFactory, Interpreter)) {
+                    state.Limits = GetLimits();
+
                     for (int i = 0; i < code.Length; i++) {
                         result[p[i]] = state.AddModule(prefix + (p[i] + 1).ToString(), "fob", null);
                     }
