@@ -19,7 +19,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using IronPython.Runtime;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
@@ -30,7 +29,7 @@ using Microsoft.VisualStudioTools;
 using TestUtilities;
 
 namespace AnalysisTests {
-    class FileStreamReader : StreamReader {
+    public class FileStreamReader : StreamReader {
         public readonly string Path;
 
         public FileStreamReader(string filename)
