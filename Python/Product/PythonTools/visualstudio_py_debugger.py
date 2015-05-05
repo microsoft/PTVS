@@ -763,11 +763,27 @@ class Thread(object):
             self.__oldstacklesscall__ = stackless.tasklet.__call__
             stackless.tasklet.settrace = settrace
             stackless.tasklet.__call__ = __call__
-            stackless.set_schedule_callback(self._legacy_stackless_schedule_cb)
-        else:
-            stackless.set_schedule_callback(self._stackless_schedule_cb)
+        if sys.platform == 'cli':
+            self.frames = []
     
-    def _stackless_legacy_schedule_cb(self, old, new):
+    if sys.platform == 'cli':
+        # workaround an IronPython bug where we're sometimes missing the back frames
+        # http://ironpython.codeplex.com/workitem/31437
+        def push_frame(self, frame):
+            self.cur_frame = frame
+            self.frames.append(frame)
+    
+        def pop_frame(self):
+            self.frames.pop()
+            self.cur_frame = self.frames[-1]
+    else:
+        def push_frame(self, frame):
+            self.cur_frame = frame
+
+        def pop_frame(self):
+            self.cur_frame = self.cur_frame.f_back
+
+    def context_dispatcher(self, old, new):
         self.stepping = STEPPING_NONE
         # for those tasklets that started before we started tracing
         # we need to make sure that the trace is set by patching
