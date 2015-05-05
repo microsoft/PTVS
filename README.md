@@ -1,5 +1,7 @@
 # Python Tools for Visual Studio
 
+[![Join the chat at https://gitter.im/Microsoft/PTVS](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/Microsoft/PTVS?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 Welcome to our new home on github!
 
 Downloads of [PTVS 2.1](https://pytools.codeplex.com/releases/view/109707) and [PTVS 2.2 RC](https://pytools.codeplex.com/releases/view/614624) are still available from CodePlex, but new releases will be here and linked from [microsoft.github.io/PTVS](https://microsoft.github.io/PTVS).
