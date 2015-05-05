@@ -461,11 +461,14 @@ namespace Microsoft.PythonTools.Uap.Project {
                 };
 
                 int result = debugger.AdviseDebugEventCallback(Debugger.PythonRemoteDebugEvents.Instance);
-                System.Diagnostics.Debug.Assert(result == VSConstants.S_OK, string.Format(System.Globalization.CultureInfo.CurrentCulture, "Failure {0}", result));
 
-                debugger4.LaunchDebugTargets4(1, appPackageDebugTarget, results);
+                if (result == VSConstants.S_OK) {
+                    debugger4.LaunchDebugTargets4(1, appPackageDebugTarget, results);
+                } else {
+                    System.Diagnostics.Debug.Fail(string.Format(System.Globalization.CultureInfo.CurrentCulture, "Failure {0}", result));
+                }
 
-                return VSConstants.S_OK;
+                return result;
             } else {
                 IVsDebuggableProjectCfg cfg = _pythonCfg as IVsDebuggableProjectCfg;
                 if (cfg != null) {

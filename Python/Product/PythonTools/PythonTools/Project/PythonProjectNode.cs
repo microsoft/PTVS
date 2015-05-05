@@ -174,7 +174,7 @@ namespace Microsoft.PythonTools.Project {
                 return;
 
             if (this.IsAppxPackageableProject()) {
-                EnvDTE.Project automationObject = GetAutomationObject() as EnvDTE.Project;
+                EnvDTE.Project automationObject = (EnvDTE.Project)GetAutomationObject();
 
                 this.BuildProject.SetGlobalProperty(ProjectFileConstants.Platform, automationObject.ConfigurationManager.ActiveConfiguration.PlatformName);
             }

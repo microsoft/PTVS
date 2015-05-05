@@ -201,7 +201,7 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
 
         public override string DisplayName {
             get {
-                return SR.GetString(SR.ImportWizardGenericWebProjectCustomization);
+                return SR.GetString(SR.ImportWizardUapProjectCustomization);
             }
         }
 

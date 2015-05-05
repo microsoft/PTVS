@@ -1,4 +1,18 @@
-﻿using System;
+﻿/* ****************************************************************************
+ *
+ * Copyright (c) Microsoft Corporation. 
+ *
+ * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
+ * copy of the license can be found in the License.html file at the root of this distribution. If 
+ * you cannot locate the Apache License, Version 2.0, please send an email to 
+ * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
+ * by the terms of the Apache License, Version 2.0.
+ *
+ * You must not remove this notice, or any other, from this software.
+ *
+ * ***************************************************************************/
+
+using System;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Xml.Linq;
@@ -77,38 +91,29 @@ namespace Microsoft.PythonTools.Uap.Debugger {
         void IDkmExceptionTriggerHitNotification.OnExceptionTriggerHit(DkmExceptionTriggerHit hit, DkmEventDescriptorS eventDescriptor) {
             var remoteProcessTask = default(System.Threading.Tasks.Task);
 
-            using (var evt = new System.Threading.ManualResetEvent(false)) {
+            ThreadHelper.Generic.Invoke(() => {
+                var exceptionInfo = hit.Exception as VisualStudio.Debugger.Native.DkmWin32ExceptionInformation;
 
-                ThreadHelper.Generic.Invoke(() => {
-                    try {
-                        var exceptionInfo = hit.Exception as VisualStudio.Debugger.Native.DkmWin32ExceptionInformation;
+                // Parameters expected are the flag to indicate the debugger is present and XML to write to the target for configuration
+                // of the debugger
+                const int exceptionParameterCount = 2;
 
-                        // Parameters expected are the flag to indicate the debugger is present and XML to write to the target for configuration
-                        // of the debugger
-                        const int exceptionParameterCount = 2;
+                if (exceptionInfo.ExceptionParameters.Count == exceptionParameterCount) {
+                    // If we have a port and debug id, we'll go ahead and tell the client we are present
+                    if (Instance.AttachRemoteProcessFunction != null && Instance.AttachRemoteDebugXml != null) {
+                        // Write back that debugger is present
+                        hit.Process.WriteMemory(exceptionInfo.ExceptionParameters[0], BitConverter.GetBytes(true));
 
-                        if (exceptionInfo.ExceptionParameters.Count == exceptionParameterCount) {
-                            // If we have a port and debug id, we'll go ahead and tell the client we are present
-                            if (Instance.AttachRemoteProcessFunction != null && Instance.AttachRemoteDebugXml != null) {
-                                // Write back that debugger is present
-                                hit.Process.WriteMemory(exceptionInfo.ExceptionParameters[0], BitConverter.GetBytes(true));
-
-                                // Write back the details of the debugger arguments
-                                hit.Process.WriteMemory(exceptionInfo.ExceptionParameters[1], Encoding.Unicode.GetBytes(Instance.AttachRemoteDebugXml));
-                            }
-                        }
-                    } finally {
-                        evt.Set();
+                        // Write back the details of the debugger arguments
+                        hit.Process.WriteMemory(exceptionInfo.ExceptionParameters[1], Encoding.Unicode.GetBytes(Instance.AttachRemoteDebugXml));
                     }
-                });
+                }
+            });
 
-                evt.WaitOne();
+            eventDescriptor.Suppress();
 
-                eventDescriptor.Suppress();
-
-                // Start the task to attach to the remote Python debugger session
-                remoteProcessTask = System.Threading.Tasks.Task.Factory.StartNew(Instance.AttachRemoteProcessFunction);
-            }
+            // Start the task to attach to the remote Python debugger session
+            remoteProcessTask = System.Threading.Tasks.Task.Factory.StartNew(Instance.AttachRemoteProcessFunction);
         }
 
         public int OnModeChange(DBGMODE dbgmodeNew) {

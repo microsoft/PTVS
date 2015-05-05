@@ -22,19 +22,30 @@ namespace Microsoft.PythonTools.Uap.Interpreter {
     class PythonUapInterpreterFactoryProvider : IPythonInterpreterFactoryProvider {
         private HashSet<IPythonInterpreterFactory> _factories = null;
 
+        public const string DefaultVersion = "3.5";
+
         public event EventHandler InterpreterFactoriesChanged;
 
         public PythonUapInterpreterFactoryProvider() {
+            PythonVersion = DefaultVersion;
+        }
+
+        public string PythonVersion {
+            get; set;
         }
 
         private void DiscoverFactories() {
             if (_factories == null) {
+                var defaultConfig = new InterpreterConfiguration(new Version(PythonVersion));
+
                 _factories = new HashSet<IPythonInterpreterFactory>();
 
-                _factories.Add(new PythonUapInterpreterFactory());
+                _factories.Add(new PythonUapInterpreterFactory(defaultConfig));
 
-                if (InterpreterFactoriesChanged != null) {
-                    InterpreterFactoriesChanged(this, new EventArgs());
+                var factoriesChanged = InterpreterFactoriesChanged;
+
+                if (factoriesChanged != null) {
+                    factoriesChanged(this, new EventArgs());
                 }
             }
         }

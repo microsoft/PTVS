@@ -36,27 +36,11 @@ namespace Microsoft.PythonTools.Uap.Interpreter {
             _factory.NewDatabaseAvailable += OnNewDatabaseAvailable;
         }
 
-        private async void OnNewDatabaseAvailable(object sender, EventArgs e) {
+        private void OnNewDatabaseAvailable(object sender, EventArgs e) {
             var factory = _factory;
             if (factory == null) {
                 // We have been disposed already, so ignore this event
                 return;
-            }
-
-            _typeDb = factory.GetCurrentDatabase();
-
-            if (_references != null) {
-                _typeDb = _typeDb.Clone();
-                foreach (var reference in _references) {
-                    string modName;
-                    try {
-                        modName = Path.GetFileNameWithoutExtension(reference.Name);
-                    } catch (ArgumentException) {
-                        continue;
-                    }
-
-                    await Task.Yield();
-                }
             }
 
             var evt = ModuleNamesChanged;

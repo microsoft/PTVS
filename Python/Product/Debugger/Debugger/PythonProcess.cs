@@ -634,8 +634,6 @@ namespace Microsoft.PythonTools.Debugger {
             long tid = stream.ReadInt64();
             string output = stream.ReadString();
 
-            System.Diagnostics.Debug.WriteLine(output);
-
             PythonThread thread;
             if (_threads.TryGetValue(tid, out thread)) {
                 var outputEvent = DebuggerOutput;

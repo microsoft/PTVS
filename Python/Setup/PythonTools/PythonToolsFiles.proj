@@ -137,10 +137,6 @@
       <InstallDirectory>CompletionDB</InstallDirectory>
     </File>
 
-    <File Include="*.idb">
-      <InstallDirectory>CompletionDB</InstallDirectory>
-    </File>
-    
     <!-- Build Tasks -->
     <File Include="!(bindpath.bin)\Microsoft.PythonTools.BuildTasks.dll" />
     <MSBuildFile Include="Microsoft.PythonTools.targets;

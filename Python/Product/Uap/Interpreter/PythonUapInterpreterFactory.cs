@@ -20,11 +20,11 @@ namespace Microsoft.PythonTools.Uap.Interpreter {
         public const string InterpreterGuidString = "{86767848-40B4-4007-8BCC-A3835EDF0E69}";
         public static readonly Guid InterpreterGuid = new Guid(InterpreterGuidString);
 
-        public PythonUapInterpreterFactory() 
+        public PythonUapInterpreterFactory(InterpreterConfiguration configuration) 
             : base(
                   InterpreterGuid, 
                   "Python UAP",
-                  new InterpreterConfiguration(new Version(3, 5)),
+                  configuration,
                   true) {
         }
 

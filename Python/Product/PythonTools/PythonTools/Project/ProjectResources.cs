@@ -105,6 +105,7 @@ namespace Microsoft.PythonTools.Project {
         public const string ImportWizardDjangoProjectCustomization = "ImportWizardDjangoProjectCustomization";
         public const string ImportWizardFlaskProjectCustomization = "ImportWizardFlaskProjectCustomization";
         public const string ImportWizardGenericWebProjectCustomization = "ImportWizardGenericWebProjectCustomization";
+        public const string ImportWizardUapProjectCustomization = "ImportWizardUapProjectCustomization";
 
         public const string ReplInitializationMessage = "ReplInitializationMessage";
         public const string ReplEvaluatorInterpreterNotFound = "ReplEvaluatorInterpreterNotFound";
