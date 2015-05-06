@@ -35,34 +35,24 @@
                                 <Run> modules)</Run>
                             </TextBlock>
 
-                            <Path Grid.Column="0"
-                                  x:Name="IsUpToDate"
-                                  Margin="2"
-                                  Height="12"
-                                  Stretch="Uniform"
-                                  Data="{StaticResource CheckMarkGeometry}"
-                                  Fill="{Binding Foreground,RelativeSource={RelativeSource FindAncestor,AncestorType=ListBoxItem}}"
-                                  Stroke="{DynamicResource {x:Static wpf:Controls.ControlBorderKey}}"
-                                  StrokeThickness="0.5">
-                                <Path.ToolTip>
+                            <Control Grid.Column="0"
+                                     x:Name="IsUpToDate"
+                                     Margin="2"
+                                     Style="{StaticResource CheckMarkImage}">
+                                <Control.ToolTip>
                                     This package is up to date in the completion DB.
-                                </Path.ToolTip>
-                            </Path>
-                            <Path Grid.Column="0"
-                                  x:Name="IsNotUpToDate"
-                                  Visibility="Hidden"
-                                  Margin="1"
-                                  Height="14"
-                                  Data="{StaticResource ExclamationMarkGeometry}"
-                                  Stretch="Uniform"
-                                  Fill="{Binding Foreground,RelativeSource={RelativeSource FindAncestor,AncestorType=ListBoxItem}}"
-                                  Stroke="{DynamicResource {x:Static wpf:Controls.ControlBorderKey}}"
-                                  StrokeThickness="0.5">
-                                <Path.ToolTip>
+                                </Control.ToolTip>
+                            </Control>
+                            <Control Grid.Column="0"
+                                     x:Name="IsNotUpToDate"
+                                     Visibility="Hidden"
+                                     Margin="2"
+                                     Style="{StaticResource ExclamationPointImage}">
+                                <Control.ToolTip>
                                     The completion DB does not have analysis
                                     results for all modules in this package.
-                                </Path.ToolTip>
-                            </Path>
+                                </Control.ToolTip>
+                            </Control>
                         </Grid>
                         <DataTemplate.Triggers>
                             <DataTrigger Binding="{Binding TotalModules,Mode=OneWay}" Value="1">
@@ -82,7 +72,19 @@
                                     CommandParameter="{Binding EnvironmentView}"
                                     HorizontalAlignment="Center"
                                     VerticalAlignment="Center">
-                                Refresh DB
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="auto" />
+                                        <ColumnDefinition />
+                                    </Grid.ColumnDefinitions>
+                                    <Control Grid.Column="0"
+                                             Margin="3"
+                                             Style="{StaticResource RefreshImage}" />
+                                    <AccessText Grid.Column="1"
+                                                VerticalAlignment="Center">
+                                        _Refresh DB
+                                    </AccessText>
+                                </Grid>
                             </Button>
 
                             <ProgressBar x:Name="_Progress"

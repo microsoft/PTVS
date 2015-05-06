@@ -238,29 +238,34 @@ namespace Microsoft.PythonTools.Repl {
                 processInfo.WorkingDirectory = Interpreter.Configuration.PrefixPath;
             }
 
-            var envVars = CurrentOptions.EnvironmentVariables;
-            if (envVars != null) {
-                foreach (var keyValue in envVars) {
-                    processInfo.EnvironmentVariables[keyValue.Key] = keyValue.Value;
-                }
-            }
-
-            string pathEnvVar = Interpreter.Configuration.PathEnvironmentVariable ?? "";
-
-            if (!string.IsNullOrWhiteSpace(pathEnvVar)) {
-                var searchPaths = CurrentOptions.SearchPaths;
-
-                if (string.IsNullOrEmpty(searchPaths)) {
-                    if (_serviceProvider.GetPythonToolsService().GeneralOptions.ClearGlobalPythonPath) {
-                        processInfo.EnvironmentVariables[pathEnvVar] = "";
+#if DEBUG
+            if (!debugMode) {
+#endif
+                var envVars = CurrentOptions.EnvironmentVariables;
+                if (envVars != null) {
+                    foreach (var keyValue in envVars) {
+                        processInfo.EnvironmentVariables[keyValue.Key] = keyValue.Value;
                     }
-                } else if (_serviceProvider.GetPythonToolsService().GeneralOptions.ClearGlobalPythonPath) {
-                    processInfo.EnvironmentVariables[pathEnvVar] = searchPaths;
-                } else {
-                    processInfo.EnvironmentVariables[pathEnvVar] = searchPaths + ";" + Environment.GetEnvironmentVariable(pathEnvVar);
                 }
-            }
 
+                string pathEnvVar = Interpreter.Configuration.PathEnvironmentVariable ?? "";
+
+                if (!string.IsNullOrWhiteSpace(pathEnvVar)) {
+                    var searchPaths = CurrentOptions.SearchPaths;
+
+                    if (string.IsNullOrEmpty(searchPaths)) {
+                        if (_serviceProvider.GetPythonToolsService().GeneralOptions.ClearGlobalPythonPath) {
+                            processInfo.EnvironmentVariables[pathEnvVar] = "";
+                        }
+                    } else if (_serviceProvider.GetPythonToolsService().GeneralOptions.ClearGlobalPythonPath) {
+                        processInfo.EnvironmentVariables[pathEnvVar] = searchPaths;
+                    } else {
+                        processInfo.EnvironmentVariables[pathEnvVar] = searchPaths + ";" + Environment.GetEnvironmentVariable(pathEnvVar);
+                    }
+                }
+#if DEBUG
+            }
+#endif
             var interpreterArgs = CurrentOptions.InterpreterArguments;
             if (!String.IsNullOrWhiteSpace(interpreterArgs)) {
                 args.Add(interpreterArgs);

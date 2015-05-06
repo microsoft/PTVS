@@ -359,15 +359,15 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                 _startThread = null;
             }
 
-            Send(new AD7LoadCompleteEvent(), AD7LoadCompleteEvent.IID, thread);
-
-            _processLoadedThread = null;
-            _loadComplete.Set();
-
             var attached = EngineAttached;
             if (attached != null) {
                 attached(this, new AD7EngineEventArgs(this));
             }
+
+            Send(new AD7LoadCompleteEvent(), AD7LoadCompleteEvent.IID, thread);
+
+            _processLoadedThread = null;
+            _loadComplete.Set();
 
             StartWebBrowser();
         }
@@ -726,6 +726,9 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                 }
             }
 
+            _engineCreated = _programCreated = false;
+            _loadComplete.Reset();
+
             Guid processId;
             if (attachRunning && Guid.TryParse(exe, out processId)) {
                 _process = DebugConnectionListener.GetProcess(processId);
@@ -734,9 +737,6 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             } else {
                 _process = new PythonProcess(version, exe, args, dir, env, interpreterOptions, debugOptions, dirMapping);
             }
-
-            _engineCreated = _programCreated = false;
-            _loadComplete.Reset();
 
             if (!attachRunning) {
                 _process.Start(false);

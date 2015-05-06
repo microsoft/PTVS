@@ -711,7 +711,32 @@ class Thread(object):
 
         # stackless changes
         if stackless is not None:
-            stackless.set_schedule_callback(self.context_dispatcher)
+            self._stackless_attach()
+
+        if sys.platform == 'cli':
+            self.frames = []
+
+    if sys.platform == 'cli':
+        # workaround an IronPython bug where we're sometimes missing the back frames
+        # http://ironpython.codeplex.com/workitem/31437
+        def push_frame(self, frame):
+            self.cur_frame = frame
+            self.frames.append(frame)
+
+        def pop_frame(self):
+            self.frames.pop()
+            self.cur_frame = self.frames[-1]
+    else:
+        def push_frame(self, frame):
+            self.cur_frame = frame
+
+        def pop_frame(self):
+            self.cur_frame = self.cur_frame.f_back
+
+    def _stackless_attach(self):
+        try:
+            stackless.tasklet.trace_function
+        except AttributeError:
             # the tasklets need to be traced on a case by case basis
             # sys.trace needs to be called within their calling context
             def __call__(tsk, *args, **kwargs):
@@ -736,38 +761,49 @@ class Thread(object):
             self.__oldstacklesscall__ = stackless.tasklet.__call__
             stackless.tasklet.settrace = settrace
             stackless.tasklet.__call__ = __call__
-        if sys.platform == 'cli':
-            self.frames = []
+            stackless.set_schedule_callback(self._legacy_stackless_schedule_cb)
+        else:
+            stackless.set_schedule_callback(self._stackless_schedule_cb)
 
-    if sys.platform == 'cli':
-        # workaround an IronPython bug where we're sometimes missing the back frames
-        # http://ironpython.codeplex.com/workitem/31437
-        def push_frame(self, frame):
-            self.cur_frame = frame
-            self.frames.append(frame)
-
-        def pop_frame(self):
-            self.frames.pop()
-            self.cur_frame = self.frames[-1]
-    else:
-        def push_frame(self, frame):
-            self.cur_frame = frame
-
-        def pop_frame(self):
-            self.cur_frame = self.cur_frame.f_back
-
-    def context_dispatcher(self, old, new):
+    def _stackless_legacy_schedule_cb(self, old, new):
         self.stepping = STEPPING_NONE
         # for those tasklets that started before we started tracing
         # we need to make sure that the trace is set by patching
         # it in the context switch
-        if not old:
-            pass # starting new
-        elif not new:
-            pass # killing prev
-        else:
+        if old and new:
             if hasattr(new.frame, "f_trace") and not new.frame.f_trace:
                 sys.call_tracing(new.settrace,(self.trace_func,))
+
+    def _stackless_schedule_cb(self, prev, next):
+        current = stackless.getcurrent()
+        if not current:
+            return
+        current_tf = current.trace_function
+        
+        try:
+            current.trace_function = None
+            self.stepping = STEPPING_NONE
+            
+            # If the current frame has no trace function, we may need to get it
+            # from the previous frame, depending on how we ended up in the
+            # callback.
+            if current_tf is None:
+                f_back = current.frame.f_back
+                if f_back is not None:
+                    current_tf = f_back.f_trace
+
+            if next is not None:
+                # Assign our trace function to the current stack
+                f = next.frame
+                if next is current:
+                    f = f.f_back
+                while f:
+                    if isinstance(f, types.FrameType):
+                        f.f_trace = self.trace_func
+                    f = f.f_back
+                next.trace_function = self.trace_func
+        finally:
+            current.trace_function = current_tf
 
     def trace_func(self, frame, event, arg):
         # If we're so far into process shutdown that sys is already gone, just stop tracing.

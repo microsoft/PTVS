@@ -81,7 +81,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 return;
             }
             
-            if (width <= height * 0.9) {
+            if (width <= height * 0.9 || width < 400) {
                 SwitchToVerticalLayout();
             } else if (width >= height * 1.1) {
                 SwitchToHorizontalLayout();
