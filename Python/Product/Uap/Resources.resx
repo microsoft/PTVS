@@ -120,7 +120,10 @@
   <data name="UapPropertyPageTitle" xml:space="preserve">
     <value>UAP Project Settings</value>
   </data>
-  <data name="UapRemoteMachineHelp" xml:space="preserve">
-    <value>Remote machine for deployment</value>
+  <data name="UapRemoteDeviceHelp" xml:space="preserve">
+    <value>Remote device name or IP address</value>
+  </data>
+  <data name="UapRemotePortHelp" xml:space="preserve">
+    <value>Remote debug port to use for Python debugger</value>
   </data>
 </root>

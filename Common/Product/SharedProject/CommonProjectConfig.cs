@@ -28,16 +28,6 @@ namespace Microsoft.VisualStudioTools.Project {
             _project = project;
         }
 
-        public virtual string Platform {
-            get {
-                return GetConfigurationProperty("Platform", false);
-            }
-
-            set {
-                SetConfigurationProperty("Platform", value);
-            }
-        }
-
         public override int DebugLaunch(uint flags) {
             IProjectLauncher starter = _project.GetLauncher();
 

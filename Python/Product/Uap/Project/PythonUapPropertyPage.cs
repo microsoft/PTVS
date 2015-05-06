@@ -22,8 +22,10 @@ namespace Microsoft.PythonTools.Uap.Project {
     class PythonUapPropertyPage : CommonPropertyPage {
         private readonly PythonUapPropertyPageControl _control;
 
-        public const string RemoteMachineSetting = "RemoteDebugMachine";
+        public const string RemoteDeviceSetting = "RemoteDebugMachine";
+        public const string RemotePortSetting = "RemoteDebugPort";
         public const string UapUserSetting = "UserSettingsChanged";
+        public const decimal DefaultPort = 5678;
 
         public PythonUapPropertyPage() {
             _control = new PythonUapPropertyPageControl(this);
@@ -34,7 +36,8 @@ namespace Microsoft.PythonTools.Uap.Project {
         }
 
         public override void Apply() {
-            SetConfigUserProjectProperty(RemoteMachineSetting, _control.RemoteDebugMachine);
+            SetConfigUserProjectProperty(RemoteDeviceSetting, _control.RemoteDevice);
+            SetConfigUserProjectProperty(RemotePortSetting, _control.RemotePort.ToString());
 
             // Workaround to reload user project file
             SetProjectProperty(UapUserSetting, DateTime.UtcNow.ToString());
@@ -46,7 +49,17 @@ namespace Microsoft.PythonTools.Uap.Project {
         public override void LoadSettings() {
             Loading = true;
             try {
-                _control.RemoteDebugMachine = GetConfigUserProjectProperty(RemoteMachineSetting);
+                var portSetting = GetConfigUserProjectProperty(RemotePortSetting);
+                decimal portValue = DefaultPort;
+
+                _control.RemoteDevice = GetConfigUserProjectProperty(RemoteDeviceSetting);
+
+                if (!decimal.TryParse(portSetting, out portValue)) {
+                    portValue = DefaultPort;
+                }
+
+                _control.RemotePort = portValue;
+
                 IsDirty = false;
             } finally {
                 Loading = false;

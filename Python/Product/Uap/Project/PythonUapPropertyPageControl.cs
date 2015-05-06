@@ -13,11 +13,7 @@
  * ***************************************************************************/
 
 using System;
-using System.Collections.Generic;
 using System.Windows.Forms;
-using Microsoft.PythonTools;
-using Microsoft.PythonTools.Project;
-using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Uap.Project {
     public partial class PythonUapPropertyPageControl : UserControl {
@@ -26,8 +22,10 @@ namespace Microsoft.PythonTools.Uap.Project {
         private PythonUapPropertyPageControl() {
             InitializeComponent();
 
-            _toolTip.SetToolTip(_remoteMachine, Resources.UapRemoteMachineHelp);
-            _toolTip.SetToolTip(_remoteMachineLabel, Resources.UapRemoteMachineHelp);
+            _toolTip.SetToolTip(_remoteDevice, Resources.UapRemoteDeviceHelp);
+            _toolTip.SetToolTip(_remoteDeviceLabel, Resources.UapRemoteDeviceHelp);
+            _toolTip.SetToolTip(_remotePort, Resources.UapRemotePortHelp);
+            _toolTip.SetToolTip(_remotePortLabel, Resources.UapRemotePortHelp);
         }
 
         internal PythonUapPropertyPageControl(PythonUapPropertyPage properties)
@@ -35,9 +33,14 @@ namespace Microsoft.PythonTools.Uap.Project {
             _properties = properties;
         }
 
-        public string RemoteDebugMachine {
-            get { return _remoteMachine.Text; }
-            set { _remoteMachine.Text = value; }
+        public string RemoteDevice {
+            get { return _remoteDevice.Text; }
+            set { _remoteDevice.Text = value; }
+        }
+
+        public decimal RemotePort {
+            get { return _remotePort.Value; }
+            set { _remotePort.Value = value; }
         }
 
         private void Setting_TextChanged(object sender, EventArgs e) {

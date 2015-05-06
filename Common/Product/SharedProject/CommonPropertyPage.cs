@@ -92,7 +92,7 @@ namespace Microsoft.VisualStudioTools.Project {
                     string condition = string.Format(System.Globalization.CultureInfo.InvariantCulture,
                         ConfigProvider.configPlatformString,
                         config.ConfigName,
-                        config.Platform);
+                        config.PlatformName);
 
                     values.Add(GetUserPropertyUnderCondition(propertyName, condition));
                 }

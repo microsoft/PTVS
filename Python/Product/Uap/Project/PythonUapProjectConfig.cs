@@ -14,6 +14,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Globalization;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Web;
 using System.Windows.Forms;
@@ -56,7 +59,8 @@ namespace Microsoft.PythonTools.Uap.Project {
         private string deployPackageMoniker;
         private string deployAppUserModelID;
 
-        private const string RemoteTarget = "Remote Machine";
+        private const string RemoteTarget = "Remote Device";
+        private const string DefaultRemoteDebugPort = "5678";
 
         public PythonUapProjectConfig(IVsCfg pythonCfg, IVsProjectFlavorCfg uapConfig) {
             _pythonCfg = pythonCfg;
@@ -440,9 +444,9 @@ namespace Microsoft.PythonTools.Uap.Project {
                 IVsDebugger debugger = (IVsDebugger)debugger4;
 
                 // Launch task to monitor to attach to Python remote process
-                var sourceDir = System.IO.Path.GetFullPath(PythonConfig.GetProjectProperty("ProjectDir")).Trim('\\');
-                var targetDir = System.IO.Path.GetFullPath(this.LayoutDir).Trim('\\');
-                var debugPort = "5678";
+                var sourceDir = Path.GetFullPath(PythonConfig.GetProjectProperty("ProjectDir")).Trim('\\');
+                var targetDir = Path.GetFullPath(this.LayoutDir).Trim('\\');
+                var debugPort = PythonConfig.GetProjectProperty("RemoteDebugPort") ?? DefaultRemoteDebugPort;
                 var debugId = Guid.NewGuid();
                 var debugXml = new XDocument(new XElement("dbg",
                     new XElement("arg", @"visualstudio_py_remote_launcher.py"),
@@ -465,7 +469,7 @@ namespace Microsoft.PythonTools.Uap.Project {
                 if (result == VSConstants.S_OK) {
                     debugger4.LaunchDebugTargets4(1, appPackageDebugTarget, results);
                 } else {
-                    System.Diagnostics.Debug.Fail(string.Format(System.Globalization.CultureInfo.CurrentCulture, "Failure {0}", result));
+                    Debug.Fail(string.Format(CultureInfo.CurrentCulture, "Failure {0}", result));
                 }
 
                 return result;

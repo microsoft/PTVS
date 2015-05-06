@@ -70,11 +70,20 @@ namespace Microsoft.PythonTools.Uap {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Remote machine for deployment.
+        ///   Looks up a localized string similar to Remote device name or IP address.
         /// </summary>
-        internal static string UapRemoteMachineHelp {
+        internal static string UapRemoteDeviceHelp {
             get {
-                return ResourceManager.GetString("UapRemoteMachineHelp", resourceCulture);
+                return ResourceManager.GetString("UapRemoteDeviceHelp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remote debug port to use for Python debugger.
+        /// </summary>
+        internal static string UapRemotePortHelp {
+            get {
+                return ResourceManager.GetString("UapRemotePortHelp", resourceCulture);
             }
         }
     }
