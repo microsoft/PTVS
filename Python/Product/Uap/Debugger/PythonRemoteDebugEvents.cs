@@ -13,9 +13,7 @@
  * ***************************************************************************/
 
 using System;
-using System.Runtime.InteropServices;
 using System.Text;
-using System.Xml.Linq;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Debugger;
 using Microsoft.VisualStudio.Debugger.ComponentInterfaces;
@@ -45,47 +43,25 @@ namespace Microsoft.PythonTools.Uap.Debugger {
         public string AttachRemoteDebugXml { get; set; }
 
         public int Event(IDebugEngine2 pEngine, IDebugProcess2 pProcess, IDebugProgram2 pProgram, IDebugThread2 pThread, IDebugEvent2 pEvent, ref Guid riidEvent, uint dwAttrib) {
-            try {
-                if (riidEvent == typeof(IDebugProgramCreateEvent2).GUID) {
-                    Guid processId;
+            if (riidEvent == typeof(IDebugProgramCreateEvent2).GUID) {
+                Guid processId;
 
-                    // A program was created and attached
-                    if (pProcess != null) {
-                        if (VSConstants.S_OK == pProcess.GetProcessId(out processId)) {
-                            DkmProcess dkmProcess = DkmProcess.FindProcess(processId);
+                // A program was created and attached
+                if (pProcess != null) {
+                    if (VSConstants.S_OK == pProcess.GetProcessId(out processId)) {
+                        DkmProcess dkmProcess = DkmProcess.FindProcess(processId);
 
-                            if (dkmProcess != null) {
-                                var debugTrigger = DkmExceptionCodeTrigger.Create(DkmExceptionProcessingStage.Thrown, null, DkmExceptionCategory.Win32, RemoteDebugStartExceptionCode);
+                        if (dkmProcess != null) {
+                            var debugTrigger = DkmExceptionCodeTrigger.Create(DkmExceptionProcessingStage.Thrown, null, DkmExceptionCategory.Win32, RemoteDebugStartExceptionCode);
 
-                                // Try to add exception trigger for when a remote debugger server is started for Python
-                                dkmProcess.AddExceptionTrigger(RemoteDebugExceptionGuid, debugTrigger);
-                            }
+                            // Try to add exception trigger for when a remote debugger server is started for Python
+                            dkmProcess.AddExceptionTrigger(RemoteDebugExceptionGuid, debugTrigger);
                         }
                     }
                 }
-
-                return VSConstants.S_OK;
-            } finally {
-                if (pEngine != null && Marshal.IsComObject(pEngine)) {
-                    Marshal.ReleaseComObject(pEngine);
-                }
-
-                if (pProcess != null && Marshal.IsComObject(pProcess)) {
-                    Marshal.ReleaseComObject(pProcess);
-                }
-
-                if (pProgram != null && Marshal.IsComObject(pProgram)) {
-                    Marshal.ReleaseComObject(pProgram);
-                }
-
-                if (pThread != null && Marshal.IsComObject(pThread)) {
-                    Marshal.ReleaseComObject(pThread);
-                }
-
-                if (pEvent != null && Marshal.IsComObject(pEvent)) {
-                    Marshal.ReleaseComObject(pEvent);
-                }
             }
+
+            return VSConstants.S_OK;
         }
 
         void IDkmExceptionTriggerHitNotification.OnExceptionTriggerHit(DkmExceptionTriggerHit hit, DkmEventDescriptorS eventDescriptor) {
