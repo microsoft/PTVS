@@ -16,8 +16,6 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using IronPython.Runtime.Types;
-using Microsoft.IronPythonTools.Interpreter;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreter.Default;
@@ -54,6 +52,10 @@ namespace AnalysisTests {
             : this(factory, factory.CreateInterpreter()) {
         }
 
+        protected virtual IModuleContext DefaultContext {
+            get { return null; }
+        }
+
         public BaseAnalysisTest(IPythonInterpreterFactory factory, IPythonInterpreter interpreter) {
             InterpreterFactory = factory;
             Interpreter = interpreter;
@@ -64,11 +66,11 @@ namespace AnalysisTests {
             var listType = Interpreter.GetBuiltinType(BuiltinTypeId.List);
             var functionType = Interpreter.GetBuiltinType(BuiltinTypeId.Function);
 
-            _objectMembers = objectType.GetMemberNames(IronPythonModuleContext.DontShowClrInstance).ToArray();
-            _strMembers = bytesType.GetMemberNames(IronPythonModuleContext.DontShowClrInstance).ToArray();
-            _listMembers = listType.GetMemberNames(IronPythonModuleContext.DontShowClrInstance).ToArray();
-            _intMembers = intType.GetMemberNames(IronPythonModuleContext.DontShowClrInstance).ToArray();
-            _functionMembers = functionType.GetMemberNames(IronPythonModuleContext.DontShowClrInstance).ToArray();
+            _objectMembers = objectType.GetMemberNames(DefaultContext).ToArray();
+            _strMembers = bytesType.GetMemberNames(DefaultContext).ToArray();
+            _listMembers = listType.GetMemberNames(DefaultContext).ToArray();
+            _intMembers = intType.GetMemberNames(DefaultContext).ToArray();
+            _functionMembers = functionType.GetMemberNames(DefaultContext).ToArray();
         }
 
         public static TextReader GetSourceUnit(string text, string name) {
@@ -81,6 +83,14 @@ namespace AnalysisTests {
 
         protected virtual AnalysisLimits GetLimits() {
             return AnalysisLimits.GetDefaultLimits();
+        }
+
+        protected virtual bool SupportsPython3 {
+            get { return true; }
+        }
+
+        protected virtual bool ShouldUseUnicodeLiterals(PythonLanguageVersion version) {
+            return version.Is3x();
         }
 
         public PythonAnalyzer CreateAnalyzer(PythonLanguageVersion version = PythonLanguageVersion.V27, string[] analysisDirs = null) {
@@ -96,7 +106,7 @@ namespace AnalysisTests {
             }
             var state = PythonAnalyzer.CreateSynchronously(fact, interp, builtinsName);
 
-            if (version.Is3x() || this is IronPythonAnalysisTest) {
+            if (ShouldUseUnicodeLiterals(version)) {
                 var types = (KnownTypes)state.Types;
                 types._types[(int)BuiltinTypeId.Str] = state.Types[BuiltinTypeId.Unicode];
                 types._types[(int)BuiltinTypeId.StrIterator] = state.Types[BuiltinTypeId.UnicodeIterator];

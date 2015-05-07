@@ -143,7 +143,14 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                                 nextExpr = _decoratorCalls[d] = new CallExpression(d, new[] { new Arg(expr) });
                             }
                             expr = nextExpr;
-                            types = decorator.Call(expr, this, new[] { types }, ExpressionEvaluator.EmptyNames);
+                            var decorated = decorator.Call(expr, this, new[] { types }, ExpressionEvaluator.EmptyNames);
+
+                            // If processing decorators, update the current
+                            // function type. Otherwise, we are acting as if
+                            // each decorator returns the function unmodified.
+                            if (ddg.ProjectState.Limits.ProcessCustomDecorators) {
+                                types = decorated;
+                            }
                         }
                     }
                 }

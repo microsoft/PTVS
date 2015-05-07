@@ -43,6 +43,7 @@ namespace Microsoft.PythonTools.Analysis {
             limits.IndexTypes = 5;
             limits.AssignedTypes = 50;
             limits.UnifyCallsToNew = true;
+            limits.ProcessCustomDecorators = true;
             return limits;
         }
 
@@ -59,6 +60,7 @@ namespace Microsoft.PythonTools.Analysis {
         private const string IndexTypesId = "IndexTypes";
         private const string AssignedTypesId = "AssignedTypes";
         private const string UnifyCallsToNewId = "UnifyCallsToNew";
+        private const string ProcessCustomDecoratorsId = "ProcessCustomDecorators";
 
         /// <summary>
         /// Loads a new instance from the specified registry key.
@@ -90,6 +92,7 @@ namespace Microsoft.PythonTools.Analysis {
                 limits.IndexTypes = (key.GetValue(IndexTypesId) as int?) ?? limits.IndexTypes;
                 limits.AssignedTypes = (key.GetValue(AssignedTypesId) as int?) ?? limits.AssignedTypes;
                 limits.UnifyCallsToNew = ((key.GetValue(UnifyCallsToNewId) as int?) ?? (limits.UnifyCallsToNew ? 1 : 0)) != 0;
+                limits.ProcessCustomDecorators = ((key.GetValue(ProcessCustomDecoratorsId) as int?) ?? (limits.ProcessCustomDecorators ? 1 : 0)) != 0;
             }
 
             return limits;
@@ -112,6 +115,7 @@ namespace Microsoft.PythonTools.Analysis {
             key.SetValue(IndexTypesId, IndexTypes, RegistryValueKind.DWord);
             key.SetValue(AssignedTypesId, AssignedTypes, RegistryValueKind.DWord);
             key.SetValue(UnifyCallsToNewId, UnifyCallsToNew ? 1 : 0, RegistryValueKind.DWord);
+            key.SetValue(ProcessCustomDecoratorsId, ProcessCustomDecorators ? 1 : 0, RegistryValueKind.DWord);
         }
 
         /// <summary>
@@ -133,6 +137,7 @@ namespace Microsoft.PythonTools.Analysis {
             DictValueTypes = 30;
             IndexTypes = 30;
             AssignedTypes = 100;
+            ProcessCustomDecorators = true;
         }
 
         /// <summary>
@@ -234,5 +239,11 @@ namespace Microsoft.PythonTools.Analysis {
         /// analysis.
         /// </summary>
         public int AssignedTypes { get; set; }
+
+        /// <summary>
+        /// True to evaluate custom decorators. If false, all decorators are
+        /// assumed to return the original function unmodified.
+        /// </summary>
+        public bool ProcessCustomDecorators { get; set; }
     }
 }
