@@ -199,6 +199,14 @@ namespace Microsoft.PythonTools {
                 int cnt = 0;
                 var text = snapshot.GetText(start, length);
 
+                // The VS Provider is fragile to us splitting in between \r\n.  
+                // Check here that we haven't done that and correct the error.
+                if (text[0] == '\n' && start >= 1 && snapshot.GetText(start - 1, 1) == "\r") {
+                    start -= 1;
+                    length += 1;
+                    text = snapshot.GetText(start, length);
+                }
+
                 // remove up to 2 \r\n's if we just end with these, this will leave a space between the methods
                 while (length > 0 && ((Char.IsWhiteSpace(text[length - 1])) || ((text[length - 1] == '\r' || text[length - 1] == '\n') && cnt++ < 4))) {
                     length--;
