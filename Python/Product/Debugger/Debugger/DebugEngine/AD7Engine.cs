@@ -93,7 +93,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         public const string TargetDirectoryKey = "td";
         public const string TargetHostType = "host";
 
-        public const string TargetUap = "uap";
+        public const string TargetUwp = "uwp";
 
         /// <summary>
         /// Specifies the version of the language which is being debugged.  One of

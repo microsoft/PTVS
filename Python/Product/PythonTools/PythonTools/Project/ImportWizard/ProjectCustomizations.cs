@@ -194,14 +194,14 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
         }
     }
 
-    class UapProjectCustomization : ProjectCustomization {
-        public static readonly ProjectCustomization Instance = new UapProjectCustomization();
+    class UwpProjectCustomization : ProjectCustomization {
+        public static readonly ProjectCustomization Instance = new UwpProjectCustomization();
 
-        private UapProjectCustomization() { }
+        private UwpProjectCustomization() { }
 
         public override string DisplayName {
             get {
-                return SR.GetString(SR.ImportWizardUapProjectCustomization);
+                return SR.GetString(SR.ImportWizardUwpProjectCustomization);
             }
         }
 

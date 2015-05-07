@@ -1,8 +1,8 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <!-- Include UAP -->
-    <IncludeUap Condition="'$(IncludeUap)' == '' and '$(VSTarget)' == '14.0'">true</IncludeUap>
-    <IncludeUap Condition="'$(IncludeUap)' == ''">false</IncludeUap>
+    <!-- Include UWP -->
+    <IncludeUwp Condition="'$(IncludeUwp)' == '' and '$(VSTarget)' == '14.0'">true</IncludeUwp>
+    <IncludeUwp Condition="'$(IncludeUwp)' == ''">false</IncludeUwp>
 
     <!-- Include HPC by default, and force to ReleaseBuild if dependencies are missing -->
     <IncludeHpc Condition="'$(IncludeHpc)' == '' and '$(VSTarget)' == '14.0'">false</IncludeHpc>

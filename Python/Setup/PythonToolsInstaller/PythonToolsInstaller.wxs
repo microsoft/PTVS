@@ -197,8 +197,8 @@
         <?endforeach?>
         <ConfigurationData Name="Config_MSBuildLocation" Value="Dir_MSBuildTargets"/>
       </Merge>
-      <?if "$(var.IncludeUap)" ~= "True" ?>
-      <Merge Id="Merge_Uap" Language="1033" SourceFile="Uap.msm" DiskId="1">
+      <?if "$(var.IncludeUwp)" ~= "True" ?>
+      <Merge Id="Merge_Uwp" Language="1033" SourceFile="Uwp.msm" DiskId="1">
         <?foreach key in VS;WD;VWD?>
         <ConfigurationData Name="Config_$(var.key)ExtensionsParent" Value="Dir_$(var.key)Extensions" />
         <ConfigurationData Name="Config_$(var.key)TemplatesParent" Value="Dir_$(var.key)Templates"/>
@@ -261,9 +261,9 @@
         <MergeRef Id="Merge_Django"/>
       </Feature>
 
-      <?if "$(var.IncludeUap)" ~= "True" ?>
-      <Feature Id="Feature_Uap" AllowAdvertise="no" Level="1" Title="UAP integration" Description="UAP integration">
-        <MergeRef Id="Merge_Uap"/>
+      <?if "$(var.IncludeUwp)" ~= "True" ?>
+      <Feature Id="Feature_Uwp" AllowAdvertise="no" Level="1" Title="UWP integration" Description="UWP integration">
+        <MergeRef Id="Merge_Uwp"/>
       </Feature>
       <?endif?>
       

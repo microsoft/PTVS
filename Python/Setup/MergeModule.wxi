@@ -48,7 +48,7 @@
       <Directory Id="Dir_$(var.key)ProjectTemplates" Name="Python">
         <Directory Id="Dir_$(var.key)WebProjectTemplates" Name="Web" />
         <?if "$(var.VSTargetVersion)" = "14.0" ?>
-        <Directory Id="Dir_$(var.key)UapProjectTemplates" Name="Windows IoT Core" />
+        <Directory Id="Dir_$(var.key)UwpProjectTemplates" Name="Windows IoT Core" />
         <?endif ?>
       </Directory>
     </Directory>
