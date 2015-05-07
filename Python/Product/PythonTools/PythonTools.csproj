@@ -94,7 +94,8 @@
     <ProjectReference Include="..\ReplWindow\ReplWindow.csproj">
       <Project>{20BB6FAC-44D2-4D76-ABFE-0C1E163A1A4F}</Project>
       <Private>false</Private>
-      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+      <ReferenceOutputAssembly Condition="'$(Dev14OrLater)' != 'True'">true</ReferenceOutputAssembly>
+      <ReferenceOutputAssembly Condition="'$(Dev14OrLater)' == 'True'">false</ReferenceOutputAssembly>
       <Name Condition="'$(InteractiveWindow)' == ''">Microsoft.VisualStudio.ReplWindow</Name>
       <Name Condition="'$(InteractiveWindow)' != ''">Microsoft.VisualStudio.InteractiveWindow</Name>
     </ProjectReference>
@@ -175,6 +176,9 @@
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Editor, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.VisualStudio.InteractiveWindow">
+      <HintPath>$(DevEnvDir)PrivateAssemblies\Microsoft.VisualStudio.InteractiveWindow.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.VisualStudio.Language.Intellisense, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Language.NavigateTo.Interfaces, Version=$(VSTarget).0.0, Culture=neutral" />
     <Reference Include="Microsoft.VisualStudio.Language.StandardClassification, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
@@ -207,6 +211,9 @@
     </Reference>
     <Reference Include="Microsoft.VisualStudio.VSHelp, Version=7.0.3300.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <EmbedInteropTypes>False</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.VsInteractiveWindow">
+      <HintPath>$(DevEnvDir)PrivateAssemblies\Microsoft.VisualStudio.VsInteractiveWindow.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.WizardFramework, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="System" />
@@ -268,9 +275,16 @@
     <Compile Include="..\Analysis\Interpreter\PythonInterpreterFactoryExtensions.cs">
       <Link>PythonInterpreterFactoryExtensions.cs</Link>
     </Compile>
+    <Compile Include="PythonTools\Repl\IMultipleScopeEvaluator.cs" />
+    <Compile Include="PythonTools\Repl\InteractiveWindowProvider.cs" />
     <Compile Include="IPythonToolsToolWindowService.cs" />
     <Compile Include="MissingInterpreterException.cs" />
+    <Compile Include="PythonTools\Repl\IInteractiveEvaluatorProvider.cs" />
+    <Compile Include="PythonTools\Repl\InteractiveRoleAttribute.cs" />
     <Compile Include="PythonTools\Debugger\ProximityExpressionWalker.cs" />
+    <Compile Include="PythonTools\Repl\ReplOutputClassificationFormatDefinitions.cs" />
+    <Compile Include="PythonTools\Repl\ReplOutputClassifier.cs" />
+    <Compile Include="PythonTools\Repl\ReplOutputClassifierProvider.cs" />
     <Compile Include="PythonTools\Project\IPythonProjectLaunchProperties.cs" />
     <Compile Include="PythonTools\Project\PythonProjectLaunchProperties.cs" />
     <Compile Include="PythonTools\SurveyNewsService.cs" />
@@ -1144,7 +1158,10 @@
     <None Include="Dev10\source.extension.vsixmanifest" Condition="'$(VSTarget)' == '10.0'">
       <SubType>Designer</SubType>
     </None>
-    <None Include="Dev11OrLater\source.extension.vsixmanifest" Condition="'$(VSTarget)' != '10.0'">
+    <None Include="Dev11OrLater\source.extension.vsixmanifest" Condition="'$(VSTarget)' != '10.0' and '$(Dev14OrLater)' != 'True'">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="Dev14OrLater\source.extension.vsixmanifest" Condition="'$(Dev14OrLater)' == 'True'">
       <SubType>Designer</SubType>
     </None>
   </ItemGroup>

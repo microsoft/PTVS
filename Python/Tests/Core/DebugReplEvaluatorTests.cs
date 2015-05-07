@@ -20,7 +20,11 @@ using System.Threading;
 using DebuggerTests;
 using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.Repl;
+#if DEV14_OR_LATER
+using Microsoft.VisualStudio.InteractiveWindow;
+#else
 using Microsoft.VisualStudio.Repl;
+#endif
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
@@ -29,10 +33,11 @@ using TestUtilities.Mocks;
 using TestUtilities.Python;
 
 namespace PythonToolsTests {
-#if INTERACTIVE_WINDOW
-    using IReplEvaluator = IInteractiveEngine;
+#if DEV14_OR_LATER
+    using IReplEvaluator = IInteractiveEvaluator;
     using IReplWindow = IInteractiveWindow;
-    using IReplWindowProvider = IInteractiveWindowProvider;
+    using IReplWindowProvider = InteractiveWindowProvider;
+    using IReplCommand = Microsoft.VisualStudio.InteractiveWindow.Commands.IInteractiveWindowCommand;
 #endif
 
     [TestClass]

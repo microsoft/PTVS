@@ -14,14 +14,24 @@
 
 using System.ComponentModel.Composition;
 using System.Threading.Tasks;
-using Microsoft.VisualStudio.Repl;
 using Microsoft.PythonTools.Debugger.DebugEngine;
 using System;
+using System.Collections.Generic;
+using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Classification;
+#if DEV14_OR_LATER
+using Microsoft.VisualStudio.InteractiveWindow;
+using Microsoft.VisualStudio.InteractiveWindow.Commands;
+#else
+using Microsoft.VisualStudio.Repl;
+#endif
 
 namespace Microsoft.PythonTools.Repl {
-#if INTERACTIVE_WINDOW
+#if DEV14_OR_LATER
     using IReplWindow = IInteractiveWindow;
     using IReplCommand = IInteractiveWindowCommand;
+    using IReplCommand2 = IInteractiveWindowCommand;
+    using ReplRoleAttribute = Microsoft.PythonTools.Repl.InteractiveWindowRoleAttribute;
 #endif
 
     [Export(typeof(IReplCommand))]
@@ -54,6 +64,36 @@ namespace Microsoft.PythonTools.Repl {
         public System.Collections.Generic.IEnumerable<string> Aliases {
             get { return new string[] { "w", "bt" }; }
         }
+
+#if DEV14_OR_LATER
+        public IEnumerable<ClassificationSpan> ClassifyArguments(ITextSnapshot snapshot, Span argumentsSpan, Span spanToClassify) {
+            yield break;
+        }
+
+        public string CommandLine {
+            get {
+                return "";
+            }
+        }
+
+        public IEnumerable<string> DetailedDescription {
+            get {
+                yield return Description;
+            }
+        }
+
+        public IEnumerable<KeyValuePair<string, string>> ParametersDescription {
+            get {
+                yield break;
+            }
+        }
+
+        public IEnumerable<string> Names {
+            get {
+                yield return Command;
+            }
+        }
+#endif
 
         #endregion
     }

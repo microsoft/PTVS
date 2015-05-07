@@ -19,7 +19,12 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
+#if DEV14_OR_LATER
+using Microsoft.VisualStudio.InteractiveWindow;
+using Microsoft.VisualStudio.InteractiveWindow.Shell;
+#else
 using Microsoft.VisualStudio.Repl;
+#endif
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text.Editor;
@@ -27,10 +32,11 @@ using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Commands {
     using IServiceProvider = System.IServiceProvider;
-
-#if INTERACTIVE_WINDOW
+#if DEV14_OR_LATER
     using IReplWindow = IInteractiveWindow;
-    using IReplCommand = IInteractiveWindowCommand;
+    using IVsReplWindow = IVsInteractiveWindow;
+#else
+    using IVsReplWindow = IReplWindow;
 #endif
 
     /// <summary>
@@ -52,12 +58,20 @@ namespace Microsoft.PythonTools.Commands {
 
             IVsWindowFrame windowFrame = (IVsWindowFrame)window.Frame;
             ErrorHandler.ThrowOnFailure(windowFrame.Show());
-            IReplWindow repl = (IReplWindow)window;
-            
+            var repl = (IVsReplWindow)window;
+
+#if DEV14_OR_LATER
+            PythonReplEvaluator eval = repl.InteractiveWindow.Evaluator as PythonReplEvaluator;
+#else
             PythonReplEvaluator eval = repl.Evaluator as PythonReplEvaluator;
-            
+#endif
+
             eval.EnsureConnected();
+#if DEV14_OR_LATER
+            repl.InteractiveWindow.Submit(GetActiveInputs(activeView, eval));
+#else
             repl.Submit(GetActiveInputs(activeView, eval));
+#endif
 
             repl.Focus();
         }
@@ -79,9 +93,9 @@ namespace Microsoft.PythonTools.Commands {
             if (activeView != null && activeView.TextBuffer.ContentType.IsOfType(PythonCoreConstants.ContentType)) {
                 var analyzer = activeView.GetAnalyzer(_serviceProvider);
 
-                if (activeView.Selection.IsEmpty || 
+                if (activeView.Selection.IsEmpty ||
                     activeView.Selection.Mode == TextSelectionMode.Box ||
-                    analyzer == null || 
+                    analyzer == null ||
                     !IsRealInterpreter(analyzer.InterpreterFactory)) {
                     cmd.cmdf = (uint)(OLECMDF.OLECMDF_SUPPORTED);
                 } else {

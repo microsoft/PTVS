@@ -25,19 +25,26 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Navigation;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
+#if DEV14_OR_LATER
+using Microsoft.VisualStudio.InteractiveWindow;
+#else
+using Microsoft.VisualStudio.Repl;
+#endif
 using Microsoft.PythonTools.Project;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.Language.Intellisense;
-using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Intellisense {
-#if INTERACTIVE_WINDOW
-    using IReplEvaluator = IInteractiveEngine;
+    using Microsoft.PythonTools.Repl;
+#if DEV14_OR_LATER
+    using IReplEvaluator = IInteractiveEvaluator;
 #endif
+
 
     /// <summary>
     /// Performs centralized parsing and analysis of Python source code within Visual Studio.
@@ -288,11 +295,11 @@ namespace Microsoft.PythonTools.Intellisense {
             _errorProvider.ClearErrorSource(bufferParser._currentProjEntry, ParserTaskMoniker);
             _errorProvider.ClearErrorSource(bufferParser._currentProjEntry, UnresolvedImportMoniker);
 
-            if (ImplicitProject) {
-                // remove the file from the error list
+                if (ImplicitProject) {
+                    // remove the file from the error list
                 _errorProvider.Clear(bufferParser._currentProjEntry, ParserTaskMoniker);
                 _errorProvider.Clear(bufferParser._currentProjEntry, UnresolvedImportMoniker);
-            }
+                }
 
             _commentTaskProvider.ClearErrorSource(bufferParser._currentProjEntry, ParserTaskMoniker);
             if (ImplicitProject) {
@@ -364,7 +371,7 @@ namespace Microsoft.PythonTools.Intellisense {
             ThreadPool.QueueUserWorkItem(x => {
                 lock (_contentsLock) {
                     AnalyzeDirectory(CommonUtils.NormalizeDirectoryPath(Path.GetDirectoryName(path)));
-                }
+        }
             });
         }
 
@@ -582,7 +589,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 var fromLine = fromPoint.GetContainingLine();
                 var toPoint = fromPoint.TranslateTo(snapshotCookie.Snapshot, PointTrackingMode.Negative);
                 var toLine = toPoint.GetContainingLine();
-
+                
                 return new SourceLocation(
                     toPoint.Position,
                     toLine.LineNumber + 1,
@@ -891,9 +898,9 @@ namespace Microsoft.PythonTools.Intellisense {
             var tasks = commentTasks = new List<TaskProviderItem>();
 
             var options = new ParserOptions {
-                ErrorSink = errorSink,
-                IndentationInconsistencySeverity = indentationSeverity,
-                BindReferences = true
+                    ErrorSink = errorSink,
+                    IndentationInconsistencySeverity = indentationSeverity,
+                    BindReferences = true
             };
             options.ProcessComment += (sender, e) => ProcessComment(tasks, snapshot, e.Span, e.Text);
 
@@ -911,8 +918,8 @@ namespace Microsoft.PythonTools.Intellisense {
             var tasks = commentTasks = new List<TaskProviderItem>();
 
             var options = new ParserOptions {
-                ErrorSink = errorSink,
-                IndentationInconsistencySeverity = indentationSeverity,
+                    ErrorSink = errorSink,
+                    IndentationInconsistencySeverity = indentationSeverity,
                 BindReferences = true,
             };
             options.ProcessComment += (sender, e) => ProcessComment(tasks, snapshot, e.Span, e.Text);
@@ -966,7 +973,7 @@ namespace Microsoft.PythonTools.Intellisense {
             if (changed) {
                 OnShouldWarnOnLaunchChanged(entry);
             }
-
+            
             // Update the parser warnings/errors.
             var factory = new TaskProviderItemFactory(snapshot);
             if (errorSink.Warnings.Any() || errorSink.Errors.Any()) {
@@ -1117,7 +1124,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     lastClass.Span.GetText() == "@") {
 
                     if (tokens.Count == 1) {
-                        return new DecoratorCompletionAnalysis(span, buffer, options);
+                    return new DecoratorCompletionAnalysis(span, buffer, options);
                     }
                     // TODO: Handle completions automatically popping up
                     // after '@' when it is used as a binary operator.
@@ -1512,7 +1519,7 @@ namespace Microsoft.PythonTools.Intellisense {
         #region IDisposable Members
 
         public void Dispose() {
-            foreach (var entry in _projectFiles.Values) {
+                foreach (var entry in _projectFiles.Values) {
                 _errorProvider.Clear(entry, ParserTaskMoniker);
                 _errorProvider.Clear(entry, UnresolvedImportMoniker);
                 _commentTaskProvider.Clear(entry, ParserTaskMoniker);
