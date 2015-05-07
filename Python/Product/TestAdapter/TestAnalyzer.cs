@@ -162,7 +162,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             AnalysisValue classValue
         ) {
             return classValue.GetAllMembers(entry.Analysis.InterpreterContext)
-                .Where(v => v.Key.StartsWith("test"))
+                .Where(v => v.Key.StartsWith("test") || v.Key.StartsWith("runTest"))
                 .Where(v => v.Value.Any(m => m.MemberType == PythonMemberType.Function || m.MemberType == PythonMemberType.Method));
         }
     }

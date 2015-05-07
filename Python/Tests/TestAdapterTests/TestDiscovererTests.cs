@@ -126,10 +126,12 @@ class MyTest2(TB2):
 class MyTest3(TestBase):
     def test3(self):
         pass
+    def runTest(self):
+        pass
 ");
 
                 var test = analyzer.GetTestCases().ToList();
-                AssertUtil.ContainsExactly(test.Select(t => t.DisplayName), "test1", "test2", "test3");
+                AssertUtil.ContainsExactly(test.Select(t => t.DisplayName), "test1", "test2", "test3", "runTest");
             }
         }
 
