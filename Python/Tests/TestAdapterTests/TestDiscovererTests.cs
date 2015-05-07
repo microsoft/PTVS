@@ -126,6 +126,8 @@ class MyTest2(TB2):
 class MyTest3(TestBase):
     def test3(self):
         pass
+    def runTests(self):
+        pass # should not discover this as it isn't runTest or test*
     def runTest(self):
         pass
 ");
