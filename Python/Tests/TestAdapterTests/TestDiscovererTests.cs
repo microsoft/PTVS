@@ -126,6 +126,19 @@ class MyTest2(TB2):
 class MyTest3(TestBase):
     def test3(self):
         pass
+");
+
+                var test = analyzer.GetTestCases().ToList();
+                AssertUtil.ContainsExactly(test.Select(t => t.DisplayName), "test1", "test2", "test3");
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void TestCaseRunTests() {
+            using (var analyzer = MakeTestAnalyzer()) {
+                AddModule(analyzer, "__main__", @"import unittest
+
+class TestBase(unittest.TestCase):
     def runTests(self):
         pass # should not discover this as it isn't runTest or test*
     def runTest(self):
@@ -133,7 +146,27 @@ class MyTest3(TestBase):
 ");
 
                 var test = analyzer.GetTestCases().ToList();
-                AssertUtil.ContainsExactly(test.Select(t => t.DisplayName), "test1", "test2", "test3", "runTest");
+                AssertUtil.ContainsExactly(test.Select(t => t.DisplayName), "runTest");
+            }
+        }
+
+        /// <summary>
+        /// If we have test* and runTest we shouldn't discover runTest
+        /// </summary>
+        [TestMethod, Priority(0)]
+        public void TestCaseRunTestsWithTest() {
+            using (var analyzer = MakeTestAnalyzer()) {
+                AddModule(analyzer, "__main__", @"import unittest
+
+class TestBase(unittest.TestCase):
+    def test_1(self):
+        pass
+    def runTest(self):
+        pass
+");
+
+                var test = analyzer.GetTestCases().ToList();
+                AssertUtil.ContainsExactly(test.Select(t => t.DisplayName), "test_1");
             }
         }
 

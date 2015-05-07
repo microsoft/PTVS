@@ -157,13 +157,28 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
         }
 
+        /// <summary>
+        /// Get Test Case Members for a class.  If the class has 'test*' tests 
+        /// return those.  If there aren't any 'test*' tests return (if one at 
+        /// all) the runTest overridden method
+        /// </summary>
         private static IEnumerable<KeyValuePair<string, IAnalysisSet>> GetTestCaseMembers(
             IPythonProjectEntry entry,
             AnalysisValue classValue
         ) {
-            return classValue.GetAllMembers(entry.Analysis.InterpreterContext)
-                .Where(v => v.Key.StartsWith("test") || v.Key.Equals("runTest"))
+            var tests = classValue.GetAllMembers(entry.Analysis.InterpreterContext)
+                .Where(v => v.Key.StartsWith("test"))
                 .Where(v => v.Value.Any(m => m.MemberType == PythonMemberType.Function || m.MemberType == PythonMemberType.Method));
+
+            var runTest = classValue.GetAllMembers(entry.Analysis.InterpreterContext)
+                .Where(v => v.Key.Equals("runTest"))
+                .Where(v => v.Value.Any(m => m.MemberType == PythonMemberType.Function || m.MemberType == PythonMemberType.Method));
+
+            if (tests.Any()) {
+                return tests;
+            } else {
+                return runTest;
+            }
         }
     }
 }
