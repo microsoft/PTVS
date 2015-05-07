@@ -85,7 +85,7 @@ namespace AnalysisTests {
             return AnalysisLimits.GetDefaultLimits();
         }
 
-        protected virtual bool SupportPython3 {
+        protected virtual bool SupportsPython3 {
             get { return true; }
         }
 

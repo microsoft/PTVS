@@ -1021,7 +1021,7 @@ c = _next(iC)
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("b", 1), BuiltinTypeId_Str);
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("c", 1), BuiltinTypeId.Int, BuiltinTypeId_Str, BuiltinTypeId.Float);
 
-            if (SupportPython3) {
+            if (SupportsPython3) {
                 entry = ProcessText(@"
 A = [1, 2, 3]
 B = 'abc'
@@ -1053,7 +1053,7 @@ c = next(iC)
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("b", 1), BuiltinTypeId_Str);
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("c", 1), BuiltinTypeId.Int);
 
-            if (SupportPython3) {
+            if (SupportsPython3) {
                 entry = ProcessText(@"
 iA = iter(lambda: 1, 2)
 iB = iter(lambda: 'abc', None)
@@ -1131,7 +1131,7 @@ d = a.__next__()";
 
         [TestMethod, Priority(0)]
         public void Generator3x() {
-            if (!SupportPython3) {
+            if (!SupportsPython3) {
                 return;
             }
 
@@ -1196,7 +1196,7 @@ d = a.next()";
 
         [TestMethod, Priority(0)]
         public void GeneratorDelegation() {
-            if (!SupportPython3) {
+            if (!SupportsPython3) {
                 // IronPython does not yet support yield from.
                 return;
             }
@@ -5947,7 +5947,7 @@ class D(object):
             //Assert.AreEqual(entry.GetSignaturesByIndex("cls.x", text.IndexOf("print cls.g")).First().Parameters.Length, 1);
             //Assert.AreEqual(entry.GetSignaturesByIndex("cls.inst_method", text.IndexOf("print cls.g")).First().Parameters.Length, 1);
 
-            if (SupportPython3) {
+            if (SupportsPython3) {
                 text = @"class C(type):
     def f(self):
         print('C.f')

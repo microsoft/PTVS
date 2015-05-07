@@ -43,7 +43,7 @@ namespace IronPythonTests {
             PythonTestData.Deploy();
         }
 
-        protected override bool SupportPython3 {
+        protected override bool SupportsPython3 {
             get { return false; }
         }
 
