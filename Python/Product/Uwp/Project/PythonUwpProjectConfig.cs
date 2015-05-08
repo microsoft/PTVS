@@ -18,9 +18,10 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Web;
+using System.Web.Script.Serialization;
 using System.Windows.Forms;
-using System.Xml.Linq;
 using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.Debugger.Remote;
 using Microsoft.VisualStudio;
@@ -448,13 +449,10 @@ namespace Microsoft.PythonTools.Uwp.Project {
                 var targetDir = Path.GetFullPath(this.LayoutDir).Trim('\\');
                 var debugPort = PythonConfig.GetProjectProperty("RemoteDebugPort") ?? DefaultRemoteDebugPort;
                 var debugId = Guid.NewGuid();
-                var debugXml = new XDocument(new XElement("dbg",
-                    new XElement("arg", @"visualstudio_py_remote_launcher.py"),
-                    new XElement("arg", debugPort),
-                    new XElement("arg", debugId),
-                    new XElement("arg", "--redirect-output")));
+                var serializer = new JavaScriptSerializer();
+                var debugCmdJson = serializer.Serialize(new string[] { "visualstudio_py_remote_launcher.py", debugPort.ToString(), debugId.ToString(), "--redirect-output" });
 
-                Debugger.PythonRemoteDebugEvents.Instance.AttachRemoteDebugXml = debugXml.ToString();
+                Debugger.PythonRemoteDebugEvents.Instance.RemoteDebugCommandInfo = Encoding.Unicode.GetBytes(debugCmdJson);
                 Debugger.PythonRemoteDebugEvents.Instance.AttachRemoteProcessFunction = () => {
                     return RemoteProcessAttachAsync(
                          appPackageDebugTarget[0].bstrRemoteMachine,
@@ -606,7 +604,7 @@ namespace Microsoft.PythonTools.Uwp.Project {
 
             try {
                 VsDebugTargetInfo2[] targets;
-                uint deployFlags = (uint)(_AppContainerDeployOptions.ACDO_NetworkLoopbackEnable | _AppContainerDeployOptions.ACDO_SetNetworkLoopback | _AppContainerDeployOptions.ACDO_ForceCleanLayout);
+                uint deployFlags = (uint)(_AppContainerDeployOptions.ACDO_NetworkLoopbackEnable | _AppContainerDeployOptions.ACDO_SetNetworkLoopback);
                 string recipeFile = null;
                 string layoutDir = null;
                 var pythonProject = PythonConfig;
@@ -622,7 +620,6 @@ namespace Microsoft.PythonTools.Uwp.Project {
                 get_CanonicalName(out canonicalName);
 
                 bps.GetPropertyValue("AppxPackageRecipe", canonicalName, (uint)_PersistStorageType.PST_PROJECT_FILE, out recipeFile);
-                bps.GetPropertyValue("LayoutDir", canonicalName, (uint)_PersistStorageType.PST_PROJECT_FILE, out layoutDir);
 
                 string projectUniqueName = null;
                 IVsSolution vsSolution = Package.GetGlobalService(typeof(SVsSolution)) as IVsSolution;
@@ -632,6 +629,8 @@ namespace Microsoft.PythonTools.Uwp.Project {
 
                 IVsAppContainerProjectDeploy deployHelper = (IVsAppContainerProjectDeploy)Package.GetGlobalService(typeof(SVsAppContainerProjectDeploy));
                 if (String.IsNullOrEmpty(targets[0].bstrRemoteMachine)) {
+                    bps.GetPropertyValue("LayoutDir", canonicalName, (uint)_PersistStorageType.PST_PROJECT_FILE, out layoutDir);
+
                     deployOp = deployHelper.StartDeployAsync(deployFlags, recipeFile, layoutDir, projectUniqueName, this);
                 } else {
                     IVsDebuggerDeploy deploy = (IVsDebuggerDeploy)Package.GetGlobalService(typeof(SVsShellDebugger));
