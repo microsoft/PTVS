@@ -171,12 +171,11 @@ namespace Microsoft.PythonTools {
                         headerIndex = startLineEnd;
                     }
 
-                    int testLen = headerIndex - start + 1;
                     if (start != -1 && end != -1) {
-                        int length = end - start - testLen;
+                        int length = end - headerIndex;
                         if (length > 0) {
                             var span = GetFinalSpan(snapshot,
-                                start + testLen,
+                                headerIndex,
                                 length
                             );
 
@@ -198,14 +197,6 @@ namespace Microsoft.PythonTools {
                 Debug.Assert(start + length <= snapshot.Length);
                 int cnt = 0;
                 var text = snapshot.GetText(start, length);
-
-                // The VS Provider is fragile to us splitting in between \r\n.  
-                // Check here that we haven't done that and correct the error.
-                if (text[0] == '\n' && start >= 1 && snapshot.GetText(start - 1, 1) == "\r") {
-                    start -= 1;
-                    length += 1;
-                    text = snapshot.GetText(start, length);
-                }
 
                 // remove up to 2 \r\n's if we just end with these, this will leave a space between the methods
                 while (length > 0 && ((Char.IsWhiteSpace(text[length - 1])) || ((text[length - 1] == '\r' || text[length - 1] == '\n') && cnt++ < 4))) {
@@ -331,7 +322,7 @@ namespace Microsoft.PythonTools {
             }
 
             public override bool Walk(ClassDefinition node) {
-                AddTagIfNecessary(node, node.HeaderIndex, node.Decorators);
+                AddTagIfNecessary(node, node.HeaderIndex + 1, node.Decorators);
 
                 return base.Walk(node);
             }
