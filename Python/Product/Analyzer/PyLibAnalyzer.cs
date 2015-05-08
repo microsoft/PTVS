@@ -527,8 +527,10 @@ namespace Microsoft.PythonTools.Analysis {
                 _library.AddRange(library);
             }
 
-            foreach (var module in IncludeModulesFromModulePath) {
-                _library.AddRange(await GetSearchPathsFromModulePath(_interpreter, module));
+            if (File.Exists(_interpreter)) {
+                foreach (var module in IncludeModulesFromModulePath) {
+                    _library.AddRange(await GetSearchPathsFromModulePath(_interpreter, module));
+                }
             }
 
             _treatPathsAsStandardLibrary.UnionWith(_library.Where(p => p.IsStandardLibrary).Select(p => p.Path));
