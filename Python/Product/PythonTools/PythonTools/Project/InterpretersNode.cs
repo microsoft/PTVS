@@ -34,6 +34,10 @@ using Task = System.Threading.Tasks.Task;
 using VsCommands = Microsoft.VisualStudio.VSConstants.VSStd97CmdID;
 using VsCommands2K = Microsoft.VisualStudio.VSConstants.VSStd2KCmdID;
 using VsMenus = Microsoft.VisualStudioTools.Project.VsMenus;
+#if DEV14_OR_LATER
+using Microsoft.VisualStudio.Imaging;
+using Microsoft.VisualStudio.Imaging.Interop;
+#endif
 
 namespace Microsoft.PythonTools.Project {
     /// <summary>
@@ -409,6 +413,24 @@ namespace Microsoft.PythonTools.Project {
                 return base.OverlayIconIndex;
             }
         }
+
+#if DEV14_OR_LATER
+        protected override bool SupportsIconMonikers {
+            get { return true; }
+        }
+
+        protected override ImageMoniker GetIconMoniker(bool open) {
+            if (!_interpreters.IsAvailable(_factory)) {
+                // TODO: Find a better icon
+                return KnownMonikers.DocumentWarning;
+            } else if (_interpreters.ActiveInterpreter == _factory) {
+                return KnownMonikers.ActiveEnvironment;
+            }
+
+            // TODO: Change to PYEnvironment
+            return KnownMonikers.DockPanel;
+        }
+#endif
 
         /// <summary>
         /// Interpreter node cannot be dragged.
