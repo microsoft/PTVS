@@ -28,14 +28,6 @@ namespace Microsoft.VisualStudioTools {
         private readonly int _processId;
         private DTE _dte;
 
-        public DTE DTE {
-            get {
-                if (_dte == null) {
-                    _dte = GetDTE(_processId);
-                }
-                return _dte;
-            }
-        }
         public static VisualStudioApp FromProcessId(int processId) {
             VisualStudioApp inst;
             lock (_knownInstances) {
@@ -80,6 +72,10 @@ namespace Microsoft.VisualStudioTools {
         [SuppressMessage("Microsoft.Design", "CA1060:MovePInvokesToNativeMethodsClass")]
         [DllImport("ole32.dll")]
         private static extern int CreateBindCtx(uint reserved, out IBindCtx ppbc);
+
+        public DTE GetDTE() {
+            return GetDTE(_processId);
+        }
 
         private static DTE GetDTE(int processId) {
             MessageFilter.Register();
@@ -139,7 +135,7 @@ namespace Microsoft.VisualStudioTools {
         }
 
         public bool AttachToProcess(ProcessOutput processOutput, Guid portSupplier, string transportQualifierUri) {
-            var debugger3 = (EnvDTE90.Debugger3)DTE.Debugger;
+            var debugger3 = (EnvDTE90.Debugger3)GetDTE().Debugger;
             var transports = debugger3.Transports;
             EnvDTE80.Transport transport = null;
             for (int i = 1; i <= transports.Count; ++i) {
@@ -163,7 +159,7 @@ namespace Microsoft.VisualStudioTools {
         }
 
         public bool AttachToProcess(ProcessOutput processOutput, Guid[] engines) {
-            var debugger3 = (EnvDTE90.Debugger3)DTE.Debugger;
+            var debugger3 = (EnvDTE90.Debugger3)GetDTE().Debugger;
             var processes = debugger3.LocalProcesses;
             for (int i = 1; i < processes.Count; ++i) {
                 var process = processes.Item(i);
@@ -178,7 +174,8 @@ namespace Microsoft.VisualStudioTools {
         public bool AttachToProcess(ProcessOutput processOutput, EnvDTE.Process process, Guid[] engines = null) {
             // Retry the attach itself 3 times before displaying a Retry/Cancel
             // dialog to the user.
-            DTE.SuppressUI = true;
+            var dte = GetDTE();
+            dte.SuppressUI = true;
             try {
                 try {
                     if (engines == null) {
@@ -198,7 +195,7 @@ namespace Microsoft.VisualStudioTools {
                     }
                 }
             } finally {
-                DTE.SuppressUI = false;
+                dte.SuppressUI = false;
             }
 
             // Another attempt, but display UI.
