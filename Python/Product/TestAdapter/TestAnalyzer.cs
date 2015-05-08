@@ -166,13 +166,11 @@ namespace Microsoft.PythonTools.TestAdapter {
             IPythonProjectEntry entry,
             AnalysisValue classValue
         ) {
-            var tests = classValue.GetAllMembers(entry.Analysis.InterpreterContext)
-                .Where(v => v.Key.StartsWith("test"))
+            var methodFunctions = classValue.GetAllMembers(entry.Analysis.InterpreterContext)
                 .Where(v => v.Value.Any(m => m.MemberType == PythonMemberType.Function || m.MemberType == PythonMemberType.Method));
 
-            var runTest = classValue.GetAllMembers(entry.Analysis.InterpreterContext)
-                .Where(v => v.Key.Equals("runTest"))
-                .Where(v => v.Value.Any(m => m.MemberType == PythonMemberType.Function || m.MemberType == PythonMemberType.Method));
+            var tests = methodFunctions.Where(v => v.Key.StartsWith("test"));
+            var runTest = methodFunctions.Where(v => v.Key.Equals("runTest"));
 
             if (tests.Any()) {
                 return tests;
