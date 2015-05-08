@@ -26,7 +26,6 @@ namespace Microsoft.VisualStudioTools {
     class VisualStudioApp : IDisposable {
         private static readonly Dictionary<int, VisualStudioApp> _knownInstances = new Dictionary<int, VisualStudioApp>();
         private readonly int _processId;
-        private DTE _dte;
 
         public static VisualStudioApp FromProcessId(int processId) {
             VisualStudioApp inst;
@@ -59,11 +58,6 @@ namespace Microsoft.VisualStudioTools {
         public void Dispose() {
             lock (_knownInstances) {
                 _knownInstances.Remove(_processId);
-            }
-            if (_dte != null) {
-                Marshal.ReleaseComObject(_dte);
-                _dte = null;
-                MessageFilter.Revoke();
             }
         }
 
