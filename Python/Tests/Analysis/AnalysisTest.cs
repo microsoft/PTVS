@@ -21,7 +21,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using IronPython.Runtime;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Interpreter;
@@ -1022,7 +1021,7 @@ c = _next(iC)
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("b", 1), BuiltinTypeId_Str);
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("c", 1), BuiltinTypeId.Int, BuiltinTypeId_Str, BuiltinTypeId.Float);
 
-            if (!(this is IronPythonAnalysisTest)) {
+            if (SupportsPython3) {
                 entry = ProcessText(@"
 A = [1, 2, 3]
 B = 'abc'
@@ -1054,7 +1053,7 @@ c = next(iC)
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("b", 1), BuiltinTypeId_Str);
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("c", 1), BuiltinTypeId.Int);
 
-            if (!(this is IronPythonAnalysisTest)) {
+            if (SupportsPython3) {
                 entry = ProcessText(@"
 iA = iter(lambda: 1, 2)
 iB = iter(lambda: 'abc', None)
@@ -1132,8 +1131,7 @@ d = a.__next__()";
 
         [TestMethod, Priority(0)]
         public void Generator3x() {
-            if (this is IronPythonAnalysisTest) {
-                // IronPython does not yet support __next__() method
+            if (!SupportsPython3) {
                 return;
             }
 
@@ -1198,7 +1196,7 @@ d = a.next()";
 
         [TestMethod, Priority(0)]
         public void GeneratorDelegation() {
-            if (this is IronPythonAnalysisTest) {
+            if (!SupportsPython3) {
                 // IronPython does not yet support yield from.
                 return;
             }
@@ -3703,6 +3701,10 @@ f('a', 'b', 1)
         }
 
 
+        protected virtual string ListInitParameterName {
+            get { return "sequence"; }
+        }
+
         /// <summary>
         /// http://pytools.codeplex.com/workitem/799
         /// </summary>
@@ -3714,10 +3716,7 @@ class oar(list):
 ";
             var entry = ProcessText(text);
             var init = entry.GetOverrideableByIndex(text.IndexOf("pass")).Single(r => r.Name == "__init__");
-            AssertUtil.AreEqual(
-                init.Parameters.Select(GetSafeParameterName), 
-                "self", this is IronPythonAnalysisTest ? "enumerable" : "sequence"
-            );
+            AssertUtil.AreEqual(init.Parameters.Select(GetSafeParameterName), "self", ListInitParameterName);
 
             // Ensure that nested classes are correctly resolved.
             text = @"
@@ -4927,10 +4926,68 @@ def decorator_b(fn):
 
             PermutedTest("mod", new[] { text1, text2 }, (pe) => {
                 // Neither decorator is callable, but at least analysis completed
-                Assert.AreEqual(0, pe[0].Analysis.GetValuesByIndex("decorator_a", 1).Count());
-                Assert.AreEqual(0, pe[1].Analysis.GetValuesByIndex("decorator_b", 1).Count());
+                AssertUtil.ContainsExactly(pe[0].Analysis.GetTypeIdsByIndex("decorator_a", 1));
+                AssertUtil.ContainsExactly(pe[1].Analysis.GetTypeIdsByIndex("decorator_b", 1));
             });
         }
+
+        [TestMethod, Priority(0)]
+        public void ProcessDecorators() {
+            var text = @"
+def d(fn):
+    return []
+
+@d
+def my_fn():
+    return None
+";
+
+            var sourceUnit = GetSourceUnit(text, "fob");
+            var state = CreateAnalyzer();
+            state.Limits.ProcessCustomDecorators = true;
+            var entry = state.AddModule("fob", "fob", null);
+            Prepare(entry, sourceUnit);
+            entry.Analyze(CancellationToken.None);
+
+            AssertUtil.ContainsExactly(
+                entry.Analysis.GetTypeIdsByIndex("my_fn", 0),
+                BuiltinTypeId.List
+            );
+            AssertUtil.ContainsExactly(
+                entry.Analysis.GetTypeIdsByIndex("fn", text.IndexOf("return")),
+                BuiltinTypeId.Function
+            );
+        }
+
+        [TestMethod, Priority(0)]
+        public void NoProcessDecorators() {
+            var text = @"
+def d(fn):
+    return []
+
+@d
+def my_fn():
+    return None
+";
+
+            var sourceUnit = GetSourceUnit(text, "fob");
+            var state = CreateAnalyzer();
+            state.Limits.ProcessCustomDecorators = false;
+            var entry = state.AddModule("fob", "fob", null);
+            Prepare(entry, sourceUnit);
+            entry.Analyze(CancellationToken.None);
+            state.Limits.ProcessCustomDecorators = true;
+
+            AssertUtil.ContainsExactly(
+                entry.Analysis.GetTypeIdsByIndex("my_fn", 0),
+                BuiltinTypeId.Function
+            );
+            AssertUtil.ContainsExactly(
+                entry.Analysis.GetTypeIdsByIndex("fn", text.IndexOf("return")),
+                BuiltinTypeId.Function
+            );
+        }
+
 
         [TestMethod, Priority(0)]
         public void ClassInit() {
@@ -5890,7 +5947,7 @@ class D(object):
             //Assert.AreEqual(entry.GetSignaturesByIndex("cls.x", text.IndexOf("print cls.g")).First().Parameters.Length, 1);
             //Assert.AreEqual(entry.GetSignaturesByIndex("cls.inst_method", text.IndexOf("print cls.g")).First().Parameters.Length, 1);
 
-            if (!(this is IronPythonAnalysisTest)) {
+            if (SupportsPython3) {
                 text = @"class C(type):
     def f(self):
         print('C.f')
@@ -6453,17 +6510,6 @@ x = A().wg");
 
         }
 
-        private static string[] GetMembers(object obj, bool showClr) {
-            var dir = showClr ? ClrModule.DirClr(obj) : ClrModule.Dir(obj);
-            int len = dir.__len__();
-            string[] result = new string[len];
-            for (int i = 0; i < len; i++) {
-                Assert.IsTrue(dir[i] is string);
-                result[i] = dir[i] as string;
-            }
-            return result;
-        }
-
 
 
         /// <summary>
@@ -6489,6 +6535,8 @@ x = A().wg");
             foreach (var p in Permutations(code.Length)) {
                 var result = new IPythonProjectEntry[code.Length];
                 using (var state = PythonAnalyzer.CreateSynchronously(InterpreterFactory, Interpreter)) {
+                    state.Limits = GetLimits();
+
                     for (int i = 0; i < code.Length; i++) {
                         result[p[i]] = state.AddModule(prefix + (p[i] + 1).ToString(), "fob", null);
                     }
@@ -6560,7 +6608,7 @@ x = A().wg");
         }
     }
 
-    static class ModuleAnalysisExtensions {
+    public static class ModuleAnalysisExtensions {
         public static IEnumerable<string> GetMemberNamesByIndex(this ModuleAnalysis analysis, string exprText, int index, GetMemberOptions options = GetMemberOptions.IntersectMultipleResults) {
             return analysis.GetMembersByIndex(exprText, index, options).Select(m => m.Name);
         }

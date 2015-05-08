@@ -19,6 +19,8 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.Remoting;
 using System.Threading;
+using AnalysisTests;
+using IronPython.Runtime;
 using Microsoft.IronPythonTools.Interpreter;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Analysis.Values;
@@ -28,7 +30,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.Python;
 
-namespace AnalysisTests {
+namespace IronPythonTests {
     /// <summary>
     /// Analysis tests run against the IronPython interpreter including tests specific to IronPython.
     /// </summary>
@@ -39,6 +41,22 @@ namespace AnalysisTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             PythonTestData.Deploy();
+        }
+
+        protected override bool SupportsPython3 {
+            get { return false; }
+        }
+
+        protected override string ListInitParameterName {
+            get { return "enumerable"; }
+        }
+
+        protected override IModuleContext DefaultContext {
+            get { return IronPythonModuleContext.DontShowClrInstance;}
+        }
+
+        protected override bool ShouldUseUnicodeLiterals(PythonLanguageVersion version) {
+            return true;
         }
 
         public IronPythonAnalysisTest()
@@ -483,5 +501,17 @@ from System.Windows.Media import Colors
                 pyEntry.Analyze(CancellationToken.None);
             }
         }
+
+        private static string[] GetMembers(object obj, bool showClr) {
+            var dir = showClr ? ClrModule.DirClr(obj) : ClrModule.Dir(obj);
+            int len = dir.__len__();
+            string[] result = new string[len];
+            for (int i = 0; i < len; i++) {
+                Assert.IsTrue(dir[i] is string);
+                result[i] = dir[i] as string;
+            }
+            return result;
+        }
+
     }
 }
