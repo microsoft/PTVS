@@ -604,11 +604,14 @@ namespace Microsoft.PythonTools.Language {
             } else if (pguidCmdGroup == CommonConstants.Std2KCmdGroupGuid) {
                 OutliningTaggerProvider.OutliningTagger tagger;
                 switch ((VSConstants.VSStd2KCmdID)nCmdID) {
-                    case (VSConstants.VSStd2KCmdID)147: // ECMD_SMARTTASKS  defined in stdidcmd.h, but not in MPF
+#if !DEV14_OR_LATER
+                    case (VSConstants.VSStd2KCmdID)147:
+                        // ECMD_SMARTTASKS  defined in stdidcmd.h, but not in MPF
                         // if the user is typing to fast for us to update the smart tags on the idle event
                         // then we want to update them before VS pops them up.
                         UpdateSmartTags();
                         break;
+#endif
                     case VSConstants.VSStd2KCmdID.FORMATDOCUMENT:
                         FormatCode(new SnapshotSpan(_textView.TextBuffer.CurrentSnapshot, 0, _textView.TextBuffer.CurrentSnapshot.Length), false);
                         return VSConstants.S_OK;
@@ -970,7 +973,7 @@ namespace Microsoft.PythonTools.Language {
             }
         }
 
-        #endregion
+#endregion
 
         internal static string RemoveReplPrompts(PythonToolsService pyService, string newline) {
             if (pyService.AdvancedOptions.PasteRemovesReplPrompts) {
@@ -1003,14 +1006,18 @@ namespace Microsoft.PythonTools.Language {
         }
 
         internal void DoIdle(IOleComponentManager compMgr) {
+#if !DEV14_OR_LATER
             UpdateSmartTags();
+#endif
         }
 
+#if !DEV14_OR_LATER
         private void UpdateSmartTags() {
             SmartTagController controller;
             if (_textView.Properties.TryGetProperty<SmartTagController>(typeof(SmartTagController), out controller)) {
                 controller.ShowSmartTag();
             }
         }
+#endif
     }
 }

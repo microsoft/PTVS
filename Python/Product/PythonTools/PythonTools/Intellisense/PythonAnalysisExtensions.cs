@@ -14,6 +14,7 @@
 
 using System;
 using Microsoft.VisualStudio.Text;
+using System.Threading.Tasks;
 
 namespace Microsoft.PythonTools.Intellisense {
     public static class PythonAnalysisExtensions {

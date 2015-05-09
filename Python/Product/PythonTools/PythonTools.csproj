@@ -271,6 +271,9 @@
     <Compile Include="IPythonToolsToolWindowService.cs" />
     <Compile Include="MissingInterpreterException.cs" />
     <Compile Include="PythonTools\Debugger\ProximityExpressionWalker.cs" />
+    <Compile Include="PythonTools\Intellisense\PythonSuggestedActionsSource.cs" />
+    <Compile Include="PythonTools\Intellisense\PythonSuggestedActionsSourceProvider.cs" />
+    <Compile Include="PythonTools\Intellisense\PythonSuggestedImportAction.cs" />
     <Compile Include="PythonTools\Project\IPythonProjectLaunchProperties.cs" />
     <Compile Include="PythonTools\Project\PythonProjectLaunchProperties.cs" />
     <Compile Include="PythonTools\SurveyNewsService.cs" />
