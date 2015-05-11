@@ -1,0 +1,45 @@
+<PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
+  <Metadata>
+    <Identity Id="96492FC7-7BC6-46F7-8559-66BB4E09FD1E" Version="2.2" Language="en-US" Publisher="Microsoft" />
+    <DisplayName>Python Tools for Visual Studio</DisplayName>
+    <Description xml:space="preserve">Provides support for editing and debugging Python programs.</Description>
+    <MoreInfo>http://pytools.codeplex.com</MoreInfo>
+    <GettingStartedGuide>http://pytools.codeplex.com</GettingStartedGuide>
+    <Icon>PythonProject.ico</Icon>
+    <PreviewImage>PythonProjectBig.ico</PreviewImage>
+  </Metadata>
+  <!-- Version="11.0" specifies the minimum (not the maximum) version, and the
+       Id specifications are minimums; any SKU equal or 'higher' will accept
+       them. -->
+  <Installation InstalledByMsi="true">
+    <InstallationTarget Id="Microsoft.VisualStudio.Pro" Version="11.0" />
+    <InstallationTarget Id="Microsoft.VisualStudio.IntegratedShell" Version="12.0" />
+    <InstallationTarget Id="Microsoft.VisualStudio.WDExpress" Version="12.0" />
+    <InstallationTarget Id="Microsoft.VisualStudio.VWDExpress" Version="12.0" />
+  </Installation>
+  <Dependencies>
+    <Dependency Id="Microsoft.Framework.NDP" DisplayName="Microsoft .NET Framework" Version="4.5" />
+    <Dependency Id="TestWindow.Microsoft.0771d463-d74d-4e95-aac2-39d3c7ec1f97" IsRequired="false" DisplayName="Test Explorer" Version="11.0" />
+    <Dependency Id="1F42C6D0-F876-4AF0-8185-1BEB0A325BB2" IsRequired="true" DisplayName="VisualStudio Interactive Components" Version="42.42.42.42" />
+  </Dependencies>
+  <Assets>
+    <Asset Type="Microsoft.VisualStudio.Package" Path="|%CurrentProject%;PkgdefProjectOutputGroup|" />
+    <Asset Type="Microsoft.VisualStudio.Assembly" Path="|%CurrentProject%;_GetTargetPath|" AssemblyName="|%CurrentProject%;_GetAssemblyName|" />
+    <Asset Type="Microsoft.VisualStudio.Assembly" Path="|Microsoft.PythonTools.Analysis;_GetTargetPath|" AssemblyName="|Microsoft.PythonTools.Analysis;_GetAssemblyName|" />
+    <Asset Type="Microsoft.VisualStudio.Assembly" Path="|Microsoft.PythonTools.BuildTasks;_GetTargetPath|" AssemblyName="|Microsoft.PythonTools.BuildTasks;_GetAssemblyName|" />
+    <Asset Type="Microsoft.VisualStudio.Assembly" Path="|Microsoft.PythonTools.Debugger;_GetTargetPath|" AssemblyName="|Microsoft.PythonTools.Debugger;_GetAssemblyName|" />
+    <Asset Type="Microsoft.VisualStudio.Assembly" Path="|ImportWizard;_GetTargetPath|" AssemblyName="|ImportWizard;AssemblyName|" />
+    <Asset Type="Microsoft.VisualStudio.Assembly" Path="|ProjectWizards;_GetTargetPath|" AssemblyName="|ProjectWizards;AssemblyName|" />
+    <Asset Type="Microsoft.VisualStudio.Assembly" Path="|Microsoft.PythonTools.VSInterpreters;_GetTargetPath|" AssemblyName="|Microsoft.PythonTools.VSInterpreters;_GetAssemblyName|" />
+    <Asset Type="Microsoft.VisualStudio.MefComponent" Path="|%CurrentProject%;_GetTargetPath|" />
+    <Asset Type="Microsoft.VisualStudio.MefComponent" Path="|Microsoft.PythonTools.Analysis;_GetTargetPath|" />
+    <Asset Type="Microsoft.VisualStudio.MefComponent" Path="|Microsoft.PythonTools.Debugger;_GetTargetPath|" />
+    <Asset Type="Microsoft.VisualStudio.MefComponent" Path="|Microsoft.PythonTools.VSInterpreters;_GetTargetPath|" />
+    <Asset Type="Microsoft.VisualStudio.MefComponent" Path="|TestAdapter;_GetTargetPath|" />
+    <Asset Type="UnitTestExtension" Path="|TestAdapter;_GetTargetPath|" />
+    <Asset Type="DebuggerEngineExtension" Path="DkmDebugger.vsdconfig" />
+    <Asset Type="NativeVisualizer" Path="PythonDkm.natvis" />
+    <Asset Type="Microsoft.VisualStudio.ProjectTemplate" Path="ProjectTemplates" />
+    <Asset Type="Microsoft.VisualStudio.ItemTemplate" Path="ItemTemplates" />
+  </Assets>
+</PackageManifest>

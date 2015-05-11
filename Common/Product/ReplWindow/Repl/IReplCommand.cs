@@ -20,20 +20,12 @@ namespace Microsoft.NodejsTools.Repl {
 #else
 namespace Microsoft.VisualStudio.Repl {
 #endif
-#if INTERACTIVE_WINDOW
-    using IReplWindow = IInteractiveWindow;
-#endif
-
     /// <summary>
     /// Represents a command which can be run from a REPL window.
     /// 
     /// This interface is a MEF contract and can be implemented and exported to add commands to the REPL window.
     /// </summary>
-#if INTERACTIVE_WINDOW
-    public interface IInteractiveWindowCommand {
-#else
     public interface IReplCommand {
-#endif
         /// <summary>
         /// Asynchronously executes the command with specified arguments and calls back the given completion when finished.
         /// </summary>

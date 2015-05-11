@@ -21,10 +21,6 @@ using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Repl;
 
 namespace Microsoft.PythonTools.Options {
-#if INTERACTIVE_WINDOW
-    using IReplWindowProvider = IInteractiveWindowProvider;
-#endif
-
     class PythonInteractiveOptionsPage : PythonDialogPage {
         internal PythonInteractiveOptionsControl _window;
 

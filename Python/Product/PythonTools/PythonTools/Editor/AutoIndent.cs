@@ -23,10 +23,6 @@ using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
 
 namespace Microsoft.PythonTools.Editor {
-#if INTERACTIVE_WINDOW
-    using IReplWindow = IInteractiveWindow;
-#endif
-
     internal static class AutoIndent {
         internal static int GetIndentation(string line, int tabSize) {
             int res = 0;

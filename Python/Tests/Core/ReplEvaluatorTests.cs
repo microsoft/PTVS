@@ -29,12 +29,6 @@ using TestUtilities.Mocks;
 using TestUtilities.Python;
 
 namespace PythonToolsTests {
-#if INTERACTIVE_WINDOW
-    using IReplEvaluator = IInteractiveEngine;
-    using IReplWindow = IInteractiveWindow;
-    using IReplWindowProvider = IInteractiveWindowProvider;
-#endif
-
     [TestClass]
     public class ReplEvaluatorTests {
         [ClassInitialize]
