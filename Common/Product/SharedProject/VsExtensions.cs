@@ -17,14 +17,12 @@ using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudioTools.Project;
 using Microsoft.VisualStudioTools.Project.Automation;
 using VsShellUtil = Microsoft.VisualStudio.Shell.VsShellUtilities;
-using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.VisualStudioTools {
     static class VsExtensions {
