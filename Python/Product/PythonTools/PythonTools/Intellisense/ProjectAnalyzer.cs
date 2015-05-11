@@ -38,6 +38,7 @@ using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudioTools;
+using System.Threading.Tasks;
 
 namespace Microsoft.PythonTools.Intellisense {
     using Microsoft.PythonTools.Repl;
@@ -630,44 +631,26 @@ namespace Microsoft.PythonTools.Intellisense {
             var analyzer = analysis.ProjectState;
             var index = span.GetStartPoint(snapshot).Position;
 
-            var expr = Statement.GetExpression(
-                analysis.GetAstFromText(
-                    text,
-                    TranslateIndex(
-                        index,
-                        snapshot,
-                        analysis
-                    )
-                ).Body
+            var location = TranslateIndex(
+                index,
+                snapshot,
+                analysis
             );
+            var nameExpr = Statement.GetExpression(analysis.GetAstFromText(text, location).Body) as NameExpression;
 
-            if (expr != null && expr is NameExpression) {
-                var nameExpr = (NameExpression)expr;
+            if (nameExpr != null && !IsImplicitlyDefinedName(nameExpr)) {
+                lock (snapshot.TextBuffer.GetAnalyzer(serviceProvider)) {
+                    var hasVariables = analysis.GetVariables(text, location).Any(IsDefinition);
+                    var hasValues = analysis.GetValues(text, location).Any();
 
-                if (!IsImplicitlyDefinedName(nameExpr)) {
-                    var applicableSpan = parser.Snapshot.CreateTrackingSpan(
-                        exprRange.Value.Span,
-                        SpanTrackingMode.EdgeExclusive
-                    );
-
-                    lock (snapshot.TextBuffer.GetAnalyzer(serviceProvider)) {
-                        var location = TranslateIndex(
-                            index,
-                            snapshot,
-                            analysis
+                    // if we have type information or an assignment to the variable we won't offer 
+                    // an import smart tag.
+                    if (!hasValues && !hasVariables) {
+                        var applicableSpan = parser.Snapshot.CreateTrackingSpan(
+                            exprRange.Value.Span,
+                            SpanTrackingMode.EdgeExclusive
                         );
-                        var variables = analysis.GetVariables(text, location).Where(IsDefinition).Count();
-
-                        var values = analysis.GetValues(text, location).ToArray();
-
-                        // if we have type information or an assignment to the variable we won't offer 
-                        // an import smart tag.
-                        if (values.Length == 0 && variables == 0) {
-                            string name = nameExpr.Name;
-                            var imports = analysis.ProjectState.FindNameInAllModules(name);
-
-                            return new MissingImportAnalysis(imports, applicableSpan);
-                        }
+                        return new MissingImportAnalysis(nameExpr.Name, analysis.ProjectState, applicableSpan);
                     }
                 }
             }

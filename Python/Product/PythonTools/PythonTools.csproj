@@ -285,6 +285,9 @@
     <Compile Include="PythonTools\Repl\ReplOutputClassificationFormatDefinitions.cs" />
     <Compile Include="PythonTools\Repl\ReplOutputClassifier.cs" />
     <Compile Include="PythonTools\Repl\ReplOutputClassifierProvider.cs" />
+    <Compile Include="PythonTools\Intellisense\PythonSuggestedActionsSource.cs" />
+    <Compile Include="PythonTools\Intellisense\PythonSuggestedActionsSourceProvider.cs" />
+    <Compile Include="PythonTools\Intellisense\PythonSuggestedImportAction.cs" />
     <Compile Include="PythonTools\Project\IPythonProjectLaunchProperties.cs" />
     <Compile Include="PythonTools\Project\PythonProjectLaunchProperties.cs" />
     <Compile Include="PythonTools\SurveyNewsService.cs" />

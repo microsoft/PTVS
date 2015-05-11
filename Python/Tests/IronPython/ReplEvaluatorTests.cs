@@ -14,6 +14,7 @@
 
 using System.Diagnostics;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Microsoft.IronPythonTools.Interpreter;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
@@ -162,7 +163,10 @@ namespace ReplWindowUITests {
 
             execute = replEval.ExecuteText("sys.gettrace()");
             execute.Wait();
-            Assert.AreEqual(replWindow.Output, "");
+            AssertUtil.AreEqual(
+                new Regex(@"\<bound method Thread.trace_func of \<Thread.+\>\>"),
+                replWindow.Output
+            );
             replWindow.ClearScreen();
         }
 

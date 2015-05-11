@@ -21,11 +21,7 @@ using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Utilities;
 
 namespace Microsoft.PythonTools.Intellisense {
-#if DEV14_OR_LATER
-#pragma warning disable 0618
-#endif
-
-    // TODO: Switch from smart tags to Light Bulb: http://go.microsoft.com/fwlink/?LinkId=394601
+#if !DEV14_OR_LATER
     [Export(typeof(ISmartTagSourceProvider))]
     [Order(Before = Priority.Default)]
     [Name("Python Smart Tag Source Provider")]
@@ -42,4 +38,5 @@ namespace Microsoft.PythonTools.Intellisense {
             return new SmartTagSource(_serviceProvider, textBuffer);
         }
     }
+#endif
 }
