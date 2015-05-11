@@ -103,9 +103,12 @@ namespace Microsoft.PythonTools.TestAdapter {
         ) {
             var moduleName = CommonUtils.CreateFriendlyFilePath(_codeFileBasePath, codeFilePath);
             var fullyQualifiedName = MakeFullyQualifiedTestName(moduleName, className, methodName);
+            
+            // If this is a runTest test we should provide a useful display name
+            var displayName = methodName == "runTest" ? className : methodName;
 
             return new TestCase(fullyQualifiedName, _executorUri, _containerFilePath) {
-                DisplayName = methodName,
+                DisplayName = displayName,
                 LineNumber = sourceLocation != null ? sourceLocation.Line : 0,
                 CodeFilePath = GetCodeFilePath(_codeFileBasePath, sourceLocation)
             };

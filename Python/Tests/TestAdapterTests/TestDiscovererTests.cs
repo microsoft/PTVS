@@ -146,7 +146,7 @@ class TestBase(unittest.TestCase):
 ");
 
                 var test = analyzer.GetTestCases().ToList();
-                AssertUtil.ContainsExactly(test.Select(t => t.DisplayName), "runTest");
+                AssertUtil.ContainsExactly(test.Select(t => t.DisplayName), "TestBase");
             }
         }
 
