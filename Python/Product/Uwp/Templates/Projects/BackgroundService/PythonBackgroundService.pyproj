@@ -44,8 +44,8 @@
     <None Include="$projectname$_TemporaryKey.pfx" />
   </ItemGroup>
   <PropertyGroup>
-    <CPythonTargetsFile>$(LocalAppData)\Microsoft\VisualStudio\$(VisualStudioVersion)Exp\Extensions\Microsoft\Python UWP\3.5\DesignTime\CommonConfiguration\Neutral\CPython.targets</CPythonTargetsFile>
-    <CPythonTargetsFile Condition="'$(CPythonTargetsFile)' == '' or !Exists('$(CPythonTargetsFile)')">$(MSBuildProgramFiles32)\Microsoft SDKs\Windows\v10.0\ExtensionSDKs\PyUWP\3.5\DesignTime\CommonConfiguration\Neutral\CPython.targets</CPythonTargetsFile>
+    <CPythonTargetsFile>$(LocalAppData)\Microsoft\VisualStudio\$(VisualStudioVersion)Exp\Extensions\Microsoft\Python UWP\$(InterpreterVersion)\DesignTime\CommonConfiguration\Neutral\CPython.targets</CPythonTargetsFile>
+    <CPythonTargetsFile Condition="'$(CPythonTargetsFile)' == '' or !Exists('$(CPythonTargetsFile)')">$(MSBuildProgramFiles32)\Microsoft SDKs\Windows\v10.0\ExtensionSDKs\PyUWP\$(InterpreterVersion)\DesignTime\CommonConfiguration\Neutral\CPython.targets</CPythonTargetsFile>
   </PropertyGroup>
   
   <PropertyGroup>

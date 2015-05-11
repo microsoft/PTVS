@@ -37,10 +37,16 @@ def debug_remote(
     BREAK_ON_SYSTEMEXIT_ZERO = break_on_systemexit_zero
     DEBUG_STDLIB = debug_stdlib
 
-    print('Remote launcher starting ptvsd attach wait with File: %s, Port: %d, Id: %s\n' % (file, port_num, debug_id))
+    import datetime
+    print('%s: Remote launcher starting ptvsd attach wait with File: %s, Port: %d, Id: %s\n' % (datetime.datetime.now(), file, port_num, debug_id))
 
     ptvsd.enable_attach(debug_id, address = ('0.0.0.0', port_num), redirect_output = redirect_output)
-    ptvsd.wait_for_attach()
+    try:
+        import _ptvsdhelper
+        if _ptvsdhelper.ping_debugger_for_attach():
+            ptvsd.wait_for_attach()
+    except ImportError:
+        _ptvsdhelper = None
 
     # now execute main file
     globals_obj = {'__name__': '__main__'}

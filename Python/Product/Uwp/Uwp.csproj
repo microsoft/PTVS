@@ -244,6 +244,10 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <SubType>Designer</SubType>
     </Content>
+    <Content Include="visualstudio_py_remote_launcher.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
     <ZipProject Include="Templates\Projects\BackgroundService\PythonBackgroundService.vstemplate">
       <SubType>Designer</SubType>
     </ZipProject>

@@ -29,6 +29,7 @@ namespace Microsoft.PythonTools.Uwp.Debugger {
         // i.e. whatever remote process is launching the debug server, should throw and catch this exception code before starting
         // remote Python debug server to have automatic attach work
         internal const uint RemoteDebugStartExceptionCode = 0xEDCBA987;
+        internal const uint RemoteDebugAttachExceptionCode = 0xEDCBA988;
 
         public const string RemoteDebugExceptionId = "E7DD0845-FB1A-4A45-8192-44953C0ACC51";
         public static readonly Guid RemoteDebugExceptionGuid = new Guid(RemoteDebugExceptionId);
@@ -52,9 +53,11 @@ namespace Microsoft.PythonTools.Uwp.Debugger {
 
                         if (dkmProcess != null) {
                             var debugTrigger = DkmExceptionCodeTrigger.Create(DkmExceptionProcessingStage.Thrown, null, DkmExceptionCategory.Win32, RemoteDebugStartExceptionCode);
+                            var attachTrigger = DkmExceptionCodeTrigger.Create(DkmExceptionProcessingStage.Thrown, null, DkmExceptionCategory.Win32, RemoteDebugAttachExceptionCode);
 
                             // Try to add exception trigger for when a remote debugger server is started for Python
                             dkmProcess.AddExceptionTrigger(RemoteDebugExceptionGuid, debugTrigger);
+                            dkmProcess.AddExceptionTrigger(RemoteDebugExceptionGuid, attachTrigger);
                         }
                     }
                 }
@@ -67,19 +70,33 @@ namespace Microsoft.PythonTools.Uwp.Debugger {
             ThreadHelper.Generic.Invoke(() => {
                 var exceptionInfo = hit.Exception as VisualStudio.Debugger.Native.DkmWin32ExceptionInformation;
 
-                // Parameters expected are the flag to indicate the debugger is present and XML to write to the target for configuration
-                // of the debugger
-                const int exceptionParameterCount = 3;
+                if (exceptionInfo.Code == RemoteDebugStartExceptionCode) {
+                    // Parameters expected are the flag to indicate the debugger is present and JSON to write to the target for configuration
+                    // of the debugger
+                    const int exceptionParameterCount = 3;
 
-                if (exceptionInfo.ExceptionParameters.Count == exceptionParameterCount) {
-                    // If we have a port and debug id, we'll go ahead and tell the client we are present
-                    if (Instance.AttachRemoteProcessFunction != null && Instance.RemoteDebugCommandInfo != null) {
-                        if (Instance.RemoteDebugCommandInfo.Length <= (int)exceptionInfo.ExceptionParameters[2]) {
+                    if (exceptionInfo.ExceptionParameters.Count == exceptionParameterCount) {
+                        // If we have a port and debug id, we'll go ahead and tell the client we are present
+                        if (Instance.AttachRemoteProcessFunction != null && Instance.RemoteDebugCommandInfo != null) {
+                            if (Instance.RemoteDebugCommandInfo.Length <= (int)exceptionInfo.ExceptionParameters[2]) {
+                                // Write back that debugger is present
+                                hit.Process.WriteMemory(exceptionInfo.ExceptionParameters[0], BitConverter.GetBytes(true));
+
+                                // Write back the details of the debugger arguments
+                                hit.Process.WriteMemory(exceptionInfo.ExceptionParameters[1], Instance.RemoteDebugCommandInfo);
+                            }
+                        }
+                    }
+                } else if (exceptionInfo.Code == RemoteDebugAttachExceptionCode) {
+                    // Parameters expected are the flag to indicate the debugger is present and XML to write to the target for configuration
+                    // of the debugger
+                    const int exceptionAttachParameterCount = 1;
+
+                    if (exceptionInfo.ExceptionParameters.Count == exceptionAttachParameterCount) {
+                        // If we have a port and debug id, we'll go ahead and tell the client we are present
+                        if (Instance.AttachRemoteProcessFunction != null) {
                             // Write back that debugger is present
                             hit.Process.WriteMemory(exceptionInfo.ExceptionParameters[0], BitConverter.GetBytes(true));
-
-                            // Write back the details of the debugger arguments
-                            hit.Process.WriteMemory(exceptionInfo.ExceptionParameters[1], Instance.RemoteDebugCommandInfo);
 
                             // Start the task to attach to the remote Python debugger session
                             System.Threading.Tasks.Task.Factory.StartNew(Instance.AttachRemoteProcessFunction);

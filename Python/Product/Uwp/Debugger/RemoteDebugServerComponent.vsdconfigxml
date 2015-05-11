@@ -18,7 +18,7 @@
 
   <ManagedComponent
     ComponentId="guidPythonDebugServerExceptionId"
-    ComponentLevel="100001"
+    ComponentLevel="10000001"
     AssemblyName="Microsoft.PythonTools.Uwp">
     
     <Class Name="Microsoft.PythonTools.Uwp.Debugger.PythonRemoteDebugEvents">

@@ -114,7 +114,7 @@ namespace Microsoft.PythonTools.Uwp.Project {
                 HttpUtility.UrlEncode(AD7Engine.TargetUwp));
 
             var dte = (EnvDTE.DTE)Package.GetGlobalService(typeof(EnvDTE.DTE));
-            var debugger = (EnvDTE90.Debugger3)dte.Debugger;
+            var debugger = (EnvDTE100.Debugger5)dte.Debugger;
 
             var transport = default(EnvDTE80.Transport);
             var transports = debugger.Transports;
@@ -124,6 +124,7 @@ namespace Microsoft.PythonTools.Uwp.Project {
                 Guid tid;
                 if (Guid.TryParse(t.ID, out tid) && tid == PythonRemoteDebugPortSupplier.PortSupplierGuid) {
                     transport = t;
+                    break;
                 }
             }
 
@@ -148,10 +149,9 @@ namespace Microsoft.PythonTools.Uwp.Project {
                     var processes = debugger.GetProcesses(transport, qualifierString);
 
                     if (processes.Count > 0) {
-                        foreach (EnvDTE.Process process in processes) {
+                        foreach (EnvDTE90.Process3 process in processes) {
                             process.Attach();
                             attached = true;
-                            System.Diagnostics.Debug.WriteLine("Successfully attached to a python remote process");
                             break;
                         }
 
@@ -168,7 +168,7 @@ namespace Microsoft.PythonTools.Uwp.Project {
                 } catch (COMException comException) {
                     // In the case where the debug client does not setup the PTVSD server in time for the Attach to work, we will
                     // get this exception.  We retry a few times to ensure client has time to start the Python debug server
-                    System.Diagnostics.Debug.WriteLine("Failure during attach to remote Python process:\r\n{0}", comException);
+                    System.Diagnostics.Debug.WriteLine("Non-fatal failure during attach to remote Python process:\r\n{0}", comException);
                 }
 
                 await System.Threading.Tasks.Task.Delay(TimeSpan.FromMilliseconds(100));
