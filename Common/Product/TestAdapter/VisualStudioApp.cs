@@ -68,7 +68,11 @@ namespace Microsoft.VisualStudioTools {
         private static extern int CreateBindCtx(uint reserved, out IBindCtx ppbc);
 
         public DTE GetDTE() {
-            return GetDTE(_processId);
+            var dte = GetDTE(_processId);
+            if (dte == null) {
+                throw new InvalidOperationException("Could not find VS DTE object for process " + _processId);
+            }
+            return dte;
         }
 
         private static DTE GetDTE(int processId) {
