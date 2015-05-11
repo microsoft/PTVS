@@ -32,7 +32,7 @@ namespace Microsoft.PythonTools.TestAdapter {
         private readonly IInterpreterOptionsService _interpreterService;
 
         public TestDiscoverer() {
-            _app = VisualStudioApp.FromCommandLineArgs(Environment.GetCommandLineArgs());
+            _app = VisualStudioApp.FromEnvironmentVariable();
             _interpreterService = InterpreterOptionsServiceProvider.GetService(_app);
         }
 

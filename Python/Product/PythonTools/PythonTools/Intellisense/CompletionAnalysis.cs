@@ -20,13 +20,18 @@ using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Language.StandardClassification;
+#if DEV14_OR_LATER
+using Microsoft.VisualStudio.InteractiveWindow;
+#else
 using Microsoft.VisualStudio.Repl;
+#endif
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
+using Microsoft.PythonTools.Repl;
 
 namespace Microsoft.PythonTools.Intellisense {
-#if INTERACTIVE_WINDOW
-    using IReplEvaluator = IInteractiveEngine;
+#if DEV14_OR_LATER
+    using IReplEvaluator = IInteractiveEvaluator;
 #endif
 
     /// <summary>

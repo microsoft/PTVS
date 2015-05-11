@@ -15,15 +15,19 @@
 using System;
 using System.ComponentModel.Composition;
 using Microsoft.PythonTools.Interpreter;
+#if DEV14_OR_LATER
+using Microsoft.VisualStudio.InteractiveWindow;
+#else
 using Microsoft.VisualStudio.Repl;
+#endif
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text.Adornments;
+#if DEV14_OR_LATER
+using IReplEvaluator = Microsoft.VisualStudio.InteractiveWindow.IInteractiveEvaluator;
+using IReplEvaluatorProvider = Microsoft.PythonTools.Repl.IInteractiveEvaluatorProvider;
+#endif
 
 namespace Microsoft.PythonTools.Repl {
-#if INTERACTIVE_WINDOW
-    using IReplEvaluator = IInteractiveEngine;
-    using IReplEvaluatorProvider = IInteractiveEngineProvider;
-#endif
 
     [Export(typeof(IReplEvaluatorProvider))]
     class PythonDebugReplEvaluatorProvider : IReplEvaluatorProvider {

@@ -24,11 +24,6 @@ namespace Microsoft.NodejsTools.Repl {
 #else
 namespace Microsoft.VisualStudio.Repl {
 #endif
-#if INTERACTIVE_WINDOW
-    using IReplCommand = IInteractiveWindowCommand;
-    using IReplWindow = IInteractiveWindow;
-#endif
-
     [Export(typeof(IReplCommand))]
     class CancelExecutionCommand : IReplCommand {
         #region IReplCommand Members

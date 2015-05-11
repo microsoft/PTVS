@@ -51,7 +51,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private ICompletionSession _activeSession;
         private ISignatureHelpSession _sigHelpSession;
         private IQuickInfoSession _quickInfoSession;
-        private IOleCommandTarget _oldTarget;
+        internal IOleCommandTarget _oldTarget;
         private IEditorOperations _editOps;
         private static string[] _allStandardSnippetTypes = { ExpansionClient.Expansion, ExpansionClient.SurroundsWith };
         private static string[] _surroundsWithSnippetTypes = { ExpansionClient.SurroundsWith, ExpansionClient.SurroundsWithStatement };

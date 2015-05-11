@@ -26,32 +26,29 @@ namespace Microsoft.VisualStudioTools {
     class VisualStudioApp : IDisposable {
         private static readonly Dictionary<int, VisualStudioApp> _knownInstances = new Dictionary<int, VisualStudioApp>();
         private readonly int _processId;
-        private DTE _dte;
 
-        public DTE DTE {
-            get {
-                if (_dte == null) {
-                    _dte = GetDTE(_processId);
+        public static VisualStudioApp FromProcessId(int processId) {
+            VisualStudioApp inst;
+            lock (_knownInstances) {
+                if (!_knownInstances.TryGetValue(processId, out inst)) {
+                    _knownInstances[processId] = inst = new VisualStudioApp(processId);
                 }
-                return _dte;
             }
+            return inst;
         }
 
-        public static VisualStudioApp FromCommandLineArgs(string[] commandLineArgs) {
-            for (int i = 0; i < commandLineArgs.Length - 1; ++i) {
-                int processId;
-                if (commandLineArgs[i].Equals("/parentProcessId", StringComparison.InvariantCultureIgnoreCase) &&
-                    int.TryParse(commandLineArgs[i + 1], out processId)) {
-                    VisualStudioApp inst;
-                    lock (_knownInstances) {
-                        if (!_knownInstances.TryGetValue(processId, out inst)) {
-                            _knownInstances[processId] = inst = new VisualStudioApp(processId);
-                        }
-                    }
-                    return inst;
-                }
+        public static VisualStudioApp FromEnvironmentVariable() {
+            string ptvsPid = Environment.GetEnvironmentVariable("_PTVS_PID");
+            if (ptvsPid == null) {
+                return null;
             }
-            return null;
+
+            int processId;
+            if (!int.TryParse(ptvsPid, out processId)) {
+                return null;
+            }
+
+            return FromProcessId(processId);
         }
 
         public VisualStudioApp(int processId) {
@@ -62,11 +59,6 @@ namespace Microsoft.VisualStudioTools {
             lock (_knownInstances) {
                 _knownInstances.Remove(_processId);
             }
-            if (_dte != null) {
-                Marshal.ReleaseComObject(_dte);
-                _dte = null;
-                MessageFilter.Revoke();
-            }
         }
 
         // Source from
@@ -74,6 +66,14 @@ namespace Microsoft.VisualStudioTools {
         [SuppressMessage("Microsoft.Design", "CA1060:MovePInvokesToNativeMethodsClass")]
         [DllImport("ole32.dll")]
         private static extern int CreateBindCtx(uint reserved, out IBindCtx ppbc);
+
+        public DTE GetDTE() {
+            var dte = GetDTE(_processId);
+            if (dte == null) {
+                throw new InvalidOperationException("Could not find VS DTE object for process " + _processId);
+            }
+            return dte;
+        }
 
         private static DTE GetDTE(int processId) {
             MessageFilter.Register();
@@ -133,7 +133,7 @@ namespace Microsoft.VisualStudioTools {
         }
 
         public bool AttachToProcess(ProcessOutput processOutput, Guid portSupplier, string transportQualifierUri) {
-            var debugger3 = (EnvDTE90.Debugger3)DTE.Debugger;
+            var debugger3 = (EnvDTE90.Debugger3)GetDTE().Debugger;
             var transports = debugger3.Transports;
             EnvDTE80.Transport transport = null;
             for (int i = 1; i <= transports.Count; ++i) {
@@ -157,7 +157,7 @@ namespace Microsoft.VisualStudioTools {
         }
 
         public bool AttachToProcess(ProcessOutput processOutput, Guid[] engines) {
-            var debugger3 = (EnvDTE90.Debugger3)DTE.Debugger;
+            var debugger3 = (EnvDTE90.Debugger3)GetDTE().Debugger;
             var processes = debugger3.LocalProcesses;
             for (int i = 1; i < processes.Count; ++i) {
                 var process = processes.Item(i);
@@ -172,7 +172,8 @@ namespace Microsoft.VisualStudioTools {
         public bool AttachToProcess(ProcessOutput processOutput, EnvDTE.Process process, Guid[] engines = null) {
             // Retry the attach itself 3 times before displaying a Retry/Cancel
             // dialog to the user.
-            DTE.SuppressUI = true;
+            var dte = GetDTE();
+            dte.SuppressUI = true;
             try {
                 try {
                     if (engines == null) {
@@ -192,7 +193,7 @@ namespace Microsoft.VisualStudioTools {
                     }
                 }
             } finally {
-                DTE.SuppressUI = false;
+                dte.SuppressUI = false;
             }
 
             // Another attempt, but display UI.

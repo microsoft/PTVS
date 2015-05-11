@@ -17,7 +17,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.IronPythonTools.Interpreter;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
@@ -50,26 +49,6 @@ namespace AnalysisTests {
                 // String type should have been loaded from the default DB.
                 Assert.IsNotNull(analyzer.ClassInfos[BuiltinTypeId.Str]);
                 Assert.IsNotNull(analyzer.ClassInfos[BuiltinTypeId.Bytes]);
-            }
-        }
-
-        [TestMethod, Priority(0)]
-        public void InvalidIronPythonDatabase() {
-            using (var db = MockCompletionDB.Create(PythonLanguageVersion.V27,
-                // __bad_builtin__ is missing str
-                Tuple.Create("__bad_builtin__", "__builtin__")
-                )) {
-                var ptd = db.Database;
-
-                Assert.IsNotNull(ptd.GetModule("__builtin__"));
-
-                var factory = new IronPythonInterpreterFactory();
-                // Explicitly create an IronPythonInterpreter from factory that
-                // will use the database in db.Factory.
-                using (var analyzer = PythonAnalyzer.CreateSynchronously(factory, factory.MakeInterpreter(db.Factory))) {
-                    // String type should have been loaded anyway
-                    Assert.IsNotNull(analyzer.ClassInfos[BuiltinTypeId.Str]);
-                }
             }
         }
 

@@ -42,6 +42,10 @@ namespace Microsoft.PythonTools.Options {
                 _executionMode.Items.Add(mode.FriendlyName);
             }
 
+#if DEV14_OR_LATER
+            // This isn't supported in the Dev14 interactive window
+            _inlinePrompts.Visible = false;
+#endif
             UpdateInterpreters();
 
             AddToolTips();

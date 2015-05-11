@@ -45,7 +45,12 @@ using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Debugger;
 using Microsoft.VisualStudio.Debugger.Interop;
 using Microsoft.VisualStudio.Editor;
+#if DEV14_OR_LATER
+using Microsoft.VisualStudio.InteractiveWindow;
+using Microsoft.VisualStudio.InteractiveWindow.Shell;
+#else
 using Microsoft.VisualStudio.Repl;
+#endif
 using Microsoft.VisualStudio.Settings;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -58,6 +63,11 @@ using Microsoft.VisualStudioTools.Navigation;
 using Microsoft.VisualStudioTools.Project;
 using NativeMethods = Microsoft.VisualStudioTools.Project.NativeMethods;
 using SR = Microsoft.PythonTools.Project.SR;
+#if DEV14_OR_LATER
+using IReplWindow = Microsoft.VisualStudio.InteractiveWindow.IInteractiveWindow;
+using IReplWindowProvider = Microsoft.VisualStudio.InteractiveWindow.Shell.IVsInteractiveWindowFactory;
+using IReplEvaluatorProvider = Microsoft.PythonTools.Repl.IInteractiveEvaluatorProvider;
+#endif
 
 namespace Microsoft.PythonTools {
     /// <summary>
@@ -108,7 +118,7 @@ namespace Microsoft.PythonTools {
     [ProvidePythonExecutionMode(ExecutionMode.StandardModeId, "Standard", "Standard")]
     [ProvidePythonExecutionMode("{91BB0245-B2A9-47BF-8D76-DD428C6D8974}", "IPython", "visualstudio_ipython_repl.IPythonBackend", supportsMultipleScopes: false, supportsMultipleCompleteStatementInputs: true)]
     [ProvidePythonExecutionMode("{3E390328-A806-4250-ACAD-97B5B37076E2}", "IPython w/o PyLab", "visualstudio_ipython_repl.IPythonBackendWithoutPyLab", supportsMultipleScopes: false, supportsMultipleCompleteStatementInputs: true)]
-#region Exception List
+    #region Exception List
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions")]
 
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions", "ArithmeticError")]
@@ -177,7 +187,7 @@ namespace Microsoft.PythonTools {
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions", "Warning")]
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions", "WindowsError")]
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions", "ZeroDivisionError")]
-#endregion
+    #endregion
     [ProvideComponentPickerPropertyPage(typeof(PythonToolsPackage), typeof(WebPiComponentPickerControl), "WebPi", DefaultPageNameValue = "#4000")]
     [ProvideToolWindow(typeof(InterpreterListToolWindow), Style = VsDockStyle.Linked, Window = ToolWindowGuids80.SolutionExplorer)]
     [ProvidePythonInterpreterFactoryProvider(CPythonInterpreterFactoryConstants.Id32, typeof(CPythonInterpreterFactoryConstants))]
@@ -190,6 +200,9 @@ namespace Microsoft.PythonTools {
 #endif
     [ProvideCodeExpansions(GuidList.guidPythonLanguageService, false, 106, "Python", @"Snippets\%LCID%\SnippetsIndex.xml", @"Snippets\%LCID%\Python\")]
     [ProvideCodeExpansionPath("Python", "Test", @"Snippets\%LCID%\Test\")]
+#if DEV14_OR_LATER
+    [ProvideInteractiveWindow(GuidList.guidPythonInteractiveWindow, Style = VsDockStyle.Linked, Orientation = ToolWindowOrientation.none, Window = ToolWindowGuids80.Outputwindow)]
+#endif
     [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",
         Justification = "Object is owned by VS and cannot be disposed")]
     public sealed class PythonToolsPackage : CommonPackage, IVsComponentSelectorProvider, IPythonToolsToolWindowService {
@@ -336,6 +349,20 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             }
         }
 
+#if DEV14_OR_LATER
+        protected override int CreateToolWindow(ref Guid toolWindowType, int id) {
+            if (toolWindowType == GuidList.guidPythonInteractiveWindowGuid) {
+                var res = ComponentModel.GetService<InteractiveWindowProvider>().CreateFromRegistry(
+                    ComponentModel,
+                    id
+                );
+
+                return res ? VSConstants.S_OK : VSConstants.E_FAIL;
+        }
+
+            return base.CreateToolWindow(ref toolWindowType, id);
+        }
+#endif
         internal static void OpenNoInterpretersHelpPage(System.IServiceProvider serviceProvider, string page = null) {
             OpenVsWebBrowser(serviceProvider, page ?? PythonToolsInstallPath.GetFile("NoInterpreters.mht"));
         }
@@ -602,6 +629,10 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             if (loadedProjectProvider != null) {
                 loadedProjectProvider.SetSolution((IVsSolution)GetService(typeof(SVsSolution)));
             }
+
+            // The variable is inherited by child processes backing Test Explorer, and is used in PTVS
+            // test discoverer and test executor to connect back to VS.
+            Environment.SetEnvironmentVariable("_PTVS_PID", Process.GetCurrentProcess().Id.ToString());
         }
 
         private void RefreshReplCommands(object sender, EventArgs e) {
@@ -753,15 +784,22 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
 
             string replId = PythonReplEvaluatorProvider.GetConfigurableReplId(realId);
 
+#if DEV14_OR_LATER
+            var replProvider = ComponentModel.GetService<InteractiveWindowProvider>();
+            var vsWindow =
+#else
             var replProvider = ComponentModel.GetService<IReplWindowProvider>();
-
-            var window = replProvider.FindReplWindow(replId) ?? replProvider.CreateReplWindow(
+            var window = 
+#endif
+            replProvider.FindReplWindow(replId) ?? replProvider.CreateReplWindow(
                 this.GetPythonContentType(),
                 title,
                 typeof(PythonLanguageInfo).GUID,
                 replId
             );
-
+#if DEV14_OR_LATER
+            var window = vsWindow.InteractiveWindow;
+#endif
             var commandProvider = project as IPythonProject2;
             if (commandProvider != null) {
                 commandProvider.AddActionOnClose((object)window, BasePythonReplEvaluator.CloseReplWindow);
@@ -784,7 +822,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
         }
 
 
-#region IVsComponentSelectorProvider Members
+        #region IVsComponentSelectorProvider Members
 
         public int GetComponentSelectorPage(ref Guid rguidPage, VSPROPSHEETPAGE[] ppage) {
             if (rguidPage == typeof(WebPiComponentPickerControl).GUID) {
@@ -853,6 +891,6 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             }
         }
 
-#endregion
+        #endregion
     }
 }
