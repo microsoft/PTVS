@@ -19,10 +19,9 @@ using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Repl;
 
 namespace Microsoft.PythonTools.Options {
-#if INTERACTIVE_WINDOW
-    using IReplWindowProvider = IInteractiveWindowProvider;
+#if DEV14_OR_LATER
+    using IReplWindowProvider = InteractiveWindowProvider;
 #endif
-
     class PythonDebugInteractiveOptionsPage : PythonDialogPage {
         private PythonDebugInteractiveOptionsControl _window;
 
@@ -78,14 +77,14 @@ namespace Microsoft.PythonTools.Options {
                 PythonDebugReplEvaluator pyEval = replWindow.Evaluator as PythonDebugReplEvaluator;
                 if (pyEval != null){
                     if (Options.UseInterpreterPrompts) {
-                        replWindow.SetOptionValue(ReplOptions.PrimaryPrompt, pyEval.PrimaryPrompt);
-                        replWindow.SetOptionValue(ReplOptions.SecondaryPrompt, pyEval.SecondaryPrompt);
+                        replWindow.SetPrompts(pyEval.PrimaryPrompt, pyEval.SecondaryPrompt);
                     } else {
-                        replWindow.SetOptionValue(ReplOptions.PrimaryPrompt, Options.PrimaryPrompt);
-                        replWindow.SetOptionValue(ReplOptions.SecondaryPrompt, Options.SecondaryPrompt);
+                        replWindow.SetPrompts(Options.PrimaryPrompt, Options.SecondaryPrompt);
                     }
+#if !DEV14_OR_LATER
                     replWindow.SetOptionValue(ReplOptions.DisplayPromptInMargin, !Options.InlinePrompts);
-                    replWindow.SetOptionValue(ReplOptions.UseSmartUpDown, Options.ReplSmartHistory);
+#endif
+                    replWindow.SetSmartUpDown(Options.ReplSmartHistory);
                 }
             }
         }

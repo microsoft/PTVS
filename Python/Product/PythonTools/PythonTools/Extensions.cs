@@ -35,7 +35,11 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Language.StandardClassification;
+#if DEV14_OR_LATER
+using Microsoft.VisualStudio.InteractiveWindow;
+#else
 using Microsoft.VisualStudio.Repl;
+#endif
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
@@ -47,8 +51,8 @@ using Microsoft.VisualStudioTools;
 namespace Microsoft.PythonTools {
     using Microsoft.PythonTools.InterpreterList;
     using Task = System.Threading.Tasks.Task;
-#if INTERACTIVE_WINDOW
-    using IReplEvaluator = IInteractiveEngine;
+#if DEV14_OR_LATER
+    using IReplEvaluator = IInteractiveEvaluator;
 #endif
 
     public static class Extensions {

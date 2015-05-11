@@ -17,15 +17,24 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Navigation;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
+#if DEV14_OR_LATER
+using Microsoft.VisualStudio.InteractiveWindow;
+using Microsoft.VisualStudio.InteractiveWindow.Shell;
+#else
 using Microsoft.VisualStudio.Repl;
+#endif
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Commands {
-#if INTERACTIVE_WINDOW
+#if DEV14_OR_LATER
     using IReplWindow = IInteractiveWindow;
-    using IReplEvaluator = IInteractiveEngine;
+    using IVsReplWindow = IVsInteractiveWindow;
+    using IReplEvaluator = IInteractiveEvaluator;
+    using IReplWindowProvider = InteractiveWindowProvider;
+#else
+    using IVsReplWindow = IReplWindow;
 #endif
 
     /// <summary>
@@ -38,7 +47,7 @@ namespace Microsoft.PythonTools.Commands {
             _serviceProvider = serviceProvider;
         }
 
-        internal static IReplWindow/*!*/ EnsureReplWindow(IServiceProvider serviceProvider) {
+        internal static IVsReplWindow/*!*/ EnsureReplWindow(IServiceProvider serviceProvider) {
             var compModel = serviceProvider.GetComponentModel();
             var provider = compModel.GetService<IReplWindowProvider>();
 
@@ -48,16 +57,13 @@ namespace Microsoft.PythonTools.Commands {
                 window = provider.CreateReplWindow(serviceProvider.GetPythonContentType(), "Python Debug Interactive", typeof(PythonLanguageInfo).GUID, replId);
 
                 var pyService = serviceProvider.GetPythonToolsService();
-                window.SetOptionValue(
-                    ReplOptions.UseSmartUpDown,
-                    pyService.DebugInteractiveOptions.ReplSmartHistory
-                );
+                window.SetSmartUpDown(pyService.DebugInteractiveOptions.ReplSmartHistory);
             }
             return window;
         }
 
         public override void DoCommand(object sender, EventArgs args) {
-            var window = (IReplWindow)EnsureReplWindow(_serviceProvider);
+            var window = EnsureReplWindow(_serviceProvider);
             IVsWindowFrame windowFrame = (IVsWindowFrame)((ToolWindowPane)window).Frame;
 
             ErrorHandler.ThrowOnFailure(windowFrame.Show());

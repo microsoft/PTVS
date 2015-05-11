@@ -33,17 +33,8 @@ using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudioTools.VSTestHost;
 
 namespace TestUtilities.UI {
-#if INTERACTIVE_WINDOW
-    using IReplWindow = IInteractiveWindow;
-    using IReplWindowProvider = IInteractiveWindowProvider;
-#endif
-
     public class InteractiveWindow : EditorWindow {
-#if INTERACTIVE_WINDOW
-        const string CommandBase = "OtherContextMenus.InteractiveConsole.";
-#else
         const string CommandBase = "PythonInteractive.";
-#endif
 
 
         private sealed class ReplWindowInfo {
