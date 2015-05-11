@@ -171,12 +171,11 @@ namespace Microsoft.PythonTools {
                         headerIndex = startLineEnd;
                     }
 
-                    int testLen = headerIndex - start + 1;
                     if (start != -1 && end != -1) {
-                        int length = end - start - testLen;
+                        int length = end - headerIndex;
                         if (length > 0) {
                             var span = GetFinalSpan(snapshot,
-                                start + testLen,
+                                headerIndex,
                                 length
                             );
 
@@ -323,7 +322,7 @@ namespace Microsoft.PythonTools {
             }
 
             public override bool Walk(ClassDefinition node) {
-                AddTagIfNecessary(node, node.HeaderIndex, node.Decorators);
+                AddTagIfNecessary(node, node.HeaderIndex + 1, node.Decorators);
 
                 return base.Walk(node);
             }
