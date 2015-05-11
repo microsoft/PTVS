@@ -25,12 +25,7 @@ using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Intellisense {
-#if DEV14_OR_LATER
-#pragma warning disable 0618
-#endif
-
-    // TODO: Switch from smart tags to Light Bulb: http://go.microsoft.com/fwlink/?LinkId=394601
-
+#if !DEV14_OR_LATER
     sealed class SmartTagAugmentTask {
         private readonly Task<ReadOnlyCollection<ISmartTagAction>> _task;
         private readonly CancellationTokenSource _cancel;
@@ -67,22 +62,20 @@ namespace Microsoft.PythonTools.Intellisense {
                 foreach (var import in imports.AvailableImports) {
                     cancel.ThrowIfCancellationRequested();
 
-                    if (import.IsDefinedInModule) {
-                        int lastDot;
+                    int lastDot;
 
-                        if ((lastDot = import.Name.LastIndexOf('.')) == -1) {
-                            // simple import
-                            actions.Add(new ImportSmartTagAction(import.Name, textBuffer, textView, serviceProvider));
-                        } else {
-                            // importing a package or member of a module
-                            actions.Add(new ImportSmartTagAction(
-                                import.Name.Substring(0, lastDot),
-                                import.Name.Substring(lastDot + 1),
-                                textBuffer,
-                                textView,
-                                serviceProvider
-                            ));
-                        }
+                    if ((lastDot = import.Name.LastIndexOf('.')) == -1) {
+                        // simple import
+                        actions.Add(new ImportSmartTagAction(import.Name, textBuffer, textView, serviceProvider));
+                    } else {
+                        // importing a package or member of a module
+                        actions.Add(new ImportSmartTagAction(
+                            import.Name.Substring(0, lastDot),
+                            import.Name.Substring(lastDot + 1),
+                            textBuffer,
+                            textView,
+                            serviceProvider
+                        ));
                     }
                 }
 
@@ -218,4 +211,5 @@ namespace Microsoft.PythonTools.Intellisense {
         public void Dispose() {
         }
     }
+#endif
 }

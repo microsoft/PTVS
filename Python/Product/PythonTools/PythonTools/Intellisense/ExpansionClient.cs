@@ -244,7 +244,13 @@ namespace Microsoft.PythonTools.Intellisense {
 
                         foreach (var import in importList) {
                             if (!walker.Imports.Contains(import)) {
-                                new ImportSmartTagAction(import, _textView.TextBuffer, _textView, _serviceProvider).Invoke();
+                                MissingImportAnalysis.AddImport(
+                                    _serviceProvider,
+                                    _textView.TextBuffer,
+                                    _textView,
+                                    null,
+                                    import
+                                );
                             }
                         }
                     }

@@ -51,7 +51,7 @@ namespace Microsoft.PythonTools.TestAdapter {
         private readonly IInterpreterOptionsService _interpreterService;
 
         public TestExecutor() {
-            _app = VisualStudioApp.FromCommandLineArgs(Environment.GetCommandLineArgs());
+            _app = VisualStudioApp.FromEnvironmentVariable();
             _interpreterService = InterpreterOptionsServiceProvider.GetService(_app);
         }
 
@@ -145,8 +145,9 @@ namespace Microsoft.PythonTools.TestAdapter {
 
             var testCase = new PythonTestCase(settings, test, debugMode);
 
+            var dte = _app.GetDTE();
             if (debugMode != PythonDebugMode.None) {
-                _app.DTE.Debugger.DetachAll();
+                dte.Debugger.DetachAll();
             }
 
             if (!File.Exists(settings.Factory.Configuration.InterpreterPath)) {
@@ -159,7 +160,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             var pythonPath = testCase.SearchPaths;
             if (!string.IsNullOrWhiteSpace(pythonPathVar)) {
                 if (_app != null) {
-                    var settingsManager = SettingsManagerCreator.GetSettingsManager(_app.DTE);
+                    var settingsManager = SettingsManagerCreator.GetSettingsManager(dte);
                     if (settingsManager != null) {
                         var store = settingsManager.GetReadOnlySettingsStore(SettingsScope.UserSettings);
                         if (store != null && store.CollectionExists(@"PythonTools\Options\General")) {

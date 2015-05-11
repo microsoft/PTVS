@@ -602,6 +602,10 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             if (loadedProjectProvider != null) {
                 loadedProjectProvider.SetSolution((IVsSolution)GetService(typeof(SVsSolution)));
             }
+
+            // The variable is inherited by child processes backing Test Explorer, and is used in PTVS
+            // test discoverer and test executor to connect back to VS.
+            Environment.SetEnvironmentVariable("_PTVS_PID", Process.GetCurrentProcess().Id.ToString());
         }
 
         private void RefreshReplCommands(object sender, EventArgs e) {
