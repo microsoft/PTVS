@@ -44,7 +44,6 @@
                    !(bindpath.bin)\PyDebugAttachX86.dll;
                    visualstudio_py_repl.py;
                    visualstudio_ipython_repl.py;
-                   visualstudio_py_remote_launcher.py;
                    visualstudio_py_launcher.py;
                    visualstudio_py_debugger.py;
                    visualstudio_py_util.py" />
