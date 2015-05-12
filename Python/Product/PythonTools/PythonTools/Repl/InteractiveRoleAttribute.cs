@@ -34,7 +34,6 @@ namespace Microsoft.PythonTools.Repl {
         public string Name {
             get { return _name; }
         }
-
     }
 }
 #endif
