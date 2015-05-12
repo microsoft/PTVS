@@ -127,6 +127,7 @@
     <Compile Include="UI\SaveProjectDialog.cs" />
     <Compile Include="UI\SelectCodeTypeDialog.cs" />
     <Compile Include="UI\SelectFolderDialog.cs" />
+    <Compile Include="UI\SmartTagSessionWrapper.cs" />
     <Compile Include="UI\SolutionExplorerTree.cs" />
     <Compile Include="UI\Table.cs" />
     <Compile Include="UI\TestExtensions.cs" />

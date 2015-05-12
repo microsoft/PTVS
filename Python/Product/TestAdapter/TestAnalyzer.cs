@@ -39,6 +39,7 @@ namespace Microsoft.PythonTools.TestAdapter {
         ) {
             _analyzer = PythonAnalyzer.CreateAsync(factory).WaitAndUnwrapExceptions();
             _analyzer.Limits = AnalysisLimits.GetStandardLibraryLimits();
+            _analyzer.Limits.ProcessCustomDecorators = false;
 
             _containerFilePath = containerFilePath;
             _codeFileBasePath = codeFileBasePath;
