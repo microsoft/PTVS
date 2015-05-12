@@ -91,7 +91,7 @@
     <ProjectReference2 Include="..\AttacherX86\AttacherX86.csproj" />
     <ProjectReference2 Include="..\ImportWizard\ImportWizard.csproj" />
     <ProjectReference2 Include="..\ProjectWizards\ProjectWizards.csproj" />
-    <ProjectReference Include="..\ReplWindow\ReplWindow.csproj" Condition="!$(Dev14OrLater)">
+    <ProjectReference Include="..\ReplWindow\ReplWindow.csproj" Condition="'$(Dev14OrLater)' != 'True'">
       <Project>{20BB6FAC-44D2-4D76-ABFE-0C1E163A1A4F}</Project>
       <Private>false</Private>
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
