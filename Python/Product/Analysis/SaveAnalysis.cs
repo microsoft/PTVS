@@ -342,6 +342,9 @@ namespace Microsoft.PythonTools.Analysis {
         private object GetMemberValueInternal(AnalysisValue type, ModuleInfo declModule, bool isRef) {
             SpecializedNamespace specialCallable = type as SpecializedNamespace;
             if (specialCallable != null) {
+                if (specialCallable.Original == null) {
+                    return null;
+                }
                 return GetMemberValueInternal(specialCallable.Original, declModule, isRef);
             }
 
@@ -456,6 +459,9 @@ namespace Microsoft.PythonTools.Analysis {
         private static string GetMemberKind(AnalysisValue type, ModuleInfo declModule, bool isRef) {
             SpecializedNamespace specialCallable = type as SpecializedNamespace;
             if (specialCallable != null) {
+                if (specialCallable.Original == null) {
+                    return "data";
+                }
                 return GetMemberKind(specialCallable.Original, declModule, isRef);
             }
 
@@ -475,7 +481,8 @@ namespace Microsoft.PythonTools.Analysis {
                 case PythonMemberType.Module:
                     return "moduleref";
                 case PythonMemberType.Instance:
-                default: return "data";
+                default:
+                    return "data";
             }
         }
 
