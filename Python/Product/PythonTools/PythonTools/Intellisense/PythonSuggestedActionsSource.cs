@@ -47,7 +47,17 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public async Task<bool> HasSuggestedActionsAsync(ISuggestedActionCategorySet requestedActionCategories, SnapshotSpan range, CancellationToken cancellationToken) {
             var textBuffer = _textBuffer;
-            var span = range.Snapshot.CreateTrackingSpan(range, SpanTrackingMode.EdgeInclusive);
+            var pos = _view.Caret.Position.BufferPosition;
+            var lineStart = pos.GetContainingLine().Start;
+            if (pos.Position < pos.Snapshot.Length - 1) {
+                pos += 1;
+            }
+            var span = pos.Snapshot.CreateTrackingSpan(
+                lineStart.Position,
+                pos.Position - lineStart.Position,
+                SpanTrackingMode.EdgePositive,
+                TrackingFidelityMode.Forward
+            );
             var imports = textBuffer.CurrentSnapshot.GetMissingImports(_provider, span);
 
             if (imports == MissingImportAnalysis.Empty) {
@@ -62,6 +72,11 @@ namespace Microsoft.PythonTools.Intellisense {
             ));
 
             cancellationToken.ThrowIfCancellationRequested();
+
+            if (!suggestions.SelectMany(s => s.Actions).Any()) {
+                return false;
+            }
+
             lock (_currentLock) {
                 cancellationToken.ThrowIfCancellationRequested();
                 _current = suggestions;
