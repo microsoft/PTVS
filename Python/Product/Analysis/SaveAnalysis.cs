@@ -343,7 +343,7 @@ namespace Microsoft.PythonTools.Analysis {
             SpecializedNamespace specialCallable = type as SpecializedNamespace;
             if (specialCallable != null) {
                 if (specialCallable.Original == null) {
-                    return "function";
+                    return null;
                 }
                 return GetMemberValueInternal(specialCallable.Original, declModule, isRef);
             }
