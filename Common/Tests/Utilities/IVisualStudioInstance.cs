@@ -89,5 +89,6 @@ namespace TestUtilities {
         DTE Dte { get; }
 
         void OnDispose(Action action);
+        void PressAndRelease(Key key, params Key[] modifier);
     }
 }

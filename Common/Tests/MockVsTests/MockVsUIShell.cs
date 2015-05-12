@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -22,9 +23,7 @@ using TestUtilities;
 namespace Microsoft.VisualStudioTools.MockVsTests {
     class MockVsUIShell : IVsUIShell {
         private readonly MockVs _instance;
-        private string _title, _text;
-        private AutoResetEvent _dismiss = new AutoResetEvent(false);
-        private MessageBoxButton _buttonPressed;
+        internal List<MockDialog> Dialogs = new List<MockDialog>();
         private Dictionary<Guid, MockToolWindow> _toolWindows = new Dictionary<Guid, MockToolWindow>();
 
         public MockVsUIShell(MockVs instance) {
@@ -156,7 +155,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         public int RefreshPropertyBrowser(int dispid) {
-            throw new NotImplementedException();
+            return VSConstants.S_OK;
         }
 
         public int RemoveAdjacentBFNavigationItem(RemoveBFDirection rdDir) {
@@ -210,13 +209,15 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         public int ShowMessageBox(uint dwCompRole, ref Guid rclsidComp, string pszTitle, string pszText, string pszHelpFile, uint dwHelpContextID, OLEMSGBUTTON msgbtn, OLEMSGDEFBUTTON msgdefbtn, OLEMSGICON msgicon, int fSysAlert, out int pnResult) {
             pnResult = (int)_instance.Invoke(
                 () => {
-                    _title = pszTitle;
-                    _text = pszText;
-                    _dismiss.WaitOne();
-                    _title = null;
-                    _text = null;
-                    _dismiss = null;
-                    return _buttonPressed;
+                    MockDialog dialog = new MockMessageBox(_instance, pszTitle, pszText);
+                    lock (Dialogs) {
+                        Dialogs.Add(dialog);
+                    }
+                    dialog.Run();
+                    lock (Dialogs) {
+                        Dialogs.RemoveAt(Dialogs.Count - 1);
+                    }
+                    return dialog.DialogResult;
                 }
             );
             return VSConstants.S_OK;
@@ -235,17 +236,38 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         internal void CheckMessageBox(MessageBoxButton button, string[] text) {
-            string dlgText;
-            while ((dlgText = _text) == null) {
-                System.Threading.Thread.Sleep(10);
+            MockMessageBox msgBox;
+            while ((msgBox = LastDialog<MockMessageBox>()) == null) {
+                Thread.Sleep(10);
             }
-            _buttonPressed = button;
-            AssertUtil.Contains(dlgText, text);
-            _dismiss.Set();
+            AssertUtil.Contains(msgBox.Text, text);
+            msgBox.Close((int)button);
+        }
+
+        private T LastDialog<T>() where T : MockDialog {
+            lock (Dialogs) {
+                if (Dialogs.Count == 0) {
+                    return null;
+                }
+                return Dialogs.Last() as T;
+            }
         }
 
         public void AddToolWindow(Guid id, MockToolWindow toolWindow) {
             _toolWindows[id] = toolWindow;
+        }
+
+        internal void WaitForDialogDismissed() {
+            while (Dialogs.Count != 0) {
+                Thread.Sleep(10);
+            }
+        }
+
+        internal IntPtr WaitForDialog() {
+            while (Dialogs.Count == 0) {
+                Thread.Sleep(10);
+            }
+            return new IntPtr(IntPtr.Size * Dialogs.Count);
         }
     }
 }

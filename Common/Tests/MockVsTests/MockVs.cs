@@ -18,8 +18,11 @@ using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Hosting;
 using System.ComponentModel.Composition.Primitives;
 using System.ComponentModel.Design;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
+using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Input;
@@ -31,6 +34,7 @@ using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudio.Utilities;
@@ -38,9 +42,6 @@ using TestUtilities;
 using TestUtilities.Mocks;
 
 namespace Microsoft.VisualStudioTools.MockVsTests {
-    using System.Diagnostics;
-    using System.Runtime.ExceptionServices;
-    using Microsoft.VisualStudio.Text;
     using Thread = System.Threading.Thread;
 
     public sealed class MockVs : IComponentModel, IDisposable, IVisualStudioInstance {
@@ -71,6 +72,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         private readonly MockVsUIShellOpenDocument _shellOpenDoc = new MockVsUIShellOpenDocument();
         private readonly MockVsSolutionBuildManager _slnBuildMgr = new MockVsSolutionBuildManager();
         private readonly MockVsExtensibility _extensibility  = new MockVsExtensibility();
+        private readonly MockDTE _dte;
         internal IFocusable _focused;
         private bool _shutdown;
         private AutoResetEvent _uiEvent = new AutoResetEvent(false);
@@ -88,6 +90,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             _monSel = new MockVsMonitorSelection(this);
             _uiHierarchy = new MockVsUIHierarchyWindow();
             _rdt = new MockVsRunningDocumentTable(this);
+            _dte = new MockDTE(this);
             _serviceProvider.AddService(typeof(SVsTextManager), TextManager);
             _serviceProvider.AddService(typeof(SVsActivityLog), ActivityLog);
             _serviceProvider.AddService(typeof(SVsSettingsManager), SettingsManager);
@@ -111,6 +114,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             _serviceProvider.AddService(typeof(SVsUIShellOpenDocument), _shellOpenDoc);
             _serviceProvider.AddService(typeof(SVsSolutionBuildManager), _slnBuildMgr);
             _serviceProvider.AddService(typeof(EnvDTE.IVsExtensibility), _extensibility);
+            _serviceProvider.AddService(typeof(EnvDTE.DTE), _dte);
 
             UIShell.AddToolWindow(new Guid(ToolWindowGuids80.SolutionExplorer), new MockToolWindow(new MockVsUIHierarchyWindow()));
 
@@ -150,21 +154,10 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
                     packages.Add(package);
                     package.Initialize();
                 }
+
                 ((AutoResetEvent)evt).Set();
 
-                while (!_shutdown) {
-                    _uiEvent.WaitOne();
-                    Action[] events;
-                    do {
-                        lock (_uiEvents) {
-                            events = _uiEvents.ToArray();
-                            _uiEvents.Clear();
-                        }
-                        foreach (var action in events) {
-                            action();
-                        }
-                    } while (events.Length > 0);
-                }
+                RunMessageLoop();
 
                 foreach (var package in packages) {
                     package.Dispose();
@@ -172,6 +165,32 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             } catch (Exception ex) {
                 Trace.TraceError("Captured exception on mock UI thread: {0}", ex);
                 _edi = ExceptionDispatchInfo.Capture(ex);
+            }
+        }
+
+        internal void RunMessageLoop(AutoResetEvent dialogEvent = null) {
+            WaitHandle[] handles;
+            if (dialogEvent == null) {
+                handles = new[] { _uiEvent };
+            } else {
+                handles = new[] { _uiEvent, dialogEvent };
+            }
+            
+            while (!_shutdown) {
+                if (WaitHandle.WaitAny(handles) == 1) {
+                    // dialog is closing...
+                    break;
+                }
+                Action[] events;
+                do {
+                    lock (_uiEvents) {
+                        events = _uiEvents.ToArray();
+                        _uiEvents.Clear();
+                    }
+                    foreach (var action in events) {
+                        action();
+                    }
+                } while (events.Length > 0);
             }
         }
 
@@ -397,7 +416,15 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         #endregion
 
         public ITreeNode WaitForItemRemoved(params string[] path) {
-            throw new NotImplementedException();
+            ITreeNode item = null;
+            for (int i = 0; i < 400; i++) {
+                item = FindItem(path);
+                if (item == null) {
+                    break;
+                }
+                System.Threading.Thread.Sleep(25);
+            }
+            return item;
         }
 
         ITreeNode IVisualStudioInstance.WaitForItem(params string[] items) {
@@ -409,7 +436,11 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         public ITreeNode FindItem(params string[] items) {
-            throw new NotImplementedException();
+            var res = WaitForItem(items);
+            if (res.IsNull) {
+                return null;
+            }
+            return new MockTreeNode(this, res);
         }
 
         /// <summary>
@@ -511,7 +542,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         internal void SetFocus(IFocusable res) {
-            Invoke(() =>SetFocusWorker(res));
+            Invoke(() => SetFocusWorker(res));
         }
 
         private void SetFocusWorker(IFocusable res) {
@@ -565,6 +596,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
                     case Key.F2: cmdTarget.Rename(); break;
                     case Key.Enter: cmdTarget.Enter(); break;
                     case Key.Tab: cmdTarget.Tab(); break;
+                    case Key.Delete: cmdTarget.Delete(); break;
                     default:
                         throw new InvalidOperationException("Unmapped key " + key);
                 }
@@ -597,7 +629,16 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             Invoke(() => TypeWorker(p));
         }
 
+        public void PressAndRelease(Key key, params Key[] modifier) {
+            throw new NotImplementedException();
+        }
+
         private void TypeWorker(string p) {
+            if (UIShell.Dialogs.Count != 0) {
+                UIShell.Dialogs.Last().Type(p);
+                return;
+            }
+
             var cmdTarget = _focused as IOleCommandTarget;
             if (cmdTarget != null) {
                 cmdTarget.Type(p);
@@ -644,31 +685,47 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         public IntPtr WaitForDialog() {
-            throw new NotImplementedException();
+            return UIShell.WaitForDialog();
         }
 
         public void WaitForDialogDismissed() {
-            throw new NotImplementedException();
+            UIShell.WaitForDialogDismissed();
         }
 
         public void AssertFileExists(params string[] path) {
-            throw new NotImplementedException();
+            Assert.IsNotNull(FindItem(path));
+
+            var basePath = Path.Combine(new[] { SolutionDirectory }.Concat(path).ToArray());
+            Assert.IsTrue(File.Exists(basePath), "File doesn't exist: " + basePath);
         }
 
         public void AssertFileDoesntExist(params string[] path) {
-            throw new NotImplementedException();
+            Assert.IsNull(FindItem(path));
+
+            var basePath = Path.Combine(new[] { SolutionDirectory }.Concat(path).ToArray());
+            Assert.IsFalse(File.Exists(basePath), "File exists: " + basePath);
         }
 
         public void AssertFolderExists(params string[] path) {
-            throw new NotImplementedException();
+            Assert.IsNotNull(FindItem(path));
+
+            var basePath = Path.Combine(new[] { SolutionDirectory }.Concat(path).ToArray());
+            Assert.IsTrue(Directory.Exists(basePath), "Folder doesn't exist: " + basePath);
         }
 
         public void AssertFolderDoesntExist(params string[] path) {
-            throw new NotImplementedException();
+            Assert.IsNull(FindItem(path));
+
+            var basePath = Path.Combine(new[] { SolutionDirectory }.Concat(path).ToArray());
+            Assert.IsFalse(Directory.Exists(basePath), "Folder exists: " + basePath);
         }
 
         public void AssertFileExistsWithContent(string content, params string[] path) {
-            throw new NotImplementedException();
+            Assert.IsNotNull(FindItem(path));
+
+            var basePath = Path.Combine(new[] { SolutionDirectory }.Concat(path).ToArray());
+            Assert.IsTrue(File.Exists(basePath), "File doesn't exist: " + basePath);
+            Assert.AreEqual(File.ReadAllText(basePath), content);
         }
 
         public void CloseActiveWindow(vsSaveChanges save) {
@@ -705,7 +762,6 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             throw new NotImplementedException();
         }
 
-
         public IAddNewItem AddNewItem() {
             throw new NotImplementedException();
         }
@@ -720,7 +776,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
 
 
         public DTE Dte {
-            get { throw new NotImplementedException(); }
+            get { return _dte; }
         }
 
         public void OnDispose(Action action) {

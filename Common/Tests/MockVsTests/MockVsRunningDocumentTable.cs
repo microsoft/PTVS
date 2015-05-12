@@ -19,7 +19,11 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.VisualStudioTools.MockVsTests {
-    class MockVsRunningDocumentTable : IVsRunningDocumentTable {
+    class MockVsRunningDocumentTable : IVsRunningDocumentTable
+#if DEV12_OR_LATER
+        , IVsRunningDocumentTable4
+#endif
+        {
         private readonly MockVs _vs;
         private readonly Dictionary<uint, DocInfo> _table = new Dictionary<uint, DocInfo>();
         private readonly Dictionary<string, uint> _ids = new Dictionary<string, uint>(StringComparer.OrdinalIgnoreCase);
@@ -36,7 +40,8 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             public uint ItemId;
             public IntPtr DocData;
             public uint Cookie;
-            public int LockCount = 1;
+            public int ReadLockCount = 1;
+            public int EditLockCount = 0;
 
             public DocInfo(_VSRDTFLAGS _VSRDTFLAGS, string pszMkDocument, IVsHierarchy pHier, uint itemid, IntPtr punkDocData, uint p) {
                 Flags = _VSRDTFLAGS;
@@ -66,8 +71,11 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
                 ppunkDocData = docInfo.DocData;
                 pdwCookie = id;
                 docInfo.Flags = (_VSRDTFLAGS)dwRDTLockType;
-                if (lockType.HasFlag(_VSRDTFLAGS.RDT_ReadLock) || lockType.HasFlag(_VSRDTFLAGS.RDT_EditLock)) {
-                    docInfo.LockCount++;
+                if (lockType.HasFlag(_VSRDTFLAGS.RDT_ReadLock)) {
+                    docInfo.ReadLockCount++;
+                }
+                if (lockType.HasFlag(_VSRDTFLAGS.RDT_EditLock)) {
+                    docInfo.EditLockCount++;
                 }
                 return VSConstants.S_OK;
             }
@@ -79,17 +87,85 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         public int GetDocumentInfo(uint docCookie, out uint pgrfRDTFlags, out uint pdwReadLocks, out uint pdwEditLocks, out string pbstrMkDocument, out IVsHierarchy ppHier, out uint pitemid, out IntPtr ppunkDocData) {
-            throw new NotImplementedException();
+            DocInfo docInfo;
+            pgrfRDTFlags = 0;
+            pdwReadLocks = 0;
+            pdwEditLocks = 0;
+            pbstrMkDocument = null;
+            ppHier = null;
+            pitemid = 0;
+            ppunkDocData = IntPtr.Zero;
+            if (_table.TryGetValue(docCookie, out docInfo)) {
+                pgrfRDTFlags = (uint)docInfo.Flags;
+                pdwReadLocks = (uint)docInfo.ReadLockCount;
+                pdwEditLocks = (uint)docInfo.EditLockCount;
+                pbstrMkDocument = docInfo.Document;
+                ppHier = docInfo.Hierarchy;
+                pitemid = docInfo.ItemId;
+                ppunkDocData = docInfo.DocData;
+                if (ppunkDocData != IntPtr.Zero) {
+                    Marshal.AddRef(ppunkDocData);
+                }
+                return VSConstants.S_OK;
+            }
+            return VSConstants.E_FAIL;
         }
 
         public int GetRunningDocumentsEnum(out IEnumRunningDocuments ppenum) {
-            throw new NotImplementedException();
+            ppenum = new RunningDocumentsEnum(this);
+            return VSConstants.S_OK;
+        }
+
+        class RunningDocumentsEnum : IEnumRunningDocuments {
+            private readonly MockVsRunningDocumentTable _docTable;
+            private IEnumerator<DocInfo> _enum;
+
+            public RunningDocumentsEnum(MockVsRunningDocumentTable docTable) {
+                _docTable = docTable;
+                _enum = _docTable._table.Values.GetEnumerator();
+            }
+
+            public int Clone(out IEnumRunningDocuments ppenum) {
+                ppenum = new RunningDocumentsEnum(_docTable);
+                return VSConstants.S_OK;
+            }
+
+            public int Next(uint celt, uint[] rgelt, out uint pceltFetched) {
+                pceltFetched = 0;
+                for (int i = 0; i < celt; i++) {
+                    if (_enum.MoveNext()) {
+                        rgelt[i] = _enum.Current.Cookie;
+                        pceltFetched++;
+                    }
+                    if (i == celt - 1) {
+                        return VSConstants.S_OK;
+                    }
+                }
+                return VSConstants.S_FALSE;
+            }
+
+            public int Reset() {
+                _enum = _docTable._table.Values.GetEnumerator();
+                return VSConstants.S_OK;
+            }
+
+            public int Skip(uint celt) {
+                for (int i = 0; i < celt && _enum.MoveNext(); i++) {
+                }
+                return VSConstants.S_OK;
+            }
         }
 
         public int LockDocument(uint grfRDTLockType, uint dwCookie) {
             DocInfo docInfo;
             if (_table.TryGetValue(dwCookie, out docInfo)) {
-                docInfo.LockCount++;
+                var lockType = (_VSRDTFLAGS)grfRDTLockType;
+                if (lockType.HasFlag(_VSRDTFLAGS.RDT_ReadLock)) {
+                    docInfo.ReadLockCount++;
+                }
+                if (lockType.HasFlag(_VSRDTFLAGS.RDT_EditLock)) {
+                    docInfo.EditLockCount++;
+                }
                 return VSConstants.S_OK;
             }
             return VSConstants.E_FAIL;
@@ -163,8 +239,14 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         public int UnlockDocument(uint grfRDTLockType, uint dwCookie) {
             DocInfo docInfo;
             if (_table.TryGetValue(dwCookie, out docInfo)) {
-                docInfo.LockCount--;
-                if (docInfo.LockCount == 0) {
+                var lockType = (_VSRDTFLAGS)grfRDTLockType;
+                if (lockType.HasFlag(_VSRDTFLAGS.RDT_ReadLock)) {
+                    docInfo.ReadLockCount--;
+                }
+                if (lockType.HasFlag(_VSRDTFLAGS.RDT_EditLock)) {
+                    docInfo.EditLockCount--;
+                }
+                if (docInfo.ReadLockCount + docInfo.EditLockCount == 0) {
                     _ids.Remove(docInfo.Document);
                     _table.Remove(dwCookie);
                     ErrorHandler.ThrowOnFailure(((IVsPersistDocData)Marshal.GetObjectForIUnknown(docInfo.DocData)).Close());
@@ -178,5 +260,77 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         public int UnregisterDocumentLockHolder(uint dwLHCookie) {
             throw new NotImplementedException();
         }
+
+#if DEV12_OR_LATER
+        public uint GetRelatedSaveTreeItems(uint cookie, uint grfSave, uint celt, VSSAVETREEITEM[] rgSaveTreeItems) {
+            throw new NotImplementedException();
+        }
+
+        public void NotifyDocumentChangedEx(uint cookie, uint attributes) {
+            throw new NotImplementedException();
+        }
+
+        public bool IsDocumentDirty(uint cookie) {
+            throw new NotImplementedException();
+        }
+
+        public bool IsDocumentReadOnly(uint cookie) {
+            throw new NotImplementedException();
+        }
+
+        public void UpdateDirtyState(uint cookie) {
+            throw new NotImplementedException();
+        }
+
+        public void UpdateReadOnlyState(uint cookie) {
+            throw new NotImplementedException();
+        }
+
+        public bool IsMonikerValid(string moniker) {
+            return _ids.ContainsKey(moniker);
+        }
+
+        public bool IsCookieValid(uint cookie) {
+            return _table.ContainsKey(cookie);
+        }
+
+        public uint GetDocumentCookie(string moniker) {
+            return _ids[moniker];
+        }
+
+        public uint GetDocumentFlags(uint cookie) {
+            throw new NotImplementedException();
+        }
+
+        public uint GetDocumentReadLockCount(uint cookie) {
+            throw new NotImplementedException();
+        }
+
+        public uint GetDocumentEditLockCount(uint cookie) {
+            throw new NotImplementedException();
+        }
+
+        public string GetDocumentMoniker(uint cookie) {
+            return _table[cookie].Document;
+        }
+
+        public void GetDocumentHierarchyItem(uint cookie, out IVsHierarchy hierarchy, out uint itemID) {
+            DocInfo docInfo;
+            hierarchy = null;
+            itemID = (uint)VSConstants.VSITEMID.Nil;
+            if (_table.TryGetValue(cookie, out docInfo)) {
+                hierarchy = docInfo.Hierarchy;
+                itemID = docInfo.ItemId;
+            }
+        }
+
+        public dynamic GetDocumentData(uint cookie) {
+            throw new NotImplementedException();
+        }
+
+        public Guid GetDocumentProjectGuid(uint cookie) {
+            throw new NotImplementedException();
+        }
+#endif
     }
 }
