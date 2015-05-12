@@ -636,7 +636,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 snapshot,
                 analysis
             );
-            var nameExpr = Statement.GetExpression(analysis.GetAstFromText(text, location).Body) as NameExpression;
+            var nameExpr = GetFirstNameExpression(analysis.GetAstFromText(text, location).Body);
 
             if (nameExpr != null && !IsImplicitlyDefinedName(nameExpr)) {
                 lock (snapshot.TextBuffer.GetAnalyzer(serviceProvider)) {
@@ -657,6 +657,28 @@ namespace Microsoft.PythonTools.Intellisense {
 
             // if we have type information don't offer to add imports
             return MissingImportAnalysis.Empty;
+        }
+
+        private static NameExpression GetFirstNameExpression(Statement stmt) {
+            return GetFirstNameExpression(Statement.GetExpression(stmt));
+        }
+
+        private static NameExpression GetFirstNameExpression(Expression expr) {
+            NameExpression nameExpr;
+            CallExpression callExpr;
+            MemberExpression membExpr;
+
+            if ((nameExpr = expr as NameExpression) != null) {
+                return nameExpr;
+            }
+            if ((callExpr = expr as CallExpression) != null) {
+                return GetFirstNameExpression(callExpr.Target);
+            }
+            if ((membExpr = expr as MemberExpression) != null) {
+                return GetFirstNameExpression(membExpr.Target);
+            }
+
+            return null;
         }
 
         private static bool IsDefinition(IAnalysisVariable variable) {

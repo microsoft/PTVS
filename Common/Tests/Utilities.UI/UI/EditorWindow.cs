@@ -30,6 +30,7 @@ using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Tagging;
 using Microsoft.VisualStudioTools.VSTestHost;
+using Task = System.Threading.Tasks.Task;
 
 namespace TestUtilities.UI {
     public class EditorWindow : AutomationWrapper, IEditor {
@@ -168,39 +169,41 @@ namespace TestUtilities.UI {
             }
         }
 
-#if DEV14_OR_LATER
-#pragma warning disable 0618
-#endif
-
-        // TODO: Switch from smart tags to Light Bulb: http://go.microsoft.com/fwlink/?LinkId=394601
         public void StartSmartTagSessionNoSession() {
             ShowSmartTag();
-            System.Threading.Thread.Sleep(100);
-            Assert.IsTrue(!(IntellisenseSessionStack.TopSession is ISmartTagSession));
+            Thread.Sleep(100);
+            Assert.IsNotInstanceOfType(
+                IntellisenseSessionStack.TopSession,
+#if DEV14_OR_LATER
+                typeof(ILightBulbSession)
+#else
+                typeof(ISmartTagSession)
+#endif
+            );
         }
 
         private static void ShowSmartTag() {
-            ThreadPool.QueueUserWorkItem(ShowSmartTagWorker);
-        }
-
-        private static void ShowSmartTagWorker(object dummy) {
-            for (int i = 0; i < 40; i++) {
-                try {
-                    VSTestContext.DTE.ExecuteCommand("View.ShowSmartTag");
-                    break;
-                } catch {
-                    System.Threading.Thread.Sleep(250);
+            Task.Run(() => {
+                for (int i = 0; i < 40; i++) {
+                    try {
+                        VSTestContext.DTE.ExecuteCommand("View.ShowSmartTag");
+                        break;
+                    } catch {
+                        Thread.Sleep(250);
+                    }
                 }
-            }
+            }).Wait();
         }
 
-        public SessionHolder<ISmartTagSession> StartSmartTagSession() {
+        public SessionHolder<SmartTagSessionWrapper> StartSmartTagSession() {
             ShowSmartTag();
-            return WaitForSession<ISmartTagSession>();
-        }
 #if DEV14_OR_LATER
-#pragma warning restore 0618
+            var sh = WaitForSession<ILightBulbSession>();
+#else
+            var sh = WaitForSession<ISmartTagSession>();
 #endif
+            return sh == null ? null : new SessionHolder<SmartTagSessionWrapper>(new SmartTagSessionWrapper(sh), this);
+        }
 
         public SessionHolder<T> WaitForSession<T>() where T : IIntellisenseSession {
             return WaitForSession<T>(true);

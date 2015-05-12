@@ -279,29 +279,27 @@ sub_package";
         }
 
         private static void AddSmartTagTest(EditorWindow doc, int line, int column, string[] expectedActions, int invokeAction = -1, string expectedText = null) {
-                doc.Invoke(() => {
-                    var point = doc.TextView.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(line - 1).Start.Add(column - 1);
-                    doc.TextView.Caret.MoveTo(point);
-                });
+            doc.Invoke(() => {
+                var point = doc.TextView.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(line - 1).Start.Add(column - 1);
+                doc.TextView.Caret.MoveTo(point);
+            });
 
-                if (expectedActions.Length > 0) {
-                    using (var sh = doc.StartSmartTagSession()) {
-                        Assert.AreEqual(1, sh.Session.ActionSets.Count);
-                        var set = sh.Session.ActionSets.First();
+            if (expectedActions.Length > 0) {
+                using (var sh = doc.StartSmartTagSession()) {
+                    var actions = sh.Session.Actions.ToList();
+                    AssertUtil.AreEqual(
+                        actions.Select(a => a.DisplayText.Replace("__", "_")).ToArray(),
+                        expectedActions
+                    );
 
-                        Assert.AreEqual(set.Actions.Count, expectedActions.Length);
-                        for (int i = 0; i < set.Actions.Count; i++) {
-                            Assert.AreEqual(set.Actions[i].DisplayText, expectedActions[i].Replace("_", "__"));
-                        }
-
-                        if (invokeAction != -1) {
-                            doc.Invoke(() => set.Actions[invokeAction].Invoke());
-                            Assert.AreEqual(expectedText, doc.Text);
-                        }
+                    if (invokeAction != -1) {
+                        doc.Invoke(() => actions[invokeAction].Invoke());
+                        Assert.AreEqual(expectedText, doc.Text);
                     }
-                } else {
-                    doc.StartSmartTagSessionNoSession();
                 }
+            } else {
+                doc.StartSmartTagSessionNoSession();
+            }
         }
 
         private static void AddSmartTagTest(string filename, int line, int column, string[] expectedActions, int invokeAction = -1, string expectedText = null) {

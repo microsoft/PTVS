@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+#if !DEV14_OR_LATER
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -21,7 +22,6 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 
 namespace Microsoft.PythonTools.Intellisense {
-#if !DEV14_OR_LATER
     class SmartTagController : IIntellisenseController {
         private readonly ISmartTagBroker _broker;
         private readonly ITextView _textView;
@@ -153,5 +153,5 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
     }
-#endif
 }
+#endif
