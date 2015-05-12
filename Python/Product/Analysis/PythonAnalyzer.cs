@@ -576,11 +576,14 @@ namespace Microsoft.PythonTools.Analysis {
             foreach (var keyValue in Modules) {
                 var modName = keyValue.Key;
                 var moduleRef = keyValue.Value;
-
+            
                 if (moduleRef.IsValid) {
                     // include modules which can be imported
-                    if (modName == name || PackageNameMatches(name, modName)) {
+                    string pkgName;
+                    if (modName == name) {
                         yield return new ExportedMemberInfo(null, modName);
+                    } else if (GetPackageNameIfMatch(name, modName, out pkgName)) {
+                        yield return new ExportedMemberInfo(pkgName, name);
                     }
                 }
             }
@@ -596,11 +599,15 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        private static bool PackageNameMatches(string name, string modName) {
-            int lastDot;
-            return (lastDot = modName.LastIndexOf('.')) != -1 &&
-                modName.Length == lastDot + 1 + name.Length &&
-                String.Compare(modName, lastDot + 1, name, 0, name.Length) == 0;
+        private static bool GetPackageNameIfMatch(string name, string fullName, out string packageName) {
+            int lastDot = fullName.LastIndexOf('.');
+            if (lastDot < 0) {
+                packageName = null;
+                return false;
+            }
+
+            packageName = fullName.Remove(lastDot);
+            return String.Compare(fullName, lastDot + 1, name, 0, name.Length) == 0;
         }
 
         /// <summary>
