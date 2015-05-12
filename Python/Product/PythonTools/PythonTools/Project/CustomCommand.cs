@@ -31,7 +31,11 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Navigation;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
+#if DEV14_OR_LATER
+using Microsoft.VisualStudio.InteractiveWindow;
+#else
 using Microsoft.VisualStudio.Repl;
+#endif
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
@@ -39,6 +43,9 @@ using Microsoft.VisualStudioTools.Project;
 using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.Project {
+#if DEV14_OR_LATER
+    using IReplWindowProvider = InteractiveWindowProvider;
+#endif
     sealed class CustomCommand : IAsyncCommand, IDisposable {
         private readonly PythonProjectNode _project;
         private readonly string _target;
@@ -601,7 +608,11 @@ namespace Microsoft.PythonTools.Project {
             var replToolWindow = replWindow as ToolWindowPane;
             var replFrame = (replToolWindow != null) ? replToolWindow.Frame as IVsWindowFrame : null;
 
+#if DEV14_OR_LATER
+            var pyEvaluator = replWindow.InteractiveWindow.Evaluator as PythonReplEvaluator;
+#else
             var pyEvaluator = replWindow.Evaluator as PythonReplEvaluator;
+#endif
             var options = (pyEvaluator != null) ? pyEvaluator.CurrentOptions as ConfigurablePythonReplOptions : null;
             if (options == null) {
                 if (created && replFrame != null) {

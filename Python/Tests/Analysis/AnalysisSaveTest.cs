@@ -462,6 +462,21 @@ sys.modules['test.imported'] = test_import_2
             }
         }
 
+        [TestMethod, Priority(0)]
+        public void SpecializedCallableWithNoOriginal() {
+            string code = @"
+import unittest
+
+# skipIf is specialized and calling it returns a callable
+# with no original value to save.
+x = unittest.skipIf(False)
+";
+            using (var newPs = SaveLoad(PythonLanguageVersion.V27, new AnalysisModule("test", "test.py", code))) {
+                var entry = newPs.NewModule("test2", "import test; x = test.x");
+                AssertUtil.ContainsExactly(entry.Analysis.GetTypeIdsByIndex("x", 0));
+            }
+        }
+
         private SaveLoadResult SaveLoad(PythonLanguageVersion version, params AnalysisModule[] modules) {
             IPythonProjectEntry[] entries = new IPythonProjectEntry[modules.Length];
 

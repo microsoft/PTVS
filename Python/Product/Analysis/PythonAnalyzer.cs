@@ -580,7 +580,7 @@ namespace Microsoft.PythonTools.Analysis {
                 if (moduleRef.IsValid) {
                     // include modules which can be imported
                     if (modName == name || PackageNameMatches(name, modName)) {
-                        yield return new ExportedMemberInfo(modName, true);
+                        yield return new ExportedMemberInfo(null, modName);
                     }
                 }
             }
@@ -590,13 +590,8 @@ namespace Microsoft.PythonTools.Analysis {
                 var modName = keyValue.Key;
                 var moduleRef = keyValue.Value;
 
-                if (moduleRef.IsValid) {
-                    // then check for members within the module.
-                    if (moduleRef.ModuleContainsMember(_defaultContext, name)) {
-                        yield return new ExportedMemberInfo(modName + "." + name, true);
-                    } else {
-                        yield return new ExportedMemberInfo(modName + "." + name, false);
-                    }
+                if (moduleRef.IsValid && moduleRef.ModuleContainsMember(_defaultContext, name)) {
+                    yield return new ExportedMemberInfo(modName, name);
                 }
             }
         }

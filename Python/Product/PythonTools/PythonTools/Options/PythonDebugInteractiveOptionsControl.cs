@@ -25,6 +25,10 @@ namespace Microsoft.PythonTools.Options {
             InitializeComponent();
 
             AddToolTips();
+
+#if DEV14_OR_LATER
+            _inlinePrompts.Visible = false;
+#endif
         }
 
         internal void EnableUserDefinedPrompts(bool enable) {

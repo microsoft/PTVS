@@ -48,13 +48,6 @@ namespace Microsoft.NodejsTools.Repl {
 #else
 namespace Microsoft.VisualStudio.Repl {
 #endif
-#if INTERACTIVE_WINDOW
-    using IReplCommand = IInteractiveWindowCommand;
-    using IReplWindow = IInteractiveWindow;
-    using IReplEvaluator = IInteractiveEngine;
-    using IReplWindowCreationListener = IInteractiveWindowCreationListener;
-#endif
-
     /// <summary>
     /// Provides implementation of a Repl Window built on top of the VS editor using projection buffers.
     /// 

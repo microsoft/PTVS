@@ -25,15 +25,20 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Project;
+#if DEV14_OR_LATER
+using Microsoft.VisualStudio.InteractiveWindow;
+#else
 using Microsoft.VisualStudio.Repl;
+#endif
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 using SR = Microsoft.PythonTools.Project.SR;
 
 namespace Microsoft.PythonTools.Repl {
-#if INTERACTIVE_WINDOW
+#if DEV14_OR_LATER
     using IReplWindow = IInteractiveWindow;
-    using IReplEvaluator = IInteractiveEngine;
+    using IReplEvaluator = IInteractiveEvaluator;
+    using ReplRoleAttribute = InteractiveWindowRoleAttribute;
 #endif
 
     [ReplRole("Execution")]

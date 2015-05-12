@@ -14,10 +14,19 @@
 
 using System.ComponentModel.Composition;
 using System.Threading.Tasks;
+using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Classification;
+using System;
+using System.Collections.Generic;
+#if DEV14_OR_LATER
+using Microsoft.VisualStudio.InteractiveWindow;
+using Microsoft.VisualStudio.InteractiveWindow.Commands;
+#else
 using Microsoft.VisualStudio.Repl;
+#endif
 
 namespace Microsoft.PythonTools.Repl {
-#if INTERACTIVE_WINDOW
+#if DEV14_OR_LATER
     using IReplWindow = IInteractiveWindow;
     using IReplCommand = IInteractiveWindowCommand;
 #endif
@@ -47,6 +56,36 @@ namespace Microsoft.PythonTools.Repl {
                 return null;
             }
         }
+
+#if DEV14_OR_LATER
+        public IEnumerable<ClassificationSpan> ClassifyArguments(ITextSnapshot snapshot, Span argumentsSpan, Span spanToClassify) {
+            yield break;
+        }
+
+        public string CommandLine {
+            get {
+                return "";
+            }
+        }
+
+        public IEnumerable<string> DetailedDescription {
+            get {
+                return new[] { "Switches the current scope to the specified module name." };
+            }
+        }
+
+        public IEnumerable<KeyValuePair<string, string>> ParametersDescription {
+            get {
+                yield break;
+            }
+        }
+
+        public IEnumerable<string> Names {
+            get {
+                yield return "mod";
+            }
+        }
+#endif
 
         #endregion
     }
