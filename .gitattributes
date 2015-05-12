@@ -1,0 +1,2 @@
+# Do not normalize line endings from CR LF to LF, regardless of core.autocrlf.
+* -text
