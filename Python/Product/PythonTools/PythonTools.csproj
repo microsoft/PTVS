@@ -1160,10 +1160,10 @@
     <None Include="Dev10\source.extension.vsixmanifest" Condition="'$(VSTarget)' == '10.0'">
       <SubType>Designer</SubType>
     </None>
-    <None Include="Dev11OrLater\source.extension.vsixmanifest" Condition="'$(VSTarget)' != '10.0' and '$(Dev14OrLater)' != 'True'">
+    <None Include="Dev11OrLater\source.extension.vsixmanifest" Condition="'$(VSTarget)' != '10.0' and !$(Dev14OrLater)">
       <SubType>Designer</SubType>
     </None>
-    <None Include="Dev14OrLater\source.extension.vsixmanifest" Condition="'$(Dev14OrLater)' == 'True'">
+    <None Include="Dev14OrLater\source.extension.vsixmanifest" Condition="$(Dev14OrLater)">
       <SubType>Designer</SubType>
     </None>
   </ItemGroup>
