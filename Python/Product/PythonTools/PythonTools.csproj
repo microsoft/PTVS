@@ -91,11 +91,10 @@
     <ProjectReference2 Include="..\AttacherX86\AttacherX86.csproj" />
     <ProjectReference2 Include="..\ImportWizard\ImportWizard.csproj" />
     <ProjectReference2 Include="..\ProjectWizards\ProjectWizards.csproj" />
-    <ProjectReference Include="..\ReplWindow\ReplWindow.csproj">
+    <ProjectReference Include="..\ReplWindow\ReplWindow.csproj" Condition="!$(Dev14OrLater)">
       <Project>{20BB6FAC-44D2-4D76-ABFE-0C1E163A1A4F}</Project>
       <Private>false</Private>
-      <ReferenceOutputAssembly Condition="'$(Dev14OrLater)' != 'True'">true</ReferenceOutputAssembly>
-      <ReferenceOutputAssembly Condition="'$(Dev14OrLater)' == 'True'">false</ReferenceOutputAssembly>
+      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Name Condition="'$(InteractiveWindow)' == ''">Microsoft.VisualStudio.ReplWindow</Name>
       <Name Condition="'$(InteractiveWindow)' != ''">Microsoft.VisualStudio.InteractiveWindow</Name>
     </ProjectReference>
@@ -1161,10 +1160,10 @@
     <None Include="Dev10\source.extension.vsixmanifest" Condition="'$(VSTarget)' == '10.0'">
       <SubType>Designer</SubType>
     </None>
-    <None Include="Dev11OrLater\source.extension.vsixmanifest" Condition="'$(VSTarget)' != '10.0' and '$(Dev14OrLater)' != 'True'">
+    <None Include="Dev11OrLater\source.extension.vsixmanifest" Condition="'$(VSTarget)' != '10.0' and !$(Dev14OrLater)">
       <SubType>Designer</SubType>
     </None>
-    <None Include="Dev14OrLater\source.extension.vsixmanifest" Condition="'$(Dev14OrLater)' == 'True'">
+    <None Include="Dev14OrLater\source.extension.vsixmanifest" Condition="$(Dev14OrLater)">
       <SubType>Designer</SubType>
     </None>
   </ItemGroup>

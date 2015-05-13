@@ -133,6 +133,43 @@ class MyTest3(TestBase):
             }
         }
 
+        [TestMethod, Priority(0)]
+        public void TestCaseRunTests() {
+            using (var analyzer = MakeTestAnalyzer()) {
+                AddModule(analyzer, "__main__", @"import unittest
+
+class TestBase(unittest.TestCase):
+    def runTests(self):
+        pass # should not discover this as it isn't runTest or test*
+    def runTest(self):
+        pass
+");
+
+                var test = analyzer.GetTestCases().ToList();
+                AssertUtil.ContainsExactly(test.Select(t => t.DisplayName), "TestBase");
+            }
+        }
+
+        /// <summary>
+        /// If we have test* and runTest we shouldn't discover runTest
+        /// </summary>
+        [TestMethod, Priority(0)]
+        public void TestCaseRunTestsWithTest() {
+            using (var analyzer = MakeTestAnalyzer()) {
+                AddModule(analyzer, "__main__", @"import unittest
+
+class TestBase(unittest.TestCase):
+    def test_1(self):
+        pass
+    def runTest(self):
+        pass
+");
+
+                var test = analyzer.GetTestCases().ToList();
+                AssertUtil.ContainsExactly(test.Select(t => t.DisplayName), "test_1");
+            }
+        }
+
         private TestAnalyzer MakeTestAnalyzer() {
             return new TestAnalyzer(
                 InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(2, 7)),
