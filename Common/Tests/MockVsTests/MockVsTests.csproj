@@ -92,8 +92,8 @@
     </Compile>
     <Compile Include="CachedVsInfo.cs" />
     <Compile Include="CommandTargetExtensions.cs" />
-    <Compile Include="DTEProperties.cs" />
-    <Compile Include="DTEProperty.cs" />
+    <Compile Include="MockDTEProperties.cs" />
+    <Compile Include="MockDTEProperty.cs" />
     <Compile Include="HierarchyExtensions.cs" />
     <Compile Include="HierarchyItem.cs" />
     <Compile Include="IContentTypeDefinitionMetadata.cs" />

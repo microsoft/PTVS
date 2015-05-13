@@ -146,6 +146,10 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             }
         }
 
+        public void AssertUIThread() {
+            Assert.AreEqual(Thread.CurrentThread, UIThread);
+        }
+
         private void UIThreadWorker(object evt) {
             try {
                 SynchronizationContext.SetSynchronizationContext(new MockSyncContext(this));

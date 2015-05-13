@@ -58,6 +58,8 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         public int FindAndLockDocument(uint dwRDTLockType, string pszMkDocument, out IVsHierarchy ppHier, out uint pitemid, out IntPtr ppunkDocData, out uint pdwCookie) {
+            _vs.AssertUIThread();
+
             uint id;
             if (_ids.TryGetValue(pszMkDocument, out id)) {
                 var docInfo = _table[id];
@@ -87,6 +89,8 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         public int GetDocumentInfo(uint docCookie, out uint pgrfRDTFlags, out uint pdwReadLocks, out uint pdwEditLocks, out string pbstrMkDocument, out IVsHierarchy ppHier, out uint pitemid, out IntPtr ppunkDocData) {
+            _vs.AssertUIThread();
+
             DocInfo docInfo;
             pgrfRDTFlags = 0;
             pdwReadLocks = 0;
@@ -112,6 +116,8 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         public int GetRunningDocumentsEnum(out IEnumRunningDocuments ppenum) {
+            _vs.AssertUIThread();
+
             ppenum = new RunningDocumentsEnum(this);
             return VSConstants.S_OK;
         }
@@ -126,11 +132,13 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             }
 
             public int Clone(out IEnumRunningDocuments ppenum) {
+                _docTable._vs.AssertUIThread();
                 ppenum = new RunningDocumentsEnum(_docTable);
                 return VSConstants.S_OK;
             }
 
             public int Next(uint celt, uint[] rgelt, out uint pceltFetched) {
+                _docTable._vs.AssertUIThread();
                 pceltFetched = 0;
                 for (int i = 0; i < celt; i++) {
                     if (_enum.MoveNext()) {
@@ -145,6 +153,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             }
 
             public int Reset() {
+                _docTable._vs.AssertUIThread();
                 _enum = _docTable._table.Values.GetEnumerator();
                 return VSConstants.S_OK;
             }
@@ -157,6 +166,8 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         public int LockDocument(uint grfRDTLockType, uint dwCookie) {
+            _vs.AssertUIThread();
+
             DocInfo docInfo;
             if (_table.TryGetValue(dwCookie, out docInfo)) {
                 var lockType = (_VSRDTFLAGS)grfRDTLockType;
@@ -188,6 +199,8 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         public int RegisterAndLockDocument(uint grfRDTLockType, string pszMkDocument, IVsHierarchy pHier, uint itemid, IntPtr punkDocData, out uint pdwCookie) {
+            _vs.AssertUIThread();
+
             pdwCookie = _ids[pszMkDocument] = ++_curCookie;
             _table[pdwCookie] = new DocInfo(
                 (_VSRDTFLAGS)grfRDTLockType,
@@ -211,6 +224,8 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         public int RenameDocument(string pszMkDocumentOld, string pszMkDocumentNew, IntPtr pHier, uint itemidNew) {
+            _vs.AssertUIThread();
+
             uint id;
             if (_ids.TryGetValue(pszMkDocumentOld, out id)) {
                 DocInfo docInfo = _table[id];
@@ -237,6 +252,8 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         public int UnlockDocument(uint grfRDTLockType, uint dwCookie) {
+            _vs.AssertUIThread();
+
             DocInfo docInfo;
             if (_table.TryGetValue(dwCookie, out docInfo)) {
                 var lockType = (_VSRDTFLAGS)grfRDTLockType;
@@ -315,6 +332,8 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         public void GetDocumentHierarchyItem(uint cookie, out IVsHierarchy hierarchy, out uint itemID) {
+            _vs.AssertUIThread();
+
             DocInfo docInfo;
             hierarchy = null;
             itemID = (uint)VSConstants.VSITEMID.Nil;

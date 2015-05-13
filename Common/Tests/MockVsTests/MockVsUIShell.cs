@@ -18,6 +18,7 @@ using System.Linq;
 using System.Threading;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 
 namespace Microsoft.VisualStudioTools.MockVsTests {
@@ -25,6 +26,8 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         private readonly MockVs _instance;
         internal List<MockDialog> Dialogs = new List<MockDialog>();
         private Dictionary<Guid, MockToolWindow> _toolWindows = new Dictionary<Guid, MockToolWindow>();
+        private const int _waitLoops = 500;
+        private const int _waitTimeout = 10;
 
         public MockVsUIShell(MockVs instance) {
             _instance = instance;
@@ -236,12 +239,16 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         internal void CheckMessageBox(MessageBoxButton button, string[] text) {
-            MockMessageBox msgBox;
-            while ((msgBox = LastDialog<MockMessageBox>()) == null) {
-                Thread.Sleep(10);
+            for (int i = 0; i < _waitLoops; i++) {
+                MockMessageBox msgBox;
+                if ((msgBox = LastDialog<MockMessageBox>()) != null) {
+                    AssertUtil.Contains(msgBox.Text, text);
+                    msgBox.Close((int)button);
+                    return;
+                }
+                Thread.Sleep(_waitTimeout);
             }
-            AssertUtil.Contains(msgBox.Text, text);
-            msgBox.Close((int)button);
+            Assert.Fail("Failed to get message box");
         }
 
         private T LastDialog<T>() where T : MockDialog {
@@ -258,16 +265,24 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         internal void WaitForDialogDismissed() {
-            while (Dialogs.Count != 0) {
-                Thread.Sleep(10);
+            for (int i = 0; i < _waitLoops; i++) {
+                if (Dialogs.Count == 0) {
+                    return;
+                }
+                Thread.Sleep(_waitTimeout);
             }
+            Assert.Fail("Dialog was not dismissed");
         }
 
         internal IntPtr WaitForDialog() {
-            while (Dialogs.Count == 0) {
-                Thread.Sleep(10);
+            for (int i = 0; i < _waitLoops; i++) {
+                if (Dialogs.Count != 0) {
+                    return new IntPtr(IntPtr.Size * Dialogs.Count);
+                }
+                Thread.Sleep(_waitTimeout);
             }
-            return new IntPtr(IntPtr.Size * Dialogs.Count);
+            Assert.Fail("Dialog not created");
+            throw new InvalidOperationException(); // not reachable
         }
     }
 }

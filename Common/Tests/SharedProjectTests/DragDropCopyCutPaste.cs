@@ -99,7 +99,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         /// <summary>
         /// Cut item, paste into folder, paste into top-level, 2nd paste shouldn’t do anything
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core"), TestCategory("Mock")]
         [HostType("VSTestHost")]
         public void CutPastePasteItem() {
             foreach (var projectType in ProjectTypes) {
@@ -136,7 +136,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         /// <summary>
         /// Cut item, rename it, paste into top-level, check error message
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core"), TestCategory("Mock")]
         [HostType("VSTestHost")]
         public void CutRenamePaste() {
             foreach (var projectType in ProjectTypes) {
@@ -172,7 +172,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         /// <summary>
         /// Cut item, rename it, paste into top-level, check error message
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core"), TestCategory("Mock")]
         [HostType("VSTestHost")]
         public void CutDeletePaste() {
             foreach (var projectType in ProjectTypes) {
@@ -320,7 +320,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         /// <summary>
         /// Cut folder, rename it, paste into top-level, check error message
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core"), TestCategory("Mock")]
         [HostType("VSTestHost")]
         public void CutRenamePasteFolder() {
             foreach (var projectType in ProjectTypes) {
@@ -449,7 +449,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         /// Cut folder, paste onto itself, should report an error that the destination is the same as the source
         ///     Cannot move 'X'. The destination folder is the same as the source folder.
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core"), TestCategory("Mock")]
         [HostType("VSTestHost")]
         public void CutFolderPasteOnSelf() {
             foreach (var projectType in ProjectTypes) {
@@ -478,7 +478,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         /// <summary>
         /// Drag and drop a folder onto itself, nothing should happen
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core"), TestCategory("Mock")]
         [HostType("VSTestHost")]
         public void DragFolderOntoSelf() {
             foreach (var projectType in ProjectTypes) {
@@ -507,7 +507,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         /// <summary>
         /// Drag and drop a folder onto itself, nothing should happen
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core"), TestCategory("Mock")]
         [HostType("VSTestHost")]
         public void DragFolderOntoChild() {
             foreach (var projectType in ProjectTypes) {
@@ -609,7 +609,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         /// Drag and drop a folder onto itself, nothing should happen
         ///     Cannot move 'CutFilePasteSameLocation'. The destination folder is the same as the source folder.
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core"), TestCategory("Mock")]
         [HostType("VSTestHost")]
         public void CutFilePasteSameLocation() {
             foreach (var projectType in ProjectTypes) {
@@ -791,13 +791,13 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core"), TestCategory("Mock")]
         [HostType("VSTestHost")]
         public void MoveDuplicateFolderNameKeyboard() {
             MoveDuplicateFolderName(MoveByKeyboard);
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core"), TestCategory("Mock")]
         [HostType("VSTestHost")]
         public void MoveDuplicateFolderNameMouse() {
             MoveDuplicateFolderName(MoveByMouse);
@@ -1421,7 +1421,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         /// <summary>
         /// Drag item from another project, drag same item again, prompt to overwrite, say yes, only one item should be in the hierarchy
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core"), TestCategory("Mock")]
         [HostType("VSTestHost")]
         public void CopyFolderMissingItem() {
             foreach (var projectType in ProjectTypes) {
@@ -1456,7 +1456,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         /// 
         /// https://pytools.codeplex.com/workitem/1141
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core"), TestCategory("Mock")]
         [HostType("VSTestHost")]
         public void CopyPasteMissingFile() {
             foreach (var projectType in ProjectTypes) {
@@ -1485,7 +1485,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         /// 
         /// https://nodejstools.codeplex.com/workitem/241
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core"), TestCategory("Mock")]
         [HostType("VSTestHost")]
         public void MoveFolderExistingFile() {
             foreach (var projectType in ProjectTypes) {
@@ -1515,7 +1515,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         /// 
         /// http://pytools.codeplex.com/workitem/2609
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core"), TestCategory("Mock")]
         [HostType("VSTestHost")]
         public void MoveFolderWithContents() {
             foreach (var projectType in ProjectTypes) {
