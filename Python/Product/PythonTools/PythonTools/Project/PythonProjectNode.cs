@@ -168,6 +168,19 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
+        protected internal override void SetCurrentConfiguration() {
+            base.SetCurrentConfiguration();
+
+            if (!IsProjectOpened)
+                return;
+
+            if (this.IsAppxPackageableProject()) {
+                EnvDTE.Project automationObject = (EnvDTE.Project)GetAutomationObject();
+
+                this.BuildProject.SetGlobalProperty(ProjectFileConstants.Platform, automationObject.ConfigurationManager.ActiveConfiguration.PlatformName);
+            }
+        }
+
         internal int GetIconIndex(PythonProjectImageName name) {
             return ImageOffset + (int)name;
         }
@@ -198,6 +211,9 @@ namespace Microsoft.PythonTools.Project {
             return new PythonNonCodeFileNode(this, item);
         }
 
+        protected override ConfigProvider CreateConfigProvider() {
+            return new CommonConfigProvider(this);
+        }
         protected override ReferenceContainerNode CreateReferenceContainerNode() {
             return new PythonReferenceContainerNode(this);
         }
@@ -308,14 +324,29 @@ namespace Microsoft.PythonTools.Project {
             return base.GenerateUniqueItemName(itemIdLoc, ext, suggestedRoot, out itemName);
         }
 
+        public override MSBuildResult Build(string config, string target) {
+            if (this.IsAppxPackageableProject()) {
+                // Ensure that AnyCPU is not the default Platform if this is an AppX project
+                // Use x86 instead
+                var platform = this.BuildProject.GetPropertyValue(GlobalProperty.Platform.ToString());
+
+                if (platform == ProjectConfig.AnyCPU) {
+                    this.BuildProject.SetGlobalProperty(GlobalProperty.Platform.ToString(), ConfigProvider.x86Platform);
+                }
+            }
+            return base.Build(config, target);
+        }
+
         protected override void Reload() {
-            _searchPathContainer = new CommonSearchPathContainerNode(this);
-            this.AddChild(_searchPathContainer);
-            RefreshCurrentWorkingDirectory();
-            RefreshSearchPaths();
-            _interpretersContainer = new InterpretersContainerNode(this);
-            this.AddChild(_interpretersContainer);
-            RefreshInterpreters(alwaysCollapse: true);
+            if (!this.IsAppxPackageableProject()) {
+                _searchPathContainer = new CommonSearchPathContainerNode(this);
+                this.AddChild(_searchPathContainer);
+                RefreshCurrentWorkingDirectory();
+                RefreshSearchPaths();
+                _interpretersContainer = new InterpretersContainerNode(this);
+                this.AddChild(_interpretersContainer);
+                RefreshInterpreters(alwaysCollapse: true);
+            }
 
             OnProjectPropertyChanged += PythonProjectNode_OnProjectPropertyChanged;
             base.Reload();

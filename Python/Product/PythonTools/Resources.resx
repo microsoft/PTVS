@@ -573,4 +573,7 @@ Packages that cannot be installed using pip may prevent all listed packages from
   <data name="CustomCommandPrerequisitesRunAnyway" xml:space="preserve">
     <value>Run the command without installing the packages</value>
   </data>
+  <data name="ImportWizardUwpProjectCustomization" xml:space="preserve">
+    <value>Python UWP Project</value>
+  </data>
 </root>

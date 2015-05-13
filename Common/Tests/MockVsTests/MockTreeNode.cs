@@ -16,6 +16,7 @@ using System;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows.Input;
+using Microsoft.Internal.VisualStudio.PlatformUI;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -29,6 +30,9 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         internal HierarchyItem _item;
         private string _editLabel;
         private int _selectionStart, _selectionLength;
+
+        private const uint MK_CONTROL = 0x0008; //winuser.h
+        private const uint MK_SHIFT = 0x0004;
 
         public MockTreeNode(MockVs mockVs, HierarchyItem res) {
             _mockVs = mockVs;
@@ -52,7 +56,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
 
         public int Exec(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
             if (pguidCmdGroup == VSConstants.GUID_VSStandardCommandSet97) {
-                switch((VSConstants.VSStd97CmdID)nCmdID) {
+                switch ((VSConstants.VSStd97CmdID)nCmdID) {
                     case VSConstants.VSStd97CmdID.Rename:
                         if ((_editLabel = _item.EditLabel) != null) {
                             _selectionLength = 0;
@@ -62,7 +66,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
                         break;
                 }
             } else if (pguidCmdGroup == VSConstants.VSStd2K) {
-                switch((VSConstants.VSStd2KCmdID)nCmdID) {
+                switch ((VSConstants.VSStd2KCmdID)nCmdID) {
                     case VSConstants.VSStd2KCmdID.TYPECHAR:
                         if (_editLabel != null) {
                             if (_selectionLength != 0) {
@@ -80,6 +84,9 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
                             _editLabel = null;
                             return VSConstants.S_OK;
                         }
+                        break;
+                    case VSConstants.VSStd2KCmdID.DELETE:
+                        DeleteItem();
                         break;
                 }
             }
@@ -104,6 +111,92 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
                 );
             }
             return VSConstants.E_FAIL;
+        }
+
+        private void DeleteItem() {
+            var deleteHandler = _item.Hierarchy as IVsHierarchyDeleteHandler;
+            int canRemoveItem = 0, canDeleteItem = 0;
+            if (deleteHandler != null &&
+                ErrorHandler.Succeeded(deleteHandler.QueryDeleteItem((uint)__VSDELETEITEMOPERATION.DELITEMOP_RemoveFromProject, _item.ItemId, out canRemoveItem))) {
+                deleteHandler.QueryDeleteItem((uint)__VSDELETEITEMOPERATION.DELITEMOP_DeleteFromStorage, _item.ItemId, out canDeleteItem);
+            }
+            bool showSpecificMsg = ShouldShowSpecificMessage(canRemoveItem, canDeleteItem);
+            if (canRemoveItem != 0) {
+                if (canDeleteItem != 0) {
+                    // show delete or remove dialog...
+                } else {
+                    // show remove dialog...
+                    PrmoptAndDelete(
+                        deleteHandler,
+                        __VSDELETEITEMOPERATION.DELITEMOP_RemoveFromProject,
+                        ""
+                    );
+                }
+
+            } else if (canDeleteItem != 0) {
+                object name;
+                ErrorHandler.ThrowOnFailure(_item.Hierarchy.GetProperty(_item.ItemId, (int)__VSHPROPID.VSHPROPID_Name, out name));
+                string message = string.Format("'{0}' will be deleted permanently.", name);
+                PrmoptAndDelete(
+                    deleteHandler, 
+                    __VSDELETEITEMOPERATION.DELITEMOP_DeleteFromStorage, 
+                    message
+                );
+            }
+        }
+
+        private void PrmoptAndDelete(IVsHierarchyDeleteHandler deleteHandler, __VSDELETEITEMOPERATION deleteType,string message) {
+            Guid unused = Guid.Empty;
+            int result;
+            // show delete dialog...
+            if (ErrorHandler.Succeeded(
+                _mockVs.UIShell.ShowMessageBox(
+                    0,
+                    ref unused,
+                    null,
+                    message,
+                    null,
+                    0,
+                    OLEMSGBUTTON.OLEMSGBUTTON_OKCANCEL,
+                    OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST,
+                    OLEMSGICON.OLEMSGICON_WARNING,
+                    0,
+                    out result
+                )) && result == DialogResult.OK) {
+                int hr = deleteHandler.DeleteItem(
+                    (uint)deleteType,
+                    _item.ItemId
+                );
+
+                if (ErrorHandler.Failed(hr) && hr != VSConstants.OLE_E_PROMPTSAVECANCELLED) {
+                    _mockVs.UIShell.ReportErrorInfo(hr);
+                }
+            }
+        }
+
+        private bool ShouldShowSpecificMessage(int canRemoveItem, int canDeleteItem) {
+            __VSDELETEITEMOPERATION op = 0;
+            if (canRemoveItem != 0) {
+                op |= __VSDELETEITEMOPERATION.DELITEMOP_RemoveFromProject;
+            }
+            if (canDeleteItem != 0) {
+                op |= __VSDELETEITEMOPERATION.DELITEMOP_DeleteFromStorage;
+            }
+
+            IVsHierarchyDeleteHandler2 deleteHandler = _item.Hierarchy as IVsHierarchyDeleteHandler2;
+            if (deleteHandler != null) {
+                int dwShowStandardMessage;
+                uint pdwDelItemOp;
+                deleteHandler.ShowSpecificDeleteRemoveMessage(
+                    (uint)op, 
+                    1, 
+                    new[] { _item.ItemId }, 
+                    out dwShowStandardMessage, 
+                    out pdwDelItemOp
+                );
+                return dwShowStandardMessage != 0;
+            }
+            return false;
         }
 
         public int QueryStatus(ref Guid pguidCmdGroup, uint cCmds, OLECMD[] prgCmds, IntPtr pCmdText) {
@@ -134,7 +227,83 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         public void DragOntoThis(Key modifier, params ITreeNode[] source) {
+            _mockVs.Invoke(() => DragOntoThisUIThread(modifier, source));
+        }
+
+        private void DragOntoThisUIThread(Key modifier, ITreeNode[] source) {
+            var target = _item.Hierarchy as IVsHierarchyDropDataTarget;
+            if (target != null) {
+                uint effect = 0;
+                uint keyState = GetKeyState(modifier);
+
+                source[0].Select();
+                for (int i = 1; i < source.Length; i++) {
+                    source[i].AddToSelection();
+                }
+
+                MockTreeNode sourceNode = (MockTreeNode)source[0];
+                var dropDataSource = (IVsHierarchyDropDataSource2)sourceNode._item.Hierarchy;
+                uint okEffects;
+                IDataObject data;
+                IDropSource dropSource;
+                ErrorHandler.ThrowOnFailure(dropDataSource.GetDropInfo(out okEffects, out data, out dropSource));
+
+                int hr = hr = target.DragEnter(
+                    data,
+                    keyState,
+                    _item.ItemId,
+                    ref effect
+                );
+
+                if (ErrorHandler.Succeeded(hr)) {
+                    if (effect == 0) {
+                        return;
+                    }
+
+                    hr = target.DragOver(keyState, _item.ItemId, ref effect);
+
+                    if (ErrorHandler.Succeeded(hr)) {
+                        int cancel;
+                        ErrorHandler.ThrowOnFailure(
+                            dropDataSource.OnBeforeDropNotify(
+                                data,
+                                effect,
+                                out cancel
+                            )
+                        );
+
+                        if (cancel == 0) {
+                            hr = target.Drop(
+                                data,
+                                keyState,
+                                _item.ItemId,
+                                ref effect
+                            );
+                        }
+
+                        int dropped = 0;
+                        if (cancel == 0 && ErrorHandler.Succeeded(hr)) {
+                            dropped = 1;
+                        }
+                        ErrorHandler.ThrowOnFailure(dropDataSource.OnDropNotify(dropped, effect));
+                    }
+                }
+                return;
+            }
             throw new NotImplementedException();
+        }
+
+        private uint GetKeyState(Key modifier) {
+            switch (modifier) {
+                case Key.LeftShift:
+                    return MK_SHIFT;
+                case Key.LeftCtrl:
+                    return MK_CONTROL;
+                case Key.None:
+                    return 0;
+                default:
+                    throw new NotImplementedException();
+            }
         }
     }
 }

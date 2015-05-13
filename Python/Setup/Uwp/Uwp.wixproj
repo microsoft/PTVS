@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\SetupProjectBefore.settings" />
+  <PropertyGroup>
+    <ProductVersion>3.5</ProductVersion>
+    <ProjectGuid>{83946E81-7A1B-4D3B-927F-4CD67AC95BE7}</ProjectGuid>
+    <SchemaVersion>2.0</SchemaVersion>
+    <OutputName>Uwp</OutputName>
+    <OutputType>Module</OutputType>
+    <DefineSolutionProperties>false</DefineSolutionProperties>
+    <DefineConstants>$(DefineConstants);ProductSuffix=Uwp</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Uwp.wxs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="$(BuildRoot)\Python\Product\Uwp\Uwp.csproj">
+      <Name>Microsoft.PythonTools.Uwp</Name>
+      <Project>{D28045D6-232C-4101-A5CB-AC4A68E92211}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\MergeModule.wxi">
+      <Link>MergeModule.wxi</Link>
+    </Content>
+    <FilesProj Include="UwpFiles.proj" />
+  </ItemGroup>
+  <Import Project="..\SetupProjectAfter.settings" />
+</Project>
