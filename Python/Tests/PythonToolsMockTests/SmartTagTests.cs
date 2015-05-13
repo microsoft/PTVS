@@ -12,6 +12,8 @@
  *
  * ***************************************************************************/
 
+#if !DEV14_OR_LATER
+
 using System;
 using System.Linq;
 using System.Threading;
@@ -171,3 +173,5 @@ namespace PythonToolsTests {
         }
     }
 }
+
+#endif
