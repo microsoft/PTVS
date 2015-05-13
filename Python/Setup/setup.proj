@@ -17,6 +17,7 @@
     <ProjectFile Include="Django\Django.wixproj"/>
     <ProjectFile Include="ReplWindow\ReplWindow.wixproj"/>
     <ProjectFile Include="IronPythonInterpreter\IronPythonInterpreter.wixproj"/>
+    <ProjectFile Include="Uwp\Uwp.wixproj" Condition="$(IncludeUwp)"/>
     <ProjectFile Include="PythonTools\PythonTools.wixproj"/>
     <ProjectFile Include="PythonProfiling\PythonProfiling.wixproj"/>
     <ProjectFile Include="PythonHpcSupport\PythonHpcSupport.wixproj" Condition="$(IncludeHpc)"/>

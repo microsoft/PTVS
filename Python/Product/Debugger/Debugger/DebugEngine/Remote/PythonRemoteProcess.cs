@@ -13,13 +13,13 @@
  * ***************************************************************************/
 
 using System;
-using System.Diagnostics;
 using System.IO;
-using System.Net.Security;
 using System.Net.Sockets;
 using System.Security.Authentication;
 using System.Text;
+using System.Web;
 using System.Windows.Forms;
+using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.Debugger.Transports;
 using Microsoft.PythonTools.Parsing;
 
@@ -37,9 +37,26 @@ namespace Microsoft.PythonTools.Debugger.Remote {
         private PythonRemoteProcess(int pid, Uri uri, PythonLanguageVersion langVer)
             : base(pid, langVer) {
             Uri = uri;
+            ParseQueryString();
         }
 
         public Uri Uri { get; private set; }
+
+        internal string TargetHostType { get; private set; }
+
+        internal void ParseQueryString() {
+            if (Uri != null && Uri.Query != null) {
+                var queryParts = HttpUtility.ParseQueryString(Uri.Query);
+
+                var sourceDir = queryParts[AD7Engine.SourceDirectoryKey];
+                var targetDir = queryParts[AD7Engine.TargetDirectoryKey];
+
+                TargetHostType = queryParts[AD7Engine.TargetHostType];
+
+                if (!string.IsNullOrWhiteSpace(sourceDir) && !string.IsNullOrWhiteSpace(targetDir))
+                    AddDirMapping(new string[] { sourceDir, targetDir });
+            }
+        }
 
         /// <summary>
         /// Connects to and performs the initial handshake with the remote debugging server, verifying protocol signature and version number,
