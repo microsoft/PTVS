@@ -34,10 +34,6 @@
     <RootNamespace>Microsoft.PythonTools.Uwp</RootNamespace>
     <AssemblyName>Microsoft.PythonTools.Uwp</AssemblyName>
     <UseVSSDK>true</UseVSSDK>
-    <SccProjectName>SAK</SccProjectName>
-    <SccLocalPath>SAK</SccLocalPath>
-    <SccAuxPath>SAK</SccAuxPath>
-    <SccProvider>SAK</SccProvider>
     <NoWarn>1762</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
