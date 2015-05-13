@@ -24,7 +24,7 @@ using TestUtilities;
 namespace Microsoft.VisualStudioTools.MockVsTests {
     class MockVsUIShell : IVsUIShell {
         private readonly MockVs _instance;
-        internal List<MockDialog> Dialogs = new List<MockDialog>();
+        internal Stack<MockDialog> Dialogs = new Stack<MockDialog>();
         private Dictionary<Guid, MockToolWindow> _toolWindows = new Dictionary<Guid, MockToolWindow>();
         private const int _waitLoops = 500;
         private const int _waitTimeout = 10;
@@ -214,11 +214,11 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
                 () => {
                     MockDialog dialog = new MockMessageBox(_instance, pszTitle, pszText);
                     lock (Dialogs) {
-                        Dialogs.Add(dialog);
+                        Dialogs.Push(dialog);
                     }
                     dialog.Run();
                     lock (Dialogs) {
-                        Dialogs.RemoveAt(Dialogs.Count - 1);
+                        Dialogs.Pop();
                     }
                     return dialog.DialogResult;
                 }

@@ -31,6 +31,9 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         private string _editLabel;
         private int _selectionStart, _selectionLength;
 
+        private const uint MK_CONTROL = 0x0008; //winuser.h
+        private const uint MK_SHIFT = 0x0004;
+
         public MockTreeNode(MockVs mockVs, HierarchyItem res) {
             _mockVs = mockVs;
             _item = res;
@@ -302,8 +305,5 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
                     throw new NotImplementedException();
             }
         }
-
-        public const uint MK_CONTROL = 0x0008; //winuser.h
-        public const uint MK_SHIFT = 0x0004;
     }
 }

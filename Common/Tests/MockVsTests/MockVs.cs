@@ -147,7 +147,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         public void AssertUIThread() {
-            Assert.AreEqual(Thread.CurrentThread, UIThread);
+            Assert.AreEqual(UIThread, Thread.CurrentThread);
         }
 
         private void UIThreadWorker(object evt) {
@@ -160,11 +160,12 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
                 }
 
                 ((AutoResetEvent)evt).Set();
-
-                RunMessageLoop();
-
-                foreach (var package in packages) {
-                    package.Dispose();
+                try {
+                    RunMessageLoop();
+                } finally {
+                    foreach (var package in packages) {
+                        package.Dispose();
+                    }
                 }
             } catch (Exception ex) {
                 Trace.TraceError("Captured exception on mock UI thread: {0}", ex);
