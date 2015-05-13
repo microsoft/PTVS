@@ -1,3 +1,4 @@
+#! /usr/bin/env python3
 '''Regenerates the strong name verification scripts based on the list of
 assemblies stored in this file.
 
@@ -38,6 +39,7 @@ ASSEMBLIES = sorted([
     "Microsoft.PythonTools.PyKinect",
     "Microsoft.PythonTools.Pyvot",
     "Microsoft.PythonTools.TestAdapter",
+    "Microsoft.PythonTools.Uwp",
     "Microsoft.PythonTools.VSInterpreters",
     "Microsoft.PythonTools.VsLogger",
     "Microsoft.PythonTools.WebRole",
