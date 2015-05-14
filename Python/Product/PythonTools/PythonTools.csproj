@@ -271,9 +271,6 @@
     <Compile Include="..\Analysis\IEnumerableExtensions.cs">
       <Link>IEnumerableExtensions.cs</Link>
     </Compile>
-    <Compile Include="..\Analysis\Interpreter\PythonInterpreterFactoryExtensions.cs">
-      <Link>PythonInterpreterFactoryExtensions.cs</Link>
-    </Compile>
     <Compile Include="PythonTools\Repl\IMultipleScopeEvaluator.cs" />
     <Compile Include="PythonTools\Repl\InteractiveWindowProvider.cs" />
     <Compile Include="IPythonToolsToolWindowService.cs" />
