@@ -93,6 +93,7 @@
     <Compile Include="Interpreter\Default\AnalysisOnlyInterpreterFactory.cs" />
     <Compile Include="Interpreter\Default\CPythonInterpreterFactory.cs" />
     <Compile Include="Interpreter\Default\CPythonSequenceType.cs" />
+    <Compile Include="Interpreter\InterpreterUIMode.cs" />
     <Compile Include="Interpreter\InterpreterFactoryCreator.cs" />
     <Compile Include="Interpreter\InterpreterFactoryCreationOptions.cs" />
     <Compile Include="Interpreter\IPythonInterpreterWithProjectReferences.cs" />

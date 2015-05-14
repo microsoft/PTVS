@@ -60,6 +60,10 @@ namespace Microsoft.PythonTools.Options {
                 _defaultInterpreter.Items.Clear();
 
                 foreach (var interpreter in _serviceProvider.GetPythonToolsService().InterpreterOptions.Select(x => x.Key).OrderBy(f => f.Description)) {
+                    if (!Microsoft.PythonTools.Interpreter.PythonInterpreterFactoryExtensions.IsUIVisible(interpreter)) {
+                        continue;
+                    }
+
                     InterpreterOptions opts;
                     if (_serviceProvider.GetPythonToolsService().TryGetInterpreterOptions(interpreter, out opts) && !opts.Removed) {
                         _showSettingsFor.Items.Add(interpreter);

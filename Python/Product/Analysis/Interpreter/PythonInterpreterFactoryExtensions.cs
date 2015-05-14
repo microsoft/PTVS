@@ -101,5 +101,38 @@ namespace Microsoft.PythonTools.Interpreter {
             factory.GenerateDatabase(options, tcs.SetResult);
             return tcs.Task;
         }
+
+        /// <summary>
+        /// Returns <c>true</c> if the factory should appear in the UI.
+        /// </summary>
+        /// <remarks>New in 2.2</remarks>
+        public static bool IsUIVisible(this IPythonInterpreterFactory factory) {
+            return factory != null &&
+                factory.Configuration != null &&
+                !factory.Configuration.UIMode.HasFlag(InterpreterUIMode.Hidden);
+        }
+
+        /// <summary>
+        /// Returns <c>true</c> if the factory can ever be the default
+        /// interpreter.
+        /// </summary>
+        /// <remarks>New in 2.2</remarks>
+        public static bool CanBeDefault(this IPythonInterpreterFactory factory) {
+            return factory != null &&
+                factory.Configuration != null &&
+                !factory.Configuration.UIMode.HasFlag(InterpreterUIMode.CannotBeDefault);
+        }
+
+        /// <summary>
+        /// Returns <c>true</c> if the factory can be automatically selected as
+        /// the default interpreter.
+        /// </summary>
+        /// <remarks>New in 2.2</remarks>
+        public static bool CanBeAutoDefault(this IPythonInterpreterFactory factory) {
+            return factory != null &&
+                factory.Configuration != null &&
+                !factory.Configuration.UIMode.HasFlag(InterpreterUIMode.CannotBeDefault) &&
+                !factory.Configuration.UIMode.HasFlag(InterpreterUIMode.CannotBeAutoDefault);
+        }
     }
 }

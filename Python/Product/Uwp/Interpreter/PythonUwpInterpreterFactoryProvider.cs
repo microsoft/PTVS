@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using System.Reflection;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Uwp.Interpreter {
@@ -36,7 +37,16 @@ namespace Microsoft.PythonTools.Uwp.Interpreter {
 
         private void DiscoverFactories() {
             if (_factories == null) {
-                var defaultConfig = new InterpreterConfiguration(new Version(PythonVersion));
+                var defaultConfig = new InterpreterConfiguration(
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    ProcessorArchitecture.None,
+                    new Version(PythonVersion),
+                    InterpreterUIMode.CannotBeDefault
+                );
 
                 _factories = new HashSet<IPythonInterpreterFactory>();
 

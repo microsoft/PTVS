@@ -45,6 +45,10 @@ namespace PythonToolsUITests {
         }
 
 
+        private static InterpreterConfiguration MockInterpreterConfiguration(Version version, InterpreterUIMode uiMode) {
+            return new InterpreterConfiguration(null, null, null, null, null, ProcessorArchitecture.None, version, uiMode);
+        }
+
         private static InterpreterConfiguration MockInterpreterConfiguration(Version version) {
             return new InterpreterConfiguration(version);
         }
@@ -55,6 +59,8 @@ namespace PythonToolsUITests {
 
         [TestMethod, Priority(0)]
         public void HasInterpreters() {
+            var sp = new MockServiceProvider();
+            var service = new InterpreterOptionsService(sp);
             var mockService = new MockInterpreterOptionsService();
             mockService.AddProvider(new MockPythonInterpreterFactoryProvider("Test Provider 1",
                 new MockPythonInterpreterFactory(Guid.NewGuid(), "Test Factory 1", MockInterpreterConfiguration(new Version(2, 7))),
@@ -64,7 +70,8 @@ namespace PythonToolsUITests {
             mockService.AddProvider(new MockPythonInterpreterFactoryProvider("Test Provider 2",
                 new MockPythonInterpreterFactory(Guid.NewGuid(), "Test Factory 4", MockInterpreterConfiguration(new Version(2, 7))),
                 new MockPythonInterpreterFactory(Guid.NewGuid(), "Test Factory 5", MockInterpreterConfiguration(new Version(3, 0))),
-                new MockPythonInterpreterFactory(Guid.NewGuid(), "Test Factory 6", MockInterpreterConfiguration(new Version(3, 3)))
+                new MockPythonInterpreterFactory(Guid.NewGuid(), "Test Factory 6", MockInterpreterConfiguration(new Version(3, 3))),
+                new MockPythonInterpreterFactory(Guid.NewGuid(), "Hidden Factory 7", MockInterpreterConfiguration(new Version(3, 3), InterpreterUIMode.Hidden))
             ));
 
             using (var wpf = new WpfProxy())
@@ -77,6 +84,45 @@ namespace PythonToolsUITests {
                     wpf.Invoke(() => environments.Select(ev => ev.Description).ToList()),
                     Enumerable.Range(1, 6).Select(i => string.Format("Test Factory {0}", i))
                 );
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void NonDefaultInterpreter() {
+            var mockProvider = new MockPythonInterpreterFactoryProvider("Test Provider 1",
+                new MockPythonInterpreterFactory(Guid.NewGuid(), "Test Factory 1", MockInterpreterConfiguration(new Version(2, 7))),
+                new MockPythonInterpreterFactory(Guid.NewGuid(), "Test Factory 2", MockInterpreterConfiguration(new Version(3, 0), InterpreterUIMode.CannotBeDefault)),
+                new MockPythonInterpreterFactory(Guid.NewGuid(), "Test Factory 3", MockInterpreterConfiguration(new Version(3, 3), InterpreterUIMode.CannotBeAutoDefault))
+            );
+
+            using (var wpf = new WpfProxy())
+            using (var list = new EnvironmentListProxy(wpf)) {
+                var service = GetInterpreterOptionsService();
+                var oldDefault = service.DefaultInterpreter;
+                var oldProviders = ((InterpreterOptionsService)service).SetProviders(new[] { mockProvider });
+                try {
+                    list.Service = service;
+                    var environments = list.Environments;
+
+                    AssertUtil.AreEqual(
+                        wpf.Invoke(() => environments.Select(ev => ev.Description).ToList()),
+                        "Test Factory 1", "Test Factory 2", "Test Factory 3"
+                    );
+                    // TF 1 and 3 can be set as default
+                    AssertUtil.AreEqual(
+                        wpf.Invoke(() => environments.Select(ev => ev.CanBeDefault).ToList()),
+                        true, false, true
+                    );
+
+                    // TF 1 should have been selected as the default
+                    Assert.AreEqual(
+                        "Test Factory 1",
+                        wpf.Invoke(() => environments.First(ev => ev.IsDefault).Description)
+                    );
+                } finally {
+                    ((InterpreterOptionsService)service).SetProviders(oldProviders);
+                    service.DefaultInterpreter = oldDefault;
+                }
             }
         }
 
