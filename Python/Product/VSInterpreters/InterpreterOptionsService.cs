@@ -155,7 +155,6 @@ namespace Microsoft.PythonTools.Interpreter {
                 var store = _settings.GetReadOnlySettingsStore(SettingsScope.Configuration);
                 _providers = LoadProviders(store, serviceProvider);
 
-
                 foreach (var provider in _providers) {
                     provider.InterpreterFactoriesChanged += Provider_InterpreterFactoriesChanged;
                 }
