@@ -316,13 +316,24 @@ Full-Width Styles
 }
 
 #downloads {
-  position: absolute;
-  width: 210px;
-  z-index: 10;
-  bottom: -40px;
+  float: right;
   right: 0;
-  height: 70px;
-  background: url('../images/icon_download.png') no-repeat 0% 90%;
+  background: #aaaaaa;
+  background: -moz-linear-gradient(top, #f0f0f0, #cccccc);
+  background: -webkit-linear-gradient(top, #f0f0f0, #cccccc);
+  background: -ms-linear-gradient(top, #f0f0f0, #cccccc);
+  background: -o-linear-gradient(top, #f0f0f0, #cccccc);
+  background: linear-gradient(top, #f0f0f0, #cccccc);
+}
+
+#downloads_title {
+    margin: 8px;
+}
+
+#download_list {
+    margin: 8px;
+    list-style: none;
+    padding: 0px;
 }
 
 .zip_download_link {
