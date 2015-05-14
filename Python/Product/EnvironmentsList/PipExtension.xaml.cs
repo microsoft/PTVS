@@ -239,6 +239,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public void Dispose() {
             _provider.UpdateStarted -= PipExtensionProvider_UpdateStarted;
             _provider.UpdateComplete -= PipExtensionProvider_UpdateComplete;
+            _provider.IsPipInstalledChanged -= PipExtensionProvider_IsPipInstalledChanged;
             _installableViewRefreshTimer.Dispose();
         }
 
