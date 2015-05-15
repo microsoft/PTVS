@@ -58,7 +58,7 @@ namespace PythonToolsTests {
 
                 Assert.AreEqual(0, hr, string.Format("Wrong HR for {0}", testCase.Name));
                 Assert.AreEqual(testCase.Expected, actual, string.Format("Wrong result for {0}", testCase.Name));
-                Assert.AreEqual(typeof(PythonProjectFactory).GUID, factoryGuid);
+                Assert.AreEqual(Guid.Empty, factoryGuid);
             }
         }
 
@@ -111,7 +111,7 @@ namespace PythonToolsTests {
                         string.Format("Non-upgraded {0} has different content to original", testCase.Name)
                     );
                 }
-                Assert.AreEqual(typeof(PythonProjectFactory).GUID, factoryGuid);
+                Assert.AreEqual(Guid.Empty, factoryGuid);
             }
         }
 
@@ -158,7 +158,7 @@ namespace PythonToolsTests {
 
                 Assert.AreEqual(0, hr, string.Format("Wrong HR for ToolsVersion={0}", testCase.Name));
                 Assert.AreEqual(testCase.Expected, actual, string.Format("Wrong result for ToolsVersion={0}", testCase.Name));
-                Assert.AreEqual(typeof(PythonProjectFactory).GUID, factoryGuid);
+                Assert.AreEqual(Guid.Empty, factoryGuid);
             }
         }
 
@@ -220,7 +220,7 @@ namespace PythonToolsTests {
                         string.Format("Non-upgraded {0} has different content to original", testCase.Name)
                     );
                 }
-                Assert.AreEqual(typeof(PythonProjectFactory).GUID, factoryGuid);
+                Assert.AreEqual(Guid.Empty, factoryGuid);
             }
         }
 
@@ -259,7 +259,7 @@ namespace PythonToolsTests {
                 File.ReadAllText(tempProject).Contains("<Import Project=\"" + PythonProjectFactory.CommonProps),
                 string.Format("Upgraded OldCommonProps.pyproj should not import from $(VSToolsPath)")
             );
-            Assert.AreEqual(typeof(PythonProjectFactory).GUID, factoryGuid);
+            Assert.AreEqual(Guid.Empty, factoryGuid);
         }
 
         [TestMethod, Priority(1)]
@@ -309,7 +309,7 @@ namespace PythonToolsTests {
                 File.ReadAllText(tempProject).Contains("<Import Project=\"$(PtvsTargetsFile)\" Condition=\"Exists($(PtvsTargetsFile))\""),
                 string.Format("Upgraded OldCommonTargets.pyproj should import $(PtvsTargetsFile)")
             );
-            Assert.AreEqual(typeof(PythonProjectFactory).GUID, factoryGuid);
+            Assert.AreEqual(Guid.Empty, factoryGuid);
         }
 
 #if DEV12_OR_LATER
