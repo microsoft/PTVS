@@ -175,6 +175,23 @@ b = c
         }
 
         [TestMethod, Priority(0)]
+        public void ParameterAnnotationClassification() {
+            var code = @"class A: pass
+class B: pass
+
+def f(a = A, b : B):
+    pass
+";
+            using (var helper = new ClassifierHelper(code, PythonLanguageVersion.V27)) {
+                helper.CheckAstClassifierSpans("ki:k ki:k ki(i=i,i:i): k");
+
+                helper.Analyze();
+
+                helper.CheckAnalysisClassifierSpans("c<A>c<B>f<f>pc<A>pc<B>");
+            }
+        }
+
+        [TestMethod, Priority(0)]
         public void TrueFalseClassification() {
             var code = "True False";
 
