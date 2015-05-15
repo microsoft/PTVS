@@ -527,11 +527,12 @@ namespace PythonToolsUITests {
                 var environment = list.Environments.Single();
                 var pip = (PipExtensionProvider)list.GetExtensionOrAssert<PipExtensionProvider>(environment);
 
-                Assert.IsFalse(pip.IsPipInstalled().GetAwaiter().GetResult(), "venv should not install pip");
+                pip.CheckPipInstalledAsync().GetAwaiter().GetResult();
+                Assert.AreEqual(false, pip.IsPipInstalled, "venv should not install pip");
                 var task = wpf.Invoke(() => pip.InstallPip().ContinueWith<bool>(LogException));
                 Assert.IsTrue(task.Wait(TimeSpan.FromSeconds(120.0)), "pip install timed out");
                 Assert.IsTrue(task.Result, "pip install failed");
-                Assert.IsTrue(pip.IsPipInstalled().GetAwaiter().GetResult(), "pip was not installed");
+                Assert.AreEqual(true, pip.IsPipInstalled, "pip was not installed");
 
                 var packages = pip.GetInstalledPackagesAsync().GetAwaiter().GetResult();
                 AssertUtil.ContainsExactly(packages.Select(pv => pv.Name), "pip", "setuptools");

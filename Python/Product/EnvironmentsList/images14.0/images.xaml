@@ -143,9 +143,7 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate>
-                    <Grid theming:ImageThemingUtilities.ImageBackgroundColor="{Binding Background,RelativeSource={RelativeSource Self}}">
-                        <imaging:CrispImage Moniker="{x:Static catalog:KnownMonikers.PythonPackage}" />
-                    </Grid>
+                    <imaging:CrispImage Moniker="{x:Static catalog:KnownMonikers.PythonPackage}" />
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
