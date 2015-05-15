@@ -20,10 +20,10 @@ namespace Microsoft.PythonTools.Uwp.Interpreter {
         public const string InterpreterGuidString = "{86767848-40B4-4007-8BCC-A3835EDF0E69}";
         public static readonly Guid InterpreterGuid = new Guid(InterpreterGuidString);
 
-        public PythonUwpInterpreterFactory(InterpreterConfiguration configuration) 
+        public PythonUwpInterpreterFactory(InterpreterConfiguration configuration, string description) 
             : base(
-                  InterpreterGuid, 
-                  "Python UWP",
+                  InterpreterGuid,
+                  description,
                   configuration,
                   true) {
         }

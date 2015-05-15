@@ -43,11 +43,7 @@
     </AppxManifest>
     <None Include="$projectname$_TemporaryKey.pfx" />
   </ItemGroup>
-  <PropertyGroup>
-    <CPythonTargetsFile>$(LocalAppData)\Microsoft\VisualStudio\$(VisualStudioVersion)Exp\Extensions\Microsoft\Python UWP\$(InterpreterVersion)\DesignTime\CommonConfiguration\Neutral\CPython.targets</CPythonTargetsFile>
-    <CPythonTargetsFile Condition="'$(CPythonTargetsFile)' == '' or !Exists('$(CPythonTargetsFile)')">$(MSBuildProgramFiles32)\Microsoft SDKs\Windows\v10.0\ExtensionSDKs\PyUWP\$(InterpreterVersion)\DesignTime\CommonConfiguration\Neutral\CPython.targets</CPythonTargetsFile>
-  </PropertyGroup>
-  
+
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">14.0</VisualStudioVersion>
     <PtvsVersion Condition="'$(PtvsVersion)' == ''">2.2</PtvsVersion>
@@ -55,7 +51,6 @@
     <PtvsTargetsFile Condition="'$(PtvsTargetsFile)' == '' or !Exists('$(PtvsTargetsFile)')">$(MSBuildProgramFiles32)\Microsoft Visual Studio $(VisualStudioVersion)\Common7\IDE\Extensions\Microsoft\Python Tools for Visual Studio - UWP\$(PtvsVersion)\Microsoft.PythonTools.Uwp.targets</PtvsTargetsFile>
   </PropertyGroup>
 
-  <Import Project="$(CPythonTargetsFile)" />
-  <Import Condition="Exists($(PtvsTargetsFile))" Project="$(PtvsTargetsFile)" />
+  <Import Project="$(PtvsTargetsFile)" />
 
 </Project>
