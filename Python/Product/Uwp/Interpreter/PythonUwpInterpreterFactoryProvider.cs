@@ -25,63 +25,72 @@ namespace Microsoft.PythonTools.Uwp.Interpreter {
     class PythonUwpInterpreterFactoryProvider : IPythonInterpreterFactoryProvider {
         private HashSet<IPythonInterpreterFactory> _factories = null;
 
+        private const string PythonUwpSdkTargetsFile = @"DesignTime\CommonConfiguration\Neutral\CPython.targets";
+
         public event EventHandler InterpreterFactoriesChanged;
 
         public PythonUwpInterpreterFactoryProvider() {
         }
 
+        private IDictionary<string, IPythonInterpreterFactory> FindFactoriesFromDirectories(params string[] directories) {
+            var factoryMap = new Dictionary<string, IPythonInterpreterFactory>();
+
+            try {
+                if (directories != null) {
+                    for (int i = 0; i < directories.Length; i++) {
+                        var rootDirectoryInfo = new DirectoryInfo(directories[i]);
+
+                        if (rootDirectoryInfo.Exists) {
+                            foreach (var dirInfo in rootDirectoryInfo.EnumerateDirectories()) {
+                                Version pythonUwpVersion;
+
+                                if (Version.TryParse(dirInfo.Name, out pythonUwpVersion)) {
+                                    var targetsFile = dirInfo.GetFiles(PythonUwpSdkTargetsFile).FirstOrDefault();
+                                    var factoryName = string.Join(" ", rootDirectoryInfo.Name, dirInfo.Name);
+
+                                    if (targetsFile != null) {
+                                        // This will add a new or overwrite factory with new factory found
+                                        // Ordering of the directories means that the last directory specified will 
+                                        // win the battle of conflicting factory names
+                                        factoryMap[factoryName] = new PythonUwpInterpreterFactory(
+                                                new InterpreterConfiguration(
+                                                    dirInfo.FullName,
+                                                    targetsFile.FullName,
+                                                    null,
+                                                    null,
+                                                    null,
+                                                    ProcessorArchitecture.None,
+                                                    pythonUwpVersion,
+                                                    InterpreterUIMode.CannotBeDefault
+                                                    ),
+                                                factoryName);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (IOException) {
+                // IOException is not critical here, just means we cannot interrogate for factories at this point
+            }
+
+            return factoryMap;
+        }
+
         private void DiscoverFactories() {
             if (_factories == null) {
-                var userSdkInstallDir = new DirectoryInfo(Environment.ExpandEnvironmentVariables(@"%LOCALAPPDATA%\Microsoft\VisualStudio\%VISUALSTUDIOVERSION%Exp\Extensions\Microsoft\Python UWP"));
-                var sdkInstallDir = new DirectoryInfo(Environment.ExpandEnvironmentVariables(@"%ProgramFiles(x86)%\Microsoft SDKs\Windows\v10.0\ExtensionSDKs\Python UWP"));
-
                 _factories = new HashSet<IPythonInterpreterFactory>();
 
-                if (userSdkInstallDir.Exists) {
-                    foreach (var dirInfo in userSdkInstallDir.EnumerateDirectories()) {
-                        var targetsFile = dirInfo.GetFiles("CPython.targets", SearchOption.AllDirectories).FirstOrDefault();
+                var userSdkInstallDir = Environment.ExpandEnvironmentVariables(@"%LOCALAPPDATA%\Microsoft\VisualStudio\%VISUALSTUDIOVERSION%Exp\Extensions\Microsoft\Python UWP");
+                var sdkInstallDir = Environment.ExpandEnvironmentVariables(@"%ProgramFiles(x86)%\Microsoft SDKs\Windows\v10.0\ExtensionSDKs\Python UWP");
 
-                        if (targetsFile != null) {
-                            _factories.Add(
-                                new PythonUwpInterpreterFactory(
-                                    new InterpreterConfiguration(
-                                        dirInfo.FullName,
-                                        targetsFile.FullName,
-                                        null,
-                                        null,
-                                        null,
-                                        ProcessorArchitecture.None,
-                                        new Version(dirInfo.Name),
-                                        InterpreterUIMode.CannotBeDefault
-                                        ), 
-                                    string.Join(" ", userSdkInstallDir.Name, dirInfo.Name)));
-                        }
+                var factoryMap = FindFactoriesFromDirectories(sdkInstallDir, userSdkInstallDir);
+
+                if (factoryMap.Count > 0) {
+                    foreach (var factory in factoryMap.Values) {
+                        _factories.Add(factory);
                     }
-                }
 
-                if (sdkInstallDir.Exists) {
-                    foreach (var dirInfo in sdkInstallDir.EnumerateDirectories()) {
-                        var targetsFile = dirInfo.GetFiles("CPython.targets", SearchOption.AllDirectories).FirstOrDefault();
-
-                        if (targetsFile != null) {
-                            _factories.Add(
-                                new PythonUwpInterpreterFactory(
-                                    new InterpreterConfiguration(
-                                        dirInfo.FullName,
-                                        targetsFile.FullName,
-                                        null,
-                                        null,
-                                        null,
-                                        ProcessorArchitecture.None,
-                                        new Version(dirInfo.Name),
-                                        InterpreterUIMode.CannotBeDefault
-                                        ),
-                                    string.Join(" ", sdkInstallDir.Name, dirInfo.Name)));
-                        }
-                    }
-                }
-
-                if (_factories.Count > 0) {
                     var factoriesChanged = InterpreterFactoriesChanged;
 
                     if (factoriesChanged != null) {
