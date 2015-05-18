@@ -21,7 +21,6 @@ using Microsoft.PythonTools.Editor.Core;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
-using Microsoft.PythonTools.Editor.Core;
 
 namespace Microsoft.PythonTools.Intellisense {
 #if DEV14_OR_LATER
@@ -62,7 +61,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public async Task<bool> HasSuggestedActionsAsync(ISuggestedActionCategorySet requestedActionCategories, SnapshotSpan range, CancellationToken cancellationToken) {
             var pos = _view.Caret.Position.BufferPosition;
-            if (pos.Position < pos.Snapshot.Length - 1) {
+            if (pos.Position < pos.GetContainingLine().End.Position) {
                 pos += 1;
             }
             var targetPoint = _view.BufferGraph.MapDownToFirstMatch(pos, PointTrackingMode.Positive, EditorExtensions.IsPythonContent, PositionAffinity.Successor);
