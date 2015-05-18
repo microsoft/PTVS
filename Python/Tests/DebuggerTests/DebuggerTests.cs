@@ -1985,7 +1985,6 @@ namespace DebuggerTests {
             }
         }
 
-
         [TestMethod, Priority(0)]
         public virtual void AttachReattach() {
             Process p = Process.Start(Version.InterpreterPath, "\"" + TestData.GetPath(@"TestData\DebuggerProject\InfiniteRun.py") + "\"");
@@ -2541,6 +2540,54 @@ int main(int argc, char* argv[]) {
             }
         }
 
+        [TestMethod, Priority(0)]
+        public void AttachAndStepWithBlankSysPrefix() {
+            string script = TestData.GetPath(@"TestData\DebuggerProject\InfiniteRunBlankPrefix.py");
+            var p = Process.Start(Version.InterpreterPath, "\"" + script  + "\"");
+            try {
+                Thread.Sleep(1000);
+                var proc = PythonProcess.Attach(p.Id);
+                try {
+                    var attached = new AutoResetEvent(false);
+                    proc.ProcessLoaded += (sender, args) => {
+                        Console.WriteLine("Process loaded");
+                        proc.Resume();
+                        attached.Set();
+                    };
+                    proc.StartListening();
+                    Assert.IsTrue(attached.WaitOne(20000), "Failed to attach within 20s");
+
+                    var bpHit = new AutoResetEvent(false);
+                    PythonThread thread = null;
+                    PythonStackFrame oldFrame = null;
+                    proc.BreakpointHit += (sender, args) => {
+                        Console.WriteLine("Breakpoint hit");
+                        thread = args.Thread;
+                        oldFrame = args.Thread.Frames[0];
+                        bpHit.Set();
+                    };
+                    var bp = proc.AddBreakPoint(script, 6);
+                    bp.Add();
+                    Assert.IsTrue(bpHit.WaitOne(20000), "Failed to hit breakpoint within 20s");
+
+                    var stepComplete = new AutoResetEvent(false);
+                    PythonStackFrame newFrame = null;
+                    proc.StepComplete += (sender, args) => {
+                        newFrame = args.Thread.Frames[0];
+                        stepComplete.Set();
+                    };
+                    thread.StepOver();
+                    Assert.IsTrue(stepComplete.WaitOne(20000), "Failed to complete the step within 20s");
+
+                    Assert.AreEqual(oldFrame.FileName, newFrame.FileName);
+                    Assert.IsTrue(oldFrame.LineNo + 1 == newFrame.LineNo);
+                } finally {
+                    DetachProcess(proc);
+                }
+            } finally {
+                DisposeProcess(p);
+            }
+        }
 
         class TraceRedirector : Redirector {
             private readonly string _prefix;

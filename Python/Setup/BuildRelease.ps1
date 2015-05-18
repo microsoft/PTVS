@@ -261,6 +261,7 @@ $managed_files = (
     "Microsoft.PythonTools.WebRole.dll",
     "Microsoft.PythonTools.Django.dll",
     "Microsoft.PythonTools.VsLogger.dll",
+    "Microsoft.PythonTools.Uwp.dll",
     "Microsoft.PythonTools.AzureSetup.exe",
     "Microsoft.IronPythonTools.Resolver.dll"
 )

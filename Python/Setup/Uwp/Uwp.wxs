@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Module Id="PTVSUwpPackage" Language="1033" Version="1.0.0.0">
+    <Package Id="4663ff7b-1971-4987-a40b-fa662787f939" Manufacturer="Microsoft Corporation" InstallerVersion="200" />
+
+    <?include ..\MergeModule.wxi ?>
+
+    <Component Id="PerUserInstallRegistry" Directory="Dir_VSInstallLocation" Guid="{D6DEC397-028C-473B-8449-B7AB415B21BB}">
+      <Condition>NOT ALLUSERS = 1</Condition>
+      <RegistryKey Root='HKCU' Key='Software\Microsoft\VisualStudio\$(var.VSTargetVersion)\ExtensionManager\EnabledExtensions'>
+        <RegistryValue Type='string' Name='90e4f34e-cd66-47c7-b1fd-b0d85751c995,$(var.ReleaseVersion)' Value='[Dir_VSInstallLocation]'/>
+      </RegistryKey>
+      <RegistryKey Root='HKCU' Key='Software\Microsoft\VisualStudio\$(var.VSTargetVersion)\ExtensionManager\ExtensionTypes'>
+        <RegistryValue Type='string' Name='90e4f34e-cd66-47c7-b1fd-b0d85751c995,$(var.ReleaseVersion)' Value='Tool'/>
+      </RegistryKey>
+    </Component>
+
+    <ComponentGroupRef Id="CGroup_UwpFiles"/>
+  </Module>
+</Wix>
