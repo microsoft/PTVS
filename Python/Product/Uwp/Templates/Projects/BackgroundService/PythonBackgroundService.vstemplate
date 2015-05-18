@@ -4,8 +4,8 @@
     <Description>A project for creating an Python IoT Background Application</Description>
     <Icon Package="{6dbd7c1e-1f1b-496d-ac7c-c55dae66c783}" ID="402" />
     <ProjectType>Python</ProjectType>
-    <SortOrder>20</SortOrder>
-    <NumberOfParentCategoriesToRollUp>2</NumberOfParentCategoriesToRollUp>
+    <SortOrder>2000</SortOrder>
+    <NumberOfParentCategoriesToRollUp>0</NumberOfParentCategoriesToRollUp>
     <CreateNewFolder>true</CreateNewFolder>
     <TemplateID>Microsoft.Ptvs.WinRT.UWP.IOT.BackgroundApplication</TemplateID>
     <DefaultName>BackgroundApplication</DefaultName>
