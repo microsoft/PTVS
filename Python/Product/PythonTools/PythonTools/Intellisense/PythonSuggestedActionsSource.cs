@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.Text;
 using System.Threading;
 using Microsoft.VisualStudio.Text.Editor;
+using Microsoft.PythonTools.Editor.Core;
 
 namespace Microsoft.PythonTools.Intellisense {
 #if DEV14_OR_LATER
@@ -46,15 +47,20 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public async Task<bool> HasSuggestedActionsAsync(ISuggestedActionCategorySet requestedActionCategories, SnapshotSpan range, CancellationToken cancellationToken) {
-            var textBuffer = _textBuffer;
             var pos = _view.Caret.Position.BufferPosition;
-            var lineStart = pos.GetContainingLine().Start;
             if (pos.Position < pos.Snapshot.Length - 1) {
                 pos += 1;
             }
-            var span = pos.Snapshot.CreateTrackingSpan(
-                lineStart.Position,
-                pos.Position - lineStart.Position,
+            var targetPoint = _view.BufferGraph.MapDownToFirstMatch(pos, PointTrackingMode.Positive, EditorExtensions.IsPythonContent, PositionAffinity.Successor);
+            if (targetPoint == null) {
+                return false;
+            }
+            var textBuffer = targetPoint.Value.Snapshot.TextBuffer;
+            var lineStart = targetPoint.Value.GetContainingLine().Start;
+
+            var span = targetPoint.Value.Snapshot.CreateTrackingSpan(
+                lineStart,
+                targetPoint.Value.Position - lineStart.Position,
                 SpanTrackingMode.EdgePositive,
                 TrackingFidelityMode.Forward
             );
@@ -68,7 +74,7 @@ namespace Microsoft.PythonTools.Intellisense {
             var availableImports = await imports.GetAvailableImportsAsync(cancellationToken);
 
             suggestions.Add(new SuggestedActionSet(
-                availableImports.Select(s => new PythonSuggestedImportAction(this, s)).OrderBy(k => k)
+                availableImports.Select(s => new PythonSuggestedImportAction(this, textBuffer, s)).OrderBy(k => k)
             ));
 
             cancellationToken.ThrowIfCancellationRequested();
