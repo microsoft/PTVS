@@ -95,7 +95,9 @@ namespace DjangoTests {
             AssertUtil.ContainsExactly(
                 proj._tags.Keys.Except(DjangoAnalyzer._knownTags.Keys),
                 "test_tag",
-                "test_tag_2"
+                "test_tag_2",
+                "test_assignment_tag",
+                "test_simple_tag"
             );
 
             var entry = proj._tags["test_tag_2"].Entry;
@@ -109,7 +111,9 @@ namespace DjangoTests {
             AssertUtil.ContainsExactly(
                 proj._tags.Keys.Except(DjangoAnalyzer._knownTags.Keys),
                 "test_tag",
-                "test_tag_3"
+                "test_tag_3",
+                "test_assignment_tag",
+                "test_simple_tag"
             );
         }
 
