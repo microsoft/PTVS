@@ -349,7 +349,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 } finally {
                     if (!success) {
                         // Check whether we failed because pip is missing
-                        await CheckPipInstalledAsync();
+                        CheckPipInstalledAsync().DoNotWait();
                     }
 
                     OnOperationFinished(string.Format(
@@ -402,7 +402,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 } finally {
                     if (!success) {
                         // Check whether we failed because pip is missing
-                        await CheckPipInstalledAsync();
+                        CheckPipInstalledAsync().DoNotWait();
                     }
 
                     OnOperationFinished(string.Format(
