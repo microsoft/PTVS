@@ -32,19 +32,24 @@ namespace Microsoft.PythonTools.Interpreter {
 
         [SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors",
             Justification = "call to RefreshIsCurrent is required for back compat")]
-        public DerivedInterpreterFactory(PythonInterpreterFactoryWithDatabase baseFactory,
-                                         InterpreterFactoryCreationOptions options)
-            : base(options.Id,
-                   options.Description,
-                   new InterpreterConfiguration(options.PrefixPath,
-                                                options.InterpreterPath,
-                                                options.WindowInterpreterPath,
-                                                options.LibraryPath,
-                                                options.PathEnvironmentVariableName,
-                                                options.Architecture,
-                                                options.LanguageVersion),
-                   options.WatchLibraryForNewModules) {
-
+        public DerivedInterpreterFactory(
+            PythonInterpreterFactoryWithDatabase baseFactory,
+            InterpreterFactoryCreationOptions options
+        ) : base(
+                options.Id,
+                options.Description,
+                new InterpreterConfiguration(
+                    options.PrefixPath,
+                    options.InterpreterPath,
+                    options.WindowInterpreterPath,
+                    options.LibraryPath,
+                    options.PathEnvironmentVariableName,
+                    options.Architecture,
+                    options.LanguageVersion,
+                    InterpreterUIMode.CannotBeDefault | InterpreterUIMode.CannotBeConfigured
+                ),
+                options.WatchLibraryForNewModules
+        ) {
             if (baseFactory.Configuration.Version != options.LanguageVersion) {
                 throw new ArgumentException("Language versions do not match", "options");
             }
