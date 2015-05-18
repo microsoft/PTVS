@@ -11,6 +11,7 @@ using System.Drawing;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 using System.Diagnostics;
+using Microsoft.VisualStudio.Text;
 
 #if DEV14_OR_LATER
 namespace Microsoft.PythonTools.Intellisense {
@@ -18,11 +19,13 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly PythonSuggestedActionsSource _source;
         private readonly string _name;
         private readonly string _fromModule;
+        private readonly ITextBuffer _buffer;
 
-        public PythonSuggestedImportAction(PythonSuggestedActionsSource source, ExportedMemberInfo import) {
+        public PythonSuggestedImportAction(PythonSuggestedActionsSource source, ITextBuffer buffer, ExportedMemberInfo import) {
             _source = source;
             _fromModule = import.FromName;
             _name = import.ImportName;
+            _buffer = buffer;
         }
 
         public IEnumerable<SuggestedActionSet> ActionSets {
@@ -68,7 +71,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             MissingImportAnalysis.AddImport(
                 _source._provider,
-                _source._textBuffer,
+                _buffer,
                 _source._view,
                 _fromModule,
                 _name
