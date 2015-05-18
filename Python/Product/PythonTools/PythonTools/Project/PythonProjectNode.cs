@@ -487,7 +487,7 @@ namespace Microsoft.PythonTools.Project {
                     }
                 } else {
                     var fact = interpreters.ActiveInterpreter;
-                    if (!RemoveFirst(remaining, n => n._isGlobalDefault && n._factory == fact)) {
+                    if (fact.IsRunnable() && !RemoveFirst(remaining, n => n._isGlobalDefault && n._factory == fact)) {
                         node.AddChild(new InterpretersNode(this, null, fact, true, false, true));
                     }
                 }
