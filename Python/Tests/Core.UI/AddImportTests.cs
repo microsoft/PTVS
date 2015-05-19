@@ -205,7 +205,7 @@ module_func()";
             string expectedText = @"import test_package
 test_package";
 
-            AddSmartTagTest("ImportPackage.py", 1, 1, new[] { "import test_package" }, 0, expectedText);
+            AddSmartTagTest("ImportPackage.py", 1, 1, new[] { "*", "import test_package" }, 1, expectedText);
         }
 
         /// <summary>
@@ -287,13 +287,22 @@ sub_package";
             if (expectedActions.Length > 0) {
                 using (var sh = doc.StartSmartTagSession()) {
                     var actions = sh.Session.Actions.ToList();
-                    AssertUtil.AreEqual(
-                        actions.Select(a => a.DisplayText.Replace("__", "_")).ToArray(),
-                        expectedActions
-                    );
+                    if (expectedActions[0] == "*") {
+                        AssertUtil.ContainsAtLeast(
+                            actions.Select(a => a.DisplayText.Replace("__", "_")),
+                            expectedActions.Skip(1)
+                        );
+                    } else {
+                        AssertUtil.AreEqual(
+                            actions.Select(a => a.DisplayText.Replace("__", "_")).ToArray(),
+                            expectedActions
+                        );
+                    }
 
-                    if (invokeAction != -1) {
-                        doc.Invoke(() => actions[invokeAction].Invoke());
+                    if (invokeAction >= 0) {
+                        var action = actions.FirstOrDefault(a => a.DisplayText.Replace("__", "_") == expectedActions[invokeAction]);
+                        Assert.IsNotNull(action, "No action named " + expectedActions[invokeAction]);
+                        doc.Invoke(() => action.Invoke());
                         Assert.AreEqual(expectedText, doc.Text);
                     }
                 }
