@@ -42,6 +42,11 @@ namespace Microsoft.PythonTools.Interpreter {
         /// <summary>
         /// Interpreter cannot be automatically selected as the default.
         /// </summary>
-        CannotBeAutoDefault = 0x04
+        CannotBeAutoDefault = 0x04,
+
+        /// <summary>
+        /// Interpreter has no user-modifiable settings.
+        /// </summary>
+        CannotBeConfigured = 0x08,
     }
 }

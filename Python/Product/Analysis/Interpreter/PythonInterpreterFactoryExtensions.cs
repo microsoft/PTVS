@@ -134,5 +134,16 @@ namespace Microsoft.PythonTools.Interpreter {
                 !factory.Configuration.UIMode.HasFlag(InterpreterUIMode.CannotBeDefault) &&
                 !factory.Configuration.UIMode.HasFlag(InterpreterUIMode.CannotBeAutoDefault);
         }
+
+        /// <summary>
+        /// Returns <c>true</c> if the factory can be configured.
+        /// </summary>
+        /// <remarks>New in 2.2</remarks>
+        public static bool CanBeConfigured(this IPythonInterpreterFactory factory) {
+            return factory != null &&
+                factory.Configuration != null &&
+                !factory.Configuration.UIMode.HasFlag(InterpreterUIMode.CannotBeConfigured);
+        }
+
     }
 }
