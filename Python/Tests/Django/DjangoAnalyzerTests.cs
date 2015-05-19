@@ -72,6 +72,20 @@ namespace DjangoTests {
                 "test_filter",
                 "test_filter_2"
             );
+
+            var entry = proj._filters["test_filter_2"].Entry;
+            var parser = Parser.CreateParser(
+                new StringReader(File.ReadAllText(entry.FilePath).Replace("test_filter_2", "test_filter_3")),
+                PythonLanguageVersion.V27
+            );
+            entry.UpdateTree(parser.ParseFile(), null);
+            entry.Analyze(CancellationToken.None, false);
+
+            AssertUtil.ContainsExactly(
+                proj._filters.Keys.Except(DjangoAnalyzer._knownFilters.Keys),
+                "test_filter",
+                "test_filter_3"
+            );
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
@@ -81,7 +95,25 @@ namespace DjangoTests {
             AssertUtil.ContainsExactly(
                 proj._tags.Keys.Except(DjangoAnalyzer._knownTags.Keys),
                 "test_tag",
-                "test_tag_2"
+                "test_tag_2",
+                "test_assignment_tag",
+                "test_simple_tag"
+            );
+
+            var entry = proj._tags["test_tag_2"].Entry;
+            var parser = Parser.CreateParser(
+                new StringReader(File.ReadAllText(entry.FilePath).Replace("test_tag_2", "test_tag_3")),
+                PythonLanguageVersion.V27
+            );
+            entry.UpdateTree(parser.ParseFile(), null);
+            entry.Analyze(CancellationToken.None, false);
+
+            AssertUtil.ContainsExactly(
+                proj._tags.Keys.Except(DjangoAnalyzer._knownTags.Keys),
+                "test_tag",
+                "test_tag_3",
+                "test_assignment_tag",
+                "test_simple_tag"
             );
         }
 
