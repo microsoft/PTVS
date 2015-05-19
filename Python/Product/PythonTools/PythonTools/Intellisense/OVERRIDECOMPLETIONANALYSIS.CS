@@ -114,7 +114,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             CompletionSet res;
             if (completions.Any()) {
-                res = new FuzzyCompletionSet(
+                var set = new FuzzyCompletionSet(
                     "PythonOverrides",
                     "Python",
                     Span,
@@ -122,6 +122,8 @@ namespace Microsoft.PythonTools.Intellisense {
                     _options,
                     CompletionComparer.UnderscoresLast
                 );
+                set.CommitByDefault = false;
+                res = set;
             } else {
                 res = new CompletionSet();
             }
