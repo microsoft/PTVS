@@ -55,34 +55,9 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             target.Exec(ref guid, (int)VSConstants.VSStd2KCmdID.TAB, 0, IntPtr.Zero, IntPtr.Zero);
         }
 
-        public static void Delete(this IOleCommandTarget target) {
-            var guid = VSConstants.VSStd2K;
-            target.Exec(ref guid, (int)VSConstants.VSStd2KCmdID.DELETE, 0, IntPtr.Zero, IntPtr.Zero);
-        }
-
         public static void Backspace(this IOleCommandTarget target) {
             var guid = VSConstants.VSStd2K;
             target.Exec(ref guid, (int)VSConstants.VSStd2KCmdID.BACKSPACE, 0, IntPtr.Zero, IntPtr.Zero);
-        }
-
-        public static void Cut(this IOleCommandTarget target) {
-            var guid = VSConstants.GUID_VSStandardCommandSet97;
-            target.Exec(ref guid, (int)VSConstants.VSStd97CmdID.Cut, 0, IntPtr.Zero, IntPtr.Zero);
-        }
-
-        public static void Copy(this IOleCommandTarget target) {
-            var guid = VSConstants.GUID_VSStandardCommandSet97;
-            target.Exec(ref guid, (int)VSConstants.VSStd97CmdID.Copy, 0, IntPtr.Zero, IntPtr.Zero);
-        }
-
-        public static void Paste(this IOleCommandTarget target) {
-            var guid = VSConstants.GUID_VSStandardCommandSet97;
-            target.Exec(ref guid, (int)VSConstants.VSStd97CmdID.Paste, 0, IntPtr.Zero, IntPtr.Zero);
-        }
-
-        public static void Rename(this IOleCommandTarget target) {
-            var guid = VSConstants.GUID_VSStandardCommandSet97;
-            target.Exec(ref guid, (int)VSConstants.VSStd97CmdID.Rename, 0, IntPtr.Zero, IntPtr.Zero);
         }
 
         public static void MemberList(this IOleCommandTarget target) {

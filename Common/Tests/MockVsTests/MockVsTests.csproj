@@ -148,9 +148,11 @@
     <Compile Include="MockVsTextManager.cs" />
     <Compile Include="MockVsTextView.cs" />
     <Compile Include="MockVsTrackProjectDocuments.cs" />
+    <Compile Include="MockVsTrackSelectionEx.cs" />
     <Compile Include="MockVsUIHierarchyWindow.cs" />
     <Compile Include="MockVsUIShell.cs" />
     <Compile Include="MockVsUIShellOpenDocument.cs" />
+    <Compile Include="MockVsWindowFrame.cs" />
     <Compile Include="ProjectAggregator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
