@@ -223,8 +223,6 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         public int RegisterAndLockDocument(uint grfRDTLockType, string pszMkDocument, IVsHierarchy pHier, uint itemid, IntPtr punkDocData, out uint pdwCookie) {
             uint cookie = 0;
             int res = _vs.Invoke(() => {
-                _vs.AssertUIThread();
-
                 cookie = _ids[pszMkDocument] = ++_curCookie;
                 _table[cookie] = new DocInfo(
                     (_VSRDTFLAGS)grfRDTLockType,
@@ -239,8 +237,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
                     Marshal.AddRef(punkDocData);
                 }
                 var persist = (IVsPersistDocData)Marshal.GetObjectForIUnknown(punkDocData);
-                ErrorHandler.ThrowOnFailure(persist.OnRegisterDocData(cookie, pHier, itemid));
-                return VSConstants.S_OK;
+                return persist.OnRegisterDocData(cookie, pHier, itemid);
             });
 
             pdwCookie = cookie;

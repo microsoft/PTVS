@@ -210,7 +210,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
                     // show delete or remove dialog...
                 } else {
                     // show remove dialog...
-                    PrmoptAndDelete(
+                    PromptAndDelete(
                         item,
                         deleteHandler,
                         __VSDELETEITEMOPERATION.DELITEMOP_RemoveFromProject,
@@ -222,7 +222,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
                 object name;
                 ErrorHandler.ThrowOnFailure(item.Hierarchy.GetProperty(item.ItemId, (int)__VSHPROPID.VSHPROPID_Name, out name));
                 string message = string.Format("'{0}' will be deleted permanently.", name);
-                PrmoptAndDelete(
+                PromptAndDelete(
                     item,
                     deleteHandler,
                     __VSDELETEITEMOPERATION.DELITEMOP_DeleteFromStorage,
@@ -231,7 +231,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             }
         }
 
-        private void PrmoptAndDelete(HierarchyItem item, IVsHierarchyDeleteHandler deleteHandler, __VSDELETEITEMOPERATION deleteType, string message) {
+        private void PromptAndDelete(HierarchyItem item, IVsHierarchyDeleteHandler deleteHandler, __VSDELETEITEMOPERATION deleteType, string message) {
             Guid unused = Guid.Empty;
             int result;
             // show delete dialog...
