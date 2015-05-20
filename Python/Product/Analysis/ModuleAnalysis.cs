@@ -960,7 +960,18 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             // Recurse to check children of candidate scope
-            return FindScope(candidate, tree, location);
+            var child = FindScope(candidate, tree, location);
+
+            var funcChild = child as FunctionScope;
+            if (funcChild != null &&
+                funcChild.Function.FunctionDefinition.IsLambda &&
+                child.GetStop(tree) < location.Index) {
+                // Do not want to extend a lambda function's scope to the end of
+                // the parent scope.
+                return parent;
+            }
+
+            return child;
         }
 
 

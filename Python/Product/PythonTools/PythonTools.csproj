@@ -175,9 +175,6 @@
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Editor, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
-    <Reference Include="Microsoft.VisualStudio.InteractiveWindow">
-      <HintPath>$(DevEnvDir)PrivateAssemblies\Microsoft.VisualStudio.InteractiveWindow.dll</HintPath>
-    </Reference>
     <Reference Include="Microsoft.VisualStudio.Language.Intellisense, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Language.NavigateTo.Interfaces, Version=$(VSTarget).0.0, Culture=neutral" />
     <Reference Include="Microsoft.VisualStudio.Language.StandardClassification, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
@@ -210,9 +207,6 @@
     </Reference>
     <Reference Include="Microsoft.VisualStudio.VSHelp, Version=7.0.3300.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <EmbedInteropTypes>False</EmbedInteropTypes>
-    </Reference>
-    <Reference Include="Microsoft.VisualStudio.VsInteractiveWindow">
-      <HintPath>$(DevEnvDir)PrivateAssemblies\Microsoft.VisualStudio.VsInteractiveWindow.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.WizardFramework, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="System" />
@@ -267,12 +261,23 @@
       </ItemGroup>
     </Otherwise>
   </Choose>
+  <Choose>
+    <When Condition="$(Dev14OrLater)">
+      <ItemGroup>
+        <Reference Include="Microsoft.VisualStudio.InteractiveWindow">
+          <HintPath>$(DevEnvDir)PrivateAssemblies\Microsoft.VisualStudio.InteractiveWindow.dll</HintPath>
+          <Private>false</Private>
+        </Reference>
+        <Reference Include="Microsoft.VisualStudio.VsInteractiveWindow">
+          <HintPath>$(DevEnvDir)PrivateAssemblies\Microsoft.VisualStudio.VsInteractiveWindow.dll</HintPath>
+          <Private>false</Private>
+        </Reference>
+      </ItemGroup>
+    </When>
+  </Choose>
   <ItemGroup>
     <Compile Include="..\Analysis\IEnumerableExtensions.cs">
       <Link>IEnumerableExtensions.cs</Link>
-    </Compile>
-    <Compile Include="..\Analysis\Interpreter\PythonInterpreterFactoryExtensions.cs">
-      <Link>PythonInterpreterFactoryExtensions.cs</Link>
     </Compile>
     <Compile Include="PythonTools\Repl\IMultipleScopeEvaluator.cs" />
     <Compile Include="PythonTools\Repl\InteractiveWindowProvider.cs" />

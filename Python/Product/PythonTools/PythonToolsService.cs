@@ -28,6 +28,7 @@ using Microsoft.PythonTools.Logging;
 using Microsoft.PythonTools.Navigation;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Parsing;
+using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.OLE.Interop;
@@ -110,7 +111,8 @@ namespace Microsoft.PythonTools {
             if (_interpreterOptionsService != null) { // not available in some test cases...
                 // log interesting stats on startup
                 var installed = _interpreterOptionsService.KnownProviders
-                    .Where(x => !(x is ConfigurablePythonInterpreterFactoryProvider))
+                    .Where(x => !(x is ConfigurablePythonInterpreterFactoryProvider) &&
+                                !(x is LoadedProjectInterpreterFactoryProvider))
                     .SelectMany(x => x.GetInterpreterFactories())
                     .Count();
 
@@ -350,14 +352,16 @@ namespace Microsoft.PythonTools {
                 Debug.Assert(configurable != null);
 
                 if (configurable != null) {
+                    // Remove any items
+                    foreach (var option in InterpreterOptions.Select(kv => kv.Value).Where(o => o.Removed).ToList()) {
+                        configurable.RemoveInterpreter(option.Id);
+                        RemoveInteractiveOptions(option.Factory);
+                        RemoveInterpreterOptions(option.Factory);
+                    }
+
+                    // Add or update any items that weren't removed
                     foreach (var option in InterpreterOptions.Select(x => x.Value)) {
-                        if (option.Removed) {
-                            if (!option.Added) {
-                                // if it was added and then immediately removed, don't save it.
-                                configurable.RemoveInterpreter(option.Id);
-                            }
-                            continue;
-                        } else if (option.Added) {
+                        if (option.Added) {
                             if (option.Id == Guid.Empty) {
                                 option.Id = Guid.NewGuid();
                             }

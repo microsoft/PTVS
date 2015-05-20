@@ -1208,6 +1208,20 @@ namespace Microsoft.PythonTools.Parsing {
                     locals = ParseExpression();
                 }
             }
+            var codeTuple = code as TupleExpression;
+            if (_langVersion.Is2x() && codeTuple != null) {
+                if (codeTuple.Items != null) {
+                    if (codeTuple.Items.Count >= 3) {
+                        locals = codeTuple.Items[2];
+                    }
+                    if (codeTuple.Items.Count >= 2) {
+                        globals = codeTuple.Items[1];
+                    }
+                    if (codeTuple.Items.Count >= 1) {
+                        code = codeTuple.Items[0];
+                    }
+                }
+            }
             ExecStatement ret = new ExecStatement(code, locals, globals);
             if (_verbatim) {
                 AddPreceedingWhiteSpace(ret, execWhiteSpace);

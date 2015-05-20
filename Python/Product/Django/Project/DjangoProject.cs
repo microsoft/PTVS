@@ -19,6 +19,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
@@ -939,9 +940,12 @@ namespace Microsoft.PythonTools.Django.Project {
 
     class TagInfo {
         public readonly string Documentation;
-        public TagInfo(string doc) {
+        public readonly IPythonProjectEntry Entry;
+        public TagInfo(string doc, IPythonProjectEntry entry) {
             Documentation = doc;
+            Entry = entry;
         }
+
     }
 
 }

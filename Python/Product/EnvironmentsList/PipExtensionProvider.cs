@@ -33,6 +33,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         private readonly Redirector _output;
         private FrameworkElement _wpfObject;
 
+        private bool? _isPipInstalled;
         private PipPackageCache _cache;
 
         private readonly CancellationTokenSource _cancelAll = new CancellationTokenSource();
@@ -148,16 +149,27 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 args = new [] { "-m", "pip", "list", "--no-index" };
             }
 
-            PipPackageView[] packages;
+            PipPackageView[] packages = null;
 
-            using (var output = ProcessOutput.RunHiddenAndCapture(_factory.Configuration.InterpreterPath, args)) {
-                if ((await output) != 0) {
-                    throw new PipException(Resources.ListFailed);
+            try {
+                using (var output = ProcessOutput.RunHiddenAndCapture(_factory.Configuration.InterpreterPath, args)) {
+                    if ((await output) != 0) {
+                        throw new PipException(Resources.ListFailed);
+                    }
+
+                    packages = output.StandardOutputLines
+                        .Select(s => new PipPackageView(_cache, s))
+                        .ToArray();
                 }
-
-                packages = output.StandardOutputLines
-                    .Select(s => new PipPackageView(_cache, s))
-                    .ToArray();
+            } catch (IOException) {
+            } finally {
+                if (packages == null) {
+                    // pip is obviously not installed
+                    IsPipInstalled = false;
+                } else {
+                    // pip is obviously installed
+                    IsPipInstalled = true;
+                }
             }
 
             return packages;
@@ -167,14 +179,44 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             return await _cache.GetAllPackagesAsync(_cancelAll.Token);
         }
 
-        internal async Task<bool> IsPipInstalled() {
-            AbortOnInvalidConfiguration();
+        internal bool? IsPipInstalled {
+            get {
+                return _isPipInstalled;
+            }
+            private set {
+                if (_isPipInstalled != value) {
+                    _isPipInstalled = value;
 
-            using (var output = ProcessOutput.RunHiddenAndCapture(
-                _factory.Configuration.InterpreterPath,
-                "-E", "-c", "import pip"
-            )) {
-                return (await output) == 0;
+                    var evt = IsPipInstalledChanged;
+                    if (evt != null) {
+                        evt(this, EventArgs.Empty);
+                    }
+                }
+            }
+        }
+
+        internal event EventHandler IsPipInstalledChanged;
+
+        internal async Task CheckPipInstalledAsync() {
+            if (!CanExecute) {
+                // Don't cache the result in case our configuration gets fixed
+                IsPipInstalled = false;
+                return;
+            }
+
+            if (!_isPipInstalled.HasValue) {
+                try {
+                    using (var output = ProcessOutput.RunHiddenAndCapture(
+                        _factory.Configuration.InterpreterPath,
+                        "-E", "-c", "import pip"
+                    )) {
+                        IsPipInstalled = (await output) == 0;
+                    }
+                } catch (IOException) {
+                    IsPipInstalled = false;
+                } catch (OperationCanceledException) {
+                    IsPipInstalled = false;
+                }
             }
         }
 
@@ -240,6 +282,10 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                         }
                         ToolWindow.UnhandledException.Execute(ExceptionDispatchInfo.Capture(ex), WpfObject);
                     } finally {
+                        if (success) {
+                            IsPipInstalled = true;
+                        }
+
                         OnOperationFinished(
                             success ? Resources.InstallingPipSuccess : Resources.InstallingPipFailed
                         );
@@ -277,34 +323,39 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             }
 
             using (await WaitAndLockPip()) {
+                bool success = false;
                 OnOperationStarted(string.Format(Resources.InstallingPackageStarted, package));
-                using (var output = ProcessOutput.Run(
-                    _factory.Configuration.InterpreterPath,
-                    QuotedArgumentsWithPackageName(args, package),
-                    _factory.Configuration.PrefixPath,
-                    UnbufferedEnv,
-                    false,
-                    _output,
-                    quoteArgs: false,
-                    elevate: ShouldElevate
-                )) {
-                    if (!output.IsStarted) {
-                        OnOperationFinished(string.Format(Resources.InstallingPackageFailed, package));
-                        return;
-                    }
-                    bool success = true;
-                    try {
+                try {
+                    using (var output = ProcessOutput.Run(
+                        _factory.Configuration.InterpreterPath,
+                        QuotedArgumentsWithPackageName(args, package),
+                        _factory.Configuration.PrefixPath,
+                        UnbufferedEnv,
+                        false,
+                        _output,
+                        quoteArgs: false,
+                        elevate: ShouldElevate
+                    )) {
+                        if (!output.IsStarted) {
+                            return;
+                        }
                         var exitCode = await output;
                         if (exitCode != 0) {
-                            success = false;
                             throw new PipException(Resources.InstallationFailed);
                         }
-                    } finally {
-                        OnOperationFinished(string.Format(
-                            success ? Resources.InstallingPackageSuccess : Resources.InstallingPackageFailed,
-                            package
-                        ));
+                        success = true;
                     }
+                } catch (IOException) {
+                } finally {
+                    if (!success) {
+                        // Check whether we failed because pip is missing
+                        CheckPipInstalledAsync().DoNotWait();
+                    }
+
+                    OnOperationFinished(string.Format(
+                        success ? Resources.InstallingPackageSuccess : Resources.InstallingPackageFailed,
+                        package
+                    ));
                 }
             }
         }
@@ -320,22 +371,21 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
             using (await WaitAndLockPip()) {
                 OnOperationStarted(string.Format(Resources.UninstallingPackageStarted, package));
-                using (var output = ProcessOutput.Run(
-                    _factory.Configuration.InterpreterPath,
-                    QuotedArgumentsWithPackageName(args, package),
-                    _factory.Configuration.PrefixPath,
-                    UnbufferedEnv,
-                    false,
-                    _output,
-                    quoteArgs: false,
-                    elevate: ShouldElevate
-                )) {
-                    if (!output.IsStarted) {
-                        OnOperationFinished(string.Format(Resources.UninstallingPackageFailed, package));
-                        return;
-                    }
-                    bool success = true;
-                    try {
+                bool success = false;
+                try {
+                    using (var output = ProcessOutput.Run(
+                        _factory.Configuration.InterpreterPath,
+                        QuotedArgumentsWithPackageName(args, package),
+                        _factory.Configuration.PrefixPath,
+                        UnbufferedEnv,
+                        false,
+                        _output,
+                        quoteArgs: false,
+                        elevate: ShouldElevate
+                    )) {
+                        if (!output.IsStarted) {
+                            return;
+                        }
                         var exitCode = await output;
                         if (exitCode != 0) {
                             // Double check whether the package has actually
@@ -343,16 +393,22 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                             // where, for all practical purposes, there is no
                             // error.
                             if ((await GetInstalledPackagesAsync()).Any(p => p.Name == package)) {
-                                success = false;
                                 throw new PipException(Resources.UninstallationFailed);
                             }
                         }
-                    } finally {
-                        OnOperationFinished(string.Format(
-                            success ? Resources.UninstallingPackageSuccess : Resources.UninstallingPackageFailed,
-                            package
-                        ));
+                        success = true;
                     }
+                } catch (IOException) {
+                } finally {
+                    if (!success) {
+                        // Check whether we failed because pip is missing
+                        CheckPipInstalledAsync().DoNotWait();
+                    }
+
+                    OnOperationFinished(string.Format(
+                        success ? Resources.UninstallingPackageSuccess : Resources.UninstallingPackageFailed,
+                        package
+                    ));
                 }
             }
         }
