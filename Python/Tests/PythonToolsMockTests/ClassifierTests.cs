@@ -47,7 +47,7 @@ namespace PythonToolsMockTests {
             PythonTestData.Deploy(includeTestData: false);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(0), TestCategory("Mock")]
         public void KeywordClassification27() {
             var code = string.Join(Environment.NewLine, PythonKeywords.All(PythonLanguageVersion.V27));
             code += "\r\nTrue\r\nFalse";
@@ -70,7 +70,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(0), TestCategory("Mock")]
         public void KeywordClassification33() {
             var code = string.Join(Environment.NewLine, PythonKeywords.All(PythonLanguageVersion.V33));
 
@@ -92,7 +92,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(0), TestCategory("Mock")]
         public void ModuleClassification() {
             var code = @"import abc
 import os
@@ -115,7 +115,7 @@ abc = True
             return new MockTextBuffer(code, PythonCoreConstants.ContentType, "C:\\fob.py");
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(0), TestCategory("Mock")]
         public void ImportClassifications() {
             var code = @"import abc as x
 from os import fdopen
@@ -134,7 +134,7 @@ fdopen
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(0), TestCategory("Mock")]
         public void TypeClassification() {
             var code = @"class MyClass(object):
     pass
@@ -154,7 +154,7 @@ MyClassType = type(mc)
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(0), TestCategory("Mock")]
         public void ParameterClassification() {
             var code = @"def f(a, b, c):
     a = b
@@ -174,7 +174,7 @@ b = c
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(0), TestCategory("Mock")]
         public void ParameterAnnotationClassification() {
             var code = @"class A: pass
 class B: pass
@@ -191,7 +191,7 @@ def f(a = A, b : B):
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(0), TestCategory("Mock")]
         public void TrueFalseClassification() {
             var code = "True False";
 
