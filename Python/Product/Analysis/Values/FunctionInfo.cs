@@ -376,7 +376,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     }).ToArray();
 
                     var parameters = vars
-                        .Select(p => string.Join(", ", p.TypesNoCopy.Select(av => av.ShortDescription).OrderBy(s => s).Distinct()))
+                        .Select(p => string.Join(", ", p.Types.Select(av => av.ShortDescription).OrderBy(s => s).Distinct()))
                         .ToArray();
 
                     IEnumerable<AnalysisVariable>[] refs;

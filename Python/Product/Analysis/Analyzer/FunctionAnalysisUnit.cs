@@ -120,6 +120,13 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             }
         }
 
+        public IEnumerable<IAnalysisSet> ReturnValueTypes {
+            get {
+                var rv = ReturnValue;
+                return rv.TypesNoCopy.AsLockedEnumerable(rv);
+            }
+        }
+
         internal void ProcessFunctionDecorators(DDG ddg) {
             if (Ast.Decorators != null) {
                 var types = Function.SelfSet;

@@ -77,7 +77,9 @@
     <Compile Include="..\PythonTools\PythonToolsInstallPath.cs">
       <Link>PythonToolsInstallPath.cs</Link>
     </Compile>
+    <Compile Include="AnalysisDictionary.cs" />
     <Compile Include="AnalysisExtensions.cs" />
+    <Compile Include="AnalysisHashSet.cs" />
     <Compile Include="AnalysisLimits.cs" />
     <Compile Include="AnalysisLog.cs" />
     <Compile Include="AnalysisValue.cs" />
