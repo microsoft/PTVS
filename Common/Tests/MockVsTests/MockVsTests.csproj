@@ -152,7 +152,6 @@
     <Compile Include="MockVsUIHierarchyWindow.cs" />
     <Compile Include="MockVsUIShell.cs" />
     <Compile Include="MockVsUIShellOpenDocument.cs" />
-    <Compile Include="MockVsWindowFrame.cs" />
     <Compile Include="ProjectAggregator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
