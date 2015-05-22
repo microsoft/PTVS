@@ -628,6 +628,10 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             var text = exprRange.Value.GetText();
+            if (string.IsNullOrEmpty(text)) {
+                return MissingImportAnalysis.Empty;
+            }
+
             var analyzer = analysis.ProjectState;
             var index = span.GetStartPoint(snapshot).Position;
 

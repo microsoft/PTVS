@@ -19,6 +19,7 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Text;
+using System.Threading.Tasks;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -2333,52 +2334,80 @@ namespace AnalysisTests {
         }
 
         [TestMethod, Priority(0), Timeout(10 * 60 * 1000)]
-        public void StdLib() {
-            foreach (var curVersion in PythonPaths.Versions) {
-                Debug.WriteLine("Running: {0}", curVersion.Version);
+        public async Task StdLib() {
+            var tasks = new List<KeyValuePair<string, Task<string>>>();
 
-                var files = new List<string>();
+            foreach (var curVersion in PythonPaths.Versions) {
+                Console.WriteLine("Starting: {0}", curVersion);
+                tasks.Add(new KeyValuePair<string, Task<string>>(
+                    curVersion.ToString(),
+                    Task.Run(() => StdLibWorker(curVersion))
+                ));
+            }
+            Console.WriteLine("Started {0} tests", tasks.Count);
+            Console.WriteLine(new string('=', 80));
+
+            bool anyErrors = false;
+            foreach (var task in tasks) {
+                string errors = null;
                 try {
-                    CollectFiles(curVersion.LibPath, files, new[] { "site-packages" });
-                } catch (DirectoryNotFoundException) {
-                    continue;
+                    errors = await task.Value;
+                } catch (Exception ex) {
+                    errors = ex.ToString();
                 }
 
-                var skippedFiles = new HashSet<string>(new[] { 
+                if (string.IsNullOrEmpty(errors)) {
+                    Console.WriteLine("{0} passed", task.Key);
+                } else {
+                    Console.WriteLine("{0} errors:", task.Key);
+                    Console.WriteLine(errors);
+                    anyErrors = true;
+                }
+                Console.WriteLine(new string('=', 80));
+            }
+
+            Assert.IsFalse(anyErrors, "Errors occurred. See output trace for details.");
+        }
+
+        private static string StdLibWorker(PythonVersion curVersion) {
+            var files = new List<string>();
+            CollectFiles(curVersion.LibPath, files, new[] { "site-packages" });
+
+            var skippedFiles = new HashSet<string>(new[] {
                     "py3_test_grammar.py",  // included in 2x distributions but includes 3x grammar
                     "py2_test_grammar.py",  // included in 3x distributions but includes 2x grammar
                     "proxy_base.py",        // included in Qt port to Py3k but installed in 2.x distributions
                     "test_pep3131.py"       // we need to update to support this.
                 });
-                var errorSink = new CollectingErrorSink();
-                var errors = new Dictionary<string, CollectingErrorSink>();
-                foreach (var file in files) {
-                    string filename = Path.GetFileName(file);
-                    if (skippedFiles.Contains(filename) || filename.StartsWith("badsyntax_") || filename.StartsWith("bad_coding") || file.IndexOf("\\lib2to3\\tests\\") != -1) {
-                        continue;
-                    }
-                    using (var parser = Parser.CreateParser(new StreamReader(file), curVersion.Version, new ParserOptions() { ErrorSink = errorSink })) {
-                        var ast = parser.ParseFile();
-                    }
-
-                    if (errorSink.Errors.Count != 0) {
-                        errors["\"" + file + "\""] = errorSink;
-                        errorSink = new CollectingErrorSink();
-                    }
+            var errorSink = new CollectingErrorSink();
+            var errors = new Dictionary<string, CollectingErrorSink>();
+            foreach (var file in files) {
+                string filename = Path.GetFileName(file);
+                if (skippedFiles.Contains(filename) || filename.StartsWith("badsyntax_") || filename.StartsWith("bad_coding") || file.IndexOf("\\lib2to3\\tests\\") != -1) {
+                    continue;
+                }
+                using (var parser = Parser.CreateParser(new StreamReader(file), curVersion.Version, new ParserOptions() { ErrorSink = errorSink })) {
+                    var ast = parser.ParseFile();
                 }
 
-                if (errors.Count != 0) {
-                    StringBuilder errorList = new StringBuilder();
-                    foreach (var keyValue in errors) {
-                        errorList.Append(keyValue.Key + " :" + Environment.NewLine);
-                        foreach (var error in keyValue.Value.Errors) {
-                            errorList.AppendFormat("     {0} {1}{2}", error.Span, error.Message, Environment.NewLine);
-                        }
-
-                    }
-                    Assert.AreEqual(0, errors.Count, errorList.ToString());
+                if (errorSink.Errors.Count != 0) {
+                    errors["\"" + file + "\""] = errorSink;
+                    errorSink = new CollectingErrorSink();
                 }
             }
+
+            if (errors.Count != 0) {
+                StringBuilder errorList = new StringBuilder();
+                foreach (var keyValue in errors) {
+                    errorList.Append(keyValue.Key + " :" + Environment.NewLine);
+                    foreach (var error in keyValue.Value.Errors) {
+                        errorList.AppendFormat("     {0} {1}{2}", error.Span, error.Message, Environment.NewLine);
+                    }
+
+                }
+                return errorList.ToString();
+            }
+            return null;
         }
 
         #endregion
