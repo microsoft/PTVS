@@ -541,9 +541,11 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
             MemberExpression member = expr as MemberExpression;
             if (member != null) {
-                var values = _eval.Evaluate(member.Target);
-                foreach (var value in values) {
-                    value.DeleteMember(member, _unit, member.Name);
+                if (!string.IsNullOrEmpty(member.Name)) {
+                    var values = _eval.Evaluate(member.Target);
+                    foreach (var value in values) {
+                        value.DeleteMember(member, _unit, member.Name);
+                    }
                 }
                 return;
             }

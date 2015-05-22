@@ -186,7 +186,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             MemberExpression member = expr as MemberExpression;
-            if (member != null) {
+            if (member != null && !string.IsNullOrEmpty(member.Name)) {
                 var eval = new ExpressionEvaluator(unit.CopyForEval(), scope, mergeScopes: true);
                 var objects = eval.Evaluate(member.Target);
 
