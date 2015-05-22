@@ -206,7 +206,11 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
         private static IAnalysisSet EvaluateMember(ExpressionEvaluator ee, Node node) {
             var n = (MemberExpression)node;
-            return ee.Evaluate(n.Target).GetMember(node, ee._unit, n.Name);
+            var target = ee.Evaluate(n.Target);
+            if (string.IsNullOrEmpty(n.Name)) {
+                return AnalysisSet.Empty;
+            }
+            return target.GetMember(node, ee._unit, n.Name);
         }
 
         private static IAnalysisSet EvaluateIndex(ExpressionEvaluator ee, Node node) {
@@ -409,7 +413,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         internal void AssignTo(Node assignStmt, Expression left, IAnalysisSet values) {
             if (left is NameExpression) {
                 var l = (NameExpression)left;
-                if (l.Name != null) {
+                if (!string.IsNullOrEmpty(l.Name)) {
                     Scope.AssignVariable(
                         l.Name,
                         l,
@@ -419,7 +423,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 }
             } else if (left is MemberExpression) {
                 var l = (MemberExpression)left;
-                if (l.Name != null) {
+                if (!string.IsNullOrEmpty(l.Name)) {
                     foreach (var obj in Evaluate(l.Target)) {
                         obj.SetMember(l, _unit, l.Name, values);
                     }
