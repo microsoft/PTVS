@@ -37,7 +37,12 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Language;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio;
+#if DEV14_OR_LATER
+using Microsoft.VisualStudio.InteractiveWindow;
+using Microsoft.VisualStudio.InteractiveWindow.Shell;
+#else
 using Microsoft.VisualStudio.Repl;
+#endif
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
@@ -47,13 +52,15 @@ using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 using SR = Microsoft.PythonTools.Project.SR;
 
-namespace Microsoft.PythonTools.Repl {
-#if INTERACTIVE_WINDOW
-    using IReplWindow = IInteractiveWindow;
-    using IReplEvaluator = IInteractiveEngine;
+#if DEV14_OR_LATER
+using IReplEvaluator = Microsoft.VisualStudio.InteractiveWindow.IInteractiveEvaluator;
+using IReplWindow = Microsoft.VisualStudio.InteractiveWindow.IInteractiveWindow;
+using Microsoft.VisualStudio.Utilities;
+using Microsoft.VisualStudio.InteractiveWindow.Commands;
 #endif
 
-    internal abstract class BasePythonReplEvaluator : IPythonReplEvaluator, IReplEvaluator, IMultipleScopeEvaluator, IPythonReplIntellisense {
+namespace Microsoft.PythonTools.Repl {
+    internal abstract class BasePythonReplEvaluator : IPythonReplEvaluator, IPythonReplIntellisense, IReplEvaluator, IMultipleScopeEvaluator {
         private CommandProcessorThread _curListener;
         private IReplWindow _window;
         private bool _multipleScopes = true, _attached;
@@ -61,6 +68,9 @@ namespace Microsoft.PythonTools.Repl {
         private readonly PythonReplEvaluatorOptions _options;
         internal readonly PythonToolsService _pyService;
         internal readonly IServiceProvider _serviceProvider;
+#if DEV14_OR_LATER
+        private IInteractiveWindowCommands _commands;
+#endif
 
         internal static readonly object InputBeforeReset = new object();    // used to mark buffers which are no longer valid because we've done a reset
 
@@ -132,7 +142,8 @@ namespace Microsoft.PythonTools.Repl {
             Window.WriteLine(SR.GetString(SR.ReplInitializationMessage));
         }
 
-        public Task<ExecutionResult> Initialize(IReplWindow window) {
+#if !DEV14_OR_LATER
+        public Task<ExecutionResult> Initialize(IReplWindow window) {            
             _window = window;
             _window.SetOptionValue(ReplOptions.CommandPrefix, "$");
 
@@ -147,6 +158,7 @@ namespace Microsoft.PythonTools.Repl {
             _window.TextView.BufferGraph.GraphBuffersChanged += BufferGraphGraphBuffersChanged;
             return ExecutionResult.Succeeded;
         }
+#endif
 
         public void ActiveLanguageBufferChanged(ITextBuffer currentBuffer, ITextBuffer previousBuffer) {
         }
@@ -206,6 +218,9 @@ namespace Microsoft.PythonTools.Repl {
             internal string _currentScope = "__main__";
             private MemberResults _memberResults;
             internal string _prompt1 = ">>> ", _prompt2 = "... ";
+#if DEV14_OR_LATER
+            internal string _userPrompt1, _userPrompt2;
+#endif
 
             public CommandProcessorThread(BasePythonReplEvaluator evaluator, Stream stream, bool redirectOutput, Process process) {
                 _eval = evaluator;
@@ -388,7 +403,11 @@ namespace Microsoft.PythonTools.Repl {
                 // perform the input on a new thread so that we don't block additional commands (such as output) from being processed by us
                 // (this is called on the output thread)
                 ThreadPool.QueueUserWorkItem(x => {
+#if DEV14_OR_LATER
+                    string input = Window.ReadStandardInput().ReadToEnd();
+#else
                     string input = Window.ReadStandardInput();
+#endif
                     input = input != null ? UnfixNewLines(input) : "\n";
                     try {
                         using (new StreamLock(this, throwIfDisconnected: true)) {
@@ -496,11 +515,13 @@ namespace Microsoft.PythonTools.Repl {
                 _prompt2 = _stream.ReadString();
                 bool updateAll = _stream.ReadInt32() == 1;
                 Trace.TraceInformation("New prompts: \"{0}\" \"{1}\" updateAll={2}", _prompt1, _prompt2, updateAll);
+#if !DEV14_OR_LATER
                 if (Window != null) {
                     using (new StreamUnlock(this)) {
                         _eval.UpdatePrompts(updateAll);
                     }
                 }
+#endif
             }
 
             private void HandleModulesChanged() {
@@ -534,8 +555,11 @@ namespace Microsoft.PythonTools.Repl {
                             imageSrc.BeginInit();
                             imageSrc.StreamSource = new MemoryStream(bytes);
                             imageSrc.EndInit();
-
+#if DEV14_OR_LATER
+                            Window.Write(new Image() { Source = imageSrc });
+#else
                             Window.WriteOutput(new Image() { Source = imageSrc });
+#endif
                         } catch (IOException) {
                         }
                     }));
@@ -1023,7 +1047,7 @@ namespace Microsoft.PythonTools.Repl {
             return new string(new char[] { (char)cmd_buffer[0], (char)cmd_buffer[1], (char)cmd_buffer[2], (char)cmd_buffer[3] });
         }
 
-
+#if !DEV14_OR_LATER
         private void UpdatePrompts(bool updateAll) {
             if (CurrentOptions.UseInterpreterPrompts && _curListener != null) {
                 _window.SetOptionValue(updateAll ? ReplOptions.PrimaryPrompt : ReplOptions.CurrentPrimaryPrompt, _curListener._prompt1);
@@ -1033,6 +1057,7 @@ namespace Microsoft.PythonTools.Repl {
                 _window.SetOptionValue(updateAll ? ReplOptions.SecondaryPrompt : ReplOptions.CurrentSecondaryPrompt, CurrentOptions.SecondaryPrompt);
             }
         }
+#endif
 
         /// <summary>
         /// Transforms lone \r or \n into \r\n.
@@ -1090,7 +1115,14 @@ namespace Microsoft.PythonTools.Repl {
             }
         }
 
+#if DEV14_OR_LATER
+        public bool CanExecuteCode(string text) {
+            if (_commands.InCommand) {
+                return true;
+            }
+#else
         public bool CanExecuteText(string text) {
+#endif
             int newLines = 0;
             for (int i = text.Length - 1; i >= 0; i--) {
                 if (text[i] == '\n') {
@@ -1130,7 +1162,14 @@ namespace Microsoft.PythonTools.Repl {
             return res;
         }
 
-        private Task<ExecutionResult> ExecuteTextWorker(string text) {
+        private Task<ExecutionResult> ExecuteTextWorker(string text) {            
+#if DEV14_OR_LATER
+            var res = _commands.TryExecuteCommand();
+            if (res != null) {
+                return res;
+            }
+#endif
+
             var parser = Parser.CreateParser(new StringReader(text), LanguageVersion);
             ParseResult parseResult;
             parser.ParseInteractiveCode(out parseResult);
@@ -1218,7 +1257,11 @@ namespace Microsoft.PythonTools.Repl {
             }
         }
 
+#if DEV14_OR_LATER
+        public void AbortExecution() {
+#else
         public void AbortCommand() {
+#endif
             if (_curListener != null) {
                 _curListener.AbortCommand();
             }
@@ -1447,19 +1490,41 @@ namespace Microsoft.PythonTools.Repl {
         public string PrimaryPrompt {
             get {
                 if (_curListener != null) {
-                    return _curListener._prompt1;
+                    return
+#if DEV14_OR_LATER
+                        _curListener._userPrompt1 ??
+#endif
+                        _curListener._prompt1;
                 }
                 return ">>> ";
             }
+#if DEV14_OR_LATER
+            set {
+                if (_curListener != null) {
+                    _curListener._userPrompt1 = value;
+                }
+            }
+#endif
         }
 
         public string SecondaryPrompt {
             get {
                 if (_curListener != null) {
-                    return _curListener._prompt2;
+                    return
+#if DEV14_OR_LATER
+                        _curListener._userPrompt2 ??
+#endif
+                        _curListener._prompt2;
                 }
                 return "... ";
             }
+#if DEV14_OR_LATER
+            set {
+                if (_curListener != null) {
+                    _curListener._userPrompt2 = value;
+                }
+            }
+#endif
         }
 
         internal string AttachDebugger() {
@@ -1610,5 +1675,293 @@ namespace Microsoft.PythonTools.Repl {
                 frame.CloseFrame((uint)__FRAMECLOSE.FRAMECLOSE_NoSave);
             }
         }
+
+#if DEV14_OR_LATER
+        public IContentType ContentType {
+            get {
+                return _serviceProvider.GetPythonContentType();
+            }
+        }
+
+        public IReplWindow CurrentWindow {
+            get {
+                return _window;
+            }
+
+            set {
+                _window = value;
+            }
+        }
+
+        public Task<ExecutionResult> InitializeAsync() {
+            WriteInitializationMessage();
+            _window.TextView.BufferGraph.GraphBuffersChanged += BufferGraphGraphBuffersChanged;
+
+            _window.SetSmartUpDown(CurrentOptions.ReplSmartHistory);
+
+            _commands = GetInteractiveCommands(_serviceProvider, _window, this);
+
+            return ExecutionResult.Succeeded;
+        }
+
+        internal static IInteractiveWindowCommands GetInteractiveCommands(IServiceProvider serviceProvider, IInteractiveWindow window, IReplEvaluator eval) {
+            var cmdFactory = serviceProvider.GetComponentModel().GetService<IInteractiveWindowCommandsFactory>();
+            var cmds = serviceProvider.GetComponentModel().GetExtensions<IInteractiveWindowCommand>();
+            string[] roles = eval.GetType().GetCustomAttributes(typeof(InteractiveWindowRoleAttribute), true).Select(r => ((InteractiveWindowRoleAttribute)r).Name).ToArray();
+
+            return cmdFactory.CreateInteractiveCommands(window, "$", cmds.Where(x => IsCommandApplicable(x, roles)));
+        }
+
+        private static bool IsCommandApplicable(IInteractiveWindowCommand command, string[] supportedRoles) {
+            bool applicable = true;
+            string[] commandRoles = command.GetType().GetCustomAttributes(typeof(InteractiveWindowRoleAttribute), true).Select(r => ((InteractiveWindowRoleAttribute)r).Name).ToArray();
+            if (supportedRoles.Length > 0) {
+                // The window has one or more roles, so the following commands will be applicable:
+                // - commands that don't specify a role
+                // - commands that specify a role that matches one of the window roles
+                if (commandRoles.Length > 0) {
+                    applicable = supportedRoles.Intersect(commandRoles).Count() > 0;
+                }
+            } else {
+                // The window doesn't have any role, so the following commands will be applicable:
+                // - commands that don't specify any role
+                applicable = commandRoles.Length == 0;
+            }
+
+            return applicable;
+        }
+
+        public Task<ExecutionResult> ResetAsync(bool initialize = true) {
+            return Reset(false);
+        }
+
+        public Task<ExecutionResult> ExecuteCodeAsync(string text) {
+            return ExecuteText(text);
+        }
+
+        public string GetPrompt() {
+            if (_window != null &&
+                _window.CurrentLanguageBuffer != null &&
+                _window.CurrentLanguageBuffer.CurrentSnapshot.LineCount > 1) {
+                return SecondaryPrompt;
+            } else {
+                return PrimaryPrompt;
+            }
+        }
+#endif
     }
+
+    static class ReplWindowExtensions {
+#if DEV14_OR_LATER
+        public static void WriteError(this IReplWindow window, string message) {
+            window.ErrorOutputWriter.Write(message);
+        }
+
+        public static void WriteOutput(this IReplWindow window, string message) {
+            AppendEscapedText(window, message);
+        }
+
+        public static void WriteLine(this IVsInteractiveWindow window, string message) {
+            window.InteractiveWindow.WriteLine(message);
+        }
+
+        public static void Focus(this IVsInteractiveWindow window) {
+            window.Show(true);
+        }
+
+        public static void Submit(this IInteractiveWindow window, IEnumerable<string> inputs) {
+            window.SubmitAsync(inputs);
+        }
+
+        public static IReplEvaluator GetReplEvaluator(this ITextBuffer buffer) {
+            var res = buffer.GetInteractiveWindow();
+            if (res != null) {
+                return res.Evaluator;
+            }
+            return null;
+        }
+
+        public static void SetSmartUpDown(this IVsInteractiveWindow window, bool setting) {
+            window.InteractiveWindow.SetSmartUpDown(setting);
+        }
+
+        public static void SetSmartUpDown(this IReplWindow window, bool setting) {
+            window.TextView.Options.SetOptionValue(InteractiveWindowOptions.SmartUpDown, setting);
+        }
+
+        public static bool CanExecuteText(this IReplEvaluator window, string text) {
+            return window.CanExecuteCode(text);
+        }
+
+        public static void AbortCommand(this IReplEvaluator window) {
+            window.AbortExecution();
+        }
+
+        public static void SetPrompts(this IInteractiveWindow window, string primary, string secondary) {
+            var eval = window.Evaluator as BasePythonReplEvaluator;
+            eval.PrimaryPrompt = primary;
+            eval.SecondaryPrompt = secondary;
+        }
+
+        public static void UseInterpreterPrompts(this IInteractiveWindow window) {
+            var eval = window.Evaluator as BasePythonReplEvaluator;
+            eval.PrimaryPrompt = null;
+            eval.SecondaryPrompt = null;
+        }
+
+        private static void AppendEscapedText(IInteractiveWindow window, string text, bool isError = false) {
+            // http://en.wikipedia.org/wiki/ANSI_escape_code
+            // process any ansi color sequences...
+            ConsoleColor? color = null;
+            List<ColoredSpan> colors;
+            if (!window.OutputBuffer.Properties.TryGetProperty(ReplOutputClassifier.ColorKey, out colors)) {
+                window.OutputBuffer.Properties[ReplOutputClassifier.ColorKey] = colors = new List<ColoredSpan>();
+            }
+            int start = 0, escape = text.IndexOf('\x1b');
+
+            List<int> codes = new List<int>();
+            while (escape != -1) {
+                if (escape != start) {
+                    // add unescaped text
+                    if (isError) {
+                        window.ErrorOutputWriter.Write(text.Substring(start, escape - start));
+                    } else {
+                        var span = window.Write(text.Substring(start, escape - start));
+                        colors.Add(new ColoredSpan(span, color));
+                    }
+                }
+
+                // process the escape sequence                
+                if (escape < text.Length - 1 && text[escape + 1] == '[') {
+                    // We have the Control Sequence Introducer (CSI) - ESC [
+
+                    codes.Clear();
+                    int? value = 0;
+
+                    for (int i = escape + 2; i < text.Length; i++) { // skip esc + [
+                        if (text[i] >= '0' && text[i] <= '9') {
+                            // continue parsing the integer...
+                            if (value == null) {
+                                value = 0;
+                            }
+                            value = 10 * value.Value + (text[i] - '0');
+                        } else if (text[i] == ';') {
+                            if (value != null) {
+                                codes.Add(value.Value);
+                                value = null;
+                            } else {
+                                // CSI ; - invalid or CSI ### ;;, both invalid
+                                break;
+                            }
+                        } else if (text[i] == 'm') {
+                            if (value != null) {
+                                codes.Add(value.Value);
+                            }
+
+                            // parsed a valid code
+                            start = i + 1;
+                            if (codes.Count == 0) {
+                                // reset
+                                color = null;
+                            } else {
+                                for (int j = 0; j < codes.Count; j++) {
+                                    switch (codes[j]) {
+                                        case 0: color = ConsoleColor.White; break;
+                                        case 1: // bright/bold
+                                            color |= ConsoleColor.DarkGray;
+                                            break;
+                                        case 2: // faint
+
+                                        case 3: // italic
+                                        case 4: // single underline
+                                            break;
+                                        case 5: // blink slow
+                                        case 6: // blink fast
+                                            break;
+                                        case 7: // negative
+                                        case 8: // conceal
+                                        case 9: // crossed out
+                                        case 10: // primary font
+                                        case 11: // 11-19, n-th alternate font
+                                            break;
+                                        case 21: // bright/bold off 
+                                            color &= ~ConsoleColor.DarkGray;
+                                            break;
+                                        case 22: // normal intensity
+                                        case 24: // underline off
+                                            break;
+                                        case 25: // blink off
+                                            break;
+                                        case 27: // image - postive
+                                        case 28: // reveal
+                                        case 29: // not crossed out
+                                        case 30: color = ConsoleColor.Black | ((color ?? ConsoleColor.Black) & ConsoleColor.DarkGray); break;
+                                        case 31: color = ConsoleColor.DarkRed | ((color ?? ConsoleColor.Black) & ConsoleColor.DarkGray); break;
+                                        case 32: color = ConsoleColor.DarkGreen | ((color ?? ConsoleColor.Black) & ConsoleColor.DarkGray); break;
+                                        case 33: color = ConsoleColor.DarkYellow | ((color ?? ConsoleColor.Black) & ConsoleColor.DarkGray); break;
+                                        case 34: color = ConsoleColor.DarkBlue | ((color ?? ConsoleColor.Black) & ConsoleColor.DarkGray); break;
+                                        case 35: color = ConsoleColor.DarkMagenta | ((color ?? ConsoleColor.Black) & ConsoleColor.DarkGray); break;
+                                        case 36: color = ConsoleColor.DarkCyan | ((color ?? ConsoleColor.Black) & ConsoleColor.DarkGray); break;
+                                        case 37: color = ConsoleColor.Gray | ((color ?? ConsoleColor.Black) & ConsoleColor.DarkGray); break;
+                                        case 38: // xterm 286 background color
+                                        case 39: // default text color
+                                            color = null;
+                                            break;
+                                        case 40: // background colors
+                                        case 41:
+                                        case 42:
+                                        case 43:
+                                        case 44:
+                                        case 45:
+                                        case 46:
+                                        case 47: break;
+                                        case 90: color = ConsoleColor.DarkGray; break;
+                                        case 91: color = ConsoleColor.Red; break;
+                                        case 92: color = ConsoleColor.Green; break;
+                                        case 93: color = ConsoleColor.Yellow; break;
+                                        case 94: color = ConsoleColor.Blue; break;
+                                        case 95: color = ConsoleColor.Magenta; break;
+                                        case 96: color = ConsoleColor.Cyan; break;
+                                        case 97: color = ConsoleColor.White; break;
+                                    }
+                                }
+                            }
+                            break;
+                        } else {
+                            // unknown char, invalid escape
+                            break;
+                        }
+                    }
+
+                    escape = text.IndexOf('\x1b', escape + 1);
+                }// else not an escape sequence, process as text
+            }
+
+            if (start != text.Length) {
+                if (isError) {
+                    window.ErrorOutputWriter.Write(text.Substring(start, escape - start));
+                } else {
+                    var span = window.Write(text.Substring(start));
+                    colors.Add(new ColoredSpan(span, color));
+                }
+            }
+        }
+#else
+        public static void SetPrompts(this IReplWindow window, string primary, string secondary) {
+            window.SetOptionValue(ReplOptions.PrimaryPrompt, primary);
+            window.SetOptionValue(ReplOptions.SecondaryPrompt, secondary);
+        }
+
+        public static void UseInterpreterPrompts(this IReplWindow window) {
+            var eval = window.Evaluator as BasePythonReplEvaluator;
+            window.SetPrompts(eval.PrimaryPrompt, eval.SecondaryPrompt);
+        }
+
+        public static void SetSmartUpDown(this IReplWindow window, bool setting) {
+            window.SetOptionValue(ReplOptions.UseSmartUpDown, setting);
+        }
+#endif
+
+    }
+
 }

@@ -16,6 +16,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudioTools.Project.Automation;
 using VSLangProj;
+using VSLangProj80;
 
 namespace Microsoft.PythonTools.Project.Automation {
     [ComVisible(true)]
@@ -34,6 +35,12 @@ namespace Microsoft.PythonTools.Project.Automation {
         public override prjReferenceType Type {
             get {
                 return prjReferenceType.prjReferenceTypeAssembly;
+            }
+        }
+
+        public override uint RefType {
+            get {
+                return (uint)__PROJECTREFERENCETYPE.PROJREFTYPE_ASSEMBLY;
             }
         }
 

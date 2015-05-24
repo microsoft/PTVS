@@ -27,6 +27,19 @@ namespace Microsoft.PythonTools.Project {
             _project = project;
         }
 
+        /// <summary>
+        /// The display name is a two part item
+        /// first part is the config name, 2nd part is the platform name
+        /// </summary>
+        public override int get_DisplayName(out string name) {
+            if (!string.IsNullOrEmpty(PlatformName)) {
+                name = ConfigName + "|" + PlatformName;
+                return VSConstants.S_OK;
+            } else {
+                return base.get_DisplayName(out name);
+            }
+        }
+
         public override int DebugLaunch(uint flags) {
             if (_project.ShouldWarnOnLaunch) {
                 var pyService = ProjectMgr.Site.GetPythonToolsService();

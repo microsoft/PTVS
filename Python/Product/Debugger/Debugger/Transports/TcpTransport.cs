@@ -14,6 +14,8 @@
 
 using System;
 using System.IO;
+using System.Linq;
+using System.Net;
 using System.Net.Sockets;
 
 namespace Microsoft.PythonTools.Debugger.Transports {
@@ -21,7 +23,7 @@ namespace Microsoft.PythonTools.Debugger.Transports {
         public const ushort DefaultPort = 5678;
 
         public Exception Validate(Uri uri) {
-            if (uri.PathAndQuery != "/") {
+            if (uri.AbsolutePath != "/") {
                 return new FormatException("tcp:// URI cannot contain a path");
             }
             return null;
@@ -32,8 +34,11 @@ namespace Microsoft.PythonTools.Debugger.Transports {
                 uri = new UriBuilder(uri) { Port = DefaultPort }.Uri;
             }
 
-            var tcpClient = new TcpClient(uri.Host, uri.Port);
+            // PTVSD is using AF_INET by default, so lets make sure to try the IPv4 address in lieu of IPv6 address
+            var tcpClient = new TcpClient(AddressFamily.InterNetwork);
+            
             try {
+                tcpClient.Connect(uri.Host, uri.Port);
                 var stream = tcpClient.GetStream();
                 tcpClient = null;
                 return stream;

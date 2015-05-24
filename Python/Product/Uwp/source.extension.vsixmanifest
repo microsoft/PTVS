@@ -1,0 +1,47 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Vsix Version="1.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2010">
+  <Identifier Id="56dfe430-f4a7-4f22-b5cf-9b713a4b4c36">
+    <Name>Python Tools for Visual Studio - UWP</Name>
+    <Author>Microsoft</Author>
+    <Version>2.2</Version>
+    <Description xml:space="preserve">Provides templates and integration for the UWP framework.</Description>
+    <MoreInfoUrl>http://pytools.codeplex.com</MoreInfoUrl>
+    <GettingStartedGuide>http://pytools.codeplex.com</GettingStartedGuide>
+    <Icon>PythonProject.ico</Icon>
+    <PreviewImage>PythonProjectBig.ico</PreviewImage>
+    <Locale>1033</Locale>
+    <InstalledByMsi>true</InstalledByMsi>
+    <SupportedProducts>
+      <!-- The Edition specifications are minimums; any SKU equal or 'higher'
+           will accept them. -->
+      <VisualStudio Version="14.0">
+        <Edition>Pro</Edition>
+        <Edition>Ultimate</Edition>
+        <Edition>IntegratedShell</Edition>
+        <Edition>WDExpress</Edition>
+        <Edition>VWDExpress</Edition>
+      </VisualStudio>
+    </SupportedProducts>
+    <SupportedFrameworkRuntimeEdition MinVersion="4.5" />
+  </Identifier>
+  <References>
+    <Reference Id="Microsoft.VisualStudio.MPF" MinVersion="10.0">
+        <Name>Visual Studio MPF</Name>
+    </Reference>
+    <Reference Id="96492FC7-7BC6-46F7-8559-66BB4E09FD1E" MinVersion="2.1" MaxVersion="2.1">
+      <Name>Python Tools for Visual Studio</Name>
+      <MoreInfoUrl>http://pytools.codeplex.com/</MoreInfoUrl>
+    </Reference>
+    <Reference Id="ce8d8e55-ad29-423e-aca2-810d0b16cdc4" MinVersion="2.1">
+      <Name>Python Tools for Visual Studio - Interactive</Name>
+      <MoreInfoUrl>http://pytools.codeplex.com/</MoreInfoUrl>
+    </Reference>
+  </References>
+  <Content>
+    <VsPackage>|%CurrentProject%;PkgdefProjectOutputGroup|</VsPackage>
+    <MefComponent>|%CurrentProject%|</MefComponent>
+    <ProjectTemplate>ProjectTemplates</ProjectTemplate>
+    <ItemTemplate>ItemTemplates</ItemTemplate>
+    <CustomExtension Type="DebuggerEngineExtension">RemoteDebugger.vsdconfig</CustomExtension>
+  </Content>
+</Vsix>

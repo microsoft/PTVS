@@ -193,4 +193,28 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
             project.AddImport(@"$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.Web.targets");
         }
     }
+
+    class UwpProjectCustomization : ProjectCustomization {
+        public static readonly ProjectCustomization Instance = new UwpProjectCustomization();
+
+        private UwpProjectCustomization() { }
+
+        public override string DisplayName {
+            get {
+                return SR.GetString(SR.ImportWizardUwpProjectCustomization);
+            }
+        }
+
+        public override void Process(
+            ProjectRootElement project,
+            Dictionary<string, ProjectPropertyGroupElement> groups
+        ) {
+            ProjectPropertyGroupElement globals;
+            if (!groups.TryGetValue("Globals", out globals)) {
+                globals = project.AddPropertyGroup();
+            }
+
+            AddOrSetProperty(globals, "ProjectTypeGuids", "{c85cbf2e-4147-4e9d-87e0-9a2fbf407f6e};{888888A0-9F3D-457C-B088-3A5042F75D52}");
+        }
+    }
 }

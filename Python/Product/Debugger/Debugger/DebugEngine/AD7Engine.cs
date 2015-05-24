@@ -89,6 +89,12 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         public const string DebugEngineId = "{EC1375B7-E2CE-43E8-BF75-DC638DE1F1F9}";
         public const string DebugEngineName = "Python";
         public static Guid DebugEngineGuid = new Guid(DebugEngineId);
+        public const string SourceDirectoryKey = "sd";
+        public const string TargetDirectoryKey = "td";
+        public const string TargetHostType = "host";
+
+        public const string TargetUwp = "uwp";
+
         /// <summary>
         /// Specifies the version of the language which is being debugged.  One of
         /// V24, V25, V26, V27, V30, V31 or V32.

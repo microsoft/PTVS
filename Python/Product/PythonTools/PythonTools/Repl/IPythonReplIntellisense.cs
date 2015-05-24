@@ -22,7 +22,7 @@ using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
 using Microsoft.PythonTools.Analysis;
 
-namespace Microsoft.VisualStudio.Repl {
+namespace Microsoft.PythonTools.Repl {
     interface IPythonReplIntellisense {
         bool LiveCompletionsOnly { get; }
         IEnumerable<KeyValuePair<string, bool>> GetAvailableScopesAndKind();

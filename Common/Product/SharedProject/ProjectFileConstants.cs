@@ -89,6 +89,9 @@ namespace Microsoft.VisualStudioTools.Project {
         public const string FlavorProperties = "FlavorProperties";
         public const string VisualStudio = "VisualStudio";
         public const string User = "User";
+        public const string PlatformAware = "PlatformAware";
+        public const string AppxPackage = "AppxPackage";
+        public const string WindowsAppContainer = "WindowsAppContainer";
     }
 
     public static class ProjectFileAttributeValue {

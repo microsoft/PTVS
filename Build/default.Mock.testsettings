@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<TestSettings name="default" id="5C570F72-6E22-4F5C-B7D0-E8D3A7D6AB71" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Description>Local test runs with the VS 2013 Experimental Hive</Description>
+  <Execution>
+    <Timeouts runTimeout="7200000" testTimeout="300000" />
+    <TestTypeSpecific>
+      <UnitTestRunConfig testTypeId="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b">
+        <AssemblyResolution>
+          <TestDirectory useLoadContext="true" />
+        </AssemblyResolution>
+      </UnitTestRunConfig>
+    </TestTypeSpecific>
+    <AgentRule name="LocalMachineDefaultRole">
+    </AgentRule>
+  </Execution>
+  <Properties>
+    <Property name="VSApplication" value="Mock"/>
+    <Property name="VSExecutable" value="devenv"/>
+    <Property name="VSVersion" value="12.0"/>
+    <Property name="VSHive" value="Exp"/>
+    <Property name="VSDebugMixedMode" value="false"/>
+  </Properties>
+</TestSettings>

@@ -737,7 +737,7 @@ namespace DjangoTests {
                 _variables[variable] = new HashSet<AnalysisValue>();
             }
             foreach (var filter in filters) {
-                _filters[filter] = new TagInfo("");
+                _filters[filter] = new TagInfo("", null);
             }
         }
 

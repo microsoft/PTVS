@@ -37,8 +37,11 @@ namespace Microsoft.VisualStudioTools.Project {
     [ComVisible(true)]
     internal abstract class ConfigProvider : IVsCfgProvider2 {
         internal const string configString = " '$(Configuration)' == '{0}' ";
+        internal const string configPlatformString = " '$(Configuration)|$(Platform)' == '{0}|{1}' ";
         internal const string AnyCPUPlatform = "Any CPU";
         internal const string x86Platform = "x86";
+        internal const string x64Platform = "x64";
+        internal const string ARMPlatform = "ARM";
 
         private ProjectNode project;
         private EventSinkCollection cfgEventSinks = new EventSinkCollection();
@@ -473,7 +476,7 @@ namespace Microsoft.VisualStudioTools.Project {
             string[] platforms = GetPropertiesConditionedOn(ProjectFileConstants.Platform);
 
             if (platforms == null || platforms.Length == 0) {
-                return new string[] { x86Platform, AnyCPUPlatform };
+                return new string[] { x86Platform, AnyCPUPlatform, x64Platform, ARMPlatform };
             }
 
             for (int i = 0; i < platforms.Length; i++) {
@@ -487,7 +490,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// Return the supported platform names.
         /// </summary>
         /// <returns>An array of supported platform names.</returns>
-        private string[] GetSupportedPlatformsFromProject() {
+        internal string[] GetSupportedPlatformsFromProject() {
             string platforms = this.ProjectMgr.BuildProject.GetPropertyValue(ProjectFileConstants.AvailablePlatforms);
 
             if (platforms == null) {
@@ -523,7 +526,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <param name="platforms">An array of available platform names</param>
         /// <returns>A count of the actual number of platform names returned.</returns>
         /// <devremark>The platforms array is never null. It is assured by the callers.</devremark>
-        private static int GetPlatforms(uint celt, string[] names, uint[] actual, string[] platforms) {
+        internal static int GetPlatforms(uint celt, string[] names, uint[] actual, string[] platforms) {
             Utilities.ArgumentNotNull("platforms", platforms);
             if (names == null) {
                 if (actual == null || actual.Length == 0) {
@@ -564,7 +567,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <summary>
         /// Get all the configurations in the project.
         /// </summary>
-        private string[] GetPropertiesConditionedOn(string constant) {
+        internal string[] GetPropertiesConditionedOn(string constant) {
             List<string> configurations = null;
             this.project.BuildProject.ReevaluateIfNecessary();
             this.project.BuildProject.ConditionedProperties.TryGetValue(constant, out configurations);

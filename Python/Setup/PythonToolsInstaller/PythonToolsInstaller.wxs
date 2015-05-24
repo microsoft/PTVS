@@ -175,7 +175,7 @@
         <RegistryValue Root='HKCR' Key='.pyw\OpenWithProgids' Name='VWDExpress.py.$(var.VSTargetVersion)' Type='string' Value='' />
       </Component>
 
-
+      <?if "$(var.VSTargetVersion)" = "10.0" or "$(var.VSTargetVersion)" = "11.0" or "$(var.VSTargetVersion)" = "12.0" ?>
       <Merge Id="Merge_ReplWindow" Language="1033" SourceFile="ReplWindow.msm" DiskId="1">
         <?foreach key in VS;WD;VWD?>
         <ConfigurationData Name="Config_$(var.key)ExtensionsParent" Value="Dir_$(var.key)Extensions" />
@@ -183,6 +183,7 @@
         <?endforeach?>
         <ConfigurationData Name="Config_MSBuildLocation" Value="Dir_MSBuildTargets"/>
       </Merge>
+      <?endif ?>
       <Merge Id="Merge_Profiling" Language="1033" SourceFile="Profiling.msm" DiskId="1">
         <?foreach key in VS;WD;VWD?>
         <ConfigurationData Name="Config_$(var.key)ExtensionsParent" Value="Dir_$(var.key)Extensions" />
@@ -197,6 +198,15 @@
         <?endforeach?>
         <ConfigurationData Name="Config_MSBuildLocation" Value="Dir_MSBuildTargets"/>
       </Merge>
+      <?if "$(var.IncludeUwp)" ~= "True" ?>
+      <Merge Id="Merge_Uwp" Language="1033" SourceFile="Uwp.msm" DiskId="1">
+        <?foreach key in VS;WD;VWD?>
+        <ConfigurationData Name="Config_$(var.key)ExtensionsParent" Value="Dir_$(var.key)Extensions" />
+        <ConfigurationData Name="Config_$(var.key)TemplatesParent" Value="Dir_$(var.key)Templates"/>
+        <?endforeach?>
+        <ConfigurationData Name="Config_MSBuildLocation" Value="Dir_MSBuildTargets"/>
+      </Merge>
+      <?endif ?>
       <Merge Id="Merge_PythonTools" Language="1033" SourceFile="PythonTools.msm" DiskId="1">
         <?foreach key in VS;WD;VWD?>
         <ConfigurationData Name="Config_$(var.key)ExtensionsParent" Value="Dir_$(var.key)Extensions" />
@@ -241,7 +251,9 @@
       <ComponentRef Id="Comp_ProgramMenuFolder" />
 
       <MergeRef Id="Merge_PythonTools"/>
+      <?if "$(var.VSTargetVersion)" = "10.0" or "$(var.VSTargetVersion)" = "11.0" or "$(var.VSTargetVersion)" = "12.0" ?>
       <MergeRef Id="Merge_ReplWindow"/>
+      <?endif ?>
       <MergeRef Id="Merge_Profiling"/>
 
       <?if "$(var.IncludeVsLogger)" ~= "True" ?>
@@ -252,6 +264,12 @@
         <MergeRef Id="Merge_Django"/>
       </Feature>
 
+      <?if "$(var.IncludeUwp)" ~= "True" ?>
+      <Feature Id="Feature_Uwp" AllowAdvertise="no" Level="1" Title="UWP integration" Description="UWP integration">
+        <MergeRef Id="Merge_Uwp"/>
+      </Feature>
+      <?endif?>
+      
       <Feature Id="Feature_IronPython" AllowAdvertise="no" Level="1" Title="IronPython support" Description="IronPython support">
         <MergeRef Id="Merge_IronPython"/>
       </Feature>

@@ -12,17 +12,28 @@
  *
  * ***************************************************************************/
 
+using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Threading.Tasks;
-using Microsoft.VisualStudio.Repl;
 using Microsoft.PythonTools.Debugger.DebugEngine;
 using System;
+using Microsoft.VisualStudio.Text.Classification;
+using Microsoft.VisualStudio.Text;
+#if DEV14_OR_LATER
+using Microsoft.VisualStudio.InteractiveWindow;
+using Microsoft.VisualStudio.InteractiveWindow.Commands;
+#else
+using Microsoft.VisualStudio.Repl;
+#endif
 
 namespace Microsoft.PythonTools.Repl {
-#if INTERACTIVE_WINDOW
-    using IReplWindow = IInteractiveWindow;
+#if DEV14_OR_LATER
     using IReplCommand = IInteractiveWindowCommand;
+    using IReplCommand2 = IInteractiveWindowCommand;
+    using IReplWindow = IInteractiveWindow;
+    using ReplRoleAttribute = Microsoft.PythonTools.Repl.InteractiveWindowRoleAttribute;
 #endif
+
 
     [Export(typeof(IReplCommand))]
     [ReplRole("Debug")]
@@ -55,6 +66,35 @@ namespace Microsoft.PythonTools.Repl {
             get { return new string[] { "until", "unt" }; }
         }
 
+#if DEV14_OR_LATER
+        public IEnumerable<ClassificationSpan> ClassifyArguments(ITextSnapshot snapshot, Span argumentsSpan, Span spanToClassify) {
+            yield break;
+        }
+
+        public string CommandLine {
+            get {
+                return "";
+            }
+        }
+
+        public IEnumerable<string> DetailedDescription {
+            get {
+                yield return Description;
+            }
+        }
+
+        public IEnumerable<KeyValuePair<string, string>> ParametersDescription {
+            get {
+                yield break;
+            }
+        }
+
+        public IEnumerable<string> Names {
+            get {
+                yield return Command;
+            }
+        }
+#endif
         #endregion
     }
 }

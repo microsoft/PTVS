@@ -167,8 +167,12 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
             }
         }
 
-        public uint RefType {
-            get { throw new NotImplementedException(); }
+        public virtual uint RefType {
+            get {
+                // Default to native reference to help prevent callers from
+                // making incorrect assumptions
+                return (uint)__PROJECTREFERENCETYPE.PROJREFTYPE_NATIVE;
+            }
         }
 
         public virtual bool Resolved {

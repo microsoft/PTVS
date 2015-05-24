@@ -1,0 +1,177 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <PropertyGroup>
+    <CPythonTargetsFile>$(LocalAppData)\Microsoft\VisualStudio\$(VisualStudioVersion)Exp\Extensions\Microsoft\Python UWP\$(InterpreterVersion)\DesignTime\CommonConfiguration\Neutral\CPython.targets</CPythonTargetsFile>
+    <CPythonTargetsFile Condition="'$(CPythonTargetsFile)' == '' or !Exists('$(CPythonTargetsFile)')">$(MSBuildProgramFiles32)\Microsoft SDKs\Windows\v10.0\ExtensionSDKs\Python UWP\$(InterpreterVersion)\DesignTime\CommonConfiguration\Neutral\CPython.targets</CPythonTargetsFile>
+  </PropertyGroup>
+  
+  <Import Project="$(CPythonTargetsFile)" />
+
+  <!-- Gets the fully qualified path to the project home.  -->
+  <PropertyGroup>
+    <AvailablePlatforms>ARM,x86,x64</AvailablePlatforms>
+    <QualifiedProjectHome>$(MSBuildProjectDirectory)</QualifiedProjectHome>
+    <QualifiedProjectHome Condition="'$(ProjectHome)' != '' and '$(ProjectHome)' != '.'">$([System.IO.Path]::GetFullPath($([System.IO.Path]::Combine($(MSBuildProjectDirectory), $(ProjectHome)))))</QualifiedProjectHome>
+    <QualifiedProjectHome Condition="!HasTrailingSlash('$(QualifiedProjectHome)')">$(QualifiedProjectHome)\</QualifiedProjectHome>
+
+    <PtvsLocation>$(MSBuildThisFileDirectory)..\..\Python Tools for Visual Studio\$(PtvsVersion)\</PtvsLocation>
+    <PtvsLocation Condition="'$(PtvsLocation)' == '' or !Exists('$(PtvsLocation)')">$(MSBuildThisFileDirectory)..\..\Python Tools for Visual Studio\$(PtvsVersion)\</PtvsLocation>
+
+    <PythonArguments Condition="'$(PythonArguments)'==''">$(StartupFile)</PythonArguments>
+
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PtvsdFiles Include="$(PtvsLocation)ptvsd\**\*" />
+
+    <VisualStudioPyFiles Include="$(PtvsLocation)visualstudio_py_*.py" />
+    <VisualStudioPyFiles Include="$(MSBuildThisFileDirectory)visualstudio_py_*.py" />
+  </ItemGroup>
+  
+  <Target Name="CustomOutputGroupForPackaging" Returns="@(CustomOutputGroupForPackagingOutput)">
+    <AssignTargetPath Files="@(PythonHost->'%(FullPath)')" RootFolder="$(OutputPath)">
+      <Output TaskParameter="AssignedFiles" ItemName="CustomOutputGroupForPackagingOutput" />
+    </AssignTargetPath>
+    <AssignTargetPath Files="@(Compile->'%(FullPath)')" RootFolder="$(OutputPath)">
+      <Output TaskParameter="AssignedFiles" ItemName="CustomOutputGroupForPackagingOutput" />
+    </AssignTargetPath>
+    <AssignTargetPath Files="@(PtvsdFiles->'%(FullPath)')" RootFolder="$(PtvsLocation)" Condition="Exists('$(PtvsLocation)')">
+      <Output TaskParameter="AssignedFiles" ItemName="CustomOutputGroupForPackagingOutput" />
+    </AssignTargetPath>
+    <AssignTargetPath Files="@(VisualStudioPyFiles->'%(FullPath)')" RootFolder="$(PtvsLocation)" Condition="Exists('$(PtvsLocation)')">
+      <Output TaskParameter="AssignedFiles" ItemName="CustomOutputGroupForPackagingOutput" />
+    </AssignTargetPath>
+    <AssignTargetPath Files="@(OutputReferences->'%(FullPath)')" RootFolder="$(OutputPath)references" Condition="Exists('$(OutputPath)references')">
+      <Output TaskParameter="AssignedFiles" ItemName="CustomOutputGroupForPackagingOutput" />
+    </AssignTargetPath>
+  </Target>
+
+  <Target Name="ReferenceCopy" BeforeTargets="CoreCompile">
+    <Message Text="Reference copy" />
+    <Copy SourceFiles="@(Reference->'%(FullPath)')" DestinationFiles="$(OutputPath)\references\%(Reference.FileName)%(Reference.Extension)" />
+    <ItemGroup>
+      <OutputReferences Include="$(OutputPath)\references\**\*" />
+    </ItemGroup>
+  </Target>
+
+  <ItemGroup>
+    <PythonHost Include="$(StartupInfoFile)" />
+  </ItemGroup>
+
+  <UsingTask TaskName="CreateStartupInfo" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll">
+    <ParameterGroup>
+      <Arguments ParameterType="System.String" Required="true" />
+      <StartupInfoFile ParameterType="System.String" Required="true" />
+    </ParameterGroup>
+    <Task>
+      <Reference Include="System.Web.Extensions" />
+      <Using Namespace="System.IO" />
+      <Using Namespace="System.Web.Script.Serialization" />
+      <Code Type="Fragment" Language="cs">
+        <![CDATA[
+        var serializer = new JavaScriptSerializer();        
+        var argArray = Arguments.Split(';');
+        var json = serializer.Serialize(argArray);
+        
+        File.WriteAllText(StartupInfoFile, json);
+      ]]>
+      </Code>
+    </Task>
+  </UsingTask>
+
+  <UsingTask TaskName="UnZip" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll">
+    <ParameterGroup>
+      <InputFileName ParameterType="System.String" Required="true" />
+      <OutputDirectory ParameterType="System.String" Required="true" />
+    </ParameterGroup>
+    <Task>
+      <Reference Include="System.IO.Compression" />
+      <Reference Include="System.IO.Compression.FileSystem" />
+      <Using Namespace="System.IO.Compression" />
+      <Using Namespace="System.IO" />
+      <Code Type="Fragment" Language="cs">
+        <![CDATA[
+        var outputDirectory = new DirectoryInfo(OutputDirectory);
+        var lastZipChangeTime = DateTime.MinValue;
+        
+        if (File.Exists(InputFileName))
+        {
+            lastZipChangeTime = new FileInfo(InputFileName).LastWriteTimeUtc;
+            
+            // Directory is older than the ZIP, so let's go ahead and delete it to force an unzip again
+            if (outputDirectory.Exists && outputDirectory.LastWriteTimeUtc < lastZipChangeTime)
+            {
+                outputDirectory.Delete(true);
+            }
+            
+            if (!outputDirectory.Exists)
+            {
+                ZipFile.ExtractToDirectory(InputFileName, OutputDirectory);
+            }
+        }
+      ]]>
+      </Code>
+    </Task>
+  </UsingTask>
+
+  <Target Name="BuildStartupInfo" BeforeTargets="CoreCompile">
+    <CreateStartupInfo Arguments="$(PythonArguments)" StartupInfoFile="$(StartupInfoFile)" />
+    <UnZip InputFileName="$(CPythonSDKPath)\References\CommonConfiguration\Neutral\lib.zip" OutputDirectory="$(ProjectDir)\lib.zip" />
+  </Target>
+
+  <PropertyGroup>
+    <BuiltProjectOutputGroupDependsOn>
+      BuiltProjectOutputGroupFast;
+      $(BuiltProjectOutputGroupDependsOn)
+    </BuiltProjectOutputGroupDependsOn>
+  </PropertyGroup>
+  
+  <Target Name="BuiltProjectOutputGroupFast"
+          Returns="@(BuiltProjectOutputGroupFastOutput)"
+          DependsOnTargets="$(BuiltProjectOutputGroupFastDependsOn)">
+    <ItemGroup>
+      <BuiltProjectOutputGroupFastOutput Remove="@(BuiltProjectOutputGroupFastOutput)" />
+      <_BuiltProjectOutputGroupFastOutput Remove="@(_BuiltProjectOutputGroupFastOutput)" />
+    </ItemGroup>
+
+    <AssignTargetPath RootFolder="$(QualifiedProjectHome)" Files="$(AppxPackageRecipe)">
+      <Output TaskParameter="AssignedFiles" ItemName="_BuiltProjectOutputGroupFastOutput" />
+    </AssignTargetPath>
+
+    <ItemGroup>
+      <BuiltProjectOutputGroupFastOutput Include="@(_BuiltProjectOutputGroupFastOutput->'%(FullPath)')" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="BuiltProjectOutputGroup"
+          Returns="@(BuiltProjectOutputGroupOutput)"
+          DependsOnTargets="$(BuiltProjectOutputGroupDependsOn)">
+    <ItemGroup>
+      <BuiltProjectOutputGroupOutput Remove="@(BuiltProjectOutputGroupOutput)" />
+      <BuiltProjectOutputGroupOutput Include="@(BuiltProjectOutputGroupFastOutput)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="SourceFilesProjectOutputGroup"
+          Returns="@(SourceFilesProjectOutputGroupOutput)"
+          DependsOnTargets="$(SourceFilesProjectOutputGroupDependsOn)">
+    <ItemGroup>
+      <SourceFilesProjectOutputGroupOutput Remove="@(SourceFilesProjectOutputGroupOutput)" />
+      <_SourceFilesProjectOutputGroupOutput Remove="@(_SourceFilesProjectOutputGroupOutput)" />
+    </ItemGroup>
+
+    <AssignTargetPath RootFolder="$(QualifiedProjectHome)" Files="@(Compile);@(Content);@(InputFiles);$(MSBuildProjectFile);@(PythonHost);@(PtvsdFiles);@(VisualStudioPyFiles)">
+      <Output TaskParameter="AssignedFiles" ItemName="_SourceFilesProjectOutputGroupOutput" />
+    </AssignTargetPath>
+
+    <ItemGroup>
+      <SourceFilesProjectOutputGroupOutput Include="@(_SourceFilesProjectOutputGroupOutput->'%(FullPath)')" />
+    </ItemGroup>
+  </Target>
+
+  <ItemGroup>
+    <InterpreterReference Include="{86767848-40B4-4007-8BCC-A3835EDF0E69}\3.5" />
+  </ItemGroup>
+
+</Project>

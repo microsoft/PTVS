@@ -26,12 +26,17 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 using SR = Microsoft.PythonTools.Project.SR;
+using Microsoft.PythonTools.Repl;
+#if DEV14_OR_LATER
+using Microsoft.VisualStudio.InteractiveWindow.Shell;
+#else
+using Microsoft.VisualStudio.Repl;
+#endif
 
 namespace Microsoft.PythonTools.InterpreterList {
     [Guid(PythonConstants.InterpreterListToolWindowGuid)]
@@ -177,7 +182,11 @@ namespace Microsoft.PythonTools.InterpreterList {
         private void OpenInteractiveWindow_Executed(object sender, ExecutedRoutedEventArgs e) {
             var view = (EnvironmentView)e.Parameter;
             var factory = view.Factory;
+#if DEV14_OR_LATER
+            IVsInteractiveWindow window;
+#else
             IReplWindow window;
+#endif
 
             var provider = _service.KnownProviders.OfType<LoadedProjectInterpreterFactoryProvider>().FirstOrDefault();
             var vsProject = provider == null ?
@@ -201,7 +210,7 @@ namespace Microsoft.PythonTools.InterpreterList {
 
         private void OpenInteractiveOptions_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
             var view = e.Parameter as EnvironmentView;
-            e.CanExecute = view != null && view.Factory != null;
+            e.CanExecute = view != null && view.Factory != null && view.Factory.CanBeConfigured();
         }
 
         private void OpenInteractiveOptions_Executed(object sender, ExecutedRoutedEventArgs e) {

@@ -263,6 +263,10 @@ namespace TestUtilities.UI {
             Keyboard.ControlV();
         }
 
+        public void PressAndRelease(Key key, params Key[] modifier) {
+            Keyboard.PressAndRelease(key, modifier);
+        }
+
         public void CheckMessageBox(params string[] text) {
             VisualStudioApp.CheckMessageBox(text);
         }

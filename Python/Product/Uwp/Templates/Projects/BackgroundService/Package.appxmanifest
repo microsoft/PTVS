@@ -1,0 +1,66 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<Package
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest"
+  xmlns:uwp="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:iot="http://schemas.microsoft.com/appx/manifest/iot/windows10"
+  IgnorableNamespaces="uwp mp iot">
+
+  <Identity
+	  Name="$safeprojectname$"
+	  Publisher="$XmlEscapedPublisherDistinguishedName$"
+	  Version="1.0.0.0" />
+
+  <mp:PhoneIdentity PhoneProductId="$guid9$" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
+
+  <Properties>
+    <DisplayName>$projectname$</DisplayName>
+    <PublisherDisplayName>$XmlEscapedPublisher$</PublisherDisplayName>
+    <Logo>StoreLogo.png</Logo>
+  </Properties>
+
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.10069.0" MaxVersionTested="10.0.10069.0" />
+  </Dependencies>
+
+  <Resources>
+    <Resource Language="x-generate"/>
+  </Resources>
+
+  <Applications>
+    <Application Id="App">
+      <uwp:VisualElements
+			  DisplayName="$projectname$"
+			  Square150x150Logo="Logo.png"
+			  Square44x44Logo="SmallLogo.png"
+			  Description="$projectname$"
+			  BackgroundColor="#464646"
+        AppListEntry="none">
+        <uwp:SplashScreen Image="SplashScreen.png" />
+      </uwp:VisualElements>
+      <Extensions>
+        <Extension Category="windows.backgroundTasks" EntryPoint="pyuwpbackgroundservice.StartupTask">
+          <BackgroundTasks>
+            <iot:Task Type="startup"/>
+          </BackgroundTasks>
+        </Extension>
+      </Extensions>
+    </Application>
+  </Applications>
+
+  <Capabilities>
+    <Capability Name="internetClient" />
+    <Capability Name="internetClientServer" />
+    <Capability Name="privateNetworkClientServer" />
+  </Capabilities>
+
+  <Extensions>
+    <Extension Category="windows.activatableClass.inProcessServer">
+      <InProcessServer>
+        <Path>pyuwpbackgroundservice.dll</Path>
+        <ActivatableClass ActivatableClassId="pyuwpbackgroundservice.StartupTask" ThreadingModel="both" />
+      </InProcessServer>
+    </Extension>
+  </Extensions>
+</Package>

@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Windows;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Editor;
@@ -30,7 +31,11 @@ using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.OLE.Interop;
+#if DEV14_OR_LATER
+using Microsoft.VisualStudio.InteractiveWindow;
+#else
 using Microsoft.VisualStudio.Repl;
+#endif
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
@@ -43,10 +48,10 @@ using Microsoft.VisualStudioTools.Navigation;
 
 namespace Microsoft.PythonTools.Language {
     using IServiceProvider = System.IServiceProvider;    
-
-#if INTERACTIVE_WINDOW
+#if DEV14_OR_LATER
     using IReplWindow = IInteractiveWindow;
 #endif
+
     /// <summary>
     /// IOleCommandTarget implementation for interacting with various editor commands.  This enables
     /// wiring up most of our features to the VisualStudio editor.  We currently support:
@@ -67,7 +72,14 @@ namespace Microsoft.PythonTools.Language {
         private readonly IServiceProvider _serviceProvider;
         private readonly IComponentModel _componentModel;
         private readonly PythonToolsService _pyService;
-        private IOleCommandTarget _next;
+        internal IOleCommandTarget _next;
+#if DEV14_OR_LATER
+        //
+        // A list of scopes if this REPL is multi-scoped
+        // 
+        private string[] _currentScopes;
+        private bool _scopeListVisible;
+#endif
 
         public EditFilter(ITextView textView, IEditorOperations editorOps, IServiceProvider serviceProvider) {
             _textView = textView;
@@ -78,6 +90,9 @@ namespace Microsoft.PythonTools.Language {
             _pyService = _serviceProvider.GetPythonToolsService();
 
             BraceMatcher.WatchBraceHighlights(textView, _componentModel);
+#if DEV14_OR_LATER
+            InitializeScopeList();
+#endif
         }
 
         internal void AttachKeyboardFilter(IVsTextView vsTextView) {
@@ -604,11 +619,14 @@ namespace Microsoft.PythonTools.Language {
             } else if (pguidCmdGroup == CommonConstants.Std2KCmdGroupGuid) {
                 OutliningTaggerProvider.OutliningTagger tagger;
                 switch ((VSConstants.VSStd2KCmdID)nCmdID) {
-                    case (VSConstants.VSStd2KCmdID)147: // ECMD_SMARTTASKS  defined in stdidcmd.h, but not in MPF
+#if !DEV14_OR_LATER
+                    case (VSConstants.VSStd2KCmdID)147:
+                        // ECMD_SMARTTASKS  defined in stdidcmd.h, but not in MPF
                         // if the user is typing to fast for us to update the smart tags on the idle event
                         // then we want to update them before VS pops them up.
                         UpdateSmartTags();
                         break;
+#endif
                     case VSConstants.VSStd2KCmdID.FORMATDOCUMENT:
                         FormatCode(new SnapshotSpan(_textView.TextBuffer.CurrentSnapshot, 0, _textView.TextBuffer.CurrentSnapshot.Length), false);
                         return VSConstants.S_OK;
@@ -621,7 +639,10 @@ namespace Microsoft.PythonTools.Language {
                         if (controller != null) {
                             IntellisenseController.ForceCompletions = true;
                             try {
-                                controller.TriggerCompletionSession((VSConstants.VSStd2KCmdID)nCmdID == VSConstants.VSStd2KCmdID.COMPLETEWORD);
+                                controller.TriggerCompletionSession(
+                                    (VSConstants.VSStd2KCmdID)nCmdID == VSConstants.VSStd2KCmdID.COMPLETEWORD,
+                                    true
+                                );
                             } finally {
                                 IntellisenseController.ForceCompletions = false;
                             }
@@ -683,6 +704,15 @@ namespace Microsoft.PythonTools.Language {
                 }
             } else if (pguidCmdGroup == GuidList.guidPythonToolsCmdSet) {
                 switch (nCmdID) {
+#if DEV14_OR_LATER
+                    case PkgCmdIDList.comboIdReplScopes:
+                        ScopeComboBoxHandler(pvaIn, pvaOut);
+                        return VSConstants.S_OK;
+
+                    case PkgCmdIDList.comboIdReplScopesGetList:
+                        ScopeComboBoxGetList(pvaOut);
+                        return VSConstants.S_OK;
+#endif
                     case PkgCmdIDList.cmdidRefactorRenameIntegratedShell:
                         RefactorRename();
                         return VSConstants.S_OK;
@@ -705,6 +735,83 @@ namespace Microsoft.PythonTools.Language {
 
             return _next.Exec(pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
         }
+
+#if DEV14_OR_LATER
+        private void InitializeScopeList() {
+            var interactive = _textView.TextBuffer.GetInteractiveWindow();
+            if (interactive != null) {
+                IMultipleScopeEvaluator multiScopeEval = interactive.Evaluator as IMultipleScopeEvaluator;
+                if (multiScopeEval != null) {
+                    _scopeListVisible = IsMultiScopeEnabled();
+                    multiScopeEval.AvailableScopesChanged += UpdateScopeList;
+                    multiScopeEval.MultipleScopeSupportChanged += MultipleScopeSupportChanged;
+                }
+            }
+        }
+
+        private void UpdateScopeList(object sender, EventArgs e) {
+            if (!((UIElement)_textView).Dispatcher.CheckAccess()) {
+                ((UIElement)_textView).Dispatcher.BeginInvoke(new Action(() => UpdateScopeList(sender, e)));
+                return;
+            }
+
+            var interactive = _textView.TextBuffer.GetInteractiveWindow();
+            if (interactive != null) {
+                _currentScopes = ((IMultipleScopeEvaluator)interactive.Evaluator).GetAvailableScopes().ToArray();
+            }
+        }
+
+        private bool IsMultiScopeEnabled() {
+            var interactive = _textView.TextBuffer.GetInteractiveWindow();
+            if (interactive != null) {
+                var multiScope = interactive.Evaluator as IMultipleScopeEvaluator;
+                return multiScope != null && multiScope.EnableMultipleScopes;
+            }
+            return false;
+        }
+
+        private void MultipleScopeSupportChanged(object sender, EventArgs e) {
+            _scopeListVisible = IsMultiScopeEnabled();
+        }
+
+        /// <summary>
+        /// Handles getting or setting the current value of the combo box.
+        /// </summary>
+        private void ScopeComboBoxHandler(IntPtr newValue, IntPtr outCurrentValue) {
+            var interactive = _textView.TextBuffer.GetInteractiveWindow();
+            if (interactive != null) {
+                // getting the current value
+                if (outCurrentValue != IntPtr.Zero) {
+                    Marshal.GetNativeVariantForObject(((IMultipleScopeEvaluator)interactive.Evaluator).CurrentScopeName, outCurrentValue);
+                }
+
+                // setting the current value
+                if (newValue != IntPtr.Zero) {
+                    SetCurrentScope((string)Marshal.GetObjectForNativeVariant(newValue));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets the list of scopes that should be available in the combo box.
+        /// </summary>
+        private void ScopeComboBoxGetList(IntPtr outList) {
+            if (_currentScopes != null) {
+                Debug.Assert(outList != IntPtr.Zero);
+                
+                Marshal.GetNativeVariantForObject(_currentScopes, outList);
+            }
+        }
+
+        internal void SetCurrentScope(string newItem) {
+            var interactive = _textView.TextBuffer.GetInteractiveWindow();
+            if (interactive != null) {
+                string activeCode = interactive.CurrentLanguageBuffer.CurrentSnapshot.GetText();
+                ((IMultipleScopeEvaluator)interactive.Evaluator).SetScope(newItem);
+                interactive.InsertCode(activeCode);
+            }
+        }
+#endif
 
         private bool ExtractMethod() {
             return new MethodExtractor(_serviceProvider, _textView).ExtractMethod(new ExtractMethodUserInput(_serviceProvider));
@@ -804,7 +911,11 @@ namespace Microsoft.PythonTools.Language {
                 var lastCode = splitCode[splitCode.Count - 1];
                 splitCode.RemoveAt(splitCode.Count - 1);
 
+#if DEV14_OR_LATER
+                eval.Window.ReadyForInput += new PendLastSplitCode(eval.CurrentWindow, lastCode).AppendCode;
+#else
                 eval.Window.ReadyForInput += new PendLastSplitCode(eval.Window, lastCode).AppendCode;
+#endif
                 eval.Window.Submit(splitCode);
             } else {
                 eval.Window.CurrentLanguageBuffer.Insert(0, startText + pasting + endText);
@@ -847,6 +958,16 @@ namespace Microsoft.PythonTools.Language {
             } else if (pguidCmdGroup == GuidList.guidPythonToolsCmdSet) {
                 for (int i = 0; i < cCmds; i++) {
                     switch (prgCmds[i].cmdID) {
+#if DEV14_OR_LATER
+                        case PkgCmdIDList.comboIdReplScopes:
+                            if (_scopeListVisible) {
+                                prgCmds[0].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
+                            } else {
+                                prgCmds[0].cmdf = CommandDisabledAndHidden;
+                            }
+                            return VSConstants.S_OK;
+#endif
+
                         case PkgCmdIDList.cmdidRefactorRenameIntegratedShell:
                             // C# provides the refactor context menu for the main VS command outside
                             // of the integrated shell.  In the integrated shell we provide our own
@@ -930,6 +1051,8 @@ namespace Microsoft.PythonTools.Language {
                     }
                 }
             }
+
+
             return _next.QueryStatus(ref pguidCmdGroup, cCmds, prgCmds, pCmdText);
         }
 
@@ -970,7 +1093,7 @@ namespace Microsoft.PythonTools.Language {
             }
         }
 
-        #endregion
+#endregion
 
         internal static string RemoveReplPrompts(PythonToolsService pyService, string newline) {
             if (pyService.AdvancedOptions.PasteRemovesReplPrompts) {
@@ -1003,14 +1126,18 @@ namespace Microsoft.PythonTools.Language {
         }
 
         internal void DoIdle(IOleComponentManager compMgr) {
+#if !DEV14_OR_LATER
             UpdateSmartTags();
+#endif
         }
 
+#if !DEV14_OR_LATER
         private void UpdateSmartTags() {
             SmartTagController controller;
             if (_textView.Properties.TryGetProperty<SmartTagController>(typeof(SmartTagController), out controller)) {
                 controller.ShowSmartTag();
             }
         }
+#endif
     }
 }

@@ -205,7 +205,7 @@ module_func()";
             string expectedText = @"import test_package
 test_package";
 
-            AddSmartTagTest("ImportPackage.py", 1, 1, new[] { "import test_package" }, 0, expectedText);
+            AddSmartTagTest("ImportPackage.py", 1, 1, new[] { "*", "import test_package" }, 1, expectedText);
         }
 
         /// <summary>
@@ -279,29 +279,36 @@ sub_package";
         }
 
         private static void AddSmartTagTest(EditorWindow doc, int line, int column, string[] expectedActions, int invokeAction = -1, string expectedText = null) {
-                doc.Invoke(() => {
-                    var point = doc.TextView.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(line - 1).Start.Add(column - 1);
-                    doc.TextView.Caret.MoveTo(point);
-                });
+            doc.Invoke(() => {
+                var point = doc.TextView.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(line - 1).Start.Add(column - 1);
+                doc.TextView.Caret.MoveTo(point);
+            });
 
-                if (expectedActions.Length > 0) {
-                    using (var sh = doc.StartSmartTagSession()) {
-                        Assert.AreEqual(1, sh.Session.ActionSets.Count);
-                        var set = sh.Session.ActionSets.First();
-
-                        Assert.AreEqual(set.Actions.Count, expectedActions.Length);
-                        for (int i = 0; i < set.Actions.Count; i++) {
-                            Assert.AreEqual(set.Actions[i].DisplayText, expectedActions[i].Replace("_", "__"));
-                        }
-
-                        if (invokeAction != -1) {
-                            doc.Invoke(() => set.Actions[invokeAction].Invoke());
-                            Assert.AreEqual(expectedText, doc.Text);
-                        }
+            if (expectedActions.Length > 0) {
+                using (var sh = doc.StartSmartTagSession()) {
+                    var actions = sh.Session.Actions.ToList();
+                    if (expectedActions[0] == "*") {
+                        AssertUtil.ContainsAtLeast(
+                            actions.Select(a => a.DisplayText.Replace("__", "_")),
+                            expectedActions.Skip(1)
+                        );
+                    } else {
+                        AssertUtil.AreEqual(
+                            actions.Select(a => a.DisplayText.Replace("__", "_")).ToArray(),
+                            expectedActions
+                        );
                     }
-                } else {
-                    doc.StartSmartTagSessionNoSession();
+
+                    if (invokeAction >= 0) {
+                        var action = actions.FirstOrDefault(a => a.DisplayText.Replace("__", "_") == expectedActions[invokeAction]);
+                        Assert.IsNotNull(action, "No action named " + expectedActions[invokeAction]);
+                        doc.Invoke(() => action.Invoke());
+                        Assert.AreEqual(expectedText, doc.Text);
+                    }
                 }
+            } else {
+                doc.StartSmartTagSessionNoSession();
+            }
         }
 
         private static void AddSmartTagTest(string filename, int line, int column, string[] expectedActions, int invokeAction = -1, string expectedText = null) {

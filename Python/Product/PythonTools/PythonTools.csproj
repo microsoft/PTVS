@@ -91,7 +91,7 @@
     <ProjectReference2 Include="..\AttacherX86\AttacherX86.csproj" />
     <ProjectReference2 Include="..\ImportWizard\ImportWizard.csproj" />
     <ProjectReference2 Include="..\ProjectWizards\ProjectWizards.csproj" />
-    <ProjectReference Include="..\ReplWindow\ReplWindow.csproj">
+    <ProjectReference Include="..\ReplWindow\ReplWindow.csproj" Condition="!$(Dev14OrLater)">
       <Project>{20BB6FAC-44D2-4D76-ABFE-0C1E163A1A4F}</Project>
       <Private>false</Private>
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
@@ -270,16 +270,37 @@
       </ItemGroup>
     </Otherwise>
   </Choose>
+  <Choose>
+    <When Condition="$(Dev14OrLater)">
+      <ItemGroup>
+        <Reference Include="Microsoft.VisualStudio.InteractiveWindow">
+          <HintPath>$(DevEnvDir)PrivateAssemblies\Microsoft.VisualStudio.InteractiveWindow.dll</HintPath>
+          <Private>false</Private>
+        </Reference>
+        <Reference Include="Microsoft.VisualStudio.VsInteractiveWindow">
+          <HintPath>$(DevEnvDir)PrivateAssemblies\Microsoft.VisualStudio.VsInteractiveWindow.dll</HintPath>
+          <Private>false</Private>
+        </Reference>
+      </ItemGroup>
+    </When>
+  </Choose>
   <ItemGroup>
     <Compile Include="..\Analysis\IEnumerableExtensions.cs">
       <Link>IEnumerableExtensions.cs</Link>
     </Compile>
-    <Compile Include="..\Analysis\Interpreter\PythonInterpreterFactoryExtensions.cs">
-      <Link>PythonInterpreterFactoryExtensions.cs</Link>
-    </Compile>
+    <Compile Include="PythonTools\Repl\IMultipleScopeEvaluator.cs" />
+    <Compile Include="PythonTools\Repl\InteractiveWindowProvider.cs" />
     <Compile Include="IPythonToolsToolWindowService.cs" />
     <Compile Include="MissingInterpreterException.cs" />
+    <Compile Include="PythonTools\Repl\IInteractiveEvaluatorProvider.cs" />
+    <Compile Include="PythonTools\Repl\InteractiveRoleAttribute.cs" />
     <Compile Include="PythonTools\Debugger\ProximityExpressionWalker.cs" />
+    <Compile Include="PythonTools\Repl\ReplOutputClassificationFormatDefinitions.cs" />
+    <Compile Include="PythonTools\Repl\ReplOutputClassifier.cs" />
+    <Compile Include="PythonTools\Repl\ReplOutputClassifierProvider.cs" />
+    <Compile Include="PythonTools\Intellisense\PythonSuggestedActionsSource.cs" />
+    <Compile Include="PythonTools\Intellisense\PythonSuggestedActionsSourceProvider.cs" />
+    <Compile Include="PythonTools\Intellisense\PythonSuggestedImportAction.cs" />
     <Compile Include="PythonTools\Project\IPythonProjectLaunchProperties.cs" />
     <Compile Include="PythonTools\Project\PythonProjectLaunchProperties.cs" />
     <Compile Include="PythonTools\SurveyNewsService.cs" />
@@ -1153,7 +1174,10 @@
     <None Include="Dev10\source.extension.vsixmanifest" Condition="'$(VSTarget)' == '10.0'">
       <SubType>Designer</SubType>
     </None>
-    <None Include="Dev11OrLater\source.extension.vsixmanifest" Condition="'$(VSTarget)' != '10.0'">
+    <None Include="Dev11OrLater\source.extension.vsixmanifest" Condition="'$(VSTarget)' != '10.0' and !$(Dev14OrLater)">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="Dev14OrLater\source.extension.vsixmanifest" Condition="$(Dev14OrLater)">
       <SubType>Designer</SubType>
     </None>
   </ItemGroup>

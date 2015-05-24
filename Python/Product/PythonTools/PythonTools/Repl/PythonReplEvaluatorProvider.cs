@@ -19,18 +19,23 @@ using System.Diagnostics;
 using System.Linq;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project;
+#if DEV14_OR_LATER
+using Microsoft.VisualStudio.InteractiveWindow;
+#else
 using Microsoft.VisualStudio.Repl;
+#endif
+
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Repl {
-#if INTERACTIVE_WINDOW
-    using IReplEvaluator = IInteractiveEngine;
-    using IReplEvaluatorProvider = IInteractiveEngineProvider;
+#if DEV14_OR_LATER
+using IReplEvaluator = IInteractiveEvaluator;
+using IReplEvaluatorProvider = Microsoft.PythonTools.Repl.IInteractiveEvaluatorProvider;
 #endif
-    
+
     [Export(typeof(IReplEvaluatorProvider))]
     class PythonReplEvaluatorProvider : IReplEvaluatorProvider {
         readonly IInterpreterOptionsService _interpreterService;
