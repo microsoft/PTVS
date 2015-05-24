@@ -696,7 +696,7 @@ namespace VisualStudioToolsUITests {
         public void TestLinkedWithProjectHome() {
             foreach (var projectType in ProjectTypes) {
                 using (var solution = MultiProjectLinkedFiles(projectType).ToVs()) {
-                    var project = solution.Project;
+                    var project = (solution as VisualStudioInstance).Project;
                     
                     // save the project to an odd location.  This will result in project home being set.
                     var newProjName = "TempFile";
@@ -709,7 +709,7 @@ namespace VisualStudioToolsUITests {
                     // create a temporary file and add a link to it in the project
                     solution.FindItem(newProjName).Select();
                     var tempFile  = Path.GetTempFileName();
-                    using (var addExistingDlg = AddExistingItemDialog.FromDte(solution.App)) {
+                    using (var addExistingDlg = AddExistingItemDialog.FromDte((solution as VisualStudioInstance).App)) {
                         addExistingDlg.FileName = tempFile;
                         addExistingDlg.AddLink();
                     }
