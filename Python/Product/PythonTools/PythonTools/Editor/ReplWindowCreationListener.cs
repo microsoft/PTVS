@@ -16,30 +16,31 @@ using System;
 using System.ComponentModel.Composition;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Language;
-using Microsoft.PythonTools.Repl;
-using Microsoft.VisualStudio.Editor;
-using Microsoft.VisualStudio.Repl;
+using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Operations;
 using Microsoft.VisualStudio.Utilities;
+using IOleCommandTarget = Microsoft.VisualStudio.OLE.Interop.IOleCommandTarget;
+
 #if DEV14_OR_LATER
 using Microsoft.VisualStudio.InteractiveWindow.Shell;
+#else
+using Microsoft.VisualStudio.Editor;
+using Microsoft.VisualStudio.Repl;
+using Microsoft.PythonTools.Repl;
 #endif
-using Microsoft.VisualStudio.OLE.Interop;
-using Microsoft.VisualStudio.Text.Editor;
 
 namespace Microsoft.PythonTools.Editor {
-    using Microsoft.VisualStudio.ComponentModelHost;
-    using IServiceProvider = System.IServiceProvider;
 #if DEV14_OR_LATER
     [Export(typeof(IVsInteractiveWindowOleCommandTargetProvider))]
     [ContentType(PythonCoreConstants.ContentType)]
     public class PythonOleCommandTargetProvider : IVsInteractiveWindowOleCommandTargetProvider {
         private readonly IEditorOperationsFactoryService _editorOpsFactory;
-        private readonly System.IServiceProvider _serviceProvider;
+        private readonly IServiceProvider _serviceProvider;
 
         [ImportingConstructor]
-        public PythonOleCommandTargetProvider([Import(typeof(SVsServiceProvider))]System.IServiceProvider serviceProvider, IEditorOperationsFactoryService editorOpsFactory) {
+        public PythonOleCommandTargetProvider([Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider, IEditorOperationsFactoryService editorOpsFactory) {
             _editorOpsFactory = editorOpsFactory;
             _serviceProvider = serviceProvider;
         }
@@ -79,8 +80,6 @@ namespace Microsoft.PythonTools.Editor {
             _serviceProvider = serviceProvider;
         }
 
-    #region IReplWindowCreationListener Members
-
         public void ReplWindowCreated(IReplWindow window) {
             var model = _serviceProvider.GetComponentModel();
             var textView = window.TextView;
@@ -99,8 +98,6 @@ namespace Microsoft.PythonTools.Editor {
             editFilter.AttachKeyboardFilter(vsTextView);
             intellisenseController.AttachKeyboardFilter();
         }
-
-    #endregion
     }
 #endif
 }
