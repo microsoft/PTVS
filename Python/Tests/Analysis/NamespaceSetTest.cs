@@ -150,12 +150,12 @@ namespace AnalysisTests {
         [TestMethod, TestCategory("AnalysisSet")]
         public void ManySet_Object() {
             var set = AnalysisSet.Create(new[] { nsA1, nsA2, nsB1, nsB2 });
-            Assert.IsInstanceOfType(set, typeof(AnalysisSetManyObject));
+            Assert.IsInstanceOfType(set, typeof(AnalysisHashSet));
             Assert.AreEqual(4, set.Count);
             AssertUtil.ContainsExactly(set, nsA1, nsA2, nsB1, nsB2);
 
             set = AnalysisSet.Create(new[] { nsA1, nsA1, nsA2, nsA2, nsB1, nsB1, nsB2, nsB2 });
-            Assert.IsInstanceOfType(set, typeof(AnalysisSetManyObject));
+            Assert.IsInstanceOfType(set, typeof(AnalysisHashSet));
             Assert.AreEqual(4, set.Count);
             AssertUtil.ContainsExactly(set, nsA1, nsA2, nsB1, nsB2);
         }
@@ -163,12 +163,12 @@ namespace AnalysisTests {
         [TestMethod, TestCategory("AnalysisSet")]
         public void ManySet_Union() {
             var set = AnalysisSet.CreateUnion(new[] { nsA1, nsA2, nsB1, nsB2, nsC1 }, UnionComparer.Instances[0]);
-            Assert.IsInstanceOfType(set, typeof(AnalysisSetManyUnion));
+            Assert.IsInstanceOfType(set, typeof(AnalysisHashSet));
             Assert.AreEqual(3, set.Count);
             AssertUtil.ContainsExactly(set, nsAU1, nsBU1, nsC1);
 
             set = AnalysisSet.CreateUnion(new[] { nsA1, nsA1, nsA2, nsA2, nsB1, nsB1, nsB2, nsB2, nsC1 }, UnionComparer.Instances[0]);
-            Assert.IsInstanceOfType(set, typeof(AnalysisSetManyUnion));
+            Assert.IsInstanceOfType(set, typeof(AnalysisHashSet));
             Assert.AreEqual(3, set.Count);
             AssertUtil.ContainsExactly(set, nsAU2, nsBU2, nsC1);
         }
@@ -382,26 +382,26 @@ namespace AnalysisTests {
 
             set2 = set.Add(nsA2, out added, true);
             Assert.AreSame(set, set2);
-            Assert.IsInstanceOfType(set2, typeof(AnalysisSetManyUnion));
+            Assert.IsInstanceOfType(set2, typeof(AnalysisHashSet));
             AssertUtil.ContainsExactly(set2, nsAU1, nsB1, nsC1);
             Assert.IsTrue(added);
 
             set = AnalysisSet.CreateUnion(new[] { nsA1, nsB1, nsC1 }, UnionComparer.Instances[0]);
             set2 = set.Add(nsA2, out added, false);
             Assert.AreNotSame(set, set2);
-            Assert.IsInstanceOfType(set2, typeof(AnalysisSetManyUnion));
+            Assert.IsInstanceOfType(set2, typeof(AnalysisHashSet));
             AssertUtil.ContainsExactly(set2, nsAU1, nsB1, nsC1);
             Assert.IsTrue(added);
 
             set2 = set.Add(nsB2, out added, false);
             Assert.AreNotSame(set, set2);
-            Assert.IsInstanceOfType(set2, typeof(AnalysisSetManyUnion));
+            Assert.IsInstanceOfType(set2, typeof(AnalysisHashSet));
             AssertUtil.ContainsExactly(set2, nsA1, nsBU1, nsC1);
             Assert.IsTrue(added);
 
             set2 = set.Add(nsC2, out added, false);
             Assert.AreNotSame(set, set2);
-            Assert.IsInstanceOfType(set2, typeof(AnalysisSetManyUnion));
+            Assert.IsInstanceOfType(set2, typeof(AnalysisHashSet));
             AssertUtil.ContainsExactly(set2, nsA1, nsB1, nsCU1);
             Assert.IsTrue(added);
         }

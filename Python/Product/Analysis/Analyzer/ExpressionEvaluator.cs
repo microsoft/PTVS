@@ -67,7 +67,8 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         /// </summary>
         public IAnalysisSet LookupAnalysisSetByName(Node node, string name, bool addRef = true) {
             if (_mergeScopes) {
-                var scope = Scope.EnumerateTowardsGlobal.FirstOrDefault(s => (s == Scope || s.VisibleToChildren) && s.Variables.ContainsKey(name));
+                var scope = Scope.EnumerateTowardsGlobal
+                    .FirstOrDefault(s => (s == Scope || s.VisibleToChildren) && s.ContainsVariable(name));
                 if (scope != null) {
                     return scope.GetMergedVariableTypes(name);
                 }
@@ -77,12 +78,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                         var refs = scope.GetVariable(node, _unit, name, addRef);
                         if (refs != null) {
                             if (addRef) {
-                                var linkedVars = scope.GetLinkedVariablesNoCreate(name);
-                                if (linkedVars != null) {
-                                    foreach (var linkedVar in linkedVars) {
-                                        linkedVar.AddReference(node, _unit);
-                                    }
-                                }
+                                scope.AddReferenceToLinkedVariables(node, _unit, name);
                             }
                             return refs.Types;
                         } else if (scope.ContainsImportStar && addRef) {

@@ -175,7 +175,7 @@ namespace Microsoft.PythonTools.Analysis {
             NameExpression name = expr as NameExpression;
             if (name != null) {
                 var defScope = scope.EnumerateTowardsGlobal.FirstOrDefault(s =>
-                    s.Variables.ContainsKey(name.Name) && (s == scope || s.VisibleToChildren || IsFirstLineOfFunction(scope, s, location)));
+                    s.ContainsVariable(name.Name) && (s == scope || s.VisibleToChildren || IsFirstLineOfFunction(scope, s, location)));
 
                 if (defScope == null) {
                     var variables = _unit.ProjectState.BuiltinModule.GetDefinitions(name.Name);
@@ -208,10 +208,7 @@ namespace Microsoft.PythonTools.Analysis {
 
             // if a variable is imported from another module then also yield the defs/refs for the 
             // value in the defining module.
-            var linked = scope.GetLinkedVariablesNoCreate(name.Name);
-            if (linked != null) {
-                result.AddRange(linked.SelectMany(ToVariables));
-            }
+            result.AddRange(scope.GetLinkedVariables(name.Name).SelectMany(ToVariables));
 
             var classScope = scope as ClassScope;
             if (classScope != null) {

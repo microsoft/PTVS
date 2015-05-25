@@ -89,6 +89,7 @@
     <Compile Include="ParserRoundTripTest.cs" />
     <Compile Include="ParserTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ThreadingTest.cs" />
     <Compile Include="TokenizerRoundTripTest.cs" />
     <Compile Include="UpdaterTests.cs" />
   </ItemGroup>
