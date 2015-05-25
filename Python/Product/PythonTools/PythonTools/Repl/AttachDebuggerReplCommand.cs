@@ -15,27 +15,20 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
-using System.IO;
 using System.Threading.Tasks;
-using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
+using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Classification;
 #if DEV14_OR_LATER
 using Microsoft.VisualStudio.InteractiveWindow;
-using Microsoft.VisualStudio.InteractiveWindow.Commands;
 
+using IReplCommand = Microsoft.VisualStudio.InteractiveWindow.Commands.IInteractiveWindowCommand;
+using IReplWindow = Microsoft.VisualStudio.InteractiveWindow.IInteractiveWindow;
+using ReplRoleAttribute = Microsoft.PythonTools.Repl.InteractiveWindowRoleAttribute;
 #else
 using Microsoft.VisualStudio.Repl;
 #endif
-using Microsoft.PythonTools.Repl;
 
-namespace Microsoft.VisualStudio.Repl {
-    using Microsoft.VisualStudio.Text;
-    using Microsoft.VisualStudio.Text.Classification;
-#if DEV14_OR_LATER
-    using IReplCommand = IInteractiveWindowCommand;
-    using IReplWindow = IInteractiveWindow;
-    using ReplRoleAttribute = InteractiveWindowRoleAttribute;
-#endif
-
+namespace Microsoft.PythonTools.Repl {
     [Export(typeof(IReplCommand))]
     [ReplRole("Execution")]
     class AttachDebuggerReplCommand : IReplCommand {
