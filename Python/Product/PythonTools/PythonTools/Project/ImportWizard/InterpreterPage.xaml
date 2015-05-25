@@ -47,9 +47,8 @@
                 <ListView.ItemTemplate>
                     <DataTemplate>
                         <StackPanel Orientation="Horizontal" Margin="1 1 4 1">
-                            <Image Source="/Microsoft.PythonTools;component/PyFile.png"
-                                   Width="16" Height="16"
-                                   Stretch="Uniform" HorizontalAlignment="Left" VerticalAlignment="Center" />
+                            <Control Style="{StaticResource PYFileImage}"
+                                     HorizontalAlignment="Left" />
                             <Grid>
                                 <TextBlock Name="Filename" Text="{Binding}" />
                                 <!-- Ensure there is enough space for the bolded version of the text. -->

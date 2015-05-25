@@ -148,6 +148,15 @@ namespace Microsoft.PythonTools.Project.Web {
                     }
             }
 
+#if DEV14_OR_LATER
+            var id8 = (__VSHPROPID8)propId;
+            switch(id8) {
+                case __VSHPROPID8.VSHPROPID_SupportsIconMonikers:
+                    property = true;
+                    return VSConstants.S_OK;
+            }
+#endif
+
             return base.GetProperty(itemId, propId, out property);
         }
 
@@ -184,26 +193,6 @@ namespace Microsoft.PythonTools.Project.Web {
 
         private static string MakeListFromGuids(IEnumerable<Guid> guidList) {
             return string.Join(";", guidList.Select(g => g.ToString("B")));
-        }
-
-        internal string RemovePropertyPagesFromList(string propertyPagesList, string[] pagesToRemove) {
-            if (pagesToRemove == null || !pagesToRemove.Any()) {
-                return propertyPagesList;
-            }
-
-            var guidsToRemove = new HashSet<Guid>(
-                pagesToRemove.Select(str => { Guid guid; return Guid.TryParse(str, out guid) ? guid : Guid.Empty; })
-            );
-            guidsToRemove.Add(Guid.Empty);
-
-            return string.Join(
-                ";",
-                propertyPagesList.Split(';')
-                    .Where(str => !string.IsNullOrEmpty(str))
-                    .Select(str => { Guid guid; return Guid.TryParse(str, out guid) ? guid : Guid.Empty; })
-                    .Except(guidsToRemove)
-                    .Select(guid => guid.ToString("B"))
-            );
         }
 
         int IOleCommandTarget.Exec(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {

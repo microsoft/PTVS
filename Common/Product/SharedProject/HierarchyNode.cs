@@ -28,6 +28,9 @@ using OleConstants = Microsoft.VisualStudio.OLE.Interop.Constants;
 using VsCommands = Microsoft.VisualStudio.VSConstants.VSStd97CmdID;
 using VsCommands2K = Microsoft.VisualStudio.VSConstants.VSStd2KCmdID;
 using IOleServiceProvider = Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
+#if DEV14_OR_LATER
+using Microsoft.VisualStudio.Imaging.Interop;
+#endif
 
 namespace Microsoft.VisualStudioTools.Project {
     /// <summary>
@@ -516,6 +519,19 @@ namespace Microsoft.VisualStudioTools.Project {
             return null;
         }
 
+#if DEV14_OR_LATER
+        protected virtual bool SupportsIconMonikers {
+            get { return false; }
+        }
+        
+        /// <summary>
+        /// Returns the icon to use.
+        /// </summary>
+        protected virtual ImageMoniker GetIconMoniker(bool open) {
+            return default(ImageMoniker);
+        }
+#endif
+
         /// <summary>
         /// Removes a node from the hierarchy.
         /// </summary>
@@ -577,11 +593,21 @@ namespace Microsoft.VisualStudioTools.Project {
                     break;
 
                 case __VSHPROPID.VSHPROPID_IconImgList:
+#if DEV14_OR_LATER
+                    if (SupportsIconMonikers) {
+                        break;
+                    }
+#endif
                     result = this.ProjectMgr.ImageHandler.ImageList.Handle;
                     break;
 
                 case __VSHPROPID.VSHPROPID_OpenFolderIconIndex:
                 case __VSHPROPID.VSHPROPID_IconIndex:
+#if DEV14_OR_LATER
+                    if (SupportsIconMonikers) {
+                        break;
+                    }
+#endif
                     int index = this.ImageIndex;
                     if (index != NoImage) {
                         result = index;
@@ -597,10 +623,20 @@ namespace Microsoft.VisualStudioTools.Project {
                     break;
 
                 case __VSHPROPID.VSHPROPID_IconHandle:
+#if DEV14_OR_LATER
+                    if (SupportsIconMonikers) {
+                        break;
+                    }
+#endif
                     result = GetIconHandle(false);
                     break;
 
                 case __VSHPROPID.VSHPROPID_OpenFolderIconHandle:
+#if DEV14_OR_LATER
+                    if (SupportsIconMonikers) {
+                        break;
+                    }
+#endif
                     result = GetIconHandle(true);
                     break;
 
@@ -725,6 +761,32 @@ namespace Microsoft.VisualStudioTools.Project {
                     break;
             }
 #endif
+
+#if DEV14_OR_LATER
+            __VSHPROPID8 id8 = (__VSHPROPID8)propId;
+            switch (id8) {
+                case __VSHPROPID8.VSHPROPID_SupportsIconMonikers:
+                    result = SupportsIconMonikers;
+                    break;
+
+                case __VSHPROPID8.VSHPROPID_IconMonikerGuid:
+                    result = GetIconMoniker(false).Guid;
+                    break;
+
+                case __VSHPROPID8.VSHPROPID_IconMonikerId:
+                    result = GetIconMoniker(false).Id;
+                    break;
+
+                case __VSHPROPID8.VSHPROPID_OpenFolderIconMonikerGuid:
+                    result = GetIconMoniker(true).Guid;
+                    break;
+
+                case __VSHPROPID8.VSHPROPID_OpenFolderIconMonikerId:
+                    result = GetIconMoniker(true).Id;
+                    break;
+            }
+#endif
+
 #if DEBUG
             if (propId != LastTracedProperty) {
                 string trailer = (result == null) ? "null" : result.ToString();
@@ -776,6 +838,18 @@ namespace Microsoft.VisualStudioTools.Project {
             if (propid == (int)__VSHPROPID.VSHPROPID_TypeGuid) {
                 guid = this.ItemTypeGuid;
             }
+#if DEV14_OR_LATER
+            __VSHPROPID8 id8 = (__VSHPROPID8)propid;
+            switch (id8) {
+                case __VSHPROPID8.VSHPROPID_IconMonikerGuid:
+                    guid = GetIconMoniker(false).Guid;
+                    break;
+
+                case __VSHPROPID8.VSHPROPID_OpenFolderIconMonikerGuid:
+                    guid = GetIconMoniker(true).Guid;
+                    break;
+            }
+#endif
 
             if (guid.Equals(Guid.Empty)) {
                 return VSConstants.DISP_E_MEMBERNOTFOUND;

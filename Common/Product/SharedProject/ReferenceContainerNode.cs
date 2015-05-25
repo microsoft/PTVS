@@ -26,6 +26,10 @@ using MSBuild = Microsoft.Build.Evaluation;
 using OleConstants = Microsoft.VisualStudio.OLE.Interop.Constants;
 using VsCommands = Microsoft.VisualStudio.VSConstants.VSStd97CmdID;
 using VsCommands2K = Microsoft.VisualStudio.VSConstants.VSStd2KCmdID;
+#if DEV14_OR_LATER
+using Microsoft.VisualStudio.Imaging;
+using Microsoft.VisualStudio.Imaging.Interop;
+#endif
 
 namespace Microsoft.VisualStudioTools.Project {
     [ComVisible(true)]
@@ -120,6 +124,15 @@ namespace Microsoft.VisualStudioTools.Project {
             return this.ProjectMgr.GetIconHandleByName(ProjectNode.ImageName.ReferenceFolder);
         }
 
+#if DEV14_OR_LATER
+        protected override bool SupportsIconMonikers {
+            get { return true; }
+        }
+
+        protected override ImageMoniker GetIconMoniker(bool open) {
+            return KnownMonikers.Reference;
+        }
+#endif
 
         /// <summary>
         /// References node cannot be dragged.
