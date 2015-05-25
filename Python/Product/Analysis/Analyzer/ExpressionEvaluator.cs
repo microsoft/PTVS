@@ -147,6 +147,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
         private static Dictionary<Type, EvalDelegate> _evaluators = new Dictionary<Type, EvalDelegate> {
             { typeof(AndExpression), ExpressionEvaluator.EvaluateAnd },
+            { typeof(AwaitExpression), ExpressionEvaluator.EvaluateAwait },
             { typeof(BackQuoteExpression), ExpressionEvaluator.EvaluateBackQuote },
             { typeof(BinaryExpression), ExpressionEvaluator.EvaluateBinary },
             { typeof(CallExpression), ExpressionEvaluator.EvaluateCall },
@@ -277,6 +278,11 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             var n = (AndExpression)node;
             var result = ee.Evaluate(n.Left);
             return result.Union(ee.Evaluate(n.Right));
+        }
+
+        private static IAnalysisSet EvaluateAwait(ExpressionEvaluator ee, Node node) {
+            var n = (AwaitExpression)node;
+            return ee.Evaluate(n.Expression).Await(node, ee._unit);
         }
 
         private static IAnalysisSet EvaluateCall(ExpressionEvaluator ee, Node node) {

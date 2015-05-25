@@ -105,9 +105,24 @@ namespace Microsoft.PythonTools.Analysis.AnalysisSetDetails {
 
         public IAnalysisSet Add(AnalysisValue item, out bool wasChanged, bool canMutate = true) {
             if (!canMutate) {
-                if (Contains(item)) {
-                    wasChanged = false;
-                    return this;
+                var buckets = _buckets;
+                var i = Contains(buckets, item);
+                if (i >= 0) {
+                    var existing = buckets[i].Key;
+                    if (object.ReferenceEquals(existing, item)) {
+                        wasChanged = false;
+                        return this;
+                    }
+                    var uc = _comparer as UnionComparer;
+                    if (uc == null) {
+                        wasChanged = false;
+                        return this;
+                    }
+                    item = uc.MergeTypes(existing, item, out wasChanged);
+                    if (!wasChanged) {
+                        return this;
+                    }
+                    return ((AnalysisHashSet)Clone()).Remove(existing).Add(item, true);
                 }
                 wasChanged = true;
                 return Clone().Add(item, true);
@@ -173,6 +188,25 @@ namespace Microsoft.PythonTools.Analysis.AnalysisSetDetails {
                 wasChanged |= AddOne(items.Current);
             }
             return wasChanged;
+        }
+
+        public AnalysisHashSet Remove(AnalysisValue key) {
+            bool dummy;
+            return Remove(key, out dummy);
+        }
+
+        public AnalysisHashSet Remove(AnalysisValue key, out bool wasChanged) {
+            var buckets = _buckets;
+            int i = Contains(buckets, key);
+            if (i < 0) {
+                wasChanged = false;
+                return this;
+            }
+
+            _buckets[i].Key = _removed;
+            _count--;
+            wasChanged = true;
+            return this;
         }
 
         public IAnalysisSet Clone() {
@@ -303,9 +337,33 @@ namespace Microsoft.PythonTools.Analysis.AnalysisSetDetails {
                     if (cur.Key == null) {
                         break;
                     }
-                } else if (Object.ReferenceEquals(key, existingKey) ||
-                    (cur.HashCode == hc && _comparer.Equals(key, (AnalysisValue)existingKey))) {
+                } else if (Object.ReferenceEquals(key, existingKey)) {
                     return false;
+                } else if (cur.HashCode == hc && _comparer.Equals(key, existingKey)) {
+                    var uc = _comparer as UnionComparer;
+                    if (uc == null) {
+                        return false;
+                    }
+                    bool changed;
+                    var newKey = uc.MergeTypes(existingKey, key, out changed);
+                    if (!changed) {
+                        return false;
+                    }
+                    // merging values has changed the one we should store, so
+                    // replace it.
+                    var newHc = _comparer.GetHashCode(newKey) & Int32.MaxValue;
+                    if (newHc != buckets[index].HashCode) {
+                        // The hash code should not change, but if it does, we
+                        // need to keep things consistent
+                        Debug.Fail("Hash code changed when merging AnalysisValues");
+                        Thread.MemoryBarrier();
+                        buckets[index].Key = _removed;
+                        AddOne(buckets, newKey, newHc);
+                        return true;
+                    }
+                    Thread.MemoryBarrier();
+                    buckets[index].Key = newKey;
+                    return true;
                 }
 
                 index = ProbeNext(buckets, index);
@@ -341,7 +399,7 @@ namespace Microsoft.PythonTools.Analysis.AnalysisSetDetails {
             if (key == null) {
                 throw new ArgumentNullException("key");
             }
-            return Contains(_buckets, key);
+            return Contains(_buckets, key) >= 0;
         }
 
         /// <summary>
@@ -350,7 +408,7 @@ namespace Microsoft.PythonTools.Analysis.AnalysisSetDetails {
         /// Used so the value lookup can run against a buckets while a writer
         /// replaces the buckets.
         /// </summary>
-        private bool Contains(Bucket[] buckets, AnalysisValue/*!*/ key) {
+        private int Contains(Bucket[] buckets, AnalysisValue/*!*/ key) {
             Debug.Assert(key != null);
 
             if (_count > 0 && buckets != null) {
@@ -359,10 +417,10 @@ namespace Microsoft.PythonTools.Analysis.AnalysisSetDetails {
                 return Contains(buckets, key, hc);
             }
 
-            return false;
+            return -1;
         }
 
-        private bool Contains(Bucket[] buckets, AnalysisValue key, int hc) {
+        private int Contains(Bucket[] buckets, AnalysisValue key, int hc) {
             int index = hc % buckets.Length;
             int startIndex = index;
             do {
@@ -375,14 +433,14 @@ namespace Microsoft.PythonTools.Analysis.AnalysisSetDetails {
                         buckets[index].HashCode == hc &&
                         _comparer.Equals(key, (AnalysisValue)existingKey))) {
 
-                        return true;
+                        return index;
                     }
                 }
 
                 index = ProbeNext(buckets, index);
             } while (startIndex != index);
 
-            return false;
+            return -1;
         }
 
         /// <summary>

@@ -16,6 +16,8 @@ using System;
 
 namespace Microsoft.PythonTools.Parsing {
     internal struct TokenWithSpan {
+        public static readonly TokenWithSpan Empty = new TokenWithSpan();
+
         private readonly Token _token;
         private readonly IndexSpan _span;
 
