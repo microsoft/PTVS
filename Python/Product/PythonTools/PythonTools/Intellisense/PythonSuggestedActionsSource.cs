@@ -21,6 +21,7 @@ using Microsoft.PythonTools.Editor.Core;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Intellisense {
 #if DEV14_OR_LATER
@@ -77,7 +78,9 @@ namespace Microsoft.PythonTools.Intellisense {
                 SpanTrackingMode.EdgePositive,
                 TrackingFidelityMode.Forward
             );
-            var imports = textBuffer.CurrentSnapshot.GetMissingImports(_provider, span);
+            var imports = await _provider
+                .GetUIThread()
+                .InvokeAsync(() => textBuffer.CurrentSnapshot.GetMissingImports(_provider, span));
 
             if (imports == MissingImportAnalysis.Empty) {
                 return false;

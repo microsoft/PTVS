@@ -633,7 +633,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             var analyzer = analysis.ProjectState;
-            var index = span.GetStartPoint(snapshot).Position;
+            var index = (parser.GetStatementRange() ?? span.GetSpan(snapshot)).Start.Position;
 
             var location = TranslateIndex(
                 index,
