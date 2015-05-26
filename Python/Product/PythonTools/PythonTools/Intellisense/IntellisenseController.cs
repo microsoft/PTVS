@@ -416,6 +416,12 @@ namespace Microsoft.PythonTools.Intellisense {
                 return base.Walk(node);
             }
 
+            public override bool Walk(AwaitExpression node) {
+                CanComplete = IsActualExpression(node.Expression);
+                CommitByDefault = true;
+                return base.Walk(node);
+            }
+
             public override bool Walk(DelStatement node) {
                 CanComplete = IsActualExpression(node.Expressions);
                 CommitByDefault = true;
