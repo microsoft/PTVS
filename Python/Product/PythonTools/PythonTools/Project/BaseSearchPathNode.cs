@@ -83,18 +83,6 @@ namespace Microsoft.PythonTools.Project {
             get { return false; }
         }
 
-        public override object GetIconHandle(bool open) {
-            return _project.GetIconHandleByName(
-#if DEV11_OR_LATER && !DEV14_OR_LATER
-                PythonProjectImageName.SearchPath
-#else
-                (Directory.Exists(Url) || File.Exists(Url)) ? 
-                    PythonProjectImageName.SearchPath : 
-                    PythonProjectImageName.MissingSearchPath
-#endif
-            );
-        }
-
 #if DEV11_OR_LATER && !DEV14_OR_LATER
         protected override VSOVERLAYICON OverlayIconIndex {
             get {
@@ -114,6 +102,20 @@ namespace Microsoft.PythonTools.Project {
             return (Directory.Exists(Url) || File.Exists(Url)) ?
                 KnownMonikers.Reference :
                 KnownMonikers.ReferenceWarning;
+        }
+#else
+        public override int ImageIndex {
+            get {
+                return _project.GetIconIndex(
+#if DEV11_OR_LATER
+                    PythonProjectImageName.SearchPath
+#else
+                    (Directory.Exists(Url) || File.Exists(Url)) ? 
+                        PythonProjectImageName.SearchPath : 
+                        PythonProjectImageName.MissingSearchPath
+#endif
+                );
+            }
         }
 #endif
 

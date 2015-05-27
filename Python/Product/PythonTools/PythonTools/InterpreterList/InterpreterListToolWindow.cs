@@ -33,6 +33,7 @@ using Microsoft.VisualStudioTools.Project;
 using SR = Microsoft.PythonTools.Project.SR;
 using Microsoft.PythonTools.Repl;
 #if DEV14_OR_LATER
+using Microsoft.VisualStudio.Imaging;
 using Microsoft.VisualStudio.InteractiveWindow.Shell;
 #else
 using Microsoft.VisualStudio.Repl;
@@ -56,8 +57,13 @@ namespace Microsoft.PythonTools.InterpreterList {
 
             _pyService = _site.GetPythonToolsService();
 
+#if DEV14_OR_LATER
+            // TODO: Get PYEnvironment added to image list
+            BitmapImageMoniker = KnownMonikers.DockPanel;
+#else
             BitmapResourceID = PythonConstants.ResourceIdForReplImages;
             BitmapIndex = 0;
+#endif
             Caption = SR.GetString(SR.Environments);
 
             _service = _site.GetComponentModel().GetService<IInterpreterOptionsService>();

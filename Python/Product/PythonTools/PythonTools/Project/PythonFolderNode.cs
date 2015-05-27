@@ -35,12 +35,23 @@ namespace Microsoft.PythonTools.Project {
     /// Currently we just provide a specialized icon for the different folder.
     /// </summary>
     class PythonFolderNode : CommonFolderNode {
+#if !DEV14_OR_LATER
         private ImageList _imageList;
+#endif
 
         public PythonFolderNode(CommonProjectNode root, ProjectElement element)
             : base(root, element) {
         }
 
+#if DEV14_OR_LATER
+        protected override ImageMoniker GetIconMoniker(bool open) {
+            if (!ItemNode.IsExcluded && AllChildren.Any(n => ModulePath.IsInitPyFile(n.Url))) {
+                return open ? KnownMonikers.PackageFolderOpened : KnownMonikers.PackageFolderClosed;
+            }
+
+            return base.GetIconMoniker(open);
+        }
+#else
         public override object GetIconHandle(bool open) {
             if (ItemNode.IsExcluded) {
                 return base.GetIconHandle(open);
@@ -63,15 +74,6 @@ namespace Microsoft.PythonTools.Project {
             }
 
             return base.GetIconHandle(open);
-        }
-
-#if DEV14_OR_LATER
-        protected override ImageMoniker GetIconMoniker(bool open) {
-            if (!ItemNode.IsExcluded && AllChildren.Any(n => ModulePath.IsInitPyFile(n.Url))) {
-                return open ? KnownMonikers.PackageFolderOpened : KnownMonikers.PackageFolderClosed;
-            }
-
-            return base.GetIconMoniker(open);
         }
 #endif
 

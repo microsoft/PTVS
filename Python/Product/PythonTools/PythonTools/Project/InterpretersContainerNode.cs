@@ -98,10 +98,6 @@ namespace Microsoft.PythonTools.Project {
             return null;
         }
 
-        public override object GetIconHandle(bool open) {
-            return _projectNode.GetIconHandleByName(PythonProjectImageName.InterpretersContainer);
-        }
-
 #if DEV14_OR_LATER
         protected override bool SupportsIconMonikers {
             get { return true; }
@@ -110,6 +106,12 @@ namespace Microsoft.PythonTools.Project {
         protected override ImageMoniker GetIconMoniker(bool open) {
             // TODO: Update to PYEnvironment
             return KnownMonikers.DockPanel;
+        }
+#else
+        public override int ImageIndex {
+            get {
+                return _projectNode.GetIconIndex(PythonProjectImageName.InterpretersContainer);
+            }
         }
 #endif
 

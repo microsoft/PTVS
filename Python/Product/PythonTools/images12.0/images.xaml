@@ -15,8 +15,7 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate>
-                    <!-- TODO: Get PYFile.png -->
-                    <Image Source="PYClassFile64.png" Stretch="Uniform" Width="16" Height="16"/>
+                    <Image Source="PYFile.png" Stretch="Uniform" Width="16" Height="16"/>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
