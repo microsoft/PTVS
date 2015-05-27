@@ -121,7 +121,10 @@ namespace Microsoft.PythonTools.Parsing {
         NLToken = 110,
         ExplicitLineJoin = 111,
         MatMultiply = 112,
-        MatMultiplyEqual = 113
+        MatMultiplyEqual = 113,
+
+        KeywordAsync = 114,
+        KeywordAwait = 115
     }
 
     internal static class Tokens {
@@ -389,6 +392,8 @@ namespace Microsoft.PythonTools.Parsing {
         private static readonly Token kwAndToken = new SymbolToken(TokenKind.KeywordAnd, "and");
         private static readonly Token kwAsToken = new SymbolToken(TokenKind.KeywordAs, "as");
         private static readonly Token kwAssertToken = new SymbolToken(TokenKind.KeywordAssert, "assert");
+        private static readonly Token kwAsyncToken = new SymbolToken(TokenKind.KeywordAsync, "async");
+        private static readonly Token kwAwaitToken = new SymbolToken(TokenKind.KeywordAwait, "await");
         private static readonly Token kwBreakToken = new SymbolToken(TokenKind.KeywordBreak, "break");
         private static readonly Token kwClassToken = new SymbolToken(TokenKind.KeywordClass, "class");
         private static readonly Token kwContinueToken = new SymbolToken(TokenKind.KeywordContinue, "continue");
@@ -432,6 +437,14 @@ namespace Microsoft.PythonTools.Parsing {
 
         public static Token KeywordAssertToken {
             get { return kwAssertToken; }
+        }
+
+        public static Token KeywordAsyncToken {
+            get { return kwAsyncToken; }
+        }
+
+        public static Token KeywordAwaitToken {
+            get { return kwAwaitToken; }
         }
 
         public static Token KeywordBreakToken {

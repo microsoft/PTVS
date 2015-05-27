@@ -568,11 +568,6 @@ a.original()
             var expectedIntType2 = new[] { BuiltinTypeId.Int };
             var expectedTupleType1 = new[] { BuiltinTypeId.Tuple, BuiltinTypeId.NoneType };
             var expectedTupleType2 = new[] { BuiltinTypeId.Tuple, BuiltinTypeId.NoneType };
-            if (this is StdLibAnalysisTest) {
-                expectedIntType1 = new BuiltinTypeId[0];
-                expectedIntType2 = new BuiltinTypeId[0];
-                expectedTupleType1 = new[] { BuiltinTypeId.NoneType };
-            }
 
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("x1", code.IndexOf("x1, y1, _1 =")), expectedIntType1);
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("y1", code.IndexOf("x1, y1, _1 =")), expectedIntType1);
@@ -619,7 +614,7 @@ x = a()
             var func = entry.GetValuesByIndex("a", 0).OfType<FunctionInfo>().FirstOrDefault();
             Assert.IsNotNull(func);
             var sb = new StringBuilder();
-            func.AddReturnTypeString(sb);
+            FunctionInfo.AddReturnTypeString(sb, func.GetReturnValue);
             Assert.AreEqual(" -> tuple", sb.ToString());
         }
 
@@ -1460,6 +1455,24 @@ for some_str, some_int, some_bool in x:
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("some_str", 1), BuiltinTypeId_Str);
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("some_int", 1), BuiltinTypeId.Int);
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("some_bool", 1), BuiltinTypeId.Bool);
+        }
+
+        [TestMethod, Priority(0)]
+        public void ForIterator() {
+            var code = @"
+class X(object):
+    def __iter__(self): return self
+    def __next__(self): return 123
+
+class Y(object):
+    def __iter__(self): return X()
+
+for i in Y():
+    pass
+";
+            var entry = ProcessText(code, PythonLanguageVersion.V34);
+
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("i", code.IndexOf("pass")), BuiltinTypeId.Int);
         }
 
         [TestMethod, Priority(0)]
@@ -3287,8 +3300,7 @@ class cls(cls):
             AssertUtil.ContainsExactly(entry.GetMemberNamesByIndex("cls().abc", 1), _intMembers);
             AssertUtil.ContainsExactly(entry.GetMemberNamesByIndex("cls.abc", 1), _intMembers);
             var sigs = entry.GetSignaturesByIndex("cls", 1).ToArray();
-            Assert.AreEqual(2, sigs.Length);    // 1 for object, one for cls
-            Assert.AreEqual(null, sigs.First().Documentation);
+            AssertUtil.ContainsExactly(sigs.Select(s => s.Documentation), null, "The most base type");
         }
 
         [TestMethod, Priority(0)]
@@ -3602,19 +3614,28 @@ if not Method(42, 'abc', []):
         [TestMethod, Priority(0)]
         public void WithStatement() {
             var text = @"
-class x(object):
-    def x_method(self):
-        pass
-        
-with x() as fob:
-    print fob
+class X(object):
+    def x_method(self): pass
+    def __enter__(self): return self
+    def __exit__(self, exc_type, exc_value, traceback): return False
+       
+class Y(object):
+    def y_method(self): pass
+    def __enter__(self): return 123
+    def __exit__(self, exc_type, exc_value, traceback): return False
+ 
+with X() as x:
+    pass #x
+
+with Y() as y:
+    pass #y
     
-with x():
+with X():
     pass
 ";
             var entry = ProcessText(text);
-            var fob = entry.GetMemberNamesByIndex("fob", text.IndexOf("print fob"));
-            AssertUtil.ContainsExactly(fob, GetUnion(_objectMembers, "x_method"));
+            AssertUtil.ContainsAtLeast(entry.GetMemberNamesByIndex("x", text.IndexOf("pass #x")), "x_method");
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("y", text.IndexOf("pass #y")), BuiltinTypeId.Int);
         }
 
         [TestMethod, Priority(0)]
@@ -6493,6 +6514,70 @@ x = A().wg");
 
             Assert.IsNotNull(entry);
         }
+
+        [TestMethod, Priority(0)]
+        public void Coroutine() {
+            var code = @"
+async def g():
+    return 123
+
+async def f():
+    x = await g()
+    g2 = g()
+    y = await g2
+";
+            var entry = ProcessText(code, PythonLanguageVersion.V35);
+
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("x", code.IndexOf("x =")), BuiltinTypeId.Int);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("y", code.IndexOf("y =")), BuiltinTypeId.Int);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("g2", code.IndexOf("g2 =")), BuiltinTypeId.Generator);
+        }
+
+        [TestMethod, Priority(0)]
+        public void AsyncWithStatement() {
+            var text = @"
+class X(object):
+    def x_method(self): pass
+    async def __aenter__(self): return self
+    async def __aexit__(self, exc_type, exc_value, traceback): return False
+
+class Y(object):
+    def y_method(self): pass
+    async def __aenter__(self): return 123
+    async def __aexit__(self, exc_type, exc_value, traceback): return False
+
+async def f():
+    async with X() as x:
+        pass #x
+
+    async with Y() as y:
+        pass #y
+";
+            var entry = ProcessText(text, PythonLanguageVersion.V35);
+            AssertUtil.ContainsAtLeast(entry.GetMemberNamesByIndex("x", text.IndexOf("pass #x")), "x_method");
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("y", text.IndexOf("pass #y")), BuiltinTypeId.Int);
+        }
+
+        [TestMethod, Priority(0)]
+        public void AsyncForIterator() {
+            var code = @"
+class X:
+    async def __aiter__(self): return self
+    async def __anext__(self): return 123
+
+class Y:
+    async def __aiter__(self): return X()
+
+async def f():
+    async for i in Y():
+        pass
+";
+            var entry = ProcessText(code, PythonLanguageVersion.V35);
+
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("i", code.IndexOf("pass")), BuiltinTypeId.Int);
+        }
+
+
 
         #endregion
 

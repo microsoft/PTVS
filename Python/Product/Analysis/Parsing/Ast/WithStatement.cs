@@ -20,12 +20,18 @@ namespace Microsoft.PythonTools.Parsing.Ast {
     public class WithStatement : Statement {
         private int _headerIndex;
         private readonly WithItem[] _items;
-        private Statement _body;
+        private readonly Statement _body;
+        private readonly bool _isAsync;
 
         public WithStatement(WithItem[] items, Statement body) {
             _items = items;
             _body = body;
         }
+
+        public WithStatement(WithItem[] items, Statement body, bool isAsync) : this(items, body) {
+            _isAsync = isAsync;
+        }
+
 
         public IList<WithItem> Items {
             get {
@@ -39,6 +45,10 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
         public Statement Body {
             get { return _body; }
+        }
+
+        public bool IsAsync {
+            get { return _isAsync; }
         }
 
         public override void Walk(PythonWalker walker) {

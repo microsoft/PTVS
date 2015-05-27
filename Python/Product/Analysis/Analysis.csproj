@@ -106,6 +106,7 @@
     <Compile Include="Interpreter\PythonLibraryPath.cs" />
     <Compile Include="LockedEnumerable.cs" />
     <Compile Include="ModulePath.cs" />
+    <Compile Include="Parsing\Ast\AwaitExpression.cs" />
     <Compile Include="Parsing\CodeFormattingCategoryAttribute.cs" />
     <Compile Include="Parsing\CodeFormattingDefaultSettingAttribute.cs" />
     <Compile Include="Parsing\CodeFormattingDescriptionAttribute.cs" />
@@ -166,6 +167,7 @@
     <Compile Include="Analyzer\ModuleScope.cs" />
     <Compile Include="Analyzer\OverviewWalker.cs" />
     <Compile Include="SingleDict.cs" />
+    <Compile Include="Values\CoroutineInfo.cs" />
     <Compile Include="Values\PartialFunctionInfo.cs" />
     <Compile Include="Values\SysModuleInfo.cs" />
     <Compile Include="VariableDef.cs" />
