@@ -77,7 +77,9 @@
     <Compile Include="..\PythonTools\PythonToolsInstallPath.cs">
       <Link>PythonToolsInstallPath.cs</Link>
     </Compile>
+    <Compile Include="AnalysisDictionary.cs" />
     <Compile Include="AnalysisExtensions.cs" />
+    <Compile Include="AnalysisHashSet.cs" />
     <Compile Include="AnalysisLimits.cs" />
     <Compile Include="AnalysisLog.cs" />
     <Compile Include="AnalysisValue.cs" />
@@ -93,6 +95,7 @@
     <Compile Include="Interpreter\Default\AnalysisOnlyInterpreterFactory.cs" />
     <Compile Include="Interpreter\Default\CPythonInterpreterFactory.cs" />
     <Compile Include="Interpreter\Default\CPythonSequenceType.cs" />
+    <Compile Include="Interpreter\InterpreterUIMode.cs" />
     <Compile Include="Interpreter\InterpreterFactoryCreator.cs" />
     <Compile Include="Interpreter\InterpreterFactoryCreationOptions.cs" />
     <Compile Include="Interpreter\IPythonInterpreterWithProjectReferences.cs" />
@@ -101,7 +104,9 @@
     <Compile Include="Interpreter\NewDatabaseEventArgs.cs" />
     <Compile Include="Interpreter\PythonInterpreterFactoryExtensions.cs" />
     <Compile Include="Interpreter\PythonLibraryPath.cs" />
+    <Compile Include="LockedEnumerable.cs" />
     <Compile Include="ModulePath.cs" />
+    <Compile Include="Parsing\Ast\AwaitExpression.cs" />
     <Compile Include="Parsing\CodeFormattingCategoryAttribute.cs" />
     <Compile Include="Parsing\CodeFormattingDefaultSettingAttribute.cs" />
     <Compile Include="Parsing\CodeFormattingDescriptionAttribute.cs" />
@@ -162,6 +167,7 @@
     <Compile Include="Analyzer\ModuleScope.cs" />
     <Compile Include="Analyzer\OverviewWalker.cs" />
     <Compile Include="SingleDict.cs" />
+    <Compile Include="Values\CoroutineInfo.cs" />
     <Compile Include="Values\PartialFunctionInfo.cs" />
     <Compile Include="Values\SysModuleInfo.cs" />
     <Compile Include="VariableDef.cs" />

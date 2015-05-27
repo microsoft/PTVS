@@ -47,7 +47,7 @@ namespace PythonToolsMockTests {
             PythonTestData.Deploy(includeTestData: false);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(0), TestCategory("Mock")]
         public void KeywordClassification27() {
             var code = string.Join(Environment.NewLine, PythonKeywords.All(PythonLanguageVersion.V27));
             code += "\r\nTrue\r\nFalse";
@@ -70,7 +70,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(0), TestCategory("Mock")]
         public void KeywordClassification33() {
             var code = string.Join(Environment.NewLine, PythonKeywords.All(PythonLanguageVersion.V33));
 
@@ -92,7 +92,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(0), TestCategory("Mock")]
         public void ModuleClassification() {
             var code = @"import abc
 import os
@@ -115,7 +115,7 @@ abc = True
             return new MockTextBuffer(code, PythonCoreConstants.ContentType, "C:\\fob.py");
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(0), TestCategory("Mock")]
         public void ImportClassifications() {
             var code = @"import abc as x
 from os import fdopen
@@ -134,7 +134,7 @@ fdopen
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(0), TestCategory("Mock")]
         public void TypeClassification() {
             var code = @"class MyClass(object):
     pass
@@ -154,7 +154,7 @@ MyClassType = type(mc)
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(0), TestCategory("Mock")]
         public void ParameterClassification() {
             var code = @"def f(a, b, c):
     a = b
@@ -174,7 +174,24 @@ b = c
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(0), TestCategory("Mock")]
+        public void ParameterAnnotationClassification() {
+            var code = @"class A: pass
+class B: pass
+
+def f(a = A, b : B):
+    pass
+";
+            using (var helper = new ClassifierHelper(code, PythonLanguageVersion.V27)) {
+                helper.CheckAstClassifierSpans("ki:k ki:k ki(i=i,i:i): k");
+
+                helper.Analyze();
+
+                helper.CheckAnalysisClassifierSpans("c<A>c<B>f<f>pc<A>pc<B>");
+            }
+        }
+
+        [TestMethod, Priority(0), TestCategory("Mock")]
         public void TrueFalseClassification() {
             var code = "True False";
 
@@ -184,6 +201,34 @@ b = c
 
             using (var helper = new ClassifierHelper(code, PythonLanguageVersion.V33)) {
                 helper.CheckAstClassifierSpans("k<True> k<False>");
+            }
+        }
+
+        [TestMethod, Priority(0), TestCategory("Mock")]
+        public void AsyncAwaitClassification() {
+            var code = @"
+await f
+await + f
+async with f: pass
+async for x in f: pass
+
+async def f():
+    await f
+    async with f: pass
+    async for x in f: pass
+
+class F:
+    async def f(self): pass
+
+";
+
+            using (var helper = new ClassifierHelper(code, PythonLanguageVersion.V35)) {
+                helper.CheckAstClassifierSpans("ii i+i iki:k ikiki:k iki(): ii iki:k ikiki:k ki: iki(i): k");
+
+                helper.Analyze();
+
+                // "await f" does not highlight "f", but "await + f" does
+                helper.CheckAnalysisClassifierSpans("fff k<async>f k<await>f k<async>f k<async>f c<F> k<async>fp");
             }
         }
 
@@ -270,6 +315,7 @@ b = c
                 { 'k', PredefinedClassificationTypeNames.Keyword },
                 { '(', PythonPredefinedClassificationTypeNames.Grouping },
                 { ')', PythonPredefinedClassificationTypeNames.Grouping },
+                { '+', PythonPredefinedClassificationTypeNames.Operator },
                 { ':', PythonPredefinedClassificationTypeNames.Operator },
                 { '=', PythonPredefinedClassificationTypeNames.Operator },
                 { ',', PythonPredefinedClassificationTypeNames.Comma },

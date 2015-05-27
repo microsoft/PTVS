@@ -36,8 +36,8 @@ namespace PythonToolsMockTests {
         public static void Initialize(TestContext context) {
             AssertListener.Initialize();
         }
-        
-        [TestMethod]
+
+        [TestMethod, TestCategory("Mock")]
         public void BuiltinFunctionSigHelp() {
             using (var view = new PythonEditor()) {
                 view.Type("min(");
@@ -56,7 +56,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("Mock")]
         public void BuiltinFunctionCompletions() {
             using (var view = new PythonEditor()) {
                 view.Type("min.");
@@ -67,7 +67,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("Mock")]
         public void FilterCompletions() {
             using (var view = new PythonEditor()) {
                 view.Type("min.");
@@ -82,7 +82,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("Mock")]
         public void DotCompletes() {
             using (var view = new PythonEditor()) {
                 view.Type("min.");
@@ -97,7 +97,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("Mock")]
         public void NonIdentifierDismisses() {
             using (var view = new PythonEditor()) {
                 view.Type("min.");
@@ -114,7 +114,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("Mock")]
         public void EnterCommits() {
             using (var view = new PythonEditor()) {
                 view.Type("min.");
@@ -128,7 +128,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("Mock")]
         public void EnterDismisses() {
             using (var view = new PythonEditor()) {
                 view.AdvancedOptions.EnterCommitsIntellisense = false;
@@ -145,7 +145,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("Mock")]
         public void EnterCommitsCompleteNoNewLine() {
             using (var view = new PythonEditor()) {
                 view.AdvancedOptions.AddNewLineAtEndOfFullyTypedWord = true;
@@ -164,7 +164,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("Mock")]
         public void TabCommits() {
             using (var view = new PythonEditor()) {
                 view.AdvancedOptions.EnterCommitsIntellisense = false;
@@ -184,7 +184,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("Mock")]
         public void DecoratorCompletions() {
             using (var view = new PythonEditor()) {
                 view.Type("@");
@@ -195,7 +195,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("Mock")]
         public void DecoratorNonCompletions() {
             using (var view = new PythonEditor()) {
                 view.Type("a = b @");
@@ -204,7 +204,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("Mock")]
         public void AutoListIdentifierCompletions() {
             using (var view = new PythonEditor()) {
                 view.AdvancedOptions.AutoListIdentifiers = true;
@@ -283,32 +283,32 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("Mock")]
         public void AutoListInDef() {
             AutoListTest("def fn(p:a, q=b) -> x", 9, 14, 20);
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("Mock")]
         public void AutoListInAssignment() {
             AutoListTest("a, b, c = a, b, c", 10, 13, 16);
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("Mock")]
         public void AutoListInClass() {
             AutoListTest("class F(o, p):", 8, 11);
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("Mock")]
         public void AutoListInLambda() {
             AutoListTest("a = lambda x, y: p", 4, 17);
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("Mock")]
         public void AutoListInWith() {
             AutoListTest("with a as b, c(x) as d:", 5, 13, -22);
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("Mock")]
         public void AutoListInLiterals() {
             AutoListTest("[a, b, c]", 1, 4, 7);
             AutoListTest("{a, b, c}", 1, 4, 7);
@@ -316,7 +316,7 @@ namespace PythonToolsMockTests {
             AutoListTest("{a: b, c: d, e: f}", 1, 4, 7, 10, 13, 16);
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("Mock")]
         public void AutoListInComprehensions() {
             // TODO: Make completions trigger after spaces
             // eg: AutoListTest("[a for a in b]", 1, 3, 9, 12);
@@ -327,7 +327,7 @@ namespace PythonToolsMockTests {
             AutoListTest("{a: b for a, b in b for c, d in e if x}", 1, 4, 18, 32, 37);
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("Mock")]
         public void AutoListInStatements() {
             AutoListTest("assert a", -6, 7);
             AutoListTest("a += b", 5);
@@ -343,7 +343,7 @@ namespace PythonToolsMockTests {
             AutoListTest("yield a", -5, 6);
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("Mock")]
         public void DisableAutoCompletions() {
             using (var view = new PythonEditor()) {
                 view.AdvancedOptions.AutoListMembers = false;
@@ -360,7 +360,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("Mock")]
         public void CompletionsAtEndOfLastChildScope() {
             using (var view = new PythonEditor(@"class A:
     def f(param1, param2):

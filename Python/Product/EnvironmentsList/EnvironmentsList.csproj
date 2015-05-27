@@ -105,28 +105,27 @@
     </When>
   </Choose>
   <ItemGroup>
-    <None Include="images14.0\images.xaml">
+    <Page Include="images\images.xaml">
       <SubType>Designer</SubType>
+    </Page>
+    <None Include="images12.0\images.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </None>
-  <Page Include="images\images.xaml">
-    <SubType>Designer</SubType>
-    <Generator>MSBuild:Compile</Generator>
-    <TargetPath>images\images.xaml</TargetPath>
-  </Page>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="images\ActiveEnvironment.png" />
-    <Resource Include="images\Checkmark.png" />
-    <Resource Include="images\ExclamationPoint.png" />
-    <Resource Include="images\FolderClosed.png" />
-    <Resource Include="images\FolderOpened.png" />
-    <Resource Include="images\PYApplication.png" />
-    <Resource Include="images\PYConsoleApplication.png" />
-    <Resource Include="images\PYEnvironment.png" />
-    <Resource Include="images\PYInteractiveWindow.png" />
-    <Resource Include="images\PythonPackage.png" />
-    <Resource Include="images\Refresh.png" />
-    <Resource Include="images\Settings.png" />
+    <None Include="images12.0\ActiveEnvironment.png" />
+    <None Include="images12.0\Checkmark.png" />
+    <None Include="images12.0\ExclamationPoint.png" />
+    <None Include="images12.0\FolderClosed.png" />
+    <None Include="images12.0\FolderOpened.png" />
+    <None Include="images12.0\PYApplication.png" />
+    <None Include="images12.0\PYConsoleApplication.png" />
+    <None Include="images12.0\PYEnvironment.png" />
+    <None Include="images12.0\PYInteractiveWindow.png" />
+    <None Include="images12.0\PythonPackage.png" />
+    <None Include="images12.0\Refresh.png" />
+    <None Include="images12.0\Settings.png" />
   </ItemGroup>
   <ItemGroup>
     <Page Include="..\..\..\Common\Product\SharedProject\Wpf\Controls.xaml">
@@ -281,16 +280,23 @@
   <Target Name="AfterBuild">
   </Target>
   -->
-  <Target Name="_TransformImages" AfterTargets="PrepareForBuild" Condition="$(VSTarget) != '12.0'">
+  <Target Name="_RemoveImages" AfterTargets="PrepareForBuild">
     <ItemGroup>
-      <Page Remove="images\images.xaml;images$(VSTarget)\images.xaml" />
-      <Resource Remove="images\*.png" />
-      <Page Include="images$(VSTarget)\images.xaml">
+      <None Remove="images12.0\images.xaml;images12.0\*.png" />
+    </ItemGroup>
+  </Target>
+  <Target Name="_IncludeImages" AfterTargets="_RemoveImages" Condition="$(VSTarget) == '12.0'">
+    <ItemGroup>
+      <Page Remove="images\images.xaml" />
+      <Page Include="images12.0\images.xaml">
         <SubType>Designer</SubType>
         <Generator>MSBuild:Compile</Generator>
         <Link>images\images.xaml</Link>
       </Page>
+      <_ImageResources Include="images12.0\*.png" />
+      <Resource Include="@(_ImageResources)">
+        <Link>images\%(_ImageResources.Filename).png</Link>
+      </Resource>
     </ItemGroup>
-
   </Target>
 </Project>

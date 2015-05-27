@@ -1,12 +1,27 @@
-﻿using Microsoft.VisualStudio.Language.Intellisense;
+﻿/* ****************************************************************************
+ *
+ * Copyright (c) Microsoft Corporation. 
+ *
+ * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
+ * copy of the license can be found in the License.html file at the root of this distribution. If 
+ * you cannot locate the Apache License, Version 2.0, please send an email to 
+ * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
+ * by the terms of the Apache License, Version 2.0.
+ *
+ * You must not remove this notice, or any other, from this software.
+ *
+ * ***************************************************************************/
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.VisualStudio.Text;
 using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.PythonTools.Editor.Core;
+using Microsoft.VisualStudio.Language.Intellisense;
+using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Intellisense {
 #if DEV14_OR_LATER
@@ -46,19 +61,26 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public async Task<bool> HasSuggestedActionsAsync(ISuggestedActionCategorySet requestedActionCategories, SnapshotSpan range, CancellationToken cancellationToken) {
-            var textBuffer = _textBuffer;
             var pos = _view.Caret.Position.BufferPosition;
-            var lineStart = pos.GetContainingLine().Start;
-            if (pos.Position < pos.Snapshot.Length - 1) {
+            if (pos.Position < pos.GetContainingLine().End.Position) {
                 pos += 1;
             }
-            var span = pos.Snapshot.CreateTrackingSpan(
-                lineStart.Position,
-                pos.Position - lineStart.Position,
+            var targetPoint = _view.BufferGraph.MapDownToFirstMatch(pos, PointTrackingMode.Positive, EditorExtensions.IsPythonContent, PositionAffinity.Successor);
+            if (targetPoint == null) {
+                return false;
+            }
+            var textBuffer = targetPoint.Value.Snapshot.TextBuffer;
+            var lineStart = targetPoint.Value.GetContainingLine().Start;
+
+            var span = targetPoint.Value.Snapshot.CreateTrackingSpan(
+                lineStart,
+                targetPoint.Value.Position - lineStart.Position,
                 SpanTrackingMode.EdgePositive,
                 TrackingFidelityMode.Forward
             );
-            var imports = textBuffer.CurrentSnapshot.GetMissingImports(_provider, span);
+            var imports = await _provider
+                .GetUIThread()
+                .InvokeAsync(() => textBuffer.CurrentSnapshot.GetMissingImports(_provider, span));
 
             if (imports == MissingImportAnalysis.Empty) {
                 return false;
@@ -68,7 +90,7 @@ namespace Microsoft.PythonTools.Intellisense {
             var availableImports = await imports.GetAvailableImportsAsync(cancellationToken);
 
             suggestions.Add(new SuggestedActionSet(
-                availableImports.Select(s => new PythonSuggestedImportAction(this, s)).OrderBy(k => k)
+                availableImports.Select(s => new PythonSuggestedImportAction(this, textBuffer, s)).OrderBy(k => k)
             ));
 
             cancellationToken.ThrowIfCancellationRequested();

@@ -22,6 +22,10 @@ using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
+#if DEV14_OR_LATER
+using Microsoft.VisualStudio.Imaging;
+using Microsoft.VisualStudio.Imaging.Interop;
+#endif
 
 namespace Microsoft.PythonTools.Project {
 
@@ -220,5 +224,15 @@ namespace Microsoft.PythonTools.Project {
 
             return base.ExcludeFromProject();
         }
+
+#if DEV14_OR_LATER
+        protected override ImageMoniker CodeFileIconMoniker {
+            get { return KnownMonikers.PYFileNode; }
+        }
+
+        protected override ImageMoniker StartupCodeFileIconMoniker {
+            get { return KnownMonikers.PYFileNode; }
+        }
+#endif
     }
 }

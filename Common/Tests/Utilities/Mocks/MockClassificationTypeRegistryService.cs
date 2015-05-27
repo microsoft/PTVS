@@ -38,7 +38,7 @@ namespace TestUtilities.Mocks {
             foreach (var def in classTypeDefs) {
                 string name = def.Metadata.Name;
                 var type = GetClasificationType(name);
-                foreach (var baseType in def.Metadata.BaseDefinition) {
+                foreach (var baseType in def.Metadata.BaseDefinition ?? Enumerable.Empty<string>()) {
                     type.AddBaseType(GetClasificationType(baseType));
                 }
             }

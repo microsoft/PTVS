@@ -16,9 +16,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Repl;
-using Microsoft.VisualStudio.ComponentModelHost;
+#if !DEV14_OR_LATER
 using Microsoft.VisualStudio.Repl;
+#endif
 
 namespace Microsoft.PythonTools.Options {
     class PythonInteractiveOptionsPage : PythonDialogPage {

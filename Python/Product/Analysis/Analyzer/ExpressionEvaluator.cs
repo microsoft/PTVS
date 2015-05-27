@@ -67,7 +67,8 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         /// </summary>
         public IAnalysisSet LookupAnalysisSetByName(Node node, string name, bool addRef = true) {
             if (_mergeScopes) {
-                var scope = Scope.EnumerateTowardsGlobal.FirstOrDefault(s => (s == Scope || s.VisibleToChildren) && s.Variables.ContainsKey(name));
+                var scope = Scope.EnumerateTowardsGlobal
+                    .FirstOrDefault(s => (s == Scope || s.VisibleToChildren) && s.ContainsVariable(name));
                 if (scope != null) {
                     return scope.GetMergedVariableTypes(name);
                 }
@@ -77,12 +78,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                         var refs = scope.GetVariable(node, _unit, name, addRef);
                         if (refs != null) {
                             if (addRef) {
-                                var linkedVars = scope.GetLinkedVariablesNoCreate(name);
-                                if (linkedVars != null) {
-                                    foreach (var linkedVar in linkedVars) {
-                                        linkedVar.AddReference(node, _unit);
-                                    }
-                                }
+                                scope.AddReferenceToLinkedVariables(node, _unit, name);
                             }
                             return refs.Types;
                         } else if (scope.ContainsImportStar && addRef) {
@@ -151,6 +147,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
         private static Dictionary<Type, EvalDelegate> _evaluators = new Dictionary<Type, EvalDelegate> {
             { typeof(AndExpression), ExpressionEvaluator.EvaluateAnd },
+            { typeof(AwaitExpression), ExpressionEvaluator.EvaluateAwait },
             { typeof(BackQuoteExpression), ExpressionEvaluator.EvaluateBackQuote },
             { typeof(BinaryExpression), ExpressionEvaluator.EvaluateBinary },
             { typeof(CallExpression), ExpressionEvaluator.EvaluateCall },
@@ -206,7 +203,11 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
         private static IAnalysisSet EvaluateMember(ExpressionEvaluator ee, Node node) {
             var n = (MemberExpression)node;
-            return ee.Evaluate(n.Target).GetMember(node, ee._unit, n.Name);
+            var target = ee.Evaluate(n.Target);
+            if (string.IsNullOrEmpty(n.Name)) {
+                return AnalysisSet.Empty;
+            }
+            return target.GetMember(node, ee._unit, n.Name);
         }
 
         private static IAnalysisSet EvaluateIndex(ExpressionEvaluator ee, Node node) {
@@ -277,6 +278,11 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             var n = (AndExpression)node;
             var result = ee.Evaluate(n.Left);
             return result.Union(ee.Evaluate(n.Right));
+        }
+
+        private static IAnalysisSet EvaluateAwait(ExpressionEvaluator ee, Node node) {
+            var n = (AwaitExpression)node;
+            return ee.Evaluate(n.Expression).Await(node, ee._unit);
         }
 
         private static IAnalysisSet EvaluateCall(ExpressionEvaluator ee, Node node) {
@@ -409,7 +415,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         internal void AssignTo(Node assignStmt, Expression left, IAnalysisSet values) {
             if (left is NameExpression) {
                 var l = (NameExpression)left;
-                if (l.Name != null) {
+                if (!string.IsNullOrEmpty(l.Name)) {
                     Scope.AssignVariable(
                         l.Name,
                         l,
@@ -419,7 +425,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 }
             } else if (left is MemberExpression) {
                 var l = (MemberExpression)left;
-                if (l.Name != null) {
+                if (!string.IsNullOrEmpty(l.Name)) {
                     foreach (var obj in Evaluate(l.Target)) {
                         obj.SetMember(l, _unit, l.Name, values);
                     }
