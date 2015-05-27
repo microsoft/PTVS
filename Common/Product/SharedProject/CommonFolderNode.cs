@@ -40,6 +40,14 @@ namespace Microsoft.VisualStudioTools.Project {
             }
         }
 
+#if DEV14_OR_LATER
+        protected override ImageMoniker GetIconMoniker(bool open) {
+            if (ItemNode.IsExcluded) {
+                return open ? KnownMonikers.HiddenFolderOpened : KnownMonikers.HiddenFolderClosed;
+            }
+            return base.GetIconMoniker(open);
+        }
+#else
         public override object GetIconHandle(bool open) {
             if (ItemNode.IsExcluded) {
                 return ProjectMgr.GetIconHandleByName(open ?
@@ -48,14 +56,6 @@ namespace Microsoft.VisualStudioTools.Project {
                 );
             }
             return base.GetIconHandle(open);
-        }
-
-#if DEV14_OR_LATER
-        protected override ImageMoniker GetIconMoniker(bool open) {
-            if (ItemNode.IsExcluded) {
-                return open ? KnownMonikers.HiddenFolderOpened : KnownMonikers.HiddenFolderClosed;
-            }
-            return base.GetIconMoniker(open);
         }
 #endif
 

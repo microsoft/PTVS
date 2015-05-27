@@ -154,6 +154,9 @@ namespace Microsoft.VisualStudioTools.Project {
         /// Return an imageindex
         /// </summary>
         /// <returns></returns>
+#if DEV14_OR_LATER
+        [Obsolete("Use GetIconMoniker() to specify the icon")]
+#endif
         public virtual int ImageIndex {
             get { return NoImage; }
         }
@@ -510,15 +513,6 @@ namespace Microsoft.VisualStudioTools.Project {
             return null;
         }
 
-        /// <summary>
-        /// Return an iconhandle
-        /// </summary>
-        /// <param name="open"></param>
-        /// <returns></returns>
-        public virtual object GetIconHandle(bool open) {
-            return null;
-        }
-
 #if DEV14_OR_LATER
         protected virtual bool SupportsIconMonikers {
             get { return false; }
@@ -529,6 +523,16 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         protected virtual ImageMoniker GetIconMoniker(bool open) {
             return default(ImageMoniker);
+        }
+#else
+        /// <summary>
+        /// Return an icon handle
+        /// </summary>
+        /// <param name="open"></param>
+        /// <returns></returns>
+        public virtual object GetIconHandle(bool open) {
+            var index = ImageIndex;
+            return index == NoImage ? null : (object)ProjectMgr.ImageHandler.GetIconHandle(index);
         }
 #endif
 
@@ -592,27 +596,27 @@ namespace Microsoft.VisualStudioTools.Project {
                     result = false;
                     break;
 
+#if !DEV14_OR_LATER
                 case __VSHPROPID.VSHPROPID_IconImgList:
-#if DEV14_OR_LATER
-                    if (SupportsIconMonikers) {
-                        break;
-                    }
-#endif
                     result = this.ProjectMgr.ImageHandler.ImageList.Handle;
                     break;
 
                 case __VSHPROPID.VSHPROPID_OpenFolderIconIndex:
                 case __VSHPROPID.VSHPROPID_IconIndex:
-#if DEV14_OR_LATER
-                    if (SupportsIconMonikers) {
-                        break;
-                    }
-#endif
-                    int index = this.ImageIndex;
+                    int index = ImageIndex;
                     if (index != NoImage) {
                         result = index;
                     }
                     break;
+
+                case __VSHPROPID.VSHPROPID_IconHandle:
+                    result = GetIconHandle(false);
+                    break;
+
+                case __VSHPROPID.VSHPROPID_OpenFolderIconHandle:
+                    result = GetIconHandle(true);
+                    break;
+#endif
 
                 case __VSHPROPID.VSHPROPID_StateIconIndex:
                     result = (int)this.StateIconIndex;
@@ -620,24 +624,6 @@ namespace Microsoft.VisualStudioTools.Project {
 
                 case __VSHPROPID.VSHPROPID_OverlayIconIndex:
                     result = (int)this.OverlayIconIndex;
-                    break;
-
-                case __VSHPROPID.VSHPROPID_IconHandle:
-#if DEV14_OR_LATER
-                    if (SupportsIconMonikers) {
-                        break;
-                    }
-#endif
-                    result = GetIconHandle(false);
-                    break;
-
-                case __VSHPROPID.VSHPROPID_OpenFolderIconHandle:
-#if DEV14_OR_LATER
-                    if (SupportsIconMonikers) {
-                        break;
-                    }
-#endif
-                    result = GetIconHandle(true);
                     break;
 
                 case __VSHPROPID.VSHPROPID_NextVisibleSibling:
@@ -1398,7 +1384,7 @@ namespace Microsoft.VisualStudioTools.Project {
             return shell.ShowContextMenu(0, ref menuGroup, menuId, pnts, (Microsoft.VisualStudio.OLE.Interop.IOleCommandTarget)ProjectMgr);
         }
 
-        #region initiation of command execution
+#region initiation of command execution
         /// <summary>
         /// Handles command execution.
         /// </summary>
@@ -1470,9 +1456,9 @@ namespace Microsoft.VisualStudioTools.Project {
             return (int)OleConstants.OLECMDERR_E_NOTSUPPORTED;
         }
 
-        #endregion
+#endregion
 
-        #region query command handling
+#region query command handling
 
 
         /// <summary>
@@ -1529,7 +1515,7 @@ namespace Microsoft.VisualStudioTools.Project {
             return (int)OleConstants.OLECMDERR_E_NOTSUPPORTED;
         }
 
-        #endregion
+#endregion
         internal virtual bool CanDeleteItem(__VSDELETEITEMOPERATION deleteOperation) {
             return this.ProjectMgr.CanProjectDeleteItems;
         }
@@ -1692,9 +1678,9 @@ namespace Microsoft.VisualStudioTools.Project {
             cancel = true;
         }
 
-        #endregion
+#endregion
 
-        #region public methods
+#region public methods
 
         /// <summary>
         /// Clears the cached node properties so that it will be recreated on the next request.
@@ -1815,9 +1801,9 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
 
-        #endregion
+#endregion
 
-        #region IDisposable
+#region IDisposable
         /// <summary>
         /// The IDispose interface Dispose method for disposing the object determinastically.
         /// </summary>
@@ -1826,7 +1812,7 @@ namespace Microsoft.VisualStudioTools.Project {
             GC.SuppressFinalize(this);
         }
 
-        #endregion
+#endregion
 
         public virtual void Close() {
             DocumentManager manager = this.GetDocumentManager();
@@ -1846,7 +1832,7 @@ namespace Microsoft.VisualStudioTools.Project {
             }
         }
 
-        #region helper methods
+#region helper methods
 
         /// <summary>
         /// Searches the immediate children of this node for a node which matches the specified predicate.
@@ -1913,13 +1899,13 @@ namespace Microsoft.VisualStudioTools.Project {
             }
         }
 
-        #endregion
+#endregion
 
         private bool InvalidProject() {
             return this.projectMgr == null || this.projectMgr.IsClosed;
         }
 
-        #region nested types
+#region nested types
         /// <summary>
         /// DropEffect as defined in oleidl.h
         /// </summary>
@@ -1929,9 +1915,9 @@ namespace Microsoft.VisualStudioTools.Project {
             Move = 2,
             Link = 4
         };
-        #endregion
+#endregion
 
-        #region IOleServiceProvider
+#region IOleServiceProvider
 
         int IOleServiceProvider.QueryService(ref Guid guidService, ref Guid riid, out IntPtr ppvObject) {
             object obj;
@@ -1977,6 +1963,6 @@ namespace Microsoft.VisualStudioTools.Project {
             return VSConstants.E_FAIL;
         }
 
-        #endregion
+#endregion
     }
 }

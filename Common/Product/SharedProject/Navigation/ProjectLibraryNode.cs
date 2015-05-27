@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+using System;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools.Project;
@@ -36,8 +37,13 @@ namespace Microsoft.VisualStudioTools.Navigation {
         public override VSTREEDISPLAYDATA DisplayData {
             get {
                 var res = new VSTREEDISPLAYDATA();
+#if DEV14_OR_LATER
+                res.hImageList = IntPtr.Zero;
+                res.Image = res.SelectedImage = 192;
+#else
                 res.hImageList = _project.ImageHandler.ImageList.Handle;
                 res.Image = res.SelectedImage = (ushort)_project.ImageIndex;
+#endif
                 return res;
             }
         }
