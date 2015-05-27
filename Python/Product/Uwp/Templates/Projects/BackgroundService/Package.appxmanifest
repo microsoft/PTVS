@@ -35,7 +35,6 @@
 			  Square150x150Logo="Logo.png"
 			  Square44x44Logo="SmallLogo.png"
 			  Description="$projectname$"
-			  ForegroundText="light"
 			  BackgroundColor="#464646"
         AppListEntry="none">
         <uwp:SplashScreen Image="SplashScreen.png" />

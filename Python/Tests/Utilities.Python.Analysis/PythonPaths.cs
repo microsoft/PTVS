@@ -69,7 +69,11 @@ namespace TestUtilities {
                             if (installPath != null) {
                                 var res = installPath.GetValue("") as string;
                                 if (res != null) {
-                                    return new PythonVersion(Path.Combine(res, exeName), PythonLanguageVersion.V27, IronPythonGuid);
+                                    return new PythonVersion(
+                                        Path.Combine(res, exeName),
+                                        PythonLanguageVersion.V27,
+                                        x64 ? IronPython64Guid : IronPythonGuid
+                                    );
                                 }
                             }
                         }
@@ -140,9 +144,9 @@ namespace TestUtilities {
                             var path = Path.Combine(installPath.ToString(), "python.exe");
                             var arch = NativeMethods.GetBinaryType(path);
                             if (arch == ProcessorArchitecture.X86) {
-                                return new PythonVersion(path, version, CPythonGuid);
+                                return x64 ? null : new PythonVersion(path, version, CPythonGuid);
                             } else if (arch == ProcessorArchitecture.Amd64) {
-                                return new PythonVersion(path, version, CPython64Guid);
+                                return x64 ? new PythonVersion(path, version, CPython64Guid) : null;
                             } else {
                                 return null;
                             }
@@ -263,6 +267,15 @@ namespace TestUtilities {
             IsCPython = (Id == PythonPaths.CPythonGuid || Id == PythonPaths.CPython64Guid);
             Isx64 = (Id == PythonPaths.CPython64Guid || Id == PythonPaths.IronPython64Guid);
             IsIronPython = (Id == PythonPaths.IronPythonGuid || Id == PythonPaths.IronPython64Guid);
+        }
+
+        public override string ToString() {
+            return string.Format(
+                "{0}Python {1} {2}",
+                IsCPython ? "C" : IsIronPython ? "Iron" : "Other ",
+                Version,
+                Isx64 ? "x64" : "x86"
+            );
         }
 
         public string PrefixPath {

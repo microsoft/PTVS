@@ -191,7 +191,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             get {
                 var result = new List<OverloadResult>();
                 VariableDef init;
-                if (Scope.Variables.TryGetValue("__init__", out init)) {
+                if (Scope.TryGetVariable("__init__", out init)) {
                     // this type overrides __init__, display that for it's help
                     foreach (var initFunc in init.TypesNoCopy) {
                         foreach (var overload in initFunc.Overloads) {
@@ -201,7 +201,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 }
 
                 VariableDef @new;
-                if (Scope.Variables.TryGetValue("__new__", out @new)) {
+                if (Scope.TryGetVariable("__new__", out @new)) {
                     foreach (var newFunc in @new.TypesNoCopy) {
                         foreach (var overload in newFunc.Overloads) {
                             result.Add(GetNewOverloadResult(overload));
@@ -310,9 +310,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
         /// Gets all members of this class that are not inherited from its base classes.
         /// </summary>
         public IDictionary<string, IAnalysisSet> GetAllImmediateMembers(IModuleContext moduleContext) {
-            var result = new Dictionary<string, IAnalysisSet>(Scope.Variables.Count);
+            var result = new Dictionary<string, IAnalysisSet>(Scope.VariableCount);
 
-            foreach (var v in Scope.Variables) {
+            foreach (var v in Scope.AllVariables) {
                 v.Value.ClearOldValues();
                 if (v.Value.VariableStillExists) {
                     result[v.Key] = v.Value.Types;
@@ -573,7 +573,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public IEnumerable<IReferenceable> GetDefinitions(string name) {
             var result = new List<IReferenceable>();
             VariableDef def;
-            if (_scope.Variables.TryGetValue(name, out def)) {
+            if (_scope.TryGetVariable(name, out def)) {
                 result.Add(def);
             }
 

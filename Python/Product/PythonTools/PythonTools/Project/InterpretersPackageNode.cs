@@ -30,6 +30,10 @@ using OleConstants = Microsoft.VisualStudio.OLE.Interop.Constants;
 using Task = System.Threading.Tasks.Task;
 using VsCommands = Microsoft.VisualStudio.VSConstants.VSStd97CmdID;
 using VsMenus = Microsoft.VisualStudioTools.Project.VsMenus;
+#if DEV14_OR_LATER
+using Microsoft.VisualStudio.Imaging;
+using Microsoft.VisualStudio.Imaging.Interop;
+#endif
 
 namespace Microsoft.PythonTools.Project {
     /// <summary>
@@ -151,6 +155,17 @@ namespace Microsoft.PythonTools.Project {
         public override object GetIconHandle(bool open) {
             return ProjectMgr.GetIconHandleByName(PythonProjectImageName.InterpretersPackage);
         }
+
+#if DEV14_OR_LATER
+        protected override bool SupportsIconMonikers {
+            get { return true; }
+        }
+
+        protected override ImageMoniker GetIconMoniker(bool open) {
+            return KnownMonikers.PythonPackage;
+        }
+#endif
+
         /// <summary>
         /// Package node cannot be dragged.
         /// </summary>

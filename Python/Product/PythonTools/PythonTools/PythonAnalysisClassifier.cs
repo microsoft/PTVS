@@ -290,7 +290,7 @@ namespace Microsoft.PythonTools {
         private static string GetFullName(MemberExpression expr) {
             var ne = expr.Target as NameExpression;
             if (ne != null) {
-                return ne.Name + "." + expr.Name;
+                return ne.Name + "." + expr.Name ?? string.Empty;
             }
             var me = expr.Target as MemberExpression;
             if (me != null) {
@@ -298,7 +298,7 @@ namespace Microsoft.PythonTools {
                 if (baseName == null) {
                     return null;
                 }
-                return baseName + "." + expr.Name;
+                return baseName + "." + expr.Name ?? string.Empty;
             }
             return null;
         }

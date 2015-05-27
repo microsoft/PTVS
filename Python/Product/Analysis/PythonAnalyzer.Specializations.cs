@@ -566,7 +566,7 @@ namespace Microsoft.PythonTools.Analysis {
                                     ClassInfo ci = instInfo.ClassInfo;
 
                                     VariableDef def;
-                                    if (ci.Scope.Variables.TryGetValue(keyValue.Key, out def)) {
+                                    if (ci.Scope.TryGetVariable(keyValue.Key, out def)) {
                                         def.AddReference(
                                             new EncodedLocation(SourceLocationResolver.Instance, new SourceLocation(1, member.LineNumber, member.LineOffset)),
                                             xamlProject

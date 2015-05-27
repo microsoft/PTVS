@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -22,47 +23,47 @@ namespace Microsoft.PythonTools.Analysis.Values {
     /// Maintains a list of references keyed off of name.
     /// </summary>
     class MemberReferences {
-        private Dictionary<string, ReferenceDict> _references;
-        
+        private readonly Dictionary<string, ReferenceDict> _references;
+
+        public MemberReferences() {
+            _references = new Dictionary<string, ReferenceDict>();
+        }
+
         public void AddReference(Node node, AnalysisUnit unit, string name) {
             if (!unit.ForEval) {
-                if (_references == null) {
-                    _references = new Dictionary<string, ReferenceDict>();
-                }
                 ReferenceDict refs;
-                if (!_references.TryGetValue(name, out refs)) {
-                    _references[name] = refs = new ReferenceDict();
+                lock (_references) {
+                    if (!_references.TryGetValue(name, out refs)) {
+                        _references[name] = refs = new ReferenceDict();
+                    }
                 }
-                refs.GetReferences(unit.DeclaringModule.ProjectEntry).AddReference(new EncodedLocation(unit.Tree, node));
+                lock (refs) {
+                    refs.GetReferences(unit.DeclaringModule.ProjectEntry)
+                        .AddReference(new EncodedLocation(unit.Tree, node));
+                }
             }
         }
 
         public IEnumerable<IReferenceable> GetDefinitions(string name, IMemberContainer innerContainer, IModuleContext context) {
-            IEnumerable<IReferenceable> refs = null;
+            var res = new List<IReferenceable>();
+
             ReferenceDict references;
-            if (_references != null && _references.TryGetValue(name, out references)) {
-                refs = references.Values;
+            lock (_references) {
+                _references.TryGetValue(name, out references);
             }
 
-            var member = innerContainer.GetMember(context, name);
+            if (references != null) {
+                lock (references) {
+                    res.AddRange(references.Values);
+                }
+            }
+
+            var member = innerContainer.GetMember(context, name) as ILocatedMember;
             if (member != null) {
-                List<IReferenceable> res;
-                if (refs == null) {
-                    res = new List<IReferenceable>();
-                } else {
-                    res = new List<IReferenceable>(refs);
-                }
-
-                ILocatedMember locatedMember = member as ILocatedMember;
-                if (locatedMember != null) {
-                    foreach(var location in locatedMember.Locations) {
-                        res.Add(new DefinitionList(location));
-                    }
-                }
-                return res;
+                res.AddRange(member.Locations.Select(loc => new DefinitionList(loc)));
             }
 
-            return new IReferenceable[0];
+            return res;
         }
     }
 
@@ -72,13 +73,23 @@ namespace Microsoft.PythonTools.Analysis.Values {
     class ReferenceDict : Dictionary<IProjectEntry, ReferenceList> {
         public ReferenceList GetReferences(ProjectEntry project) {
             ReferenceList builtinRef;
-            if (!TryGetValue(project, out builtinRef) || builtinRef.Version != project.AnalysisVersion) {
-                this[project] = builtinRef = new ReferenceList(project);
+            lock (this) {
+                if (!TryGetValue(project, out builtinRef) || builtinRef.Version != project.AnalysisVersion) {
+                    this[project] = builtinRef = new ReferenceList(project);
+                }
             }
             return builtinRef;
         }
 
         public IEnumerable<LocationInfo> AllReferences {
+            get {
+                lock (this) {
+                    return AllReferencesNoLock.ToList();
+                }
+            }
+        }
+
+        private IEnumerable<LocationInfo> AllReferencesNoLock {
             get {
                 foreach (var keyValue in this) {
                     if (keyValue.Value.References != null) {
@@ -106,7 +117,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public void AddReference(EncodedLocation location) {
-            HashSetExtensions.AddValue(ref References, location);
+            lock (this) {
+                HashSetExtensions.AddValue(ref References, location);
+            }
         }
 
         #region IReferenceable Members
@@ -116,6 +129,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         IEnumerable<KeyValuePair<IProjectEntry, EncodedLocation>> IReferenceable.References {
+            get {
+                return ReferencesNoLock.AsLockedEnumerable(this);
+            }
+        }
+
+        IEnumerable<KeyValuePair<IProjectEntry, EncodedLocation>> ReferencesNoLock {
             get {
                 if (References != null) {
                     foreach (var location in References) {
@@ -141,7 +160,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
         #region IReferenceable Members
 
         public IEnumerable<KeyValuePair<IProjectEntry, EncodedLocation>> Definitions {
-            get { yield return new KeyValuePair<IProjectEntry, EncodedLocation>(_location.ProjectEntry, new EncodedLocation(_location, null)); }
+            get {
+                yield return new KeyValuePair<IProjectEntry, EncodedLocation>(
+                    _location.ProjectEntry,
+                    new EncodedLocation(_location, null)
+                );
+            }
         }
 
         IEnumerable<KeyValuePair<IProjectEntry, EncodedLocation>> IReferenceable.References {

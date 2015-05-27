@@ -12,16 +12,14 @@
  *
  * ***************************************************************************/
 
-using System.Collections.Generic;
-using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Repl;
-using Microsoft.VisualStudio.ComponentModelHost;
+#if DEV14_OR_LATER
+using IReplWindowProvider = Microsoft.PythonTools.Repl.InteractiveWindowProvider;
+#else
 using Microsoft.VisualStudio.Repl;
+#endif
 
 namespace Microsoft.PythonTools.Options {
-#if DEV14_OR_LATER
-    using IReplWindowProvider = InteractiveWindowProvider;
-#endif
     class PythonDebugInteractiveOptionsPage : PythonDialogPage {
         private PythonDebugInteractiveOptionsControl _window;
 

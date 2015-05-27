@@ -47,6 +47,10 @@ using NativeMethods = Microsoft.VisualStudioTools.Project.NativeMethods;
 using Task = System.Threading.Tasks.Task;
 using VsCommands2K = Microsoft.VisualStudio.VSConstants.VSStd2KCmdID;
 using VsMenus = Microsoft.VisualStudioTools.Project.VsMenus;
+#if DEV14_OR_LATER
+using Microsoft.VisualStudio.Imaging;
+using Microsoft.VisualStudio.Imaging.Interop;
+#endif
 
 namespace Microsoft.PythonTools.Project {
     [Guid(PythonConstants.ProjectNodeGuid)]
@@ -188,6 +192,16 @@ namespace Microsoft.PythonTools.Project {
         internal IntPtr GetIconHandleByName(PythonProjectImageName name) {
             return ImageHandler.GetIconHandle(GetIconIndex(name));
         }
+
+#if DEV14_OR_LATER
+        protected override bool SupportsIconMonikers {
+            get { return true; }
+        }
+
+        protected override ImageMoniker GetIconMoniker(bool open) {
+            return KnownMonikers.PYProjectNode;
+        }
+#endif
 
         internal override string IssueTrackerUrl {
             get { return PythonConstants.IssueTrackerUrl; }

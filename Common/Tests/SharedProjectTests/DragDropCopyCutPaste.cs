@@ -574,7 +574,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core"), TestCategory("Mock")]
         [HostType("VSTestHost")]
         public void CutFolderAndFile() {
             foreach (var projectType in ProjectTypes) {

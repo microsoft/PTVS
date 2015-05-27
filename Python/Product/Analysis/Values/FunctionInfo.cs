@@ -369,14 +369,14 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 foreach (var unit in units) {
                     var vars = FunctionDefinition.Parameters.Select(p => {
                         VariableDef param;
-                        if (unit.Scope.Variables.TryGetValue(p.Name, out param)) {
+                        if (unit.Scope.TryGetVariable(p.Name, out param)) {
                             return param;
                         }
                         return null;
                     }).ToArray();
 
                     var parameters = vars
-                        .Select(p => string.Join(", ", p.TypesNoCopy.Select(av => av.ShortDescription).OrderBy(s => s).Distinct()))
+                        .Select(p => string.Join(", ", p.Types.Select(av => av.ShortDescription).OrderBy(s => s).Distinct()))
                         .ToArray();
 
                     IEnumerable<AnalysisVariable>[] refs;
@@ -522,7 +522,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
             VariableDef param;
             var name = FunctionDefinition.Parameters[index].Name;
-            if (scope.Variables.TryGetValue(name, out param)) {
+            if (scope.TryGetVariable(name, out param)) {
                 var av = ProjectState.GetAnalysisSetFromObjects(info.ParameterTypes);
 
                 if ((info.IsParamArray && !(param is ListParameterVariableDef)) ||
@@ -574,7 +574,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
                 VariableDef param;
                 foreach (var unit in units) {
-                    if (unit != null && unit.Scope != null && unit.Scope.Variables.TryGetValue(FunctionDefinition.Parameters[i].Name, out param)) {
+                    if (unit != null && unit.Scope != null && unit.Scope.TryGetVariable(FunctionDefinition.Parameters[i].Name, out param)) {
                         result[i] = result[i].Union(param.TypesNoCopy);
                     }
                 }

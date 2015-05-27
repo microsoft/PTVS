@@ -44,7 +44,7 @@ namespace Microsoft.PythonTools.Analysis {
                 if ((moduleInfo = modKeyValue.Value.Module as ModuleInfo) != null) {
                     _curModule = moduleInfo;
                     var info = SerializeModule(moduleInfo);
-                    WriteModule(outDir, name, info, moduleInfo.Scope.Variables.Keys);
+                    WriteModule(outDir, name, info, moduleInfo.Scope.AllVariables.Keys());
                 }
             }
 
@@ -130,7 +130,7 @@ namespace Microsoft.PythonTools.Analysis {
 
         private Dictionary<string, object> GenerateMembers(ModuleInfo moduleInfo, IEnumerable<object> children) {
             Dictionary<string, object> res = new Dictionary<string, object>();
-            foreach (var keyValue in moduleInfo.Scope.Variables) {
+            foreach (var keyValue in moduleInfo.Scope.AllVariables) {
                 if (keyValue.Value.IsEphemeral) {
                     // Never got a value, so leave it out.
                     continue;
@@ -547,7 +547,7 @@ namespace Microsoft.PythonTools.Analysis {
 
         private object GetClassMembers(ClassInfo ci, ModuleInfo declModule) {
             Dictionary<string, object> memTable = new Dictionary<string, object>();
-            foreach (var keyValue in ci.Scope.Variables) {
+            foreach (var keyValue in ci.Scope.AllVariables) {
                 if (keyValue.Value.IsEphemeral) {
                     continue;
                 }
