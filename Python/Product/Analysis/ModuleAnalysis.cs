@@ -175,7 +175,7 @@ namespace Microsoft.PythonTools.Analysis {
             NameExpression name = expr as NameExpression;
             if (name != null) {
                 var defScope = scope.EnumerateTowardsGlobal.FirstOrDefault(s =>
-                    s.Variables.ContainsKey(name.Name) && (s == scope || s.VisibleToChildren || IsFirstLineOfFunction(scope, s, location)));
+                    s.ContainsVariable(name.Name) && (s == scope || s.VisibleToChildren || IsFirstLineOfFunction(scope, s, location)));
 
                 if (defScope == null) {
                     var variables = _unit.ProjectState.BuiltinModule.GetDefinitions(name.Name);
@@ -186,7 +186,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             MemberExpression member = expr as MemberExpression;
-            if (member != null) {
+            if (member != null && !string.IsNullOrEmpty(member.Name)) {
                 var eval = new ExpressionEvaluator(unit.CopyForEval(), scope, mergeScopes: true);
                 var objects = eval.Evaluate(member.Target);
 
@@ -208,10 +208,7 @@ namespace Microsoft.PythonTools.Analysis {
 
             // if a variable is imported from another module then also yield the defs/refs for the 
             // value in the defining module.
-            var linked = scope.GetLinkedVariablesNoCreate(name.Name);
-            if (linked != null) {
-                result.AddRange(linked.SelectMany(ToVariables));
-            }
+            result.AddRange(scope.GetLinkedVariables(name.Name).SelectMany(ToVariables));
 
             var classScope = scope as ClassScope;
             if (classScope != null) {
@@ -960,7 +957,18 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             // Recurse to check children of candidate scope
-            return FindScope(candidate, tree, location);
+            var child = FindScope(candidate, tree, location);
+
+            var funcChild = child as FunctionScope;
+            if (funcChild != null &&
+                funcChild.Function.FunctionDefinition.IsLambda &&
+                child.GetStop(tree) < location.Index) {
+                // Do not want to extend a lambda function's scope to the end of
+                // the parent scope.
+                return parent;
+            }
+
+            return child;
         }
 
 

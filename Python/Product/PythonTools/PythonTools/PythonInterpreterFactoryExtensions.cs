@@ -23,7 +23,7 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools {
-    static class PythonInterpreterFactoryExtensions {
+    static class PythonInterpreterFactoryRunnableExtensions {
         /// <summary>
         /// Returns true if the factory can be run. This checks whether the
         /// configured InterpreterPath value is an actual file.

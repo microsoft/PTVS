@@ -40,7 +40,7 @@ namespace Microsoft.PythonTools.Parsing {
         private readonly PythonLanguageVersion _langVersion;
         // state:
         private TokenWithSpan _token;
-        private TokenWithSpan _lookahead;
+        private TokenWithSpan _lookahead, _lookahead2;
         private Stack<FunctionDefinition> _functions;
         private int _classDepth;
         private bool _fromFutureAllowed;
@@ -53,6 +53,7 @@ namespace Microsoft.PythonTools.Parsing {
         private readonly bool _verbatim;                            // true if we're in verbatim mode and the ASTs can be turned back into source code, preserving white space / comments
         private readonly bool _bindReferences;                      // true if we should bind the references in the ASTs
         private string _tokenWhiteSpace, _lookaheadWhiteSpace;      // the whitespace for the current and lookahead tokens as provided from the parser
+        private string _lookahead2WhiteSpace;
         private Dictionary<Node, Dictionary<object, object>> _attributes = new Dictionary<Node, Dictionary<object, object>>();  // attributes for each node, currently just round tripping information
 
         private static Encoding _utf8throwing;
@@ -360,6 +361,10 @@ namespace Microsoft.PythonTools.Parsing {
             public readonly string RealName;
             public readonly string VerbatimName;
 
+            public static readonly Name Empty = new Name();
+            public static readonly Name Async = new Name("async", "async");
+            public static readonly Name Await = new Name("await", "await");
+
             public Name(string name, string verbatimName) {
                 RealName = name;
                 VerbatimName = verbatimName;
@@ -373,17 +378,25 @@ namespace Microsoft.PythonTools.Parsing {
         }
 
         private Name ReadName() {
-            NameToken n = PeekToken() as NameToken;
-            if (n == null) {
+            var n = TokenToName(PeekToken());
+            if (n.HasName) {
+                NextToken();
+            } else {
                 ReportSyntaxError(_lookahead);
-                return new Name();
             }
-            NextToken();
-            return TokenToName(n);
+            return n;
         }
 
-        private Name TokenToName(NameToken n) {
-            return new Name(FixName(n.Name), n.Name);
+        private Name TokenToName(Token t) {
+            NameToken n;
+            if (t == Tokens.KeywordAwaitToken) {
+                return Name.Await;
+            } else if (t == Tokens.KeywordAsyncToken) {
+                return Name.Async;
+            } else if ((n = t as NameToken) != null) {
+                return new Name(FixName(n.Name), n.Name);
+            }
+            return Name.Empty;
         }
 
         //stmt: simple_stmt | compound_stmt
@@ -395,20 +408,51 @@ namespace Microsoft.PythonTools.Parsing {
                 case TokenKind.KeywordWhile:
                     return ParseWhileStmt();
                 case TokenKind.KeywordFor:
-                    return ParseForStmt();
+                    return ParseForStmt(isAsync: false);
                 case TokenKind.KeywordTry:
                     return ParseTryStatement();
                 case TokenKind.At:
                     return ParseDecorated();
                 case TokenKind.KeywordDef:
-                    return ParseFuncDef();
+                    return ParseFuncDef(isCoroutine: false);
                 case TokenKind.KeywordClass:
                     return ParseClassDef();
                 case TokenKind.KeywordWith:
-                    return ParseWithStmt();
+                    return ParseWithStmt(isAsync: false);
+                case TokenKind.KeywordAsync:
+                    return ParseAsyncStmt();
                 default:
                     return ParseSimpleStmt();
             }
+        }
+
+        private Statement ParseAsyncStmt() {
+            var token2 = PeekToken2();
+            if (token2.Kind == TokenKind.KeywordDef) {
+                Eat(TokenKind.KeywordAsync);
+                return ParseFuncDef(isCoroutine: true);
+            }
+
+            var currentFunction = CurrentFunction;
+            if (currentFunction == null || !currentFunction.IsCoroutine) {
+                // 'async', outside coroutine, and not followed by def, is a
+                // regular name
+                return ParseSimpleStmt();
+            }
+
+            NextToken();
+
+            switch (PeekToken().Kind) {
+                case TokenKind.KeywordFor:
+                    Eat(TokenKind.KeywordAsync);
+                    return ParseForStmt(isAsync: true);
+                case TokenKind.KeywordWith:
+                    Eat(TokenKind.KeywordAsync);
+                    return ParseWithStmt(isAsync: true);
+            }
+
+            ReportSyntaxError("syntax error");
+            return ParseStmt();
         }
 
         //simple_stmt: small_stmt (';' small_stmt)* [';'] Newline
@@ -617,6 +661,8 @@ namespace Microsoft.PythonTools.Parsing {
             FunctionDefinition current = CurrentFunction;
             if (current == null) {
                 ReportSyntaxError("misplaced yield");
+            } else if (current.IsCoroutine) {
+                ReportSyntaxError("'yield' inside async function");
             }
 
             _isGenerator = true;
@@ -650,7 +696,7 @@ namespace Microsoft.PythonTools.Parsing {
             //    g=((yield i) for i in range(5))
             // In that case, the genexp will mark IsGenerator. 
             FunctionDefinition current = CurrentFunction;
-            if (current != null) {
+            if (current != null && !current.IsCoroutine) {
                 current.IsGenerator = true;
             }
             string whitespace = _tokenWhiteSpace;
@@ -750,7 +796,11 @@ namespace Microsoft.PythonTools.Parsing {
                     left.Add(right);
                 }
 
-                if (_langVersion >= PythonLanguageVersion.V25 && MaybeEat(TokenKind.KeywordYield)) {
+                if (_langVersion >= PythonLanguageVersion.V25 && PeekToken(TokenKind.KeywordYield)) {
+                    if (CurrentFunction != null && CurrentFunction.IsCoroutine) {
+                        ReportSyntaxError("'yield' inside async function");
+                    }
+                    Eat(TokenKind.KeywordYield);
                     right = ParseYieldExpression();
                 } else {
                     right = ParseTestListAsExpr();
@@ -807,7 +857,11 @@ namespace Microsoft.PythonTools.Parsing {
                     string whiteSpace = _tokenWhiteSpace;
                     Expression rhs;
 
-                    if (_langVersion >= PythonLanguageVersion.V25 && MaybeEat(TokenKind.KeywordYield)) {
+                    if (_langVersion >= PythonLanguageVersion.V25 && PeekToken(TokenKind.KeywordYield)) {
+                        if (CurrentFunction != null && CurrentFunction.IsCoroutine) {
+                            ReportSyntaxError("'yield' inside async function");
+                        }
+                        Eat(TokenKind.KeywordYield);
                         rhs = ParseYieldExpression();
                     } else {
                         rhs = ParseTestListAsExpr();
@@ -1206,6 +1260,20 @@ namespace Microsoft.PythonTools.Parsing {
                 if (MaybeEat(TokenKind.Comma)) {
                     commaWhiteSpace = _tokenWhiteSpace;
                     locals = ParseExpression();
+                }
+            }
+            var codeTuple = code as TupleExpression;
+            if (_langVersion.Is2x() && codeTuple != null) {
+                if (codeTuple.Items != null) {
+                    if (codeTuple.Items.Count >= 3) {
+                        locals = codeTuple.Items[2];
+                    }
+                    if (codeTuple.Items.Count >= 2) {
+                        globals = codeTuple.Items[1];
+                    }
+                    if (codeTuple.Items.Count >= 1) {
+                        code = codeTuple.Items[0];
+                    }
                 }
             }
             ExecStatement ret = new ExecStatement(code, locals, globals);
@@ -1648,12 +1716,13 @@ namespace Microsoft.PythonTools.Parsing {
 
             Statement res;
 
-            if (PeekToken() == Tokens.KeywordDefToken) {
-                FunctionDefinition fnc = ParseFuncDef();
+            var next = PeekToken();
+            if (next == Tokens.KeywordDefToken || next == Tokens.KeywordAsyncToken) {
+                FunctionDefinition fnc = ParseFuncDef(isCoroutine: (next == Tokens.KeywordAsyncToken));
                 fnc.Decorators = decorators;
                 fnc.SetLoc(decorators.StartIndex, fnc.EndIndex);
                 res = fnc;
-            } else if (PeekToken() == Tokens.KeywordClassToken) {
+            } else if (next == Tokens.KeywordClassToken) {
                 if (_langVersion < PythonLanguageVersion.V26) {
                     ReportSyntaxError("invalid syntax, class decorators require 2.6 or later.");
                 }
@@ -1679,11 +1748,15 @@ namespace Microsoft.PythonTools.Parsing {
         // funcdef: [decorators] 'def' NAME parameters ':' suite
         // parameters: '(' [varargslist] ')'
         // this gets called with "def" as the look-ahead
-        private FunctionDefinition ParseFuncDef() {
+        private FunctionDefinition ParseFuncDef(bool isCoroutine) {
+            var start = isCoroutine ? GetStart() : 0;
             Eat(TokenKind.KeywordDef);
+            if (!isCoroutine) {
+                start = GetStart();
+            }
+
             string defWhitespace = _tokenWhiteSpace;
 
-            var start = GetStart();
             var name = ReadName();
             var nameExpr = MakeName(name);
             nameExpr.SetLoc(GetStart(), GetEnd());
@@ -1704,6 +1777,7 @@ namespace Microsoft.PythonTools.Parsing {
             if (parameters == null) {
                 // error in parameters
                 ret = new FunctionDefinition(nameExpr, new Parameter[0]);
+                ret.IsCoroutine = isCoroutine;
                 if (_verbatim) {
                     AddVerbatimName(name, ret);
                     AddPreceedingWhiteSpace(ret, defWhitespace);
@@ -1735,6 +1809,9 @@ namespace Microsoft.PythonTools.Parsing {
             AddVerbatimName(name, ret);
 
             PushFunction(ret);
+
+            // set IsCoroutine before parsing the body to enable use of 'await'
+            ret.IsCoroutine = isCoroutine;
 
             Statement body = ParseClassOrFuncBody();
             FunctionDefinition ret2 = PopFunction();
@@ -2003,7 +2080,7 @@ namespace Microsoft.PythonTools.Parsing {
 
                 case TokenKind.Name:  // identifier
                     NextToken();
-                    var name = TokenToName((NameToken)t);
+                    var name = TokenToName(t);
                     var paramStart = GetStart();
                     parameter = new Parameter(name.RealName, kind);
                     if (_verbatim) {
@@ -2057,7 +2134,7 @@ namespace Microsoft.PythonTools.Parsing {
                     break;
                 case TokenKind.Name:  // identifier
                     string name = FixName((string)t.Value);
-                    NameExpression ne = MakeName(TokenToName((NameToken)t));
+                    NameExpression ne = MakeName(TokenToName(t));
                     if (_verbatim) {
                         AddPreceedingWhiteSpace(ne, _tokenWhiteSpace);
                     }
@@ -2210,9 +2287,13 @@ namespace Microsoft.PythonTools.Parsing {
         
         //with_stmt: 'with' with_item (',' with_item)* ':' suite
         //with_item: test ['as' expr]
-        private WithStatement ParseWithStmt() {
-            var start = _lookahead.Span.Start;
+        private WithStatement ParseWithStmt(bool isAsync) {
+            var start = isAsync ? GetStart() : 0;
             Eat(TokenKind.KeywordWith);
+            if (!isAsync) {
+                start = GetStart();
+            }
+
             string withWhiteSpace = _tokenWhiteSpace;
             var itemWhiteSpace = MakeWhiteSpaceList();
 
@@ -2229,7 +2310,7 @@ namespace Microsoft.PythonTools.Parsing {
             var header = GetEnd();
             Statement body = ParseSuite();
 
-            WithStatement ret = new WithStatement(items.ToArray(), body);
+            WithStatement ret = new WithStatement(items.ToArray(), body, isAsync);
             if (_verbatim) {
                 AddPreceedingWhiteSpace(ret, withWhiteSpace);
                 AddListWhiteSpace(ret, itemWhiteSpace.ToArray());
@@ -2255,10 +2336,13 @@ namespace Microsoft.PythonTools.Parsing {
         }
 
         //for_stmt: 'for' target_list 'in' expression_list ':' suite ['else' ':' suite]
-        private Statement ParseForStmt() {
+        private Statement ParseForStmt(bool isAsync) {
+            var start = isAsync ? GetStart() : 0;
             Eat(TokenKind.KeywordFor);
+            if (!isAsync) {
+                start = GetStart();
+            }
             string forWhiteSpace = _tokenWhiteSpace;
-            var start = GetStart();
 
             bool trailingComma;
             List<string> listWhiteSpace;
@@ -2303,7 +2387,7 @@ namespace Microsoft.PythonTools.Parsing {
                 }
             }
 
-            ForStatement ret = new ForStatement(lhs, list, body, else_);
+            ForStatement ret = new ForStatement(lhs, list, body, else_, isAsync);
             if (_verbatim) {
                 AddPreceedingWhiteSpace(ret, forWhiteSpace);
                 if (inWhiteSpace != null) {
@@ -2853,7 +2937,7 @@ namespace Microsoft.PythonTools.Parsing {
                     }
                     break;
                 default:
-                    return ParsePower();
+                    return ParseAwaitExpr();
             }
             ret.SetLoc(start, GetEnd());
             return ret;
@@ -2893,6 +2977,23 @@ namespace Microsoft.PythonTools.Parsing {
                 AddPreceedingWhiteSpace(res, whitespace);
             }
             return res;
+        }
+
+        private Expression ParseAwaitExpr() {
+            if (_langVersion >= PythonLanguageVersion.V35) {
+                var currentFunction = CurrentFunction;
+                if (currentFunction != null && currentFunction.IsCoroutine && MaybeEat(TokenKind.KeywordAwait)) {
+                    var start = GetStart();
+                    string whitespace = _tokenWhiteSpace;
+                    var res = new AwaitExpression(ParsePower());
+                    if (_verbatim) {
+                        AddPreceedingWhiteSpace(res, whitespace);
+                    }
+                    res.SetLoc(start, GetEnd());
+                    return res;
+                }
+            }
+            return ParsePower();
         }
 
         // power: atom trailer* ['**' factor]
@@ -2937,9 +3038,13 @@ namespace Microsoft.PythonTools.Parsing {
                 case TokenKind.BackQuote:       // string_conversion
                     NextToken();
                     return FinishStringConversion();
+                case TokenKind.KeywordAsync:
+                case TokenKind.KeywordAwait:
+                // if we made it this far, treat await and async as names
+                // See ParseAwaitExpr() for treating 'await' as a keyword
                 case TokenKind.Name:            // identifier
                     NextToken();
-                    ret = MakeName(TokenToName((NameToken)t));
+                    ret = MakeName(TokenToName(t));
                     if (_verbatim) {
                         AddPreceedingWhiteSpace(ret);
                     }
@@ -3687,7 +3792,11 @@ namespace Microsoft.PythonTools.Parsing {
             if (MaybeEat(TokenKind.RightParenthesis)) {
                 ret = MakeTupleOrExpr(new List<Expression>(), MakeWhiteSpaceList(), false);
                 hasRightParenthesis = true;
-            } else if (MaybeEat(TokenKind.KeywordYield)) {
+            } else if (PeekToken(TokenKind.KeywordYield)) {
+                if (CurrentFunction != null && CurrentFunction.IsCoroutine) {
+                    ReportSyntaxError("'yield' inside async function");
+                }
+                Eat(TokenKind.KeywordYield);
                 ret = ParseYieldExpression();
                 Eat(TokenKind.RightParenthesis);                
                 hasRightParenthesis = true;
@@ -4583,9 +4692,24 @@ namespace Microsoft.PythonTools.Parsing {
             return _lookahead.Token;
         }
 
+        private Token PeekToken2() {
+            if (_lookahead2.Token == null) {
+                _lookahead2 = new TokenWithSpan(_tokenizer.GetNextToken(), _tokenizer.TokenSpan);
+                _lookahead2WhiteSpace = _tokenizer.PreceedingWhiteSpace;
+            }
+            return _lookahead2.Token;
+        }
+
         private void FetchLookahead() {
-            _lookahead = new TokenWithSpan(_tokenizer.GetNextToken(), _tokenizer.TokenSpan);
-            _lookaheadWhiteSpace = _tokenizer.PreceedingWhiteSpace;
+            if (_lookahead2.Token != null) {
+                _lookahead = _lookahead2;
+                _lookaheadWhiteSpace = _lookahead2WhiteSpace;
+                _lookahead2 = TokenWithSpan.Empty;
+                _lookahead2WhiteSpace = null;
+            } else {
+                _lookahead = new TokenWithSpan(_tokenizer.GetNextToken(), _tokenizer.TokenSpan);
+                _lookaheadWhiteSpace = _tokenizer.PreceedingWhiteSpace;
+            }
         }
 
         private bool PeekToken(TokenKind kind) {

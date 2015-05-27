@@ -21,12 +21,18 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         private Expression _list;
         private Statement _body;
         private readonly Statement _else;
+        private readonly bool _isAsync;
 
         public ForStatement(Expression left, Expression list, Statement body, Statement else_) {
             _left = left;
             _list = list;
             _body = body;
             _else = else_;
+        }
+
+        public ForStatement(Expression left, Expression list, Statement body, Statement else_, bool isAsync)
+            : this(left, list, body, else_) {
+            _isAsync = isAsync;
         }
 
         public int HeaderIndex {
@@ -49,6 +55,10 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
         public Statement Else {
             get { return _else; }
+        }
+
+        public bool IsAsync {
+            get { return _isAsync; }
         }
 
         public override void Walk(PythonWalker walker) {

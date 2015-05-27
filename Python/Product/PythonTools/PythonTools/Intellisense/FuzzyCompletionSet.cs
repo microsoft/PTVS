@@ -228,6 +228,12 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         /// <summary>
+        /// If True, the best item is selected by default. Otherwise, the user
+        /// will need to manually select it before committing.
+        /// </summary>
+        public bool CommitByDefault { get; set; }
+
+        /// <summary>
         /// Gets or sets the list of completions that are part of this completion set.
         /// </summary>
         /// <value>
@@ -322,7 +328,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             }
 
-            if (Moniker == "PythonOverrides") {
+            if (!CommitByDefault) {
                 allowSelect = false;
                 isUnique = false;
             }

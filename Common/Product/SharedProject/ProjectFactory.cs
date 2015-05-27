@@ -522,13 +522,13 @@ namespace Microsoft.VisualStudioTools.Project {
             out uint pUpgradeProjectCapabilityFlags
         ) {
             pUpgradeRequired = 0;
+            pguidNewProjectFactory = Guid.Empty;
+
             if (!File.Exists(bstrFileName)) {
-                pguidNewProjectFactory = Guid.Empty;
                 pUpgradeProjectCapabilityFlags = 0;
                 return VSConstants.E_INVALIDARG;
             }
 
-            pguidNewProjectFactory = GetType().GUID;
 
             var backupSupport = __VSPPROJECTUPGRADEVIAFACTORYFLAGS.PUVFF_BACKUPSUPPORTED |
                 __VSPPROJECTUPGRADEVIAFACTORYFLAGS.PUVFF_COPYBACKUP |
@@ -566,6 +566,13 @@ namespace Microsoft.VisualStudioTools.Project {
                 pUpgradeRequired = 0;
             }
             pUpgradeProjectCapabilityFlags = (uint)backupSupport;
+
+            // If the upgrade checker set the factory GUID to ourselves, we need
+            // to clear it
+            if (pguidNewProjectFactory == GetType().GUID) {
+                pguidNewProjectFactory = Guid.Empty;
+            }
+
             return VSConstants.S_OK;
         }
 
@@ -577,14 +584,14 @@ namespace Microsoft.VisualStudioTools.Project {
             out Guid pguidNewProjectFactory,
             out uint pUpgradeProjectCapabilityFlags
         ) {
+            pguidNewProjectFactory = Guid.Empty;
+
             if (!File.Exists(bstrFileName)) {
                 pUpgradeRequired = 0;
-                pguidNewProjectFactory = Guid.Empty;
                 pUpgradeProjectCapabilityFlags = 0;
                 return;
             }
 
-            pguidNewProjectFactory = GetType().GUID;
             var backupSupport = __VSPPROJECTUPGRADEVIAFACTORYFLAGS.PUVFF_BACKUPSUPPORTED |
                 __VSPPROJECTUPGRADEVIAFACTORYFLAGS.PUVFF_COPYBACKUP |
                 __VSPPROJECTUPGRADEVIAFACTORYFLAGS.PUVFF_SXSBACKUP;
@@ -640,6 +647,12 @@ namespace Microsoft.VisualStudioTools.Project {
                 pUpgradeRequired = (uint)__VSPPROJECTUPGRADEVIAFACTORYREPAIRFLAGS.VSPUVF_PROJECT_NOREPAIR;
             }
             pUpgradeProjectCapabilityFlags = (uint)backupSupport;
+
+            // If the upgrade checker set the factory GUID to ourselves, we need
+            // to clear it
+            if (pguidNewProjectFactory == GetType().GUID) {
+                pguidNewProjectFactory = Guid.Empty;
+            }
         }
 #endif
         #endregion

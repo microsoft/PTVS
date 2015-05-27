@@ -26,6 +26,7 @@ namespace Microsoft.PythonTools.Interpreter {
         readonly string _pathEnvironmentVariable;
         readonly ProcessorArchitecture _architecture;
         readonly Version _version;
+        readonly InterpreterUIMode _uiMode;
 
         /// <summary>
         /// Creates a blank configuration with the specified language version.
@@ -55,6 +56,27 @@ namespace Microsoft.PythonTools.Interpreter {
             string pathVar,
             ProcessorArchitecture arch,
             Version version
+        ) : this(prefixPath, path, winPath, libraryPath, pathVar, arch, version, InterpreterUIMode.Normal) {
+        }
+        /// <summary>
+        /// <para>Constructs a new interpreter configuration based on the
+        /// provided values.</para>
+        /// <para>No validation is performed on the parameters.</para>
+        /// <para>If winPath is null or empty,
+        /// <see cref="WindowsInterpreterPath"/> will be set to path.</para>
+        /// <para>If libraryPath is null or empty and prefixPath is a valid
+        /// file system path, <see cref="LibraryPath"/> will be set to
+        /// prefixPath plus "Lib".</para>
+        /// </summary>
+        public InterpreterConfiguration(
+            string prefixPath,
+            string path,
+            string winPath,
+            string libraryPath,
+            string pathVar,
+            ProcessorArchitecture arch,
+            Version version,
+            InterpreterUIMode uiMode
         ) {
             _prefixPath = prefixPath;
             _interpreterPath = path;
@@ -71,6 +93,7 @@ namespace Microsoft.PythonTools.Interpreter {
             _version = version;
             Debug.Assert(string.IsNullOrEmpty(_interpreterPath) || !string.IsNullOrEmpty(_prefixPath),
                 "Anyone providing an interpreter should also specify the prefix path");
+            _uiMode = uiMode;
         }
 
         /// <summary>
@@ -127,6 +150,16 @@ namespace Microsoft.PythonTools.Interpreter {
             get { return _version; }
         }
 
+        /// <summary>
+        /// The UI behavior of the interpreter.
+        /// </summary>
+        /// <remarks>
+        /// New in 2.2
+        /// </remarks>
+        public InterpreterUIMode UIMode {
+            get { return _uiMode; }
+        }
+
         public override bool Equals(object obj) {
             var other = obj as InterpreterConfiguration;
             if (other == null) {
@@ -140,7 +173,8 @@ namespace Microsoft.PythonTools.Interpreter {
                 cmp.Equals(LibraryPath, other.LibraryPath) &&
                 cmp.Equals(PathEnvironmentVariable, other.PathEnvironmentVariable) &&
                 Architecture == other.Architecture &&
-                Version == other.Version;
+                Version == other.Version &&
+                UIMode == other.UIMode;
         }
 
         public override int GetHashCode() {
@@ -151,7 +185,8 @@ namespace Microsoft.PythonTools.Interpreter {
                 cmp.GetHashCode(LibraryPath) ^
                 cmp.GetHashCode(PathEnvironmentVariable) ^
                 Architecture.GetHashCode() ^
-                Version.GetHashCode();
+                Version.GetHashCode() ^
+                UIMode.GetHashCode();
         }
     }
 }

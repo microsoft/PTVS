@@ -20,6 +20,7 @@ using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
+using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 
@@ -290,7 +291,7 @@ namespace Microsoft.PythonTools {
         private static string GetFullName(MemberExpression expr) {
             var ne = expr.Target as NameExpression;
             if (ne != null) {
-                return ne.Name + "." + expr.Name;
+                return ne.Name + "." + expr.Name ?? string.Empty;
             }
             var me = expr.Target as MemberExpression;
             if (me != null) {
@@ -298,7 +299,7 @@ namespace Microsoft.PythonTools {
                 if (baseName == null) {
                     return null;
                 }
-                return baseName + "." + expr.Name;
+                return baseName + "." + expr.Name ?? string.Empty;
             }
             return null;
         }
@@ -397,6 +398,10 @@ namespace Microsoft.PythonTools {
         }
 
         public override bool Walk(FunctionDefinition node) {
+            if (node.IsCoroutine) {
+                AddSpan(Tuple.Create("", new Span(node.StartIndex, 5)), PredefinedClassificationTypeNames.Keyword);
+            }
+
             Debug.Assert(_head != null);
             _head.Functions.Add(node.NameExpression.Name);
             node.NameExpression.Walk(this);
@@ -512,5 +517,24 @@ namespace Microsoft.PythonTools {
             base.PostWalk(node);
         }
 
+
+        public override bool Walk(AwaitExpression node) {
+            AddSpan(Tuple.Create("", new Span(node.StartIndex, 5)), PredefinedClassificationTypeNames.Keyword);
+            return base.Walk(node);
+        }
+
+        public override bool Walk(ForStatement node) {
+            if (node.IsAsync) {
+                AddSpan(Tuple.Create("", new Span(node.StartIndex, 5)), PredefinedClassificationTypeNames.Keyword);
+            }
+            return base.Walk(node);
+        }
+
+        public override bool Walk(WithStatement node) {
+            if (node.IsAsync) {
+                AddSpan(Tuple.Create("", new Span(node.StartIndex, 5)), PredefinedClassificationTypeNames.Keyword);
+            }
+            return base.Walk(node);
+        }
     }
 }

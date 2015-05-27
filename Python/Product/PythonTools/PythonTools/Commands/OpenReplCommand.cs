@@ -16,12 +16,13 @@ using System;
 using System.Linq;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
 #if DEV14_OR_LATER
 using Microsoft.VisualStudio.InteractiveWindow.Shell;
+#else
+using Microsoft.VisualStudio.Repl;
 #endif
 
 namespace Microsoft.PythonTools.Commands {

@@ -639,7 +639,10 @@ namespace Microsoft.PythonTools.Language {
                         if (controller != null) {
                             IntellisenseController.ForceCompletions = true;
                             try {
-                                controller.TriggerCompletionSession((VSConstants.VSStd2KCmdID)nCmdID == VSConstants.VSStd2KCmdID.COMPLETEWORD);
+                                controller.TriggerCompletionSession(
+                                    (VSConstants.VSStd2KCmdID)nCmdID == VSConstants.VSStd2KCmdID.COMPLETEWORD,
+                                    true
+                                );
                             } finally {
                                 IntellisenseController.ForceCompletions = false;
                             }

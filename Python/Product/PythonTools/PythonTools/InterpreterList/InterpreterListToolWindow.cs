@@ -210,7 +210,7 @@ namespace Microsoft.PythonTools.InterpreterList {
 
         private void OpenInteractiveOptions_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
             var view = e.Parameter as EnvironmentView;
-            e.CanExecute = view != null && view.Factory != null;
+            e.CanExecute = view != null && view.Factory != null && view.Factory.CanBeConfigured();
         }
 
         private void OpenInteractiveOptions_Executed(object sender, ExecutedRoutedEventArgs e) {

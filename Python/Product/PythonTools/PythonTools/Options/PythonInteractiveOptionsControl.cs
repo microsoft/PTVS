@@ -64,7 +64,13 @@ namespace Microsoft.PythonTools.Options {
             try {
                 _showSettingsFor.Items.Clear();
 
-                foreach (var factory in _serviceProvider.GetPythonToolsService().InteractiveOptions.Select(x => x.Key).OrderBy(f => f.Description)) {
+                var interpreters = _serviceProvider.GetPythonToolsService()
+                    .InterpreterOptions
+                    .Select(x => x.Key)
+                    .Where(f => f.IsUIVisible() && f.CanBeConfigured())
+                    .OrderBy(f => f.Description);
+
+                foreach (var factory in interpreters) {
                     _showSettingsFor.Items.Add(factory);
                     if (factory == previousSelection) {
                         currentSelection = factory;

@@ -59,7 +59,13 @@ namespace Microsoft.PythonTools.Options {
                 _showSettingsFor.Items.Clear();
                 _defaultInterpreter.Items.Clear();
 
-                foreach (var interpreter in _serviceProvider.GetPythonToolsService().InterpreterOptions.Select(x => x.Key).OrderBy(f => f.Description)) {
+                var interpreters = _serviceProvider.GetPythonToolsService()
+                    .InterpreterOptions
+                    .Select(x => x.Key)
+                    .Where(f => f.IsUIVisible() && f.CanBeConfigured())
+                    .OrderBy(f => f.Description);
+
+                foreach (var interpreter in interpreters) {
                     InterpreterOptions opts;
                     if (_serviceProvider.GetPythonToolsService().TryGetInterpreterOptions(interpreter, out opts) && !opts.Removed) {
                         _showSettingsFor.Items.Add(interpreter);
@@ -307,8 +313,6 @@ namespace Microsoft.PythonTools.Options {
                     if (curOption != null) {
                         curOption.Removed = true;
                         UpdateInterpreters();
-                        _serviceProvider.GetPythonToolsService().RemoveInteractiveOptions(curOption.Factory);
-                        _serviceProvider.GetPythonToolsService().RemoveInterpreterOptions(curOption.Factory);
                     }
                 }
             }

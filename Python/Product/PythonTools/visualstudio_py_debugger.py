@@ -529,6 +529,10 @@ if hasattr(sys, 'base_prefix'):
     PREFIXES.append(path.normcase(sys.base_prefix))
 if hasattr(sys, 'real_prefix'):
     PREFIXES.append(path.normcase(sys.real_prefix))
+# If one or more of the prefixes are empty, we can't reliably distinguish stdlib
+# from user code, so override stdlib-only mode and allow to debug everything.
+if '' in PREFIXES:
+    DEBUG_STDLIB = True
 
 def should_debug_code(code):
     if not code or not code.co_filename:
@@ -2409,7 +2413,8 @@ def debug(
 
     global BREAK_ON_SYSTEMEXIT_ZERO, DEBUG_STDLIB, DJANGO_DEBUG
     BREAK_ON_SYSTEMEXIT_ZERO = break_on_systemexit_zero
-    DEBUG_STDLIB = debug_stdlib
+    if not DEBUG_STDLIB:
+        DEBUG_STDLIB = debug_stdlib
     DJANGO_DEBUG = django_debugging
 
     def _excepthook(exc_type, exc_value, exc_tb):

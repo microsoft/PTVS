@@ -19,6 +19,7 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Text;
+using System.Threading.Tasks;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -2025,6 +2026,39 @@ namespace AnalysisTests {
         }
 
         [TestMethod, Priority(0)]
+        public void CoroutineDef() {
+            foreach (var version in V35AndUp) {
+                var ast = ParseFile("CoroutineDef.py", ErrorSink.Null, version);
+                CheckAst(
+                    ast,
+                    CheckSuite(
+                        CheckCoroutineDef(CheckFuncDef("f", NoParameters, CheckSuite(
+                            CheckAsyncForStmt(CheckForStmt(Fob, Oar, CheckSuite(Pass))),
+                            CheckAsyncWithStmt(CheckWithStmt(Baz, CheckSuite(Pass)))
+                        )))
+                    )
+                );
+
+                ParseErrors("CoroutineDefIllegal.py", version,
+                    new ErrorInfo("'yield' inside async function", 20, 2, 5, 25, 2, 10),
+                    new ErrorInfo("'yield' inside async function", 40, 3, 9, 45, 3, 14),
+                    new ErrorInfo("unexpected token 'for'", 74, 6, 11, 77, 6, 14),
+                    new ErrorInfo("unexpected token ':'", 88, 6, 25, 89, 6, 26),
+                    new ErrorInfo("unexpected token '<newline>'", 89, 6, 26, 99, 7, 9),
+                    new ErrorInfo("unexpected token '<indent>'", 89, 6, 26, 99, 7, 9),
+                    new ErrorInfo("unexpected token '<dedent>'", 105, 8, 1, 107, 9, 1),
+                    new ErrorInfo("unexpected token 'async'", 107, 9, 1, 112, 9, 6),
+                    new ErrorInfo("unexpected token 'with'", 162, 13, 11, 166, 13, 15),
+                    new ErrorInfo("unexpected token ':'", 170, 13, 19, 171, 13, 20),
+                    new ErrorInfo("unexpected token '<newline>'", 171, 13, 20, 181, 14, 9),
+                    new ErrorInfo("unexpected token '<indent>'", 171, 13, 20, 181, 14, 9),
+                    new ErrorInfo("unexpected token '<dedent>'", 187, 15, 1, 189, 16, 1),
+                    new ErrorInfo("unexpected token 'async'", 189, 16, 1, 194, 16, 6)
+                );
+            }
+        }
+
+        [TestMethod, Priority(0)]
         public void ClassDef() {
             foreach (var version in AllVersions) {
                 CheckAst(
@@ -2221,6 +2255,99 @@ namespace AnalysisTests {
         }
 
         [TestMethod, Priority(0)]
+        public void AwaitStmt() {
+            var AwaitFob = CheckAwaitExpression(Fob);
+            foreach (var version in V35AndUp) {
+                CheckAst(
+                    ParseFile("AwaitStmt.py", ErrorSink.Null, version),
+                    CheckSuite(CheckCoroutineDef(CheckFuncDef("quox", NoParameters, CheckSuite(
+                        CheckExprStmt(AwaitFob),
+                        CheckExprStmt(CheckAwaitExpression(CheckCallExpression(Fob))),
+                        CheckExprStmt(CheckCallExpression(CheckParenExpr(AwaitFob))),
+                        CheckBinaryStmt(One, PythonOperator.Add, AwaitFob),
+                        CheckBinaryStmt(One, PythonOperator.Power, AwaitFob),
+                        CheckBinaryStmt(One, PythonOperator.Power, CheckUnaryExpression(PythonOperator.Negate, AwaitFob))
+                    ))))
+                );
+                ParseErrors("AwaitStmt.py", version);
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void AwaitStmtPreV35() {
+            foreach (var version in AllVersions.Except(V35AndUp)) {
+                ParseErrors("AwaitStmt.py", version,
+                    new ErrorInfo("unexpected token 'def'", 6, 1, 7, 9, 1, 10),
+                    new ErrorInfo("unexpected token ':'", 16, 1, 17, 17, 1, 18),
+                    new ErrorInfo("unexpected indent", 23, 2, 5, 28, 2, 10),
+                    new ErrorInfo("unexpected token 'fob'", 29, 2, 11, 32, 2, 14),
+                    new ErrorInfo("unexpected token 'fob'", 44, 3, 11, 47, 3, 14),
+                    new ErrorInfo("unexpected token 'fob'", 62, 4, 12, 65, 4, 15),
+                    new ErrorInfo("unexpected token 'fob'", 62, 4, 12, 65, 4, 15),
+                    new ErrorInfo("unexpected token ')'", 65, 4, 15, 66, 4, 16),
+                    new ErrorInfo("unexpected token '('", 66, 4, 16, 67, 4, 17),
+                    new ErrorInfo("unexpected token ')'", 67, 4, 17, 68, 4, 18),
+                    new ErrorInfo("unexpected token 'fob'", 84, 5, 15, 87, 5, 18),
+                    new ErrorInfo("unexpected token 'fob'", 104, 6, 16, 107, 6, 19),
+                    new ErrorInfo("unexpected token 'fob'", 125, 7, 17, 128, 7, 20),
+                    new ErrorInfo("unexpected token '<dedent>'", 128, 7, 20, 130, 8, 1)
+                );
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void AwaitAsyncNames() {
+            var Async = CheckNameExpr("async");
+            var Await = CheckNameExpr("await");
+            foreach (var version in V35AndUp) {
+                var ast = ParseFile("AwaitAsyncNames.py", ErrorSink.Null, version);
+                CheckAst(
+                    ast,
+                    CheckSuite(
+                        CheckExprStmt(Async),
+                        CheckExprStmt(Await),
+                        CheckAssignment(Async, Fob),
+                        CheckAssignment(Await, Fob),
+                        CheckAssignment(Fob, Async),
+                        CheckAssignment(Fob, Await),
+                        CheckFuncDef("async", NoParameters, CheckSuite(Pass)),
+                        CheckFuncDef("await", NoParameters, CheckSuite(Pass)),
+                        CheckClassDef("async", CheckSuite(Pass)),
+                        CheckClassDef("await", CheckSuite(Pass)),
+                        CheckCallStmt(Async, CheckArg("fob")),
+                        CheckCallStmt(Await, CheckArg("fob")),
+                        CheckCallStmt(Fob, CheckArg("async")),
+                        CheckCallStmt(Fob, CheckArg("await"))
+                    )
+                );
+                ParseErrors("AwaitAsyncNames.py", version);
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void AwaitStmtIllegal() {
+            //foreach (var version in V35AndUp) {
+            //    CheckAst(
+            //        ParseFile("AwaitStmtIllegal.py", ErrorSink.Null, version),
+            //        CheckSuite(
+            //        )
+            //    );
+            //}
+
+            foreach (var version in V35AndUp) {
+                ParseErrors("AwaitStmtIllegal.py", version,
+                    new ErrorInfo("invalid syntax", 6, 1, 7, 10, 1, 11),
+                    new ErrorInfo("unexpected token 'fob'", 37, 4, 11, 40, 4, 14),
+                    new ErrorInfo("unexpected token '<newline>'", 40, 4, 14, 42, 5, 1),
+                    new ErrorInfo("unexpected token '<NL>'", 42, 5, 1, 44, 6, 1),
+                    new ErrorInfo("unexpected token 'fob'", 67, 7, 11, 70, 7, 14),
+                    new ErrorInfo("unexpected token '<newline>'", 70, 7, 14, 72, 8, 1),
+                    new ErrorInfo("unexpected token '<NL>'", 72, 8, 1, 74, 9, 1)
+                );
+            }
+        }
+
+        [TestMethod, Priority(0)]
         public void ConditionalExpr() {
             foreach (var version in AllVersions) {
                 CheckAst(
@@ -2333,52 +2460,80 @@ namespace AnalysisTests {
         }
 
         [TestMethod, Priority(0), Timeout(10 * 60 * 1000)]
-        public void StdLib() {
-            foreach (var curVersion in PythonPaths.Versions) {
-                Debug.WriteLine("Running: {0}", curVersion.Version);
+        public async Task StdLib() {
+            var tasks = new List<KeyValuePair<string, Task<string>>>();
 
-                var files = new List<string>();
+            foreach (var curVersion in PythonPaths.Versions) {
+                Console.WriteLine("Starting: {0}", curVersion);
+                tasks.Add(new KeyValuePair<string, Task<string>>(
+                    curVersion.ToString(),
+                    Task.Run(() => StdLibWorker(curVersion))
+                ));
+            }
+            Console.WriteLine("Started {0} tests", tasks.Count);
+            Console.WriteLine(new string('=', 80));
+
+            bool anyErrors = false;
+            foreach (var task in tasks) {
+                string errors = null;
                 try {
-                    CollectFiles(curVersion.LibPath, files, new[] { "site-packages" });
-                } catch (DirectoryNotFoundException) {
-                    continue;
+                    errors = await task.Value;
+                } catch (Exception ex) {
+                    errors = ex.ToString();
                 }
 
-                var skippedFiles = new HashSet<string>(new[] { 
+                if (string.IsNullOrEmpty(errors)) {
+                    Console.WriteLine("{0} passed", task.Key);
+                } else {
+                    Console.WriteLine("{0} errors:", task.Key);
+                    Console.WriteLine(errors);
+                    anyErrors = true;
+                }
+                Console.WriteLine(new string('=', 80));
+            }
+
+            Assert.IsFalse(anyErrors, "Errors occurred. See output trace for details.");
+        }
+
+        private static string StdLibWorker(PythonVersion curVersion) {
+            var files = new List<string>();
+            CollectFiles(curVersion.LibPath, files, new[] { "site-packages" });
+
+            var skippedFiles = new HashSet<string>(new[] {
                     "py3_test_grammar.py",  // included in 2x distributions but includes 3x grammar
                     "py2_test_grammar.py",  // included in 3x distributions but includes 2x grammar
                     "proxy_base.py",        // included in Qt port to Py3k but installed in 2.x distributions
                     "test_pep3131.py"       // we need to update to support this.
                 });
-                var errorSink = new CollectingErrorSink();
-                var errors = new Dictionary<string, CollectingErrorSink>();
-                foreach (var file in files) {
-                    string filename = Path.GetFileName(file);
-                    if (skippedFiles.Contains(filename) || filename.StartsWith("badsyntax_") || filename.StartsWith("bad_coding") || file.IndexOf("\\lib2to3\\tests\\") != -1) {
-                        continue;
-                    }
-                    using (var parser = Parser.CreateParser(new StreamReader(file), curVersion.Version, new ParserOptions() { ErrorSink = errorSink })) {
-                        var ast = parser.ParseFile();
-                    }
-
-                    if (errorSink.Errors.Count != 0) {
-                        errors["\"" + file + "\""] = errorSink;
-                        errorSink = new CollectingErrorSink();
-                    }
+            var errorSink = new CollectingErrorSink();
+            var errors = new Dictionary<string, CollectingErrorSink>();
+            foreach (var file in files) {
+                string filename = Path.GetFileName(file);
+                if (skippedFiles.Contains(filename) || filename.StartsWith("badsyntax_") || filename.StartsWith("bad_coding") || file.IndexOf("\\lib2to3\\tests\\") != -1) {
+                    continue;
+                }
+                using (var parser = Parser.CreateParser(new StreamReader(file), curVersion.Version, new ParserOptions() { ErrorSink = errorSink })) {
+                    var ast = parser.ParseFile();
                 }
 
-                if (errors.Count != 0) {
-                    StringBuilder errorList = new StringBuilder();
-                    foreach (var keyValue in errors) {
-                        errorList.Append(keyValue.Key + " :" + Environment.NewLine);
-                        foreach (var error in keyValue.Value.Errors) {
-                            errorList.AppendFormat("     {0} {1}{2}", error.Span, error.Message, Environment.NewLine);
-                        }
-
-                    }
-                    Assert.AreEqual(0, errors.Count, errorList.ToString());
+                if (errorSink.Errors.Count != 0) {
+                    errors["\"" + file + "\""] = errorSink;
+                    errorSink = new CollectingErrorSink();
                 }
             }
+
+            if (errors.Count != 0) {
+                StringBuilder errorList = new StringBuilder();
+                foreach (var keyValue in errors) {
+                    errorList.Append(keyValue.Key + " :" + Environment.NewLine);
+                    foreach (var error in keyValue.Value.Errors) {
+                        errorList.AppendFormat("     {0} {1}{2}", error.Span, error.Message, Environment.NewLine);
+                    }
+
+                }
+                return errorList.ToString();
+            }
+            return null;
         }
 
         #endregion
@@ -2499,6 +2654,17 @@ namespace AnalysisTests {
                 } else {
                     Assert.AreEqual(forStmt.Else, null);
                 }
+            };
+        }
+
+        private Action<Statement> CheckAsyncForStmt(Action<Statement> checkForStmt) {
+            return stmt => {
+                Assert.IsInstanceOfType(stmt, typeof(ForStatement));
+                var forStmt = (ForStatement)stmt;
+
+                Assert.IsTrue(forStmt.IsAsync);
+
+                checkForStmt(stmt);
             };
         }
 
@@ -2786,6 +2952,17 @@ namespace AnalysisTests {
             };
         }
 
+        private static Action<Statement> CheckCoroutineDef(Action<Statement> checkFuncDef) {
+            return stmt => {
+                Assert.IsInstanceOfType(stmt, typeof(FunctionDefinition));
+                var funcDef = (FunctionDefinition)stmt;
+
+                Assert.IsTrue(funcDef.IsCoroutine);
+
+                checkFuncDef(stmt);
+            };
+        }
+
         private static void CheckDecorators(Action<Expression>[] decorators, DecoratorStatement foundDecorators) {
             if (decorators != null) {
                 Assert.AreEqual(decorators.Length, foundDecorators.Decorators.Count);
@@ -2891,6 +3068,13 @@ namespace AnalysisTests {
             };
         }
 
+        private static Action<Expression> CheckAwaitExpression(Action<Expression> value) {
+            return expr => {
+                Assert.IsInstanceOfType(expr, typeof(AwaitExpression));
+                var await = (AwaitExpression)expr;
+                value(await.Expression);
+            };
+        }
         private static Action<Expression> CheckAndExpression(Action<Expression> lhs, Action<Expression> rhs) {
             return expr => {
                 Assert.AreEqual(typeof(AndExpression), expr.GetType());
@@ -3185,6 +3369,17 @@ namespace AnalysisTests {
                 }
 
                 body(with.Body);
+            };
+        }
+
+        private Action<Statement> CheckAsyncWithStmt(Action<Statement> checkWithStmt) {
+            return stmt => {
+                Assert.IsInstanceOfType(stmt, typeof(WithStatement));
+                var withStmt = (WithStatement)stmt;
+
+                Assert.IsTrue(withStmt.IsAsync);
+
+                checkWithStmt(stmt);
             };
         }
 

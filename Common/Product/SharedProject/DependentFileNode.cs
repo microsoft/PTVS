@@ -21,6 +21,10 @@ using Microsoft.VisualStudio.Shell.Interop;
 using OleConstants = Microsoft.VisualStudio.OLE.Interop.Constants;
 using VsCommands = Microsoft.VisualStudio.VSConstants.VSStd97CmdID;
 using VsCommands2K = Microsoft.VisualStudio.VSConstants.VSStd2KCmdID;
+#if DEV14_OR_LATER
+using Microsoft.VisualStudio.Imaging;
+using Microsoft.VisualStudio.Imaging.Interop;
+#endif
 
 namespace Microsoft.VisualStudioTools.Project {
     /// <summary>
@@ -73,6 +77,19 @@ namespace Microsoft.VisualStudioTools.Project {
         public override object GetIconHandle(bool open) {
             return this.ProjectMgr.ImageHandler.GetIconHandle(this.ImageIndex);
         }
+
+#if DEV14_OR_LATER
+        protected override bool SupportsIconMonikers {
+            get { return true; }
+        }
+
+        protected override ImageMoniker GetIconMoniker(bool open) {
+            return CanShowDefaultIcon() ?
+                // TODO: Check this image
+                KnownMonikers.ReferencedElement :
+                KnownMonikers.DocumentWarning;
+        }
+#endif
 
         /// <summary>
         /// Disable certain commands for dependent file nodes 

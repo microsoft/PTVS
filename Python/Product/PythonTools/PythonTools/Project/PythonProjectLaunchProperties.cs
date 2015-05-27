@@ -305,6 +305,10 @@ namespace Microsoft.PythonTools.Project {
             IServiceProvider provider = null
         ) {
             var pathEnv = project.GetProjectAnalyzer().InterpreterFactory.Configuration.PathEnvironmentVariable;
+            if (string.IsNullOrEmpty(pathEnv)) {
+                return;
+            }
+
             var paths = new List<string>();
             
             string path;

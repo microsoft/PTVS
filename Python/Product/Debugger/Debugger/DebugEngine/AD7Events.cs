@@ -281,6 +281,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         }
 
         public int GetException(EXCEPTION_INFO[] pExceptionInfo) {
+            pExceptionInfo[0].guidType = AD7Engine.DebugEngineGuid;
             pExceptionInfo[0].bstrExceptionName = _exception;
             if (_isUnhandled) {
                 pExceptionInfo[0].dwState = enum_EXCEPTION_STATE.EXCEPTION_STOP_USER_UNCAUGHT;

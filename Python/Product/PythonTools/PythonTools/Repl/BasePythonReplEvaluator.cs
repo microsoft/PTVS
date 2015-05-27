@@ -1797,10 +1797,6 @@ namespace Microsoft.PythonTools.Repl {
             window.AbortExecution();
         }
 
-        public static void WriteAnsiLine(this IInteractiveWindow window, string line) {
-            AppendEscapedText(window, line + Environment.NewLine);
-        }
-
         public static void SetPrompts(this IInteractiveWindow window, string primary, string secondary) {
             var eval = window.Evaluator as BasePythonReplEvaluator;
             eval.PrimaryPrompt = primary;
@@ -1813,7 +1809,7 @@ namespace Microsoft.PythonTools.Repl {
             eval.SecondaryPrompt = null;
         }
 
-        private static void AppendEscapedText(IInteractiveWindow window, string text) {
+        private static void AppendEscapedText(IInteractiveWindow window, string text, bool isError = false) {
             // http://en.wikipedia.org/wiki/ANSI_escape_code
             // process any ansi color sequences...
             ConsoleColor? color = null;
@@ -1827,8 +1823,12 @@ namespace Microsoft.PythonTools.Repl {
             while (escape != -1) {
                 if (escape != start) {
                     // add unescaped text
-                    var span = window.Write(text.Substring(start, escape - start));
-                    colors.Add(new ColoredSpan(span, color));
+                    if (isError) {
+                        window.ErrorOutputWriter.Write(text.Substring(start, escape - start));
+                    } else {
+                        var span = window.Write(text.Substring(start, escape - start));
+                        colors.Add(new ColoredSpan(span, color));
+                    }
                 }
 
                 // process the escape sequence                
@@ -1937,9 +1937,13 @@ namespace Microsoft.PythonTools.Repl {
                 }// else not an escape sequence, process as text
             }
 
-            if (start != text.Length - 1) {
-                var span = window.Write(text.Substring(start));
-                colors.Add(new ColoredSpan(span, color));
+            if (start != text.Length) {
+                if (isError) {
+                    window.ErrorOutputWriter.Write(text.Substring(start, escape - start));
+                } else {
+                    var span = window.Write(text.Substring(start));
+                    colors.Add(new ColoredSpan(span, color));
+                }
             }
         }
 #else
@@ -1956,11 +1960,6 @@ namespace Microsoft.PythonTools.Repl {
         public static void SetSmartUpDown(this IReplWindow window, bool setting) {
             window.SetOptionValue(ReplOptions.UseSmartUpDown, setting);
         }
-
-        public static void WriteAnsiLine(this IReplWindow window, string line) {
-            window.WriteLine(line);
-        }
-
 #endif
 
     }
