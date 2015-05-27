@@ -328,6 +328,9 @@ namespace Microsoft.PythonTools.DkmDebugger {
             process.SetDataItem(DkmDataCreationDisposition.CreateNew, new ExpressionEvaluator(process));
             process.SetDataItem(DkmDataCreationDisposition.CreateNew, new PyObjectAllocator(process));
 
+            var exceptionManager = process.GetOrCreateDataItem(() => new ExceptionManagerLocalHelper(process));
+            exceptionManager.OnPythonRuntimeInstanceLoaded();
+
             if (process.LivePart != null) {
                 process.SetDataItem(DkmDataCreationDisposition.CreateNew, new TraceManagerLocalHelper(process, TraceManagerLocalHelper.Kind.StepIn));
             }
@@ -659,6 +662,18 @@ namespace Microsoft.PythonTools.DkmDebugger {
                 } else {
                     Debug.Fail("LocalComponent received a HandleBreakpointRequest for a breakpoint that it does not know about.");
                 }
+            }
+        }
+
+        [DataContract]
+        [MessageTo(Guids.LocalComponentId)]
+        internal class MonitorExceptionsRequest : MessageBase<MonitorExceptionsRequest> {
+            [DataMember]
+            public bool MonitorExceptions { get; set; }
+
+            public override void Handle(DkmProcess process) {
+                var exceptionHelper = process.GetOrCreateDataItem(() => new ExceptionManagerLocalHelper(process));
+                exceptionHelper.MonitorExceptions = MonitorExceptions;
             }
         }
     }
