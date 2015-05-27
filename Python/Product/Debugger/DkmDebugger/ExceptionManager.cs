@@ -48,6 +48,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
         }
 
         public void AddExceptionTrigger(DkmProcess process, Guid sourceId, DkmExceptionTrigger trigger) {
+#if DEV14_OR_LATER
             var nameTrigger = trigger as DkmExceptionNameTrigger;
             if (nameTrigger != null && nameTrigger.ExceptionCategory == AD7Engine.DebugEngineGuid) {
                 string name = nameTrigger.Name;
@@ -66,15 +67,18 @@ namespace Microsoft.PythonTools.DkmDebugger {
                     new LocalComponent.MonitorExceptionsRequest { MonitorExceptions = !isEmpty }.SendHigher(process);
                 }
             }
+#endif
 
             process.AddExceptionTrigger(sourceId, trigger);
         }
 
         public void ClearExceptionTriggers(DkmProcess process, Guid sourceId) {
+#if DEV14_OR_LATER
             if (_monitoredExceptions.Count != 0) {
                 _monitoredExceptions.Clear();
                 new LocalComponent.MonitorExceptionsRequest { MonitorExceptions = false }.SendHigher(process);
             }
+#endif
 
             process.ClearExceptionTriggers(sourceId);
         }
@@ -82,7 +86,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
 
     internal class ExceptionManagerLocalHelper : DkmDataItem {
         private readonly DkmProcess _process;
-        private bool _monitorExceptions;
+        private bool _monitorExceptions = true;
 
         // Breakpoints used to intercept Python exceptions when they're raised. These are enabled dynamically
         // when at least one exception is set to break on throw, and disabled when all exceptions are cleared.
@@ -90,6 +94,14 @@ namespace Microsoft.PythonTools.DkmDebugger {
 
         public ExceptionManagerLocalHelper(DkmProcess process) {
             _process = process;
+
+            // In Dev12, AddExceptionTrigger is not consistently called when user updates exception settings, and
+            // so we cannot use it to figure out whether we need to monitor or not, so this setting is true and
+            // never changes. In Dev14+, it is reliable, and so we begin with false, and flip it to true when we
+            // see the first break-on-throw exception trigger come in.
+#if DEV14_OR_LATER
+            _monitorExceptions = false;
+#endif
         }
 
         public void OnPythonRuntimeInstanceLoaded() {
