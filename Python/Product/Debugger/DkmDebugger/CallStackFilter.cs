@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.DkmDebugger.Proxies.Structs;
 using Microsoft.VisualStudio.Debugger;
 using Microsoft.VisualStudio.Debugger.CallStack;

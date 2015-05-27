@@ -128,6 +128,19 @@ class SynthesizedValue(object):
 DONT_DEBUG = [path.normcase(__file__), path.normcase(_vspu.__file__)]
 if sys.version_info >= (3, 3):
     DONT_DEBUG.append(path.normcase('<frozen importlib._bootstrap>'))
+
+# Must be in sync with enum PythonDebugOptions in PythonDebugOptions.cs
+DEBUG_OPTION_WAIT_ON_ABNORMAL_EXIT = 0x001
+DEBUG_OPTION_WAIT_ON_NORMAL_EXIT = 0x002
+DEBUG_OPTION_REDIRECT_OUTPUT = 0x004
+DEBUG_OPTION_BREAK_ON_SYSTEMEXIT_ZERO = 0x008
+DEBUG_OPTION_DEBUG_STDLIB = 0x010
+DEBUG_OPTION_DJANGO_DEBUGGING = 0x020
+DEBUG_OPTION_CREATE_NO_WINDOW = 0x040
+DEBUG_OPTION_REDIRECT_INPUT = 0x080
+DEBUG_OPTION_ATTACH_RUNNING = 0x100
+DEBUG_OPTIONS_IS_WINDOWS_APPLICATION = 0x200
+
 # Contains information about all breakpoints in the process. Keys are line numbers on which
 # there are breakpoints in any file, and values are dicts. For every line number, the
 # corresponding dict contains all the breakpoints that fall on that line. The keys in that
@@ -529,10 +542,6 @@ if hasattr(sys, 'base_prefix'):
     PREFIXES.append(path.normcase(sys.base_prefix))
 if hasattr(sys, 'real_prefix'):
     PREFIXES.append(path.normcase(sys.real_prefix))
-# If one or more of the prefixes are empty, we can't reliably distinguish stdlib
-# from user code, so override stdlib-only mode and allow to debug everything.
-if '' in PREFIXES:
-    DEBUG_STDLIB = True
 
 def should_debug_code(code):
     if not code or not code.co_filename:
@@ -2141,7 +2150,7 @@ def intercept_threads(for_attach = False):
     global _INTERCEPTING_FOR_ATTACH
     _INTERCEPTING_FOR_ATTACH = for_attach
 
-def attach_process(port_num, debug_id, report = False, block = False):
+def attach_process(port_num, debug_id, debug_options, report = False, block = False):
     global conn
     for i in xrange(50):
         try:
@@ -2155,12 +2164,33 @@ def attach_process(port_num, debug_id, report = False, block = False):
             time.sleep(50./1000)
     else:
         raise Exception('failed to attach')
-    attach_process_from_socket(conn, report, block)
+    attach_process_from_socket(conn, debug_options, report, block)
 
-def attach_process_from_socket(sock, report = False, block = False):
-    global conn
-    global DETACHED
-    global attach_sent_break
+def attach_process_from_socket(sock, debug_options, report = False, block = False):
+    global conn, attach_sent_break, DETACHED, DEBUG_STDLIB, BREAK_ON_SYSTEMEXIT_ZERO, DJANGO_DEBUG
+
+    BREAK_ON_SYSTEMEXIT_ZERO = bool(debug_options & DEBUG_OPTION_BREAK_ON_SYSTEMEXIT_ZERO)
+    DJANGO_DEBUG = bool(debug_options & DEBUG_OPTION_DJANGO_DEBUGGING)
+
+    if '' in PREFIXES:
+        # If one or more of the prefixes are empty, we can't reliably distinguish stdlib
+        # from user code, so override stdlib-only mode and allow to debug everything.
+        DEBUG_STDLIB = True
+    else:
+        DEBUG_STDLIB = bool(debug_options & DEBUG_OPTION_DEBUG_STDLIB)
+
+    def _excepthook(exc_type, exc_value, exc_tb):
+        # Display the exception and wait on exit
+        if exc_type is SystemExit:
+            if ((debug_options & DEBUG_OPTION_WAIT_ON_ABNORMAL_EXIT) and exc_value.code != 0) or (wait_on_exit and exc_value.code == 0):
+                print_exception(exc_type, exc_value, exc_tb)
+                do_wait()
+        else:
+            print_exception(exc_type, exc_value, exc_tb)
+            if debug_options & DEBUG_OPTION_WAIT_ON_ABNORMAL_EXIT:
+                do_wait()
+    sys.excepthook = sys.__excepthook__ = _excepthook
+
     conn = sock
     attach_sent_break = False
 
@@ -2199,6 +2229,9 @@ def attach_process_from_socket(sock, report = False, block = False):
     # intercept all new thread requests
     if not _INTERCEPTING_FOR_ATTACH:
         intercept_threads()
+
+    if debug_options & DEBUG_OPTION_REDIRECT_OUTPUT:
+        enable_output_redirection()
 
 # Try to detach cooperatively, notifying the debugger as we do so.
 def detach_process_and_notify_debugger():
@@ -2398,12 +2431,7 @@ def debug(
     file,
     port_num,
     debug_id,
-    wait_on_exception,
-    redirect_output,
-    wait_on_exit,
-    break_on_systemexit_zero = False,
-    debug_stdlib = False,
-    django_debugging = False,
+    debug_options,
     run_as = 'script'
 ):
     # remove us from modules so there's no trace of us
@@ -2411,28 +2439,7 @@ def debug(
     __name__ = '$visualstudio_py_debugger'
     del sys.modules['visualstudio_py_debugger']
 
-    global BREAK_ON_SYSTEMEXIT_ZERO, DEBUG_STDLIB, DJANGO_DEBUG
-    BREAK_ON_SYSTEMEXIT_ZERO = break_on_systemexit_zero
-    if not DEBUG_STDLIB:
-        DEBUG_STDLIB = debug_stdlib
-    DJANGO_DEBUG = django_debugging
-
-    def _excepthook(exc_type, exc_value, exc_tb):
-        # Display the exception and wait on exit
-        if exc_type is SystemExit:
-            if (wait_on_exception and exc_value.code != 0) or (wait_on_exit and exc_value.code == 0):
-                print_exception(exc_type, exc_value, exc_tb)
-                do_wait()
-        else:
-            print_exception(exc_type, exc_value, exc_tb)
-            if wait_on_exception:
-                do_wait()
-    sys.excepthook = sys.__excepthook__ = _excepthook
-
-    attach_process(port_num, debug_id, report = True)
-
-    if redirect_output:
-        enable_output_redirection()
+    attach_process(port_num, debug_id, debug_options, report = True)
 
     # setup the current thread
     cur_thread = new_thread()
@@ -2468,7 +2475,7 @@ def debug(
             write_bytes(conn, LAST)
         last_ack_event.wait(5)
 
-    if wait_on_exit:
+    if debug_options & DEBUG_OPTION_WAIT_ON_NORMAL_EXIT:
         do_wait()
 
 # Code objects for functions which are going to be at the bottom of the stack, right below the first

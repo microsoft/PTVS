@@ -12,10 +12,11 @@
  *
  * ***************************************************************************/
 
-namespace Microsoft.PythonTools.DkmDebugger {
+namespace Microsoft.PythonTools.Debugger {
     public enum VsPackageMessage {
         None = 0,
         WarnAboutPythonSymbols = 1,
         WarnAboutPGO = 2,
+        SetDebugOptions = 3,
     }
 }

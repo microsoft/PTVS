@@ -17,7 +17,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Threading;
@@ -27,7 +26,6 @@ using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
-using Microsoft.Win32;
 using TestUtilities;
 using TestUtilities.Python;
 
@@ -2589,6 +2587,40 @@ int main(int argc, char* argv[]) {
             }
         }
 
+        [TestMethod, Priority(0)]
+        public void AttachWithOutputRedirection() {
+            string script = TestData.GetPath(@"TestData\DebuggerProject\AttachOutput.py");
+            var p = Process.Start(Version.InterpreterPath, "\"" + script + "\"");
+            try {
+                Thread.Sleep(1000);
+                var proc = PythonProcess.Attach(p.Id, PythonDebugOptions.RedirectOutput);
+
+                var expectedOutput = new Queue<string>(new[] { "stdout", "stderr" });
+                proc.DebuggerOutput += (sender, e) => {
+                    if (expectedOutput.Count != 0) {
+                        Assert.AreEqual(expectedOutput.Dequeue(), e.Output);
+                    }
+                };
+
+                try {
+                    var attached = new AutoResetEvent(false);
+                    proc.ProcessLoaded += (sender, args) => {
+                        Console.WriteLine("Process loaded");
+                        proc.Resume();
+                        attached.Set();
+                    };
+                    proc.StartListening();
+                    Assert.IsTrue(attached.WaitOne(20000), "Failed to attach within 20s");
+
+                    proc.WaitForExit();
+                } finally {
+                    DetachProcess(proc);
+                }
+            } finally {
+                DisposeProcess(p);
+            }
+        }
+
         class TraceRedirector : Redirector {
             private readonly string _prefix;
 
@@ -2680,6 +2712,27 @@ int main(int argc, char* argv[]) {
         #endregion
 
         #region Output Tests
+
+        [TestMethod, Priority(0)]
+        public void TestOutputRedirection() {
+            var debugger = new PythonDebugger();
+            var expectedOutput = new Queue<string>(new[] { "stdout", "stderr" });
+
+            var process = DebugProcess(debugger, Path.Combine(DebuggerTestPath, "Output.py"), (processObj, threadObj) => {
+                processObj.DebuggerOutput += (sender, e) => {
+                    if (expectedOutput.Count != 0) {
+                        Assert.AreEqual(expectedOutput.Dequeue(), e.Output);
+                    }
+                };
+            }, debugOptions: PythonDebugOptions.RedirectOutput);
+
+            try {
+                process.Start();
+                Thread.Sleep(1000);
+            } finally {
+                WaitForExit(process);
+            }
+        }
 
         [TestMethod, Priority(0)]
         public void Test3xStdoutBuffer() {

@@ -19,6 +19,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
+using Microsoft.PythonTools.Debugger;
 using Microsoft.VisualStudio.Debugger;
 using Microsoft.VisualStudio.Debugger.Breakpoints;
 using Microsoft.VisualStudio.Debugger.CallStack;

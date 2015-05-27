@@ -53,6 +53,12 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         // since all debugging is handled by Concord.
         private bool _mixedMode;
 
+        // Initial settings at launch or attach. Filled by ParseOptions.
+        private PythonLanguageVersion _languageVersion;
+        private PythonDebugOptions _debugOptions;
+        private string _interpreterOptions;
+        private List<string[]> _dirMapping;
+
         // The core of the engine is implemented by PythonProcess - we wrap and expose that to VS.
         private PythonProcess _process;
 
@@ -92,6 +98,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         public const string SourceDirectoryKey = "sd";
         public const string TargetDirectoryKey = "td";
         public const string TargetHostType = "host";
+        public const string DebugOptionsKey = "opt";
+        public const string DebugOptionsMetric = "PythonDebugOptions";
 
         public const string TargetUwp = "uwp";
 
@@ -125,6 +133,15 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         /// Specifies if the debugger should step/break into std lib code.
         /// </summary>
         public const string DebugStdLib = "DEBUG_STDLIB";
+
+        /// <summary>
+        /// Specifies if the debugger should treat the application as if it doesn't have a console.
+        /// </summary>
+        /// <remarks>
+        /// Currently, the only effect this has is suppressing <see cref="WaitOnAbnormalExitSetting"/>
+        /// and <see cref="WaitOnNormalExitSetting"/> if they're set.
+        /// </remarks>
+        public const string IsWindowsApplication = "IS_WINDOWS_APPLICATION";
 
         /// <summary>
         /// Specifies options which should be passed to the Python interpreter before the script.  If
@@ -292,8 +309,9 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             // Attach can either be called to attach to a new process, or to complete an attach
             // to a launched process
             if (_process == null) {
-                // TODO: Where do we get the language version from?
                 _events = ad7Callback;
+
+                Send(new AD7CustomEvent(VsPackageMessage.SetDebugOptions, this), AD7CustomEvent.IID, null);
 
                 // Check whether we're debugging Python alongside something else. If so, let Concord handle everything.
                 if (!IsDebuggingPythonOnly(program)) {
@@ -311,9 +329,20 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                 try {
                     if (remoteProgram != null) {
                         var remotePort = remoteProgram.DebugProcess.DebugPort;
-                        _process = PythonRemoteProcess.Attach(remotePort.Uri, true);
+
+                        var uriBuilder = new UriBuilder(remotePort.Uri);
+                        string query = uriBuilder.Query ?? "";
+                        if (query.Length > 0) {
+                            // Strip leading "?" - UriBuilder.Query getter returns it as part of the string, but the setter
+                            // will automatically prepend it even if it was already there, producing a malformed query.
+                            query = query.Substring(1);
+                        }
+                        query += "&" + DebugOptionsKey + "=" + (int)_debugOptions;
+                        uriBuilder.Query = query;
+
+                        _process = PythonRemoteProcess.Attach(uriBuilder.Uri, true);
                     } else {
-                        _process = PythonProcess.Attach(processId);
+                        _process = PythonProcess.Attach(processId, _debugOptions);
                     }
                 } catch (ConnectionException ex) {
                     MessageBox.Show("Failed to attach debugger:\r\n" + ex.Message, null, MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -449,8 +478,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         }
 
         // Called by the SDM to indicate that a synchronous debug event, previously sent by the DE to the SDM,
-        // was received and processed. The only event we send in this fashion is Program Destroy.
-        // It responds to that event by shutting down the engine.
+        // was received and processed. 
         int IDebugEngine2.ContinueFromSynchronousEvent(IDebugEvent2 eventObject) {
             if (_mixedMode) {
                 return VSConstants.E_NOTIMPL;
@@ -471,8 +499,9 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                 _modules.Clear();
 
                 debuggedProcess.Dispose();
+            } else if (eventObject is AD7CustomEvent) { 
             } else {
-                Debug.Fail("Unknown syncronious event");
+                Debug.Fail("Unknown synchronous event");
             }
 
             return VSConstants.S_OK;
@@ -585,18 +614,40 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         // A metric is a registry value used to change a debug engine's behavior or to advertise supported functionality. 
         // This method can forward the call to the appropriate form of the Debugging SDK Helpers function, SetMetric.
         int IDebugEngine2.SetMetric(string pszMetric, object varValue) {
-            // Handle JustMyCode enabling changes
-            if (string.Compare(pszMetric, "JustMyCodeStepping") == 0) {
-                var enabledUint = varValue as uint?;
-                if (enabledUint.HasValue) {
-                    var enabled = enabledUint.Value != 0;
-                    if (_justMyCodeEnabled != enabled) {
-                        _justMyCodeEnabled = enabled;
-                        SetExceptionInfo(_defaultBreakOnExceptionMode, _breakOnException);
+            switch (pszMetric) {
+                case "JustMyCodeStepping":
+                    {
+                        var enabledUint = varValue as uint?;
+                        if (enabledUint.HasValue) {
+                            var enabled = enabledUint.Value != 0;
+                            if (_justMyCodeEnabled != enabled) {
+                                _justMyCodeEnabled = enabled;
+                                SetExceptionInfo(_defaultBreakOnExceptionMode, _breakOnException);
+                            }
+                        }
+                        return VSConstants.S_OK;
                     }
-                }
+
+                case DebugOptionsMetric:
+                    {
+                        if (_engineCreated) {
+                            Debug.Fail(DebugOptionsMetric + " metric can only be sent immediately in response to IDebugEngineCreateEvent2.");
+                            return VSConstants.E_FAIL;
+                        }
+
+                        var options = varValue as string;
+                        if (options != null) {
+                            // ParseOptions only overwrites the flags that are explicitly set to True or False, leaving any
+                            // already existing values intact. Thus, any options that were previouly passed to LaunchSuspended
+                            // are preserved unless explicitly overwritten here. 
+                            ParseOptions(options);
+                        }
+                        return VSConstants.S_OK;
+                    }
+
+                default:
+                    return VSConstants.S_OK;
             }
-            return VSConstants.S_OK;
         }
 
         private void SetExceptionInfo(int defaultBreakOnMode, IEnumerable<KeyValuePair<string, int>> breakOn) {
@@ -647,8 +698,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         // in which case Visual Studio uses the IDebugEngineLaunch2::LaunchSuspended method
         // The IDebugEngineLaunch2::ResumeProcess method is called to start the process after the process has been successfully launched in a suspended state.
         int IDebugEngineLaunch2.LaunchSuspended(string pszServer, IDebugPort2 port, string exe, string args, string dir, string env, string options, enum_LAUNCH_FLAGS launchFlags, uint hStdInput, uint hStdOutput, uint hStdError, IDebugEventCallback2 ad7Callback, out IDebugProcess2 process) {
+            process = null;
             if (_mixedMode) {
-                process = null;
                 return VSConstants.E_NOTIMPL;
             }
 
@@ -659,92 +710,31 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             Debug.Assert(_process == null);
             Debug.Assert(_ad7ProgramId == Guid.Empty);
 
-            process = null;
-
             _events = ad7Callback;
-
-            PythonLanguageVersion version = DefaultVersion;
-            PythonDebugOptions debugOptions = PythonDebugOptions.None;
-            bool attachRunning = false;
-            List<string[]> dirMapping = null;
-            string interpreterOptions = null;
-            if (options != null) {
-                var splitOptions = SplitOptions(options);
-
-                foreach (var optionSetting in splitOptions) {
-                    var setting = optionSetting.Split(new[] { '=' }, 2);
-
-                    if (setting.Length == 2) {
-                        switch (setting[0]) {
-                            case VersionSetting: version = GetLanguageVersion(setting[1]); break;
-                            case WaitOnAbnormalExitSetting:
-                                bool value;
-                                if (Boolean.TryParse(setting[1], out value) && value) {
-                                    debugOptions |= PythonDebugOptions.WaitOnAbnormalExit;
-                                }
-                                break;
-                            case WaitOnNormalExitSetting:
-                                if (Boolean.TryParse(setting[1], out value) && value) {
-                                    debugOptions |= PythonDebugOptions.WaitOnNormalExit;
-                                }
-                                break;
-                            case RedirectOutputSetting:
-                                if (Boolean.TryParse(setting[1], out value) && value) {
-                                    debugOptions |= PythonDebugOptions.RedirectOutput;
-                                }
-                                break;
-                            case BreakSystemExitZero:
-                                if (Boolean.TryParse(setting[1], out value) && value) {
-                                    debugOptions |= PythonDebugOptions.BreakOnSystemExitZero;
-                                }
-                                break;
-                            case DebugStdLib:
-                                if (Boolean.TryParse(setting[1], out value) && value) {
-                                    debugOptions |= PythonDebugOptions.DebugStdLib;
-                                }
-                                break;
-                            case DirMappingSetting:
-                                string[] dirs = setting[1].Split('|');
-                                if (dirs.Length == 2) {
-                                    if (dirMapping == null) {
-                                        dirMapping = new List<string[]>();
-                                    }
-                                    Debug.WriteLine(String.Format("Mapping dir {0} to {1}", dirs[0], dirs[1]));
-                                    dirMapping.Add(dirs);
-                                }
-                                break;
-                            case InterpreterOptions:
-                                interpreterOptions = setting[1];
-                                break;
-                            case AttachRunning:
-                                attachRunning = Convert.ToBoolean(setting[1]);
-                                break;
-                            case WebBrowserUrl:
-                                _webBrowserUrl = HttpUtility.UrlDecode(setting[1]);
-                                break;
-                            case EnableDjangoDebugging:
-                                if (Boolean.TryParse(setting[1], out value) && value) {
-                                    debugOptions |= PythonDebugOptions.DjangoDebugging;
-                                }
-                                break;
-                        }
-                    }
-                }
-            }
-
             _engineCreated = _programCreated = false;
             _loadComplete.Reset();
 
+            if (options != null) {
+                ParseOptions(options);
+            }
+
+            Send(new AD7CustomEvent(VsPackageMessage.SetDebugOptions, this), AD7CustomEvent.IID, null, null);
+
+            // If this is a windowed application, there's no console to wait on, so disable those flags if they were set.
+            if (_debugOptions.HasFlag(PythonDebugOptions.IsWindowsApplication)) {
+                _debugOptions &= ~(PythonDebugOptions.WaitOnNormalExit | PythonDebugOptions.WaitOnAbnormalExit);
+            }
+
             Guid processId;
-            if (attachRunning && Guid.TryParse(exe, out processId)) {
+            if (_debugOptions.HasFlag(PythonDebugOptions.AttachRunning) && Guid.TryParse(exe, out processId)) {
                 _process = DebugConnectionListener.GetProcess(processId);
                 _attached = true;
                 _pseudoAttach = true;
             } else {
-                _process = new PythonProcess(version, exe, args, dir, env, interpreterOptions, debugOptions, dirMapping);
+                _process = new PythonProcess(_languageVersion, exe, args, dir, env, _interpreterOptions, _debugOptions, _dirMapping);
             }
 
-            if (!attachRunning) {
+            if (!_debugOptions.HasFlag(PythonDebugOptions.AttachRunning)) {
                 _process.Start(false);
             }
 
@@ -780,6 +770,87 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                 res.Add(options.Substring(lastStart, options.Length - lastStart));
             }
             return res.ToArray();
+        }
+
+        private void ParseOptions(string options) {
+            foreach (var optionSetting in SplitOptions(options)) {
+                var setting = optionSetting.Split(new[] { '=' }, 2);
+                if (setting.Length == 2) {
+                    switch (setting[0]) {
+                        case VersionSetting:
+                            _languageVersion = GetLanguageVersion(setting[1]);
+                            break;
+
+                        case WaitOnAbnormalExitSetting:
+                            bool value;
+                            if (Boolean.TryParse(setting[1], out value) && value) {
+                                _debugOptions |= PythonDebugOptions.WaitOnAbnormalExit;
+                            }
+                            break;
+
+                        case WaitOnNormalExitSetting:
+                            if (Boolean.TryParse(setting[1], out value) && value) {
+                                _debugOptions |= PythonDebugOptions.WaitOnNormalExit;
+                            }
+                            break;
+
+                        case RedirectOutputSetting:
+                            if (Boolean.TryParse(setting[1], out value) && value) {
+                                _debugOptions |= PythonDebugOptions.RedirectOutput;
+                            }
+                            break;
+
+                        case BreakSystemExitZero:
+                            if (Boolean.TryParse(setting[1], out value) && value) {
+                                _debugOptions |= PythonDebugOptions.BreakOnSystemExitZero;
+                            }
+                            break;
+
+                        case DebugStdLib:
+                            if (Boolean.TryParse(setting[1], out value) && value) {
+                                _debugOptions |= PythonDebugOptions.DebugStdLib;
+                            }
+                            break;
+
+                        case IsWindowsApplication:
+                            if (Boolean.TryParse(setting[1], out value) && value) {
+                                _debugOptions |= PythonDebugOptions.IsWindowsApplication;
+                            }
+                            break;
+
+                        case DirMappingSetting:
+                            string[] dirs = setting[1].Split('|');
+                            if (dirs.Length == 2) {
+                                if (_dirMapping == null) {
+                                    _dirMapping = new List<string[]>();
+                                }
+                                Debug.WriteLine(String.Format("Mapping dir {0} to {1}", dirs[0], dirs[1]));
+                                _dirMapping.Add(dirs);
+                            }
+                            break;
+
+                        case InterpreterOptions:
+                            _interpreterOptions = setting[1];
+                            break;
+
+                        case AttachRunning:
+                            if (Boolean.TryParse(setting[1], out value) && value) {
+                                _debugOptions |= PythonDebugOptions.AttachRunning;
+                            }
+                            break;
+
+                        case WebBrowserUrl:
+                            _webBrowserUrl = HttpUtility.UrlDecode(setting[1]);
+                            break;
+
+                        case EnableDjangoDebugging:
+                            if (Boolean.TryParse(setting[1], out value) && value) {
+                                _debugOptions |= PythonDebugOptions.DjangoDebugging;
+                            }
+                            break;
+                    }
+                }
+            }
         }
 
         // Default version, we never really use this because we always provide the version, but if someone

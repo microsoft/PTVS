@@ -564,12 +564,13 @@ void IncRef(PyObject* object) {
 
 // Structure for our shared memory communication, aligned to be identical on 64-bit and 32-bit
 struct MemoryBuffer {
-    int PortNumber;             // offset 0-4
-    __declspec(align(8)) HANDLE AttachStartingEvent;  // offset 8 - 16
-    __declspec(align(8)) HANDLE AttachDoneEvent;  // offset 16 - 24
-    __declspec(align(8)) int ErrorNumber;            // offset 24-28
-    int VersionNumber;          // offset 28-32
-    char DebugId[1];            // null terminated string
+    int PortNumber;										// offset 0-4
+    int DebugOptions;			                        // offset 0-8
+    __declspec(align(8)) HANDLE AttachStartingEvent;    // offset 8-16
+    __declspec(align(8)) HANDLE AttachDoneEvent;        // offset 16-24
+    __declspec(align(8)) int ErrorNumber;               // offset 24-28
+    int VersionNumber;                                  // offset 28-32
+    char DebugId[1];                                    // null terminated string
 };
 
 class ConnectionInfo {
@@ -1081,10 +1082,9 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
         }
 
         auto pyPortNum = PyObjectHolder(isDebug, intFromLong(connInfo.Buffer->PortNumber));
-
         auto debugId = PyObjectHolder(isDebug, strFromString(connInfo.Buffer->DebugId));
-
-        DecRef(call(attach_process.ToPython(), pyPortNum.ToPython(), debugId.ToPython(), pyTrue, pyFalse, NULL), isDebug);
+        auto debugOptions = PyObjectHolder(isDebug, intFromLong(connInfo.Buffer->DebugOptions));
+        DecRef(call(attach_process.ToPython(), pyPortNum.ToPython(), debugId.ToPython(), debugOptions.ToPython(), pyTrue, pyFalse, NULL), isDebug);
 
         auto sysMod = PyObjectHolder(isDebug, pyImportMod("sys"));
         if (*sysMod == nullptr) {
