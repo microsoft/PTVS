@@ -25,6 +25,7 @@ using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
@@ -61,17 +62,20 @@ namespace Microsoft.PythonTools.Navigation {
         private IWpfTextView _textView;                                 // text view we're drop downs for
         private IVsDropdownBar _dropDownBar;                            // drop down bar - used to refresh when changes occur
         private int _curTopLevelIndex = -1, _curNestedIndex = -1;       // currently selected indices for each oar
-        
-        private static readonly ImageList _imageList = GetImageList();
+        private readonly IServiceProvider _serviceProvider;
+        private IntPtr _imageList;
+
         private static readonly ReadOnlyCollection<DropDownEntryInfo> EmptyEntries = new ReadOnlyCollection<DropDownEntryInfo>(new DropDownEntryInfo[0]);
 
         private const int TopLevelComboBoxId = 0;
         private const int NestedComboBoxId = 1;
 
-        public DropDownBarClient(IWpfTextView textView, IPythonProjectEntry pythonProjectEntry) {
+        public DropDownBarClient(IServiceProvider serviceProvider, IWpfTextView textView, IPythonProjectEntry pythonProjectEntry) {
+            Utilities.ArgumentNotNull("serviceProvider", serviceProvider);
             Utilities.ArgumentNotNull("textView", textView);
             Utilities.ArgumentNotNull("pythonProjectEntry", pythonProjectEntry);
 
+            _serviceProvider = serviceProvider;
             _projectEntry = pythonProjectEntry;
             _projectEntry.OnNewParseTree += ParserOnNewParseTree;
             _textView = textView;
@@ -120,7 +124,7 @@ namespace Microsoft.PythonTools.Navigation {
 
             pcEntries = count;
             puEntryType = (uint)(DROPDOWNENTRYTYPE.ENTRY_TEXT | DROPDOWNENTRYTYPE.ENTRY_IMAGE | DROPDOWNENTRYTYPE.ENTRY_ATTR);
-            phImageList = _imageList.Handle;
+            phImageList = GetImageList();
             return VSConstants.S_OK;
         }
         
@@ -571,13 +575,18 @@ namespace Microsoft.PythonTools.Navigation {
         /// <summary>
         /// Reads our image list from our DLLs resource stream.
         /// </summary>
-        private static ImageList GetImageList() {
-            ImageList list = new ImageList();
-            list.ImageSize = new Size(0x10, 0x10);
-            list.TransparentColor = Color.FromArgb(0xff, 0, 0xff);
-            Stream manifestResourceStream = typeof(DropDownBarClient).Assembly.GetManifestResourceStream("Microsoft.Resources.completionset.bmp");
-            list.Images.AddStrip(new Bitmap(manifestResourceStream));
-            return list;
+        private IntPtr GetImageList() {
+            if (_imageList == IntPtr.Zero) {
+                var shell = _serviceProvider.GetService(typeof(SVsShell)) as IVsShell;
+                if (shell != null) {
+                    object obj;
+                    var hr = shell.GetProperty((int)__VSSPROPID.VSSPROPID_ObjectMgrTypesImgList, out obj);
+                    if (ErrorHandler.Succeeded(hr) && obj != null) {
+                        _imageList = (IntPtr)(int)obj;
+                    }
+                }
+            }
+            return _imageList;
         }
 
         /// <summary>

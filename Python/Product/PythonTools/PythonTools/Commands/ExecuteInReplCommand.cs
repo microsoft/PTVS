@@ -21,16 +21,17 @@ using Microsoft.PythonTools.Navigation;
 using Microsoft.PythonTools.Project;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudio.Text.Editor;
+using Microsoft.VisualStudioTools;
 #if DEV14_OR_LATER
+using Microsoft.VisualStudio.Imaging;
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.InteractiveWindow.Shell;
 #else
 using Microsoft.VisualStudio.Repl;
 #endif
-using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudio.Text.Editor;
-using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Commands {
 #if DEV14_OR_LATER
@@ -68,6 +69,15 @@ namespace Microsoft.PythonTools.Commands {
                     typeof(PythonLanguageInfo).GUID,
                     replId
                 );
+
+                var toolWindow = window as ToolWindowPane;
+                if (toolWindow != null) {
+#if DEV14_OR_LATER
+                    toolWindow.BitmapImageMoniker = KnownMonikers.PYInteractiveWindow;
+#else
+                    // TODO: Add image here for VS 2013
+#endif
+                }
 
                 var pyService = serviceProvider.GetPythonToolsService();
                 window.SetSmartUpDown(pyService.GetInteractiveOptions(factory).ReplSmartHistory);

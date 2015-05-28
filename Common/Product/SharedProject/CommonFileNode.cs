@@ -100,25 +100,6 @@ namespace Microsoft.VisualStudioTools.Project {
 
         #region overridden methods
 
-        public override int ImageIndex {
-            get {
-                if (ItemNode.IsExcluded) {
-                    return (int)ProjectNode.ImageName.ExcludedFile;
-                } else if (!File.Exists(Url)) {
-                    return (int)ProjectNode.ImageName.MissingFile;
-                } else if (IsFormSubType) {
-                    return (int)ProjectNode.ImageName.WindowsForm;
-                } else if (this._project.IsCodeFile(FileName)) {
-                    if (CommonUtils.IsSamePath(this.Url, _project.GetStartupFile())) {
-                        return _project.ImageOffset + (int)CommonImageName.StartupFile;
-                    } else {
-                        return _project.ImageOffset + (int)CommonImageName.File;
-                    }
-                }
-                return base.ImageIndex;
-            }
-        }
-
 #if DEV14_OR_LATER
         protected override bool SupportsIconMonikers {
             get { return true; }
@@ -151,6 +132,25 @@ namespace Microsoft.VisualStudioTools.Project {
                 }
             }
             return default(ImageMoniker);
+        }
+#else
+        public override int ImageIndex {
+            get {
+                if (ItemNode.IsExcluded) {
+                    return (int)ProjectNode.ImageName.ExcludedFile;
+                } else if (!File.Exists(Url)) {
+                    return (int)ProjectNode.ImageName.MissingFile;
+                } else if (IsFormSubType) {
+                    return (int)ProjectNode.ImageName.WindowsForm;
+                } else if (this._project.IsCodeFile(FileName)) {
+                    if (CommonUtils.IsSamePath(this.Url, _project.GetStartupFile())) {
+                        return _project.ImageOffset + (int)CommonImageName.StartupFile;
+                    } else {
+                        return _project.ImageOffset + (int)CommonImageName.File;
+                    }
+                }
+                return base.ImageIndex;
+            }
         }
 #endif
 

@@ -67,10 +67,6 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        public override object GetIconHandle(bool open) {
-            return ProjectMgr.GetIconHandleByName(ProjectNode.ImageName.XWorld);
-        }
-
 #if DEV14_OR_LATER
         protected override bool SupportsIconMonikers {
             get { return true; }
@@ -78,6 +74,12 @@ namespace Microsoft.PythonTools.Project {
 
         protected override ImageMoniker GetIconMoniker(bool open) {
             return KnownMonikers.XWorldFile;
+        }
+#else
+        public override int ImageIndex {
+            get {
+                return ProjectMgr.GetIconIndex(ProjectNode.ImageName.XWorld);
+            }
         }
 #endif
 

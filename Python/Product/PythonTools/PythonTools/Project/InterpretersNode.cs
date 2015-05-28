@@ -387,22 +387,6 @@ namespace Microsoft.PythonTools.Project {
             return null;
         }
 
-        public override object GetIconHandle(bool open) {
-            if (ProjectMgr == null) {
-                return null;
-            }
-
-            int index;
-            if (!_interpreters.IsAvailable(_factory)) {
-                index = ProjectMgr.GetIconIndex(PythonProjectImageName.MissingInterpreter);
-            } else if (_interpreters.ActiveInterpreter == _factory) {
-                index = ProjectMgr.GetIconIndex(PythonProjectImageName.ActiveInterpreter);
-            } else {
-                index = ProjectMgr.GetIconIndex(PythonProjectImageName.Interpreter);
-            }
-            return this.ProjectMgr.ImageHandler.GetIconHandle(index);
-        }
-
         protected override VSOVERLAYICON OverlayIconIndex {
             get {
                 if (!Directory.Exists(Url)) {
@@ -430,6 +414,25 @@ namespace Microsoft.PythonTools.Project {
             // TODO: Change to PYEnvironment
             return KnownMonikers.DockPanel;
         }
+#else
+        public override int ImageIndex {
+            get {
+                if (ProjectMgr == null) {
+                    return NoImage;
+                }
+
+                int index;
+                if (!_interpreters.IsAvailable(_factory)) {
+                    index = ProjectMgr.GetIconIndex(PythonProjectImageName.MissingInterpreter);
+                } else if (_interpreters.ActiveInterpreter == _factory) {
+                    index = ProjectMgr.GetIconIndex(PythonProjectImageName.ActiveInterpreter);
+                } else {
+                    index = ProjectMgr.GetIconIndex(PythonProjectImageName.Interpreter);
+                }
+                return index;
+            }
+        }
+
 #endif
 
         /// <summary>

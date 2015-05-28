@@ -100,13 +100,6 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
 
-        public override object GetIconHandle(bool open) {
-            return ProjectMgr.GetIconHandleByName(CanShowDefaultIcon() ?
-                ProjectNode.ImageName.Reference :
-                ProjectNode.ImageName.DanglingReference
-            );
-        }
-
 #if DEV14_OR_LATER
         protected override bool SupportsIconMonikers {
             get { return true; }
@@ -114,6 +107,15 @@ namespace Microsoft.VisualStudioTools.Project {
 
         protected override ImageMoniker GetIconMoniker(bool open) {
             return CanShowDefaultIcon() ? KnownMonikers.Reference : KnownMonikers.ReferenceWarning;
+        }
+#else
+        public override int ImageIndex {
+            get {
+                return ProjectMgr.GetIconIndex(CanShowDefaultIcon() ?
+                    ProjectNode.ImageName.Reference :
+                    ProjectNode.ImageName.DanglingReference
+                );
+            }
         }
 #endif
 

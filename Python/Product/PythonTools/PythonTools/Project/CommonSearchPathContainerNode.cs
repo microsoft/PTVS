@@ -90,10 +90,6 @@ namespace Microsoft.PythonTools.Project {
             return null;
         }
 
-        public override object GetIconHandle(bool open) {
-            return _projectNode.GetIconHandleByName(PythonProjectImageName.SearchPathContainer);
-        }
-
 #if DEV14_OR_LATER
         protected override bool SupportsIconMonikers {
             get { return true; }
@@ -101,6 +97,12 @@ namespace Microsoft.PythonTools.Project {
 
         protected override ImageMoniker GetIconMoniker(bool open) {
             return KnownMonikers.Reference;
+        }
+#else
+        public override int ImageIndex {
+            get {
+                return _projectNode.GetIconIndex(PythonProjectImageName.SearchPathContainer);
+            }
         }
 #endif
 
