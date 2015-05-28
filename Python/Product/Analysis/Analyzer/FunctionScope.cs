@@ -23,6 +23,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         private ListParameterVariableDef _seqParameters;
         private DictParameterVariableDef _dictParameters;
         public readonly VariableDef ReturnValue;
+        public readonly CoroutineInfo Coroutine;
         public readonly GeneratorInfo Generator;
 
         public FunctionScope(
@@ -33,14 +34,19 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         )
             : base(function, node, declScope) {
             ReturnValue = new VariableDef();
-            if (Function.FunctionDefinition.IsGenerator) {
+            if (Function.FunctionDefinition.IsCoroutine) {
+                Coroutine = new CoroutineInfo(function.ProjectState, declModule);
+                ReturnValue.AddTypes(function.ProjectEntry, Coroutine.SelfSet, false);
+            } else if (Function.FunctionDefinition.IsGenerator) {
                 Generator = new GeneratorInfo(function.ProjectState, declModule);
                 ReturnValue.AddTypes(function.ProjectEntry, Generator.SelfSet, false);
             }
         }
 
         internal void AddReturnTypes(Node node, AnalysisUnit unit, IAnalysisSet types, bool enqueue = true) {
-            if (Generator != null) {
+            if (Coroutine != null) {
+                Coroutine.AddReturn(node, unit, types, enqueue);
+            } else if (Generator != null) {
                 Generator.AddReturn(node, unit, types, enqueue);
             } else {
                 ReturnValue.MakeUnionStrongerIfMoreThan(unit.ProjectState.Limits.ReturnTypes, types);

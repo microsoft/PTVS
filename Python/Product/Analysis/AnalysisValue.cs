@@ -253,8 +253,18 @@ namespace Microsoft.PythonTools.Analysis {
             return GetIndex(node, unit, unit.ProjectState.ClassInfos[BuiltinTypeId.Int].SelfSet);
         }
 
+        public virtual IAnalysisSet GetAsyncEnumeratorTypes(Node node, AnalysisUnit unit) {
+            return AnalysisSet.Empty;
+        }
+
         public virtual IAnalysisSet GetIterator(Node node, AnalysisUnit unit) {
             return GetMember(node, unit, "__iter__").Call(node, unit, ExpressionEvaluator.EmptySets, ExpressionEvaluator.EmptyNames);
+        }
+
+        public virtual IAnalysisSet GetAsyncIterator(Node node, AnalysisUnit unit) {
+            return GetMember(node, unit, "__aiter__")
+                .Call(node, unit, ExpressionEvaluator.EmptySets, ExpressionEvaluator.EmptyNames)
+                .Await(node, unit);
         }
 
         public virtual IAnalysisSet GetIndex(Node node, AnalysisUnit unit, IAnalysisSet index) {
@@ -288,6 +298,10 @@ namespace Microsoft.PythonTools.Analysis {
 
         public virtual IAnalysisSet GetInstanceType() {
             return SelfSet;
+        }
+
+        public virtual IAnalysisSet Await(Node node, AnalysisUnit unit) {
+            return AnalysisSet.Empty;
         }
 
         internal virtual bool IsOfType(IAnalysisSet klass) {

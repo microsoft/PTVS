@@ -19,6 +19,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
+using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.Debugger;
 using Microsoft.VisualStudio.Debugger;
 using Microsoft.VisualStudio.Debugger.Breakpoints;
@@ -40,6 +41,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
         IDkmRuntimeStepper,
         IDkmExceptionController,
         IDkmExceptionFormatter,
+        IDkmExceptionManager,
         IDkmAsyncBreakCompleteReceived {
 
         public RemoteComponent()
@@ -66,8 +68,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
                     pyrtInfo.DLLs.DebuggerHelper = nativeModules.Single(mi => mi.UniqueId == DebuggerHelperDllModuleInstanceId);
                     pyrtInfo.DLLs.DebuggerHelper.FlagAsTransitionModule();
 
-                    var traceManager = new TraceManager(process);
-                    process.SetDataItem(DkmDataCreationDisposition.CreateNew, traceManager);
+                    process.SetDataItem(DkmDataCreationDisposition.CreateNew, new TraceManager(process));
                 }
 
                 var runtimeId = new DkmRuntimeInstanceId(Guids.PythonRuntimeTypeGuid, 0);
@@ -295,16 +296,23 @@ namespace Microsoft.PythonTools.DkmDebugger {
         }
 
         string IDkmExceptionFormatter.GetAdditionalInformation(DkmExceptionInformation exception) {
-            var customException = exception as DkmCustomExceptionInformation;
-            if (customException == null || customException.AdditionalInformation == null) {
-                return null;
-            }
-
-            return Encoding.Unicode.GetString(customException.AdditionalInformation.ToArray());
+            var em = exception.Process.GetOrCreateDataItem(() => new ExceptionManager(exception.Process));
+            return em.GetAdditionalInformation(exception);
         }
 
         string IDkmExceptionFormatter.GetDescription(DkmExceptionInformation exception) {
-            return exception.Name;
+            var em = exception.Process.GetOrCreateDataItem(() => new ExceptionManager(exception.Process));
+            return em.GetDescription(exception);
+            }
+
+        void IDkmExceptionManager.AddExceptionTrigger(DkmProcess process, Guid sourceId, DkmExceptionTrigger trigger) {
+            var em = process.GetOrCreateDataItem(() => new ExceptionManager(process));
+            em.AddExceptionTrigger(process, sourceId, trigger);
+        }
+
+        void IDkmExceptionManager.ClearExceptionTriggers(DkmProcess process, Guid sourceId) {
+            var em = process.GetOrCreateDataItem(() => new ExceptionManager(process));
+            em.ClearExceptionTriggers(process, sourceId);
         }
 
         [DataContract]

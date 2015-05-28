@@ -204,6 +204,34 @@ def f(a = A, b : B):
             }
         }
 
+        [TestMethod, Priority(0), TestCategory("Mock")]
+        public void AsyncAwaitClassification() {
+            var code = @"
+await f
+await + f
+async with f: pass
+async for x in f: pass
+
+async def f():
+    await f
+    async with f: pass
+    async for x in f: pass
+
+class F:
+    async def f(self): pass
+
+";
+
+            using (var helper = new ClassifierHelper(code, PythonLanguageVersion.V35)) {
+                helper.CheckAstClassifierSpans("ii i+i iki:k ikiki:k iki(): ii iki:k ikiki:k ki: iki(i): k");
+
+                helper.Analyze();
+
+                // "await f" does not highlight "f", but "await + f" does
+                helper.CheckAnalysisClassifierSpans("fff k<async>f k<await>f k<async>f k<async>f c<F> k<async>fp");
+            }
+        }
+
         #region ClassifierHelper class
 
         private class ClassifierHelper : IDisposable {
@@ -287,6 +315,7 @@ def f(a = A, b : B):
                 { 'k', PredefinedClassificationTypeNames.Keyword },
                 { '(', PythonPredefinedClassificationTypeNames.Grouping },
                 { ')', PythonPredefinedClassificationTypeNames.Grouping },
+                { '+', PythonPredefinedClassificationTypeNames.Operator },
                 { ':', PythonPredefinedClassificationTypeNames.Operator },
                 { '=', PythonPredefinedClassificationTypeNames.Operator },
                 { ',', PythonPredefinedClassificationTypeNames.Comma },

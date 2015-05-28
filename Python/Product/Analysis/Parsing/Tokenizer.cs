@@ -317,6 +317,11 @@ namespace Microsoft.PythonTools.Parsing {
                     result.Category = TokenCategory.Keyword;
                     break;
 
+                case TokenKind.KeywordAsync:
+                case TokenKind.KeywordAwait:
+                    result.Category = TokenCategory.Identifier;
+                    break;
+
                 default:
                     if (token.Kind >= TokenKind.FirstKeyword && token.Kind <= TokenKind.KeywordNonlocal) {
                         result.Category = TokenCategory.Keyword;
@@ -1453,8 +1458,21 @@ namespace Microsoft.PythonTools.Parsing {
                         MarkTokenEnd();
                         return Tokens.KeywordAsToken;
                     }
-                    if (NextChar() == 's' && NextChar() == 'e' && NextChar() == 'r' && NextChar() == 't' && !IsNamePart(Peek())) {
-                        return TransformStatementToken(Tokens.KeywordAssertToken);
+                    ch = NextChar();
+                    if (ch == 's') {
+                        if (NextChar() == 'e' && NextChar() == 'r' && NextChar() == 't' && !IsNamePart(Peek())) {
+                            return TransformStatementToken(Tokens.KeywordAssertToken);
+                        }
+                    } else if (ch == 'y') {
+                        if (_langVersion >= PythonLanguageVersion.V35 && NextChar() == 'n' && NextChar() == 'c' && !IsNamePart(Peek())) {
+                            MarkTokenEnd();
+                            return Tokens.KeywordAsyncToken;
+                        }
+                    }
+                } else if (ch == 'w') {
+                    if (_langVersion >= PythonLanguageVersion.V35 && NextChar() == 'a' && NextChar() == 'i' && NextChar() == 't' && !IsNamePart(Peek())) {
+                        MarkTokenEnd();
+                        return Tokens.KeywordAwaitToken;
                     }
                 }
             } else if (ch == 'y') {

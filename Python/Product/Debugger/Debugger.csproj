@@ -173,6 +173,7 @@
     <Compile Include="Debugger\TryHandlerWalker.cs" />
     <Compile Include="Debugger\FrameKind.cs" />
     <Compile Include="DkmDebugger\ComPtr.cs" />
+    <Compile Include="DkmDebugger\ExceptionManager.cs" />
   </ItemGroup>
   <ItemGroup Condition="'$(VSTarget)' != '10.0'">
     <Compile Include="DkmDebugger\ComponentBase.cs" />

@@ -163,16 +163,16 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        internal void AddReturnTypeString(StringBuilder result) {
-            bool first = true;
+        internal static void AddReturnTypeString(StringBuilder result, Func<int, IAnalysisSet> getReturnValue) {
             for (int strength = 0; strength <= UnionComparer.MAX_STRENGTH; ++strength) {
-                var retTypes = GetReturnValue(strength);
+                var retTypes = getReturnValue(strength);
                 if (retTypes.Count == 0) {
-                    first = false;
                     break;
                 }
                 if (retTypes.Count <= 10) {
                     var seenNames = new HashSet<string>();
+                    var addDots = false;
+                    var descriptions = new List<string>();
                     foreach (var av in retTypes) {
                         if (av == null) {
                             continue;
@@ -180,31 +180,42 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
                         if (av.Push()) {
                             try {
-                                if (!string.IsNullOrWhiteSpace(av.ShortDescription) && seenNames.Add(av.ShortDescription)) {
-                                    if (first) {
-                                        result.Append(" -> ");
-                                        first = false;
-                                    } else {
-                                        result.Append(", ");
-                                    }
-                                    result.Append((av.ShortDescription ?? "").Replace("\r\n", "\n").Replace("\n", "\r\n    "));
+                                var desc = av.ShortDescription;
+                                if (!string.IsNullOrWhiteSpace(desc) && seenNames.Add(desc)) {
+                                    descriptions.Add(desc.Replace("\r\n", "\n").Replace("\n", "\r\n    "));
                                 }
                             } finally {
                                 av.Pop();
                             }
                         } else {
-                            result.Append("...");
+                            addDots = true;
                         }
+                    }
+
+                    var first = true;
+                    descriptions.Sort();
+                    foreach (var desc in descriptions) {
+                        if (first) {
+                            result.Append(" -> ");
+                            first = false;
+                        } else {
+                            result.Append(", ");
+                        }
+                        result.Append(desc);
+                    }
+
+                    if (addDots) {
+                        result.Append("...");
                     }
                     break;
                 }
             }
         }
 
-        internal void AddDocumentationString(StringBuilder result) {
-            if (!String.IsNullOrEmpty(Documentation)) {
+        internal static void AddDocumentationString(StringBuilder result, string documentation) {
+            if (!String.IsNullOrEmpty(documentation)) {
                 result.AppendLine();
-                result.Append(Documentation);
+                result.Append(documentation);
             }
         }
 
@@ -247,6 +258,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
                         result.Append(((ReturnStatement)FunctionDefinition.Body).Expression.ToCodeString(DeclaringModule.Tree));
                     }
                 } else {
+                    if (FunctionDefinition.IsCoroutine) {
+                        result.Append("async ");
+                    }
                     result.Append("def ");
                     result.Append(FunctionDefinition.Name);
                     result.Append("(");
@@ -254,8 +268,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     result.Append(")");
                 }
 
-                AddReturnTypeString(result);
-                AddDocumentationString(result);
+                AddReturnTypeString(result, GetReturnValue);
+                AddDocumentationString(result, Documentation);
                 AddQualifiedLocationString(result);
 
                 return result.ToString();

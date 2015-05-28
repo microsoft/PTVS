@@ -80,8 +80,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     result.Append(" objects ");
                 }
 
-                _function.AddReturnTypeString(result);
-                _function.AddDocumentationString(result);
+                FunctionInfo.AddReturnTypeString(result, _function.GetReturnValue);
+                FunctionInfo.AddDocumentationString(result, _function.Documentation);
 
                 return result.ToString();
             }
