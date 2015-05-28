@@ -73,7 +73,7 @@ namespace Microsoft.PythonTools.Debugger {
 
             ListenForConnection();
 
-            using (var result = DebugAttach.AttachAD7(pid, DebugConnectionListener.ListenerPort, _processGuid, (int)debugOptions)) {
+            using (var result = DebugAttach.AttachAD7(pid, DebugConnectionListener.ListenerPort, _processGuid, debugOptions.ToString())) {
                 if (result.Error != ConnErrorMessages.None) {
                     throw new ConnectionException(result.Error);
                 }
@@ -121,7 +121,7 @@ namespace Microsoft.PythonTools.Debugger {
                 "\"" + dir + "\" " +
                 " " + DebugConnectionListener.ListenerPort + " " +
                 " " + _processGuid + " " +
-                " " + (int)options + " " +
+                "\"" + options + "\" " +
                 args;
 
             if (env != null) {

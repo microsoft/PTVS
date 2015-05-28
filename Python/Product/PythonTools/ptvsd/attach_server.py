@@ -235,7 +235,7 @@ def enable_attach(secret, address = ('0.0.0.0', DEFAULT_PORT), certfile = None, 
                     client.recv(1)
 
                 elif response == ATCH:
-                    debug_options = read_int(client)
+                    debug_options = vspd.parse_debug_options(read_string(client))
                     if vspd.DETACHED:
                         write_bytes(client, ACPT)
                         try:

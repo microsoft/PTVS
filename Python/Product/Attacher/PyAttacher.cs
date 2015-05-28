@@ -69,20 +69,21 @@ namespace Microsoft.PythonTools.Debugger {
                 case "ATTACH_AD7": {
                         int pid, portNum;
                         Guid debugId;
-                        int debugOptions;
                         if (args.Length != 6 ||
                             !Int32.TryParse(args[1], out pid) ||
                             !Int32.TryParse(args[2], out portNum) ||
-                            !Guid.TryParse(args[3], out debugId) ||
-                            !Int32.TryParse(args[4], out debugOptions)
+                            !Guid.TryParse(args[3], out debugId)
                         ) {
                             return Help();
                         }
 
+                        string debugOptions = args[4];
+
                         EventWaitHandle doneEvent;
                         try {
-                            doneEvent = AutoResetEvent.OpenExisting(args[4]);
+                            doneEvent = AutoResetEvent.OpenExisting(args[5]);
                         } catch {
+                            Console.Error.WriteLine("Could not open event " + args[5]);
                             return Help(-2);
                         }
 
@@ -124,7 +125,7 @@ namespace Microsoft.PythonTools.Debugger {
             return HasPython(id);
         }
 
-        public static DebugAttach AttachAD7(int pid, int portNum, Guid debugId, int debugOptions) {
+        public static DebugAttach AttachAD7(int pid, int portNum, Guid debugId, string debugOptions) {
             bool isTarget64Bit = NativeMethods.Is64BitProcess(pid);
             bool isAttacher64Bit = Environment.Is64BitProcess;
 
@@ -141,7 +142,7 @@ namespace Microsoft.PythonTools.Debugger {
                 } while (eventHandle == IntPtr.Zero);
 
                 try {
-                    string args = String.Format("ATTACH_AD7 {0} {1} {2} {3} {4}", pid, portNum, debugId, name, debugOptions);
+                    string args = String.Format("ATTACH_AD7 {0} {1} {2} \"{3}\" {4}", pid, portNum, debugId, debugOptions, name);
                     var process = isTarget64Bit ? Create64BitProcess(args) : Create32BitProcess(args);
 
                     var attachDoneEvent = AutoResetEvent.OpenExisting(name);
@@ -199,10 +200,10 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         private static int Help(int exitCode = -1) {
-            Console.WriteLine("Usage: {0} {{CHECK | ATTACH_AD7 | ATTACH_DKM}} [<parameters>]", Assembly.GetEntryAssembly().ManifestModule.Name);
-            Console.WriteLine("Parameters for:");
-            Console.WriteLine("\tATTACH_AD7:\t<target pid> <port num> <debug id> <event name>");
-            Console.WriteLine("\tATTACH_DKM:\t<target pid>");
+            Console.Error.WriteLine("Usage: {0} {{CHECK | ATTACH_AD7 | ATTACH_DKM}} [<parameters>]", Assembly.GetEntryAssembly().ManifestModule.Name);
+            Console.Error.WriteLine("Parameters for:");
+            Console.Error.WriteLine("\tATTACH_AD7:\t<target pid> <port num> <debug id> <debug options> <event name>");
+            Console.Error.WriteLine("\tATTACH_DKM:\t<target pid>");
             return exitCode;
         }
 
@@ -292,7 +293,7 @@ namespace Microsoft.PythonTools.Debugger {
         /// <summary>
         /// Attaches to the specified PID and returns a DebugAttach object indicating the result.
         /// </summary>
-        internal static DebugAttach AttachAD7Worker(int pid, int portNum, Guid debugId, int debugOptions, EventWaitHandle attachDoneEvent = null) {
+        internal static DebugAttach AttachAD7Worker(int pid, int portNum, Guid debugId, string debugOptions, EventWaitHandle attachDoneEvent = null) {
             var hProcess = NativeMethods.OpenProcess(ProcessAccessFlags.All, false, pid);
             if (hProcess != IntPtr.Zero) {
                 string dllPath;
@@ -429,7 +430,7 @@ namespace Microsoft.PythonTools.Debugger {
             return ConnErrorMessages.None;
         }
 
-        private static DebugAttach InjectDebugger(string dllPath, IntPtr hProcess, IntPtr hKernel32, int portNum, int pid, Guid debugId, int debugOptions, EventWaitHandle attachDoneEvent) {
+        private static DebugAttach InjectDebugger(string dllPath, IntPtr hProcess, IntPtr hKernel32, int portNum, int pid, Guid debugId, string debugOptions, EventWaitHandle attachDoneEvent) {
             // create our our shared memory region so that we can read the port number from the other side and we can indicate when
             // the attach has completed
             try {
@@ -444,7 +445,8 @@ namespace Microsoft.PythonTools.Debugger {
                         //      space for reporting back an error and the version of the Python interpreter attached to.
 
                         viewStream.Write(BitConverter.GetBytes(portNum), 0, 4);
-                        viewStream.Write(BitConverter.GetBytes(debugOptions), 0, 4);
+                        viewStream.Write(new byte[4], 0, 4); // padding
+
 
                         // write a handle for shared process communication
                         AutoResetEvent attachStarting = new AutoResetEvent(false);
@@ -468,12 +470,17 @@ namespace Microsoft.PythonTools.Debugger {
                             viewStream.Write(BitConverter.GetBytes(attachDoneTargetHandle.ToInt64()), 0, 8);
 
                             var errorCodePosition = viewStream.Position;
-
                             viewStream.Write(new byte[8], 0, 8); // write null bytes for error code and version
-                            string guid = debugId.ToString();
-                            for (int i = 0; i < guid.Length; i++) {
-                                viewStream.WriteByte((byte)guid[i]);
+
+                            string szDebugId = debugId.ToString().PadRight(64, '\0');
+                            for (int i = 0; i < szDebugId.Length; i++) {
+                                viewStream.WriteByte((byte)szDebugId[i]);
                             }
+
+                            for (int i = 0; i < debugOptions.Length; i++) {
+                                viewStream.WriteByte((byte)debugOptions[i]);
+                            }
+                            viewStream.WriteByte(0);
 
                             var injectDllError = InjectDll(dllPath, hProcess, hKernel32);
                             if (injectDllError != ConnErrorMessages.None) {

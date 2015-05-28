@@ -137,24 +137,20 @@ namespace Microsoft.PythonTools.Debugger.Remote {
         }
 
         public static PythonProcess Attach(Uri uri, bool warnAboutAuthenticationErrors) {
-            int debugOptions = 0;
+            string debugOptions = "";
             if (uri.Query != null) {
-                var queryParts = HttpUtility.ParseQueryString(uri.Query);
                 // It is possible to have more than one opt=... in the URI - the debug engine will always supply one based on
                 // the options that it gets from VS, but the user can also explicitly specify it directly in the URI when doing
                 // ptvsd attach (this is currently the only way to enable some flags when attaching, e.g. Django debugging).
-                // When these are parsed, they become a single comma-separated value, and we want to combine the flags as if
-                // they were OR'd together, so that user flags are added on top of automatically propagated debugger options.
-                debugOptions =
-                    (queryParts[AD7Engine.DebugOptionsKey] ?? "").Split(',')
-                    .Select(s => { int x; int.TryParse(s, out x); return x; })
-                    .Aggregate(debugOptions, (x, y) => x | y);
+                // ParseQueryString will automatically concat them all into a single value using commas.
+                var queryParts = HttpUtility.ParseQueryString(uri.Query);
+                debugOptions = queryParts[AD7Engine.DebugOptionsKey];
             }
 
             var stream = Connect(uri, warnAboutAuthenticationErrors);
             try {
                 stream.Write(AttachCommandBytes);
-                stream.WriteInt32(debugOptions);
+                stream.WriteString(debugOptions);
 
                 string attachResp = stream.ReadAsciiString(Accepted.Length);
                 if (attachResp != Accepted) {

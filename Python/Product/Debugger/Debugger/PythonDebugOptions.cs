@@ -15,6 +15,8 @@
 using System;
 
 namespace Microsoft.PythonTools.Debugger {
+    // These option names are also used as string literals in visualstudio_py_debugger.py, and so
+    // renaming them here also requires updating the literals there.
     [Flags]
     enum PythonDebugOptions {
         None,

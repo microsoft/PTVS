@@ -30,8 +30,8 @@ using TestUtilities;
 using TestUtilities.Python;
 
 namespace DebuggerTests {
-    [TestClass]
-    public class DebuggerTests : BaseDebuggerTests {
+    [TestClass, Ignore]
+    public abstract class DebuggerTests : BaseDebuggerTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
@@ -2894,7 +2894,7 @@ int main(int argc, char* argv[]) {
 
         internal override PythonVersion Version {
             get {
-                return PythonPaths.Python34 ?? PythonPaths.Python34_x64;
+                return PythonPaths.Python34;
             }
         }
 
@@ -2906,6 +2906,21 @@ int main(int argc, char* argv[]) {
 
         public override void AttachNewThread_PyThreadState_New() {
             // PyEval_AcquireLock deprecated in 3.2
+        }
+    }
+
+    [TestClass]
+    public class DebuggerTests34_x64 : DebuggerTests34 {
+        [ClassInitialize]
+        public static new void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
+            PythonTestData.Deploy();
+        }
+
+        internal override PythonVersion Version {
+            get {
+                return PythonPaths.Python34_x64;
+            }
         }
     }
 
@@ -2935,7 +2950,7 @@ int main(int argc, char* argv[]) {
     }
 
     [TestClass]
-    public class DebuggerTests27 : DebuggerTests {
+    public class DebuggerTests35_x64 : DebuggerTests35 {
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
             AssertListener.Initialize();
@@ -2944,7 +2959,7 @@ int main(int argc, char* argv[]) {
 
         internal override PythonVersion Version {
             get {
-                return PythonPaths.Python27 ?? PythonPaths.Python27_x64;
+                return PythonPaths.Python35_x64;
             }
         }
     }
@@ -2960,6 +2975,51 @@ int main(int argc, char* argv[]) {
         internal override PythonVersion Version {
             get {
                 return PythonPaths.Python25 ?? PythonPaths.Python25_x64;
+            }
+        }
+    }
+
+    [TestClass]
+    public class DebuggerTests26 : DebuggerTests {
+        [ClassInitialize]
+        public static new void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
+            PythonTestData.Deploy();
+        }
+
+        internal override PythonVersion Version {
+            get {
+                return PythonPaths.Python26 ?? PythonPaths.Python26_x64;
+            }
+        }
+    }
+
+    [TestClass]
+    public class DebuggerTests27 : DebuggerTests {
+        [ClassInitialize]
+        public static new void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
+            PythonTestData.Deploy();
+        }
+
+        internal override PythonVersion Version {
+            get {
+                return PythonPaths.Python27;
+            }
+        }
+    }
+
+    [TestClass]
+    public class DebuggerTests27_x64 : DebuggerTests {
+        [ClassInitialize]
+        public static new void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
+            PythonTestData.Deploy();
+        }
+
+        internal override PythonVersion Version {
+            get {
+                return PythonPaths.Python27_x64;
             }
         }
     }

@@ -50,7 +50,7 @@ os.chdir(sys.argv[1])
 
 port_num = int(sys.argv[2])
 debug_id = sys.argv[3]
-debug_options = int(sys.argv[4])
+debug_options = vspd.parse_debug_options(sys.argv[4])
 del sys.argv[0:5]
 
 # set run_as mode appropriately
