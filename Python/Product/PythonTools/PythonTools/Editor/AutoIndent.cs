@@ -16,11 +16,13 @@ using System;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.Language.StandardClassification;
-using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
+#if !DEV14_OR_LATER
+using Microsoft.VisualStudio.Repl;
+#endif
 
 namespace Microsoft.PythonTools.Editor {
     internal static class AutoIndent {

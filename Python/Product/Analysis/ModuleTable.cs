@@ -370,7 +370,7 @@ namespace Microsoft.PythonTools.Analysis {
                 ModuleInfo modInfo = Module as ModuleInfo;
                 if (modInfo != null) {
                     VariableDef varDef;
-                    if (modInfo.Scope.Variables.TryGetValue(name, out varDef) &&
+                    if (modInfo.Scope.TryGetVariable(name, out varDef) &&
                         varDef.VariableStillExists) {
                         var types = varDef.TypesNoCopy;
                         if (types.Count > 0) {

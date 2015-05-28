@@ -246,6 +246,19 @@
     <Reference Include="WindowsFormsIntegration" />
   </ItemGroup>
   <Choose>
+    <When Condition="'$(VSTarget)' != '10.0' and '$(VSTarget)' != '11.0' and '$(VSTarget)' != '12.0'">
+      <ItemGroup>
+        <Reference Include="Microsoft.VisualStudio.ImageCatalog, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+        <Reference Include="Microsoft.VisualStudio.Imaging, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+        <Reference Include="Microsoft.VisualStudio.Imaging.Interop.$(VSTarget).DesignTime, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+          <EmbedInteropTypes>True</EmbedInteropTypes>
+        </Reference>
+        <Reference Include="Microsoft.VisualStudio.Shell.Immutable.$(VSTarget), Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+        <Reference Include="Microsoft.VisualStudio.Utilities, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+      </ItemGroup>
+    </When>
+  </Choose>
+  <Choose>
     <When Condition="'$(VSTarget)' == '10.0'">
       <ItemGroup>
         <Reference Include="Microsoft.VisualStudio.Settings, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=x86">
@@ -1283,6 +1296,14 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="images\images.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <None Include="images12.0\images.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="images12.0\PYClassFile64.png" />
     <Page Include="PythonTools\Project\ImportWizard\SaveProjectPage.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -1393,6 +1414,25 @@
     <ItemGroup>
       <ZipProject Include="%(SharedTemplateFiles.FullPath)" Condition="%(SharedTemplateFiles.Type) == 'Project'" />
       <ZipItem Include="%(SharedTemplateFiles.FullPath)" Condition="%(SharedTemplateFiles.Type) == 'Item'" />
+    </ItemGroup>
+  </Target>
+  <Target Name="_RemoveImages" AfterTargets="PrepareForBuild">
+    <ItemGroup>
+      <None Remove="images12.0\images.xaml;images12.0\*.png" />
+    </ItemGroup>
+  </Target>
+  <Target Name="_IncludeImages" AfterTargets="_RemoveImages" Condition="$(VSTarget) == '12.0'">
+    <ItemGroup>
+      <Page Remove="images\images.xaml" />
+      <Page Include="images12.0\images.xaml">
+        <SubType>Designer</SubType>
+        <Generator>MSBuild:Compile</Generator>
+        <Link>images\images.xaml</Link>
+      </Page>
+      <_ImageResources Include="images12.0\*.png" />
+      <Resource Include="@(_ImageResources)">
+        <Link>images\%(_ImageResources.Filename)%(_ImageResources.Extension)</Link>
+      </Resource>
     </ItemGroup>
   </Target>
 </Project>

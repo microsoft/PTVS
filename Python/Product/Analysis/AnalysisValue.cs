@@ -33,6 +33,13 @@ namespace Microsoft.PythonTools.Analysis {
 
         protected AnalysisValue() { }
 
+
+        internal bool IsAlive {
+            get {
+                return true;
+            }
+        }
+
         /// <summary>
         /// Returns an immutable set which contains just this AnalysisValue.
         /// 
