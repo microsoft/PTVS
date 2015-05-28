@@ -35,15 +35,15 @@ using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudio.Utilities;
 using TestUtilities;
 using TestUtilities.Mocks;
+using Thread = System.Threading.Thread;
 
 namespace Microsoft.VisualStudioTools.MockVsTests {
-    using Thread = System.Threading.Thread;
-
     public sealed class MockVs : IComponentModel, IDisposable, IVisualStudioInstance {
         internal static CachedVsInfo CachedInfo = CreateCachedVsInfo();
         public CompositionContainer Container;
@@ -340,7 +340,9 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             foreach (var classifier in Container.GetExports<IClassifierProvider, IContentTypeMetadata>()) {
                 foreach (var targetContentType in classifier.Metadata.ContentTypes) {
                     if (buffer.ContentType.IsOfType(targetContentType)) {
-                        classifier.Value.GetClassifier(buffer);
+                        classifier.Value.GetClassifier(buffer).GetClassificationSpans(
+                            new SnapshotSpan(buffer.CurrentSnapshot, 0, buffer.CurrentSnapshot.Length)
+                        );
                     }
                 }
             }

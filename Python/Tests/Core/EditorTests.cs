@@ -286,7 +286,7 @@ def f():
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
-        public void OutlineParanthesesExpression() {
+        public void OutlineParenthesesExpression() {
             string content = @"
 (   'abc'
     'def'

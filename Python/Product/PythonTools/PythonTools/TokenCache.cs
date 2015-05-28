@@ -118,10 +118,10 @@ namespace Microsoft.PythonTools {
         }
 
         internal void DeleteLines(int index, int count) {
+            Utilities.CheckNotNull(_map);
             if (index > _map.Length - count) {
                 throw new ArgumentOutOfRangeException("line", "Must be 'count' less than the size of the cache");
             }
-            Utilities.CheckNotNull(_map);
             
             Array.Copy(_map, index + count, _map, index, _map.Length - index - count);
             for (int i = 0; i < count; i++) {
