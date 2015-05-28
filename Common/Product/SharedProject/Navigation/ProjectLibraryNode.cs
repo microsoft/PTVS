@@ -38,6 +38,7 @@ namespace Microsoft.VisualStudioTools.Navigation {
             get {
                 var res = new VSTREEDISPLAYDATA();
 #if DEV14_OR_LATER
+                // Use the default Reference icon for projects
                 res.hImageList = IntPtr.Zero;
                 res.Image = res.SelectedImage = 192;
 #else

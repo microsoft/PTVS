@@ -35,6 +35,7 @@ namespace Microsoft.PythonTools.Navigation {
                 var res = new VSTREEDISPLAYDATA();
 
 #if DEV14_OR_LATER
+                // Use the default Module icon for modules
                 res.hImageList = IntPtr.Zero;
                 res.Image = res.SelectedImage = 90;
 #else
