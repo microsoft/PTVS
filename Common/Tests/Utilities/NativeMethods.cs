@@ -389,5 +389,9 @@ namespace TestUtilities {
                 }
             }
         }
+
+        public const int OLECMDERR_E_NOTSUPPORTED = unchecked((int)0x80040100);
+        public const int OLECMDERR_E_CANCELED = -2147221245;
+        public const int OLECMDERR_E_UNKNOWNGROUP = unchecked((int)0x80040104);
     }
 }

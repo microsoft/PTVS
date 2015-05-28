@@ -356,6 +356,41 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return op;
         }
 
+        public override IAnalysisSet GetEnumeratorTypes(Node node, AnalysisUnit unit) {
+            if (Push()) {
+                try {
+                    var iter = GetIterator(node, unit);
+                    if (iter.Any()) {
+                        return iter
+                            .GetMember(node, unit, unit.ProjectState.LanguageVersion.Is3x() ? "__next__" : "next")
+                            .Call(node, unit, ExpressionEvaluator.EmptySets, ExpressionEvaluator.EmptyNames);
+                    }
+                } finally {
+                    Pop();
+                }
+            }
+
+            return base.GetEnumeratorTypes(node, unit);
+        }
+
+        public override IAnalysisSet GetAsyncEnumeratorTypes(Node node, AnalysisUnit unit) {
+            if (unit.ProjectState.LanguageVersion.Is3x() && Push()) {
+                try {
+                    var iter = GetAsyncIterator(node, unit);
+                    if (iter.Any()) {
+                        return iter
+                            .GetMember(node, unit, "__anext__")
+                            .Call(node, unit, ExpressionEvaluator.EmptySets, ExpressionEvaluator.EmptyNames)
+                            .Await(node, unit);
+                    }
+                } finally {
+                    Pop();
+                }
+            }
+
+            return base.GetAsyncEnumeratorTypes(node, unit);
+        }
+
         public override IPythonProjectEntry DeclaringModule {
             get {
                 return _classInfo.DeclaringModule;

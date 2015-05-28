@@ -125,56 +125,62 @@ namespace Microsoft.PythonTools.Analysis.Values {
     }
 
     internal class CallChainSet<T> {
-        Dictionary<IPythonProjectEntry, KeyValuePair<int, Dictionary<CallChain, T>>> _data;
+        private readonly Dictionary<IPythonProjectEntry, KeyValuePair<int, Dictionary<CallChain, T>>> _data;
+
+        public CallChainSet() {
+            _data = new Dictionary<IPythonProjectEntry, KeyValuePair<int, Dictionary<CallChain, T>>>();
+        }
 
         public bool TryGetValue(IPythonProjectEntry entry, CallChain chain, int prefixLength, out T value) {
             value = default(T);
-            if (_data == null) {
-                return false;
-            }
 
             KeyValuePair<int, Dictionary<CallChain, T>> entryData;
-            if (!_data.TryGetValue(entry, out entryData)) {
-                return false;
+            lock (_data) {
+                if (!_data.TryGetValue(entry, out entryData)) {
+                    return false;
+                }
+                if (entryData.Key != entry.AnalysisVersion) {
+                    _data.Remove(entry);
+                    return false;
+                }
             }
-            if (entryData.Key != entry.AnalysisVersion) {
-                _data.Remove(entry);
-                return false;
+            lock (entryData.Value) {
+                return entryData.Value.TryGetValue(chain, out value);
             }
-            return entryData.Value.TryGetValue(chain, out value);
         }
 
         public void Clear() {
-            _data = null;
-        }
-
-        public bool Any() {
-            return _data != null;
+            lock (_data) {
+                _data.Clear();
+            }
         }
 
         public int Count {
             get {
-                if (_data == null) {
+                var data = _data;
+                if (data == null) {
                     return 0;
                 }
-                return _data.Values.Sum(v => v.Value.Count);
+                lock (data) {
+                    return data.Values.Sum(v => v.Value.Count);
+                }
             }
         }
 
         public void Add(IPythonProjectEntry entry, CallChain chain, T value) {
-            if (_data == null) {
-                _data = new Dictionary<IPythonProjectEntry, KeyValuePair<int, Dictionary<CallChain, T>>>();
-            }
-
             KeyValuePair<int, Dictionary<CallChain, T>> entryData;
-            if (!_data.TryGetValue(entry, out entryData) || entryData.Key != entry.AnalysisVersion) {
-                _data[entry] = entryData = new KeyValuePair<int, Dictionary<CallChain, T>>(
-                    entry.AnalysisVersion,
-                    new Dictionary<CallChain, T>()
-                );
+            lock (_data) {
+                if (!_data.TryGetValue(entry, out entryData) || entryData.Key != entry.AnalysisVersion) {
+                    _data[entry] = entryData = new KeyValuePair<int, Dictionary<CallChain, T>>(
+                        entry.AnalysisVersion,
+                        new Dictionary<CallChain, T>()
+                    );
+                }
             }
 
-            entryData.Value[chain] = value;
+            lock (entryData.Value) {
+                entryData.Value[chain] = value;
+            }
         }
 
         public IEnumerable<T> Values {
@@ -183,7 +189,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     return Enumerable.Empty<T>();
                 }
 
-                return _data.Values.SelectMany(v => v.Value.Values);
+                return _data.AsLockedEnumerable()
+                    .SelectMany(v => v.Value.Value.Values.AsLockedEnumerable(v.Value.Value));
             }
         }
     }

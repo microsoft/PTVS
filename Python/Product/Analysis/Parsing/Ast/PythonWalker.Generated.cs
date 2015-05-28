@@ -22,6 +22,10 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         public virtual bool Walk(AndExpression node) { return true; }
         public virtual void PostWalk(AndExpression node) { }
 
+        // AwaitExpression
+        public virtual bool Walk(AwaitExpression node) { return true; }
+        public virtual void PostWalk(AwaitExpression node) { }
+
         // BackQuoteExpression
         public virtual bool Walk(BackQuoteExpression node) { return true; }
         public virtual void PostWalk(BackQuoteExpression node) { }
@@ -279,6 +283,10 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         // AndExpression
         public override bool Walk(AndExpression node) { return false; }
         public override void PostWalk(AndExpression node) { }
+
+        // AndExpression
+        public override bool Walk(AwaitExpression node) { return false; }
+        public override void PostWalk(AwaitExpression node) { }
 
         // BackQuoteExpression
         public override bool Walk(BackQuoteExpression node) { return false; }
@@ -542,6 +550,9 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
         // AndExpression
         public override bool Walk(AndExpression node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // AndExpression
+        public override bool Walk(AwaitExpression node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
 
         // BackQuoteExpression
         public override bool Walk(BackQuoteExpression node) { return Location >= node.StartIndex && Location <= node.EndIndex; }

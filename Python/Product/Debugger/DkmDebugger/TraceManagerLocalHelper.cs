@@ -271,10 +271,6 @@ namespace Microsoft.PythonTools.DkmDebugger {
 
                 _handlers = new PythonDllBreakpointHandlers(this);
                 LocalComponent.CreateRuntimeDllFunctionExitBreakpoints(_pyrtInfo.DLLs.Python, "new_threadstate", _handlers.new_threadstate, enable: true);
-                LocalComponent.CreateRuntimeDllFunctionExitBreakpoints(_pyrtInfo.DLLs.Python, "PyErr_SetObject", _handlers.PyErr_SetObject, enable: true);
-                if (_pyrtInfo.LanguageVersion <= PythonLanguageVersion.V27) {
-                    LocalComponent.CreateRuntimeDllFunctionExitBreakpoints(_pyrtInfo.DLLs.Python, "do_raise", _handlers.do_raise, enable: true);
-                }
 
                 foreach (var methodInfo in _handlers.GetType().GetMethods()) {
                     var stepInAttr = (StepInGateAttribute)Attribute.GetCustomAttribute(methodInfo, typeof(StepInGateAttribute));
@@ -441,68 +437,6 @@ namespace Microsoft.PythonTools.DkmDebugger {
             _stepInTargetBreakpoints.Add(bp);
         }
 
-        private void OnException(DkmThread thread) {
-            if (thread.SystemPart == null) {
-                Debug.Fail("OnException couldn't obtain system thread ID.");
-                return;
-            }
-            var tid = thread.SystemPart.Id;
-
-            var process = thread.Process;
-            PyThreadState tstate = PyThreadState.GetThreadStates(process).FirstOrDefault(ts => ts.thread_id.Read() == tid);
-            if (tstate == null) {
-                Debug.Fail("OnException couldn't find PyThreadState corresponding to system thread " + tid);
-                return;
-            }
-
-            var exc_type = tstate.curexc_type.TryRead();
-            var exc_value = tstate.curexc_value.TryRead();
-            if (exc_type == null || exc_type.IsNone) {
-                return;
-            }
-
-            var reprOptions = new ReprOptions(process);
-
-            string typeName = "<unknown exception type>";
-            string additionalInfo = "";
-            try {
-                var typeObject = exc_type as PyTypeObject;
-                if (typeObject != null) {
-                    var mod = typeObject.__module__;
-                    var ver = _process.GetPythonRuntimeInfo().LanguageVersion;
-                    if ((mod == "builtins" && ver >= PythonLanguageVersion.V30) ||
-                        (mod == "exceptions" && ver < PythonLanguageVersion.V30)) {
-                        
-                        typeName = typeObject.__name__;
-                    } else {
-                        typeName = mod + "." + typeObject.__name__;
-                    }
-                }
-
-                var exc = exc_value as PyBaseExceptionObject;
-                if (exc != null) {
-                    var args = exc.args.TryRead();
-                    if (args != null) {
-                        additionalInfo = args.Repr(reprOptions);
-                    }
-                } else {
-                    var str = exc_value as IPyBaseStringObject;
-                    if (str != null) {
-                        additionalInfo = str.ToString();
-                    } else if (exc_value != null) {
-                        additionalInfo = exc_value.Repr(reprOptions);
-                    }
-                }
-            } catch {
-            }
-
-            new RemoteComponent.RaiseExceptionRequest {
-                ThreadId = thread.UniqueId,
-                Name = typeName,
-                AdditionalInformation = Encoding.Unicode.GetBytes(additionalInfo)
-            }.SendLower(process);
-        }
-
         // Indicates that the breakpoint handler is for a Python-to-native step-in gate.
         [AttributeUsage(AttributeTargets.Method)]
         private class StepInGateAttribute : Attribute {
@@ -535,14 +469,6 @@ namespace Microsoft.PythonTools.DkmDebugger {
                 }
 
                 _owner.RegisterTracing(tstate);
-            }
-
-            public void PyErr_SetObject(DkmThread thread, ulong frameBase, ulong vframe) {
-                _owner.OnException(thread);
-            }
-
-            public void do_raise(DkmThread thread, ulong frameBase, ulong vframe) {
-                _owner.OnException(thread);
             }
 
             // This step-in gate is not marked [StepInGate] because it doesn't live in pythonXX.dll, and so we register it manually.

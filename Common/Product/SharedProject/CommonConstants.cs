@@ -118,4 +118,27 @@ namespace Microsoft.VisualStudioTools {
         /// </summary>
         public const string Visible = "Visible";
     }
+
+#if DEV14_OR_LATER
+    // This enumeration is not defined in the managed assemblies.
+    public enum __VSHPROPID8 {
+        VSHPROPID_SupportsIconMonikers = -2159,
+        VSHPROPID_IconMonikerGuid = -2160,
+        VSHPROPID_IconMonikerId = -2161,
+        VSHPROPID_OpenFolderIconMonikerGuid = -2162,
+        VSHPROPID_OpenFolderIconMonikerId = -2163,
+        VSHPROPID_IconMonikerImageList = -2164,
+        VSHPROPID_SharedProjectReference = -2165,
+        VSHPROPID_DiagHubPlatform = -2166,
+        VSHPROPID_DiagHubPlatformVersion = -2167,
+        VSHPROPID_DiagHubLanguage = -2168,
+        VSHPROPID_DiagHubProjectTargetFactory = -2169,
+        VSHPROPID_DiagHubProjectTarget = -2170,
+        VSHPROPID_SolutionGuid = -2171,
+        VSHPROPID_ActiveIntellisenseProjectContext = -2172,
+        VSHPROPID_ProjectCapabilitiesChecker = -2173,
+        VSHPROPID_ContainsStartupTask = -2174,
+        VSHPROPID_FIRST8 = -2174
+    };
+#endif
 }

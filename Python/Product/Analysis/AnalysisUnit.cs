@@ -160,7 +160,7 @@ namespace Microsoft.PythonTools.Analysis {
 
             List<KeyValuePair<string, VariableDef>> toRemove = null;
 
-            foreach (var variableInfo in DeclaringModule.Scope.Variables) {
+            foreach (var variableInfo in DeclaringModule.Scope.AllVariables) {
                 variableInfo.Value.ClearOldValues(ProjectEntry);
                 if (variableInfo.Value._dependencies.Count == 0 &&
                     variableInfo.Value.TypesNoCopy.Count == 0) {
@@ -329,12 +329,7 @@ namespace Microsoft.PythonTools.Analysis {
                 if (scope == Scope || scope.VisibleToChildren) {
                     var refs = scope.GetVariable(node, this, name, true);
                     if (refs != null) {
-                        var linkedVars = scope.GetLinkedVariablesNoCreate(name);
-                        if (linkedVars != null) {
-                            foreach (var linkedVar in linkedVars) {
-                                linkedVar.AddReference(node, this);
-                            }
-                        }
+                        scope.AddReferenceToLinkedVariables(node, this, name);
                         return refs.Types;
                     }
                 }

@@ -42,5 +42,13 @@ namespace Microsoft.PythonTools.Analysis {
             }
             return false;
         }
+
+        private static TKey GetKey<TKey, TValue>(KeyValuePair<TKey, TValue> source) {
+            return source.Key;
+        }
+
+        public static IEnumerable<TKey> Keys<TKey, TValue>(this IEnumerable<KeyValuePair<TKey, TValue>> source) {
+            return source.Select(GetKey);
+        }
     }
 }
