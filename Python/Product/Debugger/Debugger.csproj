@@ -128,6 +128,7 @@
     <Compile Include="Debugger\DebugEngine\AD7MemoryAddress.cs" />
     <Compile Include="Debugger\DebugEngine\AD7Module.cs" />
     <Compile Include="Debugger\DebugEngine\AD7PendingBreakpoint.cs" />
+    <Compile Include="Debugger\DebugEngine\Remote\PythonRemoteDebugPortPicker.cs" />
     <Compile Include="Debugger\DebugEngine\Remote\PythonRemoteDebugPortSupplier.cs" />
     <Compile Include="Debugger\DebugEngine\AD7ProgramNode.cs" />
     <Compile Include="Debugger\DebugEngine\AD7ProgramProvider.cs" />

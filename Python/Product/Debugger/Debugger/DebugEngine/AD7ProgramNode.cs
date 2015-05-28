@@ -32,7 +32,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
         // Gets the name and identifier of the DE running this program.
         int IDebugProgramNode2.GetEngineInfo(out string engineName, out Guid engineGuid) {
-            engineName = "Python Engine";
+            engineName = "Python";
             engineGuid = new Guid(AD7Engine.DebugEngineId);
 
             return VSConstants.S_OK;
