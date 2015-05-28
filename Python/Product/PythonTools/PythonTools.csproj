@@ -91,13 +91,6 @@
     <ProjectReference2 Include="..\AttacherX86\AttacherX86.csproj" />
     <ProjectReference2 Include="..\ImportWizard\ImportWizard.csproj" />
     <ProjectReference2 Include="..\ProjectWizards\ProjectWizards.csproj" />
-    <ProjectReference Include="..\ReplWindow\ReplWindow.csproj" Condition="!$(Dev14OrLater)">
-      <Project>{20BB6FAC-44D2-4D76-ABFE-0C1E163A1A4F}</Project>
-      <Private>false</Private>
-      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
-      <Name Condition="'$(InteractiveWindow)' == ''">Microsoft.VisualStudio.ReplWindow</Name>
-      <Name Condition="'$(InteractiveWindow)' != ''">Microsoft.VisualStudio.InteractiveWindow</Name>
-    </ProjectReference>
     <ProjectReference2 Include="..\TestAdapter\TestAdapter.csproj" Condition="'$(VSTarget)' != '10.0'" />
   </ItemGroup>
   <Choose>
@@ -246,8 +239,16 @@
     <Reference Include="WindowsFormsIntegration" />
   </ItemGroup>
   <Choose>
-    <When Condition="'$(VSTarget)' != '10.0' and '$(VSTarget)' != '11.0' and '$(VSTarget)' != '12.0'">
+    <When Condition="$(VSMajorVersion) >= 14">
       <ItemGroup>
+        <Reference Include="Microsoft.VisualStudio.InteractiveWindow">
+          <HintPath>$(DevEnvDir)PrivateAssemblies\Microsoft.VisualStudio.InteractiveWindow.dll</HintPath>
+          <Private>false</Private>
+        </Reference>
+        <Reference Include="Microsoft.VisualStudio.VsInteractiveWindow">
+          <HintPath>$(DevEnvDir)PrivateAssemblies\Microsoft.VisualStudio.VsInteractiveWindow.dll</HintPath>
+          <Private>false</Private>
+        </Reference>
         <Reference Include="Microsoft.VisualStudio.ImageCatalog, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
         <Reference Include="Microsoft.VisualStudio.Imaging, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
         <Reference Include="Microsoft.VisualStudio.Imaging.Interop.$(VSTarget).DesignTime, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
@@ -260,6 +261,17 @@
         <Reference Include="Microsoft.VisualStudio.Utilities, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
       </ItemGroup>
     </When>
+    <Otherwise>
+      <ItemGroup>
+        <ProjectReference Include="..\ReplWindow\ReplWindow.csproj">
+          <Project>{20BB6FAC-44D2-4D76-ABFE-0C1E163A1A4F}</Project>
+          <Private>false</Private>
+          <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+          <Name Condition="'$(InteractiveWindow)' == ''">Microsoft.VisualStudio.ReplWindow</Name>
+          <Name Condition="'$(InteractiveWindow)' != ''">Microsoft.VisualStudio.InteractiveWindow</Name>
+        </ProjectReference>
+      </ItemGroup>
+    </Otherwise>
   </Choose>
   <Choose>
     <When Condition="'$(VSTarget)' == '10.0'">
@@ -276,20 +288,6 @@
         </Reference>
       </ItemGroup>
     </Otherwise>
-  </Choose>
-  <Choose>
-    <When Condition="$(Dev14OrLater)">
-      <ItemGroup>
-        <Reference Include="Microsoft.VisualStudio.InteractiveWindow">
-          <HintPath>$(DevEnvDir)PrivateAssemblies\Microsoft.VisualStudio.InteractiveWindow.dll</HintPath>
-          <Private>false</Private>
-        </Reference>
-        <Reference Include="Microsoft.VisualStudio.VsInteractiveWindow">
-          <HintPath>$(DevEnvDir)PrivateAssemblies\Microsoft.VisualStudio.VsInteractiveWindow.dll</HintPath>
-          <Private>false</Private>
-        </Reference>
-      </ItemGroup>
-    </When>
   </Choose>
   <ItemGroup>
     <Compile Include="..\Analysis\IEnumerableExtensions.cs">
@@ -1181,10 +1179,10 @@
     <None Include="Dev10\source.extension.vsixmanifest" Condition="'$(VSTarget)' == '10.0'">
       <SubType>Designer</SubType>
     </None>
-    <None Include="Dev11OrLater\source.extension.vsixmanifest" Condition="'$(VSTarget)' != '10.0' and !$(Dev14OrLater)">
+    <None Include="Dev11OrLater\source.extension.vsixmanifest" Condition="$(VSMajorVersion) > 10 and $(VSMajorVersion) &lt; 14">
       <SubType>Designer</SubType>
     </None>
-    <None Include="Dev14OrLater\source.extension.vsixmanifest" Condition="$(Dev14OrLater)">
+    <None Include="Dev14OrLater\source.extension.vsixmanifest" Condition="$(VSMajorVersion) >= 14">
       <SubType>Designer</SubType>
     </None>
   </ItemGroup>
