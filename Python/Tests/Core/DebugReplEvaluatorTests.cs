@@ -22,6 +22,7 @@ using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.Repl;
 #if DEV14_OR_LATER
 using Microsoft.VisualStudio.InteractiveWindow;
+using Microsoft.VisualStudio.InteractiveWindow.Commands;
 #else
 using Microsoft.VisualStudio.Repl;
 #endif
@@ -70,7 +71,7 @@ namespace PythonToolsTests {
             var serviceProvider = PythonToolsTestUtilities.CreateMockServiceProvider();
             _evaluator = new PythonDebugReplEvaluator(serviceProvider);
             _window = new MockReplWindow(_evaluator);
-            _evaluator.Initialize(_window);
+            _evaluator._Initialize(_window);
             _processes = new List<PythonProcess>();
         }
 

@@ -14,19 +14,34 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.VisualStudio.Utilities;
 
 namespace TestUtilities.Mocks {
     public class MockComponentModel : IComponentModel {
+        public readonly Dictionary<Type, List<Lazy<object>>> Extensions = new Dictionary<Type, List<Lazy<object>>>();
+
+        public void AddExtension<T>(Func<T> creator) where T : class {
+            AddExtension(typeof(T), creator);
+        }
+
+        public void AddExtension<T>(Type key, Func<T> creator) where T : class {
+            List<Lazy<object>> extensions;
+            if (!Extensions.TryGetValue(key, out extensions)) {
+                Extensions[key] = extensions = new List<Lazy<object>>();
+            }
+            extensions.Add(new Lazy<object>(creator));
+        }
 
         public T GetService<T>() where T : class {
-            if (typeof(T) == typeof(IErrorProviderFactory)) {
-                return (T)(object)new MockErrorProviderFactory();
-            } else if (typeof(T) == typeof(IContentTypeRegistryService)) {
-                return (T)(object)new MockContentTypeRegistryService();
+            List<Lazy<object>> extensions;
+            if (Extensions.TryGetValue(typeof(T), out extensions)) {
+                Debug.Assert(extensions.Count == 1, "Multiple extensions were registered");
+                return (T)extensions[0].Value;
             }
+            Console.WriteLine("Unregistered component model service " + typeof(T).FullName);
             return null;
         }
 

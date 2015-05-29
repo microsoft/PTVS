@@ -41,7 +41,7 @@ namespace PythonToolsTests {
         public void ExecuteTest() {
             using (var evaluator = MakeEvaluator()) {
                 var window = new MockReplWindow(evaluator);
-                evaluator.Initialize(window);
+                evaluator._Initialize(window);
 
                 TestOutput(window, evaluator, "print 'hello'", true, "hello");
                 TestOutput(window, evaluator, "42", true, "42");
@@ -60,7 +60,7 @@ namespace PythonToolsTests {
         public void TestAbort() {
             using (var evaluator = MakeEvaluator()) {
                 var window = new MockReplWindow(evaluator);
-                evaluator.Initialize(window);
+                evaluator._Initialize(window);
 
                 TestOutput(
                     window,
@@ -99,7 +99,7 @@ namespace PythonToolsTests {
         public async Task TestGetAllMembers() {
             using (var evaluator = MakeEvaluator()) {
                 var window = new MockReplWindow(evaluator);
-                await evaluator.Initialize(window);
+                await evaluator._Initialize(window);
 
                 await evaluator.ExecuteText("globals()['my_new_value'] = 123");
                 var names = evaluator.GetMemberNames("");
@@ -280,7 +280,7 @@ g()",
             );
             var replEval = new PythonReplEvaluator(emptyFact, PythonToolsTestUtilities.CreateMockServiceProvider(), new ReplTestReplOptions());
             var replWindow = new MockReplWindow(replEval);
-            replEval.Initialize(replWindow);
+            replEval._Initialize(replWindow);
             var execute = replEval.ExecuteText("42");
             Console.WriteLine(replWindow.Error);
             Assert.IsTrue(
@@ -301,7 +301,7 @@ g()",
             );
             var replEval = new PythonReplEvaluator(emptyFact, PythonToolsTestUtilities.CreateMockServiceProvider(), new ReplTestReplOptions());
             var replWindow = new MockReplWindow(replEval);
-            replEval.Initialize(replWindow);
+            replEval._Initialize(replWindow);
             var execute = replEval.ExecuteText("42");
             var errorText = replWindow.Error;
             const string expected = 

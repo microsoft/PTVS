@@ -15,11 +15,17 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Design;
+using Microsoft.VisualStudio.ComponentModelHost;
 
 namespace TestUtilities.Mocks {
     public class MockServiceProvider : IServiceProvider, IServiceContainer {
         public readonly Dictionary<Guid, object> Services = new Dictionary<Guid, object>();
-        
+        public readonly MockComponentModel ComponentModel = new MockComponentModel();
+
+        public MockServiceProvider() {
+            Services[typeof(SComponentModel).GUID] = ComponentModel;
+        }
+
         public object GetService(Type serviceType) {
             object service;
             Console.WriteLine("MockServiceProvider.GetService({0})", serviceType.Name);
