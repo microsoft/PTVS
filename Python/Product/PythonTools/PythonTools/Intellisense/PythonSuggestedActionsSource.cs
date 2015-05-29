@@ -90,7 +90,9 @@ namespace Microsoft.PythonTools.Intellisense {
             var availableImports = await imports.GetAvailableImportsAsync(cancellationToken);
 
             suggestions.Add(new SuggestedActionSet(
-                availableImports.Select(s => new PythonSuggestedImportAction(this, textBuffer, s)).OrderBy(k => k)
+                availableImports.Select(s => new PythonSuggestedImportAction(this, textBuffer, s))
+                    .OrderBy(k => k)
+                    .Distinct()
             ));
 
             cancellationToken.ThrowIfCancellationRequested();
