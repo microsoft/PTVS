@@ -12,7 +12,9 @@
   You must not remove this notice, or any other, from this software.
  
 -->
-<Configuration xmlns="http://schemas.microsoft.com/vstudio/vsdconfig/2008">
+<Configuration xmlns="http://schemas.microsoft.com/vstudio/vsdconfig/2008"
+               xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+               xsl:version="1.0">
 
   <DefineGuid Name="guidPythonDebugRemoteCompId" Value="BCFD7074-A4D3-42A9-B1B6-C975304C882A"/>
   <DefineGuid Name="guidPythonDebugLocalCompId" Value="E42AC982-8F0B-45DE-8F22-EC045687F2EC"/>
@@ -63,7 +65,7 @@
           <Interface Name="IDkmExceptionController"/>
           <Interface Name="IDkmExceptionFormatter"/>
         </InterfaceGroup>
-        
+
         <!-- AboveNormal is needed so that we get invoked before the standard exception manager, which swallows the notifications. -->
         <InterfaceGroup Priority="AboveNormal">
           <!--<Filter>

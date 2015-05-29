@@ -69,6 +69,14 @@ namespace Microsoft.PythonTools.DkmDebugger {
             _nativeFrame = DkmStackWalkFrame.Create(thread, iaddr, frameBase, 0, DkmStackWalkFrameFlags.None, null, regs, null);
         }
 
+        public static string GetExpressionForObject(string moduleName, string typeName, ulong address, string tail = "") {
+            string expr = string.Format("(*(::{0}*){1}ULL){2}", typeName, address, tail);
+            if (moduleName != null) {
+                expr = "{,," + moduleName + "}" + expr;
+            }
+            return expr;
+        }
+
         public DkmEvaluationResult TryEvaluate(string expr) {
             using (var cppExpr = DkmLanguageExpression.Create(CppLanguage, DkmEvaluationFlags.NoSideEffects, expr, null)) {
                 DkmEvaluationResult cppEvalResult = null;
@@ -82,11 +90,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
         }
 
         public DkmEvaluationResult TryEvaluateObject(string moduleName, string typeName, ulong address, string tail = "") {
-            string expr = string.Format("(*(::{0}*){1}ULL){2}", typeName, address, tail);
-            if (moduleName != null) {
-                expr = "{,," + moduleName + "}" + expr;
-            }
-            return TryEvaluate(expr);
+            return TryEvaluate(GetExpressionForObject(moduleName, typeName, address, tail));
         }
 
         public string Evaluate(string expr) {

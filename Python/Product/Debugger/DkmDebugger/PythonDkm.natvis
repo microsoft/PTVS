@@ -13,48 +13,175 @@
  
 -->
 <AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
-  
+
+  <IntrinsicFunction ReturnType="bool" Name="$PTVS_ShowPythonViewNodes" SourceId="27BEB234-72EC-4249-89F3-4298266AE282" LanguageId="DA3C7D59-F9E4-4697-BEE7-3A0703AF6BFF" Id="1" />
+
   <Type Name="_object">
-    <CustomVisualizer VisualizerId="C85DBEDF-48BA-4BC8-ADC7-B3A7B70D692A"/>
+    <DisplayString Condition="$PTVS_ShowPythonViewNodes()">
+      {this,!na}
+    </DisplayString>
+    <Expand HideRawView="true">
+      <Synthetic Name="[Python view]" Expression="this" Condition="$PTVS_ShowPythonViewNodes()">
+        <CustomVisualizer VisualizerId="C85DBEDF-48BA-4BC8-ADC7-B3A7B70D692A"/>
+      </Synthetic>
+      <ExpandedItem>this,!</ExpandedItem>
+    </Expand>
   </Type>
+
   <Type Name="_longobject">
-    <CustomVisualizer VisualizerId="C85DBEDF-48BA-4BC8-ADC7-B3A7B70D692A"/>
+    <DisplayString Condition="$PTVS_ShowPythonViewNodes()">
+      {this,!na}
+    </DisplayString>
+    <Expand HideRawView="true">
+      <Synthetic Name="[Python view]" Expression="this" Condition="$PTVS_ShowPythonViewNodes()">
+        <CustomVisualizer VisualizerId="C85DBEDF-48BA-4BC8-ADC7-B3A7B70D692A"/>
+      </Synthetic>
+      <ExpandedItem>this,!</ExpandedItem>
+    </Expand>
   </Type>
+
   <Type Name="_setobject">
-    <CustomVisualizer VisualizerId="C85DBEDF-48BA-4BC8-ADC7-B3A7B70D692A"/>
+    <DisplayString Condition="$PTVS_ShowPythonViewNodes()">
+      {this,!na}
+    </DisplayString>
+    <Expand HideRawView="true">
+      <Synthetic Name="[Python view]" Expression="this" Condition="$PTVS_ShowPythonViewNodes()">
+        <CustomVisualizer VisualizerId="C85DBEDF-48BA-4BC8-ADC7-B3A7B70D692A"/>
+      </Synthetic>
+      <ExpandedItem>this,!</ExpandedItem>
+    </Expand>
   </Type>
+
   <Type Name="_typeobject">
-    <CustomVisualizer VisualizerId="C85DBEDF-48BA-4BC8-ADC7-B3A7B70D692A"/>
+    <DisplayString Condition="$PTVS_ShowPythonViewNodes()">
+      {this,!na}
+    </DisplayString>
+    <Expand HideRawView="true">
+      <Synthetic Name="[Python view]" Expression="this" Condition="$PTVS_ShowPythonViewNodes()">
+        <CustomVisualizer VisualizerId="C85DBEDF-48BA-4BC8-ADC7-B3A7B70D692A"/>
+      </Synthetic>
+      <ExpandedItem>this,!</ExpandedItem>
+    </Expand>
   </Type>
+
   <Type Name="PyByteArrayObject">
-    <CustomVisualizer VisualizerId="C85DBEDF-48BA-4BC8-ADC7-B3A7B70D692A"/>
+    <DisplayString Condition="$PTVS_ShowPythonViewNodes()">
+      {this,!na}
+    </DisplayString>
+    <Expand HideRawView="true">
+      <Synthetic Name="[Python view]" Expression="this" Condition="$PTVS_ShowPythonViewNodes()">
+        <CustomVisualizer VisualizerId="C85DBEDF-48BA-4BC8-ADC7-B3A7B70D692A"/>
+      </Synthetic>
+      <ExpandedItem>this,!</ExpandedItem>
+    </Expand>
   </Type>
+
   <Type Name="PyBytesObject">
-    <CustomVisualizer VisualizerId="C85DBEDF-48BA-4BC8-ADC7-B3A7B70D692A"/>
+    <DisplayString Condition="$PTVS_ShowPythonViewNodes()">
+      {this,!na}
+    </DisplayString>
+    <Expand HideRawView="true">
+      <Synthetic Name="[Python view]" Expression="this" Condition="$PTVS_ShowPythonViewNodes()">
+        <CustomVisualizer VisualizerId="C85DBEDF-48BA-4BC8-ADC7-B3A7B70D692A"/>
+      </Synthetic>
+      <ExpandedItem>this,!</ExpandedItem>
+    </Expand>
   </Type>
+
   <Type Name="PyDictObject">
-    <CustomVisualizer VisualizerId="C85DBEDF-48BA-4BC8-ADC7-B3A7B70D692A"/>
+    <DisplayString Condition="$PTVS_ShowPythonViewNodes()">
+      {this,!na}
+    </DisplayString>
+    <Expand HideRawView="true">
+      <Synthetic Name="[Python view]" Expression="this" Condition="$PTVS_ShowPythonViewNodes()">
+        <CustomVisualizer VisualizerId="C85DBEDF-48BA-4BC8-ADC7-B3A7B70D692A"/>
+      </Synthetic>
+      <ExpandedItem>this,!</ExpandedItem>
+    </Expand>
   </Type>
+
   <Type Name="PyFloatObject">
-    <CustomVisualizer VisualizerId="C85DBEDF-48BA-4BC8-ADC7-B3A7B70D692A"/>
+    <DisplayString Condition="$PTVS_ShowPythonViewNodes()">
+      {this,!na}
+    </DisplayString>
+    <Expand HideRawView="true">
+      <Synthetic Name="[Python view]" Expression="this" Condition="$PTVS_ShowPythonViewNodes()">
+        <CustomVisualizer VisualizerId="C85DBEDF-48BA-4BC8-ADC7-B3A7B70D692A"/>
+      </Synthetic>
+      <ExpandedItem>this,!</ExpandedItem>
+    </Expand>
   </Type>
+
   <Type Name="PyIntObject">
-    <CustomVisualizer VisualizerId="C85DBEDF-48BA-4BC8-ADC7-B3A7B70D692A"/>
+    <DisplayString Condition="$PTVS_ShowPythonViewNodes()">
+      {this,!na}
+    </DisplayString>
+    <Expand HideRawView="true">
+      <Synthetic Name="[Python view]" Expression="this" Condition="$PTVS_ShowPythonViewNodes()">
+        <CustomVisualizer VisualizerId="C85DBEDF-48BA-4BC8-ADC7-B3A7B70D692A"/>
+      </Synthetic>
+      <ExpandedItem>this,!</ExpandedItem>
+    </Expand>
   </Type>
+
   <Type Name="PyListObject">
-    <CustomVisualizer VisualizerId="C85DBEDF-48BA-4BC8-ADC7-B3A7B70D692A"/>
+    <DisplayString Condition="$PTVS_ShowPythonViewNodes()">
+      {this,!na}
+    </DisplayString>
+    <Expand HideRawView="true">
+      <Synthetic Name="[Python view]" Expression="this" Condition="$PTVS_ShowPythonViewNodes()">
+        <CustomVisualizer VisualizerId="C85DBEDF-48BA-4BC8-ADC7-B3A7B70D692A"/>
+      </Synthetic>
+      <ExpandedItem>this,!</ExpandedItem>
+    </Expand>
   </Type>
+
   <Type Name="PyStringObject">
-    <CustomVisualizer VisualizerId="C85DBEDF-48BA-4BC8-ADC7-B3A7B70D692A"/>
+    <DisplayString Condition="$PTVS_ShowPythonViewNodes()">
+      {this,!na}
+    </DisplayString>
+    <Expand HideRawView="true">
+      <Synthetic Name="[Python view]" Expression="this" Condition="$PTVS_ShowPythonViewNodes()">
+        <CustomVisualizer VisualizerId="C85DBEDF-48BA-4BC8-ADC7-B3A7B70D692A"/>
+      </Synthetic>
+      <ExpandedItem>this,!</ExpandedItem>
+    </Expand>
   </Type>
+
   <Type Name="PyTupleObject">
-    <CustomVisualizer VisualizerId="C85DBEDF-48BA-4BC8-ADC7-B3A7B70D692A"/>
+    <DisplayString Condition="$PTVS_ShowPythonViewNodes()">
+      {this,!na}
+    </DisplayString>
+    <Expand HideRawView="true">
+      <Synthetic Name="[Python view]" Expression="this" Condition="$PTVS_ShowPythonViewNodes()">
+        <CustomVisualizer VisualizerId="C85DBEDF-48BA-4BC8-ADC7-B3A7B70D692A"/>
+      </Synthetic>
+      <ExpandedItem>this,!</ExpandedItem>
+    </Expand>
   </Type>
+
   <Type Name="PyUnicodeObject">
-    <CustomVisualizer VisualizerId="C85DBEDF-48BA-4BC8-ADC7-B3A7B70D692A"/>
+    <DisplayString Condition="$PTVS_ShowPythonViewNodes()">
+      {this,!na}
+    </DisplayString>
+    <Expand HideRawView="true">
+      <Synthetic Name="[Python view]" Expression="this" Condition="$PTVS_ShowPythonViewNodes()">
+        <CustomVisualizer VisualizerId="C85DBEDF-48BA-4BC8-ADC7-B3A7B70D692A"/>
+      </Synthetic>
+      <ExpandedItem>this,!</ExpandedItem>
+    </Expand>
   </Type>
+
   <Type Name="PyVarObject">
-    <CustomVisualizer VisualizerId="C85DBEDF-48BA-4BC8-ADC7-B3A7B70D692A"/>
+    <DisplayString Condition="$PTVS_ShowPythonViewNodes()">
+      {this,!na}
+    </DisplayString>
+    <Expand HideRawView="true">
+      <Synthetic Name="[Python view]" Expression="this" Condition="$PTVS_ShowPythonViewNodes()">
+        <CustomVisualizer VisualizerId="C85DBEDF-48BA-4BC8-ADC7-B3A7B70D692A"/>
+      </Synthetic>
+      <ExpandedItem>this,!</ExpandedItem>
+    </Expand>
   </Type>
 
 </AutoVisualizer>
