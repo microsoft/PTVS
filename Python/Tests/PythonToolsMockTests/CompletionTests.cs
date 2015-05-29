@@ -115,21 +115,22 @@ namespace PythonToolsMockTests {
 
         [TestMethod, Priority(0), TestCategory("Mock")]
         public void KeywordCompletions() {
-            using (var view = new PythonEditor()) {
+            using (var view = new PythonEditor(version: PythonLanguageVersion.V35)) {
                 var completionList = new HashSet<string>(view.GetCompletions(0));
 
                 // not in a function
                 AssertUtil.DoesntContain(completionList, "yield");
                 AssertUtil.DoesntContain(completionList, "return");
+                AssertUtil.DoesntContain(completionList, "await");
 
-                AssertUtil.ContainsAtLeast(completionList, "assert", "and");
+                AssertUtil.ContainsAtLeast(completionList, "assert", "and", "async");
 
                 var code = @"def f():
     |
     pass";
 
                 view.Text = code.Replace("|", "");
-                AssertUtil.ContainsAtLeast(view.GetCompletions(code.IndexOf("|")), "yield", "return");
+                AssertUtil.ContainsAtLeast(view.GetCompletions(code.IndexOf("|")), "yield", "return", "async", "await");
 
 
                 view.Text = "x = (abc, oar, )";

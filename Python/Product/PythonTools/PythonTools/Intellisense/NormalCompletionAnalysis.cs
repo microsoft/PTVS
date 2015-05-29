@@ -83,7 +83,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
 
-            statementExtent = parser.GetStatementRange() ?? default(SnapshotSpan);
+            statementExtent = parser.GetStatementRange() ?? new SnapshotSpan(Span.GetStartPoint(_snapshot), 0);
 
             return true;
         }
