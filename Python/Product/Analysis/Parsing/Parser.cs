@@ -1749,13 +1749,20 @@ namespace Microsoft.PythonTools.Parsing {
         // parameters: '(' [varargslist] ')'
         // this gets called with "def" as the look-ahead
         private FunctionDefinition ParseFuncDef(bool isCoroutine) {
+            string preWhitespace = null, afterAsyncWhitespace = null;
+
             var start = isCoroutine ? GetStart() : 0;
+            if (isCoroutine) {
+                preWhitespace = _tokenWhiteSpace;
+            }
             Eat(TokenKind.KeywordDef);
-            if (!isCoroutine) {
+            
+            if (isCoroutine) {
+                afterAsyncWhitespace = _tokenWhiteSpace;
+            } else {
+                preWhitespace = _tokenWhiteSpace;
                 start = GetStart();
             }
-
-            string defWhitespace = _tokenWhiteSpace;
 
             var name = ReadName();
             var nameExpr = MakeName(name);
@@ -1780,7 +1787,10 @@ namespace Microsoft.PythonTools.Parsing {
                 ret.IsCoroutine = isCoroutine;
                 if (_verbatim) {
                     AddVerbatimName(name, ret);
-                    AddPreceedingWhiteSpace(ret, defWhitespace);
+                    AddPreceedingWhiteSpace(ret, preWhitespace);
+                    if (afterAsyncWhitespace != null) {
+                        GetNodeAttributes(ret)[FunctionDefinition.WhitespaceAfterAsync] = afterAsyncWhitespace;
+                    }
                     AddSecondPreceedingWhiteSpace(ret, nameWhiteSpace);
                     AddThirdPreceedingWhiteSpace(ret, parenWhiteSpace);
                     AddFourthPreceedingWhiteSpace(ret, closeParenWhiteSpace);
@@ -1821,7 +1831,10 @@ namespace Microsoft.PythonTools.Parsing {
             ret.ReturnAnnotation = returnAnnotation;
             ret.HeaderIndex = rEnd;
             if (_verbatim) {
-                AddPreceedingWhiteSpace(ret, defWhitespace);
+                AddPreceedingWhiteSpace(ret, preWhitespace);
+                if (afterAsyncWhitespace != null) {
+                    GetNodeAttributes(ret)[FunctionDefinition.WhitespaceAfterAsync] = afterAsyncWhitespace;
+                }
                 AddSecondPreceedingWhiteSpace(ret, nameWhiteSpace);
                 AddThirdPreceedingWhiteSpace(ret, parenWhiteSpace);
                 AddFourthPreceedingWhiteSpace(ret, closeParenWhiteSpace);

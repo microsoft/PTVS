@@ -150,11 +150,15 @@ namespace Microsoft.PythonTools.Interpreter {
 
                 value = item.GetMetadataValue(BaseInterpreterKey);
                 PythonInterpreterFactoryWithDatabase baseInterp = null;
-                if (!string.IsNullOrEmpty(value) &&
-                    (!Guid.TryParse(value, out baseId) ||
-                    (baseInterp = _service.FindInterpreter(baseId, ver) as PythonInterpreterFactoryWithDatabase) == null)) {
-                    errors.AppendLine(string.Format("Base interpreter {0} has invalid value for '{1}': {2}", dir, BaseInterpreterKey, value ?? "(null)"));
-                    hasError = true;
+                if (!string.IsNullOrEmpty(value) && Guid.TryParse(value, out baseId)) {
+                    // It's a valid GUID, so find a suitable base. If we
+                    // don't find one now, we'll try and figure it out from
+                    // the pyvenv.cfg/orig-prefix.txt files later.
+                    // Using an empty GUID will always go straight to the
+                    // later lookup.
+                    if (baseId != Guid.Empty) {
+                        baseInterp = _service.FindInterpreter(baseId, ver) as PythonInterpreterFactoryWithDatabase;
+                    }
                 }
 
                 var path = item.GetMetadataValue(InterpreterPathKey);
@@ -198,6 +202,18 @@ namespace Microsoft.PythonTools.Interpreter {
                     arch = item.GetMetadataValue(ArchitectureKey);
                     if (string.IsNullOrEmpty(arch)) {
                         arch = "x86";
+                    }
+                }
+
+                if (baseInterp == null && !hasError) {
+                    // Only thing missing is the base interpreter, so let's try
+                    // to find it using paths
+                    baseInterp = DerivedInterpreterFactory.FindBaseInterpreterFromVirtualEnv(dir, libPath, _service) as
+                        PythonInterpreterFactoryWithDatabase;
+
+                    if (baseInterp == null) {
+                        errors.AppendLine(string.Format("Interpreter {0} has invalid value for '{1}': {2}", dir, BaseInterpreterKey, value ?? "(null)"));
+                        hasError = true;
                     }
                 }
 

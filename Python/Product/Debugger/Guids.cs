@@ -46,5 +46,9 @@ namespace Microsoft.PythonTools.DkmDebugger {
 
         public const string CustomDebuggerEventHandlerId = "996D22BD-D117-4611-88F2-2832CB7D9517";
         public static readonly Guid CustomDebuggerEventHandlerGuid = new Guid(CustomDebuggerEventHandlerId);
+
+        public const string ProgramProviderCLSID = "FA452F5D-539E-4B55-BCC6-5DE7E342BC44";
+        public const string DebugEngineCLSID = "0DA53AFE-069E-47A3-AE34-32610A8253A3";
+        public const string RemoteDebugPortSupplierCLSID = "B8CBA3DE-4A20-4DD7-8709-EC66A6A256D3";
     };
 }

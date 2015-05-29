@@ -21,7 +21,8 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities.Mocks;
 
 namespace IronPythonTests {
-    class IronPythonDatabaseTest {
+    [TestClass]
+    public class IronPythonDatabaseTest {
         [TestMethod, Priority(0)]
         public void InvalidIronPythonDatabase() {
             using (var db = MockCompletionDB.Create(PythonLanguageVersion.V27,

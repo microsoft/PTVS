@@ -19,6 +19,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Interpreter {
     class DerivedInterpreterFactory : PythonInterpreterFactoryWithDatabase {
@@ -265,6 +266,82 @@ namespace Microsoft.PythonTools.Interpreter {
                     _base.GetIsCurrentReason(culture));
             }
             return base.GetIsCurrentReason(culture);
+        }
+
+        public static IPythonInterpreterFactory FindBaseInterpreterFromVirtualEnv(
+            string prefixPath,
+            string libPath,
+            IInterpreterOptionsService service
+        ) {
+            string basePath = GetOrigPrefixPath(prefixPath, libPath);
+
+            if (Directory.Exists(basePath)) {
+                return service.Interpreters.FirstOrDefault(interp =>
+                    CommonUtils.IsSamePath(interp.Configuration.PrefixPath, basePath)
+                );
+            }
+            return null;
+        }
+
+        public static string GetOrigPrefixPath(string prefixPath, string libPath = null) {
+            string basePath = null;
+
+            if (!Directory.Exists(prefixPath)) {
+                return null;
+            }
+
+            var cfgFile = Path.Combine(prefixPath, "pyvenv.cfg");
+            if (File.Exists(cfgFile)) {
+                try {
+                    var lines = File.ReadAllLines(cfgFile);
+                    basePath = lines
+                        .Select(line => Regex.Match(line, @"^home\s*=\s*(?<path>.+)$", RegexOptions.IgnoreCase))
+                        .Where(m => m != null && m.Success)
+                        .Select(m => m.Groups["path"])
+                        .Where(g => g != null && g.Success)
+                        .Select(g => g.Value)
+                        .FirstOrDefault(CommonUtils.IsValidPath);
+                } catch (IOException) {
+                } catch (UnauthorizedAccessException) {
+                } catch (System.Security.SecurityException) {
+                }
+            }
+
+            if (string.IsNullOrEmpty(libPath)) {
+                libPath = FindLibPath(prefixPath);
+            }
+
+            if (!Directory.Exists(libPath)) {
+                return null;
+            }
+
+            var prefixFile = Path.Combine(libPath, "orig-prefix.txt");
+            if (basePath == null && File.Exists(prefixFile)) {
+                try {
+                    var lines = File.ReadAllLines(prefixFile);
+                    basePath = lines.FirstOrDefault(CommonUtils.IsValidPath);
+                } catch (IOException) {
+                } catch (UnauthorizedAccessException) {
+                } catch (System.Security.SecurityException) {
+                }
+            }
+            return basePath;
+        }
+
+        public static string FindLibPath(string prefixPath) {
+            // Find site.py to find the library
+            var libPath = CommonUtils.FindFile(prefixPath, "site.py", firstCheck: new[] { "Lib" });
+            if (!File.Exists(libPath)) {
+                // Python 3.3 venv does not add site.py, but always puts the
+                // library in prefixPath\Lib
+                libPath = Path.Combine(prefixPath, "Lib");
+                if (!Directory.Exists(libPath)) {
+                    return null;
+                }
+            } else {
+                libPath = Path.GetDirectoryName(libPath);
+            }
+            return libPath;
         }
     }
 }
