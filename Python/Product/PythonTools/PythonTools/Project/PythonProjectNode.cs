@@ -78,7 +78,14 @@ namespace Microsoft.PythonTools.Project {
         private readonly CommentTaskProvider _commentTaskProvider;
 
         public PythonProjectNode(IServiceProvider serviceProvider)
-            : base(serviceProvider, Utilities.GetImageList(typeof(PythonProjectNode).Assembly.GetManifestResourceStream(PythonConstants.ProjectImageList))) {
+            : base(
+                  serviceProvider,
+#if DEV14_OR_LATER
+                  null
+#else
+                  Utilities.GetImageList(typeof(PythonProjectNode).Assembly.GetManifestResourceStream(PythonConstants.ProjectImageList))
+#endif
+        ) {
 
             Type projectNodePropsType = typeof(PythonProjectNodeProperties);
             AddCATIDMapping(projectNodePropsType, projectNodePropsType.GUID);
@@ -168,7 +175,11 @@ namespace Microsoft.PythonTools.Project {
 
         protected override Stream ProjectIconsImageStripStream {
             get {
+#if DEV14_OR_LATER
+                throw new NotSupportedException("Python Tools does not support project image strip");
+#else
                 return typeof(ProjectNode).Assembly.GetManifestResourceStream("Microsoft.PythonTools.Project.Resources.imagelis.bmp");
+#endif
             }
         }
 
@@ -185,14 +196,6 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        internal int GetIconIndex(PythonProjectImageName name) {
-            return ImageOffset + (int)name;
-        }
-
-        internal IntPtr GetIconHandleByName(PythonProjectImageName name) {
-            return ImageHandler.GetIconHandle(GetIconIndex(name));
-        }
-
 #if DEV14_OR_LATER
         protected override bool SupportsIconMonikers {
             get { return true; }
@@ -200,6 +203,14 @@ namespace Microsoft.PythonTools.Project {
 
         protected override ImageMoniker GetIconMoniker(bool open) {
             return KnownMonikers.PYProjectNode;
+        }
+#else
+        internal int GetIconIndex(PythonProjectImageName name) {
+            return ImageOffset + (int)name;
+        }
+
+        internal IntPtr GetIconHandleByName(PythonProjectImageName name) {
+            return ImageHandler.GetIconHandle(GetIconIndex(name));
         }
 #endif
 
@@ -1481,7 +1492,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
 
-        #region IPythonProject Members
+#region IPythonProject Members
 
         string IPythonProject.ProjectName {
             get {
@@ -1554,9 +1565,9 @@ namespace Microsoft.PythonTools.Project {
             return base.GetUnevaluatedProperty(name);
         }
 
-        #endregion
+#endregion
 
-        #region Search Path support
+#region Search Path support
 
         internal int AddSearchPathZip() {
             var fileName = Site.BrowseForFileOpen(
@@ -1590,9 +1601,9 @@ namespace Microsoft.PythonTools.Project {
             return VSConstants.S_OK;
         }
 
-        #endregion
+#endregion
 
-        #region Package Installation support
+#region Package Installation support
 
         private int ExecInstallPythonPackage(Dictionary<string, string> args, IList<HierarchyNode> selectedNodes) {
             InterpretersNode selectedInterpreter;
@@ -2032,9 +2043,9 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        #endregion
+#endregion
 
-        #region Virtual Env support
+#region Virtual Env support
 
         private void ShowAddInterpreter() {
             var service = Site.GetComponentModel().GetService<IInterpreterOptionsService>();
@@ -2160,7 +2171,7 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        #endregion
+#endregion
 
         public override Guid SharedCommandGuid {
             get {

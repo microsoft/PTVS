@@ -39,12 +39,6 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         #endregion
 
-        #region Properties
-        public override int ImageIndex {
-            get { return (this.CanShowDefaultIcon() ? (int)ProjectNode.ImageName.DependentFile : (int)ProjectNode.ImageName.MissingFile); }
-        }
-        #endregion
-
         #region ctor
         /// <summary>
         /// Constructor for the DependentFileNode
@@ -69,15 +63,6 @@ namespace Microsoft.VisualStudioTools.Project {
             throw new NotImplementedException();
         }
 
-        /// <summary>
-        /// Gets a handle to the icon that should be set for this node
-        /// </summary>
-        /// <param name="open">Whether the folder is open, ignored here.</param>
-        /// <returns>Handle to icon for the node</returns>
-        public override object GetIconHandle(bool open) {
-            return this.ProjectMgr.ImageHandler.GetIconHandle(this.ImageIndex);
-        }
-
 #if DEV14_OR_LATER
         protected override bool SupportsIconMonikers {
             get { return true; }
@@ -89,6 +74,11 @@ namespace Microsoft.VisualStudioTools.Project {
                 KnownMonikers.ReferencedElement :
                 KnownMonikers.DocumentWarning;
         }
+#else
+        public override int ImageIndex {
+            get { return (this.CanShowDefaultIcon() ? (int)ProjectNode.ImageName.DependentFile : (int)ProjectNode.ImageName.MissingFile); }
+        }
+
 #endif
 
         /// <summary>

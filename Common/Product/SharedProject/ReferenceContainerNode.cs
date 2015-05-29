@@ -120,10 +120,6 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
 
-        public override object GetIconHandle(bool open) {
-            return this.ProjectMgr.GetIconHandleByName(ProjectNode.ImageName.ReferenceFolder);
-        }
-
 #if DEV14_OR_LATER
         protected override bool SupportsIconMonikers {
             get { return true; }
@@ -131,6 +127,12 @@ namespace Microsoft.VisualStudioTools.Project {
 
         protected override ImageMoniker GetIconMoniker(bool open) {
             return KnownMonikers.Reference;
+        }
+#else
+        public override int ImageIndex {
+            get {
+                return ProjectMgr.GetIconIndex(ProjectNode.ImageName.ReferenceFolder);
+            }
         }
 #endif
 

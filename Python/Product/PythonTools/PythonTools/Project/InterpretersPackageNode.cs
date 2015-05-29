@@ -152,10 +152,6 @@ namespace Microsoft.PythonTools.Project {
             return null;
         }
 
-        public override object GetIconHandle(bool open) {
-            return ProjectMgr.GetIconHandleByName(PythonProjectImageName.InterpretersPackage);
-        }
-
 #if DEV14_OR_LATER
         protected override bool SupportsIconMonikers {
             get { return true; }
@@ -163,6 +159,12 @@ namespace Microsoft.PythonTools.Project {
 
         protected override ImageMoniker GetIconMoniker(bool open) {
             return KnownMonikers.PythonPackage;
+        }
+#else
+        public override int ImageIndex {
+            get {
+                return ProjectMgr.GetIconIndex(PythonProjectImageName.InterpretersPackage);
+            }
         }
 #endif
 

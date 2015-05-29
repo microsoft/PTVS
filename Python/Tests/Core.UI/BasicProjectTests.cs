@@ -1000,13 +1000,13 @@ namespace PythonToolsUITests {
             try {
                 // Ensure X does not exist, otherwise we won't be able to create
                 // it and pass the test.
-                Directory.Delete(TestData.GetPath(@"TestData\\AddFolderExists\\X"), true);
+                Directory.Delete(TestData.GetPath(@"TestData\AddFolderExists\X"), true);
             } catch { }
-            Directory.CreateDirectory(TestData.GetPath(@"TestData\\AddFolderExists\\Y"));
+            Directory.CreateDirectory(TestData.GetPath(@"TestData\AddFolderExists\Y"));
 
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\AddFolderExists.sln");
-                var solutionExplorer = app.SolutionExplorerTreeView;
+                var solutionExplorer = app.OpenSolutionExplorer();
 
                 var solutionNode = solutionExplorer.FindItem("Solution 'AddFolderExists' (1 project)");
 
@@ -1019,7 +1019,9 @@ namespace PythonToolsUITests {
                 Keyboard.Type("."); // bad filename
                 Keyboard.Type(System.Windows.Input.Key.Enter);
 
-#if DEV11_OR_LATER
+#if DEV14_OR_LATER
+                VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, "Directory names cannot:", "be '.' or '..'");
+#elif DEV11_OR_LATER
                 VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, "Directory names cannot contain any of the following characters");
 #else
                 VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, ". is an invalid filename");
@@ -1029,7 +1031,9 @@ namespace PythonToolsUITests {
                 Keyboard.Type(".."); // another bad filename
                 Keyboard.Type(System.Windows.Input.Key.Enter);
 
-#if DEV11_OR_LATER
+#if DEV14_OR_LATER
+                VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, "Directory names cannot:", "be '.' or '..'");
+#elif DEV11_OR_LATER
                 VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, "Directory names cannot contain any of the following characters");
 #else
                 VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, ".. is an invalid filename");
@@ -1091,7 +1095,7 @@ namespace PythonToolsUITests {
         public void CopyAndPasteFolder() {
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\CopyAndPasteFolder.sln");
-                var solutionExplorer = app.SolutionExplorerTreeView;
+                var solutionExplorer = app.OpenSolutionExplorer();
                 var solutionNode = solutionExplorer.FindItem("Solution 'CopyAndPasteFolder' (1 project)");
 
                 var projectNode = solutionExplorer.FindItem("Solution 'CopyAndPasteFolder' (1 project)", "CopyAndPasteFolder");

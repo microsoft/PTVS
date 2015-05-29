@@ -100,13 +100,6 @@ namespace Microsoft.VisualStudioTools.Project {
             return new Automation.OAFolderItem(this.ProjectMgr.GetAutomationObject() as Automation.OAProject, this);
         }
 
-        public override object GetIconHandle(bool open) {
-            return ProjectMgr.GetIconHandleByName(open ?
-                ProjectNode.ImageName.OpenFolder :
-                ProjectNode.ImageName.Folder
-            );
-        }
-
 #if DEV14_OR_LATER
         protected override bool SupportsIconMonikers {
             get { return true; }
@@ -114,6 +107,13 @@ namespace Microsoft.VisualStudioTools.Project {
 
         protected override ImageMoniker GetIconMoniker(bool open) {
             return open ? KnownMonikers.FolderOpened : KnownMonikers.FolderClosed;
+        }
+#else
+        public override object GetIconHandle(bool open) {
+            return ProjectMgr.GetIconHandleByName(open ?
+                ProjectNode.ImageName.OpenFolder :
+                ProjectNode.ImageName.Folder
+            );
         }
 #endif
 

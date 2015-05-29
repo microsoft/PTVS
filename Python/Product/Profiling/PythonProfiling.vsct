@@ -178,10 +178,8 @@
    
     <!--The bitmaps section is used to define the bitmaps that are used for the commands.-->
     <Bitmaps>
-      <Bitmaps Condition="Defined(DEV14)">
-        <Bitmap guid="guidCmdBarImages" href="..\Icons\Dev14.0\ProfilingCmdBar.bmp" usedList="startIcon, newSessionIcon, stopIcon, compareReports"/>
-      </Bitmaps>
-      <Bitmaps Condition="Defined(DEV12)">
+      <!-- For newer versions we use an icon map to get scalable icons. -->
+      <Bitmaps Condition="Defined(DEV12_OR_LATER)">
         <Bitmap guid="guidCmdBarImages" href="..\Icons\Dev12.0\ProfilingCmdBar.bmp" usedList="startIcon, newSessionIcon, stopIcon, compareReports"/>
       </Bitmaps>
       <Bitmaps Condition="Defined(DEV11)">

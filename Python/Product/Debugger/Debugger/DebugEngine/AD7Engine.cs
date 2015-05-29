@@ -1112,7 +1112,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
         // Gets the name and identifier of the debug engine (DE) running this program.
         public int GetEngineInfo(out string engineName, out Guid engineGuid) {
-            engineName = "Python Engine";
+            engineName = "Python";
             engineGuid = new Guid(DebugEngineId);
             return VSConstants.S_OK;
         }

@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Reflection;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Intellisense;
@@ -27,11 +28,12 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudioTools;
+using Microsoft.VisualStudioTools.MockVsTests;
 using TestUtilities;
 using TestUtilities.Mocks;
 using TestUtilities.Python;
 
-namespace PythonToolsTests {
+namespace PythonToolsMockTests {
     [TestClass]
     public class RefactorRenameTests {
         private const string ErrorModuleName = "Cannot rename a module name";
@@ -39,10 +41,23 @@ namespace PythonToolsTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            PythonTestData.Deploy();
+            PythonTestData.Deploy(includeTestData: false);
         }
 
-        [TestMethod, Priority(0)]
+        private MockVs _vs;
+
+        [TestInitialize]
+        public void TestInit() {
+            _vs = new MockVs();
+        }
+
+        [TestCleanup]
+        public void TestCleanup() {
+            _vs.Dispose();
+        }
+
+
+        [TestMethod, Priority(0), TestCategory("Mock")]
         public void PrivateMemberMangling() {
             RefactorTest("fob", "__f",
                 new[] { 
@@ -217,7 +232,7 @@ namespace PythonToolsTests {
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(0), TestCategory("Mock")]
         public void SanityClassField() {
             RefactorTest("fob", "abc",
                 new[] { 
@@ -407,7 +422,7 @@ abc = 200
             );
         }
         
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(0), TestCategory("Mock")]
         public void InheritedClassField() {
 
             RefactorTest("fob", "abc",
@@ -455,7 +470,7 @@ abc = 200
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(0), TestCategory("Mock")]
         public void RenameGeneratorVariable() {
             // http://pytools.codeplex.com/workitem/454
             RefactorTest("fob", "abc",
@@ -469,7 +484,7 @@ abc = 200
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(0), TestCategory("Mock")]
         public void TypelessForVariable() {
             RefactorTest("baz", "abc",
                 new[] { 
@@ -487,7 +502,7 @@ abc = 200
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(0), TestCategory("Mock")]
         public void TupleForVariable() {
             RefactorTest("baz", "abc",
                 new[] { 
@@ -580,7 +595,7 @@ abc = 200
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(0), TestCategory("Mock")]
         public void SanityInstanceField() {
             RefactorTest("fob", "abc",
                 new[] { 
@@ -626,7 +641,7 @@ a.fob
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(0), TestCategory("Mock")]
         public void SanityParameter() {
             RefactorTest("fob", "abc",
                 new[] { 
@@ -765,7 +780,7 @@ abc = 200
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(0), TestCategory("Mock")]
         public void SanityLocal() {
             RefactorTest("fob", "abc",
                 new[] { 
@@ -826,7 +841,7 @@ def h(abc):
 
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(0), TestCategory("Mock")]
         public void SanityClosure() {
             RefactorTest("fob", "abc",
                 new[] { 
@@ -886,7 +901,7 @@ abc = 200
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(0), TestCategory("Mock")]
         public void SanityLambda() {
             RefactorTest("fob", "abc",
                 new[] { 
@@ -940,7 +955,7 @@ abc = 200
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(0), TestCategory("Mock")]
         public void SanityInlineIf() {
             RefactorTest("fob", "abc",
                 new[] { 
@@ -970,7 +985,7 @@ abc = 200
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(0), TestCategory("Mock")]
         public void SanityGenerator() {
             RefactorTest("fob", "abc",
                 new[] { 
@@ -1036,7 +1051,7 @@ abc = 200
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(0), TestCategory("Mock")]
         public void SanityGeneratorFilter() {
             RefactorTest("fob", "abc",
                 new[] { 
@@ -1093,7 +1108,7 @@ abc = 200
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(0), TestCategory("Mock")]
         public void SanitySlices() {
             RefactorTest("fob", "abc", version: new Version(3, 2),
             inputs: new[] { 
@@ -1120,7 +1135,7 @@ x = y[fob-1:fob:fob+1]
 
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(0), TestCategory("Mock")]
         public void SanityGlobal() {
             RefactorTest("fob", "abc",
                 new[] { 
@@ -1203,7 +1218,7 @@ fob = 100
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(0), TestCategory("Mock")]
         public void SanityNonLocal() {
             RefactorTest("fob", "abc", version: new Version(3, 2),
             inputs: new[] { 
@@ -1280,7 +1295,7 @@ abc = 100
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(0), TestCategory("Mock")]
         public void SanityRenameClass() {
             RefactorTest("fob", "abc",
             new[] { 
@@ -1397,7 +1412,7 @@ class x(fob):
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(0), TestCategory("Mock")]
         public void RenameMetaclass() {
             RefactorTest("fob", "abc", version: new Version(2, 7),
             inputs: new[] { 
@@ -1435,7 +1450,7 @@ class x(metaclass=fob):
 
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(0), TestCategory("Mock")]
         public void SanityRenameFunction() {
             RefactorTest("fob", "abc",
             new[] { 
@@ -1492,7 +1507,7 @@ fdoc = fob.func_doc"
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(0), TestCategory("Mock")]
         public void SanityDelLocal() {
             RefactorTest("fob", "abc",
             new[] { 
@@ -1511,7 +1526,7 @@ def f():
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(0), TestCategory("Mock")]
         public void SanityDelInstanceMember() {
             RefactorTest("fob", "abc",
             new[] { 
@@ -1542,7 +1557,7 @@ def f():
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(0), TestCategory("Mock")]
         public void SanityDelClassMember() {
             RefactorTest("fob", "abc",
             new[] { 
@@ -1571,7 +1586,7 @@ def f():
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(0), TestCategory("Mock")]
         public void SanityDelGlobal() {
             RefactorTest("fob", "abc",
             new[] { 
@@ -1618,7 +1633,7 @@ fob = 100
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(0), TestCategory("Mock")]
         public void DelNonLocal() {
             RefactorTest("fob", "abc", version: new Version(3, 2),
             inputs: new[] { 
@@ -1646,7 +1661,7 @@ abc = 100
 
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(0), TestCategory("Mock")]
         public void Decorators() {
             RefactorTest("abc", "fob",
             new[] { 
@@ -1774,7 +1789,7 @@ def f():
 
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(0), TestCategory("Mock")]
         public void TryStatement() {
             RefactorTest("abc", "fob", 
             new[] { 
@@ -1814,7 +1829,7 @@ except Exception as abc:
 
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(0), TestCategory("Mock")]
         public void FinallyStatement() {
             RefactorTest("fob", "abc",
             new[] { 
@@ -1839,7 +1854,7 @@ finally:
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(0), TestCategory("Mock")]
         public void RaiseStatement() {
             RefactorTest("fob", "abc", version: new Version(2, 7),
             inputs: new[] { 
@@ -1874,7 +1889,7 @@ raise Exception() from fob
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(0), TestCategory("Mock")]
         public void ExecStatement() {
             RefactorTest("fob", "abc", version: new Version(2, 7),
             inputs: new[] { 
@@ -1953,7 +1968,7 @@ exec('abc = 1', fob, fob)
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(0), TestCategory("Mock")]
         public void IsInstanceScope() {
             RefactorTest("abc", "fob", version: new Version(3, 2),
             inputs: new[] { 
@@ -1974,7 +1989,7 @@ print(abc.upper())
         }
 
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(0), TestCategory("Mock")]
         public void WithStatement() {
             RefactorTest("abc", "fob", version: new Version(3, 2),
             inputs: new[] { 
@@ -1992,7 +2007,7 @@ with abc as abc:
 
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(0), TestCategory("Mock")]
         public void YieldStatement() {
             RefactorTest("fob", "abc", 
             inputs: new[] { 
@@ -2011,7 +2026,7 @@ def a():
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(0), TestCategory("Mock")]
         public void KeywordParameter() {
             RefactorTest("fob", "abc", 
             new[] { 
@@ -2081,7 +2096,7 @@ f(fob = abc)
 
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(0), TestCategory("Mock")]
         public void ImportAsStatement() {
             RefactorTest("fob", "abc",
             new[] { 
@@ -2138,7 +2153,7 @@ x = fob
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(0), TestCategory("Mock")]
         public void FromImportAsStatement() {
             RefactorTest("fob", "abc",
             new[] { 
@@ -2178,7 +2193,7 @@ x = fob
 
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(0), TestCategory("Mock")]
         public void Annotations() {
             RefactorTest("fob", "abc", version: new Version(3, 2),
                 inputs: new[] { 
@@ -2233,7 +2248,7 @@ abc = 200
 
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(0), TestCategory("Mock")]
         public void NestedFunctions() {
             RefactorTest("h", "g",
                 new[] { 
@@ -2262,7 +2277,7 @@ def g(a, b, c):
 
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(0), TestCategory("Mock")]
         public void CrossModuleRename() {
             RefactorTest("fob", "abc",
                 new[] { 
@@ -2307,7 +2322,7 @@ def g(a, b, c):
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(0), TestCategory("Mock")]
         public void CannotRename() {
             CannotRename("abc", "import abc", ErrorModuleName);
             CannotRename("abc", "from abc import oar", ErrorModuleName);
@@ -2369,35 +2384,30 @@ def g(a, b, c):
             }
         }
 
-        private static void CannotRename(string caretText, string text, string error) {
+        private void CannotRename(string caretText, string text, string error) {
             OneRefactorTest("fob", caretText, new[] { new FileInput(text, null), new FileInput("def oar(): pass", "", "C:\\abc.py") }, null, false, error, null);
         }
 
-        private static void OneRefactorTest(string newName, string caretText, FileInput[] inputs, Version version, bool preview, string error, ExpectedPreviewItem[] expected = null) {
+        private void OneRefactorTest(string newName, string caretText, FileInput[] inputs, Version version, bool preview, string error, ExpectedPreviewItem[] expected = null) {
             Console.WriteLine("Replacing {0} with {1}", caretText, newName);
+            version = version ?? new Version(2, 7);
 
-            var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version ?? new Version(2, 6));
-            var serviceProvider = PythonToolsTestUtilities.CreateMockServiceProvider();
-            var classifierProvider = new PythonClassifierProvider(new MockContentTypeRegistryService(PythonCoreConstants.ContentType), serviceProvider);
-            classifierProvider._classificationRegistry = new MockClassificationTypeRegistryService();
-            var analyzer = new VsProjectAnalyzer(serviceProvider, fact, new[] { fact });
+            for (int loops = 0; loops < 2; loops++) {
+                var views = new List<PythonEditor>();
+                try {
+                    var mainView = new PythonEditor(inputs[0].Input, version.ToLanguageVersion(), _vs, filename: inputs[0].Filename);
+                    var analyzer = mainView.Analyzer;
 
-            try {
-                for (int loops = 0; loops < 2; loops++) {
-                    MockTextBuffer[] buffers = new MockTextBuffer[inputs.Length];
-                    MockTextView[] views = new MockTextView[inputs.Length];
-                    Dictionary<string, ITextBuffer> bufferTable = new Dictionary<string, ITextBuffer>();
-                    List<MonitoredBufferResult> analysis = new List<MonitoredBufferResult>();
-                    for (int i = 0; i < inputs.Length; i++) {
-                        var filename = inputs[i].Filename;
-                        buffers[i] = new MockTextBuffer(inputs[i].Input, PythonCoreConstants.ContentType, filename: filename);
-                        views[i] = new MockTextView(buffers[i]);
-                        buffers[i].AddProperty(typeof(VsProjectAnalyzer), analyzer);
-                        classifierProvider.GetClassifier(buffers[i]);
-
-                        bufferTable[filename] = buffers[i];
-                        analysis.Add(analyzer.MonitorTextBuffer(views[i], buffers[i]));
+                    views.Add(mainView);
+                    var bufferTable = new Dictionary<string, ITextBuffer> {
+                        { inputs[0].Filename, mainView.CurrentSnapshot.TextBuffer }
+                    };
+                    foreach (var i in inputs.Skip(1)) {
+                        var editor = new PythonEditor(i.Input, version.ToLanguageVersion(), _vs, mainView.Factory, analyzer, inputs[0].Filename);
+                        views.Add(editor);
+                        bufferTable[i.Filename] = editor.CurrentSnapshot.TextBuffer;
                     }
+
 
                     // test runs twice, one w/ original buffer, once w/ re-analyzed buffers.
                     if (loops == 1) {
@@ -2406,9 +2416,7 @@ def g(a, b, c):
                         }
                         Console.WriteLine("Running w/ re-anlyzed buffers");
                         // do it again w/ a changed buffer
-                        foreach (var buffer in buffers) {
-                            buffer.RaiseChangedLowPriority();
-                        }
+                        mainView.Text = mainView.Text;
                     }
 
                     using (new DebugTimer("Waiting for analysis")) {
@@ -2416,28 +2424,24 @@ def g(a, b, c):
                     }
 
                     var caretPos = inputs[0].Input.IndexOf(caretText);
-                    views[0].Caret.MoveTo(new SnapshotPoint(buffers[0].CurrentSnapshot, caretPos));
+                    mainView.View.MoveCaret(new SnapshotPoint(mainView.CurrentSnapshot, caretPos));
 
                     var extractInput = new RenameVariableTestInput(newName, bufferTable, preview);
                     var previewChangesService = new TestPreviewChanges(expected);
 
-                    new VariableRenamer(views[0], serviceProvider).RenameVariable(extractInput, previewChangesService);
+                    new VariableRenamer(views[0].View.View, _vs.ServiceProvider).RenameVariable(extractInput, previewChangesService);
                     if (error != null) {
                         Assert.AreEqual(error, extractInput.Failure);
                         return;
                     }
                     Assert.IsNull(extractInput.Failure, "Unexpected error message: " + (extractInput.Failure ?? ""));
                     Assert.AreEqual(preview, previewChangesService.Previewed, preview ? "Changes were not previewed" : "Changes were previewed");
-                    for (int i = 0; i < buffers.Length; i++) {
-                        Assert.AreEqual(inputs[i].Output, buffers[i].CurrentSnapshot.GetText());
-                    }
-
-                    foreach (var monitored in analysis) {
-                        analyzer.StopMonitoringTextBuffer(monitored.BufferParser, monitored.TextView);
+                    AssertUtil.ArrayEquals(inputs.Select(i => i.Output).ToList(), views.Select(v => v.Text).ToList());
+                } finally {
+                    foreach (var v in views) {
+                        v.Dispose();
                     }
                 }
-            } finally {
-                analyzer.Dispose();
             }
         }
 
