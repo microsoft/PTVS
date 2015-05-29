@@ -23,7 +23,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
     // This registered interface allows the session debug manager (SDM) to obtain information about programs 
     // that have been "published" through the IDebugProgramPublisher2 interface.
     [ComVisible(true)]
-    [Guid(Guids.ProgramProviderId)]
+    [Guid(Guids.ProgramProviderCLSID)]
     public class AD7ProgramProvider : IDebugProgramProvider2 {
         public AD7ProgramProvider() {
         }

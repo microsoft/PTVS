@@ -23,7 +23,7 @@ using Microsoft.VisualStudio.Debugger.Interop;
 namespace Microsoft.PythonTools.Debugger.Remote {
 
     [ComVisible(true)]
-    [Guid(Guids.RemoteDebugPortSupplierId)]
+    [Guid(Guids.RemoteDebugPortSupplierCLSID)]
     public class PythonRemoteDebugPortSupplier : IDebugPortSupplier2, IDebugPortSupplierDescription2 {
         public const string PortSupplierId = "{FEB76325-D127-4E02-B59D-B16D93D46CF5}";
         public static readonly Guid PortSupplierGuid = new Guid(PortSupplierId);
