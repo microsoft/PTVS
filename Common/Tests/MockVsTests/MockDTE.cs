@@ -258,7 +258,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             }
         }
 
-        public Windows Windows {
+        public EnvDTE.Windows Windows {
             get {
                 throw new NotImplementedException();
             }
