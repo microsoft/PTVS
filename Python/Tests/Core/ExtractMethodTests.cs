@@ -1596,6 +1596,30 @@ def f(x):
     return (g())");
         }
 
+        [TestMethod]
+        public void ExtractAsyncFunction() {
+            // Ensure extracted bodies that use await generate async functions
+
+            var V35 = new Version(3, 5);
+            SuccessTest("x",
+@"async def f():
+    return await x",
+@"def g():
+    return x
+
+async def f():
+    return await g()", version: V35);
+
+            SuccessTest("await x",
+@"async def f():
+    return await x",
+@"async def g():
+    return await x
+
+async def f():
+    return await g()", version: V35);
+        }
+
         private void SuccessTest(Span extract, string input, string result, string scopeName = null, Version version = null, string[] parameters = null) {
             ExtractMethodTest(input, extract, TestResult.Success(result), scopeName: scopeName, version: version, parameters: parameters);
         }

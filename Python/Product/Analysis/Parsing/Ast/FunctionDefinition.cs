@@ -33,6 +33,8 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         internal bool _hasReturn;
         private int _headerIndex;
 
+        internal static readonly object WhitespaceAfterAsync = new object();
+
         public FunctionDefinition(NameExpression name, Parameter[] parameters)
             : this(name, parameters, (Statement)null) {            
         }
@@ -269,6 +271,10 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 Decorators.AppendCodeString(res, ast, format);
             }
             format.ReflowComment(res, this.GetProceedingWhiteSpaceDefaultNull(ast));
+            if (IsCoroutine) {
+                res.Append("async");
+                res.Append(NodeAttributes.GetWhiteSpace(this, ast, WhitespaceAfterAsync));
+            }
             res.Append("def");
             var name = this.GetVerbatimImage(ast) ?? Name;
             if (!String.IsNullOrEmpty(name)) {
