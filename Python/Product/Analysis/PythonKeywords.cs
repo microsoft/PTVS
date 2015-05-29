@@ -104,6 +104,7 @@ namespace Microsoft.PythonTools.Analysis {
             yield return "assert";
             if (version >= PythonLanguageVersion.V35) {
                 yield return "async";
+                yield return "await";
             }
             yield return "break";
             yield return "continue";
