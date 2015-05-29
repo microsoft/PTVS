@@ -199,7 +199,7 @@ namespace Microsoft.VisualStudio.Repl {
                 }// else not an escape sequence, process as text
 
             } while (escape != -1);
-            if (start != text.Length - 1) {
+            if (start != text.Length) {
                 AppendText(text.Substring(start), kind, color);
             }
         }

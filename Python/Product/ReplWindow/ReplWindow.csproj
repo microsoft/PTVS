@@ -48,6 +48,7 @@
     <StartProgram>$(DevEnvDir)devenv.exe</StartProgram>
     <StartArguments>/rootsuffix Exp</StartArguments>
     <UseVSSDK>true</UseVSSDK>
+    <DeployExtension Condition="$(VSMajorVersion) >= 14">false</DeployExtension>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>

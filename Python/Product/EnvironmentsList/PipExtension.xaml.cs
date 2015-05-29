@@ -190,6 +190,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             _provider = provider;
             _provider.UpdateStarted += PipExtensionProvider_UpdateStarted;
             _provider.UpdateComplete += PipExtensionProvider_UpdateComplete;
+            _provider.IsPipInstalledChanged += PipExtensionProvider_IsPipInstalledChanged;
             _installCommandView = new InstallPackageView(this);
 
             _matcher = new FuzzyStringMatcher(FuzzyMatchMode.FuzzyIgnoreCase);
@@ -207,6 +208,10 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             FinishInitialization();
         }
 
+        private async void PipExtensionProvider_IsPipInstalledChanged(object sender, EventArgs e) {
+            await Dispatcher.InvokeAsync(() => { IsPipInstalled = _provider.IsPipInstalled ?? true; });
+        }
+
         private void InstalledView_CurrentChanged(object sender, EventArgs e) {
             if (_installedView.View.CurrentItem != null) {
                 _installableView.View.MoveCurrentTo(null);
@@ -221,23 +226,8 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         private async void FinishInitialization() {
             try {
-                try {
-                    if (!(IsPipInstalled = await _provider.IsPipInstalled())) {
-                        // pip is not installed, so no point refreshing packages.
-                        return;
-                    }
-                } catch (InvalidOperationException) {
-                    IsPipInstalled = false;
-                    return;
-                } catch (OperationCanceledException) {
-                    IsPipInstalled = false;
-                    return;
-                }
-
-                try {
-                    await RefreshPackages();
-                } catch (OperationCanceledException) {
-                }
+                await RefreshPackages();
+            } catch (OperationCanceledException) {
             } catch (Exception ex) {
                 if (ex.IsCriticalException()) {
                     throw;
@@ -249,6 +239,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public void Dispose() {
             _provider.UpdateStarted -= PipExtensionProvider_UpdateStarted;
             _provider.UpdateComplete -= PipExtensionProvider_UpdateComplete;
+            _provider.IsPipInstalledChanged -= PipExtensionProvider_IsPipInstalledChanged;
             _installableViewRefreshTimer.Dispose();
         }
 
@@ -400,10 +391,12 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 CommandManager.InvalidateRequerySuggested();
             });
             try {
-                await Task.WhenAll(
-                    RefreshInstalledPackages(),
-                    RefreshInstallablePackages()
-                );
+                if (IsPipInstalled) {
+                    await Task.WhenAll(
+                        RefreshInstalledPackages(),
+                        RefreshInstallablePackages()
+                    );
+                }
             } finally {
                 Dispatcher.Invoke(() => {
                     IsListRefreshing = false;

@@ -45,7 +45,12 @@ using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Debugger;
 using Microsoft.VisualStudio.Debugger.Interop;
 using Microsoft.VisualStudio.Editor;
+#if DEV14_OR_LATER
+using Microsoft.VisualStudio.InteractiveWindow;
+using Microsoft.VisualStudio.InteractiveWindow.Shell;
+#else
 using Microsoft.VisualStudio.Repl;
+#endif
 using Microsoft.VisualStudio.Settings;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -58,6 +63,11 @@ using Microsoft.VisualStudioTools.Navigation;
 using Microsoft.VisualStudioTools.Project;
 using NativeMethods = Microsoft.VisualStudioTools.Project.NativeMethods;
 using SR = Microsoft.PythonTools.Project.SR;
+#if DEV14_OR_LATER
+using IReplWindow = Microsoft.VisualStudio.InteractiveWindow.IInteractiveWindow;
+using IReplWindowProvider = Microsoft.VisualStudio.InteractiveWindow.Shell.IVsInteractiveWindowFactory;
+using IReplEvaluatorProvider = Microsoft.PythonTools.Repl.IInteractiveEvaluatorProvider;
+#endif
 
 namespace Microsoft.PythonTools {
     /// <summary>
@@ -73,7 +83,13 @@ namespace Microsoft.PythonTools {
     [PackageRegistration(UseManagedResourcesOnly = true)]       // This attribute tells the PkgDef creation utility (CreatePkgDef.exe) that this class is a package.
     // This attribute is used to register the informations needed to show the this package in the Help/About dialog of Visual Studio.
     [InstalledProductRegistration("#110", "#112", AssemblyVersionInfo.Version, IconResourceID = 400)]
-    [ProvideMenuResource(1000, 1)]                              // This attribute is needed to let the shell know that this package exposes some menus.
+
+    // This attribute is needed to let the shell know that this package exposes some menus.
+#if DEV14_OR_LATER
+    [ProvideMenuResource(1000, 1, IconMappingFilename = "PythonTools_iconmap.csv")]
+#else
+    [ProvideMenuResource(1000, 1)]
+#endif
     [ProvideAutoLoad(Microsoft.VisualStudio.Shell.Interop.UIContextGuids.NoSolution)]
     [ProvideAutoLoad(Microsoft.VisualStudio.Shell.Interop.UIContextGuids.SolutionExists)]
     [Description("Python Tools Package")]
@@ -96,9 +112,10 @@ namespace Microsoft.PythonTools {
     [ProvideLanguageService(typeof(PythonLanguageInfo), PythonConstants.LanguageName, 106, RequestStockColors = true, ShowSmartIndent = true, ShowCompletion = true, DefaultToInsertSpaces = true, HideAdvancedMembersByDefault = true, EnableAdvancedMembersOption = true, ShowDropDownOptions = true)]
     [ProvideLanguageExtension(typeof(PythonLanguageInfo), PythonConstants.FileExtension)]
     [ProvideLanguageExtension(typeof(PythonLanguageInfo), PythonConstants.WindowsFileExtension)]
-    [ProvideDebugEngine(AD7Engine.DebugEngineName, typeof(AD7ProgramProvider), typeof(AD7Engine), AD7Engine.DebugEngineId, hitCountBp: true)]
+    [ProvideDebugEngine(AD7Engine.DebugEngineName, typeof(AD7ProgramProvider), typeof(AD7Engine), AD7Engine.DebugEngineId,  hitCountBp: true)]
     [ProvideDebugLanguage("Python", "{DA3C7D59-F9E4-4697-BEE7-3A0703AF6BFF}", PythonExpressionEvaluatorGuid, AD7Engine.DebugEngineId)]
-    [ProvideDebugPortSupplier("Python remote debugging", typeof(PythonRemoteDebugPortSupplier), PythonRemoteDebugPortSupplier.PortSupplierId)]
+    [ProvideDebugPortSupplier("Python remote (ptvsd)", typeof(PythonRemoteDebugPortSupplier), PythonRemoteDebugPortSupplier.PortSupplierId, typeof(PythonRemoteDebugPortPicker))]
+    [ProvideDebugPortPicker(typeof(PythonRemoteDebugPortPicker))]
     [ProvidePythonExecutionMode(ExecutionMode.StandardModeId, "Standard", "Standard")]
     [ProvidePythonExecutionMode("{91BB0245-B2A9-47BF-8D76-DD428C6D8974}", "IPython", "visualstudio_ipython_repl.IPythonBackend", supportsMultipleScopes: false, supportsMultipleCompleteStatementInputs: true)]
     [ProvidePythonExecutionMode("{3E390328-A806-4250-ACAD-97B5B37076E2}", "IPython w/o PyLab", "visualstudio_ipython_repl.IPythonBackendWithoutPyLab", supportsMultipleScopes: false, supportsMultipleCompleteStatementInputs: true)]
@@ -184,6 +201,9 @@ namespace Microsoft.PythonTools {
 #endif
     [ProvideCodeExpansions(GuidList.guidPythonLanguageService, false, 106, "Python", @"Snippets\%LCID%\SnippetsIndex.xml", @"Snippets\%LCID%\Python\")]
     [ProvideCodeExpansionPath("Python", "Test", @"Snippets\%LCID%\Test\")]
+#if DEV14_OR_LATER
+    [ProvideInteractiveWindow(GuidList.guidPythonInteractiveWindow, Style = VsDockStyle.Linked, Orientation = ToolWindowOrientation.none, Window = ToolWindowGuids80.Outputwindow)]
+#endif
     [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",
         Justification = "Object is owned by VS and cannot be disposed")]
     public sealed class PythonToolsPackage : CommonPackage, IVsComponentSelectorProvider, IPythonToolsToolWindowService {
@@ -330,6 +350,20 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             }
         }
 
+#if DEV14_OR_LATER
+        protected override int CreateToolWindow(ref Guid toolWindowType, int id) {
+            if (toolWindowType == GuidList.guidPythonInteractiveWindowGuid) {
+                var res = ComponentModel.GetService<InteractiveWindowProvider>().CreateFromRegistry(
+                    ComponentModel,
+                    id
+                );
+
+                return res ? VSConstants.S_OK : VSConstants.E_FAIL;
+        }
+
+            return base.CreateToolWindow(ref toolWindowType, id);
+        }
+#endif
         internal static void OpenNoInterpretersHelpPage(System.IServiceProvider serviceProvider, string page = null) {
             OpenVsWebBrowser(serviceProvider, page ?? PythonToolsInstallPath.GetFile("NoInterpreters.mht"));
         }
@@ -596,6 +630,10 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             if (loadedProjectProvider != null) {
                 loadedProjectProvider.SetSolution((IVsSolution)GetService(typeof(SVsSolution)));
             }
+
+            // The variable is inherited by child processes backing Test Explorer, and is used in PTVS
+            // test discoverer and test executor to connect back to VS.
+            Environment.SetEnvironmentVariable("_PTVS_PID", Process.GetCurrentProcess().Id.ToString());
         }
 
         private void RefreshReplCommands(object sender, EventArgs e) {
@@ -747,15 +785,22 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
 
             string replId = PythonReplEvaluatorProvider.GetConfigurableReplId(realId);
 
+#if DEV14_OR_LATER
+            var replProvider = ComponentModel.GetService<InteractiveWindowProvider>();
+            var vsWindow =
+#else
             var replProvider = ComponentModel.GetService<IReplWindowProvider>();
-
-            var window = replProvider.FindReplWindow(replId) ?? replProvider.CreateReplWindow(
+            var window = 
+#endif
+            replProvider.FindReplWindow(replId) ?? replProvider.CreateReplWindow(
                 this.GetPythonContentType(),
                 title,
                 typeof(PythonLanguageInfo).GUID,
                 replId
             );
-
+#if DEV14_OR_LATER
+            var window = vsWindow.InteractiveWindow;
+#endif
             var commandProvider = project as IPythonProject2;
             if (commandProvider != null) {
                 commandProvider.AddActionOnClose((object)window, BasePythonReplEvaluator.CloseReplWindow);

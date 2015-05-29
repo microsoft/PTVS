@@ -94,7 +94,7 @@ namespace Microsoft.PythonTools.Debugger.Remote {
         }
 
         public int GetPortSupplierName(out string pbstrName) {
-            pbstrName = "Python remote debugging";
+            pbstrName = "Python remote (ptvsd)";
             return VSConstants.S_OK;
         }
 

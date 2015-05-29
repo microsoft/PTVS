@@ -24,11 +24,21 @@ using Microsoft.PythonTools;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
 using Microsoft.VisualStudioTools;
+using Microsoft.VisualStudio.Text.Classification;
+using Microsoft.VisualStudio.Text;
+#if DEV14_OR_LATER
+using Microsoft.VisualStudio.InteractiveWindow;
+using Microsoft.VisualStudio.InteractiveWindow.Commands;
+#else
+using Microsoft.VisualStudio.Repl;
+#endif
 
-namespace Microsoft.VisualStudio.Repl {
-#if INTERACTIVE_WINDOW
+namespace Microsoft.PythonTools.Repl {
+#if DEV14_OR_LATER
     using IReplWindow = IInteractiveWindow;
     using IReplCommand = IInteractiveWindowCommand;
+    using IReplCommand2 = IInteractiveWindowCommand;
+    using ReplRoleAttribute = Microsoft.PythonTools.Repl.InteractiveWindowRoleAttribute;
 #endif
 
     [Export(typeof(IReplCommand))]
@@ -39,7 +49,7 @@ namespace Microsoft.VisualStudio.Repl {
 
         public Task<ExecutionResult> Execute(IReplWindow window, string arguments) {
             var finder = new FileFinder(arguments);
-            
+
             var eval = window.Evaluator as BasePythonReplEvaluator;
             if (eval != null && eval.CurrentOptions != null) {
                 finder.Search(eval.CurrentOptions.WorkingDirectory);
@@ -47,8 +57,11 @@ namespace Microsoft.VisualStudio.Repl {
             }
 
             finder.ThrowIfNotFound();
-
+#if DEV14_OR_LATER
+            string commandPrefix = "$";
+#else
             string commandPrefix = (string)window.GetOptionValue(ReplOptions.CommandPrefix);
+#endif
             string lineBreak = window.TextView.Options.GetNewLineCharacter();
 
             IEnumerable<string> lines = File.ReadLines(finder.Filename);
@@ -113,6 +126,36 @@ namespace Microsoft.VisualStudio.Repl {
             }
         }
 
+
+#if DEV14_OR_LATER
+        public IEnumerable<ClassificationSpan> ClassifyArguments(ITextSnapshot snapshot, Span argumentsSpan, Span spanToClassify) {
+            yield break;
+        }
+
+        public string CommandLine {
+            get {
+                return "";
+            }
+        }
+
+        public IEnumerable<string> DetailedDescription {
+            get {
+                yield return Description;
+            }
+        }
+
+        public IEnumerable<KeyValuePair<string, string>> ParametersDescription {
+            get {
+                yield break;
+            }
+        }
+
+        public IEnumerable<string> Names {
+            get {
+                yield return Command;
+            }
+        }
+#endif
         #endregion
 
         class FileFinder {

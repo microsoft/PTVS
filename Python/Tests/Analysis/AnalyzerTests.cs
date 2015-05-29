@@ -35,7 +35,7 @@ namespace AnalysisTests {
         }
 
         [TestMethod, Priority(0)]
-        public void LogFileEncoding() {
+        public async Task LogFileEncoding() {
             // Ensure that log messages round-trip correctly.
 
             const string TEST = "Abc \u01FA\u0299\uFB3B";
@@ -58,7 +58,7 @@ namespace AnalysisTests {
                     null,
                     1
                 )) {
-                    analyzer.StartTraceListener();
+                    await analyzer.StartTraceListener();
                     analyzer.TraceError(TEST);
                     analyzer.TraceWarning(TEST);
                     analyzer.TraceInformation(TEST);

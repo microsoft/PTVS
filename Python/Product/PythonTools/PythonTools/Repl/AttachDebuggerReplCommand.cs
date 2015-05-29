@@ -15,17 +15,20 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
-using System.IO;
 using System.Threading.Tasks;
-using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
-using Microsoft.PythonTools.Repl;
+using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Classification;
+#if DEV14_OR_LATER
+using Microsoft.VisualStudio.InteractiveWindow;
 
-namespace Microsoft.VisualStudio.Repl {
-#if INTERACTIVE_WINDOW
-    using IReplCommand = IInteractiveWindowCommand;
-    using IReplWindow = IInteractiveWindow;
+using IReplCommand = Microsoft.VisualStudio.InteractiveWindow.Commands.IInteractiveWindowCommand;
+using IReplWindow = Microsoft.VisualStudio.InteractiveWindow.IInteractiveWindow;
+using ReplRoleAttribute = Microsoft.PythonTools.Repl.InteractiveWindowRoleAttribute;
+#else
+using Microsoft.VisualStudio.Repl;
 #endif
-    
+
+namespace Microsoft.PythonTools.Repl {
     [Export(typeof(IReplCommand))]
     [ReplRole("Execution")]
     class AttachDebuggerReplCommand : IReplCommand {
@@ -69,6 +72,36 @@ Environment.NewLine + Environment.NewLine +
                 return null;
             }
         }
+
+#if DEV14_OR_LATER
+        public IEnumerable<ClassificationSpan> ClassifyArguments(ITextSnapshot snapshot, Span argumentsSpan, Span spanToClassify) {
+            yield break;
+        }
+
+        public string CommandLine {
+            get {
+                return "";
+            }
+        }
+
+        public IEnumerable<string> DetailedDescription {
+            get {
+                yield return Description;
+            }
+        }
+
+        public IEnumerable<KeyValuePair<string, string>> ParametersDescription {
+            get {
+                yield break;
+            }
+        }
+
+        public IEnumerable<string> Names {
+            get {
+                yield return Command;
+            }
+        }
+#endif
 
         #endregion
     }

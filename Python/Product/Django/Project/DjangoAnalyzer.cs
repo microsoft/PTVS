@@ -27,6 +27,7 @@ namespace Microsoft.PythonTools.Django.Project {
     partial class DjangoAnalyzer : IDisposable {
         internal readonly Dictionary<string, TagInfo> _tags = new Dictionary<string, TagInfo>();
         internal readonly Dictionary<string, TagInfo> _filters = new Dictionary<string, TagInfo>();
+        private readonly HashSet<IPythonProjectEntry> _hookedEntries = new HashSet<IPythonProjectEntry>();
         internal readonly Dictionary<string, TemplateVariables> _templateFiles = new Dictionary<string, TemplateVariables>(StringComparer.OrdinalIgnoreCase);
         private ConditionalWeakTable<Node, ContextMarker> _contextTable = new ConditionalWeakTable<Node, ContextMarker>();
         private ConditionalWeakTable<Node, DeferredDecorator> _decoratorTable = new ConditionalWeakTable<Node, DeferredDecorator>();
@@ -39,7 +40,7 @@ namespace Microsoft.PythonTools.Django.Project {
         public DjangoAnalyzer(IServiceProvider serviceProvider) {
             _serviceProvider = serviceProvider;
             foreach (var tagName in DjangoCompletionSource._nestedEndTags) {
-                _tags[tagName] = new TagInfo("");
+                _tags[tagName] = new TagInfo("", null);
             }
         }
 
@@ -50,20 +51,38 @@ namespace Microsoft.PythonTools.Django.Project {
 
             _tags.Clear();
             _filters.Clear();
+            foreach (var entry in _hookedEntries) {
+                entry.OnNewParseTree -= OnNewParseTree;
+            }
+            _hookedEntries.Clear();
             _templateAnalysis.Clear();
             _templateFiles.Clear();
             _contextTable = new ConditionalWeakTable<Node, ContextMarker>();
             _decoratorTable = new ConditionalWeakTable<Node, DeferredDecorator>();
 
             foreach (var keyValue in _knownTags) {
-                _tags[keyValue.Key] = new TagInfo(keyValue.Value);
+                _tags[keyValue.Key] = new TagInfo(keyValue.Value, null);
             }
             foreach (var keyValue in _knownFilters) {
-                _filters[keyValue.Key] = new TagInfo(keyValue.Value);
+                _filters[keyValue.Key] = new TagInfo(keyValue.Value, null);
             }
 
             HookAnalysis(analyzer);
             _analyzer = analyzer;
+        }
+
+        private void OnNewParseTree(object sender, EventArgs e) {
+            var entry = sender as IPythonProjectEntry;
+            if (entry != null && _hookedEntries.Remove(entry)) {
+                var removeTags = _tags.Where(kv => kv.Value.Entry == entry).Select(kv => kv.Key).ToList();
+                var removeFilters = _filters.Where(kv => kv.Value.Entry == entry).Select(kv => kv.Key).ToList();
+                foreach (var key in removeTags) {
+                    _tags.Remove(key);
+                }
+                foreach (var key in removeFilters) {
+                    _filters.Remove(key);
+                }
+            }
         }
 
         private void HookAnalysis(PythonAnalyzer analyzer) {
@@ -80,6 +99,7 @@ namespace Microsoft.PythonTools.Django.Project {
             analyzer.SpecializeFunction("django.template.base.Library", "tag", TagProcessor, true);
             analyzer.SpecializeFunction("django.template.base.Library", "tag_function", TagProcessor, true);
             analyzer.SpecializeFunction("django.template.base.Library", "assignment_tag", TagProcessor, true);
+            analyzer.SpecializeFunction("django.template.base.Library", "simple_tag", TagProcessor, true);
 
             analyzer.SpecializeFunction("django.template.base.Parser", "parse", ParseProcessor, true);
             analyzer.SpecializeFunction("django.template.base", "import_library", "django.template.base.Library", true);
@@ -107,7 +127,7 @@ namespace Microsoft.PythonTools.Django.Project {
                         foreach (var value in values) {
                             var str = value.GetConstantValueAsString();
                             if (str != null) {
-                                RegisterTag(_tags, str);
+                                RegisterTag(unit.Project, _tags, str);
                             }
                         }
                     }
@@ -121,6 +141,10 @@ namespace Microsoft.PythonTools.Django.Project {
         public void Dispose() {
             _filters.Clear();
             _tags.Clear();
+            foreach (var entry in _hookedEntries) {
+                entry.OnNewParseTree -= OnNewParseTree;
+            }
+            _hookedEntries.Clear();
             _templateAnalysis.Clear();
             _templateFiles.Clear();
         }
@@ -253,12 +277,12 @@ namespace Microsoft.PythonTools.Django.Project {
                     var constName = name.GetConstantValue();
                     if (constName == Type.Missing) {
                         if (name.Name != null) {
-                            RegisterTag(tags, name.Name, name.Documentation);
+                            RegisterTag(unit.Project, tags, name.Name, name.Documentation);
                         }
                     } else {
                         var strName = name.GetConstantValueAsString();
                         if (strName != null) {
-                            RegisterTag(tags, strName);
+                            RegisterTag(unit.Project, tags, strName);
                         }
                     }
                 }
@@ -274,7 +298,7 @@ namespace Microsoft.PythonTools.Django.Project {
                 foreach (var name in args[1]) {
                     string tagName = name.Name ?? name.GetConstantValueAsString();
                     if (tagName != null) {
-                        RegisterTag(tags, tagName, name.Documentation);
+                        RegisterTag(unit.Project, tags, tagName, name.Documentation);
                     }
                     if (name.MemberType != PythonMemberType.Constant) {
                         var parser = unit.FindAnalysisValueByName(node, "django.template.base.Parser");
@@ -295,7 +319,7 @@ namespace Microsoft.PythonTools.Django.Project {
                         return dec;
                     } else if (name.Name != null) {
                         // library.filter
-                        RegisterTag(tags, name.Name, name.Documentation);
+                        RegisterTag(unit.Project, tags, name.Name, name.Documentation);
                     }
                 }
             }
@@ -303,10 +327,13 @@ namespace Microsoft.PythonTools.Django.Project {
             return AnalysisSet.Empty;
         }
 
-        private static void RegisterTag(Dictionary<string, TagInfo> tags, string name, string documentation = null) {
+        private void RegisterTag(IPythonProjectEntry entry, Dictionary<string, TagInfo> tags, string name, string documentation = null) {
             TagInfo tag;
             if (!tags.TryGetValue(name, out tag) || (String.IsNullOrWhiteSpace(tag.Documentation) && !String.IsNullOrEmpty(documentation))) {
-                tags[name] = tag = new TagInfo(documentation);
+                tags[name] = tag = new TagInfo(documentation, entry);
+                if (entry != null && _hookedEntries.Add(entry)) {
+                    entry.OnNewParseTree += OnNewParseTree;
+                }
             }
         }
 

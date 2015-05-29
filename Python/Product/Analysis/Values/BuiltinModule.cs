@@ -139,9 +139,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
                         IAnalysisSet instValue;
                         if (ci.Instance.TryGetMember(methodName, out instValue)) {
                             ci.Instance[methodName] = new SpecializedCallable(
-                                instValue.FirstOrDefault(), 
-                                ci.Instance, 
-                                callable, 
+                                instValue.FirstOrDefault(),
+                                ci.Instance,
+                                callable,
                                 mergeOriginalAnalysis).SelfSet;
                         } else {
                             ci.Instance[methodName] = new SpecializedCallable(
@@ -152,6 +152,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
                         }
                     }
                 }
+            } else {
+                this[name] = new SpecializedCallable(null, callable, false);
             }
         }
 

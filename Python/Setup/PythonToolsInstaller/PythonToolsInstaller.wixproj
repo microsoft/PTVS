@@ -12,6 +12,7 @@
       $(DefineConstants);
       IncludeVsLogger=$(IncludeVsLogger);
       IncludeHpc=$(IncludeHpc);
+      IncludeUwp=$(IncludeUwp);
     </DefineConstants>
     <DefineConstants Condition="$(VSTarget) == '10.0' or $(VSTarget) == '11.0' or $(VSTarget) == '12.0'">
       $(DefineConstants);
@@ -84,6 +85,10 @@
     <ProjectReference Include="$(BuildRoot)\Python\Setup\Django\Django.wixproj">
       <Name>DjangoMsm</Name>
       <Project>{16671BE6-DD23-41D9-841A-0B80D47A090D}</Project>
+    </ProjectReference>
+    <ProjectReference Include="$(BuildRoot)\Python\Setup\Uwp\Uwp.wixproj" Condition="$(IncludeUwp)">
+      <Name>UwpMsm</Name>
+      <Project>{83946E81-7A1B-4D3B-927F-4CD67AC95BE7}</Project>
     </ProjectReference>
     <ProjectReference Include="$(PTVSPRPath)VsLoggerSetup\VsLogger.wixproj" Condition="'$(IncludeVsLogger)' == 'True'">
       <Name>VsLoggerMsm</Name>

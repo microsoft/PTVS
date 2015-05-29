@@ -16,15 +16,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Repl;
-using Microsoft.VisualStudio.ComponentModelHost;
+#if !DEV14_OR_LATER
 using Microsoft.VisualStudio.Repl;
-
-namespace Microsoft.PythonTools.Options {
-#if INTERACTIVE_WINDOW
-    using IReplWindowProvider = IInteractiveWindowProvider;
 #endif
 
+namespace Microsoft.PythonTools.Options {
     class PythonInteractiveOptionsPage : PythonDialogPage {
         internal PythonInteractiveOptionsControl _window;
 

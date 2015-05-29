@@ -1,7 +1,11 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
+    <!-- Include UWP -->
+    <IncludeUwp Condition="'$(IncludeUwp)' == '' and $(VSMajorVersion) >= 14">true</IncludeUwp>
+    <IncludeUwp Condition="'$(IncludeUwp)' == ''">false</IncludeUwp>
+
     <!-- Include HPC by default, and force to ReleaseBuild if dependencies are missing -->
-    <IncludeHpc Condition="'$(IncludeHpc)' == '' and '$(VSTarget)' == '14.0'">false</IncludeHpc>
+    <IncludeHpc Condition="'$(IncludeHpc)' == '' and $(VSMajorVersion) >= 14">false</IncludeHpc>
     <IncludeHpc Condition="'$(IncludeHpc)' == ''">true</IncludeHpc>
     <IncludeHpc Condition="'$(registry:HKEY_CLASSES_ROOT\CLSID\{3C376723-5FF9-4C55-89BB-E9E7A31577E1})' == ''">$(ReleaseBuild)</IncludeHpc>
     
@@ -18,5 +22,10 @@
     -->
     <IncludeWFastCgi Condition="'$(IncludeWFastCgi)' == '' and '$(VSTarget)' == '12.0'">true</IncludeWFastCgi>
     <IncludeWFastCgi Condition="'$(IncludeWFastCgi)' == ''">false</IncludeWFastCgi>
+
+    <!-- Features default to true for release builds -->
+    <FeatureAzureRemoteDebug>$(ReleaseBuild)</FeatureAzureRemoteDebug>
+    <FeatureAzureRemoteDebug Condition="$(VSMajorVersion) > 12 or ($(VSMajorVersion) == 12 and $(VSUpdateVersion) >= 30723)">true</FeatureAzureRemoteDebug>
+    <FeatureAzureRemoteDebug Condition="'$(FeatureAzureRemoteDebug)' == ''">false</FeatureAzureRemoteDebug>
   </PropertyGroup>
 </Project>

@@ -73,18 +73,24 @@ namespace Microsoft.VisualStudioTools.Project {
 #endif
         private int _idleTriggered;
 
-        public CommonProjectNode(IServiceProvider serviceProvider, ImageList/*!*/ imageList)
+        public CommonProjectNode(IServiceProvider serviceProvider, ImageList imageList)
             : base(serviceProvider) {
+#if !DEV14_OR_LATER
             Contract.Assert(imageList != null);
+#endif
 
             CanFileNodesHaveChilds = true;
             SupportsProjectDesigner = true;
-            _imageList = imageList;
+            if (imageList != null) {
+                _imageList = imageList;
 
-            //Store the number of images in ProjectNode so we know the offset of the language icons.
-            _imageOffset = ImageHandler.ImageList.Images.Count;
-            foreach (Image img in ImageList.Images) {
-                ImageHandler.AddImage(img);
+                //Store the number of images in ProjectNode so we know the offset of the language icons.
+#pragma warning disable 0618
+                _imageOffset = ImageHandler.ImageList.Images.Count;
+                foreach (Image img in ImageList.Images) {
+                    ImageHandler.AddImage(img);
+                }
+#pragma warning restore 0618
             }
 
             //Initialize a new object to track project document changes so that we can update the StartupFile Property accordingly
@@ -108,7 +114,7 @@ namespace Microsoft.VisualStudioTools.Project {
             return base.QueryService(ref guidService, out result);
         }
 
-        #region abstract methods
+#region abstract methods
 
         public abstract Type GetProjectFactoryType();
         public abstract Type GetEditorFactoryType();
@@ -124,9 +130,9 @@ namespace Microsoft.VisualStudioTools.Project {
         public abstract Type GetGeneralPropertyPageType();
         public abstract Type GetLibraryManagerType();
 
-        #endregion
+#endregion
 
-        #region Properties
+#region Properties
 
         public int ImageOffset {
             get { return _imageOffset; }
@@ -192,9 +198,9 @@ namespace Microsoft.VisualStudioTools.Project {
             }
         }
 
-        #endregion
+#endregion
 
-        #region overridden properties
+#region overridden properties
 
         public override bool CanShowAllFiles {
             get {
@@ -212,6 +218,9 @@ namespace Microsoft.VisualStudioTools.Project {
         /// Since we appended the language images to the base image list in the constructor,
         /// this should be the offset in the ImageList of the langauge project icon.
         /// </summary>
+#if DEV14_OR_LATER
+        [Obsolete("Use GetIconMoniker() to specify the icon and GetIconHandle() for back-compat")]
+#endif
         public override int ImageIndex {
             get {
                 return _imageOffset + (int)CommonImageName.Project;
@@ -233,9 +242,9 @@ namespace Microsoft.VisualStudioTools.Project {
                 return VSProject;
             }
         }
-        #endregion
+#endregion
 
-        #region overridden methods
+#region overridden methods
 
         public override object GetAutomationObject() {
             if (_automationObject == null) {
@@ -1172,7 +1181,7 @@ namespace Microsoft.VisualStudioTools.Project {
                         _project.AddAllFilesFile(parent, _path);
                         if (String.Equals(_project.GetStartupFile(), _path, StringComparison.OrdinalIgnoreCase)) {
                             _project.BoldStartupItem();
-                    }
+                        }
                     }
 
                     parent.ExpandItem(wasExpanded ? EXPANDFLAGS.EXPF_ExpandFolder : EXPANDFLAGS.EXPF_CollapseFolder);
@@ -1514,9 +1523,9 @@ namespace Microsoft.VisualStudioTools.Project {
         protected override ConfigProvider CreateConfigProvider() {
             return new CommonConfigProvider(this);
         }
-        #endregion
+#endregion
 
-        #region Methods
+#region Methods
 
         /// <summary>
         /// This method retrieves an instance of a service that 
@@ -1668,9 +1677,9 @@ namespace Microsoft.VisualStudioTools.Project {
             return _userBuildProject.GetPropertyValue(propertyName);
         }
 
-        #endregion
+#endregion
 
-        #region IVsProjectSpecificEditorMap2 Members
+#region IVsProjectSpecificEditorMap2 Members
 
         public int GetSpecificEditorProperty(string mkDocument, int propid, out object result) {
             // initialize output params
@@ -1722,9 +1731,9 @@ namespace Microsoft.VisualStudioTools.Project {
             return VSConstants.E_NOTIMPL;
         }
 
-        #endregion
+#endregion
 
-        #region IVsDeferredSaveProject Members
+#region IVsDeferredSaveProject Members
 
         /// <summary>
         /// Implements deferred save support.  Enabled by unchecking Tools->Options->Solutions and Projects->Save New Projects Created.
@@ -1820,7 +1829,7 @@ namespace Microsoft.VisualStudioTools.Project {
             }
         }
 
-        #endregion
+#endregion
 
         internal void SuppressFileChangeNotifications() {
             _watcher.EnableRaisingEvents = false;

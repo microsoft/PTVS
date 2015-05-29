@@ -28,6 +28,7 @@ using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.InterpreterList;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.PythonTools.Project;
 using Microsoft.PythonTools.Repl;
@@ -35,7 +36,11 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Language.StandardClassification;
+#if DEV14_OR_LATER
+using Microsoft.VisualStudio.InteractiveWindow;
+#else
 using Microsoft.VisualStudio.Repl;
+#endif
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
@@ -43,15 +48,30 @@ using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudioTools;
+using Microsoft.VisualStudioTools.Project;
+
+// Disables obsolete warning for ISmartTag* interfaces - http://go.microsoft.com/fwlink/?LinkId=394601
+#pragma warning disable 618
 
 namespace Microsoft.PythonTools {
-    using Microsoft.PythonTools.InterpreterList;
-    using Task = System.Threading.Tasks.Task;
-#if INTERACTIVE_WINDOW
-    using IReplEvaluator = IInteractiveEngine;
+#if DEV14_OR_LATER
+    using IReplEvaluator = IInteractiveEvaluator;
 #endif
 
     public static class Extensions {
+        internal static bool IsAppxPackageableProject(this ProjectNode projectNode) {
+            var appxProp = projectNode.BuildProject.GetPropertyValue(ProjectFileConstants.AppxPackage);
+            var containerProp = projectNode.BuildProject.GetPropertyValue(ProjectFileConstants.WindowsAppContainer);
+            var appxFlag = false;
+            var containerFlag = false;
+
+            if (bool.TryParse(appxProp, out appxFlag) && bool.TryParse(containerProp, out containerFlag)) {
+                return appxFlag && containerFlag;
+            } else {
+                return false;
+            }
+        }
+
         public static StandardGlyphGroup ToGlyphGroup(this PythonMemberType objectType) {
             StandardGlyphGroup group;
             switch (objectType) {
@@ -702,8 +722,8 @@ namespace Microsoft.PythonTools {
             return list[list.Count - 1];
         }
 
-        internal static Task StartNew(this TaskScheduler scheduler, Action func) {
-            return Task.Factory.StartNew(func, default(CancellationToken), TaskCreationOptions.None, scheduler);
+        internal static System.Threading.Tasks.Task StartNew(this TaskScheduler scheduler, Action func) {
+            return System.Threading.Tasks.Task.Factory.StartNew(func, default(CancellationToken), TaskCreationOptions.None, scheduler);
         }
 
         internal static int GetStartIncludingIndentation(this Node self, PythonAst ast) {

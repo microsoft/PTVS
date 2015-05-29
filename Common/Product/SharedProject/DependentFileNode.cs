@@ -21,6 +21,10 @@ using Microsoft.VisualStudio.Shell.Interop;
 using OleConstants = Microsoft.VisualStudio.OLE.Interop.Constants;
 using VsCommands = Microsoft.VisualStudio.VSConstants.VSStd97CmdID;
 using VsCommands2K = Microsoft.VisualStudio.VSConstants.VSStd2KCmdID;
+#if DEV14_OR_LATER
+using Microsoft.VisualStudio.Imaging;
+using Microsoft.VisualStudio.Imaging.Interop;
+#endif
 
 namespace Microsoft.VisualStudioTools.Project {
     /// <summary>
@@ -33,12 +37,6 @@ namespace Microsoft.VisualStudioTools.Project {
         /// Defines if the node has a name relation to its parent node
         /// e.g. Form1.ext and Form1.resx are name related (until first occurence of extention separator)
         /// </summary>
-        #endregion
-
-        #region Properties
-        public override int ImageIndex {
-            get { return (this.CanShowDefaultIcon() ? (int)ProjectNode.ImageName.DependentFile : (int)ProjectNode.ImageName.MissingFile); }
-        }
         #endregion
 
         #region ctor
@@ -65,14 +63,23 @@ namespace Microsoft.VisualStudioTools.Project {
             throw new NotImplementedException();
         }
 
-        /// <summary>
-        /// Gets a handle to the icon that should be set for this node
-        /// </summary>
-        /// <param name="open">Whether the folder is open, ignored here.</param>
-        /// <returns>Handle to icon for the node</returns>
-        public override object GetIconHandle(bool open) {
-            return this.ProjectMgr.ImageHandler.GetIconHandle(this.ImageIndex);
+#if DEV14_OR_LATER
+        protected override bool SupportsIconMonikers {
+            get { return true; }
         }
+
+        protected override ImageMoniker GetIconMoniker(bool open) {
+            return CanShowDefaultIcon() ?
+                // TODO: Check this image
+                KnownMonikers.ReferencedElement :
+                KnownMonikers.DocumentWarning;
+        }
+#else
+        public override int ImageIndex {
+            get { return (this.CanShowDefaultIcon() ? (int)ProjectNode.ImageName.DependentFile : (int)ProjectNode.ImageName.MissingFile); }
+        }
+
+#endif
 
         /// <summary>
         /// Disable certain commands for dependent file nodes 

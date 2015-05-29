@@ -21,16 +21,25 @@ using Microsoft.PythonTools.Navigation;
 using Microsoft.PythonTools.Project;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudioTools;
+#if DEV14_OR_LATER
+using Microsoft.VisualStudio.Imaging;
+using Microsoft.VisualStudio.InteractiveWindow;
+using Microsoft.VisualStudio.InteractiveWindow.Shell;
+#else
+using Microsoft.VisualStudio.Repl;
+#endif
 
 namespace Microsoft.PythonTools.Commands {
-#if INTERACTIVE_WINDOW
+#if DEV14_OR_LATER
     using IReplWindow = IInteractiveWindow;
-    using IReplWindowProvider = IInteractiveWindowProvider;
+    using IReplWindowProvider = InteractiveWindowProvider;
+    using IReplWindowToolWindow = IVsInteractiveWindow;
+#else
+    using IReplWindowToolWindow = IReplWindow;
 #endif
 
     /// <summary>
@@ -43,11 +52,11 @@ namespace Microsoft.PythonTools.Commands {
             _serviceProvider = serviceProvider;
         }
 
-        internal static IReplWindow/*!*/ EnsureReplWindow(IServiceProvider serviceProvider, VsProjectAnalyzer analyzer, PythonProjectNode project) {
+        internal static IReplWindowToolWindow/*!*/ EnsureReplWindow(IServiceProvider serviceProvider, VsProjectAnalyzer analyzer, PythonProjectNode project) {
             return EnsureReplWindow(serviceProvider, analyzer.InterpreterFactory, project);
         }
 
-        internal static IReplWindow/*!*/ EnsureReplWindow(IServiceProvider serviceProvider, IPythonInterpreterFactory factory, PythonProjectNode project) {
+        internal static IReplWindowToolWindow/*!*/ EnsureReplWindow(IServiceProvider serviceProvider, IPythonInterpreterFactory factory, PythonProjectNode project) {
             var compModel = serviceProvider.GetComponentModel();
             var provider = compModel.GetService<IReplWindowProvider>();
 
@@ -56,16 +65,22 @@ namespace Microsoft.PythonTools.Commands {
             if (window == null) {
                 window = provider.CreateReplWindow(
                     serviceProvider.GetPythonContentType(),
-                    factory.Description + " Interactive", 
+                    factory.Description + " Interactive",
                     typeof(PythonLanguageInfo).GUID,
                     replId
                 );
 
+                var toolWindow = window as ToolWindowPane;
+                if (toolWindow != null) {
+#if DEV14_OR_LATER
+                    toolWindow.BitmapImageMoniker = KnownMonikers.PYInteractiveWindow;
+#else
+                    // TODO: Add image here for VS 2013
+#endif
+                }
+
                 var pyService = serviceProvider.GetPythonToolsService();
-                window.SetOptionValue(
-                    ReplOptions.UseSmartUpDown, 
-                    pyService.GetInteractiveOptions(factory).ReplSmartHistory
-                );
+                window.SetSmartUpDown(pyService.GetInteractiveOptions(factory).ReplSmartHistory);
             }
 
             if (project != null && project.Interpreters.IsProjectSpecific(factory)) {
@@ -127,24 +142,37 @@ namespace Microsoft.PythonTools.Commands {
                 // TODO: Error reporting
                 return;
             }
-            
-            var window = (IReplWindow)EnsureReplWindow(_serviceProvider, analyzer, pyProj);
+
+            var window = EnsureReplWindow(_serviceProvider, analyzer, pyProj);
             IVsWindowFrame windowFrame = (IVsWindowFrame)((ToolWindowPane)window).Frame;
 
+#if DEV14_OR_LATER
+            window.Show(true);
+#else
             ErrorHandler.ThrowOnFailure(windowFrame.Show());
             window.Focus();
+#endif
 
             // The interpreter may take some time to startup, do this off the UI thread.
             ThreadPool.QueueUserWorkItem(x => {
+#if DEV14_OR_LATER
+                window.InteractiveWindow.Evaluator.ResetAsync();
+
+                window.InteractiveWindow.WriteLine(String.Format("Running {0}", filename));
+                string scopeName = Path.GetFileNameWithoutExtension(filename);
+
+                ((PythonReplEvaluator)window.InteractiveWindow.Evaluator).ExecuteFile(filename);
+#else
                 window.Reset();
                 
                 window.WriteLine(String.Format("Running {0}", filename));
                 string scopeName = Path.GetFileNameWithoutExtension(filename);
 
                 window.Evaluator.ExecuteFile(filename);
+#endif
             });
         }
-        
+
         public override int CommandId {
             get { return (int)PkgCmdIDList.cmdidExecuteFileInRepl; }
         }

@@ -24,6 +24,10 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 using OleConstants = Microsoft.VisualStudio.OLE.Interop.Constants;
 using VsCommands2K = Microsoft.VisualStudio.VSConstants.VSStd2KCmdID;
+#if DEV14_OR_LATER
+using Microsoft.VisualStudio.Imaging;
+using Microsoft.VisualStudio.Imaging.Interop;
+#endif
 
 namespace Microsoft.VisualStudioTools.Project {
     internal abstract class ReferenceNode : HierarchyNode {
@@ -96,12 +100,24 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
 
-        public override object GetIconHandle(bool open) {
-            return ProjectMgr.GetIconHandleByName(CanShowDefaultIcon() ?
-                ProjectNode.ImageName.Reference :
-                ProjectNode.ImageName.DanglingReference
-            );
+#if DEV14_OR_LATER
+        protected override bool SupportsIconMonikers {
+            get { return true; }
         }
+
+        protected override ImageMoniker GetIconMoniker(bool open) {
+            return CanShowDefaultIcon() ? KnownMonikers.Reference : KnownMonikers.ReferenceWarning;
+        }
+#else
+        public override int ImageIndex {
+            get {
+                return ProjectMgr.GetIconIndex(CanShowDefaultIcon() ?
+                    ProjectNode.ImageName.Reference :
+                    ProjectNode.ImageName.DanglingReference
+                );
+            }
+        }
+#endif
 
         /// <summary>
         /// Not supported.

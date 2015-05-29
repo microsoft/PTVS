@@ -540,10 +540,10 @@ namespace Microsoft.PythonTools.Intellisense {
                 eol = false;
                 while (e.MoveNext()) {
                     if (e.Current == null) {
-                        eol = true;
                         if (nesting == 0) {
                             break;
                         }
+                        eol = true;
                     } else {
                         eol = false;
                         if (setStart) {

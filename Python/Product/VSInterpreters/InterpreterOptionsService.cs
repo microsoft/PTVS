@@ -154,15 +154,15 @@ namespace Microsoft.PythonTools.Interpreter {
             try {
                 var store = _settings.GetReadOnlySettingsStore(SettingsScope.Configuration);
                 _providers = LoadProviders(store, serviceProvider);
+
+                foreach (var provider in _providers) {
+                    provider.InterpreterFactoriesChanged += Provider_InterpreterFactoriesChanged;
+                }
+
+                LoadDefaultInterpreter(suppressChangeEvent: true);
             } finally {
                 EndSuppressInterpretersChangedEvent();
             }
-
-            foreach (var provider in _providers) {
-                provider.InterpreterFactoriesChanged += Provider_InterpreterFactoriesChanged;
-            }
-
-            LoadDefaultInterpreter(suppressChangeEvent: true);
         }
 
         private void Provider_InterpreterFactoriesChanged(object sender, EventArgs e) {
@@ -175,7 +175,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
             // May have removed the default interpreter, so select a new default
             if (FindInterpreter(DefaultInterpreter.Id, DefaultInterpreter.Configuration.Version) == null) {
-                DefaultInterpreter = Interpreters.LastOrDefault();
+                DefaultInterpreter = Interpreters.LastOrDefault(fact => fact.CanBeAutoDefault());
             }
 
             var evt = InterpretersChanged;
@@ -344,10 +344,7 @@ namespace Microsoft.PythonTools.Interpreter {
         internal IPythonInterpreterFactoryProvider[] SetProviders(IPythonInterpreterFactoryProvider[] providers) {
             var oldProviders = _providers;
             _providers = providers;
-            var evt = InterpretersChanged;
-            if (evt != null) {
-                evt(this, EventArgs.Empty);
-            }
+            Provider_InterpreterFactoriesChanged(this, EventArgs.Empty);
             return oldProviders;
         }
 
@@ -423,7 +420,8 @@ namespace Microsoft.PythonTools.Interpreter {
                 version = store.GetString(DefaultInterpreterOptionsCollection, DefaultInterpreterVersionSetting, string.Empty);
             }
 
-            var newDefault = FindInterpreter(id, version) ?? Interpreters.LastOrDefault();
+            var newDefault = FindInterpreter(id, version) ??
+                Interpreters.LastOrDefault(fact => fact.CanBeAutoDefault());
 
             if (suppressChangeEvent) {
                 _defaultInterpreter = newDefault;

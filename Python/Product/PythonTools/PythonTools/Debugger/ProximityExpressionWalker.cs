@@ -135,6 +135,11 @@ namespace Microsoft.PythonTools.Debugger {
         private class DetectSideEffectsWalker : PythonWalker {
             public bool HasSideEffects { get; private set; }
 
+            public override bool Walk(AwaitExpression node) {
+                HasSideEffects = true;
+                return false;
+            }
+
             public override bool Walk(CallExpression node) {
                 HasSideEffects = true;
                 return false;

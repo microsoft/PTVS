@@ -267,7 +267,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
                             return VSConstants.S_OK;
                     }
                 }
-                return VSConstants.E_FAIL;
+                return NativeMethods.OLECMDERR_E_NOTSUPPORTED;
             }
 
             public int QueryStatus(ref Guid pguidCmdGroup, uint cCmds, OLECMD[] prgCmds, IntPtr pCmdText) {

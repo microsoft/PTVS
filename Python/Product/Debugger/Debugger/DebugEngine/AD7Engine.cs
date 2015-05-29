@@ -89,6 +89,12 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         public const string DebugEngineId = "{EC1375B7-E2CE-43E8-BF75-DC638DE1F1F9}";
         public const string DebugEngineName = "Python";
         public static Guid DebugEngineGuid = new Guid(DebugEngineId);
+        public const string SourceDirectoryKey = "sd";
+        public const string TargetDirectoryKey = "td";
+        public const string TargetHostType = "host";
+
+        public const string TargetUwp = "uwp";
+
         /// <summary>
         /// Specifies the version of the language which is being debugged.  One of
         /// V24, V25, V26, V27, V30, V31 or V32.
@@ -359,15 +365,15 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                 _startThread = null;
             }
 
-            Send(new AD7LoadCompleteEvent(), AD7LoadCompleteEvent.IID, thread);
-
-            _processLoadedThread = null;
-            _loadComplete.Set();
-
             var attached = EngineAttached;
             if (attached != null) {
                 attached(this, new AD7EngineEventArgs(this));
             }
+
+            Send(new AD7LoadCompleteEvent(), AD7LoadCompleteEvent.IID, thread);
+
+            _processLoadedThread = null;
+            _loadComplete.Set();
 
             StartWebBrowser();
         }
@@ -726,6 +732,9 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                 }
             }
 
+            _engineCreated = _programCreated = false;
+            _loadComplete.Reset();
+
             Guid processId;
             if (attachRunning && Guid.TryParse(exe, out processId)) {
                 _process = DebugConnectionListener.GetProcess(processId);
@@ -734,9 +743,6 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             } else {
                 _process = new PythonProcess(version, exe, args, dir, env, interpreterOptions, debugOptions, dirMapping);
             }
-
-            _engineCreated = _programCreated = false;
-            _loadComplete.Reset();
 
             if (!attachRunning) {
                 _process.Start(false);
@@ -1035,7 +1041,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
         // Gets the name and identifier of the debug engine (DE) running this program.
         public int GetEngineInfo(out string engineName, out Guid engineGuid) {
-            engineName = "Python Engine";
+            engineName = "Python";
             engineGuid = new Guid(DebugEngineId);
             return VSConstants.S_OK;
         }

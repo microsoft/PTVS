@@ -227,7 +227,7 @@
         <Parent guid="guidPythonToolsCmdSet" id="SearchPathMenu" />
       </Group>
     </Groups>
-
+    
     <Buttons>
       <Button guid="guidPythonToolsCmdSet" id="cmdidAddExistingFolder" priority="0x0500" type="Button">
         <Parent guid="guidSHLMainMenu" id="IDG_VS_CTXT_PROJECT_ADD_ITEMS"/>
@@ -660,7 +660,7 @@
       <!--================================================================================================================-->
       <!--=============================================== Project Commands ===============================================-->
       <!--================================================================================================================-->
-
+      
       <Button guid="guidPythonToolsCmdSet" id="cmdidSetAsStartupFile" priority="0x0300" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="CodeFileGroup"/>
         <CommandFlag>DynamicVisibility</CommandFlag>
@@ -852,14 +852,31 @@
 
     </Buttons>
 
+    <Combos>
+      <Combo guid="guidPythonToolsCmdSet" 
+             id="comboIdReplScopes" 
+             idCommandList="comboIdReplScopesGetList" 
+             priority="0x0400" 
+             type="DropDownCombo" 
+             defaultWidth="130" 
+             Condition="Defined(DEV14_OR_LATER)">
+        <Parent guid="guidInteractiveWindowCmdSet" id="InteractiveToolbarGroup"/>
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <Strings>
+          <ButtonText>Scopes: </ButtonText>
+          <ToolTipText>Selects the current file scope that the interactive window is executing against.</ToolTipText>
+          <CommandName>DropDown Combo</CommandName>
+          <CanonicalName>DropDown Combo</CanonicalName>
+        </Strings>
+      </Combo>
+    </Combos>
+
     <!--The bitmaps section is used to define the bitmaps that are used for the commands.-->
     <Bitmaps>
-      <Bitmaps Condition="Defined(DEV14)">
-        <Bitmap guid="guidImages" href="..\Icons\Dev14.0\Images_32bit.png" usedList="pyReplPic, pyListPic, bmpPicSearch, bmpPicX, bmpPicArrows, pyExecuteInReplPic"/>
-        <Bitmap guid="guidImagesRefactoring" href="..\Icons\Dev14.0\Refactoring_Commands.bmp" usedList="imgRemoveUsing, imgSortUsings"/>
-      </Bitmaps>
-
-      <Bitmaps Condition="Defined(DEV12)">
+      <!-- For newer versions we use an icon map to get scalable icons. -->
+      <Bitmaps Condition="Defined(DEV12_OR_LATER)">
         <Bitmap guid="guidImages" href="..\Icons\Dev12.0\Images_32bit.png" usedList="pyReplPic, pyListPic, bmpPicSearch, bmpPicX, bmpPicArrows, pyExecuteInReplPic"/>
         <Bitmap guid="guidImagesRefactoring" href="..\Icons\Dev12.0\Refactoring_Commands.bmp" usedList="imgRemoveUsing, imgSortUsings"/>
       </Bitmaps>
@@ -1074,10 +1091,15 @@
       <IDSymbol name="SearchPathContainerMenu" value="0x2009" />
       <IDSymbol name="SearchPathMenu" value="0x200A" />
 
+      <!-- combos -->
+      <IDSymbol name="comboIdReplScopes" value="0x5000"/>
+      <IDSymbol name="comboIdReplScopesGetList" value="0x5001"/>
+
       <!-- Shared commands, defined in CommonConstants.cs -->
       <IDSymbol name="cmdidAddExistingFolder" value="0x10001" />
       <IDSymbol name="cmdidOpenCommandPromptHere" value="0x10002" />
       <IDSymbol name="cmdidCopyFullPath" value="0x10003" />
+
     </GuidSymbol>
 
     <GuidSymbol name="guidImages" value="{7f103a95-8141-4004-a01d-e3f739caa27d}" >
@@ -1096,6 +1118,10 @@
 
     <GuidSymbol name="guidAzureExplorerCmdId" value="{2F32C14E-B908-42E6-AE7E-B8B3E2DED633}">
       <IDSymbol name="groupAzureDiagnostics" value="400" />
+    </GuidSymbol>
+
+    <GuidSymbol name="guidInteractiveWindowCmdSet" value="{00B8868B-F9F5-4970-A048-410B05508506}">
+      <IDSymbol name="InteractiveToolbarGroup" value="0x1053"/>
     </GuidSymbol>
   </Symbols>
 </CommandTable>

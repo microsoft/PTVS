@@ -81,7 +81,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 return;
             }
             
-            if (width <= height * 0.9) {
+            if (width <= height * 0.9 || width < 400) {
                 SwitchToVerticalLayout();
             } else if (width >= height * 1.1) {
                 SwitchToHorizontalLayout();
@@ -161,7 +161,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         private void MakeGlobalDefault_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
             var view = e.Parameter as EnvironmentView;
-            e.CanExecute = view != null && !view.IsDefault;
+            e.CanExecute = view != null && !view.IsDefault && view.Factory.CanBeDefault();
         }
 
         private void MakeGlobalDefault_Executed(object sender, ExecutedRoutedEventArgs e) {
@@ -295,7 +295,10 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 }
 
                 _environments.Merge(
-                    _service.Interpreters.Distinct().Select(f => {
+                    _service.Interpreters
+                    .Distinct()
+                    .Where(f => f.IsUIVisible())
+                    .Select(f => {
                         var view = new EnvironmentView(_service, f, null);
                         OnViewCreated(view);
                         return view;

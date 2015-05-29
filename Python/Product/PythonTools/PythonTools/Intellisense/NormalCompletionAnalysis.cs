@@ -23,12 +23,18 @@ using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Language.StandardClassification;
+#if DEV14_OR_LATER
+using Microsoft.VisualStudio.InteractiveWindow;
+#else
 using Microsoft.VisualStudio.Repl;
+#endif
 using Microsoft.VisualStudio.Text;
 
+using Microsoft.PythonTools.Repl;
+
 namespace Microsoft.PythonTools.Intellisense {
-#if INTERACTIVE_WINDOW
-    using IReplEvaluator = IInteractiveEngine;
+#if DEV14_OR_LATER
+    using IReplEvaluator = IInteractiveEvaluator;
 #endif
 
     internal class NormalCompletionAnalysis : CompletionAnalysis {
@@ -77,7 +83,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
 
-            statementExtent = parser.GetStatementRange() ?? default(SnapshotSpan);
+            statementExtent = parser.GetStatementRange() ?? new SnapshotSpan(Span.GetStartPoint(_snapshot), 0);
 
             return true;
         }

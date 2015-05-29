@@ -15,9 +15,15 @@
 using System;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Repl;
+#if !DEV14_OR_LATER
 using Microsoft.VisualStudio.Repl;
+#endif
 
 namespace Microsoft.PythonTools.Options {
+#if DEV14_OR_LATER
+    using IReplWindowProvider = InteractiveWindowProvider;
+#endif
+
     /// <summary>
     /// Stores options related to the interactive window for a single Python interpreter instance.
     /// </summary>
@@ -70,7 +76,6 @@ namespace Microsoft.PythonTools.Options {
             _pyService.SaveBool(_id + EnableAttachSetting, _category, EnableAttach);
             _pyService.SaveString(_id + ExecutionModeSetting, _category, ExecutionMode ?? "");
             _pyService.SaveString(_id + StartupScriptSetting, _category, StartupScript ?? "");
-
             var replProvider = _serviceProvider.GetComponentModel().GetService<IReplWindowProvider>();
             if (replProvider != null) {
                 // propagate changed settings to existing REPL windows
@@ -78,14 +83,14 @@ namespace Microsoft.PythonTools.Options {
                     PythonReplEvaluator pyEval = replWindow.Evaluator as PythonReplEvaluator;
                     if (EvaluatorUsesThisInterpreter(pyEval, interpreter)) {
                         if (UseInterpreterPrompts) {
-                            replWindow.SetOptionValue(ReplOptions.PrimaryPrompt, pyEval.PrimaryPrompt);
-                            replWindow.SetOptionValue(ReplOptions.SecondaryPrompt, pyEval.SecondaryPrompt);
+                            replWindow.UseInterpreterPrompts();
                         } else {
-                            replWindow.SetOptionValue(ReplOptions.PrimaryPrompt, PrimaryPrompt);
-                            replWindow.SetOptionValue(ReplOptions.SecondaryPrompt, SecondaryPrompt);
+                            replWindow.SetPrompts(PrimaryPrompt, SecondaryPrompt);
                         }
+#if !DEV14_OR_LATER
                         replWindow.SetOptionValue(ReplOptions.DisplayPromptInMargin, !InlinePrompts);
-                        replWindow.SetOptionValue(ReplOptions.UseSmartUpDown, ReplSmartHistory);
+#endif
+                        replWindow.SetSmartUpDown(ReplSmartHistory);
                     }
                 }
             }

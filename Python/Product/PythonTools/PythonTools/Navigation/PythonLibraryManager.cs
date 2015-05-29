@@ -19,6 +19,7 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Navigation;
 using Microsoft.VisualStudioTools.Project;
+using SR = Microsoft.PythonTools.Project.SR;
 
 namespace Microsoft.PythonTools.Navigation {
 
@@ -71,7 +72,9 @@ namespace Microsoft.PythonTools.Navigation {
                 // object browser (for example we could include base type information with
                 // links elsewhere in the object browser).
                 item.OnNewAnalysis += (sender, args) => {
-                    _package.GetUIThread().Invoke(() => FileParsed(task, new AstScopeNode(item.Tree, item)));
+                    _package.GetUIThread().InvokeAsync(() => FileParsed(task, new AstScopeNode(item.Tree, item)))
+                        .HandleAllExceptions(SR.ProductName, GetType())
+                        .DoNotWait();
                 };
             }
         }

@@ -1,0 +1,43 @@
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\SetupProjectBefore.settings" />
+  
+  <PropertyGroup>
+    <TargetName>UwpFiles</TargetName>
+  </PropertyGroup>
+
+  <ItemDefinitionGroup>
+    <File>
+      <IncludeInWD>false</IncludeInWD>
+    </File>
+    <ItemTemplate>
+      <IncludeInWD>false</IncludeInWD>
+    </ItemTemplate>
+  </ItemDefinitionGroup>
+
+  <ItemGroup>
+    <!-- Registration files -->
+    <File Include="Uwp\extension.vsixmanifest" />
+    <File Include="Microsoft.PythonTools.Uwp.pkgdef" />
+    
+    <!-- Debugger -->
+    <File Include="RemoteDebugger.vsdconfig" />
+    <File Include="visualstudio_py_remote_launcher.py" />
+    
+    <!-- Core extension -->
+    <File Include="!(bindpath.bin)\Microsoft.PythonTools.Uwp.dll" />
+
+    <File Include="Microsoft.PythonTools.Uwp.targets" />
+
+    <!-- Resources -->
+    <File Include="PythonProject.ico;
+                   PythonProjectBig.ico" />
+
+    <!-- Templates -->
+    <File Include="ProjectTemplates\Python\Windows IoT Core\BackgroundService.zip">
+        <InstallDirectory>UwpProjectTemplates</InstallDirectory>
+    </File>
+    
+  </ItemGroup>
+
+  <Import Project="..\WixGenerator.targets"/>
+</Project>

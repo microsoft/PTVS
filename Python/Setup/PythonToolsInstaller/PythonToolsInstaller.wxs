@@ -81,6 +81,7 @@
             <RemoveFolder Id='DeleteDir_StartMenu' Directory='Dir_StartMenu' On='uninstall'/>
             <RegistryKey Root="HKMU" Key="Software\Microsoft\PythonTools\$(var.VSTargetVersion)">
               <RegistryValue Type="string" Name="InstallDir" Value="[Dir_PTVSInstallLocation]" KeyPath="yes"/>
+              <RegistryValue Type="string" Name="Version" Value="[ProductVersion]" />
             </RegistryKey>
             <util:RestartResource Path="[DEVENV_PATH]" />
             <util:RestartResource Path="[WDEXPRESS_PATH]" />
@@ -175,7 +176,7 @@
         <RegistryValue Root='HKCR' Key='.pyw\OpenWithProgids' Name='VWDExpress.py.$(var.VSTargetVersion)' Type='string' Value='' />
       </Component>
 
-
+      <?if "$(var.VSTargetVersion)" = "10.0" or "$(var.VSTargetVersion)" = "11.0" or "$(var.VSTargetVersion)" = "12.0" ?>
       <Merge Id="Merge_ReplWindow" Language="1033" SourceFile="ReplWindow.msm" DiskId="1">
         <?foreach key in VS;WD;VWD?>
         <ConfigurationData Name="Config_$(var.key)ExtensionsParent" Value="Dir_$(var.key)Extensions" />
@@ -183,6 +184,7 @@
         <?endforeach?>
         <ConfigurationData Name="Config_MSBuildLocation" Value="Dir_MSBuildTargets"/>
       </Merge>
+      <?endif ?>
       <Merge Id="Merge_Profiling" Language="1033" SourceFile="Profiling.msm" DiskId="1">
         <?foreach key in VS;WD;VWD?>
         <ConfigurationData Name="Config_$(var.key)ExtensionsParent" Value="Dir_$(var.key)Extensions" />
@@ -197,6 +199,15 @@
         <?endforeach?>
         <ConfigurationData Name="Config_MSBuildLocation" Value="Dir_MSBuildTargets"/>
       </Merge>
+      <?if "$(var.IncludeUwp)" ~= "True" ?>
+      <Merge Id="Merge_Uwp" Language="1033" SourceFile="Uwp.msm" DiskId="1">
+        <?foreach key in VS;WD;VWD?>
+        <ConfigurationData Name="Config_$(var.key)ExtensionsParent" Value="Dir_$(var.key)Extensions" />
+        <ConfigurationData Name="Config_$(var.key)TemplatesParent" Value="Dir_$(var.key)Templates"/>
+        <?endforeach?>
+        <ConfigurationData Name="Config_MSBuildLocation" Value="Dir_MSBuildTargets"/>
+      </Merge>
+      <?endif ?>
       <Merge Id="Merge_PythonTools" Language="1033" SourceFile="PythonTools.msm" DiskId="1">
         <?foreach key in VS;WD;VWD?>
         <ConfigurationData Name="Config_$(var.key)ExtensionsParent" Value="Dir_$(var.key)Extensions" />
@@ -241,7 +252,9 @@
       <ComponentRef Id="Comp_ProgramMenuFolder" />
 
       <MergeRef Id="Merge_PythonTools"/>
+      <?if "$(var.VSTargetVersion)" = "10.0" or "$(var.VSTargetVersion)" = "11.0" or "$(var.VSTargetVersion)" = "12.0" ?>
       <MergeRef Id="Merge_ReplWindow"/>
+      <?endif ?>
       <MergeRef Id="Merge_Profiling"/>
 
       <?if "$(var.IncludeVsLogger)" ~= "True" ?>
@@ -252,6 +265,12 @@
         <MergeRef Id="Merge_Django"/>
       </Feature>
 
+      <?if "$(var.IncludeUwp)" ~= "True" ?>
+      <Feature Id="Feature_Uwp" AllowAdvertise="no" Level="1" Title="UWP integration" Description="UWP integration">
+        <MergeRef Id="Merge_Uwp"/>
+      </Feature>
+      <?endif?>
+      
       <Feature Id="Feature_IronPython" AllowAdvertise="no" Level="1" Title="IronPython support" Description="IronPython support">
         <MergeRef Id="Merge_IronPython"/>
       </Feature>
@@ -282,12 +301,12 @@
 
     <InstallExecuteSequence>
       <InstallExecute Before="DevEnvSetup_Rollback" />
-      <Custom Action="DevEnvSetup_Rollback" Before="DevEnvSetup" Overridable="yes">DEVENV_PATH</Custom>
-      <Custom Action="DevEnvSetup" Before="InstallFinalize" Overridable="yes">DEVENV_PATH</Custom>
-      <Custom Action="WDExpressSetup_Rollback" Before="WDExpressSetup" Overridable="yes">WDEXPRESS_PATH</Custom>
-      <Custom Action="WDExpressSetup" Before="InstallFinalize" Overridable="yes">WDEXPRESS_PATH</Custom>
-      <Custom Action="VWDExpressSetup_Rollback" Before="VWDExpressSetup" Overridable="yes">VWDEXPRESS_PATH</Custom>
-      <Custom Action="VWDExpressSetup" Before="InstallFinalize" Overridable="yes">VWDEXPRESS_PATH</Custom>
+      <Custom Action="DevEnvSetup_Rollback" Before="DevEnvSetup" Overridable="yes">NOT SKIP_DEVENV_SETUP AND DEVENV_PATH</Custom>
+      <Custom Action="DevEnvSetup" Before="InstallFinalize" Overridable="yes">NOT SKIP_DEVENV_SETUP AND DEVENV_PATH</Custom>
+      <Custom Action="WDExpressSetup_Rollback" Before="WDExpressSetup" Overridable="yes">NOT SKIP_DEVENV_SETUP AND WDEXPRESS_PATH</Custom>
+      <Custom Action="WDExpressSetup" Before="InstallFinalize" Overridable="yes">NOT SKIP_DEVENV_SETUP AND WDEXPRESS_PATH</Custom>
+      <Custom Action="VWDExpressSetup_Rollback" Before="VWDExpressSetup" Overridable="yes">NOT SKIP_DEVENV_SETUP AND VWDEXPRESS_PATH</Custom>
+      <Custom Action="VWDExpressSetup" Before="InstallFinalize" Overridable="yes">NOT SKIP_DEVENV_SETUP AND VWDEXPRESS_PATH</Custom>
     </InstallExecuteSequence>
     <InstallUISequence>
       <Show Dialog="CustomAdvancedWelcomeEulaDlg" Before="FindRelatedProducts">NOT Installed</Show>

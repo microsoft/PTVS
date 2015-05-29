@@ -25,6 +25,10 @@ using Microsoft.VisualStudioTools.Project;
 using OleConstants = Microsoft.VisualStudio.OLE.Interop.Constants;
 using VsCommands = Microsoft.VisualStudio.VSConstants.VSStd97CmdID;
 using VsMenus = Microsoft.VisualStudioTools.Project.VsMenus;
+#if DEV14_OR_LATER
+using Microsoft.VisualStudio.Imaging;
+using Microsoft.VisualStudio.Imaging.Interop;
+#endif
 
 namespace Microsoft.PythonTools.Project {
     /// <summary>
@@ -79,19 +83,7 @@ namespace Microsoft.PythonTools.Project {
             get { return false; }
         }
 
-        public override object GetIconHandle(bool open) {
-            return _project.GetIconHandleByName(
-#if DEV11_OR_LATER
-                PythonProjectImageName.SearchPath
-#else
-                (Directory.Exists(Url) || File.Exists(Url)) ? 
-                    PythonProjectImageName.SearchPath : 
-                    PythonProjectImageName.MissingSearchPath
-#endif
-            );
-        }
-
-#if DEV11_OR_LATER
+#if DEV11_OR_LATER && !DEV14_OR_LATER
         protected override VSOVERLAYICON OverlayIconIndex {
             get {
                 return Directory.Exists(Url) || File.Exists(Url) ?
@@ -100,6 +92,33 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 #endif
+
+#if DEV14_OR_LATER
+        protected override bool SupportsIconMonikers {
+            get { return true; }
+        }
+
+        protected override ImageMoniker GetIconMoniker(bool open) {
+            return (Directory.Exists(Url) || File.Exists(Url)) ?
+                KnownMonikers.Reference :
+                KnownMonikers.ReferenceWarning;
+        }
+#else
+        public override int ImageIndex {
+            get {
+                return _project.GetIconIndex(
+#if DEV11_OR_LATER
+                    PythonProjectImageName.SearchPath
+#else
+                    (Directory.Exists(Url) || File.Exists(Url)) ? 
+                        PythonProjectImageName.SearchPath : 
+                        PythonProjectImageName.MissingSearchPath
+#endif
+                );
+            }
+        }
+#endif
+
 
         /// <summary>
         /// Search path node cannot be dragged.

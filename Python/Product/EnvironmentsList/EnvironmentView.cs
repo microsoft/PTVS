@@ -105,6 +105,8 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             if (IsConfigurable) {
                 Extensions.Add(new ConfigurationExtensionProvider(configurableProvider));
             }
+
+            CanBeDefault = Factory.CanBeDefault();
         }
 
         public override string ToString() {

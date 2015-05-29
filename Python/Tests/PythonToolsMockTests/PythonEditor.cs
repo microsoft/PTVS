@@ -41,7 +41,8 @@ namespace PythonToolsMockTests {
             PythonLanguageVersion version = PythonLanguageVersion.V27,
             MockVs vs = null,
             IPythonInterpreterFactory factory = null,
-            VsProjectAnalyzer analyzer = null
+            VsProjectAnalyzer analyzer = null,
+            string filename = null
         ) {
             if (vs == null) {
                 _disposeVS = true;
@@ -64,7 +65,7 @@ namespace PythonToolsMockTests {
 
                 view = vs.CreateTextView(PythonCoreConstants.ContentType, content ?? "", v => {
                     v.TextView.TextBuffer.Properties.AddProperty(typeof(VsProjectAnalyzer), analyzer);
-                });
+                }, filename);
                 var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
                 analyzer.WaitForCompleteAnalysis(x => !cts.IsCancellationRequested);
                 if (cts.IsCancellationRequested) {

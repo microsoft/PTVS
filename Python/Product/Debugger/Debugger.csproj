@@ -82,6 +82,7 @@
       <Aliases>global</Aliases>
     </Reference>
     <Reference Include="System.XML" />
+    <Reference Include="System.Xml.Linq" />
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <Choose>
@@ -127,6 +128,7 @@
     <Compile Include="Debugger\DebugEngine\AD7MemoryAddress.cs" />
     <Compile Include="Debugger\DebugEngine\AD7Module.cs" />
     <Compile Include="Debugger\DebugEngine\AD7PendingBreakpoint.cs" />
+    <Compile Include="Debugger\DebugEngine\Remote\PythonRemoteDebugPortPicker.cs" />
     <Compile Include="Debugger\DebugEngine\Remote\PythonRemoteDebugPortSupplier.cs" />
     <Compile Include="Debugger\DebugEngine\AD7ProgramNode.cs" />
     <Compile Include="Debugger\DebugEngine\AD7ProgramProvider.cs" />
@@ -171,6 +173,7 @@
     <Compile Include="Debugger\TryHandlerWalker.cs" />
     <Compile Include="Debugger\FrameKind.cs" />
     <Compile Include="DkmDebugger\ComPtr.cs" />
+    <Compile Include="DkmDebugger\ExceptionManager.cs" />
     <Compile Include="DkmDebugger\ComponentBase.cs" />
     <Compile Include="DkmDebugger\CppExpressionEvaluator.cs" />
     <Compile Include="DkmDebugger\DebuggerOptions.cs" />

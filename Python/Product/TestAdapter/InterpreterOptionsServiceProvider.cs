@@ -33,7 +33,7 @@ namespace Microsoft.PythonTools {
                 provider
             );
             if (app != null) {
-                var sp = new ServiceProvider(app.DTE as IOleServiceProvider);
+                var sp = new ServiceProvider(app.GetDTE() as IOleServiceProvider);
                 provider.SetExport(typeof(SVsServiceProvider), () => sp);
             }
             return container.GetExportedValue<IInterpreterOptionsService>();

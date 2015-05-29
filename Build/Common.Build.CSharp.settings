@@ -30,10 +30,6 @@
     <DefineConstants>TRACE;$(DefineConstants)</DefineConstants>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <DefineConstants Condition="$(FeatureAzureRemoteDebug)">$(DefineConstants);FEATURE_AZURE_REMOTE_DEBUG</DefineConstants>
-  </PropertyGroup>
-
   <PropertyGroup Condition=" '$(VSTarget)' == '14.0' ">
     <DefineConstants>$(DefineConstants);DEV14;DEV14_OR_LATER;DEV12_OR_LATER;DEV11_OR_LATER</DefineConstants>
     <VSCTDefinitions>DEV14;DEV14_OR_LATER;DEV12_OR_LATER;DEV11_OR_LATER</VSCTDefinitions>

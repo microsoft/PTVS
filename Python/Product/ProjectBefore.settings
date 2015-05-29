@@ -6,4 +6,8 @@
   </PropertyGroup>
   <Import Project="$(BuildRoot)\Build\Common.Build.settings" />
   <Import Project="$(BuildRoot)\Python\products.settings" />
+
+  <PropertyGroup>
+    <DefineConstants Condition="$(FeatureAzureRemoteDebug)">$(DefineConstants);FEATURE_AZURE_REMOTE_DEBUG</DefineConstants>
+  </PropertyGroup>
 </Project>

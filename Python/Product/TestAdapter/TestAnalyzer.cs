@@ -39,6 +39,7 @@ namespace Microsoft.PythonTools.TestAdapter {
         ) {
             _analyzer = PythonAnalyzer.CreateAsync(factory).WaitAndUnwrapExceptions();
             _analyzer.Limits = AnalysisLimits.GetStandardLibraryLimits();
+            _analyzer.Limits.ProcessCustomDecorators = false;
 
             _containerFilePath = containerFilePath;
             _codeFileBasePath = codeFileBasePath;
@@ -103,9 +104,12 @@ namespace Microsoft.PythonTools.TestAdapter {
         ) {
             var moduleName = CommonUtils.CreateFriendlyFilePath(_codeFileBasePath, codeFilePath);
             var fullyQualifiedName = MakeFullyQualifiedTestName(moduleName, className, methodName);
+            
+            // If this is a runTest test we should provide a useful display name
+            var displayName = methodName == "runTest" ? className : methodName;
 
             return new TestCase(fullyQualifiedName, _executorUri, _containerFilePath) {
-                DisplayName = methodName,
+                DisplayName = displayName,
                 LineNumber = sourceLocation != null ? sourceLocation.Line : 0,
                 CodeFilePath = GetCodeFilePath(_codeFileBasePath, sourceLocation)
             };
@@ -157,13 +161,26 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
         }
 
+        /// <summary>
+        /// Get Test Case Members for a class.  If the class has 'test*' tests 
+        /// return those.  If there aren't any 'test*' tests return (if one at 
+        /// all) the runTest overridden method
+        /// </summary>
         private static IEnumerable<KeyValuePair<string, IAnalysisSet>> GetTestCaseMembers(
             IPythonProjectEntry entry,
             AnalysisValue classValue
         ) {
-            return classValue.GetAllMembers(entry.Analysis.InterpreterContext)
-                .Where(v => v.Key.StartsWith("test"))
+            var methodFunctions = classValue.GetAllMembers(entry.Analysis.InterpreterContext)
                 .Where(v => v.Value.Any(m => m.MemberType == PythonMemberType.Function || m.MemberType == PythonMemberType.Method));
+
+            var tests = methodFunctions.Where(v => v.Key.StartsWith("test"));
+            var runTest = methodFunctions.Where(v => v.Key.Equals("runTest"));
+
+            if (tests.Any()) {
+                return tests;
+            } else {
+                return runTest;
+            }
         }
     }
 }

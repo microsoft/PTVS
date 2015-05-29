@@ -20,10 +20,14 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.PythonTools.Project;
-using Microsoft.PythonTools.Repl;
+#if DEV14_OR_LATER
+using Microsoft.VisualStudio.InteractiveWindow;
+#else
+using Microsoft.VisualStudio.Repl;
+#endif
+
 using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.PlatformUI;
-using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
@@ -31,6 +35,10 @@ using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Utilities;
 
 namespace Microsoft.PythonTools {
+#if DEV14_OR_LATER
+    using IReplEvaluator = IInteractiveEvaluator;
+#endif
+
     [Export(typeof(IClassifierProvider)), ContentType(PythonCoreConstants.ContentType)]
     internal class PythonAnalysisClassifierProvider : IClassifierProvider {
         private Dictionary<string, IClassificationType> _categoryMap;
@@ -112,6 +120,8 @@ namespace Microsoft.PythonTools {
             categoryMap[PythonPredefinedClassificationTypeNames.Parameter] = registry.GetClassificationType(PythonPredefinedClassificationTypeNames.Parameter);
             categoryMap[PythonPredefinedClassificationTypeNames.Module] = registry.GetClassificationType(PythonPredefinedClassificationTypeNames.Module);
             categoryMap[PythonPredefinedClassificationTypeNames.Function] = registry.GetClassificationType(PythonPredefinedClassificationTypeNames.Function);
+            // Include keyword for context-sensitive keywords
+            categoryMap[PredefinedClassificationTypeNames.Keyword] = registry.GetClassificationType(PredefinedClassificationTypeNames.Keyword);
 
             return categoryMap;
         }

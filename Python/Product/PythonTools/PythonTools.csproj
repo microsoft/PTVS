@@ -91,13 +91,6 @@
     <ProjectReference2 Include="..\AttacherX86\AttacherX86.csproj" />
     <ProjectReference2 Include="..\ImportWizard\ImportWizard.csproj" />
     <ProjectReference2 Include="..\ProjectWizards\ProjectWizards.csproj" />
-    <ProjectReference Include="..\ReplWindow\ReplWindow.csproj">
-      <Project>{20BB6FAC-44D2-4D76-ABFE-0C1E163A1A4F}</Project>
-      <Private>false</Private>
-      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
-      <Name Condition="'$(InteractiveWindow)' == ''">Microsoft.VisualStudio.ReplWindow</Name>
-      <Name Condition="'$(InteractiveWindow)' != ''">Microsoft.VisualStudio.InteractiveWindow</Name>
-    </ProjectReference>
     <ProjectReference2 Include="..\TestAdapter\TestAdapter.csproj" Condition="'$(VSTarget)' != '10.0'" />
   </ItemGroup>
   <Choose>
@@ -246,6 +239,41 @@
     <Reference Include="WindowsFormsIntegration" />
   </ItemGroup>
   <Choose>
+    <When Condition="$(VSMajorVersion) >= 14">
+      <ItemGroup>
+        <Reference Include="Microsoft.VisualStudio.InteractiveWindow">
+          <HintPath>$(DevEnvDir)PrivateAssemblies\Microsoft.VisualStudio.InteractiveWindow.dll</HintPath>
+          <Private>false</Private>
+        </Reference>
+        <Reference Include="Microsoft.VisualStudio.VsInteractiveWindow">
+          <HintPath>$(DevEnvDir)PrivateAssemblies\Microsoft.VisualStudio.VsInteractiveWindow.dll</HintPath>
+          <Private>false</Private>
+        </Reference>
+        <Reference Include="Microsoft.VisualStudio.ImageCatalog, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+        <Reference Include="Microsoft.VisualStudio.Imaging, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+        <Reference Include="Microsoft.VisualStudio.Imaging.Interop.$(VSTarget).DesignTime, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+          <EmbedInteropTypes>True</EmbedInteropTypes>
+        </Reference>
+        <Reference Include="Microsoft.VisualStudio.Shell.Interop.$(VSTarget).DesignTime, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+          <EmbedInteropTypes>True</EmbedInteropTypes>
+        </Reference>
+        <Reference Include="Microsoft.VisualStudio.Shell.Immutable.$(VSTarget), Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+        <Reference Include="Microsoft.VisualStudio.Utilities, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+      </ItemGroup>
+    </When>
+    <Otherwise>
+      <ItemGroup>
+        <ProjectReference Include="..\ReplWindow\ReplWindow.csproj">
+          <Project>{20BB6FAC-44D2-4D76-ABFE-0C1E163A1A4F}</Project>
+          <Private>false</Private>
+          <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+          <Name Condition="'$(InteractiveWindow)' == ''">Microsoft.VisualStudio.ReplWindow</Name>
+          <Name Condition="'$(InteractiveWindow)' != ''">Microsoft.VisualStudio.InteractiveWindow</Name>
+        </ProjectReference>
+      </ItemGroup>
+    </Otherwise>
+  </Choose>
+  <Choose>
     <When Condition="'$(VSTarget)' == '10.0'">
       <ItemGroup>
         <Reference Include="Microsoft.VisualStudio.Settings, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=x86">
@@ -265,12 +293,19 @@
     <Compile Include="..\Analysis\IEnumerableExtensions.cs">
       <Link>IEnumerableExtensions.cs</Link>
     </Compile>
-    <Compile Include="..\Analysis\Interpreter\PythonInterpreterFactoryExtensions.cs">
-      <Link>PythonInterpreterFactoryExtensions.cs</Link>
-    </Compile>
+    <Compile Include="PythonTools\Repl\IMultipleScopeEvaluator.cs" />
+    <Compile Include="PythonTools\Repl\InteractiveWindowProvider.cs" />
     <Compile Include="IPythonToolsToolWindowService.cs" />
     <Compile Include="MissingInterpreterException.cs" />
+    <Compile Include="PythonTools\Repl\IInteractiveEvaluatorProvider.cs" />
+    <Compile Include="PythonTools\Repl\InteractiveRoleAttribute.cs" />
     <Compile Include="PythonTools\Debugger\ProximityExpressionWalker.cs" />
+    <Compile Include="PythonTools\Repl\ReplOutputClassificationFormatDefinitions.cs" />
+    <Compile Include="PythonTools\Repl\ReplOutputClassifier.cs" />
+    <Compile Include="PythonTools\Repl\ReplOutputClassifierProvider.cs" />
+    <Compile Include="PythonTools\Intellisense\PythonSuggestedActionsSource.cs" />
+    <Compile Include="PythonTools\Intellisense\PythonSuggestedActionsSourceProvider.cs" />
+    <Compile Include="PythonTools\Intellisense\PythonSuggestedImportAction.cs" />
     <Compile Include="PythonTools\Project\IPythonProjectLaunchProperties.cs" />
     <Compile Include="PythonTools\Project\PythonProjectLaunchProperties.cs" />
     <Compile Include="PythonTools\SurveyNewsService.cs" />
@@ -910,6 +945,10 @@
   </ItemGroup>
   <ItemGroup>
     <!-- VSIX -->
+    <Content Include="PythonTools_iconmap.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
     <None Include="Theme\contrast.vstheme" />
     <None Include="NoSurveyNewsFeed.html" />
     <None Include="NoInterpreters.html" />
@@ -1140,7 +1179,10 @@
     <None Include="Dev10\source.extension.vsixmanifest" Condition="'$(VSTarget)' == '10.0'">
       <SubType>Designer</SubType>
     </None>
-    <None Include="Dev11OrLater\source.extension.vsixmanifest" Condition="'$(VSTarget)' != '10.0'">
+    <None Include="Dev11OrLater\source.extension.vsixmanifest" Condition="$(VSMajorVersion) > 10 and $(VSMajorVersion) &lt; 14">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="Dev14OrLater\source.extension.vsixmanifest" Condition="$(VSMajorVersion) >= 14">
       <SubType>Designer</SubType>
     </None>
   </ItemGroup>
@@ -1151,7 +1193,6 @@
     </Content>
     <EmbeddedResource Include="..\Icons\Dev$(VSTarget)\PythonImageList.bmp" Condition="'$(VSTarget)' == '10.0'" />
     <EmbeddedResource Include="..\Icons\Dev$(VSTarget)\PythonImageList.png" Condition="'$(VSTarget)' != '10.0'" />
-    <Resource Include="..\Icons\Dev$(VSTarget)\PyFile.png" />
     <Resource Include="..\Icons\Dev$(VSTarget)\PythonProjectBig.ico" />
     <EmbeddedResource Include="Legacy\ObsoleteResources.resx">
       <ManifestResourceName>Microsoft.VisualStudioTools.SharedProject</ManifestResourceName>
@@ -1186,7 +1227,7 @@
     <EmbeddedResource Include="PythonTools\Project\PythonDebugPropertyPageControl.resx">
       <DependentUpon>PythonDebugPropertyPageControl.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="..\Icons\Dev$(VSTarget)\imagelis.bmp">
+    <EmbeddedResource Include="..\Icons\Dev$(VSTarget)\imagelis.bmp" Condition="'$(VSTarget)' == '10.0' or '$(VSTarget)' == '11.0' or '$(VSTarget)' == '12.0'">
       <Link>PythonTools\Project\Resources\imagelis.bmp</Link>
     </EmbeddedResource>
   </ItemGroup>
@@ -1207,13 +1248,10 @@
     <EmbeddedResource Include="PythonTools\Project\PythonGeneralPropertyPageControl.resx">
       <DependentUpon>PythonGeneralPropertyPageControl.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="..\Icons\Dev$(VSTarget)\completionset.bmp">
-      <Link>Resources\completionset.bmp</Link>
-    </EmbeddedResource>
     <EmbeddedResource Include="..\Icons\Dev$(VSTarget)\PythonPackageIcons.bmp" Condition="$(VSTarget) == '10.0'">
       <Link>Resources\PythonPackageIcons.bmp</Link>
     </EmbeddedResource>
-    <EmbeddedResource Include="..\Icons\Dev$(VSTarget)\PythonPackageIcons.png" Condition="$(VSTarget) != '10.0'">
+    <EmbeddedResource Include="..\Icons\Dev$(VSTarget)\PythonPackageIcons.png" Condition="$(VSTarget) == '11.0' or $(VSTarget) == '12.0'">
       <Link>Resources\PythonPackageIcons.png</Link>
     </EmbeddedResource>
     <ConditionalEmbeddedResource Include="VSPackage.resx">
@@ -1255,6 +1293,15 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="images\images.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <None Include="images12.0\images.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="images12.0\PYClassFile64.png" />
+    <None Include="images12.0\PYFile.png" />
     <Page Include="PythonTools\Project\ImportWizard\SaveProjectPage.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -1365,6 +1412,25 @@
     <ItemGroup>
       <ZipProject Include="%(SharedTemplateFiles.FullPath)" Condition="%(SharedTemplateFiles.Type) == 'Project'" />
       <ZipItem Include="%(SharedTemplateFiles.FullPath)" Condition="%(SharedTemplateFiles.Type) == 'Item'" />
+    </ItemGroup>
+  </Target>
+  <Target Name="_RemoveImages" AfterTargets="PrepareForBuild">
+    <ItemGroup>
+      <None Remove="images12.0\images.xaml;images12.0\*.png" />
+    </ItemGroup>
+  </Target>
+  <Target Name="_IncludeImages" AfterTargets="_RemoveImages" Condition="$(VSTarget) == '12.0'">
+    <ItemGroup>
+      <Page Remove="images\images.xaml" />
+      <Page Include="images12.0\images.xaml">
+        <SubType>Designer</SubType>
+        <Generator>MSBuild:Compile</Generator>
+        <Link>images\images.xaml</Link>
+      </Page>
+      <_ImageResources Include="images12.0\*.png" />
+      <Resource Include="@(_ImageResources)">
+        <Link>images\%(_ImageResources.Filename)%(_ImageResources.Extension)</Link>
+      </Resource>
     </ItemGroup>
   </Target>
 </Project>

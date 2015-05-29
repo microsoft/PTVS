@@ -18,15 +18,7 @@ namespace Microsoft.NodejsTools.Repl {
 #else
 namespace Microsoft.VisualStudio.Repl {
 #endif
-#if INTERACTIVE_WINDOW
-    using IReplWindow = IInteractiveWindow;
-#endif
-
-#if INTERACTIVE_WINDOW
-    public interface IInteractiveWindowCreationListener {
-#else
     public interface IReplWindowCreationListener {
-#endif
         void ReplWindowCreated(IReplWindow window);
     }
 }

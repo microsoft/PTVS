@@ -16,18 +16,55 @@ using System;
 using System.ComponentModel.Composition;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Language;
-using Microsoft.PythonTools.Repl;
-using Microsoft.VisualStudio.Editor;
-using Microsoft.VisualStudio.Repl;
+using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Operations;
 using Microsoft.VisualStudio.Utilities;
+using IOleCommandTarget = Microsoft.VisualStudio.OLE.Interop.IOleCommandTarget;
+
+#if DEV14_OR_LATER
+using Microsoft.VisualStudio.InteractiveWindow.Shell;
+#else
+using Microsoft.VisualStudio.Editor;
+using Microsoft.VisualStudio.Repl;
+using Microsoft.PythonTools.Repl;
+#endif
 
 namespace Microsoft.PythonTools.Editor {
-#if INTERACTIVE_WINDOW
-    using IReplWindow = IInteractiveWindow;
-    using IReplWindowCreationListener = IInteractiveWindowCreationListener;
-#endif
+#if DEV14_OR_LATER
+    [Export(typeof(IVsInteractiveWindowOleCommandTargetProvider))]
+    [ContentType(PythonCoreConstants.ContentType)]
+    public class PythonOleCommandTargetProvider : IVsInteractiveWindowOleCommandTargetProvider {
+        private readonly IEditorOperationsFactoryService _editorOpsFactory;
+        private readonly IServiceProvider _serviceProvider;
+
+        [ImportingConstructor]
+        public PythonOleCommandTargetProvider([Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider, IEditorOperationsFactoryService editorOpsFactory) {
+            _editorOpsFactory = editorOpsFactory;
+            _serviceProvider = serviceProvider;
+        }
+
+        public IOleCommandTarget GetCommandTarget(IWpfTextView textView, IOleCommandTarget nextTarget) {
+            EditFilter filter;
+            if (!textView.Properties.TryGetProperty<EditFilter>(typeof(EditFilter), out filter)) {
+                textView.Properties[typeof(EditFilter)] = filter = new EditFilter(
+                    textView,
+                    _editorOpsFactory.GetEditorOperations(textView),
+                    _serviceProvider
+                );
+                var intellisenseController = IntellisenseControllerProvider.GetOrCreateController(
+                    _serviceProvider,
+                    (IComponentModel)_serviceProvider.GetService(typeof(SComponentModel)),
+                    textView
+                );
+                intellisenseController._oldTarget = nextTarget;
+                filter._next = intellisenseController;
+            }
+            return filter;
+        }
+    }
+#else
 
     [Export(typeof(IReplWindowCreationListener))]
     [ContentType(PythonCoreConstants.ContentType)]
@@ -43,8 +80,6 @@ namespace Microsoft.PythonTools.Editor {
             _serviceProvider = serviceProvider;
         }
 
-        #region IReplWindowCreationListener Members
-
         public void ReplWindowCreated(IReplWindow window) {
             var model = _serviceProvider.GetComponentModel();
             var textView = window.TextView;
@@ -53,7 +88,7 @@ namespace Microsoft.PythonTools.Editor {
                 textView.Properties.AddProperty(typeof(PythonReplEvaluator), (PythonReplEvaluator)window.Evaluator);
             }
 
-            var editFilter = new EditFilter(window.TextView, _editorOpsFactory.GetEditorOperations(textView), ServiceProvider.GlobalProvider);
+            var editFilter = new EditFilter(window.TextView, _editorOpsFactory.GetEditorOperations(textView), _serviceProvider);
             var intellisenseController = IntellisenseControllerProvider.GetOrCreateController(
                 _serviceProvider,
                 model,
@@ -63,7 +98,6 @@ namespace Microsoft.PythonTools.Editor {
             editFilter.AttachKeyboardFilter(vsTextView);
             intellisenseController.AttachKeyboardFilter();
         }
-
-        #endregion
     }
+#endif
 }

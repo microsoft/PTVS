@@ -52,12 +52,6 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="IronPython">
-      <HintPath>$(BuildRoot)Python\Product\IronPython\IronPython.dll</HintPath>
-    </Reference>
-    <Reference Include="IronPython.Modules">
-      <HintPath>$(BuildRoot)Python\Product\IronPython\IronPython.Modules.dll</HintPath>
-    </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Microsoft.Dynamic">
       <HintPath>$(BuildRoot)Python\Product\IronPython\Microsoft.Dynamic.dll</HintPath>
@@ -88,7 +82,6 @@
     <Compile Include="DotNetAnalysis\Generics.cs" />
     <Compile Include="ModulePathTests.cs" />
     <Compile Include="ProcessOutputTests.cs" />
-    <Compile Include="IronPythonAnalysisTest.cs" />
     <Compile Include="MutateStdLibTest.cs" />
     <Compile Include="TestExpressions.cs" />
     <Compile Include="TestRunner.cs" />
@@ -96,6 +89,7 @@
     <Compile Include="ParserRoundTripTest.cs" />
     <Compile Include="ParserTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ThreadingTest.cs" />
     <Compile Include="TokenizerRoundTripTest.cs" />
     <Compile Include="UpdaterTests.cs" />
   </ItemGroup>
@@ -112,14 +106,6 @@
     <ProjectReference Include="$(BuildRoot)Common\Tests\Utilities\TestUtilities.csproj">
       <Project>{D092D54E-FF29-4D32-9AEE-4EF704C92F67}</Project>
       <Name>TestUtilities</Name>
-    </ProjectReference>
-    <ProjectReference Include="$(BuildRoot)Python\Product\IronPythonResolver\IronPythonResolver.csproj">
-      <Project>{31f224b1-68da-4524-9a1c-95f22492775b}</Project>
-      <Name>IronPythonResolver</Name>
-    </ProjectReference>
-    <ProjectReference Include="$(BuildRoot)Python\Product\IronPython\IronPython.Interpreter.csproj">
-      <Project>{012293b1-168a-4c48-a678-db8361b50ba7}</Project>
-      <Name>Microsoft.PythonTools.IronPython.Interpreter</Name>
     </ProjectReference>
     <ProjectReference Include="..\Utilities.Python.Analysis\TestUtilities.Python.Analysis.csproj">
       <Project>{a731c4c3-3741-4080-a946-c47574c1f3bf}</Project>

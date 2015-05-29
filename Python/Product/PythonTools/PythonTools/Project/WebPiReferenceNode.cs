@@ -21,6 +21,10 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 using VSLangProj;
+#if DEV14_OR_LATER
+using Microsoft.VisualStudio.Imaging;
+using Microsoft.VisualStudio.Imaging.Interop;
+#endif
 
 namespace Microsoft.PythonTools.Project {
     [ComVisible(true)]
@@ -63,9 +67,21 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        public override object GetIconHandle(bool open) {
-            return ProjectMgr.GetIconHandleByName(ProjectNode.ImageName.XWorld);
+#if DEV14_OR_LATER
+        protected override bool SupportsIconMonikers {
+            get { return true; }
         }
+
+        protected override ImageMoniker GetIconMoniker(bool open) {
+            return KnownMonikers.XWorldFile;
+        }
+#else
+        public override int ImageIndex {
+            get {
+                return ProjectMgr.GetIconIndex(ProjectNode.ImageName.XWorld);
+            }
+        }
+#endif
 
         protected override NodeProperties CreatePropertiesObject() {
             return new WebPiReferenceNodeProperties(this);

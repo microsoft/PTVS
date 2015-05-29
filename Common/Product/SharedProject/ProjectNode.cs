@@ -66,6 +66,9 @@ namespace Microsoft.VisualStudioTools.Project {
         IOleCommandTarget {
         #region nested types
 
+#if DEV14_OR_LATER
+        [Obsolete("Use ImageMonikers instead")]
+#endif
         public enum ImageName {
             OfflineWebApp = 0,
             WebReferencesFolder = 1,
@@ -477,11 +480,16 @@ namespace Microsoft.VisualStudioTools.Project {
             }
         }
 
+#pragma warning disable 0618, 0672
+        // Project subclasses decide whether or not to support using image
+        // monikers, and so we need to keep the ImageIndex overrides in case
+        // they choose not to.
         public override int ImageIndex {
             get {
                 return (int)ProjectNode.ImageName.Application;
             }
         }
+#pragma warning restore 0618, 0672
 
 
         #endregion
@@ -596,6 +604,9 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <summary>
         /// Gets an ImageHandler for the project node.
         /// </summary>
+#if DEV14_OR_LATER
+        [Obsolete("Use ImageMonikers instead")]
+#endif
         public ImageHandler ImageHandler {
             get {
                 if (null == imageHandler) {
@@ -947,6 +958,12 @@ namespace Microsoft.VisualStudioTools.Project {
                     return this.ShowProjectInSolutionPage;
 
                 case __VSHPROPID.VSHPROPID_ExpandByDefault:
+                    return true;
+
+                case __VSHPROPID.VSHPROPID_DefaultEnableDeployProjectCfg:
+                    return true;
+
+                case __VSHPROPID.VSHPROPID_DefaultEnableBuildProjectCfg:
                     return true;
 
                 // Use the same icon as if the folder was closed
@@ -2003,7 +2020,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         /// <returns></returns>
         protected virtual Guid[] GetConfigurationDependentPropertyPages() {
-            return new Guid[0];
+            return new Guid[] { Guid.Empty };
         }
 
         /// <summary>
@@ -2956,7 +2973,7 @@ namespace Microsoft.VisualStudioTools.Project {
         protected internal virtual void LoadNonBuildInformation() {
             IPersistXMLFragment outerHierarchy = GetOuterInterface<IPersistXMLFragment>();
             if (outerHierarchy != null) {
-                this.LoadXmlFragment(outerHierarchy, null);
+                this.LoadXmlFragment(outerHierarchy, null, null);
             }
         }
 
@@ -3371,7 +3388,8 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         /// <param name="iPersistXMLFragment">Object that support being initialized with an XML fragment</param>
         /// <param name="configName">Name of the configuration being initialized, null if it is the project</param>
-        protected internal void LoadXmlFragment(IPersistXMLFragment persistXmlFragment, string configName) {
+        /// <param name="platformName">Name of the platform being initialized, null is ok</param>
+        protected internal void LoadXmlFragment(IPersistXMLFragment persistXmlFragment, string configName, string platformName) {
             Utilities.ArgumentNotNull("persistXmlFragment", persistXmlFragment);
 
             if (xmlFragments == null) {
@@ -3395,15 +3413,20 @@ namespace Microsoft.VisualStudioTools.Project {
                     if (child.Attributes.Count > 0) {
                         string guid = String.Empty;
                         string configuration = String.Empty;
+                        string platform = String.Empty;
                         if (child.Attributes[ProjectFileConstants.Guid] != null)
                             guid = child.Attributes[ProjectFileConstants.Guid].Value;
                         if (child.Attributes[ProjectFileConstants.Configuration] != null)
                             configuration = child.Attributes[ProjectFileConstants.Configuration].Value;
+                        if (child.Attributes[ProjectFileConstants.Platform] != null)
+                            platform = child.Attributes[ProjectFileConstants.Platform].Value;
 
                         if (String.Compare(child.Name, ProjectFileConstants.FlavorProperties, StringComparison.OrdinalIgnoreCase) == 0
                                 && String.Compare(guid, flavorGuidString, StringComparison.OrdinalIgnoreCase) == 0
                                 && ((String.IsNullOrEmpty(configName) && String.IsNullOrEmpty(configuration))
-                                    || (String.Compare(configuration, configName, StringComparison.OrdinalIgnoreCase) == 0))) {
+                                    || (String.Compare(configuration, configName, StringComparison.OrdinalIgnoreCase) == 0))
+                                && ((String.IsNullOrEmpty(platformName) && String.IsNullOrEmpty(platform))
+                                    || (String.Compare(platform, platformName, StringComparison.OrdinalIgnoreCase) == 0))) {
                             // we found the matching fragment
                             fragment = child.InnerXml;
                             node = child;
@@ -3463,7 +3486,7 @@ namespace Microsoft.VisualStudioTools.Project {
                         ErrorHandler.ThrowOnFailure((outerHierarchy).Save(ref flavorGuid, (uint)_PersistStorageType.PST_PROJECT_FILE, out fragment, 1));
                         if (!String.IsNullOrEmpty(fragment)) {
                             // Add the fragment to our XML
-                            WrapXmlFragment(doc, root, flavor, null, fragment);
+                            WrapXmlFragment(doc, root, flavor, null, null, fragment);
                         }
                         // While we don't yet support user files, our flavors might, so we will store that in the project file until then
                         // TODO: Refactor this code when we support user files
@@ -3471,7 +3494,7 @@ namespace Microsoft.VisualStudioTools.Project {
                         ErrorHandler.ThrowOnFailure((outerHierarchy).Save(ref flavorGuid, (uint)_PersistStorageType.PST_USER_FILE, out fragment, 1));
                         if (!String.IsNullOrEmpty(fragment)) {
                             // Add the fragment to our XML
-                            XmlElement node = WrapXmlFragment(doc, root, flavor, null, fragment);
+                            XmlElement node = WrapXmlFragment(doc, root, flavor, null, null, fragment);
                             node.Attributes.Append(doc.CreateAttribute(ProjectFileConstants.User));
                         }
                     }
@@ -3482,7 +3505,7 @@ namespace Microsoft.VisualStudioTools.Project {
                         string fragment;
                         ErrorHandler.ThrowOnFailure(((ProjectConfig)config).GetXmlFragment(flavor, _PersistStorageType.PST_PROJECT_FILE, out fragment));
                         if (!String.IsNullOrEmpty(fragment)) {
-                            WrapXmlFragment(doc, root, flavor, ((ProjectConfig)config).ConfigName, fragment);
+                            WrapXmlFragment(doc, root, flavor, ((ProjectConfig)config).ConfigName, ((ProjectConfig)config).PlatformName, fragment);
                         }
                     }
                 }
@@ -3493,10 +3516,16 @@ namespace Microsoft.VisualStudioTools.Project {
             }
         }
 
+#if DEV14_OR_LATER
+        [Obsolete("Use ImageMonikers instead")]
+#endif
         internal int GetIconIndex(ImageName name) {
             return (int)name;
         }
 
+#if DEV14_OR_LATER
+        [Obsolete("Use ImageMonikers instead")]
+#endif
         internal IntPtr GetIconHandleByName(ImageName name) {
             return ImageHandler.GetIconHandle(GetIconIndex(name));
         }
@@ -5091,7 +5120,7 @@ If the files in the existing folder have the same names as files in the folder y
             this.projectOpened = true;
         }
 
-        private static XmlElement WrapXmlFragment(XmlDocument document, XmlElement root, Guid flavor, string configuration, string fragment) {
+        private static XmlElement WrapXmlFragment(XmlDocument document, XmlElement root, Guid flavor, string configuration, string platform, string fragment) {
             XmlElement node = document.CreateElement(ProjectFileConstants.FlavorProperties);
             XmlAttribute attribute = document.CreateAttribute(ProjectFileConstants.Guid);
             attribute.Value = flavor.ToString("B");
@@ -5099,6 +5128,9 @@ If the files in the existing folder have the same names as files in the folder y
             if (!String.IsNullOrEmpty(configuration)) {
                 attribute = document.CreateAttribute(ProjectFileConstants.Configuration);
                 attribute.Value = configuration;
+                node.Attributes.Append(attribute);
+                attribute = document.CreateAttribute(ProjectFileConstants.Platform);
+                attribute.Value = platform;
                 node.Attributes.Append(attribute);
             }
             node.InnerXml = fragment;

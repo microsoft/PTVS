@@ -51,7 +51,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private ICompletionSession _activeSession;
         private ISignatureHelpSession _sigHelpSession;
         private IQuickInfoSession _quickInfoSession;
-        private IOleCommandTarget _oldTarget;
+        internal IOleCommandTarget _oldTarget;
         private IEditorOperations _editOps;
         private static string[] _allStandardSnippetTypes = { ExpansionClient.Expansion, ExpansionClient.SurroundsWith };
         private static string[] _surroundsWithSnippetTypes = { ExpansionClient.SurroundsWith, ExpansionClient.SurroundsWithStatement };
@@ -201,7 +201,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     case '.':
                     case ' ':
                         if (_provider.PythonService.LangPrefs.AutoListMembers) {
-                            TriggerCompletionSession(false);
+                            TriggerCompletionSession(false, true);
                         }
                         break;
                     case '(':
@@ -232,16 +232,20 @@ namespace Microsoft.PythonTools.Intellisense {
                         break;
                     default:
                         if (IsIdentifierFirstChar(ch) &&
-                            (_activeSession == null || _activeSession.CompletionSets.Count == 0) &&
-                            ShouldTriggerIdentifierCompletionSession()) {
-                            TriggerCompletionSession(false);
+                            (_activeSession == null || _activeSession.CompletionSets.Count == 0)) {
+                            bool commitByDefault;
+                            if (ShouldTriggerIdentifierCompletionSession(out commitByDefault)) {
+                                TriggerCompletionSession(false, commitByDefault);
+                            }
                         }
                         break;
                 }
             }
         }
 
-        private bool ShouldTriggerIdentifierCompletionSession() {
+        private bool ShouldTriggerIdentifierCompletionSession(out bool commitByDefault) {
+            commitByDefault = true;
+
             if (!_provider.PythonService.AdvancedOptions.AutoListIdentifiers ||
                 !_provider.PythonService.AdvancedOptions.AutoListMembers) {
                 return false;
@@ -276,11 +280,13 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var walker = new ExpressionCompletionWalker(caretPoint.Value.Position - statement.Value.Start.Position);
             ast.Walk(walker);
+            commitByDefault = walker.CommitByDefault;
             return walker.CanComplete;
         }
 
         private class ExpressionCompletionWalker : PythonWalker {
             public bool CanComplete = false;
+            public bool CommitByDefault = true;
             private readonly int _caretIndex;
 
             public ExpressionCompletionWalker(int caretIndex) {
@@ -301,17 +307,23 @@ namespace Microsoft.PythonTools.Intellisense {
                     !(expressions[0] is ErrorExpression);
             }
 
+            private bool HasCaret(Node node) {
+                return node.StartIndex <= _caretIndex && _caretIndex <= node.EndIndex;
+            }
+
             public override bool Walk(ErrorExpression node) {
                 return false;
             }
 
             public override bool Walk(AssignmentStatement node) {
                 CanComplete = true;
+                CommitByDefault = true;
                 return base.Walk(node);
             }
 
             public override bool Walk(Arg node) {
                 CanComplete = true;
+                CommitByDefault = true;
                 return base.Walk(node);
             }
 
@@ -321,6 +333,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             public override bool Walk(FunctionDefinition node) {
+                CommitByDefault = true;
                 if (node.Parameters != null) {
                     CanComplete = false;
                     foreach (var p in node.Parameters) {
@@ -343,6 +356,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             public override bool Walk(Parameter node) {
+                CommitByDefault = true;
                 var afterName = node.Annotation ?? node.DefaultValue;
                 CanComplete = afterName != null && afterName.StartIndex <= _caretIndex;
                 return base.Walk(node);
@@ -350,96 +364,121 @@ namespace Microsoft.PythonTools.Intellisense {
 
             public override bool Walk(ComprehensionFor node) {
                 CanComplete = IsActualExpression(node.List);
+                CommitByDefault = true;
                 return base.Walk(node);
             }
 
             public override bool Walk(ComprehensionIf node) {
                 CanComplete = true;
+                CommitByDefault = true;
                 return base.Walk(node);
             }
 
             public override bool Walk(ListExpression node) {
-                CanComplete = true;
+                CanComplete = HasCaret(node);
+                CommitByDefault = node.Items.Count > 1;
                 return base.Walk(node);
             }
 
             public override bool Walk(DictionaryExpression node) {
-                CanComplete = true;
+                CanComplete = HasCaret(node);
+                CommitByDefault = node.Items.Count > 1;
                 return base.Walk(node);
             }
 
             public override bool Walk(SetExpression node) {
-                CanComplete = true;
+                CanComplete = HasCaret(node);
+                CommitByDefault = node.Items.Count > 1;
                 return base.Walk(node);
             }
 
             public override bool Walk(TupleExpression node) {
-                CanComplete = true;
+                CanComplete = HasCaret(node);
+                CommitByDefault = node.Items.Count > 1;
                 return base.Walk(node);
             }
 
             public override bool Walk(ParenthesisExpression node) {
-                CanComplete = true;
+                CanComplete = HasCaret(node);
+                CommitByDefault = false;
                 return base.Walk(node);
             }
 
             public override bool Walk(AssertStatement node) {
                 CanComplete = IsActualExpression(node.Test);
+                CommitByDefault = true;
                 return base.Walk(node);
             }
 
             public override bool Walk(AugmentedAssignStatement node) {
                 CanComplete = IsActualExpression(node.Right);
+                CommitByDefault = true;
+                return base.Walk(node);
+            }
+
+            public override bool Walk(AwaitExpression node) {
+                CanComplete = IsActualExpression(node.Expression);
+                CommitByDefault = true;
                 return base.Walk(node);
             }
 
             public override bool Walk(DelStatement node) {
                 CanComplete = IsActualExpression(node.Expressions);
+                CommitByDefault = true;
                 return base.Walk(node);
             }
 
             public override bool Walk(ExecStatement node) {
                 CanComplete = IsActualExpression(node.Code);
+                CommitByDefault = true;
                 return base.Walk(node);
             }
 
             public override bool Walk(ForStatement node) {
                 CanComplete = IsActualExpression(node.List);
+                CommitByDefault = true;
                 return base.Walk(node);
             }
 
             public override bool Walk(IfStatementTest node) {
                 CanComplete = IsActualExpression(node.Test);
+                CommitByDefault = true;
                 return base.Walk(node);
             }
 
             public override bool Walk(GlobalStatement node) {
                 CanComplete = IsActualExpression(node.Names);
+                CommitByDefault = true;
                 return base.Walk(node);
             }
 
             public override bool Walk(NonlocalStatement node) {
                 CanComplete = IsActualExpression(node.Names);
+                CommitByDefault = true;
                 return base.Walk(node);
             }
 
             public override bool Walk(PrintStatement node) {
                 CanComplete = IsActualExpression(node.Expressions);
+                CommitByDefault = true;
                 return base.Walk(node);
             }
 
             public override bool Walk(ReturnStatement node) {
                 CanComplete = IsActualExpression(node.Expression);
+                CommitByDefault = true;
                 return base.Walk(node);
             }
 
             public override bool Walk(WhileStatement node) {
                 CanComplete = IsActualExpression(node.Test);
+                CommitByDefault = true;
                 return base.Walk(node);
             }
 
             public override bool Walk(WithStatement node) {
                 CanComplete = true;
+                CommitByDefault = true;
                 if (node.Items != null) {
                     var item = node.Items.LastOrDefault();
                     if (item != null) {
@@ -457,6 +496,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             public override bool Walk(YieldExpression node) {
+                CommitByDefault = true;
                 if (IsActualExpression(node.Expression)) {
                     // "yield" is valid and has implied None following it
                     var ce = node.Expression as ConstantExpression;
@@ -633,7 +673,7 @@ namespace Microsoft.PythonTools.Intellisense {
         [ThreadStatic]
         internal static bool ForceCompletions;
 
-        internal void TriggerCompletionSession(bool completeWord) {
+        internal void TriggerCompletionSession(bool completeWord, bool commitByDefault) {
             Dismiss();
 
             _activeSession = CompletionBroker.TriggerCompletion(_textView);
@@ -647,6 +687,9 @@ namespace Microsoft.PythonTools.Intellisense {
                     _activeSession.Commit();
                     _activeSession = null;
                 } else {
+                    foreach (var s in _activeSession.CompletionSets.OfType<FuzzyCompletionSet>()) {
+                        s.CommitByDefault = commitByDefault;
+                    }
                     _activeSession.Filter();
                     _activeSession.Dismissed += OnCompletionSessionDismissedOrCommitted;
                     _activeSession.Committed += OnCompletionSessionDismissedOrCommitted;

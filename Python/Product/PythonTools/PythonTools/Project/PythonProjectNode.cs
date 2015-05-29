@@ -33,6 +33,7 @@ using Microsoft.PythonTools.Commands;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Navigation;
+using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Azure;
 using Microsoft.VisualStudio.Shell;
@@ -46,6 +47,10 @@ using NativeMethods = Microsoft.VisualStudioTools.Project.NativeMethods;
 using Task = System.Threading.Tasks.Task;
 using VsCommands2K = Microsoft.VisualStudio.VSConstants.VSStd2KCmdID;
 using VsMenus = Microsoft.VisualStudioTools.Project.VsMenus;
+#if DEV14_OR_LATER
+using Microsoft.VisualStudio.Imaging;
+using Microsoft.VisualStudio.Imaging.Interop;
+#endif
 
 namespace Microsoft.PythonTools.Project {
     [Guid(PythonConstants.ProjectNodeGuid)]
@@ -73,7 +78,14 @@ namespace Microsoft.PythonTools.Project {
         private readonly CommentTaskProvider _commentTaskProvider;
 
         public PythonProjectNode(IServiceProvider serviceProvider)
-            : base(serviceProvider, Utilities.GetImageList(typeof(PythonProjectNode).Assembly.GetManifestResourceStream(PythonConstants.ProjectImageList))) {
+            : base(
+                  serviceProvider,
+#if DEV14_OR_LATER
+                  null
+#else
+                  Utilities.GetImageList(typeof(PythonProjectNode).Assembly.GetManifestResourceStream(PythonConstants.ProjectImageList))
+#endif
+        ) {
 
             Type projectNodePropsType = typeof(PythonProjectNodeProperties);
             AddCATIDMapping(projectNodePropsType, projectNodePropsType.GUID);
@@ -163,10 +175,36 @@ namespace Microsoft.PythonTools.Project {
 
         protected override Stream ProjectIconsImageStripStream {
             get {
+#if DEV14_OR_LATER
+                throw new NotSupportedException("Python Tools does not support project image strip");
+#else
                 return typeof(ProjectNode).Assembly.GetManifestResourceStream("Microsoft.PythonTools.Project.Resources.imagelis.bmp");
+#endif
             }
         }
 
+        protected internal override void SetCurrentConfiguration() {
+            base.SetCurrentConfiguration();
+
+            if (!IsProjectOpened)
+                return;
+
+            if (this.IsAppxPackageableProject()) {
+                EnvDTE.Project automationObject = (EnvDTE.Project)GetAutomationObject();
+
+                this.BuildProject.SetGlobalProperty(ProjectFileConstants.Platform, automationObject.ConfigurationManager.ActiveConfiguration.PlatformName);
+            }
+        }
+
+#if DEV14_OR_LATER
+        protected override bool SupportsIconMonikers {
+            get { return true; }
+        }
+
+        protected override ImageMoniker GetIconMoniker(bool open) {
+            return KnownMonikers.PYProjectNode;
+        }
+#else
         internal int GetIconIndex(PythonProjectImageName name) {
             return ImageOffset + (int)name;
         }
@@ -174,6 +212,7 @@ namespace Microsoft.PythonTools.Project {
         internal IntPtr GetIconHandleByName(PythonProjectImageName name) {
             return ImageHandler.GetIconHandle(GetIconIndex(name));
         }
+#endif
 
         internal override string IssueTrackerUrl {
             get { return PythonConstants.IssueTrackerUrl; }
@@ -197,6 +236,9 @@ namespace Microsoft.PythonTools.Project {
             return new PythonNonCodeFileNode(this, item);
         }
 
+        protected override ConfigProvider CreateConfigProvider() {
+            return new CommonConfigProvider(this);
+        }
         protected override ReferenceContainerNode CreateReferenceContainerNode() {
             return new PythonReferenceContainerNode(this);
         }
@@ -307,14 +349,29 @@ namespace Microsoft.PythonTools.Project {
             return base.GenerateUniqueItemName(itemIdLoc, ext, suggestedRoot, out itemName);
         }
 
+        public override MSBuildResult Build(string config, string target) {
+            if (this.IsAppxPackageableProject()) {
+                // Ensure that AnyCPU is not the default Platform if this is an AppX project
+                // Use x86 instead
+                var platform = this.BuildProject.GetPropertyValue(GlobalProperty.Platform.ToString());
+
+                if (platform == ProjectConfig.AnyCPU) {
+                    this.BuildProject.SetGlobalProperty(GlobalProperty.Platform.ToString(), ConfigProvider.x86Platform);
+                }
+            }
+            return base.Build(config, target);
+        }
+
         protected override void Reload() {
-            _searchPathContainer = new CommonSearchPathContainerNode(this);
-            this.AddChild(_searchPathContainer);
-            RefreshCurrentWorkingDirectory();
-            RefreshSearchPaths();
-            _interpretersContainer = new InterpretersContainerNode(this);
-            this.AddChild(_interpretersContainer);
-            RefreshInterpreters(alwaysCollapse: true);
+            if (!this.IsAppxPackageableProject()) {
+                _searchPathContainer = new CommonSearchPathContainerNode(this);
+                this.AddChild(_searchPathContainer);
+                RefreshCurrentWorkingDirectory();
+                RefreshSearchPaths();
+                _interpretersContainer = new InterpretersContainerNode(this);
+                this.AddChild(_interpretersContainer);
+                RefreshInterpreters(alwaysCollapse: true);
+            }
 
             OnProjectPropertyChanged += PythonProjectNode_OnProjectPropertyChanged;
             base.Reload();
@@ -455,7 +512,7 @@ namespace Microsoft.PythonTools.Project {
                     }
                 } else {
                     var fact = interpreters.ActiveInterpreter;
-                    if (!RemoveFirst(remaining, n => n._isGlobalDefault && n._factory == fact)) {
+                    if (fact.IsRunnable() && !RemoveFirst(remaining, n => n._isGlobalDefault && n._factory == fact)) {
                         node.AddChild(new InterpretersNode(this, null, fact, true, false, true));
                     }
                 }
@@ -1435,7 +1492,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
 
-        #region IPythonProject Members
+#region IPythonProject Members
 
         string IPythonProject.ProjectName {
             get {
@@ -1508,9 +1565,9 @@ namespace Microsoft.PythonTools.Project {
             return base.GetUnevaluatedProperty(name);
         }
 
-        #endregion
+#endregion
 
-        #region Search Path support
+#region Search Path support
 
         internal int AddSearchPathZip() {
             var fileName = Site.BrowseForFileOpen(
@@ -1544,9 +1601,9 @@ namespace Microsoft.PythonTools.Project {
             return VSConstants.S_OK;
         }
 
-        #endregion
+#endregion
 
-        #region Package Installation support
+#region Package Installation support
 
         private int ExecInstallPythonPackage(Dictionary<string, string> args, IList<HierarchyNode> selectedNodes) {
             InterpretersNode selectedInterpreter;
@@ -1986,9 +2043,9 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        #endregion
+#endregion
 
-        #region Virtual Env support
+#region Virtual Env support
 
         private void ShowAddInterpreter() {
             var service = Site.GetComponentModel().GetService<IInterpreterOptionsService>();
@@ -2114,7 +2171,7 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        #endregion
+#endregion
 
         public override Guid SharedCommandGuid {
             get {

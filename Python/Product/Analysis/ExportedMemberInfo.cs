@@ -13,25 +13,31 @@
  * ***************************************************************************/
 
 
+using System;
+
 namespace Microsoft.PythonTools.Analysis {
     /// <summary>
     /// Provides information about a value exported from a module.
     /// </summary>
     public struct ExportedMemberInfo {
-        private readonly string _name;
-        private readonly bool _isDefinedInModule;
-
-        internal ExportedMemberInfo(string name, bool isDefinedInModule) {
+        private readonly string _fromName, _name;
+        
+        internal ExportedMemberInfo(string fromName, string name) {
+            _fromName = fromName;
             _name = name;
-            _isDefinedInModule = isDefinedInModule;
         }
 
         /// <summary>
-        /// The name of the value being exported, fully qualified with the module/package name.
+        /// The name of the value being exported, fully qualified with the
+        /// module/package name.
         /// </summary>
         public string Name {
             get {
-                return _name;
+                if (string.IsNullOrEmpty(_fromName)) {
+                    return _name;
+                } else {
+                    return _fromName + "." + _name;
+                }
             }
         }
 
@@ -39,9 +45,26 @@ namespace Microsoft.PythonTools.Analysis {
         /// True if this was defined in the module or false if this was defined in another module
         /// but imported in the module that we're getting members from.
         /// </summary>
+        [Obsolete("Only defined names are returned")]
         public bool IsDefinedInModule {
+            get { return true; }
+        }
+
+        /// <summary>
+        /// The name of the member or module that can be imported.
+        /// </summary>
+        public string ImportName {
             get {
-                return _isDefinedInModule;
+                return _name;
+            }
+        }
+
+        /// <summary>
+        /// The name of the module it is imported from, if applicable.
+        /// </summary>
+        public string FromName {
+            get {
+                return _fromName;
             }
         }
     }

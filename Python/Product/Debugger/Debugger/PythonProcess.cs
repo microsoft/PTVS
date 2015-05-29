@@ -62,6 +62,7 @@ namespace Microsoft.PythonTools.Debugger {
         protected PythonProcess(int pid, PythonLanguageVersion languageVersion) {
             _pid = pid;
             _langVersion = languageVersion;
+            _dirMapping = new List<string[]>();
         }
 
         private PythonProcess(int pid) {
@@ -183,6 +184,12 @@ namespace Microsoft.PythonTools.Debugger {
         public void Dispose() {
             Dispose(true);
             GC.SuppressFinalize(this);
+        }
+
+        internal void AddDirMapping(string[] mapping) {
+            if (mapping != null) {
+                _dirMapping.Add(mapping);
+            }
         }
 
         protected virtual void Dispose(bool disposing) {
@@ -1043,16 +1050,14 @@ namespace Microsoft.PythonTools.Debugger {
                     string mapTo = mappingInfo[toDebuggee ? 1 : 0];
 
                     if (file.StartsWith(mapFrom, StringComparison.OrdinalIgnoreCase)) {
-                        if (file.StartsWith(mapFrom, StringComparison.OrdinalIgnoreCase)) {
-                            int len = mapFrom.Length;
-                            if (!mappingInfo[0].EndsWith("\\")) {
-                                len++;
-                            }
-
-                            string newFile = Path.Combine(mapTo, file.Substring(len));
-                            Debug.WriteLine(String.Format("Filename mapped from {0} to {1}", file, newFile));
-                            return newFile;
+                        int len = mapFrom.Length;
+                        if (!mappingInfo[0].EndsWith("\\")) {
+                            len++;
                         }
+
+                        string newFile = Path.Combine(mapTo, file.Substring(len));
+                        Debug.WriteLine("Filename mapped from {0} to {1}", file, newFile);
+                        return newFile;
                     }
                 }
             }

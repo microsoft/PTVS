@@ -22,6 +22,11 @@ using Microsoft.PythonTools.Analysis;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
+using System.Linq;
+#if DEV14_OR_LATER
+using Microsoft.VisualStudio.Imaging;
+using Microsoft.VisualStudio.Imaging.Interop;
+#endif
 
 namespace Microsoft.PythonTools.Project {
     /// <summary>
@@ -30,12 +35,23 @@ namespace Microsoft.PythonTools.Project {
     /// Currently we just provide a specialized icon for the different folder.
     /// </summary>
     class PythonFolderNode : CommonFolderNode {
+#if !DEV14_OR_LATER
         private ImageList _imageList;
+#endif
 
         public PythonFolderNode(CommonProjectNode root, ProjectElement element)
             : base(root, element) {
         }
 
+#if DEV14_OR_LATER
+        protected override ImageMoniker GetIconMoniker(bool open) {
+            if (!ItemNode.IsExcluded && AllChildren.Any(n => ModulePath.IsInitPyFile(n.Url))) {
+                return open ? KnownMonikers.PackageFolderOpened : KnownMonikers.PackageFolderClosed;
+            }
+
+            return base.GetIconMoniker(open);
+        }
+#else
         public override object GetIconHandle(bool open) {
             if (ItemNode.IsExcluded) {
                 return base.GetIconHandle(open);
@@ -59,6 +75,8 @@ namespace Microsoft.PythonTools.Project {
 
             return base.GetIconHandle(open);
         }
+#endif
+
 
         internal override int ExecCommandOnNode(Guid cmdGroup, uint cmd, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
             if (cmdGroup == ProjectMgr.SharedCommandGuid) {

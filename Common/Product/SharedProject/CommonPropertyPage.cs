@@ -14,9 +14,13 @@
 
 using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Drawing;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using Microsoft.Build.Construction;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
 
@@ -49,6 +53,10 @@ namespace Microsoft.VisualStudioTools.Project {
             }
         }
 
+        internal virtual IEnumerable<CommonProjectConfig> SelectedConfigs {
+            get; set;
+        }
+
         protected void SetProjectProperty(string propertyName, string propertyValue) {
             // SetProjectProperty's implementation will check whether the value
             // has changed.
@@ -57,6 +65,150 @@ namespace Microsoft.VisualStudioTools.Project {
 
         protected string GetProjectProperty(string propertyName) {
             return Project.GetUnevaluatedProperty(propertyName);
+        }
+
+        protected void SetUserProjectProperty(string propertyName, string propertyValue) {
+            // SetUserProjectProperty's implementation will check whether the value
+            // has changed.
+            Project.SetUserProjectProperty(propertyName, propertyValue);
+        }
+
+        protected string GetUserProjectProperty(string propertyName) {
+            return Project.GetUserProjectProperty(propertyName);
+        }
+
+        protected string GetConfigUserProjectProperty(string propertyName) {
+            if (SelectedConfigs == null) {
+                string condition = string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                    ConfigProvider.configPlatformString,
+                    Project.CurrentConfig.GetPropertyValue("Configuration"),
+                    Project.CurrentConfig.GetPropertyValue("Platform"));
+
+                return GetUserPropertyUnderCondition(propertyName, condition);
+            } else {
+                StringCollection values = new StringCollection();
+
+                foreach (var config in SelectedConfigs) {
+                    string condition = string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                        ConfigProvider.configPlatformString,
+                        config.ConfigName,
+                        config.PlatformName);
+
+                    values.Add(GetUserPropertyUnderCondition(propertyName, condition));
+                }
+
+                switch (values.Count) {
+                case 0:
+                    return null;
+                case 1:
+                    return values[0];
+                default:
+                    return "<different values>";
+                }
+            }
+        }
+
+        protected void SetConfigUserProjectProperty(string propertyName, string propertyValue) {
+            if (SelectedConfigs == null) {
+                string condition = string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                    ConfigProvider.configPlatformString,
+                    Project.CurrentConfig.GetPropertyValue("Configuration"),
+                    Project.CurrentConfig.GetPropertyValue("Platform"));
+
+                SetUserPropertyUnderCondition(propertyName, propertyValue, condition);
+            } else {
+                foreach (var config in SelectedConfigs) {
+                    string condition = string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                        ConfigProvider.configPlatformString,
+                        config.ConfigName,
+                        config.GetConfigurationProperty("Platform", false));
+
+                    SetUserPropertyUnderCondition(propertyName, propertyValue, condition);
+                }
+            }
+        }
+
+        private string GetUserPropertyUnderCondition(string propertyName, string condition) {
+            string conditionTrimmed = (condition == null) ? String.Empty : condition.Trim();
+
+            if (Project.UserBuildProject != null) {
+                if (conditionTrimmed.Length == 0) {
+                    return Project.UserBuildProject.GetProperty(propertyName).UnevaluatedValue;
+                }
+
+                // New OM doesn't have a convenient equivalent for setting a property with a particular property group condition. 
+                // So do it ourselves.
+                ProjectPropertyGroupElement matchingGroup = null;
+
+                foreach (ProjectPropertyGroupElement group in Project.UserBuildProject.Xml.PropertyGroups) {
+                    if (String.Equals(group.Condition.Trim(), conditionTrimmed, StringComparison.OrdinalIgnoreCase)) {
+                        matchingGroup = group;
+                        break;
+                    }
+                }
+
+                if (matchingGroup != null) {
+                    foreach (ProjectPropertyElement property in matchingGroup.PropertiesReversed) // If there's dupes, pick the last one so we win
+                    {
+                        if (string.Equals(property.Name, propertyName, StringComparison.OrdinalIgnoreCase)
+                            && (property.Condition == null || property.Condition.Length == 0)) {
+                            return property.Value;
+                        }
+                    }
+                }
+
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Emulates the behavior of SetProperty(name, value, condition) on the old MSBuild object model.
+        /// This finds a property group with the specified condition (or creates one if necessary) then sets the property in there.
+        /// </summary>
+        private void SetUserPropertyUnderCondition(string propertyName, string propertyValue, string condition) {
+            string conditionTrimmed = (condition == null) ? String.Empty : condition.Trim();
+            const string userProjectCreateProperty = "UserProject";
+
+            if (Project.UserBuildProject == null) {
+                Project.SetUserProjectProperty(userProjectCreateProperty, null);
+            }
+
+            if (conditionTrimmed.Length == 0) {
+                var userProp = Project.UserBuildProject.GetProperty(userProjectCreateProperty);
+                if (userProp != null) {
+                    Project.UserBuildProject.RemoveProperty(userProp);
+                }
+                Project.UserBuildProject.SetProperty(propertyName, propertyValue);
+                return;
+            }
+
+            // New OM doesn't have a convenient equivalent for setting a property with a particular property group condition. 
+            // So do it ourselves.
+            ProjectPropertyGroupElement newGroup = null;
+
+            foreach (ProjectPropertyGroupElement group in Project.UserBuildProject.Xml.PropertyGroups) {
+                if (String.Equals(group.Condition.Trim(), conditionTrimmed, StringComparison.OrdinalIgnoreCase)) {
+                    newGroup = group;
+                    break;
+                }
+            }
+
+            if (newGroup == null) {
+                newGroup = Project.UserBuildProject.Xml.AddPropertyGroup(); // Adds after last existing PG, else at start of project
+                newGroup.Condition = condition;
+            }
+
+            foreach (ProjectPropertyElement property in newGroup.PropertiesReversed) // If there's dupes, pick the last one so we win
+            {
+                if (string.Equals(property.Name, propertyName, StringComparison.OrdinalIgnoreCase) 
+                    && (property.Condition == null || property.Condition.Length == 0)) {
+                    property.Value = propertyValue;
+                    return;
+                }
+            }
+
+            newGroup.AddProperty(propertyName, propertyValue);
         }
 
         public bool Loading {
@@ -138,18 +290,19 @@ namespace Microsoft.VisualStudioTools.Project {
 
             if (count > 0) {
                 if (punk[0] is ProjectConfig) {
-                    ArrayList configs = new ArrayList();
+                    if (_project == null) {
+                        _project = (CommonProjectNode)((CommonProjectConfig)punk.First()).ProjectMgr;
+                    }
+
+                    var configs = new List<CommonProjectConfig>();
 
                     for (int i = 0; i < count; i++) {
                         CommonProjectConfig config = (CommonProjectConfig)punk[i];
 
-                        if (_project == null) {
-                            Project = (CommonProjectNode)config.ProjectMgr;
-                            break;
-                        }
-
                         configs.Add(config);
                     }
+
+                    SelectedConfigs = configs;
                 } else if (punk[0] is NodeProperties) {
                     if (_project == null) {
                         Project = (CommonProjectNode)(punk[0] as NodeProperties).HierarchyNode.ProjectMgr;

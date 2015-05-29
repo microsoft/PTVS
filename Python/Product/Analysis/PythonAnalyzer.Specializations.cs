@@ -173,6 +173,11 @@ namespace Microsoft.PythonTools.Analysis {
             SpecializeFunction("functools", "update_wrapper", UpdateWrapperFunction);
             SpecializeFunction("functools", "wraps", WrapsFunction);
 
+            SpecializeFunction("unittest", "_id", Identity);
+            SpecializeFunction("unittest", "skip", IdentityDecorator);
+            SpecializeFunction("unittest", "skipIf", IdentityDecorator);
+            SpecializeFunction("unittest", "skipUnless", IdentityDecorator);
+
             // cached for quick checks to see if we're a call to clr.AddReference
 
             SpecializeFunction("wpf", "LoadComponent", LoadComponent);
@@ -201,6 +206,22 @@ namespace Microsoft.PythonTools.Analysis {
 
         IAnalysisSet Nop(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
             return AnalysisSet.Empty;
+        }
+
+        IAnalysisSet Identity(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
+            return args.Length > 0 ? args[0] : AnalysisSet.Empty;
+        }
+
+        IAnalysisSet IdentityDecorator(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
+            if (args.Length == 0) {
+                return AnalysisSet.Empty;
+            }
+            if (args[0].GetMember(node, unit, "__call__").Any()) {
+                return args[0];
+            }
+            return unit.ProjectState.GetCached(" PythonAnalyzer.Identity()", () => {
+                return new SpecializedCallable(null, Identity, false);
+            });
         }
 
         IAnalysisSet RangeConstructor(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
@@ -545,7 +566,7 @@ namespace Microsoft.PythonTools.Analysis {
                                     ClassInfo ci = instInfo.ClassInfo;
 
                                     VariableDef def;
-                                    if (ci.Scope.Variables.TryGetValue(keyValue.Key, out def)) {
+                                    if (ci.Scope.TryGetVariable(keyValue.Key, out def)) {
                                         def.AddReference(
                                             new EncodedLocation(SourceLocationResolver.Instance, new SourceLocation(1, member.LineNumber, member.LineOffset)),
                                             xamlProject

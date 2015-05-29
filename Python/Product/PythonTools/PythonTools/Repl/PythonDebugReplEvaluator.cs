@@ -26,24 +26,33 @@ using Microsoft.PythonTools.Debugger.Remote;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Parsing;
+#if DEV14_OR_LATER
+using Microsoft.VisualStudio.InteractiveWindow;
+using Microsoft.VisualStudio.InteractiveWindow.Commands;
+#else
 using Microsoft.VisualStudio.Repl;
+#endif
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Projection;
-
-namespace Microsoft.PythonTools.Repl {
-#if INTERACTIVE_WINDOW
-    using IReplWindow = IInteractiveWindow;
-    using IReplEvaluator = IInteractiveEngine;
+using Microsoft.VisualStudio.Utilities;
+#if DEV14_OR_LATER
+using IReplEvaluator = Microsoft.VisualStudio.InteractiveWindow.IInteractiveEvaluator;
+using IReplWindow = Microsoft.VisualStudio.InteractiveWindow.IInteractiveWindow;
+using ReplRoleAttribute = Microsoft.PythonTools.Repl.InteractiveWindowRoleAttribute;
 #endif
 
+namespace Microsoft.PythonTools.Repl {
     [ReplRole("Debug")]
-    internal class PythonDebugReplEvaluator : IReplEvaluator, IMultipleScopeEvaluator, IPythonReplIntellisense {
+    internal class PythonDebugReplEvaluator : IReplEvaluator/*, IMultipleScopeEvaluator*/, IPythonReplIntellisense {
         private IReplWindow _window;
         private PythonDebugProcessReplEvaluator _activeEvaluator;
         private readonly Dictionary<int, PythonDebugProcessReplEvaluator> _evaluators = new Dictionary<int, PythonDebugProcessReplEvaluator>(); // process id to evaluator
         private EnvDTE.DebuggerEvents _debuggerEvents;
         private readonly PythonToolsService _pyService;
         private readonly IServiceProvider _serviceProvider;
+#if DEV14_OR_LATER
+        private IInteractiveWindowCommands _commands;
+#endif
 
         private const string currentPrefix = "=> ";
         private const string notCurrentPrefix = "   ";
@@ -99,13 +108,15 @@ namespace Microsoft.PythonTools.Repl {
 
         public Task<ExecutionResult> Initialize(IReplWindow window) {
             _window = window;
+            _window.SetSmartUpDown(CurrentOptions.ReplSmartHistory);
+#if !DEV14_OR_LATER
             _window.SetOptionValue(ReplOptions.CommandPrefix, "$");
-            _window.SetOptionValue(ReplOptions.UseSmartUpDown, CurrentOptions.ReplSmartHistory);
             _window.SetOptionValue(ReplOptions.PrimaryPrompt, CurrentOptions.PrimaryPrompt);
             _window.SetOptionValue(ReplOptions.SecondaryPrompt, CurrentOptions.SecondaryPrompt);
             _window.SetOptionValue(ReplOptions.DisplayPromptInMargin, !CurrentOptions.InlinePrompts);
             _window.SetOptionValue(ReplOptions.SupportAnsiColors, true);
             _window.SetOptionValue(ReplOptions.FormattedPrompts, true);
+#endif
             _window.WriteLine("Python debug interactive window.  Type $help for a list of commands.");
 
             _window.TextView.BufferGraph.GraphBuffersChanged += BufferGraphGraphBuffersChanged;
@@ -149,14 +160,32 @@ namespace Microsoft.PythonTools.Repl {
         public void ActiveLanguageBufferChanged(ITextBuffer currentBuffer, ITextBuffer previousBuffer) {
         }
 
+#if DEV14_OR_LATER
+        public bool CanExecuteCode(string text) {
+            if (_commands.InCommand) {
+                return true;
+            }
+#else
         public bool CanExecuteText(string text) {
+#endif
             if (_activeEvaluator != null) {
+#if DEV14_OR_LATER
+                return _activeEvaluator.CanExecuteCode(text);
+#else
                 return _activeEvaluator.CanExecuteText(text);
+#endif
             }
             return true;
         }
 
         public Task<ExecutionResult> ExecuteText(string text) {
+#if DEV14_OR_LATER
+            var res = _commands.TryExecuteCommand();
+            if (res != null) {
+                return res;
+            }
+#endif
+
             if (!IsInDebugBreakMode()) {
                 NoExecutionIfNotStoppedInDebuggerError();
                 return ExecutionResult.Succeeded;
@@ -179,7 +208,11 @@ namespace Microsoft.PythonTools.Repl {
             }
         }
 
+#if DEV14_OR_LATER
+        public void AbortExecution() {
+#else
         public void AbortCommand() {
+#endif
             _window.WriteError("Abort is not supported." + Environment.NewLine);
         }
 
@@ -194,16 +227,16 @@ namespace Microsoft.PythonTools.Repl {
             return String.Empty;
         }
 
-        #endregion
+#endregion
 
-        #region IDisposable Members
+#region IDisposable Members
 
         public void Dispose() {
         }
 
-        #endregion
+#endregion
 
-        #region IMultipleScopeEvaluator Members
+#region IMultipleScopeEvaluator Members
 
         public IEnumerable<string> GetAvailableScopes() {
             string[] fixedScopes = new string[] { "<CurrentFrame>" };
@@ -244,13 +277,24 @@ namespace Microsoft.PythonTools.Repl {
             }
         }
 
-        #endregion
+#endregion
 
-        #region IPythonReplIntellisense Members
+#region IPythonReplIntellisense Members
 
         public bool LiveCompletionsOnly {
             get { return CurrentOptions.LiveCompletionsOnly; }
         }
+
+#if DEV14_OR_LATER
+        public IReplWindow CurrentWindow {
+            get {
+                return _window;
+            }
+            set {
+                _window = value;
+            }
+        }
+#endif
 
         public IEnumerable<KeyValuePair<string, bool>> GetAvailableScopesAndKind() {
             if (_activeEvaluator != null) {
@@ -264,7 +308,7 @@ namespace Microsoft.PythonTools.Repl {
             if (_activeEvaluator != null) {
                 return _activeEvaluator.GetMemberNames(text);
             }
-            
+
             return new Analysis.MemberResult[0];
         }
 
@@ -272,11 +316,11 @@ namespace Microsoft.PythonTools.Repl {
             if (_activeEvaluator != null) {
                 return _activeEvaluator.GetSignatureDocumentation(text);
             }
-            
+
             return new OverloadDoc[0];
         }
 
-        #endregion
+#endregion
 
         internal void StepOut() {
             if (_activeEvaluator != null) {
@@ -514,6 +558,33 @@ namespace Microsoft.PythonTools.Repl {
         private void NoExecutionIfNotStoppedInDebuggerError() {
             _window.WriteError("Code can only be executed while stopped in debugger.");
         }
+
+#if DEV14_OR_LATER
+        public Task<ExecutionResult> InitializeAsync() {
+            _commands = BasePythonReplEvaluator.GetInteractiveCommands(_serviceProvider, _window, this);
+
+            return Initialize(CurrentWindow);
+        }
+
+        public Task<ExecutionResult> ResetAsync(bool initialize = true) {
+            return Reset();
+        }
+
+        public Task<ExecutionResult> ExecuteCodeAsync(string text) {
+            return ExecuteText(text);
+        }
+
+        public string GetPrompt() {
+            if (_window != null &&
+                _window.CurrentLanguageBuffer != null &&
+                _window.CurrentLanguageBuffer.CurrentSnapshot != null &&
+                _window.CurrentLanguageBuffer.CurrentSnapshot.LineCount > 1) {
+                return SecondaryPrompt;
+            }
+
+            return PrimaryPrompt;
+        }
+#endif
     }
 
     internal class PythonDebugProcessReplEvaluator : BasePythonReplEvaluator {

@@ -36,7 +36,9 @@ namespace Microsoft.VisualStudioTools.Project {
         private string _caption;
 
         #region static fields
+#if !DEV14_OR_LATER
         private static Dictionary<string, int> extensionIcons;
+#endif
         #endregion
 
         #region overriden Properties
@@ -109,6 +111,7 @@ namespace Microsoft.VisualStudioTools.Project {
             return Caption;
         }
 
+#if !DEV14_OR_LATER
         public override int ImageIndex {
             get {
                 // Check if the file is there.
@@ -128,6 +131,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 return imageIndex;
             }
         }
+#endif
 
         public uint DocCookie {
             get {
@@ -171,9 +175,10 @@ namespace Microsoft.VisualStudioTools.Project {
             }
         }
 
-        #endregion
+#endregion
 
-        #region ctor
+#region ctor
+#if !DEV14_OR_LATER
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1810:InitializeReferenceTypeStaticFieldsInline")]
         static FileNode() {
             // Build the dictionary with the mapping between some well known extensions
@@ -216,7 +221,7 @@ namespace Microsoft.VisualStudioTools.Project {
             extensionIcons.Add(".pfx", (int)ProjectNode.ImageName.PFX);
             extensionIcons.Add(".snk", (int)ProjectNode.ImageName.SNK);
         }
-
+#endif
         /// <summary>
         /// Constructor for the FileNode
         /// </summary>
@@ -237,16 +242,6 @@ namespace Microsoft.VisualStudioTools.Project {
             }
 
             return new IncludedFileNodeProperties(this);
-        }
-
-        public override object GetIconHandle(bool open) {
-            int index = this.ImageIndex;
-            if (NoImage == index) {
-                // There is no image for this file; let the base class handle this case.
-                return base.GetIconHandle(open);
-            }
-            // Return the handle for the image.
-            return this.ProjectMgr.ImageHandler.GetIconHandle(index);
         }
 
         /// <summary>
@@ -602,9 +597,9 @@ namespace Microsoft.VisualStudioTools.Project {
             return File.Exists(moniker);
         }
 
-        #endregion
+#endregion
 
-        #region virtual methods
+#region virtual methods
 
         public override object GetProperty(int propId) {
             switch ((__VSHPROPID)propId) {
@@ -803,9 +798,9 @@ namespace Microsoft.VisualStudioTools.Project {
             }
         }
 
-        #endregion
+#endregion
 
-        #region Helper methods
+#region Helper methods
         /// <summary>
         /// Gets called to rename the eventually running document this hierarchyitem points to
         /// </summary>
@@ -918,9 +913,9 @@ namespace Microsoft.VisualStudioTools.Project {
             ExpandItem(EXPANDFLAGS.EXPF_SelectItem);
         }
 
-        #endregion
+#endregion
 
-        #region helpers
+#region helpers
 
 
         /// <summary>
@@ -942,7 +937,7 @@ namespace Microsoft.VisualStudioTools.Project {
             }
             return childNodes;
         }
-        #endregion
+#endregion
 
         void IDiskBasedNode.RenameForDeferredSave(string basePath, string baseNewPath) {
             string oldLoc = CommonUtils.GetAbsoluteFilePath(basePath, ItemNode.GetMetadata(ProjectFileConstants.Include));
