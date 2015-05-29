@@ -329,8 +329,8 @@ namespace TestUtilities.Mocks {
         #endregion
     }
 
-#if DEV14_OR_LATER
     public static class ReplEvalExtensions {
+#if DEV14_OR_LATER
         public static Task<ExecutionResult> _Initialize(this IReplEvaluator self, IReplWindow window) {
             self.CurrentWindow = window;
             return self.InitializeAsync();
@@ -343,6 +343,10 @@ namespace TestUtilities.Mocks {
         public static Task<ExecutionResult> Reset(this IReplEvaluator self) {
             return self.ResetAsync();
         }
-    }
+#else
+        public static Task<ExecutionResult> _Initialize(this IReplEvaluator self, IReplWindow window) {
+            return self.Initialize(window);
+        }
 #endif
+    }
 }
