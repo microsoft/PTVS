@@ -12,6 +12,8 @@
  *
  * ***************************************************************************/
 
+#if DEV14_OR_LATER
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -24,7 +26,6 @@ using Microsoft.VisualStudio.Imaging.Interop;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
 
-#if DEV14_OR_LATER
 namespace Microsoft.PythonTools.Intellisense {
     class PythonSuggestedImportAction : ISuggestedAction, IComparable<PythonSuggestedImportAction> {
         private readonly PythonSuggestedActionsSource _source;
