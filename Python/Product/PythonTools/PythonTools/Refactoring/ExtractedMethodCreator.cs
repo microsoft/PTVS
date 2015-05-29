@@ -14,9 +14,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
-using Microsoft.PythonTools.Parsing.Ast;
 using System.Diagnostics;
+using System.Text;
+using Microsoft.PythonTools.Parsing;
+using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Refactoring {
     class ExtractedMethodCreator {
@@ -104,6 +105,7 @@ namespace Microsoft.PythonTools.Refactoring {
             }
 
             var body = _target.GetBody(_ast);
+            var isCoroutine = IsCoroutine(body);
 
             // reset leading indentation to single newline + indentation, this
             // strips out any proceeding comments which we don't extract
@@ -146,6 +148,7 @@ namespace Microsoft.PythonTools.Refactoring {
             }
 
             var res = new FunctionDefinition(new NameExpression(info.Name), parameters.ToArray(), body, decorators);
+            res.IsCoroutine = isCoroutine;
             
             StringBuilder newCall = new StringBuilder();
             newCall.Append(_target.IndentationLevel);
@@ -218,6 +221,10 @@ namespace Microsoft.PythonTools.Refactoring {
                 newCall.Append("return ");
             }
 
+            if (isCoroutine) {
+                newCall.Append("await ");
+            }
+
             if (info.TargetScope is ClassDefinition) {
                 var fromScope = _scopes[_scopes.Length - 1] as FunctionDefinition;
                 Debug.Assert(fromScope != null);  // we don't allow extracting from classes, so we have to be coming from a function
@@ -249,6 +256,25 @@ namespace Microsoft.PythonTools.Refactoring {
                 method,
                 newCall.ToString()
             );
+        }
+
+        private bool IsCoroutine(Statement body) {
+            if (_ast.LanguageVersion < PythonLanguageVersion.V35) {
+                return false;
+            }
+
+            var walker = new AwaitWalker();
+            body.Walk(walker);
+            return walker.SeenAwait;
+        }
+
+        private class AwaitWalker : PythonWalker {
+            public bool SeenAwait = false;
+
+            public override bool Walk(AwaitExpression node) {
+                SeenAwait = true;
+                return false;
+            }
         }
 
         public ScopeStatement[] Scopes {
