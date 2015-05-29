@@ -210,7 +210,7 @@
     <Compile Include="DkmDebugger\LocalComponent.cs" />
     <Compile Include="DkmDebugger\DiaExtensions.cs" />
     <Compile Include="DkmDebugger\DkmExtensions.cs" />
-    <Compile Include="DkmDebugger\Guids.cs" />
+    <Compile Include="Guids.cs" />
     <Compile Include="DkmDebugger\Proxies\Structs\PyMemberDef.cs" />
     <Compile Include="DkmDebugger\Proxies\Structs\PyThreadState.cs" />
     <Compile Include="DkmDebugger\Proxies\Structs\PyModuleObject.cs" />
@@ -229,7 +229,6 @@
     <Compile Include="DkmDebugger\SourceLocation.cs" />
     <Compile Include="DkmDebugger\ReprBuilder.cs" />
     <Compile Include="DkmDebugger\VsPackageMessage.cs" />
-    <Compile Include="Guids.cs" />
     <None Include="DkmDebugger\LocalStackWalkingComponent.vsdconfigxml">
       <SubType>Designer</SubType>
     </None>

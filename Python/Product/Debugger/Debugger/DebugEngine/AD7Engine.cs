@@ -21,6 +21,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Web;
 using System.Windows.Forms;
+using Microsoft.PythonTools.DkmDebugger;
 using Microsoft.PythonTools.Debugger.Remote;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio;
@@ -44,7 +45,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
     [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",
         Justification = "We do not control ownership of this class")]
     [ComVisible(true)]
-    [Guid(Guids.CLSID_DebugEngine)]
+    [Guid(Guids.DebugEngineId)]
     public sealed class AD7Engine : IDebugEngine2, IDebugEngineLaunch2, IDebugProgram3, IDebugSymbolSettings100, IThreadIdMapper {
         // used to send events to the debugger. Some examples of these events are thread create, exception thrown, module load.
         private IDebugEventCallback2 _events;
