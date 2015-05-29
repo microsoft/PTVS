@@ -62,10 +62,10 @@
           SkipUnchangedFiles="true"
           OverwriteReadOnlyFiles="true"
           Retries="3"
-          RetryDelayMilliseconds="100">
+          RetryDelayMilliseconds="1000">
       <Output TaskParameter="CopiedFiles" ItemName="_CopiedTestBinaryFiles"/>
     </Copy>
     
-    <Touch Files="@(_CopiedTestBinaryFiles)" />
+    <Touch Files="@(_CopiedTestBinaryFiles)" ContinueOnError="true" />
   </Target>
 </Project>
