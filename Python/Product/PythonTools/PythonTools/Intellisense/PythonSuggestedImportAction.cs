@@ -116,6 +116,18 @@ namespace Microsoft.PythonTools.Intellisense {
             return false;
         }
 
+        public override bool Equals(object obj) {
+            var other = obj as PythonSuggestedImportAction;
+            if (other == null) {
+                return false;
+            }
+            return DisplayText.Equals(other.DisplayText);
+        }
+
+        public override int GetHashCode() {
+            return DisplayText.GetHashCode();
+        }
+
         public int CompareTo(PythonSuggestedImportAction other) {
             if (other == null) {
                 return -1;
