@@ -229,6 +229,7 @@
     <Compile Include="DkmDebugger\SourceLocation.cs" />
     <Compile Include="DkmDebugger\ReprBuilder.cs" />
     <Compile Include="DkmDebugger\VsPackageMessage.cs" />
+    <Compile Include="Guids.cs" />
     <None Include="DkmDebugger\LocalStackWalkingComponent.vsdconfigxml">
       <SubType>Designer</SubType>
     </None>
@@ -260,7 +261,7 @@
   </ItemGroup>
   <!-- .vsdconfigxml -> .vsdconfig -->
   <ItemGroup>
-    <VsdConfigXml Include="DkmDebugger\*.vsdconfigxml"/>
+    <VsdConfigXml Include="DkmDebugger\*.vsdconfigxml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Visualizers\" />
@@ -274,20 +275,12 @@
     <NatvisOutput>$(IntermediateOutputPath)\PythonDkm.natvis</NatvisOutput>
   </PropertyGroup>
   <Target Name="CopyNatvis" Inputs="DkmDebugger\*.natvis" Outputs="$(NatvisOutput)" AfterTargets="CoreCompile">
-    <Copy SourceFiles="DkmDebugger\PythonDkm_12.0.natvis" DestinationFiles="$(NatvisOutput)"
-          Condition="'$(VSTarget)' == '12.0'" />
-    <Copy SourceFiles="DkmDebugger\PythonDkm.natvis" DestinationFiles="$(NatvisOutput)"
-          Condition="'$(VSTarget)' != '12.0'" />
+    <Copy SourceFiles="DkmDebugger\PythonDkm_12.0.natvis" DestinationFiles="$(NatvisOutput)" Condition="'$(VSTarget)' == '12.0'" />
+    <Copy SourceFiles="DkmDebugger\PythonDkm.natvis" DestinationFiles="$(NatvisOutput)" Condition="'$(VSTarget)' != '12.0'" />
   </Target>
-  <Target Name="TransformVsdConfigXml"
-          Inputs="%(VsdConfigXml.Identity)"
-          Outputs="$(IntermediateOutputPath)\%(VsdConfigXml.Filename)%(VsdConfigXml.Extension)"
-          AfterTargets="CoreCompile">
+  <Target Name="TransformVsdConfigXml" Inputs="%(VsdConfigXml.Identity)" Outputs="$(IntermediateOutputPath)\%(VsdConfigXml.Filename)%(VsdConfigXml.Extension)" AfterTargets="CoreCompile">
     <Message Text="Transforming @(VsdConfigXml)" />
-    <XslTransformation XslInputPath="@(VsdConfigXml)"
-                       XmlContent="&lt;Properties VSTarget='$(VSTarget)' /&gt;"
-                       OutputPaths="$(IntermediateOutputPath)\%(VsdConfigXml.Filename)%(VsdConfigXml.Extension)"
-                       Parameters="VsdConfigXmlTransformParameters" /> 
+    <XslTransformation XslInputPath="@(VsdConfigXml)" XmlContent="&lt;Properties VSTarget='$(VSTarget)' /&gt;" OutputPaths="$(IntermediateOutputPath)\%(VsdConfigXml.Filename)%(VsdConfigXml.Extension)" Parameters="VsdConfigXmlTransformParameters" />
   </Target>
   <Target Name="GenerateVsdConfig" Inputs="@(VsdConfigXmlTransformed)" Outputs="$(VsdConfigOutput)" AfterTargets="TransformVsdConfigXml">
     <PropertyGroup>
