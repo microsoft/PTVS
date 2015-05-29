@@ -295,7 +295,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 try {
                     var lines = File.ReadAllLines(cfgFile);
                     basePath = lines
-                        .Select(line => Regex.Match(line, "^home *= *(?<path>.+)$", RegexOptions.IgnoreCase))
+                        .Select(line => Regex.Match(line, @"^home\s*=\s*(?<path>.+)$", RegexOptions.IgnoreCase))
                         .Where(m => m != null && m.Success)
                         .Select(m => m.Groups["path"])
                         .Where(g => g != null && g.Success)
