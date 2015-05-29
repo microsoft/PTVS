@@ -472,15 +472,11 @@ namespace Microsoft.PythonTools.Debugger {
                             var errorCodePosition = viewStream.Position;
                             viewStream.Write(new byte[8], 0, 8); // write null bytes for error code and version
 
-                            string szDebugId = debugId.ToString().PadRight(64, '\0');
-                            for (int i = 0; i < szDebugId.Length; i++) {
-                                viewStream.WriteByte((byte)szDebugId[i]);
-                            }
+                            byte[] szDebugId = Encoding.ASCII.GetBytes(debugId.ToString().PadRight(64, '\0'));
+                            viewStream.Write(szDebugId, 0, szDebugId.Length);
 
-                            for (int i = 0; i < debugOptions.Length; i++) {
-                                viewStream.WriteByte((byte)debugOptions[i]);
-                            }
-                            viewStream.WriteByte(0);
+                            byte[] szDebugOptions = Encoding.ASCII.GetBytes(debugOptions + '\0');
+                            viewStream.Write(szDebugOptions, 0, szDebugOptions.Length);
 
                             var injectDllError = InjectDll(dllPath, hProcess, hKernel32);
                             if (injectDllError != ConnErrorMessages.None) {

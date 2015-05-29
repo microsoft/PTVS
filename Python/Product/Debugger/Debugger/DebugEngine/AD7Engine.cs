@@ -22,6 +22,7 @@ using System.Threading;
 using System.Web;
 using System.Windows.Forms;
 using Microsoft.PythonTools.Debugger.Remote;
+using Microsoft.PythonTools.DkmDebugger;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Debugger.Interop;
@@ -337,7 +338,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                             // will automatically prepend it even if it was already there, producing a malformed query.
                             query = query.Substring(1);
                         }
-                        query += "&" + DebugOptionsKey + "=" + (int)_debugOptions;
+                        query += "&" + DebugOptionsKey + "=" + _debugOptions;
                         uriBuilder.Query = query;
 
                         _process = PythonRemoteProcess.Attach(uriBuilder.Uri, true);
@@ -636,7 +637,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                         }
 
                         var options = varValue as string;
-                        if (options != null) {
+                        if (!string.IsNullOrEmpty(options)) {
                             // ParseOptions only overwrites the flags that are explicitly set to True or False, leaving any
                             // already existing values intact. Thus, any options that were previouly passed to LaunchSuspended
                             // are preserved unless explicitly overwritten here. 
@@ -726,7 +727,12 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             }
 
             Guid processId;
-            if (_debugOptions.HasFlag(PythonDebugOptions.AttachRunning) && Guid.TryParse(exe, out processId)) {
+            if (_debugOptions.HasFlag(PythonDebugOptions.AttachRunning)) {
+                if (!Guid.TryParse(exe, out processId)) {
+                    Debug.Fail("When PythonDebugOptions.AttachRunning is used, the 'exe' parameter must be a debug session GUID.");
+                    return VSConstants.E_INVALIDARG;
+                }
+
                 _process = DebugConnectionListener.GetProcess(processId);
                 _attached = true;
                 _pseudoAttach = true;
@@ -772,6 +778,9 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             return res.ToArray();
         }
 
+        // TODO: turn PythonDebugOptions into a class that encapsulates all options (not just flags), including the "not set"
+        // state for all of them, and that knows how to stringify and parse itself, and how to merge isntances, and refactor
+        // this entire codepath, including the bits in DefaultPythonLauncher and in CustomDebuggerEventHandler, to use that.
         private void ParseOptions(string options) {
             foreach (var optionSetting in SplitOptions(options)) {
                 var setting = optionSetting.Split(new[] { '=' }, 2);

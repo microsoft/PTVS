@@ -22,6 +22,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Debugger;
+using Microsoft.PythonTools.Debugger.Remote;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools;
@@ -2541,7 +2542,7 @@ int main(int argc, char* argv[]) {
         [TestMethod, Priority(0)]
         public void AttachAndStepWithBlankSysPrefix() {
             string script = TestData.GetPath(@"TestData\DebuggerProject\InfiniteRunBlankPrefix.py");
-            var p = Process.Start(Version.InterpreterPath, "\"" + script  + "\"");
+            var p = Process.Start(Version.InterpreterPath, "\"" + script + "\"");
             try {
                 Thread.Sleep(1000);
                 var proc = PythonProcess.Attach(p.Id);
@@ -2589,20 +2590,20 @@ int main(int argc, char* argv[]) {
 
         [TestMethod, Priority(0)]
         public void AttachWithOutputRedirection() {
+            var expectedOutput = new Queue<string>(new[] { "stdout", "stderr" });
+
             string script = TestData.GetPath(@"TestData\DebuggerProject\AttachOutput.py");
             var p = Process.Start(Version.InterpreterPath, "\"" + script + "\"");
             try {
                 Thread.Sleep(1000);
                 var proc = PythonProcess.Attach(p.Id, PythonDebugOptions.RedirectOutput);
-
-                var expectedOutput = new Queue<string>(new[] { "stdout", "stderr" });
-                proc.DebuggerOutput += (sender, e) => {
-                    if (expectedOutput.Count != 0) {
-                        Assert.AreEqual(expectedOutput.Dequeue(), e.Output);
-                    }
-                };
-
                 try {
+                    proc.DebuggerOutput += (sender, e) => {
+                        if (expectedOutput.Count != 0) {
+                            Assert.AreEqual(expectedOutput.Dequeue(), e.Output);
+                        }
+                    };
+
                     var attached = new AutoResetEvent(false);
                     proc.ProcessLoaded += (sender, args) => {
                         Console.WriteLine("Process loaded");
@@ -2613,6 +2614,61 @@ int main(int argc, char* argv[]) {
                     Assert.IsTrue(attached.WaitOne(20000), "Failed to attach within 20s");
 
                     proc.WaitForExit();
+                    Assert.IsTrue(expectedOutput.Count == 0);
+                } finally {
+                    DetachProcess(proc);
+                }
+            } finally {
+                DisposeProcess(p);
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void AttachPtvsd() {
+            var expectedOutput = new[] { "stdout", "stderr" };
+
+            string script = TestData.GetPath(@"TestData\DebuggerProject\AttachPtvsd.py");
+            var psi = new ProcessStartInfo(Version.InterpreterPath, "\"" + script + "\"") {
+                WorkingDirectory = TestData.GetPath(),
+                UseShellExecute = false
+            };
+
+            var p = Process.Start(psi);
+            try {
+                Thread.Sleep(1000);
+                var proc = PythonRemoteProcess.Attach(
+                    new Uri("tcp://secret@localhost?opt=" + PythonDebugOptions.RedirectOutput),
+                    warnAboutAuthenticationErrors: false);
+                try {
+                    var attached = new AutoResetEvent(false);
+                    proc.ProcessLoaded += (sender, e) => {
+                        Console.WriteLine("Process loaded");
+
+                        var bp = proc.AddBreakPoint(script, 10);
+                        bp.Add();
+
+                        proc.Resume();
+                        attached.Set();
+                    };
+
+                    var actualOutput = new List<string>();
+                    proc.DebuggerOutput += (sender, e) => {
+                        actualOutput.Add(e.Output);
+                    };
+
+                    var bpHit = new AutoResetEvent(false);
+                    proc.BreakpointHit += (sender, args) => {
+                        Console.WriteLine("Breakpoint hit");
+                        bpHit.Set();
+                        proc.Continue();
+                    };
+
+                    proc.StartListening();
+                    Assert.IsTrue(attached.WaitOne(20000), "Failed to attach within 20s");
+                    Assert.IsTrue(bpHit.WaitOne(20000), "Failed to hit breakpoint within 20s");
+
+                    p.WaitForExit();
+                    AssertUtil.ArrayEquals(actualOutput, expectedOutput);
                 } finally {
                     DetachProcess(proc);
                 }

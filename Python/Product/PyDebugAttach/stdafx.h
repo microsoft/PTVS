@@ -21,6 +21,7 @@
 
 #include "targetver.h"
 
+#include <cstdint>
 #include <fstream>
 #include <string>
 #include <unordered_set>

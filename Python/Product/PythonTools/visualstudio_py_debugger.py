@@ -2167,15 +2167,18 @@ def attach_process_from_socket(sock, debug_options, report = False, block = Fals
     else:
         DEBUG_STDLIB = 'DebugStdLib' in debug_options
 
+    wait_on_normal_exit = 'WaitOnNormalExit' in debug_options
+    wait_on_abnormal_exit = 'WaitOnAbnormalExit' in debug_options
+
     def _excepthook(exc_type, exc_value, exc_tb):
         # Display the exception and wait on exit
         if exc_type is SystemExit:
-            if ('WaitOnAbnormalExit' in debug_options and exc_value.code != 0) or ('WaitOnNormalExit' in debug_options and exc_value.code == 0):
+            if (wait_on_abnormal_exit and exc_value.code != 0) or (wait_on_normal_exit and exc_value.code == 0):
                 print_exception(exc_type, exc_value, exc_tb)
                 do_wait()
         else:
             print_exception(exc_type, exc_value, exc_tb)
-            if 'WaitOnAbnormalExit' in debug_options:
+            if wait_on_abnormal_exit:
                 do_wait()
     sys.excepthook = sys.__excepthook__ = _excepthook
 
@@ -2424,6 +2427,8 @@ def debug(file, port_num, debug_id, debug_options, run_as = 'script'):
     __name__ = '$visualstudio_py_debugger'
     del sys.modules['visualstudio_py_debugger']
 
+    wait_on_normal_exit = 'WaitOnNormalExit' in debug_options
+
     attach_process(port_num, debug_id, debug_options, report = True)
 
     # setup the current thread
@@ -2460,7 +2465,7 @@ def debug(file, port_num, debug_id, debug_options, run_as = 'script'):
             write_bytes(conn, LAST)
         last_ack_event.wait(5)
 
-    if 'WaitOnNormalExit' in debug_options:
+    if wait_on_normal_exit in debug_options:
         do_wait()
 
 # Code objects for functions which are going to be at the bottom of the stack, right below the first

@@ -12,7 +12,7 @@
  *
  * ***************************************************************************/
 
-namespace Microsoft.PythonTools.Debugger {
+namespace Microsoft.PythonTools.DkmDebugger {
     public enum VsPackageMessage {
         None = 0,
         WarnAboutPythonSymbols = 1,

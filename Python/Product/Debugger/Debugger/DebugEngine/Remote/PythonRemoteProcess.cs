@@ -144,7 +144,7 @@ namespace Microsoft.PythonTools.Debugger.Remote {
                 // ptvsd attach (this is currently the only way to enable some flags when attaching, e.g. Django debugging).
                 // ParseQueryString will automatically concat them all into a single value using commas.
                 var queryParts = HttpUtility.ParseQueryString(uri.Query);
-                debugOptions = queryParts[AD7Engine.DebugOptionsKey];
+                debugOptions = queryParts[AD7Engine.DebugOptionsKey] ?? "";
             }
 
             var stream = Connect(uri, warnAboutAuthenticationErrors);

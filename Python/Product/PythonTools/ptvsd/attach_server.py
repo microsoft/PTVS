@@ -155,9 +155,6 @@ def enable_attach(secret, address = ('0.0.0.0', DEFAULT_PORT), certfile = None, 
         raise AttachAlreadyEnabledError('ptvsd.enable_attach() has already been called in this process.')
     _attach_enabled = True
 
-    if redirect_output:
-        vspd.enable_output_redirection()
-
     atexit.register(vspd.detach_process_and_notify_debugger)
 
     server = socket.socket()
@@ -236,6 +233,9 @@ def enable_attach(secret, address = ('0.0.0.0', DEFAULT_PORT), certfile = None, 
 
                 elif response == ATCH:
                     debug_options = vspd.parse_debug_options(read_string(client))
+                    if redirect_output:
+                        debug_options.add('RedirectOutput')
+
                     if vspd.DETACHED:
                         write_bytes(client, ACPT)
                         try:
