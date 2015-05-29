@@ -621,6 +621,10 @@
       <Link>SharedProject\ProvideDebugPortSupplierAttribute.cs</Link>
       <Visible>true</Visible>
     </Compile>
+    <Compile Include="$(_ProjectSystemFilesLocation)\ProvideDebugPortPickerAttribute.cs">
+      <Link>SharedProject\ProvideDebugPortPickerAttribute.cs</Link>
+      <Visible>true</Visible>
+    </Compile>
     <Compile Include="$(_ProjectSystemFilesLocation)\ProvideTextEditorAutomationAttribute.cs">
       <Link>SharedProject\ProvideTextEditorAutomationAttribute.cs</Link>
       <Visible>true</Visible>
