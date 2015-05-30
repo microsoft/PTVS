@@ -58,6 +58,9 @@ namespace Microsoft.PythonTools.Repl {
             int startIndex = coloredSpans.BinarySearch(new ColoredSpan(span, ConsoleColor.White), SpanStartComparer.Instance);
             if (startIndex < 0) {
                 startIndex = ~startIndex - 1;
+                if (startIndex < 0) {
+                    startIndex = 0;
+                }
             }
 
             int spanEnd = span.End.Position;
