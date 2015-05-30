@@ -23,7 +23,6 @@ using System.Web;
 using System.Windows.Forms;
 using Microsoft.PythonTools.DkmDebugger;
 using Microsoft.PythonTools.Debugger.Remote;
-using Microsoft.PythonTools.DkmDebugger;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Debugger.Interop;
