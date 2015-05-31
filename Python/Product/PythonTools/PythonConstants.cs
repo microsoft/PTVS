@@ -148,5 +148,7 @@ namespace Microsoft.PythonTools {
         /// The settings collection where "Suppress{dialog}" settings are stored
         /// </summary>
         public const string DontShowUpgradeDialogAgainCollection = "PythonTools\\Dialogs";
+
+        internal const string PythonToolsProcessIdEnvironmentVariable = "_PTVS_PID";
     }
 }
