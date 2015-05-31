@@ -13,23 +13,26 @@
  * ***************************************************************************/
 
 using System;
-using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace Microsoft.VisualStudioTools {
     /// <summary>
     /// Provides the ability to run code on the VS UI thread.
+    /// 
+    /// UIThreadBase must be an abstract class rather than an interface because the CLR
+    /// doesn't take assembly names into account when generating an interfaces GUID, resulting 
+    /// in resolution issues when we reference the interface from multiple assemblies.
     /// </summary>
-    interface IUIThread {
-        void Invoke(Action action);
-        T Invoke<T>(Func<T> func);
-        Task InvokeAsync(Action action);
-        Task<T> InvokeAsync<T>(Func<T> func);
-        Task InvokeTask(Func<Task> func);
-        Task<T> InvokeTask<T>(Func<Task<T>> func);
-        void MustBeCalledFromUIThreadOrThrow();
+    abstract class UIThreadBase {
+        public abstract void Invoke(Action action);
+        public abstract T Invoke<T>(Func<T> func);
+        public abstract Task InvokeAsync(Action action);
+        public abstract Task<T> InvokeAsync<T>(Func<T> func);
+        public abstract Task InvokeTask(Func<Task> func);
+        public abstract Task<T> InvokeTask<T>(Func<Task<T>> func);
+        public abstract void MustBeCalledFromUIThreadOrThrow();
 
-        bool InvokeRequired {
+        public abstract bool InvokeRequired {
             get;
         }
     }
@@ -37,5 +40,5 @@ namespace Microsoft.VisualStudioTools {
     /// <summary>
     /// Identifies mock implementations of IUIThread.
     /// </summary>
-    interface IMockUIThread : IUIThread { }
+    abstract class IMockUIThread : UIThreadBase { }
 }
