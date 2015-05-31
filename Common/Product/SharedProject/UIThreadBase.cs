@@ -23,7 +23,7 @@ namespace Microsoft.VisualStudioTools {
     /// doesn't take assembly names into account when generating an interfaces GUID, resulting 
     /// in resolution issues when we reference the interface from multiple assemblies.
     /// </summary>
-    abstract class UIThreadBase {
+    public abstract class UIThreadBase {
         public abstract void Invoke(Action action);
         public abstract T Invoke<T>(Func<T> func);
         public abstract Task InvokeAsync(Action action);
@@ -40,5 +40,37 @@ namespace Microsoft.VisualStudioTools {
     /// <summary>
     /// Identifies mock implementations of IUIThread.
     /// </summary>
-    abstract class IMockUIThread : UIThreadBase { }
+    public abstract class MockUIThreadBase : UIThreadBase {
+        public override void Invoke(Action action) {
+            throw new NotImplementedException();
+        }
+
+        public override T Invoke<T>(Func<T> func) {
+            throw new NotImplementedException();
+        }
+
+        public override Task InvokeAsync(Action action) {
+            throw new NotImplementedException();
+        }
+
+        public override Task<T> InvokeAsync<T>(Func<T> func) {
+            throw new NotImplementedException();
+        }
+
+        public override Task InvokeTask(Func<Task> func) {
+            throw new NotImplementedException();
+        }
+
+        public override Task<T> InvokeTask<T>(Func<Task<T>> func) {
+            throw new NotImplementedException();
+        }
+
+        public override void MustBeCalledFromUIThreadOrThrow() {
+            throw new NotImplementedException();
+        }
+
+        public override bool InvokeRequired {
+            get { throw new NotImplementedException(); }
+        }
+    }
 }

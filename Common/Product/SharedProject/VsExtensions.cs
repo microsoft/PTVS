@@ -108,12 +108,12 @@ namespace Microsoft.VisualStudioTools {
 
         [Conditional("DEBUG")]
         public static void MustBeCalledFromUIThread(this UIThreadBase self, string message = "Invalid cross-thread call") {
-            Debug.Assert(self is IMockUIThread || !self.InvokeRequired, message);
+            Debug.Assert(self is MockUIThreadBase || !self.InvokeRequired, message);
         }
 
         [Conditional("DEBUG")]
         public static void MustNotBeCalledFromUIThread(this UIThreadBase self, string message = "Invalid cross-thread call") {
-            Debug.Assert(self is IMockUIThread || self.InvokeRequired, message);
+            Debug.Assert(self is MockUIThreadBase || self.InvokeRequired, message);
         }
 
 
@@ -123,7 +123,7 @@ namespace Microsoft.VisualStudioTools {
         /// Provides a no-op implementation of <see cref="UIThreadBase"/> that will
         /// not execute any tasks.
         /// </summary>
-        private sealed class NoOpUIThread : IMockUIThread {
+        private sealed class NoOpUIThread : MockUIThreadBase {
             public override void Invoke(Action action) { }
 
             public override T Invoke<T>(Func<T> func) {
