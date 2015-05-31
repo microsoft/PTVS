@@ -95,7 +95,7 @@ namespace Microsoft.PythonTools.Navigation {
                 return VSConstants.E_FAIL;
             }
 
-            _client = new DropDownBarClient(wpfTextView, pythonProjectEntry);
+            _client = new DropDownBarClient(_serviceProvider, wpfTextView, pythonProjectEntry);
             
             IVsDropdownBarManager manager = (IVsDropdownBarManager)_window;
 

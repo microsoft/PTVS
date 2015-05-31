@@ -38,7 +38,7 @@ namespace Microsoft.PythonTools.Refactoring {
         internal void RemoveImports() {
             ScopeStatement targetStmt = null;
             if (!_allScopes) {
-                var enclosingNodeWalker = new EnclosingNodeWalker(_ast, _view.Caret.Position.BufferPosition, _view.Caret.Position.BufferPosition + 1);
+                var enclosingNodeWalker = new EnclosingNodeWalker(_ast, _view.Caret.Position.BufferPosition, _view.Caret.Position.BufferPosition);
                 _ast.Walk(enclosingNodeWalker);
                 targetStmt = enclosingNodeWalker.Target.Parents[enclosingNodeWalker.Target.Parents.Length - 1];
             }

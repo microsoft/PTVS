@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.Serialization;
@@ -28,12 +29,16 @@ using Microsoft.VisualStudio.Debugger.CallStack;
 using Microsoft.VisualStudio.Debugger.ComponentInterfaces;
 using Microsoft.VisualStudio.Debugger.DefaultPort;
 using Microsoft.VisualStudio.Debugger.Evaluation;
+using Microsoft.VisualStudio.Debugger.Evaluation.IL;
 using Microsoft.VisualStudio.Debugger.Native;
 using Microsoft.VisualStudio.Debugger.Symbols;
 
 namespace Microsoft.PythonTools.DkmDebugger {
     public class LocalComponent :
         ComponentBase,
+#if DEV14_OR_LATER
+        IDkmIntrinsicFunctionEvaluator140,
+#endif
         IDkmModuleSymbolsLoadedNotification,
         IDkmRuntimeInstanceLoadNotification,
         IDkmCallStackFilter,
@@ -328,6 +333,9 @@ namespace Microsoft.PythonTools.DkmDebugger {
             process.SetDataItem(DkmDataCreationDisposition.CreateNew, new ExpressionEvaluator(process));
             process.SetDataItem(DkmDataCreationDisposition.CreateNew, new PyObjectAllocator(process));
 
+            var exceptionManager = process.GetOrCreateDataItem(() => new ExceptionManagerLocalHelper(process));
+            exceptionManager.OnPythonRuntimeInstanceLoaded();
+
             if (process.LivePart != null) {
                 process.SetDataItem(DkmDataCreationDisposition.CreateNew, new TraceManagerLocalHelper(process, TraceManagerLocalHelper.Kind.StepIn));
             }
@@ -502,6 +510,15 @@ namespace Microsoft.PythonTools.DkmDebugger {
             natVis.UseDefaultEvaluationBehavior(visualizedExpression, out useDefaultEvaluationBehavior, out defaultEvaluationResult);
         }
 
+#if DEV14_OR_LATER 
+
+        DkmILEvaluationResult[] IDkmIntrinsicFunctionEvaluator140.Execute(DkmILExecuteIntrinsic executeIntrinsic, DkmILContext iLContext, DkmCompiledILInspectionQuery inspectionQuery, DkmILEvaluationResult[] arguments, ReadOnlyCollection<DkmCompiledInspectionQuery> subroutines, out DkmILFailureReason failureReason) {
+            var natVis = iLContext.StackFrame.Process.GetOrCreateDataItem(() => new PyObjectNativeVisualizer());
+            return natVis.Execute(executeIntrinsic, iLContext, inspectionQuery, arguments, subroutines, out failureReason);
+        }
+
+#endif
+
         DkmCompilerId IDkmSymbolCompilerIdQuery.GetCompilerId(DkmInstructionSymbol instruction, DkmInspectionSession inspectionSession) {
             return new DkmCompilerId(Guids.MicrosoftVendorGuid, Guids.PythonLanguageGuid);
         }
@@ -659,6 +676,18 @@ namespace Microsoft.PythonTools.DkmDebugger {
                 } else {
                     Debug.Fail("LocalComponent received a HandleBreakpointRequest for a breakpoint that it does not know about.");
                 }
+            }
+        }
+
+        [DataContract]
+        [MessageTo(Guids.LocalComponentId)]
+        internal class MonitorExceptionsRequest : MessageBase<MonitorExceptionsRequest> {
+            [DataMember]
+            public bool MonitorExceptions { get; set; }
+
+            public override void Handle(DkmProcess process) {
+                var exceptionHelper = process.GetOrCreateDataItem(() => new ExceptionManagerLocalHelper(process));
+                exceptionHelper.MonitorExceptions = MonitorExceptions;
             }
         }
     }

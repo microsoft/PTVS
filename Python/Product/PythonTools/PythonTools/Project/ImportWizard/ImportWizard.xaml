@@ -48,11 +48,10 @@
         
         <Grid Grid.Column="0" Grid.RowSpan="3"
               Background="{DynamicResource {x:Static wpf:Controls.BackgroundAccentKey}}">
-            <Image Source="/Microsoft.PythonTools;component/PythonProjectBig.ico"
-                   Stretch="Uniform"
-                   MaxWidth="64px"
-                   Margin="24px"
-                   HorizontalAlignment="Center" VerticalAlignment="Top" />
+            <Control Style="{StaticResource PYClassFileBigImage}"
+                     Margin="24px"
+                     HorizontalAlignment="Center"
+                     VerticalAlignment="Top"/>
         </Grid>
         
         <TextBlock Grid.Row="0" Grid.Column="1" Style="{StaticResource Title}" Margin="8">

@@ -1,19 +1,31 @@
-﻿using Microsoft.VisualStudio.Language.Intellisense;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Threading;
-using System.Windows.Media;
-using Microsoft.PythonTools.Analysis;
-using System.Drawing;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Shell.Interop;
-using System.Diagnostics;
-using Microsoft.VisualStudio.Text;
+﻿/* ****************************************************************************
+ *
+ * Copyright (c) Microsoft Corporation. 
+ *
+ * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
+ * copy of the license can be found in the License.html file at the root of this distribution. If 
+ * you cannot locate the Apache License, Version 2.0, please send an email to 
+ * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
+ * by the terms of the Apache License, Version 2.0.
+ *
+ * You must not remove this notice, or any other, from this software.
+ *
+ * ***************************************************************************/
 
 #if DEV14_OR_LATER
+
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows.Media;
+using Microsoft.PythonTools.Analysis;
+using Microsoft.VisualStudio.Imaging.Interop;
+using Microsoft.VisualStudio.Language.Intellisense;
+using Microsoft.VisualStudio.Text;
+
 namespace Microsoft.PythonTools.Intellisense {
     class PythonSuggestedImportAction : ISuggestedAction, IComparable<PythonSuggestedImportAction> {
         private readonly PythonSuggestedActionsSource _source;
@@ -34,6 +46,14 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
+        public Task<IEnumerable<SuggestedActionSet>> GetActionSetsAsync(CancellationToken cancellationToken) {
+            return Task.FromResult(ActionSets);
+        }
+
+        public bool HasActionSets {
+            get { return false; }
+        }
+
         public string DisplayText {
             get {
                 return MissingImportAnalysis.MakeImportCode(_fromModule, _name)
@@ -47,9 +67,15 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
+        public ImageMoniker IconMoniker {
+            get {
+                return default(ImageMoniker);
+            }
+        }
+
         public ImageSource IconSource {
             get {
-                // TODO: Return icon from image catalog
+                // TODO: Convert from IconMoniker
                 return null;
             }
         }
@@ -64,6 +90,14 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public object GetPreview(CancellationToken cancellationToken) {
             return null;
+        }
+
+        public Task<object> GetPreviewAsync(CancellationToken cancellationToken) {
+            return Task.FromResult<object>(null);
+        }
+
+        public bool HasPreview {
+            get { return false; }
         }
 
         public void Invoke(CancellationToken cancellationToken) {
@@ -81,6 +115,18 @@ namespace Microsoft.PythonTools.Intellisense {
         public bool TryGetTelemetryId(out Guid telemetryId) {
             telemetryId = Guid.Empty;
             return false;
+        }
+
+        public override bool Equals(object obj) {
+            var other = obj as PythonSuggestedImportAction;
+            if (other == null) {
+                return false;
+            }
+            return DisplayText.Equals(other.DisplayText);
+        }
+
+        public override int GetHashCode() {
+            return DisplayText.GetHashCode();
         }
 
         public int CompareTo(PythonSuggestedImportAction other) {

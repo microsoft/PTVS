@@ -106,7 +106,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             return GetWhiteSpace(node, ast, NodeAttributes.PreceedingWhiteSpace, null);
         }
 
-        private static string GetWhiteSpace(Node node, PythonAst ast, object kind, string defaultValue = " ") {
+        internal static string GetWhiteSpace(Node node, PythonAst ast, object kind, string defaultValue = " ") {
             object whitespace;
             if (ast.TryGetAttribute(node, kind, out whitespace)) {
                 return (string)whitespace;

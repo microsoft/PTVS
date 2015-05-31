@@ -81,6 +81,7 @@
             <RemoveFolder Id='DeleteDir_StartMenu' Directory='Dir_StartMenu' On='uninstall'/>
             <RegistryKey Root="HKMU" Key="Software\Microsoft\PythonTools\$(var.VSTargetVersion)">
               <RegistryValue Type="string" Name="InstallDir" Value="[Dir_PTVSInstallLocation]" KeyPath="yes"/>
+              <RegistryValue Type="string" Name="Version" Value="[ProductVersion]" />
             </RegistryKey>
             <util:RestartResource Path="[DEVENV_PATH]" />
             <util:RestartResource Path="[WDEXPRESS_PATH]" />
@@ -300,12 +301,12 @@
 
     <InstallExecuteSequence>
       <InstallExecute Before="DevEnvSetup_Rollback" />
-      <Custom Action="DevEnvSetup_Rollback" Before="DevEnvSetup" Overridable="yes">DEVENV_PATH</Custom>
-      <Custom Action="DevEnvSetup" Before="InstallFinalize" Overridable="yes">DEVENV_PATH</Custom>
-      <Custom Action="WDExpressSetup_Rollback" Before="WDExpressSetup" Overridable="yes">WDEXPRESS_PATH</Custom>
-      <Custom Action="WDExpressSetup" Before="InstallFinalize" Overridable="yes">WDEXPRESS_PATH</Custom>
-      <Custom Action="VWDExpressSetup_Rollback" Before="VWDExpressSetup" Overridable="yes">VWDEXPRESS_PATH</Custom>
-      <Custom Action="VWDExpressSetup" Before="InstallFinalize" Overridable="yes">VWDEXPRESS_PATH</Custom>
+      <Custom Action="DevEnvSetup_Rollback" Before="DevEnvSetup" Overridable="yes">NOT SKIP_DEVENV_SETUP AND DEVENV_PATH</Custom>
+      <Custom Action="DevEnvSetup" Before="InstallFinalize" Overridable="yes">NOT SKIP_DEVENV_SETUP AND DEVENV_PATH</Custom>
+      <Custom Action="WDExpressSetup_Rollback" Before="WDExpressSetup" Overridable="yes">NOT SKIP_DEVENV_SETUP AND WDEXPRESS_PATH</Custom>
+      <Custom Action="WDExpressSetup" Before="InstallFinalize" Overridable="yes">NOT SKIP_DEVENV_SETUP AND WDEXPRESS_PATH</Custom>
+      <Custom Action="VWDExpressSetup_Rollback" Before="VWDExpressSetup" Overridable="yes">NOT SKIP_DEVENV_SETUP AND VWDEXPRESS_PATH</Custom>
+      <Custom Action="VWDExpressSetup" Before="InstallFinalize" Overridable="yes">NOT SKIP_DEVENV_SETUP AND VWDEXPRESS_PATH</Custom>
     </InstallExecuteSequence>
     <InstallUISequence>
       <Show Dialog="CustomAdvancedWelcomeEulaDlg" Before="FindRelatedProducts">NOT Installed</Show>

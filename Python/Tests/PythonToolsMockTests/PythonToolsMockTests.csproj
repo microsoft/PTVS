@@ -116,6 +116,7 @@
     <Compile Include="MockPythonToolsPackage.cs" />
     <Compile Include="ProjectTests.cs" />
     <Compile Include="PythonEditor.cs" />
+    <Compile Include="RefactorRenameTests.cs" />
     <Compile Include="SmartTagTests.cs" />
   </ItemGroup>
   <ItemGroup>

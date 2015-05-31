@@ -72,6 +72,9 @@ namespace Microsoft.PythonTools.Analysis {
         public static IEnumerable<string> Expression(PythonLanguageVersion version = PythonLanguageVersion.None) {
             yield return "and";
             yield return "as";
+            if (version >= PythonLanguageVersion.V35) {
+                yield return "await";
+            }
             yield return "else";
             if (version.Is3x()) {
                 yield return "False";
@@ -99,6 +102,10 @@ namespace Microsoft.PythonTools.Analysis {
         /// </summary>
         public static IEnumerable<string> Statement(PythonLanguageVersion version = PythonLanguageVersion.None) {
             yield return "assert";
+            if (version >= PythonLanguageVersion.V35) {
+                yield return "async";
+                yield return "await";
+            }
             yield return "break";
             yield return "continue";
             yield return "class";
@@ -137,6 +144,9 @@ namespace Microsoft.PythonTools.Analysis {
         public static IEnumerable<string> InvalidOutsideFunction(
             PythonLanguageVersion version = PythonLanguageVersion.None
         ) {
+            if (version >= PythonLanguageVersion.V35) {
+                yield return "await";
+            }
             yield return "return";
             if (version == PythonLanguageVersion.None || version >= PythonLanguageVersion.V25) {
                 yield return "yield";

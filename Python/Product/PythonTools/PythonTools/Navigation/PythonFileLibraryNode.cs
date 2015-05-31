@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.Text;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
@@ -32,8 +33,15 @@ namespace Microsoft.PythonTools.Navigation {
         public override VSTREEDISPLAYDATA DisplayData {
             get {
                 var res = new VSTREEDISPLAYDATA();
+
+#if DEV14_OR_LATER
+                // Use the default Module icon for modules
+                res.hImageList = IntPtr.Zero;
+                res.Image = res.SelectedImage = 90;
+#else
                 res.hImageList = _hierarchy.ProjectMgr.ImageHandler.ImageList.Handle;
                 res.Image = res.SelectedImage = (ushort)_hierarchy.ImageIndex;
+#endif
                 return res;
             }
         }

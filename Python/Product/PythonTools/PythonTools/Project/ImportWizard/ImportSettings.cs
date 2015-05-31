@@ -499,7 +499,7 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
                 
                 try {
                     if (virtualEnvPaths != null) {
-                        var origPrefix = VirtualEnv.GetOrigPrefixPath(dir);
+                        var origPrefix = DerivedInterpreterFactory.GetOrigPrefixPath(dir);
                         if (!string.IsNullOrEmpty(origPrefix)) {
                             virtualEnvPaths.Add(dir);
                             skipDirectories.Add(CommonUtils.TrimEndSeparator(dir));

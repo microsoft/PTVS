@@ -201,14 +201,12 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
         public override bool Walk(ForStatement node) {
             if (node.List != null) {
-                var assignedTypes = _eval.Evaluate(node.List).ToArray();
-                if (assignedTypes.Length > 0) {
-                    foreach (var listType in assignedTypes) {
-                        _eval.AssignTo(node, node.Left, listType.GetEnumeratorTypes(node, _unit));
-                    }
-                } else {
-                    _eval.AssignTo(node, node.Left, AnalysisSet.Empty);
-                }
+                var list = _eval.Evaluate(node.List);
+                _eval.AssignTo(
+                    node,
+                    node.Left,
+                    node.IsAsync ? list.GetAsyncEnumeratorTypes(node, _unit) : list.GetEnumeratorTypes(node, _unit)
+                );
             }
 
             if (node.Body != null) {
@@ -454,8 +452,16 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         public override bool Walk(WithStatement node) {
             foreach (var item in node.Items) {
                 var ctxMgr = _eval.Evaluate(item.ContextManager);
+                var enter = ctxMgr.GetMember(node, _unit, node.IsAsync ? "__aenter__" : "__enter__");
+                var exit = ctxMgr.GetMember(node, _unit, node.IsAsync ? "__aexit__" : "__exit__");
+                var ctxt = enter.Call(node, _unit, ExpressionEvaluator.EmptySets, ExpressionEvaluator.EmptyNames);
+                var exitRes = exit.Call(node, _unit, ExpressionEvaluator.EmptySets, ExpressionEvaluator.EmptyNames);
+                if (node.IsAsync) {
+                    ctxt = ctxt.Await(node, _unit);
+                    exitRes.Await(node, _unit);
+                }
                 if (item.Variable != null) {
-                    _eval.AssignTo(node, item.Variable, ctxMgr);
+                    _eval.AssignTo(node, item.Variable, ctxt);
                 }
             }
 
@@ -541,9 +547,11 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
             MemberExpression member = expr as MemberExpression;
             if (member != null) {
-                var values = _eval.Evaluate(member.Target);
-                foreach (var value in values) {
-                    value.DeleteMember(member, _unit, member.Name);
+                if (!string.IsNullOrEmpty(member.Name)) {
+                    var values = _eval.Evaluate(member.Target);
+                    foreach (var value in values) {
+                        value.DeleteMember(member, _unit, member.Name);
+                    }
                 }
                 return;
             }

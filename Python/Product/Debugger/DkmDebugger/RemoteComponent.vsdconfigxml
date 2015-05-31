@@ -12,12 +12,15 @@
   You must not remove this notice, or any other, from this software.
  
 -->
-<Configuration xmlns="http://schemas.microsoft.com/vstudio/vsdconfig/2008">
+<Configuration xmlns="http://schemas.microsoft.com/vstudio/vsdconfig/2008"
+               xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+               xsl:version="1.0">
 
   <DefineGuid Name="guidPythonDebugRemoteCompId" Value="BCFD7074-A4D3-42A9-B1B6-C975304C882A"/>
   <DefineGuid Name="guidPythonDebugLocalCompId" Value="E42AC982-8F0B-45DE-8F22-EC045687F2EC"/>
   <DefineGuid Name="guidPythonExceptionCategory" Value="EC1375B7-E2CE-43E8-BF75-DC638DE1F1F9"/>
   <DefineGuid Name="guidPythonLanguageId" Value="DA3C7D59-F9E4-4697-BEE7-3A0703AF6BFF"/>
+  <DefineGuid Name="guidPythonEngineId" Value="EC1375B7-E2CE-43E8-BF75-DC638DE1F1F9"/>
   <DefineGuid Name="guidPythonRuntimeId" Value="0B253BA3-E62E-4428-A583-36E33EA26E54"/>
   <DefineGuid Name="guidPythonTraceManagerSourceId" Value="5B0A4B66-C7A5-4D51-9581-9C89AF483691"/>
   <DefineGuid Name="guidPythonStepTargetSourceId" Value="5653D51F-7824-41A0-9CE5-96D2E4AFC18B"/>
@@ -61,6 +64,15 @@
           <Interface Name="IDkmRuntimeMonitorBreakpointHandler"/>
           <Interface Name="IDkmExceptionController"/>
           <Interface Name="IDkmExceptionFormatter"/>
+        </InterfaceGroup>
+
+        <!-- AboveNormal is needed so that we get invoked before the standard exception manager, which swallows the notifications. -->
+        <InterfaceGroup Priority="AboveNormal">
+          <!--<Filter>
+            <EngineId RequiredValue="guidPythonEngineId"/>
+          </Filter>-->
+          <NoFilter/>
+          <Interface Name="IDkmExceptionManager"/>
         </InterfaceGroup>
 
         <InterfaceGroup>

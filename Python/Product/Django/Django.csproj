@@ -137,6 +137,15 @@
       <HintPath>$(DevEnvDir)Microsoft.VisualStudio.Web.Html.dll</HintPath>
     </Reference>
   </ItemGroup>
+  <Choose>
+    <When Condition="$(VSMajorVersion) >= 14">
+      <ItemGroup>
+        <Reference Include="Microsoft.VisualStudio.Shell.Interop.$(VSTarget).DesignTime, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+          <EmbedInteropTypes>True</EmbedInteropTypes>
+        </Reference>
+      </ItemGroup>
+    </When>
+  </Choose>
   <ItemGroup>
     <COMReference Include="EnvDTE">
       <Guid>{80CC9F66-E7D8-4DDD-85B6-D9E6CD0E93E2}</Guid>

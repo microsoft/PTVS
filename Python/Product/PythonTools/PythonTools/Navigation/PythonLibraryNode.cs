@@ -133,7 +133,7 @@ namespace Microsoft.PythonTools.Navigation {
             if (me != null) {
                 string expr = FormatExpression(me.Target);
                 if (expr != null) {
-                    return expr + "." + me.Name;
+                    return expr + "." + me.Name ?? string.Empty;
                 }
             }
 

@@ -25,12 +25,15 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         private Expression _returnAnnotation;
         private DecoratorStatement _decorators;
         private bool _generator;                        // The function is a generator
+        private bool _coroutine;
         private bool _isLambda;
 
         private PythonVariable _variable;               // The variable corresponding to the function name or null for lambdas
         internal PythonVariable _nameVariable;          // the variable that refers to the global __name__
         internal bool _hasReturn;
         private int _headerIndex;
+
+        internal static readonly object WhitespaceAfterAsync = new object();
 
         public FunctionDefinition(NameExpression name, Parameter[] parameters)
             : this(name, parameters, (Statement)null) {            
@@ -97,13 +100,22 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         }
 
         /// <summary>
-        /// True is the function is a generator.  Generators contain at least one yield
+        /// True if the function is a generator.  Generators contain at least one yield
         /// expression and instead of returning a value when called they return a generator
         /// object which implements the iterator protocol.
         /// </summary>
         public bool IsGenerator {
             get { return _generator; }
             set { _generator = value; }
+        }
+
+        /// <summary>
+        /// True if the function is a coroutine. Coroutines are defined using
+        /// 'async def'.
+        /// </summary>
+        public bool IsCoroutine {
+            get { return _coroutine; }
+            set { _coroutine = value; }
         }
 
         /// <summary>
@@ -259,6 +271,10 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 Decorators.AppendCodeString(res, ast, format);
             }
             format.ReflowComment(res, this.GetProceedingWhiteSpaceDefaultNull(ast));
+            if (IsCoroutine) {
+                res.Append("async");
+                res.Append(NodeAttributes.GetWhiteSpace(this, ast, WhitespaceAfterAsync));
+            }
             res.Append("def");
             var name = this.GetVerbatimImage(ast) ?? Name;
             if (!String.IsNullOrEmpty(name)) {

@@ -96,6 +96,20 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         /// <summary>
+        /// Performs a get iterator operation propagating any iterator types
+        /// into the value and returns the associated types associated with the
+        /// object.
+        /// </summary>
+        public static IAnalysisSet GetAsyncIterator(this IAnalysisSet self, Node node, AnalysisUnit unit) {
+            var res = AnalysisSet.Empty;
+            foreach (var ns in self) {
+                res = res.Union(ns.GetAsyncIterator(node, unit));
+            }
+
+            return res;
+        }
+
+        /// <summary>
         /// Performs a get index operation propagating any index types into the
         /// value and returns the associated types associated with the object.
         /// </summary>
@@ -144,6 +158,19 @@ namespace Microsoft.PythonTools.Analysis {
             var res = AnalysisSet.Empty;
             foreach (var ns in self) {
                 res = res.Union(ns.GetEnumeratorTypes(node, unit));
+            }
+
+            return res;
+        }
+        /// <summary>
+        /// Returns the set of types which are accessible when code enumerates
+        /// over the object
+        /// in a for statement.
+        /// </summary>
+        public static IAnalysisSet GetAsyncEnumeratorTypes(this IAnalysisSet self, Node node, AnalysisUnit unit) {
+            var res = AnalysisSet.Empty;
+            foreach (var ns in self) {
+                res = res.Union(ns.GetAsyncEnumeratorTypes(node, unit));
             }
 
             return res;
@@ -228,6 +255,18 @@ namespace Microsoft.PythonTools.Analysis {
             return values
                 .Select(v => v.GetConstantValueAsString())
                 .Where(s => !string.IsNullOrEmpty(s));
+        }
+
+        /// <summary>
+        /// Performs an await operation.
+        /// </summary>
+        public static IAnalysisSet Await(this IAnalysisSet self, Node node, AnalysisUnit unit) {
+            var res = AnalysisSet.Empty;
+            foreach (var ns in self) {
+                res = res.Union(ns.Await(node, unit));
+            }
+
+            return res;
         }
 
     }

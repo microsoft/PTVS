@@ -16,13 +16,14 @@ using System;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using Microsoft.PythonTools.Debugger.Transports;
+using Microsoft.PythonTools.DkmDebugger;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Debugger.Interop;
 
 namespace Microsoft.PythonTools.Debugger.Remote {
 
     [ComVisible(true)]
-    [Guid("B8CBA3DE-4A20-4DD7-8709-EC66A6A256D3")]
+    [Guid(Guids.RemoteDebugPortSupplierCLSID)]
     public class PythonRemoteDebugPortSupplier : IDebugPortSupplier2, IDebugPortSupplierDescription2 {
         public const string PortSupplierId = "{FEB76325-D127-4E02-B59D-B16D93D46CF5}";
         public static readonly Guid PortSupplierGuid = new Guid(PortSupplierId);
@@ -94,7 +95,7 @@ namespace Microsoft.PythonTools.Debugger.Remote {
         }
 
         public int GetPortSupplierName(out string pbstrName) {
-            pbstrName = "Python remote debugging";
+            pbstrName = "Python remote (ptvsd)";
             return VSConstants.S_OK;
         }
 

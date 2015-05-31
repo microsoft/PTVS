@@ -15,7 +15,9 @@
 using System;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Repl;
+#if !DEV14_OR_LATER
 using Microsoft.VisualStudio.Repl;
+#endif
 
 namespace Microsoft.PythonTools.Options {
 #if DEV14_OR_LATER

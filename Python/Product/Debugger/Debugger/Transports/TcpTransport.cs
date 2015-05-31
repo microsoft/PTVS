@@ -35,10 +35,10 @@ namespace Microsoft.PythonTools.Debugger.Transports {
             }
 
             // PTVSD is using AF_INET by default, so lets make sure to try the IPv4 address in lieu of IPv6 address
-            var ipHostEntry = Dns.GetHostEntry(uri.Host);
-            var tcpClient = new TcpClient(ipHostEntry.AddressList.First(i => i.AddressFamily == AddressFamily.InterNetwork).ToString(), uri.Port);
-
+            var tcpClient = new TcpClient(AddressFamily.InterNetwork);
+            
             try {
+                tcpClient.Connect(uri.Host, uri.Port);
                 var stream = tcpClient.GetStream();
                 tcpClient = null;
                 return stream;

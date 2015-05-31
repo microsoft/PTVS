@@ -29,6 +29,10 @@ using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudioTools.Project.Automation;
 using VsCommands2K = Microsoft.VisualStudio.VSConstants.VSStd2KCmdID;
 using VSConstants = Microsoft.VisualStudio.VSConstants;
+#if DEV14_OR_LATER
+using Microsoft.VisualStudio.Imaging;
+using Microsoft.VisualStudio.Imaging.Interop;
+#endif
 
 namespace Microsoft.VisualStudioTools.Project {
     internal class CommonFileNode : FileNode {
@@ -96,6 +100,40 @@ namespace Microsoft.VisualStudioTools.Project {
 
         #region overridden methods
 
+#if DEV14_OR_LATER
+        protected override bool SupportsIconMonikers {
+            get { return true; }
+        }
+
+        protected virtual ImageMoniker CodeFileIconMoniker {
+            get { return KnownMonikers.Document; }
+        }
+
+        protected virtual ImageMoniker StartupCodeFileIconMoniker {
+            get { return CodeFileIconMoniker; }
+        }
+
+        protected virtual ImageMoniker FormFileIconMoniker {
+            get { return KnownMonikers.WindowsForm; }
+        }
+
+        protected override ImageMoniker GetIconMoniker(bool open) {
+            if (ItemNode.IsExcluded) {
+                return KnownMonikers.HiddenFile;
+            } else if (!File.Exists(Url)) {
+                return KnownMonikers.DocumentWarning;
+            } else if (IsFormSubType) {
+                return FormFileIconMoniker;
+            } else if (this._project.IsCodeFile(FileName)) {
+                if (CommonUtils.IsSamePath(this.Url, _project.GetStartupFile())) {
+                    return StartupCodeFileIconMoniker;
+                } else {
+                    return CodeFileIconMoniker;
+                }
+            }
+            return default(ImageMoniker);
+        }
+#else
         public override int ImageIndex {
             get {
                 if (ItemNode.IsExcluded) {
@@ -114,6 +152,8 @@ namespace Microsoft.VisualStudioTools.Project {
                 return base.ImageIndex;
             }
         }
+#endif
+
 
         /// <summary>
         /// Open a file depending on the SubType property associated with the file item in the project file

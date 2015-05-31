@@ -43,8 +43,10 @@ namespace Microsoft.PythonTools.Options {
         private void InitializeImageList() {
             if (_imageList == null) {
                 using (var imgHandler = new ImageHandler(typeof(OptionsTreeView).Assembly.GetManifestResourceStream("Microsoft.PythonTools.Project.Resources.imagelis.bmp"))) {
+#pragma warning disable 0618
                     var openFolder = imgHandler.ImageList.Images[(int)ProjectNode.ImageName.OpenFolder];
                     var closedFolder = imgHandler.ImageList.Images[(int)ProjectNode.ImageName.Folder];
+#pragma warning restore 0618
 
                     _imageList = new ImageList();
 

@@ -66,6 +66,9 @@ namespace Microsoft.VisualStudioTools.Project {
         IOleCommandTarget {
         #region nested types
 
+#if DEV14_OR_LATER
+        [Obsolete("Use ImageMonikers instead")]
+#endif
         public enum ImageName {
             OfflineWebApp = 0,
             WebReferencesFolder = 1,
@@ -477,11 +480,16 @@ namespace Microsoft.VisualStudioTools.Project {
             }
         }
 
+#pragma warning disable 0618, 0672
+        // Project subclasses decide whether or not to support using image
+        // monikers, and so we need to keep the ImageIndex overrides in case
+        // they choose not to.
         public override int ImageIndex {
             get {
                 return (int)ProjectNode.ImageName.Application;
             }
         }
+#pragma warning restore 0618, 0672
 
 
         #endregion
@@ -596,6 +604,9 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <summary>
         /// Gets an ImageHandler for the project node.
         /// </summary>
+#if DEV14_OR_LATER
+        [Obsolete("Use ImageMonikers instead")]
+#endif
         public ImageHandler ImageHandler {
             get {
                 if (null == imageHandler) {
@@ -3506,10 +3517,16 @@ namespace Microsoft.VisualStudioTools.Project {
             }
         }
 
+#if DEV14_OR_LATER
+        [Obsolete("Use ImageMonikers instead")]
+#endif
         internal int GetIconIndex(ImageName name) {
             return (int)name;
         }
 
+#if DEV14_OR_LATER
+        [Obsolete("Use ImageMonikers instead")]
+#endif
         internal IntPtr GetIconHandleByName(ImageName name) {
             return ImageHandler.GetIconHandle(GetIconIndex(name));
         }
