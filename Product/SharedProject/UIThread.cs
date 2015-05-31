@@ -20,7 +20,7 @@ using System.Threading.Tasks;
 using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.VisualStudioTools {
-    internal class UIThread : IUIThread {
+    class UIThread : UIThreadBase {
         private readonly TaskScheduler _scheduler;
         private readonly TaskFactory _factory;
         private readonly Thread _uiThread;
@@ -32,18 +32,18 @@ namespace Microsoft.VisualStudioTools {
         }
 
         public static void EnsureService(IServiceContainer container) {
-            if (container.GetService(typeof(IUIThread)) == null) {
-                container.AddService(typeof(IUIThread), new UIThread(), true);
+            if (container.GetService(typeof(UIThreadBase)) == null) {
+                container.AddService(typeof(UIThreadBase), new UIThread(), true);
             }
         }
 
-        public bool InvokeRequired {
+        public override bool InvokeRequired {
             get {
                 return Thread.CurrentThread != _uiThread;
             }
         }
 
-        public void MustBeCalledFromUIThreadOrThrow() {
+        public override void MustBeCalledFromUIThreadOrThrow() {
             if (InvokeRequired) {
                 const int RPC_E_WRONG_THREAD = unchecked((int)0x8001010E);
                 throw new COMException("Invalid cross-thread call", RPC_E_WRONG_THREAD);
@@ -57,7 +57,7 @@ namespace Microsoft.VisualStudioTools {
         /// <remarks>
         /// If called from the UI thread, the action is executed synchronously.
         /// </remarks>
-        public void Invoke(Action action) {
+        public override void Invoke(Action action) {
             if (InvokeRequired) {
                 _factory.StartNew(action).GetAwaiter().GetResult();
             } else {
@@ -73,7 +73,7 @@ namespace Microsoft.VisualStudioTools {
         /// If called from the UI thread, the function is evaluated 
         /// synchronously.
         /// </remarks>
-        public T Invoke<T>(Func<T> func) {
+        public override T Invoke<T>(Func<T> func) {
             if (InvokeRequired) {
                 return _factory.StartNew(func).GetAwaiter().GetResult();
             } else {
@@ -88,7 +88,7 @@ namespace Microsoft.VisualStudioTools {
         /// <remarks>
         /// If called from the UI thread, the action is executed synchronously.
         /// </remarks>
-        public Task InvokeAsync(Action action) {
+        public override Task InvokeAsync(Action action) {
             var tcs = new TaskCompletionSource<object>();
             if (InvokeRequired) {
                 return _factory.StartNew(action);
@@ -107,7 +107,7 @@ namespace Microsoft.VisualStudioTools {
         /// If called from the UI thread, the function is evaluated 
         /// synchronously.
         /// </remarks>
-        public Task<T> InvokeAsync<T>(Func<T> func) {
+        public override Task<T> InvokeAsync<T>(Func<T> func) {
             var tcs = new TaskCompletionSource<T>();
             if (InvokeRequired) {
                 return _factory.StartNew(func);
@@ -127,7 +127,7 @@ namespace Microsoft.VisualStudioTools {
         /// If called from the UI thread, the function is evaluated 
         /// synchronously.
         /// </remarks>
-        public Task InvokeTask(Func<Task> func) {
+        public override Task InvokeTask(Func<Task> func) {
             var tcs = new TaskCompletionSource<object>();
             if (InvokeRequired) {
                 InvokeAsync(() => InvokeTaskHelper(func, tcs));
@@ -147,7 +147,7 @@ namespace Microsoft.VisualStudioTools {
         /// If called from the UI thread, the function is evaluated 
         /// synchronously.
         /// </remarks>
-        public Task<T> InvokeTask<T>(Func<Task<T>> func) {
+        public override Task<T> InvokeTask<T>(Func<Task<T>> func) {
             var tcs = new TaskCompletionSource<T>();
             if (InvokeRequired) {
                 InvokeAsync(() => InvokeTaskHelper(func, tcs));

@@ -37,14 +37,14 @@ namespace Microsoft.VisualStudioTools {
             return inst;
         }
 
-        public static VisualStudioApp FromEnvironmentVariable() {
-            string ptvsPid = Environment.GetEnvironmentVariable("_PTVS_PID");
-            if (ptvsPid == null) {
+        public static VisualStudioApp FromEnvironmentVariable(string variable) {
+            string pid = Environment.GetEnvironmentVariable(variable);
+            if (pid == null) {
                 return null;
             }
 
             int processId;
-            if (!int.TryParse(ptvsPid, out processId)) {
+            if (!int.TryParse(pid, out processId)) {
                 return null;
             }
 

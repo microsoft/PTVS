@@ -2002,7 +2002,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         /// <returns></returns>
         protected virtual Guid[] GetConfigurationIndependentPropertyPages() {
-            return new Guid[] { Guid.Empty };
+            return new Guid[] { };
         }
 
         /// <summary>
@@ -2010,7 +2010,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         /// <returns></returns>
         protected virtual Guid[] GetConfigurationDependentPropertyPages() {
-            return new Guid[] { Guid.Empty };
+            return new Guid[] { };
         }
 
         /// <summary>
