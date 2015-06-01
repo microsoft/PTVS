@@ -43,6 +43,8 @@ namespace TestUtilities.Mocks {
         private readonly string _contentType;
 
 #if DEV14_OR_LATER
+        private PropertyCollection _properties;
+
         public event EventHandler<SubmissionBufferAddedEventArgs> SubmissionBufferAdded {
             add {
             }
@@ -55,7 +57,7 @@ namespace TestUtilities.Mocks {
             _eval = eval;
             _contentType = contentType;
             _view = new MockTextView(new MockTextBuffer(String.Empty, contentType, filename: "text"));
-            _eval.Initialize(this);
+            _eval._Initialize(this);
         }
 
         public bool ShowAnsiCodes { get; set; }
@@ -100,7 +102,7 @@ namespace TestUtilities.Mocks {
 #if DEV14_OR_LATER
         public ITextBuffer OutputBuffer {
             get {
-                throw new NotImplementedException();
+                return _view.TextBuffer;
             }
         }
 
@@ -142,7 +144,10 @@ namespace TestUtilities.Mocks {
 
         public PropertyCollection Properties {
             get {
-                throw new NotImplementedException();
+                if (_properties == null) {
+                    _properties = new PropertyCollection();
+                }
+                return _properties;
             }
         }
 #endif
@@ -284,7 +289,9 @@ namespace TestUtilities.Mocks {
         }
 
         Span IReplWindow.WriteLine(string text) {
-            throw new NotImplementedException();
+            var start = _output.Length;
+            _output.AppendLine(text);
+            return new Span(start, _output.Length - start);
         }
 
         public Task SubmitAsync(IEnumerable<string> inputs) {
@@ -292,7 +299,9 @@ namespace TestUtilities.Mocks {
         }
 
         public Span Write(string text) {
-            throw new NotImplementedException();
+            var start = _output.Length;
+            _output.Append(text);
+            return new Span(start, _output.Length - start);
         }
 
         public void Write(UIElement element) {
@@ -320,9 +329,9 @@ namespace TestUtilities.Mocks {
         #endregion
     }
 
-#if DEV14_OR_LATER
     public static class ReplEvalExtensions {
-        public static Task<ExecutionResult> Initialize(this IReplEvaluator self, IReplWindow window) {
+#if DEV14_OR_LATER
+        public static Task<ExecutionResult> _Initialize(this IReplEvaluator self, IReplWindow window) {
             self.CurrentWindow = window;
             return self.InitializeAsync();
         }
@@ -334,6 +343,10 @@ namespace TestUtilities.Mocks {
         public static Task<ExecutionResult> Reset(this IReplEvaluator self) {
             return self.ResetAsync();
         }
-    }
+#else
+        public static Task<ExecutionResult> _Initialize(this IReplEvaluator self, IReplWindow window) {
+            return self.Initialize(window);
+        }
 #endif
+    }
 }

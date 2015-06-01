@@ -35,6 +35,7 @@ using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Projection;
 using Microsoft.VisualStudio.Utilities;
+using Microsoft.VisualStudioTools;
 #if DEV14_OR_LATER
 using IReplEvaluator = Microsoft.VisualStudio.InteractiveWindow.IInteractiveEvaluator;
 using IReplWindow = Microsoft.VisualStudio.InteractiveWindow.IInteractiveWindow;
@@ -502,6 +503,9 @@ namespace Microsoft.PythonTools.Repl {
             process.ProcessExited += new EventHandler<ProcessExitedEventArgs>(OnProcessExited);
             var evaluator = new PythonDebugProcessReplEvaluator(_serviceProvider, process, _pyService, threadIdMapper);
             evaluator.Window = _window;
+#if DEV14_OR_LATER
+            evaluator.InitializeAsync().WaitAndUnwrapExceptions();
+#endif
             evaluator.AvailableScopesChanged += new EventHandler<EventArgs>(evaluator_AvailableScopesChanged);
             evaluator.MultipleScopeSupportChanged += new EventHandler<EventArgs>(evaluator_MultipleScopeSupportChanged);
             _evaluators.Add(process.Id, evaluator);

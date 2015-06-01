@@ -12,12 +12,18 @@
  *
  * ***************************************************************************/
 
+using System;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Options;
 using Microsoft.VisualStudio.ComponentModelHost;
+using Microsoft.VisualStudio.Text.Adornments;
+using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudioTools;
 using TestUtilities.Mocks;
+#if DEV14_OR_LATER
+using Microsoft.VisualStudio.InteractiveWindow.Commands;
+#endif
 
 namespace TestUtilities.Python {
     public static class PythonToolsTestUtilities {
@@ -43,8 +49,23 @@ namespace TestUtilities.Python {
         public static MockServiceProvider CreateMockServiceProvider() {
             var serviceProvider = new MockServiceProvider();
             var errorProvider = new MockErrorProviderFactory();
-            serviceProvider.AddService(typeof(MockErrorProviderFactory), errorProvider, true);
-            serviceProvider.AddService(typeof(SComponentModel), new MockComponentModel());
+
+            serviceProvider.ComponentModel.AddExtension(
+                typeof(IErrorProviderFactory),
+                () => new MockErrorProviderFactory()
+            );
+            serviceProvider.ComponentModel.AddExtension(
+                typeof(IContentTypeRegistryService),
+                () => new MockClassificationTypeRegistryService()
+            );
+
+#if DEV14_OR_LATER
+            serviceProvider.ComponentModel.AddExtension(
+                typeof(IInteractiveWindowCommandsFactory),
+                () => new MockInteractiveWindowCommandsFactory()
+            );
+#endif
+
             serviceProvider.AddService(
                 typeof(ErrorTaskProvider),
                 (container, type) => new ErrorTaskProvider(serviceProvider, null, errorProvider),
