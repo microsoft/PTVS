@@ -2465,7 +2465,7 @@ def debug(file, port_num, debug_id, debug_options, run_as = 'script'):
             write_bytes(conn, LAST)
         last_ack_event.wait(5)
 
-    if wait_on_normal_exit in debug_options:
+    if wait_on_normal_exit:
         do_wait()
 
 # Code objects for functions which are going to be at the bottom of the stack, right below the first
