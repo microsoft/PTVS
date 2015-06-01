@@ -421,6 +421,23 @@ namespace Microsoft.VisualStudioTools.Project {
 
         }
 
+        /// <summary>
+        /// Specifies the build action as a string so the user can configure it to any value.
+        /// </summary>
+        [SRCategoryAttribute(SR.Advanced)]
+        [SRDisplayName(SR.BuildAction)]
+        [SRDescriptionAttribute(SR.BuildActionDescription)]
+        [AlwaysSerialized]
+        [TypeConverter(typeof(BuildActionStringConverter))]
+        public string ItemType {
+            get {
+                return HierarchyNode.ItemNode.ItemTypeName;
+            }
+            set {
+                HierarchyNode.ItemNode.ItemTypeName = value;
+            }
+        }
+
         [SRCategoryAttribute(SR.Misc)]
         [SRDisplayName(SR.FileName)]
         [SRDescriptionAttribute(SR.FileNameDescription)]

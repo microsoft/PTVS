@@ -76,7 +76,7 @@ namespace TestUtilities.Python {
                 (container, type) => new CommentTaskProvider(serviceProvider, null, errorProvider),
                 true
             );
-            serviceProvider.AddService(typeof(IUIThread), new MockUIThread());
+            serviceProvider.AddService(typeof(UIThreadBase), new MockUIThread());
             var optionsService = new MockPythonToolsOptionsService();
             serviceProvider.AddService(typeof(IPythonToolsOptionsService), optionsService, true);
 

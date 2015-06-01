@@ -12,7 +12,6 @@
  *
  * ***************************************************************************/
 
-using System;
 using System.Threading.Tasks;
 
 #if NTVS_FEATURE_INTERACTIVEWINDOW

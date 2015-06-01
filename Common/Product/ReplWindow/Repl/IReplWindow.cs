@@ -18,6 +18,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
+using Microsoft.VisualStudio.Utilities;
 
 #if NTVS_FEATURE_INTERACTIVEWINDOW
 namespace Microsoft.NodejsTools.Repl {
@@ -169,5 +170,13 @@ namespace Microsoft.VisualStudio.Repl {
         /// This method can only execute special (prefixed) commands. To evaluate code snippers, use <see cref="Evaluator"/>.
         /// </remarks>
         Task<ExecutionResult> ExecuteCommand(string text);
+    }
+
+    public interface IReplWindow3 : IReplWindow2 {
+
+        /// <summary>
+        /// Storage
+        /// </summary>
+        PropertyCollection Properties { get; }
     }
 }

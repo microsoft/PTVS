@@ -847,6 +847,17 @@ namespace Microsoft.VisualStudioTools.Project {
                     RenameInStorage(oldName, newName);
                 }
 
+                // For some reason when ignoreFileChanges is called in Resume, we get an ArgumentException because
+                // Somewhere a required fileWatcher is null.  This issue only occurs when you copy and rename a typescript file,
+                // Calling Resume here prevents said fileWatcher from being null. Don't know why it works, but it does.
+                // Also fun! This is the only location it can go (between RenameInStorage and RenameFileNode)
+                // So presumably there is some condition that is no longer met once both of these methods are called with a ts file.
+                // https://nodejstools.codeplex.com/workitem/1510
+                if (sfc != null) {
+                    sfc.Resume();
+                    sfc.Suspend();
+                }
+
                 if (!CommonUtils.IsSamePath(oldName, newName)) {
                     // Check out the project file if necessary.
                     if (!this.ProjectMgr.QueryEditProjectFile(false)) {

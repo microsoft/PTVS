@@ -16,6 +16,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Threading;
 using EnvDTE;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -682,6 +683,47 @@ namespace VisualStudioToolsUITests {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
                     var rootedIncludeIgnored = solution.FindItem("LinkedFiles", "RootedIncludeIgnored" + projectType.CodeExtension);
                     Assert.IsNotNull(rootedIncludeIgnored, "rootedIncludeIgnored");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Test linked files with a project home set (done by save as in this test)
+        /// https://nodejstools.codeplex.com/workitem/1511
+        /// </summary>
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("VSTestHost")]
+        public void TestLinkedWithProjectHome() {
+            foreach (var projectType in ProjectTypes) {
+                using (var solution = MultiProjectLinkedFiles(projectType).ToVs()) {
+                    var project = (solution as VisualStudioInstance).Project;
+                    
+                    // save the project to an odd location.  This will result in project home being set.
+                    var newProjName = "TempFile";
+                    try {
+                        project.SaveAs(Path.GetTempPath() +  newProjName + projectType.ProjectExtension);
+                    } catch (UnauthorizedAccessException) {
+                        Assert.Inconclusive("Couldn't save the file");
+                    }
+                    
+                    // create a temporary file and add a link to it in the project
+                    solution.FindItem(newProjName).Select();
+                    var tempFile  = Path.GetTempFileName();
+                    using (var addExistingDlg = AddExistingItemDialog.FromDte((solution as VisualStudioInstance).App)) {
+                        addExistingDlg.FileName = tempFile;
+                        addExistingDlg.AddLink();
+                    }
+
+                    // Save the project to commit that link to the project file
+                    project.Save();
+
+                    // verify that the project file contains the correct text for Link
+                    var fileText = File.ReadAllText(project.FullName);
+                    var pattern = string.Format(
+                        @"<Content Include=""{0}"">\s*<Link>{1}</Link>\s*</Content>", 
+                        Regex.Escape(tempFile),
+                        Regex.Escape(Path.GetFileName(tempFile)));
+                    AssertUtil.AreEqual(new Regex(pattern), fileText);
                 }
             }
         }

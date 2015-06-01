@@ -200,6 +200,7 @@ namespace Microsoft.VisualStudioTools.Project {
             psi.UseShellExecute = false;
             psi.RedirectStandardError = !visible || (redirector != null);
             psi.RedirectStandardOutput = !visible || (redirector != null);
+            psi.RedirectStandardInput = !visible;
             psi.StandardOutputEncoding = outputEncoding ?? psi.StandardOutputEncoding;
             psi.StandardErrorEncoding = errorEncoding ?? outputEncoding ?? psi.StandardErrorEncoding;
             if (env != null) {
@@ -422,6 +423,15 @@ namespace Microsoft.VisualStudioTools.Project {
                 }
                 if (_process.StartInfo.RedirectStandardError) {
                     _process.BeginErrorReadLine();
+                }
+                
+                if (_process.StartInfo.RedirectStandardInput) {
+                    // Close standard input so that we don't get stuck trying to read input from the user.
+                    try {
+                        _process.StandardInput.Close();
+                    } catch (InvalidOperationException) {
+                        // StandardInput not available
+                    }
                 }
             }
         }
@@ -678,7 +688,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// Immediately stops the process.
         /// </summary>
         public void Kill() {
-            if (_process != null) {
+            if (_process != null && !_process.HasExited) {
                 _process.Kill();
                 // Should have already been called, in which case this is a no-op
                 OnExited(this, EventArgs.Empty);

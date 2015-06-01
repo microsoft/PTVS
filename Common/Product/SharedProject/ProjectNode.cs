@@ -628,7 +628,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 if (projectHome == null) {
                     projectHome = CommonUtils.GetAbsoluteDirectoryPath(
                         this.ProjectFolder,
-                        this.GetProjectProperty(CommonConstants.ProjectHome, true));
+                        this.GetProjectProperty(CommonConstants.ProjectHome, resetCache: false));
                 }
 
                 Debug.Assert(projectHome != null, "ProjectHome should not be null");
@@ -1832,9 +1832,10 @@ namespace Microsoft.VisualStudioTools.Project {
                 options.TreatWarningsAsErrors = true;
             }
 
-            if (GetProjectProperty("WarningLevel", false) != null) {
+            var warningLevel = GetProjectProperty("WarningLevel", resetCache: false);
+            if (warningLevel != null) {
                 try {
-                    options.WarningLevel = Int32.Parse(GetProjectProperty("WarningLevel", false), CultureInfo.InvariantCulture);
+                    options.WarningLevel = Int32.Parse(warningLevel, CultureInfo.InvariantCulture);
                 } catch (ArgumentNullException e) {
                     Trace.WriteLine("Exception : " + e.Message);
                 } catch (ArgumentException e) {
@@ -2012,7 +2013,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         /// <returns></returns>
         protected virtual Guid[] GetConfigurationIndependentPropertyPages() {
-            return new Guid[] { Guid.Empty };
+            return new Guid[] { };
         }
 
         /// <summary>
@@ -2020,7 +2021,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         /// <returns></returns>
         protected virtual Guid[] GetConfigurationDependentPropertyPages() {
-            return new Guid[] { Guid.Empty };
+            return new Guid[] { };
         }
 
         /// <summary>
@@ -4108,7 +4109,7 @@ namespace Microsoft.VisualStudioTools.Project {
                     }
 
                     newChild.SetIsLinkFile(true);
-                    newChild.ItemNode.SetMetadata(ProjectFileConstants.Link, CommonUtils.CreateFriendlyFilePath(ProjectFolder, newFileName));
+                    newChild.ItemNode.SetMetadata(ProjectFileConstants.Link, CommonUtils.CreateFriendlyFilePath(ProjectHome, newFileName));
                     n.AddChild(newChild);
 
                     DocumentManager.RenameDocument(site, file, file, n.ID);

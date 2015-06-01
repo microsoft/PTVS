@@ -57,8 +57,8 @@ namespace Microsoft.VisualStudioTools.Wpf {
         public static readonly object ComboBoxPopupBorderKey = VsBrushes.ComboBoxPopupBorderKey;
         public static readonly object ComboBoxPopupForegroundKey = VsBrushes.WindowTextKey;
 
-        public static readonly object ButtonForegroundPressedKey = VsBrushes.ActiveCaptionKey;
-        public static readonly object ButtonBackgroundPressedKey = VsBrushes.ComboBoxMouseDownBorderKey;
+        public static readonly object ButtonForegroundPressedKey = VsBrushes.ToolWindowButtonDownActiveGlyphKey;
+        public static readonly object ButtonBackgroundPressedKey = VsBrushes.ComboBoxMouseOverBorderKey;
         public static readonly object ButtonBackgroundHoverKey = VsBrushes.CommandBarHoverOverSelectedKey;
         public static readonly object ButtonBorderHoverKey = VsBrushes.ComboBoxMouseOverGlyphKey;
 

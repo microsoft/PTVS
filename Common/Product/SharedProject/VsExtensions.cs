@@ -12,7 +12,6 @@
  *
  * ***************************************************************************/
 
-
 using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
@@ -97,8 +96,8 @@ namespace Microsoft.VisualStudioTools {
             return (IClipboardService)serviceProvider.GetService(typeof(IClipboardService));
         }
 
-        internal static IUIThread GetUIThread(this IServiceProvider serviceProvider) {
-            var uiThread = (IUIThread)serviceProvider.GetService(typeof(IUIThread));
+        internal static UIThreadBase GetUIThread(this IServiceProvider serviceProvider) {
+            var uiThread = (UIThreadBase)serviceProvider.GetService(typeof(UIThreadBase));
             if (uiThread == null) {
                 Trace.TraceWarning("Returning NoOpUIThread instance from GetUIThread");
                 Debug.Assert(VsShellUtil.ShellIsShuttingDown, "No UIThread service but shell is not shutting down");
@@ -108,52 +107,67 @@ namespace Microsoft.VisualStudioTools {
         }
 
         [Conditional("DEBUG")]
-        public static void MustBeCalledFromUIThread(this IUIThread self, string message = "Invalid cross-thread call") {
-            Debug.Assert(self is IMockUIThread || !self.InvokeRequired, message);
+        public static void MustBeCalledFromUIThread(this UIThreadBase self, string message = "Invalid cross-thread call") {
+            Debug.Assert(self is MockUIThreadBase || !self.InvokeRequired, message);
         }
 
         [Conditional("DEBUG")]
-        public static void MustNotBeCalledFromUIThread(this IUIThread self, string message = "Invalid cross-thread call") {
-            Debug.Assert(self is IMockUIThread || self.InvokeRequired, message);
+        public static void MustNotBeCalledFromUIThread(this UIThreadBase self, string message = "Invalid cross-thread call") {
+            Debug.Assert(self is MockUIThreadBase || self.InvokeRequired, message);
         }
 
 
         #region NoOpUIThread class
 
         /// <summary>
-        /// Provides a no-op implementation of <see cref="IUIThread"/> that will
+        /// Provides a no-op implementation of <see cref="UIThreadBase"/> that will
         /// not execute any tasks.
         /// </summary>
-        private sealed class NoOpUIThread : IMockUIThread {
-            public void Invoke(Action action) { }
+        private sealed class NoOpUIThread : MockUIThreadBase {
+            public override void Invoke(Action action) { }
 
-            public T Invoke<T>(Func<T> func) {
+            public override T Invoke<T>(Func<T> func) {
                 return default(T);
             }
 
-            public Task InvokeAsync(Action action) {
+            public override Task InvokeAsync(Action action) {
                 return Task.FromResult<object>(null);
             }
 
-            public Task<T> InvokeAsync<T>(Func<T> func) {
+            public override Task<T> InvokeAsync<T>(Func<T> func) {
                 return Task.FromResult<T>(default(T));
             }
 
-            public Task InvokeTask(Func<Task> func) {
+            public override Task InvokeTask(Func<Task> func) {
                 return Task.FromResult<object>(null);
             }
 
-            public Task<T> InvokeTask<T>(Func<Task<T>> func) {
+            public override Task<T> InvokeTask<T>(Func<Task<T>> func) {
                 return Task.FromResult<T>(default(T));
             }
 
-            public void MustBeCalledFromUIThreadOrThrow() { }
+            public override void MustBeCalledFromUIThreadOrThrow() { }
 
-            public bool InvokeRequired {
+            public override bool InvokeRequired {
                 get { return false; }
             }
         }
 
         #endregion
+
+        /// <summary>
+        /// Use the line ending of the first line for the line endings.  
+        /// If we have no line endings (single line file) just use Environment.NewLine
+        /// </summary>
+        public static string GetNewLineText(ITextSnapshot snapshot) {
+            // https://nodejstools.codeplex.com/workitem/1670 : override the GetNewLineCharacter as VS always returns '\r\n'
+            // check on each format as the user could have changed line endings (manually or through advanced save options) since
+            // the file was opened.
+            if (snapshot.LineCount > 0 && snapshot.GetLineFromPosition(0).LineBreakLength > 0) {
+                return snapshot.GetLineFromPosition(0).GetLineBreakText();
+            } else {
+                return Environment.NewLine;
+            }
+        }
     }
 }

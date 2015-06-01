@@ -52,15 +52,6 @@ namespace Microsoft.VisualStudioTools.Project {
 
         #region properties
 
-        public string PlatformName {
-            get {
-                return platformName;
-            }
-            set {
-                platformName = value;
-            }
-        }
-
         internal ProjectNode ProjectMgr {
             get {
                 return this.project;
@@ -73,6 +64,15 @@ namespace Microsoft.VisualStudioTools.Project {
             }
             set {
                 this.configName = value;
+            }
+        }
+
+        public string PlatformName {
+            get {
+                return platformName;
+            }
+            set {
+                platformName = value;
             }
         }
 
@@ -108,8 +108,8 @@ namespace Microsoft.VisualStudioTools.Project {
         #region ctors
         internal ProjectConfig(ProjectNode project, string configuration) {
             this.project = project;
-            if (configuration.Contains("|")) { // If configuration is in the form "<Configuration>|<Platform>"
             
+            if (configuration.Contains("|")) { // If configuration is in the form "<Configuration>|<Platform>"
                 string[] configStrArray = configuration.Split('|');
                 if (2 == configStrArray.Length) {
                     this.configName = configStrArray[0];

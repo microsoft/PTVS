@@ -168,7 +168,9 @@ namespace TestUtilities.UI {
                 }
             }
         }
-
+#if DEV14_OR_LATER
+#pragma warning disable 0618
+#endif
         public void StartSmartTagSessionNoSession() {
             ShowSmartTag();
             Thread.Sleep(100);

@@ -51,7 +51,8 @@ namespace TestUtilities {
                     Assert.AreEqual(expected[i].Start, start, spanInfo);
                     Assert.AreEqual(expected[i].End, end, spanInfo);
                     Assert.AreEqual(expected[i].Text, curSpan.Span.GetText(), spanInfo);
-                    Assert.IsTrue(curSpan.ClassificationType.IsOfType(expected[i].ClassificationType));
+                    Assert.IsTrue(curSpan.ClassificationType.IsOfType(expected[i].ClassificationType), 
+                        "Classifier incorrect for '{0}'.  Expected:{1} Actual:{2}", expected[i].Text, expected[i].ClassificationType, curSpan.ClassificationType);
                 }
 
                 passed = true;

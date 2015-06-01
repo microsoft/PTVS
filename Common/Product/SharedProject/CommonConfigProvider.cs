@@ -12,9 +12,9 @@
  *
  * ***************************************************************************/
 
+using System.Collections.Generic;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
-using System.Collections.Generic;
 
 namespace Microsoft.VisualStudioTools.Project {
     /// <summary>
@@ -68,7 +68,7 @@ namespace Microsoft.VisualStudioTools.Project {
             else {
                 if (names != null) {
                     names[0] = AnyCPUPlatform;
-            }
+                }
 
                 if (actual != null) {
                     actual[0] = 1;
@@ -76,7 +76,7 @@ namespace Microsoft.VisualStudioTools.Project {
 
                 return VSConstants.S_OK;
             }
-            }
+        }
 
         public override int GetSupportedPlatformNames(uint celt, string[] names, uint[] actual) {
             if (_isPlatformAware) {

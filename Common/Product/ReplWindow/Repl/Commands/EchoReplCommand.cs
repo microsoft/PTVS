@@ -25,12 +25,24 @@ namespace Microsoft.VisualStudio.Repl {
         #region IReplCommand Members
 
         public Task<ExecutionResult> Execute(IReplWindow window, string arguments) {
-            arguments = arguments.ToLowerInvariant();
-            if (arguments == "on") {
-                window.SetOptionValue(ReplOptions.ShowOutput, true);
-            } else {
-                window.SetOptionValue(ReplOptions.ShowOutput, false);
+
+            if (string.IsNullOrWhiteSpace(arguments)) {
+                var curValue = (bool)window.GetOptionValue(ReplOptions.ShowOutput);
+                window.WriteLine("ECHO is " + (curValue ? "ON" : "OFF"));
+                return ExecutionResult.Succeeded;
             }
+
+            if (arguments.Equals("on", System.StringComparison.InvariantCultureIgnoreCase)) {
+                window.SetOptionValue(ReplOptions.ShowOutput, true);
+                return ExecutionResult.Succeeded;
+            } else if(arguments.Equals("off",System.StringComparison.InvariantCultureIgnoreCase)) {
+                window.SetOptionValue(ReplOptions.ShowOutput, false);
+                return ExecutionResult.Succeeded;
+            }
+
+            //Any other value passed to .echo we treat as a message
+            window.WriteLine(arguments);
+
             return ExecutionResult.Succeeded;
         }
 

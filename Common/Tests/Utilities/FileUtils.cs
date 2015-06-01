@@ -13,13 +13,58 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TestUtilities {
     public static class FileUtils {
+        public static void CopyDirectory(string sourceDir, string destDir) {
+            sourceDir = sourceDir.TrimEnd('\\');
+            destDir = destDir.TrimEnd('\\');
+            try {
+                Directory.CreateDirectory(destDir);
+            } catch (IOException) {
+            }
+
+            var newDirectories = new HashSet<string>(from d in Directory.EnumerateDirectories(sourceDir, "*", SearchOption.AllDirectories)
+                                                     where d.StartsWith(sourceDir)
+                                                     select d.Substring(sourceDir.Length + 1), StringComparer.OrdinalIgnoreCase);
+            newDirectories.ExceptWith(from d in Directory.EnumerateDirectories(destDir, "*", SearchOption.AllDirectories)
+                                      where d.StartsWith(destDir)
+                                      select d.Substring(destDir.Length + 1));
+
+            foreach (var newDir in newDirectories.OrderBy(i => i.Length).Select(i => Path.Combine(destDir, i))) {
+                try {
+                    Directory.CreateDirectory(newDir);
+                } catch {
+                    Debug.WriteLine("Failed to create directory " + newDir);
+                }
+            }
+
+            var newFiles = new HashSet<string>(from f in Directory.EnumerateFiles(sourceDir, "*", SearchOption.AllDirectories)
+                                               where f.StartsWith(sourceDir)
+                                               select f.Substring(sourceDir.Length + 1), StringComparer.OrdinalIgnoreCase);
+            newFiles.ExceptWith(from f in Directory.EnumerateFiles(destDir, "*", SearchOption.AllDirectories)
+                                where f.StartsWith(destDir)
+                                select f.Substring(destDir.Length + 1));
+
+            foreach (var newFile in newFiles) {
+                var copyFrom = Path.Combine(sourceDir, newFile);
+                var copyTo = Path.Combine(destDir, newFile);
+                try {
+                    File.Copy(copyFrom, copyTo);
+                    File.SetAttributes(copyTo, FileAttributes.Normal);
+                } catch {
+                    Debug.WriteLine("Failed to copy " + copyFrom + " to " + copyTo);
+                }
+            }
+        }
+
 
         public static IDisposable Backup(string path) {
             var backup = Path.GetTempFileName();

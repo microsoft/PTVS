@@ -551,8 +551,8 @@
       <Link>SharedProject\UIThread.cs</Link>
       <Visible>true</Visible>
     </Compile>
-    <Compile Include="$(_ProjectSystemFilesLocation)\IUIThread.cs">
-      <Link>SharedProject\IUIThread.cs</Link>
+    <Compile Include="$(_ProjectSystemFilesLocation)\UIThreadBase.cs">
+      <Link>SharedProject\UIThreadBase.cs</Link>
       <Visible>true</Visible>
     </Compile>
     <Compile Include="$(_ProjectSystemFilesLocation)\UIThreadSynchronizer.cs">
