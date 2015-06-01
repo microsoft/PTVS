@@ -210,11 +210,16 @@ namespace Microsoft.PythonTools.Analysis.AnalysisSetDetails {
         }
 
         public IAnalysisSet Clone() {
-            var buckets = new Bucket[_buckets.Length];
-            Array.Copy(_buckets, buckets, buckets.Length);
+            var buckets = _buckets;
+            var count = _count;
+            if (buckets != null) {
+                var newBuckets = new Bucket[buckets.Length];
+                Array.Copy(buckets, newBuckets, buckets.Length);
+                buckets = newBuckets;
+            }
             var res = new AnalysisHashSet(Comparer);
             res._buckets = buckets;
-            res._count = _count;
+            res._count = count;
             return res;
         }
 
