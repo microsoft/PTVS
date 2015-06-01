@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 #if DEV14_OR_LATER
 using Microsoft.Html.Core.Artifacts;
@@ -72,7 +73,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
 
         private bool IsDestructiveChangeForSeparator(
             ISensitiveFragmentSeparatorsInfo separatorInfo,
-            IList<IArtifact> itemsInRange,
+            IEnumerable<IArtifact> itemsInRange,
             int start,
             int oldLength,
             int newLength,
@@ -89,8 +90,11 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
             string leftSeparator = separatorInfo.LeftSeparator;
             string rightSeparator = separatorInfo.RightSeparator;
 
+            var firstTwoItems = itemsInRange.Take(2).ToList();
+            var item = firstTwoItems.FirstOrDefault();
+
             // If no items are affected, change is unsafe only if new region contains left side separators.
-            if (itemsInRange.Count == 0) {
+            if (item == null) {
                 // Simple optimization for whitespace insertion
                 if (oldLength == 0 && string.IsNullOrWhiteSpace(newText.GetText(new TextRange(start, newLength)))) {
                     return false;
@@ -104,9 +108,9 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
             }
 
             // Is change completely inside an existing item?
-            if (itemsInRange.Count == 1 && (itemsInRange[0].Contains(start) && itemsInRange[0].Contains(start + oldLength))) {
+            if (firstTwoItems.Count == 1 && (item.Contains(start) && item.Contains(start + oldLength))) {
                 // Check that change does not affect item left separator
-                if (TextRange.Contains(itemsInRange[0].Start, leftSeparator.Length, start)) {
+                if (TextRange.Contains(item.Start, leftSeparator.Length, start)) {
                     return true;
                 }
 
@@ -116,9 +120,9 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                 // which is incorrect. Typing at position 10 does not change separator at position 10. Similarly,
                 // deleting text right before %} or }} does not make change destructive.
 
-                var htmlToken = itemsInRange[0] as IHtmlToken;
+                var htmlToken = item as IHtmlToken;
                 if (htmlToken == null || htmlToken.IsWellFormed) {
-                    int rightSeparatorStart = itemsInRange[0].End - rightSeparator.Length;
+                    int rightSeparatorStart = item.End - rightSeparator.Length;
                     if (start + oldLength > rightSeparatorStart) {
                         if (TextRange.Intersect(rightSeparatorStart, rightSeparator.Length, start, oldLength)) {
                             return true;
@@ -128,7 +132,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
 
                 // Touching left separator is destructive too, like when changing {{ to {{@
                 // Check that change does not affect item left separator (whitespace is fine)
-                if (itemsInRange[0].Start + leftSeparator.Length == start) {
+                if (item.Start + leftSeparator.Length == start) {
                     if (oldLength == 0) {
                         string text = newText.GetText(new TextRange(start, newLength));
                         if (String.IsNullOrWhiteSpace(text)) {
@@ -139,10 +143,10 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                     return true;
                 }
 
-                int fragmentStart = itemsInRange[0].Start + separatorInfo.LeftSeparator.Length;
+                int fragmentStart = item.Start + separatorInfo.LeftSeparator.Length;
                 fragmentStart = Math.Max(fragmentStart, start - separatorInfo.RightSeparator.Length + 1);
                 int changeLength = newLength - oldLength;
-                int fragmentEnd = itemsInRange[0].End + changeLength;
+                int fragmentEnd = item.End + changeLength;
                 fragmentEnd = Math.Min(fragmentEnd, start + newLength + separatorInfo.RightSeparator.Length - 1);
 
                 if (newText.IndexOf(separatorInfo.RightSeparator, TextRange.FromBounds(fragmentStart, fragmentEnd), true) >= 0) {
