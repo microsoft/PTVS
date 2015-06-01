@@ -16,17 +16,16 @@ using System;
 using System.ComponentModel.Design;
 using System.Globalization;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Windows;
+using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.DkmDebugger;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Debugger.Interop;
-using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
-using Microsoft.VisualStudioTools.Project;
-using NativeMethods = Microsoft.VisualStudioTools.Project.NativeMethods;
 
 namespace Microsoft.PythonTools.Debugger {
-    [Guid("996D22BD-D117-4611-88F2-2832CB7D9517")]
+    [Guid(Guids.CustomDebuggerEventHandlerId)]
     public class CustomDebuggerEventHandler : IVsCustomDebuggerEventHandler110 {
         private readonly IServiceProvider _serviceProvider;
         
@@ -38,12 +37,15 @@ namespace Microsoft.PythonTools.Debugger {
             switch ((VsPackageMessage)message.MessageCode) {
                 case VsPackageMessage.WarnAboutPythonSymbols:
                     WarnAboutPythonSymbols((string)message.Parameter1);
-                    return 0;
+                    return VSConstants.S_OK;
                 case VsPackageMessage.WarnAboutPGO:
                     WarnAboutPGO((string)message.Parameter1);
-                    return 0;
+                    return VSConstants.S_OK;
+                case VsPackageMessage.SetDebugOptions:
+                    SetDebugOptions((IDebugEngine2)message.Parameter1);
+                    return VSConstants.S_OK;
                 default:
-                    return 0;
+                    return VSConstants.S_OK;
             }
         }
 
@@ -82,6 +84,29 @@ namespace Microsoft.PythonTools.Debugger {
                 "If you are using a stock Python interpreter, you should upgrade to a more recent version of it. If you're using a custom built " +
                 "interpreter, please disable PGO.";
             MessageBox.Show(content, "PGO Is Not Supported", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+
+        private void SetDebugOptions(IDebugEngine2 engine) {
+            var pyService = _serviceProvider.GetPythonToolsService();
+
+            var options = new StringBuilder();
+            if (pyService.DebuggerOptions.WaitOnAbnormalExit) {
+                options.Append(";" + AD7Engine.WaitOnAbnormalExitSetting + "=True");
+            }
+            if (pyService.DebuggerOptions.WaitOnNormalExit) {
+                options.Append(";" + AD7Engine.WaitOnNormalExitSetting + "=True");
+            }
+            if (pyService.DebuggerOptions.TeeStandardOutput) {
+                options.Append(";" + AD7Engine.RedirectOutputSetting + "=True");
+            }
+            if (pyService.DebuggerOptions.BreakOnSystemExitZero) {
+                options.Append(";" + AD7Engine.BreakSystemExitZero + "=True");
+            }
+            if (pyService.DebuggerOptions.DebugStdLib) {
+                options.Append(";" + AD7Engine.DebugStdLib + "=True");
+            }
+
+            engine.SetMetric(AD7Engine.DebugOptionsMetric, options.ToString());
         }
     }
 }

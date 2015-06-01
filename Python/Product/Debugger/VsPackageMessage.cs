@@ -17,5 +17,6 @@ namespace Microsoft.PythonTools.DkmDebugger {
         None = 0,
         WarnAboutPythonSymbols = 1,
         WarnAboutPGO = 2,
+        SetDebugOptions = 3,
     }
 }

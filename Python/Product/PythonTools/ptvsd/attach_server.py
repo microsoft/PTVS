@@ -70,7 +70,7 @@ from ptvsd.visualstudio_py_util import to_bytes, read_bytes, read_int, read_stri
 
 PTVS_VER = '2.2'
 DEFAULT_PORT = 5678
-PTVSDBG_VER = 5 # must be kept in sync with DebuggerProtocolVersion in PythonRemoteProcess.cs
+PTVSDBG_VER = 6 # must be kept in sync with DebuggerProtocolVersion in PythonRemoteProcess.cs
 PTVSDBG = to_bytes('PTVSDBG')
 ACPT = to_bytes('ACPT')
 RJCT = to_bytes('RJCT')
@@ -155,9 +155,6 @@ def enable_attach(secret, address = ('0.0.0.0', DEFAULT_PORT), certfile = None, 
         raise AttachAlreadyEnabledError('ptvsd.enable_attach() has already been called in this process.')
     _attach_enabled = True
 
-    if redirect_output:
-        vspd.enable_output_redirection()
-
     atexit.register(vspd.detach_process_and_notify_debugger)
 
     server = socket.socket()
@@ -235,6 +232,10 @@ def enable_attach(secret, address = ('0.0.0.0', DEFAULT_PORT), certfile = None, 
                     client.recv(1)
 
                 elif response == ATCH:
+                    debug_options = vspd.parse_debug_options(read_string(client))
+                    if redirect_output:
+                        debug_options.add('RedirectOutput')
+
                     if vspd.DETACHED:
                         write_bytes(client, ACPT)
                         try:
@@ -248,7 +249,7 @@ def enable_attach(secret, address = ('0.0.0.0', DEFAULT_PORT), certfile = None, 
                         write_int(client, minor)
                         write_int(client, micro)
 
-                        vspd.attach_process_from_socket(client, report = True)
+                        vspd.attach_process_from_socket(client, debug_options, report = True)
                         vspd.mark_all_threads_for_break(vspd.STEPPING_ATTACH_BREAK)
                         _attached.set()
                         client = None

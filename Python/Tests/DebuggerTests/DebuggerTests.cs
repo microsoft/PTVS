@@ -17,23 +17,22 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Debugger;
+using Microsoft.PythonTools.Debugger.Remote;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
-using Microsoft.Win32;
 using TestUtilities;
 using TestUtilities.Python;
 
 namespace DebuggerTests {
-    [TestClass]
-    public class DebuggerTests : BaseDebuggerTests {
+    [TestClass, Ignore]
+    public abstract class DebuggerTests : BaseDebuggerTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
@@ -2543,7 +2542,7 @@ int main(int argc, char* argv[]) {
         [TestMethod, Priority(0)]
         public void AttachAndStepWithBlankSysPrefix() {
             string script = TestData.GetPath(@"TestData\DebuggerProject\InfiniteRunBlankPrefix.py");
-            var p = Process.Start(Version.InterpreterPath, "\"" + script  + "\"");
+            var p = Process.Start(Version.InterpreterPath, "\"" + script + "\"");
             try {
                 Thread.Sleep(1000);
                 var proc = PythonProcess.Attach(p.Id);
@@ -2581,6 +2580,95 @@ int main(int argc, char* argv[]) {
 
                     Assert.AreEqual(oldFrame.FileName, newFrame.FileName);
                     Assert.IsTrue(oldFrame.LineNo + 1 == newFrame.LineNo);
+                } finally {
+                    DetachProcess(proc);
+                }
+            } finally {
+                DisposeProcess(p);
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void AttachWithOutputRedirection() {
+            var expectedOutput = new Queue<string>(new[] { "stdout", "stderr" });
+
+            string script = TestData.GetPath(@"TestData\DebuggerProject\AttachOutput.py");
+            var p = Process.Start(Version.InterpreterPath, "\"" + script + "\"");
+            try {
+                Thread.Sleep(1000);
+                var proc = PythonProcess.Attach(p.Id, PythonDebugOptions.RedirectOutput);
+                try {
+                    proc.DebuggerOutput += (sender, e) => {
+                        if (expectedOutput.Count != 0) {
+                            Assert.AreEqual(expectedOutput.Dequeue(), e.Output);
+                        }
+                    };
+
+                    var attached = new AutoResetEvent(false);
+                    proc.ProcessLoaded += (sender, args) => {
+                        Console.WriteLine("Process loaded");
+                        proc.Resume();
+                        attached.Set();
+                    };
+                    proc.StartListening();
+                    Assert.IsTrue(attached.WaitOne(20000), "Failed to attach within 20s");
+
+                    proc.WaitForExit();
+                    Assert.IsTrue(expectedOutput.Count == 0);
+                } finally {
+                    DetachProcess(proc);
+                }
+            } finally {
+                DisposeProcess(p);
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void AttachPtvsd() {
+            var expectedOutput = new[] { "stdout", "stderr" };
+
+            string script = TestData.GetPath(@"TestData\DebuggerProject\AttachPtvsd.py");
+            var psi = new ProcessStartInfo(Version.InterpreterPath, "\"" + script + "\"") {
+                WorkingDirectory = TestData.GetPath(),
+                UseShellExecute = false
+            };
+
+            var p = Process.Start(psi);
+            try {
+                Thread.Sleep(1000);
+                var proc = PythonRemoteProcess.Attach(
+                    new Uri("tcp://secret@localhost?opt=" + PythonDebugOptions.RedirectOutput),
+                    warnAboutAuthenticationErrors: false);
+                try {
+                    var attached = new AutoResetEvent(false);
+                    proc.ProcessLoaded += (sender, e) => {
+                        Console.WriteLine("Process loaded");
+
+                        var bp = proc.AddBreakPoint(script, 10);
+                        bp.Add();
+
+                        proc.Resume();
+                        attached.Set();
+                    };
+
+                    var actualOutput = new List<string>();
+                    proc.DebuggerOutput += (sender, e) => {
+                        actualOutput.Add(e.Output);
+                    };
+
+                    var bpHit = new AutoResetEvent(false);
+                    proc.BreakpointHit += (sender, args) => {
+                        Console.WriteLine("Breakpoint hit");
+                        bpHit.Set();
+                        proc.Continue();
+                    };
+
+                    proc.StartListening();
+                    Assert.IsTrue(attached.WaitOne(20000), "Failed to attach within 20s");
+                    Assert.IsTrue(bpHit.WaitOne(20000), "Failed to hit breakpoint within 20s");
+
+                    p.WaitForExit();
+                    AssertUtil.ArrayEquals(actualOutput, expectedOutput);
                 } finally {
                     DetachProcess(proc);
                 }
@@ -2680,6 +2768,27 @@ int main(int argc, char* argv[]) {
         #endregion
 
         #region Output Tests
+
+        [TestMethod, Priority(0)]
+        public void TestOutputRedirection() {
+            var debugger = new PythonDebugger();
+            var expectedOutput = new Queue<string>(new[] { "stdout", "stderr" });
+
+            var process = DebugProcess(debugger, Path.Combine(DebuggerTestPath, "Output.py"), (processObj, threadObj) => {
+                processObj.DebuggerOutput += (sender, e) => {
+                    if (expectedOutput.Count != 0) {
+                        Assert.AreEqual(expectedOutput.Dequeue(), e.Output);
+                    }
+                };
+            }, debugOptions: PythonDebugOptions.RedirectOutput);
+
+            try {
+                process.Start();
+                Thread.Sleep(1000);
+            } finally {
+                WaitForExit(process);
+            }
+        }
 
         [TestMethod, Priority(0)]
         public void Test3xStdoutBuffer() {
@@ -2841,7 +2950,7 @@ int main(int argc, char* argv[]) {
 
         internal override PythonVersion Version {
             get {
-                return PythonPaths.Python34 ?? PythonPaths.Python34_x64;
+                return PythonPaths.Python34;
             }
         }
 
@@ -2853,6 +2962,21 @@ int main(int argc, char* argv[]) {
 
         public override void AttachNewThread_PyThreadState_New() {
             // PyEval_AcquireLock deprecated in 3.2
+        }
+    }
+
+    [TestClass]
+    public class DebuggerTests34_x64 : DebuggerTests34 {
+        [ClassInitialize]
+        public static new void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
+            PythonTestData.Deploy();
+        }
+
+        internal override PythonVersion Version {
+            get {
+                return PythonPaths.Python34_x64;
+            }
         }
     }
 
@@ -2882,7 +3006,7 @@ int main(int argc, char* argv[]) {
     }
 
     [TestClass]
-    public class DebuggerTests27 : DebuggerTests {
+    public class DebuggerTests35_x64 : DebuggerTests35 {
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
             AssertListener.Initialize();
@@ -2891,7 +3015,7 @@ int main(int argc, char* argv[]) {
 
         internal override PythonVersion Version {
             get {
-                return PythonPaths.Python27 ?? PythonPaths.Python27_x64;
+                return PythonPaths.Python35_x64;
             }
         }
     }
@@ -2907,6 +3031,51 @@ int main(int argc, char* argv[]) {
         internal override PythonVersion Version {
             get {
                 return PythonPaths.Python25 ?? PythonPaths.Python25_x64;
+            }
+        }
+    }
+
+    [TestClass]
+    public class DebuggerTests26 : DebuggerTests {
+        [ClassInitialize]
+        public static new void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
+            PythonTestData.Deploy();
+        }
+
+        internal override PythonVersion Version {
+            get {
+                return PythonPaths.Python26 ?? PythonPaths.Python26_x64;
+            }
+        }
+    }
+
+    [TestClass]
+    public class DebuggerTests27 : DebuggerTests {
+        [ClassInitialize]
+        public static new void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
+            PythonTestData.Deploy();
+        }
+
+        internal override PythonVersion Version {
+            get {
+                return PythonPaths.Python27;
+            }
+        }
+    }
+
+    [TestClass]
+    public class DebuggerTests27_x64 : DebuggerTests {
+        [ClassInitialize]
+        public static new void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
+            PythonTestData.Deploy();
+        }
+
+        internal override PythonVersion Version {
+            get {
+                return PythonPaths.Python27_x64;
             }
         }
     }

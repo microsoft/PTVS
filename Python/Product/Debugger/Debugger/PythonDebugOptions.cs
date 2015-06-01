@@ -15,6 +15,8 @@
 using System;
 
 namespace Microsoft.PythonTools.Debugger {
+    // These option names are also used as string literals in visualstudio_py_debugger.py, and so
+    // renaming them here also requires updating the literals there.
     [Flags]
     enum PythonDebugOptions {
         None,
@@ -54,9 +56,15 @@ namespace Microsoft.PythonTools.Debugger {
         CreateNoWindow = 0x40,
 
         /// <summary>
-        /// Passing this flag will allow the PythonProcess.SendStringToStdInput function to be used. It
-        /// is not passed to the debuggee in any way.
+        /// Passing this flag will allow the PythonProcess.SendStringToStdInput function to be used.
         /// </summary>
-        RedirectInput = 0x80
+        RedirectInput = 0x80,
+
+        AttachRunning = 0x100,
+        
+        /// <summary>
+        /// Indicates that the application is a windowed application rather than a console one.
+        /// </summary>
+        IsWindowsApplication = 0x200,
     }
 }

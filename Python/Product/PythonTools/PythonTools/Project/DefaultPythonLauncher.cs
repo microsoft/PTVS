@@ -13,16 +13,12 @@
  * ***************************************************************************/
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.Diagnostics;
-using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Web;
 using System.Windows.Forms;
 using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.Interpreter;
@@ -30,7 +26,6 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Debugger;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project {
@@ -168,25 +163,17 @@ namespace Microsoft.PythonTools.Project {
             dbgInfo.fSendStdoutToOutputWindow = 0;
 
             if (!enableNativeCodeDebugging) {
+                // Set up project- and environment-specific debug options. Global debug options are passed
+                // to the engine by CustomDebuggerEventHandler via IDebugEngine2.SetMetric in response to
+                // the VsPackageMessage.SetDebugOptions custom debug event.
+
                 string interpArgs = _project.GetProperty(PythonConstants.InterpreterArgumentsSetting);
                 dbgInfo.bstrOptions = AD7Engine.VersionSetting + "=" + _project.GetInterpreterFactory().GetLanguageVersion().ToString();
-                if (!(props.GetIsWindowsApplication() ?? false)) {
-                    if (_pyService.DebuggerOptions.WaitOnAbnormalExit) {
-                        dbgInfo.bstrOptions += ";" + AD7Engine.WaitOnAbnormalExitSetting + "=True";
-                    }
-                    if (_pyService.DebuggerOptions.WaitOnNormalExit) {
-                        dbgInfo.bstrOptions += ";" + AD7Engine.WaitOnNormalExitSetting + "=True";
-                    }
+
+                if (props.GetIsWindowsApplication() ?? false) {
+                    dbgInfo.bstrOptions += ";" + AD7Engine.IsWindowsApplication + "=True";
                 }
-                if (_pyService.DebuggerOptions.TeeStandardOutput) {
-                    dbgInfo.bstrOptions += ";" + AD7Engine.RedirectOutputSetting + "=True";
-                }
-                if (_pyService.DebuggerOptions.BreakOnSystemExitZero) {
-                    dbgInfo.bstrOptions += ";" + AD7Engine.BreakSystemExitZero + "=True";
-                }
-                if (_pyService.DebuggerOptions.DebugStdLib) {
-                    dbgInfo.bstrOptions += ";" + AD7Engine.DebugStdLib + "=True";
-                }
+
                 if (!String.IsNullOrWhiteSpace(interpArgs)) {
                     dbgInfo.bstrOptions += ";" + AD7Engine.InterpreterOptions + "=" + interpArgs.Replace(";", ";;");
                 }

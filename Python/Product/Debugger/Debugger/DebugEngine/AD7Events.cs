@@ -12,6 +12,8 @@
  *
  * ***************************************************************************/
 
+using System;
+using Microsoft.PythonTools.DkmDebugger;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Debugger.Interop;
 
@@ -71,7 +73,6 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
         int IDebugEngineCreateEvent2.GetEngine(out IDebugEngine2 engine) {
             engine = m_engine;
-
             return VSConstants.S_OK;
         }
     }
@@ -321,5 +322,29 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         }
 
         #endregion
+    }
+
+    sealed class AD7CustomEvent : IDebugEvent2, IDebugCustomEvent110 {
+        public const string IID = "2615D9BC-1948-4D21-81EE-7A963F20CF59";
+        private readonly VsComponentMessage _message;
+
+        public AD7CustomEvent(VsComponentMessage message) {
+            _message = message;
+        }
+
+        public AD7CustomEvent(VsPackageMessage message, object param1 = null, object param2 = null)
+            : this(new VsComponentMessage { MessageCode = (uint)message, Parameter1 = param1, Parameter2 = param2 }) {
+        }
+
+        int IDebugEvent2.GetAttributes(out uint eventAttributes) {
+            eventAttributes = (uint)(enum_EVENTATTRIBUTES.EVENT_SYNCHRONOUS | enum_EVENTATTRIBUTES.EVENT_IMMEDIATE);
+            return VSConstants.S_OK;
+        }
+
+        int IDebugCustomEvent110.GetCustomEventInfo(out Guid guidVSService, VsComponentMessage[] message) {
+            guidVSService = Guids.CustomDebuggerEventHandlerGuid;
+            message[0] = _message;
+            return VSConstants.S_OK;
+        }
     }
 }

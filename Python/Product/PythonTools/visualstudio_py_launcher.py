@@ -22,7 +22,7 @@ import os.path
 import sys
 import traceback
 try:
-    import visualstudio_py_debugger
+    import visualstudio_py_debugger as vspd
 except:
     traceback.print_exc()
     print('''
@@ -36,41 +36,28 @@ Press Enter to close. . .''')
         input()
     sys.exit(1)
 
-# arguments are working dir, port, normal arguments which should include a filename to execute
+# Arguments are:
+# 1. Working directory.
+# 2. VS debugger port to connect to.
+# 3. GUID for the debug session.
+# 4. Debug options (as integer - see enum PythonDebugOptions).
+# 5. '-m' or '-c' to override the default run-as mode. [optional]
+# 6. Startup script name.
+# 7. Script arguments.
 
 # change to directory we expected to start from
 os.chdir(sys.argv[1])
 
 port_num = int(sys.argv[2])
 debug_id = sys.argv[3]
-del sys.argv[0:4]
-
-wait_on_exception = False
-redirect_output = False
-wait_on_exit = False
-break_on_systemexit_zero = False
-debug_stdlib = False
-django_debugging = False
-run_as = 'script'
-
-for opt in [
-    # Order is important for these options.
-    'wait_on_exception',
-    'wait_on_exit',
-    'redirect_output',
-    'break_on_systemexit_zero',
-    'debug_stdlib',
-    'django_debugging'
-]:
-    if sys.argv and sys.argv[0] == '--' + opt.replace('_', '-'):
-        globals()[opt] = True
-        del sys.argv[0]
+debug_options = vspd.parse_debug_options(sys.argv[4])
+del sys.argv[0:5]
 
 # set run_as mode appropriately
+run_as = 'script'
 if sys.argv and sys.argv[0] == '-m':
     run_as = 'module'
     del sys.argv[0]
-
 if sys.argv and sys.argv[0] == '-c':
     run_as = 'code'
     del sys.argv[0]
@@ -82,21 +69,10 @@ filename = sys.argv[0]
 sys.path[0] = ''
 
 # exclude ourselves from being debugged
-visualstudio_py_debugger.DONT_DEBUG.append(os.path.normcase(__file__))
+vspd.DONT_DEBUG.append(os.path.normcase(__file__))
 
 # remove all state we imported
 del sys, os
 
 # and start debugging
-visualstudio_py_debugger.debug(
-    filename, 
-    port_num, 
-    debug_id, 
-    wait_on_exception, 
-    redirect_output, 
-    wait_on_exit,
-    break_on_systemexit_zero,
-    debug_stdlib,
-    django_debugging,
-    run_as
-)
+vspd.debug(filename, port_num, debug_id, debug_options, run_as)

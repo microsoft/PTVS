@@ -65,7 +65,7 @@ namespace Microsoft.PythonTools.Debugger {
             _dirMapping = new List<string[]>();
         }
 
-        private PythonProcess(int pid) {
+        private PythonProcess(int pid, PythonDebugOptions debugOptions) {
             _pid = pid;
             _process = Process.GetProcessById(pid);
             _process.EnableRaisingEvents = true;
@@ -73,7 +73,7 @@ namespace Microsoft.PythonTools.Debugger {
 
             ListenForConnection();
 
-            using (var result = DebugAttach.AttachAD7(pid, DebugConnectionListener.ListenerPort, _processGuid)) {
+            using (var result = DebugAttach.AttachAD7(pid, DebugConnectionListener.ListenerPort, _processGuid, debugOptions.ToString())) {
                 if (result.Error != ConnErrorMessages.None) {
                     throw new ConnectionException(result.Error);
                 }
@@ -121,12 +121,7 @@ namespace Microsoft.PythonTools.Debugger {
                 "\"" + dir + "\" " +
                 " " + DebugConnectionListener.ListenerPort + " " +
                 " " + _processGuid + " " +
-                (((options & PythonDebugOptions.WaitOnAbnormalExit) != 0) ? " --wait-on-exception " : "") +
-                (((options & PythonDebugOptions.WaitOnNormalExit) != 0) ? " --wait-on-exit " : "") +
-                (((options & PythonDebugOptions.RedirectOutput) != 0) ? " --redirect-output " : "") +
-                (((options & PythonDebugOptions.BreakOnSystemExitZero) != 0) ? " --break-on-systemexit-zero " : "") +
-                (((options & PythonDebugOptions.DebugStdLib) != 0) ? " --debug-stdlib " : "") +
-                (((options & PythonDebugOptions.DjangoDebugging) != 0) ? " --django-debugging " : "") +
+                "\"" + options + "\" " +
                 args;
 
             if (env != null) {
@@ -146,8 +141,8 @@ namespace Microsoft.PythonTools.Debugger {
             _process.Exited += new EventHandler(_process_Exited);
         }
 
-        public static PythonProcess Attach(int pid) {
-            return new PythonProcess(pid);
+        public static PythonProcess Attach(int pid, PythonDebugOptions debugOptions = PythonDebugOptions.None) {
+            return new PythonProcess(pid, debugOptions);
         }
 
         public static PythonProcess AttachRepl(Stream stream, int pid, PythonLanguageVersion version) {

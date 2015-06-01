@@ -18,8 +18,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization;
-using System.Text;
-using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.VisualStudio.Debugger;
 using Microsoft.VisualStudio.Debugger.Breakpoints;
 using Microsoft.VisualStudio.Debugger.CallStack;
@@ -112,7 +110,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
                 Debug.Fail("EnableRuntimeBreakpoint called before TraceMananger is initialized.");
                 throw new InvalidOperationException();
             }
-            
+
             var loc = new SourceLocation(instrAddr.AdditionalData);
             bp.SetDataItem(DkmDataCreationDisposition.CreateNew, loc);
             traceManager.AddBreakpoint(bp);

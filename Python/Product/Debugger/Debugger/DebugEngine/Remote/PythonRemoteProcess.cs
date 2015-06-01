@@ -14,6 +14,7 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using System.Net.Sockets;
 using System.Security.Authentication;
 using System.Text;
@@ -25,7 +26,7 @@ using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Debugger.Remote {
     internal class PythonRemoteProcess : PythonProcess {
-        public const byte DebuggerProtocolVersion = 5; // must be kept in sync with PTVSDBG_VER in attach_server.py
+        public const byte DebuggerProtocolVersion = 6; // must be kept in sync with PTVSDBG_VER in attach_server.py
         public const string DebuggerSignature = "PTVSDBG";
         public const string Accepted = "ACPT";
         public const string Rejected = "RJCT";
@@ -44,17 +45,17 @@ namespace Microsoft.PythonTools.Debugger.Remote {
 
         internal string TargetHostType { get; private set; }
 
-        internal void ParseQueryString() {
+        private void ParseQueryString() {
             if (Uri != null && Uri.Query != null) {
                 var queryParts = HttpUtility.ParseQueryString(Uri.Query);
 
-                var sourceDir = queryParts[AD7Engine.SourceDirectoryKey];
-                var targetDir = queryParts[AD7Engine.TargetDirectoryKey];
-
                 TargetHostType = queryParts[AD7Engine.TargetHostType];
 
-                if (!string.IsNullOrWhiteSpace(sourceDir) && !string.IsNullOrWhiteSpace(targetDir))
+                var sourceDir = queryParts[AD7Engine.SourceDirectoryKey];
+                var targetDir = queryParts[AD7Engine.TargetDirectoryKey];
+                if (!string.IsNullOrWhiteSpace(sourceDir) && !string.IsNullOrWhiteSpace(targetDir)) {
                     AddDirMapping(new string[] { sourceDir, targetDir });
+                }
             }
         }
 
@@ -136,9 +137,20 @@ namespace Microsoft.PythonTools.Debugger.Remote {
         }
 
         public static PythonProcess Attach(Uri uri, bool warnAboutAuthenticationErrors) {
+            string debugOptions = "";
+            if (uri.Query != null) {
+                // It is possible to have more than one opt=... in the URI - the debug engine will always supply one based on
+                // the options that it gets from VS, but the user can also explicitly specify it directly in the URI when doing
+                // ptvsd attach (this is currently the only way to enable some flags when attaching, e.g. Django debugging).
+                // ParseQueryString will automatically concat them all into a single value using commas.
+                var queryParts = HttpUtility.ParseQueryString(uri.Query);
+                debugOptions = queryParts[AD7Engine.DebugOptionsKey] ?? "";
+            }
+
             var stream = Connect(uri, warnAboutAuthenticationErrors);
             try {
                 stream.Write(AttachCommandBytes);
+                stream.WriteString(debugOptions);
 
                 string attachResp = stream.ReadAsciiString(Accepted.Length);
                 if (attachResp != Accepted) {
