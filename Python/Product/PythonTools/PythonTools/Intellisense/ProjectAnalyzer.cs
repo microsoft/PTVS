@@ -580,21 +580,26 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal static SourceLocation TranslateIndex(int index, ITextSnapshot fromSnapshot, ModuleAnalysis toAnalysisSnapshot) {
-            var snapshotCookie = toAnalysisSnapshot.AnalysisCookie as SnapshotCookie;
+            SnapshotCookie snapshotCookie;
             // TODO: buffers differ in the REPL window case, in the future we should handle this better
-            if (snapshotCookie != null &&
+            if (toAnalysisSnapshot != null &&
                 fromSnapshot != null &&
+                (snapshotCookie = toAnalysisSnapshot.AnalysisCookie as SnapshotCookie) != null &&
+                snapshotCookie.Snapshot != null &&
                 snapshotCookie.Snapshot.TextBuffer == fromSnapshot.TextBuffer) {
 
                 var fromPoint = new SnapshotPoint(fromSnapshot, index);
                 var fromLine = fromPoint.GetContainingLine();
                 var toPoint = fromPoint.TranslateTo(snapshotCookie.Snapshot, PointTrackingMode.Negative);
                 var toLine = toPoint.GetContainingLine();
-                
+
+                Debug.Assert(fromLine != null, "Unable to get 'from' line from " + fromPoint.ToString());
+                Debug.Assert(toLine != null, "Unable to get 'to' line from " + toPoint.ToString());
+
                 return new SourceLocation(
                     toPoint.Position,
-                    toLine.LineNumber + 1,
-                    index - fromLine.Start.Position + 1
+                    toLine != null ? toLine.LineNumber + 1 : fromLine != null ? fromLine.LineNumber + 1 : 1,
+                    index - (fromLine != null ? fromLine.Start.Position + 1 : 0)
                 );
             } else if (fromSnapshot != null) {
                 var fromPoint = new SnapshotPoint(fromSnapshot, index);

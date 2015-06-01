@@ -100,6 +100,10 @@ namespace Microsoft.PythonTools.Intellisense {
             var startPos = line.Start.Position + line.GetText().IndexOf("def");
 
             var analysis = GetAnalysisEntry();
+            if (analysis == null) {
+                return null;
+            }
+
             var snapshot = TextBuffer.CurrentSnapshot;
             var pos = VsProjectAnalyzer.TranslateIndex(startPos, snapshot, analysis);
 
