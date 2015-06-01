@@ -8,7 +8,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectFile Include="$(BuildRoot)\Common\dirs.proj"/>
     <ProjectFile Include="Product\dirs.proj"/>
     <ProjectFile Include="Tests\dirs.proj" Condition="$(IncludeTests)" />
     <ProjectFile Include="Setup\dirs.proj" Condition="$(IncludeSetup)" />
