@@ -91,12 +91,13 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         async void InterpretersChanged(object sender, EventArgs e) {
-            var interpreter = _interpreterService.FindInterpreter(Interpreter.Id, Interpreter.Configuration.Version);
-            if (interpreter != null && interpreter != _interpreter) {
-                // if the previous interpreter was not available, we will want
-                // to reset afterwards
-                bool resetAfter = _interpreter is UnavailableFactory;
+            var current = _interpreter;
+            if (current == null) {
+                return;
+            }
 
+            var interpreter = _interpreterService.FindInterpreter(current.Id, current.Configuration.Version);
+            if (interpreter != null && interpreter != current) {
                 // the interpreter has been reconfigured, we want the new settings
                 _interpreter = interpreter;
                 if (_replAnalyzer != null) {
@@ -113,7 +114,9 @@ namespace Microsoft.PythonTools.Repl {
                     }
                 }
 
-                if (resetAfter) {
+                // if the previous interpreter was not available, we will want
+                // to reset afterwards
+                if (current is UnavailableFactory) {
                     await Reset();
                 }
             }
