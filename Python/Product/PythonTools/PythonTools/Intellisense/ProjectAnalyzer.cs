@@ -598,8 +598,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
                 return new SourceLocation(
                     toPoint.Position,
-                    toLine != null ? toLine.LineNumber + 1 : fromLine != null ? fromLine.LineNumber + 1 : 1,
-                    index - (fromLine != null ? fromLine.Start.Position + 1 : 0)
+                    (toLine != null ? toLine.LineNumber : fromLine != null ? fromLine.LineNumber : 0) + 1,
+                    index - (fromLine != null ? fromLine.Start.Position : 0) + 1
                 );
             } else if (fromSnapshot != null) {
                 var fromPoint = new SnapshotPoint(fromSnapshot, index);
