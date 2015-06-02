@@ -33,6 +33,7 @@
     <None Include="EnumChildTest.py" />
     <None Include="ExceptionalExit.py" />
     <None Include="FinallyExceptions.py" />
+    <None Include="ImportLibException.py" />
     <None Include="imports_other.py" />
     <None Include="is_imported.py" />
     <None Include="LocalsTest.py" />

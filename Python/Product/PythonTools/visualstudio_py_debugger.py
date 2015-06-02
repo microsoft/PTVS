@@ -128,6 +128,8 @@ class SynthesizedValue(object):
 DONT_DEBUG = [path.normcase(__file__), path.normcase(_vspu.__file__)]
 if sys.version_info >= (3, 3):
     DONT_DEBUG.append(path.normcase('<frozen importlib._bootstrap>'))
+if sys.version_info >= (3, 5):
+    DONT_DEBUG.append(path.normcase('<frozen importlib._bootstrap_external>'))
 
 # Contains information about all breakpoints in the process. Keys are line numbers on which
 # there are breakpoints in any file, and values are dicts. For every line number, the
