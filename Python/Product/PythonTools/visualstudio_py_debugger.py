@@ -13,6 +13,12 @@
  # ###########################################################################
 
 from __future__ import with_statement
+
+# This module MUST NOT import threading in global scope. This is because in a direct (non-ptvsd)
+# attach scenario, it is loaded on the injected debugger attach thread, and if threading module
+# hasn't been loaded already, it will assume that the thread on which it is being loaded is the
+# main thread. This will cause issues when the thread goes away after attach completes.
+
 import sys
 import ctypes
 try:
@@ -2127,16 +2133,23 @@ def write_object(conn, obj_type, obj_repr, hex_repr, type_name, obj_len, flags =
 
 debugger_thread_id = -1
 _INTERCEPTING_FOR_ATTACH = False
+
 def intercept_threads(for_attach = False):
     thread.start_new_thread = thread_creator
     thread.start_new = thread_creator
+
+    # If threading has already been imported (i.e. we're attaching), we must hot-patch threading._start_new_thread
+    # so that new threads started using it will be intercepted by our code.
+    #
+    # On the other hand, if threading has not been imported, we must not import it ourselves, because it will then
+    # treat the current thread as the main thread, which is incorrect when attaching because this code is executing
+    # on an ephemeral debugger attach thread that will go away shortly. We don't need to hot-patch it in that case
+    # anyway, because it will pick up the new thread.start_new_thread that we have set above when it's imported.
     global threading
-    if threading is None:
-        # we need to patch threading._start_new_thread so that 
-        # we pick up new threads in the attach case when threading
-        # is already imported.
+    if threading is None and 'threading' in sys.modules:
         import threading
         threading._start_new_thread = thread_creator
+
     global _INTERCEPTING_FOR_ATTACH
     _INTERCEPTING_FOR_ATTACH = for_attach
 
