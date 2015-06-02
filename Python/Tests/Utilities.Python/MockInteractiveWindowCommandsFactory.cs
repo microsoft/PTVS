@@ -63,9 +63,8 @@ namespace TestUtilities.Python {
         public string CommandPrefix { get; private set; }
 
         public bool InCommand {
-            get {
-                throw new NotImplementedException();
-            }
+            get;
+            private set;
         }
 
         public IEnumerable<ClassificationSpan> Classify(SnapshotSpan span) {
@@ -93,7 +92,10 @@ namespace TestUtilities.Python {
             Console.WriteLine("Executing {0} in REPL", input);
             var args = input.Split(new[] { ' ' }, 2);
             var command = this[args[0]];
-            return command == null ? null : command.Execute(_window, args[1]);
+            InCommand = true;
+            var res = command == null ? null : command.Execute(_window, args[1]);
+            InCommand = false;
+            return res;
         }
     }
 }

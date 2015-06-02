@@ -25,6 +25,7 @@ using Microsoft.PythonTools.Parsing;
 using Microsoft.Scripting.Hosting;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.VisualStudio.Text.Tagging;
 using Microsoft.VisualStudio.Utilities;
 using TestUtilities;
@@ -68,7 +69,8 @@ namespace PythonToolsTests {
             
             try {
                 var serviceProvider = PythonToolsTestUtilities.CreateMockServiceProvider();
-                var errorProvider = (MockErrorProviderFactory)serviceProvider.GetService(typeof(MockErrorProviderFactory));
+                var errorProvider = serviceProvider.ComponentModel.GetService<IErrorProviderFactory>();
+                Assert.IsNotNull(errorProvider, "Error provider factory is not available");
                 var analyzer = new VsProjectAnalyzer(serviceProvider, fact, new[] { fact });
                 buffer.AddProperty(typeof(VsProjectAnalyzer), analyzer);
                 var classifierProvider = new PythonClassifierProvider(new MockContentTypeRegistryService(PythonCoreConstants.ContentType), serviceProvider);

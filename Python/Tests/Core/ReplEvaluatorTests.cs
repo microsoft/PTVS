@@ -178,7 +178,9 @@ g()",
             var python = PythonPaths.Python27 ?? PythonPaths.Python27_x64 ?? PythonPaths.Python26 ?? PythonPaths.Python26_x64;
             python.AssertInstalled();
             var provider = new SimpleFactoryProvider(python.InterpreterPath, python.InterpreterPath);
-            return new PythonReplEvaluator(provider.GetInterpreterFactories().First(), PythonToolsTestUtilities.CreateMockServiceProvider(), new ReplTestReplOptions());
+            var eval = new PythonReplEvaluator(provider.GetInterpreterFactories().First(), PythonToolsTestUtilities.CreateMockServiceProvider(), new ReplTestReplOptions());
+            Assert.IsTrue(eval._Initialize(new MockReplWindow(eval)).Result.IsSuccessful);
+            return eval;
         }
 
         class SimpleFactoryProvider : IPythonInterpreterFactoryProvider {
