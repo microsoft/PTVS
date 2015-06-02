@@ -117,7 +117,7 @@
     </When>
     <Otherwise>
       <ItemGroup>
-        <ProjectReference Include="..\..\Product\ReplWindow\ReplWindow.csproj">
+        <ProjectReference Include="$(BuildRoot)Python\Product\ReplWindow\ReplWindow.csproj">
           <Project>{20BB6FAC-44D2-4D76-ABFE-0C1E163A1A4F}</Project>
           <Private>false</Private>
           <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
