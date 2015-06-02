@@ -463,6 +463,23 @@ namespace DebuggerUITests {
             }
         }
 
+        // https://github.com/Microsoft/PTVS/issues/275
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("VSTestHost")]
+        public void TestExceptionInImportLibNotReported() {
+            using (var app = new VisualStudioApp()) {
+                bool justMyCode = (bool)app.Dte.Properties["Debugging", "General"].Item("EnableJustMyCode").Value;
+                app.Dte.Properties["Debugging", "General"].Item("EnableJustMyCode").Value = true;
+                try {
+                    OpenDebuggerProjectAndBreak(app, "ImportLibException.py", 2);
+                    app.Dte.Debugger.Go(WaitForBreakOrEnd: true);
+                    Assert.AreEqual(dbgDebugMode.dbgDesignMode, app.Dte.Debugger.CurrentMode);
+                } finally {
+                    app.Dte.Properties["Debugging", "General"].Item("EnableJustMyCode").Value = justMyCode;
+                }
+            }
+        }
+
         private static void ExceptionTest(string filename, string expectedTitle, string expectedDescription, string exceptionType, int expectedLine) {
             using (var app = new VisualStudioApp()) {
                 var debug3 = (Debugger3)app.Dte.Debugger;
