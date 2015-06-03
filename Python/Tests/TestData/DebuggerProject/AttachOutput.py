@@ -1,6 +1,8 @@
 import sys
 
-while type(sys.stdout).__name__ != '_DebuggerOutput': pass
+attached = False # the test will manually set it to true after breaking on 'pass'
+while not attached:
+    pass
 
 sys.stdout.write('stdout')
 sys.stderr.write('stderr')

@@ -877,7 +877,7 @@ namespace DebuggerTests {
             // Bug 503: http://pytools.codeplex.com/workitem/503
             StepTest(Path.Combine(DebuggerTestPath, "SteppingTestBug503.py"),
                 new[] { 6, 12 },
-                new Action<PythonProcess>[] { 
+                new Action<PythonProcess>[] {
                     (x) => {},
                     (x) => {},
                 },
@@ -1263,7 +1263,7 @@ namespace DebuggerTests {
         [TestMethod, Priority(0)]
         public void TestBreakpointsConditionalWhenTrue() {
             new BreakpointTest(this, "BreakpointTest2.py") {
-                Breakpoints = { 
+                Breakpoints = {
                     new Breakpoint(3) {
                         ConditionKind = PythonBreakpointConditionKind.WhenTrue,
                         Condition = "i == 1",
@@ -1302,7 +1302,7 @@ namespace DebuggerTests {
             var expectedHitCounts = new Queue<int>(new[] { 3, 6, 9 });
 
             new BreakpointTest(this, "BreakpointTest5.py") {
-                Breakpoints = { 
+                Breakpoints = {
                     new Breakpoint(3) {
                         PassCountKind = PythonBreakpointPassCountKind.Every,
                         PassCount = 3,
@@ -1322,7 +1322,7 @@ namespace DebuggerTests {
         [TestMethod, Priority(0)]
         public void TestBreakpointsPassCountWhenEqual() {
             new BreakpointTest(this, "BreakpointTest5.py") {
-                Breakpoints = { 
+                Breakpoints = {
                     new Breakpoint(3) {
                         PassCountKind = PythonBreakpointPassCountKind.WhenEqual,
                         PassCount = 5,
@@ -1342,7 +1342,7 @@ namespace DebuggerTests {
             var expectedHitCounts = new Queue<int>(new[] { 8, 9, 10 });
 
             new BreakpointTest(this, "BreakpointTest5.py") {
-                Breakpoints = { 
+                Breakpoints = {
                     new Breakpoint(3) {
                         PassCountKind = PythonBreakpointPassCountKind.WhenEqualOrGreater,
                         PassCount = 8,
@@ -1362,7 +1362,7 @@ namespace DebuggerTests {
         [TestMethod, Priority(0)]
         public void TestBreakpointsPassCountAndCondition() {
             new BreakpointTest(this, "BreakpointTest5.py") {
-                Breakpoints = { 
+                Breakpoints = {
                     new Breakpoint(3) {
                         ConditionKind = PythonBreakpointConditionKind.WhenTrue,
                         Condition = "i % 2 == 0",
@@ -1426,7 +1426,7 @@ namespace DebuggerTests {
 
             new BreakpointTest(this, "CallStackTest.py") {
                 WaitForExit = false,
-                Breakpoints = { 
+                Breakpoints = {
                     new Breakpoint(7) {
                         OnHit = args => {
                             var actualNames = args.Thread.Frames.Select(f => f.GetQualifiedFunctionName());
@@ -2589,8 +2589,8 @@ int main(int argc, char* argv[]) {
         }
 
         [TestMethod, Priority(0)]
-        public void AttachWithOutputRedirection() {
-            var expectedOutput = new Queue<string>(new[] { "stdout", "stderr" });
+        public virtual void AttachWithOutputRedirection() {
+            var expectedOutput = new[] { "stdout", "stderr" };
 
             string script = TestData.GetPath(@"TestData\DebuggerProject\AttachOutput.py");
             var p = Process.Start(Version.InterpreterPath, "\"" + script + "\"");
@@ -2598,23 +2598,41 @@ int main(int argc, char* argv[]) {
                 Thread.Sleep(1000);
                 var proc = PythonProcess.Attach(p.Id, PythonDebugOptions.RedirectOutput);
                 try {
-                    proc.DebuggerOutput += (sender, e) => {
-                        if (expectedOutput.Count != 0) {
-                            Assert.AreEqual(expectedOutput.Dequeue(), e.Output);
-                        }
-                    };
-
                     var attached = new AutoResetEvent(false);
                     proc.ProcessLoaded += (sender, args) => {
                         Console.WriteLine("Process loaded");
-                        proc.Resume();
                         attached.Set();
                     };
                     proc.StartListening();
-                    Assert.IsTrue(attached.WaitOne(20000), "Failed to attach within 20s");
 
+                    Assert.IsTrue(attached.WaitOne(20000), "Failed to attach within 20s");
+                    proc.Resume();
+
+                    var bpHit = new AutoResetEvent(false);
+                    PythonThread thread = null;
+                    proc.BreakpointHit += (sender, args) => {
+                        thread = args.Thread;
+                        bpHit.Set();
+                    };
+                    var bp = proc.AddBreakPoint(script, 5);
+                    bp.Add();
+
+                    Assert.IsTrue(bpHit.WaitOne(20000), "Failed to hit breakpoint within 20s");
+                    Assert.IsNotNull(thread);
+
+                    var actualOutput = new List<string>();
+                    proc.DebuggerOutput += (sender, e) => {
+                        Console.WriteLine("Debugger output: '{0}'", e.Output);
+                        actualOutput.Add(e.Output);
+                    };
+
+                    var frame = thread.Frames[0];
+                    Assert.AreEqual("False", frame.ExecuteTextAsync("attached").Result.StringRepr);
+                    Assert.IsTrue(frame.ExecuteTextAsync("attached = True").Wait(20000), "Failed to complete evaluation within 20s");
+
+                    proc.Resume();
                     proc.WaitForExit();
-                    Assert.IsTrue(expectedOutput.Count == 0);
+                    AssertUtil.ArrayEquals(expectedOutput, actualOutput);
                 } finally {
                     DetachProcess(proc);
                 }
@@ -2668,7 +2686,7 @@ int main(int argc, char* argv[]) {
                     Assert.IsTrue(bpHit.WaitOne(20000), "Failed to hit breakpoint within 20s");
 
                     p.WaitForExit();
-                    AssertUtil.ArrayEquals(actualOutput, expectedOutput);
+                    AssertUtil.ArrayEquals(expectedOutput, actualOutput);
                 } finally {
                     DetachProcess(proc);
                 }
@@ -3105,6 +3123,7 @@ int main(int argc, char* argv[]) {
         public override void AttachThreadingStartNewThread() { }
         public override void AttachTimeoutThreadsInitialized() { }
         public override void AttachTimeout() { }
+        public override void AttachWithOutputRedirection() { }
 
         protected override string UnassignedLocalRepr {
             get { return "None"; }
