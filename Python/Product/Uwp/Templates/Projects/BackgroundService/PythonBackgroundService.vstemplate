@@ -7,7 +7,7 @@
     <SortOrder>2000</SortOrder>
     <NumberOfParentCategoriesToRollUp>0</NumberOfParentCategoriesToRollUp>
     <CreateNewFolder>true</CreateNewFolder>
-    <TemplateID>Microsoft.Ptvs.WinRT.UWP.IOT.BackgroundApplication</TemplateID>
+    <TemplateID>Microsoft.Ptvs.UWP.IOT.BackgroundApplication</TemplateID>
     <DefaultName>BackgroundApplication</DefaultName>
     <ProvideDefaultName>true</ProvideDefaultName>
     <TargetPlatformName>Windows</TargetPlatformName>
@@ -23,9 +23,5 @@
   <WizardExtension>
     <Assembly>Microsoft.VisualStudio.WinRT.TemplateWizards, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</Assembly>
     <FullClassName>Microsoft.VisualStudio.WinRT.TemplateWizards.CreateProjectCertificate.Wizard</FullClassName>
-  </WizardExtension>
-  <WizardExtension>
-    <Assembly>Microsoft.VisualStudio.WinRT.TemplateWizards, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</Assembly>
-    <FullClassName>Microsoft.VisualStudio.WinRT.TemplateWizards.PlatformVersion.Wizard</FullClassName>
   </WizardExtension>
 </VSTemplate>
