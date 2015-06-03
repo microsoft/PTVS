@@ -13,6 +13,13 @@
  # ###########################################################################
 
 from __future__ import with_statement
+
+# This module MUST NOT import threading in global scope. This is because in a direct (non-ptvsd)
+# attach scenario, it is loaded on the injected debugger attach thread, and if threading module
+# hasn't been loaded already, it will assume that the thread on which it is being loaded is the
+# main thread. This will cause issues when the thread goes away after attach completes.
+_threading = None
+
 import sys
 import ctypes
 try:
@@ -1526,12 +1533,11 @@ class Thread(object):
                     write_object(conn, type_obj, safe_repr_obj, hex_repr_obj, type_name, obj_len)
 
     def enum_thread_frames_locally(self):
-        global threading
-        if threading is None:
+        global _threading
+        if _threading is None:
             import threading
-        self.send_frame_list(self.get_frame_list(), getattr(threading.currentThread(), 'name', 'Python Thread'))
-
-threading = None
+            _threading = threading
+        self.send_frame_list(self.get_frame_list(), getattr(_threading.currentThread(), 'name', 'Python Thread'))
 
 class Module(object):
     """tracks information about a loaded module"""
@@ -2127,16 +2133,24 @@ def write_object(conn, obj_type, obj_repr, hex_repr, type_name, obj_len, flags =
 
 debugger_thread_id = -1
 _INTERCEPTING_FOR_ATTACH = False
+
 def intercept_threads(for_attach = False):
     thread.start_new_thread = thread_creator
     thread.start_new = thread_creator
-    global threading
-    if threading is None:
-        # we need to patch threading._start_new_thread so that 
-        # we pick up new threads in the attach case when threading
-        # is already imported.
+
+    # If threading has already been imported (i.e. we're attaching), we must hot-patch threading._start_new_thread
+    # so that new threads started using it will be intercepted by our code.
+    #
+    # On the other hand, if threading has not been imported, we must not import it ourselves, because it will then
+    # treat the current thread as the main thread, which is incorrect when attaching because this code is executing
+    # on an ephemeral debugger attach thread that will go away shortly. We don't need to hot-patch it in that case
+    # anyway, because it will pick up the new thread.start_new_thread that we have set above when it's imported.
+    global _threading
+    if _threading is None and 'threading' in sys.modules:
         import threading
-        threading._start_new_thread = thread_creator
+        _threading = threading
+        _threading._start_new_thread = thread_creator
+
     global _INTERCEPTING_FOR_ATTACH
     _INTERCEPTING_FOR_ATTACH = for_attach
 
@@ -2458,11 +2472,12 @@ def debug(file, port_num, debug_id, debug_options, run_as = 'script'):
 
         # Give VS debugger a chance to process commands
         # by waiting for ack of "last" command
-        global threading
-        if threading is None:
+        global _threading
+        if _threading is None:
             import threading
+            _threading = threading
         global last_ack_event
-        last_ack_event = threading.Event()
+        last_ack_event = _threading.Event()
         with _SendLockCtx:
             write_bytes(conn, LAST)
         last_ack_event.wait(5)

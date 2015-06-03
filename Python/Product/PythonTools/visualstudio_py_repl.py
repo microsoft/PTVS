@@ -14,6 +14,11 @@
 
 from __future__ import with_statement
 
+# This module MUST NOT import threading in global scope. This is because in a direct (non-ptvsd)
+# attach scenario, it is loaded on the injected debugger attach thread, and if threading module
+# hasn't been loaded already, it will assume that the thread on which it is being loaded is the
+# main thread. This will cause issues when the thread goes away after attach completes.
+
 try:
     import thread
 except ImportError:
@@ -24,7 +29,6 @@ try:
 except:
     SSLError = None
 
-import threading
 import sys
 import socket
 import select
@@ -162,6 +166,7 @@ actual inspection and introspection."""
     _MODC = to_bytes('MODC')
     
     def __init__(self):
+        import threading
         self.conn = None
         self.send_lock = SafeSendLock()
         self.input_event = threading.Lock()
@@ -526,6 +531,7 @@ class BasicReplBackend(ReplBackend):
 
     """Basic back end which executes all Python code in-proc"""
     def __init__(self, mod_name = '__main__', launch_file = None):
+        import threading
         ReplBackend.__init__(self)
         if mod_name is not None:
             if sys.platform == 'cli':
