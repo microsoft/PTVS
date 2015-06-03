@@ -1,6 +1,6 @@
 import sys
 
-attached = False
+attached = False # the test will manually set it to true after breaking on 'pass'
 while not attached:
     pass
 
