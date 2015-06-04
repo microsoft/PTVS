@@ -17,6 +17,8 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Intellisense;
+using Microsoft.PythonTools.Project;
+using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Language.NavigateTo.Interfaces;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -27,7 +29,6 @@ namespace Microsoft.PythonTools.Navigation.NavigateTo {
     internal class PythonNavigateToItemProvider : INavigateToItemProvider {
         private readonly IServiceProvider _serviceProvider;
         private readonly IGlyphService _glyphService;
-        private Task _searchTask;
         private CancellationTokenSource _searchCts;
 
         // Used to propagate information to PythonNavigateToItemDisplay inside NavigateToItem.Tag.
@@ -50,6 +51,8 @@ namespace Microsoft.PythonTools.Navigation.NavigateTo {
             private readonly FuzzyStringMatcher _comparer, _regexComparer;
             private readonly PythonToolsService _pyService;
 
+            private static readonly Guid _projectType = new Guid(PythonConstants.ProjectFactoryGuid);
+
             public LibraryNodeVisitor(PythonToolsService pyService, PythonNavigateToItemProvider itemProvider, INavigateToCallback navCallback, string searchValue) {
                 _pyService = pyService;
                 _itemProvider = itemProvider;
@@ -64,6 +67,21 @@ namespace Microsoft.PythonTools.Navigation.NavigateTo {
                 if (ct.IsCancellationRequested) {
                     _navCallback.Invalidate();
                     return false;
+                }
+
+                IVsHierarchy hierarchy;
+                uint itemId, itemsCount;
+                Guid projectType;
+                node.SourceItems(out hierarchy, out itemId, out itemsCount);
+                if (hierarchy != null) {
+                    ErrorHandler.ThrowOnFailure(hierarchy.GetGuidProperty(
+                        (uint)VSConstants.VSITEMID.Root,
+                        (int)__VSHPROPID.VSHPROPID_TypeGuid,
+                        out projectType
+                    ));
+                    if (projectType != _projectType) {
+                        return false;
+                    }
                 }
 
                 var parentNode = _path.Peek();
@@ -129,21 +147,32 @@ namespace Microsoft.PythonTools.Navigation.NavigateTo {
             var libraryManager = (LibraryManager)_serviceProvider.GetService(typeof(IPythonLibraryManager));
             var library = libraryManager.Library;
 
-            if (_searchCts != null) {
-                _searchCts.Dispose();
+            var searchCts = new CancellationTokenSource();
+            var oldCts = Interlocked.Exchange(ref _searchCts, searchCts);
+            if (oldCts != null) {
+                oldCts.Dispose();
             }
-            _searchCts = new CancellationTokenSource();
-            var pyService = (PythonToolsService)_serviceProvider.GetService(typeof(PythonToolsService));
-            _searchTask = Task.Factory.StartNew(() => library.VisitNodes(new LibraryNodeVisitor(pyService, this, callback, searchValue), _searchCts.Token), _searchCts.Token);
+            var pyService = _serviceProvider.GetPythonToolsService();
+            Task.Run(() => {
+                try {
+                    library.VisitNodes(new LibraryNodeVisitor(pyService, this, callback, searchValue), searchCts.Token);
+                } finally {
+                    callback.Done();
+                }
+            }, _searchCts.Token).HandleAllExceptions(SR.ProductName, GetType()).DoNotWait();
         }
 
         public void StopSearch() {
-            _searchCts.Cancel();
+            var cts = Volatile.Read(ref _searchCts);
+            if (cts != null) {
+                cts.Cancel();
+            }
         }
 
         public void Dispose() {
-            if (_searchCts != null) {
-                _searchCts.Dispose();
+            var cts = Interlocked.Exchange(ref _searchCts, null);
+            if (cts != null) {
+                cts.Dispose();
             }
         }
     }
