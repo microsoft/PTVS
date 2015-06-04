@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.Reflection;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Options {
@@ -20,6 +21,16 @@ namespace Microsoft.PythonTools.Options {
         public InterpreterPlaceholder(Guid id, string description) {
             Id = id;
             Description = description;
+            Configuration = new InterpreterConfiguration(
+                null,
+                null,
+                null,
+                null,
+                null,
+                ProcessorArchitecture.None,
+                null,
+                InterpreterUIMode.Normal
+            );
         }
         
         public string Description {
@@ -27,11 +38,7 @@ namespace Microsoft.PythonTools.Options {
             private set;
         }
 
-        public InterpreterConfiguration Configuration {
-            get {
-                throw new NotSupportedException();
-            }
-        }
+        public InterpreterConfiguration Configuration { get; private set; }
 
         public Guid Id {
             get;

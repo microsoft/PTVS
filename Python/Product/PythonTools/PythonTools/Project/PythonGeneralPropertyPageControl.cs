@@ -67,24 +67,23 @@ namespace Microsoft.PythonTools.Project {
                 _defaultInterpreter.Items.Clear();
                 var provider = _propPage.PythonProject != null ? _propPage.PythonProject.Interpreters : null;
                 var available = provider != null ? provider.GetInterpreterFactories().ToArray() : null;
+                var globalInterpreters = _service.Interpreters.Where(f => f.IsUIVisible() && f.CanBeDefault()).ToList();
                 if (available != null && available.Length > 0) {
-                    var others = _service.Interpreters.ToList();
-
                     foreach (var interpreter in available) {
                         _defaultInterpreter.Items.Add(interpreter);
-                        others.Remove(interpreter);
+                        globalInterpreters.Remove(interpreter);
                     }
 
-                    if (others.Count > 0) {
+                    if (globalInterpreters.Any()) {
                         _defaultInterpreter.Items.Add(Separator);
-                        foreach (var interpreter in others) {
+                        foreach (var interpreter in globalInterpreters) {
                             _defaultInterpreter.Items.Add(interpreter);
                         }
                     }
                 } else {
                     _defaultInterpreter.Items.Add(GlobalDefault);
 
-                    foreach (var interpreter in _service.Interpreters) {
+                    foreach (var interpreter in globalInterpreters) {
                         _defaultInterpreter.Items.Add(interpreter);
                     }
                 }
