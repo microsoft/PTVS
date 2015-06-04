@@ -79,6 +79,13 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             textView.Properties.AddProperty(typeof(IntellisenseController), this);  // added so our key processors can get back to us
+            _textView.Closed += TextView_Closed;
+        }
+
+        private void TextView_Closed(object sender, EventArgs e) {
+            _textView.MouseHover -= TextViewMouseHover;
+            _textView.Closed -= TextView_Closed;
+            _textView.Properties.RemoveProperty(typeof(IntellisenseController));
         }
 
         internal void SetBufferParser(BufferParser bufferParser) {

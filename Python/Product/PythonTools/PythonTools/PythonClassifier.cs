@@ -26,7 +26,7 @@ namespace Microsoft.PythonTools {
     /// <summary>
     /// Provides classification based upon the DLR TokenCategory enum.
     /// </summary>
-    internal class PythonClassifier : IClassifier {
+    internal sealed class PythonClassifier : IClassifier, IDisposable {
         private readonly TokenCache _tokenCache;
         private readonly PythonClassifierProvider _provider;
         private readonly ITextBuffer _buffer;
@@ -46,6 +46,11 @@ namespace Microsoft.PythonTools {
             var analyzer = _buffer.GetAnalyzer(provider._serviceProvider);
             Debug.Assert(analyzer != null);
             _version = analyzer.InterpreterFactory.GetLanguageVersion();
+        }
+
+        void IDisposable.Dispose() {
+            _buffer.Changed -= BufferChanged;
+            _buffer.ContentTypeChanged -= BufferContentTypeChanged;
         }
 
         internal void NewVersion() {

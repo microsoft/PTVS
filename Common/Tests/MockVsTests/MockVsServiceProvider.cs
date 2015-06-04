@@ -27,10 +27,13 @@ using IOleServiceProvider = Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
 namespace Microsoft.VisualStudioTools.MockVsTests {
     [Export(typeof(SVsServiceProvider))]
     [Export(typeof(MockVsServiceProvider))]
-    public class MockVsServiceProvider : SVsServiceProvider, IOleServiceProvider, IServiceContainer {
+    public class MockVsServiceProvider : SVsServiceProvider, IOleServiceProvider, IServiceContainer, IDisposable {
         private readonly MockVs _vs;
-        private Dictionary<Type, object> _servicesByType = new Dictionary<Type, object>();
-        private Dictionary<Guid, object> _servicesByGuid = new Dictionary<Guid, object>();
+        private readonly Dictionary<Type, object> _servicesByType = new Dictionary<Type, object>();
+        private readonly Dictionary<Guid, object> _servicesByGuid = new Dictionary<Guid, object>();
+        private readonly Dictionary<Type, ServiceCreatorCallback> _serviceCreatorByType = new Dictionary<Type, ServiceCreatorCallback>();
+        private readonly List<IDisposable> _disposeAtEnd = new List<IDisposable>();
+        private bool _isDisposed;
 
         [ImportingConstructor]
         public MockVsServiceProvider(MockVs mockVs) {
@@ -66,6 +69,17 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
                 return res;
             }
 
+            ServiceCreatorCallback creator;
+            if (_serviceCreatorByType.TryGetValue(serviceType, out creator)) {
+                _servicesByType[serviceType] = res = creator(this, serviceType);
+                _serviceCreatorByType.Remove(serviceType);
+                var disposable = res as IDisposable;
+                if (disposable != null) {
+                    _disposeAtEnd.Add(disposable);
+                }
+                return res;
+            }
+
             Console.WriteLine("Unknown service: " + serviceType.FullName);
             return null;
         }
@@ -87,21 +101,35 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         public void AddService(Type serviceType, ServiceCreatorCallback callback, bool promote) {
-            AddService(serviceType, callback(this, serviceType), promote);
+            _serviceCreatorByType[serviceType] = callback;
         }
 
         public void AddService(Type serviceType, ServiceCreatorCallback callback) {
-            AddService(serviceType, callback(this, serviceType));
+            _serviceCreatorByType[serviceType] = callback;
         }
 
         public void RemoveService(Type serviceType, bool promote) {
             _servicesByType.Remove(serviceType);
             _servicesByGuid.Remove(serviceType.GUID);
+            _serviceCreatorByType.Remove(serviceType);
         }
 
         public void RemoveService(Type serviceType) {
             _servicesByType.Remove(serviceType);
-            _servicesByGuid.Remove(serviceType.GUID);
+            _serviceCreatorByType.Remove(serviceType);
+        }
+
+        public void Dispose() {
+            if (!_isDisposed) {
+                _isDisposed = true;
+                foreach (var d in _disposeAtEnd) {
+                    d.Dispose();
+                }
+                _disposeAtEnd.Clear();
+                _servicesByType.Clear();
+                _servicesByGuid.Clear();
+                _serviceCreatorByType.Clear();
+            }
         }
     }
 }

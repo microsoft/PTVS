@@ -32,6 +32,7 @@ using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.OLE.Interop;
+using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudioTools;
 
@@ -40,9 +41,7 @@ namespace Microsoft.PythonTools {
     /// <summary>
     /// Provides services and state which need to be available to various PTVS components.
     /// </summary>
-    [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",
-        Justification = "Object will never be disposed")]
-    public sealed class PythonToolsService {
+    public sealed class PythonToolsService : IDisposable {
         private readonly IServiceContainer _container;
         private LanguagePreferences _langPrefs;
         private IPythonToolsOptionsService _optionsService;
@@ -60,6 +59,9 @@ namespace Microsoft.PythonTools {
         private readonly IdleManager _idleManager;
         private Func<CodeFormattingOptions> _optionsFactory;
         private const string _formattingCat = "Formatting";
+        private uint _langPrefsTextManagerCookie;
+
+        private readonly Dictionary<IVsCodeWindow, CodeWindowManager> _codeWindowManagers = new Dictionary<IVsCodeWindow, CodeWindowManager>();
 
         private readonly object _suppressEnvironmentsLock = new object();
         private int _suppressEnvironmentsChanged;
@@ -78,13 +80,12 @@ namespace Microsoft.PythonTools {
                 var langPrefs = new LANGPREFERENCES[1];
                 langPrefs[0].guidLang = typeof(PythonLanguageInfo).GUID;
                 ErrorHandler.ThrowOnFailure(textMgr.GetUserPreferences(null, null, langPrefs, null));
-                _langPrefs = new LanguagePreferences(langPrefs[0]);
+                _langPrefs = new LanguagePreferences(this, langPrefs[0]);
 
                 Guid guid = typeof(IVsTextManagerEvents2).GUID;
                 IConnectionPoint connectionPoint;
                 ((IConnectionPointContainer)textMgr).FindConnectionPoint(ref guid, out connectionPoint);
-                uint cookie;
-                connectionPoint.Advise(_langPrefs, out cookie);
+                connectionPoint.Advise(_langPrefs, out _langPrefsTextManagerCookie);
             }
 
             _optionsService = (IPythonToolsOptionsService)container.GetService(typeof(IPythonToolsOptionsService));
@@ -105,6 +106,40 @@ namespace Microsoft.PythonTools {
 
             _logger = new PythonToolsLogger(ComponentModel.GetExtensions<IPythonToolsLogger>().ToArray());
             InitializeLogging();
+        }
+
+        void IDisposable.Dispose() {
+            // This will probably never be called by VS, but we use it in unit
+            // tests to avoid leaking memory when we reinitialize state between
+            // each test.
+
+            IDisposable disposable;
+
+            if (_langPrefs != null && _langPrefsTextManagerCookie != 0) {
+                IVsTextManager textMgr = (IVsTextManager)_container.GetService(typeof(SVsTextManager));
+                if (textMgr != null) {
+                    Guid guid = typeof(IVsTextManagerEvents2).GUID;
+                    IConnectionPoint connectionPoint;
+                    ((IConnectionPointContainer)textMgr).FindConnectionPoint(ref guid, out connectionPoint);
+                    connectionPoint.Unadvise(_langPrefsTextManagerCookie);
+                }
+            }
+            
+            if (_interpreterOptionsService != null) {
+                _interpreterOptionsService.InterpretersChanged -= InterpretersChanged;
+                _interpreterOptionsService.DefaultInterpreterChanged -= UpdateDefaultAnalyzer;
+            }
+
+            if ((disposable = _interpreterOptionsService as IDisposable) != null) {
+                disposable.Dispose();
+            }
+
+            _idleManager.Dispose();
+
+            foreach (var window in _codeWindowManagers.Values) {
+                window.RemoveAdornments();
+            }
+            _codeWindowManagers.Clear();
         }
 
         private void InitializeLogging() {
@@ -644,6 +679,21 @@ namespace Microsoft.PythonTools {
         internal void SetLanguagePreferences(LANGPREFERENCES2 langPrefs) {
             var txtMgr = (IVsTextManager2)_container.GetService(typeof(SVsTextManager));
             ErrorHandler.ThrowOnFailure(txtMgr.SetUserPreferences2(null, null, new [] { langPrefs }, null));
+        }
+
+        internal IEnumerable<CodeWindowManager> CodeWindowManagers {
+            get {
+                return _codeWindowManagers.Values;
+            }
+        }
+
+        internal CodeWindowManager GetOrCreateCodeWindowManager(IVsCodeWindow window) {
+            CodeWindowManager value;
+            if (!_codeWindowManagers.TryGetValue(window, out value)) {
+                _codeWindowManagers[window] = value = new CodeWindowManager(_container, window);
+                
+            }
+            return value;
         }
 
         #endregion

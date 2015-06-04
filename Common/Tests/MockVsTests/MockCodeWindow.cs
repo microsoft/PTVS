@@ -42,7 +42,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         public int GetLastActiveView(out IVsTextView ppView) {
-            throw new NotImplementedException();
+            return GetPrimaryView(out ppView);
         }
 
         public int GetPrimaryView(out IVsTextView ppView) {

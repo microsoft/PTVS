@@ -44,18 +44,9 @@ namespace Microsoft.PythonTools.Navigation {
         }
 
         public int GetCodeWindowManager(IVsCodeWindow pCodeWin, out IVsCodeWindowManager ppCodeWinMgr) {
-            var model = _serviceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
-            var service = model.GetService<IVsEditorAdaptersFactoryService>();
-            
-            IVsTextView textView;
-            if (ErrorHandler.Succeeded(pCodeWin.GetPrimaryView(out textView))) {
-                ppCodeWinMgr = new CodeWindowManager(_serviceProvider, pCodeWin, service.GetWpfTextView(textView));
-
-                return VSConstants.S_OK;
-            }
-
-            ppCodeWinMgr = null;
-            return VSConstants.E_FAIL;
+            var ptvsService = _serviceProvider.GetPythonToolsService();
+            ppCodeWinMgr = ptvsService.GetOrCreateCodeWindowManager(pCodeWin);
+            return VSConstants.S_OK;
         }
 
         public int GetFileExtensions(out string pbstrExtensions) {
