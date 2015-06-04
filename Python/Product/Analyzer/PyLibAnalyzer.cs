@@ -828,21 +828,29 @@ namespace Microsoft.PythonTools.Analysis {
 
             int modCount = 0;
             TraceInformation("Deleting {0} files", files.Count);
+            bool traceDelete = files.Count < 10;
             foreach (var file in files) {
                 if (_updater != null && ++modCount >= progressScale) {
                     modCount = 0;
                     _updater.UpdateStatus(++_progressOffset, _progressTotal, "Cleaning old files");
                 }
 
-                TraceVerbose("Deleting \"{0}\"", file);
                 if (_dryRun) {
                     TraceDryRun("DELETE:{0}", file);
                 } else {
+                    if (traceDelete) {
+                        // Extra logging for occasional issues where a few files
+                        // always get deleted.
+                        TraceInformation("Deleting \"{0}\"", file);
+                    } else {
+                        TraceVerbose("Deleting \"{0}\"", file);
+                    }
                     try {
                         File.Delete(file);
                         File.Delete(file + ".$memlist");
                         var dirName = Path.GetDirectoryName(file);
                         if (!Directory.EnumerateFileSystemEntries(dirName, "*", SearchOption.TopDirectoryOnly).Any()) {
+                            TraceVerbose("Removing empty directory \"{0}\"", dirName);
                             Directory.Delete(dirName);
                         }
                     } catch (ArgumentException) {
