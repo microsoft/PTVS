@@ -84,11 +84,9 @@ namespace PythonToolsUITests {
 
                 app.OpenSolutionExplorer().FindItem("Solution 'Commands1' (1 project)", "Commands1").Select();
 
-                AutomationWrapper projectMenu = null;
-                for (int retries = 10; retries > 0 && projectMenu == null; --retries) {
-                    Thread.Sleep(100);
-                    projectMenu = app.FindByAutomationId("MenuBar").AsWrapper().FindByName("Project").AsWrapper();
-                }
+                var menuBar = app.FindByAutomationId("MenuBar").AsWrapper();
+                Assert.IsNotNull(menuBar, "Unable to find menu bar");
+                var projectMenu = menuBar.FindByName("Project").AsWrapper();
                 Assert.IsNotNull(projectMenu, "Unable to find Project menu");
                 projectMenu.Element.EnsureExpanded();
 
@@ -352,7 +350,8 @@ namespace PythonToolsUITests {
                 app.WaitForNoDialog(TimeSpan.FromSeconds(5.0));
 
                 // First, execute the command and cancel it.
-                using (var task = ExecuteAsync(node, "Require Packages")) {
+                var task = ExecuteAsync(node, "Require Packages");
+                try {
                     var dialogHandle = app.WaitForDialog(task);
                     if (dialogHandle == IntPtr.Zero) {
                         if (task.IsFaulted && task.Exception != null) {
@@ -363,17 +362,15 @@ namespace PythonToolsUITests {
                     }
 
                     using (var dialog = new AutomationDialog(app, AutomationElement.FromHandle(dialogHandle))) {
-                        var label = dialog.FindByAutomationId("65535");
+                        var label = dialog.FindByAutomationId("CommandLink_1000");
                         Assert.IsNotNull(label);
 
                         string expectedLabel =
-                            "The following packages will be installed from PyPI in order to run this command:\r\n" +
+                            "The following packages will be installed using pip:\r\n" +
                             "\r\n" +
                             "ptvsd\r\n" +
-                            "azure==0.1\r\n" +
-                            "\r\n" +
-                            "Do you want to continue?";
-                        Assert.AreEqual(expectedLabel, label.Current.Name);
+                            "azure==0.1"; ;
+                        Assert.AreEqual(expectedLabel, label.Current.HelpText);
 
                         dialog.Cancel();
                         try {
@@ -385,10 +382,19 @@ namespace PythonToolsUITests {
                             }
                         }
                     }
+                } finally {
+                    if (!task.IsCanceled && !task.IsCompleted && !task.IsFaulted) {
+                        if (task.Wait(10000)) {
+                            task.Dispose();
+                        }
+                    } else {
+                        task.Dispose();
+                    }
                 }
 
                 // Then, execute command and allow it to proceed.
-                using (var task = ExecuteAsync(node, "Require Packages")) {
+                task = ExecuteAsync(node, "Require Packages");
+                try {
                     var dialogHandle = app.WaitForDialog(task);
                     if (dialogHandle == IntPtr.Zero) {
                         if (task.IsFaulted && task.Exception != null) {
@@ -399,12 +405,20 @@ namespace PythonToolsUITests {
                     }
 
                     using (var dialog = new AutomationDialog(app, AutomationElement.FromHandle(dialogHandle))) {
-                        dialog.OK();
+                        dialog.ClickButtonAndClose("CommandLink_1000", nameIsAutomationId: true);
                     }
                     task.Wait();
 
                     var ver = PythonVersion.Version.ToVersion();
                     ExpectOutputWindowText(app, string.Format("pass {0}.{1}", ver.Major, ver.Minor));
+                } finally {
+                    if (!task.IsCanceled && !task.IsCompleted && !task.IsFaulted) {
+                        if (task.Wait(10000)) {
+                            task.Dispose();
+                        }
+                    } else {
+                        task.Dispose();
+                    }
                 }
             }
         }

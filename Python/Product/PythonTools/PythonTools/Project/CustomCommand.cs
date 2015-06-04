@@ -422,7 +422,7 @@ namespace Microsoft.PythonTools.Project {
                         OutputWindowRedirector.GetGeneral(project.Site));
                 } else if (selectedButton == runAnywayButton) {
                 } else {
-                    return;
+                    throw new TaskCanceledException();
                 }
             }
 

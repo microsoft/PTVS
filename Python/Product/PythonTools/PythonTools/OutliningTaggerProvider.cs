@@ -137,7 +137,9 @@ namespace Microsoft.PythonTools {
             internal static IEnumerable<TagSpan> ProcessOutliningTags(PythonAst ast, ITextSnapshot snapshot) {
                 var walker = new OutliningWalker(snapshot);
                 ast.Walk(walker);
-                return walker.TagSpans;
+                return walker.TagSpans
+                    .GroupBy(s => s.Span.Start.GetContainingLine().LineNumber)
+                    .Select(ss => ss.OrderBy(s => s.Span.End.GetContainingLine().LineNumber - ss.Key).Last());
             }
 
             internal static IEnumerable<TagSpan> ProcessRegionTags(ITextSnapshot snapshot){
