@@ -4802,7 +4802,7 @@ namespace Microsoft.PythonTools.Parsing {
         /// New in 1.1.
         /// </summary>
         public static Encoding GetEncodingFromStream(Stream stream) {
-            return GetStreamReaderWithEncoding(stream, PythonAsciiEncoding.Instance, ErrorSink.Null).CurrentEncoding;
+            return GetStreamReaderWithEncoding(stream, Encoding.UTF8, ErrorSink.Null).CurrentEncoding;
         }
 
         private static StreamReader/*!*/ GetStreamReaderWithEncoding(Stream/*!*/ stream, Encoding/*!*/ defaultEncoding, ErrorSink errors) {
