@@ -15,6 +15,7 @@ class ViewTest(TestCase):
         # Django 1.7 requires an explicit setup() when running tests in PTVS
         @classmethod
         def setUpClass(cls):
+            super(ViewTest, cls).setUpClass()
             django.setup()
 
     def test_home(self):
