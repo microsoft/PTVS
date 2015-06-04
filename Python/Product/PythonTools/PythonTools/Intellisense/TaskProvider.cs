@@ -531,7 +531,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     cts.CancelAfter(1000);
                 }
             } catch (OperationCanceledException) {
-                // Occurs if we accidentally call Apply() on 
+                // Occurs if we accidentally call Apply() on AbortMessage.
             } finally {
                 cts.Dispose();
             }
