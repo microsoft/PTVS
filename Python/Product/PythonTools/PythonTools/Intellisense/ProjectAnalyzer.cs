@@ -648,9 +648,10 @@ namespace Microsoft.PythonTools.Intellisense {
             var nameExpr = GetFirstNameExpression(analysis.GetAstFromText(text, location).Body);
 
             if (nameExpr != null && !IsImplicitlyDefinedName(nameExpr)) {
+                var name = nameExpr.Name;
                 lock (snapshot.TextBuffer.GetAnalyzer(serviceProvider)) {
-                    var hasVariables = analysis.GetVariables(text, location).Any(IsDefinition);
-                    var hasValues = analysis.GetValues(text, location).Any();
+                    var hasVariables = analysis.GetVariables(name, location).Any(IsDefinition);
+                    var hasValues = analysis.GetValues(name, location).Any();
 
                     // if we have type information or an assignment to the variable we won't offer 
                     // an import smart tag.
@@ -659,7 +660,7 @@ namespace Microsoft.PythonTools.Intellisense {
                             exprRange.Value.Span,
                             SpanTrackingMode.EdgeExclusive
                         );
-                        return new MissingImportAnalysis(nameExpr.Name, analysis.ProjectState, applicableSpan);
+                        return new MissingImportAnalysis(name, analysis.ProjectState, applicableSpan);
                     }
                 }
             }
