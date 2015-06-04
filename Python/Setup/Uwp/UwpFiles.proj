@@ -8,9 +8,11 @@
   <ItemDefinitionGroup>
     <File>
       <IncludeInWD>false</IncludeInWD>
+      <IncludeInVWD>false</IncludeInVWD>
     </File>
     <ItemTemplate>
       <IncludeInWD>false</IncludeInWD>
+      <IncludeInVWD>false</IncludeInVWD>
     </ItemTemplate>
   </ItemDefinitionGroup>
 
