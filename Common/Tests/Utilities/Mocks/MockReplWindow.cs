@@ -294,6 +294,20 @@ namespace TestUtilities.Mocks {
             return new Span(start, _output.Length - start);
         }
 
+        // TODO: Make explicit implementation after dropping Dev14 RC support
+        public Span WriteError(string text) {
+            var start = _error.Length;
+            _error.Append(text);
+            return new Span(start, _error.Length - start);
+        }
+
+        // TODO: Make explicit implementation after dropping Dev14 RC support
+        public Span WriteErrorLine(string text) {
+            var start = _error.Length;
+            _error.AppendLine(text);
+            return new Span(start, _error.Length - start);
+        }
+
         public Task SubmitAsync(IEnumerable<string> inputs) {
             throw new NotImplementedException();
         }
