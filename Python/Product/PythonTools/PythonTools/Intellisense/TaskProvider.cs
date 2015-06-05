@@ -236,6 +236,10 @@ namespace Microsoft.PythonTools.Intellisense {
             return new FlushMessage(taskSource, DateTime.Now);
         }
 
+        public static WorkerMessage Abort() {
+            return new AbortMessage();
+        }
+
         // Message implementations
         sealed class ReplaceMessage : WorkerMessage {
             public ReplaceMessage(EntryKey key, List<TaskProviderItem> items)
@@ -298,6 +302,15 @@ namespace Microsoft.PythonTools.Intellisense {
                 return false;
             }
         }
+
+        internal sealed class AbortMessage : WorkerMessage {
+            public AbortMessage() : base() { }
+
+            public override bool Apply(Dictionary<EntryKey, List<TaskProviderItem>> items, object itemsLock) {
+                Debug.Fail("Should not ever apply an AbortMessage");
+                throw new OperationCanceledException();
+            }
+        }
     }
 
     abstract class TaskProvider : IVsTaskProvider, IDisposable {
@@ -309,8 +322,9 @@ namespace Microsoft.PythonTools.Intellisense {
         internal readonly IErrorProviderFactory _errorProvider;
         protected readonly IServiceProvider _serviceProvider;
 
-        private bool _hasWorker;
-        private readonly BlockingCollection<WorkerMessage> _workerQueue;
+        private readonly SemaphoreSlim _workerRunning = new SemaphoreSlim(1, 1);
+        private readonly Queue<WorkerMessage> _workerQueue = new Queue<WorkerMessage>();
+        private readonly ManualResetEventSlim _workerQueueChanged = new ManualResetEventSlim();
 
         public TaskProvider(IServiceProvider serviceProvider, IVsTaskList taskList, IErrorProviderFactory errorProvider) {
             _serviceProvider = serviceProvider;
@@ -319,7 +333,6 @@ namespace Microsoft.PythonTools.Intellisense {
 
             _taskList = taskList;
             _errorProvider = errorProvider;
-            _workerQueue = new BlockingCollection<WorkerMessage>();
         }
 
         public void Dispose() {
@@ -327,20 +340,33 @@ namespace Microsoft.PythonTools.Intellisense {
             GC.SuppressFinalize(this);
         }
 
+        /// <summary>
+        /// Stops the worker and blocks it from starting again. This should be
+        /// called prior to disposal in contexts where it is possible to use
+        /// await. Otherwise, Dispose() will call this and block on the current
+        /// thread.
+        /// </summary>
+        internal async Task<bool> StopAsync(TimeSpan timeout) {
+            if (_workerRunning.Wait(0)) {
+                return true;
+            }
+
+            lock (_workerQueue) {
+                _workerQueue.Clear();
+                _workerQueue.Enqueue(WorkerMessage.Abort());
+                _workerQueueChanged.Set();
+            }
+            return await _workerRunning.WaitAsync(timeout);
+        }
+
         protected virtual void Dispose(bool disposing) {
             if (disposing) {
-                lock (_workerQueue) {
-                    if (_hasWorker) {
-                        _hasWorker = false;
-                        _workerQueue.CompleteAdding();
-                    } else {
-                        _workerQueue.Dispose();
-                    }
-                }
+                bool stopped = StopAsync(TimeSpan.FromSeconds(10)).WaitAndUnwrapExceptions();
+                Debug.Assert(stopped, "Failed to terminate TaskProvider worker thread");
+
                 lock (_itemsLock) {
                     _items.Clear();
                 }
-                RefreshAsync().DoNotWait();
                 if (_taskList != null) {
                     _taskList.UnregisterTaskProvider(_cookie);
                 }
@@ -436,6 +462,15 @@ namespace Microsoft.PythonTools.Intellisense {
         #region Internal Worker Thread
 
         private void Worker() {
+            _workerRunning.Wait();
+            try {
+                WorkerWorker();
+            } finally {
+                _workerRunning.Release();
+            }
+        }
+
+        private void WorkerWorker() {
             var flushMessages = new Queue<WorkerMessage>();
             var cts = new CancellationTokenSource();
             bool changed = false;
@@ -446,44 +481,59 @@ namespace Microsoft.PythonTools.Intellisense {
                 // should be at least one message or the worker would not have
                 // been started.
 
-                foreach (var msg in _workerQueue.GetConsumingEnumerable(cts.Token)) {
+                var wh = new[] { cts.Token.WaitHandle, _workerQueueChanged.WaitHandle};
+
+                while (WaitHandle.WaitAny(wh) == 0) {
                     // Prevent timeouts while processing the message
                     cts.CancelAfter(-1);
 
-                    if (msg is WorkerMessage.FlushMessage) {
-                        // Keep flush messages until we've exited the loop
-                        flushMessages.Enqueue(msg);
-                    } else {
-                        // Apply the message to our collection
-                        changed |= msg.Apply(_items, _itemsLock);
+                    // Reset event and handle all messages in the queue
+                    _workerQueueChanged.Reset();
+
+                    while (!cts.IsCancellationRequested) {
+                        WorkerMessage msg;
+                        lock (_workerQueue) {
+                            if (_workerQueue.Count == 0) {
+                                break;
+                            }
+                            msg = _workerQueue.Dequeue();
+                        }
+
+                        if (msg is WorkerMessage.AbortMessage) {
+                            // Ignore flush messages and cancel the loop
+                            flushMessages.Clear();
+                            cts.Cancel();
+                            break;
+                        } else if (msg is WorkerMessage.FlushMessage) {
+                            // Keep flush messages until we've exited the loop
+                            flushMessages.Enqueue(msg);
+                        } else {
+                            // Apply the message to our collection
+                            changed |= msg.Apply(_items, _itemsLock);
+                        }
+
+                        // Every second, we want to force another update
+                        if (changed) {
+                            var currentTime = DateTime.Now;
+                            if ((currentTime - lastUpdateTime).TotalMilliseconds > 1000) {
+                                Refresh();
+                                lastUpdateTime = currentTime;
+                                changed = false;
+                            }
+                        }
                     }
 
-                    // Every second, we want to force another update
-                    if (changed) {
-                        var currentTime = DateTime.Now;
-                        if ((currentTime - lastUpdateTime).TotalMilliseconds > 1000) {
-                            Refresh();
-                            lastUpdateTime = currentTime;
-                            changed = false;
-                        }
+                    if (cts.IsCancellationRequested) {
+                        break;
                     }
 
                     // Reset the timeout back to 1 second
                     cts.CancelAfter(1000);
                 }
             } catch (OperationCanceledException) {
-                // Expected when the timeout expires
-            } catch (ObjectDisposedException ex) {
-                // We have been disposed.
-                Debug.Assert(
-                    ex.ObjectName == "BlockingCollection",
-                    "Handled ObjectDisposedException for the wrong type"
-                );
-                return;
+                // Occurs if we accidentally call Apply() on AbortMessage.
             } finally {
-                lock (_workerQueue) {
-                    _hasWorker = false;
-                }
+                cts.Dispose();
             }
 
             // Handle any changes that weren't handled in the loop
@@ -495,13 +545,6 @@ namespace Microsoft.PythonTools.Intellisense {
             while (flushMessages.Any()) {
                 var msg = flushMessages.Dequeue();
                 msg.Apply(_items, _itemsLock);
-            }
-
-            try {
-                if (_workerQueue.IsCompleted) {
-                    _workerQueue.Dispose();
-                }
-            } catch (ObjectDisposedException) {
             }
         }
 
@@ -583,16 +626,15 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private void SendMessage(WorkerMessage message) {
             lock (_workerQueue) {
+                _workerQueue.Enqueue(message);
+                _workerQueueChanged.Set();
+            }
+
+            if (_workerRunning.Wait(0)) {
                 try {
-                    _workerQueue.Add(message);
-                } catch (InvalidOperationException) {
-                    return;
-                }
-                if (!_hasWorker) {
-                    _hasWorker = true;
-                    Task.Run(() => Worker())
-                        .HandleAllExceptions(SR.ProductName, GetType())
-                        .DoNotWait();
+                    Task.Run(() => Worker()).HandleAllExceptions(SR.ProductName, GetType()).DoNotWait();
+                } finally {
+                    _workerRunning.Release();
                 }
             }
         }

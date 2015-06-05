@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.ComponentModel.Design;
 using Microsoft.PythonTools;
+using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Navigation;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Project;
@@ -24,6 +25,7 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Settings;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.MockVsTests;
 using TestUtilities.Mocks;
@@ -55,31 +57,11 @@ namespace PythonToolsMockTests {
             _serviceContainer.AddService(typeof(IClipboardService), new MockClipboardService());
             UIThread.EnsureService(_serviceContainer);
 
-            _serviceContainer.AddService(
-                typeof(Microsoft.PythonTools.Intellisense.ErrorTaskProvider),
-                new ServiceCreatorCallback((container, type) => {
-                    var p = new Microsoft.PythonTools.Intellisense.ErrorTaskProvider(_serviceContainer, null, errorProvider);
-                    lock (_onDispose) {
-                        _onDispose.Add(() => p.Dispose());
-                    }
-                    return p;
-                }), 
-                true
-            );
-
-            _serviceContainer.AddService(
-                typeof(Microsoft.PythonTools.Intellisense.CommentTaskProvider),
-                new ServiceCreatorCallback((container, type) => {
-                    var p = new Microsoft.PythonTools.Intellisense.CommentTaskProvider(_serviceContainer, null, errorProvider);
-                    lock (_onDispose) {
-                        _onDispose.Add(() => p.Dispose());
-                    }
-                    return p;
-                }),
-                true
-            );
+            _serviceContainer.AddService(typeof(ErrorTaskProvider), CreateTaskProviderService, true);
+            _serviceContainer.AddService(typeof(CommentTaskProvider), CreateTaskProviderService, true);
 
             var pyService = new PythonToolsService(_serviceContainer);
+            _onDispose.Add(() => ((IDisposable)pyService).Dispose());
             _serviceContainer.AddService(typeof(PythonToolsService), pyService, true);
 
             _serviceContainer.AddService(typeof(IPythonLibraryManager), (object)null);
@@ -97,6 +79,17 @@ namespace PythonToolsMockTests {
 
         public void RemoveService(Type type) {
             _serviceContainer.RemoveService(type);
+        }
+
+        private static object CreateTaskProviderService(IServiceContainer container, Type type) {
+            var errorProvider = (IErrorProviderFactory)container.GetService(typeof(IErrorProviderFactory));
+            if (type == typeof(ErrorTaskProvider)) {
+                return new ErrorTaskProvider(container, null, errorProvider);
+            } else if (type == typeof(CommentTaskProvider)) {
+                return new CommentTaskProvider(container, null, errorProvider);
+            } else {
+                return null;
+            }
         }
 
         public void Dispose() {

@@ -84,9 +84,55 @@ namespace Microsoft.PythonTools.Navigation {
             _textView.Caret.PositionChanged += CaretPositionChanged;
         }
 
-        internal void Unregister() {
+        internal int Register(IVsDropdownBarManager manager) {
+            IVsDropdownBar dropDownBar;
+            int hr = manager.GetDropdownBar(out dropDownBar);
+            if (ErrorHandler.Succeeded(hr) && dropDownBar != null) {
+                hr = manager.RemoveDropdownBar();
+                if (!ErrorHandler.Succeeded(hr)) {
+                    return hr;
+                }
+            }
+
+            int res = manager.AddDropdownBar(2, this);
+            if (ErrorHandler.Succeeded(res)) {
+                // A buffer may have multiple DropDownBarClients, given one may
+                // open multiple CodeWindows over a single buffer using
+                // Window/New Window
+                var clients = _textView.Properties.GetOrCreateSingletonProperty(
+                    typeof(DropDownBarClient),
+                    () => new List<DropDownBarClient>()
+                );
+                clients.Add(this);
+            }
+
+            return res;
+        }
+
+        internal int Unregister(IVsDropdownBarManager manager) {
             _projectEntry.OnNewParseTree -= ParserOnNewParseTree;
             _textView.Caret.PositionChanged -= CaretPositionChanged;
+
+            // A buffer may have multiple DropDownBarClients, given one may open multiple CodeWindows
+            // over a single buffer using Window/New Window
+            List<DropDownBarClient> clients;
+            if (_textView.Properties.TryGetProperty(typeof(DropDownBarClient), out clients)) {
+                clients.Remove(this);
+                if (clients.Count == 0) {
+                    _textView.Properties.RemoveProperty(typeof(DropDownBarClient));
+                }
+            }
+
+#if DEBUG
+            IVsDropdownBar existing;
+            IVsDropdownBarClient existingClient;
+            if (ErrorHandler.Succeeded(manager.GetDropdownBar(out existing)) &&
+                ErrorHandler.Succeeded(existing.GetClient(out existingClient))) {
+                Debug.Assert(existingClient == this, "Unregistering the wrong dropdown client");
+            }
+#endif
+
+            return manager.RemoveDropdownBar();
         }
 
         public void UpdateView(IWpfTextView textView) {

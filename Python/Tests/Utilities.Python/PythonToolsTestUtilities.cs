@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.ComponentModel.Design;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Options;
@@ -48,7 +49,6 @@ namespace TestUtilities.Python {
         /// </summary>
         public static MockServiceProvider CreateMockServiceProvider() {
             var serviceProvider = new MockServiceProvider();
-            var errorProvider = new MockErrorProviderFactory();
 
             serviceProvider.ComponentModel.AddExtension(
                 typeof(IErrorProviderFactory),
@@ -66,16 +66,8 @@ namespace TestUtilities.Python {
             );
 #endif
 
-            serviceProvider.AddService(
-                typeof(ErrorTaskProvider),
-                (container, type) => new ErrorTaskProvider(serviceProvider, null, errorProvider),
-                true
-            );
-            serviceProvider.AddService(
-                typeof(CommentTaskProvider),
-                (container, type) => new CommentTaskProvider(serviceProvider, null, errorProvider),
-                true
-            );
+            serviceProvider.AddService(typeof(ErrorTaskProvider), CreateTaskProviderService, true);
+            serviceProvider.AddService(typeof(CommentTaskProvider), CreateTaskProviderService, true);
             serviceProvider.AddService(typeof(UIThreadBase), new MockUIThread());
             var optionsService = new MockPythonToolsOptionsService();
             serviceProvider.AddService(typeof(IPythonToolsOptionsService), optionsService, true);
@@ -83,6 +75,17 @@ namespace TestUtilities.Python {
             var ptvsService = new PythonToolsService(serviceProvider);
             serviceProvider.AddService(typeof(PythonToolsService), ptvsService);
             return serviceProvider;
+        }
+
+        private static object CreateTaskProviderService(IServiceContainer container, Type type) {
+            var errorProvider = container.GetComponentModel().GetService<IErrorProviderFactory>();
+            if (type == typeof(ErrorTaskProvider)) {
+                return new ErrorTaskProvider(container, null, errorProvider);
+            } else if (type == typeof(CommentTaskProvider)) {
+                return new CommentTaskProvider(container, null, errorProvider);
+            } else {
+                return null;
+            }
         }
 
     }

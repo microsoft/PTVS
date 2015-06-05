@@ -38,6 +38,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         private readonly IServiceProvider _serviceProvider;
         private readonly MockVs _vs;
         private IOleCommandTarget _commandTarget;
+        private IClassifier _classifier;
         private bool _isDisposed;
 
         public MockVsTextView(IServiceProvider serviceProvier, MockVs vs, MockTextView view) {
@@ -104,6 +105,10 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         public void Close() {
             var rdt = (IVsRunningDocumentTable)_serviceProvider.GetService(typeof(SVsRunningDocumentTable));
             rdt.UnlockDocument(0, ((MockVsTextLines)GetBuffer())._docCookie);
+            var disposable = _classifier as IDisposable;
+            if (disposable != null) {
+                disposable.Dispose();
+            }
             _view.Close();
         }
 
@@ -338,10 +343,13 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
 
         public IClassifier Classifier {
             get {
-                var compModel = (IComponentModel)_serviceProvider.GetService(typeof(SComponentModel));
+                if (_classifier == null) {
+                    var compModel = (IComponentModel)_serviceProvider.GetService(typeof(SComponentModel));
 
-                var provider = compModel.GetService<IClassifierAggregatorService>();
-                return provider.GetClassifier(TextView.TextBuffer);
+                    var provider = compModel.GetService<IClassifierAggregatorService>();
+                    _classifier = provider.GetClassifier(TextView.TextBuffer);
+                }
+                return _classifier;
             }
         }
 

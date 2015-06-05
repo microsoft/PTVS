@@ -14,13 +14,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
-using Microsoft.PythonTools;
-using Microsoft.PythonTools.Intellisense;
-using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Interpreter.Default;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Refactoring;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -30,7 +24,6 @@ using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.MockVsTests;
 using TestUtilities;
-using TestUtilities.Mocks;
 using TestUtilities.Python;
 
 namespace PythonToolsMockTests {
@@ -2438,6 +2431,7 @@ def g(a, b, c):
                     Assert.AreEqual(preview, previewChangesService.Previewed, preview ? "Changes were not previewed" : "Changes were previewed");
                     AssertUtil.ArrayEquals(inputs.Select(i => i.Output).ToList(), views.Select(v => v.Text).ToList());
                 } finally {
+                    views.Reverse();
                     foreach (var v in views) {
                         v.Dispose();
                     }

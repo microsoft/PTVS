@@ -66,6 +66,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         private readonly MockVsBuildManagerAccessor _buildManager = new MockVsBuildManagerAccessor();
         private readonly MockUIHierWinClipboardHelper _hierClipHelper = new MockUIHierWinClipboardHelper();
         internal readonly MockVsMonitorSelection _monSel;
+        internal readonly uint _monSelCookie;
         internal readonly MockVsUIHierarchyWindow _uiHierarchy;
         private readonly MockVsQueryEditQuerySave _queryEditSave = new MockVsQueryEditQuerySave();
         private readonly MockVsRunningDocumentTable _rdt;
@@ -125,11 +126,10 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
 
             UIShell.AddToolWindow(new Guid(ToolWindowGuids80.SolutionExplorer), new MockToolWindow(_uiHierarchy));
 
-            uint dummy;
             ErrorHandler.ThrowOnFailure(
                 _monSel.AdviseSelectionEvents(
                     new SelectionEvents(this),
-                    out dummy
+                    out _monSelCookie
                 )
             );
 
@@ -145,6 +145,19 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             }
             ThrowPendingException();
         }
+
+        public void Dispose() {
+            _shutdown = true;
+            _uiEvent.Set();
+            if (!UIThread.Join(TimeSpan.FromSeconds(30))) {
+                Console.WriteLine("Failed to wait for UI thread to terminate");
+            }
+            ThrowPendingException();
+            _monSel.UnadviseSelectionEvents(_monSelCookie);
+            AssertListener.ThrowUnhandled();
+            Container.Dispose();
+        }
+
 
         class SelectionEvents : IVsSelectionEvents {
             private readonly MockVs _vs;
@@ -337,14 +350,9 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
                 onCreate(res);
             }
 
-            foreach (var classifier in Container.GetExports<IClassifierProvider, IContentTypeMetadata>()) {
-                foreach (var targetContentType in classifier.Metadata.ContentTypes) {
-                    if (buffer.ContentType.IsOfType(targetContentType)) {
-                        classifier.Value.GetClassifier(buffer).GetClassificationSpans(
-                            new SnapshotSpan(buffer.CurrentSnapshot, 0, buffer.CurrentSnapshot.Length)
-                        );
-                    }
-                }
+            var classifier = res.Classifier;
+            if (classifier != null) {
+                classifier.GetClassificationSpans(new SnapshotSpan(buffer.CurrentSnapshot, 0, buffer.CurrentSnapshot.Length));
             }
 
             // Initialize code window
@@ -618,13 +626,6 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
 
         T IComponentModel.GetService<T>() {
             return Container.GetExportedValue<T>();
-        }
-
-        public void Dispose() {
-            _shutdown = true;
-            _uiEvent.Set();
-            ThrowPendingException();
-            AssertListener.ThrowUnhandled();
         }
 
 
