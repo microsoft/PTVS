@@ -62,6 +62,31 @@ namespace PythonToolsUITests {
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("VSTestHost")]
+        public void TemplateDirectories() {
+            var languageName = PythonVisualStudioApp.TemplateLanguageName;
+            using (var app = new VisualStudioApp()) {
+                var sln = (Solution2)app.Dte.Solution;
+
+                foreach (var templateName in new[] {
+#if DEV14_OR_LATER
+                    "BackgroundService.zip",
+#endif
+                    PythonVisualStudioApp.PythonApplicationTemplate,
+                    PythonVisualStudioApp.BottleWebProjectTemplate,
+                    PythonVisualStudioApp.DjangoWebProjectTemplate
+                }) {
+                    var templatePath = sln.GetProjectTemplate(templateName, languageName);
+                    Assert.IsTrue(
+                        File.Exists(templatePath) || Directory.Exists(templatePath),
+                        string.Format("Cannot find template '{0}' for language '{1}'", templateName, languageName)
+                    );
+                    Console.WriteLine("Found {0} at {1}", templateName, templatePath);
+                }
+            }
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("VSTestHost")]
         public void UserProjectFile() {
             using (var app = new VisualStudioApp()) {
                 var project = app.CreateProject(
