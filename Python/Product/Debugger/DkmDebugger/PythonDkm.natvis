@@ -14,7 +14,7 @@
 -->
 <AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
 
-  <IntrinsicFunction ReturnType="bool" Name="$PTVS_ShowPythonViewNodes" SourceId="27BEB234-72EC-4249-89F3-4298266AE282" LanguageId="DA3C7D59-F9E4-4697-BEE7-3A0703AF6BFF" Id="1" />
+  <Intrinsic ReturnType="bool" Name="$PTVS_ShowPythonViewNodes" SourceId="27BEB234-72EC-4249-89F3-4298266AE282" LanguageId="DA3C7D59-F9E4-4697-BEE7-3A0703AF6BFF" Id="1" />
 
   <Type Name="_object">
     <DisplayString Condition="$PTVS_ShowPythonViewNodes()">
