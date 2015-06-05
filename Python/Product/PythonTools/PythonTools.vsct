@@ -237,7 +237,7 @@
           <ButtonText>Existing &amp;Folder...</ButtonText>
           <MenuText>Existing &amp;Folder...</MenuText>
           <ToolTipText>Adds a folder and its contents to this project.</ToolTipText>
-          <LocCanonicalName>AddExistingFolder</LocCanonicalName>
+          <LocCanonicalName>.Project.AddExistingFolder</LocCanonicalName>
         </Strings>
       </Button>
 

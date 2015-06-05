@@ -62,7 +62,7 @@ namespace ReplWindowUITests {
             replWindow.ClearScreen();
             var execute = replEval.ExecuteText("__name__");
             execute.Wait();
-            Assert.AreEqual(execute.Result, ExecutionResult.Success);
+            Assert.IsTrue(execute.Result.IsSuccessful);
             Assert.AreEqual(replWindow.Output, "'__main__'\r\n");
             replWindow.ClearScreen();
         }
@@ -74,7 +74,7 @@ namespace ReplWindowUITests {
             replEval._Initialize(replWindow).Wait();
             var execute = replEval.ExecuteText("from System import Array");
             execute.Wait();
-            Assert.AreEqual(execute.Result, ExecutionResult.Success);
+            Assert.IsTrue(execute.Result.IsSuccessful);
 
             var sigs = replEval.GetSignatureDocumentation("Array[int]");
             Assert.AreEqual(sigs.Length, 1);
@@ -89,7 +89,7 @@ namespace ReplWindowUITests {
             replEval._Initialize(replWindow).Wait();
             var execute = replEval.ExecuteText("#fob\n1+2");
             execute.Wait();
-            Assert.AreEqual(execute.Result, ExecutionResult.Success);
+            Assert.IsTrue(execute.Result.IsSuccessful);
         }
 
         [TestMethod, Priority(0)]
@@ -100,7 +100,7 @@ namespace ReplWindowUITests {
             replEval._Initialize(replWindow).Wait();
             var execute = replEval.ExecuteText("import System");
             execute.Wait();
-            Assert.AreEqual(execute.Result, ExecutionResult.Success);
+            Assert.IsTrue(execute.Result.IsSuccessful);
             replWindow.ClearScreen();
 
             execute = replEval.ExecuteText("System.Console.WriteLine(42)");
@@ -108,12 +108,12 @@ namespace ReplWindowUITests {
             Assert.AreEqual(replWindow.Output, "42\r\n");
             replWindow.ClearScreen();
 
-            Assert.AreEqual(execute.Result, ExecutionResult.Success);
+            Assert.IsTrue(execute.Result.IsSuccessful);
 
             execute = replEval.ExecuteText("System.Console.Write(42)");
             execute.Wait();
 
-            Assert.AreEqual(execute.Result, ExecutionResult.Success);
+            Assert.IsTrue(execute.Result.IsSuccessful);
 
             Assert.AreEqual(replWindow.Output, "42");
         }
@@ -127,18 +127,18 @@ namespace ReplWindowUITests {
             replEval._Initialize(replWindow).Wait();
             var execute = replEval.ExecuteText("from System.Threading.Tasks import Task");
             execute.Wait();
-            Assert.AreEqual(execute.Result, ExecutionResult.Success);
+            Assert.IsTrue(execute.Result.IsSuccessful);
             replWindow.ClearScreen();
 
             execute = replEval.ExecuteText("def func1(): print 'hello world'\r\n\r\n");
             execute.Wait();
             replWindow.ClearScreen();
 
-            Assert.AreEqual(execute.Result, ExecutionResult.Success);
+            Assert.IsTrue(execute.Result.IsSuccessful);
 
             execute = replEval.ExecuteText("t = Task.Factory.StartNew(func1)");
             execute.Wait();
-            Assert.AreEqual(execute.Result, ExecutionResult.Success);
+            Assert.IsTrue(execute.Result.IsSuccessful);
 
             using (var analyzer = new VsProjectAnalyzer(PythonToolsTestUtilities.CreateMockServiceProvider(), fact, new[] { fact })) {
                 replWindow.TextView.TextBuffer.Properties.AddProperty(typeof(VsProjectAnalyzer), analyzer);
@@ -158,7 +158,7 @@ namespace ReplWindowUITests {
             replEval._Initialize(replWindow).Wait();
             var execute = replEval.ExecuteText("import sys");
             execute.Wait();
-            Assert.AreEqual(execute.Result, ExecutionResult.Success);
+            Assert.IsTrue(execute.Result.IsSuccessful);
             replWindow.ClearScreen();
 
             execute = replEval.ExecuteText("sys.gettrace()");
@@ -178,7 +178,7 @@ namespace ReplWindowUITests {
             replEval._Initialize(replWindow).Wait();
             var execute = replEval.ExecuteText("# fob\r\n\r\n    \r\n\t\t\r\na = 42");
             execute.Wait();
-            Assert.AreEqual(execute.Result, ExecutionResult.Success);
+            Assert.IsTrue(execute.Result.IsSuccessful);
             replWindow.ClearScreen();
         }
 
@@ -201,13 +201,13 @@ namespace ReplWindowUITests {
             foreach (var line in code) {
                 var execute = replEval.ExecuteText(line);
                 execute.Wait();
-                Assert.AreEqual(execute.Result, ExecutionResult.Success);
+                Assert.IsTrue(execute.Result.IsSuccessful);
             }
 
             replWindow.ClearScreen();
             var finalExecute = replEval.ExecuteText("42");
             finalExecute.Wait();
-            Assert.AreEqual(finalExecute.Result, ExecutionResult.Success);
+            Assert.IsTrue(finalExecute.Result.IsSuccessful);
             Assert.AreEqual(replWindow.Output, "42\r\n");
         }
     }
