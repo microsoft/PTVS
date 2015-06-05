@@ -17,16 +17,6 @@ using System.Globalization;
 using Microsoft.VisualStudio.Shell;
 
 namespace Microsoft.PythonTools.Django {
-
-    /// <include file='doc\ProvideEditorExtensionAttribute.uex' path='docs/doc[@for="ProvideEditorExtensionAttribute"]' />
-    /// <devdoc>
-    ///     This attribute associates a file extension to a given editor factory.  
-    ///     The editor factory may be specified as either a GUID or a type and 
-    ///     is placed on a package.
-    ///     
-    /// This differs from the normal one in that more than one extension can be supplied and
-    /// a linked editor GUID can be supplied.
-    /// </devdoc>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = true)]
     internal sealed class ProvideLanguageTemplatesAttribute : RegistrationAttribute {
         private readonly string _projectFactory, _languageName, _package, _languageGuid, _description, _templateGroup,
@@ -45,8 +35,6 @@ namespace Microsoft.PythonTools.Django {
             _webProjectGuid = webProjectGuid;
         }
 
-
-        /// <include file='doc\ProvideEditorExtensionAttribute.uex' path='docs/doc[@for="Register"]' />
         /// <devdoc>
         ///     Called to register this attribute with the given context.  The context
         ///     contains the location where the registration inforomation should be placed.
