@@ -39,6 +39,14 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         const string VSRENAMEFILEFLAGS_NoFlags = "VSRENAMEFILEFLAGS_NoFlags";
         const string VSRENAMEFILEFLAGS_Directory = "VSRENAMEFILEFLAGS_Directory";
 
+        private static bool OnNoSccDialog(AutomationDialog dlg) {
+            if (dlg.Text.Contains("source control provider associated with this solution could not be found")) {
+                dlg.ClickButtonByName("No");
+                return true;
+            }
+            return false;
+        }
+
         /// <summary>
         /// https://nodejstools.codeplex.com/workitem/194
         /// 
@@ -82,7 +90,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     using (var solution = testDef.Generate()) {
                         TestSccProvider.DocumentEvents.Clear();
 
-                        var project = app.OpenProject(solution.Filename);
+                        var project = app.OpenProject(solution.Filename, onDialog: OnNoSccDialog);
                         var window = app.SolutionExplorerTreeView;
                         var folder = window.WaitForItem("Solution 'SourceControl' (1 project)", "SourceControl", "Fob", "Oar");
                         var point = folder.GetClickablePoint();
@@ -121,7 +129,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     using (var solution = testDef.Generate()) {
                         TestSccProvider.DocumentEvents.Clear();
 
-                        var project = app.OpenProject(solution.Filename);
+                        var project = app.OpenProject(solution.Filename, onDialog: OnNoSccDialog);
                         var fileName = "NewFile" + projectType.CodeExtension;
 
                         using (var newItem = NewItemDialog.FromDte(app)) {
@@ -154,7 +162,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     using (var solution = testDef.Generate()) {
                         TestSccProvider.DocumentEvents.Clear();
 
-                        var project = app.OpenProject(solution.Filename);
+                        var project = app.OpenProject(solution.Filename, onDialog: OnNoSccDialog);
                         var fileName = projectType.Code(@"ExcludedFile");
 
                         using (var newItem = AddExistingItemDialog.FromDte(app)) {
@@ -187,7 +195,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                     using (var solution = testDef.Generate().ToVs()) {
                         TestSccProvider.DocumentEvents.Clear();
-                        var project = app.OpenProject(solution.SolutionFilename);
+                        var project = app.OpenProject(solution.SolutionFilename, onDialog: OnNoSccDialog);
                         var window = app.SolutionExplorerTreeView;
                         var fileName = projectType.Code(@"ExcludedFile");
 
@@ -228,7 +236,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     using (var solution = testDef.Generate()) {
                         TestSccProvider.DocumentEvents.Clear();
 
-                        var project = app.OpenProject(solution.Filename);
+                        var project = app.OpenProject(solution.Filename, onDialog: OnNoSccDialog);
                         var window = app.SolutionExplorerTreeView;
                         var fileName = "Program" + projectType.CodeExtension;
                         var program = window.WaitForChildOfProject(project, fileName);
@@ -272,7 +280,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     var testDef = SourceControlProject(projectType);
 
                     using (var solution = testDef.Generate()) {
-                        var project = app.OpenProject(solution.Filename);
+                        var project = app.OpenProject(solution.Filename, onDialog: OnNoSccDialog);
 
                         Assert.AreEqual(1, TestSccProvider.LoadedProjects.Count);
 
@@ -317,7 +325,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                 foreach (var projectType in ProjectTypes) {
                     var testDef = SourceControlProject(projectType);
                     using (var solution = testDef.Generate()) {
-                        var project = app.OpenProject(solution.Filename);
+                        var project = app.OpenProject(solution.Filename, onDialog: OnNoSccDialog);
 
                         Assert.AreEqual(1, TestSccProvider.LoadedProjects.Count);
                         var sccProject = TestSccProvider.LoadedProjects.First();
@@ -370,7 +378,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                 foreach (var projectType in ProjectTypes) {
                     var testDef = NoSourceControlProject(projectType);
                     using (var solution = testDef.Generate()) {
-                        var project = app.OpenProject(solution.Filename);
+                        var project = app.OpenProject(solution.Filename, onDialog: OnNoSccDialog);
 
                         Assert.AreEqual(0, TestSccProvider.LoadedProjects.Count);
 
@@ -403,7 +411,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                         app.SelectSourceControlProvider("Test Source Provider");
 
-                        var project = app.OpenProject(solution.Filename);
+                        var project = app.OpenProject(solution.Filename, onDialog: OnNoSccDialog);
 
                         Assert.AreEqual(1, TestSccProvider.LoadedProjects.Count);
                         var sccProject = TestSccProvider.LoadedProjects.First();
@@ -435,7 +443,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                     using (var solution = SourceControlProject(projectType).Generate()) {
                         try {
-                            var project = app.OpenProject(solution.Filename);
+                            var project = app.OpenProject(solution.Filename, onDialog: OnNoSccDialog);
 
                             project.ProjectItems.Item("TestFolder").Name = "Renamed";
 

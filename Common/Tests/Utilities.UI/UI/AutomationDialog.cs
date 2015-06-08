@@ -81,5 +81,15 @@ namespace TestUtilities.UI {
         public virtual void Cancel() {
             ClickButtonAndClose("Cancel");
         }
+
+        public virtual string Text {
+            get {
+                var label = FindByAutomationId("65535");
+                if (label != null) {
+                    return label.Current.Name;
+                }
+                return "";
+            }
+        }
     }
 }

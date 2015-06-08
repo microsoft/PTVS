@@ -768,20 +768,47 @@ namespace TestUtilities.UI {
             return sln.Projects.Cast<Project>().FirstOrDefault(p => p.Name == projectName);
         }
 
-        public Project OpenProject(string projName, string startItem = null, int? expectedProjects = null, string projectName = null, bool setStartupItem = true) {
+        public Project OpenProject(
+            string projName,
+            string startItem = null,
+            int? expectedProjects = null,
+            string projectName = null,
+            bool setStartupItem = true,
+            Func<AutomationDialog, bool> onDialog = null
+        ) {
             string fullPath = TestData.GetPath(projName);
             Assert.IsTrue(File.Exists(fullPath), "Cannot find " + fullPath);
             Console.WriteLine("Opening {0}", fullPath);
 
             // If there is a .suo file, delete that so that there is no state carried over from another test.
-            for (int i = 10; i <= 12; ++i) {
+            for (int i = 10; i <= 14; ++i) {
                 string suoPath = Path.ChangeExtension(fullPath, ".v" + i + ".suo");
                 if (File.Exists(suoPath)) {
                     File.Delete(suoPath);
                 }
             }
 
-            Dte.Solution.Open(fullPath);
+            var t = Task.Run(() => Dte.Solution.Open(fullPath));
+            if (!t.Wait(1000)) {
+                // Load has taken a while, start checking whether a dialog has
+                // appeared
+                IVsUIShell uiShell = GetService<IVsUIShell>(typeof(IVsUIShell));
+                IntPtr hwnd;
+                while (!t.Wait(1000)) {
+                    ErrorHandler.ThrowOnFailure(uiShell.GetDialogOwnerHwnd(out hwnd));
+                    if (hwnd != _mainWindowHandle) {
+                        using (var dlg = new AutomationDialog(this, AutomationElement.FromHandle(hwnd))) {
+                            if (onDialog == null || onDialog(dlg) == false) {
+                                Console.WriteLine("Unexpected dialog");
+                                DumpElement(dlg.Element);
+                                Assert.Fail("Unexpected dialog while loading project");
+                            }
+                        }
+                    }
+                }
+            }
+
+            Assert.IsTrue(t.Wait(30000), "Failed to open project quickly enough");
             Assert.IsTrue(Dte.Solution.IsOpen, "The solution is not open");
 
             // Force all projects to load before running any tests.
