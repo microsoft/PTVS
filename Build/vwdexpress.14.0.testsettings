@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <TestSettings name="default" id="FBA3FF0E-57FA-403D-BD46-7A1DC123D369" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
-  <Description>Local test runs with the VWD 2015 Experimental Hive</Description>
+  <Description>Local test runs with Express for Web 2015</Description>
   <Execution>
     <Timeouts runTimeout="7200000" testTimeout="300000" />
     <TestTypeSpecific>
