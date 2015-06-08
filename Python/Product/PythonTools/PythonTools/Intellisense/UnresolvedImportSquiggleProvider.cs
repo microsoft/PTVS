@@ -52,10 +52,11 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private void OnNewAnalysis(object sender, EventArgs e) {
-            if (!_alwaysCreateSquiggle &&
-                !_serviceProvider.GetPythonToolsService().GeneralOptions.UnresolvedImportWarning
-            ) {
-                return;
+            if (!_alwaysCreateSquiggle) {
+                var service = _serviceProvider.GetPythonToolsService();
+                if (service == null || !service.GeneralOptions.UnresolvedImportWarning) {
+                    return;
+                }
             }
 
             var entry = sender as IPythonProjectEntry;
