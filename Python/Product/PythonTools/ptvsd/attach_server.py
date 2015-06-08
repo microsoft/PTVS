@@ -271,7 +271,7 @@ def enable_attach(secret, address = ('0.0.0.0', DEFAULT_PORT), certfile = None, 
                     client.close()
 
     server_thread = threading.Thread(target = server_thread_func)
-    server_thread.daemon = True
+    server_thread.setDaemon(True)
     server_thread.start()
 
     frames = []
