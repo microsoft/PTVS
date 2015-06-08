@@ -16,3 +16,8 @@ async(fob)
 await(fob)
 fob(async)
 fob(await)
+
+fob.async
+fob.await
+
+def fob(async, await): pass

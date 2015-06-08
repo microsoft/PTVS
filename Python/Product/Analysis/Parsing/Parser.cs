@@ -344,17 +344,17 @@ namespace Microsoft.PythonTools.Parsing {
             Token t = PeekToken();
             if (t == Tokens.NoneToken) {
                 NextToken();
-                return new Name("None", "None");
+                return Name.None;
             }
 
-            NameToken n = t as NameToken;
-            if (n == null) {
-                ReportSyntaxError("syntax error");
-                return new Name();
+            var n = TokenToName(t);
+            if (n.HasName) {
+                NextToken();
+                return n;
             }
 
-            NextToken();
-            return new Name(FixName(n.Name), n.Name);
+            ReportSyntaxError("syntax error");
+            return Name.Empty;
         }
 
         struct Name {
@@ -364,6 +364,7 @@ namespace Microsoft.PythonTools.Parsing {
             public static readonly Name Empty = new Name();
             public static readonly Name Async = new Name("async", "async");
             public static readonly Name Await = new Name("await", "await");
+            public static readonly Name None = new Name("None", "None");
 
             public Name(string name, string verbatimName) {
                 RealName = name;
@@ -388,12 +389,15 @@ namespace Microsoft.PythonTools.Parsing {
         }
 
         private Name TokenToName(Token t) {
-            NameToken n;
-            if (t == Tokens.KeywordAwaitToken) {
-                return Name.Await;
-            } else if (t == Tokens.KeywordAsyncToken) {
-                return Name.Async;
-            } else if ((n = t as NameToken) != null) {
+            if (CurrentFunction == null || !CurrentFunction.IsCoroutine) {
+                if (t.Kind == TokenKind.KeywordAwait) {
+                    return Name.Await;
+                } else if (t.Kind == TokenKind.KeywordAsync) {
+                    return Name.Async;
+                }
+            }
+            var n = t as NameToken;
+            if (n != null) {
                 return new Name(FixName(n.Name), n.Name);
             }
             return Name.Empty;
@@ -444,10 +448,8 @@ namespace Microsoft.PythonTools.Parsing {
 
             switch (PeekToken().Kind) {
                 case TokenKind.KeywordFor:
-                    Eat(TokenKind.KeywordAsync);
                     return ParseForStmt(isAsync: true);
                 case TokenKind.KeywordWith:
-                    Eat(TokenKind.KeywordAsync);
                     return ParseWithStmt(isAsync: true);
             }
 
@@ -1718,7 +1720,11 @@ namespace Microsoft.PythonTools.Parsing {
 
             var next = PeekToken();
             if (next == Tokens.KeywordDefToken || next == Tokens.KeywordAsyncToken) {
-                FunctionDefinition fnc = ParseFuncDef(isCoroutine: (next == Tokens.KeywordAsyncToken));
+                bool isCoroutine = (next == Tokens.KeywordAsyncToken);
+                if (isCoroutine) {
+                    Eat(TokenKind.KeywordAsync);
+                }
+                FunctionDefinition fnc = ParseFuncDef(isCoroutine: isCoroutine);
                 fnc.Decorators = decorators;
                 fnc.SetLoc(decorators.StartIndex, fnc.EndIndex);
                 res = fnc;
@@ -2031,95 +2037,88 @@ namespace Microsoft.PythonTools.Parsing {
         //  parameter ::=
         //      identifier | "(" sublist ")"
         private Parameter ParseParameter(int position, HashSet<string> names, ParameterKind kind, bool isTyped = false) {
-            Token t = PeekToken();
+            Name name;
             Parameter parameter;
 
-            switch (t.Kind) {
-                case TokenKind.LeftParenthesis: // sublist       
-                    string parenWhiteSpace = _lookaheadWhiteSpace;
+            if (PeekToken().Kind == TokenKind.LeftParenthesis) {
+                // sublist
+                string parenWhiteSpace = _lookaheadWhiteSpace;
 
-                    NextToken();
-                    var parenStart = GetStart();
-                    Expression ret = ParseSublist(names, true);
+                NextToken();
+                var parenStart = GetStart();
+                Expression ret = ParseSublist(names, true);
 
-                    if (_langVersion.Is3x()) {
-                        ReportSyntaxError(parenStart, GetEnd(), "sublist parameters are not supported in 3.x");
-                    }
+                if (_langVersion.Is3x()) {
+                    ReportSyntaxError(parenStart, GetEnd(), "sublist parameters are not supported in 3.x");
+                }
 
-                    bool ateRightParen = Eat(TokenKind.RightParenthesis);
-                    string closeParenWhiteSpace = _tokenWhiteSpace;
+                bool ateRightParen = Eat(TokenKind.RightParenthesis);
+                string closeParenWhiteSpace = _tokenWhiteSpace;
 
-                    TupleExpression tret = ret as TupleExpression;
-                    NameExpression nameRet;
+                TupleExpression tret = ret as TupleExpression;
+                NameExpression nameRet;
 
-                    if (tret != null) {
-                        parameter = new SublistParameter(position, tret);
-                        if (_verbatim) {
-                            AddPreceedingWhiteSpace(tret, parenWhiteSpace);
-                            AddSecondPreceedingWhiteSpace(tret, closeParenWhiteSpace);
-                            if (!ateRightParen) {
-                                AddErrorMissingCloseGrouping(parameter);
-                            }
-                        }
-                    } else if ((nameRet = ret as NameExpression) != null) {
-                        parameter = new Parameter(nameRet.Name, kind);
-                        if (_verbatim) {
-                            AddThirdPreceedingWhiteSpace(parameter, (string)_attributes[nameRet][NodeAttributes.PreceedingWhiteSpace]);
-                            AddIsAltForm(parameter);
-                            if (!ateRightParen) {
-                                AddErrorMissingCloseGrouping(parameter);
-                            }
-                        }
-                    } else {
-                        Debug.Assert(ret is ErrorExpression);
-                        ReportSyntaxError(_lookahead);
-
-                        parameter = new ErrorParameter((ErrorExpression)ret);
-                        AddIsAltForm(parameter);
-                    }
-
-                    if (parameter != null) {
-                        parameter.SetLoc(ret.IndexSpan);
-                    }
+                if (tret != null) {
+                    parameter = new SublistParameter(position, tret);
                     if (_verbatim) {
-                        AddPreceedingWhiteSpace(parameter, parenWhiteSpace);
-                        AddSecondPreceedingWhiteSpace(parameter, closeParenWhiteSpace);
+                        AddPreceedingWhiteSpace(tret, parenWhiteSpace);
+                        AddSecondPreceedingWhiteSpace(tret, closeParenWhiteSpace);
                         if (!ateRightParen) {
                             AddErrorMissingCloseGrouping(parameter);
                         }
                     }
-
-                    break;
-
-                case TokenKind.Name:  // identifier
-                    NextToken();
-                    var name = TokenToName(t);
-                    var paramStart = GetStart();
-                    parameter = new Parameter(name.RealName, kind);
+                } else if ((nameRet = ret as NameExpression) != null) {
+                    parameter = new Parameter(nameRet.Name, kind);
                     if (_verbatim) {
-                        AddPreceedingWhiteSpace(parameter, _tokenWhiteSpace);
-                        AddVerbatimName(name, parameter);
-                    }
-                    if (isTyped && MaybeEat(TokenKind.Colon)) {
-                        if (_verbatim) {
-                            AddThirdPreceedingWhiteSpace(parameter, _tokenWhiteSpace);
-                        }
-
-                        var start = GetStart();
-                        parameter.Annotation = ParseExpression();
-
-                        if (_langVersion.Is2x()) {
-                            ReportSyntaxError(start, parameter.Annotation.EndIndex, "invalid syntax, parameter annotations require 3.x");
+                        AddThirdPreceedingWhiteSpace(parameter, (string)_attributes[nameRet][NodeAttributes.PreceedingWhiteSpace]);
+                        AddIsAltForm(parameter);
+                        if (!ateRightParen) {
+                            AddErrorMissingCloseGrouping(parameter);
                         }
                     }
-                    CompleteParameterName(parameter, name.RealName, names, paramStart);
-                    break;
-
-                default:
+                } else {
+                    Debug.Assert(ret is ErrorExpression);
                     ReportSyntaxError(_lookahead);
-                    NextToken();
-                    parameter = new ErrorParameter(_verbatim ? Error(_tokenWhiteSpace + _token.Token.VerbatimImage) : null);
-                    break;
+
+                    parameter = new ErrorParameter((ErrorExpression)ret);
+                    AddIsAltForm(parameter);
+                }
+
+                if (parameter != null) {
+                    parameter.SetLoc(ret.IndexSpan);
+                }
+                if (_verbatim) {
+                    AddPreceedingWhiteSpace(parameter, parenWhiteSpace);
+                    AddSecondPreceedingWhiteSpace(parameter, closeParenWhiteSpace);
+                    if (!ateRightParen) {
+                        AddErrorMissingCloseGrouping(parameter);
+                    }
+                }
+            } else if ((name = TokenToName(PeekToken())).HasName) {
+                NextToken();
+                var paramStart = GetStart();
+                parameter = new Parameter(name.RealName, kind);
+                if (_verbatim) {
+                    AddPreceedingWhiteSpace(parameter, _tokenWhiteSpace);
+                    AddVerbatimName(name, parameter);
+                }
+                if (isTyped && MaybeEat(TokenKind.Colon)) {
+                    if (_verbatim) {
+                        AddThirdPreceedingWhiteSpace(parameter, _tokenWhiteSpace);
+                    }
+
+                    var start = GetStart();
+                    parameter.Annotation = ParseExpression();
+
+                    if (_langVersion.Is2x()) {
+                        ReportSyntaxError(start, parameter.Annotation.EndIndex, "invalid syntax, parameter annotations require 3.x");
+                    }
+                }
+                CompleteParameterName(parameter, name.RealName, names, paramStart);
+            } else {
+                ReportSyntaxError(_lookahead);
+                NextToken();
+                parameter = new ErrorParameter(_verbatim ? Error(_tokenWhiteSpace + _token.Token.VerbatimImage) : null);
             }
 
             return parameter;

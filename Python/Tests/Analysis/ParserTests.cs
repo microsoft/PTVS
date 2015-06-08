@@ -1824,6 +1824,21 @@ namespace AnalysisTests {
         }
 
         [TestMethod, Priority(0)]
+        public void DecoratorsAsyncFuncDef() {
+            foreach (var version in V35AndUp) {
+                CheckAst(
+                    ParseFileNoErrors("DecoratorsAsyncFuncDef.py", version),
+                    CheckSuite(
+                        CheckCoroutineDef(CheckFuncDef("f", NoParameters, CheckSuite(Pass), new[] { Fob })),
+                        CheckCoroutineDef(CheckFuncDef("f", NoParameters, CheckSuite(Pass), new[] { CheckMemberExpr(Fob, "oar") })),
+                        CheckCoroutineDef(CheckFuncDef("f", NoParameters, CheckSuite(Pass), new[] { CheckCallExpression(Fob, PositionalArg(Oar)) })),
+                        CheckCoroutineDef(CheckFuncDef("f", NoParameters, CheckSuite(Pass), new[] { Fob, Oar }))
+                    )
+                );
+            }
+        }
+
+        [TestMethod, Priority(0)]
         public void DecoratorsClassDef() {
             foreach (var version in V26AndUp) {
                 CheckAst(
@@ -2028,9 +2043,8 @@ namespace AnalysisTests {
         [TestMethod, Priority(0)]
         public void CoroutineDef() {
             foreach (var version in V35AndUp) {
-                var ast = ParseFile("CoroutineDef.py", ErrorSink.Null, version);
                 CheckAst(
-                    ast,
+                    ParseFileNoErrors("CoroutineDef.py", version),
                     CheckSuite(
                         CheckCoroutineDef(CheckFuncDef("f", NoParameters, CheckSuite(
                             CheckAsyncForStmt(CheckForStmt(Fob, Oar, CheckSuite(Pass))),
@@ -2300,7 +2314,7 @@ namespace AnalysisTests {
             var Async = CheckNameExpr("async");
             var Await = CheckNameExpr("await");
             foreach (var version in V35AndUp) {
-                var ast = ParseFile("AwaitAsyncNames.py", ErrorSink.Null, version);
+                var ast = ParseFileNoErrors("AwaitAsyncNames.py", version);
                 CheckAst(
                     ast,
                     CheckSuite(
@@ -2317,7 +2331,10 @@ namespace AnalysisTests {
                         CheckCallStmt(Async, CheckArg("fob")),
                         CheckCallStmt(Await, CheckArg("fob")),
                         CheckCallStmt(Fob, CheckArg("async")),
-                        CheckCallStmt(Fob, CheckArg("await"))
+                        CheckCallStmt(Fob, CheckArg("await")),
+                        CheckMemberStmt(Fob, "async"),
+                        CheckMemberStmt(Fob, "await"),
+                        CheckFuncDef("fob", new[] { CheckParameter("async"), CheckParameter("await") }, CheckSuite(Pass))
                     )
                 );
                 ParseErrors("AwaitAsyncNames.py", version);
@@ -2599,6 +2616,19 @@ namespace AnalysisTests {
             }
         }
 
+        private static PythonAst ParseFileNoErrors(string filename, PythonLanguageVersion version, Severity indentationInconsistencySeverity = Severity.Ignore) {
+            var errorSink = new CollectingErrorSink();
+            var ast = ParseFile(filename, errorSink, version, indentationInconsistencySeverity);
+            foreach (var warn in errorSink.Warnings) {
+                Trace.TraceInformation("WARN: {0} {1}", warn.Span, warn.Message);
+            }
+            foreach (var err in errorSink.Errors) {
+                Trace.TraceInformation("ERR:  {0} {1}", err.Span, err.Message);
+            }
+            Assert.AreEqual(0, errorSink.Warnings.Count + errorSink.Errors.Count, "Parse errors occurred");
+            return ast;
+        }
+
         private static PythonAst ParseFile(string filename, ErrorSink errorSink, PythonLanguageVersion version, Severity indentationInconsistencySeverity = Severity.Ignore) {
             var parser = Parser.CreateParser(TestData.Read(Path.Combine("TestData\\Grammar", filename)), version, new ParserOptions() { ErrorSink = errorSink, IndentationInconsistencySeverity = indentationInconsistencySeverity });
             var ast = parser.ParseFile();
@@ -2635,6 +2665,7 @@ namespace AnalysisTests {
                     try {
                         statements[i](suite.Statements[i]);
                     } catch (AssertFailedException e) {
+                        Trace.TraceError(e.ToString());
                         throw new AssertFailedException(String.Format("Suite Item {0}: {1}", i, e.Message), e);
                     }
                 }
@@ -3145,9 +3176,9 @@ namespace AnalysisTests {
 
         private static Action<Expression> CheckMemberExpr(Action<Expression> target, string name) {
             return expr => {
-                Assert.AreEqual(typeof(MemberExpression), expr.GetType());
+                Assert.IsInstanceOfType(expr, typeof(MemberExpression));
                 var member = (MemberExpression)expr;
-                Assert.AreEqual(member.Name, name);
+                Assert.AreEqual(name, member.Name);
                 target(member.Target);
             };
         }
