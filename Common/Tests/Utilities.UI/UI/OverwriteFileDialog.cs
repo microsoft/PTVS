@@ -82,7 +82,7 @@ namespace TestUtilities.UI {
         }
 
 
-        public string Text {
+        public override string Text {
             get {
                 return FindByAutomationId("_message").GetValuePattern().Current.Value;
             }
