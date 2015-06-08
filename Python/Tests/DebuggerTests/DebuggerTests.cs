@@ -2631,7 +2631,7 @@ int main(int argc, char* argv[]) {
                     Assert.IsTrue(frame.ExecuteTextAsync("attached = True").Wait(20000), "Failed to complete evaluation within 20s");
 
                     proc.Resume();
-                    proc.WaitForExit();
+                    WaitForExit(proc);
                     AssertUtil.ArrayEquals(expectedOutput, actualOutput);
                 } finally {
                     DetachProcess(proc);
@@ -2685,7 +2685,7 @@ int main(int argc, char* argv[]) {
                     Assert.IsTrue(attached.WaitOne(20000), "Failed to attach within 20s");
                     Assert.IsTrue(bpHit.WaitOne(20000), "Failed to hit breakpoint within 20s");
 
-                    p.WaitForExit(10000);
+                    p.WaitForExit(DefaultWaitForExitTimeout);
                     AssertUtil.ArrayEquals(expectedOutput, actualOutput);
                 } finally {
                     DetachProcess(proc);
