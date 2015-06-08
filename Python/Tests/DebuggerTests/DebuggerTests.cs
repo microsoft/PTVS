@@ -2540,7 +2540,7 @@ int main(int argc, char* argv[]) {
         }
 
         [TestMethod, Priority(0)]
-        public void AttachAndStepWithBlankSysPrefix() {
+        public virtual void AttachAndStepWithBlankSysPrefix() {
             string script = TestData.GetPath(@"TestData\DebuggerProject\InfiniteRunBlankPrefix.py");
             var p = Process.Start(Version.InterpreterPath, "\"" + script + "\"");
             try {
@@ -3124,6 +3124,7 @@ int main(int argc, char* argv[]) {
         public override void AttachTimeoutThreadsInitialized() { }
         public override void AttachTimeout() { }
         public override void AttachWithOutputRedirection() { }
+        public override void AttachAndStepWithBlankSysPrefix() { }
 
         protected override string UnassignedLocalRepr {
             get { return "None"; }
