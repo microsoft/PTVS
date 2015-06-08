@@ -2685,7 +2685,7 @@ int main(int argc, char* argv[]) {
                     Assert.IsTrue(attached.WaitOne(20000), "Failed to attach within 20s");
                     Assert.IsTrue(bpHit.WaitOne(20000), "Failed to hit breakpoint within 20s");
 
-                    p.WaitForExit();
+                    p.WaitForExit(10000);
                     AssertUtil.ArrayEquals(expectedOutput, actualOutput);
                 } finally {
                     DetachProcess(proc);
