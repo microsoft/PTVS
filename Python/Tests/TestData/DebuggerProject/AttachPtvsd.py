@@ -1,5 +1,5 @@
 import sys
-sys.path.append('.') # so that we can find ptvsd
+if '.' not in sys.path: sys.path.insert(0, '.') # so that we can find ptvsd
 
 import ptvsd
 ptvsd.enable_attach('secret', redirect_output=False)
