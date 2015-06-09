@@ -148,6 +148,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
 
         public void Dispose() {
             _shutdown = true;
+            Shell.SetProperty((int)__VSSPROPID6.VSSPROPID_ShutdownStarted, true);
             _uiEvent.Set();
             if (!UIThread.Join(TimeSpan.FromSeconds(30))) {
                 Console.WriteLine("Failed to wait for UI thread to terminate");
