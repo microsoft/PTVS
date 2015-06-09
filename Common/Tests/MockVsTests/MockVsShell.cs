@@ -13,11 +13,14 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Generic;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.VisualStudioTools.MockVsTests {
     class MockVsShell : IVsShell {
+        private readonly Dictionary<int, object> _properties = new Dictionary<int, object>();
+
         public int AdviseBroadcastMessages(IVsBroadcastMessageEvents pSink, out uint pdwCookie) {
             throw new NotImplementedException();
         }
@@ -31,8 +34,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         public int GetProperty(int propid, out object pvar) {
-            pvar = null;
-            return VSConstants.E_FAIL;
+            return _properties.TryGetValue(propid, out pvar) ? VSConstants.S_OK : VSConstants.E_FAIL;
         }
 
         public int IsPackageInstalled(ref Guid guidPackage, out int pfInstalled) {
@@ -56,7 +58,8 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         public int SetProperty(int propid, object var) {
-            throw new NotImplementedException();
+            _properties[propid] = var;
+            return VSConstants.S_OK;
         }
 
         public int UnadviseBroadcastMessages(uint dwCookie) {

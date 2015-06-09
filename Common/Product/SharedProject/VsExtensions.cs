@@ -100,7 +100,15 @@ namespace Microsoft.VisualStudioTools {
             var uiThread = (UIThreadBase)serviceProvider.GetService(typeof(UIThreadBase));
             if (uiThread == null) {
                 Trace.TraceWarning("Returning NoOpUIThread instance from GetUIThread");
-                Debug.Assert(VsShellUtil.ShellIsShuttingDown, "No UIThread service but shell is not shutting down");
+#if DEBUG
+                var shell = (IVsShell)serviceProvider.GetService(typeof(SVsShell));
+                object shutdownStarted;
+                if (shell != null &&
+                    ErrorHandler.Succeeded(shell.GetProperty((int)__VSSPROPID6.VSSPROPID_ShutdownStarted, out shutdownStarted)) &&
+                    !(bool)shutdownStarted) {
+                    Debug.Fail("No UIThread service but shell is not shutting down");
+                }
+#endif
                 return new NoOpUIThread();
             }
             return uiThread;

@@ -568,6 +568,11 @@ a.original()
             var expectedIntType2 = new[] { BuiltinTypeId.Int };
             var expectedTupleType1 = new[] { BuiltinTypeId.Tuple, BuiltinTypeId.NoneType };
             var expectedTupleType2 = new[] { BuiltinTypeId.Tuple, BuiltinTypeId.NoneType };
+            if (this is StdLibAnalysisTest) {
+                expectedIntType1 = new BuiltinTypeId[0];
+                expectedIntType2 = new BuiltinTypeId[0];
+                expectedTupleType1 = new[] { BuiltinTypeId.NoneType };
+            }
 
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("x1", code.IndexOf("x1, y1, _1 =")), expectedIntType1);
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("y1", code.IndexOf("x1, y1, _1 =")), expectedIntType1);

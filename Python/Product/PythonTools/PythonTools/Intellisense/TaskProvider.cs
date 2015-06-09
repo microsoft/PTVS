@@ -307,7 +307,6 @@ namespace Microsoft.PythonTools.Intellisense {
             public AbortMessage() : base() { }
 
             public override bool Apply(Dictionary<EntryKey, List<TaskProviderItem>> items, object itemsLock) {
-                Debug.Fail("Should not ever apply an AbortMessage");
                 throw new OperationCanceledException();
             }
         }
@@ -322,7 +321,7 @@ namespace Microsoft.PythonTools.Intellisense {
         internal readonly IErrorProviderFactory _errorProvider;
         protected readonly IServiceProvider _serviceProvider;
 
-        private readonly SemaphoreSlim _workerRunning = new SemaphoreSlim(1, 1);
+        private Thread _worker;
         private readonly Queue<WorkerMessage> _workerQueue = new Queue<WorkerMessage>();
         private readonly ManualResetEventSlim _workerQueueChanged = new ManualResetEventSlim();
 
@@ -340,29 +339,18 @@ namespace Microsoft.PythonTools.Intellisense {
             GC.SuppressFinalize(this);
         }
 
-        /// <summary>
-        /// Stops the worker and blocks it from starting again. This should be
-        /// called prior to disposal in contexts where it is possible to use
-        /// await. Otherwise, Dispose() will call this and block on the current
-        /// thread.
-        /// </summary>
-        internal async Task<bool> StopAsync(TimeSpan timeout) {
-            if (_workerRunning.Wait(0)) {
-                return true;
-            }
-
-            lock (_workerQueue) {
-                _workerQueue.Clear();
-                _workerQueue.Enqueue(WorkerMessage.Abort());
-                _workerQueueChanged.Set();
-            }
-            return await _workerRunning.WaitAsync(timeout);
-        }
-
         protected virtual void Dispose(bool disposing) {
             if (disposing) {
-                bool stopped = StopAsync(TimeSpan.FromSeconds(10)).WaitAndUnwrapExceptions();
-                Debug.Assert(stopped, "Failed to terminate TaskProvider worker thread");
+                var worker = _worker;
+                if (worker != null) {
+                    lock (_workerQueue) {
+                        _workerQueue.Clear();
+                        _workerQueue.Enqueue(WorkerMessage.Abort());
+                        _workerQueueChanged.Set();
+                    }
+                    bool stopped = _worker.Join(10000);
+                    Debug.Assert(stopped, "Failed to terminate TaskProvider worker thread");
+                }
 
                 lock (_itemsLock) {
                     _items.Clear();
@@ -461,79 +449,76 @@ namespace Microsoft.PythonTools.Intellisense {
 
         #region Internal Worker Thread
 
-        private void Worker() {
-            _workerRunning.Wait();
+        private void StartWorker() {
+            if (_worker != null) {
+                // Already running
+                Debug.Assert(_worker.IsAlive, "Worker has died without clearing itself");
+                return;
+            }
+
+            var t = new Thread(Worker);
+            t.IsBackground = true;
+            t.Name = GetType().Name + " Worker";
+            t.Start(t);
+        }
+
+        private void Worker(object param) {
+            var self = (Thread)param;
+            if (Interlocked.CompareExchange(ref _worker, self, null) != null) {
+                // Not us, so abort
+                return;
+            }
+
             try {
                 WorkerWorker();
+            } catch (OperationCanceledException) {
+            } catch (Exception ex) {
+                if (ex.IsCriticalException()) {
+                    throw;
+                }
+                Debug.Fail(ex.ToString());
             } finally {
-                _workerRunning.Release();
+                var oldWorker = Interlocked.CompareExchange(ref _worker, null, self);
+                Debug.Assert(oldWorker == self, "Worker was changed while running");
             }
         }
 
         private void WorkerWorker() {
             var flushMessages = new Queue<WorkerMessage>();
-            var cts = new CancellationTokenSource();
             bool changed = false;
             var lastUpdateTime = DateTime.Now;
 
-            try {
-                // First time through, we don't want to abort the queue. There
-                // should be at least one message or the worker would not have
-                // been started.
+            while (_workerQueueChanged.Wait(1000)) {
+                // Reset event and handle all messages in the queue
+                _workerQueueChanged.Reset();
 
-                var wh = new[] { cts.Token.WaitHandle, _workerQueueChanged.WaitHandle};
-
-                while (WaitHandle.WaitAny(wh) == 0) {
-                    // Prevent timeouts while processing the message
-                    cts.CancelAfter(-1);
-
-                    // Reset event and handle all messages in the queue
-                    _workerQueueChanged.Reset();
-
-                    while (!cts.IsCancellationRequested) {
-                        WorkerMessage msg;
-                        lock (_workerQueue) {
-                            if (_workerQueue.Count == 0) {
-                                break;
-                            }
-                            msg = _workerQueue.Dequeue();
-                        }
-
-                        if (msg is WorkerMessage.AbortMessage) {
-                            // Ignore flush messages and cancel the loop
-                            flushMessages.Clear();
-                            cts.Cancel();
+                while (true) {
+                    WorkerMessage msg;
+                    lock (_workerQueue) {
+                        if (_workerQueue.Count == 0) {
                             break;
-                        } else if (msg is WorkerMessage.FlushMessage) {
-                            // Keep flush messages until we've exited the loop
-                            flushMessages.Enqueue(msg);
-                        } else {
-                            // Apply the message to our collection
-                            changed |= msg.Apply(_items, _itemsLock);
                         }
-
-                        // Every second, we want to force another update
-                        if (changed) {
-                            var currentTime = DateTime.Now;
-                            if ((currentTime - lastUpdateTime).TotalMilliseconds > 1000) {
-                                Refresh();
-                                lastUpdateTime = currentTime;
-                                changed = false;
-                            }
-                        }
+                        msg = _workerQueue.Dequeue();
                     }
 
-                    if (cts.IsCancellationRequested) {
-                        break;
+                    if (msg is WorkerMessage.FlushMessage) {
+                        // Keep flush messages until we've exited the loop
+                        flushMessages.Enqueue(msg);
+                    } else {
+                        // Apply the message to our collection
+                        changed |= msg.Apply(_items, _itemsLock);
                     }
 
-                    // Reset the timeout back to 1 second
-                    cts.CancelAfter(1000);
+                    // Every second, we want to force another update
+                    if (changed) {
+                        var currentTime = DateTime.Now;
+                        if ((currentTime - lastUpdateTime).TotalMilliseconds > 1000) {
+                            Refresh();
+                            lastUpdateTime = currentTime;
+                            changed = false;
+                        }
+                    }
                 }
-            } catch (OperationCanceledException) {
-                // Occurs if we accidentally call Apply() on AbortMessage.
-            } finally {
-                cts.Dispose();
             }
 
             // Handle any changes that weren't handled in the loop
@@ -630,13 +615,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 _workerQueueChanged.Set();
             }
 
-            if (_workerRunning.Wait(0)) {
-                try {
-                    Task.Run(() => Worker()).HandleAllExceptions(SR.ProductName, GetType()).DoNotWait();
-                } finally {
-                    _workerRunning.Release();
-                }
-            }
+            StartWorker();
         }
 
         #endregion
