@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using System.Windows.Threading;
+using Microsoft.VisualStudio.Text;
 
 #if NTVS_FEATURE_INTERACTIVEWINDOW
 namespace Microsoft.NodejsTools.Repl {
@@ -241,11 +242,15 @@ namespace Microsoft.VisualStudio.Repl {
             }
 
             if (entries.Length > 0) {
-                for (int i = 0; i < entries.Length; i++) {
-                    var entry = entries[i];
-
-                    _window.AppendOutput(entry.Properties.Color, entry.Buffer.ToString(), i == entries.Length - 1);
+                var colors = new List<ColoredSpan>();
+                var text = new StringBuilder();
+                foreach (var entry in entries) {
+                    int start = text.Length;
+                    text.Append(entry.Buffer.ToString());
+                    colors.Add(new ColoredSpan(new Span(start, entry.Buffer.Length), entry.Properties.Color));
                 }
+                _window.AppendOutput(colors, text.ToString());
+
                 _window.TextView.Caret.EnsureVisible();
             }
         }
