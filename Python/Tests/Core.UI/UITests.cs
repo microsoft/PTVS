@@ -242,7 +242,7 @@ namespace PythonToolsUITests {
                 var innerFolderNode = app.OpenSolutionExplorer().WaitForChildOfProject(project, "FolderX", "FolderY");
                 innerFolderNode.Select();
 
-                var newItem = project.ProjectItems.Item("FolderX").Collection.Item("FolderY").Collection.AddFromFile(
+                var newItem = project.ProjectItems.Item("FolderX").ProjectItems.Item("FolderY").ProjectItems.AddFromFile(
                     TestData.GetPath(@"TestData\DebuggerProject\BreakpointTest.py")
                 );
 
