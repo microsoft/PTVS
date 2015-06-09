@@ -118,6 +118,7 @@
     <Compile Include="PythonEditor.cs" />
     <Compile Include="RefactorRenameTests.cs" />
     <Compile Include="SmartTagTests.cs" />
+    <Compile Include="SquiggleTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(BuildRoot)Common\Tests\MockVsTests\MockVsTests.csproj">

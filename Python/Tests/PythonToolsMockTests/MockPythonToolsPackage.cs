@@ -28,7 +28,6 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.MockVsTests;
-using TestUtilities.Mocks;
 using TestUtilities.Python;
 
 namespace PythonToolsMockTests {
@@ -82,7 +81,7 @@ namespace PythonToolsMockTests {
         }
 
         private static object CreateTaskProviderService(IServiceContainer container, Type type) {
-            var errorProvider = (IErrorProviderFactory)container.GetService(typeof(IErrorProviderFactory));
+            var errorProvider = container.GetComponentModel().GetService<IErrorProviderFactory>();
             if (type == typeof(ErrorTaskProvider)) {
                 return new ErrorTaskProvider(container, null, errorProvider);
             } else if (type == typeof(CommentTaskProvider)) {

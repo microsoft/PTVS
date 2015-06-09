@@ -28,11 +28,12 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.VisualStudio.Text.Tagging;
 using Microsoft.VisualStudio.Utilities;
+using Microsoft.VisualStudioTools.MockVsTests;
 using TestUtilities;
 using TestUtilities.Mocks;
 using TestUtilities.Python;
 
-namespace PythonToolsTests {
+namespace PythonToolsMockTests {
     [TestClass]
     public class SquiggleTests {
         public static IContentType PythonContentType = new MockContentType("Python", new IContentType[0]);
@@ -54,52 +55,6 @@ namespace PythonToolsTests {
             UnresolvedImportSquiggleProvider._alwaysCreateSquiggle = false;
         }
 
-        private static IEnumerable<TrackingTagSpan<ErrorTag>> AnalyzeTextBuffer(
-            MockTextBuffer buffer,
-            PythonLanguageVersion version = PythonLanguageVersion.V27
-        ) {
-            return AnalyzeTextBufferAsync(buffer, version).GetAwaiter().GetResult();
-        }
-
-        private static async Task<IEnumerable<TrackingTagSpan<ErrorTag>>> AnalyzeTextBufferAsync(
-            MockTextBuffer buffer,
-            PythonLanguageVersion version = PythonLanguageVersion.V27
-        ) {
-            var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version.ToVersion());
-            
-            try {
-                var serviceProvider = PythonToolsTestUtilities.CreateMockServiceProvider();
-                var errorProvider = serviceProvider.ComponentModel.GetService<IErrorProviderFactory>();
-                Assert.IsNotNull(errorProvider, "Error provider factory is not available");
-                var analyzer = new VsProjectAnalyzer(serviceProvider, fact, new[] { fact });
-                buffer.AddProperty(typeof(VsProjectAnalyzer), analyzer);
-                var classifierProvider = new PythonClassifierProvider(new MockContentTypeRegistryService(PythonCoreConstants.ContentType), serviceProvider);
-                classifierProvider._classificationRegistry = new MockClassificationTypeRegistryService();
-                classifierProvider.GetClassifier(buffer);
-                var squiggles = errorProvider.GetErrorTagger(buffer);
-                var textView = new MockTextView(buffer);
-                var monitoredBuffer = analyzer.MonitorTextBuffer(textView, buffer);
-
-                var tcs = new TaskCompletionSource<object>();
-                buffer.GetPythonProjectEntry().OnNewAnalysis += (s, e) => tcs.SetResult(null);
-                await tcs.Task;
-
-                var snapshot = buffer.CurrentSnapshot;
-                
-                // Ensure all tasks have been updated
-                var taskProvider = (ErrorTaskProvider)serviceProvider.GetService(typeof(ErrorTaskProvider));
-                var time = await taskProvider.FlushAsync();
-                Console.WriteLine("TaskProvider.FlushAsync took {0}ms", time.TotalMilliseconds);
-
-                var spans = squiggles.GetTaggedSpans(new SnapshotSpan(snapshot, 0, snapshot.Length));
-
-                analyzer.StopMonitoringTextBuffer(monitoredBuffer.BufferParser, textView);
-
-                return spans;
-            } finally {
-            }
-        }
-
         private static string FormatErrorTag(TrackingTagSpan<ErrorTag> tag) {
             return string.Format("{0}: {1} ({2})",
                 tag.Tag.ErrorType,
@@ -118,14 +73,26 @@ namespace PythonToolsTests {
 
         [TestMethod, Priority(0)]
         public void UnresolvedImportSquiggle() {
-            var buffer = new MockTextBuffer("import fob, oar\r\nfrom baz import *\r\nfrom .spam import eggs", PythonCoreConstants.ContentType, filename: "C:\\name.py");
-            var squiggles = AnalyzeTextBuffer(buffer).Select(FormatErrorTag).ToArray();
+            List<string> squiggles;
+
+            using (var view = new PythonEditor("import fob, oar\r\nfrom baz import *\r\nfrom .spam import eggs")) {
+                var errorProvider = view.VS.ServiceProvider.GetComponentModel().GetService<IErrorProviderFactory>();
+                var tagger = errorProvider.GetErrorTagger(view.View.TextView.TextBuffer);
+                // Ensure all tasks have been updated
+                var taskProvider = (ErrorTaskProvider)view.VS.ServiceProvider.GetService(typeof(ErrorTaskProvider));
+                var time = taskProvider.FlushAsync().GetAwaiter().GetResult();
+                Console.WriteLine("TaskProvider.FlushAsync took {0}ms", time.TotalMilliseconds);
+
+                squiggles = tagger.GetTaggedSpans(new SnapshotSpan(view.CurrentSnapshot, 0, view.CurrentSnapshot.Length))
+                    .Select(FormatErrorTag)
+                    .ToList();
+            }
 
             Console.WriteLine(" Squiggles found:");
             foreach (var actual in squiggles) {
                 Console.WriteLine(actual);
             }
-            Console.WriteLine(" Found {0} squiggle(s)", squiggles.Length);
+            Console.WriteLine(" Found {0} squiggle(s)", squiggles.Count);
 
             int i = 0;
             foreach (var expected in new[] {
@@ -135,7 +102,7 @@ namespace PythonToolsTests {
                 @".*warning:.*baz.*\(22-25\)",
                 @".*warning:.*\.spam.*\(41-46\)"
             }) {
-                Assert.IsTrue(i < squiggles.Length, "Not enough squiggles");
+                Assert.IsTrue(i < squiggles.Count, "Not enough squiggles");
                 AssertUtil.AreEqual(new Regex(expected, RegexOptions.IgnoreCase | RegexOptions.Singleline), squiggles[i]);
                 i += 1;
             }
@@ -157,23 +124,35 @@ namespace PythonToolsTests {
                 new[] { @".*warning:.*spam.*\(17-21\)" }
             ));
 
-            foreach (var testCase in testCases) {
-                var buffer = new MockTextBuffer(testCase.Item1, PythonCoreConstants.ContentType);
-                var squiggles = AnalyzeTextBuffer(buffer).Select(FormatErrorTag).ToArray();
+            using (var view = new PythonEditor()) {
+                var errorProvider = view.VS.ServiceProvider.GetComponentModel().GetService<IErrorProviderFactory>();
+                var tagger = errorProvider.GetErrorTagger(view.View.TextView.TextBuffer);
+                // Ensure all tasks have been updated
+                var taskProvider = (ErrorTaskProvider)view.VS.ServiceProvider.GetService(typeof(ErrorTaskProvider));
 
-                Console.WriteLine(testCase.Item1);
-                Console.WriteLine(" Squiggles found:");
-                foreach (var actual in squiggles) {
-                    Console.WriteLine(actual);
-                }
-                Console.WriteLine(" Found {0} squiggle(s)", squiggles.Length);
-                Console.WriteLine();
+                foreach (var testCase in testCases) {
+                    view.Text = testCase.Item1;
+                    var time = taskProvider.FlushAsync().GetAwaiter().GetResult();
+                    Console.WriteLine("TaskProvider.FlushAsync took {0}ms", time.TotalMilliseconds);
 
-                int i = 0;
-                foreach (var expected in testCase.Item2) {
-                    Assert.IsTrue(i < squiggles.Length, "Not enough squiggles");
-                    AssertUtil.AreEqual(new Regex(expected, RegexOptions.IgnoreCase | RegexOptions.Singleline), squiggles[i]);
-                    i += 1;
+                    var squiggles = tagger.GetTaggedSpans(new SnapshotSpan(view.CurrentSnapshot, 0, view.CurrentSnapshot.Length))
+                        .Select(FormatErrorTag)
+                        .ToList();
+
+                    Console.WriteLine(testCase.Item1);
+                    Console.WriteLine(" Squiggles found:");
+                    foreach (var actual in squiggles) {
+                        Console.WriteLine(actual);
+                    }
+                    Console.WriteLine(" Found {0} squiggle(s)", squiggles.Count);
+                    Console.WriteLine();
+
+                    int i = 0;
+                    foreach (var expected in testCase.Item2) {
+                        Assert.IsTrue(i < squiggles.Count, "Not enough squiggles");
+                        AssertUtil.AreEqual(new Regex(expected, RegexOptions.IgnoreCase | RegexOptions.Singleline), squiggles[i]);
+                        i += 1;
+                    }
                 }
             }
         }

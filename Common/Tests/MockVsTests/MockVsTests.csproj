@@ -111,6 +111,7 @@
     <Compile Include="MockDTESolution.cs" />
     <Compile Include="MockEditorOperations.cs" />
     <Compile Include="MockEditorOperationsFactoryService.cs" />
+    <Compile Include="MockErrorProviderFactory.cs" />
     <Compile Include="MockGlyphService.cs" />
     <Compile Include="MockIncrementalSearch.cs" />
     <Compile Include="MockIncrementalSearchFactoryService.cs" />
