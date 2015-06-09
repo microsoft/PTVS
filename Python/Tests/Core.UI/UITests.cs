@@ -242,7 +242,7 @@ namespace PythonToolsUITests {
                 var innerFolderNode = app.OpenSolutionExplorer().WaitForChildOfProject(project, "FolderX", "FolderY");
                 innerFolderNode.Select();
 
-                var newItem = project.ProjectItems.Item("FolderX").Collection.Item("FolderY").Collection.AddFromFile(
+                var newItem = project.ProjectItems.Item("FolderX").ProjectItems.Item("FolderY").ProjectItems.AddFromFile(
                     TestData.GetPath(@"TestData\DebuggerProject\BreakpointTest.py")
                 );
 
@@ -428,21 +428,20 @@ namespace PythonToolsUITests {
         [HostType("VSTestHost")]
         public void DragDropTest() {
             using (var app = new PythonVisualStudioApp()) {
-                app.OpenProject(@"TestData\DragDropTest.sln");
+                var project = app.OpenProject(@"TestData\DragDropTest.sln");
 
                 var window = app.OpenSolutionExplorer();
 
-                var folder = window.FindItem("Solution 'DragDropTest' (1 project)", "DragDropTest", "TestFolder", "SubItem.py");
-                var point = folder.GetClickablePoint();
+                var folder = window.FindChildOfProject(project, "TestFolder", "SubItem.py");
+                var point = folder.Element.GetClickablePoint();
                 Mouse.MoveTo(point);
                 Mouse.Down(MouseButton.Left);
 
-                var project = window.FindItem("Solution 'DragDropTest' (1 project)", "DragDropTest");
-                point = project.GetClickablePoint();
+                point = window.FindChildOfProject(project).Element.GetClickablePoint();
                 Mouse.MoveTo(point);
                 Mouse.Up(MouseButton.Left);
 
-                Assert.IsNotNull(window.WaitForItem("Solution 'DragDropTest' (1 project)", "DragDropTest", "SubItem.py"));
+                window.WaitForChildOfProject(project, "SubItem.py");
             }
         }
 
@@ -453,49 +452,40 @@ namespace PythonToolsUITests {
         [HostType("VSTestHost")]
         public void DragDropFileToFileTest() {
             using (var app = new PythonVisualStudioApp()) {
-                app.OpenProject(@"TestData\DragDropTest.sln");
+                var project = app.OpenProject(@"TestData\DragDropTest.sln");
 
-                app.OpenSolutionExplorer();
-                var window = app.SolutionExplorerTreeView;
+                var window = app.OpenSolutionExplorer();
 
-                var folder = window.FindItem("Solution 'DragDropTest' (1 project)", "DragDropTest", "TestFolder", "SubItem2.py");
-                var point = folder.GetClickablePoint();
-                Mouse.MoveTo(point);
+                Mouse.MoveTo(window.FindChildOfProject(project, "TestFolder", "SubItem2.py").Element.GetClickablePoint());
                 Mouse.Down(MouseButton.Left);
 
-                var project = window.FindItem("Solution 'DragDropTest' (1 project)", "DragDropTest", "TestFolder", "SubItem3.py");
-                point = project.GetClickablePoint();
-                Mouse.MoveTo(point);
+                Mouse.MoveTo(window.FindChildOfProject(project, "TestFolder", "SubItem3.py").Element.GetClickablePoint());
                 Mouse.Up(MouseButton.Left);
 
-                Assert.IsNotNull(window.WaitForItem("Solution 'DragDropTest' (1 project)", "DragDropTest", "TestFolder", "SubItem2.py"));
-                Assert.IsNotNull(window.WaitForItem("Solution 'DragDropTest' (1 project)", "DragDropTest", "TestFolder", "SubItem3.py"));
+                using (var dlg = AutomationDialog.WaitForDialog(app)) { }
+                window.WaitForChildOfProject(project, "TestFolder", "SubItem2.py");
+                window.WaitForChildOfProject(project, "TestFolder", "SubItem3.py");
             }
         }
 
         /// <summary>
-        /// Drag a file onto it's containing folder, nothing should happen
+        /// Drag a file onto it's containing folder, dialog should appear
         /// </summary>
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("VSTestHost")]
         public void DragDropFileToContainingFolderTest() {
             using (var app = new PythonVisualStudioApp()) {
-                app.OpenProject(@"TestData\DragDropTest.sln");
+                var project = app.OpenProject(@"TestData\DragDropTest.sln");
+                var window = app.OpenSolutionExplorer();
 
-                app.OpenSolutionExplorer();
-                var window = app.SolutionExplorerTreeView;
-
-                var folder = window.FindItem("Solution 'DragDropTest' (1 project)", "DragDropTest", "TestFolder", "SubItem2.py");
-                var point = folder.GetClickablePoint();
-                Mouse.MoveTo(point);
+                Mouse.MoveTo(window.FindChildOfProject(project, "TestFolder", "SubItem2.py").Element.GetClickablePoint());
                 Mouse.Down(MouseButton.Left);
 
-                var project = window.FindItem("Solution 'DragDropTest' (1 project)", "DragDropTest", "TestFolder");
-                point = project.GetClickablePoint();
-                Mouse.MoveTo(point);
+                Mouse.MoveTo(window.FindChildOfProject(project, "TestFolder").Element.GetClickablePoint());
                 Mouse.Up(MouseButton.Left);
 
-                Assert.IsNotNull(window.WaitForItem("Solution 'DragDropTest' (1 project)", "DragDropTest", "TestFolder", "SubItem2.py"));
+                using (var dlg = AutomationDialog.WaitForDialog(app)) { }
+                window.WaitForChildOfProject(project, "TestFolder", "SubItem2.py");
             }
         }
 
@@ -503,29 +493,23 @@ namespace PythonToolsUITests {
         [HostType("VSTestHost")]
         public void DragLeaveTest() {
             using (var app = new PythonVisualStudioApp()) {
-                app.OpenProject(@"TestData\DragDropTest.sln");
-
-                app.OpenSolutionExplorer();
-                var window = app.SolutionExplorerTreeView;
-
-                var item = window.FindItem("Solution 'DragDropTest' (1 project)", "DragDropTest", "TestFolder2", "SubItem.py");
-                var project = window.FindItem("Solution 'DragDropTest' (1 project)", "DragDropTest");
+                var project = app.OpenProject(@"TestData\DragDropTest.sln");
+                var window = app.OpenSolutionExplorer();
 
                 // click on SubItem.py
-                var point = item.GetClickablePoint();
+                var point = window.FindChildOfProject(project, "TestFolder2", "SubItem.py").Element.GetClickablePoint();
                 Mouse.MoveTo(point);
                 Mouse.Down(MouseButton.Left);
 
                 // move to project and hover
-                var projectPoint = project.GetClickablePoint();
-                Mouse.MoveTo(projectPoint);
+                Mouse.MoveTo(window.FindChildOfProject(project).Element.GetClickablePoint());
                 System.Threading.Thread.Sleep(500);
 
                 // move back and release
                 Mouse.MoveTo(point);
                 Mouse.Up(MouseButton.Left);
 
-                Assert.IsNotNull(window.FindItem("Solution 'DragDropTest' (1 project)", "DragDropTest", "TestFolder2", "SubItem.py"));
+                window.WaitForChildOfProject(project, "TestFolder2", "SubItem.py");
             }
         }
 
@@ -533,29 +517,23 @@ namespace PythonToolsUITests {
         [HostType("VSTestHost")]
         public void DragLeaveFolderTest() {
             using (var app = new PythonVisualStudioApp()) {
-                app.OpenProject(@"TestData\DragDropTest.sln");
-
-                app.OpenSolutionExplorer();
-                var window = app.SolutionExplorerTreeView;
-
-                var folder = window.FindItem("Solution 'DragDropTest' (1 project)", "DragDropTest", "TestFolder2", "SubFolder");
-                var project = window.FindItem("Solution 'DragDropTest' (1 project)", "DragDropTest");
+                var project = app.OpenProject(@"TestData\DragDropTest.sln");
+                var window = app.OpenSolutionExplorer();
 
                 // click on SubItem.py
-                var point = folder.GetClickablePoint();
+                var point = window.FindChildOfProject(project, "TestFolder2", "SubFolder").Element.GetClickablePoint();
                 Mouse.MoveTo(point);
                 Mouse.Down(MouseButton.Left);
 
                 // move to project and hover
-                var projectPoint = project.GetClickablePoint();
-                Mouse.MoveTo(projectPoint);
+                Mouse.MoveTo(window.FindChildOfProject(project).Element.GetClickablePoint());
                 System.Threading.Thread.Sleep(500);
 
                 // move back and release
                 Mouse.MoveTo(point);
                 Mouse.Up(MouseButton.Left);
 
-                Assert.IsNotNull(window.FindItem("Solution 'DragDropTest' (1 project)", "DragDropTest", "TestFolder2", "SubFolder"));
+                window.WaitForChildOfProject(project, "TestFolder2", "SubFolder");
             }
         }
 
