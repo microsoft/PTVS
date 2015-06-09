@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net.Sockets;
 using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Threading;
@@ -2641,22 +2642,38 @@ int main(int argc, char* argv[]) {
             }
         }
 
+        protected virtual string PtvsdInterpreterArguments {
+            get { return ""; }
+        }
+
         [TestMethod, Priority(0)]
         public void AttachPtvsd() {
             var expectedOutput = new[] { "stdout", "stderr" };
 
             string script = TestData.GetPath(@"TestData\DebuggerProject\AttachPtvsd.py");
-            var psi = new ProcessStartInfo(Version.InterpreterPath, "\"" + script + "\"") {
+            var psi = new ProcessStartInfo(Version.InterpreterPath, PtvsdInterpreterArguments + " \"" + script + "\"") {
                 WorkingDirectory = TestData.GetPath(),
                 UseShellExecute = false
             };
 
             var p = Process.Start(psi);
             try {
-                Thread.Sleep(1000);
-                var proc = PythonRemoteProcess.Attach(
-                    new Uri("tcp://secret@localhost?opt=" + PythonDebugOptions.RedirectOutput),
-                    warnAboutAuthenticationErrors: false);
+                PythonProcess proc = null;
+                for (int i = 0;; ++i) {
+                    Thread.Sleep(1000);
+                    try {
+                        proc = PythonRemoteProcess.Attach(
+                            new Uri("tcp://secret@localhost?opt=" + PythonDebugOptions.RedirectOutput),
+                            warnAboutAuthenticationErrors: false);
+                        break;
+                    } catch (SocketException) {
+                        // Failed to connect - the process might have not started yet, so keep trying a few more times.
+                        if (i >= 5) {
+                            throw;
+                        }
+                    }
+                }
+
                 try {
                     var attached = new AutoResetEvent(false);
                     proc.ProcessLoaded += (sender, e) => {
@@ -3132,6 +3149,10 @@ int main(int argc, char* argv[]) {
 
         protected override string UnassignedLocalType {
             get { return "NoneType"; }
+        }
+
+        protected override string PtvsdInterpreterArguments {
+            get { return "-X:Tracing -X:Frames"; }
         }
 
         // IronPython doesn't expose closure variables in frame.f_locals
