@@ -1231,6 +1231,7 @@ namespace Microsoft.PythonTools.Parsing {
         }
 
         private Token ReadExponent(bool leftIsFloat = false) {
+            string tokenStr;
             int ch = NextChar();
 
             if (ch == '-' || ch == '+') {
@@ -1238,61 +1239,62 @@ namespace Microsoft.PythonTools.Parsing {
             }
 
             for (var iter = 0; ;iter++ ) {
-                    switch (ch) {
-                        case '0':
-                        case '1':
-                        case '2':
-                        case '3':
-                        case '4':
-                        case '5':
-                        case '6':
-                        case '7':
-                        case '8':
-                        case '9':
-                            ch = NextChar();
-                            break;
+                switch (ch) {
+                    case '0':
+                    case '1':
+                    case '2':
+                    case '3':
+                    case '4':
+                    case '5':
+                    case '6':
+                    case '7':
+                    case '8':
+                    case '9':
+                        ch = NextChar();
+                        break;
 
-                        case 'j':
-                        case 'J':
+                    case 'j':
+                    case 'J':
+                        MarkTokenEnd();
+
+                        // TODO: parse in place
+                        tokenStr = GetTokenString();
+                        if (Verbatim) {
+                            return new VerbatimConstantValueToken(ParseComplex(tokenStr), tokenStr);
+                        }
+                        return new ConstantValueToken(ParseComplex(tokenStr));
+                            
+                    default:
+                        if (iter <= 0) {
+                            // CPython Issue 21642 allows entries such as 1else which should be
+                            // parsed as '1 else' and not '1e lse'.  Back the buffer to before the e.
+                            BufferBack(-2);
+                            MarkTokenEnd();
+
+                            // since we are ignoring the e this could be either a float or int
+                            // depending on the lhs of the e
+                            tokenStr = GetTokenString();
+                            object parsed = leftIsFloat ? ParseFloat(tokenStr) : ParseInteger(tokenStr, 10);
+                            // TODO: parse in place
+                            if (Verbatim) {
+                                return new VerbatimConstantValueToken(parsed, tokenStr);
+                            }
+                            return new ConstantValueToken(parsed);
+                        } else {
+                            // we have a valid exponent but it is against a variable and are on the e.
+                            // For example 1e23else.
+                            BufferBack();
                             MarkTokenEnd();
 
                             // TODO: parse in place
+                            tokenStr = GetTokenString();
                             if (Verbatim) {
-                                string tokenStr = GetTokenString();
-                                return new VerbatimConstantValueToken(LiteralParser.ParseImaginary(tokenStr), tokenStr);
+                                return new VerbatimConstantValueToken(ParseFloat(tokenStr), tokenStr);
                             }
-                            return new ConstantValueToken(LiteralParser.ParseImaginary(GetTokenString()));
-                        default:
-                            if (iter <= 0) {
-                                // CPython Issue 21642 allows entries such as 1else which should be
-                                // parsed as '1 else' and not '1e lse'.  Back the buffer to before the e.
-                                BufferBack(-2);
-                                MarkTokenEnd();
-
-                                // since we are ignoring the e this could be either a float or int
-                                // depending on the lhs of the e
-                                string tokenStr = GetTokenString();
-                                object parsed = leftIsFloat ? ParseFloat(tokenStr) : ParseInteger(tokenStr, 10);
-                                // TODO: parse in place
-                                if (Verbatim) {
-                                    return new VerbatimConstantValueToken(parsed, tokenStr);
-                                }
-                                return new ConstantValueToken(parsed);
-                            } else {
-                                // we have a valid exponent but it is against a variable and are on the e.
-                                // For example 1e23else.
-                                BufferBack();
-                                MarkTokenEnd();
-
-                                // TODO: parse in place
-                                string tokenStr = GetTokenString();
-                                if (Verbatim) {
-                                    return new VerbatimConstantValueToken(ParseFloat(tokenStr), tokenStr);
-                                }
-                                return new ConstantValueToken(ParseFloat(tokenStr));
-                            }
-                    }
+                            return new ConstantValueToken(ParseFloat(tokenStr));
+                        }
                 }
+            }
         }
 
         private Token ReadName() {
@@ -2016,6 +2018,15 @@ namespace Microsoft.PythonTools.Parsing {
             } catch (Exception e) {
                 ReportSyntaxError(BufferTokenSpan, e.Message, ErrorCodes.SyntaxError);
                 return 0.0;
+            }
+        }
+
+        private object ParseComplex(string s) {
+            try {
+                return LiteralParser.ParseImaginary(s);
+            } catch (Exception e) {
+                ReportSyntaxError(BufferTokenSpan, e.Message, ErrorCodes.SyntaxError);
+                return default(Complex);
             }
         }
 
