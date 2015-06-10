@@ -33,11 +33,11 @@
       </Color>
       <Color Name="Interactive - Gray">
         <Foreground Type="CT_RAW" Source="FFC0C0C0" />
-      </Color>
+      </Color>-->
       <Color Name="Interactive - Green">
-        <Foreground Type="CT_RAW" Source="FF00FF00" />
+        <Foreground Type="CT_RAW" Source="FF00C000" />
       </Color>
-      <Color Name="Interactive - Magenta">
+      <!--<Color Name="Interactive - Magenta">
         <Foreground Type="CT_RAW" Source="FFFF00FF" />
       </Color>
       <Color Name="Interactive - Red">
