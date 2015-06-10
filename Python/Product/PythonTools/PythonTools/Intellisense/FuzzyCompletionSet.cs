@@ -159,6 +159,8 @@ namespace Microsoft.PythonTools.Intellisense {
         readonly bool _shouldHideAdvanced;
         readonly bool _matchInsertionText;
 
+        public const bool DefaultCommitByDefault = true;
+
         private readonly static Regex _advancedItemPattern = new Regex(
             @"__\w+__($|\s)",
             RegexOptions.IgnoreCase | RegexOptions.CultureInvariant
@@ -221,6 +223,8 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
                 _filteredCompletions.Filter(IsVisible);
             }
+
+            CommitByDefault = DefaultCommitByDefault;
         }
 
         private bool IsAdvanced(Completion comp) {
@@ -231,6 +235,9 @@ namespace Microsoft.PythonTools.Intellisense {
         /// If True, the best item is selected by default. Otherwise, the user
         /// will need to manually select it before committing.
         /// </summary>
+        /// <remarks>
+        /// By default, this is set to <see cref="DefaultCommitByDefault"/>
+        /// </remarks>
         public bool CommitByDefault { get; set; }
 
         /// <summary>
