@@ -72,15 +72,15 @@ namespace Microsoft.PythonTools.Analysis {
         public static IEnumerable<string> Expression(PythonLanguageVersion version = PythonLanguageVersion.None) {
             yield return "and";
             yield return "as";
-            if (version == PythonLanguageVersion.None || version >= PythonLanguageVersion.V35) {
+            if (version.IsNone() || version >= PythonLanguageVersion.V35) {
                 yield return "await";
             }
             yield return "else";
-            if (version == PythonLanguageVersion.None || version.Is3x()) {
+            if (version.IsNone() || version.Is3x()) {
                 yield return "False";
             }
             yield return "for";
-            if (version == PythonLanguageVersion.None || version >= PythonLanguageVersion.V33) {
+            if (version.IsNone() || version >= PythonLanguageVersion.V33) {
                 yield return "from";
             }
             yield return "if";
@@ -90,7 +90,7 @@ namespace Microsoft.PythonTools.Analysis {
             yield return "None";
             yield return "not";
             yield return "or";
-            if (version == PythonLanguageVersion.None || version.Is3x()) {
+            if (version.IsNone() || version.Is3x()) {
                 yield return "True";
             }
             yield return "yield";
@@ -102,7 +102,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// </summary>
         public static IEnumerable<string> Statement(PythonLanguageVersion version = PythonLanguageVersion.None) {
             yield return "assert";
-            if (version == PythonLanguageVersion.None || version >= PythonLanguageVersion.V35) {
+            if (version.IsNone() || version >= PythonLanguageVersion.V35) {
                 yield return "async";
                 yield return "await";
             }
@@ -111,7 +111,7 @@ namespace Microsoft.PythonTools.Analysis {
             yield return "class";
             yield return "def";
             yield return "del";
-            if (version == PythonLanguageVersion.None || version.Is2x()) {
+            if (version.IsNone() || version.Is2x()) {
                 yield return "exec";
             }
             yield return "if";
@@ -122,11 +122,11 @@ namespace Microsoft.PythonTools.Analysis {
             yield return "from";
             yield return "global";
             yield return "import";
-            if (version == PythonLanguageVersion.None || version.Is3x()) {
+            if (version.IsNone() || version.Is3x()) {
                 yield return "nonlocal";
             }
             yield return "pass";
-            if (version == PythonLanguageVersion.None || version.Is2x()) {
+            if (version.IsNone() || version.Is2x()) {
                 yield return "print";
             }
             yield return "raise";
@@ -144,11 +144,11 @@ namespace Microsoft.PythonTools.Analysis {
         public static IEnumerable<string> InvalidOutsideFunction(
             PythonLanguageVersion version = PythonLanguageVersion.None
         ) {
-            if (version == PythonLanguageVersion.None || version >= PythonLanguageVersion.V35) {
+            if (version.IsNone() || version >= PythonLanguageVersion.V35) {
                 yield return "await";
             }
             yield return "return";
-            if (version == PythonLanguageVersion.None || version >= PythonLanguageVersion.V25) {
+            if (version.IsNone() || version >= PythonLanguageVersion.V25) {
                 yield return "yield";
             }
         }
