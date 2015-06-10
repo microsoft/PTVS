@@ -63,13 +63,24 @@ namespace PythonToolsMockTests {
                     analyzer = new VsProjectAnalyzer(vs.ServiceProvider, factory, new[] { factory });
                 }
 
-                view = vs.CreateTextView(PythonCoreConstants.ContentType, content ?? "", v => {
-                    v.TextView.TextBuffer.Properties.AddProperty(typeof(VsProjectAnalyzer), analyzer);
-                }, filename);
                 var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-                analyzer.WaitForCompleteAnalysis(x => !cts.IsCancellationRequested);
-                if (cts.IsCancellationRequested) {
-                    Assert.Fail("Timed out waiting for code analysis");
+                using (var mre = new ManualResetEventSlim()) {
+                    EventHandler evt = (s, e) => mre.Set();
+                    analyzer.AnalysisStarted += evt;
+                    view = vs.CreateTextView(PythonCoreConstants.ContentType, content ?? "", v => {
+                        v.TextView.TextBuffer.Properties.AddProperty(typeof(VsProjectAnalyzer), analyzer);
+                    }, filename);
+
+                    try {
+                        mre.Wait(cts.Token);
+                        analyzer.WaitForCompleteAnalysis(x => !cts.IsCancellationRequested);
+                    } catch (OperationCanceledException) {
+                    } finally {
+                        analyzer.AnalysisStarted -= evt;
+                    }
+                    if (cts.IsCancellationRequested) {
+                        Assert.Fail("Timed out waiting for code analysis");
+                    }
                 }
 
                 View = view;

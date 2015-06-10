@@ -124,6 +124,8 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
+        public event EventHandler AnalysisStarted;
+
         public bool IsAnalyzing {
             get {
                 lock (_queueLock) {
@@ -178,6 +180,11 @@ namespace Microsoft.PythonTools.Intellisense {
                     workItem = GetNextItem(out pri);
                     _isAnalyzing = true;
                 }
+                var evt = AnalysisStarted;
+                if (evt != null) {
+                    evt(this, EventArgs.Empty);
+                }
+
                 if (workItem != null) {
                     var groupable = workItem as IGroupableAnalysisProjectEntry;
                     if (groupable != null) {
