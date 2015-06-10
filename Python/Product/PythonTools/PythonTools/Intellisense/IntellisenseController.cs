@@ -208,7 +208,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     case '.':
                     case ' ':
                         if (_provider.PythonService.LangPrefs.AutoListMembers) {
-                            TriggerCompletionSession(false, true);
+                            TriggerCompletionSession(false);
                         }
                         break;
                     case '(':
@@ -680,27 +680,41 @@ namespace Microsoft.PythonTools.Intellisense {
         [ThreadStatic]
         internal static bool ForceCompletions;
 
-        internal void TriggerCompletionSession(bool completeWord, bool commitByDefault) {
+        private bool SelectSingleBestCompletion(ICompletionSession session) {
+            if (session.CompletionSets.Count != 1) {
+                return false;
+            }
+            var set = session.CompletionSets[0] as FuzzyCompletionSet;
+            if (set == null) {
+                return false;
+            }
+            set.Filter();
+            if (set.SelectSingleBest()) {
+                session.Commit();
+                return true;
+            }
+            return false;
+        }
+
+        internal void TriggerCompletionSession(bool completeWord, bool? commitByDefault = null) {
             Dismiss();
 
-            _activeSession = CompletionBroker.TriggerCompletion(_textView);
+            var session = CompletionBroker.TriggerCompletion(_textView);
 
-            if (_activeSession != null) {
-                FuzzyCompletionSet set;
-                if (completeWord &&
-                    _activeSession.CompletionSets.Count == 1 &&
-                    (set = _activeSession.CompletionSets[0] as FuzzyCompletionSet) != null &&
-                    set.SelectSingleBest()) {
-                    _activeSession.Commit();
-                    _activeSession = null;
-                } else {
-                    foreach (var s in _activeSession.CompletionSets.OfType<FuzzyCompletionSet>()) {
-                        s.CommitByDefault = commitByDefault;
+            if (session == null) {
+                _activeSession = null;
+            } else if (completeWord && SelectSingleBestCompletion(session)) {
+                session.Commit();
+            } else {
+                if (commitByDefault.HasValue) {
+                    foreach (var s in session.CompletionSets.OfType<FuzzyCompletionSet>()) {
+                        s.CommitByDefault = commitByDefault.GetValueOrDefault();
                     }
-                    _activeSession.Filter();
-                    _activeSession.Dismissed += OnCompletionSessionDismissedOrCommitted;
-                    _activeSession.Committed += OnCompletionSessionDismissedOrCommitted;
                 }
+                session.Filter();
+                session.Dismissed += OnCompletionSessionDismissedOrCommitted;
+                session.Committed += OnCompletionSessionDismissedOrCommitted;
+                _activeSession = session;
             }
         }
 
