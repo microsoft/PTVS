@@ -16,7 +16,6 @@ using System;
 using System.Drawing;
 using System.Windows.Forms;
 using System.Windows.Forms.VisualStyles;
-using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudioTools.Project;
 
@@ -24,8 +23,6 @@ namespace Microsoft.PythonTools.Options {
     class OptionsTreeView : TreeView {
         private static ImageList _imageList;
         internal const int TransparentIndex = 0;
-        internal const int OpenFolderIndex = 1;
-        internal const int ClosedFolderIndex = 2;
 
         public OptionsTreeView() {
             InitializeImageList();
@@ -42,28 +39,16 @@ namespace Microsoft.PythonTools.Options {
 
         private void InitializeImageList() {
             if (_imageList == null) {
-                using (var imgHandler = new ImageHandler(typeof(OptionsTreeView).Assembly.GetManifestResourceStream("Microsoft.PythonTools.Project.Resources.imagelis.bmp"))) {
-#pragma warning disable 0618
-                    var openFolder = imgHandler.ImageList.Images[(int)ProjectNode.ImageName.OpenFolder];
-                    var closedFolder = imgHandler.ImageList.Images[(int)ProjectNode.ImageName.Folder];
-#pragma warning restore 0618
+                _imageList = new ImageList();
 
-                    _imageList = new ImageList();
+                Bitmap bmp = new Bitmap(16, 16);
 
-                    Bitmap bmp = new Bitmap(16, 16);
-
-                    // transparent image is the image we use for owner drawn icons
-                    _imageList.TransparentColor = Color.Magenta;
-                    using (var g = Graphics.FromImage(bmp)) {
-                        g.FillRectangle(
-                            Brushes.Magenta,
-                            new Rectangle(0, 0, 16, 16)
-                        );
-                    }
-                    _imageList.Images.Add(bmp);
-                    _imageList.Images.Add(openFolder);
-                    _imageList.Images.Add(closedFolder);
+                // transparent image is the image we use for owner drawn icons
+                _imageList.TransparentColor = Color.Magenta;
+                using (var g = Graphics.FromImage(bmp)) {
+                    g.FillRectangle(Brushes.Magenta, new Rectangle(0, 0, 16, 16));
                 }
+                _imageList.Images.Add(bmp);
             }
 
             StateImageList = _imageList;
@@ -130,7 +115,6 @@ namespace Microsoft.PythonTools.Options {
         protected override void OnAfterExpand(TreeViewEventArgs e) {
             OptionFolderNode node = e.Node as OptionFolderNode;
             if (node != null) {
-                node.SelectedImageIndex = node.ImageIndex = OpenFolderIndex;
                 InvalidateNodeIcon(node);
                 node.WasExpanded = true;
                 return;
@@ -141,7 +125,6 @@ namespace Microsoft.PythonTools.Options {
         protected override void OnAfterCollapse(TreeViewEventArgs e) {
             OptionFolderNode node = e.Node as OptionFolderNode;
             if (node != null) {
-                node.SelectedImageIndex = node.ImageIndex = ClosedFolderIndex;
                 InvalidateNodeIcon(node);
                 node.WasExpanded = false;
                 return;
@@ -404,9 +387,7 @@ namespace Microsoft.PythonTools.Options {
         public bool WasExpanded = true;
 
         public OptionFolderNode(string name)
-            : base(name) {
-            StateImageIndex = SelectedImageIndex = ImageIndex = OptionsTreeView.OpenFolderIndex;
-        }
+            : base(name) { }
     }
 
     abstract class OptionSettingNode : OptionNode {
