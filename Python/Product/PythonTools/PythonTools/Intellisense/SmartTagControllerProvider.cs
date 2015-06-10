@@ -25,22 +25,13 @@ namespace Microsoft.PythonTools.Intellisense {
     [TextViewRole(PredefinedTextViewRoles.Analyzable)]
     [TextViewRole(PredefinedTextViewRoles.Editable)]
     class SmartTagControllerProvider : IIntellisenseControllerProvider {
-
-    #region MEF Imports
-
         [Import]
         public ISmartTagBroker smartTagBroker = null;
-
-    #endregion
-
-    #region IIntellisenseControllerProvider Members
 
         public IIntellisenseController TryCreateIntellisenseController(ITextView textView,
                                                                        IList<ITextBuffer> subjectBuffers) {
             return SmartTagController.CreateInstance(this.smartTagBroker, textView, subjectBuffers);
         }
-
-    #endregion
     }
 #endif
 }
