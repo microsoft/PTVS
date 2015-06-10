@@ -1156,7 +1156,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 } else if (CompletionAnalysis.IsKeyword(first, "raise") || CompletionAnalysis.IsKeyword(first, "except")) {
                     if (tokens.Count == 1 ||
                         lastClass.ClassificationType.IsOfType(PythonPredefinedClassificationTypeNames.Comma) ||
-                        lastClass.IsOpenGrouping()) {
+                        (lastClass.IsOpenGrouping() && tokens.Count < 3)) {
                         return new ExceptionCompletionAnalysis(span, buffer, options);
                     }
                 }
