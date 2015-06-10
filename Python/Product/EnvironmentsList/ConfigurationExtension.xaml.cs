@@ -218,7 +218,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 WindowInterpreterPath = view.WindowsInterpreterPath,
                 LibraryPath = view.LibraryPath,
                 PathEnvironmentVariableName = view.PathEnvironmentVariable,
-                ArchitectureString = view.ArchitectureName,
+                Architecture = view.ArchitectureName == "64-bit" ? ProcessorArchitecture.Amd64 : ProcessorArchitecture.X86,
                 LanguageVersionString = view.VersionName
             });
         }
