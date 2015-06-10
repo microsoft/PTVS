@@ -1022,6 +1022,35 @@ x = m.f(";
         }
 
         [TestMethod, Priority(0), TestCategory("Mock")]
+        public void YieldFromExpressionCompletion() {
+            const string code = @"
+def f():
+    yield 1
+    return 1
+
+def g():
+    f().
+    yield from f().
+    (yield from f()).
+";
+
+            using (var view = new PythonEditor(code, PythonLanguageVersion.V35)) {
+                AssertUtil.CheckCollection(view.GetCompletionsAfter("f()."),
+                    new[] { "next", "send", "throw" },
+                    new[] { "real", "imag" }
+                );
+                AssertUtil.CheckCollection(view.GetCompletionsAfter("yield from f()."),
+                    new[] { "next", "send", "throw" },
+                    new[] { "real", "imag" }
+                );
+                AssertUtil.CheckCollection(view.GetCompletionsAfter("(yield from f())."),
+                    new[] { "real", "imag" },
+                    new[] { "next", "send", "throw" }
+                );
+            }
+        }
+
+        [TestMethod, Priority(0), TestCategory("Mock")]
         public void AwaitExpressionCompletion() {
             const string code = @"
 async def f():

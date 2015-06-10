@@ -393,7 +393,7 @@ namespace Microsoft.PythonTools.Parsing {
         }
 
         private Name TokenToName(Token t) {
-            if (AllowAsyncAwaitSyntax) {
+            if (!AllowAsyncAwaitSyntax) {
                 if (t.Kind == TokenKind.KeywordAwait) {
                     return Name.Await;
                 } else if (t.Kind == TokenKind.KeywordAsync) {
