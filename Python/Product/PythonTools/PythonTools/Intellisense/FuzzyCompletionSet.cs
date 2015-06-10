@@ -235,6 +235,9 @@ namespace Microsoft.PythonTools.Intellisense {
         /// If True, the best item is selected by default. Otherwise, the user
         /// will need to manually select it before committing.
         /// </summary>
+        /// <remarks>
+        /// By default, this is set to <see cref="DefaultCommitByDefault"/>
+        /// </remarks>
         public bool CommitByDefault { get; set; }
 
         /// <summary>
