@@ -327,9 +327,10 @@ namespace ReplWindowUITests {
             using (var interactive = Prepare()) {
                 // the App instance preserves this property for us already
                 interactive.App.Options.Intellisense.AutoListIdentifiers = true;
-
+                Keyboard.Type("x = ");
+                
+                // 'x' should bring up a completion session
                 foreach (var c in "abcdefghijklmnopqrstuvwxyz_ABCDEFGHIJKLMNOPQRSTUVWXYZ") {
-                    // x<space> should bring up a completion session
                     Keyboard.Type(c.ToString());
 
                     using (var sh = interactive.WaitForSession<ICompletionSession>()) {
@@ -339,7 +340,7 @@ namespace ReplWindowUITests {
                     Keyboard.Backspace();
                 }
 
-                // x<space> should not bring up a completion session
+                // 'x' should not bring up a completion session
                 // Don't check too many items, since asserting that no session
                 // starts is slow.
                 foreach (var c in "1([{") {
