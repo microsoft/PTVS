@@ -59,6 +59,11 @@ namespace Microsoft.PythonTools {
                 _entry = _buffer.GetPythonProjectEntry();
                 if (_entry != null) {
                     _entry.OnNewAnalysis += OnNewAnalysis;
+                    if (_entry.IsAnalyzed) {
+                        // Ensure we get classifications if we've already been
+                        // analyzed
+                        OnNewAnalysis(_entry, EventArgs.Empty);
+                    }
                 }
             }
         }
@@ -172,6 +177,7 @@ namespace Microsoft.PythonTools {
         }
 
         private void BufferChanged(object sender, TextContentChangedEventArgs e) {
+            EnsureAnalysis();
         }
 
         #endregion

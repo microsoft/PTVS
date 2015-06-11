@@ -116,6 +116,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             _queue = new ParseQueue(this);
             _analysisQueue = new AnalysisQueue(this);
+            _analysisQueue.AnalysisStarted += AnalysisQueue_AnalysisStarted;
             _allFactories = allFactories;
 
             _interpreterFactory = factory;
@@ -137,6 +138,13 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             _userCount = 1;
+        }
+
+        private void AnalysisQueue_AnalysisStarted(object sender, EventArgs e) {
+            var evt = AnalysisStarted;
+            if (evt != null) {
+                evt(this, e);
+            }
         }
 
         internal PythonToolsService PyService {
@@ -707,6 +715,8 @@ namespace Microsoft.PythonTools.Intellisense {
                 return _queue.IsParsing || _analysisQueue.IsAnalyzing;
             }
         }
+
+        internal event EventHandler AnalysisStarted;
 
         internal void WaitForCompleteAnalysis(Func<int, bool> itemsLeftUpdated) {
             if (IsAnalyzing) {
@@ -1540,6 +1550,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 _commentTaskProvider.Clear(entry, ParserTaskMoniker);
             }
 
+            _analysisQueue.AnalysisStarted -= AnalysisQueue_AnalysisStarted;
             ((IDisposable)_analysisQueue).Dispose();
             if (_pyAnalyzer != null) {
                 lock (_contentsLock) {
