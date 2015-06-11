@@ -46,7 +46,7 @@ namespace Microsoft.PythonTools.Options {
             var textContentType = contentTypeRegistry.GetContentType("Python");
 
             _buffer = bufferFactory.CreateTextBuffer(textContentType);
-            var editor = editorFactory.CreateTextView(_buffer);
+            var editor = editorFactory.CreateTextView(_buffer, CreateRoleSet());
             
             _editorHost.Child = (UIElement)editor;
             _buffer.Replace(new Span(0, 0), DefaultText);
@@ -55,8 +55,6 @@ namespace Microsoft.PythonTools.Options {
         private ITextViewRoleSet/*!*/ CreateRoleSet() {
             var textEditorFactoryService = _serviceProvider.GetComponentModel().GetService<ITextEditorFactoryService>();
             return textEditorFactoryService.CreateTextViewRoleSet(
-                PredefinedTextViewRoles.Analyzable,
-                PredefinedTextViewRoles.Editable,
                 PredefinedTextViewRoles.Interactive,
                 PredefinedTextViewRoles.PrimaryDocument,
                 PredefinedTextViewRoles.Zoomable,

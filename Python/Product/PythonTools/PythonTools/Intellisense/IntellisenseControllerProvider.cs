@@ -31,6 +31,8 @@ using Microsoft.VisualStudio.Repl;
 
 namespace Microsoft.PythonTools.Intellisense {
     [Export(typeof(IIntellisenseControllerProvider)), ContentType(PythonCoreConstants.ContentType), Order]
+    [TextViewRole(PredefinedTextViewRoles.Analyzable)]
+    [TextViewRole(PredefinedTextViewRoles.Editable)]
     class IntellisenseControllerProvider : IIntellisenseControllerProvider {
         [Import]
         internal ICompletionBroker _CompletionBroker = null; // Set via MEF
