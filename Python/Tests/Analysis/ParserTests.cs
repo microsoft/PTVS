@@ -2437,7 +2437,7 @@ namespace AnalysisTests {
         public void FromFuture() {
             foreach (var version in AllVersions) {
                 CheckAst(
-                    ParseFile("FromFuture24.py", ErrorSink.Null, version),
+                    ParseFileNoErrors("FromFuture24.py", version),
                     CheckSuite(
                         CheckFromImport("__future__", new[] { "division" }),
                         CheckFromImport("__future__", new[] { "generators" })
@@ -2451,7 +2451,7 @@ namespace AnalysisTests {
                     );
                 } else {
                     CheckAst(
-                        ParseFile("FromFuture25.py", ErrorSink.Null, version),
+                        ParseFileNoErrors("FromFuture25.py", version),
                         CheckSuite(
                             CheckFromImport("__future__", new[] { "with_statement" }),
                             CheckFromImport("__future__", new[] { "absolute_import" })
@@ -2466,10 +2466,23 @@ namespace AnalysisTests {
                     );
                 } else {
                     CheckAst(
-                        ParseFile("FromFuture26.py", ErrorSink.Null, version),
+                        ParseFileNoErrors("FromFuture26.py", version),
                         CheckSuite(
                             CheckFromImport("__future__", new[] { "print_function" }),
                             CheckFromImport("__future__", new[] { "unicode_literals" })
+                        )
+                    );
+                }
+
+                if (version < PythonLanguageVersion.V35) {
+                    ParseErrors("FromFuture35.py", version,
+                        new ErrorInfo("future feature is not defined: generator_stop", 0, 1, 1, 37, 1, 38)
+                    );
+                } else {
+                    CheckAst(
+                        ParseFileNoErrors("FromFuture35.py", version),
+                        CheckSuite(
+                            CheckFromImport("__future__", new[] { "generator_stop" })
                         )
                     );
                 }

@@ -1185,6 +1185,10 @@ namespace Microsoft.PythonTools.Parsing {
                 } else if (_langVersion >= PythonLanguageVersion.V26 && name.Name == "unicode_literals") {
                     _tokenizer.UnicodeLiterals = true;
                     _languageFeatures |= FutureOptions.UnicodeLiterals;
+
+                    // v3.5:
+                } else if (_langVersion >= PythonLanguageVersion.V35 && name.Name == "generator_stop") {
+                    // No behavior change, but we don't want to display an error
                 } else {
                     string strName = name.Name;
 
