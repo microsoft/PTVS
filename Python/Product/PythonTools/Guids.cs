@@ -41,5 +41,8 @@ namespace Microsoft.PythonTools
         public static readonly Guid guidEureka = new Guid("30947ebe-9147-45f9-96cf-401bfc671a82");  //  Microsoft.VisualStudio.Web.Eureka.dll package, includes page inspector
         
         public static readonly Guid guidOfficeSharePointCmdSet = new Guid("d26c976c-8ee8-4ec4-8746-f5f7702a17c5");
+
+        public static readonly Guid InteractiveCommandSetId = new Guid("00B8868B-F9F5-4970-A048-410B05508506");
+        public static readonly Guid InteractiveToolWindowId = new Guid("2D0A56AA-9527-4B78-B6E6-EBE6E05DA749");
     };
 }
