@@ -1050,12 +1050,72 @@ namespace Microsoft.PythonTools.Language {
                             return VSConstants.S_OK;
                     }
                 }
+#if DEV14_OR_LATER
+            } else if (pguidCmdGroup == GuidList.InteractiveCommandSetId) {
+                for (int i = 0; i < cCmds; i++) {
+                    switch ((ReplCommandIds)prgCmds[i].cmdID) {
+                        case ReplCommandIds.HistoryNext:
+                        case ReplCommandIds.HistoryPrevious:
+                        case ReplCommandIds.SearchHistoryNext:
+                        case ReplCommandIds.SearchHistoryPrevious:
+                        case ReplCommandIds.SmartExecute:
+                            var interactive = _textView.TextBuffer.GetInteractiveWindow();
+
+                            if (interactive != null) {
+                                if (interactive.CurrentLanguageBuffer != null) {
+                                    prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED | OLECMDF.OLECMDF_DEFHIDEONCTXTMENU);
+                                } else {
+                                    prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_SUPPORTED | OLECMDF.OLECMDF_DEFHIDEONCTXTMENU);
+                                }
+                                return VSConstants.S_OK;
+                            }
+                            break;
+                        case ReplCommandIds.AbortExecution:
+                            interactive = _textView.TextBuffer.GetInteractiveWindow();
+
+                            if (interactive != null) {
+                                if (interactive.IsRunning) {
+                                    prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED | OLECMDF.OLECMDF_DEFHIDEONCTXTMENU);
+                                } else {
+                                    prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_SUPPORTED | OLECMDF.OLECMDF_DEFHIDEONCTXTMENU);
+                                }
+                            }
+                            break;
+                        case ReplCommandIds.Reset:
+                            interactive = _textView.TextBuffer.GetInteractiveWindow();
+
+                            if (interactive != null) {
+                                if (!interactive.IsResetting) {
+                                    prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED | OLECMDF.OLECMDF_DEFHIDEONCTXTMENU);
+                                } else {
+                                    prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_SUPPORTED | OLECMDF.OLECMDF_DEFHIDEONCTXTMENU);
+                                }
+                            }
+                            break;
+                    }
+                }
+#endif
             }
 
 
             return _next.QueryStatus(ref pguidCmdGroup, cCmds, prgCmds, pCmdText);
         }
 
+#if DEV14_OR_LATER
+        enum ReplCommandIds : uint {
+            SmartExecute = 0x103,
+            AbortExecution = 0x104,
+            Reset = 0x105,
+            HistoryNext = 0x0106,
+            HistoryPrevious = 0x0107,
+            ClearScreen = 0x0108,
+            BreakLine = 0x0109,
+            SearchHistoryNext = 0x010A,
+            SearchHistoryPrevious = 0x010B,
+            ExecuteInInteractiveWindow = 0x010C,
+            CopyToInteractiveWindow = 0x010D,
+        }
+#endif
 #if DEV10
         private bool IsCSharpInstalled() {
             IVsShell shell = (IVsShell)_serviceProvider.GetService(typeof(IVsShell));
