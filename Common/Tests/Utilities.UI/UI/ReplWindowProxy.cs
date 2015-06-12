@@ -151,7 +151,6 @@ namespace TestUtilities.UI {
 
                 for (int retries = 10; retries > 0; --retries) {
                     result.Reset();
-                    Thread.Sleep(1000);
                     result.ClearScreen();
                     result.ClearInput();
 
