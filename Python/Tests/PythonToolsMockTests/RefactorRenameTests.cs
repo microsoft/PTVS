@@ -2396,7 +2396,7 @@ def g(a, b, c):
                         { inputs[0].Filename, mainView.CurrentSnapshot.TextBuffer }
                     };
                     foreach (var i in inputs.Skip(1)) {
-                        var editor = new PythonEditor(i.Input, version.ToLanguageVersion(), _vs, mainView.Factory, analyzer, inputs[0].Filename);
+                        var editor = new PythonEditor(i.Input, version.ToLanguageVersion(), _vs, mainView.Factory, analyzer, i.Filename);
                         views.Add(editor);
                         bufferTable[i.Filename] = editor.CurrentSnapshot.TextBuffer;
                     }
