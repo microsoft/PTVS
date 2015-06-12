@@ -719,16 +719,6 @@ namespace Microsoft.PythonTools.Language {
                     case PkgCmdIDList.cmdidExtractMethodIntegratedShell:
                         ExtractMethod();
                         return VSConstants.S_OK;
-                    default:
-                        lock (PythonToolsPackage.CommandsLock) {
-                            foreach (var command in PythonToolsPackage.Commands.Keys) {
-                                if (command.CommandId == nCmdID) {
-                                    command.DoCommand(this, EventArgs.Empty);
-                                    return VSConstants.S_OK;
-                                }
-                            }
-                        }
-                        break;
                 }
 
             }
