@@ -402,11 +402,12 @@ namespace Microsoft.PythonTools.Repl {
             private void HandleReadLine() {
                 // perform the input on a new thread so that we don't block additional commands (such as output) from being processed by us
                 // (this is called on the output thread)
+                var window = Window;
                 ThreadPool.QueueUserWorkItem(x => {
 #if DEV14_OR_LATER
-                    string input = Window.ReadStandardInput().ReadToEnd();
+                    string input = window?.ReadStandardInput()?.ReadToEnd();
 #else
-                    string input = Window.ReadStandardInput();
+                    string input = window != null ? window.ReadStandardInput() : null;
 #endif
                     input = input != null ? UnfixNewLines(input) : "\n";
                     try {

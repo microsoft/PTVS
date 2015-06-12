@@ -24,6 +24,8 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Tagging;
 using TestUtilities;
+using TestUtilities.UI;
+using TestUtilities.UI.Python;
 using Keyboard = TestUtilities.UI.Keyboard;
 
 namespace ReplWindowUITests {
@@ -57,9 +59,7 @@ namespace ReplWindowUITests {
         [TestMethod, Priority(0)]
         [HostType("VSTestHost")]
         public virtual void RegressionImportMultipleModules() {
-            using (var interactive = Prepare()) {
-                interactive.AddNewLineAtEndOfFullyTypedWord = true;
-
+            using (var interactive = Prepare(addNewLineAtEndOfFullyTypedWord: true)) {
                 Keyboard.Type("import ");
 
                 using (var sh = interactive.WaitForSession<ICompletionSession>()) {
@@ -85,7 +85,7 @@ namespace ReplWindowUITests {
                 interactive.WaitForText(
                     ">" + code,
                     "Traceback (most recent call last):",
-                    "  File \"<" + interactive.Settings.SourceFileName + ">\", line 1, in <module>",
+                    "  File \"<" + ((PythonReplWindowProxySettings)interactive.Settings).SourceFileName + ">\", line 1, in <module>",
                     "Exception",
                     ">"
                 );
@@ -218,7 +218,7 @@ repl is not None");
         [HostType("VSTestHost")]
         public virtual void ImportCompletions() {
             using (var interactive = Prepare()) {
-                if (interactive.Settings.Version.IsIronPython) {
+                if (((PythonReplWindowProxySettings)interactive.Settings).Version.IsIronPython) {
                     interactive.SubmitCode("import clr");
                 }
 

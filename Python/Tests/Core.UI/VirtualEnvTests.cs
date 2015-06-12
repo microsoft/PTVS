@@ -28,6 +28,7 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools;
 using TestUtilities;
+using TestUtilities.Mocks;
 using TestUtilities.Python;
 using TestUtilities.UI;
 using TestUtilities.UI.Python;
