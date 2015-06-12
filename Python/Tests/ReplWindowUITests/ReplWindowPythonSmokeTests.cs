@@ -21,6 +21,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.Python;
 using TestUtilities.UI;
+using TestUtilities.UI.Python;
 
 namespace ReplWindowUITests {
     /// <summary>
@@ -31,15 +32,17 @@ namespace ReplWindowUITests {
     public abstract class ReplWindowPythonSmokeTests {
         static ReplWindowPythonSmokeTests() {
             PythonTestData.Deploy();
+            AssertListener.Initialize();
         }
 
-        internal abstract ReplWindowProxySettings Settings {
+        internal abstract PythonReplWindowProxySettings Settings {
             get;
         }
 
         internal virtual ReplWindowProxy Prepare(
             bool enableAttach = false,
-            bool useIPython = false
+            bool useIPython = false,
+            bool addNewLineAtEndOfFullyTypedWord = false
         ) {
             var s = Settings;
             if (s.Version == null) {
@@ -49,6 +52,10 @@ namespace ReplWindowUITests {
             if (enableAttach != s.EnableAttach) {
                 s = s.Clone();
                 s.EnableAttach = enableAttach;
+            }
+            if (addNewLineAtEndOfFullyTypedWord != s.AddNewLineAtEndOfFullyTypedWord) {
+                s = s.Clone();
+                s.AddNewLineAtEndOfFullyTypedWord = addNewLineAtEndOfFullyTypedWord;
             }
 
             return ReplWindowProxy.Prepare(s, useIPython: useIPython);
@@ -97,11 +104,12 @@ namespace ReplWindowUITests {
                 interactive.SubmitCode("import sys\nsys.path");
                 interactive.SubmitCode("import os\nos.chdir(r'" + TestData.GetPath("TestData\\ReplCwd") + "')");
 
+                var importErrorFormat = ((PythonReplWindowProxySettings)interactive.Settings).ImportError;
                 interactive.SubmitCode("import module1");
-                interactive.WaitForTextEnd(string.Format(interactive.Settings.ImportError, "module1"), ">");
+                interactive.WaitForTextEnd(string.Format(importErrorFormat, "module1"), ">");
 
                 interactive.SubmitCode("import module2");
-                interactive.WaitForTextEnd(string.Format(interactive.Settings.ImportError, "module2"), ">");
+                interactive.WaitForTextEnd(string.Format(importErrorFormat, "module2"), ">");
 
                 interactive.SubmitCode("os.chdir('A')");
                 interactive.WaitForTextEnd(">os.chdir('A')", ">");
@@ -110,7 +118,7 @@ namespace ReplWindowUITests {
                 interactive.WaitForTextEnd(">import module1", ">");
 
                 interactive.SubmitCode("import module2");
-                interactive.WaitForTextEnd(string.Format(interactive.Settings.ImportError, "module2"), ">");
+                interactive.WaitForTextEnd(string.Format(importErrorFormat, "module2"), ">");
 
                 interactive.SubmitCode("os.chdir('..\\B')");
                 interactive.WaitForTextEnd(">os.chdir('..\\B')", ">");

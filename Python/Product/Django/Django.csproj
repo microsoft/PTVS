@@ -113,6 +113,31 @@
     </Reference>
     <Reference Include="WindowsBase" />
   </ItemGroup>
+  <Choose>
+    <When Condition="$(VSMajorVersion) >= 14">
+      <ItemGroup>
+        <Reference Include="Microsoft.VisualStudio.InteractiveWindow">
+          <HintPath>$(DevEnvDir)PrivateAssemblies\Microsoft.VisualStudio.InteractiveWindow.dll</HintPath>
+          <Private>false</Private>
+        </Reference>
+        <Reference Include="Microsoft.VisualStudio.VsInteractiveWindow">
+          <HintPath>$(DevEnvDir)PrivateAssemblies\Microsoft.VisualStudio.VsInteractiveWindow.dll</HintPath>
+          <Private>false</Private>
+        </Reference>
+      </ItemGroup>
+    </When>
+    <Otherwise>
+      <ItemGroup>
+        <ProjectReference Include="$(BuildRoot)Python\Product\ReplWindow\ReplWindow.csproj">
+          <Project>{20BB6FAC-44D2-4D76-ABFE-0C1E163A1A4F}</Project>
+          <Private>false</Private>
+          <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+          <Name Condition="'$(InteractiveWindow)' == ''">Microsoft.VisualStudio.ReplWindow</Name>
+          <Name Condition="'$(InteractiveWindow)' != ''">Microsoft.VisualStudio.InteractiveWindow</Name>
+        </ProjectReference>
+      </ItemGroup>
+    </Otherwise>
+  </Choose>
   <PropertyGroup>
     <WebEditorHintPath>$(DevEnvDir)\CommonExtensions\Microsoft\Web\Editor\</WebEditorHintPath>
     <WebEditorHintPath Condition="'$(VSTarget)' == '14.0'">$(DevEnvDir)\Extensions\Microsoft\Web Tools\Editors\</WebEditorHintPath>
@@ -467,19 +492,15 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ReplWindow\ReplWindow.csproj">
-      <Project>{20bb6fac-44d2-4d76-abfe-0c1e163a1a4f}</Project>
-      <Name>ReplWindow</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Analysis\Analysis.csproj">
+    <ProjectReference Include="$(BuildRoot)Python\Product\Analysis\Analysis.csproj">
       <Project>{A85D479D-67A9-4BDB-904A-7D86DAF68A6F}</Project>
       <Name>Analysis</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Debugger\Debugger.csproj">
+    <ProjectReference Include="$(BuildRoot)Python\Product\Debugger\Debugger.csproj">
       <Project>{DECC7971-FA58-4DB0-9561-BFFADD393BBD}</Project>
       <Name>Debugger</Name>
     </ProjectReference>
-    <ProjectReference Include="..\PythonTools\PythonTools.csproj">
+    <ProjectReference Include="$(BuildRoot)Python\Product\PythonTools\PythonTools.csproj">
       <Project>{FA7BE5F5-E04F-4613-B7AC-70CE10D1BB68}</Project>
       <Name>PythonTools</Name>
       <EmbedInteropTypes>False</EmbedInteropTypes>

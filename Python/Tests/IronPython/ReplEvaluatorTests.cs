@@ -20,13 +20,15 @@ using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Repl;
-using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudioTools;
 using TestUtilities;
 using TestUtilities.Mocks;
 using TestUtilities.Python;
+#if !DEV14_OR_LATER
+using Microsoft.VisualStudio.Repl;
+#endif
 
 namespace ReplWindowUITests {
     [TestClass]

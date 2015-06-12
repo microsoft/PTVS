@@ -21,79 +21,44 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
-using Microsoft.PythonTools;
-using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Options;
-using Microsoft.PythonTools.Parsing;
-using Microsoft.PythonTools.Repl;
-using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Language.Intellisense;
-using Microsoft.VisualStudio.Repl;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Operations;
-using TestUtilities;
-using TestUtilities.UI.Python;
+#if DEV14_OR_LATER
+using Microsoft.VisualStudio.InteractiveWindow;
+using Microsoft.VisualStudio.InteractiveWindow.Shell;
+#else
+using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Repl;
+using IInteractiveWindow = Microsoft.VisualStudio.Repl.IReplWindow;
+using InteractiveWindowProvider = Microsoft.VisualStudio.Repl.IReplWindowProvider;
+#endif
 
-namespace ReplWindowUITests {
-    internal sealed class ReplWindowProxySettings {
+namespace TestUtilities.UI {
+    public abstract class ReplWindowProxySettings {
         public ReplWindowProxySettings() {
             PrimaryPrompt = ">>>";
             SecondaryPrompt = "...";
             InlinePrompts = true;
             UseInterpreterPrompts = false;
-            SourceFileName = "stdin";
-            IntFirstMember = "bit_length";
-            RawInput = "raw_input";
-            IPythonIntDocumentation = Python2IntDocumentation;
-            Print42Output = "42";
-            ImportError = "ImportError: No module named {0}";
         }
 
         public ReplWindowProxySettings Clone() {
             return (ReplWindowProxySettings)MemberwiseClone();
         }
 
-        public const string Python2IntDocumentation = @"Type:        int
-String form: 42
-Docstring:
-int(x=0) -> int or long
-int(x, base=10) -> int or long
+        public virtual void AssertValid() { }
 
-Convert a number or string to an integer, or return 0 if no arguments
-are given.  If x is floating point, the conversion truncates towards zero.
-If x is outside the integer range, the function returns a long instead.
+        public virtual VisualStudioApp CreateApp() {
+            return new VisualStudioApp();
+        }
 
-If x is not a number or if base is given, then x must be a string or
-Unicode object representing an integer literal in the given base.  The
-literal can be preceded by '+' or '-' and be surrounded by whitespace.
-The base defaults to 10.  Valid bases are 0 and 2-36.  Base 0 means to
-interpret the base from the string as an integer literal.
->>> int('0b100', base=0)
-4";
-
-        public const string Python3IntDocumentation = @"Type:        int
-String form: 42
-Docstring:
-int(x=0) -> integer
-int(x, base=10) -> integer
-
-Convert a number or string to an integer, or return 0 if no arguments
-are given.  If x is a number, return x.__int__().  For floating point
-numbers, this truncates towards zero.
-
-If x is not a number or if base is given, then x must be a string,
-bytes, or bytearray instance representing an integer literal in the
-given base.  The literal can be preceded by '+' or '-' and be surrounded
-by whitespace.  The base defaults to 10.  Valid bases are 0 and 2-36.
-Base 0 means to interpret the base from the string as an integer literal.
->>> int('0b100', base=0)
-4";
-
-        public PythonVersion Version { get; set; }
+        public abstract ToolWindowPane ActivateInteractiveWindow(VisualStudioApp app, string executionMode);
 
         public string PrimaryPrompt { get; set; }
 
@@ -103,43 +68,33 @@ Base 0 means to interpret the base from the string as an integer literal.
 
         public bool InlinePrompts { get; set; }
 
-        public string SourceFileName { get; set; }
-
-        public string IPythonIntDocumentation { get; set; }
-
-        public string IntFirstMember { get; set; }
-
-        public string RawInput { get; set; }
-
-        public string Print42Output { get; set; }
-
-        public bool KeyboardInterruptHasTracebackHeader { get; set; }
-
         public bool EnableAttach { get; set; }
-
-        public string ImportError { get; set; }
     }
 
     internal sealed class ReplWindowProxy : IDisposable {
-        private readonly PythonVisualStudioApp _app;
-        private readonly ReplWindow _window;
+        private readonly VisualStudioApp _app;
+        private readonly ToolWindowPane _toolWindow;
+        private readonly IInteractiveWindow _window;
         private readonly ReplWindowProxySettings _settings;
         private readonly ReplWindowInfo _replWindowInfo;
         private readonly IEditorOperations _editorOperations;
 
+#if !DEV14_OR_LATER
         private Dictionary<ReplOptions, object> _restoreOptions;
+#endif
         private List<Action> _onDispose;
 
-        private static ConditionalWeakTable<ReplWindow, ReplWindowInfo> _replWindows =
-            new ConditionalWeakTable<ReplWindow, ReplWindowInfo>();
+        private static ConditionalWeakTable<ToolWindowPane, ReplWindowInfo> _replWindows =
+            new ConditionalWeakTable<ToolWindowPane, ReplWindowInfo>();
 
-        internal ReplWindowProxy(PythonVisualStudioApp app, ReplWindow window, ReplWindowProxySettings settings) {
+        internal ReplWindowProxy(VisualStudioApp app, IInteractiveWindow window, ToolWindowPane toolWindow, ReplWindowProxySettings settings) {
             Assert.IsNotNull(app, "app is required");
             Assert.IsNotNull(window, "window is required");
             _app = app;
             _window = window;
+            _toolWindow = toolWindow;
             _settings = settings;
-            _replWindowInfo = _replWindows.GetOrCreateValue(_window);
+            _replWindowInfo = _replWindows.GetOrCreateValue(toolWindow);
             _window.ReadyForInput += _replWindowInfo.OnReadyForInput;
             _editorOperations = _app.ComponentModel.GetService<IEditorOperationsFactoryService>()
                 .GetEditorOperations(_window.TextView);
@@ -149,18 +104,20 @@ Base 0 means to interpret the base from the string as an integer literal.
             Invoke(() => {
                 ClearInput();
 
+#if !DEV14_OR_LATER
                 if (_restoreOptions != null) {
                     foreach (var kv in _restoreOptions) {
                         _window.SetOptionValue(kv.Key, kv.Value);
                     }
                 }
+#endif
                 if (_onDispose != null) {
                     foreach (var a in _onDispose) {
                         a();
                     }
                 }
 
-                ((IVsWindowFrame)_window.Frame).Hide();
+                ((IVsWindowFrame)_toolWindow.Frame).Hide();
             });
 
             _app.Dispose();
@@ -185,22 +142,22 @@ Base 0 means to interpret the base from the string as an integer literal.
             ReplWindowProxySettings settings,
             bool useIPython = false
         ) {
-            settings.Version.AssertInstalled();
+            settings.AssertValid();
 
-            var app = new PythonVisualStudioApp();
+            var app = settings.CreateApp();
             ReplWindowProxy result = null;
             try {
-                var wnd = OpenInteractive(app, settings, useIPython ? "IPython" : "Standard");
-                result = new ReplWindowProxy(app, wnd, settings);
+                result = OpenInteractive(app, settings, useIPython ? "IPython" : "Standard");
                 app = null;
 
-                result.Window.Reset();
-                result.ClearInput();
-
                 for (int retries = 10; retries > 0; --retries) {
-                    result.Window.Reset();
+                    result.Reset();
+                    Thread.Sleep(1000);
+                    result.ClearScreen();
+                    result.ClearInput();
+
                     try {
-                        var task = result.Window.Evaluator.ExecuteText("print('READY')");
+                        var task = result.ExecuteText("print('READY')");
                         Assert.IsTrue(task.Wait(useIPython ? 30000 : 10000), "ReplWindow did not initialize in time");
                         if (!task.Result.IsSuccessful) {
                             continue;
@@ -216,7 +173,6 @@ Base 0 means to interpret the base from the string as an integer literal.
                         Assert.Inconclusive("IPython is not available");
                     }
                     result.ClearScreen();
-                    result.ClearHistory();
                     return result;
                 }
                 Assert.Fail("ReplWindow did not initialize");
@@ -228,74 +184,36 @@ Base 0 means to interpret the base from the string as an integer literal.
             }
         }
 
-        private static ReplWindow OpenInteractive(
-            PythonVisualStudioApp app,
+        private static ReplWindowProxy OpenInteractive(
+            VisualStudioApp app,
             ReplWindowProxySettings settings,
             string executionMode
         ) {
-            string description = null;
-            if (settings.Version.IsCPython) {
-                description = string.Format("{0} {1}",
-                    settings.Version.Isx64 ? CPythonInterpreterFactoryConstants.Description64 : CPythonInterpreterFactoryConstants.Description32,
-                    settings.Version.Version.ToVersion()
-                );
-            } else if (settings.Version.IsIronPython) {
-                description = string.Format("{0} {1}",
-                    settings.Version.Isx64 ? "IronPython 64-bit" : "IronPython",
-                    settings.Version.Version.ToVersion()
-                );
-            }
-            Assert.IsNotNull(description, "Unknown interpreter");
+            var toolWindow = settings.ActivateInteractiveWindow(app, executionMode);
 
-            var automation = (IVsPython)app.Dte.GetObject("VsPython");
-            var options = ((IPythonOptions)automation).GetInteractiveOptions(description);
-            Assert.IsNotNull(options, "Could not find options for " + description);
+#if DEV14_OR_LATER
+            var interactive = ((IVsInteractiveWindow)toolWindow).InteractiveWindow;
+#else
+            var interactive = toolWindow as IInteractiveWindow;
+#endif
 
-            options.InlinePrompts = settings.InlinePrompts;
-            options.UseInterpreterPrompts = settings.UseInterpreterPrompts;
-            options.PrimaryPrompt = settings.PrimaryPrompt;
-            options.SecondaryPrompt = settings.SecondaryPrompt;
-            options.EnableAttach = settings.EnableAttach;
-
-            var oldExecutionMode = options.ExecutionMode;
-            app.OnDispose(() => options.ExecutionMode = oldExecutionMode);
-            options.ExecutionMode = executionMode;
-
-            bool success = false;
-            for (int retries = 1; retries < 20; ++retries) {
-                try {
-                    app.ExecuteCommand("Python.Interactive", "/e:\"" + description + "\"");
-                    success = true;
-                    break;
-                } catch (AggregateException) {
-                }
-                app.DismissAllDialogs();
-                app.SetFocus();
-                Thread.Sleep(retries * 100);
-            }
-            Assert.IsTrue(success, "Unable to open " + description + " through DTE");
-            var provider = app.ComponentModel.GetService<IReplWindowProvider>();
-            var interpreters = app.ComponentModel.GetService<IInterpreterOptionsService>();
-            var replId = PythonReplEvaluatorProvider.GetReplId(
-                interpreters.FindInterpreter(settings.Version.Id, settings.Version.Version.ToVersion())
-            );
-
-            var interactive = provider.FindReplWindow(replId) as ReplWindow;
-
-            if (interactive == null) {
-                // This is a failure, since we check if the environment is
-                // installed in TestInitialize().
-                Assert.Fail("Need " + description);
-            }
-
-            return interactive;
+            Assert.IsNotNull(interactive, "Could not find interactive window");
+            return new ReplWindowProxy(app, interactive, toolWindow, settings);
         }
 
 
-        public PythonVisualStudioApp App { get { return _app; } }
-        public ReplWindow Window { get { return _window; } }
+        public VisualStudioApp App { get { return _app; } }
+        public IInteractiveWindow Window { get { return _window; } }
 
         public ReplWindowProxySettings Settings { get { return _settings; } }
+
+        public Task<ExecutionResult> ExecuteText(string text) {
+#if DEV14_OR_LATER
+            return _window.Evaluator.ExecuteCodeAsync(text);
+#else
+            return _window.Evaluator.ExecuteText(text);
+#endif
+        }
 
         /// <summary>
         /// <para>Waits for the provided text to appear.</para>
@@ -352,6 +270,12 @@ Base 0 means to interpret the base from the string as an integer literal.
         }
 
         private List<string> GetReplLines(IEnumerable<string> lines) {
+#if DEV14_OR_LATER
+            dynamic eval = _window.Evaluator;
+            var primary = eval.PrimaryPrompt as string ?? ">>>";
+            var secondary = eval.SecondaryPrompt as string ?? "...";
+            var input = "";
+#else
             var primary = _window.GetOptionValue(ReplOptions.PrimaryPrompt) as string ?? ">>>";
             var secondary = _window.GetOptionValue(ReplOptions.SecondaryPrompt) as string ?? "...";
             var input = _window.GetOptionValue(ReplOptions.StandardInputPrompt) as string ?? "";
@@ -359,6 +283,7 @@ Base 0 means to interpret the base from the string as an integer literal.
             if (_window.GetOptionValue(ReplOptions.DisplayPromptInMargin) as bool? ?? false) {
                 primary = secondary = input = "";
             }
+#endif
 
             return lines.Select(s => {
                 if (string.IsNullOrEmpty(s)) {
@@ -381,7 +306,7 @@ Base 0 means to interpret the base from the string as an integer literal.
             using (var cts = new CancellationTokenSource(timeout ?? TimeSpan.FromSeconds(15)))
             using (var changed = new ManualResetEventSlim()) {
                 EventHandler<TextContentChangedEventArgs> handler = (s, e) => changed.Set();
-                Window.TextBuffer.Changed += handler;
+                Window.TextView.TextBuffer.Changed += handler;
                 try {
                     while (!MatchTextInternal(expected, matchAtStart, matchAtEnd, true)) {
                         changed.Wait(cts.Token);
@@ -390,7 +315,7 @@ Base 0 means to interpret the base from the string as an integer literal.
                     return;
                 } catch (OperationCanceledException) {
                 } finally {
-                    Window.TextBuffer.Changed -= handler;
+                    Window.TextView.TextBuffer.Changed -= handler;
                 }
             }
 
@@ -403,7 +328,8 @@ Base 0 means to interpret the base from the string as an integer literal.
             // a single string. This helps ensure the comparison is correct and
             // the output is sensible.
             expected = expected.SelectMany(l => l.Split('\n')).Select(l => l.TrimEnd('\r', '\n')).ToList();
-            var actual = Window.TextBuffer.CurrentSnapshot.Lines
+            var lines = Window.TextView.TextBuffer.CurrentSnapshot.Lines;
+            var actual = lines
                 .SelectMany(l => l.GetText().Split('\n'))
                 .Select(l => l.TrimEnd('\r', '\n'))
                 .ToList();
@@ -453,8 +379,11 @@ Base 0 means to interpret the base from the string as an integer literal.
                     }
 
                     bool lineMatch = false;
-                    if (e_i >= 0 && a_i >= 0) {
+                    if (e_i > 0 && a_i > 0) {
                         lineMatch = expected[e_i] == actual[a_i];
+                        isMatch &= lineMatch;
+                    } else if (e_i == 0 && a_i >= 0) {
+                        lineMatch = actual[a_i].EndsWith(expected[e_i]);
                         isMatch &= lineMatch;
                     }
 
@@ -550,38 +479,50 @@ Base 0 means to interpret the base from the string as an integer literal.
                 _replWindowInfo.ReadyForInput.Reset();
             }
 
+            if (!string.IsNullOrEmpty(line)) {
+                Invoke(() => {
+                    _editorOperations.InsertText(line);
+                });
+            }
+#if DEV14_OR_LATER
+            bool canExecute = Invoke(() => _window.Operations.TrySubmitStandardInput() || _window.Operations.Return());
+#else
             bool canExecute = Invoke(() => {
-                if (!string.IsNullOrEmpty(line)) {
-                _editorOperations.InsertText(line);
-                    }
+                var rw = (ReplWindow)_window;
                 var res = _window.Evaluator.CanExecuteText(_window.CurrentLanguageBuffer.CurrentSnapshot.GetText());
-                var pkgCmdSet = VSConstants.VSStd2K;
-                ErrorHandler.ThrowOnFailure(_window.Exec(
-                    ref pkgCmdSet,
-                    (uint)VSConstants.VSStd2KCmdID.RETURN,
-                    0,
-                    IntPtr.Zero,
-                    IntPtr.Zero
-                ));
+                if (res && rw.CaretInStandardInputRegion) {
+                    var pkgCmdSet = VSConstants.VSStd2K;
+                    ErrorHandler.ThrowOnFailure(rw.Exec(ref pkgCmdSet, (uint)VSConstants.VSStd2KCmdID.RETURN, 0, IntPtr.Zero, IntPtr.Zero));
+                } else if (res) {
+                    rw.Submit();
+                } else {
+                    var pkgCmdSet = Microsoft.VisualStudio.Repl.Guids.guidReplWindowCmdSet;
+                    ErrorHandler.ThrowOnFailure(rw.Exec(ref pkgCmdSet, (uint)Microsoft.VisualStudio.Repl.PkgCmdIDList.cmdidBreakLine, 0, IntPtr.Zero, IntPtr.Zero));
+                }
                 return res;
             });
+#endif
 
             if (wait && canExecute) {
-                // A series of quick checks for scenarios where we don't get
-                // notifications via ReadyForInput.
-                for (int checks = 10; checks > 0; --checks) {
-                    if (_replWindowInfo.ReadyForInput.WaitOne(TimeSpan.FromSeconds(0.1))) {
-                        return;
-                    }
-                    if (_window.CaretInStandardInputRegion) {
-                        return;
-                    }
-                }
                 Assert.IsTrue(
-                    _replWindowInfo.ReadyForInput.WaitOne(TimeSpan.FromSeconds(9.0)),
+                    WaitForReadyForInput(TimeSpan.FromSeconds(10)),
                     "Timed out waiting for submitted code to execute: " + line
                 );
             }
+        }
+
+        private bool WaitForReadyForInput(TimeSpan timeout) {
+            // A series of quick checks for scenarios where we don't get
+            // notifications via ReadyForInput.
+            for (int checks = 10; checks > 0; --checks) {
+                if (_replWindowInfo.ReadyForInput.WaitOne(TimeSpan.FromSeconds(0.1))) {
+                    return true;
+                }
+                if (IsCaretInStandardInputRegion) {
+                    return true;
+                }
+            }
+            return _replWindowInfo.ReadyForInput.WaitOne(timeout.Subtract(TimeSpan.FromSeconds(1)));
         }
 
         /// <summary>
@@ -600,9 +541,8 @@ Base 0 means to interpret the base from the string as an integer literal.
         public void Type(string text, bool commitLastLine = true, bool waitForLastLine = true) {
             var lines = text.Split('\n').Select(s => s.Trim('\r')).ToList();
 
-            ((UIElement)_window.TextView).Dispatcher.Invoke(() => { }, DispatcherPriority.ApplicationIdle);
-
             foreach (var line in lines.Take(lines.Count - 1)) {
+                ((UIElement)_window.TextView).Dispatcher.Invoke(() => { }, DispatcherPriority.ApplicationIdle);
                 SubmitOneLine(line, true);
             }
             if (commitLastLine) {
@@ -650,10 +590,15 @@ Base 0 means to interpret the base from the string as an integer literal.
             if (wait) {
                 _replWindowInfo.ReadyForInput.Reset();
             }
-            _window.Submit(SplitCodeIntoBlocks(text.Split('\n').Select(s => s.Trim('\r'))));
+            var code = SplitCodeIntoBlocks(text.Split('\n').Select(s => s.Trim('\r')));
+#if DEV14_OR_LATER
+            _window.SubmitAsync(code);
+#else
+            _window.Submit(code);
+#endif
             if (wait) {
                 Assert.IsTrue(
-                    _replWindowInfo.ReadyForInput.WaitOne(timeout ?? TimeSpan.FromSeconds(60)),
+                    WaitForReadyForInput(timeout ?? TimeSpan.FromSeconds(60)),
                     "Timed out waiting for code to submit"
                 );
             }
@@ -679,25 +624,66 @@ Base 0 means to interpret the base from the string as an integer literal.
             });
         }
 
+        private bool IsCaretInStandardInputRegion {
+            get {
+#if DEV14_OR_LATER
+                var point = _window.TextView.BufferGraph.MapDownToInsertionPoint(
+                    _window.TextView.Caret.Position.BufferPosition,
+                    PointTrackingMode.Positive,
+                    _ => true
+                );
+                return point.HasValue && point.Value.Snapshot.ContentType.IsOfType(PredefinedInteractiveContentTypes.InteractiveContentTypeName);
+#else
+                return ((ReplWindow)_window).CaretInActiveCodeRegion;
+#endif
+            }
+        }
+
+        private bool IsCaretInActiveCodeRegion {
+            get {
+#if DEV14_OR_LATER
+                if (_window.CurrentLanguageBuffer == null) {
+                    return false;
+                }
+
+                return _window.TextView.BufferGraph.MapDownToBuffer(
+                    _window.TextView.Caret.Position.BufferPosition,
+                    PointTrackingMode.Positive,
+                    _window.CurrentLanguageBuffer,
+                    PositionAffinity.Successor
+                ) != null;
+#else
+                return ((ReplWindow)_window).CaretInActiveCodeRegion;
+#endif
+            }
+        }
+
         public void ClearScreen() {
-            for (int retries = 10; retries > 0 && !_window.CaretInActiveCodeRegion; --retries) {
+            for (int retries = 10; retries > 0 && !IsCaretInActiveCodeRegion; --retries) {
                 Thread.Sleep(100);
             }
 
             ((UIElement)_window.TextView).Dispatcher.Invoke(() => { }, DispatcherPriority.ApplicationIdle);
 
             _replWindowInfo.ReadyForInput.Reset();
+#if DEV14_OR_LATER
+            Invoke(_window.Operations.ClearHistory);
+            Invoke(_window.Operations.ClearView);
+#else
             Invoke(() => {
-                var pkgCmdSet = Guids.guidReplWindowCmdSet;
-                ErrorHandler.ThrowOnFailure(_window.Exec(
-                    ref pkgCmdSet,
-                    (uint)Microsoft.VisualStudio.Repl.PkgCmdIDList.cmdidReplClearScreen,
-                    0,
-                    IntPtr.Zero,
-                    IntPtr.Zero
-                ));
                 _window.ClearHistory();
+                var pkgCmdSet = Guids.guidReplWindowCmdSet;
+                for (int i = 2; i > 0; --i) {
+                    ErrorHandler.ThrowOnFailure(((ReplWindow)_window).Exec(
+                        ref pkgCmdSet,
+                        (uint)Microsoft.VisualStudio.Repl.PkgCmdIDList.cmdidReplClearScreen,
+                        0,
+                        IntPtr.Zero,
+                        IntPtr.Zero
+                    ));
+                }
             });
+#endif
             Assert.IsTrue(
                 _replWindowInfo.ReadyForInput.WaitOne(TimeSpan.FromSeconds(10.0)),
                 "Timed out waiting for ClearScreen()"
@@ -705,41 +691,71 @@ Base 0 means to interpret the base from the string as an integer literal.
         }
 
         public void ClearHistory() {
+#if DEV14_OR_LATER
+            Invoke(_window.Operations.ClearHistory);
+#else
             Invoke(_window.ClearHistory);
+#endif
         }
 
         public void SubmitCurrentText() {
-            Invoke(_window.Submit);
+#if DEV14_OR_LATER
+            Invoke(_window.Operations.ExecuteInput);
+#else
+            Invoke(((ReplWindow)_window).Submit);
+#endif
         }
 
         public void Backspace(int count = 1) {
             while (count-- > 0) {
+#if DEV14_OR_LATER
+                Invoke(_window.Operations.Backspace);
+#else
                 _app.ExecuteCommand("Edit.DeleteBackwards");
+#endif
             }
         }
 
         public void PreviousHistoryItem(int count = 1, bool search = false) {
             while (count-- > 0) {
+#if DEV14_OR_LATER
+                Invoke(search ?
+                    (Action)(() => _window.Operations.HistorySearchPrevious()) :
+                    (Action)(() => _window.Operations.HistoryPrevious())
+                );
+#else
                 _app.ExecuteCommand(search ?
                     "PythonInteractive.SearchHistoryPrevious" :
                     "PythonInteractive.HistoryPrevious"
                 );
+#endif
             }
         }
 
         public void NextHistoryItem(int count = 1, bool search = false) {
             while (count-- > 0) {
+#if DEV14_OR_LATER
+                Invoke(search ?
+                    (Action)(() => _window.Operations.HistorySearchNext()) :
+                    (Action)(() => _window.Operations.HistoryNext())
+                );
+#else
                 _app.ExecuteCommand(search ?
                     "PythonInteractive.SearchHistoryNext" :
                     "PythonInteractive.HistoryNext"
                 );
+#endif
             }
         }
 
         public void Reset() {
+#if DEV14_OR_LATER
+            var t = _window.Operations.ResetAsync();
+#else
             var t = _window.Reset();
+#endif
             Assert.IsTrue(t.Wait(TimeSpan.FromSeconds(15)), "Timed out resetting the window");
-            Assert.AreEqual(ExecutionResult.Success, t.Result, "Window failed to reset");
+            Assert.IsTrue(t.Result.IsSuccessful, "Window failed to reset");
         }
         
         public void CancelExecution(int attempts = 100) {
@@ -749,7 +765,13 @@ Base 0 means to interpret the base from the string as an integer literal.
             for (int i = 0; i < attempts && !rfi.WaitOne(0); i++) {
                 rfi.Reset();
                 try {
+#if DEV14_OR_LATER
+                    Invoke(() => {
+                        _window.Evaluator.AbortExecution();
+                    });
+#else
                     _app.ExecuteCommand("PythonInteractive.Cancel");
+#endif
                     // The command succeeded, so wait longer
                     if (rfi.WaitOne(1000)) {
                         break;
@@ -764,6 +786,7 @@ Base 0 means to interpret the base from the string as an integer literal.
             Assert.IsTrue(rfi.WaitOne(10000));
         }
 
+#if !DEV14_OR_LATER
         public object GetOptionValue(ReplOptions option) {
             return _window.GetOptionValue(option);
         }
@@ -780,30 +803,7 @@ Base 0 means to interpret the base from the string as an integer literal.
             }
             _window.SetOptionValue(option, value);
         }
-
-        public void WaitForAnalysis(TimeSpan? timeout = null) {
-            var stopAt = DateTime.Now.Add(timeout ?? TimeSpan.FromSeconds(60));
-            _window.TextView.GetAnalyzer(_app.ServiceProvider).WaitForCompleteAnalysis(_ => DateTime.Now < stopAt);
-            if (DateTime.Now >= stopAt) {
-                Assert.Fail("Timeout waiting for complete analysis");
-            }
-            // Most of the time we're waiting to ensure that IntelliSense will
-            // work, which normally requires a bit more time.
-            Thread.Sleep(500);
-        }
-
-        public bool AddNewLineAtEndOfFullyTypedWord {
-            get {
-                var options = (IPythonOptions)App.Dte.GetObject("VsPython");
-                return options.Intellisense.AddNewLineAtEndOfFullyTypedWord;
-            }
-            set {
-                var options = (IPythonOptions)App.Dte.GetObject("VsPython");
-                var currentValue = options.Intellisense.AddNewLineAtEndOfFullyTypedWord;
-                options.Intellisense.AddNewLineAtEndOfFullyTypedWord = value;
-                OnDispose(() => options.Intellisense.AddNewLineAtEndOfFullyTypedWord = currentValue);
-            }
-        }
+#endif
 
         public IWpfTextView TextView {
             get {
@@ -830,22 +830,29 @@ Base 0 means to interpret the base from the string as an integer literal.
             }
         }
 
-        public void EnsureInputFunction() {
-            if (Settings.RawInput != "input") {
-                Type("input = " + Settings.RawInput);
-                WaitForTextEnd(">input = " + Settings.RawInput, ">");
-                ClearScreen();
-            }
-        }
-
 
         private sealed class ReplWindowInfo {
-            public readonly ManualResetEvent Idle = new ManualResetEvent(false);
             public readonly ManualResetEvent ReadyForInput = new ManualResetEvent(false);
 
             public void OnReadyForInput() {
                 ReadyForInput.Set();
             }
+        }
+
+        internal SnapshotSpan? GetContainingRegion(SnapshotPoint snapshotPoint) {
+#if DEV14_OR_LATER
+            var point = _window.TextView.BufferGraph.MapDownToInsertionPoint(
+                snapshotPoint,
+                PointTrackingMode.Positive,
+                _ => true
+            );
+            if (point == null) {
+                return null;
+            }
+            return new SnapshotSpan(point.Value.Snapshot, 0, point.Value.Snapshot.Length);
+#else
+            return ((ReplWindow)_window).GetContainingRegion(snapshotPoint);
+#endif
         }
     }
 

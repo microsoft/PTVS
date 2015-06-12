@@ -1049,6 +1049,7 @@ namespace Microsoft.PythonTools.Language {
                         case ReplCommandIds.SearchHistoryNext:
                         case ReplCommandIds.SearchHistoryPrevious:
                         case ReplCommandIds.SmartExecute:
+                        case ReplCommandIds.BreakLine:
                             var interactive = _textView.TextBuffer.GetInteractiveWindow();
 
                             if (interactive != null) {

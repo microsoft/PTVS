@@ -638,8 +638,11 @@ namespace Microsoft.PythonTools.Intellisense {
                 return MissingImportAnalysis.Empty;
             }
 
-            var analysis = ((IPythonProjectEntry)snapshot.TextBuffer.GetProjectEntry()).Analysis;
-            if (analysis == null) {
+            IPythonProjectEntry entry;
+            ModuleAnalysis analysis;
+            if (!snapshot.TextBuffer.TryGetPythonProjectEntry(out entry) ||
+                entry == null ||
+                (analysis = entry.Analysis) == null) {
                 return MissingImportAnalysis.Empty;
             }
 

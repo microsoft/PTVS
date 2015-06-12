@@ -239,7 +239,7 @@
     <Reference Include="WindowsFormsIntegration" />
   </ItemGroup>
   <Choose>
-    <When Condition="$(VSMajorVersion) >= 14">
+    <When Condition="$(VSMajorVersion) &gt;= 14">
       <ItemGroup>
         <Reference Include="Microsoft.VisualStudio.InteractiveWindow">
           <HintPath>$(DevEnvDir)PrivateAssemblies\Microsoft.VisualStudio.InteractiveWindow.dll</HintPath>
@@ -294,6 +294,7 @@
       <Link>IEnumerableExtensions.cs</Link>
     </Compile>
     <Compile Include="PythonTools\Repl\IMultipleScopeEvaluator.cs" />
+    <Compile Include="PythonTools\Repl\InteractiveWindowCommands.cs" />
     <Compile Include="PythonTools\Repl\InteractiveWindowProvider.cs" />
     <Compile Include="IPythonToolsToolWindowService.cs" />
     <Compile Include="MissingInterpreterException.cs" />
@@ -1179,10 +1180,10 @@
     <None Include="Dev10\source.extension.vsixmanifest" Condition="'$(VSTarget)' == '10.0'">
       <SubType>Designer</SubType>
     </None>
-    <None Include="Dev11OrLater\source.extension.vsixmanifest" Condition="$(VSMajorVersion) > 10 and $(VSMajorVersion) &lt; 14">
+    <None Include="Dev11OrLater\source.extension.vsixmanifest" Condition="$(VSMajorVersion) &gt; 10 and $(VSMajorVersion) &lt; 14">
       <SubType>Designer</SubType>
     </None>
-    <None Include="Dev14OrLater\source.extension.vsixmanifest" Condition="$(VSMajorVersion) >= 14">
+    <None Include="Dev14OrLater\source.extension.vsixmanifest" Condition="$(VSMajorVersion) &gt;= 14">
       <SubType>Designer</SubType>
     </None>
   </ItemGroup>
