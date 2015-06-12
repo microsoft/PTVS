@@ -108,9 +108,15 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal ModuleAnalysis GetAnalysisEntry() {
             IPythonProjectEntry entry;
-            return TextBuffer.TryGetPythonProjectEntry(out entry) && entry != null ?
-                entry.Analysis :
-                null;
+            if (TextBuffer.TryGetPythonProjectEntry(out entry) && entry != null) {
+                Debug.Assert(
+                    entry.Analysis != null,
+                    string.Format("Failed to get analysis for buffer {0} with file {1}", TextBuffer, entry.FilePath)
+                );
+                return entry.Analysis;
+            }
+            Debug.Fail("Failed to get project entry for buffer " + TextBuffer.ToString());
+            return null;
         }
 
         private static Stopwatch MakeStopWatch() {
@@ -121,6 +127,9 @@ namespace Microsoft.PythonTools.Intellisense {
 
         protected IEnumerable<MemberResult> GetModules(string[] package, bool modulesOnly = true) {
             var analysis = GetAnalysisEntry();
+            if (analysis == null) {
+                return Enumerable.Empty<MemberResult>();
+            }
 
             IPythonReplIntellisense pyReplEval = null;
             IReplEvaluator eval;

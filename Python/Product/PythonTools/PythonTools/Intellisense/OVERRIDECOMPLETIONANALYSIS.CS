@@ -73,7 +73,8 @@ namespace Microsoft.PythonTools.Intellisense {
             if (result.Parameters.Length > 0) {
                 var parameterString = string.Join(", ", result.Parameters.Skip(1).Select((p, i) => GetSafeArgumentName(p, i + 1)));
 
-                if (GetAnalysisEntry().ProjectState.LanguageVersion.Is3x()) {
+                var analysis = GetAnalysisEntry();
+                if (analysis != null && analysis.ProjectState.LanguageVersion.Is3x()) {
                     sb.AppendFormat("return super().{0}({1})",
                         result.Name,
                         parameterString);
