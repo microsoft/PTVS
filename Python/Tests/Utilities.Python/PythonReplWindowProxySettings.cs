@@ -21,6 +21,9 @@ using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+#if !DEV14_OR_LATER
+using InteractiveWindowProvider = Microsoft.VisualStudio.Repl.IReplWindowProvider;
+#endif
 
 namespace TestUtilities.UI.Python {
     public sealed class PythonReplWindowProxySettings : ReplWindowProxySettings {

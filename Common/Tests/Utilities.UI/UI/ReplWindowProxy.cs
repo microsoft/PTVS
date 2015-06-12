@@ -36,7 +36,6 @@ using Microsoft.VisualStudio.InteractiveWindow.Shell;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Repl;
 using IInteractiveWindow = Microsoft.VisualStudio.Repl.IReplWindow;
-using InteractiveWindowProvider = Microsoft.VisualStudio.Repl.IReplWindowProvider;
 #endif
 
 namespace TestUtilities.UI {
