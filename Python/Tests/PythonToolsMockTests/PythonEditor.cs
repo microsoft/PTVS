@@ -24,6 +24,7 @@ using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.MockVsTests;
 using TestUtilities;
 
@@ -61,6 +62,10 @@ namespace PythonToolsMockTests {
                 if (analyzer == null) {
                     _disposeAnalyzer = true;
                     analyzer = new VsProjectAnalyzer(vs.ServiceProvider, factory, new[] { factory });
+                    var task = analyzer.ReloadTask;
+                    if (task != null) {
+                        task.WaitAndUnwrapExceptions();
+                    }
                 }
 
                 var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));

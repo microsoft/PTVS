@@ -96,6 +96,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private readonly object _contentsLock = new object();
 
+        internal Task ReloadTask;
+
         internal VsProjectAnalyzer(
             IServiceProvider serviceProvider,
             IPythonInterpreterFactory factory,
@@ -124,7 +126,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
             if (interpreter != null) {
                 _pyAnalyzer = PythonAnalyzer.Create(factory, interpreter);
-                _pyAnalyzer.ReloadModulesAsync().HandleAllExceptions(SR.ProductName, GetType()).DoNotWait();
+                ReloadTask = _pyAnalyzer.ReloadModulesAsync().HandleAllExceptions(SR.ProductName, GetType());
+                ReloadTask.ContinueWith(_ => ReloadTask = null);
                 interpreter.ModuleNamesChanged += OnModulesChanged;
             }
 

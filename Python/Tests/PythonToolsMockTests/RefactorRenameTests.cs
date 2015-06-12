@@ -2404,16 +2404,8 @@ def g(a, b, c):
 
                     // test runs twice, one w/ original buffer, once w/ re-analyzed buffers.
                     if (loops == 1) {
-                        using (new DebugTimer("Waiting for previous analysis before raising change events")) {
-                            analyzer.WaitForCompleteAnalysis(x => true);
-                        }
-                        Console.WriteLine("Running w/ re-anlyzed buffers");
                         // do it again w/ a changed buffer
                         mainView.Text = mainView.Text;
-                    }
-
-                    using (new DebugTimer("Waiting for analysis")) {
-                        analyzer.WaitForCompleteAnalysis(x => true);
                     }
 
                     var caretPos = inputs[0].Input.IndexOf(caretText);
