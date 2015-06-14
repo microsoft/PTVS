@@ -232,6 +232,10 @@ namespace Microsoft.PythonTools.Intellisense {
                     if (classifier != null) {
                         classifier.NewVersion();
                     }
+                    var classifier2 = buffer.GetPythonAnalysisClassifier();
+                    if (classifier2 != null) {
+                        classifier2.NewVersion();
+                    }
 
                     ConnectErrorList(projEntry, buffer);
                     if (doSquiggles) {

@@ -1032,16 +1032,19 @@ namespace Microsoft.PythonTools.Project {
                 }
 
                 Reanalyze(analyzer);
-                if (_analyzer != null) {
-                    analyzer.SwitchAnalyzers(_analyzer);
-                    if (_analyzer.RemoveUser()) {
-                        _analyzer.Dispose();
+                var oldAnalyzer = Interlocked.Exchange(ref _analyzer, analyzer);
+
+                if (oldAnalyzer != null) {
+                    if (analyzer != null) {
+                        analyzer.SwitchAnalyzers(oldAnalyzer);
+                    }
+                    if (oldAnalyzer.RemoveUser()) {
+                        oldAnalyzer.Dispose();
                     }
                 }
 
-                _analyzer = analyzer;
                 var searchPath = ParseSearchPath();
-                if (searchPath != null && _analyzer != null) {
+                if (searchPath != null && analyzer != null) {
                     AnalyzeSearchPaths(searchPath);
                 }
 
