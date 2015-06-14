@@ -27,6 +27,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         private PythonInterpreterFactoryWithDatabase _factory;
         private PythonTypeDatabase _typeDb;
         private HashSet<ProjectReference> _references;
+        private readonly object _referencesLock = new object();
 
         public CPythonInterpreter(PythonInterpreterFactoryWithDatabase factory) {
             _langVersion = factory.Configuration.Version;
@@ -43,10 +44,14 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             }
 
             _typeDb = factory.GetCurrentDatabase();
-            
-            if (_references != null) {
+
+            List<ProjectReference> references = null;
+            lock (_referencesLock) {
+                references = _references != null ? _references.ToList() : null;
+            }
+            if (references != null) {
                 _typeDb = _typeDb.Clone();
-                foreach (var reference in _references) {
+                foreach (var reference in references) {
                     string modName;
                     try {
                         modName = Path.GetFileNameWithoutExtension(reference.Name);
@@ -137,18 +142,25 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                 return MakeExceptionTask(new ArgumentNullException("reference"));
             }
 
-            if (_references == null) {
-                _references = new HashSet<ProjectReference>();
+            bool cloneDb = false;
+            lock (_referencesLock) {
+                if (_references == null) {
+                    _references = new HashSet<ProjectReference>();
+                    cloneDb = true;
+                }
+            }
+
+            if (cloneDb && _typeDb != null) {
                 // If we needed to set _references, then we also need to clone
                 // _typeDb to avoid adding modules to the shared database.
-                if (_typeDb != null) {
-                    _typeDb = _typeDb.Clone();
-                }
+                _typeDb = _typeDb.Clone();
             }
 
             switch (reference.Kind) {
                 case ProjectReferenceKind.ExtensionModule:
-                    _references.Add(reference);
+                    lock (_referencesLock) {
+                        _references.Add(reference);
+                    }
                     string filename;
                     try {
                         filename = Path.GetFileNameWithoutExtension(reference.Name);
@@ -170,7 +182,11 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         public void RemoveReference(ProjectReference reference) {
             switch (reference.Kind) {
                 case ProjectReferenceKind.ExtensionModule:
-                    if (_references != null && _references.Remove(reference) && _typeDb != null) {
+                    bool removed = false;
+                    lock (_referencesLock) {
+                        removed = _references != null && _references.Remove(reference);
+                    }
+                    if (removed && _typeDb != null) {
                         _typeDb.UnloadExtensionModule(Path.GetFileNameWithoutExtension(reference.Name));
                         RaiseModulesChanged(null);
                     }
@@ -179,7 +195,10 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         }
 
         public IEnumerable<ProjectReference> GetReferences() {
-            return _references != null ? _references : Enumerable.Empty<ProjectReference>();
+            var references = _references;
+            return references != null ?
+                references.AsLockedEnumerable(_referencesLock) :
+                Enumerable.Empty<ProjectReference>();
         }
 
         private static Task MakeExceptionTask(Exception e) {

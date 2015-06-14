@@ -94,8 +94,6 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly PythonToolsService _pyService;
         private readonly IServiceProvider _serviceProvider;
 
-        private readonly object _contentsLock = new object();
-
         internal Task ReloadTask;
 
         internal VsProjectAnalyzer(
@@ -188,19 +186,17 @@ namespace Microsoft.PythonTools.Intellisense {
             entry.Properties[_pathInZipFile] = value;
         }
 
-        private void OnModulesChanged(object sender, EventArgs e) {
+        private async void OnModulesChanged(object sender, EventArgs e) {
             Debug.Assert(_pyAnalyzer != null, "Should not have null _pyAnalyzer here");
             if (_pyAnalyzer == null) {
                 return;
             }
 
-            lock (_contentsLock) {
-                _pyAnalyzer.ReloadModulesAsync().WaitAndUnwrapExceptions();
+            await _pyAnalyzer.ReloadModulesAsync();
 
-                // re-analyze all of the modules when we get a new set of modules loaded...
-                foreach (var nameAndEntry in _projectFiles) {
-                    _queue.EnqueueFile(nameAndEntry.Value, nameAndEntry.Key);
-                }
+            // re-analyze all of the modules when we get a new set of modules loaded...
+            foreach (var nameAndEntry in _projectFiles) {
+                _queue.EnqueueFile(nameAndEntry.Value, nameAndEntry.Key);
             }
         }
 
@@ -381,9 +377,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private void QueueDirectoryAnalysis(string path) {
             ThreadPool.QueueUserWorkItem(x => {
-                lock (_contentsLock) {
-                    AnalyzeDirectory(CommonUtils.NormalizeDirectoryPath(Path.GetDirectoryName(path)));
-        }
+                AnalyzeDirectory(CommonUtils.NormalizeDirectoryPath(Path.GetDirectoryName(path)));
             });
         }
 
@@ -1271,9 +1265,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
 
                 if (addDir) {
-                    lock (_analyzer._contentsLock) {
-                        _analyzer._pyAnalyzer.AddAnalysisDirectory(dir);
-                    }
+                    _analyzer._pyAnalyzer.AddAnalysisDirectory(dir);
                 }
 
                 try {
@@ -1350,9 +1342,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 return;
             }
 
-            lock (_contentsLock) {
-                _pyAnalyzer.AddAnalysisDirectory(zipFileName);
-            }
+            _pyAnalyzer.AddAnalysisDirectory(zipFileName);
 
             ZipArchive archive = null;
             Queue<ZipArchiveEntry> entryQueue = null;
@@ -1468,9 +1458,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 return;
             }
 
-            lock (_contentsLock) {
-                _pyAnalyzer.RemoveAnalysisDirectory(directory);
-            }
+            _pyAnalyzer.RemoveAnalysisDirectory(directory);
         }
 
         internal void Cancel() {
@@ -1557,12 +1545,10 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             _analysisQueue.AnalysisStarted -= AnalysisQueue_AnalysisStarted;
-            ((IDisposable)_analysisQueue).Dispose();
+            _analysisQueue.Dispose();
             if (_pyAnalyzer != null) {
-                lock (_contentsLock) {
-                    _pyAnalyzer.Interpreter.ModuleNamesChanged -= OnModulesChanged;
-                    ((IDisposable)_pyAnalyzer).Dispose();
-                }
+                _pyAnalyzer.Interpreter.ModuleNamesChanged -= OnModulesChanged;
+                _pyAnalyzer.Dispose();
             }
 
             _queueActivityEvent.Dispose();
@@ -1571,11 +1557,9 @@ namespace Microsoft.PythonTools.Intellisense {
         #endregion
 
         internal void RemoveReference(ProjectAssemblyReference reference) {
-            lock (_contentsLock) {
-                var interp = Interpreter as IPythonInterpreterWithProjectReferences;
-                if (interp != null) {
-                    interp.RemoveReference(reference);
-                }
+            var interp = Interpreter as IPythonInterpreterWithProjectReferences;
+            if (interp != null) {
+                interp.RemoveReference(reference);
             }
         }
     }
