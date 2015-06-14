@@ -94,6 +94,7 @@ namespace Microsoft.PythonTools {
             if (_interpreterOptionsService != null) {   // not available in some test cases...
                 _interpreterOptionsService.InterpretersChanged += InterpretersChanged;
                 _interpreterOptionsService.DefaultInterpreterChanged += UpdateDefaultAnalyzer;
+                LoadInterpreterOptions();
             }
 
             _idleManager = new IdleManager(container);
@@ -102,6 +103,7 @@ namespace Microsoft.PythonTools {
             _generalOptions = new GeneralOptions(this);
             _surveyNews = new SurveyNewsService(container);
             _globalInterpreterOptions = new GlobalInterpreterOptions(this, _interpreterOptionsService);
+            _globalInterpreterOptions.Load();
             _debugInteractiveOptions = new PythonInteractiveCommonOptions(this, "Debug Interactive Window", "");
 
             _logger = new PythonToolsLogger(ComponentModel.GetExtensions<IPythonToolsLogger>().ToArray());
