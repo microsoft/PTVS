@@ -13,7 +13,7 @@
     <Upgrade Id="{419CC5C5-2A98-4EF9-8D52-987703C3C7AF}">
       <UpgradeVersion Property="REMOVE_VWDEXPRESS_TEMPLATE" Maximum="$(var.MsiVersion)" ExcludeLanguages="yes"/>
     </Upgrade>
-    <?elif "$(var.VSTargetVersion)" = "12.0" ?>
+    <?elseif "$(var.VSTargetVersion)" = "12.0" ?>
     <Upgrade Id="{C0FB1AC9-C1EA-4FBE-857C-114DD719B41C}">
       <UpgradeVersion Property="REMOVE_TEMPLATE" Maximum="$(var.MsiVersion)" ExcludeLanguages="yes"/>
     </Upgrade>
