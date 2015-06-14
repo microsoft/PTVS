@@ -195,6 +195,8 @@ namespace Microsoft.PythonTools.Project {
                 return;
             } catch (NoInterpretersException) {
                 return;
+            } catch (FileNotFoundException) {
+                return;
             }
 
             // Ensure we are back on the UI thread
