@@ -67,9 +67,6 @@ namespace Microsoft.PythonTools.Options {
         }
 
         public override void LoadSettingsFromStorage() {
-            PyService.GlobalInterpreterOptions.Load();
-            PyService.LoadInterpreterOptions();
-
             if (_window != null) {
                 _window.UpdateInterpreters();
             }
