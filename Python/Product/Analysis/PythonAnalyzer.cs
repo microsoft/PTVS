@@ -55,7 +55,7 @@ namespace Microsoft.PythonTools.Analysis {
         private readonly PythonLanguageVersion _langVersion;
         internal readonly AnalysisUnit _evalUnit;   // a unit used for evaluating when we don't otherwise have a unit available
         private readonly HashSet<string> _analysisDirs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        private Dictionary<string, List<SpecializationInfo>> _specializationInfo = new Dictionary<string, List<SpecializationInfo>>();  // delayed specialization information, for modules not yet loaded...
+        private readonly Dictionary<string, List<SpecializationInfo>> _specializationInfo = new Dictionary<string, List<SpecializationInfo>>();  // delayed specialization information, for modules not yet loaded...
         private AnalysisLimits _limits;
         private static object _nullKey = new object();
         private readonly SemaphoreSlim _reloadLock = new SemaphoreSlim(1, 1);
