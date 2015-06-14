@@ -2161,8 +2161,13 @@ namespace Microsoft.PythonTools.Project {
             var path = factory.Configuration.PrefixPath;
             if (removeFromStorage && Directory.Exists(path)) {
                 var t = Task.Run(() => {
-                    Directory.Delete(path, true);
-                    return true;
+                    try {
+                        Directory.Delete(path, true);
+                        return true;
+                    } catch (IOException) {
+                    } catch (UnauthorizedAccessException) {
+                    }
+                    return false;
                 }).HandleAllExceptions(SR.ProductName, GetType());
 
                 if (!await t) {
