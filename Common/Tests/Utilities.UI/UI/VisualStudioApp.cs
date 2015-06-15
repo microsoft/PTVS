@@ -970,7 +970,7 @@ namespace TestUtilities.UI {
                 System.Threading.Thread.Sleep(5000);
             }
 
-            for (int retries = 10; retries > 0; --retries) {
+            for (int retries = 20; retries > 0; --retries) {
                 allItems.Clear();
                 IVsEnumTaskItems items;
                 ErrorHandler.ThrowOnFailure(errorList.EnumTaskItems(out items));
