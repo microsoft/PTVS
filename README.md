@@ -8,6 +8,6 @@ PTVS is a free, open source plugin that turns Visual Studio into a Python IDE.
 
 Visit our page on [VisualStudio.com](https://www.visualstudio.com/en-us/explore/python-vs) for an overview and videos, and check out our [Getting Started](http://aka.ms/PTVSTutorial) series on YouTube.
 
-Our [documentation](https://github.com/Microsoft/PTVS/wiki) is now on the wikigood (feel free to help us improve it), and we manage all of our issues here on the [issue tracker](http://github.com/Microsoft/PTVS/issues) or in the gitter chat linked above. Pull requests and feature suggestions are welcome - see the [Contributing](https://github.com/Microsoft/PTVS/wiki#contributing) section for information.
+Our [documentation](https://github.com/Microsoft/PTVS/wiki) is now on the wiki (feel free to help us improve it), and we manage all of our issues here on the [issue tracker](http://github.com/Microsoft/PTVS/issues). Pull requests and feature suggestions are welcome - see the [Contributing](https://github.com/Microsoft/PTVS/wiki#contributing) section for information or chat with us on gitter though the button above.
 
 Thank you for using and supporting Python Tools for Visual Studio.
