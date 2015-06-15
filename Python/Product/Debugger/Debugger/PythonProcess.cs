@@ -85,7 +85,7 @@ namespace Microsoft.PythonTools.Debugger {
             }
         }
 
-        private PythonProcess(Stream stream, int pid, PythonLanguageVersion version) {
+        private PythonProcess(Stream stream, int pid, PythonLanguageVersion version, PythonDebugOptions debugOptions) {
             _pid = pid;
             _process = Process.GetProcessById(pid);
             _process.EnableRaisingEvents = true;
@@ -97,6 +97,7 @@ namespace Microsoft.PythonTools.Debugger {
 
             stream.WriteInt32(DebugConnectionListener.ListenerPort);
             stream.WriteString(_processGuid.ToString());
+            stream.WriteString(debugOptions.ToString());
         }
 
         public PythonProcess(PythonLanguageVersion languageVersion, string exe, string args, string dir, string env, string interpreterOptions, PythonDebugOptions options = PythonDebugOptions.None, List<string[]> dirMapping = null)
@@ -145,8 +146,8 @@ namespace Microsoft.PythonTools.Debugger {
             return new PythonProcess(pid, debugOptions);
         }
 
-        public static PythonProcess AttachRepl(Stream stream, int pid, PythonLanguageVersion version) {
-            return new PythonProcess(stream, pid, version);
+        public static PythonProcess AttachRepl(Stream stream, int pid, PythonLanguageVersion version, PythonDebugOptions debugOptions = PythonDebugOptions.None) {
+            return new PythonProcess(stream, pid, version, debugOptions);
         }
 
         #region Public Process API
