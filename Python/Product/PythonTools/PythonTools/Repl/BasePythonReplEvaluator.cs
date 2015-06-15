@@ -444,10 +444,18 @@ namespace Microsoft.PythonTools.Repl {
                     return "Cannot attach to debugger when already attached.";
                 }
 
+                var pyService = _eval._serviceProvider.GetPythonToolsService();
+
+                // Only pass options that make sense for the REPL.
+                var debugOptions = PythonDebugOptions.None;
+                if (pyService.DebuggerOptions.DebugStdLib) {
+                    debugOptions |= PythonDebugOptions.DebugStdLib;
+                }
+
                 PythonProcess debugProcess;
                 using (new StreamLock(this, throwIfDisconnected: true)) {
                     _stream.Write(DebugAttachCommandBytes);
-                    debugProcess = PythonProcess.AttachRepl(_stream, _process.Id, _eval.AnalyzerProjectLanguageVersion);
+                    debugProcess = PythonProcess.AttachRepl(_stream, _process.Id, _eval.AnalyzerProjectLanguageVersion, debugOptions);
                 }
 
                 var debugTarget = new VsDebugTargetInfo2();
