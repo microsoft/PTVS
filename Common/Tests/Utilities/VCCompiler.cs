@@ -85,7 +85,7 @@ namespace TestUtilities {
                 bins = bin + ";" + bins;
             }
             if (!string.IsNullOrEmpty(vsDir)) {
-                bins += ";" + vsDir;
+                bins += ";" + vsDir + ";" + vsDir + @"\Common7\IDE";
             }
 
             string include = Path.Combine(vcDir, "include");
@@ -114,7 +114,7 @@ namespace TestUtilities {
                 return;
             }
 
-            if (vcVersion == "10.0" || vcVersion == "11.0" || vcVersion == "12.0") {
+            if (vcVersion == "11.0" || vcVersion == "12.0") {
                 // If we find a Windows 8 kit, then return
                 if (AddWindows8KitPaths(isX64, ref includePaths, ref libPaths)) {
                     return;

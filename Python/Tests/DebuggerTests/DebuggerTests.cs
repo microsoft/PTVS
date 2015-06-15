@@ -224,11 +224,11 @@ namespace DebuggerTests {
                 AssertWaited(evalComplete);
                 Assert.IsNotNull(evalRes, "didn't get evaluation result");
 
-
                 if (children == null) {
                     Assert.IsFalse(evalRes.IsExpandable, "result should not be expandable");
                     Assert.IsNull(evalRes.GetChildren(Int32.MaxValue), "result should not have children");
                 } else {
+                    Assert.IsNull(evalRes.ExceptionText, "exception while evaluating: " + evalRes.ExceptionText);
                     Assert.IsTrue(evalRes.IsExpandable, "result is not expandable");
                     var childrenReceived = new List<PythonEvaluationResult>(evalRes.GetChildren(Int32.MaxValue));
 
@@ -2769,7 +2769,7 @@ int main(int argc, char* argv[]) {
 
             // compile our host code...
             var env = new Dictionary<string, string>();
-            env["PATH"] = Environment.GetEnvironmentVariable("PATH") + ";" + vc.BinPaths;
+            env["PATH"] = vc.BinPaths + ";" + Environment.GetEnvironmentVariable("PATH");
             env["INCLUDE"] = vc.IncludePaths + ";" + Path.Combine(Version.PrefixPath, "Include");
             env["LIB"] = vc.LibPaths + ";" + Path.Combine(Version.PrefixPath, "libs");
 
