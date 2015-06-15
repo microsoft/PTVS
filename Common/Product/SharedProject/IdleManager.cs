@@ -75,12 +75,16 @@ namespace Microsoft.VisualStudioTools {
 
         internal event EventHandler<ComponentManagerEventArgs> OnIdle {
             add {
-                EnsureInit();
-                _onIdle += value;
+                _serviceProvider.GetUIThread().Invoke(() => {
+                    EnsureInit();
+                    _onIdle += value;
+                });
             }
             remove {
-                EnsureInit();
-                _onIdle -= value;
+                _serviceProvider.GetUIThread().Invoke(() => {
+                    EnsureInit();
+                    _onIdle -= value;
+                });
             }
         }
 
