@@ -136,7 +136,7 @@ namespace ReplWindowUITests {
     }
 
     [TestClass]
-    public class ReplWindowPython354Tests : ReplWindowPythonIPythonTests {
+    public class ReplWindowPython35Tests : ReplWindowPythonIPythonTests {
         internal override PythonReplWindowProxySettings Settings {
             get {
                 return new PythonReplWindowProxySettings {
