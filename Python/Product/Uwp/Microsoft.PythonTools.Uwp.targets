@@ -10,7 +10,7 @@
 	<Error Text="Could not find CPython UWP SDK.  Please download from http://go.microsoft.com/fwlink/?LinkID=613495&amp;clcid=0x409 and reload the project after install." Condition="!Exists($(CPythonTargetsFile))" />
   </Target>
 
-  <Target Name="CoreCompile" Condition="!Exists($(CPythonTargetsFile))" />
+  <Target Name="CoreCompile" />
 
   <Import Project="$(CPythonTargetsFile)" Condition="Exists($(CPythonTargetsFile))"/>
 
