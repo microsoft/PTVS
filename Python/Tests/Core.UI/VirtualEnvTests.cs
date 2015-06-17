@@ -510,7 +510,9 @@ namespace PythonToolsUITests {
                 app.Dte.ExecuteCommand("Python.Interactive");
 
                 var window = app.GetInteractiveWindow(string.Format("{0} Interactive", envName));
+                Assert.IsNotNull(window, string.Format("Failed to find '{0} Interactive'", envName));
                 try {
+                    window.Reset();
                     window.ReplWindow.Evaluator.ExecuteText("import os; os.getcwd()").Wait();
                     window.WaitForTextEnd(
                         string.Format("'{0}'", path1.Replace("\\", "\\\\")),

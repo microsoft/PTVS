@@ -190,11 +190,23 @@ namespace TestUtilities.UI.Python {
         }
 
         public InteractiveWindow GetInteractiveWindow(string title) {
+#if !DEV14_OR_LATER
             string autoId = GetName(title);
+#endif
             AutomationElement element = null;
             for (int i = 0; i < 5 && element == null; i++) {
                 element = Element.FindFirst(TreeScope.Descendants,
                     new AndCondition(
+#if DEV14_OR_LATER
+                        new PropertyCondition(
+                            AutomationElement.NameProperty,
+                            title
+                        ),
+                        new PropertyCondition(
+                            AutomationElement.ControlTypeProperty,
+                            ControlType.Pane
+                        )
+#else
                         new PropertyCondition(
                             AutomationElement.AutomationIdProperty,
                             autoId
@@ -203,6 +215,7 @@ namespace TestUtilities.UI.Python {
                             AutomationElement.ClassNameProperty,
                             ""
                         )
+#endif
                     )
                 );
                 if (element == null) {
