@@ -73,7 +73,12 @@ namespace TestUtilities.UI {
 
             var compModel = _app.GetService<IComponentModel>(typeof(SComponentModel));
             var replWindowProvider = compModel.GetService<InteractiveWindowProvider>();
-            _replWindow = replWindowProvider.GetReplWindows()
+            _replWindow = replWindowProvider
+#if DEV14_OR_LATER
+                .GetReplToolWindows()
+#else
+                .GetReplWindows()
+#endif
                 .OfType<ToolWindowPane>()
                 .FirstOrDefault(p => p.Caption.Equals(title, StringComparison.CurrentCulture));
 #if DEV14_OR_LATER

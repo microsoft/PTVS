@@ -180,6 +180,10 @@ namespace Microsoft.PythonTools.Repl {
             return _windows.Values.Select(x => x.Window.InteractiveWindow);
         }
 
+        internal IEnumerable<ToolWindowPane> GetReplToolWindows() {
+            return _windows.Values.Select(x => x.Window).OfType<ToolWindowPane>();
+        }
+
         private static IInteractiveEvaluator GetReplEvaluator(IComponentModel model, string replId, out string[] roles) {
             roles = new string[0];
             foreach (var provider in model.GetExtensions<IReplEvaluatorProvider>()) {
