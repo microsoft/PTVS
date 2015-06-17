@@ -977,7 +977,7 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             private void SendString(string text) {
-                Debug.Assert(!string.IsNullOrEmpty(text), "text should not be null or empty");
+                Debug.Assert(text != null, "text should not be null");
                 byte[] bytes = Encoding.UTF8.GetBytes(text);
                 _stream.WriteInt32(bytes.Length);
                 _stream.Write(bytes);
