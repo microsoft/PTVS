@@ -1295,6 +1295,7 @@ namespace PythonToolsUITests {
 
                 Keyboard.Type("print('hi')\r");
                 var interactive = app.GetInteractiveWindow(interpreterName + " Interactive");
+                Assert.IsNotNull(interactive, "Unable to find " + interpreterName + " Interactive");
                 interactive.WaitForTextEnd("hi", ">>> ");
             }
         }
