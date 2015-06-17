@@ -869,8 +869,8 @@ namespace Microsoft.PythonTools.Project {
                     Arguments = string.Format(
                         "/C \"{0}{1}{2}\" & if errorlevel 1 pause",
                         ProcessOutput.QuoteSingleArgument(Filename),
-                        string.IsNullOrEmpty(Arguments) ? "" : " ",
-                        Arguments ?? ""
+                        string.IsNullOrEmpty(Arguments) ? string.Empty : " ",
+                        Arguments ?? string.Empty
                     );
                     Filename = Path.Combine(Environment.SystemDirectory, "cmd.exe");
                     ExecuteIn = CreatePythonCommandItem.ExecuteInConsole;
@@ -880,8 +880,8 @@ namespace Microsoft.PythonTools.Project {
                     Arguments = string.Format(
                         "/C \"{0}{1}{2}\" & pause",
                         ProcessOutput.QuoteSingleArgument(Filename),
-                        string.IsNullOrEmpty(Arguments) ? "" : " ",
-                        Arguments ?? ""
+                        string.IsNullOrEmpty(Arguments) ? string.Empty : " ",
+                        Arguments ?? string.Empty
                     );
                     Filename = Path.Combine(Environment.SystemDirectory, "cmd.exe");
                     ExecuteIn = CreatePythonCommandItem.ExecuteInConsole;
