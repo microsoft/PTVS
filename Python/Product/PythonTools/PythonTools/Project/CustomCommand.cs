@@ -13,7 +13,6 @@
  * ***************************************************************************/
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -32,7 +31,7 @@ using Microsoft.PythonTools.Navigation;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
 #if DEV14_OR_LATER
-using Microsoft.VisualStudio.InteractiveWindow;
+using IReplWindowProvider = Microsoft.PythonTools.Repl.InteractiveWindowProvider;
 #else
 using Microsoft.VisualStudio.Repl;
 #endif
@@ -43,9 +42,6 @@ using Microsoft.VisualStudioTools.Project;
 using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.Project {
-#if DEV14_OR_LATER
-    using IReplWindowProvider = InteractiveWindowProvider;
-#endif
     sealed class CustomCommand : IAsyncCommand, IDisposable {
         private readonly PythonProjectNode _project;
         private readonly string _target;
@@ -431,7 +427,9 @@ namespace Microsoft.PythonTools.Project {
                     await Pip.Install(
                         _project.Site,
                         interpFactory,
-                        string.Format("{0} {1}", startInfo.Filename, startInfo.Arguments),
+                        string.IsNullOrEmpty(startInfo.Arguments) ?
+                            startInfo.Filename :
+                            string.Format("{0} {1}", startInfo.Filename, startInfo.Arguments),
                         project.Site,
                         false,
                         OutputWindowRedirector.GetGeneral(project.Site)
@@ -651,7 +649,7 @@ namespace Microsoft.PythonTools.Project {
             if (result.IsSuccessful) {
                 try {
                     var filename = startInfo.Filename;
-                    var arguments = startInfo.Arguments;
+                    var arguments = startInfo.Arguments ?? string.Empty;
 
                     if (startInfo.IsScript) {
                         pyEvaluator.Window.WriteLine(string.Format("Executing {0} {1}", Path.GetFileName(filename), arguments));
@@ -734,11 +732,19 @@ namespace Microsoft.PythonTools.Project {
         public string[] RequiredPackages;
 
         public void AddArgumentAtStart(string argument) {
-            Arguments = ProcessOutput.QuoteSingleArgument(argument) + " " + Arguments;
+            if (string.IsNullOrEmpty(Arguments)) {
+                Arguments = ProcessOutput.QuoteSingleArgument(argument);
+            } else {
+                Arguments = ProcessOutput.QuoteSingleArgument(argument) + Arguments;
+            }
         }
 
         public void AddArgumentAtEnd(string argument) {
-            Arguments += " " + ProcessOutput.QuoteSingleArgument(argument);
+            if (string.IsNullOrEmpty(Arguments)) {
+                Arguments = ProcessOutput.QuoteSingleArgument(argument);
+            } else {
+                Arguments += " " + ProcessOutput.QuoteSingleArgument(argument);
+            }
         }
 
         public bool ExecuteInRepl {
@@ -861,9 +867,10 @@ namespace Microsoft.PythonTools.Project {
             } else if (ExecuteInConsole) {
                 if (handleConsoleAndPause) {
                     Arguments = string.Format(
-                        "/C \"{0} {1}\" & if errorlevel 1 pause",
+                        "/C \"{0}{1}{2}\" & if errorlevel 1 pause",
                         ProcessOutput.QuoteSingleArgument(Filename),
-                        Arguments
+                        string.IsNullOrEmpty(Arguments) ? string.Empty : " ",
+                        Arguments ?? string.Empty
                     );
                     Filename = Path.Combine(Environment.SystemDirectory, "cmd.exe");
                     ExecuteIn = CreatePythonCommandItem.ExecuteInConsole;
@@ -871,16 +878,17 @@ namespace Microsoft.PythonTools.Project {
             } else if (ExecuteInConsoleAndPause) {
                 if (handleConsoleAndPause) {
                     Arguments = string.Format(
-                        "/C \"{0} {1}\" & pause",
+                        "/C \"{0}{1}{2}\" & pause",
                         ProcessOutput.QuoteSingleArgument(Filename),
-                        Arguments
+                        string.IsNullOrEmpty(Arguments) ? string.Empty : " ",
+                        Arguments ?? string.Empty
                     );
                     Filename = Path.Combine(Environment.SystemDirectory, "cmd.exe");
                     ExecuteIn = CreatePythonCommandItem.ExecuteInConsole;
                 }
             }
 
-            if (EnvironmentVariables != null) {
+            if (EnvironmentVariables != null && !string.IsNullOrEmpty(Arguments)) {
                 Arguments = Regex.Replace(Arguments, @"%(\w+)%", m => {
                     string envVar;
                     return EnvironmentVariables.TryGetValue(m.Groups[1].Value, out envVar) ? envVar : string.Empty;
