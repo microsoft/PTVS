@@ -145,8 +145,8 @@ namespace Microsoft.PythonTools.TestAdapter {
 
             var testCase = new PythonTestCase(settings, test, debugMode);
 
-            var dte = _app.GetDTE();
-            if (debugMode != PythonDebugMode.None) {
+            var dte = _app != null ? _app.GetDTE() : null;
+            if (dte != null && debugMode != PythonDebugMode.None) {
                 dte.Debugger.DetachAll();
             }
 
