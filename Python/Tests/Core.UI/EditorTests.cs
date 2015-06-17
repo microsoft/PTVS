@@ -296,9 +296,10 @@ namespace PythonToolsUITests {
         [HostType("VSTestHost")]
         public void AutoIndent() {
             using (var app = new PythonVisualStudioApp()) {
-                var prevSetting = app.GetService<PythonToolsService>().AdvancedOptions.AddNewLineAtEndOfFullyTypedWord;
-                app.OnDispose(() => app.GetService<PythonToolsService>().AdvancedOptions.AddNewLineAtEndOfFullyTypedWord = prevSetting);
-                app.GetService<PythonToolsService>().AdvancedOptions.AddNewLineAtEndOfFullyTypedWord = true;
+                var options = app.GetService<PythonToolsService>().AdvancedOptions;
+                var prevSetting = options.AddNewLineAtEndOfFullyTypedWord;
+                app.OnDispose(() => options.AddNewLineAtEndOfFullyTypedWord = prevSetting);
+                options.AddNewLineAtEndOfFullyTypedWord = true;
 
                 var project = app.OpenProject(@"TestData\AutoIndent.sln");
 
