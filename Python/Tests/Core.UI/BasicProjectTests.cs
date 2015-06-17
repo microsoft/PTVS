@@ -1200,9 +1200,10 @@ namespace PythonToolsUITests {
         [HostType("VSTestHost")]
         public void AddFromFileOutsideOfProject() {
             using (var app = new VisualStudioApp()) {
-                var prevSetting = app.GetService<PythonToolsService>().GeneralOptions.UpdateSearchPathsWhenAddingLinkedFiles;
-                app.OnDispose(() => app.GetService<PythonToolsService>().GeneralOptions.UpdateSearchPathsWhenAddingLinkedFiles = prevSetting);
-                app.GetService<PythonToolsService>().GeneralOptions.UpdateSearchPathsWhenAddingLinkedFiles = false;
+                var options = app.GetService<PythonToolsService>().GeneralOptions;
+                var prevSetting = options.UpdateSearchPathsWhenAddingLinkedFiles;
+                app.OnDispose(() => options.UpdateSearchPathsWhenAddingLinkedFiles = prevSetting);
+                options.UpdateSearchPathsWhenAddingLinkedFiles = false;
 
                 var project = app.OpenProject(@"TestData\HelloWorld.sln");
                 // "Python Environments", "References", "Search Paths", "Program.py"
