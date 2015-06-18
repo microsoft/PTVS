@@ -333,6 +333,8 @@ namespace Microsoft.PythonTools.Analysis {
                     var sitePackagesDir = Path.Combine(value, "site-packages");
                     if (Directory.Exists(sitePackagesDir)) {
                         library.Add(new PythonLibraryPath(sitePackagesDir, false, null));
+                        library.AddRange(ModulePath.ExpandPathFiles(sitePackagesDir)
+                            .Select(p => new PythonLibraryPath(p, false, null)));
                     }
                 }
             }
