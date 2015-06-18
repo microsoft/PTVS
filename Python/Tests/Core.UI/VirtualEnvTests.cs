@@ -215,13 +215,6 @@ namespace PythonToolsUITests {
                 var id1 = Guid.Parse((string)project.Properties.Item("InterpreterId").Value);
                 Assert.AreNotEqual(id0, id1);
 
-                env1.Select();
-                try {
-                    app.Dte.ExecuteCommand("Python.ActivateEnvironment");
-                    Assert.Fail("First env should already be active");
-                } catch (COMException) {
-                }
-
                 env2.Select();
                 app.Dte.ExecuteCommand("Python.ActivateEnvironment");
 
