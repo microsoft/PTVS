@@ -12,31 +12,28 @@
  *
  * ***************************************************************************/
 
+using System;
+using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
-using System;
-using System.Collections.Generic;
 #if DEV14_OR_LATER
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.InteractiveWindow.Commands;
 #else
 using Microsoft.VisualStudio.Repl;
+using IInteractiveWindow = Microsoft.VisualStudio.Repl.IReplWindow;
+using IInteractiveWindowCommand = Microsoft.VisualStudio.Repl.IReplCommand;
 #endif
 
 namespace Microsoft.PythonTools.Repl {
-#if DEV14_OR_LATER
-    using IReplWindow = IInteractiveWindow;
-    using IReplCommand = IInteractiveWindowCommand;
-#endif
-
-    [Export(typeof(IReplCommand))]
-    class SwitchModuleCommand : IReplCommand {
-        #region IReplCommand Members
-
-        public Task<ExecutionResult> Execute(IReplWindow window, string arguments) {
+    [Export(typeof(IInteractiveWindowCommand))]
+    class SwitchModuleCommand : IInteractiveWindowCommand {
+        public Task<ExecutionResult> Execute(IInteractiveWindow window, string arguments) {
             var remoteEval = window.Evaluator as IMultipleScopeEvaluator;
+            Debug.Assert(remoteEval != null, "Evaluator does not support switching scope");
             if (remoteEval != null) {
                 remoteEval.SetScope(arguments);
             }
@@ -86,7 +83,5 @@ namespace Microsoft.PythonTools.Repl {
             }
         }
 #endif
-
-        #endregion
     }
 }

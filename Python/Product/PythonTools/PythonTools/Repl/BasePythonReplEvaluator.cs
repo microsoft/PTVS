@@ -1172,7 +1172,7 @@ namespace Microsoft.PythonTools.Repl {
             return res;
         }
 
-        private Task<ExecutionResult> ExecuteTextWorker(string text) {            
+        private Task<ExecutionResult> ExecuteTextWorker(string text) {
 #if DEV14_OR_LATER
             var res = _commands.TryExecuteCommand();
             if (res != null) {

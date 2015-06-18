@@ -44,7 +44,7 @@ using ReplRoleAttribute = Microsoft.PythonTools.Repl.InteractiveWindowRoleAttrib
 
 namespace Microsoft.PythonTools.Repl {
     [ReplRole("Debug")]
-    internal class PythonDebugReplEvaluator : IReplEvaluator/*, IMultipleScopeEvaluator*/, IPythonReplIntellisense {
+    internal class PythonDebugReplEvaluator : IReplEvaluator, IMultipleScopeEvaluator, IPythonReplIntellisense {
         private IReplWindow _window;
         private PythonDebugProcessReplEvaluator _activeEvaluator;
         private readonly Dictionary<int, PythonDebugProcessReplEvaluator> _evaluators = new Dictionary<int, PythonDebugProcessReplEvaluator>(); // process id to evaluator
