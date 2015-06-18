@@ -271,23 +271,24 @@ namespace PythonToolsUITests {
         public void DeleteVirtualEnv() {
             using (var app = new PythonVisualStudioApp())
             using (var dis = Init(app)) {
+                var options = app.GetService<PythonToolsService>().GeneralOptions;
+                var oldAutoAnalyze = options.AutoAnalyzeStandardLibrary;
+                app.OnDispose(() => { options.AutoAnalyzeStandardLibrary = oldAutoAnalyze; options.Save(); });
+                options.AutoAnalyzeStandardLibrary = false;
+                options.Save();
+
                 var project = CreateTemporaryProject(app);
 
                 string envName, envPath;
-                var env = app.CreateVirtualEnvironment(project, out envName, out envPath);
+                TreeNode env;
+                using (var ps = new ProcessScope("Microsoft.PythonTools.Analyzer")) {
+                    env = app.CreateVirtualEnvironment(project, out envName, out envPath);
 
-                // Need to wait for analysis to complete before deleting - otherwise
-                // it will always fail.
-                for (int retries = 120;
-                    Process.GetProcessesByName("Microsoft.PythonTools.Analyzer").Any() && retries > 0;
-                    --retries) {
-                    Thread.Sleep(1000);
+                    Assert.IsFalse(ps.WaitForNewProcess(TimeSpan.FromSeconds(10)).Any(), "Unexpected analyzer processes");
                 }
 
-                Assert.IsFalse(Process.GetProcessesByName("Microsoft.PythonTools.Analyzer").Any(), "Analyzer is still running");
-
                 // Need to wait some more for the database to be loaded.
-                app.WaitForNoDialog(TimeSpan.FromSeconds(5.0));
+                app.WaitForNoDialog(TimeSpan.FromSeconds(10.0));
 
                 env.Select();
                 using (var removeDeleteDlg = RemoveItemDialog.FromDte(app)) {

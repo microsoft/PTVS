@@ -145,7 +145,6 @@ namespace Microsoft.PythonTools.Interpreter {
             }
 
             if (!IsCurrent || !Directory.Exists(databasePath)) {
-                GenerateDatabase(GenerateDatabaseOptions.SkipUnchanged);
                 return _baseDb;
             }
 
