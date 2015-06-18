@@ -177,7 +177,7 @@ namespace ReplWindowUITests {
 
                     WaitForMode(app.Dte.Debugger, EnvDTE.dbgDebugMode.dbgRunMode);
 
-                    ((IVsWindowFrame)((ToolWindowPane)interactive.Window).Frame).Show();
+                    interactive.Show();
 
                     const string import = "import BreakpointTest";
                     interactive.SubmitCode(import, wait: false);

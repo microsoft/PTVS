@@ -21,6 +21,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
+using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -33,7 +34,6 @@ using Microsoft.VisualStudio.Text.Operations;
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.InteractiveWindow.Shell;
 #else
-using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Repl;
 using IInteractiveWindow = Microsoft.VisualStudio.Repl.IReplWindow;
 #endif
@@ -116,7 +116,7 @@ namespace TestUtilities.UI {
                     }
                 }
 
-                ((IVsWindowFrame)_toolWindow.Frame).Hide();
+                Hide();
             });
 
             _app.Dispose();
@@ -127,6 +127,14 @@ namespace TestUtilities.UI {
                 _onDispose = new List<Action>();
             }
             _onDispose.Add(action);
+        }
+
+        public void Show() {
+            ErrorHandler.ThrowOnFailure(((IVsWindowFrame)_toolWindow.Frame).Show());
+        }
+
+        public void Hide() {
+            ErrorHandler.ThrowOnFailure(((IVsWindowFrame)_toolWindow.Frame).Hide());
         }
 
         public void Invoke(Action action) {
