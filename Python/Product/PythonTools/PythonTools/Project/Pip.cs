@@ -81,12 +81,18 @@ namespace Microsoft.PythonTools.Project {
 
             // Pip failed, so return a directory listing
             var packagesPath = Path.Combine(factory.Configuration.LibraryPath, "site-packages");
-            var result = await Task.Run(() => new HashSet<string>(Directory.EnumerateDirectories(packagesPath)
-                .Select(path => Path.GetFileName(path))
-                .Select(name => PackageNameRegex.Match(name))
-                .Where(match => match.Success)
-                .Select(match => match.Groups["name"].Value)
-            )).HandleAllExceptions(SR.ProductName, typeof(Pip));
+            HashSet<string> result = null;
+            if (Directory.Exists(packagesPath)) {
+                result = await Task.Run(() => new HashSet<string>(Directory.EnumerateDirectories(packagesPath)
+                    .Select(path => Path.GetFileName(path))
+                    .Select(name => PackageNameRegex.Match(name))
+                    .Where(match => match.Success)
+                    .Select(match => match.Groups["name"].Value)
+                ))
+                    .SilenceException<IOException, HashSet<string>>()
+                    .SilenceException<UnauthorizedAccessException, HashSet<string>>()
+                    .HandleAllExceptions(SR.ProductName, typeof(Pip));
+            }
 
             return result ?? new HashSet<string>();
         }
