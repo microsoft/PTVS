@@ -464,7 +464,7 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
                             @"Interpreter $env\ has invalid value for 'InterpreterPath': INVALID<>PATH",
                             @"Interpreter $env\ has invalid value for 'WindowsInterpreterPath': INVALID<>PATH",
                             @"Interpreter $env\ has invalid value for 'LibraryPath': INVALID<>PATH",
-                            @"Base interpreter $env\ has invalid value for 'BaseInterpreter': {98512745-4ac7-4abb-9f33-120af32edc77}"
+                            @"Interpreter $env\ has invalid value for 'BaseInterpreter': {98512745-4ac7-4abb-9f33-120af32edc77}"
                         );
                     }
 
