@@ -48,6 +48,10 @@ namespace TestUtilities.UI {
         public VisualStudioApp(DTE dte = null)
             : this(new IntPtr((dte ?? VSTestContext.DTE).MainWindow.HWnd)) {
             _dte = dte ?? VSTestContext.DTE;
+
+            foreach (var p in ((DTE2)_dte).ToolWindows.OutputWindow.OutputWindowPanes.OfType<OutputWindowPane>()) {
+                p.Clear();
+            }
         }
 
         private VisualStudioApp(IntPtr windowHandle)
@@ -332,7 +336,7 @@ namespace TestUtilities.UI {
         }
 
         public OutputWindowPane GetOutputWindow(string name) {
-            return ((DTE2)VSTestContext.DTE).ToolWindows.OutputWindow.OutputWindowPanes.Item(name);
+            return ((DTE2)Dte).ToolWindows.OutputWindow.OutputWindowPanes.Item(name);
         }
 
         public IEnumerable<Window> OpenDocumentWindows {
