@@ -735,7 +735,7 @@ namespace Microsoft.PythonTools.Project {
             if (string.IsNullOrEmpty(Arguments)) {
                 Arguments = ProcessOutput.QuoteSingleArgument(argument);
             } else {
-                Arguments = ProcessOutput.QuoteSingleArgument(argument) + Arguments;
+                Arguments = ProcessOutput.QuoteSingleArgument(argument) + " " + Arguments;
             }
         }
 
