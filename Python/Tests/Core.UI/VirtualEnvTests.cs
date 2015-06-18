@@ -21,6 +21,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
+using analysis::Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project;
@@ -52,6 +53,15 @@ namespace PythonToolsUITests {
 
         static DefaultInterpreterSetter Init(PythonVisualStudioApp app, PythonVersion interp, bool install) {
             return app.SelectDefaultInterpreter(interp, install ? "virtualenv" : null);
+        }
+
+        static DefaultInterpreterSetter Init3(PythonVisualStudioApp app, bool installVirtualEnv = false) {
+            return app.SelectDefaultInterpreter(
+                PythonPaths.Python35 ?? PythonPaths.Python35_x64 ??
+                PythonPaths.Python34 ?? PythonPaths.Python34_x64 ??
+                PythonPaths.Python33 ?? PythonPaths.Python33_x64,
+                installVirtualEnv ? "virtualenv" : null
+            );
         }
 
         private EnvDTE.Project CreateTemporaryProject(VisualStudioApp app) {
@@ -370,7 +380,7 @@ namespace PythonToolsUITests {
         [HostType("VSTestHost")]
         public void CreateVEnv() {
             using (var app = new PythonVisualStudioApp())
-            using (var dis = Init(app, PythonPaths.Python33 ?? PythonPaths.Python33_x64, false)) {
+            using (var dis = Init3(app)) {
                 if (dis.CurrentDefault.FindModules("virtualenv").Contains("virtualenv")) {
                     Pip.Uninstall(app.ServiceProvider, dis.CurrentDefault, "virtualenv", false).Wait();
                 }
@@ -396,21 +406,26 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("VSTestHost")]
         public void AddExistingVEnv() {
-            PythonPaths.Python33.AssertInstalled();
-            if (!analysis::Microsoft.VisualStudioTools.CommonUtils.IsSameDirectory("C:\\Python33", PythonPaths.Python33.PrefixPath)) {
-                Assert.Inconclusive("Python 3.3 not configured correctly");
-            }
+            var python = PythonPaths.Python35 ?? PythonPaths.Python34 ?? PythonPaths.Python33;
+            python.AssertInstalled();
 
             using (var app = new PythonVisualStudioApp()) {
                 var project = CreateTemporaryProject(app);
 
                 string envName;
                 var envPath = TestData.GetPath(@"TestData\\Environments\\venv");
+                File.WriteAllText(Path.Combine(envPath, "pyvenv.cfg"),
+                    string.Format(@"home = {0}
+include-system-site-packages = false
+version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
 
                 var env = app.AddExistingVirtualEnvironment(project, envPath, out envName);
                 Assert.IsNotNull(env);
                 Assert.IsNotNull(env.Element);
-                Assert.AreEqual("venv (Python 3.3)", envName);
+                Assert.AreEqual(
+                    string.Format("venv (Python 3.{0})", python.Version.ToVersion().Minor),
+                    envName
+                );
             }
         }
 
