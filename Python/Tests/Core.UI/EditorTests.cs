@@ -640,14 +640,16 @@ x\
                 var item = project.ProjectItems.Item("Program.py");
                 var windowTask = Task.Run(() => item.Open());
 
-                VisualStudioApp.CheckMessageBox(TestUtilities.MessageBoxButton.Ok, "File Load", "Program.py", "ascii encoding");
+                VisualStudioApp.CheckMessageBox(TestUtilities.MessageBoxButton.Ok, "File Load", "Program.py", "Unicode (UTF-8) encoding");
 
                 var window = windowTask.Result;
                 window.Activate();
                 var doc = app.GetDocument(item.Document.FullName);
                 var text = doc.TextView.TextBuffer.CurrentSnapshot.GetText();
-                // Characters should not have been replaced
-                Assert.AreEqual(-1, text.IndexOf("????"));
+                Console.WriteLine(string.Join(" ", text.Select(c => c < ' ' ? " .  " : string.Format(" {0}  ", c))));
+                Console.WriteLine(string.Join(" ", text.Select(c => string.Format("{0:X04}", (int)c))));
+                // Characters should have been replaced
+                Assert.AreNotEqual(-1, text.IndexOf("\uFFFD\uFFFD\uFFFD\uFFFD", StringComparison.Ordinal));
             }
         }
 

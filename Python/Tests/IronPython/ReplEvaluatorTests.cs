@@ -16,6 +16,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Microsoft.IronPythonTools.Interpreter;
+using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
@@ -30,7 +31,7 @@ using TestUtilities.Python;
 using Microsoft.VisualStudio.Repl;
 #endif
 
-namespace ReplWindowUITests {
+namespace IronPythonTests {
     [TestClass]
     public class IronPythonReplEvaluatorTests {
         static IronPythonReplEvaluatorTests() {
@@ -78,7 +79,11 @@ namespace ReplWindowUITests {
             execute.Wait();
             Assert.IsTrue(execute.Result.IsSuccessful);
 
-            var sigs = replEval.GetSignatureDocumentation("Array[int]");
+            OverloadDoc[] sigs = null;
+            for (int retries = 0; retries < 5 && sigs == null; retries += 1) {
+                sigs = replEval.GetSignatureDocumentation("Array[int]");
+            }
+            Assert.IsNotNull(sigs, "GetSignatureDocumentation timed out");
             Assert.AreEqual(sigs.Length, 1);
             Assert.AreEqual("Array[int](: int)\r\n", sigs[0].Documentation);
         }
@@ -145,7 +150,11 @@ namespace ReplWindowUITests {
             using (var analyzer = new VsProjectAnalyzer(PythonToolsTestUtilities.CreateMockServiceProvider(), fact, new[] { fact })) {
                 replWindow.TextView.TextBuffer.Properties.AddProperty(typeof(VsProjectAnalyzer), analyzer);
 
-                var names = replEval.GetMemberNames("t");
+                MemberResult[] names = null;
+                for (int retries = 0; retries < 5 && names == null; retries += 1) {
+                    names = replEval.GetMemberNames("t");
+                }
+                Assert.IsNotNull(names, "GetMemberNames call timed out");
                 foreach (var name in names) {
                     Debug.WriteLine(name.Name);
                 }
