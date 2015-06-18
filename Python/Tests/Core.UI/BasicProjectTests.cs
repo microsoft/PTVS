@@ -857,7 +857,20 @@ namespace PythonToolsUITests {
                     window.Activate();
                 });
 
-                project.GetPythonProject().GetAnalyzer().WaitForCompleteAnalysis(_ => true);
+                var pyProject = project.GetPythonProject();
+                VsProjectAnalyzer analyzer = pyProject != null ? pyProject.GetAnalyzer() : null;
+                for (int retries = 0; analyzer == null && retries < 10; ++retries) {
+                    Thread.Sleep(1000);
+                    if (pyProject == null) {
+                        pyProject = project.GetPythonProject();
+                    }
+                    if (pyProject != null) {
+                        analyzer = pyProject.GetAnalyzer();
+                    }
+                }
+                Assert.IsNotNull(analyzer, "Unable to get analyzer for project");
+
+                analyzer.WaitForCompleteAnalysis(_ => true);
 
                 var doc = app.GetDocument(program.Document.FullName);
                 var snapshot = doc.TextView.TextBuffer.CurrentSnapshot;
@@ -876,7 +889,7 @@ namespace PythonToolsUITests {
                 CompileFile("ClassLibraryBool.cs", "ClassLibrary.dll");
 
                 Thread.Sleep(2000); // allow time to reload the new DLL
-                project.GetPythonProject().GetAnalyzer().WaitForCompleteAnalysis(_ => true);
+                analyzer.WaitForCompleteAnalysis(_ => true);
                 
                 AssertUtil.ContainsExactly(GetVariableDescriptions("a", snapshot), "bool");
                 AssertUtil.ContainsExactly(GetVariableDescriptions("b", snapshot), "int");
@@ -885,7 +898,7 @@ namespace PythonToolsUITests {
                 CompileFile("ClassLibrary2Char.cs", "ClassLibrary2.dll");
 
                 Thread.Sleep(2000); // allow time to reload the new DLL
-                project.GetPythonProject().GetAnalyzer().WaitForCompleteAnalysis(_ => true);
+                analyzer.WaitForCompleteAnalysis(_ => true);
 
                 AssertUtil.ContainsExactly(GetVariableDescriptions("a", snapshot), "bool");
                 AssertUtil.ContainsExactly(GetVariableDescriptions("b", snapshot), "Char");
@@ -1187,9 +1200,10 @@ namespace PythonToolsUITests {
         [HostType("VSTestHost")]
         public void AddFromFileOutsideOfProject() {
             using (var app = new VisualStudioApp()) {
-                var prevSetting = app.GetService<PythonToolsService>().GeneralOptions.UpdateSearchPathsWhenAddingLinkedFiles;
-                app.OnDispose(() => app.GetService<PythonToolsService>().GeneralOptions.UpdateSearchPathsWhenAddingLinkedFiles = prevSetting);
-                app.GetService<PythonToolsService>().GeneralOptions.UpdateSearchPathsWhenAddingLinkedFiles = false;
+                var options = app.GetService<PythonToolsService>().GeneralOptions;
+                var prevSetting = options.UpdateSearchPathsWhenAddingLinkedFiles;
+                app.OnDispose(() => options.UpdateSearchPathsWhenAddingLinkedFiles = prevSetting);
+                options.UpdateSearchPathsWhenAddingLinkedFiles = false;
 
                 var project = app.OpenProject(@"TestData\HelloWorld.sln");
                 // "Python Environments", "References", "Search Paths", "Program.py"
@@ -1295,6 +1309,7 @@ namespace PythonToolsUITests {
 
                 Keyboard.Type("print('hi')\r");
                 var interactive = app.GetInteractiveWindow(interpreterName + " Interactive");
+                Assert.IsNotNull(interactive, "Unable to find " + interpreterName + " Interactive");
                 interactive.WaitForTextEnd("hi", ">>> ");
             }
         }
