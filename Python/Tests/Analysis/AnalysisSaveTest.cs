@@ -175,7 +175,11 @@ Overloaded = test.Overloaded
                 Assert.AreEqual("class doc\r\n\r\nfunction doc", allMembers.First(x => x.Name == "Aliased").Documentation);
                 Assert.AreEqual(1, newMod.Analysis.GetSignaturesByIndex("FunctionNoRetType", pos).ToArray().Length);
 
-                Assert.AreEqual("help 1\r\n\r\nhelp 2", newMod.Analysis.GetMembersByIndex("test", pos).Where(x => x.Name == "Overloaded").First().Documentation);
+                var doc = newMod.Analysis.GetMembersByIndex("test", pos).Where(x => x.Name == "Overloaded").First().Documentation;
+                // Out of order is okay, as long as "help 2" only appears once
+                if (doc != "help 2\r\n\r\nhelp 1") {
+                    Assert.AreEqual("help 1\r\n\r\nhelp 2", doc);
+                }
             }
         }
 
