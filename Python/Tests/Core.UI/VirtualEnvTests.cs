@@ -178,7 +178,10 @@ namespace PythonToolsUITests {
                     "requirements.txt"
                 );
                 
-                Assert.AreEqual("azure==0.6.2", File.ReadAllText(requirementsTxt).Trim());
+                AssertUtil.ContainsAtLeast(
+                    File.ReadAllLines(requirementsTxt).Select(s => s.Trim()),
+                    "azure==0.6.2"
+                );
             }
         }
 
