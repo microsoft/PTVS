@@ -1671,7 +1671,12 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         internal static void CloseReplWindow(object key) {
+#if DEV14_OR_LATER
+            var vsWindow = key as IVsInteractiveWindow;
+            var window = vsWindow != null ? vsWindow.InteractiveWindow : null;
+#else
             var window = key as IReplWindow;
+#endif
             Debug.Assert(window != null);
             if (window == null) {
                 return;
@@ -1686,7 +1691,11 @@ namespace Microsoft.PythonTools.Repl {
 
             // Close project-specific REPL windows when the project
             // closes.
+#if DEV14_OR_LATER
+            var pane = vsWindow as ToolWindowPane;
+#else
             var pane = window as ToolWindowPane;
+#endif
             var frame = pane != null ? pane.Frame as IVsWindowFrame : null;
             if (frame != null) {
                 frame.CloseFrame((uint)__FRAMECLOSE.FRAMECLOSE_NoSave);
