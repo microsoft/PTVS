@@ -31,7 +31,7 @@ using TestUtilities.Python;
 using Microsoft.VisualStudio.Repl;
 #endif
 
-namespace ReplWindowUITests {
+namespace IronPythonTests {
     [TestClass]
     public class IronPythonReplEvaluatorTests {
         static IronPythonReplEvaluatorTests() {
@@ -79,7 +79,11 @@ namespace ReplWindowUITests {
             execute.Wait();
             Assert.IsTrue(execute.Result.IsSuccessful);
 
-            var sigs = replEval.GetSignatureDocumentation("Array[int]");
+            OverloadDoc[] sigs = null;
+            for (int retries = 0; retries < 5 && sigs == null; retries += 1) {
+                sigs = replEval.GetSignatureDocumentation("Array[int]");
+            }
+            Assert.IsNotNull(sigs, "GetSignatureDocumentation timed out");
             Assert.AreEqual(sigs.Length, 1);
             Assert.AreEqual("Array[int](: int)\r\n", sigs[0].Documentation);
         }
