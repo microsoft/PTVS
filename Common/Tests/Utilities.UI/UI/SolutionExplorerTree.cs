@@ -121,11 +121,12 @@ namespace TestUtilities.UI {
 
         private AutomationElement FindChildOfProjectHelper(EnvDTE.Project project, string[] path, bool assertOnFailure) {
             var sln = project.DTE.Solution;
+            int count = sln.Projects.OfType<EnvDTE.Project>().Count(p => !string.IsNullOrEmpty(p.FullName));
             var slnLabel = string.Format(
                 "Solution '{0}' ({1} project{2})",
                 Path.GetFileNameWithoutExtension(sln.FullName),
-                sln.Count,
-                sln.Count == 1 ? "" : "s"
+                count,
+                count == 1 ? "" : "s"
             );
 
             var slnElements = Element.FindAll(TreeScope.Children, new PropertyCondition(
