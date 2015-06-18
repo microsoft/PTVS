@@ -112,7 +112,6 @@ namespace Microsoft.PythonTools.Commands {
 
                 IWpfTextView textView;
                 var pyProj = CommonPackage.GetStartupProject(_serviceProvider) as PythonProjectNode;
-                var window = (IReplWindow)EnsureReplWindow(_serviceProvider, analyzer, pyProj);
                 if (pyProj != null) {
                     // startup project, enabled in Start in REPL mode.
                     oleMenu.Visible = true;
