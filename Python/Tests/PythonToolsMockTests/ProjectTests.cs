@@ -14,7 +14,12 @@
 
 using System;
 using System.Linq;
+using System.Reflection;
+using System.Threading;
 using System.Windows.Input;
+using Microsoft.PythonTools;
+using Microsoft.PythonTools.Interpreter;
+using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools;
@@ -79,6 +84,54 @@ namespace PythonToolsMockTests {
 
                     solution.CheckMessageBox("The source URL 'CutRenamePaste" + projectType.CodeExtension + "' could not be found.");
                 }
+            }
+        }
+
+        [TestMethod]
+        public void ShouldWarnOnRun() {
+            var sln = new ProjectDefinition(
+                "HelloWorld",
+                PythonProject,
+                Compile("app", "print \"hello\"")
+            ).Generate();
+
+            using (var vs = sln.ToMockVs())
+            using (var analyzerChanged = new AutoResetEvent(false)) {
+                var project = vs.GetProject("HelloWorld").GetPythonProject();
+                project.ProjectAnalyzerChanged += (s, e) => analyzerChanged.Set();
+
+                var v27 = InterpreterFactoryCreator.CreateInterpreterFactory(new InterpreterFactoryCreationOptions {
+                    LanguageVersion = new Version(2, 7),
+                    PrefixPath = "C:\\Python27",
+                    InterpreterPath = "C:\\Python27\\python.exe"
+                });
+                var v34 = InterpreterFactoryCreator.CreateInterpreterFactory(new InterpreterFactoryCreationOptions {
+                    LanguageVersion = new Version(3, 4),
+                    PrefixPath = "C:\\Python34",
+                    InterpreterPath = "C:\\Python34\\python.exe"
+                });
+
+                var uiThread = (UIThreadBase)project.GetService(typeof(UIThreadBase));
+
+                uiThread.Invoke(() => {
+                    project.Interpreters.AddInterpreter(v27);
+                    project.Interpreters.AddInterpreter(v34);
+                });
+
+                project.SetInterpreterFactory(v27);
+                Assert.IsTrue(analyzerChanged.WaitOne(10000), "Timed out waiting for analyzer change #1");
+                uiThread.Invoke(() => project.GetAnalyzer()).WaitForCompleteAnalysis(_ => true);
+                Assert.IsFalse(project.ShouldWarnOnLaunch, "Should not warn on 2.7");
+
+                project.SetInterpreterFactory(v34);
+                Assert.IsTrue(analyzerChanged.WaitOne(10000), "Timed out waiting for analyzer change #2");
+                uiThread.Invoke(() => project.GetAnalyzer()).WaitForCompleteAnalysis(_ => true);
+                Assert.IsTrue(project.ShouldWarnOnLaunch, "Expected warning on 3.4");
+
+                project.SetInterpreterFactory(v27);
+                Assert.IsTrue(analyzerChanged.WaitOne(10000), "Timed out waiting for analyzer change #3");
+                uiThread.Invoke(() => project.GetAnalyzer()).WaitForCompleteAnalysis(_ => true);
+                Assert.IsFalse(project.ShouldWarnOnLaunch, "Expected warning to go away on 2.7");
             }
         }
 

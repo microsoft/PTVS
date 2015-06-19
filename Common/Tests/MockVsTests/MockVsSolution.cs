@@ -154,7 +154,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             public int Next(uint celt, IVsHierarchy[] rgelt, out uint pceltFetched) {
                 pceltFetched = 0;
                 for (int i = 0; i < celt && _index < _projects.Length; i++) {
-                    rgelt[i] = _projects[++_index].Hierarchy;
+                    rgelt[i] = _projects[_index++].Hierarchy;
                     pceltFetched++;
                 }
                 return VSConstants.S_OK;
