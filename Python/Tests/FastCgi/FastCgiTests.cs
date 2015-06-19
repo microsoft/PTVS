@@ -185,7 +185,7 @@ namespace FastCgiTest {
             using (var site = ConfigureIISForCustomHandler(AppCmdPath, InterpreterPath, "custom_handler.error_handler")) {
                 site.StartServer();
                 try {
-                    var response = site.Request("");
+                    var response = site.Request("", printError: false);
                 } catch (WebException wex) {
                     var stream = wex.Response.GetResponseStream();
                     var content = new StreamReader(stream).ReadToEnd();
@@ -397,14 +397,16 @@ namespace FastCgiTest {
                 Console.WriteLine("Server started: {0}", _process.Arguments);
             }
 
-            public WebResponse Request(string uri) {
+            public WebResponse Request(string uri, bool printError = true) {
                 WebRequest req = WebRequest.Create(
                     "http://localhost:8181/" + uri
                 );
                 try {
                     return req.GetResponse();
                 } catch (WebException ex) {
-                    Console.WriteLine(new StreamReader(ex.Response.GetResponseStream()).ReadToEnd());
+                    if (printError) {
+                        Console.WriteLine(new StreamReader(ex.Response.GetResponseStream()).ReadToEnd());
+                    }
                     throw;
                 }
             }
