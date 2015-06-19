@@ -23,18 +23,18 @@ using TestUtilities.Python;
 
 namespace FastCgiTest {
     [TestClass]
-    public class FastCgiTests33 : FastCgiTests {
+    public class FastCgiTests3x : FastCgiTests {
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
             AssertListener.Initialize();
             PythonTestData.Deploy();
         }
 
-        public override string InterpreterPath {
+        public override PythonVersion PythonVersion {
             get {
-                return PythonPaths.Python33.InterpreterPath;
+                return PythonPaths.Python34 ?? PythonPaths.Python34_x64 ??
+                    PythonPaths.Python33 ?? PythonPaths.Python33_x64;
             }
         }
-
     }
 }
