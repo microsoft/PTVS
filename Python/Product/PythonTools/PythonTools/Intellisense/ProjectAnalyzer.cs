@@ -1132,6 +1132,9 @@ namespace Microsoft.PythonTools.Intellisense {
             if (!statementRange.HasValue) {
                 statementRange = snapSpan.Start.GetContainingLine().Extent;
             }
+            if (snapSpan.Start < statementRange.Value.Start) {
+                return null;
+            }
 
             var tokens = classifier.GetClassificationSpans(new SnapshotSpan(statementRange.Value.Start, snapSpan.Start));
             if (tokens.Count > 0) {
