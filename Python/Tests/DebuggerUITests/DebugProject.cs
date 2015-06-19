@@ -143,8 +143,12 @@ namespace DebuggerUITests {
 
                 app.Dte.ExecuteCommand("Debug.Start");
 
+                string expectedMissingInterpreterText = string.Format(
+                    "The project cannot be launched because no Python interpreter is available at \"{0}\". Please check the " +
+                    "Python Environments window and ensure the version of Python is installed and has all settings specified.",
+                    TestData.GetPath(@"TestData\Interpreter.exe"));
                 var dialog = app.WaitForDialog();
-                VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, "Interpreter specified in the project does not exist:", "Interpreter.exe'");
+                VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, expectedMissingInterpreterText);
 
                 app.Dte.Solution.Close(false);
 
