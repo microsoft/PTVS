@@ -38,12 +38,10 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public static readonly RoutedCommand StartRefreshDB = new RoutedCommand();
 
         private readonly DBExtensionProvider _provider;
-        private readonly DBEnvironmentView _view;
         private readonly CollectionViewSource _sortedPackages;
 
         public DBExtension(DBExtensionProvider provider) {
             _provider = provider;
-            _view = new DBEnvironmentView(null, _provider);
             DataContextChanged += DBExtension_DataContextChanged;
             InitializeComponent();
 
