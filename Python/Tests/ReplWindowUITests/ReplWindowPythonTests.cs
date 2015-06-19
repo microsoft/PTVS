@@ -78,8 +78,11 @@ namespace ReplWindowUITests {
         [TestMethod, Priority(0)]
         [HostType("VSTestHost")]
         public virtual void SyntaxHighlightingRaiseException() {
-            using (var interactive = Prepare()) {
+            using (var interactive = Prepare())
+            using (var newClassifications = new AutoResetEvent(false)) {
                 const string code = "raise Exception()";
+                interactive.Classifier.ClassificationChanged += (s, e) => newClassifications.Set();
+
                 interactive.SubmitCode(code);
 
                 interactive.WaitForText(
@@ -92,7 +95,11 @@ namespace ReplWindowUITests {
 
                 var snapshot = interactive.TextView.TextBuffer.CurrentSnapshot;
                 var span = new SnapshotSpan(snapshot, new Span(0, snapshot.Length));
+                Assert.IsTrue(newClassifications.WaitOne(10000), "Timed out waiting for classification");
                 var classifications = interactive.Classifier.GetClassificationSpans(span);
+                foreach (var c in classifications) {
+                    Console.WriteLine("{0} ({1})", c.Span.GetText(), c.ClassificationType.Classification);
+                }
 
                 Assert.AreEqual(classifications[0].ClassificationType.Classification, PredefinedClassificationTypeNames.Keyword);
                 Assert.AreEqual(classifications[1].ClassificationType.Classification, PredefinedClassificationTypeNames.Identifier);
