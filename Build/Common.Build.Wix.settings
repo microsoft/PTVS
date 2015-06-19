@@ -11,9 +11,9 @@
 
   <PropertyGroup>
     <Language>WiX</Language>
-    <WixToolsVersion Condition="'$(WixToolsVersion)'==''">3.7</WixToolsVersion>
-    <WixToolPath Condition="'$(WixToolPath)'==''">$(BuildRoot)\Tools\Wix\$(WixToolsVersion)</WixToolPath>
-    <WixExtDir Condition="'$(WixExtDir)'==''">$(BuildRoot)\Tools\Wix\$(WixToolsVersion)</WixExtDir>
+    <WixToolsVersion Condition="'$(WixToolsVersion)'==''">3.9</WixToolsVersion>
+    <WixToolPath Condition="'$(WixToolPath)'==''">$(BuildRoot)\BuildOutput\Wix\$(WixToolsVersion)</WixToolPath>
+    <WixExtDir Condition="'$(WixExtDir)'==''">$(BuildRoot)\BuildOutput\Wix\$(WixToolsVersion)</WixExtDir>
     <WixTargetsPath>$(WixToolPath)\Wix.targets</WixTargetsPath>
     <WixTasksPath>$(WixToolPath)\WixTasks.dll</WixTasksPath>
     <LuxTargetsPath>$(WixToolPath)\Lux.targets</LuxTargetsPath>

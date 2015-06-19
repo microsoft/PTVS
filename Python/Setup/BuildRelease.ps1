@@ -295,6 +295,8 @@ if (-not (Get-Command msbuild -EA 0)) {
     Throw "Visual Studio build tools are required."
 }
 
+& "$buildroot\Build\GetWix.ps1"
+
 if (-not $outdir -and -not $release -and -not $internal) {
     if (-not $outdir) {
         Throw "Invalid output directory '$outdir'"
