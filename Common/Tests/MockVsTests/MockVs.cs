@@ -875,7 +875,27 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         public Project GetProject(string projectName) {
-            throw new NotImplementedException();
+            var empty = Guid.Empty;
+            IEnumHierarchies ppenum;
+            ErrorHandler.ThrowOnFailure(Solution.GetProjectEnum(
+                (uint)__VSENUMPROJFLAGS.EPF_ALLPROJECTS,
+                ref empty,
+                out ppenum
+            ));
+
+            var projects = new IVsHierarchy[32];
+            int hr;
+            uint fetched;
+            while ((hr = ppenum.Next((uint)projects.Length, projects, out fetched)) == VSConstants.S_OK && fetched > 0) {
+                var project = projects.FirstOrDefault(h =>
+                    projectName.Equals(h.GetPropertyValue((int)__VSHPROPID.VSHPROPID_Name, (uint)VSConstants.VSITEMID.Root) as string)
+                );
+                if (project != null) {
+                    return project.GetPropertyValue((int)__VSHPROPID.VSHPROPID_ExtObject, (uint)VSConstants.VSITEMID.Root) as Project;
+                }
+            }
+
+            return null;
         }
 
         public void SelectProject(Project project) {

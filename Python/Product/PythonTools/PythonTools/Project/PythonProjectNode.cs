@@ -922,6 +922,7 @@ namespace Microsoft.PythonTools.Project {
 
         private void UnHookErrorsAndWarnings(VsProjectAnalyzer res) {
             res.ShouldWarnOnLaunchChanged -= OnShouldWarnOnLaunchChanged;
+            _warnOnLaunchFiles.Clear();
         }
 
         private void OnShouldWarnOnLaunchChanged(object sender, EntryEventArgs e) {
