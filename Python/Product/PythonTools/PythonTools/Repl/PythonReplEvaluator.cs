@@ -240,8 +240,6 @@ namespace Microsoft.PythonTools.Repl {
             var workingDir = CurrentOptions.WorkingDirectory;
             if (!string.IsNullOrEmpty(workingDir)) {
                 processInfo.WorkingDirectory = workingDir;
-            } else if (configurableOptions != null && configurableOptions.Project != null) {
-                processInfo.WorkingDirectory = configurableOptions.Project.GetWorkingDirectory();
             } else {
                 processInfo.WorkingDirectory = Interpreter.Configuration.PrefixPath;
             }
@@ -468,15 +466,7 @@ namespace Microsoft.PythonTools.Repl {
 
         public PythonProjectNode Project {
             get { return _project; }
-            set {
-                _project = value;
-                if (_workingDir == null) {
-                    _workingDir = _project.GetWorkingDirectory();
-                }
-                if (_searchPaths == null) {
-                    _searchPaths = string.Join(";", _project.GetSearchPaths());
-                }
-            }
+            set { _project = value; }
         }
 
         public override string InterpreterOptions {
@@ -484,7 +474,12 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public override string WorkingDirectory {
-            get { return _workingDir ?? ""; }
+            get {
+                if (_project != null && string.IsNullOrEmpty(_workingDir)) {
+                    return _project.GetWorkingDirectory();
+                }
+                return _workingDir ?? "";
+            }
         }
 
         public override IDictionary<string, string> EnvironmentVariables {
@@ -496,7 +491,12 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public override string SearchPaths {
-            get { return _searchPaths ?? ""; }
+            get {
+                if (_project != null && string.IsNullOrEmpty(_searchPaths)) {
+                    return string.Join(new string(Path.PathSeparator, 1), _project.GetSearchPaths());
+                }
+                return _searchPaths ?? "";
+            }
         }
 
         public override string InterpreterArguments {

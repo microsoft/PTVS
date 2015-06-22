@@ -501,6 +501,45 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
             }
         }
 
+        private void EnvironmentReplWorkingDirectoryTest(
+            PythonVisualStudioApp app,
+            EnvDTE.Project project,
+            TreeNode env,
+            string envName
+        ) {
+            var path1 = Path.Combine(Path.GetDirectoryName(project.FullName), Guid.NewGuid().ToString("N"));
+            var path2 = Path.Combine(Path.GetDirectoryName(project.FullName), Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(path1);
+            Directory.CreateDirectory(path2);
+
+            env.Select();
+            app.Dte.ExecuteCommand("Python.Interactive");
+
+            var window = app.GetInteractiveWindow(string.Format("{0} Interactive", envName));
+            Assert.IsNotNull(window, string.Format("Failed to find '{0} Interactive'", envName));
+            try {
+                app.ServiceProvider.GetUIThread().Invoke(() => project.GetPythonProject().SetProjectProperty("WorkingDirectory", path1));
+
+                window.Reset();
+                window.ReplWindow.Evaluator.ExecuteText("import os; os.getcwd()").Wait();
+                window.WaitForTextEnd(
+                    string.Format("'{0}'", path1.Replace("\\", "\\\\")),
+                    ">>>"
+                );
+
+                app.ServiceProvider.GetUIThread().Invoke(() => project.GetPythonProject().SetProjectProperty("WorkingDirectory", path2));
+
+                window.Reset();
+                window.ReplWindow.Evaluator.ExecuteText("import os; os.getcwd()").Wait();
+                window.WaitForTextEnd(
+                    string.Format("'{0}'", path2.Replace("\\", "\\\\")),
+                    ">>>"
+                );
+            } finally {
+                window.Close();
+            }
+        }
+
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("VSTestHost")]
         public void EnvironmentReplWorkingDirectory() {
@@ -508,40 +547,30 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
             using (var dis = Init(app)) {
                 var project = CreateTemporaryProject(app);
 
-                var path1 = Path.Combine(Path.GetDirectoryName(project.FullName), Guid.NewGuid().ToString("N"));
-                var path2 = Path.Combine(Path.GetDirectoryName(project.FullName), Guid.NewGuid().ToString("N"));
-                Directory.CreateDirectory(path1);
-                Directory.CreateDirectory(path2);
+                app.ServiceProvider.GetUIThread().Invoke(() => {
+                    var pp = project.GetPythonProject();
+                    pp.Interpreters.AddInterpreter(dis.CurrentDefault);
+                });
 
-                app.ServiceProvider.GetUIThread().Invoke(() => project.GetPythonProject().SetProjectProperty("WorkingDirectory", path1));
+                var envName = dis.CurrentDefault.Description;
+                var sln = app.OpenSolutionExplorer();
+                var env = sln.FindChildOfProject(project, SR.GetString(SR.Environments), envName);
+
+                EnvironmentReplWorkingDirectoryTest(app, project, env, envName);
+            }
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("VSTestHost")]
+        public void VirtualEnvironmentReplWorkingDirectory() {
+            using (var app = new PythonVisualStudioApp())
+            using (var dis = Init(app)) {
+                var project = CreateTemporaryProject(app);
 
                 string envName;
                 var env = app.CreateVirtualEnvironment(project, out envName);
-                env.Select();
 
-                app.Dte.ExecuteCommand("Python.Interactive");
-
-                var window = app.GetInteractiveWindow(string.Format("{0} Interactive", envName));
-                Assert.IsNotNull(window, string.Format("Failed to find '{0} Interactive'", envName));
-                try {
-                    window.Reset();
-                    window.ReplWindow.Evaluator.ExecuteText("import os; os.getcwd()").Wait();
-                    window.WaitForTextEnd(
-                        string.Format("'{0}'", path1.Replace("\\", "\\\\")),
-                        ">>>"
-                    );
-
-                    app.ServiceProvider.GetUIThread().Invoke(() => project.GetPythonProject().SetProjectProperty("WorkingDirectory", path2));
-
-                    window.Reset();
-                    window.ReplWindow.Evaluator.ExecuteText("import os; os.getcwd()").Wait();
-                    window.WaitForTextEnd(
-                        string.Format("'{0}'", path2.Replace("\\", "\\\\")),
-                        ">>>"
-                    );
-                } finally {
-                    window.Close();
-                }
+                EnvironmentReplWorkingDirectoryTest(app, project, env, envName);
             }
         }
     }
