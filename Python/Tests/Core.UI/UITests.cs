@@ -810,7 +810,18 @@ namespace PythonToolsUITests {
 
                 Assert.AreEqual(1, app.Dte.Solution.Projects.Count);
 
-                Assert.IsNotNull(app.Dte.Solution.Projects.Item(1).ProjectItems.Item(Path.GetFileNameWithoutExtension(app.Dte.Solution.FullName) + ".py"));
+                var project = app.Dte.Solution.Projects.Item(1);
+                Console.WriteLine("Project.Name: {0}", project.Name ?? "(null)");
+
+                var itemName = Path.ChangeExtension(project.Name, ".py");
+                Console.WriteLine("Expected item: {0}", itemName);
+
+                Console.WriteLine("Items:");
+                foreach (var item in project.ProjectItems.OfType<ProjectItem>()) {
+                    Console.WriteLine("  {0}", item.Name ?? "(null)");
+                }
+
+                Assert.IsNotNull(project.ProjectItems.Item(itemName));
             }
         }
 
