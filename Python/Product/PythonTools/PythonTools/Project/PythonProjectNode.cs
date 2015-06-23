@@ -1151,7 +1151,7 @@ namespace Microsoft.PythonTools.Project {
                 );
 
                 var props = PythonProjectLaunchProperties.Create(this);
-                var env = new Dictionary<string, string>(props.GetEnvironment(true));
+                var env = new Dictionary<string, string>(props.GetEnvironment(true), StringComparer.OrdinalIgnoreCase);
 
                 var paths = new List<string>();
                 paths.Add(CommonUtils.GetParent(((IPythonProjectLaunchProperties)this).GetInterpreterPath()));

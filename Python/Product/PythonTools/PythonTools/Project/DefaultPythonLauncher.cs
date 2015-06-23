@@ -185,7 +185,7 @@ namespace Microsoft.PythonTools.Project {
                 }
             }
 
-            var env = new Dictionary<string, string>(props.GetEnvironment(true));
+            var env = new Dictionary<string, string>(props.GetEnvironment(true), StringComparer.OrdinalIgnoreCase);
             PythonProjectLaunchProperties.MergeEnvironmentBelow(env, null, true);
             if (env.Any()) {
                 //Environment variables should be passed as a
@@ -243,7 +243,7 @@ namespace Microsoft.PythonTools.Project {
             //In order to update environment variables we have to set UseShellExecute to false
             startInfo.UseShellExecute = false;
 
-            var env = new Dictionary<string, string>(props.GetEnvironment(true));
+            var env = new Dictionary<string, string>(props.GetEnvironment(true), StringComparer.OrdinalIgnoreCase);
             PythonProjectLaunchProperties.MergeEnvironmentBelow(env, null, true);
             foreach (var kv in env) {
                 startInfo.EnvironmentVariables[kv.Key] = kv.Value;

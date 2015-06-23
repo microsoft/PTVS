@@ -438,7 +438,7 @@ namespace Microsoft.PythonTools.Project.Web {
                 UseShellExecute = false
             };
 
-            var env = new Dictionary<string, string>(startInfo.EnvironmentVariables);
+            var env = new Dictionary<string, string>(startInfo.EnvironmentVariables, StringComparer.OrdinalIgnoreCase);
             PythonProjectLaunchProperties.MergeEnvironmentBelow(env, new Dictionary<string, string> {
                 { "SERVER_HOST", "localhost" },
                 { "SERVER_PORT", TestServerPortString }
