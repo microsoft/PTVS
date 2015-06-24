@@ -72,15 +72,15 @@ namespace PythonToolsUITests {
         [HostType("VSTestHost")]
         public void OutliningTest() {
             OutlineTest("Program.py",
-                new ExpectedTag(9, 64, "\n    print('hello')\r\n    print('world')\r\n    print('!')"),
+                new ExpectedTag(8, 64, "\r\n    print('hello')\r\n    print('world')\r\n    print('!')"),
                 new ExpectedTag(86, 142, "\r\n    print('hello')\r\n    print('world')\r\n    print('!')"),
-                new ExpectedTag(165, 220, "\n    print('hello')\r\n    print('world')\r\n    print('!')"),
-                new ExpectedTag(306, 361, "\n    print('hello')\r\n    print('world')\r\n    print('!')"),
-                new ExpectedTag(243, 298, "\n    print('hello')\r\n    print('world')\r\n    print('!')"),
-                new ExpectedTag(384, 439, "\n    print('hello')\r\n    print('world')\r\n    print('!')"),
-                new ExpectedTag(452, 507, "\n    print('hello')\r\n    print('world')\r\n    print('!')"),
-                new ExpectedTag(551, 606, "\n    print('hello')\r\n    print('world')\r\n    print('!')"),
-                new ExpectedTag(626, 681, "\n    print('hello')\r\n    print('world')\r\n    print('!')")
+                new ExpectedTag(164, 220, "\r\n    print('hello')\r\n    print('world')\r\n    print('!')"),
+                new ExpectedTag(305, 361, "\r\n    print('hello')\r\n    print('world')\r\n    print('!')"),
+                new ExpectedTag(242, 298, "\r\n    print('hello')\r\n    print('world')\r\n    print('!')"),
+                new ExpectedTag(383, 439, "\r\n    print('hello')\r\n    print('world')\r\n    print('!')"),
+                new ExpectedTag(451, 507, "\r\n    print('hello')\r\n    print('world')\r\n    print('!')"),
+                new ExpectedTag(550, 606, "\r\n    print('hello')\r\n    print('world')\r\n    print('!')"),
+                new ExpectedTag(625, 681, "\r\n    print('hello')\r\n    print('world')\r\n    print('!')")
             );
         }
 
@@ -88,8 +88,8 @@ namespace PythonToolsUITests {
         [HostType("VSTestHost")]
         public void OutlineNestedFuncDef() {
             OutlineTest("NestedFuncDef.py",
-                new ExpectedTag(9, 90, "\n    def g():\r\n        print('hello')\r\n        print('world')\r\n        print('!')"),
-                new ExpectedTag(23, 90, "\n        print('hello')\r\n        print('world')\r\n        print('!')"));
+                new ExpectedTag(8, 90, "\r\n    def g():\r\n        print('hello')\r\n        print('world')\r\n        print('!')"),
+                new ExpectedTag(22, 90, "\r\n        print('hello')\r\n        print('world')\r\n        print('!')"));
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]

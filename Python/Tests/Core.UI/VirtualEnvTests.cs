@@ -401,8 +401,9 @@ namespace PythonToolsUITests {
                 var env = app.CreateVirtualEnvironment(project, out envName, out envPath);
                 Assert.IsNotNull(env);
                 Assert.IsNotNull(env.Element);
-                Assert.AreEqual(string.Format("env (Python {0}3.3)",
-                    dis.CurrentDefault.Configuration.Architecture == ProcessorArchitecture.Amd64 ? "64-bit " : ""
+                Assert.AreEqual(string.Format("env (Python {0}3.{1})",
+                    dis.CurrentDefault.Configuration.Architecture == ProcessorArchitecture.Amd64 ? "64-bit " : "",
+                    dis.CurrentDefault.Configuration.Version.Minor
                 ), envName);
             }
         }
