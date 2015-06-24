@@ -321,10 +321,11 @@ namespace PythonToolsMockTests {
             // TODO: Make completions trigger after spaces
             // eg: AutoListTest("[a for a in b]", 1, 3, 9, 12);
 
-            AutoListTest("[a for a in b for c in d if x]", 1, 12, 23, 28);
-            AutoListTest("{a for a in b for c in d if x}", 1, 12, 23, 28);
-            AutoListTest("(a for a in b for c in d if x)", 1, 12, 23, 28);
-            AutoListTest("{a: b for a, b in b for c, d in e if x}", 1, 4, 18, 32, 37);
+            AutoListTest("[a for a in b for c in d if x]", 1, -7, 12, -18, 23, 28);
+            AutoListTest("{a for a in b for c in d if x}", 1, -7, 12, -18, 23, 28);
+            AutoListTest("(a for a in b for c in d if x)", 1, -7, 12, -18, 23, 28);
+            AutoListTest("{a: b for a, b in b for c, d in e if x}", 1, 4, -10, -13, 18, 32, 37);
+            AutoListTest("x = [a for a in b for c in d if x]", -1, 5, -11, 16, -22, 27, 32);
         }
 
         [TestMethod, TestCategory("Mock")]
