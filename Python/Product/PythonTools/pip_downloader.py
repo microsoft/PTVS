@@ -52,10 +52,7 @@ def install_from_source(setuptools_source, pip_source):
         os.chdir(setuptools_temp_dir)
         print('Downloading setuptools from ' + setuptools_source)
         sys.stdout.flush()
-        if os.path.exists('setuptools.tar.gz'):
-            setuptools_package = 'setuptools.tar.gz'
-        else:
-            setuptools_package, _ = urlretrieve(setuptools_source, 'setuptools.tar.gz')
+        setuptools_package, _ = urlretrieve(setuptools_source, 'setuptools.tar.gz')
 
         package = tarfile.open(setuptools_package)
         try:
@@ -79,10 +76,7 @@ def install_from_source(setuptools_source, pip_source):
         os.chdir(pip_temp_dir)
         print('Downloading pip from ' + pip_source)
         sys.stdout.flush()
-        if os.path.exists('pip.tar.gz'):
-            pip_package = 'pip.tar.gz'
-        else:
-            pip_package, _ = urlretrieve(pip_source, 'pip.tar.gz')
+        pip_package, _ = urlretrieve(pip_source, 'pip.tar.gz')
 
         package = tarfile.open(pip_package)
         try:
@@ -116,13 +110,7 @@ def install_from_pip(getpip_url):
     try:
         print('Downloading pip from ' + getpip_url)
         sys.stdout.flush()
-        if os.path.exists('get-pip.py'):
-            pip_script = 'get-pip.py'
-        else:
-            pip_script, _ = urlretrieve(
-                getpip_url,
-                os.path.join(pip_temp_dir, 'get-pip.py')
-            )
+        pip_script, _ = urlretrieve(getpip_url, os.path.join(pip_temp_dir, 'get-pip.py'))
 
         print('\nInstalling from ' + pip_script)
         sys.stdout.flush()
