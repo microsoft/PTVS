@@ -951,7 +951,7 @@ namespace Microsoft.PythonTools.Project {
                 return service.DefaultInterpreter;
             }
 
-            var fact = _interpreters.ActiveInterpreter;
+            var fact = interpreters.ActiveInterpreter;
 
             Site.GetPythonToolsService().EnsureCompletionDb(fact);
 
@@ -969,7 +969,7 @@ namespace Microsoft.PythonTools.Project {
                 return service.DefaultInterpreter;
             }
 
-            var fact = _interpreters.ActiveInterpreter;
+            var fact = interpreters.ActiveInterpreter;
             if (fact == service.NoInterpretersValue) {
                 throw new NoInterpretersException();
             }
@@ -1364,12 +1364,19 @@ namespace Microsoft.PythonTools.Project {
             if (args != null && args.TryGetValue("e", out description) && !string.IsNullOrEmpty(description)) {
                 var service = Site.GetComponentModel().GetService<IInterpreterOptionsService>();
 
-                factory = _interpreters.GetInterpreterFactories().FirstOrDefault(
-                    // Description is a localized string, hence CCIC
-                    f => description.Equals(f.Description, StringComparison.CurrentCultureIgnoreCase)
-                ) ?? service.Interpreters.FirstOrDefault(
-                    f => description.Equals(f.Description, StringComparison.CurrentCultureIgnoreCase)
-                );
+                var interpreters = _interpreters;
+                if (interpreters != null) {
+                    factory = _interpreters.GetInterpreterFactories().FirstOrDefault(
+                        // Description is a localized string, hence CCIC
+                        f => description.Equals(f.Description, StringComparison.CurrentCultureIgnoreCase)
+                    );
+                }
+
+                if (factory == null) {
+                    factory = service.Interpreters.FirstOrDefault(
+                        f => description.Equals(f.Description, StringComparison.CurrentCultureIgnoreCase)
+                    );
+                }
             }
 
             if (factory == null) {
@@ -2059,7 +2066,12 @@ namespace Microsoft.PythonTools.Project {
                 return;
             }
 
-            var toRemove = new HashSet<IPythonInterpreterFactory>(_interpreters.GetInterpreterFactories());
+            var interpreters = _interpreters;
+            if (interpreters == null) {
+                return;
+            }
+
+            var toRemove = new HashSet<IPythonInterpreterFactory>(interpreters.GetInterpreterFactories());
             var toAdd = new HashSet<IPythonInterpreterFactory>(result);
             toRemove.ExceptWith(toAdd);
             toAdd.ExceptWith(toRemove);
@@ -2070,10 +2082,10 @@ namespace Microsoft.PythonTools.Project {
                     throw Marshal.GetExceptionForHR(VSConstants.OLE_E_PROMPTSAVECANCELLED);
                 }
                 foreach (var factory in toAdd) {
-                    _interpreters.AddInterpreter(factory);
+                    interpreters.AddInterpreter(factory);
                 }
                 foreach (var factory in toRemove) {
-                    _interpreters.RemoveInterpreterFactory(factory);
+                    interpreters.RemoveInterpreterFactory(factory);
                 }
             }
         }
@@ -2127,7 +2139,12 @@ namespace Microsoft.PythonTools.Project {
                 );
             }
 
-            var existing = _interpreters.FindInterpreter(path);
+            var interpreters = _interpreters;
+            if (interpreters == null) {
+                return null;
+            }
+
+            var existing = interpreters.FindInterpreter(path);
             if (existing != null) {
                 return existing;
             }
@@ -2144,8 +2161,8 @@ namespace Microsoft.PythonTools.Project {
                 throw Marshal.GetExceptionForHR(VSConstants.OLE_E_PROMPTSAVECANCELLED);
             }
 
-            var id = _interpreters.CreateInterpreterFactory(options);
-            return _interpreters.FindInterpreter(id, options.LanguageVersion);
+            var id = interpreters.CreateInterpreterFactory(options);
+            return interpreters.FindInterpreter(id, options.LanguageVersion);
         }
 
 
