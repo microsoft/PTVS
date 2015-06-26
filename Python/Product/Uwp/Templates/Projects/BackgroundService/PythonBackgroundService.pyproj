@@ -7,6 +7,8 @@
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
     <SchemaVersion>2.0</SchemaVersion>
     <ApplicationTypeRevision>10.0</ApplicationTypeRevision>
+    <WindowsTargetPlatformVersion>10.0.10150.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformMinVersion>10.0.10150.0</WindowsTargetPlatformMinVersion>
     <ApplicationType>Windows Store</ApplicationType>
     <AppContainerApplication>true</AppContainerApplication>
     <AppxPackage>true</AppxPackage>
