@@ -1040,52 +1040,6 @@ namespace Microsoft.PythonTools.Language {
                             return VSConstants.S_OK;
                     }
                 }
-#if DEV14_OR_LATER
-            } else if (pguidCmdGroup == GuidList.InteractiveCommandSetId) {
-                for (int i = 0; i < cCmds; i++) {
-                    switch ((ReplCommandIds)prgCmds[i].cmdID) {
-                        case ReplCommandIds.HistoryNext:
-                        case ReplCommandIds.HistoryPrevious:
-                        case ReplCommandIds.SearchHistoryNext:
-                        case ReplCommandIds.SearchHistoryPrevious:
-                        case ReplCommandIds.SmartExecute:
-                        case ReplCommandIds.BreakLine:
-                            var interactive = _textView.TextBuffer.GetInteractiveWindow();
-
-                            if (interactive != null) {
-                                if (interactive.CurrentLanguageBuffer != null) {
-                                    prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED | OLECMDF.OLECMDF_DEFHIDEONCTXTMENU);
-                                } else {
-                                    prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_SUPPORTED | OLECMDF.OLECMDF_DEFHIDEONCTXTMENU);
-                                }
-                                return VSConstants.S_OK;
-                            }
-                            break;
-                        case ReplCommandIds.AbortExecution:
-                            interactive = _textView.TextBuffer.GetInteractiveWindow();
-
-                            if (interactive != null) {
-                                if (interactive.IsRunning) {
-                                    prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED | OLECMDF.OLECMDF_DEFHIDEONCTXTMENU);
-                                } else {
-                                    prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_SUPPORTED | OLECMDF.OLECMDF_DEFHIDEONCTXTMENU);
-                                }
-                            }
-                            break;
-                        case ReplCommandIds.Reset:
-                            interactive = _textView.TextBuffer.GetInteractiveWindow();
-
-                            if (interactive != null) {
-                                if (!interactive.IsResetting) {
-                                    prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED | OLECMDF.OLECMDF_DEFHIDEONCTXTMENU);
-                                } else {
-                                    prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_SUPPORTED | OLECMDF.OLECMDF_DEFHIDEONCTXTMENU);
-                                }
-                            }
-                            break;
-                    }
-                }
-#endif
             }
 
 
