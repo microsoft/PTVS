@@ -1366,7 +1366,7 @@ namespace Microsoft.PythonTools.Project {
 
                 var interpreters = _interpreters;
                 if (interpreters != null) {
-                    factory = _interpreters.GetInterpreterFactories().FirstOrDefault(
+                    factory = interpreters.GetInterpreterFactories().FirstOrDefault(
                         // Description is a localized string, hence CCIC
                         f => description.Equals(f.Description, StringComparison.CurrentCultureIgnoreCase)
                     );
