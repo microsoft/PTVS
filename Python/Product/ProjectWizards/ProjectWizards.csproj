@@ -118,6 +118,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="WindowsSDKWizard.cs" />
     <Compile Include="WizardHelpers.cs" />
   </ItemGroup>
   <ItemGroup>
