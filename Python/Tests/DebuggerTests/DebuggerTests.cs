@@ -224,11 +224,11 @@ namespace DebuggerTests {
                 AssertWaited(evalComplete);
                 Assert.IsNotNull(evalRes, "didn't get evaluation result");
 
-
                 if (children == null) {
                     Assert.IsFalse(evalRes.IsExpandable, "result should not be expandable");
                     Assert.IsNull(evalRes.GetChildren(Int32.MaxValue), "result should not have children");
                 } else {
+                    Assert.IsNull(evalRes.ExceptionText, "exception while evaluating: " + evalRes.ExceptionText);
                     Assert.IsTrue(evalRes.IsExpandable, "result is not expandable");
                     var childrenReceived = new List<PythonEvaluationResult>(evalRes.GetChildren(Int32.MaxValue));
 
@@ -1933,50 +1933,56 @@ namespace DebuggerTests {
             try {
                 System.Threading.Thread.Sleep(1000);
 
-                AutoResetEvent attached = new AutoResetEvent(false);
-                AutoResetEvent breakpointHit = new AutoResetEvent(false);
-
                 var proc = PythonProcess.Attach(p.Id);
                 try {
-                    proc.ProcessLoaded += (sender, args) => {
-                        attached.Set();
-                        var bp = proc.AddBreakPoint("ThreadingStartNewThread.py", 9);
-                        bp.Add();
-
-                        bp = proc.AddBreakPoint("ThreadingStartNewThread.py", 5);
-                        bp.Add();
-
-                        proc.Resume();
-                    };
-                    PythonThread mainThread = null;
-                    PythonThread bpThread = null;
-                    bool wrongLine = false;
-                    proc.BreakpointHit += (sender, args) => {
-                        if (args.Breakpoint.LineNo == 9) {
-                            // stop running the infinite loop
-                            Debug.WriteLine(String.Format("First BP hit {0}", args.Thread.Id));
-                            args.Thread.Frames[0].ExecuteText("x = False", (x) => { });
-                            mainThread = args.Thread;
-                        } else if (args.Breakpoint.LineNo == 5) {
-                            // we hit the breakpoint on the new thread
-                            Debug.WriteLine(String.Format("Second BP hit {0}", args.Thread.Id));
-                            breakpointHit.Set();
-                            bpThread = args.Thread;
-                        } else {
-                            Debug.WriteLine(String.Format("Hit breakpoint on wrong line number: {0}", args.Breakpoint.LineNo));
-                            wrongLine = true;
+                    using (var attached = new AutoResetEvent(false))
+                    using (var readyToContinue = new AutoResetEvent(false))
+                    using (var threadBreakpointHit = new AutoResetEvent(false)) {
+                        proc.ProcessLoaded += (sender, args) => {
                             attached.Set();
-                            breakpointHit.Set();
-                        }
+                            var bp = proc.AddBreakPoint("ThreadingStartNewThread.py", 9);
+                            bp.Add();
+
+                            bp = proc.AddBreakPoint("ThreadingStartNewThread.py", 5);
+                            bp.Add();
+
+                            proc.Resume();
+                        };
+                        PythonThread mainThread = null;
+                        PythonThread bpThread = null;
+                        bool wrongLine = false;
+                        proc.BreakpointHit += (sender, args) => {
+                            if (args.Breakpoint.LineNo == 9) {
+                                // stop running the infinite loop
+                                Debug.WriteLine(String.Format("First BP hit {0}", args.Thread.Id));
+                                mainThread = args.Thread;
+                                args.Thread.Frames[0].ExecuteText("x = False", (x) => { readyToContinue.Set(); });
+                            } else if (args.Breakpoint.LineNo == 5) {
+                                // we hit the breakpoint on the new thread
+                                Debug.WriteLine(String.Format("Second BP hit {0}", args.Thread.Id));
+                                bpThread = args.Thread;
+                                threadBreakpointHit.Set();
+                                proc.Continue();
+                            } else {
+                                Debug.WriteLine(String.Format("Hit breakpoint on wrong line number: {0}", args.Breakpoint.LineNo));
+                                wrongLine = true;
+                                attached.Set();
+                                threadBreakpointHit.Set();
+                                proc.Continue();
+                            }
+                        };
+
+                        proc.StartListening();
+                        Assert.IsTrue(attached.WaitOne(10000), "Failed to attach within 10s");
+
+                        Assert.IsTrue(readyToContinue.WaitOne(20000), "Failed to hit the main thread breakpoint within 20s");
                         proc.Continue();
-                    };
-                    proc.StartListening();
 
-                    Assert.IsTrue(attached.WaitOne(10000), "Failed to attach within 10s");
-                    Assert.IsTrue(breakpointHit.WaitOne(20000), "Failed to hit breakpoint within 20s of attaching");
-                    Assert.IsFalse(wrongLine, "Breakpoint broke on the wrong line");
+                        Assert.IsTrue(threadBreakpointHit.WaitOne(20000), "Failed to hit the background thread breakpoint within 10s");
+                        Assert.IsFalse(wrongLine, "Breakpoint broke on the wrong line");
 
-                    Assert.AreNotEqual(mainThread, bpThread);
+                        Assert.AreNotEqual(mainThread, bpThread);
+                    }
                 } finally {
                     DetachProcess(proc);
                 }
@@ -2659,7 +2665,7 @@ int main(int argc, char* argv[]) {
             var p = Process.Start(psi);
             try {
                 PythonProcess proc = null;
-                for (int i = 0;; ++i) {
+                for (int i = 0; ; ++i) {
                     Thread.Sleep(1000);
                     try {
                         proc = PythonRemoteProcess.Attach(
@@ -2763,7 +2769,7 @@ int main(int argc, char* argv[]) {
 
             // compile our host code...
             var env = new Dictionary<string, string>();
-            env["PATH"] = Environment.GetEnvironmentVariable("PATH") + ";" + vc.BinPaths;
+            env["PATH"] = vc.BinPaths + ";" + Environment.GetEnvironmentVariable("PATH");
             env["INCLUDE"] = vc.IncludePaths + ";" + Path.Combine(Version.PrefixPath, "Include");
             env["LIB"] = vc.LibPaths + ";" + Path.Combine(Version.PrefixPath, "libs");
 

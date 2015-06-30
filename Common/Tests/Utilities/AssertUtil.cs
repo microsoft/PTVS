@@ -243,6 +243,52 @@ namespace TestUtilities
             ));
         }
 
+        [System.Diagnostics.DebuggerStepThrough]
+        public static void CheckCollection<T>(
+            IEnumerable<T> source,
+            IEnumerable<T> expectedSubset,
+            IEnumerable<T> unexpectedSubset,
+            IEqualityComparer<T> comparer = null
+        ) {
+            var set = new HashSet<T>(source, comparer);
+            var expected = new HashSet<T>(expectedSubset, comparer);
+
+            var missing = new HashSet<T>(expected, comparer);
+            missing.ExceptWith(set);        // should be empty
+
+            expected.IntersectWith(set);    // should be unchanged
+
+            var unexpectedPresent = new HashSet<T>(unexpectedSubset, comparer);
+            var unexpectedAbsent = new HashSet<T>(unexpectedPresent, comparer);
+            unexpectedPresent.IntersectWith(set);  // should be empty
+            unexpectedAbsent.ExceptWith(unexpectedPresent); // should be unchanged
+
+            if (!missing.Any() && !unexpectedPresent.Any()) {
+                return;
+            }
+
+            Assert.Fail(String.Format(@"Values that should have been present but weren't (ideally none)
+{0}
+
+Values that were present but shouldn't have been (ideally none)
+{1}
+
+Expected values that were present
+{2}
+
+Unexpected values that were not present
+{3}
+
+All values in set
+{4}",
+                MakeText(missing),
+                MakeText(unexpectedPresent),
+                MakeText(expected),
+                MakeText(unexpectedAbsent),
+                MakeText(set)
+            ));
+        }
+
         public static string MakeText<T>(IEnumerable<T> values) {
             var ss = values.Select(x => x == null ? "(null)" : x.ToString()).ToArray();
             bool multiline = ss.Sum(s => s.Length) > 60;

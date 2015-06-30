@@ -348,7 +348,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         _workerQueue.Enqueue(WorkerMessage.Abort());
                         _workerQueueChanged.Set();
                     }
-                    bool stopped = _worker.Join(10000);
+                    bool stopped = worker.Join(10000);
                     Debug.Assert(stopped, "Failed to terminate TaskProvider worker thread");
                 }
 

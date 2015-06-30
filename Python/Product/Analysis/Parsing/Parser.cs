@@ -56,6 +56,8 @@ namespace Microsoft.PythonTools.Parsing {
         private string _lookahead2WhiteSpace;
         private Dictionary<Node, Dictionary<object, object>> _attributes = new Dictionary<Node, Dictionary<object, object>>();  // attributes for each node, currently just round tripping information
 
+        private bool _alwaysAllowContextDependentSyntax;
+
         private static Encoding _utf8throwing;
         private static Regex _codingRegex;
 
@@ -228,7 +230,9 @@ namespace Microsoft.PythonTools.Parsing {
 
         public PythonAst ParseTopExpression() {
             // TODO: move from source unit  .TrimStart(' ', '\t')
+            _alwaysAllowContextDependentSyntax = true;
             ReturnStatement ret = new ReturnStatement(ParseTestListAsExpression());
+            _alwaysAllowContextDependentSyntax = false;
             ret.SetLoc(0, 0);
             return CreateAst(ret);
         }
@@ -389,7 +393,7 @@ namespace Microsoft.PythonTools.Parsing {
         }
 
         private Name TokenToName(Token t) {
-            if (CurrentFunction == null || !CurrentFunction.IsCoroutine) {
+            if (!AllowAsyncAwaitSyntax) {
                 if (t.Kind == TokenKind.KeywordAwait) {
                     return Name.Await;
                 } else if (t.Kind == TokenKind.KeywordAsync) {
@@ -401,6 +405,29 @@ namespace Microsoft.PythonTools.Parsing {
                 return new Name(FixName(n.Name), n.Name);
             }
             return Name.Empty;
+        }
+
+        private bool AllowReturnSyntax {
+            get {
+                return _alwaysAllowContextDependentSyntax ||
+                    CurrentFunction != null;
+            }
+        }
+
+        private bool AllowYieldSyntax {
+            get {
+                FunctionDefinition cf;
+                return _alwaysAllowContextDependentSyntax ||
+                    ((cf = CurrentFunction) != null && !cf.IsCoroutine);
+            }
+        }
+
+        private bool AllowAsyncAwaitSyntax {
+            get {
+                FunctionDefinition cf;
+                return _alwaysAllowContextDependentSyntax ||
+                    ((cf = CurrentFunction) != null && cf.IsCoroutine);
+            }
         }
 
         //stmt: simple_stmt | compound_stmt
@@ -437,8 +464,7 @@ namespace Microsoft.PythonTools.Parsing {
                 return ParseFuncDef(isCoroutine: true);
             }
 
-            var currentFunction = CurrentFunction;
-            if (currentFunction == null || !currentFunction.IsCoroutine) {
+            if (!AllowAsyncAwaitSyntax) {
                 // 'async', outside coroutine, and not followed by def, is a
                 // regular name
                 return ParseSimpleStmt();
@@ -616,7 +642,7 @@ namespace Microsoft.PythonTools.Parsing {
         }
 
         private Statement ParseReturnStmt() {
-            if (CurrentFunction == null) {
+            if (!AllowReturnSyntax) {
                 ReportSyntaxError("'return' outside function");
             }
             var returnToken = _lookahead;
@@ -660,11 +686,12 @@ namespace Microsoft.PythonTools.Parsing {
         private Statement ParseYieldStmt() {
             // For yield statements, continue to enforce that it's currently in a function. 
             // This gives us better syntax error reporting for yield-statements than for yield-expressions.
-            FunctionDefinition current = CurrentFunction;
-            if (current == null) {
-                ReportSyntaxError("misplaced yield");
-            } else if (current.IsCoroutine) {
-                ReportSyntaxError("'yield' inside async function");
+            if (!AllowYieldSyntax) {
+                if (AllowAsyncAwaitSyntax) {
+                    ReportSyntaxError("'yield' inside async function");
+                } else {
+                    ReportSyntaxError("misplaced yield");
+                }
             }
 
             _isGenerator = true;
@@ -799,7 +826,7 @@ namespace Microsoft.PythonTools.Parsing {
                 }
 
                 if (_langVersion >= PythonLanguageVersion.V25 && PeekToken(TokenKind.KeywordYield)) {
-                    if (CurrentFunction != null && CurrentFunction.IsCoroutine) {
+                    if (!AllowYieldSyntax && AllowAsyncAwaitSyntax) {
                         ReportSyntaxError("'yield' inside async function");
                     }
                     Eat(TokenKind.KeywordYield);
@@ -860,7 +887,7 @@ namespace Microsoft.PythonTools.Parsing {
                     Expression rhs;
 
                     if (_langVersion >= PythonLanguageVersion.V25 && PeekToken(TokenKind.KeywordYield)) {
-                        if (CurrentFunction != null && CurrentFunction.IsCoroutine) {
+                        if (!AllowYieldSyntax && AllowAsyncAwaitSyntax) {
                             ReportSyntaxError("'yield' inside async function");
                         }
                         Eat(TokenKind.KeywordYield);
@@ -1185,6 +1212,10 @@ namespace Microsoft.PythonTools.Parsing {
                 } else if (_langVersion >= PythonLanguageVersion.V26 && name.Name == "unicode_literals") {
                     _tokenizer.UnicodeLiterals = true;
                     _languageFeatures |= FutureOptions.UnicodeLiterals;
+
+                    // v3.5:
+                } else if (_langVersion >= PythonLanguageVersion.V35 && name.Name == "generator_stop") {
+                    // No behavior change, but we don't want to display an error
                 } else {
                     string strName = name.Name;
 
@@ -2993,8 +3024,7 @@ namespace Microsoft.PythonTools.Parsing {
 
         private Expression ParseAwaitExpr() {
             if (_langVersion >= PythonLanguageVersion.V35) {
-                var currentFunction = CurrentFunction;
-                if (currentFunction != null && currentFunction.IsCoroutine && MaybeEat(TokenKind.KeywordAwait)) {
+                if (AllowAsyncAwaitSyntax && MaybeEat(TokenKind.KeywordAwait)) {
                     var start = GetStart();
                     string whitespace = _tokenWhiteSpace;
                     var res = new AwaitExpression(ParsePower());
@@ -3805,7 +3835,7 @@ namespace Microsoft.PythonTools.Parsing {
                 ret = MakeTupleOrExpr(new List<Expression>(), MakeWhiteSpaceList(), false);
                 hasRightParenthesis = true;
             } else if (PeekToken(TokenKind.KeywordYield)) {
-                if (CurrentFunction != null && CurrentFunction.IsCoroutine) {
+                if (!AllowYieldSyntax && AllowAsyncAwaitSyntax) {
                     ReportSyntaxError("'yield' inside async function");
                 }
                 Eat(TokenKind.KeywordYield);

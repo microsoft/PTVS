@@ -41,8 +41,10 @@ namespace Microsoft.PythonTools.Options {
         }
 
         public void Load() {
-            DefaultInterpreter = _interpreterOptions.DefaultInterpreter.Id;
-            DefaultInterpreterVersion = _interpreterOptions.DefaultInterpreter.Configuration.Version;
+            if (_interpreterOptions != null) {
+                DefaultInterpreter = _interpreterOptions.DefaultInterpreter.Id;
+                DefaultInterpreterVersion = _interpreterOptions.DefaultInterpreter.Configuration.Version;
+            }
         }
 
         public void Save() {

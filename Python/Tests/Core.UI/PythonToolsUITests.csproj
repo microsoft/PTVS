@@ -60,7 +60,7 @@
     </Reference>
     <Reference Include="Microsoft.Build, Version=$(MicrosoftBuildAssemblyVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="Microsoft.VisualStudioTools.VSTestHost.$(VSTarget), Version=$(VSTarget).1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.VisualStudioTools.VSTestHost.$(VSTarget)" />
     <Reference Include="Microsoft.VisualStudio.ComponentModelHost, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.CoreUtility, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Debugger.Interop.10.0, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
@@ -103,6 +103,31 @@
     </Reference>
     <Reference Include="WindowsBase" />
   </ItemGroup>
+  <Choose>
+    <When Condition="$(VSMajorVersion) >= 14">
+      <ItemGroup>
+        <Reference Include="Microsoft.VisualStudio.InteractiveWindow">
+          <HintPath>$(DevEnvDir)PrivateAssemblies\Microsoft.VisualStudio.InteractiveWindow.dll</HintPath>
+          <Private>false</Private>
+        </Reference>
+        <Reference Include="Microsoft.VisualStudio.VsInteractiveWindow">
+          <HintPath>$(DevEnvDir)PrivateAssemblies\Microsoft.VisualStudio.VsInteractiveWindow.dll</HintPath>
+          <Private>false</Private>
+        </Reference>
+      </ItemGroup>
+    </When>
+    <Otherwise>
+      <ItemGroup>
+        <ProjectReference Include="$(BuildRoot)Python\Product\ReplWindow\ReplWindow.csproj">
+          <Project>{20BB6FAC-44D2-4D76-ABFE-0C1E163A1A4F}</Project>
+          <Private>false</Private>
+          <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+          <Name Condition="'$(InteractiveWindow)' == ''">Microsoft.VisualStudio.ReplWindow</Name>
+          <Name Condition="'$(InteractiveWindow)' != ''">Microsoft.VisualStudio.InteractiveWindow</Name>
+        </ProjectReference>
+      </ItemGroup>
+    </Otherwise>
+  </Choose>
   <ItemGroup>
     <Compile Include="AddImportTests.cs" />
     <Compile Include="ErrorListTaskListTests.cs" />
@@ -129,10 +154,6 @@
     <Compile Include="WebProjectTests.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="$(BuildRoot)Python\Product\ReplWindow\ReplWindow.csproj">
-      <Project>{20bb6fac-44d2-4d76-abfe-0c1e163a1a4f}</Project>
-      <Name>ReplWindow</Name>
-    </ProjectReference>
     <ProjectReference Include="$(BuildRoot)Python\Product\Analysis\Analysis.csproj">
       <Project>{A85D479D-67A9-4BDB-904A-7D86DAF68A6F}</Project>
       <Name>Analysis</Name>

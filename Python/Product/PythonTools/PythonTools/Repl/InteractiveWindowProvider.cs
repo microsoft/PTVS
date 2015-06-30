@@ -30,7 +30,6 @@ using IReplEvaluatorProvider = Microsoft.PythonTools.Repl.IInteractiveEvaluatorP
 using IReplWindow = Microsoft.VisualStudio.InteractiveWindow.IInteractiveWindow;
 using IReplEvaluator = Microsoft.VisualStudio.InteractiveWindow.IInteractiveEvaluator;
 using ReplRoleAttribute = Microsoft.PythonTools.Repl.InteractiveWindowRoleAttribute;
-using Microsoft.VisualStudio;
 
 namespace Microsoft.PythonTools.Repl {
     [Export(typeof(InteractiveWindowProvider))]
@@ -180,6 +179,10 @@ namespace Microsoft.PythonTools.Repl {
             return _windows.Values.Select(x => x.Window.InteractiveWindow);
         }
 
+        internal IEnumerable<ToolWindowPane> GetReplToolWindows() {
+            return _windows.Values.Select(x => x.Window).OfType<ToolWindowPane>();
+        }
+
         private static IInteractiveEvaluator GetReplEvaluator(IComponentModel model, string replId, out string[] roles) {
             roles = new string[0];
             foreach (var provider in model.GetExtensions<IReplEvaluatorProvider>()) {
@@ -214,10 +217,6 @@ namespace Microsoft.PythonTools.Repl {
             var replWindow = _windowFactory.Create(GuidList.guidPythonInteractiveWindowGuid, id, title, evaluator, creationFlags);
             replWindow.SetLanguage(GuidList.guidPythonLanguageServiceGuid, contentType);
             replWindow.InteractiveWindow.InitializeAsync();
-
-            var frame = (IVsWindowFrame)((ToolWindowPane)replWindow).Frame;
-            var guid = GuidList.InteractiveToolWindowId;
-            ErrorHandler.ThrowOnFailure(frame.SetGuidProperty((int)__VSFPROPID.VSFPROPID_CmdUIGuid, ref guid));
 
             return _windows[id] = new ReplWindowInfo(replWindow, replId);
         }

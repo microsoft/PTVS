@@ -1,12 +1,18 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project InitialTargets="PtvsUwpImportCheck" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <PropertyGroup>
     <CPythonTargetsFile>$(LocalAppData)\Microsoft\VisualStudio\$(VisualStudioVersion)Exp\Extensions\Microsoft\Python UWP\$(InterpreterVersion)\DesignTime\CommonConfiguration\Neutral\CPython.targets</CPythonTargetsFile>
     <CPythonTargetsFile Condition="'$(CPythonTargetsFile)' == '' or !Exists('$(CPythonTargetsFile)')">$(MSBuildProgramFiles32)\Microsoft SDKs\Windows\v10.0\ExtensionSDKs\Python UWP\$(InterpreterVersion)\DesignTime\CommonConfiguration\Neutral\CPython.targets</CPythonTargetsFile>
   </PropertyGroup>
   
-  <Import Project="$(CPythonTargetsFile)" />
+  <Target Name="PtvsUwpImportCheck">
+	<Error Text="Could not find CPython UWP SDK.  Please download from http://go.microsoft.com/fwlink/?LinkID=613495&amp;clcid=0x409 and reload the project after install." Condition="!Exists($(CPythonTargetsFile))" />
+  </Target>
+
+  <Target Name="CoreCompile" />
+
+  <Import Project="$(CPythonTargetsFile)" Condition="Exists($(CPythonTargetsFile))"/>
 
   <!-- Gets the fully qualified path to the project home.  -->
   <PropertyGroup>

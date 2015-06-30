@@ -23,7 +23,7 @@ namespace Microsoft.PythonTools.Debugger {
             lock (this) {
                 if (_freedInts.Count > 0) {
                     int res = _freedInts[_freedInts.Count - 1];
-                    _freedInts.Remove(_freedInts.Count - 1);
+                    _freedInts.RemoveAt(_freedInts.Count - 1);
                     return res;
                 } else {
                     int res = _curValue++;

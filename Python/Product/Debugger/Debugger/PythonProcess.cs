@@ -85,7 +85,7 @@ namespace Microsoft.PythonTools.Debugger {
             }
         }
 
-        private PythonProcess(Stream stream, int pid, PythonLanguageVersion version) {
+        private PythonProcess(Stream stream, int pid, PythonLanguageVersion version, PythonDebugOptions debugOptions) {
             _pid = pid;
             _process = Process.GetProcessById(pid);
             _process.EnableRaisingEvents = true;
@@ -97,6 +97,7 @@ namespace Microsoft.PythonTools.Debugger {
 
             stream.WriteInt32(DebugConnectionListener.ListenerPort);
             stream.WriteString(_processGuid.ToString());
+            stream.WriteString(debugOptions.ToString());
         }
 
         public PythonProcess(PythonLanguageVersion languageVersion, string exe, string args, string dir, string env, string interpreterOptions, PythonDebugOptions options = PythonDebugOptions.None, List<string[]> dirMapping = null)
@@ -145,8 +146,8 @@ namespace Microsoft.PythonTools.Debugger {
             return new PythonProcess(pid, debugOptions);
         }
 
-        public static PythonProcess AttachRepl(Stream stream, int pid, PythonLanguageVersion version) {
-            return new PythonProcess(stream, pid, version);
+        public static PythonProcess AttachRepl(Stream stream, int pid, PythonLanguageVersion version, PythonDebugOptions debugOptions = PythonDebugOptions.None) {
+            return new PythonProcess(stream, pid, version, debugOptions);
         }
 
         #region Public Process API
@@ -667,14 +668,19 @@ namespace Microsoft.PythonTools.Debugger {
         private void HandleExecutionException(Stream stream) {
             int execId = stream.ReadInt32();
             CompletionInfo completion;
-
             lock (_pendingExecutes) {
-                completion = _pendingExecutes[execId];
-                _pendingExecutes.Remove(execId);
+                if (_pendingExecutes.TryGetValue(execId, out completion)) {
+                    _pendingExecutes.Remove(execId);
+                    _ids.Free(execId);
+                } else {
+                    Debug.Fail("Received execution result with unknown execution ID " + execId);
+                }
             }
 
             string exceptionText = stream.ReadString();
-            completion.Completion(new PythonEvaluationResult(this, exceptionText, completion.Text, completion.Frame));
+            if (completion != null) {
+                completion.Completion(new PythonEvaluationResult(this, exceptionText, completion.Text, completion.Frame));
+            }
         }
 
         private void HandleExecutionResult(Stream stream) {
@@ -685,7 +691,7 @@ namespace Microsoft.PythonTools.Debugger {
                     _pendingExecutes.Remove(execId);
                     _ids.Free(execId);
                 } else {
-                    Debug.Fail("Received REPL execution result with unknown execution ID " + execId);
+                    Debug.Fail("Received execution result with unknown execution ID " + execId);
                 }
             }
 
@@ -705,18 +711,24 @@ namespace Microsoft.PythonTools.Debugger {
 
             ChildrenInfo completion;
             lock (_pendingChildEnums) {
-                completion = _pendingChildEnums[execId];
-                _pendingChildEnums.Remove(execId);
+                if (_pendingChildEnums.TryGetValue(execId, out completion)) {
+                    _pendingChildEnums.Remove(execId);
+                    _ids.Free(execId);
+                } else {
+                    Debug.Fail("Received enum children result with unknown execution ID " + execId);
+                }
             }
 
             var children = new PythonEvaluationResult[stream.ReadInt32()];
             for (int i = 0; i < children.Length; i++) {
                 string childName = stream.ReadString();
                 string childExpr = stream.ReadString();
-                children[i] = ReadPythonObject(stream, childExpr, childName, completion.Frame);
+                children[i] = ReadPythonObject(stream, childExpr, childName, completion != null ? completion.Frame : null);
             }
 
-            completion.Completion(children);
+            if (completion != null) {
+                completion.Completion(children);
+            }
         }
 
         private PythonEvaluationResult ReadPythonObject(Stream stream, string expr, string childName, PythonStackFrame frame) {

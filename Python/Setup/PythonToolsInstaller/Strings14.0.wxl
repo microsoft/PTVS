@@ -8,7 +8,7 @@
 
   <String Id="ProductDescription">!(loc.ProductName) !(loc.ForVisualStudio)</String>
   <String Id="DowngradeErrorMessage">A newer version of !(loc.ProductDescription) is already installed.</String>
-  <String Id="NoInstallPath">!(loc.VSProductName) is required.  The free !(loc.WDProductName) and !(loc.VWDProductName) editions can be downloaded from http://www.visualstudio.com/.</String>
+  <String Id="NoInstallPath">!(loc.VSProductName) is required.  The free Community edition can be downloaded from http://www.visualstudio.com/.</String>
   <String Id="NoExePath">Your version of !(loc.VSProductName) is not supported.  Please install the latest update from http://www.visualstudio.com/.</String>
   <String Id="WDInstallPathButNoExe">Your version of !(loc.WDProductName) is not supported.  Please install the latest update from http://www.visualstudio.com/.</String>
   <String Id="VWDInstallPathButNoExe">Your version of !(loc.VWDProductName) is not supported.  Please install the latest update from http://www.visualstudio.com/.</String>

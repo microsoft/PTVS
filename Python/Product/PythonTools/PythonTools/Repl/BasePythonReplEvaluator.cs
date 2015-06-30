@@ -405,11 +405,12 @@ namespace Microsoft.PythonTools.Repl {
             private void HandleReadLine() {
                 // perform the input on a new thread so that we don't block additional commands (such as output) from being processed by us
                 // (this is called on the output thread)
+                var window = Window;
                 ThreadPool.QueueUserWorkItem(x => {
 #if DEV14_OR_LATER
-                    string input = Window.ReadStandardInput().ReadToEnd();
+                    string input = window?.ReadStandardInput()?.ReadToEnd();
 #else
-                    string input = Window.ReadStandardInput();
+                    string input = window != null ? window.ReadStandardInput() : null;
 #endif
                     input = input != null ? UnfixNewLines(input) : "\n";
                     try {
@@ -474,10 +475,18 @@ namespace Microsoft.PythonTools.Repl {
                     return "Cannot attach to debugger when already attached.";
                 }
 
+                var pyService = _eval._serviceProvider.GetPythonToolsService();
+
+                // Only pass options that make sense for the REPL.
+                var debugOptions = PythonDebugOptions.None;
+                if (pyService.DebuggerOptions.DebugStdLib) {
+                    debugOptions |= PythonDebugOptions.DebugStdLib;
+                }
+
                 PythonProcess debugProcess;
                 using (new StreamLock(this, throwIfDisconnected: true)) {
                     _stream.Write(DebugAttachCommandBytes);
-                    debugProcess = PythonProcess.AttachRepl(_stream, _process.Id, _eval.AnalyzerProjectLanguageVersion);
+                    debugProcess = PythonProcess.AttachRepl(_stream, _process.Id, _eval.AnalyzerProjectLanguageVersion, debugOptions);
                 }
 
                 var debugTarget = new VsDebugTargetInfo2();
@@ -791,10 +800,10 @@ namespace Microsoft.PythonTools.Repl {
                         _stream.Write(ExecuteFileCommandBytes);
                     } else {
                         _stream.Write(ExecuteFileExCommandBytes);
-                        SendString(fileType);
+                        SendString(fileType ?? string.Empty);
                     }
-                    SendString(filename);
-                    SendString(extraArgs ?? String.Empty);
+                    SendString(filename ?? string.Empty);
+                    SendString(extraArgs ?? string.Empty);
                 };
 
                 using (new StreamLock(this, throwIfDisconnected: false)) {
@@ -1012,7 +1021,8 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             private void SendString(string text) {
-                byte[] bytes = System.Text.Encoding.UTF8.GetBytes(text);
+                Debug.Assert(text != null, "text should not be null");
+                byte[] bytes = Encoding.UTF8.GetBytes(text);
                 _stream.WriteInt32(bytes.Length);
                 _stream.Write(bytes);
             }
@@ -1206,7 +1216,7 @@ namespace Microsoft.PythonTools.Repl {
             return res;
         }
 
-        private Task<ExecutionResult> ExecuteTextWorker(string text) {            
+        private Task<ExecutionResult> ExecuteTextWorker(string text) {
 #if DEV14_OR_LATER
             var res = _commands.TryExecuteCommand();
             if (res != null) {
@@ -1248,6 +1258,8 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public Task<ExecutionResult> ExecuteFile(string filename, string extraArgs) {
+            Utilities.ArgumentNotNullOrEmpty("filename", filename);
+            Utilities.ArgumentNotNull("extraArgs", extraArgs);
             EnsureConnected();
 
             if (_curListener != null) {
@@ -1259,6 +1271,7 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public void ExecuteFile(string filename) {
+            Utilities.ArgumentNotNullOrEmpty("filename", filename);
             EnsureConnected();
 
             string startupFilename, startupDir, extraArgs = null;
@@ -1280,6 +1293,8 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public Task<ExecutionResult> ExecuteModule(string moduleName, string arguments) {
+            Utilities.ArgumentNotNullOrEmpty("moduleName", moduleName);
+            Utilities.ArgumentNotNull("arguments", arguments);
             EnsureConnected();
 
             if (_curListener != null) {
@@ -1291,6 +1306,8 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public Task<ExecutionResult> ExecuteProcess(string filename, string arguments) {
+            Utilities.ArgumentNotNullOrEmpty("filename", filename);
+            Utilities.ArgumentNotNull("arguments", arguments);
             EnsureConnected();
 
             if (_curListener != null) {
@@ -1698,7 +1715,12 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         internal static void CloseReplWindow(object key) {
+#if DEV14_OR_LATER
+            var vsWindow = key as IVsInteractiveWindow;
+            var window = vsWindow != null ? vsWindow.InteractiveWindow : null;
+#else
             var window = key as IReplWindow;
+#endif
             Debug.Assert(window != null);
             if (window == null) {
                 return;
@@ -1713,7 +1735,11 @@ namespace Microsoft.PythonTools.Repl {
 
             // Close project-specific REPL windows when the project
             // closes.
+#if DEV14_OR_LATER
+            var pane = vsWindow as ToolWindowPane;
+#else
             var pane = window as ToolWindowPane;
+#endif
             var frame = pane != null ? pane.Frame as IVsWindowFrame : null;
             if (frame != null) {
                 frame.CloseFrame((uint)__FRAMECLOSE.FRAMECLOSE_NoSave);

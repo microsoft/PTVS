@@ -275,13 +275,18 @@ namespace Microsoft.PythonTools.Intellisense {
                 snapshot.TextBuffer,
                 snapshot.CreateTrackingSpan(caretPoint.Value.Position, 0, SpanTrackingMode.EdgeNegative)
             ).GetStatementRange();
-            if (!statement.HasValue) {
+            if (!statement.HasValue || caretPoint.Value <= statement.Value.Start) {
+                return false;
+            }
+
+            var text = new SnapshotSpan(statement.Value.Start, caretPoint.Value).GetText();
+            if (string.IsNullOrEmpty(text)) {
                 return false;
             }
 
             var languageVersion = _bufferParser._parser.InterpreterFactory.Configuration.Version.ToLanguageVersion();
             PythonAst ast;
-            using (var parser = Parser.CreateParser(new StringReader(statement.Value.GetText()), languageVersion, new ParserOptions())) {
+            using (var parser = Parser.CreateParser(new StringReader(text), languageVersion, new ParserOptions())) {
                 ast = parser.ParseSingleStatement();
             }
 
@@ -325,7 +330,10 @@ namespace Microsoft.PythonTools.Intellisense {
             public override bool Walk(AssignmentStatement node) {
                 CanComplete = true;
                 CommitByDefault = true;
-                return base.Walk(node);
+                if (node.Right != null) {
+                    node.Right.Walk(this);
+                }
+                return false;
             }
 
             public override bool Walk(Arg node) {
@@ -370,9 +378,15 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             public override bool Walk(ComprehensionFor node) {
-                CanComplete = IsActualExpression(node.List);
-                CommitByDefault = true;
-                return base.Walk(node);
+                if (!IsActualExpression(node.Left) || HasCaret(node.Left)) {
+                    CanComplete = false;
+                    CommitByDefault = false;
+                } else if (IsActualExpression(node.List)) {
+                    CanComplete = true;
+                    CommitByDefault = true;
+                    node.List.Walk(this);
+                }
+                return false;
             }
 
             public override bool Walk(ComprehensionIf node) {
@@ -381,28 +395,40 @@ namespace Microsoft.PythonTools.Intellisense {
                 return base.Walk(node);
             }
 
-            public override bool Walk(ListExpression node) {
+            private bool WalkCollection(Expression node, IEnumerable<Expression> items) {
                 CanComplete = HasCaret(node);
-                CommitByDefault = node.Items.Count > 1;
-                return base.Walk(node);
+                int count = 0;
+                Expression last = null;
+                foreach (var e in items) {
+                    count += 1;
+                    last = e;
+                }
+                if (count == 0) {
+                    CommitByDefault = false;
+                } else if (count == 1) {
+                    last.Walk(this);
+                    CommitByDefault = false;
+                } else {
+                    CommitByDefault = true;
+                    last.Walk(this);
+                }
+                return false;
+            }
+
+            public override bool Walk(ListExpression node) {
+                return WalkCollection(node, node.Items);
             }
 
             public override bool Walk(DictionaryExpression node) {
-                CanComplete = HasCaret(node);
-                CommitByDefault = node.Items.Count > 1;
-                return base.Walk(node);
+                return WalkCollection(node, node.Items);
             }
 
             public override bool Walk(SetExpression node) {
-                CanComplete = HasCaret(node);
-                CommitByDefault = node.Items.Count > 1;
-                return base.Walk(node);
+                return WalkCollection(node, node.Items);
             }
 
             public override bool Walk(TupleExpression node) {
-                CanComplete = HasCaret(node);
-                CommitByDefault = node.Items.Count > 1;
-                return base.Walk(node);
+                return WalkCollection(node, node.Items);
             }
 
             public override bool Walk(ParenthesisExpression node) {
@@ -441,10 +467,25 @@ namespace Microsoft.PythonTools.Intellisense {
                 return base.Walk(node);
             }
 
-            public override bool Walk(ForStatement node) {
-                CanComplete = IsActualExpression(node.List);
-                CommitByDefault = true;
+            public override bool Walk(ExpressionStatement node) {
+                if (node.Expression is TupleExpression) {
+                    node.Expression.Walk(this);
+                    CommitByDefault = false;
+                    return false;
+                }
                 return base.Walk(node);
+            }
+
+            public override bool Walk(ForStatement node) {
+                if (!IsActualExpression(node.Left) || HasCaret(node.Left)) {
+                    CanComplete = false;
+                    CommitByDefault = false;
+                } else if (IsActualExpression(node.List)) {
+                    CanComplete = true;
+                    CommitByDefault = true;
+                    node.List.Walk(this);
+                }
+                return false;
             }
 
             public override bool Walk(IfStatementTest node) {
@@ -818,7 +859,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     }
                 }
 
-                int res = _oldTarget.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
+                int res = _oldTarget != null ? _oldTarget.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut) : VSConstants.S_OK;
                 
                 HandleChar((char)(ushort)System.Runtime.InteropServices.Marshal.GetObjectForNativeVariant(pvaIn));
 
@@ -866,7 +907,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         case VSConstants.VSStd2KCmdID.DELETE:
                         case VSConstants.VSStd2KCmdID.DELETEWORDLEFT:
                         case VSConstants.VSStd2KCmdID.DELETEWORDRIGHT:
-                            int res = _oldTarget.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
+                            int res = _oldTarget != null ? _oldTarget.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut) : VSConstants.S_OK;
                             if (_activeSession != null && !_activeSession.IsDismissed) {
                                 _activeSession.Filter();
                             }
@@ -935,7 +976,10 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             }
 
-            return _oldTarget.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
+            if (_oldTarget != null) {
+                return _oldTarget.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
+            }
+            return (int)Constants.OLECMDERR_E_UNKNOWNGROUP;
         }
 
         private void TriggerSnippet(uint nCmdID) {
@@ -1050,7 +1094,10 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             }
 
-            return _oldTarget.QueryStatus(ref pguidCmdGroup, cCmds, prgCmds, pCmdText);
+            if (_oldTarget != null) {
+                return _oldTarget.QueryStatus(ref pguidCmdGroup, cCmds, prgCmds, pCmdText);
+            }
+            return (int)Constants.OLECMDERR_E_UNKNOWNGROUP;
         }
 
         #endregion

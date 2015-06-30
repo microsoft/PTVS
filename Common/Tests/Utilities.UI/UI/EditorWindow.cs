@@ -106,7 +106,7 @@ namespace TestUtilities.UI {
             for (int i = 0; i < 100; i++) {
                 string curText = Text;
 
-                if (Text.StartsWith(expected, StringComparison.CurrentCulture)) {
+                if (curText.StartsWith(expected, StringComparison.CurrentCulture)) {
                     return;
                 }
                 Thread.Sleep(100);
@@ -116,12 +116,12 @@ namespace TestUtilities.UI {
         }
 
         public void WaitForTextEnd(params string[] text) {
-            string expected = GetExpectedText(text);
+            string expected = GetExpectedText(text).TrimEnd();
 
             for (int i = 0; i < 100; i++) {
                 string curText = Text.TrimEnd();
 
-                if (Text.EndsWith(expected, StringComparison.CurrentCulture)) {
+                if (curText.EndsWith(expected, StringComparison.CurrentCulture)) {
                     return;
                 }
                 Thread.Sleep(100);

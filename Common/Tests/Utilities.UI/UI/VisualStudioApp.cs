@@ -18,6 +18,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Windows.Automation;
 using EnvDTE;
 using EnvDTE80;
@@ -47,6 +48,10 @@ namespace TestUtilities.UI {
         public VisualStudioApp(DTE dte = null)
             : this(new IntPtr((dte ?? VSTestContext.DTE).MainWindow.HWnd)) {
             _dte = dte ?? VSTestContext.DTE;
+
+            foreach (var p in ((DTE2)_dte).ToolWindows.OutputWindow.OutputWindowPanes.OfType<OutputWindowPane>()) {
+                p.Clear();
+            }
         }
 
         private VisualStudioApp(IntPtr windowHandle)
@@ -331,7 +336,7 @@ namespace TestUtilities.UI {
         }
 
         public OutputWindowPane GetOutputWindow(string name) {
-            return ((DTE2)VSTestContext.DTE).ToolWindows.OutputWindow.OutputWindowPanes.Item(name);
+            return ((DTE2)Dte).ToolWindows.OutputWindow.OutputWindowPanes.Item(name);
         }
 
         public IEnumerable<Window> OpenDocumentWindows {
@@ -789,26 +794,30 @@ namespace TestUtilities.UI {
             }
 
             var t = Task.Run(() => Dte.Solution.Open(fullPath));
-            if (!t.Wait(1000)) {
-                // Load has taken a while, start checking whether a dialog has
-                // appeared
-                IVsUIShell uiShell = GetService<IVsUIShell>(typeof(IVsUIShell));
-                IntPtr hwnd;
-                while (!t.Wait(1000)) {
-                    ErrorHandler.ThrowOnFailure(uiShell.GetDialogOwnerHwnd(out hwnd));
-                    if (hwnd != _mainWindowHandle) {
-                        using (var dlg = new AutomationDialog(this, AutomationElement.FromHandle(hwnd))) {
-                            if (onDialog == null || onDialog(dlg) == false) {
-                                Console.WriteLine("Unexpected dialog");
-                                DumpElement(dlg.Element);
-                                Assert.Fail("Unexpected dialog while loading project");
+            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30))) {
+                try {
+                    if (!t.Wait(1000, cts.Token)) {
+                        // Load has taken a while, start checking whether a dialog has
+                        // appeared
+                        IVsUIShell uiShell = GetService<IVsUIShell>(typeof(IVsUIShell));
+                        IntPtr hwnd;
+                        while (!t.Wait(1000, cts.Token)) {
+                            ErrorHandler.ThrowOnFailure(uiShell.GetDialogOwnerHwnd(out hwnd));
+                            if (hwnd != _mainWindowHandle) {
+                                using (var dlg = new AutomationDialog(this, AutomationElement.FromHandle(hwnd))) {
+                                    if (onDialog == null || onDialog(dlg) == false) {
+                                        Console.WriteLine("Unexpected dialog");
+                                        DumpElement(dlg.Element);
+                                        Assert.Fail("Unexpected dialog while loading project");
+                                    }
+                                }
                             }
                         }
                     }
+                } catch (OperationCanceledException) {
+                    Assert.Fail("Failed to open project quickly enough");
                 }
             }
-
-            Assert.IsTrue(t.Wait(30000), "Failed to open project quickly enough");
             Assert.IsTrue(Dte.Solution.IsOpen, "The solution is not open");
 
             // Force all projects to load before running any tests.
@@ -965,7 +974,7 @@ namespace TestUtilities.UI {
                 System.Threading.Thread.Sleep(5000);
             }
 
-            for (int retries = 10; retries > 0; --retries) {
+            for (int retries = 20; retries > 0; --retries) {
                 allItems.Clear();
                 IVsEnumTaskItems items;
                 ErrorHandler.ThrowOnFailure(errorList.EnumTaskItems(out items));

@@ -104,9 +104,6 @@ abc = True
 ";
             using (var helper = new ClassifierHelper(code, PythonLanguageVersion.V27)) {
                 helper.CheckAstClassifierSpans("ki ki ki i.i=i i=n i=b");
-
-                helper.Analyze();
-
                 helper.CheckAnalysisClassifierSpans("m<abc>m<os>m<ntpath>m<os>m<ntpath>m<abc>m<abc>");
             }
         }
@@ -127,9 +124,6 @@ fdopen
 ";
             using (var helper = new ClassifierHelper(code, PythonLanguageVersion.V27)) {
                 helper.CheckAstClassifierSpans("kiki kiki i i i i");
-
-                helper.Analyze();
-
                 helper.CheckAnalysisClassifierSpans("m<abc>m<x>m<os>m<x>");
             }
         }
@@ -146,10 +140,6 @@ MyClassType = type(mc)
 ";
             using (var helper = new ClassifierHelper(code, PythonLanguageVersion.V27)) {
                 helper.CheckAstClassifierSpans("ki(i): k i=i() i=i i=i() i=i(i)");
-                helper.AnalysisClassifierSpans.ToArray();
-
-                helper.Analyze();
-
                 helper.CheckAnalysisClassifierSpans("c<MyClass>c<object>cc<MyClassAlias>ccc<type>");
             }
         }
@@ -167,9 +157,6 @@ b = c
 ";
             using (var helper = new ClassifierHelper(code, PythonLanguageVersion.V27)) {
                 helper.CheckAstClassifierSpans("ki(i,i,i): i=i i=i ki i(i,i,i) i=i i=i");
-
-                helper.Analyze();
-
                 helper.CheckAnalysisClassifierSpans("f<f>ppppppppf<f>");
             }
         }
@@ -184,9 +171,6 @@ def f(a = A, b : B):
 ";
             using (var helper = new ClassifierHelper(code, PythonLanguageVersion.V27)) {
                 helper.CheckAstClassifierSpans("ki:k ki:k ki(i=i,i:i): k");
-
-                helper.Analyze();
-
                 helper.CheckAnalysisClassifierSpans("c<A>c<B>f<f>pc<A>pc<B>");
             }
         }
@@ -224,9 +208,6 @@ class F:
 
             using (var helper = new ClassifierHelper(code, PythonLanguageVersion.V35)) {
                 helper.CheckAstClassifierSpans("ii i+i iki:k ikiki:k iki(): ii iki:k ikiki:k ki: iki(i): k");
-
-                helper.Analyze();
-
                 // "await f" does not highlight "f", but "await + f" does
                 helper.CheckAnalysisClassifierSpans("fff k<async>f k<await>f k<async>f k<async>f c<F> k<async>fp");
             }
@@ -235,43 +216,42 @@ class F:
         #region ClassifierHelper class
 
         private class ClassifierHelper : IDisposable {
-            private readonly MockVs _vs;
             private readonly PythonClassifierProvider _provider1;
             private readonly PythonAnalysisClassifierProvider _provider2;
-
-            private readonly MockVsTextView _view;
-            private readonly VsProjectAnalyzer _analyzer;
+            private readonly ManualResetEventSlim _classificationsReady1, _classificationsReady2;
+            private readonly PythonEditor _view;
 
             public ClassifierHelper(string code, PythonLanguageVersion version) {
-                _vs = new MockVs();
+                _view = new PythonEditor("", version);
 
-                var reg = _vs.ContentTypeRegistry;
-                var providers = _vs.ComponentModel.GetExtensions<IClassifierProvider>().ToArray();
+                var providers = _view.VS.ComponentModel.GetExtensions<IClassifierProvider>().ToArray();
                 _provider1 = providers.OfType<PythonClassifierProvider>().Single();
                 _provider2 = providers.OfType<PythonAnalysisClassifierProvider>().Single();
 
-                var factory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version.ToVersion());
-                _analyzer = new VsProjectAnalyzer(_vs.ServiceProvider, factory, new[] { factory });
-                
-                _view = _vs.CreateTextView(PythonCoreConstants.ContentType, code, v => {
-                    v.TextView.TextBuffer.Properties.AddProperty(typeof(VsProjectAnalyzer), _analyzer);
-                });
+                _classificationsReady1 = new ManualResetEventSlim();
+                _classificationsReady2 = new ManualResetEventSlim();
+
+                AstClassifier.ClassificationChanged += (s, e) => _classificationsReady1.Set();
+                AnalysisClassifier.ClassificationChanged += (s, e) => _classificationsReady2.Set();
+
+                _view.Text = code;
             }
 
             public void Dispose() {
-                _vs.Dispose();
-                _analyzer.Dispose();
+                _classificationsReady1.Dispose();
+                _classificationsReady2.Dispose();
+                _view.Dispose();
             }
 
             public ITextView TextView {
                 get {
-                    return _view.TextView;
+                    return _view.View.TextView;
                 }
             }
 
             public ITextBuffer TextBuffer {
                 get {
-                    return _view.TextView.TextBuffer;
+                    return _view.View.TextView.TextBuffer;
                 }
             }
 
@@ -283,6 +263,7 @@ class F:
 
             public IEnumerable<ClassificationSpan> AstClassifierSpans {
                 get {
+                    _classificationsReady1.Wait();
                     return AstClassifier.GetClassificationSpans(
                         new SnapshotSpan(TextBuffer.CurrentSnapshot, 0, TextBuffer.CurrentSnapshot.Length)
                     ).OrderBy(s => s.Span.Start.Position);
@@ -297,6 +278,7 @@ class F:
 
             public IEnumerable<ClassificationSpan> AnalysisClassifierSpans {
                 get {
+                    _classificationsReady2.Wait();
                     return AnalysisClassifier.GetClassificationSpans(
                         new SnapshotSpan(TextBuffer.CurrentSnapshot, 0, TextBuffer.CurrentSnapshot.Length)
                     ).OrderBy(s => s.Span.Start.Position);
@@ -388,26 +370,6 @@ class F:
                 }
 
                 Assert.IsTrue(string.IsNullOrEmpty(expectedSpans), "Remaining: " + expectedSpans);
-            }
-
-            public VsProjectAnalyzer Analyzer {
-                get {
-                    return _analyzer;
-                }
-            }
-
-            public void Analyze() {
-                var classifier = AnalysisClassifier;
-                using (var evt = new ManualResetEventSlim()) {
-                    classifier.ClassificationChanged += (o, e) => evt.Set();
-                    var ensureClassifier = AnalysisClassifierSpans.ToArray();
-                    TextBuffer.GetPythonProjectEntry().Analyze(CancellationToken.None, true);
-                    _analyzer.WaitForCompleteAnalysis(_ => true);
-                    while (TextBuffer.GetPythonProjectEntry().Analysis == null) {
-                        Thread.Sleep(500);
-                    }
-                    Assert.IsTrue(evt.Wait(10000));
-                }
             }
         }
 

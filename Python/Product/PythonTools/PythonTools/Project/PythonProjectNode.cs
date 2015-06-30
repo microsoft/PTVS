@@ -922,6 +922,7 @@ namespace Microsoft.PythonTools.Project {
 
         private void UnHookErrorsAndWarnings(VsProjectAnalyzer res) {
             res.ShouldWarnOnLaunchChanged -= OnShouldWarnOnLaunchChanged;
+            _warnOnLaunchFiles.Clear();
         }
 
         private void OnShouldWarnOnLaunchChanged(object sender, EntryEventArgs e) {
@@ -950,7 +951,7 @@ namespace Microsoft.PythonTools.Project {
                 return service.DefaultInterpreter;
             }
 
-            var fact = _interpreters.ActiveInterpreter;
+            var fact = interpreters.ActiveInterpreter;
 
             Site.GetPythonToolsService().EnsureCompletionDb(fact);
 
@@ -968,7 +969,7 @@ namespace Microsoft.PythonTools.Project {
                 return service.DefaultInterpreter;
             }
 
-            var fact = _interpreters.ActiveInterpreter;
+            var fact = interpreters.ActiveInterpreter;
             if (fact == service.NoInterpretersValue) {
                 throw new NoInterpretersException();
             }
@@ -1032,16 +1033,19 @@ namespace Microsoft.PythonTools.Project {
                 }
 
                 Reanalyze(analyzer);
-                if (_analyzer != null) {
-                    analyzer.SwitchAnalyzers(_analyzer);
-                    if (_analyzer.RemoveUser()) {
-                        _analyzer.Dispose();
+                var oldAnalyzer = Interlocked.Exchange(ref _analyzer, analyzer);
+
+                if (oldAnalyzer != null) {
+                    if (analyzer != null) {
+                        analyzer.SwitchAnalyzers(oldAnalyzer);
+                    }
+                    if (oldAnalyzer.RemoveUser()) {
+                        oldAnalyzer.Dispose();
                     }
                 }
 
-                _analyzer = analyzer;
                 var searchPath = ParseSearchPath();
-                if (searchPath != null && _analyzer != null) {
+                if (searchPath != null && analyzer != null) {
                     AnalyzeSearchPaths(searchPath);
                 }
 
@@ -1147,7 +1151,7 @@ namespace Microsoft.PythonTools.Project {
                 );
 
                 var props = PythonProjectLaunchProperties.Create(this);
-                var env = new Dictionary<string, string>(props.GetEnvironment(true));
+                var env = new Dictionary<string, string>(props.GetEnvironment(true), StringComparer.OrdinalIgnoreCase);
 
                 var paths = new List<string>();
                 paths.Add(CommonUtils.GetParent(((IPythonProjectLaunchProperties)this).GetInterpreterPath()));
@@ -1360,12 +1364,19 @@ namespace Microsoft.PythonTools.Project {
             if (args != null && args.TryGetValue("e", out description) && !string.IsNullOrEmpty(description)) {
                 var service = Site.GetComponentModel().GetService<IInterpreterOptionsService>();
 
-                factory = _interpreters.GetInterpreterFactories().FirstOrDefault(
-                    // Description is a localized string, hence CCIC
-                    f => description.Equals(f.Description, StringComparison.CurrentCultureIgnoreCase)
-                ) ?? service.Interpreters.FirstOrDefault(
-                    f => description.Equals(f.Description, StringComparison.CurrentCultureIgnoreCase)
-                );
+                var interpreters = _interpreters;
+                if (interpreters != null) {
+                    factory = interpreters.GetInterpreterFactories().FirstOrDefault(
+                        // Description is a localized string, hence CCIC
+                        f => description.Equals(f.Description, StringComparison.CurrentCultureIgnoreCase)
+                    );
+                }
+
+                if (factory == null) {
+                    factory = service.Interpreters.FirstOrDefault(
+                        f => description.Equals(f.Description, StringComparison.CurrentCultureIgnoreCase)
+                    );
+                }
             }
 
             if (factory == null) {
@@ -2055,7 +2066,12 @@ namespace Microsoft.PythonTools.Project {
                 return;
             }
 
-            var toRemove = new HashSet<IPythonInterpreterFactory>(_interpreters.GetInterpreterFactories());
+            var interpreters = _interpreters;
+            if (interpreters == null) {
+                return;
+            }
+
+            var toRemove = new HashSet<IPythonInterpreterFactory>(interpreters.GetInterpreterFactories());
             var toAdd = new HashSet<IPythonInterpreterFactory>(result);
             toRemove.ExceptWith(toAdd);
             toAdd.ExceptWith(toRemove);
@@ -2066,10 +2082,10 @@ namespace Microsoft.PythonTools.Project {
                     throw Marshal.GetExceptionForHR(VSConstants.OLE_E_PROMPTSAVECANCELLED);
                 }
                 foreach (var factory in toAdd) {
-                    _interpreters.AddInterpreter(factory);
+                    interpreters.AddInterpreter(factory);
                 }
                 foreach (var factory in toRemove) {
-                    _interpreters.RemoveInterpreterFactory(factory);
+                    interpreters.RemoveInterpreterFactory(factory);
                 }
             }
         }
@@ -2123,7 +2139,12 @@ namespace Microsoft.PythonTools.Project {
                 );
             }
 
-            var existing = _interpreters.FindInterpreter(path);
+            var interpreters = _interpreters;
+            if (interpreters == null) {
+                return null;
+            }
+
+            var existing = interpreters.FindInterpreter(path);
             if (existing != null) {
                 return existing;
             }
@@ -2140,8 +2161,8 @@ namespace Microsoft.PythonTools.Project {
                 throw Marshal.GetExceptionForHR(VSConstants.OLE_E_PROMPTSAVECANCELLED);
             }
 
-            var id = _interpreters.CreateInterpreterFactory(options);
-            return _interpreters.FindInterpreter(id, options.LanguageVersion);
+            var id = interpreters.CreateInterpreterFactory(options);
+            return interpreters.FindInterpreter(id, options.LanguageVersion);
         }
 
 
@@ -2161,8 +2182,13 @@ namespace Microsoft.PythonTools.Project {
             var path = factory.Configuration.PrefixPath;
             if (removeFromStorage && Directory.Exists(path)) {
                 var t = Task.Run(() => {
-                    Directory.Delete(path, true);
-                    return true;
+                    try {
+                        Directory.Delete(path, true);
+                        return true;
+                    } catch (IOException) {
+                    } catch (UnauthorizedAccessException) {
+                    }
+                    return false;
                 }).HandleAllExceptions(SR.ProductName, GetType());
 
                 if (!await t) {

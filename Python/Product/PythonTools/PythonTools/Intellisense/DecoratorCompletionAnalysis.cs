@@ -52,6 +52,10 @@ namespace Microsoft.PythonTools.Intellisense {
             var start = _stopwatch.ElapsedMilliseconds;
 
             var analysis = GetAnalysisEntry();
+            if (analysis == null) {
+                return null;
+            }
+
             var index = VsProjectAnalyzer.TranslateIndex(
                 Span.GetEndPoint(TextBuffer.CurrentSnapshot).Position,
                 TextBuffer.CurrentSnapshot,

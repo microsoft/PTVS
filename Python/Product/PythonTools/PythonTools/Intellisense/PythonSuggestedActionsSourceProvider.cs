@@ -15,6 +15,8 @@ namespace Microsoft.PythonTools.Intellisense {
     [Export(typeof(ISuggestedActionsSourceProvider))]
     [Name("Python Suggested Actions")]
     [ContentType(PythonCoreConstants.ContentType)]
+    [TextViewRole(PredefinedTextViewRoles.Analyzable)]
+    [TextViewRole(PredefinedTextViewRoles.Editable)]
     class PythonSuggestedActionsSourceProvider : ISuggestedActionsSourceProvider {
         [Import(typeof(SVsServiceProvider))]
         internal IServiceProvider _provider = null;

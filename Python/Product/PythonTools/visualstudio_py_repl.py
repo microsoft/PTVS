@@ -345,9 +345,11 @@ actual inspection and introspection."""
         self.execute_file_ex(filetype, filename, args)
 
     def _cmd_debug_attach(self):
+        import visualstudio_py_debugger
         port = read_int(self.conn)
         id = read_string(self.conn)
-        self.attach_process(port, id)
+        debug_options = visualstudio_py_debugger.parse_debug_options(read_string(self.conn))
+        self.attach_process(port, id, debug_options)
 
     _COMMANDS = {
         to_bytes('run '): _cmd_run,
@@ -496,7 +498,7 @@ actual inspection and introspection."""
         """flushes the stdout/stderr buffers"""
         raise NotImplementedError
 
-    def attach_process(self, port, debugger_id):
+    def attach_process(self, port, debugger_id, debug_options):
         """starts processing execution requests"""
         raise NotImplementedError
     
@@ -996,11 +998,11 @@ due to the exec, so we do it here"""
         visualstudio_py_debugger.DETACH_CALLBACKS.remove(self.do_detach)
         self.on_debugger_detach()
 
-    def attach_process(self, port, debugger_id):
+    def attach_process(self, port, debugger_id, debug_options):
         def execute_attach_process_work_item():
             import visualstudio_py_debugger
             visualstudio_py_debugger.DETACH_CALLBACKS.append(self.do_detach)
-            visualstudio_py_debugger.attach_process(port, debugger_id, report = True, block = True)
+            visualstudio_py_debugger.attach_process(port, debugger_id, debug_options, report=True, block=True)
         
         self.execute_item = execute_attach_process_work_item
         self.execute_item_lock.release()

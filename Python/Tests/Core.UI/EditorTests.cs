@@ -72,15 +72,15 @@ namespace PythonToolsUITests {
         [HostType("VSTestHost")]
         public void OutliningTest() {
             OutlineTest("Program.py",
-                new ExpectedTag(9, 64, "\n    print('hello')\r\n    print('world')\r\n    print('!')"),
+                new ExpectedTag(8, 64, "\r\n    print('hello')\r\n    print('world')\r\n    print('!')"),
                 new ExpectedTag(86, 142, "\r\n    print('hello')\r\n    print('world')\r\n    print('!')"),
-                new ExpectedTag(165, 220, "\n    print('hello')\r\n    print('world')\r\n    print('!')"),
-                new ExpectedTag(306, 361, "\n    print('hello')\r\n    print('world')\r\n    print('!')"),
-                new ExpectedTag(243, 298, "\n    print('hello')\r\n    print('world')\r\n    print('!')"),
-                new ExpectedTag(384, 439, "\n    print('hello')\r\n    print('world')\r\n    print('!')"),
-                new ExpectedTag(452, 507, "\n    print('hello')\r\n    print('world')\r\n    print('!')"),
-                new ExpectedTag(551, 606, "\n    print('hello')\r\n    print('world')\r\n    print('!')"),
-                new ExpectedTag(626, 681, "\n    print('hello')\r\n    print('world')\r\n    print('!')")
+                new ExpectedTag(164, 220, "\r\n    print('hello')\r\n    print('world')\r\n    print('!')"),
+                new ExpectedTag(305, 361, "\r\n    print('hello')\r\n    print('world')\r\n    print('!')"),
+                new ExpectedTag(242, 298, "\r\n    print('hello')\r\n    print('world')\r\n    print('!')"),
+                new ExpectedTag(383, 439, "\r\n    print('hello')\r\n    print('world')\r\n    print('!')"),
+                new ExpectedTag(451, 507, "\r\n    print('hello')\r\n    print('world')\r\n    print('!')"),
+                new ExpectedTag(550, 606, "\r\n    print('hello')\r\n    print('world')\r\n    print('!')"),
+                new ExpectedTag(625, 681, "\r\n    print('hello')\r\n    print('world')\r\n    print('!')")
             );
         }
 
@@ -88,8 +88,8 @@ namespace PythonToolsUITests {
         [HostType("VSTestHost")]
         public void OutlineNestedFuncDef() {
             OutlineTest("NestedFuncDef.py",
-                new ExpectedTag(9, 90, "\n    def g():\r\n        print('hello')\r\n        print('world')\r\n        print('!')"),
-                new ExpectedTag(23, 90, "\n        print('hello')\r\n        print('world')\r\n        print('!')"));
+                new ExpectedTag(8, 90, "\r\n    def g():\r\n        print('hello')\r\n        print('world')\r\n        print('!')"),
+                new ExpectedTag(22, 90, "\r\n        print('hello')\r\n        print('world')\r\n        print('!')"));
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
@@ -296,9 +296,10 @@ namespace PythonToolsUITests {
         [HostType("VSTestHost")]
         public void AutoIndent() {
             using (var app = new PythonVisualStudioApp()) {
-                var prevSetting = app.GetService<PythonToolsService>().AdvancedOptions.AddNewLineAtEndOfFullyTypedWord;
-                app.OnDispose(() => app.GetService<PythonToolsService>().AdvancedOptions.AddNewLineAtEndOfFullyTypedWord = prevSetting);
-                app.GetService<PythonToolsService>().AdvancedOptions.AddNewLineAtEndOfFullyTypedWord = true;
+                var options = app.GetService<PythonToolsService>().AdvancedOptions;
+                var prevSetting = options.AddNewLineAtEndOfFullyTypedWord;
+                app.OnDispose(() => options.AddNewLineAtEndOfFullyTypedWord = prevSetting);
+                options.AddNewLineAtEndOfFullyTypedWord = true;
 
                 var project = app.OpenProject(@"TestData\AutoIndent.sln");
 
@@ -639,14 +640,16 @@ x\
                 var item = project.ProjectItems.Item("Program.py");
                 var windowTask = Task.Run(() => item.Open());
 
-                VisualStudioApp.CheckMessageBox(TestUtilities.MessageBoxButton.Ok, "File Load", "Program.py", "ascii encoding");
+                VisualStudioApp.CheckMessageBox(TestUtilities.MessageBoxButton.Ok, "File Load", "Program.py", "Unicode (UTF-8) encoding");
 
                 var window = windowTask.Result;
                 window.Activate();
                 var doc = app.GetDocument(item.Document.FullName);
                 var text = doc.TextView.TextBuffer.CurrentSnapshot.GetText();
-                // Characters should not have been replaced
-                Assert.AreEqual(-1, text.IndexOf("????"));
+                Console.WriteLine(string.Join(" ", text.Select(c => c < ' ' ? " .  " : string.Format(" {0}  ", c))));
+                Console.WriteLine(string.Join(" ", text.Select(c => string.Format("{0:X04}", (int)c))));
+                // Characters should have been replaced
+                Assert.AreNotEqual(-1, text.IndexOf("\uFFFD\uFFFD\uFFFD\uFFFD", StringComparison.Ordinal));
             }
         }
 

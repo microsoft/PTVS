@@ -21,7 +21,6 @@
     <!-- The default Platform value is specified in the imports below -->
     
     <RunFXCop Condition="'$(RunFXCop)' == ''">false</RunFXCop>
-    <RunStyleCop Condition="'$(RunStyleCop)' == ''">false</RunStyleCop>
 
     <CodeCoverageEnabled Condition="'$(CodeCoverageEnabled)'==''">true</CodeCoverageEnabled>
 
@@ -96,7 +95,6 @@
     <!-- Suppress warning about multiply defined AssemblyVersionInfo -->
     <NoWarn>436</NoWarn>
     <RunCodeAnalysis>$(RunFXCop)</RunCodeAnalysis>
-    <StyleCopEnabled>$(RunStyleCop)</StyleCopEnabled>
 
     <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
 

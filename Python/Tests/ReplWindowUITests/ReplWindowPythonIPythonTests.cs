@@ -18,6 +18,7 @@ using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.UI;
+using TestUtilities.UI.Python;
 using Keyboard = TestUtilities.UI.Keyboard;
 
 namespace ReplWindowUITests {
@@ -27,8 +28,10 @@ namespace ReplWindowUITests {
     /// </summary>
     [TestClass, Ignore]
     public abstract class ReplWindowPythonIPythonTests : ReplWindowPythonTests {
-        internal virtual ReplWindowProxy PrepareIPython() {
-            return Prepare(useIPython: true);
+        internal virtual ReplWindowProxy PrepareIPython(
+            bool addNewLineAtEndOfFullyTypedWord = false
+        ) {
+            return Prepare(useIPython: true, addNewLineAtEndOfFullyTypedWord: addNewLineAtEndOfFullyTypedWord);
         }
 
         [TestMethod, Priority(0)]
@@ -40,7 +43,7 @@ namespace ReplWindowUITests {
                 interactive.WaitForText(
                     ">x = 42",
                     ">?x",
-                    interactive.Settings.IPythonIntDocumentation,
+                    ((PythonReplWindowProxySettings)interactive.Settings).IPythonIntDocumentation,
                     ">"
                 );
             }
@@ -72,9 +75,7 @@ namespace ReplWindowUITests {
         [TestMethod, Priority(0)]
         [HostType("VSTestHost")]
         public virtual void IPythonSimpleCompletion() {
-            using (var interactive = PrepareIPython()) {
-                interactive.AddNewLineAtEndOfFullyTypedWord = false;
-
+            using (var interactive = PrepareIPython(addNewLineAtEndOfFullyTypedWord: false)) {
                 interactive.SubmitCode("x = 42");
                 interactive.WaitForText(">x = 42", ">");
                 interactive.ClearScreen();
@@ -87,7 +88,7 @@ namespace ReplWindowUITests {
                     sh.WaitForSessionDismissed();
                 }
 
-                interactive.WaitForText(">x." + interactive.Settings.IntFirstMember);
+                interactive.WaitForText(">x." + ((PythonReplWindowProxySettings)interactive.Settings).IntFirstMember);
 
                 // clear input at repl
                 interactive.ClearInput();

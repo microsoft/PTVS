@@ -31,8 +31,8 @@ namespace Microsoft.PythonTools.Intellisense {
         private IList<ClassificationSpan> _tokens;
         private ITextSnapshotLine _curLine;
         private PythonClassifier _classifier;
-        private static readonly string[] _assignOperators = new[] {
-            "=" ,  "+=" ,  "-=" ,  "/=" ,  "%=" ,  "^=" ,  "*=" ,  "//=" ,  "&=" ,  "|=" ,  ">>=" ,  "<<=" ,  "**="
+        private static readonly HashSet<string> _assignOperators = new HashSet<string> {
+            "=" ,  "+=" ,  "-=" ,  "/=" ,  "%=" ,  "^=" ,  "*=" ,  "//=" ,  "&=" ,  "|=" ,  ">>=" ,  "<<=" ,  "**=", "@="
         };
 
 
@@ -335,7 +335,8 @@ namespace Microsoft.PythonTools.Intellisense {
                             } else {
                                 break;
                             }
-                        } else if (token.ClassificationType == Classifier.Provider.Keyword && (text == "if" || text == "else")) {
+                        } else if (token.ClassificationType == Classifier.Provider.Keyword &&
+                            (text == "if" || text == "else")) {
                             // if and else can be used in an expression context or a statement context
                             if (currentParamAtLastColon != -1) {
                                 start = startAtLastToken;
@@ -364,7 +365,9 @@ namespace Microsoft.PythonTools.Intellisense {
                     } else if (token.ClassificationType == Classifier.Provider.Comment) {
                         return null;
                     } else if (!lastTokenWasCommaOrOperator) {
-                        break;
+                        if (nesting == 0 && otherNesting == 0) {
+                            break;
+                        }
                     } else {
                         if (lastTokenWasKeywordArgAssignment &&
                             token.ClassificationType.IsOfType(PredefinedClassificationTypeNames.Identifier) &&
@@ -396,7 +399,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private static bool IsAssignmentOperator(string text) {
-            return ((IList<string>)_assignOperators).Contains(text);
+            return _assignOperators.Contains(text);
         }
 
         internal static bool IsExplicitLineJoin(ClassificationSpan cur) {

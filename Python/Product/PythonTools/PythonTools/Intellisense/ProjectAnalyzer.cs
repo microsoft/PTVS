@@ -94,7 +94,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly PythonToolsService _pyService;
         private readonly IServiceProvider _serviceProvider;
 
-        private readonly object _contentsLock = new object();
+        internal Task ReloadTask;
 
         internal VsProjectAnalyzer(
             IServiceProvider serviceProvider,
@@ -116,6 +116,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             _queue = new ParseQueue(this);
             _analysisQueue = new AnalysisQueue(this);
+            _analysisQueue.AnalysisStarted += AnalysisQueue_AnalysisStarted;
             _allFactories = allFactories;
 
             _interpreterFactory = factory;
@@ -123,7 +124,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
             if (interpreter != null) {
                 _pyAnalyzer = PythonAnalyzer.Create(factory, interpreter);
-                _pyAnalyzer.ReloadModulesAsync().HandleAllExceptions(SR.ProductName, GetType()).DoNotWait();
+                ReloadTask = _pyAnalyzer.ReloadModulesAsync().HandleAllExceptions(SR.ProductName, GetType());
+                ReloadTask.ContinueWith(_ => ReloadTask = null);
                 interpreter.ModuleNamesChanged += OnModulesChanged;
             }
 
@@ -137,6 +139,13 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             _userCount = 1;
+        }
+
+        private void AnalysisQueue_AnalysisStarted(object sender, EventArgs e) {
+            var evt = AnalysisStarted;
+            if (evt != null) {
+                evt(this, e);
+            }
         }
 
         internal PythonToolsService PyService {
@@ -177,19 +186,17 @@ namespace Microsoft.PythonTools.Intellisense {
             entry.Properties[_pathInZipFile] = value;
         }
 
-        private void OnModulesChanged(object sender, EventArgs e) {
+        private async void OnModulesChanged(object sender, EventArgs e) {
             Debug.Assert(_pyAnalyzer != null, "Should not have null _pyAnalyzer here");
             if (_pyAnalyzer == null) {
                 return;
             }
 
-            lock (_contentsLock) {
-                _pyAnalyzer.ReloadModulesAsync().WaitAndUnwrapExceptions();
+            await _pyAnalyzer.ReloadModulesAsync();
 
-                // re-analyze all of the modules when we get a new set of modules loaded...
-                foreach (var nameAndEntry in _projectFiles) {
-                    _queue.EnqueueFile(nameAndEntry.Value, nameAndEntry.Key);
-                }
+            // re-analyze all of the modules when we get a new set of modules loaded...
+            foreach (var nameAndEntry in _projectFiles) {
+                _queue.EnqueueFile(nameAndEntry.Value, nameAndEntry.Key);
             }
         }
 
@@ -220,6 +227,10 @@ namespace Microsoft.PythonTools.Intellisense {
                     var classifier = buffer.GetPythonClassifier();
                     if (classifier != null) {
                         classifier.NewVersion();
+                    }
+                    var classifier2 = buffer.GetPythonAnalysisClassifier();
+                    if (classifier2 != null) {
+                        classifier2.NewVersion();
                     }
 
                     ConnectErrorList(projEntry, buffer);
@@ -370,9 +381,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private void QueueDirectoryAnalysis(string path) {
             ThreadPool.QueueUserWorkItem(x => {
-                lock (_contentsLock) {
-                    AnalyzeDirectory(CommonUtils.NormalizeDirectoryPath(Path.GetDirectoryName(path)));
-        }
+                AnalyzeDirectory(CommonUtils.NormalizeDirectoryPath(Path.GetDirectoryName(path)));
             });
         }
 
@@ -627,8 +636,11 @@ namespace Microsoft.PythonTools.Intellisense {
                 return MissingImportAnalysis.Empty;
             }
 
-            var analysis = ((IPythonProjectEntry)snapshot.TextBuffer.GetProjectEntry()).Analysis;
-            if (analysis == null) {
+            IPythonProjectEntry entry;
+            ModuleAnalysis analysis;
+            if (!snapshot.TextBuffer.TryGetPythonProjectEntry(out entry) ||
+                entry == null ||
+                (analysis = entry.Analysis) == null) {
                 return MissingImportAnalysis.Empty;
             }
 
@@ -707,6 +719,8 @@ namespace Microsoft.PythonTools.Intellisense {
                 return _queue.IsParsing || _analysisQueue.IsAnalyzing;
             }
         }
+
+        internal event EventHandler AnalysisStarted;
 
         internal void WaitForCompleteAnalysis(Func<int, bool> itemsLeftUpdated) {
             if (IsAnalyzing) {
@@ -1118,6 +1132,9 @@ namespace Microsoft.PythonTools.Intellisense {
             if (!statementRange.HasValue) {
                 statementRange = snapSpan.Start.GetContainingLine().Extent;
             }
+            if (snapSpan.Start < statementRange.Value.Start) {
+                return null;
+            }
 
             var tokens = classifier.GetClassificationSpans(new SnapshotSpan(statementRange.Value.Start, snapSpan.Start));
             if (tokens.Count > 0) {
@@ -1156,7 +1173,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 } else if (CompletionAnalysis.IsKeyword(first, "raise") || CompletionAnalysis.IsKeyword(first, "except")) {
                     if (tokens.Count == 1 ||
                         lastClass.ClassificationType.IsOfType(PythonPredefinedClassificationTypeNames.Comma) ||
-                        lastClass.IsOpenGrouping()) {
+                        (lastClass.IsOpenGrouping() && tokens.Count < 3)) {
                         return new ExceptionCompletionAnalysis(span, buffer, options);
                     }
                 }
@@ -1255,9 +1272,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
 
                 if (addDir) {
-                    lock (_analyzer._contentsLock) {
-                        _analyzer._pyAnalyzer.AddAnalysisDirectory(dir);
-                    }
+                    _analyzer._pyAnalyzer.AddAnalysisDirectory(dir);
                 }
 
                 try {
@@ -1334,9 +1349,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 return;
             }
 
-            lock (_contentsLock) {
-                _pyAnalyzer.AddAnalysisDirectory(zipFileName);
-            }
+            _pyAnalyzer.AddAnalysisDirectory(zipFileName);
 
             ZipArchive archive = null;
             Queue<ZipArchiveEntry> entryQueue = null;
@@ -1452,9 +1465,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 return;
             }
 
-            lock (_contentsLock) {
-                _pyAnalyzer.RemoveAnalysisDirectory(directory);
-            }
+            _pyAnalyzer.RemoveAnalysisDirectory(directory);
         }
 
         internal void Cancel() {
@@ -1540,12 +1551,11 @@ namespace Microsoft.PythonTools.Intellisense {
                 _commentTaskProvider.Clear(entry, ParserTaskMoniker);
             }
 
-            ((IDisposable)_analysisQueue).Dispose();
+            _analysisQueue.AnalysisStarted -= AnalysisQueue_AnalysisStarted;
+            _analysisQueue.Dispose();
             if (_pyAnalyzer != null) {
-                lock (_contentsLock) {
-                    _pyAnalyzer.Interpreter.ModuleNamesChanged -= OnModulesChanged;
-                    ((IDisposable)_pyAnalyzer).Dispose();
-                }
+                _pyAnalyzer.Interpreter.ModuleNamesChanged -= OnModulesChanged;
+                _pyAnalyzer.Dispose();
             }
 
             _queueActivityEvent.Dispose();
@@ -1554,11 +1564,9 @@ namespace Microsoft.PythonTools.Intellisense {
         #endregion
 
         internal void RemoveReference(ProjectAssemblyReference reference) {
-            lock (_contentsLock) {
-                var interp = Interpreter as IPythonInterpreterWithProjectReferences;
-                if (interp != null) {
-                    interp.RemoveReference(reference);
-                }
+            var interp = Interpreter as IPythonInterpreterWithProjectReferences;
+            if (interp != null) {
+                interp.RemoveReference(reference);
             }
         }
     }

@@ -23,7 +23,6 @@ using System.Windows.Automation;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Project;
-using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools;
@@ -31,6 +30,9 @@ using TestUtilities;
 using TestUtilities.Python;
 using TestUtilities.UI;
 using TestUtilities.UI.Python;
+#if !DEV14_OR_LATER
+using Microsoft.VisualStudio.Repl;
+#endif
 
 namespace PythonToolsUITests {
     [TestClass]
@@ -144,7 +146,7 @@ namespace PythonToolsUITests {
                 Assert.IsNotNull(repl, "Could not find repl window");
                 repl.WaitForTextEnd(
                     "Program.py completed",
-                    (string)repl.ReplWindow.GetOptionValue(ReplOptions.CurrentPrimaryPrompt)
+                    repl.PrimaryPrompt
                 );
 
                 Assert.IsNull(app.GetInteractiveWindow("resource:PythonToolsUITests;PythonToolsUITests.Resources;ReplName"));
@@ -165,7 +167,7 @@ namespace PythonToolsUITests {
                 Assert.IsNotNull(repl, "Could not find repl window");
                 repl.WaitForTextEnd(
                     "Program.py completed",
-                    (string)repl.ReplWindow.GetOptionValue(ReplOptions.CurrentPrimaryPrompt)
+                    repl.PrimaryPrompt
                 );
 
                 app.Dte.Solution.Close();
@@ -188,7 +190,7 @@ namespace PythonToolsUITests {
                 Assert.IsNotNull(repl, "Could not find repl window");
                 repl.WaitForTextEnd(
                     string.Format("({0}, {1})", PythonVersion.Configuration.Version.Major, PythonVersion.Configuration.Version.Minor),
-                    (string)repl.ReplWindow.GetOptionValue(ReplOptions.CurrentPrimaryPrompt)
+                    repl.PrimaryPrompt
                 );
             }
         }

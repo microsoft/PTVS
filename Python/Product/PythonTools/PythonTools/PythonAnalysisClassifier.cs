@@ -15,6 +15,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
@@ -54,12 +55,25 @@ namespace Microsoft.PythonTools {
             EnsureAnalysis();
         }
 
+        public void NewVersion() {
+            var newEntry = _buffer.GetPythonProjectEntry();
+            var oldEntry = Interlocked.Exchange(ref _entry, newEntry);
+            if (oldEntry != null && oldEntry != newEntry) {
+                oldEntry.OnNewAnalysis -= OnNewAnalysis;
+            }
+            if (newEntry != null) {
+                newEntry.OnNewAnalysis += OnNewAnalysis;
+                if (newEntry.IsAnalyzed) {
+                    // Ensure we get classifications if we've already been
+                    // analyzed
+                    OnNewAnalysis(_entry, EventArgs.Empty);
+                }
+            }
+        }
+
         private void EnsureAnalysis() {
             if (_entry == null) {
-                _entry = _buffer.GetPythonProjectEntry();
-                if (_entry != null) {
-                    _entry.OnNewAnalysis += OnNewAnalysis;
-                }
+                NewVersion();
             }
         }
 
@@ -172,6 +186,7 @@ namespace Microsoft.PythonTools {
         }
 
         private void BufferChanged(object sender, TextContentChangedEventArgs e) {
+            EnsureAnalysis();
         }
 
         #endregion

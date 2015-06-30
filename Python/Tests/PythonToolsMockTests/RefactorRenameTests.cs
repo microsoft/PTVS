@@ -2396,7 +2396,7 @@ def g(a, b, c):
                         { inputs[0].Filename, mainView.CurrentSnapshot.TextBuffer }
                     };
                     foreach (var i in inputs.Skip(1)) {
-                        var editor = new PythonEditor(i.Input, version.ToLanguageVersion(), _vs, mainView.Factory, analyzer, inputs[0].Filename);
+                        var editor = new PythonEditor(i.Input, version.ToLanguageVersion(), _vs, mainView.Factory, analyzer, i.Filename);
                         views.Add(editor);
                         bufferTable[i.Filename] = editor.CurrentSnapshot.TextBuffer;
                     }
@@ -2404,16 +2404,8 @@ def g(a, b, c):
 
                     // test runs twice, one w/ original buffer, once w/ re-analyzed buffers.
                     if (loops == 1) {
-                        using (new DebugTimer("Waiting for previous analysis before raising change events")) {
-                            analyzer.WaitForCompleteAnalysis(x => true);
-                        }
-                        Console.WriteLine("Running w/ re-anlyzed buffers");
                         // do it again w/ a changed buffer
                         mainView.Text = mainView.Text;
-                    }
-
-                    using (new DebugTimer("Waiting for analysis")) {
-                        analyzer.WaitForCompleteAnalysis(x => true);
                     }
 
                     var caretPos = inputs[0].Input.IndexOf(caretText);

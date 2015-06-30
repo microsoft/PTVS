@@ -168,6 +168,9 @@ namespace Microsoft.PythonTools.Intellisense {
 
             SmartTagController controller;
             session.Properties.TryGetProperty<SmartTagController>(typeof(SmartTagController), out controller);
+            if (controller == null) {
+                return;
+            }
 
             var task = Volatile.Read(ref controller._curTask);
             var origTask = task;
