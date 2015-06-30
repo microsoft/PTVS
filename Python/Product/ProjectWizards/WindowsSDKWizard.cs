@@ -42,12 +42,12 @@ namespace Microsoft.PythonTools.ProjectWizards {
             try {
                 string keyValue = string.Empty;
                 // Attempt to get the installation folder of the Windows 10 SDK
-                RegistryKey key = Registry.LocalMachine.OpenSubKey(@"Software\Microsoft\Windows Kits\Instlled Roots");
+                RegistryKey key = Registry.LocalMachine.OpenSubKey(@"Software\Microsoft\Windows Kits\Installed Roots");
                 if (null != key) {
                     keyValue = (string)key.GetValue("KitsRoot10") + "Include";
                 }
                 // Get the latest SDK version from the name of the directory in the Include path of the SDK installation.
-                if (string.IsNullOrEmpty(keyValue)) {
+                if (!string.IsNullOrEmpty(keyValue)) {
                     string dirName = Directory.GetDirectories(keyValue).OrderByDescending(x => x).FirstOrDefault();
                     winSDKVersion = Path.GetFileName(dirName);
                 }
