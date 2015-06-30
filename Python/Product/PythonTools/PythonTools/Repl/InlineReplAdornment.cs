@@ -15,7 +15,7 @@
 using System.ComponentModel.Composition;
 using System.Windows;
 #if DEV14_OR_LATER
-Microsoft.VisualStudio.InteractiveWindow
+using Microsoft.VisualStudio.InteractiveWindow;
 #else
 using Microsoft.VisualStudio.Repl;
 #endif
