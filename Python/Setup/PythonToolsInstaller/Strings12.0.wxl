@@ -13,7 +13,7 @@
   <String Id="WDInstallPathButNoExe">Your version of !(loc.WDProductName) is not supported.  Please install the latest update from http://www.visualstudio.com/.</String>
   <String Id="VWDInstallPathButNoExe">Your version of !(loc.VWDProductName) is not supported.  Please install the latest update from http://www.visualstudio.com/.</String>
   <String Id="VSPrerelease">A pre-release version of !(loc.VSProductName) was detected that is not supported by !(loc.ProductName).  Please upgrade to the final release from http://www.visualstudio.com.</String>
-  <String Id="IronPythonToolsInstalled">The IronPython Tools feature of IronPython 2.7 must be uninstalled.  Python Tools replaces IronPython Tools and supports all the same features and more.</String>
+  <String Id="IronPythonToolsInstalled">The IronPython Tools feature of IronPython 2.7 must be uninstalled.  !(loc.ProductName) replaces IronPython Tools and supports all the same features and more.</String>
   <String Id="PTVS15PerUserInstalled">Python Tools 1.5 was installed per-user.  Python Tools 1.5 must be uninstalled via Add\Remove Programs before continuing installation.</String>
   <String Id="NetFx45NotInstalled">The Microsoft .NET Framework 4.5 is required. Please install it from http://go.microsoft.com/fwlink/?LinkId=398711</String>
   <String Id="DevEnvSetup">Registering extension in !(loc.VSProductName)...</String>
