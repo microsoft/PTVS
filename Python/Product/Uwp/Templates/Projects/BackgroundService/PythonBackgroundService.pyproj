@@ -7,8 +7,6 @@
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
     <SchemaVersion>2.0</SchemaVersion>
     <ApplicationTypeRevision>10.0</ApplicationTypeRevision>
-    <WindowsTargetPlatformVersion>$winsdkversion$</WindowsTargetPlatformVersion>
-    <WindowsTargetPlatformMinVersion>$winsdkminversion$</WindowsTargetPlatformMinVersion>
     <ApplicationType>Windows Store</ApplicationType>
     <AppContainerApplication>true</AppContainerApplication>
     <AppxPackage>true</AppxPackage>
@@ -56,5 +54,10 @@
   </PropertyGroup>
 
   <Import Project="$(PtvsTargetsFile)" />
+
+  <PropertyGroup>
+    <TargetPlatformVersion>$winsdkversion$</TargetPlatformVersion>
+    <TargetPlatformMinVersion>$winsdkminversion$</TargetPlatformMinVersion>
+  </PropertyGroup>
 
 </Project>
