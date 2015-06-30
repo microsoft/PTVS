@@ -5,8 +5,8 @@
   <String Id="VSProductName">Visual Studio 2015</String>
   <String Id="WDProductName">Visual Studio Express 2015 for Desktop</String>
   <String Id="VWDProductName">Visual Studio Express 2015 for Web</String>
+  <String Id="ProductDescription">Python Tools for Visual Studio 2015</String>
 
-  <String Id="ProductDescription">!(loc.ProductName) !(loc.ForVisualStudio)</String>
   <String Id="DowngradeErrorMessage">A newer version of !(loc.ProductDescription) is already installed.</String>
   <String Id="NoInstallPath">!(loc.VSProductName) is required.  The free Community edition can be downloaded from http://www.visualstudio.com/.</String>
   <String Id="NoExePath">Your version of !(loc.VSProductName) is not supported.  Please install the latest update from http://www.visualstudio.com/.</String>
