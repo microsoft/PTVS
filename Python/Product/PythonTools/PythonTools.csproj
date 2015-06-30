@@ -239,7 +239,7 @@
     <Reference Include="WindowsFormsIntegration" />
   </ItemGroup>
   <Choose>
-    <When Condition="$(VSMajorVersion) >= 14">
+    <When Condition="$(VSMajorVersion) &gt;= 14">
       <ItemGroup>
         <Reference Include="Microsoft.VisualStudio.InteractiveWindow">
           <HintPath>$(DevEnvDir)PrivateAssemblies\Microsoft.VisualStudio.InteractiveWindow.dll</HintPath>
@@ -294,6 +294,8 @@
       <Link>IEnumerableExtensions.cs</Link>
     </Compile>
     <Compile Include="PythonTools\Repl\IMultipleScopeEvaluator.cs" />
+    <Compile Include="PythonTools\Repl\InlineReplAdornment.cs" />
+    <Compile Include="PythonTools\Repl\InlineReplAdornmentManager.cs" />
     <Compile Include="PythonTools\Repl\InteractiveWindowProvider.cs" />
     <Compile Include="IPythonToolsToolWindowService.cs" />
     <Compile Include="MissingInterpreterException.cs" />
@@ -308,6 +310,8 @@
     <Compile Include="PythonTools\Intellisense\PythonSuggestedImportAction.cs" />
     <Compile Include="PythonTools\Project\IPythonProjectLaunchProperties.cs" />
     <Compile Include="PythonTools\Project\PythonProjectLaunchProperties.cs" />
+    <Compile Include="PythonTools\Repl\ResizingAdorner.cs" />
+    <Compile Include="PythonTools\Repl\ZoomableInlineAdornment.cs" />
     <Compile Include="PythonTools\SurveyNewsService.cs" />
     <Compile Include="PythonTools\Options\GlobalInterpreterOptions.cs" />
     <Compile Include="PythonTools\Options\GeneralOptions.cs" />
@@ -1179,10 +1183,10 @@
     <None Include="Dev10\source.extension.vsixmanifest" Condition="'$(VSTarget)' == '10.0'">
       <SubType>Designer</SubType>
     </None>
-    <None Include="Dev11OrLater\source.extension.vsixmanifest" Condition="$(VSMajorVersion) > 10 and $(VSMajorVersion) &lt; 14">
+    <None Include="Dev11OrLater\source.extension.vsixmanifest" Condition="$(VSMajorVersion) &gt; 10 and $(VSMajorVersion) &lt; 14">
       <SubType>Designer</SubType>
     </None>
-    <None Include="Dev14OrLater\source.extension.vsixmanifest" Condition="$(VSMajorVersion) >= 14">
+    <None Include="Dev14OrLater\source.extension.vsixmanifest" Condition="$(VSMajorVersion) &gt;= 14">
       <SubType>Designer</SubType>
     </None>
   </ItemGroup>

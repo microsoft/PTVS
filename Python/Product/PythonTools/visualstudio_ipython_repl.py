@@ -158,6 +158,16 @@ class VsIOPubChannel(DefaultHandler, IOPubChannel):
         self.write_data(output, execution_count)
         
     def write_data(self, data, execution_count = None):
+        output_xaml = data.get('image/xaml', None)
+        if output_xaml is not None:
+            try:            
+                if isinstance(output_xaml, str) and sys.version_info[0] >= 3:
+                    output_xaml = output_png.encode('ascii')
+                self._vs_backend.write_png(decodestring(output_xaml))
+                self._vs_backend.write_stdout('\n') 
+                return
+            except:
+                pass
         
         output_png = data.get('image/png', None)
         if output_png is not None:

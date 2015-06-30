@@ -157,6 +157,7 @@ actual inspection and introspection."""
     _DBGA = to_bytes('DBGA')
     _DETC = to_bytes('DETC')
     _DPNG = to_bytes('DPNG')
+    _DXAM = to_bytes('DXAM')
 
     _MERR = to_bytes('MERR')
     _SERR = to_bytes('SERR')
@@ -392,6 +393,12 @@ actual inspection and introspection."""
             write_bytes(self.conn, ReplBackend._DPNG)
             write_int(self.conn, len(image_bytes))
             write_bytes(self.conn, image_bytes)
+
+    def write_xaml(self, xaml_bytes):
+        with self.send_lock:
+            write_bytes(self.conn, ReplBackend._DXAM)
+            write_int(self.conn, len(xaml_bytes))
+            write_bytes(self.conn, xaml_bytes)
 
     def send_prompt(self, ps1, ps2, update_all = True):
         """sends the current prompt to the interactive window"""
