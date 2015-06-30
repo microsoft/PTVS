@@ -5,14 +5,14 @@
   <String Id="VSProductName">Visual Studio 2012</String>
   <String Id="WDProductName">Visual Studio Express 2012 for Desktop</String>
   <String Id="VWDProductName">Visual Studio Express 2012 for Web</String>
+  <String Id="ProductDescription">Python Tools for Visual Studio 2012</String>
 
-  <String Id="ProductDescription">!(loc.ProductName) !(loc.ForVisualStudio)</String>
   <String Id="DowngradeErrorMessage">A newer version of !(loc.ProductDescription) is already installed.</String>
   <String Id="NoInstallPath">!(loc.VSProductName) is required.  An installer for other versions of Visual Studio can be downloaded from http://pytools.codeplex.com/.</String>
   <String Id="NoExePath">Your version of !(loc.VSProductName) is not supported.  Please install the latest update from http://www.visualstudio.com/.</String>
   <String Id="WDInstallPathButNoExe">Your version of !(loc.WDProductName) is not supported.  Please install the latest update from http://www.visualstudio.com/.</String>
   <String Id="VWDInstallPathButNoExe">Your version of !(loc.VWDProductName) is not supported.  Please install the latest update from http://www.visualstudio.com/.</String>
-  <String Id="VSPrerelease">A pre-release version of !(loc.VSProductName) was detected.  This version of !(loc.ProductName) is not supported on pre-release builds of !(loc.VSProductName).  Please upgrade to !(loc.VSProductName).</String>
+  <String Id="VSPrerelease">A pre-release version of !(loc.VSProductName) was detected that is not supported by !(loc.ProductName).  Please upgrade to the final release from http://www.visualstudio.com.</String>
   <String Id="IronPythonToolsInstalled">The IronPython Tools feature of IronPython 2.7 must be uninstalled.  !(loc.ProductName) replaces IronPython Tools and supports all the same features and more.</String>
   <String Id="PTVS15PerUserInstalled">Python Tools 1.5 was installed per-user.  Python Tools 1.5 must be uninstalled via Add\Remove Programs before continuing installation.</String>
   <String Id="NetFx45NotInstalled">The Microsoft .NET Framework 4.5 is required. Please install it from http://go.microsoft.com/fwlink/?LinkId=398711</String>
