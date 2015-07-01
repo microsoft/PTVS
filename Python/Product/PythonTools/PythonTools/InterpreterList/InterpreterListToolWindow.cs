@@ -125,6 +125,39 @@ namespace Microsoft.PythonTools.InterpreterList {
             if (_withDb != null) {
                 view.Extensions.Add(new DBExtensionProvider(_withDb));
             }
+
+            var model = _site.GetComponentModel();
+            if (model != null) {
+                try {
+                    foreach (var provider in model.GetExtensions<IEnvironmentViewExtensionProvider>()) {
+                        try {
+                            var ext = provider.CreateExtension(view);
+                            if (ext != null) {
+                                view.Extensions.Add(ext);
+                            }
+                        } catch (Exception ex) {
+                            LogLoadException(provider, ex);
+                        }
+                    }
+                } catch (Exception ex2) {
+                    LogLoadException(null, ex2);
+                }
+            }
+        }
+
+        private static void LogLoadException(IEnvironmentViewExtensionProvider provider, Exception ex) {
+            string message;
+            if (provider == null) {
+                message = SR.GetString(SR.ErrorLoadingEnvironmentViewExtensions, ex);
+            } else {
+                message = SR.GetString(SR.ErrorLoadingEnvironmentViewExtension, provider.GetType().FullName, ex);
+            }
+
+            Debug.Fail(message);
+            try {
+                ActivityLog.LogError(SR.ProductName, message);
+            } catch (InvalidOperationException) {
+            }
         }
 
         private void PipExtensionProvider_GetElevateSetting(object sender, ValueEventArgs<bool> e) {
