@@ -1,8 +1,9 @@
 WFastCGI
 ========
 
-wfastcgi.py provides a gateway between `IIS <http://www.iis.net/>`__ and Python
-using CGI and WSGI.
+wfastcgi.py provides a bridge between `IIS <http://www.iis.net/>`__ and Python
+using WSGI and FastCGI, similar to what ``mod_python`` provides for Apache HTTP
+Server.
 
 It can be used with any Python web application or framework that supports WSGI,
 and provides an efficient way to handle requests and process pools through IIS.

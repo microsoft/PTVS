@@ -1,31 +1,16 @@
-from setuptools import setup, find_packages
+from setuptools import setup
+from os.path import join, split
 
-try:
-    from pathlib import Path
-    here = Path(__file__).parent
-except ImportError:
-    from os.path import split, join
-    from codecs import open
-    here = split(__file__)[0]
-    Path = None
-
-
-# Get the long description from the relevant file
-if Path:
-    f = (here /'README.rst').open(encoding='utf-8')
-else:
-    f = open(join(here, 'README.rst'), encoding='utf-8')
-
-with f:
+with open(join(split(__file__)[0], 'README.rst')) as f:
     long_description = f.read()
 
 setup(
     name='wfastcgi',
     version='2.2',
 
-    description='A sample Python project',
+    description='An IIS-Python bridge based on WSGI and FastCGI.',
     long_description=long_description,
-    url='https://github.com/Microsoft/PTVS',
+    url='http://aka.ms/PTVS',
 
     # Author details
     author='Microsoft Corporation',
@@ -48,7 +33,7 @@ setup(
         'Topic :: Internet :: WWW/HTTP :: WSGI :: Server',
     ],
 
-    keywords='iis fastcgi',
+    keywords='iis fastcgi wsgi windows server mod_python',
     py_modules=['wfastcgi'],
     install_requires=[],
     entry_points={
