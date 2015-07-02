@@ -34,6 +34,7 @@
     <Asset Type="Microsoft.VisualStudio.MefComponent" Path="|%CurrentProject%;_GetTargetPath|" />
     <Asset Type="Microsoft.VisualStudio.MefComponent" Path="|Microsoft.PythonTools.Analysis;_GetTargetPath|" />
     <Asset Type="Microsoft.VisualStudio.MefComponent" Path="|Microsoft.PythonTools.Debugger;_GetTargetPath|" />
+    <Asset Type="Microsoft.VisualStudio.MefComponent" Path="|Microsoft.PythonTools.EnvironmentsList;_GetTargetPath|" />
     <Asset Type="Microsoft.VisualStudio.MefComponent" Path="|Microsoft.PythonTools.VSInterpreters;_GetTargetPath|" />
     <Asset Type="Microsoft.VisualStudio.MefComponent" Path="|TestAdapter;_GetTargetPath|" />
     <Asset Type="UnitTestExtension" Path="|TestAdapter;_GetTargetPath|" />
