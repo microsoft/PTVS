@@ -851,7 +851,7 @@ def enable():
     ])
     
     if res == 0:
-        print(sys.executable, 'and', __file__, 'can now be used as a FastCGI script processor')
+        print('"%s|%s" can now be used as a FastCGI script processor' % (sys.executable, __file__))
     return res
 
 def disable():
@@ -861,7 +861,7 @@ def disable():
     ])
 
     if res == 0:
-        print(sys.executable, 'and', __file__, 'are no longer registered for use with FastCGI')
+        print('"%s|%s" is no longer registered for use with FastCGI' % (sys.executable, __file__))
     return res
 
 if __name__ == '__main__':
