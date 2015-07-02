@@ -145,7 +145,7 @@ namespace Microsoft.PythonTools.InterpreterList {
             }
         }
 
-        private static void LogLoadException(IEnvironmentViewExtensionProvider provider, Exception ex) {
+        private void LogLoadException(IEnvironmentViewExtensionProvider provider, Exception ex) {
             string message;
             if (provider == null) {
                 message = SR.GetString(SR.ErrorLoadingEnvironmentViewExtensions, ex);
@@ -154,9 +154,13 @@ namespace Microsoft.PythonTools.InterpreterList {
             }
 
             Debug.Fail(message);
-            try {
-                ActivityLog.LogError(SR.ProductName, message);
-            } catch (InvalidOperationException) {
+            var log = _site.GetService(typeof(SVsActivityLog)) as IVsActivityLog;
+            if (log != null) {
+                log.LogEntry(
+                    (uint)__ACTIVITYLOG_ENTRYTYPE.ALE_ERROR,
+                    SR.ProductName,
+                    message
+                );
             }
         }
 
