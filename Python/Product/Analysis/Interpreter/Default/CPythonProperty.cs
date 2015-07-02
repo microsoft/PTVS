@@ -33,7 +33,9 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             }
 
             object type;
-            valueDict.TryGetValue("type", out type);
+            if (!valueDict.TryGetValue("type", out type) || type == null) {
+                type = new[] { null, "object" };
+            }
 
             _hasLocation = PythonTypeDatabase.TryGetLocation(valueDict, ref _line, ref _column);
 

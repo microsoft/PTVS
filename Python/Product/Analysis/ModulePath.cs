@@ -188,7 +188,7 @@ namespace Microsoft.PythonTools.Analysis {
                 !includeTopLevelFiles,
                 recurse,
                 requireInitPy
-            );
+            ).Where(mp => !string.IsNullOrEmpty(mp.ModuleName));
         }
 
         /// <summary>
@@ -209,7 +209,7 @@ namespace Microsoft.PythonTools.Analysis {
                 !includeTopLevelFiles,
                 recurse,
                 requireInitPy
-            ));
+            )).Where(mp => !string.IsNullOrEmpty(mp.ModuleName));
         }
 
         /// <summary>

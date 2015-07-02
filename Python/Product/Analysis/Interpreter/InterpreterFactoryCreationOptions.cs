@@ -38,10 +38,10 @@ namespace Microsoft.PythonTools.Interpreter {
         /// </exception>
         public string LanguageVersionString {
             get {
-                return LanguageVersion.ToString();
+                return LanguageVersion != null ? LanguageVersion.ToString() : string.Empty;
             }
             set {
-                LanguageVersion = Version.Parse(value);
+                LanguageVersion = string.IsNullOrEmpty(value) ? null : Version.Parse(value);
             }
         }
         

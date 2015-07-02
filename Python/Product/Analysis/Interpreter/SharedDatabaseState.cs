@@ -53,6 +53,7 @@ namespace Microsoft.PythonTools.Interpreter {
         public SharedDatabaseState(Version languageVersion) {
             _langVersion = languageVersion;
             _builtinName = (_langVersion.Major == 3) ? BuiltinName3x : BuiltinName2x;
+            _objectTypeFixups = new List<Action<IPythonType>>();
         }
 
         public SharedDatabaseState(Version languageVersion, string databaseDirectory)

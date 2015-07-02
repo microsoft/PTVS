@@ -17,6 +17,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Interpreter;
 
@@ -74,12 +75,49 @@ namespace Microsoft.PythonTools.Analysis {
         /// may be valid and should not be replaced, but it is an unresolved
         /// reference.
         /// </returns>
+        public async Task<ModuleReference> TryImportAsync(string name) {
+            ModuleReference res;
+            bool firstImport = false;
+            if (!_modules.TryGetValue(name, out res) || res == null) {
+                var mod = await Task.Run(() => _interpreter.ImportModule(name)).ConfigureAwait(false);
+                _modules[name] = res = new ModuleReference(GetBuiltinModule(mod));
+                firstImport = true;
+            }
+            if (res != null && res.Module == null) {
+                var mod = await Task.Run(() => _interpreter.ImportModule(name)).ConfigureAwait(false);
+                res.Module = GetBuiltinModule(mod);
+            }
+            if (firstImport && res != null && res.Module != null) {
+                await Task.Run(() => _analyzer.DoDelayedSpecialization(name)).ConfigureAwait(false);
+            }
+            if (res != null && res.Module == null) {
+                return null;
+            }
+            return res;
+        }
+
+        /// <summary>
+        /// Gets a reference to a module.
+        /// </summary>
+        /// <param name="name">The full import name of the module.</param>
+        /// <param name="res">The module reference object.</param>
+        /// <returns>
+        /// True if the module is available. This means that <c>res.Module</c>
+        /// is not null. If this function returns false, <paramref name="res"/>
+        /// may be valid and should not be replaced, but it is an unresolved
+        /// reference.
+        /// </returns>
         public bool TryImport(string name, out ModuleReference res) {
+            bool firstImport = false;
             if (!_modules.TryGetValue(name, out res) || res == null) {
                 _modules[name] = res = new ModuleReference(GetBuiltinModule(_interpreter.ImportModule(name)));
+                firstImport = true;
             }
             if (res != null && res.Module == null) {
                 res.Module = GetBuiltinModule(_interpreter.ImportModule(name));
+            }
+            if (firstImport && res != null && res.Module != null) {
+                _analyzer.DoDelayedSpecialization(name);
             }
             return res != null && res.Module != null;
         }
@@ -166,6 +204,7 @@ namespace Microsoft.PythonTools.Analysis {
                         var mod = value as IModule;
                         if (mod != null) {
                             _modules[fullname] = new ModuleReference(mod);
+                            _analyzer.DoDelayedSpecialization(fullname);
                         }
                     }
                 }
@@ -331,7 +370,7 @@ namespace Microsoft.PythonTools.Analysis {
                 ModuleInfo modInfo = Module as ModuleInfo;
                 if (modInfo != null) {
                     VariableDef varDef;
-                    if (modInfo.Scope.Variables.TryGetValue(name, out varDef) &&
+                    if (modInfo.Scope.TryGetVariable(name, out varDef) &&
                         varDef.VariableStillExists) {
                         var types = varDef.TypesNoCopy;
                         if (types.Count > 0) {

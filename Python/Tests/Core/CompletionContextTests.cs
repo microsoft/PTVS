@@ -1013,12 +1013,8 @@ def func(a):
 
             var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version.ToVersion());
             var taskProvider = new TaskProvider(null, new MockErrorProviderFactory());
-            var originalTaskProvider = VsProjectAnalyzer.ReplaceTaskProviderForTests(new Lazy<TaskProvider>(() => {
-                return taskProvider;
-            }));
-
-            var analyzer = new VsProjectAnalyzer(fact, new[] { fact });
-            try {
+            
+            using (var analyzer = new VsProjectAnalyzer(fact.CreateInterpreter(), fact, new[] { fact }, errorTaskProvider: taskProvider)) {
                 var buffer = new MockTextBuffer(code);
                 buffer.AddProperty(typeof(VsProjectAnalyzer), analyzer);
                 var classifierProvider = new PythonClassifierProvider(new MockContentTypeRegistryService());
@@ -1058,9 +1054,6 @@ def func(a):
                 var completions = context.GetCompletions(new MockGlyphService()).Completions
                     .Select(c => c.DisplayText).ToSet();
                 return completions;
-            } finally {
-                analyzer.Dispose();
-                VsProjectAnalyzer.ReplaceTaskProviderForTests(originalTaskProvider);
             }
         }
 
@@ -1081,9 +1074,7 @@ def func(a):
                 location = sourceCode.Length + location + 1;
             }
             var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(PythonLanguageVersion.V27.ToVersion());
-            using (var analyzer = new VsProjectAnalyzer(fact, new[] { fact })) {
-                return AnalyzeExpressionWorker(location, sourceCode, forCompletion, analyzer);
-            }
+            return AnalyzeExpressionWorker(location, sourceCode, forCompletion, fact);
         }
 
         private static List<object> AnalyzeQuickInfo(int location, string sourceCode, bool forCompletion = true) {
@@ -1091,27 +1082,22 @@ def func(a):
                 location = sourceCode.Length + location + 1;
             }
             var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(PythonLanguageVersion.V27.ToVersion());
-            using (var analyzer = new VsProjectAnalyzer(fact, new[] { fact })) {
-                var analysis = AnalyzeExpressionWorker(location, sourceCode, forCompletion, analyzer);
 
-                List<object> quickInfo = new List<object>();
-                ITrackingSpan span;
-                QuickInfoSource.AugmentQuickInfoWorker(
-                    analysis,
-                    quickInfo,
-                    out span);
+            var analysis = AnalyzeExpressionWorker(location, sourceCode, forCompletion, fact);
 
-                return quickInfo;
-            }
+            List<object> quickInfo = new List<object>();
+            ITrackingSpan span;
+            QuickInfoSource.AugmentQuickInfoWorker(
+                analysis,
+                quickInfo,
+                out span);
+
+            return quickInfo;
         }
 
-        private static ExpressionAnalysis AnalyzeExpressionWorker(int location, string sourceCode, bool forCompletion, VsProjectAnalyzer analyzer) {
+        private static ExpressionAnalysis AnalyzeExpressionWorker(int location, string sourceCode, bool forCompletion, IPythonInterpreterFactory fact) {
             var taskProvider = new TaskProvider(null, new MockErrorProviderFactory());
-            var originalTaskProvider = VsProjectAnalyzer.ReplaceTaskProviderForTests(new Lazy<TaskProvider>(() => {
-                return taskProvider;
-            }));
-
-            try {
+            using (var analyzer = new VsProjectAnalyzer(fact.CreateInterpreter(), fact, new[] { fact }, errorTaskProvider: taskProvider)) {
                 var buffer = new MockTextBuffer(sourceCode);
                 buffer.AddProperty(typeof(VsProjectAnalyzer), analyzer);
                 var classifierProvider = new PythonClassifierProvider(new MockContentTypeRegistryService());
@@ -1126,8 +1112,6 @@ def func(a):
                 var snapshot = (MockTextSnapshot)buffer.CurrentSnapshot;
                 analyzer.StopMonitoringTextBuffer(item.BufferParser, textView);
                 return snapshot.AnalyzeExpression(new MockTrackingSpan(snapshot, location, location == snapshot.Length ? 0 : 1), forCompletion);
-            } finally {
-                VsProjectAnalyzer.ReplaceTaskProviderForTests(originalTaskProvider);
             }
         }
 
@@ -1143,9 +1127,7 @@ def func(a):
                 location = sourceCode.Length + location + 1;
             }
             var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(PythonLanguageVersion.V27.ToVersion());
-            using (var analyzer = new VsProjectAnalyzer(fact, new[] { fact })) {
-                return GetCompletionsWorker(location, sourceCode, intersectMembers, analyzer);
-            }
+            return GetCompletionsWorker(location, sourceCode, intersectMembers, fact);
         }
 
         private static CompletionSet GetCompletionSet(int location, string sourceCode, bool intersectMembers = true, IPythonInterpreterFactory factory = null) {
@@ -1156,9 +1138,7 @@ def func(a):
             if (factory == null) {
                 factory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(PythonLanguageVersion.V27.ToVersion());
             }
-            using (var analyzer = new VsProjectAnalyzer(factory, new[] { factory })) {
-                return GetCompletionsWorker(location, sourceCode, intersectMembers, analyzer).GetCompletions(new MockGlyphService());
-            }
+            return GetCompletionsWorker(location, sourceCode, intersectMembers, factory).GetCompletions(new MockGlyphService());
         }
 
         /// <summary>
@@ -1177,13 +1157,9 @@ def func(a):
             }
         }
 
-        private static CompletionAnalysis GetCompletionsWorker(int location, string sourceCode, bool intersectMembers, VsProjectAnalyzer analyzer) {
+        private static CompletionAnalysis GetCompletionsWorker(int location, string sourceCode, bool intersectMembers, IPythonInterpreterFactory fact) {
             var taskProvider = new TaskProvider(null, new MockErrorProviderFactory());
-            var originalTaskProvider = VsProjectAnalyzer.ReplaceTaskProviderForTests(new Lazy<TaskProvider>(() => {
-                return taskProvider;
-            }));
-
-            try {
+            using (var analyzer = new VsProjectAnalyzer(fact.CreateInterpreter(), fact, new[] { fact }, errorTaskProvider: taskProvider)) {
                 var buffer = new MockTextBuffer(sourceCode);
                 buffer.AddProperty(typeof(VsProjectAnalyzer), analyzer);
                 var classifierProvider = new PythonClassifierProvider(new MockContentTypeRegistryService());
@@ -1214,8 +1190,6 @@ def func(a):
                 );
 #pragma warning restore 618
                 return context;
-            } finally {
-                VsProjectAnalyzer.ReplaceTaskProviderForTests(originalTaskProvider);
             }
         }
 
@@ -1231,12 +1205,7 @@ def func(a):
             var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version.ToVersion());
 
             var taskProvider = new TaskProvider(null, new MockErrorProviderFactory());
-            var originalTaskProvider = VsProjectAnalyzer.ReplaceTaskProviderForTests(new Lazy<TaskProvider>(() => {
-                return taskProvider;
-            }));
-
-            var analyzer = new VsProjectAnalyzer(fact, new[] { fact });
-            try {
+            using (var analyzer = new VsProjectAnalyzer(fact.CreateInterpreter(), fact, new[] { fact }, errorTaskProvider: taskProvider)) {
                 var buffer = new MockTextBuffer(sourceCode);
                 buffer.AddProperty(typeof(VsProjectAnalyzer), analyzer);
                 var classifierProvider = new PythonClassifierProvider(new MockContentTypeRegistryService());
@@ -1258,9 +1227,6 @@ def func(a):
                 sigs = snapshot.GetSignatures(new MockTrackingSpan(snapshot, location, 1));
                 Assert.AreEqual(expectedExpression, sigs.Text, sourceCode);
                 Assert.AreEqual(paramIndex, sigs.ParameterIndex, sourceCode);
-            } finally {
-                analyzer.Dispose();
-                VsProjectAnalyzer.ReplaceTaskProviderForTests(originalTaskProvider);
             }
         }
 

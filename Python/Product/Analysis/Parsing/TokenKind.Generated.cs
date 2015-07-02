@@ -80,7 +80,7 @@ namespace Microsoft.PythonTools.Parsing {
         At = 75,
 
         FirstKeyword = KeywordAnd,
-        LastKeyword = KeywordWith,
+        LastKeyword = KeywordNonlocal,
         KeywordAnd = 76,
         KeywordAssert = 77,
         KeywordBreak = 78,
@@ -120,8 +120,8 @@ namespace Microsoft.PythonTools.Parsing {
 
         #endregion
 
-        NLToken,
-        ExplicitLineJoin
+        NLToken = 110,
+        ExplicitLineJoin = 111
     }
 
     internal static class Tokens {

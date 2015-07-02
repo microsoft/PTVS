@@ -70,7 +70,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             scope.UpdateParameters(this, callArgs, false, originalUnit.Scope as FunctionScope);
             _scope = scope;
 
-            var walker = new OverviewWalker(originalUnit.ProjectEntry, this);
+            var walker = new OverviewWalker(_originalUnit.ProjectEntry, this, Tree);
             if (Ast.Body != null) {
                 Ast.Body.Walk(walker);
             }
@@ -120,6 +120,13 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             }
         }
 
+        public IEnumerable<IAnalysisSet> ReturnValueTypes {
+            get {
+                var rv = ReturnValue;
+                return rv.TypesNoCopy.AsLockedEnumerable(rv);
+            }
+        }
+
         internal void ProcessFunctionDecorators(DDG ddg) {
             if (Ast.Decorators != null) {
                 var types = Function.SelfSet;
@@ -161,7 +168,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                     firstParam = Function.IsClassMethod ? clsScope.Class.SelfSet : clsScope.Class.Instance.SelfSet;
                 }
 
-                if (Scope.Variables.TryGetValue(Ast.Parameters[0].Name, out param)) {
+                if (Scope.TryGetVariable(Ast.Parameters[0].Name, out param)) {
                     param.AddTypes(this, firstParam, false);
                 }
             }
@@ -174,7 +181,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 ddg._eval.EvaluateMaybeNull(p.Annotation);
 
                 if (p.DefaultValue != null && p.Kind != ParameterKind.List && p.Kind != ParameterKind.Dictionary &&
-                    Scope.Variables.TryGetValue(p.Name, out param)) {
+                    Scope.TryGetVariable(p.Name, out param)) {
                     var val = ddg._eval.Evaluate(p.DefaultValue);
                     if (val != null) {
                         param.AddTypes(this, val, false);
@@ -188,7 +195,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             return string.Format("{0}{1}({2})->{3}",
                 base.ToString(),
                 _originalUnit == null ? " def:" : "",
-                string.Join(", ", Ast.Parameters.Select(p => Scope.Variables[p.Name].TypesNoCopy.ToString())),
+                string.Join(", ", Ast.Parameters.Select(p => Scope.GetVariable(p.Name).TypesNoCopy.ToString())),
                 ((FunctionScope)Scope).ReturnValue.TypesNoCopy.ToString()
             );
         }

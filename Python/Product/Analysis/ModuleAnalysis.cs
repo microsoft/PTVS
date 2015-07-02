@@ -24,6 +24,7 @@ using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Analysis {
     /// <summary>
@@ -36,6 +37,9 @@ namespace Microsoft.PythonTools.Analysis {
         private readonly InterpreterScope _scope;
         private readonly IAnalysisCookie _cookie;
         private static Regex _otherPrivateRegex = new Regex("^_[a-zA-Z_]\\w*__[a-zA-Z_]\\w*$");
+
+        private static readonly IEnumerable<IOverloadResult> GetSignaturesError =
+            new[] { new SimpleOverloadResult(new ParameterResult[0], "Unknown", "IntellisenseError_Sigs") };
 
         internal ModuleAnalysis(AnalysisUnit unit, InterpreterScope scope, IAnalysisCookie cookie) {
             _unit = unit;
@@ -136,7 +140,7 @@ namespace Microsoft.PythonTools.Analysis {
             NameExpression name = expr as NameExpression;
             if (name != null) {
                 var defScope = scope.EnumerateTowardsGlobal.FirstOrDefault(s =>
-                    s.Variables.ContainsKey(name.Name) && (s == scope || s.VisibleToChildren || IsFirstLineOfFunction(scope, s, index)));
+                    s.ContainsVariable(name.Name) && (s == scope || s.VisibleToChildren || IsFirstLineOfFunction(scope, s, index)));
 
                 if (defScope == null) {
                     var variables = _unit.ProjectState.BuiltinModule.GetDefinitions(name.Name);
@@ -147,7 +151,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             MemberExpression member = expr as MemberExpression;
-            if (member != null) {
+            if (member != null && !string.IsNullOrEmpty(member.Name)) {
                 var eval = new ExpressionEvaluator(unit.CopyForEval(), scope, mergeScopes: true);
                 var objects = eval.Evaluate(member.Target);
 
@@ -169,10 +173,7 @@ namespace Microsoft.PythonTools.Analysis {
 
             // if a variable is imported from another module then also yield the defs/refs for the 
             // value in the defining module.
-            var linked = scope.GetLinkedVariablesNoCreate(name.Name);
-            if (linked != null) {
-                result.AddRange(linked.SelectMany(ToVariables));
-            }
+            result.AddRange(scope.GetLinkedVariables(name.Name).SelectMany(ToVariables));
 
             var classScope = scope as ClassScope;
             if (classScope != null) {
@@ -203,6 +204,10 @@ namespace Microsoft.PythonTools.Analysis {
             return result;
         }
 
+        /// <summary>
+        /// Gets the list of modules known by the current analysis.
+        /// </summary>
+        /// <param name="topLevelOnly">Only return top-level modules.</param>
         public MemberResult[] GetModules(bool topLevelOnly = false) {
             List<MemberResult> res = new List<MemberResult>(ProjectState.GetModules(topLevelOnly));
 
@@ -215,15 +220,26 @@ namespace Microsoft.PythonTools.Analysis {
             return res.ToArray();
         }
 
+        /// <summary>
+        /// Gets the list of modules and members matching the provided names.
+        /// </summary>
+        /// <param name="names">The dotted name parts to match</param>
+        /// <param name="includeMembers">Include module members that match as
+        /// well as just modules.</param>
         public MemberResult[] GetModuleMembers(string[] names, bool includeMembers = false) {
             var res = new List<MemberResult>(ProjectState.GetModuleMembers(InterpreterContext, names, includeMembers));
             var children = GlobalScope.GetChildrenPackages(InterpreterContext);
 
             foreach (var child in children) {
                 var mod = (ModuleInfo)child.Value;
-                var childName = mod.Name.Substring(this.GlobalScope.Name.Length + 1);
 
-                if (childName.StartsWith(names[0])) {
+                if (string.IsNullOrEmpty(mod.Name)) {
+                    // Module does not have an importable name
+                    continue;
+                }
+
+                var childName = mod.Name.Split('.');
+                if (childName.Length >= 2 && childName[0] == GlobalScope.Name && childName[1] == names[0]) {
                     res.AddRange(PythonAnalyzer.GetModuleMembers(InterpreterContext, names, includeMembers, mod as IModule));
                 }
             }
@@ -331,9 +347,12 @@ namespace Microsoft.PythonTools.Analysis {
 
                     return result;
                 }
-            } catch (Exception) {
-                // TODO: log exception
-                return new[] { new SimpleOverloadResult(new ParameterResult[0], "Unknown", "IntellisenseError_Sigs") };
+            } catch (Exception ex) {
+                if (ex.IsCriticalException()) {
+                    throw;
+                }
+                Debug.Fail(ex.ToString());
+                return GetSignaturesError;
             }
         }
 
@@ -364,7 +383,7 @@ namespace Microsoft.PythonTools.Analysis {
             try {
                 var result = new List<IOverloadResult>();
 
-                var scope = FindScope(index, useIndent: true);
+                var scope = FindScope(index);
                 var cls = scope as ClassScope;
                 if (cls == null) {
                     return result;
@@ -431,7 +450,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// </summary>
         /// <param name="index">The 0-based absolute index into the file where the available mebmers should be looked up.</param>
         public IEnumerable<MemberResult> GetAllAvailableMembersByIndex(int index, GetMemberOptions options = GetMemberOptions.IntersectMultipleResults) {
-            var result = new Dictionary<string, List<AnalysisValue>>();
+            var result = new Dictionary<string, IEnumerable<AnalysisValue>>();
 
             // collect builtins
             foreach (var variable in ProjectState.BuiltinModule.GetAllMembers(ProjectState._defaultContext)) {
@@ -536,8 +555,8 @@ namespace Microsoft.PythonTools.Analysis {
                 return SingleMemberResult(GetPrivatePrefix(scope), options, newMembers);
             }
 
-            Dictionary<string, List<AnalysisValue>> memberDict = null;
-            Dictionary<string, List<AnalysisValue>> ownerDict = null;
+            Dictionary<string, IEnumerable<AnalysisValue>> memberDict = null;
+            Dictionary<string, IEnumerable<AnalysisValue>> ownerDict = null;
             HashSet<string> memberSet = null;
             int namespacesCount = namespaces.Count;
             foreach (AnalysisValue ns in namespaces) {
@@ -555,8 +574,8 @@ namespace Microsoft.PythonTools.Analysis {
                 if (memberSet == null) {
                     // first namespace, add everything
                     memberSet = new HashSet<string>(newMembers.Keys);
-                    memberDict = new Dictionary<string, List<AnalysisValue>>();
-                    ownerDict = new Dictionary<string, List<AnalysisValue>>();
+                    memberDict = new Dictionary<string, IEnumerable<AnalysisValue>>();
+                    ownerDict = new Dictionary<string, IEnumerable<AnalysisValue>>();
                     foreach (var kvp in newMembers) {
                         var tmp = new List<AnalysisValue>(kvp.Value);
                         memberDict[kvp.Key] = tmp;
@@ -589,15 +608,23 @@ namespace Microsoft.PythonTools.Analysis {
 
                     // update memberDict
                     foreach (var name in adding) {
-                        List<AnalysisValue> values;
+                        IEnumerable<AnalysisValue> values;
+                        List<AnalysisValue> valueList;
                         if (!memberDict.TryGetValue(name, out values)) {
                             memberDict[name] = values = new List<AnalysisValue>();
                         }
-                        values.AddRange(newMembers[name]);
+                        if ((valueList = values as List<AnalysisValue>) == null) {
+                            memberDict[name] = valueList = new List<AnalysisValue>(values);
+                        }
+                        valueList.AddRange(newMembers[name]);
+
                         if (!ownerDict.TryGetValue(name, out values)) {
                             ownerDict[name] = values = new List<AnalysisValue>();
                         }
-                        values.Add(ns);
+                        if ((valueList = values as List<AnalysisValue>) == null) {
+                            ownerDict[name] = valueList = new List<AnalysisValue>(values);
+                        }
+                        valueList.Add(ns);
                     }
 
                     if (toRemove != null) {
@@ -675,108 +702,134 @@ namespace Microsoft.PythonTools.Analysis {
         /// <summary>
         /// Gets the chain of scopes which are associated with the given position in the code.
         /// </summary>
-        private InterpreterScope FindScope(int index, bool useIndent = false) {
-            InterpreterScope curScope = Scope;
-            InterpreterScope prevScope = null;
-            var parent = _unit.Tree;
-
-            while (curScope != prevScope) {
-                prevScope = curScope;
-
-                // TODO: Binary search?
-                // We currently search backwards because the end positions are sometimes unreliable
-                // and go onto the next line overlapping w/ the previous definition.  Therefore searching backwards always 
-                // hits the valid method first matching on Start.  For example:
-                // def f():  # Starts on 1, ends on 3
-                //     pass
-                // def g():  # starts on 3, ends on 4
-                //     pass
-                int lastStart = curScope.GetStart(parent) - 1;
-
-                for (int i = curScope.Children.Count - 1; i >= 0; i--) {
-                    var scope = curScope.Children[i];
-                    var curStart = scope.GetBodyStart(parent);
-
-
-                    if (curStart < index) {
-                        var curEnd = scope.GetStop(parent);
-
-                        bool inScope = curEnd >= index;
-                        if (!inScope || useIndent) {
-                            // Artificially extend the scope up to the start of the following
-                            // child, but only if index is at an indentation that is not as
-                            // deep as the current child.
-                            int scopeIndent = int.MaxValue, indexIndent;
-                            if (scope.Node != null) {
-                                scopeIndent = scope.Node.GetStart(parent).Column;
-                            }
-
-                            if (index <= parent.EndIndex) {
-                                indexIndent = parent.IndexToLocation(index).Column;
-                            } else {
-                                // This implicitly includes one character for a newline.
-                                // When using CRLF, this may place the indent at one
-                                // character less than it should be, but this will only
-                                // affect scope resolution if the user is indenting by
-                                // one space instead of four.
-                                indexIndent = index - parent.EndIndex;
-                            }
-
-                            inScope = (inScope || i == curScope.Children.Count - 1 || index < lastStart) && indexIndent > scopeIndent;
-                        }
-
-                        if (inScope) {
-                            if (!(scope is StatementScope)) {
-                                curScope = scope;
-                            }
-                            break;
-                        }
-                    } else if (scope is FunctionScope) {
-                        var initialStart = scope.GetStart(parent);
-                        if (initialStart < curStart) {
-                            // we could be on a parameter or we could be on a default value.
-                            // If we're on a parameter then we're logically in the function
-                            // scope.  If we're on a default value then we're in the outer
-                            // scope.
-                            var funcDef = (FunctionDefinition)((FunctionScope)scope).Node;
-
-                            if (funcDef.Parameters != null) {
-                                bool isParam = false;
-                                foreach (var param in funcDef.Parameters) {
-                                    string paramName = param.GetVerbatimImage(_unit.Tree) ?? param.Name;
-                                    var nameStart = param.IndexSpan.Start;
-
-                                    if (index >= nameStart && index <= (nameStart + paramName.Length)) {
-                                        curScope = scope;
-                                        isParam = true;
-                                        break;
-                                    }
-
-                                }
-
-                                if (isParam) {
-                                    break;
-                                }
-                            }
-
-                        }
-                    }
-
-                    lastStart = scope.GetStart(parent);
-                }
-            }
-            return curScope;
+        private InterpreterScope FindScope(int index) {
+            var location = _unit.Tree.IndexToLocation(index);
+            var res = FindScope(Scope, _unit.Tree, location);
+            Debug.Assert(res != null, "Should never return null from FindScope");
+            return res;
         }
 
-        private static IEnumerable<MemberResult> MemberDictToResultList(string privatePrefix, GetMemberOptions options, Dictionary<string, List<AnalysisValue>> memberDict,
-            Dictionary<string, List<AnalysisValue>> ownerDict = null, int maximumOwners = 0) {
+        private static bool IsInFunctionParameter(InterpreterScope scope, PythonAst tree, SourceLocation location) {
+            var function = scope.Node as FunctionDefinition;
+            if (function == null) {
+                // Not a function
+                return false;
+            }
+
+            if (location.Index < function.StartIndex || location.Index >= function.Body.StartIndex) {
+                // Not within the def line
+                return false;
+            }
+
+            return function.Parameters != null &&
+                function.Parameters.Any(p => {
+                    var paramName = p.GetVerbatimImage(tree) ?? p.Name;
+                    return location.Index >= p.StartIndex && location.Index <= p.StartIndex + paramName.Length;
+                });
+        }
+
+        private static int GetParentScopeIndent(InterpreterScope scope, PythonAst tree) {
+            if (scope is ClassScope) {
+                // Return column of "class" statement
+                return tree.IndexToLocation(scope.GetStart(tree)).Column;
+            }
+
+            var function = scope as FunctionScope;
+            if (function != null && !((FunctionDefinition)function.Node).IsLambda) {
+                // Return column of "def" statement
+                return tree.IndexToLocation(scope.GetStart(tree)).Column;
+            }
+
+            var isinstance = scope as IsInstanceScope;
+            if (isinstance != null && isinstance._effectiveSuite != null) {
+                int col = tree.IndexToLocation(isinstance._startIndex).Column;
+                if (isinstance._effectiveSuite.StartIndex < isinstance._startIndex) {
+                    // "assert isinstance", so scope is before the test
+                    return col - 1;
+                } else {
+                    // "if isinstance", so scope is at the test
+                    return col;
+                }
+            }
+
+            return -1;
+        }
+
+        private static InterpreterScope FindScope(InterpreterScope parent, PythonAst tree, SourceLocation location) {
+            var children = parent.Children.Where(c => !(c is StatementScope)).ToList();
+
+            InterpreterScope candidate = null;
+
+            for (int i = 0; i < children.Count; ++i) {
+                if (IsInFunctionParameter(children[i], tree, location)) {
+                    // In parameter name scope, so consider the function scope.
+                    candidate = children[i];
+                    continue;
+                }
+
+                int start = children[i].GetBodyStart(tree);
+
+                if (start > location.Index) {
+                    // We've gone past index completely so our last candidate is
+                    // the best one.
+                    break;
+                }
+
+                int end = children[i].GetStop(tree);
+                if (i + 1 < children.Count) {
+                    int nextStart = children[i + 1].GetStart(tree);
+                    if (nextStart > end) {
+                        end = nextStart;
+                    }
+                }
+
+                if (location.Index <= end || (candidate == null && i + 1 == children.Count)) {
+                    candidate = children[i];
+                }
+            }
+
+            if (candidate == null) {
+                // No children, so we must belong in our parent
+                return parent;
+            }
+
+            int scopeIndent = GetParentScopeIndent(candidate, tree);
+            if (location.Column <= scopeIndent) {
+                // Candidate is at deeper indentation than location and the
+                // candidate is scoped, so return the parent instead.
+                return parent;
+            }
+
+            // Recurse to check children of candidate scope
+            var child = FindScope(candidate, tree, location);
+
+            var funcChild = child as FunctionScope;
+            if (funcChild != null &&
+                funcChild.Function.FunctionDefinition.IsLambda &&
+                child.GetStop(tree) < location.Index) {
+                // Do not want to extend a lambda function's scope to the end of
+                // the parent scope.
+                return parent;
+            }
+
+            return child;
+        }
+
+
+        private static IEnumerable<MemberResult> MemberDictToResultList(
+            string privatePrefix,
+            GetMemberOptions options,
+            Dictionary<string, IEnumerable<AnalysisValue>> memberDict,
+            Dictionary<string, IEnumerable<AnalysisValue>> ownerDict = null,
+            int maximumOwners = 0
+        ) {
             foreach (var kvp in memberDict) {
                 string name = GetMemberName(privatePrefix, options, kvp.Key);
                 string completion = name;
                 if (name != null) {
-                    List<AnalysisValue> owners;
+                    IEnumerable<AnalysisValue> owners;
                     if (ownerDict != null && ownerDict.TryGetValue(kvp.Key, out owners) &&
-                        owners.Count >= 1 && owners.Count < maximumOwners) {
+                        owners.Any() && owners.Count() < maximumOwners) {
                         // This member came from less than the full set of types.
                         var seenNames = new HashSet<string>();
                         var newName = new StringBuilder(name);

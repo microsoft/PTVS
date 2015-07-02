@@ -22,11 +22,13 @@ using System.Linq;
 using System.Numerics;
 using System.Security;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.PyAnalysis;
+using Microsoft.VisualStudioTools;
 using Microsoft.Win32;
 
 namespace Microsoft.PythonTools.Analysis {
@@ -35,6 +37,7 @@ namespace Microsoft.PythonTools.Analysis {
     /// </summary>
     public partial class PythonAnalyzer : IGroupableAnalysisProject, IDisposable {
         private readonly IPythonInterpreter _interpreter;
+        private readonly bool _disposeInterpreter;
         private readonly IPythonInterpreterFactory _interpreterFactory;
         private readonly ModuleTable _modules;
         private readonly ConcurrentDictionary<string, ModuleInfo> _modulesByFilename;
@@ -52,24 +55,74 @@ namespace Microsoft.PythonTools.Analysis {
         private readonly PythonLanguageVersion _langVersion;
         internal readonly AnalysisUnit _evalUnit;   // a unit used for evaluating when we don't otherwise have a unit available
         private readonly HashSet<string> _analysisDirs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        private Dictionary<string, List<SpecializationInfo>> _specializationInfo = new Dictionary<string, List<SpecializationInfo>>();  // delayed specialization information, for modules not yet loaded...
+        private readonly Dictionary<string, List<SpecializationInfo>> _specializationInfo = new Dictionary<string, List<SpecializationInfo>>();  // delayed specialization information, for modules not yet loaded...
         private AnalysisLimits _limits;
         private static object _nullKey = new object();
+        private readonly SemaphoreSlim _reloadLock = new SemaphoreSlim(1, 1);
 
         private const string AnalysisLimitsKey = @"Software\Microsoft\PythonTools\" + AssemblyVersionInfo.VSVersion +
             @"\Analysis\Project";
 
+        /// <summary>
+        /// Creates a new analyzer that is ready for use.
+        /// </summary>
+        public static async Task<PythonAnalyzer> CreateAsync(
+            IPythonInterpreterFactory factory,
+            IPythonInterpreter interpreter = null
+        ) {
+            var res = new PythonAnalyzer(factory, interpreter, null);
+
+            try {
+                await res.ReloadModulesAsync();
+                var r = res;
+                res = null;
+                return r;
+            } finally {
+                if (res != null) {
+                    res.Dispose();
+                }
+            }
+        }
+
+        // Test helper method
+        internal static PythonAnalyzer CreateSynchronously(
+            IPythonInterpreterFactory factory,
+            IPythonInterpreter interpreter = null,
+            string builtinName = null
+        ) {
+            var res = new PythonAnalyzer(factory, interpreter, null);
+            try {
+                res.ReloadModulesAsync().GetAwaiter().GetResult();
+                var r = res;
+                res = null;
+                return r;
+            } finally {
+                if (res != null) {
+                    res.Dispose();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Creates a new analyzer that is not ready for use. You must call and
+        /// wait for <see cref="ReloadModulesAsync"/> to complete before using.
+        /// </summary>
+        public static PythonAnalyzer Create(IPythonInterpreterFactory factory, IPythonInterpreter interpreter = null) {
+            return new PythonAnalyzer(factory, interpreter, null);
+        }
+
+        // HACK: Suppress warning for 2.1 build
+        //[Obsolete("Use CreateAsync instead")]
         public PythonAnalyzer(IPythonInterpreterFactory factory, IPythonInterpreter interpreter = null)
-            : this(factory, interpreter ?? factory.CreateInterpreter(), null) {
+            : this(factory, interpreter, null) {
+            ReloadModulesAsync().GetAwaiter().GetResult();
         }
 
         internal PythonAnalyzer(IPythonInterpreterFactory factory, IPythonInterpreter pythonInterpreter, string builtinName) {
-            if (pythonInterpreter == null) {
-                throw new ArgumentNullException("pythonInterpreter");
-            }
             _interpreterFactory = factory;
             _langVersion = factory.GetLanguageVersion();
-            _interpreter = pythonInterpreter;
+            _disposeInterpreter = pythonInterpreter == null;
+            _interpreter = pythonInterpreter ?? factory.CreateInterpreter();
             _builtinName = builtinName ?? (_langVersion.Is3x() ? SharedDatabaseState.BuiltinName3x : SharedDatabaseState.BuiltinName2x);
             _modules = new ModuleTable(this, _interpreter);
             _modulesByFilename = new ConcurrentDictionary<string, ModuleInfo>(StringComparer.OrdinalIgnoreCase);
@@ -90,31 +143,64 @@ namespace Microsoft.PythonTools.Analysis {
 
             _queue = new Deque<AnalysisUnit>();
 
-            LoadKnownTypes();
-
-            pythonInterpreter.Initialize(this);
-
             _defaultContext = _interpreter.CreateModuleContext();
 
             _evalUnit = new AnalysisUnit(null, null, new ModuleInfo("$global", new ProjectEntry(this, "$global", String.Empty, null), _defaultContext).Scope, true);
             AnalysisLog.NewUnit(_evalUnit);
+
+            LoadInitialKnownTypes();
         }
 
-        private void LoadKnownTypes() {
+        private void LoadInitialKnownTypes() {
+            if (_builtinModule != null) {
+                Debug.Fail("LoadInitialKnownTypes should only be called once");
+                return;
+            }
+
+            var fallbackDb = PythonTypeDatabase.CreateDefaultTypeDatabase(LanguageVersion.ToVersion());
+            _builtinModule = _modules.GetBuiltinModule(fallbackDb.GetModule(SharedDatabaseState.BuiltinName2x));
+
+            FinishLoadKnownTypes(fallbackDb);
+        }
+
+        private async Task LoadKnownTypesAsync() {
             _itemCache.Clear();
 
-            ModuleReference moduleRef;
-            if (Modules.TryImport(_builtinName, out moduleRef)) {
+            Debug.Assert(_builtinModule != null, "LoadInitialKnownTypes was not called");
+            if (_builtinModule == null) {
+                LoadInitialKnownTypes();
+            }
+
+            var moduleRef = await Modules.TryImportAsync(_builtinName);
+
+            if (moduleRef != null) {
                 _builtinModule = (BuiltinModule)moduleRef.Module;
             } else {
-                var fallbackDb = PythonTypeDatabase.CreateDefaultTypeDatabase(LanguageVersion.ToVersion());
-                _builtinModule = _modules.GetBuiltinModule(fallbackDb.GetModule(SharedDatabaseState.BuiltinName2x));
                 Modules[_builtinName] = new ModuleReference(_builtinModule);
             }
 
-            Types = new KnownTypes(this);
-            ClassInfos = (IKnownClasses)Types;
+            FinishLoadKnownTypes(null);
 
+            var sysModule = await _modules.TryImportAsync("sys");
+            if (sysModule != null) {
+                var bm = sysModule.AnalysisModule as BuiltinModule;
+                if (bm != null) {
+                    sysModule.Module = new SysModuleInfo(bm);
+                }
+            }
+        }
+
+        private void FinishLoadKnownTypes(PythonTypeDatabase db) {
+            _itemCache.Clear();
+
+            if (db == null) {
+                db = PythonTypeDatabase.CreateDefaultTypeDatabase(LanguageVersion.ToVersion());
+                Types = KnownTypes.Create(this, db);
+            } else {
+                Types = KnownTypes.CreateDefault(this, db);
+            }
+
+            ClassInfos = (IKnownClasses)Types;
             _noneInst = (ConstantInfo)GetCached(_nullKey, () => new ConstantInfo(ClassInfos[BuiltinTypeId.NoneType], (object)null));
 
             DoNotUnionInMro = AnalysisSet.Create(new AnalysisValue[] {
@@ -123,14 +209,6 @@ namespace Microsoft.PythonTools.Analysis {
             });
 
             AddBuiltInSpecializations();
-
-            ModuleReference sysModule;
-            if (_modules.TryImport("sys", out sysModule)) {
-                var bm = sysModule.AnalysisModule as BuiltinModule;
-                if (bm != null) {
-                    sysModule.Module = new SysModuleInfo(bm);
-                }
-            }
         }
 
         /// <summary>
@@ -139,14 +217,27 @@ namespace Microsoft.PythonTools.Analysis {
         /// This method should be called on the analysis thread and is usually invoked
         /// when the interpreter signals that it's modules have changed.
         /// </summary>
-        public void ReloadModules() {
-            _modules.ReInit();
-            LoadKnownTypes();
+        public async Task ReloadModulesAsync() {
+            if (!_reloadLock.Wait(0)) {
+                // If we don't lock immediately, wait for the current reload to
+                // complete and then return.
+                await _reloadLock.WaitAsync();
+                _reloadLock.Release();
+                return;
+            }
 
-            _interpreter.Initialize(this);
+            try {
+                _modules.ReInit();
 
-            foreach (var mod in _modulesByFilename.Values) {
-                mod.Clear();
+                await LoadKnownTypesAsync();
+
+                _interpreter.Initialize(this);
+
+                foreach (var mod in _modulesByFilename.Values) {
+                    mod.Clear();
+                }
+            } finally {
+                _reloadLock.Release();
             }
         }
 
@@ -657,6 +748,14 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
+        /// <summary>
+        /// Returns the cached value for the provided key, creating it with
+        /// <paramref name="maker"/> if necessary. If <paramref name="maker"/>
+        /// attempts to get the same value, returns <c>null</c>.
+        /// </summary>
+        /// <param name="key">The identifier for the cached value.</param>
+        /// <param name="maker">Function to create the value.</param>
+        /// <returns>The cached value or <c>null</c>.</returns>
         internal AnalysisValue GetCached(object key, Func<AnalysisValue> maker) {
             AnalysisValue result;
             if (!_itemCache.TryGetValue(key, out result)) {
@@ -678,7 +777,7 @@ namespace Microsoft.PythonTools.Analysis {
         internal BuiltinClassInfo GetBuiltinType(IPythonType type) {
             return (BuiltinClassInfo)GetCached(type,
                 () => MakeBuiltinType(type)
-            );
+            ) ?? ClassInfos[BuiltinTypeId.Object];
         }
 
         private BuiltinClassInfo MakeBuiltinType(IPythonType type) {
@@ -722,7 +821,7 @@ namespace Microsoft.PythonTools.Analysis {
                 return GetBuiltinType((IPythonType)attr);
             } else if (attr is IPythonFunction) {
                 var bf = (IPythonFunction)attr;
-                return GetCached(attr, () => new BuiltinFunctionInfo(bf, this));
+                return GetCached(attr, () => new BuiltinFunctionInfo(bf, this)) ?? _noneInst;
             } else if (attr is IPythonMethodDescriptor) {
                 return GetCached(attr, () => {
                     var md = (IPythonMethodDescriptor)attr;
@@ -731,13 +830,13 @@ namespace Microsoft.PythonTools.Analysis {
                     } else {
                         return new BuiltinMethodInfo(md, this);
                     }
-                });
+                }) ?? _noneInst;
             } else if (attr is IBuiltinProperty) {
-                return GetCached(attr, () => new BuiltinPropertyInfo((IBuiltinProperty)attr, this));
+                return GetCached(attr, () => new BuiltinPropertyInfo((IBuiltinProperty)attr, this)) ?? _noneInst;
             } else if (attr is IPythonModule) {
                 return _modules.GetBuiltinModule((IPythonModule)attr);
             } else if (attr is IPythonEvent) {
-                return GetCached(attr, () => new BuiltinEventInfo((IPythonEvent)attr, this));
+                return GetCached(attr, () => new BuiltinEventInfo((IPythonEvent)attr, this)) ?? _noneInst;
             } else if (attr is IPythonConstant) {
                 return GetConstant((IPythonConstant)attr).First();
             } else if (attrType == typeof(bool) || attrType == typeof(int) || attrType == typeof(Complex) ||
@@ -751,7 +850,7 @@ namespace Microsoft.PythonTools.Analysis {
                 var members = multMembers.Members;
                 return GetCached(attr, () =>
                     MultipleMemberInfo.Create(members.Select(GetAnalysisValueFromObjects)).FirstOrDefault() ??
-                        GetBuiltinType(Types[BuiltinTypeId.NoneType]).Instance
+                        ClassInfos[BuiltinTypeId.NoneType].Instance
                 );
             } else {
                 var pyAttrType = GetTypeFromObject(attr);
@@ -780,12 +879,12 @@ namespace Microsoft.PythonTools.Analysis {
 
         internal IAnalysisSet GetConstant(IPythonConstant value) {
             object key = value ?? _nullKey;
-            return GetCached(key, () => new ConstantInfo(value, this)).SelfSet;
+            return GetCached(key, () => new ConstantInfo(value, this)) ?? _noneInst;
         }
 
         internal IAnalysisSet GetConstant(object value) {
             object key = value ?? _nullKey;
-            return GetCached(key, () => new ConstantInfo(value, this)).SelfSet;
+            return GetCached(key, () => new ConstantInfo(value, this)) ?? _noneInst;
         }
 
         private static void Update<K, V>(IDictionary<K, V> dict, IDictionary<K, V> newValues) {
@@ -833,6 +932,12 @@ namespace Microsoft.PythonTools.Analysis {
             if (cancel.IsCancellationRequested) {
                 return;
             }
+
+            if (_builtinModule == null) {
+                Debug.Fail("Used analyzer without reloading modules");
+                ReloadModulesAsync().GetAwaiter().GetResult();
+            }
+
             var ddg = new DDG();
             ddg.Analyze(Queue, cancel, _reportQueueSize, _reportQueueInterval);
             foreach (var entry in ddg.AnalyzedEntries) {
@@ -904,7 +1009,7 @@ namespace Microsoft.PythonTools.Analysis {
         protected virtual void Dispose(bool disposing) {
             if (disposing) {
                 IDisposable interpreter = _interpreter as IDisposable;
-                if (interpreter != null) {
+                if (_disposeInterpreter && interpreter != null) {
                     interpreter.Dispose();
                 }
             }

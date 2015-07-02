@@ -42,6 +42,10 @@ namespace Microsoft.PythonTools.Parsing {
             return (((int)version >> 8) & 0xff) == 3;
         }
 
+        public static bool IsNone(this PythonLanguageVersion version) {
+            return version == PythonLanguageVersion.None;
+        }
+
         public static Version ToVersion(this PythonLanguageVersion version) {
             return new Version(((int)version) >> 8, ((int)version) & 0xff);
         }

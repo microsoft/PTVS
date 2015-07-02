@@ -16,20 +16,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using System.Threading;
 using System.Threading.Tasks;
-using IronPython.Hosting;
 using Microsoft.PythonTools;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
-using Microsoft.Scripting.Hosting;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Tagging;
-using Microsoft.VisualStudio.Utilities;
-using Microsoft.VisualStudioTools.Project;
 using TestUtilities;
 using TestUtilities.Mocks;
 using TestUtilities.Python;
@@ -37,9 +31,6 @@ using TestUtilities.Python;
 namespace PythonToolsTests {
     [TestClass]
     public class SquiggleTests {
-        public static IContentType PythonContentType = new MockContentType("Python", new IContentType[0]);
-        public static ScriptEngine PythonEngine = Python.CreateEngine();
-
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
@@ -70,38 +61,31 @@ namespace PythonToolsTests {
             var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version.ToVersion());
             var errorProvider = new MockErrorProviderFactory();
             var taskProvider = new TaskProvider(null, errorProvider);
-            var originalTaskProvider = VsProjectAnalyzer.ReplaceTaskProviderForTests(new Lazy<TaskProvider>(() => {
-                return taskProvider;
-            }));
 
-            try {
-                var analyzer = new VsProjectAnalyzer(fact, new[] { fact });
-                buffer.AddProperty(typeof(VsProjectAnalyzer), analyzer);
-                var classifierProvider = new PythonClassifierProvider(new MockContentTypeRegistryService());
-                classifierProvider._classificationRegistry = new MockClassificationTypeRegistryService();
-                classifierProvider.GetClassifier(buffer);
-                var textView = new MockTextView(buffer);
-                var monitoredBuffer = analyzer.MonitorTextBuffer(textView, buffer);
+            var analyzer = new VsProjectAnalyzer(fact.CreateInterpreter(), fact, new[] { fact }, errorTaskProvider: taskProvider);
+            buffer.AddProperty(typeof(VsProjectAnalyzer), analyzer);
+            var classifierProvider = new PythonClassifierProvider(new MockContentTypeRegistryService());
+            classifierProvider._classificationRegistry = new MockClassificationTypeRegistryService();
+            classifierProvider.GetClassifier(buffer);
+            var textView = new MockTextView(buffer);
+            var monitoredBuffer = analyzer.MonitorTextBuffer(textView, buffer);
 
-                var tcs = new TaskCompletionSource<object>();
-                buffer.GetPythonProjectEntry().OnNewAnalysis += (s, e) => tcs.SetResult(null);
-                await tcs.Task;
+            var tcs = new TaskCompletionSource<object>();
+            buffer.GetPythonProjectEntry().OnNewAnalysis += (s, e) => tcs.SetResult(null);
+            await tcs.Task;
 
-                var squiggles = errorProvider.GetErrorTagger(buffer);
-                var snapshot = buffer.CurrentSnapshot;
+            var squiggles = errorProvider.GetErrorTagger(buffer);
+            var snapshot = buffer.CurrentSnapshot;
                 
-                // Ensure all tasks have been updated
-                var time = await taskProvider.FlushAsync();
-                Console.WriteLine("TaskProvider.FlushAsync took {0}ms", time.TotalMilliseconds);
+            // Ensure all tasks have been updated
+            var time = await taskProvider.FlushAsync();
+            Console.WriteLine("TaskProvider.FlushAsync took {0}ms", time.TotalMilliseconds);
 
-                var spans = squiggles.GetTaggedSpans(new SnapshotSpan(snapshot, 0, snapshot.Length));
+            var spans = squiggles.GetTaggedSpans(new SnapshotSpan(snapshot, 0, snapshot.Length));
 
-                analyzer.StopMonitoringTextBuffer(monitoredBuffer.BufferParser, textView);
+            analyzer.StopMonitoringTextBuffer(monitoredBuffer.BufferParser, textView);
 
-                return spans;
-            } finally {
-                VsProjectAnalyzer.ReplaceTaskProviderForTests(originalTaskProvider);
-            }
+            return spans;
         }
 
         private static string FormatErrorTag(TrackingTagSpan<ErrorTag> tag) {

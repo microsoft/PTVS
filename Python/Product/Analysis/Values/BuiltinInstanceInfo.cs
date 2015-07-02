@@ -183,6 +183,23 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return res;
         }
 
+        public override IAnalysisSet GetEnumeratorTypes(Node node, AnalysisUnit unit) {
+            if (Push()) {
+                try {
+                    var iter = GetIterator(node, unit);
+                    if (iter.Any()) {
+                        return iter
+                            .GetMember(node, unit, unit.ProjectState.LanguageVersion.Is3x() ? "__next__" : "next")
+                            .Call(node, unit, ExpressionEvaluator.EmptySets, ExpressionEvaluator.EmptyNames);
+                    }
+                } finally {
+                    Pop();
+                }
+            }
+
+            return base.GetEnumeratorTypes(node, unit);
+        }
+
         internal override bool IsOfType(IAnalysisSet klass) {
             if (klass.Contains(this.ClassInfo)) {
                 return true;

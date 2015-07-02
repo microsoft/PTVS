@@ -29,11 +29,14 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
             LeftSeparator = RightSeparator = "";
         }
 
-        protected override ISensitiveFragmentSeparatorsInfo SeparatorInfo {
-            get {
-                return this;
-            }
-        }
+        // HACK: Does not build properly on Dev12
+        // However, since we are no longer releasing 2.1 for VS 2013, we can
+        // omit this here, which will let us keep building with VS 2013.
+        //protected override ISensitiveFragmentSeparatorsInfo SeparatorInfo {
+        //    get {
+        //        return this;
+        //    }
+        //}
 
         public string LeftSeparator { get; private set; }
 

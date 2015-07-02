@@ -30,10 +30,10 @@ namespace Microsoft.PythonTools.Intellisense {
     sealed class UnresolvedImportSquiggleProvider {
         // Allows test cases to skip checking user options
         internal static bool _alwaysCreateSquiggle;
+        private readonly TaskProvider _taskProvider;
 
-        private readonly Lazy<TaskProvider> _taskProvider;
+        public UnresolvedImportSquiggleProvider(TaskProvider taskProvider) {
 
-        public UnresolvedImportSquiggleProvider(Lazy<TaskProvider> taskProvider) {
             _taskProvider = taskProvider;
         }
 
@@ -46,6 +46,7 @@ namespace Microsoft.PythonTools.Intellisense {
         public void StopListening(IPythonProjectEntry entry) {
             if (entry != null) {
                 entry.OnNewAnalysis -= OnNewAnalysis;
+                _taskProvider.Clear(entry, VsProjectAnalyzer.UnresolvedImportMoniker);
             }
         }
 
@@ -86,7 +87,7 @@ namespace Microsoft.PythonTools.Intellisense {
             if (walker.Imports.Any()) {
                 var f = new TaskProviderItemFactory(snapshot);
 
-                _taskProvider.Value.ReplaceItems(
+                _taskProvider.ReplaceItems(
                     entry,
                     VsProjectAnalyzer.UnresolvedImportMoniker,
                     walker.Imports.Select(t => f.FromUnresolvedImport(
@@ -96,7 +97,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     )).ToList()
                 );
             } else {
-                _taskProvider.Value.Clear(entry, VsProjectAnalyzer.UnresolvedImportMoniker);
+                _taskProvider.Clear(entry, VsProjectAnalyzer.UnresolvedImportMoniker);
             }
         }
 

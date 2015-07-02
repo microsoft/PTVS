@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
@@ -26,6 +27,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         private PythonInterpreterFactoryWithDatabase _factory;
         private PythonTypeDatabase _typeDb;
         private HashSet<ProjectReference> _references;
+        private readonly object _referencesLock = new object();
 
         public CPythonInterpreter(PythonInterpreterFactoryWithDatabase factory) {
             _langVersion = factory.Configuration.Version;
@@ -35,27 +37,42 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         }
 
         private async void OnNewDatabaseAvailable(object sender, EventArgs e) {
-            _typeDb = _factory.GetCurrentDatabase();
-            
-            if (_references != null) {
+            var factory = _factory;
+            if (factory == null) {
+                // We have been disposed already, so ignore this event
+                return;
+            }
+
+            _typeDb = factory.GetCurrentDatabase();
+
+            List<ProjectReference> references = null;
+            lock (_referencesLock) {
+                references = _references != null ? _references.ToList() : null;
+            }
+            if (references != null) {
                 _typeDb = _typeDb.Clone();
-                foreach (var reference in _references) {
+                foreach (var reference in references) {
                     string modName;
                     try {
                         modName = Path.GetFileNameWithoutExtension(reference.Name);
                     } catch (ArgumentException) {
                         continue;
                     }
+
                     try {
                         await _typeDb.LoadExtensionModuleAsync(modName, reference.Name);
                     } catch (Exception ex) {
+                        if (ex.IsCriticalException()) {
+                            throw;
+                        }
+
                         try {
-                            Directory.CreateDirectory(_factory.DatabasePath);
+                            Directory.CreateDirectory(factory.DatabasePath);
                         } catch (IOException) {
                         } catch (UnauthorizedAccessException) {
                         }
-                        if (Directory.Exists(_factory.DatabasePath)) {
-                            var analysisLog = Path.Combine(_factory.DatabasePath, "AnalysisLog.txt");
+                        if (Directory.Exists(factory.DatabasePath)) {
+                            var analysisLog = Path.Combine(factory.DatabasePath, "AnalysisLog.txt");
                             for (int retries = 10; retries > 0; --retries) {
                                 try {
                                     File.AppendAllText(analysisLog, string.Format(
@@ -130,18 +147,25 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                 return MakeExceptionTask(new ArgumentNullException("reference"));
             }
 
-            if (_references == null) {
-                _references = new HashSet<ProjectReference>();
+            bool cloneDb = false;
+            lock (_referencesLock) {
+                if (_references == null) {
+                    _references = new HashSet<ProjectReference>();
+                    cloneDb = true;
+                }
+            }
+
+            if (cloneDb && _typeDb != null) {
                 // If we needed to set _references, then we also need to clone
                 // _typeDb to avoid adding modules to the shared database.
-                if (_typeDb != null) {
-                    _typeDb = _typeDb.Clone();
-                }
+                _typeDb = _typeDb.Clone();
             }
 
             switch (reference.Kind) {
                 case ProjectReferenceKind.ExtensionModule:
-                    _references.Add(reference);
+                    lock (_referencesLock) {
+                        _references.Add(reference);
+                    }
                     string filename;
                     try {
                         filename = Path.GetFileNameWithoutExtension(reference.Name);
@@ -163,7 +187,11 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         public void RemoveReference(ProjectReference reference) {
             switch (reference.Kind) {
                 case ProjectReferenceKind.ExtensionModule:
-                    if (_references != null && _references.Remove(reference) && _typeDb != null) {
+                    bool removed = false;
+                    lock (_referencesLock) {
+                        removed = _references != null && _references.Remove(reference);
+                    }
+                    if (removed && _typeDb != null) {
                         _typeDb.UnloadExtensionModule(Path.GetFileNameWithoutExtension(reference.Name));
                         RaiseModulesChanged(null);
                     }
@@ -194,12 +222,12 @@ namespace Microsoft.PythonTools.Interpreter.Default {
 
 
         public void Dispose() {
-            if (_typeDb != null) {
-                _typeDb = null;
-            }
-            if (_factory != null) {
-                _factory.NewDatabaseAvailable -= OnNewDatabaseAvailable;
-                _factory = null;
+            _typeDb = null;
+
+            var factory = _factory;
+            _factory = null;
+            if (factory != null) {
+                factory.NewDatabaseAvailable -= OnNewDatabaseAvailable;
             }
         }
     }

@@ -27,25 +27,20 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
         private readonly AnalysisValue _av;
         private readonly Node _node;
-        private readonly Dictionary<Node, InterpreterScope> _nodeScopes;
-        private readonly Dictionary<Node, IAnalysisSet> _nodeValues;
-        private readonly Dictionary<string, VariableDef> _variables;
-        private Dictionary<string, HashSet<VariableDef>> _linkedVariables;
+        private readonly AnalysisDictionary<Node, InterpreterScope> _nodeScopes;
+        private readonly AnalysisDictionary<Node, IAnalysisSet> _nodeValues;
+        private readonly AnalysisDictionary<string, VariableDef> _variables;
+        private readonly AnalysisDictionary<string, HashSet<VariableDef>> _linkedVariables;
 
         public InterpreterScope(AnalysisValue av, Node ast, InterpreterScope outerScope) {
             _av = av;
             _node = ast;
             OuterScope = outerScope;
 
-            _nodeScopes = new Dictionary<Node, InterpreterScope>();
-            _nodeValues = new Dictionary<Node, IAnalysisSet>();
-            _variables = new Dictionary<string, VariableDef>();
-
-#if DEBUG
-            NodeScopes = new ReadOnlyDictionary<Node, InterpreterScope>(_nodeScopes);
-            NodeValues = new ReadOnlyDictionary<Node, IAnalysisSet>(_nodeValues);
-            Variables = new ReadOnlyDictionary<string, VariableDef>(_variables);
-#endif
+            _nodeScopes = new AnalysisDictionary<Node, InterpreterScope>();
+            _nodeValues = new AnalysisDictionary<Node, IAnalysisSet>();
+            _variables = new AnalysisDictionary<string, VariableDef>();
+            _linkedVariables = new AnalysisDictionary<string, HashSet<VariableDef>>();
         }
 
         public InterpreterScope(AnalysisValue av, InterpreterScope outerScope)
@@ -58,16 +53,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             _nodeScopes = cloned._nodeScopes;
             _nodeValues = cloned._nodeValues;
             _variables = cloned._variables;
-            if (cloned._linkedVariables == null) {
-                // linkedVariables could be created later, and we need to share them if it.
-                cloned._linkedVariables = new Dictionary<string, HashSet<VariableDef>>();
-            }
             _linkedVariables = cloned._linkedVariables;
-#if DEBUG
-            NodeScopes = new ReadOnlyDictionary<Node, InterpreterScope>(_nodeScopes);
-            NodeValues = new ReadOnlyDictionary<Node, IAnalysisSet>(_nodeValues);
-            Variables = new ReadOnlyDictionary<string, VariableDef>(_variables);
-#endif
         }
 
         public InterpreterScope GlobalScope {
@@ -134,34 +120,31 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             }
         }
 
-#if DEBUG
-        public ReadOnlyDictionary<string, VariableDef> Variables {
-            get;
-            private set;
-        }
-
-        public ReadOnlyDictionary<Node, InterpreterScope> NodeScopes {
-            get;
-            private set;
-        }
-
-        public ReadOnlyDictionary<Node, IAnalysisSet> NodeValues {
-            get;
-            private set;
-        }
-#else
-        public IDictionary<string, VariableDef> Variables {
+        internal IEnumerable<KeyValuePair<string, VariableDef>> AllVariables {
             get { return _variables; }
         }
 
-        public IDictionary<Node, InterpreterScope> NodeScopes {
+        internal IEnumerable<KeyValuePair<Node, InterpreterScope>> AllNodeScopes {
             get { return _nodeScopes; }
         }
 
-        public IDictionary<Node, IAnalysisSet> NodeValues {
-            get { return _nodeValues; }
+        internal bool ContainsVariable(string name) {
+            return _variables.ContainsKey(name);
         }
-#endif
+
+        internal VariableDef GetVariable(string name) {
+            return _variables[name];
+        }
+
+        internal bool TryGetVariable(string name, out VariableDef value) {
+            return _variables.TryGetValue(name, out value);
+        }
+
+        internal int VariableCount {
+            get {
+                return _variables.Count;
+            }
+        }
 
         /// <summary>
         /// Assigns a variable in the given scope, creating the variable if necessary, and performing
@@ -188,7 +171,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
         public VariableDef AddLocatedVariable(string name, Node location, AnalysisUnit unit, ParameterKind paramKind = ParameterKind.Normal) {
             VariableDef value;
-            if (!Variables.TryGetValue(name, out value)) {
+            if (!TryGetVariable(name, out value)) {
                 VariableDef def;
                 switch (paramKind) {
                     case ParameterKind.List: def = new ListParameterVariableDef(unit, location); break;
@@ -222,13 +205,13 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
         public virtual VariableDef GetVariable(Node node, AnalysisUnit unit, string name, bool addRef = true) {
             VariableDef res;
-            if (_variables.TryGetValue(name, out res)) {
-                if (addRef) {
-                    res.AddReference(node, unit);
-                }
-                return res;
+            if (!_variables.TryGetValue(name, out res)) {
+                return null;
             }
-            return null;
+            if (addRef) {
+                res.AddReference(node, unit);
+            }
+            return res;
         }
 
         public virtual IEnumerable<KeyValuePair<string, VariableDef>> GetAllMergedVariables() {
@@ -237,7 +220,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
         public virtual IEnumerable<VariableDef> GetMergedVariables(string name) {
             VariableDef res;
-            if (_variables.TryGetValue(name, out res)) {
+            if (_variables.TryGetValue(name, out res) && res != null) {
                 yield return res;
             }
         }
@@ -278,7 +261,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         public virtual VariableDef AddVariable(string name, VariableDef variable = null) {
-            return _variables[name] = (variable ?? new VariableDef());
+            return _variables[name] = variable ?? new VariableDef();
         }
 
         internal virtual bool RemoveVariable(string name) {
@@ -286,11 +269,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         internal bool RemoveVariable(string name, out VariableDef value) {
-            if (_variables.TryGetValue(name, out value)) {
-                return _variables.Remove(name);
-            }
-            value = null;
-            return false;
+            return _variables.TryGetValue(name, out value) && _variables.Remove(name);
         }
 
         internal virtual void ClearVariables() {
@@ -334,28 +313,33 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         public void ClearLinkedVariables() {
-            if (_linkedVariables != null) {
-                _linkedVariables.Clear();
-            }
+            _linkedVariables.Clear();
         }
 
-        internal HashSet<VariableDef> GetLinkedVariables(string saveName) {
-            if (_linkedVariables == null) {
-                _linkedVariables = new Dictionary<string, HashSet<VariableDef>>();
-            }
+        internal bool AddLinkedVariable(string name, VariableDef variable) {
             HashSet<VariableDef> links;
-            if (!_linkedVariables.TryGetValue(saveName, out links)) {
-                _linkedVariables[saveName] = links = new HashSet<VariableDef>();
+            if (!_linkedVariables.TryGetValue(name, out links) || links == null) {
+                _linkedVariables[name] = links = new HashSet<VariableDef>();
             }
-            return links;
+            lock (links) {
+                return links.Add(variable);
+            }
         }
 
-        internal HashSet<VariableDef> GetLinkedVariablesNoCreate(string saveName) {
-            HashSet<VariableDef> linkedVars;
-            if (_linkedVariables == null || !_linkedVariables.TryGetValue(saveName, out linkedVars)) {
-                return null;
+        internal IEnumerable<VariableDef> GetLinkedVariables(string name) {
+            HashSet<VariableDef> links;
+            _linkedVariables.TryGetValue(name, out links);
+
+            if (links == null) {
+                return Enumerable.Empty<VariableDef>();
             }
-            return linkedVars;
+            return links.AsLockedEnumerable();
+        }
+
+        internal void AddReferenceToLinkedVariables(Node node, AnalysisUnit unit, string name) {
+            foreach (var linkedVar in GetLinkedVariables(name)) {
+                linkedVar.AddReference(node, unit);
+            }
         }
 
         internal bool TryGetNodeValue(Node node, out IAnalysisSet variable) {

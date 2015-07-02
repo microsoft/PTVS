@@ -81,7 +81,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext moduleContext) {
             var res = new Dictionary<string, IAnalysisSet>();
-            foreach (var kvp in _scope.Variables) {
+            foreach (var kvp in _scope.AllVariables) {
                 kvp.Value.ClearOldValues();
                 if (kvp.Value._dependencies.Count > 0) {
                     var types = kvp.Value.Types;
@@ -187,16 +187,16 @@ namespace Microsoft.PythonTools.Analysis.Values {
         private void SpecializeOneFunction(string name, CallDelegate callable, bool mergeOriginalAnalysis) {
             int lastIndex;
             VariableDef def;
-            if (Scope.Variables.TryGetValue(name, out def)) {
+            if (Scope.TryGetVariable(name, out def)) {
                 SpecializeVariableDef(def, callable, mergeOriginalAnalysis);
             } else if ((lastIndex = name.LastIndexOf('.')) != -1 &&
-                Scope.Variables.TryGetValue(name.Substring(0, lastIndex), out def)) {
+                Scope.TryGetVariable(name.Substring(0, lastIndex), out def)) {
                 var methodName = name.Substring(lastIndex + 1, name.Length - (lastIndex + 1));
                 foreach (var v in def.TypesNoCopy) {
                     ClassInfo ci = v as ClassInfo;
                     if (ci != null) {
                         VariableDef methodDef;
-                        if (ci.Scope.Variables.TryGetValue(methodName, out methodDef)) {
+                        if (ci.Scope.TryGetVariable(methodName, out methodDef)) {
                             SpecializeVariableDef(methodDef, callable, mergeOriginalAnalysis);
                         }
                     }
@@ -317,7 +317,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public IEnumerable<IReferenceable> GetDefinitions(string name) {
             VariableDef def;
-            if (_scope.Variables.TryGetValue(name, out def)) {
+            if (_scope.TryGetVariable(name, out def)) {
                 yield return def;
             }
         }
@@ -331,14 +331,14 @@ namespace Microsoft.PythonTools.Analysis.Values {
             ModuleDefinition.AddDependency(unit);
 
             if (linkedScope != null) {
-                linkedScope.GetLinkedVariables(linkedName ?? name).Add(importedValue);
+                linkedScope.AddLinkedVariable(linkedName ?? name, importedValue);
             }
             return importedValue.TypesNoCopy;
         }
 
 
         public IEnumerable<string> GetModuleMemberNames(IModuleContext context) {
-            return Scope.Variables.Keys;
+            return Scope.AllVariables.Keys();
         }
 
         public void Imported(AnalysisUnit unit) {
