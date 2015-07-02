@@ -102,9 +102,11 @@
       <IncludeInVSIX>true</IncludeInVSIX>
       <SubType>Designer</SubType>
     </Content>
-    <Content Include="wfastcgi.py">
+    <Content Include="..\WFastCGI\wfastcgi.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>.</VSIXSubPath>
+      <Link>wfastcgi.py</Link>
     </Content>
     <Content Include="Microsoft.PythonTools.Worker.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

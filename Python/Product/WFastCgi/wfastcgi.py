@@ -12,7 +12,7 @@
  #
  # ###########################################################################
 
-from __future__ import absolute_import, with_statement
+from __future__ import absolute_import, print_function, with_statement
 import ctypes
 import datetime
 import os
@@ -820,6 +820,49 @@ def main():
     finally:
         run_exit_tasks()
         maybe_log('wfastcgi.py %s closed' % __version__)
+
+def _run_appcmd(args):
+    from subprocess import check_call, CalledProcessError
+    
+    if len(sys.argv) > 1 and os.path.isfile(sys.argv[1]):
+        appcmd = sys.argv[1:]
+    else:
+        appcmd = [os.path.join(os.getenv('SystemRoot'), 'system32', 'inetsrv', 'appcmd.exe')]
+
+    if not os.path.isfile(appcmd[0]):
+        print('IIS configuration tool appcmd.exe was not found at', appcmd, file=sys.stderr)
+        return -1
+
+    args = appcmd + args
+    try:
+        return check_call(args)
+    except CalledProcessError as ex:
+        print('''An error occurred running the command:
+
+%r
+
+Ensure your user has sufficient privileges and try again.''' % args, file=sys.stderr)
+        return ex.returncode
+
+def enable():
+    res = _run_appcmd([
+        "set", "config", "/section:system.webServer/fastCGI",
+        "/+[fullPath='" + sys.executable + "', arguments='" + __file__ + "', signalBeforeTerminateSeconds='30']"
+    ])
+    
+    if res == 0:
+        print(sys.executable, 'and', __file__, 'can now be used as a FastCGI script processor')
+    return res
+
+def disable():
+    res = _run_appcmd([
+        "set", "config", "/section:system.webServer/fastCGI",
+        "/-[fullPath='" + sys.executable + "', arguments='" + __file__ + "', signalBeforeTerminateSeconds='30']"
+    ])
+
+    if res == 0:
+        print(sys.executable, 'and', __file__, 'are no longer registered for use with FastCGI')
+    return res
 
 if __name__ == '__main__':
     main()
