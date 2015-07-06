@@ -28,6 +28,7 @@ ASSEMBLIES = sorted([
     "Microsoft.PythonTools.Django",
     "Microsoft.PythonTools.EnvironmentsList",
     "Microsoft.PythonTools.EnvironmentsList.Host",
+    "Microsoft.PythonTools.ExpressInteractiveWorkaround",
     "Microsoft.PythonTools.Hpc",
     "Microsoft.PythonTools.ImportWizard",
     "Microsoft.PythonTools.IronPython",

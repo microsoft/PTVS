@@ -40,6 +40,7 @@
     <ProjectFile Include="WebRole\WebRole.csproj"/>
     <ProjectFile Include="Django\Django.csproj"/>
 
+    <ProjectFile Include="ExpressInteractiveWorkaround\ExpressInteractiveWorkaround.csproj" Condition="$(IncludeExpressInteractiveWorkaround)" />
     
     <ProjectFile Include="AnalysisBrowser\AnalysisBrowser.csproj" />
     <ProjectFile Include="AnalysisMemoryTester\AnalysisMemoryTester.csproj" />
