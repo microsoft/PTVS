@@ -48,7 +48,7 @@ namespace Microsoft.PythonTools.ProjectWizards {
                 }
                 // Get the latest SDK version from the name of the directory in the Include path of the SDK installation.
                 if (!string.IsNullOrEmpty(keyValue)) {
-                    string dirName = Directory.GetDirectories(keyValue).OrderByDescending(x => x).FirstOrDefault();
+                    string dirName = Directory.GetDirectories(keyValue, "10.*").OrderByDescending(x => x).FirstOrDefault();
                     winSDKVersion = Path.GetFileName(dirName);
                 }
             } catch(Exception ex) {
