@@ -80,7 +80,17 @@
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
   </Target>
-  <Target Name="AfterBuild">
-  </Target>
   -->
+  <Target Name="AfterBuild">
+    <MakeDir Directories="$(OutputPath)\CompletionDB" />
+
+    <ItemGroup>
+      <_CompletionDB Include="$(BuildRoot)Python\Product\Analyzer\CompletionDB\*.idb" />
+    </ItemGroup>
+    
+    <Copy SourceFiles="@(_CompletionDB)"
+          DestinationFolder="$(OutputPath)\CompletionDB"
+          OverwriteReadOnlyFiles="true"
+          SkipUnchangedFiles="true" />
+  </Target>
 </Project>
