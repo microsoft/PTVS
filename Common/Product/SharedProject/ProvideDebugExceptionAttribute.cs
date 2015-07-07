@@ -87,8 +87,15 @@ namespace Microsoft.VisualStudioTools {
             key.SetValue("Code", _code);
             key.SetValue("State", (int)_state);
 
-            string name = _path.LastOrDefault() ?? "*";
-            engineKey.SetValue(name, (int)(_state & DkmValidFlags));
+            // Debug engine load time can be improved by writing the exception category default 
+            // stop setting and exceptions to the default settings at the exception category reg 
+            // key node. This improves debug engine load time by getting necessary exception stop
+            // settings for the entire category without having to enumerate the entire category 
+            // hive structure when loading the debug engine.
+            string name = _path.LastOrDefault();
+            if (name == null || !BreakByDefault) {
+                engineKey.SetValue(name ?? "*", (int)(_state & DkmValidFlags));
+            }
         }
 
         public override void Unregister(RegistrationAttribute.RegistrationContext context) {

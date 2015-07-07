@@ -65,11 +65,15 @@
 
   <Fragment>
     <Property Id="VS_PRERELEASE" Secure="yes">
-      <?if "$(var.VSTargetVersion)"="12.0" ?>
-      <DirectorySearch Id="VSDevEnvFilePathSearch" Path="[VSINSTALLPATH]">
-        <FileSearch Id="VSDevEnvFileVersionSearch" Name="devenv.exe" MinVersion="12.0.0.0" MaxVersion="12.0.21004.0"/>
-      </DirectorySearch>
-      <?endif ?>
+      <RegistrySearch Id="VSPrereleaseInstallDir" Root="HKLM" Key="Software\Microsoft\VisualStudio\$(var.VSTargetVersion)\Setup\VS" Name="ProductDir" Type="directory">
+        <DirectorySearch Id="VSPrereleaseInstallDir_Common7_IDE" Path="Common7\IDE" Depth="1">
+          <?if "$(var.VSTargetVersion)"="14.0" ?>
+          <FileSearch Id="VSPrerelease_Common7_IDE_msenv_dll" Name="msenv.dll" MinVersion="14.0.0.0" MaxVersion="14.0.23102.0"/>
+          <?elseif "$(var.VSTargetVersion)"="12.0" ?>
+          <FileSearch Id="VSPrerelease_Common7_IDE_msenv_dll" Name="msenv.dll" MinVersion="12.0.0.0" MaxVersion="12.0.21004.0"/>
+          <?endif ?>
+        </DirectorySearch>
+      </RegistrySearch>
     </Property>
   </Fragment>
 

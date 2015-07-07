@@ -23,6 +23,9 @@
     <IncludeWFastCgi Condition="'$(IncludeWFastCgi)' == '' and '$(VSTarget)' == '12.0'">true</IncludeWFastCgi>
     <IncludeWFastCgi Condition="'$(IncludeWFastCgi)' == ''">false</IncludeWFastCgi>
 
+    <IncludeExpressInteractiveWorkaround Condition="'$(IncludeExpressInteractiveWorkaround)' == '' and $(VSMajorVersion) == 14">true</IncludeExpressInteractiveWorkaround>
+    <IncludeExpressInteractiveWorkaround Condition="'$(IncludeExpressInteractiveWorkaround)' == ''">false</IncludeExpressInteractiveWorkaround>
+
     <!-- Features default to true for release builds -->
     <FeatureAzureRemoteDebug>$(ReleaseBuild)</FeatureAzureRemoteDebug>
     <FeatureAzureRemoteDebug Condition="$(VSMajorVersion) > 12 or ($(VSMajorVersion) == 12 and $(VSUpdateVersion) >= 30723)">true</FeatureAzureRemoteDebug>
