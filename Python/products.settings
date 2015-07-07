@@ -17,12 +17,6 @@
     <IncludeML Condition="'$(IncludeML)' == ''">true</IncludeML>
     <IncludeML Condition="'$(VSTarget)' == '10.0' or '$(VSTarget)' == '11.0'">false</IncludeML>
     
-    <!-- Include WFastCgi by default for VS 2013.
-    WFastCgi has no dependencies on VS version, but we only want to build it once.
-    -->
-    <IncludeWFastCgi Condition="'$(IncludeWFastCgi)' == '' and '$(VSTarget)' == '12.0'">true</IncludeWFastCgi>
-    <IncludeWFastCgi Condition="'$(IncludeWFastCgi)' == ''">false</IncludeWFastCgi>
-
     <IncludeExpressInteractiveWorkaround Condition="'$(IncludeExpressInteractiveWorkaround)' == '' and $(VSMajorVersion) == 14">true</IncludeExpressInteractiveWorkaround>
     <IncludeExpressInteractiveWorkaround Condition="'$(IncludeExpressInteractiveWorkaround)' == ''">false</IncludeExpressInteractiveWorkaround>
 

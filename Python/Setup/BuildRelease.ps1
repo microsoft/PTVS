@@ -232,7 +232,6 @@ function after-build-all($buildroot, $outdir) {
 #   {3} will be replaced by the config ('Debug') marker preceded by a space
 $installer_names = @{
     'PythonToolsInstaller.msi'="PTVS{1}{2}{3}.msi";
-    "WFastCGI.msi"="WFastCGI{1}{3}.msi";
     "Microsoft.PythonTools.Samples.vsix"="PTVS Samples{1}{3}.vsix";
     "Microsoft.PythonTools.ML.vsix"="PTVS ML{1}{3}.vsix";
 }

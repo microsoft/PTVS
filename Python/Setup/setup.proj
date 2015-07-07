@@ -23,7 +23,6 @@
     <ProjectFile Include="PythonHpcSupport\PythonHpcSupport.wixproj" Condition="$(IncludeHpc)"/>
     <ProjectFile Include="$(PTVSPRPath)VsLoggerSetup\VsLogger.wixproj" Condition="'$(IncludeVsLogger)' == 'True'"/>
     <ProjectFile Include="PythonToolsInstaller\PythonToolsInstaller.wixproj"/>
-    <ProjectFile Include="FastCgiInstaller\FastCgi.wixproj" Condition="$(IncludeWFastCgi)"/>
   </ItemGroup>
 
   <Import Project="$(TargetsPath)\Common.Build.Traversal.targets" />
