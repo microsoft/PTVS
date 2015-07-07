@@ -35,6 +35,8 @@ namespace Microsoft.PythonTools.Repl {
         public ZoomableInlineAdornment(FrameworkElement content, ITextView parent) {
             _parent = parent;
             Debug.Assert(parent is IInputElement);
+            Debug.Assert(!double.IsNaN(content.Width), "Unsupported content.Width");
+            Debug.Assert(!double.IsNaN(content.Height), "Unsupported content.Height");
             _desiredSize = new Size(content.Width, content.Height);
             Content = content;
             _zoom = 1.0;
