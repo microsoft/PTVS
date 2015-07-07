@@ -660,7 +660,11 @@ namespace Microsoft.PythonTools.Repl {
                 if (data != null) {
                     Trace.TraceInformation("Data = \"{0}\"", FixNewLines(data).Replace("\r\n", "\\r\\n"));
                     using (new StreamUnlock(this)) {
+#if DEV14_OR_LATER
+                        Window.AppendEscapedText(FixNewLines(data), false);
+#else
                         Window.WriteOutput(FixNewLines(data));
+#endif
                     }
                 }
             }
@@ -671,7 +675,11 @@ namespace Microsoft.PythonTools.Repl {
                 string data = _stream.ReadString();
                 Trace.TraceInformation("Data = \"{0}\"", FixNewLines(data).Replace("\r\n", "\\r\\n"));
                 using (new StreamUnlock(this)) {
+#if DEV14_OR_LATER
+                    Window.AppendEscapedText(FixNewLines(data), true);
+#else
                     Window.WriteError(FixNewLines(data));
+#endif
                 }
             }
 
@@ -1779,10 +1787,6 @@ namespace Microsoft.PythonTools.Repl {
 
     static class ReplWindowExtensions {
 #if DEV14_OR_LATER
-        public static void WriteError(this IReplWindow window, string message) {
-            window.ErrorOutputWriter.Write(message);
-        }
-
         public static void WriteOutput(this IReplWindow window, string message) {
             AppendEscapedText(window, message);
         }
@@ -1835,7 +1839,7 @@ namespace Microsoft.PythonTools.Repl {
             eval.SecondaryPrompt = null;
         }
 
-        private static void AppendEscapedText(IInteractiveWindow window, string text, bool isError = false) {
+        public static void AppendEscapedText(this IInteractiveWindow window, string text, bool isError = false) {
             // http://en.wikipedia.org/wiki/ANSI_escape_code
             // process any ansi color sequences...
             ConsoleColor? color = null;
@@ -1849,12 +1853,13 @@ namespace Microsoft.PythonTools.Repl {
             while (escape != -1) {
                 if (escape != start) {
                     // add unescaped text
+                    Span span;
                     if (isError) {
-                        window.ErrorOutputWriter.Write(text.Substring(start, escape - start));
+                        span = window.WriteError(text.Substring(start, escape - start));
                     } else {
-                        var span = window.Write(text.Substring(start, escape - start));
-                        colors.Add(new ColoredSpan(span, color));
+                        span = window.Write(text.Substring(start, escape - start));
                     }
+                    colors.Add(new ColoredSpan(span, color));
                 }
 
                 // process the escape sequence                
@@ -1964,12 +1969,13 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             if (start != text.Length) {
+                Span span;
                 if (isError) {
-                    window.ErrorOutputWriter.Write(text.Substring(start, escape - start));
+                    span = window.WriteError(text.Substring(start));
                 } else {
-                    var span = window.Write(text.Substring(start));
-                    colors.Add(new ColoredSpan(span, color));
+                    span = window.Write(text.Substring(start));
                 }
+                colors.Add(new ColoredSpan(span, color));
             }
         }
 #else
