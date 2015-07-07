@@ -18,7 +18,7 @@ To install via the Python Package Index (PyPI), type:
 
 .. code:: shell
 
-    pip.exe install wfastcgi
+    pip install wfastcgi
 
 Installing IIS and FastCGI
 --------------------------
@@ -36,25 +36,40 @@ administrator to enable ``wfastcgi`` in the IIS configuration. This will
 configure a CGI application that can then be specified as a 
 `route handler <#route-handlers>`__.
 
-All arguments passed to ``wfastcgi-enable`` or ``wfastcgi-disable`` are
-assumed to be the start of the configure command if the first argument is a
-valid file.
+.. code:: shell
+
+    wfastcgi-enable
+
+To disable ``wfastcgi`` before uninstalling, run ``wfastcgi-disable``.
+
+.. code:: shell
+
+    wfastcgi-disable
+    pip uninstall wfastcgi
+
+**Note**: uninstalling ``wfastcgi`` does not automatically unregister the CGI
+application.
+
+
+If the first argument passed to ``wfastcgi-enable`` or ``wfastcgi-disable`` is
+a valid file, the entire command line is used to register or unregister the CGI
+handler.
 
 For example, the following command will enable wfastcgi with IIS Express and a
 specific host configuration:
 
 .. code:: shell
 
-    wfastcgi-enable "C:\Program Files (x86)\IIS Express\appcmd.exe" /apphostconfig:C:\Path\To\applicationhost.config
+    wfastcgi-enable "C:\Program Files (x86)\IIS Express\appcmd.exe"
+        /apphostconfig:C:\Path\To\applicationhost.config
 
 You can disable wfastcgi in the same configuration file using
 ``wfastcgi-disable`` with the same options:
 
 .. code:: shell
 
-    wfastcgi-disable "C:\Program Files (x86)\IIS Express\appcmd.exe" /apphostconfig:C:\Path\To\applicationhost.config
-
-Note that uninstalling ``wfastcgi`` does not unregister the CGI application.
+    wfastcgi-disable "C:\Program Files (x86)\IIS Express\appcmd.exe"
+        /apphostconfig:C:\Path\To\applicationhost.config
 
 .. route-handlers
 
@@ -115,8 +130,8 @@ This is a Python name that evaluates to the WSGI application object. It is a
 series of dotted names that are optionally called with no parameters. When
 resolving the handler, the following steps are used:
 
-1. As many names as possibleare loaded using ``import``. The last name is never
-   imported.
+1. As many names as possible are loaded using ``import``. The last name is
+   never imported.
 
 2. Once a module has been obtained, each remaining name is retrieved as an
    attribute. If ``()`` follows the name, it is called before getting the
