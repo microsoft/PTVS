@@ -6583,6 +6583,28 @@ async def f():
         }
 
 
+        [TestMethod, Priority(0)]
+        public void RecursiveDecorators() {
+            // See https://github.com/Microsoft/PTVS/issues/542
+            // Should not crash/OOM
+            var code = @"
+def f():
+    def d(fn):
+        @f()
+        def g(): pass
+
+    return d
+";
+
+            var cancelAt = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            try {
+                var entry = ProcessText(code, cancel: cancelAt.Token);
+            } catch (OperationCanceledException) {
+            }
+            if (cancelAt.IsCancellationRequested) {
+                Assert.Fail("Failed to complete within 10 seconds");
+            }
+        }
 
         #endregion
 
