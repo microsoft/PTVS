@@ -85,8 +85,8 @@ namespace Microsoft.PythonTools.Interpreter {
 
     public interface IPythonInterpreterFactoryWithDatabase2 : IPythonInterpreterFactoryWithDatabase {
         /// <summary>
-        /// Returns a list of module names that are causing the database to
-        /// appear out of date.
+        /// Returns a list of module names that appear to have current entries
+        /// in the database.
         /// </summary>
         IEnumerable<string> GetUpToDateModules();
     }

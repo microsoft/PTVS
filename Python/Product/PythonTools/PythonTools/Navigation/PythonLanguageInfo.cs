@@ -36,11 +36,9 @@ namespace Microsoft.PythonTools.Navigation {
     [Guid(GuidList.guidPythonLanguageService)]
     internal sealed class PythonLanguageInfo : IVsLanguageInfo, IVsLanguageDebugInfo {
         private readonly IServiceProvider _serviceProvider;
-        private readonly IComponentModel _componentModel;
 
         public PythonLanguageInfo(IServiceProvider serviceProvider) {
             _serviceProvider = serviceProvider;
-            _componentModel = serviceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
         }
 
         public int GetCodeWindowManager(IVsCodeWindow pCodeWin, out IVsCodeWindowManager ppCodeWinMgr) {
