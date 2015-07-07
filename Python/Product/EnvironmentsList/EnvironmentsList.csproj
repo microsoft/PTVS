@@ -226,6 +226,7 @@
     <Compile Include="DBExtension.xaml.cs">
       <DependentUpon>DBExtension.xaml</DependentUpon>
     </Compile>
+    <Compile Include="IEnvironmentViewExtensionProvider.cs" />
     <Compile Include="Pep440Version.cs" />
     <Compile Include="PipExtension.xaml.cs">
       <DependentUpon>PipExtension.xaml</DependentUpon>

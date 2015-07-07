@@ -185,6 +185,9 @@ namespace Microsoft.PythonTools.Project {
         public const string InsertSnippet = "InsertSnippet";
         public const string SurroundWith = "SurroundWith";
 
+        public const string ErrorLoadingEnvironmentViewExtensions = "ErrorLoadingEnvironmentViewExtensions";
+        public const string ErrorLoadingEnvironmentViewExtension = "ErrorLoadingEnvironmentViewExtension";
+
         private static readonly Lazy<ResourceManager> _manager = new Lazy<ResourceManager>(
             () => new System.Resources.ResourceManager("Microsoft.PythonTools.Resources", typeof(SR).Assembly),
             LazyThreadSafetyMode.ExecutionAndPublication

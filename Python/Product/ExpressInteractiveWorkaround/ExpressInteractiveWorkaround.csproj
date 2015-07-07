@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Choose>
     <When Condition=" '$(VisualStudioVersion)'=='14.0'  Or '$(TargetVisualStudioVersion)'=='VS140' ">
       <PropertyGroup>
@@ -32,65 +32,48 @@
       </PropertyGroup>
     </When>
   </Choose>
-  <Import Project="..\ToolProjectBefore.settings" />
+  <Import Project="..\ProjectBefore.settings" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{F05EA25B-155C-458D-8E4D-A851C79565DA}</ProjectGuid>
-    <OutputType>Exe</OutputType>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectTypeGuids>{82b43b9b-a64c-4715-b499-d71e9ca2bd60};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <ProjectGuid>{A9E7F3E9-0CD5-491E-8DA0-325D7E70237C}</ProjectGuid>
+    <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Microsoft.PythonTools.Analysis.MemoryTester</RootNamespace>
-    <AssemblyName>AnalysisMemoryTester</AssemblyName>
+    <RootNamespace>Microsoft.PythonTools</RootNamespace>
+    <AssemblyName>Microsoft.PythonTools.ExpressInteractiveWorkaround</AssemblyName>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Platform)' == 'AnyCPU' ">
+  <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
-  <PropertyGroup>
-    <SignAssembly>false</SignAssembly>
-  </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.VisualStudio.Shell.$(VsTarget), Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.VisualStudio.Shell.Immutable.10.0, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\..\..\Common\Product\SharedProject\TaskExtensions.cs">
-      <Link>TaskExtensions.cs</Link>
-    </Compile>
-    <Compile Include="Program.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ExpressInteractiveWorkaroundPackage.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
+    <VSCTCompile Include="ExpressInteractiveWorkaround.vsct">
+      <ResourceName>Menus.ctmenu</ResourceName>
+      <SubType>Designer</SubType>
+    </VSCTCompile>
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Analysis\Analysis.csproj">
-      <Project>{a85d479d-67a9-4bdb-904a-7d86daf68a6f}</Project>
-      <Name>Analysis</Name>
-      <Private>true</Private>
-    </ProjectReference>
-  </ItemGroup>
-  <Import Project="..\ToolProjectAfter.settings" />
+  <PropertyGroup>
+    <UseCodebase>true</UseCodebase>
+    <RegisterOutputPackage>true</RegisterOutputPackage>
+    <RegisterWithCodebase>true</RegisterWithCodebase>
+  </PropertyGroup>
+  <Import Project="..\ProjectAfter.settings" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
   </Target>
-  -->
   <Target Name="AfterBuild">
-    <MakeDir Directories="$(OutputPath)\CompletionDB" />
-
-    <ItemGroup>
-      <_CompletionDB Include="$(BuildRoot)Python\Product\Analyzer\CompletionDB\*.idb" />
-    </ItemGroup>
-    
-    <Copy SourceFiles="@(_CompletionDB)"
-          DestinationFolder="$(OutputPath)\CompletionDB"
-          OverwriteReadOnlyFiles="true"
-          SkipUnchangedFiles="true" />
   </Target>
+  -->
 </Project>
