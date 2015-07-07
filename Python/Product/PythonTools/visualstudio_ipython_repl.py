@@ -163,7 +163,7 @@ class VsIOPubChannel(DefaultHandler, IOPubChannel):
             try:
                 if isinstance(output_xaml, str) and sys.version_info[0] >= 3:
                     output_xaml = output_xaml.encode('ascii')
-                self._vs_backend.write_png(decodestring(output_xaml))
+                self._vs_backend.write_xaml(decodestring(output_xaml))
                 self._vs_backend.write_stdout('\n') 
                 return
             except:

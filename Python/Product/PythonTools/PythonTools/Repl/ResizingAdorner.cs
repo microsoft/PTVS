@@ -14,6 +14,7 @@
 
 using System;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Documents;
 using System.Windows.Input;
@@ -22,18 +23,23 @@ using System.Windows.Media;
 namespace Microsoft.PythonTools.Repl {
     internal class ResizingAdorner : Adorner {
         private readonly VisualCollection _visualChildren;
-        private readonly Thumb _bottomRight;
-        private readonly Size _desiredSize;
+        private readonly FrameworkElement _bottomRight;
 
-        public ResizingAdorner(UIElement adornedElement, Size desiredSize)
+        private Point _mouseDownPoint;
+        private readonly Size _originalSize;
+        private Size _initialSize;
+        private Size _desiredSize;
+
+        public ResizingAdorner(UIElement adornedElement, Size originalSize)
             : base(adornedElement) {
             _visualChildren = new VisualCollection(this);
-            _bottomRight = BuildAdornerCorner(Cursors.SizeNWSE, HandleBottomRight);
-            _desiredSize = desiredSize;
+            _originalSize = _desiredSize = originalSize;
+            Width = Height = double.NaN;
+            _bottomRight = BuildAdornerCorner(Cursors.SizeNWSE);
         }
 
-        private Thumb BuildAdornerCorner(Cursor cursor, DragDeltaEventHandler dragHandler) {
-            var thumb = new Thumb();
+        private FrameworkElement BuildAdornerCorner(Cursor cursor) {
+            var thumb = new Border();
             // TODO: this thumb should be styled to look like a dotted triangle, 
             // similar to the one you can see on the bottom right corner of 
             // Internet Explorer window
@@ -41,47 +47,93 @@ namespace Microsoft.PythonTools.Repl {
             thumb.Height = thumb.Width = 10;
             thumb.Opacity = 0.40;
             thumb.Background = new SolidColorBrush(Colors.MediumBlue);
-            thumb.DragDelta += dragHandler;
-            thumb.DragStarted += (s, e) => {
-                var handler = ResizeStarted;
-                if (handler != null) {
-                    handler(this, e);
-                }
-            };
-            thumb.DragCompleted += (s, e) => {
-                var handler = ResizeCompleted;
-                if (handler != null) {
-                    handler(this, e);
-                }
-            };
+            thumb.IsHitTestVisible = true;
+            thumb.MouseDown += Thumb_MouseDown;
+            thumb.MouseMove += Thumb_MouseMove;
+            thumb.MouseUp += Thumb_MouseUp;
+            thumb.HorizontalAlignment = HorizontalAlignment.Right;
+            thumb.VerticalAlignment = VerticalAlignment.Bottom;
             _visualChildren.Add(thumb);
             return thumb;
         }
 
-        private void HandleBottomRight(object sender, DragDeltaEventArgs eventArgs) {
-            var thumb = sender as Thumb;
-            var element = AdornedElement as FrameworkElement;
-            if (element == null || thumb == null) {
+        private void Thumb_MouseDown(object sender, MouseButtonEventArgs e) {
+            if (e.ChangedButton != MouseButton.Left) {
                 return;
             }
 
-            const double minHeight = 50;
-            double minWidth = _desiredSize.Width / _desiredSize.Height * minHeight;
-            element.Height = Math.Max(_desiredSize.Height + eventArgs.HorizontalChange, minHeight);
-            element.Width = Math.Max(_desiredSize.Width + eventArgs.HorizontalChange, minWidth);
-            //var size = new Size(element.MaxWidth, element.MaxHeight);
-            //AdornedElement.Measure(size);
+            _initialSize = _desiredSize;
+            _mouseDownPoint = e.GetPosition(AdornedElement);
+            _bottomRight.CaptureMouse();
+
+            var evt = ResizeStarted;
+            if (evt != null) {
+                evt(this, e);
+            }
+
+            e.Handled = true;
+        }
+
+        private void Thumb_MouseMove(object sender, MouseEventArgs e) {
+            if (!_bottomRight.IsMouseCaptured) {
+                return;
+            }
+
+            var pt = e.GetPosition(AdornedElement);
+            var newWidth = _initialSize.Width + pt.X - _mouseDownPoint.X;
+            //var newHeight = _initialSize.Height + pt.Y - _initialPoint.Y;
+            var newHeight = _initialSize.Height / _initialSize.Width * newWidth;
+
+            var desiredSize = new Size(
+                Math.Max(newWidth, 0),
+                Math.Max(newHeight, 0)
+            );
+
+            if (_desiredSize != desiredSize) {
+                _desiredSize = desiredSize;
+                var evt = DesiredSizeChanged;
+                if (evt != null) {
+                    evt(this, new DesiredSizeChangedEventArgs(desiredSize));
+                }
+            }
+
+            e.Handled = true;
+        }
+
+        private void Thumb_MouseUp(object sender, MouseButtonEventArgs e) {
+            if (e.ChangedButton != MouseButton.Left) {
+                return;
+            }
+
+            _initialSize = _desiredSize;
+            _bottomRight.ReleaseMouseCapture();
+
+            var evt = ResizeCompleted;
+            if (evt != null) {
+                evt(this, e);
+            }
+
+            e.Handled = true;
+        }
+
+        protected override Size MeasureOverride(Size constraint) {
+            if (_desiredSize.Width < 0) {
+                _desiredSize.Width = 0;
+            }
+            if (_desiredSize.Height < 0) {
+                _desiredSize.Height = 0;
+            }
+
+            var size = new Size(
+                Math.Min(_desiredSize.Width, constraint.Width),
+                Math.Min(_desiredSize.Height, constraint.Height)
+            );
+            _bottomRight.Measure(size);
+            return size;
         }
 
         protected override Size ArrangeOverride(Size finalSize) {
-            var desiredWidth = AdornedElement.DesiredSize.Width;
-            var desiredHeight = AdornedElement.DesiredSize.Height;
-            var adornerWidth = DesiredSize.Width;
-            var adornerHeight = DesiredSize.Height;
-
-            _bottomRight.Arrange(new Rect((desiredWidth - adornerWidth) / 2,
-                (desiredHeight - adornerHeight) / 2, adornerWidth, adornerHeight));
-
+            _bottomRight.Arrange(new Rect(new Point(), finalSize));
             return finalSize;
         }
 
@@ -95,5 +147,20 @@ namespace Microsoft.PythonTools.Repl {
 
         public event RoutedEventHandler ResizeStarted;
         public event RoutedEventHandler ResizeCompleted;
+        public event EventHandler<DesiredSizeChangedEventArgs> DesiredSizeChanged;
+    }
+
+    class DesiredSizeChangedEventArgs : EventArgs {
+        private readonly Size _size;
+
+        public DesiredSizeChangedEventArgs(Size size) {
+            _size = size;
+        }
+
+        public Size Size {
+            get {
+                return _size;
+            }
+        }
     }
 }

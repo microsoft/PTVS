@@ -23,35 +23,35 @@ using System.Windows.Media.Imaging;
 using Microsoft.VisualStudio.Text.Editor;
 
 namespace Microsoft.PythonTools.Repl {
-    internal class ZoomableInlineAdornment : ContentControl {
+    internal class ZoomableInlineAdornment : Grid {
         private readonly ITextView _parent;
         private ResizingAdorner _adorner;
-        private bool _isResizing;
-        private double _zoom;
-        private readonly Size _desiredSize;
-        private const double _zoomStep = 0.25;
-        //private readonly double _widthRatio, _heightRatio;
+        private readonly Size _originalSize;
+        private Size _desiredSize;
 
-        public ZoomableInlineAdornment(FrameworkElement content, ITextView parent) {
+        public ZoomableInlineAdornment(UIElement content, ITextView parent, Size desiredSize) {
             _parent = parent;
             Debug.Assert(parent is IInputElement);
-            Debug.Assert(!double.IsNaN(content.Width), "Unsupported content.Width");
-            Debug.Assert(!double.IsNaN(content.Height), "Unsupported content.Height");
-            _desiredSize = new Size(content.Width, content.Height);
-            Content = content;
-            _zoom = 1.0;
-            content.Focusable = true;
+            _originalSize = _desiredSize = new Size(
+                Math.Max(double.IsNaN(desiredSize.Width) ? 100 : desiredSize.Width, 10),
+                Math.Max(double.IsNaN(desiredSize.Height) ? 100 : desiredSize.Height, 10)
+            );
+
+            ContextMenu = MakeContextMenu();
+
+            Focusable = true;
+            MinWidth = MinHeight = 50;
+
+            Children.Add(content);
 
             GotFocus += OnGotFocus;
             LostFocus += OnLostFocus;
-
-            ContextMenu = MakeContextMenu();
         }
 
         protected override void OnPreviewMouseLeftButtonDown(MouseButtonEventArgs e) {
             base.OnPreviewMouseLeftButtonDown(e);
 
-            ((FrameworkElement)Content).Focus();
+            Focus();
             e.Handled = true;
         }
 
@@ -77,37 +77,59 @@ namespace Microsoft.PythonTools.Repl {
             return result;
         }
 
-        private static void AddMenuItem(ContextMenu menu, string text, string shortcut, EventHandler handler) {
+        private static void AddMenuItem(ContextMenu menu, string text, string shortcut, RoutedEventHandler handler) {
             var item = new MenuItem();
             item.Header = text;
-            item.Click += (s, e) => handler(s, e);
+            item.Click += handler;
             menu.Items.Add(item);
         }
 
-        private FrameworkElement MyContent {
-            get { return Content as FrameworkElement; }
-        }
-
         private void OnGotFocus(object sender, RoutedEventArgs args) {
-            _adorner = new ResizingAdorner(MyContent, _desiredSize);
-            _adorner.ResizeStarted += OnResizeStarted;
-            _adorner.ResizeCompleted += OnResizeCompleted;
+            _adorner = new ResizingAdorner(this, _desiredSize);
+            _adorner.DesiredSizeChanged += OnDesiredSizeChanged;
 
-            var adornerLayer = AdornerLayer.GetAdornerLayer(MyContent);
+            var adornerLayer = AdornerLayer.GetAdornerLayer(this);
             if (adornerLayer != null) {
                 adornerLayer.Add(_adorner);
             }
         }
 
         private void OnLostFocus(object sender, RoutedEventArgs args) {
-            _adorner.ResizeStarted -= OnResizeStarted;
-            _adorner.ResizeCompleted -= OnResizeCompleted;
+            if (_adorner == null) {
+                Debug.Fail("Lost focus without creating an adorner");
+                return;
+            }
 
-            var adornerLayer = AdornerLayer.GetAdornerLayer(MyContent);
+            _adorner.DesiredSizeChanged -= OnDesiredSizeChanged;
+
+            var adornerLayer = AdornerLayer.GetAdornerLayer(this);
             if (adornerLayer != null) {
                 adornerLayer.Remove(_adorner);
                 _adorner = null;
             }
+        }
+
+        protected override Size MeasureOverride(Size constraint) {
+            if (_desiredSize.Width < MinWidth) {
+                _desiredSize.Width = MinWidth;
+            }
+            if (_desiredSize.Height < MinHeight) {
+                _desiredSize.Height = MinHeight;
+            }
+
+            var size = new Size(
+                Math.Min(_desiredSize.Width, constraint.Width),
+                Math.Min(_desiredSize.Height, constraint.Height)
+            );
+            foreach (UIElement c in Children) {
+                c.Measure(size);
+            }
+            return size;
+        }
+
+        private void OnDesiredSizeChanged(object sender, DesiredSizeChangedEventArgs e) {
+            _desiredSize = e.Size;
+            InvalidateMeasure();
         }
 
         protected override void OnPreviewKeyDown(KeyEventArgs args) {
@@ -123,55 +145,42 @@ namespace Microsoft.PythonTools.Repl {
             base.OnPreviewKeyDown(args);
         }
 
-        private void OnResizeStarted(object sender, RoutedEventArgs args) {
-            _isResizing = true;
-        }
-
-        private void OnResizeCompleted(object sender, RoutedEventArgs args) {
-            _isResizing = false;
-            _zoom = MyContent.DesiredSize.Width / (_parent.ViewportWidth /* * _widthRatio */);
-        }
-
-        internal void Zoom(double zoomFactor) {
-            _zoom = zoomFactor;
-            UpdateSize();
-        }
-
         private void OnCopy() {
-            double width = MyContent.ActualWidth;
-            double height = MyContent.ActualHeight;
-            RenderTargetBitmap bmpCopied = new RenderTargetBitmap((int)Math.Round(width), (int)Math.Round(height), 96, 96, PixelFormats.Default);
+            double width = ActualWidth;
+            double height = ActualHeight;
+            RenderTargetBitmap bmpCopied = new RenderTargetBitmap(
+                (int)Math.Round(width),
+                (int)Math.Round(height),
+                96,
+                96,
+                PixelFormats.Default
+            );
             DrawingVisual dv = new DrawingVisual();
             using (DrawingContext dc = dv.RenderOpen()) {
                 dc.DrawRectangle(Brushes.White, null, new Rect(new Point(), new Size(width, height)));
-                VisualBrush vb = new VisualBrush(MyContent);
+                VisualBrush vb = new VisualBrush(this);
                 dc.DrawRectangle(vb, null, new Rect(new Point(), new Size(width, height)));
             }
             bmpCopied.Render(dv);
             Clipboard.SetImage(bmpCopied);
         }
 
+        internal void Zoom(double zoomFactor) {
+            _desiredSize = new Size(
+                Math.Max(_originalSize.Width * zoomFactor, 50),
+                Math.Max(_originalSize.Height * zoomFactor, _originalSize.Height / _originalSize.Width * 50)
+            );
+            InvalidateMeasure();
+        }
+
         private void OnZoomIn() {
-            _zoom += _zoomStep;
-            UpdateSize();
+            _desiredSize = new Size(_desiredSize.Width * 1.1, _desiredSize.Height * 1.1);
+            InvalidateMeasure();
         }
 
         private void OnZoomOut() {
-            if (_zoom - _zoomStep > 0.1) {
-                _zoom -= _zoomStep;
-                UpdateSize();
-            }
-        }
-
-        internal void UpdateSize() {
-            if (_isResizing) {
-                return;
-            }
-
-            double width = _desiredSize.Width * _zoom;
-            double height = _desiredSize.Height * _zoom;
-            MyContent.Width = width;
-            MyContent.Height = height;
+            _desiredSize = new Size(_desiredSize.Width * 0.9, _desiredSize.Height * 0.9);
+            InvalidateMeasure();
         }
     }
 }

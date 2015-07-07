@@ -462,11 +462,17 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             private void DisplayXaml(byte[] buffer) {
-                var fe = XamlReader.Load(new MemoryStream(buffer)) as FrameworkElement;
-                if (fe != null) {
-                    WriteFrameworkElement(fe);
-                } else if (fe != null) {
-                    Window.WriteLine(fe.ToString());
+                try {
+                    var fe = (FrameworkElement)XamlReader.Load(new MemoryStream(buffer));
+                    if (fe != null) {
+                        WriteFrameworkElement(fe, fe.DesiredSize);
+                    }
+                } catch (Exception ex) {
+                    if (ex.IsCriticalException()) {
+                        throw;
+                    }
+                    Window.WriteError(ex.ToString());
+                    return;
                 }
             }
 
@@ -604,19 +610,25 @@ namespace Microsoft.PythonTools.Repl {
                 imageSrc.StreamSource = new MemoryStream(bytes);
                 imageSrc.EndInit();
 
-                var img = new Image() { Source = imageSrc };
-                var control = new UserControl() { Content = img, Background = Brushes.White };
-                control.Height = imageSrc.PixelHeight;
-                control.Width = imageSrc.PixelWidth;
-                WriteFrameworkElement(control);
+                var img = new Image {
+                    Source = imageSrc,
+                    Stretch = Stretch.Uniform,
+                    StretchDirection = StretchDirection.Both
+                };
+                var control = new Border {
+                    Child = img,
+                    Background = Brushes.White
+                };
+
+                WriteFrameworkElement(control, new Size(imageSrc.PixelWidth, imageSrc.PixelHeight));
             }
 
-            private void WriteFrameworkElement(FrameworkElement control) {
+            private void WriteFrameworkElement(UIElement control, Size desiredSize) {
                 Window.FlushOutput();
 
                 var caretPos = Window.TextView.Caret.Position.BufferPosition;
                 var manager = InlineReplAdornmentProvider.GetManager(Window.TextView);
-                manager.AddAdornment(new ZoomableInlineAdornment(control, Window.TextView), caretPos);
+                manager.AddAdornment(new ZoomableInlineAdornment(control, Window.TextView, desiredSize), caretPos);
             }
 
             private void HandleModuleList() {
