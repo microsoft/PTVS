@@ -37,6 +37,17 @@ namespace Microsoft.PythonTools.Repl {
                 Math.Max(double.IsNaN(desiredSize.Height) ? 100 : desiredSize.Height, 10)
             );
 
+            // First time through, we want to reduce the image to fit within the
+            // viewport.
+            if (_desiredSize.Width > parent.ViewportWidth) {
+                _desiredSize.Width = parent.ViewportWidth;
+                _desiredSize.Height = _originalSize.Height / _originalSize.Width * _desiredSize.Width;
+            }
+            if (_desiredSize.Height > parent.ViewportHeight) {
+                _desiredSize.Height = parent.ViewportHeight;
+                _desiredSize.Width = _originalSize.Width / _originalSize.Height * _desiredSize.Height;
+            }
+
             ContextMenu = MakeContextMenu();
 
             Focusable = true;
