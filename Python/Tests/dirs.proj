@@ -10,7 +10,7 @@
     <ProjectFile Include="DebuggerUITests\DebuggerUITests.csproj" />
     <ProjectFile Include="Django\DjangoTests.csproj" />
     <ProjectFile Include="Django.UI\DjangoUITests.csproj" />
-    <ProjectFile Include="FastCgi\FastCgiTest.csproj" Condition="$(IncludeWFastCgi)" />
+    <ProjectFile Include="FastCgi\FastCgiTest.csproj" />
     <ProjectFile Include="TestAdapterTests\TestAdapterTests.csproj" Condition="$(IncludeTestAdapter)" />
     <ProjectFile Include="VSInterpretersTests\VSInterpretersTests.csproj" />
     <ProjectFile Include="ProfilingUITests\ProfilingUITests.csproj" />
