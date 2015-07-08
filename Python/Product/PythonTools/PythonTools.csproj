@@ -295,6 +295,8 @@
       <Link>IEnumerableExtensions.cs</Link>
     </Compile>
     <Compile Include="PythonTools\Repl\IMultipleScopeEvaluator.cs" />
+    <Compile Include="PythonTools\Repl\InlineReplAdornment.cs" />
+    <Compile Include="PythonTools\Repl\InlineReplAdornmentManager.cs" />
     <Compile Include="PythonTools\Repl\InteractiveWindowCommands.cs" />
     <Compile Include="PythonTools\Repl\InteractiveWindowProvider.cs" />
     <Compile Include="IPythonToolsToolWindowService.cs" />
@@ -310,6 +312,8 @@
     <Compile Include="PythonTools\Intellisense\PythonSuggestedImportAction.cs" />
     <Compile Include="PythonTools\Project\IPythonProjectLaunchProperties.cs" />
     <Compile Include="PythonTools\Project\PythonProjectLaunchProperties.cs" />
+    <Compile Include="PythonTools\Repl\ResizingAdorner.cs" />
+    <Compile Include="PythonTools\Repl\ZoomableInlineAdornment.cs" />
     <Compile Include="PythonTools\SurveyNewsService.cs" />
     <Compile Include="PythonTools\Options\GlobalInterpreterOptions.cs" />
     <Compile Include="PythonTools\Options\GeneralOptions.cs" />

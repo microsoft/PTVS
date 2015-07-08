@@ -51,6 +51,8 @@ using Microsoft.VisualStudio.Text.Projection;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 using SR = Microsoft.PythonTools.Project.SR;
+using System.Windows.Media;
+using System.Windows.Markup;
 
 #if DEV14_OR_LATER
 using IReplEvaluator = Microsoft.VisualStudio.InteractiveWindow.IInteractiveEvaluator;
@@ -361,6 +363,7 @@ namespace Microsoft.PythonTools.Repl {
                                 case "RDLN": HandleReadLine(); break;
                                 case "DETC": HandleDebuggerDetach(); break;
                                 case "DPNG": HandleDisplayPng(); break;
+                                case "DXAM": HandleDisplayXaml(); break;
                                 case "EXIT":
                                     // REPL has exited
                                     _stream.Write(ExitCommandBytes);
@@ -437,6 +440,40 @@ namespace Microsoft.PythonTools.Repl {
                 }
 
                 DisplayImage(buffer);
+            }
+
+            private void HandleDisplayXaml() {
+                Debug.Assert(Monitor.IsEntered(_streamLock));
+
+                int len = _stream.ReadInt32();
+                byte[] buffer = new byte[len];
+                if (len != 0) {
+                    int bytesRead = 0;
+                    do {
+                        bytesRead += _stream.Read(buffer, bytesRead, len - bytesRead);
+                    } while (bytesRead != len);
+                }
+
+                using (new StreamUnlock(this)) {
+                    ((System.Windows.UIElement)Window.TextView).Dispatcher.BeginInvoke((Action)(() => {
+                        DisplayXaml(buffer);
+                    }));
+                }
+            }
+
+            private void DisplayXaml(byte[] buffer) {
+                try {
+                    var fe = (FrameworkElement)XamlReader.Load(new MemoryStream(buffer));
+                    if (fe != null) {
+                        WriteFrameworkElement(fe, fe.DesiredSize);
+                    }
+                } catch (Exception ex) {
+                    if (ex.IsCriticalException()) {
+                        throw;
+                    }
+                    Window.WriteError(ex.ToString());
+                    return;
+                }
             }
 
             internal string DoDebugAttach() {
@@ -560,19 +597,38 @@ namespace Microsoft.PythonTools.Repl {
                 using (new StreamUnlock(this)) {
                     ((System.Windows.UIElement)Window.TextView).Dispatcher.BeginInvoke((Action)(() => {
                         try {
-                            var imageSrc = new BitmapImage();
-                            imageSrc.BeginInit();
-                            imageSrc.StreamSource = new MemoryStream(bytes);
-                            imageSrc.EndInit();
-#if DEV14_OR_LATER
-                            Window.Write(new Image() { Source = imageSrc });
-#else
-                            Window.WriteOutput(new Image() { Source = imageSrc });
-#endif
+                            WriteImage(bytes);
                         } catch (IOException) {
                         }
                     }));
                 }
+            }
+
+            private void WriteImage(byte[] bytes) {
+                var imageSrc = new BitmapImage();
+                imageSrc.BeginInit();
+                imageSrc.StreamSource = new MemoryStream(bytes);
+                imageSrc.EndInit();
+
+                var img = new Image {
+                    Source = imageSrc,
+                    Stretch = Stretch.Uniform,
+                    StretchDirection = StretchDirection.Both
+                };
+                var control = new Border {
+                    Child = img,
+                    Background = Brushes.White
+                };
+
+                WriteFrameworkElement(control, new Size(imageSrc.PixelWidth, imageSrc.PixelHeight));
+            }
+
+            private void WriteFrameworkElement(UIElement control, Size desiredSize) {
+                Window.FlushOutput();
+
+                var caretPos = Window.TextView.Caret.Position.BufferPosition;
+                var manager = InlineReplAdornmentProvider.GetManager(Window.TextView);
+                manager.AddAdornment(new ZoomableInlineAdornment(control, Window.TextView, desiredSize), caretPos);
             }
 
             private void HandleModuleList() {
@@ -1991,6 +2047,12 @@ namespace Microsoft.PythonTools.Repl {
 
         public static void SetSmartUpDown(this IReplWindow window, bool setting) {
             window.SetOptionValue(ReplOptions.UseSmartUpDown, setting);
+        }
+
+        public static void FlushOutput(this IReplWindow window) {
+            // hacky way to force flushing of the output buffer as there is no API for it.
+            window.SetOptionValue(ReplOptions.SupportAnsiColors, window.GetOptionValue(ReplOptions.SupportAnsiColors));
+
         }
 #endif
 
