@@ -46,6 +46,7 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.CSharp" />
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Core" />
@@ -68,7 +69,9 @@
     <Compile Include="..\PythonTools\PythonToolsInstallPath.cs">
       <Link>PythonToolsInstallPath.cs</Link>
     </Compile>
+    <Compile Include="AnalysisDictionary.cs" />
     <Compile Include="AnalysisExtensions.cs" />
+    <Compile Include="AnalysisHashSet.cs" />
     <Compile Include="AnalysisLimits.cs" />
     <Compile Include="AnalysisLog.cs" />
     <Compile Include="AnalysisValue.cs" />
@@ -80,6 +83,7 @@
     <Compile Include="Analyzer\IsInstanceScope.cs" />
     <Compile Include="Analyzer\StatementScope.cs" />
     <Compile Include="AssemblyInfo.cs" />
+    <Compile Include="IEnumerableExtensions.cs" />
     <Compile Include="Interpreter\Default\AnalysisOnlyInterpreterFactory.cs" />
     <Compile Include="Interpreter\Default\CPythonInterpreterFactory.cs" />
     <Compile Include="Interpreter\Default\CPythonSequenceType.cs" />
@@ -90,6 +94,7 @@
     <Compile Include="Interpreter\IPythonSequenceType.cs" />
     <Compile Include="Interpreter\NewDatabaseEventArgs.cs" />
     <Compile Include="Interpreter\PythonInterpreterFactoryExtensions.cs" />
+    <Compile Include="LockedEnumerable.cs" />
     <Compile Include="ModulePath.cs" />
     <Compile Include="Parsing\CodeFormattingCategoryAttribute.cs" />
     <Compile Include="Parsing\CodeFormattingDefaultSettingAttribute.cs" />
@@ -97,7 +102,6 @@
     <Compile Include="Parsing\CodeFormattingExampleAttribute.cs" />
     <Compile Include="Parsing\CodeFormattingOptions.cs" />
     <Compile Include="IdDispenser.cs" />
-    <Compile Include="IEnumerableExtensions.cs" />
     <Compile Include="Interpreter\ProjectAssemblyReference.cs" />
     <Compile Include="Interpreter\CannotAnalyzeExtensionException.cs" />
     <Compile Include="Interpreter\ITypeDatabaseReader.cs" />

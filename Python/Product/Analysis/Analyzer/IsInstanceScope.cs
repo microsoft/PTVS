@@ -66,7 +66,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
         public override IAnalysisSet GetMergedVariableTypes(string name) {
             VariableDef res;
-            if (Variables.TryGetValue(name, out res)) {
+            if (TryGetVariable(name, out res)) {
                 return res.Types;
             }
             return AnalysisSet.Empty;
@@ -90,7 +90,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
         internal VariableDef CreateTypedVariable(Node node, AnalysisUnit unit, string name, IAnalysisSet types, bool addRef = true) {
             VariableDef res, outer, immediateOuter;
-            if (!Variables.TryGetValue(name, out res)) {
+            if (!TryGetVariable(name, out res)) {
                 // Normal CreateVariable would use AddVariable, which will put
                 // the typed one in the wrong scope.
                 res = base.AddVariable(name);
@@ -103,13 +103,13 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
             foreach (var scope in OuterScope.EnumerateTowardsGlobal) {
                 outer = scope.GetVariable(node, unit, name, addRef);
-                if (scope.Variables.TryGetValue(name, out immediateOuter) && immediateOuter != res) {
+                if (scope.TryGetVariable(name, out immediateOuter) && immediateOuter != res) {
                     if (addRef && immediateOuter != outer) {
                         res.AddReference(node, unit);
                     }
                     PropagateIsInstanceTypes(node, unit, types, immediateOuter);
 
-                    scope.GetLinkedVariables(name).Add(res);
+                    scope.AddLinkedVariable(name, res);
                 }
 
                 if (!(scope is IsInstanceScope)) {

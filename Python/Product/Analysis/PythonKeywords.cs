@@ -73,11 +73,11 @@ namespace Microsoft.PythonTools.Analysis {
             yield return "and";
             yield return "as";
             yield return "else";
-            if (version.Is3x()) {
+            if (version.IsNone() || version.Is3x()) {
                 yield return "False";
             }
             yield return "for";
-            if (version >= PythonLanguageVersion.V33) {
+            if (version.IsNone() || version >= PythonLanguageVersion.V33) {
                 yield return "from";
             }
             yield return "if";
@@ -87,7 +87,7 @@ namespace Microsoft.PythonTools.Analysis {
             yield return "None";
             yield return "not";
             yield return "or";
-            if (version.Is3x()) {
+            if (version.IsNone() || version.Is3x()) {
                 yield return "True";
             }
             yield return "yield";
@@ -104,7 +104,7 @@ namespace Microsoft.PythonTools.Analysis {
             yield return "class";
             yield return "def";
             yield return "del";
-            if (version.Is2x()) {
+            if (version.IsNone() || version.Is2x()) {
                 yield return "exec";
             }
             yield return "if";
@@ -115,11 +115,11 @@ namespace Microsoft.PythonTools.Analysis {
             yield return "from";
             yield return "global";
             yield return "import";
-            if (version.Is3x()) {
+            if (version.IsNone() || version.Is3x()) {
                 yield return "nonlocal";
             }
             yield return "pass";
-            if (version.Is2x()) {
+            if (version.IsNone() || version.Is2x()) {
                 yield return "print";
             }
             yield return "raise";
@@ -138,7 +138,7 @@ namespace Microsoft.PythonTools.Analysis {
             PythonLanguageVersion version = PythonLanguageVersion.None
         ) {
             yield return "return";
-            if (version == PythonLanguageVersion.None || version >= PythonLanguageVersion.V25) {
+            if (version.IsNone() || version >= PythonLanguageVersion.V25) {
                 yield return "yield";
             }
         }

@@ -85,6 +85,9 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
         public override void Walk(PythonWalker walker) {
             if (walker.Walk(this)) {
+                if (_annotation != null) {
+                    _annotation.Walk(walker);
+                }
                 if (_defaultValue != null) {
                     _defaultValue.Walk(walker);
                 }

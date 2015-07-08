@@ -14,6 +14,7 @@
 
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using Microsoft.PythonTools.Interpreter;
 
@@ -25,7 +26,7 @@ namespace Microsoft.PythonTools.Analysis {
         private string _content;
         private IAnalysisCookie _cookie;
         private Dictionary<object, object> _properties;
-        private HashSet<IProjectEntry> _dependencies = new HashSet<IProjectEntry>();
+        private readonly HashSet<IProjectEntry> _dependencies = new HashSet<IProjectEntry>();
 
         public XamlProjectEntry(string filename) {
             _filename = filename;
@@ -37,7 +38,9 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         public void AddDependency(IProjectEntry projectEntry) {
-            _dependencies.Add(projectEntry);
+            lock (_dependencies) {
+                _dependencies.Add(projectEntry);
+            }
         }
 
         #region IProjectEntry Members
@@ -61,10 +64,25 @@ namespace Microsoft.PythonTools.Analysis {
                 _version++;
 
                 // update any .py files which depend upon us.
-                foreach (var dep in _dependencies) {
-                    dep.Analyze(cancel);
+                for (var deps = GetNewDependencies(null); deps.Any(); deps = GetNewDependencies(deps)) {
+                    foreach (var dep in deps) {
+                        dep.Analyze(cancel);
+                    }
                 }
             }
+        }
+
+        private HashSet<IProjectEntry> GetNewDependencies(HashSet<IProjectEntry> oldDependencies) {
+            HashSet<IProjectEntry> deps;
+            lock (_dependencies) {
+                deps = new HashSet<IProjectEntry>(_dependencies);
+            }
+
+            if (oldDependencies != null) {
+                deps.ExceptWith(oldDependencies);
+            }
+
+            return deps;
         }
 
         public string FilePath { get { return _filename; } }

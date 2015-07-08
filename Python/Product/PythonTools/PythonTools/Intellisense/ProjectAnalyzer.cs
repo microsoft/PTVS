@@ -19,27 +19,22 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading;
-using System.Windows.Forms;
-using System.Windows.Threading;
+using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Navigation;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
-using Microsoft.PythonTools.Project;
 using Microsoft.PythonTools.Repl;
-using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.VisualStudio.Text.Editor;
-using Microsoft.VisualStudio.Text.Tagging;
 using Microsoft.VisualStudioTools;
-using Microsoft.VisualStudioTools.Project;
+using SR = Microsoft.PythonTools.Project.SR;
 
 namespace Microsoft.PythonTools.Intellisense {
 #if INTERACTIVE_WINDOW
@@ -86,33 +81,15 @@ namespace Microsoft.PythonTools.Intellisense {
         private const string ParserTaskMoniker = "Parser";
         internal const string UnresolvedImportMoniker = "UnresolvedImport";
 
-
-        internal static Lazy<TaskProvider> ReplaceTaskProviderForTests(Lazy<TaskProvider> newProvider) {
-            return Interlocked.Exchange(ref _taskProvider, newProvider);
-        }
-
-        private static Lazy<TaskProvider> _taskProvider;
-        private static readonly Lazy<TaskProvider> _defaultTaskProvider = new Lazy<TaskProvider>(() => {
-            var errorList = PythonToolsPackage.GetGlobalService(typeof(SVsErrorList)) as IVsTaskList;
-            var model = PythonToolsPackage.ComponentModel;
-            var errorProvider = model != null ? model.GetService<IErrorProviderFactory>() : null;
-            return new TaskProvider(errorList, errorProvider);
-        }, LazyThreadSafetyMode.ExecutionAndPublication);
-
-        private static Lazy<TaskProvider> TaskProvider {
-            get {
-                return _taskProvider ?? _defaultTaskProvider;
-            }
-        }
+        private readonly TaskProvider _errorProvider;
 
         private readonly UnresolvedImportSquiggleProvider _unresolvedSquiggles;
 
-        private object _contentsLock = new object();
+        internal Task ReloadTask;
 
         internal VsProjectAnalyzer(
             IPythonInterpreterFactory factory,
-            IPythonInterpreterFactory[] allFactories
-        )
+            IPythonInterpreterFactory[] allFactories)
             : this(factory.CreateInterpreter(), factory, allFactories) {
         }
 
@@ -120,9 +97,18 @@ namespace Microsoft.PythonTools.Intellisense {
             IPythonInterpreter interpreter,
             IPythonInterpreterFactory factory,
             IPythonInterpreterFactory[] allFactories,
-            bool implicitProject = true
+            bool implicitProject = true,
+            TaskProvider errorTaskProvider = null
         ) {
-            _unresolvedSquiggles = new UnresolvedImportSquiggleProvider(TaskProvider);
+            if (errorTaskProvider == null) {
+                var errorList = PythonToolsPackage.GetGlobalService(typeof(SVsErrorList)) as IVsTaskList;
+                var model = PythonToolsPackage.ComponentModel;
+                var errorProvider = model != null ? model.GetService<IErrorProviderFactory>() : null;
+                _errorProvider = new TaskProvider(errorList, errorProvider);
+            } else {
+                _errorProvider = errorTaskProvider;
+            }
+            _unresolvedSquiggles = new UnresolvedImportSquiggleProvider(_errorProvider);
 
             _queue = new ParseQueue(this);
             _analysisQueue = new AnalysisQueue(this);
@@ -132,9 +118,12 @@ namespace Microsoft.PythonTools.Intellisense {
             _implicitProject = implicitProject;
 
             if (interpreter != null) {
-                _pyAnalyzer = new PythonAnalyzer(factory, interpreter);
+                _pyAnalyzer = PythonAnalyzer.Create(factory, interpreter);
+                ReloadTask = _pyAnalyzer.ReloadModulesAsync().HandleAllExceptions(SR.ProductName, GetType());
+                ReloadTask.ContinueWith(_ => ReloadTask = null);
                 interpreter.ModuleNamesChanged += OnModulesChanged;
             }
+
             _projectFiles = new ConcurrentDictionary<string, IProjectEntry>(StringComparer.OrdinalIgnoreCase);
 
             if (PythonToolsPackage.Instance != null && _pyAnalyzer != null) {
@@ -177,19 +166,17 @@ namespace Microsoft.PythonTools.Intellisense {
             entry.Properties[_pathInZipFile] = value;
         }
 
-        private void OnModulesChanged(object sender, EventArgs e) {
+        private async void OnModulesChanged(object sender, EventArgs e) {
             Debug.Assert(_pyAnalyzer != null, "Should not have null _pyAnalyzer here");
             if (_pyAnalyzer == null) {
                 return;
             }
 
-            lock (_contentsLock) {
-                _pyAnalyzer.ReloadModules();
+            await _pyAnalyzer.ReloadModulesAsync();
 
-                // re-analyze all of the modules when we get a new set of modules loaded...
-                foreach (var nameAndEntry in _projectFiles) {
-                    _queue.EnqueueFile(nameAndEntry.Value, nameAndEntry.Key);
-                }
+            // re-analyze all of the modules when we get a new set of modules loaded...
+            foreach (var nameAndEntry in _projectFiles) {
+                _queue.EnqueueFile(nameAndEntry.Value, nameAndEntry.Key);
             }
         }
 
@@ -201,8 +188,8 @@ namespace Microsoft.PythonTools.Intellisense {
         internal void ReAnalyzeTextBuffers(BufferParser bufferParser) {
             ITextBuffer[] buffers = bufferParser.Buffers;
             if (buffers.Length > 0) {
-                TaskProvider.Value.ClearErrorSource(bufferParser._currentProjEntry, ParserTaskMoniker);
-                TaskProvider.Value.ClearErrorSource(bufferParser._currentProjEntry, UnresolvedImportMoniker);
+                _errorProvider.ClearErrorSource(bufferParser._currentProjEntry, ParserTaskMoniker);
+                _errorProvider.ClearErrorSource(bufferParser._currentProjEntry, UnresolvedImportMoniker);
                 _unresolvedSquiggles.StopListening(bufferParser._currentProjEntry as IPythonProjectEntry);
 
                 var projEntry = CreateProjectEntry(buffers[0], new SnapshotCookie(buffers[0].CurrentSnapshot));
@@ -223,7 +210,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
                     ConnectErrorList(projEntry, buffer);
                     if (doSquiggles) {
-                        TaskProvider.Value.AddBufferForErrorSource(projEntry, UnresolvedImportMoniker, buffer);
+                        _errorProvider.AddBufferForErrorSource(projEntry, UnresolvedImportMoniker, buffer);
                     }
                 }
                 bufferParser._currentProjEntry = _openFiles[bufferParser] = projEntry;
@@ -244,12 +231,12 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        public static void ConnectErrorList(IProjectEntry projEntry, ITextBuffer buffer) {
-            TaskProvider.Value.AddBufferForErrorSource(projEntry, ParserTaskMoniker, buffer);
+        public void ConnectErrorList(IProjectEntry projEntry, ITextBuffer buffer) {
+            _errorProvider.AddBufferForErrorSource(projEntry, ParserTaskMoniker, buffer);
         }
 
-        public static void DisconnectErrorList(IProjectEntry projEntry, ITextBuffer buffer) {
-            TaskProvider.Value.RemoveBufferForErrorSource(projEntry, ParserTaskMoniker, buffer);
+        public void DisconnectErrorList(IProjectEntry projEntry, ITextBuffer buffer) {
+            _errorProvider.RemoveBufferForErrorSource(projEntry, ParserTaskMoniker, buffer);
         }
 
         internal void SwitchAnalyzers(VsProjectAnalyzer oldAnalyzer) {
@@ -268,10 +255,9 @@ namespace Microsoft.PythonTools.Intellisense {
         internal MonitoredBufferResult MonitorTextBuffer(ITextView textView, ITextBuffer buffer) {
             IProjectEntry projEntry = CreateProjectEntry(buffer, new SnapshotCookie(buffer.CurrentSnapshot));
 
-            ConnectErrorList(projEntry, buffer);
-            
             if (!buffer.Properties.ContainsProperty(typeof(IReplEvaluator))) {
-                TaskProvider.Value.AddBufferForErrorSource(projEntry, UnresolvedImportMoniker, buffer);
+                ConnectErrorList(projEntry, buffer);
+                _errorProvider.AddBufferForErrorSource(projEntry, UnresolvedImportMoniker, buffer);
                 _unresolvedSquiggles.ListenForNextNewAnalysis(projEntry as IPythonProjectEntry);
             }
 
@@ -291,15 +277,13 @@ namespace Microsoft.PythonTools.Intellisense {
 
             _unresolvedSquiggles.StopListening(bufferParser._currentProjEntry as IPythonProjectEntry);
 
-            if (TaskProvider.IsValueCreated) {
-                TaskProvider.Value.ClearErrorSource(bufferParser._currentProjEntry, ParserTaskMoniker);
-                TaskProvider.Value.ClearErrorSource(bufferParser._currentProjEntry, UnresolvedImportMoniker);
+            _errorProvider.ClearErrorSource(bufferParser._currentProjEntry, ParserTaskMoniker);
+            _errorProvider.ClearErrorSource(bufferParser._currentProjEntry, UnresolvedImportMoniker);
 
-                if (ImplicitProject) {
-                    // remove the file from the error list
-                    TaskProvider.Value.Clear(bufferParser._currentProjEntry, ParserTaskMoniker);
-                    TaskProvider.Value.Clear(bufferParser._currentProjEntry, UnresolvedImportMoniker);
-                }
+            if (ImplicitProject) {
+                // remove the file from the error list
+                _errorProvider.Clear(bufferParser._currentProjEntry, ParserTaskMoniker);
+                _errorProvider.Clear(bufferParser._currentProjEntry, UnresolvedImportMoniker);
             }
         }
 
@@ -363,7 +347,9 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private void QueueDirectoryAnalysis(string path) {
-            ThreadPool.QueueUserWorkItem(x => { lock (_contentsLock) { AnalyzeDirectory(CommonUtils.NormalizeDirectoryPath(Path.GetDirectoryName(path))); } });
+            ThreadPool.QueueUserWorkItem(x => {
+                AnalyzeDirectory(CommonUtils.NormalizeDirectoryPath(Path.GetDirectoryName(path)));
+            });
         }
 
         private bool ShouldAnalyzePath(string path) {
@@ -596,12 +582,19 @@ namespace Microsoft.PythonTools.Intellisense {
                 return MissingImportAnalysis.Empty;
             }
 
-            var analysis = ((IPythonProjectEntry)snapshot.TextBuffer.GetProjectEntry()).Analysis;
-            if (analysis == null) {
+            IPythonProjectEntry entry;
+            ModuleAnalysis analysis;
+            if (!snapshot.TextBuffer.TryGetPythonProjectEntry(out entry) ||
+                entry == null ||
+                (analysis = entry.Analysis) == null) {
                 return MissingImportAnalysis.Empty;
             }
 
             var text = exprRange.Value.GetText();
+            if (string.IsNullOrEmpty(text)) {
+                return MissingImportAnalysis.Empty;
+            }
+
             var analyzer = analysis.ProjectState;
             var index = span.GetStartPoint(snapshot).Position;
 
@@ -773,9 +766,9 @@ namespace Microsoft.PythonTools.Intellisense {
                 PythonAst ast;
                 CollectingErrorSink errorSink;
                 if (reader != null) {
-                    ParsePythonCode(reader, indentationSeverity, out ast, out errorSink);
+                    ParsePythonCode(snapshot, reader, indentationSeverity, out ast, out errorSink);
                 } else {
-                    ParsePythonCode(content, indentationSeverity, out ast, out errorSink);
+                    ParsePythonCode(snapshot, content, indentationSeverity, out ast, out errorSink);
                 }
 
                 if (ast != null) {
@@ -818,7 +811,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     CollectingErrorSink errorSink;
 
                     var reader = new SnapshotSpanSourceCodeReader(new SnapshotSpan(snapshot, new Span(0, snapshot.Length)));
-                    ParsePythonCode(reader, indentationSeverity, out ast, out errorSink);
+                    ParsePythonCode(snapshot, reader, indentationSeverity, out ast, out errorSink);
 
                     if (ast != null) {
                         asts.Add(ast);
@@ -863,36 +856,38 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        private void ParsePythonCode(Stream content, Severity indentationSeverity, out PythonAst ast, out CollectingErrorSink errorSink) {
+        private void ParsePythonCode(
+            ITextSnapshot snapshot, Stream content, Severity indentationSeverity,
+            out PythonAst ast, out CollectingErrorSink errorSink
+        ) {
             ast = null;
             errorSink = new CollectingErrorSink();
 
-            using (var parser = Parser.CreateParser(
-                content,
-                Project.LanguageVersion,
-                new ParserOptions() {
+            var options = new ParserOptions {
                     ErrorSink = errorSink,
                     IndentationInconsistencySeverity = indentationSeverity,
                     BindReferences = true
-                }
-            )) {
+            };
+
+            using (var parser = Parser.CreateParser(content, Project.LanguageVersion, options)) {
                 ast = ParseOneFile(ast, parser);
             }
         }
 
-        private void ParsePythonCode(TextReader content, Severity indentationSeverity, out PythonAst ast, out CollectingErrorSink errorSink) {
+        private void ParsePythonCode(
+            ITextSnapshot snapshot, TextReader content, Severity indentationSeverity,
+            out PythonAst ast, out CollectingErrorSink errorSink
+        ) {
             ast = null;
             errorSink = new CollectingErrorSink();
 
-            using (var parser = Parser.CreateParser(
-                content,
-                Project.LanguageVersion,
-                new ParserOptions() {
+            var options = new ParserOptions {
                     ErrorSink = errorSink,
                     IndentationInconsistencySeverity = indentationSeverity,
-                    BindReferences = true
-                }
-            )) {
+                BindReferences = true,
+            };
+
+            using (var parser = Parser.CreateParser(content, Project.LanguageVersion, options)) {
                 ast = ParseOneFile(ast, parser);
             }
         }
@@ -926,20 +921,20 @@ namespace Microsoft.PythonTools.Intellisense {
             if (changed) {
                 OnShouldWarnOnLaunchChanged(entry);
             }
-
-            var f = new TaskProviderItemFactory(snapshot);
-
-            // Update the parser warnings/errors
+            
+            // Update the parser warnings/errors.
+            var factory = new TaskProviderItemFactory(snapshot);
             if (errorSink.Warnings.Any() || errorSink.Errors.Any()) {
-                TaskProvider.Value.ReplaceItems(
+                _errorProvider.ReplaceItems(
                     entry,
                     ParserTaskMoniker,
-                    errorSink.Warnings.Select(er => f.FromParseWarning(er))
-                        .Concat(errorSink.Errors.Select(er => f.FromParseError(er)))
+                    errorSink.Warnings
+                        .Select(er => factory.FromErrorResult(er, VSTASKPRIORITY.TP_NORMAL, VSTASKCATEGORY.CAT_BUILDCOMPILE))
+                        .Concat(errorSink.Errors.Select(er => factory.FromErrorResult(er, VSTASKPRIORITY.TP_HIGH, VSTASKCATEGORY.CAT_BUILDCOMPILE)))
                         .ToList()
                 );
-            } else if (TaskProvider.IsValueCreated) {
-                TaskProvider.Value.Clear(entry, ParserTaskMoniker);
+            } else {
+                _errorProvider.Clear(entry, ParserTaskMoniker);
             }
         }
 
@@ -1183,9 +1178,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
 
                 if (addDir) {
-                    lock (_analyzer._contentsLock) {
-                        _analyzer._pyAnalyzer.AddAnalysisDirectory(dir);
-                    }
+                    _analyzer._pyAnalyzer.AddAnalysisDirectory(dir);
                 }
 
                 try {
@@ -1262,9 +1255,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 return;
             }
 
-            lock (_contentsLock) {
-                _pyAnalyzer.AddAnalysisDirectory(zipFileName);
-            }
+            _pyAnalyzer.AddAnalysisDirectory(zipFileName);
 
             ZipArchive archive = null;
             Queue<ZipArchiveEntry> entryQueue = null;
@@ -1380,9 +1371,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 return;
             }
 
-            lock (_contentsLock) {
-                _pyAnalyzer.RemoveAnalysisDirectory(directory);
-            }
+            _pyAnalyzer.RemoveAnalysisDirectory(directory);
         }
 
         internal void Cancel() {
@@ -1419,11 +1408,10 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal void ClearParserTasks(IProjectEntry entry) {
             if (entry != null) {
-                if (TaskProvider.IsValueCreated) {
-                    // TaskProvider may not be created if we've never opened a
-                    // Python file and none of the project files have errors
-                    TaskProvider.Value.Clear(entry, ParserTaskMoniker);
-                }
+                _errorProvider.Clear(entry, ParserTaskMoniker);
+
+                _unresolvedSquiggles.StopListening(entry as IPythonProjectEntry);
+
                 bool removed = false;
                 lock (_hasParseErrorsLock) {
                     removed = _hasParseErrors.Remove(entry);
@@ -1435,9 +1423,9 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal void ClearAllTasks() {
-            if (TaskProvider.IsValueCreated) {
-                TaskProvider.Value.ClearAll();
-            }
+            _errorProvider.ClearAll();
+
+
             lock (_hasParseErrorsLock) {
                 _hasParseErrors.Clear();
             }
@@ -1463,19 +1451,16 @@ namespace Microsoft.PythonTools.Intellisense {
         #region IDisposable Members
 
         public void Dispose() {
-            if (TaskProvider.IsValueCreated) {
                 foreach (var entry in _projectFiles.Values) {
-                    TaskProvider.Value.Clear(entry, ParserTaskMoniker);
-                    TaskProvider.Value.Clear(entry, UnresolvedImportMoniker);
-                }
+                _errorProvider.Clear(entry, ParserTaskMoniker);
+                _errorProvider.Clear(entry, UnresolvedImportMoniker);
+
             }
 
-            ((IDisposable)_analysisQueue).Dispose();
+            _analysisQueue.Dispose();
             if (_pyAnalyzer != null) {
-                lock (_contentsLock) {
-                    _pyAnalyzer.Interpreter.ModuleNamesChanged -= OnModulesChanged;
-                    ((IDisposable)_pyAnalyzer).Dispose();
-                }
+                _pyAnalyzer.Interpreter.ModuleNamesChanged -= OnModulesChanged;
+                _pyAnalyzer.Dispose();
             }
 
             _queueActivityEvent.Dispose();
@@ -1484,11 +1469,9 @@ namespace Microsoft.PythonTools.Intellisense {
         #endregion
 
         internal void RemoveReference(ProjectAssemblyReference reference) {
-            lock (_contentsLock) {
-                var interp = Interpreter as IPythonInterpreterWithProjectReferences;
-                if (interp != null) {
-                    interp.RemoveReference(reference);
-                }
+            var interp = Interpreter as IPythonInterpreterWithProjectReferences;
+            if (interp != null) {
+                interp.RemoveReference(reference);
             }
         }
     }

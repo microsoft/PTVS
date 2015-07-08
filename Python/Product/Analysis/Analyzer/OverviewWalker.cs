@@ -28,13 +28,17 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
     internal class OverviewWalker : PythonWalker {
         private InterpreterScope _scope;
         private readonly ProjectEntry _entry;
+        private readonly PythonAst _tree;
         private readonly Stack<AnalysisUnit> _analysisStack = new Stack<AnalysisUnit>();
         private AnalysisUnit _curUnit;
         private SuiteStatement _curSuite;
 
-        public OverviewWalker(ProjectEntry entry, AnalysisUnit topAnalysis) {
+        public OverviewWalker(ProjectEntry entry, AnalysisUnit topAnalysis, PythonAst tree) {
             _entry = entry;
             _curUnit = topAnalysis;
+
+            _tree = tree;
+            Debug.Assert(_tree != null);
 
             _scope = topAnalysis.Scope;
         }
@@ -127,7 +131,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         private VariableDef CreateVariableInDeclaredScope(NameExpression name) {
-            var reference = name.GetVariableReference(_entry.Tree);
+            var reference = name.GetVariableReference(_tree);
 
             if (reference != null && reference.Variable != null) {
                 var declNode = reference.Variable.Scope;
@@ -250,25 +254,25 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         private ComprehensionScope MakeGeneratorComprehensionScope(Comprehension node) {
-            var unit = new GeneratorComprehensionAnalysisUnit(node, _entry.Tree, _curUnit, _scope);
+            var unit = new GeneratorComprehensionAnalysisUnit(node, _tree, _curUnit, _scope);
             unit.Enqueue();
             return (ComprehensionScope)unit.Scope;
         }
 
         private ComprehensionScope MakeListComprehensionScope(Comprehension node) {
-            var unit = new ListComprehensionAnalysisUnit(node, _entry.Tree, _curUnit, _scope);
+            var unit = new ListComprehensionAnalysisUnit(node, _tree, _curUnit, _scope);
             unit.Enqueue();
             return (ComprehensionScope)unit.Scope;
         }
 
         private ComprehensionScope MakeSetComprehensionScope(Comprehension node) {
-            var unit = new SetComprehensionAnalysisUnit(node, _entry.Tree, _curUnit, _scope);
+            var unit = new SetComprehensionAnalysisUnit(node, _tree, _curUnit, _scope);
             unit.Enqueue();
             return (ComprehensionScope)unit.Scope;
         }
 
         private ComprehensionScope MakeDictComprehensionScope(Comprehension node) {
-            var unit = new DictionaryComprehensionAnalysisUnit(node, _entry.Tree, _curUnit, _scope);
+            var unit = new DictionaryComprehensionAnalysisUnit(node, _tree, _curUnit, _scope);
             unit.Enqueue();
             return (ComprehensionScope)unit.Scope;
         }
@@ -531,14 +535,14 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 _scope = _scope.OuterScope;
                 // transform back into a line number and start the new statement scope on the line
                 // after the suite statement.
-                var lineNo = _entry.Tree.IndexToLocation(node.EndIndex).Line;
+                var lineNo = _tree.IndexToLocation(node.EndIndex).Line;
 
                 int offset;
-                if (_entry.Tree._lineLocations.Length == 0) {
+                if (_tree._lineLocations.Length == 0) {
                     // single line input
                     offset = 0;
                 } else {
-                    offset = lineNo < _entry.Tree._lineLocations.Length ? _entry.Tree._lineLocations[lineNo] : _entry.Tree._lineLocations[_entry.Tree._lineLocations.Length - 1];
+                    offset = lineNo < _tree._lineLocations.Length ? _tree._lineLocations[lineNo] : _tree._lineLocations[_tree._lineLocations.Length - 1];
                 }
                 var closingScope = new StatementScope(offset, _scope);
                 _scope.Children.Add(closingScope);

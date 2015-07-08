@@ -21,7 +21,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using IronPython.Runtime;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Interpreter;
@@ -620,7 +619,7 @@ x = a()
             var func = entry.GetValuesByIndex("a", 0).OfType<FunctionInfo>().FirstOrDefault();
             Assert.IsNotNull(func);
             var sb = new StringBuilder();
-            func.AddReturnTypeString(sb);
+            FunctionInfo.AddReturnTypeString(sb, func.GetReturnValue);
             Assert.AreEqual(" -> tuple", sb.ToString());
         }
 
@@ -656,41 +655,42 @@ import nt,
 
         [TestMethod, Priority(0)]
         public void ImportStarCorrectRefs() {
-            var state = new PythonAnalyzer(InterpreterFactory, Interpreter);
+            using (var state = PythonAnalyzer.CreateSynchronously(InterpreterFactory, Interpreter)) {
 
-            var text1 = @"
+                var text1 = @"
 from mod2 import *
 
 a = D()
 ";
 
-            var text2 = @"
+                var text2 = @"
 class D(object):
     pass
 ";
 
-            var mod1 = state.AddModule("mod1", "mod1", null);
-            Prepare(mod1, GetSourceUnit(text1, "mod1"));
-            var mod2 = state.AddModule("mod2", "mod2", null);
-            Prepare(mod2, GetSourceUnit(text2, "mod2"));
+                var mod1 = state.AddModule("mod1", "mod1", null);
+                Prepare(mod1, GetSourceUnit(text1, "mod1"));
+                var mod2 = state.AddModule("mod2", "mod2", null);
+                Prepare(mod2, GetSourceUnit(text2, "mod2"));
 
-            mod1.Analyze(CancellationToken.None, true);
-            mod2.Analyze(CancellationToken.None, true);
-            mod1.AnalysisGroup.AnalyzeQueuedEntries(CancellationToken.None);
+                mod1.Analyze(CancellationToken.None, true);
+                mod2.Analyze(CancellationToken.None, true);
+                mod1.AnalysisGroup.AnalyzeQueuedEntries(CancellationToken.None);
 
-            VerifyReferences(
-                UniqifyVariables(mod2.Analysis.GetVariablesByIndex("D", text2.IndexOf("class D"))),
-                new VariableLocation(2, 7, VariableType.Definition, "mod2"),
-                new VariableLocation(4, 5, VariableType.Reference, "mod1")
-            );
+                VerifyReferences(
+                    UniqifyVariables(mod2.Analysis.GetVariablesByIndex("D", text2.IndexOf("class D"))),
+                    new VariableLocation(2, 7, VariableType.Definition, "mod2"),
+                    new VariableLocation(4, 5, VariableType.Reference, "mod1")
+                );
+            }
         }
 
 
         [TestMethod, Priority(0)]
         public void MutatingReferences() {
-            var state = new PythonAnalyzer(InterpreterFactory, Interpreter);
+            using (var state = PythonAnalyzer.CreateSynchronously(InterpreterFactory, Interpreter)) {
 
-            var text1 = @"
+                var text1 = @"
 import mod2
 
 class C(object):
@@ -700,40 +700,41 @@ class C(object):
 mod2.D(C())
 ";
 
-            var text2 = @"
+                var text2 = @"
 class D(object):
     def __init__(self, value):
         self.value = value
         self.value.SomeMethod()
 ";
 
-            var mod1 = state.AddModule("mod1", "mod1", null);
-            Prepare(mod1, GetSourceUnit(text1, "mod1"));
-            var mod2 = state.AddModule("mod2", "mod2", null);
-            Prepare(mod2, GetSourceUnit(text2, "mod2"));
+                var mod1 = state.AddModule("mod1", "mod1", null);
+                Prepare(mod1, GetSourceUnit(text1, "mod1"));
+                var mod2 = state.AddModule("mod2", "mod2", null);
+                Prepare(mod2, GetSourceUnit(text2, "mod2"));
 
-            mod1.Analyze(CancellationToken.None);
-            mod2.Analyze(CancellationToken.None);
+                mod1.Analyze(CancellationToken.None);
+                mod2.Analyze(CancellationToken.None);
 
 
-            VerifyReferences(UniqifyVariables(mod1.Analysis.GetVariablesByIndex("SomeMethod", text1.IndexOf("SomeMethod"))),
-                new VariableLocation(5, 9, VariableType.Definition), new VariableLocation(5, 20, VariableType.Reference));
+                VerifyReferences(UniqifyVariables(mod1.Analysis.GetVariablesByIndex("SomeMethod", text1.IndexOf("SomeMethod"))),
+                    new VariableLocation(5, 9, VariableType.Definition), new VariableLocation(5, 20, VariableType.Reference));
 
-            // mutate 1st file
-            text1 = text1.Substring(0, text1.IndexOf("    def")) + Environment.NewLine + text1.Substring(text1.IndexOf("    def"));
-            Prepare(mod1, GetSourceUnit(text1, "mod1"));
-            mod1.Analyze(CancellationToken.None);
+                // mutate 1st file
+                text1 = text1.Substring(0, text1.IndexOf("    def")) + Environment.NewLine + text1.Substring(text1.IndexOf("    def"));
+                Prepare(mod1, GetSourceUnit(text1, "mod1"));
+                mod1.Analyze(CancellationToken.None);
 
-            VerifyReferences(UniqifyVariables(mod1.Analysis.GetVariablesByIndex("SomeMethod", text1.IndexOf("SomeMethod"))),
-                new VariableLocation(6, 9, VariableType.Definition), new VariableLocation(5, 20, VariableType.Reference));
+                VerifyReferences(UniqifyVariables(mod1.Analysis.GetVariablesByIndex("SomeMethod", text1.IndexOf("SomeMethod"))),
+                    new VariableLocation(6, 9, VariableType.Definition), new VariableLocation(5, 20, VariableType.Reference));
 
-            // mutate 2nd file
-            text2 = Environment.NewLine + text2;
-            Prepare(mod2, GetSourceUnit(text2, "mod1"));
-            mod2.Analyze(CancellationToken.None);
+                // mutate 2nd file
+                text2 = Environment.NewLine + text2;
+                Prepare(mod2, GetSourceUnit(text2, "mod1"));
+                mod2.Analyze(CancellationToken.None);
 
-            VerifyReferences(UniqifyVariables(mod1.Analysis.GetVariablesByIndex("SomeMethod", text1.IndexOf("SomeMethod"))),
-                new VariableLocation(6, 9, VariableType.Definition), new VariableLocation(6, 20, VariableType.Reference));
+                VerifyReferences(UniqifyVariables(mod1.Analysis.GetVariablesByIndex("SomeMethod", text1.IndexOf("SomeMethod"))),
+                    new VariableLocation(6, 9, VariableType.Definition), new VariableLocation(6, 20, VariableType.Reference));
+            }
 
         }
 
@@ -805,7 +806,6 @@ class C(object):
 
     def f(self):
         abc = C.__FOB  # Completion should work here
-
 
 xyz = C._C__FOB  # Advanced members completion should work here
 ";
@@ -1020,7 +1020,7 @@ c = _next(iC)
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("b", 1), BuiltinTypeId_Str);
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("c", 1), BuiltinTypeId.Int, BuiltinTypeId_Str, BuiltinTypeId.Float);
 
-            if (!(this is IronPythonAnalysisTest)) {
+            if (SupportsPython3) {
                 entry = ProcessText(@"
 A = [1, 2, 3]
 B = 'abc'
@@ -1052,7 +1052,7 @@ c = next(iC)
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("b", 1), BuiltinTypeId_Str);
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("c", 1), BuiltinTypeId.Int);
 
-            if (!(this is IronPythonAnalysisTest)) {
+            if (SupportsPython3) {
                 entry = ProcessText(@"
 iA = iter(lambda: 1, 2)
 iB = iter(lambda: 'abc', None)
@@ -1130,8 +1130,7 @@ d = a.__next__()";
 
         [TestMethod, Priority(0)]
         public void Generator3x() {
-            if (this is IronPythonAnalysisTest) {
-                // IronPython does not yet support __next__() method
+            if (!SupportsPython3) {
                 return;
             }
 
@@ -1196,7 +1195,7 @@ d = a.next()";
 
         [TestMethod, Priority(0)]
         public void GeneratorDelegation() {
-            if (this is IronPythonAnalysisTest) {
+            if (!SupportsPython3) {
                 // IronPython does not yet support yield from.
                 return;
             }
@@ -1463,6 +1462,24 @@ for some_str, some_int, some_bool in x:
         }
 
         [TestMethod, Priority(0)]
+        public void ForIterator() {
+            var code = @"
+class X(object):
+    def __iter__(self): return self
+    def __next__(self): return 123
+
+class Y(object):
+    def __iter__(self): return X()
+
+for i in Y():
+    pass
+";
+            var entry = ProcessText(code, PythonLanguageVersion.V34);
+
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("i", code.IndexOf("pass")), BuiltinTypeId.Int);
+        }
+
+        [TestMethod, Priority(0)]
         public void DynamicAttributes() {
             var entry = ProcessText(@"
 class x(object):
@@ -1520,6 +1537,27 @@ b = x.b
 
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("a", 1), BuiltinTypeId.Int);
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("b", 1), BuiltinTypeId.Float);
+        }
+
+        [TestMethod, Priority(0)]
+        public void NoGetAttrForSlots() {
+            var code = @"class A(object):
+    def __getattr__(self, key):
+        return f
+
+def f(x, y):
+    x # should be unknown
+    y # should be int
+
+a = A()
+a(123, None)
+a.__call__(None, 123)
+";
+            var entry = ProcessText(code);
+
+            // FIXME: https://pytools.codeplex.com/workitem/2898 (for IronPython only)
+            AssertUtil.DoesntContain(entry.GetTypeIdsByIndex("x", code.IndexOf("x #")), BuiltinTypeId.Int);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("y", code.IndexOf("y #")), BuiltinTypeId.Int);
         }
 
         [TestMethod, Priority(0)]
@@ -2089,18 +2127,18 @@ b = {1}{1}C()
         [TestMethod, Priority(0)]
         public void BinaryOperators() {
             var operators = new[] {
-                new { Method = "add", Operator = "+" },
-                new { Method = "sub", Operator = "-" },
-                new { Method = "mul", Operator = "*" },
-                new { Method = "div", Operator = "/" },
-                new { Method = "mod", Operator = "%" },
-                new { Method = "and", Operator = "&" },
-                new { Method = "or", Operator = "|" },
-                new { Method = "xor", Operator = "^" },
-                new { Method = "lshift", Operator = "<<" },
-                new { Method = "rshift", Operator = ">>" },
-                new { Method = "pow", Operator = "**" },
-                new { Method = "floordiv", Operator = "//" },
+                new { Method = "add", Operator = "+", Version = PythonLanguageVersion.V27 },
+                new { Method = "sub", Operator = "-", Version = PythonLanguageVersion.V27 },
+                new { Method = "mul", Operator = "*", Version = PythonLanguageVersion.V27 },
+                new { Method = "div", Operator = "/", Version = PythonLanguageVersion.V27 },
+                new { Method = "mod", Operator = "%", Version = PythonLanguageVersion.V27 },
+                new { Method = "and", Operator = "&", Version = PythonLanguageVersion.V27 },
+                new { Method = "or", Operator = "|", Version = PythonLanguageVersion.V27 },
+                new { Method = "xor", Operator = "^", Version = PythonLanguageVersion.V27 },
+                new { Method = "lshift", Operator = "<<", Version = PythonLanguageVersion.V27 },
+                new { Method = "rshift", Operator = ">>", Version = PythonLanguageVersion.V27 },
+                new { Method = "pow", Operator = "**", Version = PythonLanguageVersion.V27 },
+                new { Method = "floordiv", Operator = "//", Version = PythonLanguageVersion.V27 },
             };
 
             var text = @"
@@ -2129,11 +2167,13 @@ i = C() {1} 42L
 j = 42L {1} C()
 k = C() {1} 42j
 l = 42j {1} C()
+m = C()
+m {1}= m
 ";
 
             foreach (var test in operators) {
                 Console.WriteLine(test.Operator);
-                var entry = ProcessText(String.Format(text, test.Method, test.Operator));
+                var entry = ProcessText(String.Format(text, test.Method, test.Operator), test.Version);
 
                 AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("a", text.IndexOf("a =")), "ForwardResult instance");
                 AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("b", text.IndexOf("b =")), "ReverseResult instance");
@@ -2147,6 +2187,8 @@ l = 42j {1} C()
                 AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("j", text.IndexOf("j =")), "ReverseResult instance");
                 AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("k", text.IndexOf("k =")), "ForwardResult instance");
                 AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("l", text.IndexOf("l =")), "ReverseResult instance");
+                // We assume that augmented assignments keep their type
+                AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("m", text.IndexOf("m " + test.Operator)), "C instance");
             }
         }
 
@@ -2698,78 +2740,80 @@ def f(a):
 
         [TestMethod, Priority(0)]
         public void ReferencesCrossModule() {
-            var state = new PythonAnalyzer(InterpreterFactory, Interpreter);
+            using (var state = PythonAnalyzer.CreateSynchronously(InterpreterFactory, Interpreter)) {
 
-            var fobText = @"
+                var fobText = @"
 from oar import abc
 
 abc()
 ";
-            var oarText = "class abc(object): pass";
+                var oarText = "class abc(object): pass";
 
-            var fobMod = state.AddModule("fob", "fob", null);
-            Prepare(fobMod, GetSourceUnit(fobText, "mod1"));
-            var oarMod = state.AddModule("oar", "oar", null);
-            Prepare(oarMod, GetSourceUnit(oarText, "mod2"));
+                var fobMod = state.AddModule("fob", "fob", null);
+                Prepare(fobMod, GetSourceUnit(fobText, "mod1"));
+                var oarMod = state.AddModule("oar", "oar", null);
+                Prepare(oarMod, GetSourceUnit(oarText, "mod2"));
 
-            fobMod.Analyze(CancellationToken.None);
-            oarMod.Analyze(CancellationToken.None);
+                fobMod.Analyze(CancellationToken.None);
+                oarMod.Analyze(CancellationToken.None);
 
-            VerifyReferences(UniqifyVariables(oarMod.Analysis.GetVariablesByIndex("abc", oarText.IndexOf("abc"))),
-                new VariableLocation(1, 7, VariableType.Definition, "oar"),     // definition 
-                new VariableLocation(2, 17, VariableType.Reference, "fob"),     // import
-                new VariableLocation(4, 1, VariableType.Reference, "fob")       // call
-            );
+                VerifyReferences(UniqifyVariables(oarMod.Analysis.GetVariablesByIndex("abc", oarText.IndexOf("abc"))),
+                    new VariableLocation(1, 7, VariableType.Definition, "oar"),     // definition 
+                    new VariableLocation(2, 17, VariableType.Reference, "fob"),     // import
+                    new VariableLocation(4, 1, VariableType.Reference, "fob")       // call
+                );
+            }
         }
 
         [TestMethod, Priority(0)]
         public void ReferencesCrossMultiModule() {
-            var state = new PythonAnalyzer(InterpreterFactory, Interpreter);
+            using (var state = PythonAnalyzer.CreateSynchronously(InterpreterFactory, Interpreter)) {
 
-            var fobText = @"
+                var fobText = @"
 from oarbaz import abc
 
 abc()
 ";
-            var oarText = "class abc1(object): pass";
-            var bazText = "class abc2(object): pass";
-            var oarBazText = @"from oar import abc1 as abc
+                var oarText = "class abc1(object): pass";
+                var bazText = "class abc2(object): pass";
+                var oarBazText = @"from oar import abc1 as abc
 from baz import abc2 as abc";
 
-            var fobMod = state.AddModule("fob", "fob", null);
-            Prepare(fobMod, GetSourceUnit(fobText, "mod1"));
-            var oarMod = state.AddModule("oar", "oar", null);
-            Prepare(oarMod, GetSourceUnit(oarText, "mod2"));
-            var bazMod = state.AddModule("baz", "baz", null);
-            Prepare(bazMod, GetSourceUnit(bazText, "mod3"));
-            var oarBazMod = state.AddModule("oarbaz", "oarbaz", null);
-            Prepare(oarBazMod, GetSourceUnit(oarBazText, "mod4"));
+                var fobMod = state.AddModule("fob", "fob", null);
+                Prepare(fobMod, GetSourceUnit(fobText, "mod1"));
+                var oarMod = state.AddModule("oar", "oar", null);
+                Prepare(oarMod, GetSourceUnit(oarText, "mod2"));
+                var bazMod = state.AddModule("baz", "baz", null);
+                Prepare(bazMod, GetSourceUnit(bazText, "mod3"));
+                var oarBazMod = state.AddModule("oarbaz", "oarbaz", null);
+                Prepare(oarBazMod, GetSourceUnit(oarBazText, "mod4"));
 
-            fobMod.Analyze(CancellationToken.None, true);
-            oarMod.Analyze(CancellationToken.None, true);
-            bazMod.Analyze(CancellationToken.None, true);
-            oarBazMod.Analyze(CancellationToken.None, true);
-            fobMod.AnalysisGroup.AnalyzeQueuedEntries(CancellationToken.None);
-            oarMod.AnalysisGroup.AnalyzeQueuedEntries(CancellationToken.None);
-            bazMod.AnalysisGroup.AnalyzeQueuedEntries(CancellationToken.None);
-            oarBazMod.AnalysisGroup.AnalyzeQueuedEntries(CancellationToken.None);
+                fobMod.Analyze(CancellationToken.None, true);
+                oarMod.Analyze(CancellationToken.None, true);
+                bazMod.Analyze(CancellationToken.None, true);
+                oarBazMod.Analyze(CancellationToken.None, true);
+                fobMod.AnalysisGroup.AnalyzeQueuedEntries(CancellationToken.None);
+                oarMod.AnalysisGroup.AnalyzeQueuedEntries(CancellationToken.None);
+                bazMod.AnalysisGroup.AnalyzeQueuedEntries(CancellationToken.None);
+                oarBazMod.AnalysisGroup.AnalyzeQueuedEntries(CancellationToken.None);
 
-            VerifyReferences(UniqifyVariables(oarMod.Analysis.GetVariablesByIndex("abc1", oarText.IndexOf("abc1"))),
-                new VariableLocation(1, 7, VariableType.Definition),
-                new VariableLocation(1, 25, VariableType.Reference)
-            );
-            VerifyReferences(UniqifyVariables(bazMod.Analysis.GetVariablesByIndex("abc2", bazText.IndexOf("abc2"))),
-                new VariableLocation(1, 7, VariableType.Definition),
-                new VariableLocation(2, 25, VariableType.Reference)
-            );
-            VerifyReferences(UniqifyVariables(fobMod.Analysis.GetVariablesByIndex("abc", 0)),
-                new VariableLocation(1, 7, VariableType.Value),         // possible value
-                //new VariableLocation(1, 7, VariableType.Value),       // appears twice for two modules, but cannot test that
-                new VariableLocation(2, 20, VariableType.Definition),   // import
-                new VariableLocation(4, 1, VariableType.Reference),     // call
-                new VariableLocation(1, 25, VariableType.Definition),   // import in oar
-                new VariableLocation(2, 25, VariableType.Definition)    // import in baz
-            );
+                VerifyReferences(UniqifyVariables(oarMod.Analysis.GetVariablesByIndex("abc1", oarText.IndexOf("abc1"))),
+                    new VariableLocation(1, 7, VariableType.Definition),
+                    new VariableLocation(1, 25, VariableType.Reference)
+                );
+                VerifyReferences(UniqifyVariables(bazMod.Analysis.GetVariablesByIndex("abc2", bazText.IndexOf("abc2"))),
+                    new VariableLocation(1, 7, VariableType.Definition),
+                    new VariableLocation(2, 25, VariableType.Reference)
+                );
+                VerifyReferences(UniqifyVariables(fobMod.Analysis.GetVariablesByIndex("abc", 0)),
+                    new VariableLocation(1, 7, VariableType.Value),         // possible value
+                    //new VariableLocation(1, 7, VariableType.Value),       // appears twice for two modules, but cannot test that
+                    new VariableLocation(2, 20, VariableType.Definition),   // import
+                    new VariableLocation(4, 1, VariableType.Reference),     // call
+                    new VariableLocation(1, 25, VariableType.Definition),   // import in oar
+                    new VariableLocation(2, 25, VariableType.Definition)    // import in baz
+                );
+            }
         }
 
         private static void LocationNames(List<IAnalysisVariable> vars, StringBuilder error) {
@@ -2955,9 +2999,9 @@ for fob in abc:
         [TestMethod, Priority(0)]
         public void ListIndiciesCrossModuleAnalysis() {
             for (int i = 0; i < 2; i++) {
-                var state = new PythonAnalyzer(InterpreterFactory, Interpreter);
-                var code1 = "l = []";
-                var code2 = @"class C(object):
+                using (var state = PythonAnalyzer.CreateSynchronously(InterpreterFactory, Interpreter)) {
+                    var code1 = "l = []";
+                    var code2 = @"class C(object):
     pass
 
 a = C()
@@ -2965,30 +3009,31 @@ import mod1
 mod1.l.append(a)
 ";
 
-                var mod1 = state.AddModule("mod1", "mod1", null);
-                Prepare(mod1, GetSourceUnit(code1, "mod1"));
-                var mod2 = state.AddModule("mod2", "mod2", null);
-                Prepare(mod2, GetSourceUnit(code2, "mod2"));
-
-                mod1.Analyze(CancellationToken.None, true);
-                mod2.Analyze(CancellationToken.None, true);
-
-                mod1.AnalysisGroup.AnalyzeQueuedEntries(CancellationToken.None);
-                if (i == 0) {
-                    // re-preparing shouldn't be necessary
+                    var mod1 = state.AddModule("mod1", "mod1", null);
+                    Prepare(mod1, GetSourceUnit(code1, "mod1"));
+                    var mod2 = state.AddModule("mod2", "mod2", null);
                     Prepare(mod2, GetSourceUnit(code2, "mod2"));
+
+                    mod1.Analyze(CancellationToken.None, true);
+                    mod2.Analyze(CancellationToken.None, true);
+
+                    mod1.AnalysisGroup.AnalyzeQueuedEntries(CancellationToken.None);
+                    if (i == 0) {
+                        // re-preparing shouldn't be necessary
+                        Prepare(mod2, GetSourceUnit(code2, "mod2"));
+                    }
+
+                    mod2.Analyze(CancellationToken.None, true);
+                    mod2.AnalysisGroup.AnalyzeQueuedEntries(CancellationToken.None);
+
+                    var listValue = mod1.Analysis.GetValuesByIndex("l", 0).ToArray();
+                    Assert.AreEqual(1, listValue.Length);
+                    Assert.AreEqual("list of C instance", listValue[0].Description);
+
+                    var values = mod1.Analysis.GetValuesByIndex("l[0]", 0).ToArray();
+                    Assert.AreEqual(1, values.Length);
+                    Assert.AreEqual("C instance", values[0].Description);
                 }
-
-                mod2.Analyze(CancellationToken.None, true);
-                mod2.AnalysisGroup.AnalyzeQueuedEntries(CancellationToken.None);
-
-                var listValue = mod1.Analysis.GetValuesByIndex("l", 0).ToArray();
-                Assert.AreEqual(1, listValue.Length);
-                Assert.AreEqual("list of C instance", listValue[0].Description);
-
-                var values = mod1.Analysis.GetValuesByIndex("l[0]", 0).ToArray();
-                Assert.AreEqual(1, values.Length);
-                Assert.AreEqual("C instance", values[0].Description);
             }
         }
 
@@ -3258,8 +3303,7 @@ class cls(cls):
             AssertUtil.ContainsExactly(entry.GetMemberNamesByIndex("cls().abc", 1), _intMembers);
             AssertUtil.ContainsExactly(entry.GetMemberNamesByIndex("cls.abc", 1), _intMembers);
             var sigs = entry.GetSignaturesByIndex("cls", 1).ToArray();
-            Assert.AreEqual(2, sigs.Length);    // 1 for object, one for cls
-            Assert.AreEqual(null, sigs.First().Documentation);
+            AssertUtil.ContainsExactly(sigs.Select(s => s.Documentation), null, "The most base type");
         }
 
         [TestMethod, Priority(0)]
@@ -3573,19 +3617,28 @@ if not Method(42, 'abc', []):
         [TestMethod, Priority(0)]
         public void WithStatement() {
             var text = @"
-class x(object):
-    def x_method(self):
-        pass
-        
-with x() as fob:
-    print fob
+class X(object):
+    def x_method(self): pass
+    def __enter__(self): return self
+    def __exit__(self, exc_type, exc_value, traceback): return False
+       
+class Y(object):
+    def y_method(self): pass
+    def __enter__(self): return 123
+    def __exit__(self, exc_type, exc_value, traceback): return False
+ 
+with X() as x:
+    pass #x
+
+with Y() as y:
+    pass #y
     
-with x():
+with X():
     pass
 ";
             var entry = ProcessText(text);
-            var fob = entry.GetMemberNamesByIndex("fob", text.IndexOf("print fob"));
-            AssertUtil.ContainsExactly(fob, GetUnion(_objectMembers, "x_method"));
+            AssertUtil.ContainsAtLeast(entry.GetMemberNamesByIndex("x", text.IndexOf("pass #x")), "x_method");
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("y", text.IndexOf("pass #y")), BuiltinTypeId.Int);
         }
 
         [TestMethod, Priority(0)]
@@ -3672,6 +3725,10 @@ f('a', 'b', 1)
         }
 
 
+        protected virtual string ListInitParameterName {
+            get { return "sequence"; }
+        }
+
         /// <summary>
         /// http://pytools.codeplex.com/workitem/799
         /// </summary>
@@ -3682,12 +3739,8 @@ class oar(list):
     pass
 ";
             var entry = ProcessText(text);
-            AssertUtil.ContainsExactly(
-                entry.GetOverrideableByIndex(text.IndexOf("pass")).Where(res => res.Name == "__init__").Select(
-                    x => string.Join(", ", x.Parameters.Select(GetSafeParameterName))
-                ),
-                this is IronPythonAnalysisTest ? "self, enumerable" : "self, sequence"
-            );
+            var init = entry.GetOverrideableByIndex(text.IndexOf("pass")).Single(r => r.Name == "__init__");
+            AssertUtil.AreEqual(init.Parameters.Select(GetSafeParameterName), "self", ListInitParameterName);
 
             // Ensure that nested classes are correctly resolved.
             text = @"
@@ -3698,13 +3751,12 @@ class oar(int):
             entry = ProcessText(text);
             var oarItems = entry.GetOverrideableByIndex(text.IndexOf("    pass")).Select(x => x.Name).ToSet();
             var fobItems = entry.GetOverrideableByIndex(text.IndexOf("pass")).Select(x => x.Name).ToSet();
-            Assert.IsFalse(oarItems.Contains("keys"));
-            Assert.IsFalse(oarItems.Contains("items"));
-            Assert.IsTrue(oarItems.Contains("bit_length"));
+            AssertUtil.DoesntContain(oarItems, "keys");
+            AssertUtil.DoesntContain(oarItems, "items");
+            AssertUtil.ContainsAtLeast(oarItems, "bit_length");
 
-            Assert.IsTrue(fobItems.Contains("keys"));
-            Assert.IsTrue(fobItems.Contains("items"));
-            Assert.IsFalse(fobItems.Contains("bit_length"));
+            AssertUtil.ContainsAtLeast(fobItems, "keys", "items");
+            AssertUtil.DoesntContain(fobItems, "bit_length");
         }
 
 
@@ -4325,13 +4377,13 @@ t.x, t. =
 
         //[TestMethod, Timeout(5 * 60 * 1000), Priority(2)]
         public void MemLeak() {
-            var state = new PythonAnalyzer(InterpreterFactory, Interpreter);
+            using (var state = PythonAnalyzer.CreateSynchronously(InterpreterFactory, Interpreter)) {
 
-            var oar = state.AddModule("oar", @"oar.py", EmptyAnalysisCookie.Instance);
-            var baz = state.AddModule("baz", @"baz.py", EmptyAnalysisCookie.Instance);
+                var oar = state.AddModule("oar", @"oar.py", EmptyAnalysisCookie.Instance);
+                var baz = state.AddModule("baz", @"baz.py", EmptyAnalysisCookie.Instance);
 
-            AnalyzeLeak(() => {
-                var oarSrc = GetSourceUnit(@"
+                AnalyzeLeak(() => {
+                    var oarSrc = GetSourceUnit(@"
 import sys
 from baz import D
 
@@ -4349,7 +4401,7 @@ min(a, D())
 
 ", @"oar.py");
 
-                var bazSrc = GetSourceUnit(@"
+                    var bazSrc = GetSourceUnit(@"
 from oar import C
 
 class D(object):
@@ -4364,12 +4416,13 @@ min(a, D())
 ", @"baz.py");
 
 
-                Prepare(oar, oarSrc);
-                Prepare(baz, bazSrc);
+                    Prepare(oar, oarSrc);
+                    Prepare(baz, bazSrc);
 
-                oar.Analyze(CancellationToken.None);
-                baz.Analyze(CancellationToken.None);
-            });
+                    oar.Analyze(CancellationToken.None);
+                    baz.Analyze(CancellationToken.None);
+                });
+            }
         }
 
         //[TestMethod, Timeout(15 * 60 * 1000), Priority(2)]
@@ -4404,66 +4457,67 @@ min(a, D())
 
             sw.Start();
             long start0 = sw.ElapsedMilliseconds;
-            var projectState = new PythonAnalyzer(InterpreterFactory, Interpreter);
-            var modules = new List<IPythonProjectEntry>();
-            foreach (var sourceUnit in sourceUnits) {
-                modules.Add(projectState.AddModule(ModulePath.FromFullPath(sourceUnit.Path).ModuleName, sourceUnit.Path, null));
-            }
-            long start1 = sw.ElapsedMilliseconds;
-            Trace.TraceInformation("AddSourceUnit: {0} ms", start1 - start0);
-
-            var nodes = new List<Microsoft.PythonTools.Parsing.Ast.PythonAst>();
-            for (int i = 0; i < modules.Count; i++) {
-                PythonAst ast = null;
-                try {
-                    var sourceUnit = sourceUnits[i];
-
-                    ast = Parser.CreateParser(sourceUnit, InterpreterFactory.GetLanguageVersion()).ParseFile();
-                } catch (Exception) {
+            using (var projectState = PythonAnalyzer.CreateSynchronously(InterpreterFactory, Interpreter)) {
+                var modules = new List<IPythonProjectEntry>();
+                foreach (var sourceUnit in sourceUnits) {
+                    modules.Add(projectState.AddModule(ModulePath.FromFullPath(sourceUnit.Path).ModuleName, sourceUnit.Path, null));
                 }
-                nodes.Add(ast);
-            }
-            long start2 = sw.ElapsedMilliseconds;
-            Trace.TraceInformation("Parse: {0} ms", start2 - start1);
+                long start1 = sw.ElapsedMilliseconds;
+                Trace.TraceInformation("AddSourceUnit: {0} ms", start1 - start0);
 
-            for (int i = 0; i < modules.Count; i++) {
-                var ast = nodes[i];
+                var nodes = new List<Microsoft.PythonTools.Parsing.Ast.PythonAst>();
+                for (int i = 0; i < modules.Count; i++) {
+                    PythonAst ast = null;
+                    try {
+                        var sourceUnit = sourceUnits[i];
 
-                if (ast != null) {
-                    modules[i].UpdateTree(ast, null);
+                        ast = Parser.CreateParser(sourceUnit, InterpreterFactory.GetLanguageVersion()).ParseFile();
+                    } catch (Exception) {
+                    }
+                    nodes.Add(ast);
                 }
-            }
+                long start2 = sw.ElapsedMilliseconds;
+                Trace.TraceInformation("Parse: {0} ms", start2 - start1);
 
-            long start3 = sw.ElapsedMilliseconds;
-            for (int i = 0; i < modules.Count; i++) {
-                Trace.TraceInformation("Analyzing {1}: {0} ms", sw.ElapsedMilliseconds - start3, sourceUnits[i].Path);
-                var ast = nodes[i];
-                if (ast != null) {
-                    modules[i].Analyze(CancellationToken.None, true);
-                }
-            }
-            if (modules.Count > 0) {
-                Trace.TraceInformation("Analyzing queue");
-                modules[0].AnalysisGroup.AnalyzeQueuedEntries(CancellationToken.None);
-            }
+                for (int i = 0; i < modules.Count; i++) {
+                    var ast = nodes[i];
 
-            int index = -1;
-            for (int i = 0; i < modules.Count; i++) {
-                if (((ProjectEntry)modules[i]).ModuleName == "azure.servicebus.servicebusservice") {
-                    index = i;
-                    break;
-                }
-            }
-            AnalyzeLeak(() => {
-                using (var reader = new FileStreamReader(modules[index].FilePath)) {
-                    var ast = Parser.CreateParser(reader, InterpreterFactory.GetLanguageVersion()).ParseFile();
-
-                    modules[index].UpdateTree(ast, null);
+                    if (ast != null) {
+                        modules[i].UpdateTree(ast, null);
+                    }
                 }
 
-                modules[index].Analyze(CancellationToken.None, true);
-                modules[index].AnalysisGroup.AnalyzeQueuedEntries(CancellationToken.None);
-            });
+                long start3 = sw.ElapsedMilliseconds;
+                for (int i = 0; i < modules.Count; i++) {
+                    Trace.TraceInformation("Analyzing {1}: {0} ms", sw.ElapsedMilliseconds - start3, sourceUnits[i].Path);
+                    var ast = nodes[i];
+                    if (ast != null) {
+                        modules[i].Analyze(CancellationToken.None, true);
+                    }
+                }
+                if (modules.Count > 0) {
+                    Trace.TraceInformation("Analyzing queue");
+                    modules[0].AnalysisGroup.AnalyzeQueuedEntries(CancellationToken.None);
+                }
+
+                int index = -1;
+                for (int i = 0; i < modules.Count; i++) {
+                    if (((ProjectEntry)modules[i]).ModuleName == "azure.servicebus.servicebusservice") {
+                        index = i;
+                        break;
+                    }
+                }
+                AnalyzeLeak(() => {
+                    using (var reader = new FileStreamReader(modules[index].FilePath)) {
+                        var ast = Parser.CreateParser(reader, InterpreterFactory.GetLanguageVersion()).ParseFile();
+
+                        modules[index].UpdateTree(ast, null);
+                    }
+
+                    modules[index].Analyze(CancellationToken.None, true);
+                    modules[index].AnalysisGroup.AnalyzeQueuedEntries(CancellationToken.None);
+                });
+            }
         }
 
         [TestMethod, Priority(1)]
@@ -4501,40 +4555,41 @@ class C(object):
     pass
 ", @"baz.py");
 
-            var state = new PythonAnalyzer(InterpreterFactory, Interpreter);
+            using (var state = PythonAnalyzer.CreateSynchronously(InterpreterFactory, Interpreter)) {
 
-            var fob = state.AddModule("fob", @"fob.py", EmptyAnalysisCookie.Instance);
-            var oar = state.AddModule("oar", @"oar.py", EmptyAnalysisCookie.Instance);
-            var baz = state.AddModule("baz", @"baz.py", EmptyAnalysisCookie.Instance);
+                var fob = state.AddModule("fob", @"fob.py", EmptyAnalysisCookie.Instance);
+                var oar = state.AddModule("oar", @"oar.py", EmptyAnalysisCookie.Instance);
+                var baz = state.AddModule("baz", @"baz.py", EmptyAnalysisCookie.Instance);
 
-            Prepare(fob, fobSrc);
-            Prepare(oar, oarSrc);
-            Prepare(baz, bazSrc);
+                Prepare(fob, fobSrc);
+                Prepare(oar, oarSrc);
+                Prepare(baz, bazSrc);
 
-            fob.Analyze(CancellationToken.None);
-            oar.Analyze(CancellationToken.None);
-            baz.Analyze(CancellationToken.None);
+                fob.Analyze(CancellationToken.None);
+                oar.Analyze(CancellationToken.None);
+                baz.Analyze(CancellationToken.None);
 
-            Assert.AreEqual(fob.Analysis.GetValuesByIndex("C", 1).First().Description, "class C");
-            Assert.IsTrue(fob.Analysis.GetValuesByIndex("C", 1).First().Locations.Single().FilePath.EndsWith("oar.py"));
+                Assert.AreEqual(fob.Analysis.GetValuesByIndex("C", 1).First().Description, "class C");
+                Assert.IsTrue(fob.Analysis.GetValuesByIndex("C", 1).First().Locations.Single().FilePath.EndsWith("oar.py"));
 
-            oarSrc = GetSourceUnit(@"
+                oarSrc = GetSourceUnit(@"
 ", @"oar.py");
 
-            // delete the class..
-            Prepare(oar, oarSrc);
-            oar.Analyze(CancellationToken.None);
-            oar.AnalysisGroup.AnalyzeQueuedEntries(CancellationToken.None);
+                // delete the class..
+                Prepare(oar, oarSrc);
+                oar.Analyze(CancellationToken.None);
+                oar.AnalysisGroup.AnalyzeQueuedEntries(CancellationToken.None);
 
-            Assert.AreEqual(fob.Analysis.GetValuesByIndex("C", 1).ToArray().Length, 0);
+                Assert.AreEqual(fob.Analysis.GetValuesByIndex("C", 1).ToArray().Length, 0);
 
-            fobSrc = GetSourceUnit("from baz import C", @"fob.py");
-            Prepare(fob, fobSrc);
+                fobSrc = GetSourceUnit("from baz import C", @"fob.py");
+                Prepare(fob, fobSrc);
 
-            fob.Analyze(CancellationToken.None);
+                fob.Analyze(CancellationToken.None);
 
-            Assert.AreEqual(fob.Analysis.GetValuesByIndex("C", 1).First().Description, "class C");
-            Assert.IsTrue(fob.Analysis.GetValuesByIndex("C", 1).First().Locations.Single().FilePath.EndsWith("baz.py"));
+                Assert.AreEqual(fob.Analysis.GetValuesByIndex("C", 1).First().Description, "class C");
+                Assert.IsTrue(fob.Analysis.GetValuesByIndex("C", 1).First().Locations.Single().FilePath.EndsWith("baz.py"));
+            }
         }
 
         [TestMethod, Priority(0)]
@@ -4550,22 +4605,23 @@ import fob.y as y
 abc = 42
 ", @"C:\\Test\\Lib\\fob\\y.py");
 
-            var state = new PythonAnalyzer(InterpreterFactory, Interpreter);
+            using (var state = PythonAnalyzer.CreateSynchronously(InterpreterFactory, Interpreter)) {
 
-            var package = state.AddModule("fob", @"C:\\Test\\Lib\\fob\\__init__.py", EmptyAnalysisCookie.Instance);
-            var x = state.AddModule("fob.x", @"C:\\Test\\Lib\\fob\\x.py", EmptyAnalysisCookie.Instance);
-            var y = state.AddModule("fob.y", @"C:\\Test\\Lib\\fob\\y.py", EmptyAnalysisCookie.Instance);
+                var package = state.AddModule("fob", @"C:\\Test\\Lib\\fob\\__init__.py", EmptyAnalysisCookie.Instance);
+                var x = state.AddModule("fob.x", @"C:\\Test\\Lib\\fob\\x.py", EmptyAnalysisCookie.Instance);
+                var y = state.AddModule("fob.y", @"C:\\Test\\Lib\\fob\\y.py", EmptyAnalysisCookie.Instance);
 
-            Prepare(package, src1);
-            Prepare(x, src2);
-            Prepare(y, src3);
+                Prepare(package, src1);
+                Prepare(x, src2);
+                Prepare(y, src3);
 
-            package.Analyze(CancellationToken.None);
-            x.Analyze(CancellationToken.None);
-            y.Analyze(CancellationToken.None);
+                package.Analyze(CancellationToken.None);
+                x.Analyze(CancellationToken.None);
+                y.Analyze(CancellationToken.None);
 
-            Assert.AreEqual(x.Analysis.GetValuesByIndex("y", 1).First().Description, "Python module fob.y");
-            AssertUtil.ContainsExactly(x.Analysis.GetTypeIdsByIndex("abc", 1), BuiltinTypeId.Int);
+                Assert.AreEqual(x.Analysis.GetValuesByIndex("y", 1).First().Description, "Python module fob.y");
+                AssertUtil.ContainsExactly(x.Analysis.GetTypeIdsByIndex("abc", 1), BuiltinTypeId.Int);
+            }
         }
 
         [TestMethod, Priority(0)]
@@ -4588,22 +4644,23 @@ abc = 42
             var src2 = srcs[1];
             var src3 = srcs[2];
 
-            var state = new PythonAnalyzer(InterpreterFactory, Interpreter);
+            using (var state = PythonAnalyzer.CreateSynchronously(InterpreterFactory, Interpreter)) {
 
-            var package = state.AddModule("fob", files[0].FullPath, EmptyAnalysisCookie.Instance);
-            var x = state.AddModule("fob.x", files[1].FullPath, EmptyAnalysisCookie.Instance);
-            var y = state.AddModule("fob.y", files[2].FullPath, EmptyAnalysisCookie.Instance);
+                var package = state.AddModule("fob", files[0].FullPath, EmptyAnalysisCookie.Instance);
+                var x = state.AddModule("fob.x", files[1].FullPath, EmptyAnalysisCookie.Instance);
+                var y = state.AddModule("fob.y", files[2].FullPath, EmptyAnalysisCookie.Instance);
 
-            Prepare(package, src1);
-            Prepare(x, src2);
-            Prepare(y, src3);
+                Prepare(package, src1);
+                Prepare(x, src2);
+                Prepare(y, src3);
 
-            package.Analyze(CancellationToken.None);
-            x.Analyze(CancellationToken.None);
-            y.Analyze(CancellationToken.None);
+                package.Analyze(CancellationToken.None);
+                x.Analyze(CancellationToken.None);
+                y.Analyze(CancellationToken.None);
 
-            AssertUtil.ContainsExactly(x.Analysis.GetTypeIdsByIndex("abc", 1), BuiltinTypeId.Int);
-            AssertUtil.ContainsExactly(package.Analysis.GetTypeIdsByIndex("abc", 1), BuiltinTypeId.Int);
+                AssertUtil.ContainsExactly(x.Analysis.GetTypeIdsByIndex("abc", 1), BuiltinTypeId.Int);
+                AssertUtil.ContainsExactly(package.Analysis.GetTypeIdsByIndex("abc", 1), BuiltinTypeId.Int);
+            }
         }
 
         [TestMethod, Priority(0)]
@@ -4626,21 +4683,21 @@ abc = 42
             var src1 = srcs[0];
             var src2 = srcs[1];
 
-            var state = new PythonAnalyzer(InterpreterFactory, Interpreter);
+            using (var state = PythonAnalyzer.CreateSynchronously(InterpreterFactory, Interpreter)) {
+                var package = state.AddModule("fob", files[0].FullPath, EmptyAnalysisCookie.Instance);
+                var y = state.AddModule("fob.y", files[1].FullPath, EmptyAnalysisCookie.Instance);
 
-            var package = state.AddModule("fob", files[0].FullPath, EmptyAnalysisCookie.Instance);
-            var y = state.AddModule("fob.y", files[1].FullPath, EmptyAnalysisCookie.Instance);
+                Prepare(package, src1);
+                Prepare(y, src2);
 
-            Prepare(package, src1);
-            Prepare(y, src2);
+                package.Analyze(CancellationToken.None);
+                y.Analyze(CancellationToken.None);
 
-            package.Analyze(CancellationToken.None);
-            y.Analyze(CancellationToken.None);
-
-            AssertUtil.ContainsExactly(package.Analysis.GetTypesByIndex("y", 1), 
-                package.Analysis.ProjectState.Types[BuiltinTypeId.Function],
-                package.Analysis.ProjectState.Types[BuiltinTypeId.Module]
-            );
+                AssertUtil.ContainsExactly(package.Analysis.GetTypesByIndex("y", 1),
+                    package.Analysis.ProjectState.Types[BuiltinTypeId.Function],
+                    package.Analysis.ProjectState.Types[BuiltinTypeId.Module]
+                );
+            }
         }
 
 
@@ -4893,10 +4950,11 @@ def decorator_b(fn):
 
             PermutedTest("mod", new[] { text1, text2 }, (pe) => {
                 // Neither decorator is callable, but at least analysis completed
-                Assert.AreEqual(0, pe[0].Analysis.GetValuesByIndex("decorator_a", 1).Count());
-                Assert.AreEqual(0, pe[1].Analysis.GetValuesByIndex("decorator_b", 1).Count());
+                AssertUtil.ContainsExactly(pe[0].Analysis.GetTypeIdsByIndex("decorator_a", 1));
+                AssertUtil.ContainsExactly(pe[1].Analysis.GetTypeIdsByIndex("decorator_b", 1));
             });
         }
+
 
         [TestMethod, Priority(0)]
         public void ClassInit() {
@@ -5807,25 +5865,25 @@ import mod1
 mod1.f(42)
 ";
 
-            var state = new PythonAnalyzer(InterpreterFactory, Interpreter);
+            using (var state = PythonAnalyzer.CreateSynchronously(InterpreterFactory, Interpreter)) {
+                // add both files to the project
+                var entry1 = state.AddModule("mod1", "mod1", null);
+                var entry2 = state.AddModule("mod2", "mod2", null);
 
-            // add both files to the project
-            var entry1 = state.AddModule("mod1", "mod1", null);
-            var entry2 = state.AddModule("mod2", "mod2", null);
+                // analyze both files
+                Prepare(entry1, GetSourceUnit(text1, "mod1"), InterpreterFactory.GetLanguageVersion());
+                entry1.Analyze(CancellationToken.None);
+                Prepare(entry2, GetSourceUnit(text2, "mod2"), InterpreterFactory.GetLanguageVersion());
+                entry2.Analyze(CancellationToken.None);
 
-            // analyze both files
-            Prepare(entry1, GetSourceUnit(text1, "mod1"), InterpreterFactory.GetLanguageVersion());
-            entry1.Analyze(CancellationToken.None);
-            Prepare(entry2, GetSourceUnit(text2, "mod2"), InterpreterFactory.GetLanguageVersion());
-            entry2.Analyze(CancellationToken.None);
+                AssertUtil.ContainsExactly(entry1.Analysis.GetTypeIdsByIndex("abc", text1.IndexOf("pass")), BuiltinTypeId.Int);
 
-            AssertUtil.ContainsExactly(entry1.Analysis.GetTypeIdsByIndex("abc", text1.IndexOf("pass")), BuiltinTypeId.Int);
+                // re-analyze project1, we should still know about the type info provided by module2
+                Prepare(entry1, GetSourceUnit(text1, "mod1"), InterpreterFactory.GetLanguageVersion());
+                entry1.Analyze(CancellationToken.None);
 
-            // re-analyze project1, we should still know about the type info provided by module2
-            Prepare(entry1, GetSourceUnit(text1, "mod1"), InterpreterFactory.GetLanguageVersion());
-            entry1.Analyze(CancellationToken.None);
-
-            AssertUtil.ContainsExactly(entry1.Analysis.GetTypeIdsByIndex("abc", text1.IndexOf("pass")), BuiltinTypeId.Int);
+                AssertUtil.ContainsExactly(entry1.Analysis.GetTypeIdsByIndex("abc", text1.IndexOf("pass")), BuiltinTypeId.Int);
+            }
         }
 
         [TestMethod, Priority(0)]
@@ -5856,7 +5914,7 @@ class D(object):
             //Assert.AreEqual(entry.GetSignaturesByIndex("cls.x", text.IndexOf("print cls.g")).First().Parameters.Length, 1);
             //Assert.AreEqual(entry.GetSignaturesByIndex("cls.inst_method", text.IndexOf("print cls.g")).First().Parameters.Length, 1);
 
-            if (!(this is IronPythonAnalysisTest)) {
+            if (SupportsPython3) {
                 text = @"class C(type):
     def f(self):
         print('C.f')
@@ -6070,7 +6128,7 @@ def f(s: lambda s: s > 0 = 123):
             var entry = ProcessText(text, PythonLanguageVersion.V33);
 
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("s", text.IndexOf("s:")), BuiltinTypeId.Int);
-            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("s", text.IndexOf("s >")));
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("s", text.IndexOf("s >")), BuiltinTypeId.NoneType);
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("s", text.IndexOf("return s")), BuiltinTypeId.Int);
         }
 
@@ -6388,6 +6446,22 @@ p3 = a.abc
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("p2", 0), BuiltinTypeId.Int, BuiltinTypeId.Float);
         }
 
+        [TestMethod, Priority(0)]
+        public void RecursiveGetDescriptor() {
+            // see https://pytools.codeplex.com/workitem/2955
+            var entry = ProcessText(@"
+class WithGet:
+    __get__ = WithGet()
+
+class A:
+    wg = WithGet()
+
+x = A().wg");
+
+            Assert.IsNotNull(entry);
+        }
+
+
         #endregion
 
         #region Helpers
@@ -6402,17 +6476,6 @@ p3 = a.abc
 
             return res.Values;
 
-        }
-
-        private static string[] GetMembers(object obj, bool showClr) {
-            var dir = showClr ? ClrModule.DirClr(obj) : ClrModule.Dir(obj);
-            int len = dir.__len__();
-            string[] result = new string[len];
-            for (int i = 0; i < len; i++) {
-                Assert.IsTrue(dir[i] is string);
-                result[i] = dir[i] as string;
-            }
-            return result;
         }
 
 
@@ -6439,20 +6502,23 @@ p3 = a.abc
         private IEnumerable<IPythonProjectEntry[]> MakeModulePermutations(string prefix, string[] code) {
             foreach (var p in Permutations(code.Length)) {
                 var result = new IPythonProjectEntry[code.Length];
-                var state = new PythonAnalyzer(InterpreterFactory, Interpreter);
-                for (int i = 0; i < code.Length; i++) {
-                    result[p[i]] = state.AddModule(prefix + (p[i] + 1).ToString(), "fob", null);
-                }
-                for (int i = 0; i < code.Length; i++) {
-                    Prepare(result[p[i]], GetSourceUnit(code[p[i]]));
-                }
-                for (int i = 0; i < code.Length; i++) {
-                    result[p[i]].Analyze(CancellationToken.None, true);
-                }
+                using (var state = PythonAnalyzer.CreateSynchronously(InterpreterFactory, Interpreter)) {
+                    state.Limits = GetLimits();
 
-                state.AnalyzeQueuedEntries(CancellationToken.None);
+                    for (int i = 0; i < code.Length; i++) {
+                        result[p[i]] = state.AddModule(prefix + (p[i] + 1).ToString(), "fob", null);
+                    }
+                    for (int i = 0; i < code.Length; i++) {
+                        Prepare(result[p[i]], GetSourceUnit(code[p[i]]));
+                    }
+                    for (int i = 0; i < code.Length; i++) {
+                        result[p[i]].Analyze(CancellationToken.None, true);
+                    }
 
-                yield return result;
+                    state.AnalyzeQueuedEntries(CancellationToken.None);
+
+                    yield return result;
+                }
             }
         }
 
@@ -6510,7 +6576,7 @@ p3 = a.abc
         }
     }
 
-    static class ModuleAnalysisExtensions {
+    public static class ModuleAnalysisExtensions {
         public static IEnumerable<string> GetMemberNamesByIndex(this ModuleAnalysis analysis, string exprText, int index, GetMemberOptions options = GetMemberOptions.IntersectMultipleResults) {
             return analysis.GetMembersByIndex(exprText, index, options).Select(m => m.Name);
         }

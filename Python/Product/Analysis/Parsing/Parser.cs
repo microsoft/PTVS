@@ -40,7 +40,7 @@ namespace Microsoft.PythonTools.Parsing {
         private readonly PythonLanguageVersion _langVersion;
         // state:
         private TokenWithSpan _token;
-        private TokenWithSpan _lookahead;
+        private TokenWithSpan _lookahead, _lookahead2;
         private Stack<FunctionDefinition> _functions;
         private int _classDepth;
         private bool _fromFutureAllowed;
@@ -53,6 +53,7 @@ namespace Microsoft.PythonTools.Parsing {
         private readonly bool _verbatim;                            // true if we're in verbatim mode and the ASTs can be turned back into source code, preserving white space / comments
         private readonly bool _bindReferences;                      // true if we should bind the references in the ASTs
         private string _tokenWhiteSpace, _lookaheadWhiteSpace;      // the whitespace for the current and lookahead tokens as provided from the parser
+        private string _lookahead2WhiteSpace;
         private Dictionary<Node, Dictionary<object, object>> _attributes = new Dictionary<Node, Dictionary<object, object>>();  // attributes for each node, currently just round tripping information
 
         private static Encoding _utf8throwing;
@@ -96,18 +97,16 @@ namespace Microsoft.PythonTools.Parsing {
             Tokenizer tokenizer = new Tokenizer(version, options.ErrorSink, (options.Verbatim ? TokenizerOptions.Verbatim : TokenizerOptions.None) | TokenizerOptions.GroupingRecovery);
 
             tokenizer.Initialize(null, reader, SourceLocation.MinValue);
-            tokenizer.IndentationInconsistencySeverity = options.IndentationInconsistencySeverity;            
+            tokenizer.IndentationInconsistencySeverity = options.IndentationInconsistencySeverity;
 
-            Parser result = new Parser(tokenizer, 
-                options.ErrorSink ?? ErrorSink.Null, 
-                version, 
+            return new Parser(
+                tokenizer,
+                options.ErrorSink ?? ErrorSink.Null,
+                version,
                 options.Verbatim,
                 options.BindReferences,
                 options.PrivatePrefix
-            );
-
-            result._sourceReader = reader;
-            return result;
+            ) { _sourceReader = reader };
         }
 
         public static Parser CreateParser(Stream stream, PythonLanguageVersion version) {
@@ -341,22 +340,25 @@ namespace Microsoft.PythonTools.Parsing {
             Token t = PeekToken();
             if (t == Tokens.NoneToken) {
                 NextToken();
-                return new Name("None", "None");
+                return Name.None;
             }
 
-            NameToken n = t as NameToken;
-            if (n == null) {
-                ReportSyntaxError("syntax error");
-                return new Name();
+            var n = TokenToName(t);
+            if (n.HasName) {
+                NextToken();
+                return n;
             }
 
-            NextToken();
-            return new Name(FixName(n.Name), n.Name);
+            ReportSyntaxError("syntax error");
+            return Name.Empty;
         }
 
         struct Name {
             public readonly string RealName;
             public readonly string VerbatimName;
+
+            public static readonly Name Empty = new Name();
+            public static readonly Name None = new Name("None", "None");
 
             public Name(string name, string verbatimName) {
                 RealName = name;
@@ -371,17 +373,21 @@ namespace Microsoft.PythonTools.Parsing {
         }
 
         private Name ReadName() {
-            NameToken n = PeekToken() as NameToken;
-            if (n == null) {
+            var n = TokenToName(PeekToken());
+            if (n.HasName) {
+                NextToken();
+            } else {
                 ReportSyntaxError(_lookahead);
-                return new Name();
             }
-            NextToken();
-            return TokenToName(n);
+            return n;
         }
 
-        private Name TokenToName(NameToken n) {
-            return new Name(FixName(n.Name), n.Name);
+        private Name TokenToName(Token t) {
+            var n = t as NameToken;
+            if (n != null) {
+                return new Name(FixName(n.Name), n.Name);
+            }
+            return Name.Empty;
         }
 
         //stmt: simple_stmt | compound_stmt
@@ -1204,6 +1210,20 @@ namespace Microsoft.PythonTools.Parsing {
                     locals = ParseExpression();
                 }
             }
+            var codeTuple = code as TupleExpression;
+            if (_langVersion.Is2x() && codeTuple != null) {
+                if (codeTuple.Items != null) {
+                    if (codeTuple.Items.Count >= 3) {
+                        locals = codeTuple.Items[2];
+                    }
+                    if (codeTuple.Items.Count >= 2) {
+                        globals = codeTuple.Items[1];
+                    }
+                    if (codeTuple.Items.Count >= 1) {
+                        code = codeTuple.Items[0];
+                    }
+                }
+            }
             ExecStatement ret = new ExecStatement(code, locals, globals);
             if (_verbatim) {
                 AddPreceedingWhiteSpace(ret, execWhiteSpace);
@@ -1937,95 +1957,88 @@ namespace Microsoft.PythonTools.Parsing {
         //  parameter ::=
         //      identifier | "(" sublist ")"
         private Parameter ParseParameter(int position, HashSet<string> names, ParameterKind kind, bool isTyped = false) {
-            Token t = PeekToken();
+            Name name;
             Parameter parameter;
 
-            switch (t.Kind) {
-                case TokenKind.LeftParenthesis: // sublist       
-                    string parenWhiteSpace = _lookaheadWhiteSpace;
+            if (PeekToken().Kind == TokenKind.LeftParenthesis) {
+                // sublist
+                string parenWhiteSpace = _lookaheadWhiteSpace;
 
-                    NextToken();
-                    var parenStart = GetStart();
-                    Expression ret = ParseSublist(names, true);
+                NextToken();
+                var parenStart = GetStart();
+                Expression ret = ParseSublist(names, true);
 
-                    if (_langVersion.Is3x()) {
-                        ReportSyntaxError(parenStart, GetEnd(), "sublist parameters are not supported in 3.x");
-                    }
+                if (_langVersion.Is3x()) {
+                    ReportSyntaxError(parenStart, GetEnd(), "sublist parameters are not supported in 3.x");
+                }
 
-                    bool ateRightParen = Eat(TokenKind.RightParenthesis);
-                    string closeParenWhiteSpace = _tokenWhiteSpace;
+                bool ateRightParen = Eat(TokenKind.RightParenthesis);
+                string closeParenWhiteSpace = _tokenWhiteSpace;
 
-                    TupleExpression tret = ret as TupleExpression;
-                    NameExpression nameRet;
+                TupleExpression tret = ret as TupleExpression;
+                NameExpression nameRet;
 
-                    if (tret != null) {
-                        parameter = new SublistParameter(position, tret);
-                        if (_verbatim) {
-                            AddPreceedingWhiteSpace(tret, parenWhiteSpace);
-                            AddSecondPreceedingWhiteSpace(tret, closeParenWhiteSpace);
-                            if (!ateRightParen) {
-                                AddErrorMissingCloseGrouping(parameter);
-                            }
-                        }
-                    } else if ((nameRet = ret as NameExpression) != null) {
-                        parameter = new Parameter(nameRet.Name, kind);
-                        if (_verbatim) {
-                            AddThirdPreceedingWhiteSpace(parameter, (string)_attributes[nameRet][NodeAttributes.PreceedingWhiteSpace]);
-                            AddIsAltForm(parameter);
-                            if (!ateRightParen) {
-                                AddErrorMissingCloseGrouping(parameter);
-                            }
-                        }
-                    } else {
-                        Debug.Assert(ret is ErrorExpression);
-                        ReportSyntaxError(_lookahead);
-
-                        parameter = new ErrorParameter((ErrorExpression)ret);
-                        AddIsAltForm(parameter);
-                    }
-
-                    if (parameter != null) {
-                        parameter.SetLoc(ret.IndexSpan);
-                    }
+                if (tret != null) {
+                    parameter = new SublistParameter(position, tret);
                     if (_verbatim) {
-                        AddPreceedingWhiteSpace(parameter, parenWhiteSpace);
-                        AddSecondPreceedingWhiteSpace(parameter, closeParenWhiteSpace);
+                        AddPreceedingWhiteSpace(tret, parenWhiteSpace);
+                        AddSecondPreceedingWhiteSpace(tret, closeParenWhiteSpace);
                         if (!ateRightParen) {
                             AddErrorMissingCloseGrouping(parameter);
                         }
                     }
-
-                    break;
-
-                case TokenKind.Name:  // identifier
-                    NextToken();
-                    var name = TokenToName((NameToken)t);
-                    var paramStart = GetStart();
-                    parameter = new Parameter(name.RealName, kind);
+                } else if ((nameRet = ret as NameExpression) != null) {
+                    parameter = new Parameter(nameRet.Name, kind);
                     if (_verbatim) {
-                        AddPreceedingWhiteSpace(parameter, _tokenWhiteSpace);
-                        AddVerbatimName(name, parameter);
-                    }
-                    if (isTyped && MaybeEat(TokenKind.Colon)) {
-                        if (_verbatim) {
-                            AddThirdPreceedingWhiteSpace(parameter, _tokenWhiteSpace);
-                        }
-
-                        var start = GetStart();
-                        parameter.Annotation = ParseExpression();
-
-                        if (_langVersion.Is2x()) {
-                            ReportSyntaxError(start, parameter.Annotation.EndIndex, "invalid syntax, parameter annotations require 3.x");
+                        AddThirdPreceedingWhiteSpace(parameter, (string)_attributes[nameRet][NodeAttributes.PreceedingWhiteSpace]);
+                        AddIsAltForm(parameter);
+                        if (!ateRightParen) {
+                            AddErrorMissingCloseGrouping(parameter);
                         }
                     }
-                    CompleteParameterName(parameter, name.RealName, names, paramStart);
-                    break;
-
-                default:
+                } else {
+                    Debug.Assert(ret is ErrorExpression);
                     ReportSyntaxError(_lookahead);
-                    NextToken();
-                    parameter = new ErrorParameter(_verbatim ? Error(_tokenWhiteSpace + _token.Token.VerbatimImage) : null);
-                    break;
+
+                    parameter = new ErrorParameter((ErrorExpression)ret);
+                    AddIsAltForm(parameter);
+                }
+
+                if (parameter != null) {
+                    parameter.SetLoc(ret.IndexSpan);
+                }
+                if (_verbatim) {
+                    AddPreceedingWhiteSpace(parameter, parenWhiteSpace);
+                    AddSecondPreceedingWhiteSpace(parameter, closeParenWhiteSpace);
+                    if (!ateRightParen) {
+                        AddErrorMissingCloseGrouping(parameter);
+                    }
+                }
+            } else if ((name = TokenToName(PeekToken())).HasName) {
+                NextToken();
+                var paramStart = GetStart();
+                parameter = new Parameter(name.RealName, kind);
+                if (_verbatim) {
+                    AddPreceedingWhiteSpace(parameter, _tokenWhiteSpace);
+                    AddVerbatimName(name, parameter);
+                }
+                if (isTyped && MaybeEat(TokenKind.Colon)) {
+                    if (_verbatim) {
+                        AddThirdPreceedingWhiteSpace(parameter, _tokenWhiteSpace);
+                    }
+
+                    var start = GetStart();
+                    parameter.Annotation = ParseExpression();
+
+                    if (_langVersion.Is2x()) {
+                        ReportSyntaxError(start, parameter.Annotation.EndIndex, "invalid syntax, parameter annotations require 3.x");
+                    }
+                }
+                CompleteParameterName(parameter, name.RealName, names, paramStart);
+            } else {
+                ReportSyntaxError(_lookahead);
+                NextToken();
+                parameter = new ErrorParameter(_verbatim ? Error(_tokenWhiteSpace + _token.Token.VerbatimImage) : null);
             }
 
             return parameter;
@@ -2053,7 +2066,7 @@ namespace Microsoft.PythonTools.Parsing {
                     break;
                 case TokenKind.Name:  // identifier
                     string name = FixName((string)t.Value);
-                    NameExpression ne = MakeName(TokenToName((NameToken)t));
+                    NameExpression ne = MakeName(TokenToName(t));
                     if (_verbatim) {
                         AddPreceedingWhiteSpace(ne, _tokenWhiteSpace);
                     }
@@ -2932,7 +2945,7 @@ namespace Microsoft.PythonTools.Parsing {
                     return FinishStringConversion();
                 case TokenKind.Name:            // identifier
                     NextToken();
-                    ret = MakeName(TokenToName((NameToken)t));
+                    ret = MakeName(TokenToName(t));
                     if (_verbatim) {
                         AddPreceedingWhiteSpace(ret);
                     }
@@ -4576,9 +4589,24 @@ namespace Microsoft.PythonTools.Parsing {
             return _lookahead.Token;
         }
 
+        private Token PeekToken2() {
+            if (_lookahead2.Token == null) {
+                _lookahead2 = new TokenWithSpan(_tokenizer.GetNextToken(), _tokenizer.TokenSpan);
+                _lookahead2WhiteSpace = _tokenizer.PreceedingWhiteSpace;
+            }
+            return _lookahead2.Token;
+        }
+
         private void FetchLookahead() {
-            _lookahead = new TokenWithSpan(_tokenizer.GetNextToken(), _tokenizer.TokenSpan);
-            _lookaheadWhiteSpace = _tokenizer.PreceedingWhiteSpace;
+            if (_lookahead2.Token != null) {
+                _lookahead = _lookahead2;
+                _lookaheadWhiteSpace = _lookahead2WhiteSpace;
+                _lookahead2 = TokenWithSpan.Empty;
+                _lookahead2WhiteSpace = null;
+            } else {
+                _lookahead = new TokenWithSpan(_tokenizer.GetNextToken(), _tokenizer.TokenSpan);
+                _lookaheadWhiteSpace = _tokenizer.PreceedingWhiteSpace;
+            }
         }
 
         private bool PeekToken(TokenKind kind) {
@@ -4658,7 +4686,7 @@ namespace Microsoft.PythonTools.Parsing {
         /// New in 1.1.
         /// </summary>
         public static Encoding GetEncodingFromStream(Stream stream) {
-            return GetStreamReaderWithEncoding(stream, PythonAsciiEncoding.Instance, ErrorSink.Null).CurrentEncoding;
+            return GetStreamReaderWithEncoding(stream, Encoding.UTF8, ErrorSink.Null).CurrentEncoding;
         }
 
         private static StreamReader/*!*/ GetStreamReaderWithEncoding(Stream/*!*/ stream, Encoding/*!*/ defaultEncoding, ErrorSink errors) {

@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using Microsoft.PythonTools.Analysis.Values;
@@ -81,11 +82,11 @@ namespace Microsoft.PythonTools.Analysis {
                 var doc = new StringBuilder();
 
                 foreach (var ns in _vars()) {
-                    var docString = ns.Documentation;
+                    var docString = ns.Documentation ?? string.Empty;
                     if (docSeen.Add(docString)) {
                         docs.Add(docString);
                     }
-                    var typeString = ns.ShortDescription;
+                    var typeString = ns.ShortDescription ?? string.Empty;
                     if (typeSeen.Add(typeString)) {
                         types.Add(typeString);
                     }
@@ -142,6 +143,11 @@ namespace Microsoft.PythonTools.Analysis {
             });
 
             foreach (var ns in allVars) {
+                if (ns == null) {
+                    Debug.Fail("Unexpected null AnalysisValue");
+                    continue;
+                }
+
                 var nsType = ns.MemberType;
 
                 var ci = ns as ConstantInfo;

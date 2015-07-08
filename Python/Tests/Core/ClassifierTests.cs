@@ -192,7 +192,6 @@ b = c
             private static readonly PythonAnalysisClassifierProvider _provider2 =
                 new PythonAnalysisClassifierProvider(_contentRegistry) { _classificationRegistry = _classificationRegistry };
 
-            private readonly Lazy<TaskProvider> _originalTaskProvider;
             private readonly MockTextBuffer _buffer;
             private readonly MockTextView _view;
             private readonly IPythonInterpreterFactory _factory;
@@ -202,19 +201,20 @@ b = c
                 _buffer = buffer;
                 _factory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version.ToVersion());
 
-                var analyzer = new VsProjectAnalyzer(_factory, new[] { _factory });
+                var taskProvider = new TaskProvider(null, new MockErrorProviderFactory());
+                var analyzer = new VsProjectAnalyzer(
+                    _factory.CreateInterpreter(),
+                    _factory,
+                    new[] { _factory },
+                    errorTaskProvider: taskProvider
+                );
+
                 _buffer.AddProperty(typeof(VsProjectAnalyzer), analyzer);
 
                 _view = new MockTextView(_buffer);
-
-                var taskProvider = new TaskProvider(null, new MockErrorProviderFactory());
-                _originalTaskProvider = VsProjectAnalyzer.ReplaceTaskProviderForTests(new Lazy<TaskProvider>(() => {
-                    return taskProvider;
-                }));
             }
 
             public void Dispose() {
-                VsProjectAnalyzer.ReplaceTaskProviderForTests(_originalTaskProvider);
             }
 
             public ITextView TextView {

@@ -23,6 +23,7 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreter.Default;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudioTools;
 using TestUtilities;
 using TestUtilities.Python;
 using Assert = Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
@@ -174,7 +175,11 @@ Overloaded = test.Overloaded
                 Assert.AreEqual("class doc\r\n\r\nfunction doc", allMembers.First(x => x.Name == "Aliased").Documentation);
                 Assert.AreEqual(1, newMod.Analysis.GetSignaturesByIndex("FunctionNoRetType", pos).ToArray().Length);
 
-                Assert.AreEqual("help 1\r\n\r\nhelp 2", newMod.Analysis.GetMembersByIndex("test", pos).Where(x => x.Name == "Overloaded").First().Documentation);
+                var doc = newMod.Analysis.GetMembersByIndex("test", pos).Where(x => x.Name == "Overloaded").First().Documentation;
+                // Out of order is okay, as long as "help 2" only appears once
+                if (doc != "help 2\r\n\r\nhelp 1") {
+                    Assert.AreEqual("help 1\r\n\r\nhelp 2", doc);
+                }
             }
         }
 
@@ -461,6 +466,21 @@ sys.modules['test.imported'] = test_import_2
             }
         }
 
+        [TestMethod, Priority(0)]
+        public void SpecializedCallableWithNoOriginal() {
+            string code = @"
+import unittest
+
+# skipIf is specialized and calling it returns a callable
+# with no original value to save.
+x = unittest.skipIf(False)
+";
+            using (var newPs = SaveLoad(PythonLanguageVersion.V27, new AnalysisModule("test", "test.py", code))) {
+                var entry = newPs.NewModule("test2", "import test; x = test.x");
+                AssertUtil.ContainsExactly(entry.Analysis.GetTypeIdsByIndex("x", 0));
+            }
+        }
+
         private SaveLoadResult SaveLoad(PythonLanguageVersion version, params AnalysisModule[] modules) {
             IPythonProjectEntry[] entries = new IPythonProjectEntry[modules.Length];
 
@@ -471,27 +491,37 @@ sys.modules['test.imported'] = test_import_2
                 interp = fact.CreateInterpreter();
             }
 
-            var state = new PythonAnalyzer(fact, interp, SharedDatabaseState.BuiltinName2x);
+            var codeFolder = TestData.GetTempPath(randomSubPath: true);
+            var dbFolder = Path.Combine(codeFolder, "DB");
+            Directory.CreateDirectory(codeFolder);
+            Directory.CreateDirectory(dbFolder);
+
+            var state = PythonAnalyzer.CreateSynchronously(fact, interp, SharedDatabaseState.BuiltinName2x);
             for (int i = 0; i < modules.Length; i++) {
-                entries[i] = state.AddModule(modules[i].ModuleName, modules[i].Filename);
+                var fullname = Path.Combine(codeFolder, modules[i].Filename);
+                File.WriteAllText(fullname, modules[i].Code);
+                entries[i] = state.AddModule(modules[i].ModuleName, fullname);
                 Prepare(entries[i], new StringReader(modules[i].Code), version);
             }
 
             for (int i = 0; i < modules.Length; i++) {
-                entries[i].Analyze(CancellationToken.None);
+                entries[i].Analyze(CancellationToken.None, false);
             }
 
-            string tmpFolder = TestData.GetTempPath("6666d700-a6d8-4e11-8b73-3ba99a61e27b");
-            Directory.CreateDirectory(tmpFolder);
+            new SaveAnalysis().Save(state, dbFolder);
 
-            new SaveAnalysis().Save(state, tmpFolder);
-
-            File.Copy(Path.Combine(PythonTypeDatabase.BaselineDatabasePath, "__builtin__.idb"), Path.Combine(tmpFolder, "__builtin__.idb"), true);
-
-            return new SaveLoadResult(
-                new PythonAnalyzer(InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version.ToVersion(), null, tmpFolder)),
-                tmpFolder
+            File.Copy(
+                Path.Combine(PythonTypeDatabase.BaselineDatabasePath, "__builtin__.idb"),
+                Path.Combine(dbFolder, "__builtin__.idb"),
+                true
             );
+
+            var loadFactory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(
+                version.ToVersion(),
+                null,
+                dbFolder
+            );
+            return new SaveLoadResult(PythonAnalyzer.CreateSynchronously(loadFactory), codeFolder);
         }
 
         class AnalysisModule {

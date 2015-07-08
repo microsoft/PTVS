@@ -31,28 +31,49 @@ namespace Microsoft.PythonTools.PyAnalysis {
         internal readonly IPythonType[] _types;
         internal readonly BuiltinClassInfo[] _classInfos;
 
-        public KnownTypes(PythonAnalyzer state) {
-            ITypeDatabaseReader fallbackDb = null;
-            IBuiltinPythonModule fallback = null;
+        public static KnownTypes CreateDefault(PythonAnalyzer state, PythonTypeDatabase fallbackDb) {
+            var res = new KnownTypes();
 
+            var fallback = fallbackDb.BuiltinModule;
+
+            for (int value = 0; value < res._types.Length; ++value) {
+                res._types[value] = (IPythonType)fallback.GetAnyMember(
+                    ((ITypeDatabaseReader)fallbackDb).GetBuiltinTypeName((BuiltinTypeId)value)
+                );
+            }
+
+            res.SetClassInfo(state);
+            return res;
+        }
+
+        public static KnownTypes Create(PythonAnalyzer state, PythonTypeDatabase fallbackDb) {
+            var res = new KnownTypes();
+
+            var interpreter = state.Interpreter;
+            var fallback = fallbackDb.BuiltinModule;
+
+            for (int value = 0; value < res._types.Length; ++value) {
+                try {
+                    res._types[value] = interpreter.GetBuiltinType((BuiltinTypeId)value);
+                } catch (KeyNotFoundException) {
+                    res._types[value] = (IPythonType)fallback.GetAnyMember(
+                        ((ITypeDatabaseReader)fallbackDb).GetBuiltinTypeName((BuiltinTypeId)value)
+                    );
+                }
+            }
+
+            res.SetClassInfo(state);
+            return res;
+        }
+
+        private KnownTypes() {
             int count = (int)BuiltinTypeIdExtensions.LastTypeId + 1;
             _types = new IPythonType[count];
             _classInfos = new BuiltinClassInfo[count];
+        }
 
-            var interpreter = state.Interpreter;
-
-            for (int value = 0; value < count; ++value) {
-                try {
-                    _types[value] = interpreter.GetBuiltinType((BuiltinTypeId)value);
-                } catch (KeyNotFoundException) {
-                    if (fallback == null) {
-                        var tempDb = PythonTypeDatabase.CreateDefaultTypeDatabase(state.LanguageVersion.ToVersion());
-                        fallbackDb = (ITypeDatabaseReader)tempDb;
-                        fallback = tempDb.BuiltinModule;
-                    }
-                    
-                    _types[value] = fallback.GetAnyMember(fallbackDb.GetBuiltinTypeName((BuiltinTypeId)value)) as IPythonType;
-                }
+        private void SetClassInfo(PythonAnalyzer state) {
+            for (int value = 0; value < _types.Length; ++value) {
                 if (_types[value] != null) {
                     _classInfos[value] = state.GetBuiltinType(_types[value]);
                 }
