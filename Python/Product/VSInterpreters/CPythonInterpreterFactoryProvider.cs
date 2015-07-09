@@ -19,6 +19,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using System.Threading;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.VisualStudioTools;
 using Microsoft.Win32;
@@ -143,7 +144,23 @@ namespace Microsoft.PythonTools.Interpreter {
         private bool RegisterInterpreters(HashSet<string> registeredPaths, RegistryKey python, ProcessorArchitecture? arch) {
             bool anyAdded = false;
 
-            foreach (var key in python.GetSubKeyNames()) {
+            string[] subKeyNames = null;
+            for (int retries = 5; subKeyNames == null && retries > 0; --retries) {
+                try {
+                    subKeyNames = python.GetSubKeyNames();
+                } catch (IOException) {
+                    // Registry changed while enumerating subkeys. Give it a
+                    // short period to settle down and try again.
+                    // We are almost certainly being called from a background
+                    // thread, so sleeping here is fine.
+                    Thread.Sleep(100);
+                }
+            }
+            if (subKeyNames == null) {
+                return false;
+            }
+
+            foreach (var key in subKeyNames) {
                 Version version;
                 ProcessorArchitecture? arch2;
                 if (TryParsePythonVersion(key, out version, out arch2)) {
