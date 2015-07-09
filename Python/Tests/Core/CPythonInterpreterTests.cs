@@ -55,7 +55,7 @@ namespace PythonToolsTests {
         public void DiscoverRegistryRace() {
             // https://github.com/Microsoft/PTVS/issues/558
 
-            using (var key = Registry.CurrentUser.CreateSubKey(@"Software\Python\PythonCore", true)) {
+            using (var key = Registry.CurrentUser.CreateSubKey(@"Software\Python\PythonCore")) {
                 for (int changes = 0; changes < 1000; ++changes) {
                     // Doesn't matter about the name - we just want to trigger
                     // discovery and then remove the key during GetSubKeyNames.
