@@ -224,6 +224,12 @@ namespace Microsoft.PythonTools.Analysis {
                 }
             }
 
+            Debug.Assert(
+                addIndex >= 0,
+                "addIndex was not found while scanning buckets. This normally indicates a race condition - " +
+                "AnalysisDictionary does not support simultaneous mutations."
+            );
+
             buckets[addIndex].HashCode = hc;
             buckets[addIndex].Value = value;
             Thread.MemoryBarrier();
