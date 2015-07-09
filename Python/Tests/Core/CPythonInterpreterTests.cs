@@ -16,6 +16,7 @@ using System;
 using System.Linq;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.Win32;
 using TestUtilities;
 using TestUtilities.Python;
 
@@ -46,6 +47,20 @@ namespace PythonToolsTests {
                     Assert.IsNotNull(factory.CreateInterpreter() != null, "64-bit failed to create interpreter");
                 } else {
                     Assert.Fail("Expected Id == {2AF0F10D-7135-4994-9156-5D01C9C11B7E} or {9A7A9026-48C1-4688-9D5D-E5699D47D074}");
+                }
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void DiscoverRegistryRace() {
+            // https://github.com/Microsoft/PTVS/issues/558
+
+            using (var key = Registry.CurrentUser.CreateSubKey(@"Software\Python\PythonCore", true)) {
+                for (int changes = 0; changes < 1000; ++changes) {
+                    // Doesn't matter about the name - we just want to trigger
+                    // discovery and then remove the key during GetSubKeyNames.
+                    key.CreateSubKey("NotARealInterpreter").Close();
+                    key.DeleteSubKey("NotARealInterpreter", false);
                 }
             }
         }
