@@ -78,7 +78,15 @@ namespace Microsoft.PythonTools {
         }
 
         private void OnNewAnalysis(object sender, EventArgs e) {
-            if (_provider._serviceProvider.GetPythonToolsService().AdvancedOptions.ColorNames == false) {
+            var entry = sender as IPythonProjectEntry;
+            if (entry == null || entry != _entry || !entry.IsAnalyzed) {
+                Debug.Fail("Project entry does not match expectation");
+                return;
+            }
+
+            var pyService = _provider._serviceProvider.GetPythonToolsService();
+            var options = pyService != null ? pyService.AdvancedOptions : null;
+            if (options == null || options.ColorNames == false) {
                 lock (_spanCacheLock) {
                     if (_spanCache != null) {
                         _spanCache = null;
@@ -90,7 +98,7 @@ namespace Microsoft.PythonTools {
 
             PythonAst tree;
             IAnalysisCookie cookie;
-            _entry.GetTreeAndCookie(out tree, out cookie);
+            entry.GetTreeAndCookie(out tree, out cookie);
             var sCookie = cookie as SnapshotCookie;
             var snapshot = sCookie != null ? sCookie.Snapshot : null;
             if (tree == null || snapshot == null) {
@@ -98,9 +106,7 @@ namespace Microsoft.PythonTools {
             }
 
 
-            var moduleAnalysis = (_provider._serviceProvider.GetPythonToolsService().AdvancedOptions.ColorNamesWithAnalysis)
-                ? _entry.Analysis
-                : null;
+            var moduleAnalysis = options.ColorNamesWithAnalysis ? entry.Analysis : null;
 
             var walker = new ClassifierWalker(tree, moduleAnalysis, snapshot, Provider.CategoryMap);
             tree.Walk(walker);
