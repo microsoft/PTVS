@@ -209,6 +209,8 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         void _process_Exited(object sender, EventArgs e) {
+            // TODO: Abort all pending operations
+
             if (!_sentExited) {
                 _sentExited = true;
                 var exited = ProcessExited;

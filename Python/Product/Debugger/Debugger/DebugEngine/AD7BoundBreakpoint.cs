@@ -12,7 +12,10 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.Diagnostics;
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.PythonTools.Debugger.Remote;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Debugger.Interop;
@@ -116,7 +119,21 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                 pdwHitCount = 1;
             } else {
                 var task = _breakpoint.GetHitCountAsync();
-                pdwHitCount = (uint)task.GetAwaiter().GetResult();
+                try {
+                    if (!task.Wait(remoteProcess != null ? 5000 : 1000)) {
+                        pdwHitCount = 0;
+                        return VSConstants.E_FAIL;
+                    }
+                    pdwHitCount = (uint)task.Result;
+                } catch (AggregateException ae) {
+                    if (ae.InnerExceptions.OfType<OperationCanceledException>().Any()) {
+                        pdwHitCount = 1;
+                    } else if (ae.InnerExceptions.Count == 1) {
+                        throw ae.InnerException;
+                    } else {
+                        throw;
+                    }
+                }
             }
 
             return VSConstants.S_OK;
