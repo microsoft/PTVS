@@ -624,6 +624,7 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             private void WriteFrameworkElement(UIElement control, Size desiredSize) {
+                Window.Write("");
                 Window.FlushOutput();
 
                 var caretPos = Window.TextView.Caret.Position.BufferPosition;
