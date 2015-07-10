@@ -50,12 +50,17 @@ namespace ReplWindowUITests {
             }
 
             if (enableAttach != s.EnableAttach) {
-                s = s.Clone();
+                s = object.ReferenceEquals(s, Settings) ? s.Clone() : s;
                 s.EnableAttach = enableAttach;
             }
             if (addNewLineAtEndOfFullyTypedWord != s.AddNewLineAtEndOfFullyTypedWord) {
-                s = s.Clone();
+                s = object.ReferenceEquals(s, Settings) ? s.Clone() : s;
                 s.AddNewLineAtEndOfFullyTypedWord = addNewLineAtEndOfFullyTypedWord;
+            }
+            if (useIPython) {
+                s = object.ReferenceEquals(s, Settings) ? s.Clone() : s;
+                s.PrimaryPrompt = ">>> ";
+                s.UseInterpreterPrompts = false;
             }
 
             return ReplWindowProxy.Prepare(s, useIPython: useIPython);
