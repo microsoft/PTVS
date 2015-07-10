@@ -97,6 +97,18 @@ class VsShellChannel(DefaultHandler, ShellChannel):
         payload = content['payload']
         
         for item in payload:
+            data = item.get('data')
+            if data is not None:
+                try:
+                    # Could be named km.sub_channel for very old IPython, but
+                    # those versions should not put 'data' in this payload
+                    write_data = self._vs_backend.km.iopub_channel.write_data
+                except AttributeError:
+                    pass
+                else:
+                    write_data(data)
+                    continue
+
             output = item.get('text', None)
             if output is not None:
                 self._vs_backend.write_stdout(output)
