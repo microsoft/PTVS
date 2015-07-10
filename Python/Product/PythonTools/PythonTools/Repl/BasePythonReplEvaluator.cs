@@ -224,15 +224,26 @@ namespace Microsoft.PythonTools.Repl {
             internal string _userPrompt1, _userPrompt2;
 #endif
 
-            public CommandProcessorThread(BasePythonReplEvaluator evaluator, Stream stream, bool redirectOutput, Process process) {
+            private CommandProcessorThread(BasePythonReplEvaluator evaluator) {
                 _eval = evaluator;
+                var options = _eval._options;
+                if (options == null || options.UseInterpreterPrompts) {
+                    _userPrompt1 = _userPrompt2 = null;
+                } else {
+                    _userPrompt1 = options.PrimaryPrompt;
+                    _userPrompt2 = options.SecondaryPrompt;
+                }
+            }
+
+            public CommandProcessorThread(BasePythonReplEvaluator evaluator, Stream stream, bool redirectOutput, Process process)
+                : this(evaluator) {
                 _stream = stream;
                 _process = process;
                 StartOutputThread(redirectOutput);
             }
 
-            public CommandProcessorThread(BasePythonReplEvaluator evaluator, Socket listenerSocket, bool redirectOutput, Process process) {
-                _eval = evaluator;
+            public CommandProcessorThread(BasePythonReplEvaluator evaluator, Socket listenerSocket, bool redirectOutput, Process process)
+                : this(evaluator){
                 _listenerSocket = listenerSocket;
                 _process = process;
                 StartOutputThread(redirectOutput);
