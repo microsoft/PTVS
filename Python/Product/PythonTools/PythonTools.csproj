@@ -973,6 +973,10 @@
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <None Include="ptvsd\__init__.py" />
+    <None Include="Theme\Repl\blue.vstheme" />
+    <None Include="Theme\Repl\contrast.vstheme" />
+    <None Include="Theme\Repl\dark.vstheme" />
+    <None Include="Theme\Repl\light.vstheme" />
     <Note Include="ptvsd\__main__.py" />
     <Content Include="pip_downloader.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -1094,6 +1098,13 @@
     <Content Include="ReadmeStyle.css" />
     <ZipProject Include="Templates\Projects\WebProjectBottle\requirements.txt" />
     <ZipProject Include="Templates\Projects\WebProjectFlask\requirements.txt" />
+    <None Include="Theme\Repl\make_theme_pkgdef.py" />
+    <_ThemePkgDef Include="Theme\Repl\Microsoft.PythonTools.Repl.theme.v14.0.pkgdef">
+      <IncludeInVsix>true</IncludeInVsix>
+      <Link>Microsoft.PythonTools.Repl.theme.pkgdef</Link>
+      <VSIXSubPath>.</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </_ThemePkgDef>
     <Content Include="visualstudio_py_debugger.py">
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -1439,14 +1450,11 @@
       </Resource>
     </ItemGroup>
   </Target>
-
   <!-- We build these assemblies into separate folders to avoid incremental cleaning issues,
        but then CreatePkgDef can't find them for the ProvideCodeBase attributes. So we copy
        into the PythonTools output folder temporarily to generate the pkgdef file. -->
   <Target Name="_CopyForCreatePkgDef" BeforeTargets="GeneratePkgDef">
-    <Copy SourceFiles="$(OutputPath)..\Analysis\Microsoft.PythonTools.Analysis.dll;
-                       $(OutputPath)..\EnvironmentsList\Microsoft.PythonTools.EnvironmentsList.dll;
-                       $(OutputPath)..\VSInterpreters\Microsoft.PythonTools.VSInterpreters.dll" DestinationFolder="$(OutputPath)">
+    <Copy SourceFiles="$(OutputPath)..\Analysis\Microsoft.PythonTools.Analysis.dll;$(OutputPath)..\EnvironmentsList\Microsoft.PythonTools.EnvironmentsList.dll;$(OutputPath)..\VSInterpreters\Microsoft.PythonTools.VSInterpreters.dll" DestinationFolder="$(OutputPath)">
       <Output TaskParameter="CopiedFiles" ItemName="_CopiedForCreatePkgdef" />
     </Copy>
   </Target>
