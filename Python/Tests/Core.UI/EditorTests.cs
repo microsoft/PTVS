@@ -188,11 +188,13 @@ namespace PythonToolsUITests {
 
                 var doc = app.GetDocument(item.Document.FullName);
 
+                doc.SetFocus();
 
                 ((UIElement)doc.TextView).Dispatcher.Invoke((Action)(() => {
                     doc.TextView.Caret.MoveTo(new SnapshotPoint(doc.TextView.TextBuffer.CurrentSnapshot, doc.TextView.TextBuffer.CurrentSnapshot.Length));
+                    ((UIElement)doc.TextView).Focus();
                 }));
-
+                
                 Keyboard.Type("f(");
 
                 using (var sh = doc.WaitForSession<ISignatureHelpSession>()) {
@@ -228,10 +230,12 @@ namespace PythonToolsUITests {
                 window.Activate();
 
                 var doc = app.GetDocument(item.Document.FullName);
+                doc.SetFocus();
 
                 ((UIElement)doc.TextView).Dispatcher.Invoke((Action)(() => {
                     var point = doc.TextView.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(5 - 1).Start;
                     doc.TextView.Caret.MoveTo(point);
+                    ((UIElement)doc.TextView).Focus();
                 }));
 
                 app.ExecuteCommand("Edit.ParameterInfo");
@@ -500,10 +504,12 @@ pass");
             window.Activate();
 
             var doc = app.GetDocument(item.Document.FullName);
+            doc.SetFocus();
             var textLine = doc.TextView.TextViewLines[line];
 
             ((UIElement)doc.TextView).Dispatcher.Invoke((Action)(() => {
                 doc.TextView.Caret.MoveTo(textLine.Start + column);
+                ((UIElement)doc.TextView).Focus();
             }));
 
             Keyboard.Type("\r");
@@ -608,11 +614,13 @@ x\
             window.Activate();
 
             var doc = app.GetDocument(item.Document.FullName);
+            doc.SetFocus();
             var textLine = doc.TextView.TextViewLines[line];
 
             ((UIElement)doc.TextView).Dispatcher.Invoke((Action)(() => {
                 try {
                     doc.TextView.Caret.MoveTo(textLine.Start + column);
+                    ((UIElement)doc.TextView).Focus();
                 } catch (Exception) {
                     Debug.Fail("Bad position for moving caret");
                 }
