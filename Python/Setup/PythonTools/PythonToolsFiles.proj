@@ -177,7 +177,8 @@
 
     <!-- A workaround for an interactive window issue in VWD and WD 14.0 -->
     <File Condition="$(VSTarget) == '14.0'"
-          Include="!(bindpath.bin)\Microsoft.PythonTools.ExpressInteractiveWorkaround.dll">
+          Include="!(bindpath.bin)\Microsoft.PythonTools.ExpressInteractiveWorkaround.dll;
+                   Microsoft.PythonTools.ExpressInteractiveWorkaround.pkgdef">
         <IncludeInVS>false</IncludeInVS>
     </File>
   </ItemGroup>
