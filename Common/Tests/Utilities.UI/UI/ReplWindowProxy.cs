@@ -198,7 +198,7 @@ namespace TestUtilities.UI {
             var toolWindow = settings.ActivateInteractiveWindow(app, executionMode);
 
 #if DEV14_OR_LATER
-            var interactive = ((IVsInteractiveWindow)toolWindow).InteractiveWindow;
+            var interactive = toolWindow != null ? ((IVsInteractiveWindow)toolWindow).InteractiveWindow : null;
 #else
             var interactive = toolWindow as IInteractiveWindow;
 #endif
