@@ -226,6 +226,7 @@ namespace Microsoft.PythonTools.Repl {
 
             private CommandProcessorThread(BasePythonReplEvaluator evaluator) {
                 _eval = evaluator;
+#if DEV14_OR_LATER
                 var options = _eval._options;
                 if (options == null || options.UseInterpreterPrompts) {
                     _userPrompt1 = _userPrompt2 = null;
@@ -233,6 +234,7 @@ namespace Microsoft.PythonTools.Repl {
                     _userPrompt1 = options.PrimaryPrompt;
                     _userPrompt2 = options.SecondaryPrompt;
                 }
+#endif
             }
 
             public CommandProcessorThread(BasePythonReplEvaluator evaluator, Stream stream, bool redirectOutput, Process process)
