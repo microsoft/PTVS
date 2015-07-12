@@ -1,0 +1,8 @@
+[$RootKey$\Packages\{9f038257-7ba3-410c-9486-486f5c73e215}]
+@="ExpressInteractiveWorkaroundSupportPackage"
+"InprocServer32"="$WinDir$\SYSTEM32\MSCOREE.DLL"
+"Class"="Microsoft.PythonTools.ExpressInteractiveWorkaround.ExpressInteractiveWorkaroundSupportPackage"
+"CodeBase"="$PackageFolder$\Microsoft.PythonTools.ExpressInteractiveWorkaround.dll"
+[$RootKey$\Menus]
+"{9f038257-7ba3-410c-9486-486f5c73e215}"=", Menus.ctmenu, 1"
+
