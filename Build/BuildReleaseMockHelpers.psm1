@@ -1,8 +1,8 @@
 function submit_symbols {
-    param($buildname, $buildid, $filetype, $sourcedir, $contacts)
+    param($productgroup, $productver, $buildname, $buildid, $buildnum, $buildtype, $filetype, $sourcedir, $contacts)
     
-    Write-Debug "*** Symbol Submission Text ***
-    BuildId=$buildid $filetype
+    $request = `
+    "BuildId=$buildid $filetype
     BuildLabPhone=7058786
     BuildRemark=$buildname
     ContactPeople=$contacts
@@ -10,7 +10,22 @@ function submit_symbols {
     Project=TechnicalComputing
     Recursive=yes
     StatusMail=$contacts
-    UserName=$env:username"
+    UserName=$env:username
+    SubmitToArchive=all
+    SubmitToInternet=yes
+    ProductGroup=$productgroup
+    ProductName=$($productgroup)_$($productver)
+    Release=$buildnum
+    Build=$buildnum
+    BuildType=$buildtype
+    LocaleCode=en-US"
+
+    Write-Output "*** Symbol Submission Text ***
+$request"
+
+    # Dump it to the file as well so that it can be manually submitted for testing.
+    $reqfile = "symreq $buildname $buildid $buildtype $filetype.txt"
+    $request | Out-File -Encoding ascii -FilePath "$reqfile"
 }
 
 function _find_sdk_tool {

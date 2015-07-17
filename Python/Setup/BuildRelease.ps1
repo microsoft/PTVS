@@ -147,14 +147,17 @@ $setup_project = gi "$buildroot\Python\Setup\setup.proj"
 
 # Project metadata
 $project_name = "Python Tools for Visual Studio"
-$project_url = "http://pytools.codeplex.com"
+$project_url = "http://aka.ms/ptvs"
 $project_keywords = "PTVS; Visual Studio; Python"
+
+# Identifies all versions of the product for symbols archiving. No spaces.
+$product_group = "Python_Tools_for_Visual_Studio"
 
 # These people are able to approve code signing operations
 $approvers = "smortaz", "dinov", "stevdo", "pminaev", "gilbertw", "huvalo", "jinglou", "sitani", "crwilcox"
 
 # These people are the contacts for the symbols uploaded to the symbol server
-$symbol_contacts = "$env:username;dinov;smortaz;stevdo;gilbertw"
+$symbol_contacts = "$env:username;dinov;smortaz;stevdo;gilbertw;pminaev"
 
 # This single person or DL is the contact for virus scan notifications
 $vcs_contact = "ptvscore"
@@ -562,8 +565,9 @@ try {
                     Write-Output "Skipping symbol submission for $($i.VSName) because the build failed"
                     continue
                 }
-                submit_symbols "$project_name$spacename" "$buildnumber $($i.VSName)" "binaries" $i.signed_bindir $symbol_contacts
-                submit_symbols "$project_name$spacename" "$buildnumber $($i.VSName)" "symbols" $i.symboldir $symbol_contacts
+
+                submit_symbols "$product_group" "$release_version" "$project_name$spacename" "$buildnumber $($i.VSName)" "$buildnumber" "$config" "binaries" $i.signed_bindir $symbol_contacts
+                submit_symbols "$product_group" "$release_version" "$project_name$spacename" "$buildnumber $($i.VSName)" "$buildnumber" "$config" "symbols" $i.symboldir $symbol_contacts
 
                 $target_msbuild_options = msbuild-options $i
                 msbuild $global_msbuild_options $target_msbuild_options `
