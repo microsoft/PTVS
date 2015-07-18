@@ -3,22 +3,22 @@ function submit_symbols {
     
     $request = `
     "BuildId=$buildid $filetype
-    BuildLabPhone=7058786
-    BuildRemark=$buildname
-    ContactPeople=$contacts
-    Directory=$sourcedir
-    Project=TechnicalComputing
-    Recursive=yes
-    StatusMail=$contacts
-    UserName=$env:username
-    SubmitToArchive=all
-    SubmitToInternet=yes
-    ProductGroup=$productgroup
-    ProductName=$($productgroup)_$($productver)
-    Release=$buildnum
-    Build=$buildnum
-    BuildType=$buildtype
-    LocaleCode=en-US"
+BuildLabPhone=7058786
+BuildRemark=$buildname
+ContactPeople=$contacts
+Directory=$sourcedir
+Project=TechnicalComputing
+Recursive=yes
+StatusMail=$contacts
+UserName=$env:username
+SubmitToArchive=all
+SubmitToInternet=yes
+ProductGroup=$productgroup
+ProductName=$($productgroup)_$($productver)
+Release=$buildnum
+Build=$buildnum
+BuildType=$buildtype
+LocaleCode=en-US"
 
     Write-Output "*** Symbol Submission Text ***
 $request"
@@ -26,7 +26,7 @@ $request"
     $reqfile = "$reqdir\symreq_$filetype.txt"
     $request | Out-File -Encoding ascii -FilePath "$reqfile"
 
-    \\symbols\tools\createrequest.cmd -i "$reqfile" -d "$reqfile\SymSrvRequestLogs" -c -a
+    \\symbols\tools\createrequest.cmd -i "$reqfile" -d "$reqdir\SymSrvRequestLogs" -c -a
 }
 
 function _find_sdk_tool {
