@@ -2035,9 +2035,9 @@ namespace Microsoft.PythonTools.Repl {
                             break;
                         }
                     }
-
-                    escape = text.IndexOf('\x1b', escape + 1);
                 }// else not an escape sequence, process as text
+
+                escape = text.IndexOf('\x1b', escape + 1);
             }
 
             if (start != text.Length) {
