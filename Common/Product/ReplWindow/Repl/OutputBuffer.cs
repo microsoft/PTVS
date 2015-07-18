@@ -194,10 +194,9 @@ namespace Microsoft.VisualStudio.Repl {
                             break;
                         }
                     }
-
-                    escape = text.IndexOf('\x1b', escape + 1);
                 }// else not an escape sequence, process as text
 
+                escape = text.IndexOf('\x1b', escape + 1);
             } while (escape != -1);
             if (start != text.Length - 1) {
                 AppendText(text.Substring(start), kind, color);
