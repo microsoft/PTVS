@@ -3,22 +3,22 @@ function submit_symbols {
     
     $request = `
     "BuildId=$buildid $filetype
-    BuildLabPhone=7058786
-    BuildRemark=$buildname
-    ContactPeople=$contacts
-    Directory=$sourcedir
-    Project=TechnicalComputing
-    Recursive=yes
-    StatusMail=$contacts
-    UserName=$env:username
-    SubmitToArchive=all
-    SubmitToInternet=yes
-    ProductGroup=$productgroup
-    ProductName=$($productgroup)_$($productver)
-    Release=$buildnum
-    Build=$buildnum
-    BuildType=$buildtype
-    LocaleCode=en-US"
+BuildLabPhone=7058786
+BuildRemark=$buildname
+ContactPeople=$contacts
+Directory=$sourcedir
+Project=TechnicalComputing
+Recursive=yes
+StatusMail=$contacts
+UserName=$env:username
+SubmitToArchive=all
+SubmitToInternet=yes
+ProductGroup=$productgroup
+ProductName=$($productgroup)_$($productver)
+Release=$buildnum
+Build=$buildnum
+BuildType=$buildtype
+LocaleCode=en-US"
 
     Write-Output "*** Symbol Submission Text ***
 $request"
