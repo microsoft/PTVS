@@ -1,5 +1,5 @@
 function submit_symbols {
-    param($buildname, $buildid, $filetype, $sourcedir, $contacts)
+    param($productgroup, $productver, $buildname, $buildid, $buildnum, $buildtype, $filetype, $sourcedir, $reqdir, $contacts)
     
     $request = `
     "BuildId=$buildid $filetype
@@ -10,13 +10,23 @@ function submit_symbols {
     Project=TechnicalComputing
     Recursive=yes
     StatusMail=$contacts
-    UserName=$env:username"
+    UserName=$env:username
+    SubmitToArchive=all
+    SubmitToInternet=yes
+    ProductGroup=$productgroup
+    ProductName=$($productgroup)_$($productver)
+    Release=$buildnum
+    Build=$buildnum
+    BuildType=$buildtype
+    LocaleCode=en-US"
 
     Write-Output "*** Symbol Submission Text ***
 $request"
 
-    $request | Out-File -Encoding ascii -FilePath request_$filetype.txt
-    \\symbols\tools\createrequest.cmd -i request_$filetype.txt -d .\SymSrvRequestLogs -c -s
+    $reqfile = "$reqdir\symreq_$filetype.txt"
+    $request | Out-File -Encoding ascii -FilePath "$reqfile"
+
+    \\symbols\tools\createrequest.cmd -i "$reqfile" -d "$reqfile\SymSrvRequestLogs" -c -a
 }
 
 function _find_sdk_tool {
