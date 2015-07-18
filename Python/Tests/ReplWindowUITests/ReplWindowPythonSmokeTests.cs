@@ -12,6 +12,8 @@
  *
  * ***************************************************************************/
 
+using System;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Microsoft.PythonTools;
@@ -145,6 +147,20 @@ namespace ReplWindowUITests {
                 interactive.SubmitCode("42");
 
                 interactive.WaitForTextEnd(">42", "42", ">");
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        [HostType("VSTestHost")]
+        public virtual void PrintAllCharacters() {
+            using (var interactive = Prepare()) {
+                interactive.SubmitCode("print(\"" +
+                    string.Join("", Enumerable.Range(0, 256).Select(i => string.Format("\\x{0:X2}", i))) +
+                    "\\nDONE\")",
+                    timeout: TimeSpan.FromSeconds(10.0)
+                );
+
+                interactive.WaitForTextEnd("DONE", ">");
             }
         }
 

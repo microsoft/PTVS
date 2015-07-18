@@ -333,11 +333,19 @@ namespace TestUtilities.UI {
             // Resplit lines to handle cases where linebreaks are embedded in
             // a single string. This helps ensure the comparison is correct and
             // the output is sensible.
-            expected = expected.SelectMany(l => l.Split('\n')).Select(l => l.TrimEnd('\r', '\n')).ToList();
-            var lines = Window.TextView.TextBuffer.CurrentSnapshot.Lines;
+            expected = expected.SelectMany(l => l.Split('\n')).Select(l => l.TrimEnd('\r', '\n', ' ')).ToList();
+            var snapshot = Window.TextView.TextBuffer.CurrentSnapshot;
+            var lines = snapshot.Lines;
+            // Cap the number of lines we'll ever look at to avoid breaking here
+            // when tests get stuck in infinite loops
+            if (matchAtStart && !matchAtEnd) {
+                lines = lines.Take(expected.Count + 1);
+            } else if (!matchAtStart && matchAtEnd) {
+                lines = lines.Skip(snapshot.LineCount - expected.Count - 2);
+            }
             var actual = lines
                 .SelectMany(l => l.GetText().Split('\n'))
-                .Select(l => l.TrimEnd('\r', '\n'))
+                .Select(l => l.TrimEnd('\r', '\n', ' '))
                 .ToList();
 
             bool isMatch = true;
