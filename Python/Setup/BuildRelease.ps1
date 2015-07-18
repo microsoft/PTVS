@@ -566,8 +566,8 @@ try {
                     continue
                 }
 
-                submit_symbols "$product_group" "$release_version" "$project_name$spacename" "$buildnumber $($i.VSName)" "$buildnumber" "$config" "binaries" $i.signed_bindir $symbol_contacts
-                submit_symbols "$product_group" "$release_version" "$project_name$spacename" "$buildnumber $($i.VSName)" "$buildnumber" "$config" "symbols" $i.symboldir $symbol_contacts
+                submit_symbols "$product_group" "$release_version" "$project_name$spacename" "$buildnumber $($i.VSName)" "$buildnumber" "$config" "binaries" $i.signed_bindir $i.destdir $symbol_contacts
+                submit_symbols "$product_group" "$release_version" "$project_name$spacename" "$buildnumber $($i.VSName)" "$buildnumber" "$config" "symbols" $i.symboldir $i.destdir $symbol_contacts
 
                 $target_msbuild_options = msbuild-options $i
                 msbuild $global_msbuild_options $target_msbuild_options `

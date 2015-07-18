@@ -1,5 +1,5 @@
 function submit_symbols {
-    param($productgroup, $productver, $buildname, $buildid, $buildnum, $buildtype, $filetype, $sourcedir, $contacts)
+    param($productgroup, $productver, $buildname, $buildid, $buildnum, $buildtype, $filetype, $sourcedir, $reqdir, $contacts)
     
     $request = `
     "BuildId=$buildid $filetype
@@ -24,7 +24,7 @@ function submit_symbols {
 $request"
 
     # Dump it to the file as well so that it can be manually submitted for testing.
-    $reqfile = "symreq $buildname $buildid $buildtype $filetype.txt"
+    $reqfile = "$reqdir\symreq_$filetype.txt"
     $request | Out-File -Encoding ascii -FilePath "$reqfile"
 }
 
