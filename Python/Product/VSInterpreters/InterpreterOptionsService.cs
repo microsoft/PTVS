@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Hosting;
@@ -49,7 +50,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
         // If this collection exists in the settings provider, no factories will
         // be loaded. This is meant for tests.
-        private const string SuppressFactoryProvidersCollection = @"PythonTools\NoInterpreterFactories";
+        internal const string SuppressFactoryProvidersCollection = @"PythonTools\NoInterpreterFactories";
 
         private const string DefaultInterpreterOptionsCollection = @"PythonTools\Options\Interpreters";
         private const string DefaultInterpreterSetting = "DefaultInterpreter";
@@ -178,9 +179,20 @@ namespace Microsoft.PythonTools.Interpreter {
                 DefaultInterpreter = Interpreters.LastOrDefault(fact => fact.CanBeAutoDefault());
             }
 
-            var evt = InterpretersChanged;
-            if (evt != null) {
-                evt(this, EventArgs.Empty);
+            OnInterpretersChanged();
+        }
+
+        private void OnInterpretersChanged() {
+            try {
+                BeginSuppressInterpretersChangedEvent();
+                for (bool repeat = true; repeat; repeat = _raiseInterpretersChanged, _raiseInterpretersChanged = false) {
+                    var evt = InterpretersChanged;
+                    if (evt != null) {
+                        evt(this, EventArgs.Empty);
+                    }
+                }
+            } finally {
+                EndSuppressInterpretersChangedEvent();
             }
         }
 
@@ -344,16 +356,19 @@ namespace Microsoft.PythonTools.Interpreter {
         internal IPythonInterpreterFactoryProvider[] SetProviders(IPythonInterpreterFactoryProvider[] providers) {
             var oldProviders = _providers;
             _providers = providers;
+            foreach (var p in oldProviders) {
+                p.InterpreterFactoriesChanged -= Provider_InterpreterFactoriesChanged;
+            }
+            foreach (var p in providers) {
+                p.InterpreterFactoriesChanged += Provider_InterpreterFactoriesChanged;
+            }
             Provider_InterpreterFactoriesChanged(this, EventArgs.Empty);
             return oldProviders;
         }
 
         public IEnumerable<IPythonInterpreterFactory> Interpreters {
             get {
-                return _providers.SelectMany(provider => provider.GetInterpreterFactories())
-                    .Where(fact => fact != null)
-                    .OrderBy(fact => fact.Description)
-                    .ThenBy(fact => fact.Configuration.Version);
+                return new InterpretersEnumerable(this);
             }
         }
 
@@ -486,20 +501,14 @@ namespace Microsoft.PythonTools.Interpreter {
             }
 
             if (shouldRaiseEvent) {
-                var evt = InterpretersChanged;
-                if (evt != null) {
-                    evt(this, EventArgs.Empty);
-                }
+                OnInterpretersChanged();
             }
         }
 
         public IEnumerable<IPythonInterpreterFactory> InterpretersOrDefault {
             get {
                 bool anyYielded = false;
-                foreach (var factory in _providers.SelectMany(provider => provider.GetInterpreterFactories())
-                                                  .Where(fact => fact != null)
-                                                  .OrderBy(fact => fact.Description)
-                                                  .ThenBy(fact => fact.Configuration.Version)) {
+                foreach (var factory in Interpreters) {
                     Debug.Assert(factory != NoInterpretersValue);
                     yield return factory;
                     anyYielded = true;
@@ -588,6 +597,75 @@ namespace Microsoft.PythonTools.Interpreter {
             bool res = Interlocked.Decrement(ref info._lockCount) == 0;
             info._lock.Release();
             return res;
+        }
+
+        private sealed class InterpretersEnumerator : IEnumerator<IPythonInterpreterFactory> {
+            private readonly InterpreterOptionsService _owner;
+            private readonly IEnumerator<IPythonInterpreterFactory> _e;
+
+            public InterpretersEnumerator(InterpreterOptionsService owner, IEnumerator<IPythonInterpreterFactory> e) {
+                _owner = owner;
+                _owner.BeginSuppressInterpretersChangedEvent();
+                _e = e;
+            }
+
+            public void Dispose() {
+                Dispose(true);
+                GC.SuppressFinalize(this);
+            }
+
+            private void Dispose(bool disposing) {
+                if (disposing) {
+                    _e.Dispose();
+                }
+                _owner.EndSuppressInterpretersChangedEvent();
+            }
+
+            ~InterpretersEnumerator() {
+                Debug.Fail("Interpreter enumerator should always be disposed");
+                Dispose(false);
+            }
+
+            public IPythonInterpreterFactory Current { get { return _e.Current; } }
+            object IEnumerator.Current { get { return _e.Current; } }
+            public bool MoveNext() { return _e.MoveNext(); }
+            public void Reset() { _e.Reset(); }
+        }
+
+        private sealed class InterpretersEnumerable : IEnumerable<IPythonInterpreterFactory> {
+            private readonly InterpreterOptionsService _owner;
+            private readonly IEnumerable<IPythonInterpreterFactory> _e;
+
+            private static IList<IPythonInterpreterFactory> GetFactories(IPythonInterpreterFactoryProvider provider) {
+                while (true) {
+                    try {
+                        var res = new List<IPythonInterpreterFactory>();
+                        foreach (var f in provider.GetInterpreterFactories()) {
+                            res.Add(f);
+                        }
+                        return res;
+                    } catch (InvalidOperationException ex) {
+                        // Collection changed, so retry
+                        Debug.WriteLine("Retrying GetInterpreterFactories because " + ex.Message);
+                    }
+                }
+            }
+
+            public InterpretersEnumerable(InterpreterOptionsService owner) {
+                _owner = owner;
+                _e = owner._providers.SelectMany(GetFactories)
+                    .Where(fact => fact != null)
+                    .OrderBy(fact => fact.Description)
+                    .ThenBy(fact => fact.Configuration.Version);
+            }
+
+            public IEnumerator<IPythonInterpreterFactory> GetEnumerator() {
+                return new InterpretersEnumerator(_owner, _e.GetEnumerator());
+            }
+
+            IEnumerator IEnumerable.GetEnumerator() {
+                return new InterpretersEnumerator(_owner, _e.GetEnumerator());
+            }
         }
     }
 }
