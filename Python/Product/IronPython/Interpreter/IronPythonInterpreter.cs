@@ -158,6 +158,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
             if (_state != null) {
                 _state.AnalysisDirectoriesChanged += AnalysisDirectoryChanged;
+                AnalysisDirectoryChanged(_state, EventArgs.Empty);
             }
         }
 
