@@ -70,7 +70,7 @@ namespace Microsoft.PythonTools.Profiling {
             string newFilename = newBaseName + ".pyperf";
             // add directory name back if present...
             string dirName = Path.GetDirectoryName(filename);
-            if (dirName != "") {
+            if (!string.IsNullOrEmpty(dirName)) {
                 newFilename = Path.Combine(dirName, newFilename);
             }
             filename = newFilename;

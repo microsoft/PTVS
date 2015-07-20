@@ -52,6 +52,7 @@ namespace Microsoft.PythonTools.Analysis {
         where TKey : class
         where TValue : class {
 
+        [NonSerialized]
         private Bucket[] _buckets;
         private int _count;
         private IEqualityComparer<TKey> _comparer;

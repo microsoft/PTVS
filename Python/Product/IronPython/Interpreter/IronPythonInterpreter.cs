@@ -539,6 +539,9 @@ namespace Microsoft.IronPythonTools.Interpreter {
             _typeDb = null;
             AppDomain.CurrentDomain.AssemblyResolve -= AssemblyResolver.Instance.CurrentDomain_AssemblyResolve;
             _unloader.Dispose();
+#if DEBUG
+            GC.SuppressFinalize(this);
+#endif
         }
 
         #endregion

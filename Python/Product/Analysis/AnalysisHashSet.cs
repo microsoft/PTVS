@@ -41,6 +41,7 @@ namespace Microsoft.PythonTools.Analysis.AnalysisSetDetails {
     [Serializable]
     internal sealed class AnalysisHashSet : IAnalysisSet {
 
+        [NonSerialized]
         private Bucket[] _buckets;
         private int _count;
         private readonly IEqualityComparer<AnalysisValue> _comparer;
