@@ -2536,7 +2536,7 @@ namespace AnalysisTests {
                     "test_pep3131.py"       // we need to update to support this.
                 });
             var errorSink = new CollectingErrorSink();
-            var errors = new Dictionary<string, CollectingErrorSink>();
+            var errors = new Dictionary<string, List<ErrorResult>>();
             foreach (var file in files) {
                 string filename = Path.GetFileName(file);
                 if (skippedFiles.Contains(filename) || filename.StartsWith("badsyntax_") || filename.StartsWith("bad_coding") || file.IndexOf("\\lib2to3\\tests\\") != -1) {
@@ -2547,8 +2547,18 @@ namespace AnalysisTests {
                 }
 
                 if (errorSink.Errors.Count != 0) {
-                    errors["\"" + file + "\""] = errorSink;
-                    errorSink = new CollectingErrorSink();
+                    var fileErrors = errorSink.Errors.ToList();
+                    if (curVersion.Configuration.Version == new Version(3, 5)) {
+                        // TODO: https://github.com/Microsoft/PTVS/issues/337
+                        fileErrors.RemoveAll(e => {
+                            return e.Message == "non-keyword arg after keyword arg";
+                        });
+                    }
+
+                    if (fileErrors.Any()) {
+                        errors["\"" + file + "\""] = fileErrors;
+                        errorSink = new CollectingErrorSink();
+                    }
                 }
             }
 
@@ -2556,7 +2566,7 @@ namespace AnalysisTests {
                 StringBuilder errorList = new StringBuilder();
                 foreach (var keyValue in errors) {
                     errorList.Append(keyValue.Key + " :" + Environment.NewLine);
-                    foreach (var error in keyValue.Value.Errors) {
+                    foreach (var error in keyValue.Value) {
                         errorList.AppendFormat("     {0} {1}{2}", error.Span, error.Message, Environment.NewLine);
                     }
 
