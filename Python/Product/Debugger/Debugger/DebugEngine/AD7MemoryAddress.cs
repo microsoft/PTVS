@@ -136,8 +136,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                 pinfo[0].dwFields |= enum_CONTEXT_INFO_FIELDS.CIF_ADDRESS;
             }
 
-            if ((dwFields & enum_CONTEXT_INFO_FIELDS.CIF_FUNCTION) != 0 && _frame != null) {
-                pinfo[0].bstrFunction = _frame.FunctionName;
+            if ((dwFields & enum_CONTEXT_INFO_FIELDS.CIF_FUNCTION) != 0) {
+                pinfo[0].bstrFunction = _frame != null ? _frame.FunctionName : "<unknown>";
                 pinfo[0].dwFields |= enum_CONTEXT_INFO_FIELDS.CIF_FUNCTION;
             }
 
