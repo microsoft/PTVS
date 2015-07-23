@@ -23,9 +23,7 @@ extern "C" {
     volatile char isInitialized;
 
     __declspec(dllexport) __declspec(noinline)
-    void OnInitialized() {
-        volatile char dummy = 0;
-    }
+    void OnInitialized() DUMMY_BREAKPOINT_FUNCTION
 }
 
 
