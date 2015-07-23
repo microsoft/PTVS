@@ -348,27 +348,19 @@ bool StringEquals33(const DebuggerString* debuggerString, const void* pyString) 
 // and thus gets notifications when they're called.
 
 __declspec(dllexport) __declspec(noinline)
-void OnBreakpointHit() {
-    volatile char dummy = 0;
-}
+void OnBreakpointHit() DUMMY_BREAKPOINT_FUNCTION
 
 // Note that this is only reported for step in/over, not for step out - debugger handles the latter via native breakpoints.
 __declspec(dllexport) __declspec(noinline)
-void OnStepComplete() { 
-    volatile char dummy = 0;
-}
+void OnStepComplete() DUMMY_BREAKPOINT_FUNCTION
 
 // Stepping operation fell through the end of the frame on which it began - debugger should handle the rest of the step.
 __declspec(dllexport) __declspec(noinline)
-void OnStepFallThrough() {
-    volatile char dummy = 0;
-}
+void OnStepFallThrough() DUMMY_BREAKPOINT_FUNCTION
 
 // EvalLoop completed evaluation of input; evalLoopResult points at the resulting object if any, and evalLoopException points at exception if any.
 __declspec(dllexport) __declspec(noinline)
-void OnEvalComplete() {
-    volatile char dummy = 0;
-}
+void OnEvalComplete() DUMMY_BREAKPOINT_FUNCTION
 
 
 void EvalLoop(void (*bp)()) {

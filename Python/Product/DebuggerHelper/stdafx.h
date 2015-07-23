@@ -25,3 +25,6 @@
 #include "targetver.h"
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+
+#define DUMMY_BREAKPOINT_FUNCTION \
+    { volatile char unique[] = __FUNCSIG__; while (*unique == 0) {} }
