@@ -150,7 +150,17 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                                 nextExpr = _decoratorCalls[d] = new CallExpression(d, new[] { new Arg(expr) });
                             }
                             expr = nextExpr;
-                            types = decorator.Call(expr, this, new[] { types }, ExpressionEvaluator.EmptyNames);
+                            var decorated = AnalysisSet.Empty;
+                            foreach (var ns in decorator)
+                            {
+                                var fd = ns as FunctionInfo;
+                                if (fd != null && Scope.EnumerateTowardsGlobal.Any(s => s.AnalysisValue == fd))
+                                {
+                                    continue;
+                                }
+                                decorated = decorated.Union(ns.Call(expr, this, new[] { types }, ExpressionEvaluator.EmptyNames));
+                            }
+                            types = decorated;
                         }
                     }
                 }

@@ -124,12 +124,17 @@ namespace AnalysisTests {
             return state;
         }
 
-        public ModuleAnalysis ProcessText(string text, PythonLanguageVersion version = PythonLanguageVersion.V27, string[] analysisDirs = null) {
+        public ModuleAnalysis ProcessText(
+            string text,
+            PythonLanguageVersion version = PythonLanguageVersion.V27,
+            string[] analysisDirs = null,
+            CancellationToken cancel = default(CancellationToken)
+        ) {
             var sourceUnit = GetSourceUnit(text, "fob");
             var state = CreateAnalyzer(version, analysisDirs);
             var entry = state.AddModule("fob", "fob", null);
             Prepare(entry, sourceUnit, version);
-            entry.Analyze(CancellationToken.None);
+            entry.Analyze(cancel);
 
             return entry.Analysis;
         }
