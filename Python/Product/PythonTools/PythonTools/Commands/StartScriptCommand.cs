@@ -13,8 +13,10 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
@@ -39,7 +41,7 @@ namespace Microsoft.PythonTools.Commands {
         internal class LaunchFileProperties : IProjectLaunchProperties {
             private readonly string _arguments, _workingDir;
             private readonly Dictionary<string, string> _environment;
-            
+
             public LaunchFileProperties(string arguments, string workingDir, string searchPathVar, string searchPath) {
                 _arguments = arguments;
                 _workingDir = workingDir;
@@ -47,7 +49,7 @@ namespace Microsoft.PythonTools.Commands {
                     { searchPathVar, searchPath }
                 };
             }
-            
+
             public string GetArguments() {
                 return _arguments;
             }
@@ -71,7 +73,13 @@ namespace Microsoft.PythonTools.Commands {
             // Fallback to using default python project
             var file = CommonPackage.GetActiveTextView(_serviceProvider).GetFilePath();
             var sln = (IVsSolution)_serviceProvider.GetService(typeof(SVsSolution));
-            var projects = _serviceProvider.GetDTE().ActiveSolutionProjects as System.Collections.IEnumerable;
+            IEnumerable projects;
+            try {
+                projects = _serviceProvider.GetDTE().ActiveSolutionProjects as IEnumerable;
+            } catch (COMException) {
+                // ActiveSolutionProjects can fail if Solution Explorer has not been loaded
+                projects = Enumerable.Empty<EnvDTE.Project>();
+            }
 
             var pythonProject = (projects == null ? null : projects.OfType<EnvDTE.Project>()
                 .Select(p => p.GetPythonProject())
