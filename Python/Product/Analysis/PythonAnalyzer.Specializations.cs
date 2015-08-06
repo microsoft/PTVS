@@ -192,7 +192,10 @@ namespace Microsoft.PythonTools.Analysis {
             for (int i = 0, j = args.Length - keywordArgNames.Length;
                 i < keywordArgNames.Length && j < args.Length;
                 ++i, ++j) {
-                if (keywordArgNames[i].Name == name) {
+                var kwArg = keywordArgNames[i];
+                if (kwArg == null) {
+                    Debug.Fail("Null keyword argument");
+                } else if (kwArg.Name == name) {
                     return args[j];
                 }
             }
