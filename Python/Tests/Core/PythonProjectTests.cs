@@ -314,5 +314,19 @@ namespace PythonToolsTests {
         }
 
 
+        [TestMethod, Priority(0)]
+        public void AnalyzeBadEgg() {
+            var factories = new[] { InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(3, 4)) };
+            using (var analyzer = new VsProjectAnalyzer(PythonToolsTestUtilities.CreateMockServiceProvider(), factories[0], factories)) {
+                analyzer.AnalyzeZipArchive(TestData.GetPath(@"TestData\BadEgg.egg"));
+                analyzer.WaitForCompleteAnalysis(_ => true);
+
+                // Analysis result must contain the module for the filename inside the egg that is a valid identifier,
+                // and no entries for the other filename which is not. 
+                var moduleNames = analyzer.Project.Modules.Select(kv => kv.Key);
+                AssertUtil.Contains(moduleNames, "module");
+                AssertUtil.DoesntContain(moduleNames, "42");
+            }
+        }
     }
 }
