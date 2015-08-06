@@ -18,6 +18,8 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Project;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Intellisense {
     /// <summary>
@@ -186,16 +188,24 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
 
                 if (workItem != null) {
-                    var groupable = workItem as IGroupableAnalysisProjectEntry;
-                    if (groupable != null) {
-                        bool added = _enqueuedGroups.Add(groupable.AnalysisGroup);
-                        if (added) {
-                            Enqueue(new GroupAnalysis(groupable.AnalysisGroup, this), pri);
-                        }
+                    try {
+                        var groupable = workItem as IGroupableAnalysisProjectEntry;
+                        if (groupable != null) {
+                            bool added = _enqueuedGroups.Add(groupable.AnalysisGroup);
+                            if (added) {
+                                Enqueue(new GroupAnalysis(groupable.AnalysisGroup, this), pri);
+                            }
 
-                        groupable.Analyze(_cancel.Token, true);
-                    } else {
-                        workItem.Analyze(_cancel.Token);
+                            groupable.Analyze(_cancel.Token, true);
+                        } else {
+                            workItem.Analyze(_cancel.Token);
+                        }
+                    } catch (Exception ex) {
+                        if (ex.IsCriticalException() || System.Diagnostics.Debugger.IsAttached) {
+                            throw;
+                        }
+                        VsTaskExtensions.ReportUnhandledException(ex, SR.ProductName, GetType());
+                        _cancel.Cancel();
                     }
                 } else {
                     _isAnalyzing = false;
@@ -203,7 +213,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         _analyzer.QueueActivityEvent,
                         _workEvent
                     );
-                }   
+                }
             }
             _isAnalyzing = false;
         }

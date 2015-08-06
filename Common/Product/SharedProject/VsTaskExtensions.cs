@@ -27,6 +27,51 @@ namespace Microsoft.VisualStudioTools {
         private static readonly HashSet<string> _displayedMessages = new HashSet<string>();
 
         /// <summary>
+        /// Logs an unhandled exception. May display UI to the user informing
+        /// them that an error has been logged.
+        /// </summary>
+        public static void ReportUnhandledException(
+            Exception ex,
+            string productTitle,
+            Type callerType = null,
+            [CallerFilePath] string callerFile = null,
+            [CallerLineNumber] int callerLineNumber = 0,
+            [CallerMemberName] string callerName = null
+        ) {
+            var message = SR.GetUnhandledExceptionString(ex, callerType, callerFile, callerLineNumber, callerName);
+            // Send the message to the trace listener in case there is
+            // somebody out there listening.
+            Trace.TraceError(message);
+
+            string logFile;
+            try {
+                logFile = ActivityLog.LogFilePath;
+            } catch (InvalidOperationException) {
+                logFile = null;
+            }
+
+            // In debug builds let the user know immediately
+            Debug.Fail(message);
+
+            // TODO: Log to Windows Event log
+            // https://github.com/Microsoft/PTVS/issues/669
+
+            lock (_displayedMessages) {
+                if (!string.IsNullOrEmpty(logFile) &&
+                    _displayedMessages.Add(string.Format("{0}:{1}", callerFile, callerLineNumber))) {
+                    // First time we've seen this error, so let the user know
+                    MessageBox.Show(SR.GetString(SR.SeeActivityLog, logFile), productTitle);
+                }
+            }
+
+            try {
+                ActivityLog.LogError(productTitle, message);
+            } catch (InvalidOperationException) {
+                // Activity Log is unavailable.
+            }
+        }
+
+        /// <summary>
         /// Waits for a task to complete and logs all exceptions except those
         /// that return true from <see cref="IsCriticalException"/>, which are
         /// rethrown.
@@ -65,34 +110,7 @@ namespace Microsoft.VisualStudioTools {
                     throw;
                 }
 
-                var message = SR.GetUnhandledExceptionString(ex, callerType, callerFile, callerLineNumber, callerName);
-                // Send the message to the trace listener in case there is
-                // somebody out there listening.
-                Trace.TraceError(message);
-
-                string logFile;
-                try {
-                    logFile = ActivityLog.LogFilePath;
-                } catch (InvalidOperationException) {
-                    logFile = null;
-                }
-
-                lock (_displayedMessages) {
-                    if (!string.IsNullOrEmpty(logFile) &&
-                        _displayedMessages.Add(string.Format("{0}:{1}", callerFile, callerLineNumber))) {
-                        // First time we've seen this error, so let the user know
-                        MessageBox.Show(SR.GetString(SR.SeeActivityLog, logFile), productTitle);
-                    }
-                }
-
-                try {
-                    ActivityLog.LogError(productTitle, message);
-                } catch (InvalidOperationException) {
-                    // Activity Log is unavailable.
-                }
-
-                // In debug builds let the user know immediately
-                Debug.Fail(message);
+                ReportUnhandledException(ex, productTitle, callerType, callerFile, callerLineNumber, callerName);
             }
             return result;
         }
@@ -134,34 +152,7 @@ namespace Microsoft.VisualStudioTools {
                     throw;
                 }
 
-                var message = SR.GetUnhandledExceptionString(ex, callerType, callerFile, callerLineNumber, callerName);
-                // Send the message to the trace listener in case there is
-                // somebody out there listening.
-                Trace.TraceError(message);
-
-                string logFile;
-                try {
-                    logFile = ActivityLog.LogFilePath;
-                } catch (InvalidOperationException) {
-                    logFile = null;
-                }
-
-                lock (_displayedMessages) {
-                    if (!string.IsNullOrEmpty(logFile) &&
-                        _displayedMessages.Add(string.Format("{0}:{1}", callerFile, callerLineNumber))) {
-                        // First time we've seen this error, so let the user know
-                        MessageBox.Show(SR.GetString(SR.SeeActivityLog, logFile), productTitle);
-                    }
-                }
-
-                try {
-                    ActivityLog.LogError(productTitle, message);
-                } catch (InvalidOperationException) {
-                    // Activity Log is unavailable.
-                }
-
-                // In debug builds let the user know immediately
-                Debug.Fail(message);
+                ReportUnhandledException(ex, productTitle, callerType, callerFile, callerLineNumber, callerName);
             }
         }
     }
