@@ -31,6 +31,7 @@ namespace ReplWindowUITests {
     [TestClass, Ignore]
     public abstract class ReplWindowPythonSmokeTests {
         static ReplWindowPythonSmokeTests() {
+            AssertListener.Initialize();
             PythonTestData.Deploy();
         }
 

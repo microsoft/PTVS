@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+using System.Text.RegularExpressions;
 using System.Threading;
 using Microsoft.PythonTools;
 using Microsoft.TC.TestHostAdapters;
@@ -111,7 +112,8 @@ namespace ReplWindowUITests {
                 Keyboard.Type("f(");
 
                 using (var sh = interactive.WaitForSession<ISignatureHelpSession>()) {
-                    Assert.AreEqual("<no docstring>", sh.Session.SelectedSignature.Documentation);
+                    var doc = sh.Session.SelectedSignature.Documentation;
+                    AssertUtil.AreEqual(new Regex(@"Signature: f\(\).+Source:\s+def f.+Type:\s+function", RegexOptions.Singleline), doc);
                 }
             }
         }

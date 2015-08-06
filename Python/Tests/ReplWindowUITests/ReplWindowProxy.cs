@@ -201,7 +201,12 @@ Base 0 means to interpret the base from the string as an integer literal.
                 for (int retries = 10; retries > 0; --retries) {
                     result.Window.Reset();
                     try {
-                        var task = result.Window.Evaluator.ExecuteText("print('READY')");
+                        Task<ExecutionResult> task;
+                        if (useIPython) {
+                            task = result.Window.Evaluator.ExecuteText("print('')");
+                            Assert.IsTrue(task.Wait(30000), "ReplWindow did not initialize in time");
+                        }
+                        task = result.Window.Evaluator.ExecuteText("print('READY')");
                         Assert.IsTrue(task.Wait(useIPython ? 30000 : 10000), "ReplWindow did not initialize in time");
                         if (!task.Result.IsSuccessful) {
                             continue;
@@ -267,7 +272,8 @@ Base 0 means to interpret the base from the string as an integer literal.
                     app.ExecuteCommand("Python.Interactive", "/e:\"" + description + "\"");
                     success = true;
                     break;
-                } catch (AggregateException) {
+                } catch (AggregateException ex) {
+                    Console.WriteLine(ex.InnerException.ToString());
                 }
                 app.DismissAllDialogs();
                 app.SetFocus();
@@ -429,7 +435,12 @@ Base 0 means to interpret the base from the string as an integer literal.
 
                     bool lineMatch = false;
                     if (i < expected.Count && i < actual.Count) {
-                        lineMatch = expected[i] == actual[i];
+                        var e = expected[i];
+                        var a = actual[i];
+                        if (i == expected.Count - 1 && e.Length < a.Length) {
+                            a = a.Substring(0, e.Length);
+                        }
+                        lineMatch = e == a;
                         isMatch &= lineMatch;
                     }
 
