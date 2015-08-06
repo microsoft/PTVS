@@ -1296,7 +1296,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         if (cancel.IsCancellationRequested) {
                             break;
                         }
-                        if (File.Exists(Path.Combine(innerDir, "__init__.py"))) {
+                        if (File.Exists(CommonUtils.GetAbsoluteFilePath(innerDir, "__init__.py"))) {
                             AnalyzeDirectoryWorker(innerDir, false, onFileAnalyzed, cancel);
                         }
                     }
@@ -1422,7 +1422,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 string pathInZip = entry.FullName.Replace('/', '\\');
                 string path;
                 try {
-                    path = Path.Combine(zipFileName, pathInZip);
+                    path = CommonUtils.GetAbsoluteFilePath(zipFileName, pathInZip);
                 } catch (ArgumentException) {
                     return null;
                 }
