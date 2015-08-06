@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -43,7 +44,7 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        private void StartWatching(RegistryHive hive, RegistryView view) {
+        private void StartWatching(RegistryHive hive, RegistryView view, int retries = 5) {
             var tag = RegistryWatcher.Instance.TryAdd(
                 hive, view, PythonCorePath, Registry_PythonCorePath_Changed,
                 recursive: true, notifyValueChange: true, notifyKeyChange: true
@@ -52,10 +53,18 @@ namespace Microsoft.PythonTools.Interpreter {
                 hive, view, PythonPath, Registry_PythonPath_Changed,
                 recursive: false, notifyValueChange: false, notifyKeyChange: true
             ) ??
-            RegistryWatcher.Instance.Add(
+            RegistryWatcher.Instance.TryAdd(
                 hive, view, "Software", Registry_Software_Changed,
                 recursive: false, notifyValueChange: false, notifyKeyChange: true
             );
+
+            if (tag == null && retries > 0) {
+                Trace.TraceWarning("Failed to watch registry. Retrying {0} more times", retries);
+                Thread.Sleep(100);
+                StartWatching(hive, view, retries - 1);
+            } else if (tag == null) {
+                Trace.TraceError("Failed to watch registry");
+            }
         }
 
         #region Registry Watching
