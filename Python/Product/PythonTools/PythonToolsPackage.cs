@@ -663,7 +663,17 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
 
         private List<OpenReplCommand> GetReplCommands() {
             var replCommands = new List<OpenReplCommand>();
+
+            var compModel = ComponentModel;
+            if (compModel == null) {
+                return replCommands;
+            }
+
             var interpreterService = ComponentModel.GetService<IInterpreterOptionsService>();
+            if (interpreterService == null) {
+                return replCommands;
+            }
+
             var factories = interpreterService.Interpreters.ToList();
             if (factories.Count == 0) {
                 return replCommands;
