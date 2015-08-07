@@ -186,12 +186,12 @@ if ($name) {
 $signedbuild = $release -or $mockrelease
 if ($signedbuild) {
     $signedbuildText = "true"
-    $approvers = "smortaz", "dinov", "stevdo", "pminaev", "gilbertw", "huvalo", "jinglou", "sitani", "crwilcox"
+    $approvers = "smortaz", "dinov", "stevdo", "pminaev", "gilbertw", "huvalo", "crwilcox"
     $approvers = @($approvers | Where-Object {$_ -ne $env:USERNAME})
     $symbol_contacts = "$env:username;dinov;smortaz;stevdo;gilbertw"
     
     $projectName = "Python Tools for Visual Studio"
-    $projectUrl = "http://pytools.codeplex.com"
+    $projectUrl = "https://github.com/Microsoft/PTVS"
     $projectKeywords = "PTVS; Visual Studio; Python"
 
     Push-Location (Split-Path -Parent $MyInvocation.MyCommand.Definition)
@@ -219,11 +219,11 @@ $products = @(
 )
 
 $nonvs_products = @(
-    @{name="WFastCGI";
-      msi="WFastCGI.msi";
-      signtag=" - WFastCGI";
-      outname1="WFastCGI"; outname2=".msi"
-    }
+#    @{name="WFastCGI";
+#      msi="WFastCGI.msi";
+#      signtag=" - WFastCGI";
+#      outname1="WFastCGI"; outname2=".msi"
+#    }
 )
 
 $multivs_products = @(
