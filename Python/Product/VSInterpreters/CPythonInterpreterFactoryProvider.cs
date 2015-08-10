@@ -159,19 +159,26 @@ namespace Microsoft.PythonTools.Interpreter {
                         }
 
                         if (!_interpreters.Any(f => f.Id == id && f.Configuration.Version == version)) {
-                            _interpreters.Add(InterpreterFactoryCreator.CreateInterpreterFactory(
-                                new InterpreterFactoryCreationOptions {
-                                    LanguageVersion = version,
-                                    Id = id,
-                                    Description = string.Format("{0} {1}", description, version),
-                                    InterpreterPath = Path.Combine(basePath, CPythonInterpreterFactoryConstants.ConsoleExecutable),
-                                    WindowInterpreterPath = Path.Combine(basePath, CPythonInterpreterFactoryConstants.WindowsExecutable),
-                                    LibraryPath = Path.Combine(basePath, CPythonInterpreterFactoryConstants.LibrarySubPath),
-                                    PathEnvironmentVariableName = CPythonInterpreterFactoryConstants.PathEnvironmentVariableName,
-                                    Architecture = actualArch ?? ProcessorArchitecture.None,
-                                    WatchLibraryForNewModules = true
-                                }
-                            ));
+                            IPythonInterpreterFactory fact;
+                            try {
+                                fact = InterpreterFactoryCreator.CreateInterpreterFactory(
+                                    new InterpreterFactoryCreationOptions {
+                                        LanguageVersion = version,
+                                        Id = id,
+                                        Description = string.Format("{0} {1}", description, version),
+                                        InterpreterPath = Path.Combine(basePath, CPythonInterpreterFactoryConstants.ConsoleExecutable),
+                                        WindowInterpreterPath = Path.Combine(basePath, CPythonInterpreterFactoryConstants.WindowsExecutable),
+                                        LibraryPath = Path.Combine(basePath, CPythonInterpreterFactoryConstants.LibrarySubPath),
+                                        PathEnvironmentVariableName = CPythonInterpreterFactoryConstants.PathEnvironmentVariableName,
+                                        Architecture = actualArch ?? ProcessorArchitecture.None,
+                                        WatchLibraryForNewModules = true
+                                    }
+                                );
+                            } catch (ArgumentException) {
+                                continue;
+                            }
+
+                            _interpreters.Add(fact);
                             anyAdded = true;
                         }
                     }

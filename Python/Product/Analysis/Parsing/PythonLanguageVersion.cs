@@ -52,6 +52,11 @@ namespace Microsoft.PythonTools.Parsing {
 
         public static PythonLanguageVersion ToLanguageVersion(this Version version) {
             switch (version.Major) {
+                case 0:
+                    switch (version.Minor) {
+                        case 0: return PythonLanguageVersion.None;
+                    }
+                    break;
                 case 2:
                     switch (version.Minor) {
                         case 4: return PythonLanguageVersion.V24;

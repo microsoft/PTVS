@@ -1996,8 +1996,14 @@ namespace Microsoft.PythonTools.Project {
                 throw Marshal.GetExceptionForHR(VSConstants.OLE_E_PROMPTSAVECANCELLED);
             }
 
-            var id = _interpreters.CreateInterpreterFactory(options);
-            return _interpreters.FindInterpreter(id, options.LanguageVersion);
+            Guid id;
+            try {
+                id = interpreters.CreateInterpreterFactory(options);
+            } catch (ArgumentException ex) {
+                TaskDialog.ForException(Site, ex, issueTrackerUrl: IssueTrackerUrl).ShowModal();
+                return null;
+            }
+            return interpreters.FindInterpreter(id, options.LanguageVersion);
         }
 
 
