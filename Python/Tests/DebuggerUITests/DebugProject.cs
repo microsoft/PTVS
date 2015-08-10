@@ -186,6 +186,37 @@ namespace DebuggerUITests {
                 bp = app.Dte.Debugger.Breakpoints.Add(File: "BreakpointInfo.py", Line: 7);
                 Assert.AreEqual("Python", bp.Item(1).Language);
                 //Assert.AreEqual("BreakpointInfo.f", bp.Item(1).FunctionName);
+
+                // https://github.com/Microsoft/PTVS/pull/630
+                // Make sure 
+            }
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("VSTestHost")]
+        public void TestBoundBreakpoint() {
+            using (var app = new VisualStudioApp()) {
+                var project = OpenDebuggerProjectAndBreak(app, "BreakpointInfo.py", 2);
+
+                var pendingBp = (Breakpoint3)app.Dte.Debugger.Breakpoints.Item(1);
+                Assert.AreEqual(1, pendingBp.Children.Count);
+
+                var bp = (Breakpoint3)pendingBp.Children.Item(1);
+                Assert.AreEqual("Python", bp.Language);
+                Assert.AreEqual(TestData.GetPath(@"TestData\DebuggerProject\BreakpointInfo.py"), bp.File);
+                Assert.AreEqual(2, bp.FileLine);
+                Assert.AreEqual(1, bp.FileColumn);
+                Assert.AreEqual(true, bp.Enabled);
+                Assert.AreEqual(true, bp.BreakWhenHit);
+                Assert.AreEqual(1, bp.CurrentHits);
+                Assert.AreEqual(1, bp.HitCountTarget);
+                Assert.AreEqual(dbgHitCountType.dbgHitCountTypeNone, bp.HitCountType);
+
+                // https://github.com/Microsoft/PTVS/pull/630
+                pendingBp.BreakWhenHit = false; // causes rebind
+                Assert.AreEqual(1, pendingBp.Children.Count);
+                bp = (Breakpoint3)pendingBp.Children.Item(1);
+                Assert.AreEqual(false, bp.BreakWhenHit);
             }
         }
 

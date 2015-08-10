@@ -42,9 +42,18 @@ def main():
         # For mixed-mode attach, there's no ptvsd and hence no wait_for_attach(), 
         # so we have to use Win32 API in a loop to do the same thing.
         from time import sleep
-        from ctypes import windll
+        from ctypes import windll, c_char
         while True:
             if windll.kernel32.IsDebuggerPresent() != 0:
+                break
+            sleep(0.1)
+        try:
+            debugger_helper = windll['Microsoft.PythonTools.Debugger.Helper.x86.dll']
+        except WinError:
+            debugger_helper = windll['Microsoft.PythonTools.Debugger.Helper.x64.dll']
+        isTracing = c_char.in_dll(debugger_helper, "isTracing")
+        while True:
+            if isTracing.value != 0:
                 break
             sleep(0.1)
                 

@@ -204,6 +204,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
         private readonly PythonDllBreakpointHandlers _handlers;
         private readonly DkmNativeInstructionAddress _traceFunc;
         private readonly UInt32Proxy _pyTracingPossible;
+        private readonly ByteProxy _isTracing;
 
         // A step-in gate is a function inside the Python interpreter or one of the libaries that may call out
         // to native user code such that it may be a potential target of a step-in operation. For every gate,
@@ -245,6 +246,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
             _pyrtInfo = process.GetPythonRuntimeInfo();
 
             _traceFunc = _pyrtInfo.DLLs.DebuggerHelper.GetExportedFunctionAddress("TraceFunc");
+            _isTracing = _pyrtInfo.DLLs.DebuggerHelper.GetExportedStaticVariable<ByteProxy>("isTracing");
             _pyTracingPossible = _pyrtInfo.DLLs.Python.GetStaticVariable<UInt32Proxy>("_Py_TracingPossible");
 
             if (kind == Kind.StepIn) {
@@ -307,8 +309,8 @@ namespace Microsoft.PythonTools.DkmDebugger {
         public unsafe void RegisterTracing(PyThreadState tstate) {
             tstate.use_tracing.Write(1);
             tstate.c_tracefunc.Write(_traceFunc.GetPointer());
-
             _pyTracingPossible.Write(_pyTracingPossible.Read() + 1);
+            _isTracing.Write(1);
         }
 
         public void OnBeginStepIn(DkmThread thread) {

@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -84,6 +85,72 @@ namespace PythonToolsUITests {
                     wpf.Invoke(() => environments.Select(ev => ev.Description).ToList()),
                     Enumerable.Range(1, 6).Select(i => string.Format("Test Factory {0}", i))
                 );
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public async Task InterpretersRaceCondition() {
+            var service = GetInterpreterOptionsService(defaultProviders: false);
+            var provider = new MockPythonInterpreterFactoryProvider("Test Provider");
+            var factories = Enumerable.Repeat(0, 5).Select(
+                i => new MockPythonInterpreterFactory(
+                    Guid.NewGuid(),
+                    string.Format("Test Factory {0}", i),
+                    MockInterpreterConfiguration(new Version(2, 7))
+                )
+            ).ToList();
+            ((InterpreterOptionsService)service).SetProviders(new[] { provider });
+
+            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            ExceptionDispatchInfo edi = null;
+
+            service.InterpretersChanged += (s, e) => {
+                Task.Run(() => {
+                    try {
+                        foreach (var f in factories) {
+                            Thread.Sleep(1);
+                            provider.AddFactory(f);
+                        }
+
+                        var interpreters = service.Interpreters.ToList();
+                        Console.WriteLine("Got {0} interpreters", interpreters.Count);
+                    } catch (Exception ex) {
+                        edi = ExceptionDispatchInfo.Capture(ex);
+                    }
+                });
+            };
+
+            var t1 = Task.Run(() => {
+                while (!cts.IsCancellationRequested) {
+                    provider.AddFactory(factories.First());
+                    Thread.Sleep(50);
+                    if (edi != null) {
+                        edi.Throw();
+                    }
+                    provider.RemoveAllFactories();
+                }
+            }, cts.Token);
+            var t2 = Task.Run(() => {
+                try {
+                    while (!cts.IsCancellationRequested) {
+                        var interpreters = service.InterpretersOrDefault.ToList();
+                        Console.WriteLine("Got {0} interpreters or default", interpreters.Count);
+                        Thread.Sleep(10);
+                    }
+                } finally {
+                    cts.Cancel();
+                }
+            }, cts.Token);
+
+            try {
+                await t1;
+            } catch (OperationCanceledException) {
+            } finally {
+                cts.Cancel();
+            }
+            try {
+                await t2;
+            } catch (OperationCanceledException) {
             }
         }
 
@@ -746,21 +813,25 @@ namespace PythonToolsUITests {
             }
         }
 
-        static IInterpreterOptionsService GetInterpreterOptionsService() {
+        static IInterpreterOptionsService GetInterpreterOptionsService(bool defaultProviders = true) {
             var sp = new MockServiceProvider();
             sp.Services[typeof(SVsActivityLog).GUID] = new MockActivityLog();
             var settings = new MockSettingsManager();
             sp.Services[typeof(SVsSettingsManager).GUID] = settings;
-            settings.Store.AddSetting(
-                InterpreterOptionsService.FactoryProvidersCollection + "\\CPythonAndConfigurable",
-                InterpreterOptionsService.FactoryProviderCodeBaseSetting,
-                typeof(CPythonInterpreterFactoryConstants).Assembly.Location
-            );
-            settings.Store.AddSetting(
-                InterpreterOptionsService.FactoryProvidersCollection + "\\LoadedProjects",
-                InterpreterOptionsService.FactoryProviderCodeBaseSetting,
-                typeof(LoadedProjectInterpreterFactoryProvider).Assembly.Location
-            );
+            if (defaultProviders) {
+                settings.Store.AddSetting(
+                    InterpreterOptionsService.FactoryProvidersCollection + "\\CPythonAndConfigurable",
+                    InterpreterOptionsService.FactoryProviderCodeBaseSetting,
+                    typeof(CPythonInterpreterFactoryConstants).Assembly.Location
+                );
+                settings.Store.AddSetting(
+                    InterpreterOptionsService.FactoryProvidersCollection + "\\LoadedProjects",
+                    InterpreterOptionsService.FactoryProviderCodeBaseSetting,
+                    typeof(LoadedProjectInterpreterFactoryProvider).Assembly.Location
+                );
+            } else {
+                settings.Store.CreateCollection(InterpreterOptionsService.SuppressFactoryProvidersCollection);
+            }
             return new InterpreterOptionsService(sp);
         }
 

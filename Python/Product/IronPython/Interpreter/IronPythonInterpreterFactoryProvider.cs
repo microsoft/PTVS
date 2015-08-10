@@ -15,7 +15,9 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using System.Diagnostics;
 using System.Reflection;
+using System.Threading;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.Win32;
@@ -31,15 +33,27 @@ namespace Microsoft.IronPythonTools.Interpreter {
         public IronPythonInterpreterFactoryProvider() {
             DiscoverInterpreterFactories();
             if (_interpreter == null) {
-                var token = RegistryWatcher.Instance.TryAdd(
-                    RegistryHive.LocalMachine, RegistryView.Registry32, IronPythonCorePath,
-                    Registry_Changed,
-                    recursive: true, notifyValueChange: true, notifyKeyChange: true
-                ) ?? RegistryWatcher.Instance.Add(
-                    RegistryHive.LocalMachine, RegistryView.Registry32, "Software",
-                    Registry_Software_Changed,
-                    recursive: false, notifyValueChange: false, notifyKeyChange: true
-                );
+                StartWatching(RegistryHive.LocalMachine, RegistryView.Registry32);
+            }
+        }
+
+        private void StartWatching(RegistryHive hive, RegistryView view, int retries = 5) {
+            var tag = RegistryWatcher.Instance.TryAdd(
+                hive, view, IronPythonCorePath,
+                Registry_Changed,
+                recursive: true, notifyValueChange: true, notifyKeyChange: true
+            ) ?? RegistryWatcher.Instance.TryAdd(
+                hive, view, "Software",
+                Registry_Software_Changed,
+                recursive: false, notifyValueChange: false, notifyKeyChange: true
+            );
+
+            if (tag == null && retries > 0) {
+                Trace.TraceWarning("Failed to watch registry. Retrying {0} more times", retries);
+                Thread.Sleep(100);
+                StartWatching(hive, view, retries - 1);
+            } else if (tag == null) {
+                Trace.TraceError("Failed to watch registry");
             }
         }
 

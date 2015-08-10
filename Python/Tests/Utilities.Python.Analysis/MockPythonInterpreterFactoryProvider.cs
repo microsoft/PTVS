@@ -32,7 +32,9 @@ namespace TestUtilities.Python {
         }
 
         public void AddFactory(IPythonInterpreterFactory factory) {
-            _factories.Add(factory);
+            lock (_factories) {
+                _factories.Add(factory);
+            }
             var evt = InterpreterFactoriesChanged;
             if (evt != null) {
                 evt(this, EventArgs.Empty);
@@ -40,7 +42,11 @@ namespace TestUtilities.Python {
         }
 
         public bool RemoveFactory(IPythonInterpreterFactory factory) {
-            if (_factories.Remove(factory)) {
+            bool changed;
+            lock (_factories) {
+                changed = _factories.Remove(factory);
+            }
+            if (changed) {
                 var evt = InterpreterFactoriesChanged;
                 if (evt != null) {
                     evt(this, EventArgs.Empty);
@@ -51,8 +57,14 @@ namespace TestUtilities.Python {
         }
 
         public void RemoveAllFactories() {
-            if (_factories.Any()) {
-                _factories.Clear();
+            bool changed = false;
+            lock (_factories) {
+                if (_factories.Any()) {
+                    _factories.Clear();
+                    changed = true;
+                }
+            }
+            if (changed) {
                 var evt = InterpreterFactoriesChanged;
                 if (evt != null) {
                     evt(this, EventArgs.Empty);
@@ -61,6 +73,8 @@ namespace TestUtilities.Python {
         }
 
         public IEnumerable<IPythonInterpreterFactory> GetInterpreterFactories() {
+            // Deliberately not locked so we simulate testing against 3rd-party
+            // implementations that don't protect this function call.
             return _factories;
         }
 

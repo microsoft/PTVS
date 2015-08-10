@@ -1296,7 +1296,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         if (cancel.IsCancellationRequested) {
                             break;
                         }
-                        if (File.Exists(Path.Combine(innerDir, "__init__.py"))) {
+                        if (File.Exists(CommonUtils.GetAbsoluteFilePath(innerDir, "__init__.py"))) {
                             AnalyzeDirectoryWorker(innerDir, false, onFileAnalyzed, cancel);
                         }
                     }
@@ -1420,7 +1420,12 @@ namespace Microsoft.PythonTools.Intellisense {
             }
             try {
                 string pathInZip = entry.FullName.Replace('/', '\\');
-                string path = Path.Combine(zipFileName, pathInZip);
+                string path;
+                try {
+                    path = CommonUtils.GetAbsoluteFilePath(zipFileName, pathInZip);
+                } catch (ArgumentException) {
+                    return null;
+                }
 
                 IProjectEntry item;
                 if (_projectFiles.TryGetValue(path, out item)) {
@@ -1430,11 +1435,16 @@ namespace Microsoft.PythonTools.Intellisense {
                 if (ModulePath.IsPythonSourceFile(path)) {
                     // Use the entry path relative to the root of the archive to determine module name - this boundary
                     // should never be crossed, even if the parent directory of the zip is itself a package.
-                    var modName = ModulePath.FromFullPath(
-                        pathInZip,
-                        isPackage: dir => entry.Archive.GetEntry(
-                            (CommonUtils.EnsureEndSeparator(dir) + "__init__.py").Replace('\\', '/')
-                        ) != null).ModuleName;
+                    string modName;
+                    try {
+                        modName = ModulePath.FromFullPath(
+                            pathInZip,
+                            isPackage: dir => entry.Archive.GetEntry(
+                                (CommonUtils.EnsureEndSeparator(dir) + "__init__.py").Replace('\\', '/')
+                            ) != null).ModuleName;
+                    } catch (ArgumentException) {
+                        return null;
+                    }
                     item = _pyAnalyzer.AddModule(modName, path, null);
                 }
                 if (item == null) {
