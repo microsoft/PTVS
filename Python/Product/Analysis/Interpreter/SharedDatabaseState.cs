@@ -184,6 +184,10 @@ namespace Microsoft.PythonTools.Interpreter {
                 lock (fixups) {
                     // Ensure it was not changed while waiting for the lock
                     if (ReferenceEquals(_objectTypeFixups, fixups)) {
+                        // Mutate the list under the lock - later we will read
+                        // from the list after clearing _objectTypeFixups under
+                        // the same lock. If there were a race, we would have
+                        // failed the comparison above.
                         fixups.Add(assign);
                         return;
                     }
@@ -191,6 +195,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
                 // _objectTypeFixups changed, and it only changes to null, so we
                 // should call assign directly
+                Debug.Assert(_objectTypeFixups == null, "_objectTypeFixups was changed to something other than null");
                 obj = ObjectType;
                 if (obj != null) {
                     assign(obj);
@@ -221,11 +226,18 @@ namespace Microsoft.PythonTools.Interpreter {
                 lock (fixups) {
                     if (!ReferenceEquals(_objectTypeFixups, fixups)) {
                         // _objectTypeFixups changed while we waited to lock
+                        // This means someone else now owns the list and will
+                        // run the fixups, so we can just return the new object
+                        // type.
                         return objectType;
                     }
                     _objectTypeFixups = null;
                 }
 
+                // At this point, nobody else has a reference to the list. If
+                // they did (see AddObjectTypeFixup), they just entered the lock
+                // now and discovered that _objectTypeFixups has changed and
+                // will not use the reference they have.
                 foreach (var assign in fixups) {
                     assign(objectType);
                 }
