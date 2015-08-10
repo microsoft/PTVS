@@ -814,7 +814,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
                 return replCommands;
             }
 
-            var interpreterService = ComponentModel.GetService<IInterpreterOptionsService>();
+            var interpreterService = compModel.GetService<IInterpreterOptionsService>();
             if (interpreterService == null) {
                 return replCommands;
             }
