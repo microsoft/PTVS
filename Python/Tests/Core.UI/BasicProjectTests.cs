@@ -754,6 +754,36 @@ namespace PythonToolsUITests {
             }
         }
 
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("VSTestHost")]
+        public void DotNetSearchPathReferences() {
+            var dllPath = TestData.GetPath(@"TestData\AssemblyReference\PythonApplication\Assemblies\ClassLibrary3.dll");
+            Directory.CreateDirectory(Path.GetDirectoryName(dllPath));
+            CompileFile("ClassLibrary.cs", dllPath);
+
+            using (var app = new VisualStudioApp()) {
+                var project = app.OpenProject(@"TestData\AssemblyReference\SearchPathReference.sln");
+
+                var program = project.ProjectItems.Item("Program3.py");
+                var window = program.Open();
+                window.Activate();
+
+                Thread.Sleep(2000); // allow time to reload the new DLL
+                project.GetPythonProject().GetAnalyzer().WaitForCompleteAnalysis(_ => true);
+
+                var doc = app.GetDocument(program.Document.FullName);
+                var snapshot = doc.TextView.TextBuffer.CurrentSnapshot;
+                AssertUtil.ContainsExactly(GetVariableDescriptions("a", snapshot), "str");
+
+                CompileFile("ClassLibraryBool.cs", dllPath);
+
+                Thread.Sleep(2000); // allow time to reload the new DLL
+                project.GetPythonProject().GetAnalyzer().WaitForCompleteAnalysis(_ => true);
+
+                AssertUtil.ContainsExactly(GetVariableDescriptions("a", snapshot), "bool");
+            }
+        }
+
         /// <summary>
         /// Opens a project w/ a reference to a .NET project.  Makes sure we get completion after a build, changes the assembly, rebuilds, makes
         /// sure the completion info changes.
@@ -880,10 +910,15 @@ namespace PythonToolsUITests {
                 // verify getting signature help doesn't crash...  This used to crash because IronPython
                 // used the empty path for an assembly and throws an exception.  We now handle the exception
                 // in RemoteInterpreter.GetBuiltinFunctionDocumentation and RemoteInterpreter.GetPythonTypeDocumentation
-                AssertUtil.ContainsExactly(
-                    GetSignatures(app, "Class1.Fob(", snapshot).Signatures.Select(s => s.Documentation),
-                    ""
-                );
+                List<string> docs = null;
+                for (int retries = 10; retries > 0; --retries) {
+                    docs = GetSignatures(app, "Class1.Fob(", snapshot).Signatures.Select(s => s.Documentation).ToList();
+                    if (!docs.Any(d => d.Contains("still being calcualted"))) {
+                        break;
+                    }
+                    Thread.Sleep(100);
+                }
+                AssertUtil.ContainsExactly(docs, "");
 
                 // recompile one file, we should still have type info for both DLLs, with one updated
                 CompileFile("ClassLibraryBool.cs", "ClassLibrary.dll");

@@ -658,7 +658,7 @@ try {
     
     if (-not $skipcopy) {
         Write-Output "Copying source files"
-        robocopy /s . $outdir\Sources /xd BuildOutput TestResults | Out-Null
+        robocopy /s . $outdir\Sources /xd .hg .git .vs .tfs BuildOutput TestResults | Out-Null
     }
     
     if ($signedbuild) {

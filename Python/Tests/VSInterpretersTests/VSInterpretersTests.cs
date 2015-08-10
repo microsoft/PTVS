@@ -21,6 +21,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
@@ -46,49 +47,6 @@ namespace VSInterpretersTests {
                 } catch {
                 }
             }
-        }
-
-        [TestMethod, Priority(0)]
-        public void MinimumAssembliesLoaded() {
-            var assembliesBefore = new HashSet<Assembly>(AppDomain.CurrentDomain.GetAssemblies());
-            // This assembly is probably already loaded, but let's pretend that
-            // we've loaded it again for this test.
-            assembliesBefore.Remove(typeof(IInterpreterOptionsService).Assembly);
-
-            var catalog = new AssemblyCatalog(typeof(IInterpreterOptionsService).Assembly);
-            var container = new CompositionContainer(catalog);
-            var service = container.GetExportedValue<IInterpreterOptionsService>();
-
-            Assert.IsInstanceOfType(service, typeof(InterpreterOptionsService));
-
-            // Ensure these assemblies were loaded.
-            var expectedAssemblies = new HashSet<string> {
-                "Microsoft.PythonTools.Analysis",
-                "Microsoft.PythonTools.VSInterpreters",
-                "Microsoft.PythonTools.IronPython.Interpreter"
-            };
-
-            // Ensure these assemblies were not loaded. In the out-of-VS
-            // scenario, we cannot always resolve these and so will crash.
-            // For tests, they are always available, and when installed they may
-            // always be available in the GAC, but we want to ensure that they
-            // are not loaded anyway.
-            var notExpectedAssemblies = new HashSet<string> {
-                "Microsoft.PythonTools",
-                "Microsoft.VisualStudio.ReplWindow"
-            };
-
-            Console.WriteLine("Loaded assemblies:");
-            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies()) {
-                if (!assembliesBefore.Remove(assembly)) {
-                    var name = assembly.GetName().Name;
-                    Console.WriteLine("{0}: {1}", name, assembly.FullName);
-                    expectedAssemblies.Remove(name);
-                    Assert.IsFalse(notExpectedAssemblies.Remove(name), assembly.FullName + " should not have been loaded");
-                }
-            }
-
-            Assert.AreEqual(0, expectedAssemblies.Count, "Was not loaded: " + string.Join(", ", expectedAssemblies));
         }
 
         private static string CompileString(string csharpCode, string outFile) {
@@ -322,6 +280,26 @@ namespace FactoryProviderTypeLoadException {
             );
 
             Assert.AreEqual(1, service.KnownProviders.Count());
+        }
+
+        [TestMethod, Priority(0)]
+        public void InvalidInterpreterVersion() {
+            try {
+                var lv = new Version(1, 0).ToLanguageVersion();
+                Assert.Fail("Expected InvalidOperationException");
+            } catch (InvalidOperationException) {
+            }
+
+            try {
+                InterpreterFactoryCreator.CreateInterpreterFactory(new InterpreterFactoryCreationOptions {
+                    Id = Guid.NewGuid(),
+                    LanguageVersionString = "1.0"
+                });
+                Assert.Fail("Expected ArgumentException");
+            } catch (ArgumentException ex) {
+                // Expect version number in message
+                AssertUtil.Contains(ex.Message, "1.0");
+            }
         }
     }
 }

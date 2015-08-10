@@ -312,6 +312,8 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                     }
 
                     res[i - (args.Count - res.Length)] = (NameExpression)args[i].NameExpression;
+                } else if (res != null) {
+                    res[i - (args.Count - res.Length)] = NameExpression.Empty;
                 }
             }
             return res ?? EmptyNames;
