@@ -20,7 +20,7 @@
 // Used by debugger to detect when DLL is fully loaded and initialized and TraceFunc can be registered.
 extern "C" {
     __declspec(dllexport)
-    volatile char isInitialized;
+    volatile char isInitialized, isTracing;
 
     __declspec(dllexport) __declspec(noinline)
     void OnInitialized() {
