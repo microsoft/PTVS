@@ -22,6 +22,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter.Default;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Interpreter {
@@ -67,6 +68,18 @@ namespace Microsoft.PythonTools.Interpreter {
             _description = description;
             _id = id;
             _config = config;
+
+            if (_config == null) {
+                throw new ArgumentNullException("config");
+            }
+
+            // Avoid creating a interpreter with an unsupported version.
+            // https://github.com/Microsoft/PTVS/issues/706
+            try {
+                var langVer = _config.Version.ToLanguageVersion();
+            } catch (InvalidOperationException ex) {
+                throw new ArgumentException(ex.Message, ex);
+            }
 
             if (watchLibraryForChanges && Directory.Exists(_config.LibraryPath)) {
                 _refreshIsCurrentTrigger = new Timer(RefreshIsCurrentTimer_Elapsed);
