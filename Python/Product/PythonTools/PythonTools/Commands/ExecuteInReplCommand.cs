@@ -77,6 +77,7 @@ namespace Microsoft.PythonTools.Commands {
             var interpreterService = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
             string filename, dir;
             if (!PythonToolsPackage.TryGetStartupFileAndDirectory(out filename, out dir, out analyzer) ||
+                string.IsNullOrEmpty(filename) ||
                 interpreterService == null ||
                 interpreterService.NoInterpretersValue == analyzer.InterpreterFactory) {
                 // no interpreters installed, disable the command.
@@ -113,7 +114,9 @@ namespace Microsoft.PythonTools.Commands {
             VsProjectAnalyzer analyzer;
             string filename, dir;
             var pyProj = CommonPackage.GetStartupProject() as PythonProjectNode;
-            if (!PythonToolsPackage.TryGetStartupFileAndDirectory(out filename, out dir, out analyzer)) {
+            if (!PythonToolsPackage.TryGetStartupFileAndDirectory(out filename, out dir, out analyzer) ||
+                string.IsNullOrEmpty(filename)
+            ) {
                 // TODO: Error reporting
                 return;
             }

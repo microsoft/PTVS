@@ -1979,7 +1979,12 @@ namespace Microsoft.PythonTools.Project {
                 );
             }
 
-            var existing = _interpreters.FindInterpreter(path);
+            var interpreters = _interpreters;
+            if (interpreters == null) {
+                return null;
+            }
+
+            var existing = interpreters.FindInterpreter(path);
             if (existing != null) {
                 return existing;
             }
@@ -1996,8 +2001,14 @@ namespace Microsoft.PythonTools.Project {
                 throw Marshal.GetExceptionForHR(VSConstants.OLE_E_PROMPTSAVECANCELLED);
             }
 
-            var id = _interpreters.CreateInterpreterFactory(options);
-            return _interpreters.FindInterpreter(id, options.LanguageVersion);
+            Guid id;
+            try {
+                id = interpreters.CreateInterpreterFactory(options);
+            } catch (ArgumentException ex) {
+                TaskDialog.ForException(Site, ex, issueTrackerUrl: IssueTrackerUrl).ShowModal();
+                return null;
+            }
+            return interpreters.FindInterpreter(id, options.LanguageVersion);
         }
 
 
