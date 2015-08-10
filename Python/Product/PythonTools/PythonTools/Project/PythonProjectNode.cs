@@ -1979,7 +1979,12 @@ namespace Microsoft.PythonTools.Project {
                 );
             }
 
-            var existing = _interpreters.FindInterpreter(path);
+            var interpreters = _interpreters;
+            if (interpreters == null) {
+                return null;
+            }
+
+            var existing = interpreters.FindInterpreter(path);
             if (existing != null) {
                 return existing;
             }
