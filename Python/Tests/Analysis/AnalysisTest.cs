@@ -6484,6 +6484,34 @@ def f():
             }
         }
 
+        [TestMethod, Priority(0)]
+        public void NullNamedArgument() {
+            CallDelegate callable = (node, unit, args, keywordArgNames) => {
+                bool anyNull = false;
+                Console.WriteLine("fn({0})", string.Join(", ", keywordArgNames.Select(n => {
+                    if (n == null) {
+                        anyNull = true;
+                        return "(null)";
+                    } else {
+                        return n.Name + "=(value)";
+                    }
+                })));
+                Assert.IsFalse(anyNull, "Some arguments were null");
+                return AnalysisSet.Empty;
+            };
+
+            using (var state = CreateAnalyzer(PythonLanguageVersion.V27)) {
+                state.SpecializeFunction("NullNamedArgument", "fn", callable);
+
+                var entry1 = state.AddModule("NullNamedArgument", "NullNamedArgument.py");
+                Prepare(entry1, GetSourceUnit("def fn(**kwargs): pass", "NullNamedArgument"), state.LanguageVersion);
+                entry1.Analyze(CancellationToken.None);
+                var entry2 = state.AddModule("test", "test.py");
+                Prepare(entry2, GetSourceUnit("import NullNamedArgument; NullNamedArgument.fn(a=0, ]]])", "test"), state.LanguageVersion);
+                entry2.Analyze(CancellationToken.None);
+            }
+        }
+
         #endregion
 
         #region Helpers
