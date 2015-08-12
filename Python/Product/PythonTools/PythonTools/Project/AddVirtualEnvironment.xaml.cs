@@ -67,7 +67,7 @@ namespace Microsoft.PythonTools.Project {
                     view.WillInstallRequirementsTxt = false;
                     await view.WaitForReady();
                     if (view.WillAddVirtualEnv) {
-                        await view.Create();
+                        await view.Create().HandleAllExceptions(SR.ProductName, typeof(AddVirtualEnvironment));
                         return;
                     }
 
@@ -119,7 +119,7 @@ namespace Microsoft.PythonTools.Project {
 
         private async void Save_Executed(object sender, ExecutedRoutedEventArgs e) {
             Debug.Assert(_currentOperation == null);
-            _currentOperation = _view.Create().HandleAllExceptions(SR.ProductName);
+            _currentOperation = _view.Create().HandleAllExceptions(SR.ProductName, GetType());
             
             await _currentOperation;
 

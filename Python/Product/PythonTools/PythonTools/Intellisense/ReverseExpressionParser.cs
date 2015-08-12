@@ -12,12 +12,13 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using Microsoft.PythonTools.Analysis;
 using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
-using System.Diagnostics;
-using Microsoft.PythonTools.Analysis;
 
 namespace Microsoft.PythonTools.Intellisense {
     /// <summary>
@@ -422,7 +423,17 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public PythonClassifier Classifier {
-            get { return _classifier ?? (_classifier = (PythonClassifier)_buffer.Properties.GetProperty(typeof(PythonClassifier))); }
+            get {
+                if (_classifier == null) {
+                    if (!_buffer.Properties.TryGetProperty(typeof(PythonClassifier), out _classifier)) {
+                        Debug.Fail("Buffer has no classifier");
+                        // All callers assume we return non-null, so better to
+                        // throw here so we know where the problem comes from
+                        throw new InvalidOperationException("Failed to get classifier from buffer");
+                    }
+                }
+                return _classifier;
+            }
         }
 
         public ITextSnapshot Snapshot {

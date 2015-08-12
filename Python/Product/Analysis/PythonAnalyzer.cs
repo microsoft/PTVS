@@ -20,6 +20,7 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using System.Runtime.ExceptionServices;
 using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
@@ -59,6 +60,7 @@ namespace Microsoft.PythonTools.Analysis {
         private AnalysisLimits _limits;
         private static object _nullKey = new object();
         private readonly SemaphoreSlim _reloadLock = new SemaphoreSlim(1, 1);
+        private ExceptionDispatchInfo _loadKnownTypesException;
 
         private const string AnalysisLimitsKey = @"Software\Microsoft\PythonTools\" + AssemblyVersionInfo.VSVersion +
             @"\Analysis\Project";
@@ -146,7 +148,15 @@ namespace Microsoft.PythonTools.Analysis {
             _evalUnit = new AnalysisUnit(null, null, new ModuleInfo("$global", new ProjectEntry(this, "$global", String.Empty, null), _defaultContext).Scope, true);
             AnalysisLog.NewUnit(_evalUnit);
 
-            LoadInitialKnownTypes();
+            try {
+                LoadInitialKnownTypes();
+            } catch (Exception ex) {
+                if (ex.IsCriticalException()) {
+                    throw;
+                }
+                // This will be rethrown in LoadKnownTypesAsync
+                _loadKnownTypesException = ExceptionDispatchInfo.Capture(ex);
+            }
         }
 
         private void LoadInitialKnownTypes() {
@@ -162,6 +172,10 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         private async Task LoadKnownTypesAsync() {
+            if (_loadKnownTypesException != null) {
+                _loadKnownTypesException.Throw();
+            }
+
             _itemCache.Clear();
 
             Debug.Assert(_builtinModule != null, "LoadInitialKnownTypes was not called");

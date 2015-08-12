@@ -86,6 +86,8 @@
             <util:RestartResource Path="[DEVENV_PATH]" />
             <util:RestartResource Path="[WDEXPRESS_PATH]" />
             <util:RestartResource Path="[VWDEXPRESS_PATH]" />
+            <util:EventSource Name="Python Tools for Visual Studio" Log="Application"
+                              EventMessageFile="%SystemRoot%\Microsoft.NET\Framework\v4.0.30319\EventLogMessages.dll" />
           </Component>
         </Directory>
       </Directory>
