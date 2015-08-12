@@ -14,8 +14,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Security;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.Shell;
@@ -53,8 +55,19 @@ namespace Microsoft.VisualStudioTools {
             // In debug builds let the user know immediately
             Debug.Fail(message);
 
-            // TODO: Log to Windows Event log
-            // https://github.com/Microsoft/PTVS/issues/669
+            // Log to Windows Event log. If this fails, there is nothing we can
+            // do. In debug builds we have already asserted by this point.
+            try {
+                EventLog.WriteEntry(productTitle, message, EventLogEntryType.Error, 9999);
+            } catch (ArgumentException) {
+                // Misconfigured source or the message is too long.
+            } catch (SecurityException) {
+                // Source does not exist and user cannot create it
+            } catch (InvalidOperationException) {
+                // Unable to open the registry key for the log
+            } catch (Win32Exception) {
+                // Unknown error prevented writing to the log
+            }
 
             lock (_displayedMessages) {
                 if (!string.IsNullOrEmpty(logFile) &&
