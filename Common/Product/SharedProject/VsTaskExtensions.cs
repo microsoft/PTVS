@@ -14,8 +14,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Security;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.Shell;
@@ -25,6 +27,62 @@ using Task = System.Threading.Tasks.Task;
 namespace Microsoft.VisualStudioTools {
     static class VsTaskExtensions {
         private static readonly HashSet<string> _displayedMessages = new HashSet<string>();
+
+        /// <summary>
+        /// Logs an unhandled exception. May display UI to the user informing
+        /// them that an error has been logged.
+        /// </summary>
+        public static void ReportUnhandledException(
+            Exception ex,
+            string productTitle,
+            Type callerType = null,
+            [CallerFilePath] string callerFile = null,
+            [CallerLineNumber] int callerLineNumber = 0,
+            [CallerMemberName] string callerName = null
+        ) {
+            var message = SR.GetUnhandledExceptionString(ex, callerType, callerFile, callerLineNumber, callerName);
+            // Send the message to the trace listener in case there is
+            // somebody out there listening.
+            Trace.TraceError(message);
+
+            string logFile;
+            try {
+                logFile = ActivityLog.LogFilePath;
+            } catch (InvalidOperationException) {
+                logFile = null;
+            }
+
+            // In debug builds let the user know immediately
+            Debug.Fail(message);
+
+            // Log to Windows Event log. If this fails, there is nothing we can
+            // do. In debug builds we have already asserted by this point.
+            try {
+                EventLog.WriteEntry(productTitle, message, EventLogEntryType.Error, 9999);
+            } catch (ArgumentException) {
+                // Misconfigured source or the message is too long.
+            } catch (SecurityException) {
+                // Source does not exist and user cannot create it
+            } catch (InvalidOperationException) {
+                // Unable to open the registry key for the log
+            } catch (Win32Exception) {
+                // Unknown error prevented writing to the log
+            }
+
+            lock (_displayedMessages) {
+                if (!string.IsNullOrEmpty(logFile) &&
+                    _displayedMessages.Add(string.Format("{0}:{1}", callerFile, callerLineNumber))) {
+                    // First time we've seen this error, so let the user know
+                    MessageBox.Show(SR.GetString(SR.SeeActivityLog, logFile), productTitle);
+                }
+            }
+
+            try {
+                ActivityLog.LogError(productTitle, message);
+            } catch (InvalidOperationException) {
+                // Activity Log is unavailable.
+            }
+        }
 
         /// <summary>
         /// Waits for a task to complete and logs all exceptions except those
@@ -65,34 +123,7 @@ namespace Microsoft.VisualStudioTools {
                     throw;
                 }
 
-                var message = SR.GetUnhandledExceptionString(ex, callerType, callerFile, callerLineNumber, callerName);
-                // Send the message to the trace listener in case there is
-                // somebody out there listening.
-                Trace.TraceError(message);
-
-                string logFile;
-                try {
-                    logFile = ActivityLog.LogFilePath;
-                } catch (InvalidOperationException) {
-                    logFile = null;
-                }
-
-                lock (_displayedMessages) {
-                    if (!string.IsNullOrEmpty(logFile) &&
-                        _displayedMessages.Add(string.Format("{0}:{1}", callerFile, callerLineNumber))) {
-                        // First time we've seen this error, so let the user know
-                        MessageBox.Show(SR.GetString(SR.SeeActivityLog, logFile), productTitle);
-                    }
-                }
-
-                try {
-                    ActivityLog.LogError(productTitle, message);
-                } catch (InvalidOperationException) {
-                    // Activity Log is unavailable.
-                }
-
-                // In debug builds let the user know immediately
-                Debug.Fail(message);
+                ReportUnhandledException(ex, productTitle, callerType, callerFile, callerLineNumber, callerName);
             }
             return result;
         }
@@ -134,34 +165,7 @@ namespace Microsoft.VisualStudioTools {
                     throw;
                 }
 
-                var message = SR.GetUnhandledExceptionString(ex, callerType, callerFile, callerLineNumber, callerName);
-                // Send the message to the trace listener in case there is
-                // somebody out there listening.
-                Trace.TraceError(message);
-
-                string logFile;
-                try {
-                    logFile = ActivityLog.LogFilePath;
-                } catch (InvalidOperationException) {
-                    logFile = null;
-                }
-
-                lock (_displayedMessages) {
-                    if (!string.IsNullOrEmpty(logFile) &&
-                        _displayedMessages.Add(string.Format("{0}:{1}", callerFile, callerLineNumber))) {
-                        // First time we've seen this error, so let the user know
-                        MessageBox.Show(SR.GetString(SR.SeeActivityLog, logFile), productTitle);
-                    }
-                }
-
-                try {
-                    ActivityLog.LogError(productTitle, message);
-                } catch (InvalidOperationException) {
-                    // Activity Log is unavailable.
-                }
-
-                // In debug builds let the user know immediately
-                Debug.Fail(message);
+                ReportUnhandledException(ex, productTitle, callerType, callerFile, callerLineNumber, callerName);
             }
         }
     }

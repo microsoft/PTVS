@@ -34,7 +34,7 @@ namespace Microsoft.PythonTools.Interpreter {
 #endif
         private readonly List<IPythonModule> _modulesLoading = new List<IPythonModule>();
         private List<Action> _fixups;
-        private List<Action<IPythonType>> _objectTypeFixups;
+        private List<Action<IPythonType>> _objectTypeFixups = new List<Action<IPythonType>>();
         private readonly Dictionary<string, List<Action<IMember>>> _moduleFixups = new Dictionary<string, List<Action<IMember>>>();
         private string _dbDir;
         private readonly Dictionary<IPythonType, CPythonConstant> _constants = new Dictionary<IPythonType, CPythonConstant>();
@@ -43,7 +43,7 @@ namespace Microsoft.PythonTools.Interpreter {
         private readonly Version _langVersion;
         private readonly List<WeakReference> _corruptListeners = new List<WeakReference>();
         private IBuiltinPythonModule _builtinModule;
-        private IPythonType _objectType;
+        private volatile IPythonType _objectType;
         internal readonly SharedDatabaseState _inner;
 
         internal const string BuiltinName2x = "__builtin__";
@@ -53,7 +53,6 @@ namespace Microsoft.PythonTools.Interpreter {
         public SharedDatabaseState(Version languageVersion) {
             _langVersion = languageVersion;
             _builtinName = (_langVersion.Major == 3) ? BuiltinName3x : BuiltinName2x;
-            _objectTypeFixups = new List<Action<IPythonType>>();
         }
 
         public SharedDatabaseState(Version languageVersion, string databaseDirectory)
@@ -177,34 +176,83 @@ namespace Microsoft.PythonTools.Interpreter {
             var obj = ObjectType;
             if (obj != null) {
                 assign(obj);
-            } else if (_objectTypeFixups != null) {
-                _objectTypeFixups.Add(assign);
-            } else {
-                throw new InvalidOperationException("Cannot find builtin type 'object'");
+                return;
             }
-        }
 
-        private void RunObjectTypeFixups() {
-            if (_objectType == null) {
-                _objectType = BuiltinModule.GetAnyMember(GetBuiltinTypeName(BuiltinTypeId.Object)) as IPythonType;
-                if (_objectType != null) {
-                    var fixups = _objectTypeFixups;
-                    _objectTypeFixups = null;
-                    if (fixups != null) {
-                        foreach (var assign in fixups) {
-                            assign(_objectType);
-                        }
+            var fixups = _objectTypeFixups;
+            if (fixups != null) {
+                lock (fixups) {
+                    // Ensure it was not changed while waiting for the lock
+                    if (ReferenceEquals(_objectTypeFixups, fixups)) {
+                        // Mutate the list under the lock - later we will read
+                        // from the list after clearing _objectTypeFixups under
+                        // the same lock. If there were a race, we would have
+                        // failed the comparison above.
+                        fixups.Add(assign);
+                        return;
                     }
                 }
+
+                // _objectTypeFixups changed, and it only changes to null, so we
+                // should call assign directly
+                Debug.Assert(_objectTypeFixups == null, "_objectTypeFixups was changed to something other than null");
+                obj = ObjectType;
+                if (obj != null) {
+                    assign(obj);
+                    return;
+                }
+            } 
+
+            throw new InvalidOperationException("Cannot find builtin type 'object'");
+        }
+
+        private IPythonType RunObjectTypeFixups() {
+            var objectType = _objectType;
+            if (objectType == null) {
+                var newObjectType = BuiltinModule.GetAnyMember(GetBuiltinTypeName(BuiltinTypeId.Object)) as IPythonType;
+
+                if (newObjectType == null) {
+                    // No type available, so don't do fixups
+                    return null;
+                }
+
+                // Either set _objectType to newObjectType, or replace our local
+                // objectType with whatever got there first
+                objectType = Interlocked.CompareExchange(ref _objectType, newObjectType, null) ?? newObjectType;
             }
+
+            var fixups = _objectTypeFixups;
+            if (fixups != null) {
+                lock (fixups) {
+                    if (!ReferenceEquals(_objectTypeFixups, fixups)) {
+                        // _objectTypeFixups changed while we waited to lock
+                        // This means someone else now owns the list and will
+                        // run the fixups, so we can just return the new object
+                        // type.
+                        return objectType;
+                    }
+                    _objectTypeFixups = null;
+                }
+
+                // At this point, nobody else has a reference to the list. If
+                // they did (see AddObjectTypeFixup), they just entered the lock
+                // now and discovered that _objectTypeFixups has changed and
+                // will not use the reference they have.
+                foreach (var assign in fixups) {
+                    assign(objectType);
+                }
+            }
+
+            return objectType;
         }
 
         private IPythonType ObjectType {
             get {
-                if (_objectType == null) {
-                    RunObjectTypeFixups();
+                var objectType = _objectType;
+                if (objectType == null) {
+                    objectType = RunObjectTypeFixups();
                 }
-                return _objectType;
+                return objectType;
             }
         }
 
@@ -443,18 +491,26 @@ namespace Microsoft.PythonTools.Interpreter {
         private void AddFixup(Action action) {
             Debug.Assert(action != null);
             if (action != null) {
-                if (_fixups == null) {
-                    _fixups = new List<Action>();
+                var fixups = _fixups;
+                if (fixups == null) {
+                    var newFixups = new List<Action>();
+                    fixups = Interlocked.CompareExchange(ref _fixups, newFixups, null) ?? newFixups;
                 }
-                _fixups.Add(action);
+                lock (fixups) {
+                    fixups.Add(action);
+                }
             }
         }
 
         private void RunFixups() {
-            var fixups = _fixups;
-            _fixups = null;
+
+            var fixups = Interlocked.Exchange(ref _fixups, null);
             if (fixups != null) {
-                foreach (var fixup in fixups) {
+                List<Action> fixupsCopy;
+                lock (fixups) {
+                    fixupsCopy = fixups.ToList();
+                }
+                foreach (var fixup in fixupsCopy) {
                     Debug.Assert(fixup != null);
                     if (fixup != null) {
                         fixup();
