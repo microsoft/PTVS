@@ -24,14 +24,16 @@ int TraceFunction(PyObject *obj, PyFrameObject *frame, int what, PyObject *arg) 
     return ((VsPyProfThread*)obj)->Trace(frame, what, arg);
 }
 
-extern "C" VSPYPROF_API VsPyProf* CreateProfiler(HMODULE module) 
-{
+extern "C" VSPYPROF_API VsPyProf* CreateProfiler(HMODULE module) {
     return VsPyProf::Create(module);
 }
 
 // This is an example of an exported function.
-extern "C" VSPYPROF_API VsPyProfThread* InitProfiler(VsPyProf* profiler)
-{    
+extern "C" VSPYPROF_API VsPyProfThread* InitProfiler(VsPyProf* profiler) {
+    if (!profiler) {
+        return nullptr;
+    }
+    
     auto thread = profiler->CreateThread();
 
     if (thread != nullptr) {
@@ -42,12 +44,16 @@ extern "C" VSPYPROF_API VsPyProfThread* InitProfiler(VsPyProf* profiler)
 }
 
 extern "C" VSPYPROF_API void CloseProfiler(VsPyProf* profiler) {
-    profiler->Release();
+    if (profiler) {
+        profiler->Release();
+    }
 }
 
 extern "C" VSPYPROF_API void CloseThread(VsPyProfThread* thread) {
-    thread->GetProfiler()->PyEval_SetProfile(nullptr, nullptr);    
-    delete thread;
+    if (thread) {
+        thread->GetProfiler()->PyEval_SetProfile(nullptr, nullptr);
+        delete thread;
+    }
 }
 
 // used for compat w/ Python 2.4 where we don't have ctypes.

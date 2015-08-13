@@ -257,7 +257,10 @@ public:
     void* tp_print;
     void* tp_getattr;
     void* tp_setattr;
-    void* tp_compare;
+    union {
+        void* tp_compare; /* 2.4 - 3.4 */
+        void* tp_as_async; /* 3.5 */
+    };
     void* tp_repr;
 
     /* Method suites for standard classes */

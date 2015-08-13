@@ -1276,43 +1276,6 @@ namespace ProfilingUITests {
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("VSTestHost")]
-        public void BuiltinsProfile() {
-            var interp = PythonPaths.Python27;
-            interp.AssertInstalled();
-
-            EnvDTE.Project project;
-            IPythonProfiling profiling;
-            using (var app = OpenProfileTestProject(out project, out profiling, null)) {
-                var session = LaunchProcess(app, profiling, interp.InterpreterPath,
-                    TestData.GetPath(@"TestData\ProfileTest\BuiltinsProfile.py"),
-                    TestData.GetPath(@"TestData\ProfileTest"),
-                    "",
-                    false
-                );
-
-                try {
-                    while (profiling.IsProfiling) {
-                        Thread.Sleep(100);
-                    }
-
-                    var report = session.GetReport(1);
-                    var filename = report.Filename;
-                    Assert.IsTrue(filename.Contains("BuiltinsProfile"));
-
-                    Assert.IsNull(session.GetReport(2));
-
-                    Assert.IsNotNull(session.GetReport(report.Filename));
-                    Assert.IsTrue(File.Exists(filename));
-
-                    VerifyReport(report, true, "str.startswith", "isinstance", "marshal.dumps", "array.array.tostring");
-                } finally {
-                    profiling.RemoveSession(session, false);
-                }
-            }
-        }
-
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
         public void Pystone() {
             var interp = PythonPaths.Python27;
             interp.AssertInstalled();
@@ -1343,16 +1306,13 @@ namespace ProfilingUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
-        public void Python3k() {
-            var interp = PythonPaths.Python31;
+        private void BuiltinsProfile(PythonVersion interp, string[] expectedFunctions, string[] expectedNonFunctions) {
             interp.AssertInstalled();
 
             EnvDTE.Project project;
             IPythonProfiling profiling;
             using (var app = OpenProfileTestProject(out project, out profiling, null)) {
-                var session = LaunchProcess(app, profiling, interp.InterpreterPath,
+                var session = LaunchProcess(app, profiling, interp.Id.ToString() + ";" + interp.Version.ToVersion().ToString(),
                     TestData.GetPath(@"TestData\ProfileTest\BuiltinsProfile.py"),
                     TestData.GetPath(@"TestData\ProfileTest"),
                     "",
@@ -1372,7 +1332,12 @@ namespace ProfilingUITests {
                     Assert.IsNotNull(session.GetReport(report.Filename));
                     Assert.IsTrue(File.Exists(filename));
 
-                    VerifyReport(report, true, "BuiltinsProfile.f", "str.startswith", "isinstance", "marshal.dumps", "array.array.tostring");
+                    if (expectedFunctions != null && expectedFunctions.Length > 0) {
+                        VerifyReport(report, true, expectedFunctions);
+                    }
+                    if (expectedNonFunctions != null && expectedNonFunctions.Length > 0) {
+                        VerifyReport(report, false, expectedNonFunctions);
+                    }
                 } finally {
                     profiling.RemoveSession(session, false);
                 }
@@ -1381,39 +1346,132 @@ namespace ProfilingUITests {
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("VSTestHost")]
-        public void Python32() {
-            var interp = PythonPaths.Python32;
-            interp.AssertInstalled();
+        public void BuiltinsProfilePython25() {
+            BuiltinsProfile(
+                PythonPaths.Python25,
+                new[] { "str.startswith", "isinstance", "marshal.dumps", "array.array.tostring" },
+                null
+            );
+        }
 
-            EnvDTE.Project project;
-            IPythonProfiling profiling;
-            using (var app = OpenProfileTestProject(out project, out profiling, null)) {
-                var session = LaunchProcess(app, profiling, interp.InterpreterPath,
-                    TestData.GetPath(@"TestData\ProfileTest\BuiltinsProfile.py"),
-                    TestData.GetPath(@"TestData\ProfileTest"),
-                    "",
-                    false
-                );
-                try {
-                    while (profiling.IsProfiling) {
-                        Thread.Sleep(100);
-                    }
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("VSTestHost")]
+        public void BuiltinsProfilePython26() {
+            BuiltinsProfile(
+                PythonPaths.Python26,
+                new[] { "str.startswith", "isinstance", "marshal.dumps", "array.array.tostring" },
+                null
+            );
+        }
 
-                    var report = session.GetReport(1);
-                    var filename = report.Filename;
-                    Assert.IsTrue(filename.Contains("BuiltinsProfile"));
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("VSTestHost")]
+        public void BuiltinsProfilePython27() {
+            BuiltinsProfile(
+                PythonPaths.Python27,
+                new[] { "str.startswith", "isinstance", "marshal.dumps", "array.array.tostring" },
+                null
+            );
+        }
 
-                    Assert.IsNull(session.GetReport(2));
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("VSTestHost")]
+        public void BuiltinsProfilePython27x64() {
+            BuiltinsProfile(
+                PythonPaths.Python27_x64,
+                new[] { "str.startswith", "isinstance", "marshal.dumps", "array.array.tostring" },
+                null
+            );
+        }
 
-                    Assert.IsNotNull(session.GetReport(report.Filename));
-                    Assert.IsTrue(File.Exists(filename));
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("VSTestHost")]
+        public void BuiltinsProfilePython31() {
+            BuiltinsProfile(
+                PythonPaths.Python31,
+                new[] { "BuiltinsProfile.f", "str.startswith", "isinstance", "marshal.dumps", "array.array.tostring" },
+                null
+            );
+        }
 
-                    VerifyReport(report, true, "BuiltinsProfile.f", "str.startswith", "isinstance", "marshal.dumps", "array.array.tostring");
-                    VerifyReport(report, false, "compile", "exec", "execfile", "_io.TextIOWrapper.read");
-                } finally {
-                    profiling.RemoveSession(session, false);
-                }
-            }
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("VSTestHost")]
+        public void BuiltinsProfilePython32() {
+            BuiltinsProfile(
+                PythonPaths.Python32,
+                new[] { "BuiltinsProfile.f", "str.startswith", "isinstance", "marshal.dumps", "array.array.tostring" },
+                new[] { "compile", "exec", "execfile", "_io.TextIOWrapper.read" }
+            );
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("VSTestHost")]
+        public void BuiltinsProfilePython32x64() {
+            BuiltinsProfile(
+                PythonPaths.Python32_x64,
+                new[] { "BuiltinsProfile.f", "str.startswith", "isinstance", "marshal.dumps", "array.array.tostring" },
+                new[] { "compile", "exec", "execfile", "_io.TextIOWrapper.read" }
+            );
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("VSTestHost")]
+        public void BuiltinsProfilePython33() {
+            BuiltinsProfile(
+                PythonPaths.Python33,
+                new[] { "BuiltinsProfile.f", "str.startswith", "isinstance", "marshal.dumps", "array.array.tostring" },
+                new[] { "compile", "exec", "execfile", "_io.TextIOWrapper.read" }
+            );
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("VSTestHost")]
+        public void BuiltinsProfilePython33x64() {
+            BuiltinsProfile(
+                PythonPaths.Python33_x64,
+                new[] { "BuiltinsProfile.f", "str.startswith", "isinstance", "marshal.dumps", "array.array.tostring" },
+                new[] { "compile", "exec", "execfile", "_io.TextIOWrapper.read" }
+            );
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("VSTestHost")]
+        public void BuiltinsProfilePython34() {
+            BuiltinsProfile(
+                PythonPaths.Python34,
+                new[] { "BuiltinsProfile.f", "str.startswith", "isinstance", "marshal.dumps", "array.array.tostring" },
+                new[] { "compile", "exec", "execfile", "_io.TextIOWrapper.read" }
+            );
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("VSTestHost")]
+        public void BuiltinsProfilePython34x64() {
+            BuiltinsProfile(
+                PythonPaths.Python34_x64,
+                new[] { "BuiltinsProfile.f", "str.startswith", "isinstance", "marshal.dumps", "array.array.tostring" },
+                new[] { "compile", "exec", "execfile", "_io.TextIOWrapper.read" }
+            );
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("VSTestHost")]
+        public void BuiltinsProfilePython35() {
+            BuiltinsProfile(
+                PythonPaths.Python35,
+                new[] { "BuiltinsProfile.f", "str.startswith", "isinstance", "marshal.dumps", "array.array.tostring" },
+                new[] { "compile", "exec", "execfile", "_io.TextIOWrapper.read" }
+            );
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("VSTestHost")]
+        public void BuiltinsProfilePython35x64() {
+            BuiltinsProfile(
+                PythonPaths.Python35_x64,
+                new[] { "BuiltinsProfile.f", "str.startswith", "isinstance", "marshal.dumps", "array.array.tostring" },
+                new[] { "compile", "exec", "execfile", "_io.TextIOWrapper.read" }
+            );
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
