@@ -44,8 +44,11 @@ def profile(file, globals_obj, locals_obj, profdll):
     pyprofdll.CloseThread.argtypes = [ctypes.c_void_p]
     pyprofdll.CloseProfiler.argtypes = [ctypes.c_void_p]
     pyprofdll.InitProfiler.argtypes = [ctypes.c_void_p]
+    pyprofdll.InitProfiler.restype = ctypes.c_void_p
 
     profiler = pyprofdll.CreateProfiler(sys.dllhandle)
+    if not profiler:
+        raise NotImplementedError("Profiling is currently not supported for " + sys.version)
     handle = None
 
     try:
