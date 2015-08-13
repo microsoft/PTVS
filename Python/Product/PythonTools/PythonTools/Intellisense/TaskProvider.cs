@@ -358,13 +358,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 if (_taskList != null) {
                     _taskList.UnregisterTaskProvider(_cookie);
                 }
-
-                _workerQueueChanged.Dispose();
             }
-        }
-
-        ~TaskProvider() {
-            Dispose(false);
         }
 
         public uint Cookie {

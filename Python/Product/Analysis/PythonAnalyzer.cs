@@ -1024,12 +1024,7 @@ namespace Microsoft.PythonTools.Analysis {
                 if (_disposeInterpreter && interpreter != null) {
                     interpreter.Dispose();
                 }
-                _reloadLock.Dispose();
             }
-        }
-
-        ~PythonAnalyzer() {
-            Dispose(false);
         }
 
         #endregion

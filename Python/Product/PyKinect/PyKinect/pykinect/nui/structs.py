@@ -210,7 +210,7 @@ class PlanarImage(ctypes.c_voidp):
     def height(self):
         desc = _NuiSurfaceDesc()
         PlanarImage._GetLevelDesc(self, 0, ctypes.byref(desc))
-        return desc.height
+        return desc.height.value
         
     @property
     def bytes_per_pixel(self):
