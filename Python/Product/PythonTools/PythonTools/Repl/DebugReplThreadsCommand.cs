@@ -38,6 +38,7 @@ namespace Microsoft.PythonTools.Repl {
 
     [Export(typeof(IReplCommand))]
     [ReplRole("Debug")]
+    [ContentType(PythonCoreConstants.ContentType)]
     class DebugReplThreadsCommand : IReplCommand {
         #region IReplCommand Members
 
