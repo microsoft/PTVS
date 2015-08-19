@@ -1810,31 +1810,57 @@ namespace Microsoft.PythonTools.Repl {
             return ExecutionResult.Succeeded;
         }
 
-        internal static IInteractiveWindowCommands GetInteractiveCommands(IServiceProvider serviceProvider, IInteractiveWindow window, IReplEvaluator eval) {
-            var cmdFactory = serviceProvider.GetComponentModel().GetService<IInteractiveWindowCommandsFactory>();
-            var cmds = serviceProvider.GetComponentModel().GetExtensions<IInteractiveWindowCommand>();
-            string[] roles = eval.GetType().GetCustomAttributes(typeof(InteractiveWindowRoleAttribute), true).Select(r => ((InteractiveWindowRoleAttribute)r).Name).ToArray();
+        internal static IInteractiveWindowCommands GetInteractiveCommands(
+            IServiceProvider serviceProvider,
+            IInteractiveWindow window,
+            IReplEvaluator eval
+        ) {
+            var model = serviceProvider.GetComponentModel();
+            var cmdFactory = model.GetService<IInteractiveWindowCommandsFactory>();
+            var cmds = model.GetExtensions<IInteractiveWindowCommand>();
+            var roles = eval.GetType()
+                .GetCustomAttributes(typeof(InteractiveWindowRoleAttribute), true)
+                .Select(r => ((InteractiveWindowRoleAttribute)r).Name)
+                .ToArray();
 
-            return cmdFactory.CreateInteractiveCommands(window, "$", cmds.Where(x => IsCommandApplicable(x, roles)));
+            var contentTypeRegistry = model.GetService<IContentTypeRegistryService>();
+            var contentTypes = eval.GetType()
+                .GetCustomAttributes(typeof(ContentTypeAttribute), true)
+                .Select(r => contentTypeRegistry.GetContentType(((ContentTypeAttribute)r).ContentTypes))
+                .ToArray();
+
+            return cmdFactory.CreateInteractiveCommands(
+                window,
+                "$",
+                cmds.Where(x => IsCommandApplicable(x, roles, contentTypes))
+            );
         }
 
-        private static bool IsCommandApplicable(IInteractiveWindowCommand command, string[] supportedRoles) {
-            bool applicable = true;
-            string[] commandRoles = command.GetType().GetCustomAttributes(typeof(InteractiveWindowRoleAttribute), true).Select(r => ((InteractiveWindowRoleAttribute)r).Name).ToArray();
-            if (supportedRoles.Length > 0) {
-                // The window has one or more roles, so the following commands will be applicable:
-                // - commands that don't specify a role
-                // - commands that specify a role that matches one of the window roles
-                if (commandRoles.Length > 0) {
-                    applicable = supportedRoles.Intersect(commandRoles).Count() > 0;
-                }
-            } else {
-                // The window doesn't have any role, so the following commands will be applicable:
-                // - commands that don't specify any role
-                applicable = commandRoles.Length == 0;
+        private static bool IsCommandApplicable(
+            IInteractiveWindowCommand command,
+            string[] supportedRoles,
+            IContentType[] supportedContentTypes
+        ) {
+            var commandRoles = command.GetType().GetCustomAttributes(typeof(InteractiveWindowRoleAttribute), true).Select(r => ((InteractiveWindowRoleAttribute)r).Name).ToArray();
+
+            // Commands with no roles are always applicable.
+            // If a command specifies roles and none apply, exclude it
+            if (commandRoles.Any() && !commandRoles.Intersect(supportedRoles).Any()) {
+                return false;
             }
 
-            return applicable;
+            var commandContentTypes = command.GetType()
+                .GetCustomAttributes(typeof(ContentTypeAttribute), true)
+                .Select(a => ((ContentTypeAttribute)a).ContentTypes)
+                .ToArray();
+
+            // Commands with no content type are always applicable
+            // If a commands specifies content types and none apply, exclude it
+            if (commandContentTypes.Any() && !commandContentTypes.Any(cct => supportedContentTypes.Any(sct => sct.IsOfType(cct)))) {
+                return false;
+            }
+
+            return true;
         }
 
         public Task<ExecutionResult> ResetAsync(bool initialize = true) {
