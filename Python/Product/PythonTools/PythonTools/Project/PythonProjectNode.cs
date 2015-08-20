@@ -1204,8 +1204,10 @@ namespace Microsoft.PythonTools.Project {
                 switch ((int)cmd) {
                     case PythonConstants.OpenInteractiveForEnvironment:
                     case PythonConstants.InstallPythonPackage:
+                    case PythonConstants.InstallRequirementsTxt:
+                    case PythonConstants.GenerateRequirementsTxt:
                         var factory = GetInterpreterFactory();
-                        if (Interpreters.IsAvailable(factory) && File.Exists(factory.Configuration.InterpreterPath)) {
+                        if (factory.IsRunnable()) {
                             result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
                         } else {
                             result |= QueryStatusResult.INVISIBLE;
@@ -1888,7 +1890,7 @@ namespace Microsoft.PythonTools.Project {
             if (selectedInterpreterFactory != null) {
                 GenerateRequirementsTxtAsync(selectedInterpreterFactory)
                     .SilenceException<OperationCanceledException>()
-                    .HandleAllExceptions(SR.ProductName)
+                    .HandleAllExceptions(SR.ProductName, GetType())
                     .DoNotWait();
             }
             return VSConstants.S_OK;
@@ -1897,6 +1899,23 @@ namespace Microsoft.PythonTools.Project {
         private async Task GenerateRequirementsTxtAsync(IPythonInterpreterFactory factory) {
             var projectHome = ProjectHome;
             var txt = CommonUtils.GetAbsoluteFilePath(projectHome, "requirements.txt");
+
+            HashSet<string> items = null;
+
+            try {
+                items = await Pip.Freeze(factory);
+            } catch (FileNotFoundException ex) {
+                // Other exceptions should not occur, so let them propagate
+                var dlg = TaskDialog.ForException(
+                    Site,
+                    ex,
+                    SR.GetString(SR.MissingEnvironment, factory.Description, factory.Configuration.Version),
+                    IssueTrackerUrl
+                );
+                dlg.Title = SR.ProductName;
+                dlg.ShowModal();
+                return;
+            }
 
             string[] existing = null;
             bool addNew = false;
@@ -1945,8 +1964,6 @@ namespace Microsoft.PythonTools.Project {
                     addNew = true;
                 }
             }
-
-            var items = await Pip.Freeze(factory);
 
             if (File.Exists(txt) && !QueryEditFiles(false, txt)) {
                 return;
