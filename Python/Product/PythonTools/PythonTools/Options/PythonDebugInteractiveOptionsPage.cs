@@ -45,12 +45,12 @@ namespace Microsoft.PythonTools.Options {
         }
 
         public override void ResetSettings() {
-            PyService.DebugInteractiveOptions.Reset();
+            Options.Reset();
         }
 
         public override void LoadSettingsFromStorage() {
             // Load settings from storage.
-            PyService.DebugInteractiveOptions.Load();
+            Options.Load();
 
             // Synchronize UI with backing properties.
             if (_window != null) {
@@ -65,21 +65,29 @@ namespace Microsoft.PythonTools.Options {
             }
             
             // Save settings.
-            PyService.DebugInteractiveOptions.Save();
+            Options.Save();
 
             // propagate changed settings to existing REPL windows
             var model = ComponentModel;
+            if (model == null) {
+                // Might be shutting down?
+                return;
+            }
+
             var replProvider = model.GetService<IReplWindowProvider>();
             
             foreach (var replWindow in replProvider.GetReplWindows()) {
                 PythonDebugReplEvaluator pyEval = replWindow.Evaluator as PythonDebugReplEvaluator;
-                if (pyEval != null){
+                if (pyEval != null) {
+                    // HACK: Many more changes required to support updating
+                    // prompts in Dev14. Fixing the crash for now and deferring
+                    // the other work until we revamp REPLs completely.
+#if !DEV14_OR_LATER
                     if (Options.UseInterpreterPrompts) {
                         replWindow.SetPrompts(pyEval.PrimaryPrompt, pyEval.SecondaryPrompt);
                     } else {
                         replWindow.SetPrompts(Options.PrimaryPrompt, Options.SecondaryPrompt);
                     }
-#if !DEV14_OR_LATER
                     replWindow.SetOptionValue(ReplOptions.DisplayPromptInMargin, !Options.InlinePrompts);
 #endif
                     replWindow.SetSmartUpDown(Options.ReplSmartHistory);
