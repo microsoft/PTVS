@@ -43,7 +43,7 @@ namespace Microsoft.PythonTools.Interpreter {
         private readonly Version _langVersion;
         private readonly List<WeakReference> _corruptListeners = new List<WeakReference>();
         private IBuiltinPythonModule _builtinModule;
-        private volatile IPythonType _objectType;
+        private IPythonType _objectType;
         internal readonly SharedDatabaseState _inner;
 
         internal const string BuiltinName2x = "__builtin__";
@@ -207,7 +207,7 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         private IPythonType RunObjectTypeFixups() {
-            var objectType = _objectType;
+            var objectType = Volatile.Read(ref _objectType);
             if (objectType == null) {
                 var newObjectType = BuiltinModule.GetAnyMember(GetBuiltinTypeName(BuiltinTypeId.Object)) as IPythonType;
 
@@ -248,7 +248,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
         private IPythonType ObjectType {
             get {
-                var objectType = _objectType;
+                var objectType = Volatile.Read(ref _objectType);
                 if (objectType == null) {
                     objectType = RunObjectTypeFixups();
                 }
