@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using Microsoft.PythonTools.Intellisense;
@@ -98,59 +99,73 @@ namespace Microsoft.PythonTools.Commands {
 
         private void QueryStatusMethod(object sender, EventArgs args) {
             var oleMenu = sender as OleMenuCommand;
-            VsProjectAnalyzer analyzer;
-            var interpreterService = _serviceProvider.GetComponentModel().GetService<IInterpreterOptionsService>();
-            string filename, dir;
-            if (!PythonToolsPackage.TryGetStartupFileAndDirectory(_serviceProvider, out filename, out dir, out analyzer) ||
-                string.IsNullOrEmpty(filename) ||
-                interpreterService == null ||
-                interpreterService.NoInterpretersValue == analyzer.InterpreterFactory) {
-                // no interpreters installed, disable the command.
-                oleMenu.Visible = true;
-                oleMenu.Enabled = false;
-                oleMenu.Supported = true;
-            } else {
+            if (oleMenu == null) {
+                Debug.Fail("Unexpected command type " + sender == null ? "(null)" : sender.GetType().FullName);
+                return;
+            }
 
-                IWpfTextView textView;
-                var pyProj = CommonPackage.GetStartupProject(_serviceProvider) as PythonProjectNode;
-                if (pyProj != null) {
-                    // startup project, enabled in Start in REPL mode.
-                    oleMenu.Visible = true;
-                    oleMenu.Enabled = true;
-                    oleMenu.Supported = true;
-                    oleMenu.Text = "Execute Project in P&ython Interactive";
-                } else if ((textView = CommonPackage.GetActiveTextView(_serviceProvider)) != null &&
-                    textView.TextBuffer.ContentType == _serviceProvider.GetPythonContentType()) {
-                    // enabled in Execute File mode...
-                    oleMenu.Visible = true;
-                    oleMenu.Enabled = true;
-                    oleMenu.Supported = true;
-                    oleMenu.Text = "Execute File in P&ython Interactive";
-                } else {
-                    oleMenu.Visible = false;
-                    oleMenu.Enabled = false;
-                    oleMenu.Supported = false;
-                }
+            var pyProj = CommonPackage.GetStartupProject(_serviceProvider) as PythonProjectNode;
+            var textView = CommonPackage.GetActiveTextView(_serviceProvider);
+
+            oleMenu.Supported = true;
+
+            if (pyProj != null) {
+                // startup project, so visible in Project mode
+                oleMenu.Visible = true;
+                oleMenu.Text = "Execute Project in P&ython Interactive";
+
+                // Only enable if runnable
+                oleMenu.Enabled = pyProj.GetInterpreterFactory().IsRunnable();
+
+            } else if (textView != null && textView.TextBuffer.ContentType.IsOfType(PythonCoreConstants.ContentType)) {
+                // active file, so visible in File mode
+                oleMenu.Visible = true;
+                oleMenu.Text = "Execute File in P&ython Interactive";
+
+                // Only enable if runnable
+                var interpreterService = _serviceProvider.GetComponentModel().GetService<IInterpreterOptionsService>();
+                oleMenu.Enabled = interpreterService != null && interpreterService.DefaultInterpreter.IsRunnable();
+
+            } else {
+                // Python is not active, so hide the command
+                oleMenu.Visible = false;
+                oleMenu.Enabled = false;
             }
         }
 
         public override void DoCommand(object sender, EventArgs args) {
-            VsProjectAnalyzer analyzer;
-            string filename, dir;
             var pyProj = CommonPackage.GetStartupProject(_serviceProvider) as PythonProjectNode;
-            if (!PythonToolsPackage.TryGetStartupFileAndDirectory(_serviceProvider, out filename, out dir, out analyzer) ||
-                string.IsNullOrEmpty(filename)
-            ) {
+            var textView = CommonPackage.GetActiveTextView(_serviceProvider);
+
+            VsProjectAnalyzer analyzer;
+            string filename, dir = null;
+
+            if (pyProj != null) {
+                analyzer = pyProj.GetAnalyzer();
+                filename = pyProj.GetStartupFile();
+                dir = pyProj.GetWorkingDirectory();
+            } else if (textView != null) {
+                var pyService = _serviceProvider.GetPythonToolsService();
+                analyzer = pyService.DefaultAnalyzer;
+                filename = textView.GetFilePath();
+            } else {
+                Debug.Fail("Should not be executing command when it is invisible");
+                return;
+            }
+            if (string.IsNullOrEmpty(filename)) {
                 // TODO: Error reporting
                 return;
             }
+            if (string.IsNullOrEmpty(dir)) {
+                dir = CommonUtils.GetParent(filename);
+            }
 
             var window = EnsureReplWindow(_serviceProvider, analyzer, pyProj);
-            IVsWindowFrame windowFrame = (IVsWindowFrame)((ToolWindowPane)window).Frame;
 
 #if DEV14_OR_LATER
             window.Show(true);
 #else
+            IVsWindowFrame windowFrame = (IVsWindowFrame)((ToolWindowPane)window).Frame;
             ErrorHandler.ThrowOnFailure(windowFrame.Show());
             window.Focus();
 #endif
@@ -158,7 +173,7 @@ namespace Microsoft.PythonTools.Commands {
             // The interpreter may take some time to startup, do this off the UI thread.
             ThreadPool.QueueUserWorkItem(x => {
 #if DEV14_OR_LATER
-                window.InteractiveWindow.Evaluator.ResetAsync();
+                window.InteractiveWindow.Evaluator.ResetAsync().WaitAndUnwrapExceptions();
 
                 window.InteractiveWindow.WriteLine(String.Format("Running {0}", filename));
                 string scopeName = Path.GetFileNameWithoutExtension(filename);
