@@ -451,8 +451,8 @@ namespace Microsoft.PythonTools.Analysis {
                     .Select(s => new MemberResult(s.Name, s.GetMergedAnalysisValues()))
                     .ToList();
             } catch (Exception) {
-                // TODO: log exception
-                return new[] { new MemberResult("Unknown", null) };
+                Debug.Fail("Failed to find scope. Bad state in analysis");
+                return new[] { new MemberResult("Unknown", new AnalysisValue[] { }) };
             }
         }
 
