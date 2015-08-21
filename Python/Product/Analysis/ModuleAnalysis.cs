@@ -452,7 +452,8 @@ namespace Microsoft.PythonTools.Analysis {
                     .ToList();
             } catch (Exception) {
                 // TODO: log exception
-                return new[] { new MemberResult("Unknown", null) };
+                Debug.Fail("Failed to find scope. Bad state in analysis");
+                return new[] { new MemberResult("Unknown", new AnalysisValue[] { }) };
             }
         }
 
