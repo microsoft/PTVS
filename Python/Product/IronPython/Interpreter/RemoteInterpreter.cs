@@ -1057,9 +1057,6 @@ namespace Microsoft.IronPythonTools.Interpreter {
                     for (int i = 0; i < types.Length; i++) {
                         var o = Unwrap(types[i]);
                         genTypes[i] = o as Type ?? (PythonType)o;
-                        if (genTypes[i] == null) {
-                            throw new InvalidOperationException("Cannot get type from " + o.GetType().FullName);
-                        }
                     }
                     return MakeHandle(DynamicHelpers.GetPythonTypeFromType(genType.Type.MakeGenericType(genTypes)));
                 }
