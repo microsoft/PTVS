@@ -31,7 +31,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly ITrackingSpan _span;
         private IList<ClassificationSpan> _tokens;
         private ITextSnapshotLine _curLine;
-        private PythonClassifier _classifier;
+        private readonly PythonClassifier _classifier;
         private static readonly HashSet<string> _assignOperators = new HashSet<string> {
             "=" ,  "+=" ,  "-=" ,  "/=" ,  "%=" ,  "^=" ,  "*=" ,  "//=" ,  "&=" ,  "|=" ,  ">>=" ,  "<<=" ,  "**=", "@="
         };
@@ -46,6 +46,11 @@ namespace Microsoft.PythonTools.Intellisense {
             var line = _curLine = snapshot.GetLineFromPosition(loc.Start);
 
             var targetSpan = new Span(line.Start.Position, span.GetEndPoint(snapshot).Position - line.Start.Position);
+
+            if (!_buffer.Properties.TryGetProperty(typeof(PythonClassifier), out _classifier) || _classifier == null) {
+                throw new ArgumentException("Failed to get classifier from buffer");
+            }
+
             _tokens = Classifier.GetClassificationSpans(new SnapshotSpan(snapshot, targetSpan));
         }
 
@@ -131,7 +136,7 @@ namespace Microsoft.PythonTools.Intellisense {
             int groupingLevel = 1;
 
             while (MoveNextSkipExplicitNewLines(enumerator)) {
-                if (enumerator.Current.ClassificationType == _classifier.Provider.Keyword) {
+                if (enumerator.Current.ClassificationType == Classifier.Provider.Keyword) {
                     if (enumerator.Current.Span.GetText() == "def" && groupingLevel == 0) {
                         return true;
                     }
@@ -189,9 +194,9 @@ namespace Microsoft.PythonTools.Intellisense {
 
             ClassificationSpan lastToken = null;
             // Walks backwards over all the lines
-            var enumerator = ReverseClassificationSpanEnumerator(_classifier, _span.GetSpan(_snapshot).End);
+            var enumerator = ReverseClassificationSpanEnumerator(Classifier, _span.GetSpan(_snapshot).End);
             if (enumerator.MoveNext()) {
-                if (enumerator.Current != null && enumerator.Current.ClassificationType == this._classifier.Provider.StringLiteral) {
+                if (enumerator.Current != null && enumerator.Current.ClassificationType == this.Classifier.Provider.StringLiteral) {
                     return enumerator.Current.Span;
                 }
 
@@ -317,7 +322,7 @@ namespace Microsoft.PythonTools.Intellisense {
                             }
                             if (text == "*" || text == "**") {
                                 if (enumerator.MoveNext()) {
-                                    if (enumerator.Current.ClassificationType == _classifier.Provider.CommaClassification) {
+                                    if (enumerator.Current.ClassificationType == Classifier.Provider.CommaClassification) {
                                         isParameterName = IsParameterNameComma(enumerator);
                                     } else if (enumerator.Current.IsOpenGrouping() && enumerator.Current.Span.GetText() == "(") {
                                         isParameterName = IsParameterNameOpenParen(enumerator);
@@ -423,17 +428,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public PythonClassifier Classifier {
-            get {
-                if (_classifier == null) {
-                    if (!_buffer.Properties.TryGetProperty(typeof(PythonClassifier), out _classifier)) {
-                        Debug.Fail("Buffer has no classifier");
-                        // All callers assume we return non-null, so better to
-                        // throw here so we know where the problem comes from
-                        throw new InvalidOperationException("Failed to get classifier from buffer");
-                    }
-                }
-                return _classifier;
-            }
+            get { return _classifier; }
         }
 
         public ITextSnapshot Snapshot {
@@ -462,11 +457,11 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public IEnumerator<ClassificationSpan> GetEnumerator() {
-            return ReverseClassificationSpanEnumerator(_classifier, _span.GetSpan(_snapshot).End);
+            return ReverseClassificationSpanEnumerator(Classifier, _span.GetSpan(_snapshot).End);
         }
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() {
-            return ReverseClassificationSpanEnumerator(_classifier, _span.GetSpan(_snapshot).End);
+            return ReverseClassificationSpanEnumerator(Classifier, _span.GetSpan(_snapshot).End);
         }
 
         internal bool IsInGrouping() {
@@ -550,7 +545,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             // Keep going to find the end of the statement
-            using (var e = ForwardClassificationSpanEnumerator(_classifier, Span.GetStartPoint(Snapshot))) {
+            using (var e = ForwardClassificationSpanEnumerator(Classifier, Span.GetStartPoint(Snapshot))) {
                 eol = false;
                 while (e.MoveNext()) {
                     if (e.Current == null) {
