@@ -59,7 +59,8 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
 
         private void UninstallPackage_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
-            e.CanExecute = e.Parameter is PipPackageView;
+            e.CanExecute = _provider.CanExecute && e.Parameter is PipPackageView;
+            e.Handled = true;
         }
 
         private async void UninstallPackage_Executed(object sender, ExecutedRoutedEventArgs e) {
@@ -76,21 +77,20 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
 
         private void UpgradePackage_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+            e.Handled = true;
+
             if (!_provider.CanExecute) {
                 e.CanExecute = false;
-                e.Handled = true;
                 return;
             }
             
             var view = e.Parameter as PipPackageView;
             if (view == null) {
                 e.CanExecute = false;
-                e.Handled = true;
                 return;
             }
 
             e.CanExecute = !view.UpgradeVersion.IsEmpty && view.UpgradeVersion.CompareTo(view.Version) > 0;
-            e.Handled = true;
         }
 
         private async void UpgradePackage_Executed(object sender, ExecutedRoutedEventArgs e) {
@@ -407,6 +407,10 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         private async Task RefreshInstalledPackages() {
             var installed = await _provider.GetInstalledPackagesAsync();
+
+            if (installed == null || !installed.Any()) {
+                return;
+            }
 
             await Dispatcher.InvokeAsync(() => {
                 lock (_installed) {
