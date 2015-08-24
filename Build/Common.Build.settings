@@ -131,6 +131,9 @@
       <BuildReference>true</BuildReference>
       <IncludeInVSIX>true</IncludeInVSIX>
     </ProjectReference2>
+    <ProjectFile>
+      <Properties>BuildRoot=$(BuildRoot)</Properties>
+    </ProjectFile>
   </ItemDefinitionGroup>
 
   <Import Project="$(TargetsPath)\Common.Build.CSharp.settings" Condition="'$(MSBuildProjectExtension)' == '.csproj' or '$(MSBuildProjectExtension)' == '.tmp_proj'" />

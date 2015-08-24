@@ -1927,14 +1927,22 @@ namespace Microsoft.PythonTools.Repl {
 
         public static void SetPrompts(this IInteractiveWindow window, string primary, string secondary) {
             var eval = window.Evaluator as BasePythonReplEvaluator;
-            eval.PrimaryPrompt = primary;
-            eval.SecondaryPrompt = secondary;
+            if (eval != null) {
+                eval.PrimaryPrompt = primary;
+                eval.SecondaryPrompt = secondary;
+            } else {
+                Debug.Fail("SetPrompts called on non-Python interactive window");
+            }
         }
 
         public static void UseInterpreterPrompts(this IInteractiveWindow window) {
             var eval = window.Evaluator as BasePythonReplEvaluator;
-            eval.PrimaryPrompt = null;
-            eval.SecondaryPrompt = null;
+            if (eval != null) {
+                eval.PrimaryPrompt = null;
+                eval.SecondaryPrompt = null;
+            } else {
+                Debug.Fail("SetPrompts called on non-Python interactive window");
+            }
         }
 
         public static void AppendEscapedText(this IInteractiveWindow window, string text, bool isError = false) {

@@ -29,7 +29,7 @@ namespace Microsoft.PythonTools.Analysis {
 
         internal MemberResult(string name, IEnumerable<AnalysisValue> vars) {
             _name = _completion = name;
-            _vars = () => vars;
+            _vars = () => vars ?? Empty;
             _type = null;
             _type = GetMemberType;
         }
@@ -42,7 +42,7 @@ namespace Microsoft.PythonTools.Analysis {
 
         internal MemberResult(string name, string completion, IEnumerable<AnalysisValue> vars, PythonMemberType? type) {
             _name = name;
-            _vars = () => vars;
+            _vars = () => vars ?? Empty;
             _completion = completion;
             if (type != null) {
                 _type = () => type.Value;
@@ -54,7 +54,8 @@ namespace Microsoft.PythonTools.Analysis {
 
         internal MemberResult(string name, Func<IEnumerable<AnalysisValue>> vars, Func<PythonMemberType> type) {
             _name = _completion = name;
-            _vars = vars;
+            Func<IEnumerable<AnalysisValue>> empty = () => Empty;
+            _vars = vars ?? empty;
             _type = type;
         }
 
