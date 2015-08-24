@@ -22,6 +22,7 @@ using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
+using System.Security;
 #if DEV14_OR_LATER
 using Microsoft.VisualStudio.Imaging;
 using Microsoft.VisualStudio.Imaging.Interop;
@@ -154,8 +155,35 @@ namespace Microsoft.PythonTools.Project {
             return true;
         }
 
+        private void TryDelete(string filename) {
+            if (!File.Exists(filename)) {
+                return;
+            }
+
+            var node = ((PythonProjectNode)ProjectMgr).FindNodeByFullPath(filename);
+            if (node != null) {
+                if (node.IsNonMemberItem) {
+                    node.Remove(true);
+                }
+                return;
+            }
+
+            try {
+                File.Delete(filename);
+            } catch (IOException) {
+            } catch (UnauthorizedAccessException) {
+            } catch (SecurityException) {
+            }
+        }
+
         public override void Remove(bool removeFromStorage) {
             ((PythonProjectNode)ProjectMgr).GetAnalyzer().UnloadFile(GetProjectEntry());
+
+            if (Url.EndsWith(PythonConstants.FileExtension, StringComparison.OrdinalIgnoreCase) && removeFromStorage) {
+                TryDelete(Url + "c");
+                TryDelete(Url + "o");
+            }
+
             base.Remove(removeFromStorage);
         }
 
@@ -188,8 +216,32 @@ namespace Microsoft.PythonTools.Project {
             return ((PythonProjectNode)this.ProjectMgr).GetAnalyzer().GetEntryFromFile(Url);
         }
 
+        private void TryRename(string oldFile, string newFile) {
+            if (!File.Exists(oldFile) || File.Exists(newFile)) {
+                return;
+            }
+
+            var node = ((PythonProjectNode)ProjectMgr).FindNodeByFullPath(oldFile);
+            if (node != null && !node.IsNonMemberItem) {
+                return;
+            }
+
+            try {
+                File.Move(oldFile, newFile);
+            } catch (IOException) {
+            } catch (UnauthorizedAccessException) {
+            } catch (SecurityException) {
+            }
+        }
+
         internal override FileNode RenameFileNode(string oldFileName, string newFileName) {
             var res = base.RenameFileNode(oldFileName, newFileName);
+
+            if (newFileName.EndsWith(PythonConstants.FileExtension, StringComparison.OrdinalIgnoreCase)) {
+                TryRename(oldFileName + "c", newFileName + "c");
+                TryRename(oldFileName + "o", newFileName + "o");
+            }
+
             if (res != null) {
                 var analyzer = ((PythonProjectNode)this.ProjectMgr).GetAnalyzer();
                 var analysis = GetProjectEntry();
