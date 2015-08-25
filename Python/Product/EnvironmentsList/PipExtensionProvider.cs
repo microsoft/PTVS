@@ -143,6 +143,11 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         internal async Task<IList<PipPackageView>> GetInstalledPackagesAsync() {
             string[] args;
 
+            if (!CanExecute) {
+                // Invalid configuration, so assume no packages
+                return null;
+            }
+
             if (_factory.Configuration.Version < SupportsDashMPip) {
                 args = new [] { "-c", "import pip; pip.main()", "list", "--no-index" };
             } else {
@@ -181,6 +186,9 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         internal bool? IsPipInstalled {
             get {
+                if (!CanExecute) {
+                    return false;
+                }
                 return _isPipInstalled;
             }
             private set {
@@ -200,7 +208,6 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         internal async Task CheckPipInstalledAsync() {
             if (!CanExecute) {
                 // Don't cache the result in case our configuration gets fixed
-                IsPipInstalled = false;
                 return;
             }
 
