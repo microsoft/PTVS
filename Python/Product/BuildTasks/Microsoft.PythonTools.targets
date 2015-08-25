@@ -128,7 +128,7 @@
 
   <!-- Gets the full path module name of the startup file -->
   <Target Name="ResolveStartupModule" AfterTargets="_CheckForInvalidConfigurationAndPlatform" Condition="'$(StartupPath)' != ''">
-    <ConvertPathToModuleName Paths="$(StartupPath)" PathLimit="$(QualifiedProjectHome)">
+    <ConvertPathToModuleName Paths="$(StartupPath)" PathLimit="$(QualifiedProjectHome)" IgnoreErrors="true">
       <Output TaskParameter="ModuleNames" PropertyName="StartupModule" />
     </ConvertPathToModuleName>
     

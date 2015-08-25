@@ -37,6 +37,11 @@ namespace Microsoft.PythonTools.BuildTasks {
         public string PathLimit { get; set; }
 
         /// <summary>
+        /// If true, does not log or fail because of invalid module names.
+        /// </summary>
+        public bool IgnoreErrors { get; set; }
+
+        /// <summary>
         /// The converted module names.
         /// </summary>
         [Output]
@@ -49,7 +54,10 @@ namespace Microsoft.PythonTools.BuildTasks {
                 try {
                     modules.Add(new TaskItem(ModulePath.FromFullPath(path.ItemSpec, PathLimit).ModuleName));
                 } catch (ArgumentException ex) {
-                    Log.LogErrorFromException(ex);
+                    modules.Add(new TaskItem(string.Empty));
+                    if (!IgnoreErrors) {
+                        Log.LogErrorFromException(ex);
+                    }
                 }
             }
 
