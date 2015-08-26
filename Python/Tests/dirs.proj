@@ -38,7 +38,7 @@
           Retries="3"
           RetryDelayMilliseconds="1000" />
     
-    <WriteLinesToFile File="$(BuildOutputRoot)Tests\build.root" Lines="Test data was included, so mark as top of tree" Overwrite="true" />
+    <WriteLinesToFile File="$(BuildOutputRoot)build.root" Lines="Test data was included, so mark as top of tree" Overwrite="true" />
   </Target>
 
 </Project>
