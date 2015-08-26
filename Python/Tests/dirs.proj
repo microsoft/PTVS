@@ -24,4 +24,21 @@
 
   <Import Project="$(TargetsPath)\Common.Build.Traversal.targets" />
 
+  <Target Name="_CopyTestData" Condition="'$(CopyTestData)' == 'true'" AfterTargets="Build">
+    <ItemGroup>
+      <_RawTestDataFiles Include="TestData\**\*" />
+      <_TestDataFiles Include="@(_RawTestDataFiles)">
+        <TargetPath>$(BuildOutputRoot)Tests\TestData\%(_RawTestDataFiles.RecursiveDir)%(_RawTestDataFiles.Filename)%(_RawTestDataFiles.Extension)</TargetPath>
+      </_TestDataFiles>
+    </ItemGroup>
+    <Copy SourceFiles="@(_TestDataFiles)"
+          DestinationFiles="@(_TestDataFiles->'%(TargetPath)')"
+          SkipUnchangedFiles="true"
+          OverwriteReadOnlyFiles="true"
+          Retries="3"
+          RetryDelayMilliseconds="1000" />
+    
+    <WriteLinesToFile File="$(BuildOutputRoot)Tests\build.root" Lines="Test data was included, so mark as top of tree" Overwrite="true" />
+  </Target>
+
 </Project>
