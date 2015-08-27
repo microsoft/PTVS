@@ -13,4 +13,32 @@
   </Choose>
 
   <Import Project="$(BuildRoot)\Build\Common.Build.targets" />
+  
+  <Target Name="_UpdateBuildNumber"
+          AfterTargets="PrepareForBuild"
+          Condition="'$(Language)' == 'C#'"
+          Inputs="$(BuildRoot)\Python\Product\AssemblyVersion.cs"
+          Outputs="$(IntermediateOutputPath)\AssemblyVersion.$(FileVersion).cs">
+    <ItemGroup>
+      <_OldItems Include="@(Compile)" Condition="'%(Filename)' == 'AssemblyVersion'" />
+      <Compile Remove="@(_OldItems)" />
+      <_NewItem Include="$(IntermediateOutputPath)\AssemblyVersion.$(FileVersion).cs" />
+    </ItemGroup>
+
+    <PropertyGroup>
+      <OriginalAVText>$([System.IO.File]::ReadAllText('$(BuildRoot)\Python\Product\AssemblyVersion.cs'))</OriginalAVText>
+      <AVText>$(OriginalAVText.Replace(` BuildNumber = "1000.00"`, ` BuildNumber = "$(BuildNumber)"`))</AVText>
+      <AVText>$(AVText.Replace(` Version = "1.0.0.0"`, ` Version = "$(FileVersion)"`))</AVText>
+      <AVText>$(AVText.Replace(` StableVersion = "1.0.0.0"`, ` StableVersion = "$(StableVersion)"`))</AVText>
+    </PropertyGroup>
+
+    <WriteLinesToFile File="@(_NewItem)" Lines="$(AVText)" Overwrite="true" />
+
+    <ItemGroup>
+      <Compile Include="@(_NewItem)">
+        <Link>AssemblyVersion.cs</Link>
+      </Compile>
+      <FileWrites Include="@(_NewItem)" />
+    </ItemGroup>
+  </Target>
 </Project>

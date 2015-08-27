@@ -11,10 +11,30 @@
 
   <PropertyGroup>
     <Configuration Condition="'$(Configuration)' == ''">Debug</Configuration>
-    <!-- The version number to compare with existing install. -->
-    <MsiVersion Condition="$(MsiVersion)==''">0.7.4100.000</MsiVersion>
-    <!-- The version number that will be displayed to users. -->
-    <ReleaseVersion Condition="$(ReleaseVersion)==''">0.7</ReleaseVersion>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
+    <VSTarget Condition="$(VSTarget)=='' and '$(VisualStudioVersion)'=='14.0'">14.0</VSTarget>
+    <VSTarget Condition="$(VSTarget)=='' and '$(VisualStudioVersion)'=='12.0'">12.0</VSTarget>
+    <VSTarget Condition="$(VSTarget)=='' and '$(VisualStudioVersion)'=='11.0'">11.0</VSTarget>
+    <VSTarget Condition="$(VSTarget)==''">10.0</VSTarget>
+    
+    <VSTargetName Condition="'$(VSTarget)' == '14.0'">2015</VSTargetName>
+    <VSTargetName Condition="'$(VSTarget)' == '12.0'">2013</VSTargetName>
+    <VSTargetName Condition="'$(VSTarget)' == '11.0'">2012</VSTargetName>
+    <VSTargetName Condition="'$(VSTarget)' == '10.0'">2010</VSTargetName>
+    
+    <BuildNumber Condition="'$(BuildNumber)' == ''">1000.00</BuildNumber>
+    <!--
+    The version number that will identify a specific build. This appears in
+    Programs and Features, Extension Manager, and Help About.
+    -->
+    <FileVersionPrefix Condition="$(FileVersionPrefix) == ''">2.2</FileVersionPrefix>
+    <FileVersion Condition="$(FileVersion) == ''">$(FileVersionPrefix).$(BuildNumber)</FileVersion>
+    <!--
+    The version number that will identify assembly compatibility.
+    -->
+    <StableVersionPrefix Condition="$(StableVersionPrefix) == ''">2.0.2</StableVersionPrefix>
+    <StableVersion Condition="$(StableVersion) == ''">$(StableVersionPrefix).$(VSTargetName)</StableVersion>
+    
     <!-- When true, increases build restrictions to ensure complete public releases -->
     <ReleaseBuild Condition="'$(ReleaseBuild)' == ''">false</ReleaseBuild>
 
@@ -24,11 +44,6 @@
 
     <CodeCoverageEnabled Condition="'$(CodeCoverageEnabled)'==''">true</CodeCoverageEnabled>
 
-    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
-    <VSTarget Condition="$(VSTarget)=='' and '$(VisualStudioVersion)'=='14.0'">14.0</VSTarget>
-    <VSTarget Condition="$(VSTarget)=='' and '$(VisualStudioVersion)'=='12.0'">12.0</VSTarget>
-    <VSTarget Condition="$(VSTarget)=='' and '$(VisualStudioVersion)'=='11.0'">11.0</VSTarget>
-    <VSTarget Condition="$(VSTarget)==''">10.0</VSTarget>
     <BuildingInsideVisualStudio Condition="'$(BuildingInsideVisualStudio)' == ''">false</BuildingInsideVisualStudio>
     
     <TargetFrameworkVersion Condition="'$(TargetFrameworkVersion)' == '' and $(VSTarget)=='14.0'">v4.6</TargetFrameworkVersion>
