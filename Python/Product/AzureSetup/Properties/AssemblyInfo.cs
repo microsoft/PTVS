@@ -17,7 +17,6 @@ using System.Runtime.InteropServices;
 
 [assembly: AssemblyTitle("Python Tools for Visual Studio Azure Setup Helper")]
 [assembly: AssemblyDescription("Performs installation of IIS components, Python, and other WebPI components for running Python on Microsoft Azure VMs.")]
-[assembly: AssemblyConfiguration("")]
 
 [assembly: ComVisible(false)]
 [assembly: Guid("a7646935-4b78-4358-84c2-359d33bced49")]
