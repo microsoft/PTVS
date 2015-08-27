@@ -15,16 +15,12 @@
 using System;
 using System.Reflection;
 using System.Resources;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-// General Information about an assembly is controlled through the following 
-// set of attributes. Change these attribute values to modify the information
-// associated with an assembly.
-[assembly: AssemblyTitle("Python Tools for Visual Studio - UWP Integration")]
-[assembly: AssemblyDescription("")]
-[assembly: AssemblyConfiguration("")]
-[assembly: ComVisible(false)]     
+[assembly: AssemblyTitle("Python Tools for Visual Studio UWP integration")]
+[assembly: AssemblyDescription("Provides support for Python-based UWP projects.")]
+
+[assembly: ComVisible(false)]
 [assembly: CLSCompliant(false)]
 [assembly: NeutralResourcesLanguage("en-US")]
 

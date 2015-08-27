@@ -17,9 +17,8 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Windows;
 
-[assembly: AssemblyTitle("EnvironmentsList")]
-[assembly: AssemblyDescription("")]
-[assembly: AssemblyConfiguration("")]
+[assembly: AssemblyTitle("Python Tools for Visual Studio environments list")]
+[assembly: AssemblyDescription("Provides the control and functionality for listing and managing multiple Python environments.")]
 
 [assembly: ComVisible(false)]
 
