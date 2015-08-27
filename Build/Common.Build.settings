@@ -116,12 +116,15 @@
   </PropertyGroup>
   
   <ItemDefinitionGroup>
-    <!-- By default, project references are never copied.
+    <!-- By default, references are never copied.
     
     Setting Private to true will treat the reference as a critical dependency,
     but files are only copied if CopyLocalReferenceVsixItems is also true, or if
     a .vsix file is generated.
     -->
+    <Reference>
+      <Private>false</Private>
+    </Reference>
     <ProjectReference>
       <Private>false</Private>
     </ProjectReference>

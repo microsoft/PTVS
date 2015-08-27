@@ -37,7 +37,7 @@ if (-not $remove) {
     }
 
     "Refreshing Completion DB"
-    "$((gp HKLM:\Software\Wow6432Node\IronPython\2.7\InstallPath\).'(default)')\ipy.exe" "$drop\Tests\refreshdb.py"
+    & "$((gp HKLM:\Software\Wow6432Node\IronPython\2.7\InstallPath\).'(default)')\ipy.exe" "$drop\test\refreshdb.py"
 } else {
     "Removing TestSccPackage"
     del "$vsinstalldir\Common7\IDE\CommonExtensions\Platform\TestSccPackage.*"
