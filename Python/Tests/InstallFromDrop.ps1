@@ -3,7 +3,7 @@ param (
     [switch] $remove
 )
 
-$drop = Split-Path -Parent $MyInvocation.MyCommand.Definition
+$drop = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Definition)
 $install_msi = "$drop\unsigned\PythonToolsInstaller.msi"
 
 $logs = mkdir "$drop\logs" -Force
