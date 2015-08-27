@@ -30,6 +30,12 @@
       <_TestDataFiles Include="@(_RawTestDataFiles)">
         <TargetPath>$(BuildOutputRoot)Tests\TestData\%(_RawTestDataFiles.RecursiveDir)%(_RawTestDataFiles.Filename)%(_RawTestDataFiles.Extension)</TargetPath>
       </_TestDataFiles>
+      <_TestDataFiles Include="InstallFromDrop.ps1">
+        <TargetPath>$(BuildOutputRoot)Tests\InstallFromDrop.ps1</TargetPath>
+      </_TestDataFiles>
+      <_TestDataFiles Include="refreshdb.py">
+        <TargetPath>$(BuildOutputRoot)Tests\refreshdb.py</TargetPath>
+      </_TestDataFiles>
     </ItemGroup>
     <Copy SourceFiles="@(_TestDataFiles)"
           DestinationFiles="@(_TestDataFiles->'%(TargetPath)')"
