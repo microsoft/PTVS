@@ -22,7 +22,7 @@
     <ProjectFile Include="ImportWizard\ImportWizard.csproj"/>
     <ProjectFile Include="ProjectWizards\ProjectWizards.csproj"/>
 
-    <ProjectFile Include="ReplWindow\ReplWindow.csproj"/>
+    <ProjectFile Include="ReplWindow\ReplWindow.csproj" Condition="$(IncludeReplWindow)"/>
     <ProjectFile Include="PythonTools\PythonTools.csproj"/>
 
     <ProjectFile Include="MpiShim\MpiShim.csproj"/>

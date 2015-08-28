@@ -133,7 +133,7 @@
           Outputs="@(TemplateZip->'$(OutputPath)%(TemplateSubPath)\%(Filename)%(Extension)')"
           AfterTargets="CopyFilesToOutputDirectory">
     <Copy SourceFiles="@(TemplateZip)"
-          DestinationFiles="@(TemplateZip->'$(OutputPath)%(TemplateSubPath)\%(Filename)%(Extension)'"
+          DestinationFiles="@(TemplateZip->'$(OutputPath)%(TemplateSubPath)\%(Filename)%(Extension)')"
           SkipUnchangedFiles="true">
       <Output TaskParameter="CopiedFiles" ItemName="FileWrites"/>
     </Copy>

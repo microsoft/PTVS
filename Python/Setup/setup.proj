@@ -15,7 +15,7 @@
   
   <ItemGroup>
     <ProjectFile Include="Django\Django.wixproj"/>
-    <ProjectFile Include="ReplWindow\ReplWindow.wixproj"/>
+    <ProjectFile Include="ReplWindow\ReplWindow.wixproj" Condition="$(IncludeReplWindow)"/>
     <ProjectFile Include="IronPythonInterpreter\IronPythonInterpreter.wixproj"/>
     <ProjectFile Include="Uwp\Uwp.wixproj" Condition="$(IncludeUwp)"/>
     <ProjectFile Include="PythonTools\PythonTools.wixproj"/>
