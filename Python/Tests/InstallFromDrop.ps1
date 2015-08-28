@@ -36,6 +36,9 @@ if (-not $remove) {
         throw "Failed to install"
     }
 
+    "Creating build.root"
+    "" | Out-File "$drop\build.root"
+
     "Refreshing Completion DB"
     & "$((gp HKLM:\Software\Wow6432Node\IronPython\2.7\InstallPath\).'(default)')\ipy.exe" "$drop\test\refreshdb.py"
 } else {
