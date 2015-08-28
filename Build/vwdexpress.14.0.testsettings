@@ -19,5 +19,6 @@
     <Property name="VSVersion" value="14.0"/>
     <Property name="VSHive" value=""/>
     <Property name="VSDebugMixedMode" value="false"/>
+    <Property name="VSLaunchTimeoutInSeconds" value="120"/>
   </Properties>
 </TestSettings>
