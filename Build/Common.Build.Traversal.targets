@@ -13,25 +13,23 @@
   <Target Name="_PrepareProjectFiles" BeforeTargets="PrepareForBuild">
     <ItemGroup>
       <_ProjectFile Include="@(ProjectFile)">
-        <Platform>$([msbuild]::ValueOrDefault(%(ProjectFile.Platform), $(Platform)))</Platform>
-        <Platform Condition="%(ProjectFile.Extension) == '.wixproj' and $(Platform) == 'Win32'">x86</Platform>
+        <Properties Condition="%(ProjectFile.Extension) != '.wixproj' or $(Platform) != 'Win32'">%(ProjectFile.Properties);Platform=$(Platform)</Properties>
+        <Properties Condition="%(ProjectFile.Extension) == '.wixproj' and $(Platform) == 'Win32'">%(ProjectFile.Properties);Platform=x86</Properties>
       </_ProjectFile>
     </ItemGroup>
-    <Message Text="@(_ProjectFile->'Building %(Filename)%(Extension) with Platform=%(Platform);%(Properties)','
-')" Importance="low" />
   </Target>
 
   <Target Name="Rebuild" DependsOnTargets="PrepareForBuild;Clean;Build">
   </Target>
 
   <Target Name="Build" DependsOnTargets="PrepareForBuild">
-    <MSBuild Projects="@(_ProjectFile)" Properties="%(_ProjectFile.Properties);Platform=%(_ProjectFile.Platform)" Targets="Build"/>
-    <MSBuild Projects="@(SequencedProjectFile)" Properties="%(SequencedProjectFile.Properties)" Targets="Build"/>
+    <MSBuild Projects="@(_ProjectFile)" Targets="Build"/>
+    <MSBuild Projects="@(SequencedProjectFile)" Targets="Build"/>
   </Target>
 
   <Target Name="Clean" DependsOnTargets="PrepareForBuild">
-    <MSBuild Projects="@(_ProjectFile)" Properties="%(_ProjectFile.Properties);Platform=%(_ProjectFile.Platform)" Targets="Clean"/>
-    <MSBuild Projects="@(SequencedProjectFile)" Properties="%(SequencedProjectFile.Properties)" Targets="Clean"/>
+    <MSBuild Projects="@(_ProjectFile)" Targets="Clean"/>
+    <MSBuild Projects="@(SequencedProjectFile)" Targets="Clean"/>
   </Target>
 
 </Project>
