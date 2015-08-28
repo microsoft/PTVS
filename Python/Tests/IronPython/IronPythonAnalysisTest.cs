@@ -40,6 +40,7 @@ namespace IronPythonTests {
 
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
             PythonTestData.Deploy();
         }
 
