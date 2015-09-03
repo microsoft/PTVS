@@ -16,7 +16,7 @@
 
   <ItemGroup>
     <!-- Registration files -->
-    <File Include="Django\extension.vsixmanifest" />
+    <File Include="extension.vsixmanifest" />
     <File Include="Microsoft.PythonTools.Django.pkgdef" />
 
     <!-- Core extension -->

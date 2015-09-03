@@ -8,7 +8,7 @@
 
   <ItemGroup>
     <!-- Registration files -->
-    <File Include="Hpc\extension.vsixmanifest" />
+    <File Include="extension.vsixmanifest" />
     <File Include="Microsoft.PythonTools.Hpc.pkgdef" />
 
     <!-- Core extension -->

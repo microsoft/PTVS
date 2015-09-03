@@ -14,7 +14,7 @@
                           !(bindpath.bin)\Microsoft.PythonTools.Debugger.dll" />
 
     <!-- Registration files -->
-    <File Include="PythonTools\extension.vsixmanifest" />
+    <File Include="extension.vsixmanifest" />
     <File Include="Microsoft.PythonTools.pkgdef" />
     <File Condition="$(VSTarget) != '10.0'" Include="Microsoft.PythonTools.theme.pkgdef" />
     <File Condition="$(VSTarget) == '14.0'" Include="Microsoft.PythonTools.Repl.theme.pkgdef" />
@@ -114,11 +114,11 @@
     WiX doesn't get to do its path binding magic. It's okay for data files, but should
     never be used for binaries.
     -->
-    <File Include="$(BuildOutputRoot)Binaries\PythonTools\Snippets\1033\Python\*.snippet">
+    <File Include="$(VsixSource)\Snippets\1033\Python\*.snippet">
       <InstallDirectory>Snippets_1033_Python</InstallDirectory>
     </File>
 
-    <File Include="$(BuildOutputRoot)Binaries\PythonTools\Snippets\1033\Test\*.snippet">
+    <File Include="$(VsixSource)\Snippets\1033\Test\*.snippet">
       <InstallDirectory>Snippets_1033_Test</InstallDirectory>
     </File>
   
@@ -132,7 +132,7 @@
     WiX doesn't get to do its path binding magic. It's okay for data files, but should
     never be used for binaries.
     -->
-    <File Include="$(BuildOutputRoot)Binaries\Analyzer\CompletionDB\*.idb">
+    <File Include="$(VsixSource)\CompletionDB\*.idb">
       <InstallDirectory>CompletionDB</InstallDirectory>
     </File>
 

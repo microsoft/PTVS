@@ -48,9 +48,11 @@
   <ItemGroup>
     <Reference Include="Microsoft.WindowsAPICodePack">
       <HintPath>.\Microsoft.WindowsAPICodePack.dll</HintPath>
+      <Private>true</Private>
     </Reference>
     <Reference Include="Microsoft.WindowsAPICodePack.Shell">
       <HintPath>.\Microsoft.WindowsAPICodePack.Shell.dll</HintPath>
+      <Private>true</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
@@ -153,7 +155,6 @@
     <ProjectReference Include="..\Analysis\Analysis.csproj">
       <Project>{a85d479d-67a9-4bdb-904a-7d86daf68a6f}</Project>
       <Name>Analysis</Name>
-      <Private>True</Private>
     </ProjectReference>
   </ItemGroup>
   <Import Project="..\ToolProjectAfter.settings" />

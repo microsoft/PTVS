@@ -57,7 +57,13 @@
   <PropertyGroup Condition="$(CreateVsixContainer)">
     <CopyVsixExtensionFiles Condition="'$(CopyVsixExtensionFiles)' == ''">true</CopyVsixExtensionFiles>
     <CopyVsixExtensionLocation>$(CopyVsixExtensionRoot)$(TargetName)\</CopyVsixExtensionLocation>
+    <TargetVsixContainerName Condition="'$(TargetVsixContainerName)'==''">$(TargetName).vsix</TargetVsixContainerName>
+    <TargetVsixContainer Condition="'$(TargetVsixContainer)'==''">$(BuildOutputRoot)setup\$(TargetVsixContainerName)</TargetVsixContainer>
   </PropertyGroup>
+
+  <Target Name="_CreateVsixContainerPath" Condition="$(CreateVsixContainer) and !Exists('$(BuildOutputRoot)setup')" BeforeTargets="PrepareForBuild">
+    <MakeDir Directories="$(BuildOutputRoot)setup" ContinueOnError="true" />
+  </Target>
 
   <!-- Import the normal VS SDK headers -->
   <Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" />
@@ -81,24 +87,6 @@
     </ItemGroup>
   </Target>
   
-  <!-- If a copy-to-output path is specified, copy the VSIX there too -->
-  <Target Name="_CopyVSIXToPath"
-          AfterTargets="AfterBuild"
-          Condition="'$(CopyOutputsToPath)' != '' and $(CreateVsixContainer) and Exists($(TargetVsixContainer))">
-    <PropertyGroup>
-      <CopyOutputsToPath Condition="!HasTrailingSlash($(CopyOutputsToPath))">$(CopyOutputsToPath)\</CopyOutputsToPath>
-    </PropertyGroup>
-
-    <MakeDir Directories="$(CopyOutputsToPath)UnsignedMsi"
-             ContinueOnError="true" />
-
-    <Copy SourceFiles="$(TargetVsixContainer)"
-          DestinationFiles="$(CopyOutputsToPath)UnsignedMsi\$([System.IO.Path]::GetFileName($(TargetVsixContainer)))"
-          SkipUnchangedFiles="true">
-      <Output TaskParameter="CopiedFiles" ItemName="FileWrites"/>
-    </Copy>
-  </Target>
-
   <!--
   Our GetVSIXSourceItems does not trigger vsixmanifest generation, so update
   the target dependencies to bypass it.
@@ -152,17 +140,23 @@
       Microsoft.PythonTools.theme.v12.0.pkgdef
   -->
   <ItemGroup>
-    <_ThemePkgDef Include="Theme\$(TargetName).theme.v$(VSTarget).pkgdef" Condition="Exists('Theme\$(TargetName).theme.v$(VSTarget).pkgdef')">
-      <IncludeInVsix>true</IncludeInVsix>
-      <Link>$(TargetName).theme.pkgdef</Link>
-      <VSIXSubPath>.</VSIXSubPath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <_ThemePkgDef Include="Theme\**\*.theme.v$(VSTarget).pkgdef">
+      <IntermediateFile>$(IntermediateOutputPath)$([System.String]::New(`%(Identity)`).Replace(`.v$(VSTarget)`, ``))</IntermediateFile>
     </_ThemePkgDef>
   </ItemGroup>
 
-  <Target Name="_IncludeThemePkgdef" AfterTargets="PrepareForBuild" Condition="'@(_ThemePkgDef)' != ''">
+  <Target Name="_IncludeThemePkgdef" BeforeTargets="PrepareForBuild" Inputs="@(_ThemePkgDef)" Outputs="@(_ThemePkgDef->'%(IntermediateFile)')">
+    <Copy SourceFiles="@(_ThemePkgDef)"
+          DestinationFiles="@(_ThemePkgDef->'%(IntermediateFile)')">
+        <Output TaskParameter="CopiedFiles" ItemName="_CopiedThemePkgDef" />
+        <Output TaskParameter="CopiedFiles" ItemName="FileWrites" />
+    </Copy>
     <ItemGroup>
-      <Content Include="@(_ThemePkgDef)" />
+      <Content Include="@(_ThemePkgDef->'%(IntermediateFile)')">
+        <IncludeInVsix>true</IncludeInVsix>
+        <VSIXSubPath>.</VSIXSubPath>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
     </ItemGroup>
   </Target>
 

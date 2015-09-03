@@ -22,7 +22,7 @@ using Microsoft.VisualStudioTools;
 
 namespace TestUtilities {
     public static class TestData {
-        const string BinariesAltSourcePath = @"Tests";
+        const string BinariesAltSourceLandmark = @"TestUtilities.dll";
         const string BinariesSourcePath = @"BuildOutput\" +
 #if DEBUG
             @"Debug" + 
@@ -32,17 +32,13 @@ namespace TestUtilities {
             AssemblyVersionInfo.VSVersion + @"\Tests";
         const string BinariesOutPath = "";
 
-        const string DataAltSourcePath = @"Tests\TestData";
+        const string DataAltSourcePath = @"TestData";
         const string DataOutPath = @"TestData";
 
         private static string GetSolutionDir() {
             var dir = Path.GetDirectoryName((typeof(TestData)).Assembly.Location);
             while (!string.IsNullOrEmpty(dir) && Directory.Exists(dir)) {
                 if (File.Exists(Path.Combine(dir, "build.root"))) {
-                    break;
-                }
-                if (File.Exists(Path.Combine(dir, "staging", "build.root"))) {
-                    dir = Path.Combine(dir, "staging");
                     break;
                 }
                 dir = Path.GetDirectoryName(dir);
@@ -59,8 +55,11 @@ namespace TestUtilities {
                 var sourceRoot = GetSolutionDir();
                 var binSource = Path.Combine(sourceRoot, BinariesSourcePath);
                 if (!Directory.Exists(binSource)) {
-                    binSource = Path.Combine(sourceRoot, BinariesAltSourcePath);
-                    if (!Directory.Exists(binSource)) {
+                    var landmark = Path.Combine(sourceRoot, BinariesAltSourceLandmark);
+                    if (File.Exists(landmark)) {
+                        binSource = Path.GetDirectoryName(landmark);
+                    }
+                    if (!Directory.Exists(landmark)) {
                         Debug.Fail("Could not find location of test binaries." + Environment.NewLine + "    " + binSource);
                     }
                 }

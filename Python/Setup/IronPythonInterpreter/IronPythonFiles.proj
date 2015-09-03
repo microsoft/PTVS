@@ -8,7 +8,7 @@
 
   <ItemGroup>
     <!-- Registration files -->
-    <File Include="IronPython\extension.vsixmanifest" />
+    <File Include="extension.vsixmanifest" />
     <File Include="Microsoft.PythonTools.IronPython.pkgdef" />
 
     <!-- Core extension -->

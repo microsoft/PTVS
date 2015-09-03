@@ -46,6 +46,7 @@
     <AssemblyName>Microsoft.PythonTools.Hpc</AssemblyName>
     <FileAlignment>512</FileAlignment>
     <UseVSSDK>true</UseVSSDK>
+    <CreateVsixContainer>true</CreateVsixContainer>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>

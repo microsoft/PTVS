@@ -72,7 +72,6 @@
     <ProjectReference Include="..\Analysis\Analysis.csproj">
       <Project>{a85d479d-67a9-4bdb-904a-7d86daf68a6f}</Project>
       <Name>Analysis</Name>
-      <Private>true</Private>
     </ProjectReference>
   </ItemGroup>
   <Import Project="..\ToolProjectAfter.settings" />

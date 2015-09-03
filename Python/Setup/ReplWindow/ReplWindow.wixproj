@@ -20,6 +20,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <LinkerBindInputPaths Include="$(CopyVsixExtensionRoot)\Microsoft.VisualStudio.ReplWindow" />
+  </ItemGroup>
+  <ItemGroup>
     <Content Include="..\MergeModule.wxi">
       <Link>MergeModule.wxi</Link>
     </Content>

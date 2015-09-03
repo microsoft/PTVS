@@ -47,6 +47,8 @@
     <ProjectFile Include="EnvironmentsListHost\EnvironmentsListHost.csproj" />
 
     <ProjectFile Include="ML\ML.csproj" Condition="$(IncludeML)"/>
+    
+    <ProjectFile Include="Uwp\Uwp.csproj" Condition="$(IncludeUwp)"/>
   </ItemGroup>
 
   <Import Project="$(TargetsPath)\Common.Build.Traversal.targets" />

@@ -44,6 +44,7 @@
     <RootNamespace>Microsoft.PythonTools.Django</RootNamespace>
     <AssemblyName>Microsoft.PythonTools.Django</AssemblyName>
     <UseVSSDK>true</UseVSSDK>
+    <CreateVsixContainer>true</CreateVsixContainer>
     <NoWarn>1762</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
