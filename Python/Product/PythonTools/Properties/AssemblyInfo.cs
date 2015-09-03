@@ -20,12 +20,8 @@ using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.Shell;
 
 
-// General Information about an assembly is controlled through the following 
-// set of attributes. Change these attribute values to modify the information
-// associated with an assembly.
-[assembly: AssemblyTitle("PythonTools")]
-[assembly: AssemblyDescription("")]
-[assembly: AssemblyConfiguration("")]
+[assembly: AssemblyTitle("Python Tools for Visual Studio")]
+[assembly: AssemblyDescription("Provides Python support within Visual Studio.")]
 
 [assembly: ComVisible(false)]
 [assembly: CLSCompliant(false)]

@@ -37,9 +37,14 @@ namespace TestUtilities {
 
         private static string GetSolutionDir() {
             var dir = Path.GetDirectoryName((typeof(TestData)).Assembly.Location);
-            while (!string.IsNullOrEmpty(dir) && 
-                Directory.Exists(dir) && 
-                !File.Exists(Path.Combine(dir, "build.root"))) {
+            while (!string.IsNullOrEmpty(dir) && Directory.Exists(dir)) {
+                if (File.Exists(Path.Combine(dir, "build.root"))) {
+                    break;
+                }
+                if (File.Exists(Path.Combine(dir, "staging", "build.root"))) {
+                    dir = Path.Combine(dir, "staging");
+                    break;
+                }
                 dir = Path.GetDirectoryName(dir);
             }
             return dir ?? "";

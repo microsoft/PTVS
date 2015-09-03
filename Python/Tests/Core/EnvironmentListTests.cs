@@ -15,6 +15,7 @@
 extern alias analysis;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -113,7 +114,7 @@ namespace PythonToolsUITests {
                         }
 
                         var interpreters = service.Interpreters.ToList();
-                        Console.WriteLine("Got {0} interpreters", interpreters.Count);
+                        Trace.TraceInformation("Got {0} interpreters", interpreters.Count);
                     } catch (Exception ex) {
                         edi = ExceptionDispatchInfo.Capture(ex);
                     }
@@ -134,7 +135,7 @@ namespace PythonToolsUITests {
                 try {
                     while (!cts.IsCancellationRequested) {
                         var interpreters = service.InterpretersOrDefault.ToList();
-                        Console.WriteLine("Got {0} interpreters or default", interpreters.Count);
+                        Trace.TraceInformation("Got {0} interpreters or default", interpreters.Count);
                         Thread.Sleep(10);
                     }
                 } finally {

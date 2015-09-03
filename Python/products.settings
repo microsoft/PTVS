@@ -20,6 +20,10 @@
     <IncludeExpressInteractiveWorkaround Condition="'$(IncludeExpressInteractiveWorkaround)' == '' and $(VSMajorVersion) == 14">true</IncludeExpressInteractiveWorkaround>
     <IncludeExpressInteractiveWorkaround Condition="'$(IncludeExpressInteractiveWorkaround)' == ''">false</IncludeExpressInteractiveWorkaround>
 
+    <!-- Include ReplWindow by default, and force to false for VS 2015 and later -->
+    <IncludeReplWindow Condition="'$(IncludeReplWindow)' == ''">true</IncludeReplWindow>
+    <IncludeReplWindow Condition="$(VSMajorVersion) >= 14">false</IncludeReplWindow>
+
     <!-- Features default to true for release builds -->
     <FeatureAzureRemoteDebug>$(ReleaseBuild)</FeatureAzureRemoteDebug>
     <FeatureAzureRemoteDebug Condition="$(VSMajorVersion) > 12 or ($(VSMajorVersion) == 12 and $(VSUpdateVersion) >= 30723)">true</FeatureAzureRemoteDebug>

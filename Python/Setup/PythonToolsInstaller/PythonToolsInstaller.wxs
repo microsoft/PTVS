@@ -178,7 +178,7 @@
         <RegistryValue Root='HKCR' Key='.pyw\OpenWithProgids' Name='VWDExpress.py.$(var.VSTargetVersion)' Type='string' Value='' />
       </Component>
 
-      <?if "$(var.VSTargetVersion)" = "10.0" or "$(var.VSTargetVersion)" = "11.0" or "$(var.VSTargetVersion)" = "12.0" ?>
+      <?if "$(var.IncludeReplWindow)" ~= "True" ?>
       <Merge Id="Merge_ReplWindow" Language="1033" SourceFile="ReplWindow.msm" DiskId="1">
         <?foreach key in VS;WD;VWD?>
         <ConfigurationData Name="Config_$(var.key)ExtensionsParent" Value="Dir_$(var.key)Extensions" />
@@ -254,7 +254,7 @@
       <ComponentRef Id="Comp_ProgramMenuFolder" />
 
       <MergeRef Id="Merge_PythonTools"/>
-      <?if "$(var.VSTargetVersion)" = "10.0" or "$(var.VSTargetVersion)" = "11.0" or "$(var.VSTargetVersion)" = "12.0" ?>
+      <?if "$(var.IncludeReplWindow)" ~= "True" ?>
       <MergeRef Id="Merge_ReplWindow"/>
       <?endif ?>
       <MergeRef Id="Merge_Profiling"/>

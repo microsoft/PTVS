@@ -33,8 +33,8 @@
     <LinkerSuppressSpecificWarnings>1056</LinkerSuppressSpecificWarnings>
     <DefineConstants>
         VSTargetVersion=$(VSTarget);
-        MsiVersion=$(MsiVersion);
-        ReleaseVersion=$(ReleaseVersion)
+        MsiVersion=$(FileVersion);
+        ReleaseVersion=$(FileVersionPrefix)
     </DefineConstants>
     <DefineConstants Condition="'$(CustomBuildIdentifier)' != ''">
       $(DefineConstants);

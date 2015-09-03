@@ -15,8 +15,8 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
 
-[assembly: AssemblyTitle("Microsoft.PythonTools.Analysis.MemoryTester")]
-[assembly: AssemblyDescription("Python Tools Analysis Memory Tester")]
-[assembly: AssemblyConfiguration("")]
+[assembly: AssemblyTitle("Python Tools for Visual Studio Analysis Memory Tester")]
+[assembly: AssemblyDescription("Provides tools for analyzing code analysis for memory leaks.")]
+
 
 [assembly: ComVisible(false)]

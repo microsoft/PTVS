@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <TestSettings name="default" id="FBA3FF0E-57FA-403D-BD46-7A1DC123D369" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
-  <Description>Local test runs with the VWD 2015 Experimental Hive</Description>
+  <Description>Local test runs with the VS 2015 Experimental Hive</Description>
   <Execution>
     <Timeouts runTimeout="7200000" testTimeout="300000" />
     <TestTypeSpecific>
@@ -14,10 +14,10 @@
     </AgentRule>
   </Execution>
   <Properties>
-    <Property name="VSApplication" value="VWDExpress"/>
-    <Property name="VSExecutable" value="vwdexpress"/>
+    <Property name="VSApplication" value="VisualStudio"/>
+    <Property name="VSExecutable" value="devenv"/>
     <Property name="VSVersion" value="14.0"/>
-    <Property name="VSHive" value="Exp"/>
+    <Property name="VSHive" value=""/>
     <Property name="VSDebugMixedMode" value="false"/>
     <Property name="VSLaunchTimeoutInSeconds" value="120"/>
   </Properties>

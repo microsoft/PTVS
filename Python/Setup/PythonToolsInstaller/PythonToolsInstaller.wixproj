@@ -13,6 +13,7 @@
       IncludeVsLogger=$(IncludeVsLogger);
       IncludeHpc=$(IncludeHpc);
       IncludeUwp=$(IncludeUwp);
+      IncludeReplWindow=$(IncludeReplWindow);
     </DefineConstants>
     <DefineConstants Condition="$(VSTarget) == '10.0' or $(VSTarget) == '11.0' or $(VSTarget) == '12.0'">
       $(DefineConstants);
@@ -66,7 +67,7 @@
       <Name>PythonProfiling</Name>
       <Project>{C7D3FCEB-47DA-4539-8D20-6B9047BAC3F7}</Project>
     </ProjectReference>
-    <ProjectReference Include="$(BuildRoot)\Python\Setup\ReplWindow\ReplWindow.wixproj">
+    <ProjectReference Include="$(BuildRoot)\Python\Setup\ReplWindow\ReplWindow.wixproj" Condition="$(IncludeReplWindow)">
       <Name>ReplWindow</Name>
       <Project>{C0D64130-C0E9-4CAB-99BC-68F62357F010}</Project>
     </ProjectReference>

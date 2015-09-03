@@ -13,15 +13,10 @@
  * ***************************************************************************/
 
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-// General Information about an assembly is controlled through the following 
-// set of attributes. Change these attribute values to modify the information
-// associated with an assembly.
-[assembly: AssemblyTitle("Python Tools for Visual Studio - Import Wizard")]
-[assembly: AssemblyDescription("")]
-[assembly: AssemblyConfiguration("")]
+[assembly: AssemblyTitle("Python Tools for Visual Studio import wizard")]
+[assembly: AssemblyDescription("Provides the wizard for creating projects from existing code files.")]
 
 // Do not modify this version number - it is a major breaking change.
 // Additive changes to the assembly are okay, but removals or modifications

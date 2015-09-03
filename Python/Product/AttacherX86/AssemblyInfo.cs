@@ -16,4 +16,3 @@ using System.Reflection;
 
 [assembly: AssemblyTitle("Python Tools for Visual Studio debug attacher (x86)")]
 [assembly: AssemblyDescription("Enumerates processes running Python code which can be attached to and supports performing the debug attach.")]
-[assembly: AssemblyConfiguration("")]
