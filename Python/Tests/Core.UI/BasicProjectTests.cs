@@ -476,6 +476,11 @@ namespace PythonToolsUITests {
                 project.ProjectItems.Item(".fob").Name = "ProgramX.py";
                 AssertError<InvalidOperationException>(() => project.ProjectItems.Item("ProgramX.py").Name = "ProgramY.py");
 
+                var progXpyc = project.ProjectItems.Item("ProgramX.py").FileNames[0] + "c";
+                var progXpyo = project.ProjectItems.Item("ProgramX.py").FileNames[0] + "o";
+                Assert.IsTrue(File.Exists(progXpyc), "Expected " + progXpyc);
+                Assert.IsTrue(File.Exists(progXpyo), "Expected " + progXpyo);
+
                 project.ProjectItems.Item("ProgramX.py").Name = "PrOgRaMX.py";
                 project.ProjectItems.Item("ProgramX.py").Name = "ProgramX.py";
 
@@ -490,7 +495,17 @@ namespace PythonToolsUITests {
                 }
                 Assert.IsTrue(foundProg2);
 
+                Assert.IsFalse(File.Exists(progXpyc), "Did not expect " + progXpyc);
+                Assert.IsFalse(File.Exists(progXpyo), "Did not expect " + progXpyo);
+                var prog2pyc = project.ProjectItems.Item("Program2.py").FileNames[0] + "c";
+                var prog2pyo = project.ProjectItems.Item("Program2.py").FileNames[0] + "o";
+                Assert.IsTrue(File.Exists(prog2pyc), "Expected " + prog2pyc);
+                Assert.IsTrue(File.Exists(prog2pyo), "Expected " + prog2pyo);
+
+
                 // rename using a different method...
+                var progYpyc = project.ProjectItems.Item("ProgramY.py").FileNames[0] + "c";
+
                 project.ProjectItems.Item("ProgramY.py").Properties.Item("FileName").Value = "Program3.py";
                 bool foundProg3 = false;
                 foreach (ProjectItem item in project.ProjectItems) {
@@ -500,7 +515,14 @@ namespace PythonToolsUITests {
                     }
                 }
 
+                var prog3pyc = project.ProjectItems.Item("Program3.py").FileNames[0] + "c";
+
+                Assert.IsTrue(File.Exists(progYpyc), "Expected " + progYpyc);
+                Assert.IsTrue(File.Exists(prog3pyc), "Expected " + prog3pyc);
+                Assert.AreEqual("Program3.pyc", File.ReadAllText(prog3pyc), "Program3.pyc should not have changed");
+
                 project.ProjectItems.Item("Program3.py").Remove();
+                Assert.IsTrue(File.Exists(prog3pyc), "Expected " + prog3pyc);
 
                 Assert.IsTrue(foundProg3);
 
@@ -511,8 +533,7 @@ namespace PythonToolsUITests {
 
                 bool foundProgZ = false;
                 foreach (ProjectItem item in project.ProjectItems) {
-                    Debug.Assert(item.Name
-                        != "Program4.py");
+                    Debug.Assert(item.Name != "Program4.py");
                     if (item.Name == "ProgramZ.py") {
                         foundProgZ = true;
                     }
@@ -530,7 +551,12 @@ namespace PythonToolsUITests {
                 // rename something in a folder...
                 project.ProjectItems.Item("SubFolder").ProjectItems.Item("SubItem.py").Name = "NewSubItem.py";
 
+                var progDeletepyc = project.ProjectItems.Item("ProgramDelete.py").FileNames[0] + "c";
+                File.WriteAllText(progDeletepyc, "ProgramDelete.pyc");
+
                 project.ProjectItems.Item("ProgramDelete.py").Delete();
+
+                Assert.IsFalse(File.Exists(progDeletepyc), "Should have been deleted: " + progDeletepyc);
 
                 // rename the folder
                 project.ProjectItems.Item("SubFolder").Name = "SubFolderNew";
