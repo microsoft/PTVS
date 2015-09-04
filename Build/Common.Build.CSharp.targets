@@ -7,6 +7,14 @@
     <DefineConstants>$(DefineConstants);SUPPRESS_COMMON_ASSEMBLY_VERSION</DefineConstants>
   </PropertyGroup>
   
+  <!-- Identifies the files that need signing. -->
+  <ItemGroup Condition="$(SignAssembly)">
+    <FilesToSign Include="$(TargetPath)">
+      <Authenticode>MicrosoftSHA1</Authenticode>
+      <StrongName>StrongName</StrongName>
+    </FilesToSign>
+  </ItemGroup>
+  
   <!--
   Returns the paths and names required for generating a vsixmanifest file.
   The default targets for this occasionally return the wrong files depending

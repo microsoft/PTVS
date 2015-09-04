@@ -4,6 +4,7 @@
     <OutputPathSuffix Condition="$(TestOutputPathSuffix) == ''">binaries\</OutputPathSuffix>
     <OutputPathSuffix Condition="$(TestOutputPathSuffix) != ''">$(TestOutputPathSuffix)\</OutputPathSuffix>
     <IntermediateOutputPathSuffix>test_$(MSBuildProjectName)\</IntermediateOutputPathSuffix>
+    <SignAssembly>false</SignAssembly>
   </PropertyGroup>
   <Import Project="$(BuildRoot)\Build\Common.Build.settings" />
   <Import Project="$(BuildRoot)\Python\products.settings" />
