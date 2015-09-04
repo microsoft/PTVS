@@ -178,8 +178,21 @@
       </FilesToSign>
     </ItemGroup>
   </Target>
+  
+  <Target Name="_GetBinariesInLayout" DependsOnTargets="_GetRezipVSIXFiles" Condition="$([msbuild]::ValueOrDefault($(SignRezippedVSIXFiles), `false`))">
+    <ItemGroup>
+      <_BinariesInLayout Include="%(VSIX.SourceDir)**\*.exe;%(VSIX.SourceDir)**\*.dll" Condition="Exists('$(BuildOutputRoot)binaries\%(Filename)%(Extension)')">
+        <TargetPath>$(BuildOutputRoot)binaries\%(Filename)%(Extension)</TargetPath>
+      </_BinariesInLayout>
+    </ItemGroup>
+  </Target>
+  
+  <Target Name="_UpdateLayoutWithSignedBinaries" DependsOnTargets="_GetBinariesInLayout" Inputs="@(_BinariesInLayout)" Outputs="@(_BinariesInLayout->'%(TargetPath)')">
+    <Message Text="Updating %(VSIX.SourceDir) from $(BuildOutputRoot)binaries" />
+    <Copy SourceFiles="@(_BinariesInLayout)" DestinationFiles="@(_BinariesInLayout->'%(TargetPath)')" />
+  </Target>
 
-  <Target Name="_RezipSingleVSIX_Dev12_14" DependsOnTargets="_GetRezipVSIXFiles" BeforeTargets="Build" Inputs="@(VSIX)" Outputs="%(VSIX.Container)" Condition="'$(VSTarget)' == '12.0' or '$(VSTarget)' == '14.0'">
+  <Target Name="_RezipSingleVSIX_Dev12_14" DependsOnTargets="_GetRezipVSIXFiles;_UpdateLayoutWithSignedBinaries" BeforeTargets="Build" Inputs="@(VSIX)" Outputs="%(VSIX.Container)" Condition="'$(VSTarget)' == '12.0' or '$(VSTarget)' == '14.0'">
     <Message Text="Rezipping %(VSIX.SourceDir) to %(VSIX.Container)" Importance="high" />
     
     <ItemGroup>
@@ -198,7 +211,7 @@
     </CreateZipPackage>
   </Target>
 
-  <Target Name="_RezipSingleVSIX_Dev10_11" DependsOnTargets="_GetRezipVSIXFiles" BeforeTargets="Build" Inputs="@(VSIX)" Outputs="%(VSIX.Container)" Condition="'$(VSTarget)' == '10.0' or '$(VSTarget)' == '11.0'">
+  <Target Name="_RezipSingleVSIX_Dev10_11" DependsOnTargets="_GetRezipVSIXFiles;_UpdateLayoutWithSignedBinaries" BeforeTargets="Build" Inputs="@(VSIX)" Outputs="%(VSIX.Container)" Condition="'$(VSTarget)' == '10.0' or '$(VSTarget)' == '11.0'">
     <Message Text="Rezipping %(VSIX.SourceDir)" Importance="high" />
     
     <ItemGroup>
