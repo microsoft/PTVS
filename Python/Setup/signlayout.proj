@@ -2,6 +2,8 @@
   <Import Project="SetupProjectBefore.settings" />
   
   <Target Name="Build" />
+  <Target Name="AfterBuild" AfterTargets="Build" />
+  
   <Target Name="Clean" />
 
   <ItemGroup>
