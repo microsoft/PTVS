@@ -109,6 +109,7 @@
     <!-- Suppress warning about multiply defined AssemblyVersionInfo -->
     <NoWarn>436</NoWarn>
     <RunCodeAnalysis>$(RunFXCop)</RunCodeAnalysis>
+    <SignAssembly Condition="$(SignAssembly) == ''">true</SignAssembly>
 
     <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
 

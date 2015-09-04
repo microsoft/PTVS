@@ -60,7 +60,6 @@
 
   <PropertyGroup>
     <SignManifests>false</SignManifests>
-    <SignAssembly Condition="$(SignAssembly) == ''">true</SignAssembly>
     <AssemblyOriginatorKeyFile>$(TargetsPath)\FinalPublicKey.snk</AssemblyOriginatorKeyFile>
     <DelaySign>true</DelaySign>
   </PropertyGroup>

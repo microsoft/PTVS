@@ -1,6 +1,13 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(WixTargetsPath)" />
 
+  <!-- Identifies the files that need signing. -->
+  <ItemGroup Condition="$(SignAssembly)">
+    <FilesToSign Include="$(TargetPath)">
+      <Authenticode>MicrosoftSHA1</Authenticode>
+    </FilesToSign>
+  </ItemGroup>
+
   <Target Name="CompileFilesProj"
           BeforeTargets="BeforeBuild"
           Condition="'@(FilesProj)' != ''">
