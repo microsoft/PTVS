@@ -32,7 +32,7 @@
     <ManagedFiles Include="Microsoft.VisualStudio.ReplWindow.dll" Condition="$(IncludeReplWindow)" />
     <ManagedFiles Include="Microsoft.PythonTools.TestAdapter.dll" Condition="$(IncludeTestAdapter)" />
     <ManagedFiles Include="Microsoft.PythonTools.Uwp.dll" Condition="$(IncludeUwp)" />
-    <ManagedFiles Include="Microsoft.PythonTools.VsLogger.dll" Condition="$(IncludeVsLogger)" />
+    <ManagedFiles Include="Microsoft.PythonTools.VsLogger.dll" Condition="'$(IncludeVsLogger)' == 'True'" />
 
     <UnmanagedFiles Include="
         PyDebugAttach.dll;
