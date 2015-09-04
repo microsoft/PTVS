@@ -63,6 +63,7 @@
     Rather than customizing OutputPath or IntermediateOutputPath in projects,
     $(OutputPathSuffix) and $(IntermediateOutputPathSuffix) should be set.
     -->
+    <BuildOutputRoot Condition="'$(BuildOutputRoot)' == ''">$(TF_BUILD_BinariesDirectory)</BuildOutputRoot>
     <BuildOutputRoot Condition="'$(BuildOutputRoot)' == ''">$(BuildRoot)\BuildOutput\$(Configuration)$(VSTarget)\</BuildOutputRoot>
     <BuildOutputRoot Condition="!HasTrailingSlash($(BuildOutputRoot))">$(BuildOutputRoot)\</BuildOutputRoot>
 
