@@ -2,11 +2,13 @@
   <Import Project="$(WixTargetsPath)" />
 
   <!-- Identifies the files that need signing. -->
-  <ItemGroup Condition="$(SignAssembly)">
-    <FilesToSign Include="$(TargetPath)">
-      <Authenticode>MicrosoftSHA1</Authenticode>
-    </FilesToSign>
-  </ItemGroup>
+  <Target Name="SignMsi">
+    <ItemGroup Condition="$(SignAssembly)">
+      <FilesToSign Include="@(SignMsi)">
+        <Authenticode>MicrosoftSHA1</Authenticode>
+      </FilesToSign>
+    </ItemGroup>
+  </Target>
 
   <Target Name="CompileFilesProj"
           BeforeTargets="BeforeBuild"
