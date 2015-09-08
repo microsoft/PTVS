@@ -2,7 +2,7 @@
   <PropertyGroup>
     <BuildRoot Condition="'$(BuildRoot)' == ''">$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), build.root))</BuildRoot>
     <OutputPathSuffix Condition="$(OutputPathSuffix) == ''">setup</OutputPathSuffix>
-    <IntermediateOutputPathSuffix Condition="$(IntermediateOutputPathSuffix)" == ''">setup_$(MSBuildProjectName)\</IntermediateOutputPathSuffix>
+    <IntermediateOutputPathSuffix Condition="$(IntermediateOutputPathSuffix) == ''">setup_$(MSBuildProjectName)\</IntermediateOutputPathSuffix>
   </PropertyGroup>
   <Import Project="$(BuildRoot)\Build\Common.Build.settings" />
   <Import Project="$(BuildRoot)\Python\products.settings" />
