@@ -1,5 +1,6 @@
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="SetupProjectBefore.settings" />
+  <Import Project="$(CustomBeforeMicrosoftCommonTargets)" Condition="'$(CustomBeforeMicrosoftCommonTargets)' != '' and exists('$(CustomBeforeMicrosoftCommonTargets)')" />
   
   <Target Name="Build" />
   <Target Name="AfterBuild" AfterTargets="Build" />
@@ -60,4 +61,6 @@
   <Target Name="_PreserveUnsigned" Inputs="@(FilesToSign)" Outputs="@(FilesToSign->'%(UnsignedPath)')" BeforeTargets="Build">
     <Copy SourceFiles="@(FilesToSign)" DestinationFiles="@(FilesToSign->'%(UnsignedPath)')" />
   </Target>
+
+  <Import Project="$(CustomAfterMicrosoftCommonTargets)" Condition="'$(CustomAfterMicrosoftCommonTargets)' != '' and exists('$(CustomAfterMicrosoftCommonTargets)')" />
 </Project>
