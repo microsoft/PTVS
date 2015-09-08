@@ -57,14 +57,14 @@
         VsPyProfX86.dll
         "/>
 
-    <FilesToSign Include="@(ManagedFiles)">
+    <FilesToSign Include="@(ManagedFiles->'$(BuildOutputRoot)binaries\%(Identity)')">
       <Authenticode>MicrosoftSHA1</Authenticode>
       <StrongName Condition="!$([msbuild]::ValueOrDefault(%(SkipStrongName), `false`))">StrongName</StrongName>
       <SignedPath>$(BuildOutputRoot)binaries\%(Filename)%(Extension)</SignedPath>
       <UnsignedPath>$(BuildOutputRoot)unsigned\%(Filename)%(Extension)</UnsignedPath>
     </FilesToSign>
     
-    <FilesToSign Include="@(UnmanagedFiles)">
+    <FilesToSign Include="@(UnmanagedFiles->'$(BuildOutputRoot)binaries\%(Identity)')">
       <Authenticode>MicrosoftSHA1</Authenticode>
       <SignedPath>$(BuildOutputRoot)binaries\%(Filename)%(Extension)</SignedPath>
       <UnsignedPath>$(BuildOutputRoot)unsigned\%(Filename)%(Extension)</UnsignedPath>
@@ -76,7 +76,7 @@
   </Target>
 
   <Target Name="ListFiles">
-    <Message Text="@(FilesToSign->'%(Identity) (%(Authenticode), %(StrongName)))', '
+    <Message Text="@(FilesToSign->'%(Identity) (%(Authenticode), %(StrongName))', '
 ')" Importance="high" />
   </Target>
 
