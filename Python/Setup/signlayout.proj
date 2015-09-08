@@ -1,4 +1,9 @@
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <OutputPathSuffix>binaries\</OutputPathSuffix>
+    <IntermediateOutputPathSuffix>obj\signlayout\</IntermediateOutputPathSuffix>
+  </PropertyGroup>
+  
   <Import Project="SetupProjectBefore.settings" />
   <Import Project="$(CustomBeforeMicrosoftCommonTargets)" Condition="'$(CustomBeforeMicrosoftCommonTargets)' != '' and exists('$(CustomBeforeMicrosoftCommonTargets)')" />
   
