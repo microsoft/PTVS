@@ -55,17 +55,19 @@
     <FilesToSign Include="@(ManagedFiles)">
       <Authenticode>MicrosoftSHA1</Authenticode>
       <StrongName Condition="!$([msbuild]::ValueOrDefault(%(SkipStrongName), `false`))">StrongName</StrongName>
+      <SignedPath>$(BuildOutputRoot)binaries\%(Filename)%(Extension)</SignedPath>
       <UnsignedPath>$(BuildOutputRoot)unsigned\%(Filename)%(Extension)</UnsignedPath>
     </FilesToSign>
     
     <FilesToSign Include="@(UnmanagedFiles)">
       <Authenticode>MicrosoftSHA1</Authenticode>
+      <SignedPath>$(BuildOutputRoot)binaries\%(Filename)%(Extension)</SignedPath>
       <UnsignedPath>$(BuildOutputRoot)unsigned\%(Filename)%(Extension)</UnsignedPath>
     </FilesToSign>
   </ItemGroup>
   
-  <Target Name="_PreserveUnsigned" Inputs="@(FilesToSign)" Outputs="@(FilesToSign->'%(UnsignedPath)')" BeforeTargets="Build">
-    <Copy SourceFiles="@(FilesToSign)" DestinationFiles="@(FilesToSign->'%(UnsignedPath)')" />
+  <Target Name="_PreserveUnsigned" Inputs="@(FilesToSign->'%(SignedPath)')" Outputs="@(FilesToSign->'%(UnsignedPath)')" BeforeTargets="Build">
+    <Copy SourceFiles="@(FilesToSign->'%(SignedPath)')" DestinationFiles="@(FilesToSign->'%(UnsignedPath)')" />
   </Target>
 
   <Target Name="ListFiles">
