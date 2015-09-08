@@ -23,9 +23,7 @@
         Microsoft.PythonTools.IronPython.Interpreter.dll;
         Microsoft.PythonTools.Profiling.dll;
         Microsoft.PythonTools.ProjectWizards.dll;
-        Microsoft.PythonTools.WebRole.dll;
         Microsoft.PythonTools.Django.dll;
-        Microsoft.PythonTools.AzureSetup.exe;
         Microsoft.IronPythonTools.Resolver.dll
         "/>
     
@@ -37,6 +35,14 @@
     <ManagedFiles Include="Microsoft.PythonTools.Uwp.dll" Condition="$(IncludeUwp)" />
     <ManagedFiles Include="Microsoft.PythonTools.VsLogger.dll" Condition="'$(IncludeVsLogger)' == 'True'" />
 
+    <ManagedFiles Include="
+        Microsoft.PythonTools.WebRole.dll;
+        Microsoft.PythonTools.AzureSetup.exe
+        ">
+        <SkipStrongName>true</SkipStrongName>
+    </ManagedFiles>
+
+
     <UnmanagedFiles Include="
         PyDebugAttach.dll;
         PyDebugAttachX86.dll;
@@ -46,13 +52,13 @@
         VsPyProfX86.dll
         "/>
 
-    <FilesToSign Include="@(ManagedFiles->'$(BuildOutputRoot)binaries\%(Identity)')">
+    <FilesToSign Include="@(ManagedFiles)">
       <Authenticode>MicrosoftSHA1</Authenticode>
-      <StrongName>StrongName</StrongName>
+      <StrongName Condition="!$([msbuild]::ValueOrDefault(%(SkipStrongName), `false`))">StrongName</StrongName>
       <UnsignedPath>$(BuildOutputRoot)unsigned\%(Filename)%(Extension)</UnsignedPath>
     </FilesToSign>
     
-    <FilesToSign Include="@(UnmanagedFiles->'$(BuildOutputRoot)binaries\%(Identity)')">
+    <FilesToSign Include="@(UnmanagedFiles)">
       <Authenticode>MicrosoftSHA1</Authenticode>
       <UnsignedPath>$(BuildOutputRoot)unsigned\%(Filename)%(Extension)</UnsignedPath>
     </FilesToSign>
@@ -60,6 +66,11 @@
   
   <Target Name="_PreserveUnsigned" Inputs="@(FilesToSign)" Outputs="@(FilesToSign->'%(UnsignedPath)')" BeforeTargets="Build">
     <Copy SourceFiles="@(FilesToSign)" DestinationFiles="@(FilesToSign->'%(UnsignedPath)')" />
+  </Target>
+
+  <Target Name="ListFiles">
+    <Message Text="@(FilesToSign->'%(Identity) (%(Authenticode), %(StrongName)))', '
+')" Importance="high" />
   </Target>
 
   <Import Project="$(CustomAfterMicrosoftCommonTargets)" Condition="'$(CustomAfterMicrosoftCommonTargets)' != '' and exists('$(CustomAfterMicrosoftCommonTargets)')" />
