@@ -38,6 +38,13 @@
     <!-- When true, increases build restrictions to ensure complete public releases -->
     <ReleaseBuild Condition="'$(ReleaseBuild)' == ''">false</ReleaseBuild>
 
+    <CustomBuildIdentifier Condition="'$(CustomBuildIdentifierTemplate)' == 'Dev'">Dev $([System.DateTime]::Now.ToString(`yyyy-mm-dd`))</CustomBuildIdentifier>
+    <CustomBuildIdentifier Condition="'$(CustomBuildIdentifierTemplate)' == 'Alpha'">$(FileVersionPrefix) Alpha $(CustomBuildIdentifierIndex)</CustomBuildIdentifier>
+    <CustomBuildIdentifier Condition="'$(CustomBuildIdentifierTemplate)' == 'Beta'">$(FileVersionPrefix) Beta $(CustomBuildIdentifierIndex)</CustomBuildIdentifier>
+    <CustomBuildIdentifier Condition="'$(CustomBuildIdentifierTemplate)' == 'RC'">$(FileVersionPrefix) RC $(CustomBuildIdentifierIndex)</CustomBuildIdentifier>
+    <CustomBuildIdentifier Condition="'$(CustomBuildIdentifierTemplate)' == 'Rel'">$(FileVersionPrefix)</CustomBuildIdentifier>
+    <CustomBuildIdentifier Condition="'$(CustomBuildIdentifier)' != ''">$(CustomBuildIdentifier.Trim())</CustomBuildIdentifier>
+
     <!-- The default Platform value is specified in the imports below -->
     
     <RunFXCop Condition="'$(RunFXCop)' == ''">false</RunFXCop>

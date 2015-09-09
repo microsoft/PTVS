@@ -3,11 +3,26 @@
   <PropertyGroup>
     <RezipVSIXFiles>true</RezipVSIXFiles>
     <SignOutput>true</SignOutput>
-    <SignRezippedVSIXFiles>true</SignRezippedVSIXFiles>
     <BuildProjectReferences>false</BuildProjectReferences>
   </PropertyGroup>
 
   <Import Project="setup.proj" />
 
+  <ItemGroup>
+    <ReleaseFile Include="setup\en-us\PythonToolsInstaller.msi">
+      <Name>PTVS $(CustomBuildIdentifier) VS $(VSTargetName).msi</Name>
+    </ReleaseFile>
+    <ReleaseFile Include="setup\Microsoft.PythonTools.ML.vsix">
+      <Name>PTVS ML $(CustomBuildIdentifier).vsix</Name>
+    </ReleaseFile>
+  </ItemGroup>
+
+  <Target Name="CopyToRelease" AfterTargets="SignFiles" Inputs="@(ReleaseFile->'$(BuildOutputRoot)%(Identity)')" Outputs="@(ReleaseFile->'$(BuildOutputRoot)release\%(Name)')">
+    <Copy SourceFiles="@(ReleaseFile->'$(BuildOutputRoot)%(Identity)')"
+          DestinationFiles="@(ReleaseFile->'$(BuildOutputRoot)release\%(Name)')"
+          OverwriteReadOnlyFiles="true" />
+  </Target>
+
+  <Import Project="$(TargetsPath)\Common.Build.targets"/>
   <Import Project="$(TargetsPath)\Common.Build.VSSDK.targets"/>
 </Project>

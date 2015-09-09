@@ -172,14 +172,10 @@
         <SourceDir>%(VSIX.RootDir)%(VSIX.Directory)</SourceDir>
         <Container>$(BuildOutputRoot)setup\$([System.IO.Path]::GetFileName($([System.String]::new(%(VSIX.Directory)).TrimEnd(`\`)))).vsix</Container>
       </VSIX>
-      
-      <FilesToSign Include="@(VSIX->'%(Container)')" Condition="$([msbuild]::ValueOrDefault($(SignRezippedVSIXFiles), `false`))">
-        <Authenticode>vsix</Authenticode>
-      </FilesToSign>
     </ItemGroup>
   </Target>
   
-  <Target Name="_GetBinariesInLayout" DependsOnTargets="_GetRezipVSIXFiles" Condition="$([msbuild]::ValueOrDefault($(SignRezippedVSIXFiles), `false`))">
+  <Target Name="_GetBinariesInLayout" DependsOnTargets="_GetRezipVSIXFiles" Condition="$(SignOutput)">
     <ItemGroup>
       <_BinariesInLayout Include="%(VSIX.SourceDir)**\*.exe;%(VSIX.SourceDir)**\*.dll" />
       <_BinariesWithSignedSource Include="$(BuildOutputRoot)binaries\%(_BinariesInLayout.RecursiveDir)%(_BinariesInLayout.Filename)%(_BinariesInLayout.Extension)">
@@ -209,7 +205,14 @@
 
     <CreateZipPackage Files="@(_VSIXSourceItems)" ZipPackage="$(_Container)" CompressionLevel="$(ZipPackageCompressionLevel)">
       <Output TaskParameter="ZipPackage" ItemName="FileWrites" />
+      <Output TaskParameter="ZipPackage" ItemName="_FilesToSign" />
     </CreateZipPackage>
+
+    <ItemGroup>
+      <FilesToSign Include="@(_FilesToSign)" Condition="$(SignOutput)">
+        <Authenticode>vsix</Authenticode>
+      </FilesToSign>
+    </ItemGroup>
   </Target>
 
   <Target Name="_RezipSingleVSIX_Dev10_11" DependsOnTargets="_GetRezipVSIXFiles;_UpdateLayoutWithSignedBinaries" BeforeTargets="Build" Inputs="@(VSIX)" Outputs="%(VSIX.Container)" Condition="'$(VSTarget)' == '10.0' or '$(VSTarget)' == '11.0'">
