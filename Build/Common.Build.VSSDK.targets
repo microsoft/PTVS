@@ -181,15 +181,14 @@
   
   <Target Name="_GetBinariesInLayout" DependsOnTargets="_GetRezipVSIXFiles" Condition="$([msbuild]::ValueOrDefault($(SignRezippedVSIXFiles), `false`))">
     <ItemGroup>
-      <_BinariesInLayout Include="%(VSIX.SourceDir)**\*.exe;%(VSIX.SourceDir)**\*.dll" Condition="Exists('$(BuildOutputRoot)binaries\%(Filename)%(Extension)')">
-        <SignedPath>$(BuildOutputRoot)binaries\%(Filename)%(Extension)</SignedPath>
-      </_BinariesInLayout>
+      <_BinariesInLayout Include="%(VSIX.SourceDir)**\*.exe;%(VSIX.SourceDir)**\*.dll" Condition="Exists('$(BuildOutputRoot)binaries\%(Filename)%(Extension)')" />
+      <_BinariesInBinaries Include="@(_BinariesInLayout->'$(BuildOutputRoot)binaries\%(Filename)%(Extension)')" />
     </ItemGroup>
   </Target>
   
-  <Target Name="_UpdateLayoutWithSignedBinaries" DependsOnTargets="_GetBinariesInLayout" Inputs="@(_BinariesInLayout->'%(SignedPath)')" Outputs="@(_BinariesInLayout)">
-    <Message Text="Updating %(VSIX.SourceDir) from $(BuildOutputRoot)binaries" />
-    <Copy SourceFiles="@(_BinariesInLayout->'%(SignedPath)')" DestinationFiles="@(_BinariesInLayout)" />
+  <Target Name="_UpdateLayoutWithSignedBinaries" DependsOnTargets="_GetBinariesInLayout" Inputs="@(_BinariesInBinaries)" Outputs="@(_BinariesInLayout)">
+    <Message Text="Updating from $(BuildOutputRoot)binaries" />
+    <Copy SourceFiles="@(_BinariesInBinaries)" DestinationFiles="@(_BinariesInLayout)" />
   </Target>
 
   <Target Name="_RezipSingleVSIX_Dev12_14" DependsOnTargets="_GetRezipVSIXFiles;_UpdateLayoutWithSignedBinaries" BeforeTargets="Build" Inputs="@(VSIX)" Outputs="%(VSIX.Container)" Condition="'$(VSTarget)' == '12.0' or '$(VSTarget)' == '14.0'">
