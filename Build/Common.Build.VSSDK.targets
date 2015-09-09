@@ -190,7 +190,7 @@
   </Target>
   
   <Target Name="_UpdateLayoutWithSignedBinaries" DependsOnTargets="_GetBinariesInLayout" Inputs="%(_BinariesToCopy.FullPath)" Outputs="%(_BinariesToCopy.TargetPath)">
-    <Copy SourceFiles="%(_BinariesToCopy.SignedSource)" DestinationFiles="%(_BinariesToCopy.FullPath)" />
+    <Copy SourceFiles="%(_BinariesToCopy.FullPath)" DestinationFiles="%(_BinariesToCopy.TargetPath)" />
   </Target>
 
   <Target Name="_RezipSingleVSIX_Dev12_14" DependsOnTargets="_GetRezipVSIXFiles;_UpdateLayoutWithSignedBinaries" BeforeTargets="Build" Inputs="@(VSIX)" Outputs="%(VSIX.Container)" Condition="'$(VSTarget)' == '12.0' or '$(VSTarget)' == '14.0'">

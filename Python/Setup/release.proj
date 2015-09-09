@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <RezipVSIXFiles>true</RezipVSIXFiles>
+    <SignOutput>true</SignOutput>
     <SignRezippedVSIXFiles>true</SignRezippedVSIXFiles>
     <BuildProjectReferences>false</BuildProjectReferences>
   </PropertyGroup>

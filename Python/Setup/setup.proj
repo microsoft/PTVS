@@ -2,9 +2,13 @@
 
   <Import Project="SetupProjectBefore.settings" />
 
+  <PropertyGroup>
+    <SignOutput Condition="$(SignOutput) == ''">false</SignOutput>
+  </PropertyGroup>
+
   <ItemDefinitionGroup>
     <ProjectFile>
-      <Properties>BuildProjectReferences=$(BuildProjectReferences);%(Properties)</Properties>
+      <Properties>BuildProjectReferences=$(BuildProjectReferences);SignOutput=$(SignOutput);%(Properties)</Properties>
     </ProjectFile>
   </ItemDefinitionGroup>
 
