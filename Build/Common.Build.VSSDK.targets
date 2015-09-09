@@ -181,8 +181,8 @@
   
   <Target Name="_GetBinariesInLayout" DependsOnTargets="_GetRezipVSIXFiles" Condition="$([msbuild]::ValueOrDefault($(SignRezippedVSIXFiles), `false`))">
     <ItemGroup>
-      <_BinariesInLayout Include="%(VSIX.SourceDir)**\*.exe;%(VSIX.SourceDir)**\*.dll" Condition="Exists('$(BuildOutputRoot)binaries\%(Filename)%(Extension)')" />
-      <_BinariesInBinaries Include="@(_BinariesInLayout->'$(BuildOutputRoot)binaries\%(Filename)%(Extension)')" />
+      <_BinariesInLayout Include="%(VSIX.SourceDir)**\*.exe;%(VSIX.SourceDir)**\*.dll" Condition="Exists('$(BuildOutputRoot)binaries\%(RecursiveDir)%(Filename)%(Extension)')" />
+      <_BinariesInBinaries Include="@(_BinariesInLayout->'$(BuildOutputRoot)binaries\%(RecursiveDir)%(Filename)%(Extension)')" />
     </ItemGroup>
   </Target>
   
