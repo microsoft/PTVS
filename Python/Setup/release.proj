@@ -20,9 +20,13 @@
     </ReleaseFile>
   </ItemGroup>
 
-  <Target Name="CopyToRelease" AfterTargets="SignFiles" Inputs="@(ReleaseFile)" Outputs="@(ReleaseFile->'$(BuildOutputRoot)release\%(Name)')">
-    <Copy SourceFiles="@(ReleaseFile->'$(BuildOutputRoot)%(Identity)')"
-          DestinationFiles="@(ReleaseFile->'$(BuildOutputRoot)release\%(Name)')"
+  <!--<Target Name="SignFiles" AfterTargets="AfterBuild">
+    <Message Text="FilesToSign: @(FilesToSign)" Importance="high" />
+  </Target>-->
+
+  <Target Name="CopyToRelease" AfterTargets="SignFiles" Inputs="@(ReleaseFile)" Outputs="$(BuildOutputRoot)release\%(ReleaseFile.Name)'">
+    <Copy SourceFiles="%(ReleaseFile.FullPath)"
+          DestinationFiles="$(BuildOutputRoot)release\%(Name)"
           OverwriteReadOnlyFiles="true" />
   </Target>
 
