@@ -20,16 +20,16 @@
     </ReleaseFile>
   </ItemGroup>
 
-  <!--<Target Name="SignFiles" AfterTargets="AfterBuild">
+  <Target Name="ShowFilesToSign" AfterTargets="AfterBuild">
     <Message Text="FilesToSign: @(FilesToSign)" Importance="high" />
-  </Target>-->
+  </Target>
+
+  <Import Project="$(TargetsPath)\Common.Build.targets"/>
+  <Import Project="$(TargetsPath)\Common.Build.VSSDK.targets"/>
 
   <Target Name="CopyToRelease" AfterTargets="SignFiles" Inputs="@(ReleaseFile)" Outputs="$(BuildOutputRoot)release\%(ReleaseFile.Name)'">
     <Copy SourceFiles="%(ReleaseFile.FullPath)"
           DestinationFiles="$(BuildOutputRoot)release\%(Name)"
           OverwriteReadOnlyFiles="true" />
   </Target>
-
-  <Import Project="$(TargetsPath)\Common.Build.targets"/>
-  <Import Project="$(TargetsPath)\Common.Build.VSSDK.targets"/>
 </Project>
