@@ -1,22 +1,29 @@
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="SetupProjectBefore.settings" />
+  <Import Project="$(TargetsPath)\Common.Shim.targets" />
 
   <PropertyGroup>
     <RezipVSIXFiles>true</RezipVSIXFiles>
     <SignOutput>true</SignOutput>
     <BuildProjectReferences>false</BuildProjectReferences>
+    <UseVSSDK>false</UseVSSDK>
   </PropertyGroup>
 
-  <Import Project="setup.proj" />
+  <Import Project="setup.settings" />
+
+  <PropertyGroup>
+    <_CBI Condition="$(CustomBuildIdentifier) != ''"> $(CustomBuildIdentifier)</_CBI>
+  </PropertyGroup>
 
   <ItemGroup>
     <ReleaseFile Include="$(BuildOutputRoot)setup\en-us\PythonToolsInstaller.msi">
-      <Name>PTVS $(CustomBuildIdentifier) VS $(VSTargetName).msi</Name>
+      <Name>PTVS$(_CBI) VS $(VSTargetName).msi</Name>
     </ReleaseFile>
     <ReleaseFile Include="$(BuildOutputRoot)setup\Microsoft.PythonTools.ML.vsix" Condition="Exists('$(BuildOutputRoot)setup\Microsoft.PythonTools.ML.vsix')">
-      <Name>PTVS ML $(CustomBuildIdentifier).vsix</Name>
+      <Name>PTVS ML$(_CBI).vsix</Name>
     </ReleaseFile>
     <ReleaseFile Include="$(BuildOutputRoot)setup\Microsoft.PythonTools.Samples.vsix" Condition="Exists('$(BuildOutputRoot)setup\Microsoft.PythonTools.Samples.vsix')">
-      <Name>PTVS Samples $(CustomBuildIdentifier).vsix</Name>
+      <Name>PTVS Samples$(_CBI).vsix</Name>
     </ReleaseFile>
   </ItemGroup>
 
@@ -24,7 +31,7 @@
     <Message Text="FilesToSign: @(FilesToSign)" Importance="high" />
   </Target>
 
-  <Import Project="$(TargetsPath)\Common.Build.targets"/>
+  <Import Project="$(TargetsPath)\Common.Build.Traversal.targets" />
   <Import Project="$(TargetsPath)\Common.Build.VSSDK.targets"/>
 
   <Target Name="CopyToRelease" AfterTargets="SignFiles" Inputs="@(ReleaseFile)" Outputs="$(BuildOutputRoot)release\%(ReleaseFile.Name)'">

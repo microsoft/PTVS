@@ -1,5 +1,4 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
   <Import Project="Common.Build.CSharp.targets" Condition="'$(Language)' == 'C#'" />
   <Import Project="Common.Build.VSSDK.targets" Condition="$(UseVSSDK) or $(UseVSSDKTemplateOnly)" />
   <Import Project="Common.Build.Cpp.targets" Condition="'$(Language)' == 'C++'" />

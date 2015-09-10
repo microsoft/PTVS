@@ -17,6 +17,16 @@
     <IncludeVSIXItemsFromTargets>BuiltVsixTemplateItems</IncludeVSIXItemsFromTargets>
   </PropertyGroup>
 
+  <PropertyGroup Condition="!$(UseVSSDK)">
+    <DeployVSTemplates>false</DeployVSTemplates>
+    <DeployExtension>false</DeployExtension>
+    <CopyVsixExtensionFiles>false</CopyVsixExtensionFiles>
+    <CreateVsixContainer>false</CreateVsixContainer>
+    <CopyVsixManifestToOutput>false</CopyVsixManifestToOutput>
+    <GeneratePkgDefFile>false</GeneratePkgDefFile>
+    <IncludePkgdefInVSIXContainer>false</IncludePkgdefInVSIXContainer>
+  </PropertyGroup>
+
   <PropertyGroup>
     <!--
     To specify a different registry root to register your package, uncomment the TargetRegistryRoot

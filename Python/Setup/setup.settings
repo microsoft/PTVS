@@ -1,7 +1,4 @@
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-
-  <Import Project="SetupProjectBefore.settings" />
-
   <PropertyGroup>
     <SignOutput Condition="$(SignOutput) == ''">false</SignOutput>
   </PropertyGroup>
@@ -23,6 +20,4 @@
     <ProjectFile Include="$(PTVSPRPath)VsLoggerSetup\VsLogger.wixproj" Condition="'$(IncludeVsLogger)' == 'True'"/>
     <ProjectFile Include="PythonToolsInstaller\PythonToolsInstaller.wixproj"/>
   </ItemGroup>
-
-  <Import Project="$(TargetsPath)\Common.Build.Traversal.targets" />
 </Project>
