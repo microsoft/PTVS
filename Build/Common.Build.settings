@@ -117,6 +117,7 @@
     <NoWarn>436</NoWarn>
     <RunCodeAnalysis>$(RunFXCop)</RunCodeAnalysis>
     <SignAssembly Condition="$(SignAssembly) == ''">true</SignAssembly>
+    <SignOutput Condition="$(SignOutput) == ''">false</SignOutput>
 
     <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
 
