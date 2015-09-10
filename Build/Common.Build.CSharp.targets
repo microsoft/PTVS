@@ -62,8 +62,8 @@
     <BuildTasksProjectDir>$(BuildRoot)\Common\Tools\BuildTasks\</BuildTasksProjectDir>
     <!-- Deliberately omit trailing backslashes so we can quote these on the
          command line. -->
-    <BuildTasksIntDir>$(BuildOutputRoot)obj\BuildTasks</BuildTasksIntDir>
-    <BuildTasksOutDir>$(BuildOutputRoot)tools\BuildTasks</BuildTasksOutDir>
+    <BuildTasksIntDir>$(IntermediateOutputRoot)BuildTasks</BuildTasksIntDir>
+    <BuildTasksOutDir>$(ToolsOutputPath)BuildTasks</BuildTasksOutDir>
     <BuildTasksAssembly>$(BuildTasksOutDir)\Microsoft.VisualStudioTools.BuildTasks.dll</BuildTasksAssembly>
   </PropertyGroup>
   <ItemGroup>

@@ -74,10 +74,27 @@
     <BuildOutputRoot Condition="'$(BuildOutputRoot)' == ''">$(BuildRoot)\BuildOutput\$(Configuration)$(VSTarget)\</BuildOutputRoot>
     <BuildOutputRoot Condition="!HasTrailingSlash($(BuildOutputRoot))">$(BuildOutputRoot)\</BuildOutputRoot>
 
-    <OutputPath Condition="'$(OutputPath)' == ''">$(BuildOutputRoot)$(OutputPathSuffix)\</OutputPath>
+    <OutputPath Condition="'$(OutputPath)' == ''">$(BuildOutputRoot)raw\$(OutputPathSuffix)\</OutputPath>
     <OutputPath Condition="!HasTrailingSlash($(OutputPath))">$(OutputPath)\</OutputPath>
 
-    <IntermediateOutputPath Condition="'$(IntermediateOutputPath)' == ''">$(BuildOutputRoot)obj\$(IntermediateOutputPathSuffix)</IntermediateOutputPath>
+    <BinariesOutputPath Condition="'$(BinariesOutputPath)' == ''">$(BuildOutputRoot)raw\binaries\</BinariesOutputPath>
+    <BinariesOutputPath Condition="!HasTrailingSlash($(BinariesOutputPath))">$(BinariesOutputPath)\</BinariesOutputPath>
+
+    <LayoutOutputPath Condition="'$(LayoutOutputPath)' == ''">$(BuildOutputRoot)layout\</LayoutOutputPath>
+    <LayoutOutputPath Condition="!HasTrailingSlash($(LayoutOutputPath))">$(LayoutOutputPath)\</LayoutOutputPath>
+
+    <SetupOutputPath Condition="'$(SetupOutputPath)' == ''">$(BuildOutputRoot)raw\setup\</SetupOutputPath>
+    <SetupOutputPath Condition="!HasTrailingSlash($(SetupOutputPath))">$(SetupOutputPath)\</SetupOutputPath>
+
+    <ToolsOutputPath Condition="'$(ToolsOutputPath)' == ''">$(BuildOutputRoot)raw\tools\</ToolsOutputPath>
+    <ToolsOutputPath Condition="!HasTrailingSlash($(ToolsOutputPath))">$(ToolsOutputPath)\</ToolsOutputPath>
+
+    <UnsignedOutputPath Condition="'$(UnsignedOutputPath)' == ''">$(BuildOutputRoot)raw\unsigned\</UnsignedOutputPath>
+    <UnsignedOutputPath Condition="!HasTrailingSlash($(UnsignedOutputPath))">$(UnsignedOutputPath)\</UnsignedOutputPath>
+
+    <IntermediateOutputRoot Condition="'$(IntermediateOutputRoot)' == ''">$(BuildOutputRoot)raw\obj\</IntermediateOutputRoot>
+    <IntermediateOutputRoot Condition="!HasTrailingSlash($(IntermediateOutputRoot))">$(IntermediateOutputRoot)\</IntermediateOutputRoot>
+    <IntermediateOutputPath Condition="'$(IntermediateOutputPath)' == ''">$(IntermediateOutputRoot)$(IntermediateOutputPathSuffix)</IntermediateOutputPath>
     <IntermediateOutputPath Condition="!HasTrailingSlash($(IntermediateOutputPath))">$(IntermediateOutputPath)\</IntermediateOutputPath>
 
     <OutDir>$(OutputPath)</OutDir>
@@ -94,7 +111,7 @@
     <UseVSSDK Condition="'$(UseVSSDK)' == ''">false</UseVSSDK>
     <UseVSSDKTemplateOnly Condition="'$(UseVSSDKTemplateOnly)' == ''">false</UseVSSDKTemplateOnly>
     <!-- The location to copy VSIX contents so they can be signed and zipped -->
-    <CopyVsixExtensionRoot Condition="'$(CopyVsixExtensionRoot)' == ''">$(BuildOutputRoot)layout\</CopyVsixExtensionRoot>
+    <CopyVsixExtensionRoot Condition="'$(CopyVsixExtensionRoot)' == ''">$(LayoutOutputPath)</CopyVsixExtensionRoot>
 
     <!-- These targets are invoked to find VSIX contents on all projects.
     

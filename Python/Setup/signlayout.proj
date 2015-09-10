@@ -1,12 +1,15 @@
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <OutputPathSuffix>binaries\</OutputPathSuffix>
-    <IntermediateOutputPathSuffix>obj\signlayout\</IntermediateOutputPathSuffix>
+    <IntermediateOutputPathSuffix>signlayout\</IntermediateOutputPathSuffix>
   </PropertyGroup>
   
   <Import Project="SetupProjectBefore.settings" />
   <Import Project="$(TargetsPath)\Common.Shim.targets" />
   <Import Project="$(CustomBeforeMicrosoftCommonTargets)" Condition="'$(CustomBeforeMicrosoftCommonTargets)' != '' and exists('$(CustomBeforeMicrosoftCommonTargets)')" />
+  
+  <PropertyGroup>
+    <OutputPath>$(BinariesOutputPath)</OutputPath>
+  </PropertyGroup>
   
   <Target Name="Build" />
   <Target Name="AfterBuild" AfterTargets="Build" />
@@ -58,17 +61,17 @@
         VsPyProfX86.dll
         "/>
 
-    <FilesToSign Include="@(ManagedFiles->'$(BuildOutputRoot)binaries\%(Identity)')">
+    <FilesToSign Include="@(ManagedFiles->'$(BinariesOutputPath)%(Identity)')">
       <Authenticode>MicrosoftSHA1</Authenticode>
       <StrongName Condition="!$([msbuild]::ValueOrDefault(%(SkipStrongName), `false`))">StrongName</StrongName>
-      <SignedPath>$(BuildOutputRoot)binaries\%(Filename)%(Extension)</SignedPath>
-      <UnsignedPath>$(BuildOutputRoot)unsigned\%(Filename)%(Extension)</UnsignedPath>
+      <SignedPath>$(BinariesOutputPath)%(Filename)%(Extension)</SignedPath>
+      <UnsignedPath>$(UnsignedOutputPath)%(Filename)%(Extension)</UnsignedPath>
     </FilesToSign>
     
-    <FilesToSign Include="@(UnmanagedFiles->'$(BuildOutputRoot)binaries\%(Identity)')">
+    <FilesToSign Include="@(UnmanagedFiles->'$(BinariesOutputPath)%(Identity)')">
       <Authenticode>MicrosoftSHA1</Authenticode>
-      <SignedPath>$(BuildOutputRoot)binaries\%(Filename)%(Extension)</SignedPath>
-      <UnsignedPath>$(BuildOutputRoot)unsigned\%(Filename)%(Extension)</UnsignedPath>
+      <SignedPath>$(BinariesOutputPath)%(Filename)%(Extension)</SignedPath>
+      <UnsignedPath>$(UnsignedOutputPath)%(Filename)%(Extension)</UnsignedPath>
     </FilesToSign>
   </ItemGroup>
   
@@ -83,8 +86,8 @@
 
   <Target Name="_GetBinariesInLayout">
     <ItemGroup>
-      <_BinariesInLayout Include="$(BuildOutputRoot)layout\**\*.exe;$(BuildOutputRoot)layout\**\*.dll" />
-      <_BinariesWithSignedSource Include="$(BuildOutputRoot)binaries\%(_BinariesInLayout.RecursiveDir)%(_BinariesInLayout.Filename)%(_BinariesInLayout.Extension)">
+      <_BinariesInLayout Include="$(LayoutOutputPath)**\*.exe;$(LayoutOutputPath)**\*.dll" />
+      <_BinariesWithSignedSource Include="$(BinariesOutputPath)%(_BinariesInLayout.RecursiveDir)%(_BinariesInLayout.Filename)%(_BinariesInLayout.Extension)">
         <TargetPath>%(_BinariesInLayout.FullPath)</TargetPath>
       </_BinariesWithSignedSource>
       <_BinariesToCopy Include="@(_BinariesWithSignedSource)" Condition="Exists(%(FullPath))" />

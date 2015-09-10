@@ -1,7 +1,7 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <OutputPathSuffix>samples\$(MSBuildProjectName)\</OutputPathSuffix>
-    <IntermediateOutputPathSuffix>obj\samples_$(MSBuildProjectName)\</IntermediateOutputPathSuffix>
+    <IntermediateOutputPathSuffix>samples_$(MSBuildProjectName)\</IntermediateOutputPathSuffix>
   </PropertyGroup>
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), build.root))\Build\Common.Build.settings" />
   <PropertyGroup>

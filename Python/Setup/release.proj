@@ -13,20 +13,20 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ReleaseFile Include="$(BuildOutputRoot)setup\en-us\PythonToolsInstaller.msi">
+    <ReleaseFile Include="$(SetupOutputPath)en-us\PythonToolsInstaller.msi">
       <Name>PTVS$(_CBI) VS $(VSTargetName).msi</Name>
     </ReleaseFile>
-    <ReleaseFile Include="$(BuildOutputRoot)setup\Microsoft.PythonTools.ML.vsix" Condition="Exists('$(BuildOutputRoot)setup\Microsoft.PythonTools.ML.vsix')">
+    <ReleaseFile Include="$(SetupOutputPath)Microsoft.PythonTools.ML.vsix" Condition="Exists('$(SetupOutputPath)Microsoft.PythonTools.ML.vsix')">
       <Name>PTVS ML$(_CBI).vsix</Name>
     </ReleaseFile>
-    <ReleaseFile Include="$(BuildOutputRoot)setup\Microsoft.PythonTools.Samples.vsix" Condition="Exists('$(BuildOutputRoot)setup\Microsoft.PythonTools.Samples.vsix')">
+    <ReleaseFile Include="$(SetupOutputPath)Microsoft.PythonTools.Samples.vsix" Condition="Exists('$(SetupOutputPath)Microsoft.PythonTools.Samples.vsix')">
       <Name>PTVS Samples$(_CBI).vsix</Name>
     </ReleaseFile>
   </ItemGroup>
 
-  <Target Name="CopyToRelease" AfterTargets="AfterBuild" Inputs="@(ReleaseFile)" Outputs="$(BuildOutputRoot)release\%(ReleaseFile.Name)'">
+  <Target Name="CopyToRelease" AfterTargets="AfterBuild" Inputs="@(ReleaseFile)" Outputs="$(ReleaseOutputPath)%(ReleaseFile.Name)'">
     <Copy SourceFiles="%(ReleaseFile.FullPath)"
-          DestinationFiles="$(BuildOutputRoot)release\%(Name)"
+          DestinationFiles="$(ReleaseOutputPath)%(Name)"
           OverwriteReadOnlyFiles="true" />
   </Target>
 </Project>

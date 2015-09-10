@@ -20,18 +20,10 @@
       <Compile Include="@(FilesProj->'$(IntermediateOutputPath)%(FileName).wxs')" />
     </ItemGroup>
   </Target>
-  
-  <!--
-  Set the bind paths in this order
-  
-    1. Signed binaries (if any)
-    2. Output directory (for explicit project references)
-    3. Each project output directory (for implicit project references)
-    4. Setup output directory (for merge modules)
-  -->
+
   <Target Name="_SetBindInputPaths" BeforeTargets="Link">
     <ItemGroup>
-      <LinkerBindInputPaths Include="$(BuildOutputRoot)binaries">
+      <LinkerBindInputPaths Include="$(BinariesOutputPath)">
         <BindName>bin</BindName>
       </LinkerBindInputPaths>
       <LinkerBindInputPaths Include="$(OutputPath)" />
