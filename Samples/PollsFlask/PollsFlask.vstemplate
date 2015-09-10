@@ -1,0 +1,78 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<VSTemplate Version="3.0.0" xmlns="http://schemas.microsoft.com/developer/vstemplate/2005" Type="Project">
+  <TemplateData>
+    <Name>Polls Flask Web Project</Name>
+    <Description>A sample polls application using the Flask web framework. It can be configured to use Azure Table Storage or MongoDB for storage.</Description>
+    <ProjectType>Python</ProjectType>
+    <ProjectSubType></ProjectSubType>
+    <SortOrder>1020</SortOrder>
+    <CreateNewFolder>true</CreateNewFolder>
+    <DefaultName>FlaskWebProject</DefaultName>
+    <ProvideDefaultName>true</ProvideDefaultName>
+    <LocationField>Enabled</LocationField>
+    <EnableLocationBrowseButton>true</EnableLocationBrowseButton>
+    <Icon Package="{6dbd7c1e-1f1b-496d-ac7c-c55dae66c783}" ID="406" />
+    <PreviewImage>PollsFlask.png</PreviewImage>
+  </TemplateData>
+  <TemplateContent>
+    <Project File="PollsFlask.pyproj" ReplaceParameters="true">
+      <ProjectItem ReplaceParameters="true">runserver.py</ProjectItem>
+      <ProjectItem>requirements.txt</ProjectItem>
+      <Folder Name="PollsFlask" TargetFolderName="$safeprojectname$">
+        <ProjectItem ReplaceParameters="true">__init__.py</ProjectItem>
+        <ProjectItem ReplaceParameters="true" OpenInEditor="true">views.py</ProjectItem>
+        <ProjectItem ReplaceParameters="true">settings.py</ProjectItem>
+        <Folder Name="models">
+          <ProjectItem ReplaceParameters="true">__init__.py</ProjectItem>
+          <ProjectItem ReplaceParameters="true">azuretablestorage.py</ProjectItem>
+          <ProjectItem ReplaceParameters="true">factory.py</ProjectItem>
+          <ProjectItem ReplaceParameters="true">memory.py</ProjectItem>
+          <ProjectItem ReplaceParameters="true">mongodb.py</ProjectItem>
+          <ProjectItem ReplaceParameters="true">samples.json</ProjectItem>
+        </Folder>
+        <Folder Name="static">
+          <Folder Name="content">
+            <ProjectItem>bootstrap.css</ProjectItem>
+            <ProjectItem>bootstrap.min.css</ProjectItem>
+            <ProjectItem>site.css</ProjectItem>
+          </Folder>
+          <Folder Name="fonts">
+            <ProjectItem>glyphicons-halflings-regular.eot</ProjectItem>
+            <ProjectItem>glyphicons-halflings-regular.svg</ProjectItem>
+            <ProjectItem>glyphicons-halflings-regular.ttf</ProjectItem>
+            <ProjectItem>glyphicons-halflings-regular.woff</ProjectItem>
+          </Folder>
+          <Folder Name="scripts">
+            <ProjectItem>_references.js</ProjectItem>
+            <ProjectItem>bootstrap.js</ProjectItem>
+            <ProjectItem>bootstrap.min.js</ProjectItem>
+            <ProjectItem>jquery.validate.js</ProjectItem>
+            <ProjectItem>jquery.validate.min.js</ProjectItem>
+            <ProjectItem>jquery.validate.unobtrusive.js</ProjectItem>
+            <ProjectItem>jquery.validate.unobtrusive.min.js</ProjectItem>
+            <ProjectItem>jquery.validate-vsdoc.js</ProjectItem>
+            <ProjectItem>jquery-1.10.2.intellisense.js</ProjectItem>
+            <ProjectItem>jquery-1.10.2.js</ProjectItem>
+            <ProjectItem>jquery-1.10.2.min.js</ProjectItem>
+            <ProjectItem>jquery-1.10.2.min.map</ProjectItem>
+            <ProjectItem>modernizr-2.6.2.js</ProjectItem>
+            <ProjectItem>respond.js</ProjectItem>
+            <ProjectItem>respond.min.js</ProjectItem>
+          </Folder>
+        </Folder>
+        <Folder Name="templates">
+          <ProjectItem>about.html</ProjectItem>
+          <ProjectItem>contact.html</ProjectItem>
+          <ProjectItem>details.html</ProjectItem>
+          <ProjectItem>index.html</ProjectItem>
+          <ProjectItem>layout.html</ProjectItem>
+          <ProjectItem>results.html</ProjectItem>
+        </Folder>
+      </Folder>
+    </Project>
+  </TemplateContent>
+  <WizardExtension>
+    <Assembly>Microsoft.PythonTools.ProjectWizards, Version=2.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</Assembly>
+    <FullClassName>Microsoft.PythonTools.ProjectWizards.InstallRequirementsWizard</FullClassName>
+  </WizardExtension>
+</VSTemplate>

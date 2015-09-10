@@ -1,0 +1,75 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<VSTemplate Version="3.0.0" xmlns="http://schemas.microsoft.com/developer/vstemplate/2005" Type="Project">
+  <TemplateData>
+    <Name>Polls Bottle Web Project</Name>
+    <Description>A sample polls application using the Bottle web framework. It can be configured to use Azure Table Storage or MongoDB for storage.</Description>
+    <ProjectType>Python</ProjectType>
+    <ProjectSubType></ProjectSubType>
+    <SortOrder>1000</SortOrder>
+    <CreateNewFolder>true</CreateNewFolder>
+    <DefaultName>BottleWebProject</DefaultName>
+    <ProvideDefaultName>true</ProvideDefaultName>
+    <LocationField>Enabled</LocationField>
+    <EnableLocationBrowseButton>true</EnableLocationBrowseButton>
+    <Icon Package="{6dbd7c1e-1f1b-496d-ac7c-c55dae66c783}" ID="406" />
+    <PreviewImage>PollsBottle.png</PreviewImage>
+  </TemplateData>
+  <TemplateContent>
+    <Project File="PollsBottle.pyproj" ReplaceParameters="true">
+      <ProjectItem>app.py</ProjectItem>
+      <ProjectItem>requirements.txt</ProjectItem>
+      <ProjectItem OpenInEditor="true">routes.py</ProjectItem>
+      <ProjectItem>settings.py</ProjectItem>
+      <Folder Name="models">
+        <ProjectItem>__init__.py</ProjectItem>
+        <ProjectItem>azuretablestorage.py</ProjectItem>
+        <ProjectItem>factory.py</ProjectItem>
+        <ProjectItem>memory.py</ProjectItem>
+        <ProjectItem>mongodb.py</ProjectItem>
+        <ProjectItem>samples.json</ProjectItem>
+      </Folder>
+      <Folder Name="static" TargetFolderName="static">
+        <Folder Name="content" TargetFolderName="content">
+          <ProjectItem>bootstrap.css</ProjectItem>
+          <ProjectItem>bootstrap.min.css</ProjectItem>
+          <ProjectItem>site.css</ProjectItem>
+        </Folder>
+        <Folder Name="fonts" TargetFolderName="fonts">
+          <ProjectItem>glyphicons-halflings-regular.eot</ProjectItem>
+          <ProjectItem>glyphicons-halflings-regular.svg</ProjectItem>
+          <ProjectItem>glyphicons-halflings-regular.ttf</ProjectItem>
+          <ProjectItem>glyphicons-halflings-regular.woff</ProjectItem>
+        </Folder>
+        <Folder Name="scripts" TargetFolderName="scripts">
+          <ProjectItem>_references.js</ProjectItem>
+          <ProjectItem>bootstrap.js</ProjectItem>
+          <ProjectItem>bootstrap.min.js</ProjectItem>
+          <ProjectItem>jquery.validate.js</ProjectItem>
+          <ProjectItem>jquery.validate.min.js</ProjectItem>
+          <ProjectItem>jquery.validate.unobtrusive.js</ProjectItem>
+          <ProjectItem>jquery.validate.unobtrusive.min.js</ProjectItem>
+          <ProjectItem>jquery.validate-vsdoc.js</ProjectItem>
+          <ProjectItem>jquery-1.10.2.intellisense.js</ProjectItem>
+          <ProjectItem>jquery-1.10.2.js</ProjectItem>
+          <ProjectItem>jquery-1.10.2.min.js</ProjectItem>
+          <ProjectItem>jquery-1.10.2.min.map</ProjectItem>
+          <ProjectItem>modernizr-2.6.2.js</ProjectItem>
+          <ProjectItem>respond.js</ProjectItem>
+          <ProjectItem>respond.min.js</ProjectItem>
+        </Folder>
+      </Folder>
+      <Folder Name="views" TargetFolderName="views">
+        <ProjectItem>about.tpl</ProjectItem>
+        <ProjectItem>contact.tpl</ProjectItem>
+        <ProjectItem>details.tpl</ProjectItem>
+        <ProjectItem>index.tpl</ProjectItem>
+        <ProjectItem>layout.tpl</ProjectItem>
+        <ProjectItem>results.tpl</ProjectItem>
+      </Folder>
+    </Project>
+  </TemplateContent>
+  <WizardExtension>
+    <Assembly>Microsoft.PythonTools.ProjectWizards, Version=2.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</Assembly>
+    <FullClassName>Microsoft.PythonTools.ProjectWizards.InstallRequirementsWizard</FullClassName>
+  </WizardExtension>
+</VSTemplate>

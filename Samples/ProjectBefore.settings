@@ -1,0 +1,11 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <OutputPathSuffix>samples\$(MSBuildProjectName)\</OutputPathSuffix>
+    <IntermediateOutputPathSuffix>obj\samples_$(MSBuildProjectName)\</IntermediateOutputPathSuffix>
+  </PropertyGroup>
+  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), build.root))\Build\Common.Build.settings" />
+  <PropertyGroup>
+    <!-- Suppress warning about no source files specified -->
+    <NoWarn>2008;$(NoWarn)</NoWarn>
+  </PropertyGroup>
+</Project>
