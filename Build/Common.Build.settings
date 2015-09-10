@@ -63,7 +63,7 @@
     <TargetsPath>$(BuildRoot)Build</TargetsPath>
 
     <PTVSPRPath Condition="'$(PTVSPRPath)' == ''">$(BuildRoot)..\PTVS-pr\</PTVSPRPath>
-    <PTVSSamplesPath Condition="'$(PTVSSamplesPath)' == ''">$(BuildRoot)..\PTVS-Samples\</PTVSSamplesPath>
+    <PTVSSamplesPath Condition="'$(PTVSSamplesPath)' == ''">$(BuildRoot)Python\Samples\</PTVSSamplesPath>
 
     <!-- BuildOutputRoot contains all build files.
     
@@ -117,7 +117,6 @@
     <NoWarn>436</NoWarn>
     <RunCodeAnalysis>$(RunFXCop)</RunCodeAnalysis>
     <SignAssembly Condition="$(SignAssembly) == ''">true</SignAssembly>
-    <SignOutput Condition="$(SignOutput) == ''">false</SignOutput>
 
     <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
 

@@ -3,14 +3,14 @@
 
   <!-- Identifies the files that need signing. -->
   <Target Name="SignMsi">
-    <ItemGroup Condition="$(SignAssembly)">
+    <ItemGroup>
       <FilesToSign Include="@(SignMsi)">
         <Authenticode>MicrosoftSHA1</Authenticode>
       </FilesToSign>
     </ItemGroup>
-    <Message Text="Signing: @(FilesToSign)" Importance="high" />
   </Target>
 
+  <!-- Generates .wxs files from our file projects. -->
   <Target Name="CompileFilesProj"
           BeforeTargets="BeforeBuild"
           Condition="'@(FilesProj)' != ''">
@@ -30,14 +30,8 @@
     4. Setup output directory (for merge modules)
   -->
   <Target Name="_SetBindInputPaths" BeforeTargets="Link">
-    <PropertyGroup>
-      <CopyOutputsToPath Condition="'$(CopyOutputsToPath)' != '' and !HasTrailingSlash($(CopyOutputsToPath))">$(CopyOutputsToPath)\</CopyOutputsToPath>
-    </PropertyGroup>
     <ItemGroup>
-      <LinkerBindInputPaths Include="$(SignedBinariesPath)" Condition="'$(SignedBinariesPath)' != ''">
-        <BindName>bin</BindName>
-      </LinkerBindInputPaths>
-      <LinkerBindInputPaths Include="$(BuildOutputRoot)binaries" Condition="'$(SignedBinariesPath)' == ''">
+      <LinkerBindInputPaths Include="$(BuildOutputRoot)binaries">
         <BindName>bin</BindName>
       </LinkerBindInputPaths>
       <LinkerBindInputPaths Include="$(OutputPath)" />

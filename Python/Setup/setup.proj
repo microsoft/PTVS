@@ -1,11 +1,9 @@
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <PropertyGroup>
-    <SignOutput Condition="$(SignOutput) == ''">false</SignOutput>
-  </PropertyGroup>
+  <Import Project="SetupProjectBefore.settings" />
 
   <ItemDefinitionGroup>
     <ProjectFile>
-      <Properties>BuildProjectReferences=$(BuildProjectReferences);SignOutput=$(SignOutput);%(Properties)</Properties>
+      <Properties>BuildProjectReferences=$(BuildProjectReferences);%(Properties)</Properties>
     </ProjectFile>
   </ItemDefinitionGroup>
 
@@ -20,4 +18,6 @@
     <ProjectFile Include="$(PTVSPRPath)VsLoggerSetup\VsLogger.wixproj" Condition="'$(IncludeVsLogger)' == 'True'"/>
     <ProjectFile Include="PythonToolsInstaller\PythonToolsInstaller.wixproj"/>
   </ItemGroup>
+
+  <Import Project="$(TargetsPath)\Common.Build.Traversal.targets" />
 </Project>

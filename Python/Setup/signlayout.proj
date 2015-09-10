@@ -5,6 +5,7 @@
   </PropertyGroup>
   
   <Import Project="SetupProjectBefore.settings" />
+  <Import Project="$(TargetsPath)\Common.Shim.targets" />
   <Import Project="$(CustomBeforeMicrosoftCommonTargets)" Condition="'$(CustomBeforeMicrosoftCommonTargets)' != '' and exists('$(CustomBeforeMicrosoftCommonTargets)')" />
   
   <Target Name="Build" />
@@ -71,13 +72,31 @@
     </FilesToSign>
   </ItemGroup>
   
-  <Target Name="_PreserveUnsigned" Inputs="@(FilesToSign->'%(SignedPath)')" Outputs="@(FilesToSign->'%(UnsignedPath)')" BeforeTargets="Build">
-    <Copy SourceFiles="@(FilesToSign->'%(SignedPath)')" DestinationFiles="@(FilesToSign->'%(UnsignedPath)')" />
+  <Target Name="_PreserveUnsigned" Inputs="%(FilesToSign.SignedPath)" Outputs="%(FilesToSign.UnsignedPath)" BeforeTargets="Build">
+    <Copy SourceFiles="%(FilesToSign.SignedPath)" DestinationFiles="%(FilesToSign.UnsignedPath)" />
   </Target>
 
   <Target Name="ListFiles">
     <Message Text="@(FilesToSign->'%(Identity) (%(Authenticode), %(StrongName))', '
 ')" Importance="high" />
+  </Target>
+
+  <Target Name="_GetBinariesInLayout">
+    <ItemGroup>
+      <_BinariesInLayout Include="$(BuildOutputRoot)layout\**\*.exe;$(BuildOutputRoot)layout\**\*.dll" />
+      <_BinariesWithSignedSource Include="$(BuildOutputRoot)binaries\%(_BinariesInLayout.RecursiveDir)%(_BinariesInLayout.Filename)%(_BinariesInLayout.Extension)">
+        <TargetPath>%(_BinariesInLayout.FullPath)</TargetPath>
+      </_BinariesWithSignedSource>
+      <_BinariesToCopy Include="@(_BinariesWithSignedSource)" Condition="Exists(%(FullPath))" />
+    </ItemGroup>
+  </Target>
+  
+  <Target Name="_UpdateLayoutWithSignedBinaries"
+          DependsOnTargets="_GetBinariesInLayout"
+          Inputs="%(_BinariesToCopy.FullPath)"
+          Outputs="%(_BinariesToCopy.TargetPath)"
+          AfterTargets="SignFiles">
+    <Copy SourceFiles="%(_BinariesToCopy.FullPath)" DestinationFiles="%(_BinariesToCopy.TargetPath)" />
   </Target>
 
   <Import Project="$(CustomAfterMicrosoftCommonTargets)" Condition="'$(CustomAfterMicrosoftCommonTargets)' != '' and exists('$(CustomAfterMicrosoftCommonTargets)')" />
