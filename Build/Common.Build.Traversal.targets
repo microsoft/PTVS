@@ -27,9 +27,14 @@
     <MSBuild Projects="@(SequencedProjectFile)" Targets="Build"/>
   </Target>
 
+  <Target Name="BeforeBuild" BeforeTargets="Build" />
+  <Target Name="AfterBuild" AfterTargets="Build" />
+
   <Target Name="Clean" DependsOnTargets="PrepareForBuild">
     <MSBuild Projects="@(_ProjectFile)" Targets="Clean"/>
     <MSBuild Projects="@(SequencedProjectFile)" Targets="Clean"/>
   </Target>
 
+  <Target Name="BeforeClean" BeforeTargets="Clean" />
+  <Target Name="AfterClean" AfterTargets="Clean" />
 </Project>
