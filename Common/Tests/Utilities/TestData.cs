@@ -22,25 +22,24 @@ using Microsoft.VisualStudioTools;
 
 namespace TestUtilities {
     public static class TestData {
-        const string BinariesAltSourceLandmark = @"TestUtilities.dll";
+        const string BinariesAltSourcePath = @"Tests";
         const string BinariesSourcePath = @"BuildOutput\" +
 #if DEBUG
-            @"Debug" + 
+            @"Debug" +
 #else
             @"Release" + 
 #endif
             AssemblyVersionInfo.VSVersion + @"\Tests";
         const string BinariesOutPath = "";
 
-        const string DataAltSourcePath = @"TestData";
+        const string DataAltSourcePath = @"Tests\TestData";
         const string DataOutPath = @"TestData";
 
         private static string GetSolutionDir() {
             var dir = Path.GetDirectoryName((typeof(TestData)).Assembly.Location);
-            while (!string.IsNullOrEmpty(dir) && Directory.Exists(dir)) {
-                if (File.Exists(Path.Combine(dir, "build.root"))) {
-                    break;
-                }
+            while (!string.IsNullOrEmpty(dir) &&
+                Directory.Exists(dir) &&
+                !File.Exists(Path.Combine(dir, "build.root"))) {
                 dir = Path.GetDirectoryName(dir);
             }
             return dir ?? "";
@@ -55,11 +54,8 @@ namespace TestUtilities {
                 var sourceRoot = GetSolutionDir();
                 var binSource = Path.Combine(sourceRoot, BinariesSourcePath);
                 if (!Directory.Exists(binSource)) {
-                    var landmark = Path.Combine(sourceRoot, BinariesAltSourceLandmark);
-                    if (File.Exists(landmark)) {
-                        binSource = Path.GetDirectoryName(landmark);
-                    }
-                    if (!Directory.Exists(landmark)) {
+                    binSource = Path.Combine(sourceRoot, BinariesAltSourcePath);
+                    if (!Directory.Exists(binSource)) {
                         Debug.Fail("Could not find location of test binaries." + Environment.NewLine + "    " + binSource);
                     }
                 }
@@ -150,3 +146,4 @@ namespace TestUtilities {
         }
     }
 }
+

@@ -7,6 +7,12 @@
     <DefineConstants>$(DefineConstants);SUPPRESS_COMMON_ASSEMBLY_VERSION</DefineConstants>
   </PropertyGroup>
 
+  <ItemGroup Condition="$(AssemblyName) == 'TestUtilities'">
+    <Compile Include="$(BuildRoot)Python\Tests\Utilities.Python.Analysis\PythonTestData.cs">
+      <Link>PythonTestData.cs</Link>
+    </Compile>
+  </ItemGroup>
+
   <!--
   Returns the paths and names required for generating a vsixmanifest file.
   The default targets for this occasionally return the wrong files depending
