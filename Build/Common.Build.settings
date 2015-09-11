@@ -38,7 +38,7 @@
     <!-- When true, increases build restrictions to ensure complete public releases -->
     <ReleaseBuild Condition="'$(ReleaseBuild)' == ''">false</ReleaseBuild>
 
-    <CustomBuildIdentifier Condition="'$(CustomBuildIdentifierTemplate)' == 'Dev'">Dev $([System.DateTime]::Now.ToString(`yyyy-mm-dd`))</CustomBuildIdentifier>
+    <CustomBuildIdentifier Condition="'$(CustomBuildIdentifierTemplate)' == 'Dev'">Dev $([System.DateTime]::Now.ToString(`yyyy-MM-dd`))</CustomBuildIdentifier>
     <CustomBuildIdentifier Condition="'$(CustomBuildIdentifierTemplate)' == 'Alpha'">$(FileVersionPrefix) Alpha $(CustomBuildIdentifierIndex)</CustomBuildIdentifier>
     <CustomBuildIdentifier Condition="'$(CustomBuildIdentifierTemplate)' == 'Beta'">$(FileVersionPrefix) Beta $(CustomBuildIdentifierIndex)</CustomBuildIdentifier>
     <CustomBuildIdentifier Condition="'$(CustomBuildIdentifierTemplate)' == 'RC'">$(FileVersionPrefix) RC $(CustomBuildIdentifierIndex)</CustomBuildIdentifier>
@@ -82,6 +82,9 @@
 
     <LayoutOutputPath Condition="'$(LayoutOutputPath)' == ''">$(BuildOutputRoot)layout\</LayoutOutputPath>
     <LayoutOutputPath Condition="!HasTrailingSlash($(LayoutOutputPath))">$(LayoutOutputPath)\</LayoutOutputPath>
+
+    <ReleaseOutputPath Condition="'$(ReleaseOutputPath)' == ''">$(BuildOutputRoot)release\</ReleaseOutputPath>
+    <ReleaseOutputPath Condition="!HasTrailingSlash($(ReleaseOutputPath))">$(ReleaseOutputPath)\</ReleaseOutputPath>
 
     <SetupOutputPath Condition="'$(SetupOutputPath)' == ''">$(BuildOutputRoot)raw\setup\</SetupOutputPath>
     <SetupOutputPath Condition="!HasTrailingSlash($(SetupOutputPath))">$(SetupOutputPath)\</SetupOutputPath>
