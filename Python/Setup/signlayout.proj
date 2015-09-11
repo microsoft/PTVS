@@ -9,6 +9,7 @@
   
   <PropertyGroup>
     <OutputPath>$(BinariesOutputPath)</OutputPath>
+    <OutDir>$(BinariesOutputPath)</OutDir>
   </PropertyGroup>
   
   <Target Name="Build" />
@@ -80,6 +81,7 @@
   </Target>
 
   <Target Name="ListFiles">
+    <Message Text="OutputPath: $(OutputPath)" Importance="high" />
     <Message Text="@(FilesToSign->'%(Identity) (%(Authenticode), %(StrongName))', '
 ')" Importance="high" />
   </Target>
