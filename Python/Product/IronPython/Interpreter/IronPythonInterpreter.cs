@@ -113,8 +113,33 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 typeof(RemoteInterpreterProxy).Assembly.FullName,
                 typeof(RemoteInterpreterProxy).FullName);
 
+#if DEBUG
+            var assertListener = Debug.Listeners["Microsoft.PythonTools.AssertListener"];
+            if (assertListener != null) {
+                domain.DoCallBack(new AssertListenerInitializer(assertListener).Initialize);
+            }
+#endif
+
             return domain;
         }
+
+#if DEBUG
+        [Serializable]
+        class AssertListenerInitializer {
+            private readonly TraceListener _listener;
+
+            public AssertListenerInitializer(TraceListener listener) {
+                _listener = listener;
+            }
+
+            public void Initialize() {
+                if (Debug.Listeners[_listener.Name] == null) {
+                    Debug.Listeners.Add(_listener);
+                    Debug.Listeners.Remove("Default");
+                }
+            }
+        }
+#endif
 
         class AssemblyResolver {
             internal static AssemblyResolver Instance = new AssemblyResolver();

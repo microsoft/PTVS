@@ -32,13 +32,14 @@ namespace TestUtilities {
         }
 
         public override string Name {
-            get { return "AssertListener"; }
+            get { return "Microsoft.PythonTools.AssertListener"; }
             set { }
         }
 
         public static void Initialize() {
-            if (null == Debug.Listeners["AssertListener"]) {
-                Debug.Listeners.Add(new AssertListener());
+            var listener = new AssertListener();
+            if (null == Debug.Listeners[listener.Name]) {
+                Debug.Listeners.Add(listener);
                 Debug.Listeners.Remove("Default");
 
                 AppDomain.CurrentDomain.FirstChanceException += CurrentDomain_FirstChanceException;
