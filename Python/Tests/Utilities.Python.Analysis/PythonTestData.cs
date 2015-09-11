@@ -19,8 +19,6 @@ using Microsoft.VisualStudioTools;
 
 namespace TestUtilities.Python {
     public class PythonTestData {
-        const string DataSourcePath = @"Python\Tests\TestData";
-
 #if DEBUG
         const string Configuration = "Debug";
 #else
@@ -32,14 +30,9 @@ namespace TestUtilities.Python {
         const string BinariesInReleaseDrop = "raw\\binaries";
         const string BinariesLandmark = "Microsoft.PythonTools.Analysis.dll";
 
-        const string TestBinariesInSourceTree = "BuildOutput\\" + Configuration + AssemblyVersionInfo.VSVersion + "\\raw\\binaries";
-        const string TestBinariesInTestDrop = "test";
-        const string TestBinariesInReleaseDrop = "raw\\test";
-        const string TestBinariesLandmark = "TestUtilities.dll";
-
         const string TestDataInSourceTree = "Python\\Tests\\TestData";
-        const string TestDataInTestDrop = "test\\TestData";
-        const string TestDataInReleaseDrop = "raw\\test\\TestData";
+        const string TestDataInTestDrop = "binaries\\TestData";
+        const string TestDataInReleaseDrop = "raw\\binaries\\TestData";
         const string TestDataLandmark = "testdata.root";
 
         private static string FindDirectoryFromLandmark(string root, string directory, string landmark = null) {
@@ -66,7 +59,6 @@ namespace TestUtilities.Python {
 
         public static void Deploy(bool includeTestData = true) {
             var binSource = Environment.GetEnvironmentVariable("PTVS_BINARIES_SOURCE");
-            var testBinSource = Environment.GetEnvironmentVariable("PTVS_TESTBINARIES_SOURCE");
             var testDataSource = Environment.GetEnvironmentVariable("PTVS_TESTDATA_SOURCE");
 
             var drop = Environment.GetEnvironmentVariable("PTVS_DROP");
@@ -79,13 +71,6 @@ namespace TestUtilities.Python {
                     ?? FindDirectoryFromLandmark(drop, BinariesInReleaseDrop, BinariesLandmark);
             }
 
-            if (string.IsNullOrEmpty(testBinSource)) {
-                buildRoot = buildRoot ?? GetSolutionDir();
-                testBinSource = FindDirectoryFromLandmark(buildRoot, TestBinariesInSourceTree, TestBinariesLandmark)
-                    ?? FindDirectoryFromLandmark(drop, TestBinariesInTestDrop, TestBinariesLandmark)
-                    ?? FindDirectoryFromLandmark(drop, TestBinariesInReleaseDrop, TestBinariesLandmark);
-            }
-
             if (string.IsNullOrEmpty(testDataSource) && includeTestData) {
                 buildRoot = buildRoot ?? GetSolutionDir();
                 testDataSource = FindDirectoryFromLandmark(buildRoot, TestDataInSourceTree, TestDataLandmark)
@@ -94,15 +79,10 @@ namespace TestUtilities.Python {
             }
 
             Debug.Assert(Directory.Exists(binSource), "Unable to find binaries at " + (binSource ?? "(null)"));
-            Debug.Assert(Directory.Exists(testBinSource), "Unable to find test binaries at " + (testBinSource ?? "(null)"));
 
             Trace.TraceInformation("Copying binaries from {0}", binSource);
-            Trace.TraceInformation("Copying test binaries from {0}", testBinSource);
 
             FileUtils.CopyDirectory(binSource, TestData.GetPath());
-            if (!CommonUtils.IsSameDirectory(binSource, testBinSource)) {
-                FileUtils.CopyDirectory(testBinSource, TestData.GetPath());
-            }
 
             if (includeTestData) {
                 Debug.Assert(Directory.Exists(testDataSource), "Unable to find test data at " + (testDataSource ?? "(null)"));
