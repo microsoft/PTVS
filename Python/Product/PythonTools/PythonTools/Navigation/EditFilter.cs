@@ -595,9 +595,23 @@ namespace Microsoft.PythonTools.Language {
         public int Exec(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
             // preprocessing
             if (pguidCmdGroup == VSConstants.GUID_VSStandardCommandSet97) {
+                PythonReplEvaluator eval;
                 switch ((VSConstants.VSStd97CmdID)nCmdID) {
+                    case VSConstants.VSStd97CmdID.Cut:
+                        if (_textView.Properties.TryGetProperty(typeof(PythonReplEvaluator), out eval)) {
+                            if (_editorOps.CutSelection()) {
+                                return VSConstants.S_OK;
+                            }
+                        }
+                        break;
+                    case VSConstants.VSStd97CmdID.Copy:
+                        if (_textView.Properties.TryGetProperty(typeof(PythonReplEvaluator), out eval)) {
+                            if (_editorOps.CopySelection()) {
+                                return VSConstants.S_OK;
+                            }
+                        }
+                        break;
                     case VSConstants.VSStd97CmdID.Paste:
-                        PythonReplEvaluator eval;
                         if (_textView.Properties.TryGetProperty(typeof(PythonReplEvaluator), out eval)) {
                             string pasting = eval.FormatClipboard() ?? Clipboard.GetText();
                             if (pasting != null) {

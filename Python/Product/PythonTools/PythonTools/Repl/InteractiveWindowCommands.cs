@@ -24,9 +24,11 @@ using Microsoft.VisualStudio.InteractiveWindow.Commands;
 using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
+using Microsoft.VisualStudio.Utilities;
 
 namespace Microsoft.PythonTools.Repl {
     [Export(typeof(IInteractiveWindowCommand))]
+    [ContentType(PythonCoreConstants.ContentType)]
     class InteractiveCommentCommand : IInteractiveWindowCommand {
         private readonly IStandardClassificationService _registry;
 
@@ -81,6 +83,7 @@ namespace Microsoft.PythonTools.Repl {
 
 
     [Export(typeof(IInteractiveWindowCommand))]
+    [ContentType(PythonCoreConstants.ContentType)]
     class InteractiveWaitCommand : IInteractiveWindowCommand {
         private readonly IStandardClassificationService _registry;
 

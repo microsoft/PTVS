@@ -159,7 +159,7 @@ namespace Microsoft.PythonTools.Navigation.NavigateTo {
                 } finally {
                     callback.Done();
                 }
-            }, _searchCts.Token).HandleAllExceptions(SR.ProductName, GetType()).DoNotWait();
+            }).HandleAllExceptions(SR.ProductName, GetType()).DoNotWait();
         }
 
         public void StopSearch() {

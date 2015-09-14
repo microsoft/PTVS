@@ -16,6 +16,7 @@ using System;
 using System.ComponentModel.Composition;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Language;
+using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text.Editor;
@@ -24,11 +25,11 @@ using Microsoft.VisualStudio.Utilities;
 using IOleCommandTarget = Microsoft.VisualStudio.OLE.Interop.IOleCommandTarget;
 
 #if DEV14_OR_LATER
+using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.InteractiveWindow.Shell;
 #else
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Repl;
-using Microsoft.PythonTools.Repl;
 #endif
 
 namespace Microsoft.PythonTools.Editor {
@@ -53,6 +54,10 @@ namespace Microsoft.PythonTools.Editor {
                     _editorOpsFactory.GetEditorOperations(textView),
                     _serviceProvider
                 );
+                var window = textView.TextBuffer.GetInteractiveWindow();
+                if (window != null && window.Evaluator is PythonReplEvaluator) {
+                    textView.Properties.AddProperty(typeof(PythonReplEvaluator), (PythonReplEvaluator)window.Evaluator);
+                }
                 var intellisenseController = IntellisenseControllerProvider.GetOrCreateController(
                     _serviceProvider,
                     (IComponentModel)_serviceProvider.GetService(typeof(SComponentModel)),
