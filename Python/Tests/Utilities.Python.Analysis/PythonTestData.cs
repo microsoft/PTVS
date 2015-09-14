@@ -47,7 +47,7 @@ namespace TestUtilities.Python {
             return Directory.Exists(path) ? path : null;
         }
 
-        private static string GetSolutionDir() {
+        private static string GetRootDir() {
             var dir = CommonUtils.GetParent((typeof(TestData)).Assembly.Location);
             while (!string.IsNullOrEmpty(dir) &&
                 Directory.Exists(dir) &&
@@ -61,18 +61,19 @@ namespace TestUtilities.Python {
             var binSource = Environment.GetEnvironmentVariable("PTVS_BINARIES_SOURCE");
             var testDataSource = Environment.GetEnvironmentVariable("PTVS_TESTDATA_SOURCE");
 
-            var drop = Environment.GetEnvironmentVariable("PTVS_DROP");
+            var drop = Environment.GetEnvironmentVariable("PTVS_DROP") ??
+                CommonUtils.GetParent(CommonUtils.GetParent(typeof(TestData).Assembly.Location));
             string buildRoot = null;
 
             if (string.IsNullOrEmpty(binSource)) {
-                buildRoot = buildRoot ?? GetSolutionDir();
+                buildRoot = buildRoot ?? GetRootDir();
                 binSource = FindDirectoryFromLandmark(buildRoot, BinariesInSourceTree, BinariesLandmark)
                     ?? FindDirectoryFromLandmark(drop, BinariesInTestDrop, BinariesLandmark)
                     ?? FindDirectoryFromLandmark(drop, BinariesInReleaseDrop, BinariesLandmark);
             }
 
             if (string.IsNullOrEmpty(testDataSource) && includeTestData) {
-                buildRoot = buildRoot ?? GetSolutionDir();
+                buildRoot = buildRoot ?? GetRootDir();
                 testDataSource = FindDirectoryFromLandmark(buildRoot, TestDataInSourceTree, TestDataLandmark)
                     ?? FindDirectoryFromLandmark(drop, TestDataInTestDrop, TestDataLandmark)
                     ?? FindDirectoryFromLandmark(drop, TestDataInReleaseDrop, TestDataLandmark);
