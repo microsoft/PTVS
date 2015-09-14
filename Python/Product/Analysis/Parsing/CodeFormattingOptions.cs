@@ -179,7 +179,7 @@ namespace Microsoft.PythonTools.Parsing {
 
         [CodeFormattingExample("[ a, b ]", "[a, b]")]
         [CodeFormattingCategory(CodeFormattingCategory.Spacing)]
-        [CodeFormattingDescription("SpacesWithinEmptyListExpressionShort", "SpacesWithinEmptyListExpressionLong")]
+        [CodeFormattingDescription("SpacesWithinListExpressionShort", "SpacesWithinListExpressionLong")]
         [CodeFormattingDefaultValue(false)]
         public bool? SpacesWithinListExpression { get; set; }
 
