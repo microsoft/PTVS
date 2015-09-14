@@ -18,6 +18,7 @@ using System.ComponentModel.Composition;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
+using Microsoft.VisualStudio.Utilities;
 #if DEV14_OR_LATER
 using Microsoft.VisualStudio.InteractiveWindow;
 
@@ -31,6 +32,7 @@ using Microsoft.VisualStudio.Repl;
 namespace Microsoft.PythonTools.Repl {
     [Export(typeof(IReplCommand))]
     [ReplRole("Execution")]
+    [ContentType(PythonCoreConstants.ContentType)]
     class AttachDebuggerReplCommand : IReplCommand {
         #region IReplCommand Members
 

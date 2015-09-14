@@ -27,6 +27,7 @@ using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Project;
 #if DEV14_OR_LATER
 using Microsoft.VisualStudio.InteractiveWindow;
+using Microsoft.VisualStudio.InteractiveWindow.Commands;
 #else
 using Microsoft.VisualStudio.Repl;
 #endif
@@ -39,10 +40,15 @@ namespace Microsoft.PythonTools.Repl {
     using IReplWindow = IInteractiveWindow;
     using IReplEvaluator = IInteractiveEvaluator;
     using ReplRoleAttribute = InteractiveWindowRoleAttribute;
+    using VisualStudio.Utilities;
 #endif
 
     [ReplRole("Execution")]
     [ReplRole("Reset")]
+    [ContentType(PythonCoreConstants.ContentType)]
+#if FEATURE_INTERACTIVE_COMMANDS_CONTENT_TYPE
+    [ContentType(PredefinedInteractiveCommandsContentTypes.InteractiveCommandContentTypeName)]
+#endif
     internal class PythonReplEvaluator : BasePythonReplEvaluator {
         private IPythonInterpreterFactory _interpreter;
         private readonly IInterpreterOptionsService _interpreterService;

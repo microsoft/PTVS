@@ -26,6 +26,7 @@ using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Utilities;
 #if DEV14_OR_LATER
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.InteractiveWindow.Commands;
@@ -42,6 +43,7 @@ namespace Microsoft.PythonTools.Repl {
 #endif
 
     [Export(typeof(IReplCommand))]
+    [ContentType(PythonCoreConstants.ContentType)]
     class LoadReplCommand : IReplCommand {
         const string _commentPrefix = "%%";
 

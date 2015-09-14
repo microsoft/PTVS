@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Utilities;
 #if DEV14_OR_LATER
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.InteractiveWindow.Commands;
@@ -38,6 +39,7 @@ namespace Microsoft.PythonTools.Repl {
 
     [Export(typeof(IReplCommand))]
     [ReplRole("Debug")]
+    [ContentType(PythonCoreConstants.ContentType)]
     class DebugReplGoCommand : IReplCommand2 {
         #region IReplCommand2 Members
 
