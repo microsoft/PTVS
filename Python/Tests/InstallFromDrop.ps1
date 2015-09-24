@@ -1,10 +1,11 @@
 param (
     [string] $vsversion,
+    [switch] $install,
     [switch] $remove
 )
 
 $drop = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Definition)
-$install_msi = "$drop\unsigned\PythonToolsInstaller.msi"
+$install_msi = "$drop\setup\en-us\PythonToolsInstaller.msi"
 
 $logs = mkdir "$drop\logs" -Force
 
@@ -19,13 +20,13 @@ $exitcode = 1
 $ErrorActionPreference = 'SilentlyContinue'
 
 $vsinstalldir = Split-Path (Split-Path (&{switch($vsversion) {
-    "10.0" { $env:VS100COMNTOOLS }
-    "11.0" { $env:VS110COMNTOOLS }
-    "12.0" { $env:VS120COMNTOOLS }
     "14.0" { $env:VS140COMNTOOLS }
+    "12.0" { $env:VS120COMNTOOLS }
+    "11.0" { $env:VS110COMNTOOLS }
+    "10.0" { $env:VS100COMNTOOLS }
 }}))
 
-if (-not $remove) {
+if ($install) {
     "Deploying TestSccPackage"
     copy "$drop\test\TestSccPackage.*" (mkdir "$vsinstalldir\Common7\IDE\CommonExtensions\Platform" -Force) -Force
 
@@ -41,7 +42,9 @@ if (-not $remove) {
 
     "Refreshing Completion DB"
     & "$((gp HKLM:\Software\Wow6432Node\IronPython\2.7\InstallPath\).'(default)')\ipy.exe" "$drop\test\refreshdb.py"
-} else {
+} 
+
+if ($remove) {
     "Removing TestSccPackage"
     del "$vsinstalldir\Common7\IDE\CommonExtensions\Platform\TestSccPackage.*"
 

@@ -99,6 +99,8 @@ namespace TestUtilities.UI {
                 } catch (Exception ex) {
                     Debug.WriteLine("Exception disposing VisualStudioApp: {0}", ex);
                 }
+
+                AssertListener.ThrowUnhandled();
             }
         }
 

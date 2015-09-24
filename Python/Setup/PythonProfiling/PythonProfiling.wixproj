@@ -23,6 +23,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <LinkerBindInputPaths Include="$(CopyVsixExtensionRoot)Microsoft.PythonTools.Profiling" />
+  </ItemGroup>
+  <ItemGroup>
     <Content Include="..\MergeModule.wxi">
       <Link>MergeModule.wxi</Link>
     </Content>

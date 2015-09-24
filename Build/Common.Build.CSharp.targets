@@ -6,7 +6,13 @@
   <PropertyGroup Condition="$(SuppressCommonAssemblyVersion)">
     <DefineConstants>$(DefineConstants);SUPPRESS_COMMON_ASSEMBLY_VERSION</DefineConstants>
   </PropertyGroup>
-  
+
+  <ItemGroup Condition="$(AssemblyName) == 'TestUtilities'">
+    <Compile Include="$(BuildRoot)Python\Tests\Utilities.Python.Analysis\PythonTestData.cs">
+      <Link>PythonTestData.cs</Link>
+    </Compile>
+  </ItemGroup>
+
   <!--
   Returns the paths and names required for generating a vsixmanifest file.
   The default targets for this occasionally return the wrong files depending
@@ -60,7 +66,11 @@
 
   <PropertyGroup>
     <BuildTasksProjectDir>$(BuildRoot)\Common\Tools\BuildTasks\</BuildTasksProjectDir>
-    <BuildTasksAssembly>$(BuildOutputRoot)\ToolBinaries\BuildTasks\Microsoft.VisualStudioTools.BuildTasks.dll</BuildTasksAssembly>
+    <!-- Deliberately omit trailing backslashes so we can quote these on the
+         command line. -->
+    <BuildTasksIntDir>$(IntermediateOutputRoot)BuildTasks</BuildTasksIntDir>
+    <BuildTasksOutDir>$(ToolsOutputPath)BuildTasks</BuildTasksOutDir>
+    <BuildTasksAssembly>$(BuildTasksOutDir)\Microsoft.VisualStudioTools.BuildTasks.dll</BuildTasksAssembly>
   </PropertyGroup>
   <ItemGroup>
     <BuildTasksSourceFiles Include="$(BuildTasksProjectDir)*.csproj"/>
@@ -70,14 +80,18 @@
   <!-- Use Exec rather than MSBuild here to completely isolate the task build - otherwise it interferes with the main build.
        To avoid spawning a new msbuild.exe process again and again unnecessarily, do a quick up-to-date check (effectively
        duplicating the one done by .csproj) on the target. -->
-  <Target Name="BuildBuildTasks" Inputs="@(BuildTasksSourceFiles)" Outputs="$(BuildTasksAssembly)">
-    <Exec Command='"$(MSBuildBinPath)\msbuild.exe" "$(BuildTasksProjectDir)BuildTasks.csproj" /p:Configuration=$(Configuration) /p:VSTarget=$(VSTarget) /p:BuildOutputRoot="$(BuildOutputRoot.TrimEnd(`\`))\\"'/> 
+  <Target Name="_BuildBuildTasks"
+          BeforeTargets="ExtractLambdasFromXaml"
+          Condition="$(MSBuildProjectDir) != $(BuildTasksProjectDir)"
+          Inputs="@(BuildTasksSourceFiles)"
+          Outputs="$(BuildTasksAssembly)">
+    <Exec Command='"$(MSBuildBinPath)\msbuild.exe" "$(BuildTasksProjectDir)BuildTasks.csproj" /p:Configuration=$(Configuration) /p:VSTarget=$(VSTarget) /p:BuildRoot="$(BuildRoot.TrimEnd(`\`))\\" /p:OutputPath="$(BuildTasksOutDir)" /p:IntermediateOutputPath="$(BuildTasksIntDir)"'/> 
+    <Touch Files='$(BuildTasksAssembly)'/>
   </Target>
 
   <UsingTask AssemblyFile="$(BuildTasksAssembly)" TaskName="Microsoft.VisualStudioTools.BuildTasks.ExtractLambdasFromXaml"/>
 
   <Target Name="ExtractLambdasFromXaml"
-          DependsOnTargets="BuildBuildTasks"
           Inputs="@(Page)"
           Outputs="@(Page->'$(IntermediateOutputPath)%(Filename).g.lambdas$(DefaultLanguageSourceExtension)')">
     <ExtractLambdasFromXaml InputFileName="@(Page->'%(FullPath)')" OutputFileName="$(IntermediateOutputPath)%(Filename).g.lambdas$(DefaultLanguageSourceExtension)" Language="$(Language)">

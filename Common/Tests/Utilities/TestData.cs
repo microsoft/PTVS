@@ -25,7 +25,7 @@ namespace TestUtilities {
         const string BinariesAltSourcePath = @"Tests";
         const string BinariesSourcePath = @"BuildOutput\" +
 #if DEBUG
-            @"Debug" + 
+            @"Debug" +
 #else
             @"Release" + 
 #endif
@@ -37,14 +37,9 @@ namespace TestUtilities {
 
         private static string GetSolutionDir() {
             var dir = Path.GetDirectoryName((typeof(TestData)).Assembly.Location);
-            while (!string.IsNullOrEmpty(dir) && Directory.Exists(dir)) {
-                if (File.Exists(Path.Combine(dir, "build.root"))) {
-                    break;
-                }
-                if (File.Exists(Path.Combine(dir, "staging", "build.root"))) {
-                    dir = Path.Combine(dir, "staging");
-                    break;
-                }
+            while (!string.IsNullOrEmpty(dir) &&
+                Directory.Exists(dir) &&
+                !File.Exists(Path.Combine(dir, "build.root"))) {
                 dir = Path.GetDirectoryName(dir);
             }
             return dir ?? "";
@@ -151,3 +146,4 @@ namespace TestUtilities {
         }
     }
 }
+

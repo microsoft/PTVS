@@ -34,15 +34,18 @@
     <DefineConstants>
         VSTargetVersion=$(VSTarget);
         MsiVersion=$(FileVersion);
-        ReleaseVersion=$(FileVersionPrefix)
+        ReleaseVersion=$(FileVersionPrefix);
     </DefineConstants>
     <DefineConstants Condition="'$(CustomBuildIdentifier)' != ''">
-      $(DefineConstants);
-      CustomBuildIdentifier=$(CustomBuildIdentifier)
+      $(DefineConstants);CustomBuildIdentifier=$(CustomBuildIdentifier);
     </DefineConstants>
-    <!-- If SignedBinariesPath has been provided, don't build references. -->
-    <BuildProjectReferences Condition="'$(BuildProjectReferences)' == '' and '$(SignedBinariesPath)' != ''">false</BuildProjectReferences>
+    <BuildProjectReferences Condition="'$(BuildProjectReferences)' == ''">false</BuildProjectReferences>
+    <SignOutput>true</SignOutput>
   </PropertyGroup>
+  
+  <Target Name="Show">
+    <Message Text="$(DefineConstants)" Importance="high" />
+  </Target>
   
   <ItemDefinitionGroup>
     <BindInputPaths>

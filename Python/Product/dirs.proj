@@ -41,12 +41,15 @@
     <ProjectFile Include="Django\Django.csproj"/>
 
     <ProjectFile Include="ExpressInteractiveWorkaround\ExpressInteractiveWorkaround.csproj" Condition="$(IncludeExpressInteractiveWorkaround)" />
+    <ProjectFile Include="$(PTVSPRPath)VsLogger\VsLogger.csproj" Condition="'$(IncludeVsLogger)' == 'True'"/>
     
     <ProjectFile Include="AnalysisBrowser\AnalysisBrowser.csproj" />
     <ProjectFile Include="AnalysisMemoryTester\AnalysisMemoryTester.csproj" />
     <ProjectFile Include="EnvironmentsListHost\EnvironmentsListHost.csproj" />
 
     <ProjectFile Include="ML\ML.csproj" Condition="$(IncludeML)"/>
+    
+    <ProjectFile Include="Uwp\Uwp.csproj" Condition="$(IncludeUwp)"/>
   </ItemGroup>
 
   <Import Project="$(TargetsPath)\Common.Build.Traversal.targets" />

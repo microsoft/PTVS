@@ -433,44 +433,72 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             // we want to pick up all of the MEF exports which are available, but they don't
             // depend upon us.  So if we're just running some tests in the IDE when the deployment
             // happens it won't have the DLLS with the MEF exports.  So we copy them here.
+#if USE_PYTHON_TESTDATA
+            TestUtilities.Python.PythonTestData.Deploy(includeTestData: false);
+#else
             TestData.Deploy(null, includeTestData: false);
+#endif
 
             // load all of the available DLLs that depend upon TestUtilities into our catalog
             List<AssemblyCatalog> catalogs = new List<AssemblyCatalog>();
             List<Type> packageTypes = new List<Type>();
-            foreach (var file in Directory.GetFiles(runningLoc, "*.dll")) {
-                if (file.EndsWith("VsLogger.dll", StringComparison.OrdinalIgnoreCase)) {
-                    continue;
-                }
 
-                Assembly asm;
-                try {
-                    asm = Assembly.Load(Path.GetFileNameWithoutExtension(file));
-                } catch {
-                    continue;
-                }
-
-                Console.WriteLine("Including {0}", file);
-                try {
-                    foreach (var type in asm.GetTypes()) {
-                        if (type.IsDefined(typeof(PackageRegistrationAttribute), false)) {
-                            packageTypes.Add(type);
-                        }
+            AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
+            try {
+                foreach (var file in Directory.GetFiles(runningLoc, "*.dll")) {
+                    if (file.EndsWith("VsLogger.dll", StringComparison.OrdinalIgnoreCase)) {
+                        continue;
                     }
-                    catalogs.Add(new AssemblyCatalog(asm));
-                } catch (TypeInitializationException tix) {
-                    Console.WriteLine(tix);
-                } catch (ReflectionTypeLoadException tlx) {
-                    Console.WriteLine(tlx);
-                } catch (IOException iox) {
-                    Console.WriteLine(iox);
+
+                    Assembly asm;
+                    try {
+                        asm = Assembly.Load(Path.GetFileNameWithoutExtension(file));
+                    } catch {
+                        continue;
+                    }
+
+                    Console.WriteLine("Including {0}", file);
+                    try {
+                        foreach (var type in asm.GetTypes()) {
+                            if (type.IsDefined(typeof(PackageRegistrationAttribute), false)) {
+                                packageTypes.Add(type);
+                            }
+                        }
+                        catalogs.Add(new AssemblyCatalog(asm));
+                    } catch (TypeInitializationException tix) {
+                        Console.WriteLine(tix);
+                    } catch (ReflectionTypeLoadException tlx) {
+                        Console.WriteLine(tlx);
+                    } catch (IOException iox) {
+                        Console.WriteLine(iox);
+                    }
                 }
+            } finally {
+                AppDomain.CurrentDomain.AssemblyResolve -= CurrentDomain_AssemblyResolve;
             }
 
             return new CachedVsInfo(
                 new AggregateCatalog(catalogs.ToArray()),
                 packageTypes
             );
+        }
+
+        private static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args) {
+            Assembly asm = null;
+            var name = new AssemblyName(args.Name);
+            var path = Path.Combine(VisualStudioPath.PrivateAssemblies, name.Name + ".dll");
+            if (File.Exists(path)) {
+                asm = Assembly.LoadFile(path);
+            } else {
+                path = Path.Combine(VisualStudioPath.PublicAssemblies, name.Name + ".dll");
+                if (File.Exists(path)) {
+                    asm = Assembly.LoadFile(path);
+                }
+            }
+            if (asm != null && asm.FullName != name.FullName) {
+                asm = null;
+            }
+            return asm;
         }
 
         #endregion

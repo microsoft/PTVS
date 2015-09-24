@@ -18,7 +18,7 @@
 
   <ItemGroup>
     <!-- Registration files -->
-    <File Include="Uwp\extension.vsixmanifest" />
+    <File Include="extension.vsixmanifest" />
     <File Include="Microsoft.PythonTools.Uwp.pkgdef" />
     
     <!-- Debugger -->

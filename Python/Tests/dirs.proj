@@ -28,13 +28,13 @@
     <ItemGroup>
       <_RawTestDataFiles Include="TestData\**\*" />
       <_TestDataFiles Include="@(_RawTestDataFiles)">
-        <TargetPath>$(BuildOutputRoot)Tests\TestData\%(_RawTestDataFiles.RecursiveDir)%(_RawTestDataFiles.Filename)%(_RawTestDataFiles.Extension)</TargetPath>
+        <TargetPath>$(OutputPath)TestData\%(_RawTestDataFiles.RecursiveDir)%(_RawTestDataFiles.Filename)%(_RawTestDataFiles.Extension)</TargetPath>
       </_TestDataFiles>
       <_TestDataFiles Include="InstallFromDrop.ps1">
-        <TargetPath>$(BuildOutputRoot)Tests\InstallFromDrop.ps1</TargetPath>
+        <TargetPath>$(OutputPath)InstallFromDrop.ps1</TargetPath>
       </_TestDataFiles>
       <_TestDataFiles Include="refreshdb.py">
-        <TargetPath>$(BuildOutputRoot)Tests\refreshdb.py</TargetPath>
+        <TargetPath>$(OutputPath)refreshdb.py</TargetPath>
       </_TestDataFiles>
     </ItemGroup>
     <Copy SourceFiles="@(_TestDataFiles)"
@@ -44,7 +44,7 @@
           Retries="3"
           RetryDelayMilliseconds="1000" />
     
-    <WriteLinesToFile File="$(BuildOutputRoot)build.root" Lines="Test data was included, so mark as top of tree" Overwrite="true" />
+    <WriteLinesToFile File="$(OutputPath)build.root" Lines="Test data was included, so mark as top of tree" Overwrite="true" />
   </Target>
 
 </Project>

@@ -43,53 +43,80 @@ namespace TestUtilities.SharedProject {
             // we want to pick up all of the MEF exports which are available, but they don't
             // depend upon us.  So if we're just running some tests in the IDE when the deployment
             // happens it won't have the DLLS with the MEF exports.  So we copy them here.
+#if USE_PYTHON_TESTDATA
+            TestUtilities.Python.PythonTestData.Deploy(includeTestData: false);
+#else
             TestData.Deploy(null, includeTestData: false);
+#endif
 
-            // load all of the available DLLs that depend upon TestUtilities into our catalog
-            List<AssemblyCatalog> catalogs = new List<AssemblyCatalog>();
-            foreach (var file in Directory.GetFiles(runningLoc, "*.dll")) {
-                TryAddAssembly(catalogs, file);
-            }
+            AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
+            try {
+                // load all of the available DLLs that depend upon TestUtilities into our catalog
+                List<AssemblyCatalog> catalogs = new List<AssemblyCatalog>();
+                foreach (var file in Directory.GetFiles(runningLoc, "*.dll")) {
+                    TryAddAssembly(catalogs, file);
+                }
 
-            // Compose everything
-            var catalog = new AggregateCatalog(catalogs.ToArray());
+                // Compose everything
+                var catalog = new AggregateCatalog(catalogs.ToArray());
 
-            var container = Container = new CompositionContainer(catalog);
-            var compBatch = new CompositionBatch();
-            container.Compose(compBatch);
+                var container = Container = new CompositionContainer(catalog);
+                var compBatch = new CompositionBatch();
+                container.Compose(compBatch);
 
-            // Initialize our ProjectTypes information from the catalog.            
+                // Initialize our ProjectTypes information from the catalog.            
 
-            // First, get a mapping from extension type to all available IProjectProcessor's for
-            // that extension
-            var processorsMap = container
-                .GetExports<IProjectProcessor, IProjectProcessorMetadata>()
-                .GroupBy(x => x.Metadata.ProjectExtension)
-                .ToDictionary(
-                    x => x.Key, 
-                    x => x.Select(lazy => lazy.Value).ToArray(), 
-                    StringComparer.OrdinalIgnoreCase
-                );
-
-            // Then create the ProjectTypes
-            ProjectTypes = container
-                .GetExports<ProjectTypeDefinition, IProjectTypeDefinitionMetadata>()
-                .Select(lazyVal => {
-                    var md = lazyVal.Metadata;
-                    IProjectProcessor[] processors;
-                    processorsMap.TryGetValue(md.ProjectExtension, out processors);
-
-                    return new ProjectType(
-                        md.CodeExtension,
-                        md.ProjectExtension,
-                        Guid.Parse(md.ProjectTypeGuid),
-                        md.SampleCode,
-                        processors
+                // First, get a mapping from extension type to all available IProjectProcessor's for
+                // that extension
+                var processorsMap = container
+                    .GetExports<IProjectProcessor, IProjectProcessorMetadata>()
+                    .GroupBy(x => x.Metadata.ProjectExtension)
+                    .ToDictionary(
+                        x => x.Key,
+                        x => x.Select(lazy => lazy.Value).ToArray(),
+                        StringComparer.OrdinalIgnoreCase
                     );
-                });
+
+                // Then create the ProjectTypes
+                ProjectTypes = container
+                    .GetExports<ProjectTypeDefinition, IProjectTypeDefinitionMetadata>()
+                    .Select(lazyVal => {
+                        var md = lazyVal.Metadata;
+                        IProjectProcessor[] processors;
+                        processorsMap.TryGetValue(md.ProjectExtension, out processors);
+
+                        return new ProjectType(
+                            md.CodeExtension,
+                            md.ProjectExtension,
+                            Guid.Parse(md.ProjectTypeGuid),
+                            md.SampleCode,
+                            processors
+                        );
+                    });
+            } finally {
+                AppDomain.CurrentDomain.AssemblyResolve -= CurrentDomain_AssemblyResolve;
+            }
 
             // something's broken if we don't have any languages to test against, so fail the test.
             Assert.IsTrue(ProjectTypes.Count() > 0, "no project types were registered and no tests will run");
+        }
+
+        private static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args) {
+            Assembly asm = null;
+            var name = new AssemblyName(args.Name);
+            var path = Path.Combine(VisualStudioPath.PrivateAssemblies, name.Name + ".dll");
+            if (File.Exists(path)) {
+                asm = Assembly.LoadFile(path);
+            } else {
+                path = Path.Combine(VisualStudioPath.PublicAssemblies, name.Name + ".dll");
+                if (File.Exists(path)) {
+                    asm = Assembly.LoadFile(path);
+                }
+            }
+            if (asm != null && asm.FullName != name.FullName) {
+                asm = null;
+            }
+            return asm;
         }
 
         private static void TryAddAssembly(List<AssemblyCatalog> catalogs, string file) {

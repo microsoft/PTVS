@@ -1,0 +1,108 @@
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <IntermediateOutputPathSuffix>signlayout\</IntermediateOutputPathSuffix>
+  </PropertyGroup>
+  
+  <Import Project="SetupProjectBefore.settings" />
+  <Import Project="$(TargetsPath)\Common.Shim.targets" />
+  <Import Project="$(CustomBeforeMicrosoftCommonTargets)" Condition="'$(CustomBeforeMicrosoftCommonTargets)' != '' and exists('$(CustomBeforeMicrosoftCommonTargets)')" />
+  
+  <PropertyGroup>
+    <OutputPath>$(BinariesOutputPath)</OutputPath>
+    <OutDir>$(BinariesOutputPath)</OutDir>
+  </PropertyGroup>
+  
+  <Target Name="Build" />
+  <Target Name="AfterBuild" AfterTargets="Build" />
+  
+  <Target Name="Clean" />
+
+  <ItemGroup>
+    <ManagedFiles Include="
+        Microsoft.PythonTools.Analysis.dll;
+        Microsoft.PythonTools.Analyzer.exe;
+        Microsoft.PythonTools.Attacher.exe;
+        Microsoft.PythonTools.AttacherX86.exe;
+        Microsoft.PythonTools.BuildTasks.dll;
+        Microsoft.PythonTools.Debugger.dll;
+        Microsoft.PythonTools.EnvironmentsList.dll;
+        Microsoft.PythonTools.dll;
+        Microsoft.PythonTools.VSInterpreters.dll;
+        Microsoft.PythonTools.ImportWizard.dll;
+        Microsoft.PythonTools.IronPython.dll;
+        Microsoft.PythonTools.IronPython.Interpreter.dll;
+        Microsoft.PythonTools.Profiling.dll;
+        Microsoft.PythonTools.ProjectWizards.dll;
+        Microsoft.PythonTools.Django.dll;
+        Microsoft.IronPythonTools.Resolver.dll
+        "/>
+    
+    <ManagedFiles Include="Microsoft.PythonTools.ExpressInteractiveWorkaround.dll" Condition="$(IncludeExpressInteractiveWorkaround)" />
+    <ManagedFiles Include="Microsoft.PythonTools.Hpc.dll;Microsoft.PythonTools.MpiShim.exe" Condition="$(IncludeHpc)" />
+    <ManagedFiles Include="Microsoft.PythonTools.ML.dll" Condition="$(IncludeML)" />
+    <ManagedFiles Include="Microsoft.VisualStudio.ReplWindow.dll" Condition="$(IncludeReplWindow)" />
+    <ManagedFiles Include="Microsoft.PythonTools.TestAdapter.dll" Condition="$(IncludeTestAdapter)" />
+    <ManagedFiles Include="Microsoft.PythonTools.Uwp.dll" Condition="$(IncludeUwp)" />
+    <ManagedFiles Include="Microsoft.PythonTools.VsLogger.dll" Condition="'$(IncludeVsLogger)' == 'True'" />
+
+    <ManagedFiles Include="
+        Microsoft.PythonTools.WebRole.dll;
+        Microsoft.PythonTools.AzureSetup.exe
+        ">
+        <SkipStrongName>true</SkipStrongName>
+    </ManagedFiles>
+
+
+    <UnmanagedFiles Include="
+        PyDebugAttach.dll;
+        PyDebugAttachX86.dll;
+        Microsoft.PythonTools.Debugger.Helper.x86.dll;
+        Microsoft.PythonTools.Debugger.Helper.x64.dll;
+        VsPyProf.dll;
+        VsPyProfX86.dll
+        "/>
+
+    <FilesToSign Include="@(ManagedFiles->'$(BinariesOutputPath)%(Identity)')">
+      <Authenticode>MicrosoftSHA1</Authenticode>
+      <StrongName Condition="!$([msbuild]::ValueOrDefault(%(SkipStrongName), `false`))">StrongName</StrongName>
+      <SignedPath>$(BinariesOutputPath)%(Filename)%(Extension)</SignedPath>
+      <UnsignedPath>$(UnsignedOutputPath)%(Filename)%(Extension)</UnsignedPath>
+    </FilesToSign>
+    
+    <FilesToSign Include="@(UnmanagedFiles->'$(BinariesOutputPath)%(Identity)')">
+      <Authenticode>MicrosoftSHA1</Authenticode>
+      <SignedPath>$(BinariesOutputPath)%(Filename)%(Extension)</SignedPath>
+      <UnsignedPath>$(UnsignedOutputPath)%(Filename)%(Extension)</UnsignedPath>
+    </FilesToSign>
+  </ItemGroup>
+  
+  <Target Name="_PreserveUnsigned" Inputs="%(FilesToSign.SignedPath)" Outputs="%(FilesToSign.UnsignedPath)" BeforeTargets="Build">
+    <Copy SourceFiles="%(FilesToSign.SignedPath)" DestinationFiles="%(FilesToSign.UnsignedPath)" />
+  </Target>
+
+  <Target Name="ListFiles">
+    <Message Text="OutputPath: $(OutputPath)" Importance="high" />
+    <Message Text="@(FilesToSign->'%(Identity) (%(Authenticode), %(StrongName))', '
+')" Importance="high" />
+  </Target>
+
+  <Target Name="_GetBinariesInLayout">
+    <ItemGroup>
+      <_BinariesInLayout Include="$(LayoutOutputPath)**\*.exe;$(LayoutOutputPath)**\*.dll" />
+      <_BinariesWithSignedSource Include="$(BinariesOutputPath)%(_BinariesInLayout.RecursiveDir)%(_BinariesInLayout.Filename)%(_BinariesInLayout.Extension)">
+        <TargetPath>%(_BinariesInLayout.FullPath)</TargetPath>
+      </_BinariesWithSignedSource>
+      <_BinariesToCopy Include="@(_BinariesWithSignedSource)" Condition="Exists(%(FullPath))" />
+    </ItemGroup>
+  </Target>
+  
+  <Target Name="_UpdateLayoutWithSignedBinaries"
+          DependsOnTargets="_GetBinariesInLayout"
+          Inputs="%(_BinariesToCopy.FullPath)"
+          Outputs="%(_BinariesToCopy.TargetPath)"
+          AfterTargets="SignFiles">
+    <Copy SourceFiles="%(_BinariesToCopy.FullPath)" DestinationFiles="%(_BinariesToCopy.TargetPath)" />
+  </Target>
+
+  <Import Project="$(CustomAfterMicrosoftCommonTargets)" Condition="'$(CustomAfterMicrosoftCommonTargets)' != '' and exists('$(CustomAfterMicrosoftCommonTargets)')" />
+</Project>

@@ -298,7 +298,7 @@
       </Content>
       <Content Include="$(NatvisOutput)">
         <IncludeInVSIX>true</IncludeInVSIX>
-        <VSIXSubPath>.</VSIXSubPath>
+        <VSIXSubPath>Visualizers</VSIXSubPath>
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         <Link>Visualizers\$([System.IO.Path]::GetFileName($(NatvisOutput)))</Link>
       </Content>

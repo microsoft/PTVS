@@ -1,7 +1,7 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="Common.Build.CSharp.targets" Condition="'$(Language)' == 'C#'" />
   <Import Project="Common.Build.VSSDK.targets" Condition="$(UseVSSDK) or $(UseVSSDKTemplateOnly)" />
-  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" Condition="'$(Language)' == 'C++'" />
+  <Import Project="Common.Build.Cpp.targets" Condition="'$(Language)' == 'C++'" />
   <Import Project="Common.Build.Wix.targets" Condition="'$(Language)' == 'WiX'" />
 
   <!--
@@ -120,29 +120,5 @@
     <ItemGroup>
       <_DebugSymbolsFinalOutputProjectOutputGroupOutput Include="@(DebugSymbolsProjectOutputGroupOutput->'%(FinalOutputPath)'" />
     </ItemGroup>
-  </Target>
-
-  <!--
-  Copies certain outputs from the project to the specified path.
-  
-  This is used when building releases.
-  -->
-  <Target Name="_CopyOutputsToPath"
-          AfterTargets="AfterBuild"
-          DependsOnTargets="BuiltProjectOutputGroup;DebugSymbolsFinalOutputProjectOutputGroup"
-          Condition="'$(CopyOutputsToPath)' != '' and $(MSBuildProjectExtension) != '.wixproj' and Exists($(TargetPath))">
-    <PropertyGroup>
-      <CopyOutputsToPath Condition="!HasTrailingSlash($(CopyOutputsToPath))">$(CopyOutputsToPath)\</CopyOutputsToPath>
-    </PropertyGroup>
-
-    <MakeDir Directories="$(CopyOutputsToPath)UnsignedBinaries;$(CopyOutputsToPath)Symbols"
-             ContinueOnError="true" />
-
-    <Copy SourceFiles="$(TargetPath)"
-          DestinationFiles="$(CopyOutputsToPath)UnsignedBinaries\$(TargetName)$(TargetExt)"
-          SkipUnchangedFiles="true" />
-
-    <Copy SourceFiles="@(DebugSymbolsProjectOutputGroupOutput->'%(FinalOutputPath)')"
-          DestinationFolder="$(CopyOutputsToPath)Symbols" />
   </Target>
 </Project>

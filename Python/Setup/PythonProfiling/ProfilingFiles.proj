@@ -14,7 +14,7 @@
 
   <ItemGroup>
     <!-- Registration files -->
-    <File Include="Profiling\extension.vsixmanifest" />
+    <File Include="extension.vsixmanifest" />
     <File Include="Microsoft.PythonTools.Profiling.pkgdef" />
 
     <!-- Core extension -->

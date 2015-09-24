@@ -1,9 +1,9 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <BuildRoot>$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), build.root))</BuildRoot>
-    <OutputPathSuffix>Tests\</OutputPathSuffix>
-    <IntermediateOutputPathSuffix>obj\Test_$(MSBuildProjectName)\</IntermediateOutputPathSuffix>
-    <CopyLocalReferenceVsixItems>True</CopyLocalReferenceVsixItems>
+    <OutputPathSuffix Condition="$(TestOutputPathSuffix) == ''">binaries\</OutputPathSuffix>
+    <OutputPathSuffix Condition="$(TestOutputPathSuffix) != ''">$(TestOutputPathSuffix)\</OutputPathSuffix>
+    <IntermediateOutputPathSuffix>test_$(MSBuildProjectName)\</IntermediateOutputPathSuffix>
   </PropertyGroup>
   <Import Project="$(BuildRoot)\Build\Common.Build.settings" />
   <Import Project="$(BuildRoot)\Python\products.settings" />

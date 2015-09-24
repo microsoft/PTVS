@@ -12,6 +12,8 @@
     <Language>C#</Language>        <!-- Duplicated from the C# targets file -->
     <Platform Condition="'$(Platform)'==''">x86</Platform>
 
+    <DefineConstants>$(DefineConstants);USE_PYTHON_TESTDATA</DefineConstants>
+
     <CodeAnalysisTreatWarningsAsErrors>true</CodeAnalysisTreatWarningsAsErrors>
     <!-- This eliminates the warning CA0060, EnvDTE Version=7.0 not found, for VS 10 installations. -->
     <CodeAnalysisAdditionalOptions> /assemblycomparemode:StrongNameIgnoringVersion</CodeAnalysisAdditionalOptions>
@@ -60,7 +62,6 @@
 
   <PropertyGroup>
     <SignManifests>false</SignManifests>
-    <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>$(TargetsPath)\FinalPublicKey.snk</AssemblyOriginatorKeyFile>
     <DelaySign>true</DelaySign>
   </PropertyGroup>

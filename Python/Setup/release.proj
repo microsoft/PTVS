@@ -1,0 +1,32 @@
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="SetupProjectBefore.settings" />
+
+  <ItemGroup>
+    <ProjectFile Include="vsix.proj" />
+    <ProjectFile Include="setup.proj" />
+  </ItemGroup>
+
+  <Import Project="$(TargetsPath)\Common.Build.Traversal.targets" />
+
+  <PropertyGroup>
+    <_CBI Condition="$(CustomBuildIdentifier) != ''"> $(CustomBuildIdentifier)</_CBI>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ReleaseFile Include="$(SetupOutputPath)en-us\PythonToolsInstaller.msi">
+      <Name>PTVS$(_CBI) VS $(VSTargetName).msi</Name>
+    </ReleaseFile>
+    <ReleaseFile Include="$(SetupOutputPath)Microsoft.PythonTools.ML.vsix" Condition="Exists('$(SetupOutputPath)Microsoft.PythonTools.ML.vsix')">
+      <Name>PTVS ML$(_CBI).vsix</Name>
+    </ReleaseFile>
+    <ReleaseFile Include="$(SetupOutputPath)Microsoft.PythonTools.Samples.vsix" Condition="Exists('$(SetupOutputPath)Microsoft.PythonTools.Samples.vsix')">
+      <Name>PTVS Samples$(_CBI).vsix</Name>
+    </ReleaseFile>
+  </ItemGroup>
+
+  <Target Name="CopyToRelease" AfterTargets="AfterBuild" Inputs="@(ReleaseFile)" Outputs="$(ReleaseOutputPath)%(ReleaseFile.Name)'">
+    <Copy SourceFiles="%(ReleaseFile.FullPath)"
+          DestinationFiles="$(ReleaseOutputPath)%(Name)"
+          OverwriteReadOnlyFiles="true" />
+  </Target>
+</Project>

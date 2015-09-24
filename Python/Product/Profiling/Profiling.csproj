@@ -44,6 +44,7 @@
     <RootNamespace>Microsoft.PythonTools</RootNamespace>
     <AssemblyName>Microsoft.PythonTools.Profiling</AssemblyName>
     <UseVSSDK>true</UseVSSDK>
+    <CreateVsixContainer>true</CreateVsixContainer>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'x86' ">
     <PlatformTarget>x86</PlatformTarget>

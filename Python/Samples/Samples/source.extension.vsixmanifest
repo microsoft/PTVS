@@ -1,0 +1,41 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Vsix xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Version="1.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2010">
+  <Identifier Id="D793AEE5-B080-4A0F-AF00-4F40016BB0D2">
+    <Name>Python Tools for Visual Studio - Samples</Name>
+    <Author>Microsoft</Author>
+    <Version>2.1</Version>
+    <Description xml:space="preserve">Python Tools for Visual Studio sample project templates.</Description>
+    <Locale>1033</Locale>
+    <License>Python Tools for VS License.rtf</License>
+    <MoreInfoUrl>http://aka.ms/ptvs</MoreInfoUrl>
+    <GettingStartedGuide>http://aka.ms/ptvs</GettingStartedGuide>
+    <SupportedProducts>
+      <VisualStudio Version="10.0">
+        <Edition>Pro</Edition>
+      </VisualStudio>
+      <VisualStudio Version="11.0">
+        <Edition>Pro</Edition>
+      </VisualStudio>
+      <VisualStudio Version="12.0">
+        <Edition>IntegratedShell</Edition>
+        <Edition>VSWinDesktopExpress</Edition>
+        <Edition>VWDExpress</Edition>
+      </VisualStudio>
+      <VisualStudio Version="14.0">
+        <Edition>IntegratedShell</Edition>
+        <Edition>VSWinDesktopExpress</Edition>
+        <Edition>VWDExpress</Edition>
+      </VisualStudio>
+    </SupportedProducts>
+    <SupportedFrameworkRuntimeEdition MinVersion="4.5" />
+  </Identifier>
+  <References>
+    <Reference Id="96492FC7-7BC6-46F7-8559-66BB4E09FD1E" MinVersion="2.1">
+      <Name>Python Tools for Visual Studio</Name>
+      <MoreInfoUrl>http://aka.ms/ptvs</MoreInfoUrl>
+    </Reference>
+  </References>
+  <Content>
+    <ProjectTemplate>ProjectTemplates</ProjectTemplate>
+  </Content>
+</Vsix>
