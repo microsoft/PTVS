@@ -31,6 +31,7 @@ using Microsoft.VisualStudio.InteractiveWindow.Commands;
 #else
 using Microsoft.VisualStudio.Repl;
 #endif
+using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 using SR = Microsoft.PythonTools.Project.SR;
@@ -40,7 +41,6 @@ namespace Microsoft.PythonTools.Repl {
     using IReplWindow = IInteractiveWindow;
     using IReplEvaluator = IInteractiveEvaluator;
     using ReplRoleAttribute = InteractiveWindowRoleAttribute;
-    using VisualStudio.Utilities;
 #endif
 
     [ReplRole("Execution")]
