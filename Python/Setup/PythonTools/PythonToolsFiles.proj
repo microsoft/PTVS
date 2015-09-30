@@ -174,13 +174,6 @@
                          ptvsd\__main__.py">
       <InstallDirectory>Dir_ptvsd</InstallDirectory>
     </SharedFile>
-
-    <!-- A workaround for an interactive window issue in VWD and WD 14.0 -->
-    <File Condition="$(VSTarget) == '14.0'"
-          Include="!(bindpath.bin)\Microsoft.PythonTools.ExpressInteractiveWorkaround.dll;
-                   Microsoft.PythonTools.ExpressInteractiveWorkaround.pkgdef">
-        <IncludeInVS>false</IncludeInVS>
-    </File>
   </ItemGroup>
 
   <Import Project="..\WixGenerator.targets"/>
