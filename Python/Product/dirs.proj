@@ -40,7 +40,6 @@
     <ProjectFile Include="WebRole\WebRole.csproj"/>
     <ProjectFile Include="Django\Django.csproj"/>
 
-    <ProjectFile Include="ExpressInteractiveWorkaround\ExpressInteractiveWorkaround.csproj" Condition="$(IncludeExpressInteractiveWorkaround)" />
     <ProjectFile Include="$(PTVSPRPath)VsLogger\VsLogger.csproj" Condition="'$(IncludeVsLogger)' == 'True'"/>
     
     <ProjectFile Include="AnalysisBrowser\AnalysisBrowser.csproj" />
