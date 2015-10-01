@@ -26,7 +26,7 @@
     <Parameter name="VSApplication" value="VisualStudio"/>
     <Parameter name="VSExecutable" value="devenv"/>
     <Parameter name="VSVersion" value="14.0"/>
-    <Parameter name="VSHive" value="Default"/>
+    <!--<Parameter name="VSHive" value=""/>-->
     <Parameter name="VSDebugMixedMode" value="false"/>
     <Parameter name="VSLaunchTimeoutInSeconds" value="300"/>
   </TestRunParameters>
