@@ -15,7 +15,7 @@
           BeforeTargets="BeforeBuild"
           Condition="'@(FilesProj)' != ''">
     <MSBuild Projects="%(FilesProj.FullPath)"
-             Properties="VSTarget=$(VSTarget);Configuration=$(Configuration);TargetPath=$(IntermediateOutputPath)%(FilesProj.FileName).wxs" />
+             Properties="VSTarget=$(VSTarget);Configuration=$(Configuration);TargetPath=$(IntermediateOutputPath)%(FilesProj.FileName).wxs;%(FilesProj.Properties)" />
     <ItemGroup>
       <Compile Include="@(FilesProj->'$(IntermediateOutputPath)%(FileName).wxs')" />
     </ItemGroup>
