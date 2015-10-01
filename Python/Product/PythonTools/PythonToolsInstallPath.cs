@@ -61,7 +61,7 @@ namespace Microsoft.PythonTools {
             return string.Empty;
         }
 
-        public static string GetFile(string filename) {
+        public static string GetFile(string filename, bool retry = true) {
             string path = GetFromAssembly(typeof(PythonToolsInstallPath).Assembly, filename);
             if (!string.IsNullOrEmpty(path)) {
                 return path;
@@ -70,6 +70,11 @@ namespace Microsoft.PythonTools {
             path = GetFromRegistry(filename);
             if (!string.IsNullOrEmpty(path)) {
                 return path;
+            }
+
+            if (retry) {
+                System.Diagnostics.Debugger.Launch();
+                return GetFile(filename, false);
             }
 
             throw new InvalidOperationException(
