@@ -56,12 +56,6 @@ namespace Microsoft.PythonTools.Interpreter {
         /// <returns>The names of the modules that were found.</returns>
         public static async Task<HashSet<string>> FindModulesAsync(this IPythonInterpreterFactory factory, params string[] moduleNames) {
             var withDb = factory as PythonInterpreterFactoryWithDatabase;
-            if (withDb != null && withDb.IsCurrent) {
-                var db = withDb.GetCurrentDatabase();
-                var set = new HashSet<string>(moduleNames.Where(m => db.GetModule(m) != null));
-                return set;
-            }
-
             var expected = new HashSet<string>(moduleNames);
 
             if (withDb != null) {

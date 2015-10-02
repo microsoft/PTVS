@@ -127,6 +127,7 @@ namespace Microsoft.PythonTools.Project {
             var modules = await factory.FindModulesAsync("pip", "virtualenv", "venv");
             bool hasPip = modules.Contains("pip");
             bool hasVirtualEnv = modules.Contains("virtualenv") || modules.Contains("venv");
+            bool useVEnv = modules.Contains("venv") && !modules.Contains("virtualenv");
 
             if (!hasVirtualEnv) {
                 if (!hasPip) {
@@ -138,7 +139,7 @@ namespace Microsoft.PythonTools.Project {
                 }
             }
 
-            await ContinueCreate(provider, factory, path, false, output);
+            await ContinueCreate(provider, factory, path, useVEnv, output);
         }
 
         public static InterpreterFactoryCreationOptions FindInterpreterOptions(
