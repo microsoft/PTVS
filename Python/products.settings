@@ -17,9 +17,6 @@
     <IncludeML Condition="'$(IncludeML)' == ''">true</IncludeML>
     <IncludeML Condition="'$(VSTarget)' == '10.0' or '$(VSTarget)' == '11.0'">false</IncludeML>
 
-    <IncludeExpressInteractiveWorkaround Condition="'$(IncludeExpressInteractiveWorkaround)' == '' and $(VSMajorVersion) == 14">true</IncludeExpressInteractiveWorkaround>
-    <IncludeExpressInteractiveWorkaround Condition="'$(IncludeExpressInteractiveWorkaround)' == ''">false</IncludeExpressInteractiveWorkaround>
-
     <!-- Include ReplWindow by default, and force to false for VS 2015 and later -->
     <IncludeReplWindow Condition="'$(IncludeReplWindow)' == ''">true</IncludeReplWindow>
     <IncludeReplWindow Condition="$(VSMajorVersion) >= 14">false</IncludeReplWindow>
