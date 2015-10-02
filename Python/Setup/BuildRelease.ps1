@@ -248,7 +248,6 @@ $managed_files = (
     "Microsoft.PythonTools.BuildTasks.dll", 
     "Microsoft.PythonTools.Debugger.dll", 
     "Microsoft.PythonTools.EnvironmentsList.dll", 
-    "Microsoft.PythonTools.ExpressInteractiveWorkaround.dll", 
     "Microsoft.PythonTools.dll", 
     "Microsoft.PythonTools.VSInterpreters.dll",
     "Microsoft.PythonTools.TestAdapter.dll",
