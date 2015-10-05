@@ -50,6 +50,8 @@ except:
         sys.stdout.write('Press any key to continue . . .')
         sys.stdout.flush()
         msvcrt.getch()
+    else:
+        raise
 else:
     import sys, msvcrt, os
     if 'VSPYPROF_WAIT_ON_NORMAL_EXIT' in os.environ:
