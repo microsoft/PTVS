@@ -4,6 +4,8 @@
   <Extern href="vsshlids.h"/>
   <Extern href="VSDbgCmd.h"/>
   <Extern href="VsDebugGuids.h"/>
+  <Extern href="PythonTools_vsct.h" Condition="!Defined(DEV14U1)"/>
+  <Extern href="PythonTools_vsct_14U1.h" Condition="Defined(DEV14U1)"/>
 
   <!--The Commands section is where we the commands, menus and menu groups are defined.
       This section uses a Guid to identify the package that provides the command defined inside it. -->
@@ -913,52 +915,52 @@
     </CommandPlacement>
 
     <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidInterpreterList" priority="0x7E00">
-      <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
+      <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1" />
     </CommandPlacement>
     <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindow" priority="0x7F00">
-      <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
+      <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_INTERACTIVEWNDWS"/>
     </CommandPlacement>
     <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindow2" priority="0x7F01">
-      <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
+      <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_INTERACTIVEWNDWS"/>
     </CommandPlacement>
     <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindow3" priority="0x7F02">
-      <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
+      <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_INTERACTIVEWNDWS"/>
     </CommandPlacement>
     <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindow4" priority="0x7F03">
-      <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
+      <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_INTERACTIVEWNDWS"/>
     </CommandPlacement>
     <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindow5" priority="0x7F04">
-      <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
+      <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_INTERACTIVEWNDWS"/>
     </CommandPlacement>
     <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindow6" priority="0x7F05">
-      <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
+      <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_INTERACTIVEWNDWS"/>
     </CommandPlacement>
     <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindow7" priority="0x7F06">
-      <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
+      <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_INTERACTIVEWNDWS"/>
     </CommandPlacement>
     <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindow8" priority="0x7F07">
-      <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
+      <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_INTERACTIVEWNDWS"/>
     </CommandPlacement>
     <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindow9" priority="0x7F08">
-      <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
+      <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_INTERACTIVEWNDWS"/>
     </CommandPlacement>
     <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindowA" priority="0x7F09">
-      <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
+      <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_INTERACTIVEWNDWS"/>
     </CommandPlacement>
     <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindowB" priority="0x7F0A">
-      <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
+      <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_INTERACTIVEWNDWS"/>
     </CommandPlacement>
     <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindowC" priority="0x7F0B">
-      <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
+      <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_INTERACTIVEWNDWS"/>
     </CommandPlacement>
     <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindowD" priority="0x7F0C">
-      <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
+      <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_INTERACTIVEWNDWS"/>
     </CommandPlacement>
     <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindowE" priority="0x7F0D">
-      <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
+      <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_INTERACTIVEWNDWS"/>
     </CommandPlacement>
     <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindowF" priority="0x7F0E">
-      <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
+      <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_INTERACTIVEWNDWS"/>
     </CommandPlacement>
 
     <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidOpenCommandPromptHere" priority="0x0180">
