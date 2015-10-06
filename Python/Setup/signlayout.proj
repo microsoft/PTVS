@@ -37,7 +37,6 @@
         Microsoft.IronPythonTools.Resolver.dll
         "/>
     
-    <ManagedFiles Include="Microsoft.PythonTools.ExpressInteractiveWorkaround.dll" Condition="$(IncludeExpressInteractiveWorkaround)" />
     <ManagedFiles Include="Microsoft.PythonTools.Hpc.dll;Microsoft.PythonTools.MpiShim.exe" Condition="$(IncludeHpc)" />
     <ManagedFiles Include="Microsoft.PythonTools.ML.dll" Condition="$(IncludeML)" />
     <ManagedFiles Include="Microsoft.VisualStudio.ReplWindow.dll" Condition="$(IncludeReplWindow)" />

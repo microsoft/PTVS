@@ -8,7 +8,6 @@
     <OutputName>PythonTools</OutputName>
     <OutputType>Module</OutputType>
     <DefineSolutionProperties>false</DefineSolutionProperties>
-    <DefineConstants>$(DefineConstants);VsixSource=$(CopyVsixExtensionRoot)Microsoft.PythonTools</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="PythonTools.wxs" />
@@ -28,13 +27,15 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <LinkerBindInputPaths Include="$(CopyVsixExtensionRoot)Microsoft.PythonTools" />
+    <LinkerBindInputPaths Include="$(LayoutOutputPath)Microsoft.PythonTools" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="..\MergeModule.wxi">
       <Link>MergeModule.wxi</Link>
     </Content>
-    <FilesProj Include="PythonToolsFiles.proj" />
+    <FilesProj Include="PythonToolsFiles.proj">
+      <Properties>VsixSource=$(LayoutOutputPath)Microsoft.PythonTools</Properties>
+    </FilesProj>
   </ItemGroup>
   <Import Project="..\SetupProjectAfter.settings" />
 </Project>

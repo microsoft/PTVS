@@ -42,16 +42,16 @@ function VsVars32()
 "Initializing Python Powershell Environment"
 
 # determine enlistment root
-$pnjsToolsBin = $script:MyInvocation.MyCommand.Path | Split-Path -parent;
-$pnjsRoot = $pnjsToolsBin | Split-Path -parent | Split-Path -parent;
+$pnjsRoot = $script:MyInvocation.MyCommand.Path | Split-Path -parent;
 "Python Tools Root = " + $pnjsRoot;
 
 # get VS tools
 "Calling vsvars32"
 VsVars32
 
-# add tools to path
-$Env:Path = $pnjsToolsBin + ";" + $Env:Path;
+# ensure prerequisites are available
+& "$pnjsRoot\Build\PreBuild.ps1"
+
 $env:PTVS_DEV="true"
 
 # set environment var for codereview.bat

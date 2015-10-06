@@ -8,16 +8,10 @@
     </MSBuildAllProjects>
   </PropertyGroup>
 
+  <Import Project="$(BuildRoot)\BuildOutput\WiX.3.9.2.1\build\wix.props" />
 
   <PropertyGroup>
     <Language>WiX</Language>
-    <WixToolsVersion Condition="'$(WixToolsVersion)'==''">3.9</WixToolsVersion>
-    <WixToolPath Condition="'$(WixToolPath)'==''">$(BuildRoot)\BuildOutput\Wix\$(WixToolsVersion)</WixToolPath>
-    <WixExtDir Condition="'$(WixExtDir)'==''">$(BuildRoot)\BuildOutput\Wix\$(WixToolsVersion)</WixExtDir>
-    <WixTargetsPath>$(WixToolPath)\Wix.targets</WixTargetsPath>
-    <WixTasksPath>$(WixToolPath)\WixTasks.dll</WixTasksPath>
-    <LuxTargetsPath>$(WixToolPath)\Lux.targets</LuxTargetsPath>
-    <LuxTasksPath>$(WixToolPath)\LuxTasks.dll</LuxTasksPath>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <!-- Suppressed warnings:
     

@@ -95,7 +95,6 @@
     <ProjectReference2 Include="..\ImportWizard\ImportWizard.csproj" />
     <ProjectReference2 Include="..\ProjectWizards\ProjectWizards.csproj" />
     <ProjectReference2 Include="..\TestAdapter\TestAdapter.csproj" Condition="'$(VSTarget)' != '10.0'" />
-    <ProjectReference2 Include="..\ExpressInteractiveWorkaround\ExpressInteractiveWorkaround.csproj" Condition="'$(VSTarget)' == '14.0'" />
   </ItemGroup>
   <Choose>
     <When Condition="'$(VSTarget)' == '10.0'">
