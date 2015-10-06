@@ -33,6 +33,7 @@
   <PropertyGroup Condition=" '$(VSTarget)' == '14.0' ">
     <DefineConstants>$(DefineConstants);DEV14;DEV14_OR_LATER;DEV12_OR_LATER;DEV11_OR_LATER</DefineConstants>
     <VSCTDefinitions>DEV14;DEV14_OR_LATER;DEV12_OR_LATER;DEV11_OR_LATER</VSCTDefinitions>
+    <VSCTDefinitions Condition="$(VSUpdateVersion) &gt; 24601">$(VSCTDefinitions);DEV14U1</VSCTDefinitions>
     <MicrosoftBuildAssemblyVersion>14.0.0.0</MicrosoftBuildAssemblyVersion>
     <MicrosoftBuildAssemblyVersionSuffix>Core</MicrosoftBuildAssemblyVersionSuffix>
   </PropertyGroup>

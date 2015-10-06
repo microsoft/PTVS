@@ -983,6 +983,8 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
+    <Content Include="PythonTools_vsct_14U1.h" />
+    <Content Include="PythonTools_vsct.h" />
     <Content Include="Snippets\1033\Python\for.snippet">
       <IncludeInVSIX>true</IncludeInVSIX>
       <SubType>Designer</SubType>
