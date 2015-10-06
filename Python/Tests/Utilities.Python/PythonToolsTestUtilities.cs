@@ -41,6 +41,12 @@ namespace TestUtilities.Python {
             return serviceProvider.GetPythonToolsService();
         }
 
+        private static IContentTypeRegistryService CreateContentTypeRegistryService() {
+            var service = new MockContentTypeRegistryService();
+            service.AddContentType(PythonCoreConstants.ContentType, new[] { "code" });
+            return service;
+        }
+
         /// <summary>
         /// Sets up a limited service provider which can be used for testing.  
         /// 
@@ -56,7 +62,7 @@ namespace TestUtilities.Python {
             );
             serviceProvider.ComponentModel.AddExtension(
                 typeof(IContentTypeRegistryService),
-                () => new MockClassificationTypeRegistryService()
+                CreateContentTypeRegistryService
             );
 
 #if DEV14_OR_LATER
