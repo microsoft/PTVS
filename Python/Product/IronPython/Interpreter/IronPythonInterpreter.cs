@@ -195,6 +195,11 @@ namespace Microsoft.IronPythonTools.Interpreter {
         private void ReloadRemoteDomain() {
             var oldUnloader = _unloader;
 
+            var evt = UnloadingDomain;
+            if (evt != null) {
+                evt(this, EventArgs.Empty);
+            }
+
             lock (this) {
                 _members.Clear();
                 _modules.Clear();
@@ -209,6 +214,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
             oldUnloader.Dispose();
         }
+
+        public event EventHandler UnloadingDomain;
 
         private ObjectHandle LoadAssemblyByName(string name) {
             return Remote.LoadAssemblyByName(name);
@@ -534,6 +541,11 @@ namespace Microsoft.IronPythonTools.Interpreter {
         #region IDisposable Members
 
         public void Dispose() {
+            var evt = UnloadingDomain;
+            if (evt != null) {
+                evt(this, EventArgs.Empty);
+            }
+
             if (_factory != null) {
                 _factory.NewDatabaseAvailable -= OnNewDatabaseAvailable;
             }

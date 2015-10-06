@@ -243,7 +243,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             get {
                 if (_doc == null) {
                     try {
-                        var doc = _type.Documentation;
+                        var doc = _type.Documentation ?? string.Empty;
                         _doc = Utils.StripDocumentation(doc.ToString());
                     } catch {
                         _doc = String.Empty;

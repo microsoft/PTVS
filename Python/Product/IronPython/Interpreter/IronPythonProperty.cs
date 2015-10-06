@@ -30,7 +30,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
         public IPythonType Type {
             get {
                 if (_propertyType == null) {
-                    _propertyType = (IPythonType)Interpreter.MakeObject(Interpreter.Remote.GetPropertyType(Value));
+                    var ri = RemoteInterpreter;
+                    _propertyType = ri != null ? (IPythonType)Interpreter.MakeObject(ri.GetPropertyType(Value)) : null;
                 }
                 return _propertyType;
             }
@@ -39,7 +40,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
         public bool IsStatic {
             get {
                 if (_isStatic == null) {
-                    _isStatic = Interpreter.Remote.IsPropertyStatic(Value);
+                    var ri = RemoteInterpreter;
+                    _isStatic = ri != null ? ri.IsPropertyStatic(Value) : false;
                 }
                 return _isStatic.Value;
             }
@@ -47,7 +49,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
         public string Documentation {
             get {
-                return Interpreter.Remote.GetPropertyDocumentation(Value);
+                var ri = RemoteInterpreter;
+                return ri != null ? ri.GetPropertyDocumentation(Value) : string.Empty;
             }
         }
 
