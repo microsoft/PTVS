@@ -29,12 +29,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
         public RemoteInterpreterProxy() {
             AppDomain.CurrentDomain.AssemblyResolve += new ResolveEventHandler(CurrentDomain_AssemblyResolve);
             AppDomain.CurrentDomain.TypeResolve += new ResolveEventHandler(CurrentDomain_AssemblyResolve);
-            AppDomain.CurrentDomain.DomainUnload += CurrentDomain_Unload;
             _remoteInterpreter = new RemoteInterpreter();
-        }
-
-        private void CurrentDomain_Unload(object sender, EventArgs e) {
-            throw new NotImplementedException();
         }
 
         System.Reflection.Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args) {
