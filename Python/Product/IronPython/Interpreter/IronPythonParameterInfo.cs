@@ -23,8 +23,9 @@ using Microsoft.Scripting.Generation;
 
 namespace Microsoft.IronPythonTools.Interpreter {
     class IronPythonParameterInfo : IParameterInfo {
-        private IronPythonInterpreter _interpreter;
-        private ObjectIdentityHandle _parameterInfo;
+        private readonly IronPythonInterpreter _interpreter;
+        private RemoteInterpreterProxy _remote;
+        private readonly ObjectIdentityHandle _parameterInfo;
         private string _name;
         private ParameterKind _paramKind;
         private IPythonType[] _paramType;
@@ -33,7 +34,14 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
         public IronPythonParameterInfo(IronPythonInterpreter interpreter, ObjectIdentityHandle parameterInfo) {
             _interpreter = interpreter;
+            _interpreter.UnloadingDomain += Interpreter_UnloadingDomain;
+            _remote = _interpreter.Remote;
             _parameterInfo = parameterInfo;
+        }
+
+        private void Interpreter_UnloadingDomain(object sender, EventArgs e) {
+            _remote = null;
+            _interpreter.UnloadingDomain -= Interpreter_UnloadingDomain;
         }
 
         #region IParameterInfo Members
@@ -41,7 +49,10 @@ namespace Microsoft.IronPythonTools.Interpreter {
         public IList<IPythonType> ParameterTypes {
             get {
                 if (_paramType == null) {
-                    _paramType = new [] { _interpreter.GetTypeFromType(_interpreter.Remote.GetParameterPythonType(_parameterInfo)) };
+                    var ri = _remote;
+                    if (ri != null) {
+                        _paramType = new[] { _interpreter.GetTypeFromType(ri.GetParameterPythonType(_parameterInfo)) };
+                    }
                 }
                 return _paramType;
             }
@@ -55,7 +66,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
         public string Name {
             get {
                 if (_name == null) {
-                    _name = _interpreter.Remote.GetParameterName(_parameterInfo);
+                    var ri = _remote;
+                    _name = ri != null ? ri.GetParameterName(_parameterInfo) : string.Empty;
                 }
                 return _name;
             }
@@ -64,7 +76,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
         public bool IsParamArray {
             get {
                 if (_paramKind == ParameterKind.Unknown) {
-                    _paramKind = _interpreter.Remote.GetParameterKind(_parameterInfo);
+                    var ri = _remote;
+                    _paramKind = ri != null ? ri.GetParameterKind(_parameterInfo) : ParameterKind.Unknown;
                 }
                 return _paramKind == ParameterKind.List;
             }
@@ -73,7 +86,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
         public bool IsKeywordDict {
             get {
                 if (_paramKind == ParameterKind.Unknown) {
-                    _paramKind = _interpreter.Remote.GetParameterKind(_parameterInfo);
+                    var ri = _remote;
+                    _paramKind = ri != null ? ri.GetParameterKind(_parameterInfo) : ParameterKind.Unknown;
                 }
                 return _paramKind == ParameterKind.Dictionary;
             }
@@ -82,7 +96,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
         public string DefaultValue {
             get {
                 if (_defaultValue == null) {
-                    _defaultValue = _interpreter.Remote.GetParameterDefaultValue(_parameterInfo) ?? _noDefaultValue;
+                    var ri = _remote;
+                    _defaultValue = (ri != null ? ri.GetParameterDefaultValue(_parameterInfo) : null) ?? _noDefaultValue;
                 }
 
                 if (Object.ReferenceEquals(_defaultValue, _noDefaultValue)) {

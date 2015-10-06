@@ -26,7 +26,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
         public override PythonMemberType MemberType {
             get {
                 if (_memType == PythonMemberType.Unknown) {
-                    if (!Value.IsNull && Interpreter.Remote.IsEnumValue(Value)) {
+                    var ri = RemoteInterpreter;
+                    if (!Value.IsNull && ri != null && ri.IsEnumValue(Value)) {
                         _memType = PythonMemberType.EnumInstance;
                     } else {
                         _memType = PythonMemberType.Constant;
@@ -42,7 +43,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
                     if (Value.IsNull) {
                         _type = Interpreter.GetBuiltinType(BuiltinTypeId.NoneType);
                     } else {
-                        _type = Interpreter.GetTypeFromType(Interpreter.Remote.GetObjectPythonType(Value));
+                        var ri = RemoteInterpreter;
+                        _type = ri != null ? Interpreter.GetTypeFromType(ri.GetObjectPythonType(Value)) : null;
                     }
                 }
                 return _type;
