@@ -36,7 +36,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
         public string Name {
             get {
                 if (_name == null) {
-                    _name = Interpreter.Remote.GetModuleName(Value);
+                    var ri = RemoteInterpreter;
+                    _name = ri != null ? ri.GetModuleName(Value) : string.Empty;
                 }
                 return _name; 
             }
@@ -55,7 +56,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
         }
 
         private void AddWpfReferences() {
-            if (Interpreter.Remote.LoadWpf()) {
+            var ri = RemoteInterpreter;
+            if (ri != null && ri.LoadWpf()) {
                 Interpreter.RaiseModuleNamesChanged();
             }
         }
@@ -66,7 +68,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
         public string Documentation {
             get {
-                return Interpreter.Remote.GetModuleDocumentation(Value);
+                var ri = RemoteInterpreter;
+                return ri != null ? ri.GetModuleDocumentation(Value) : string.Empty;
             }
         }
 

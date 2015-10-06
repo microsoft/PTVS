@@ -22,12 +22,20 @@ namespace Microsoft.IronPythonTools.Interpreter {
     class PythonObject : IMemberContainer, IMember {
         private readonly ObjectIdentityHandle _obj;
         private readonly IronPythonInterpreter _interpreter;
+        private RemoteInterpreterProxy _remote;
         private Dictionary<string, MemberInfo> _attrs;
         private bool _checkedClrAttrs;
 
         public PythonObject(IronPythonInterpreter interpreter, ObjectIdentityHandle obj) {
             _interpreter = interpreter;
+            _interpreter.UnloadingDomain += Interpreter_UnloadingDomain;
+            _remote = _interpreter.Remote;
             _obj = obj;
+        }
+
+        private void Interpreter_UnloadingDomain(object sender, EventArgs e) {
+            _remote = null;
+            _interpreter.UnloadingDomain -= Interpreter_UnloadingDomain;
         }
 
         public ObjectIdentityHandle Value {
@@ -39,6 +47,12 @@ namespace Microsoft.IronPythonTools.Interpreter {
         public IronPythonInterpreter Interpreter {
             get {
                 return _interpreter;
+            }
+        }
+
+        public RemoteInterpreterProxy RemoteInterpreter {
+            get {
+                return _remote;
             }
         }
 
@@ -78,7 +92,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
             MemberInfo member;
             if (!_attrs.TryGetValue(name, out member) || member.Member == null) {
-                var res = Interpreter.Remote.GetMember(Value, name);
+                var ri = RemoteInterpreter;
+                var res = ri != null ? ri.GetMember(Value, name) : default(ObjectIdentityHandle);
                 if (!res.Equals(Value)) {
                     _attrs[name] = member = new MemberInfo(_interpreter.MakeObject(res));
                 }
@@ -107,7 +122,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
         private void CreateNonClrAttrs() {
             if (!_checkedClrAttrs) {
-                foreach (var name in Interpreter.Remote.DirHelper(_obj, false)) {
+                var ri = RemoteInterpreter;
+                foreach (var name in ri != null ? ri.DirHelper(_obj, false) : Enumerable.Empty<string>()) {
                     if (!_attrs.ContainsKey(name)) {
                         _attrs[name] = new MemberInfo(IsClrOnly.No);
                     } else {
@@ -126,7 +142,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
 
         public IEnumerable<string> GetMemberNames(IModuleContext moduleContext) {
-            return Interpreter.Remote.DirHelper(Value, ((IronPythonModuleContext)moduleContext).ShowClr);
+            var ri = RemoteInterpreter;
+            return ri != null ? ri.DirHelper(Value, ((IronPythonModuleContext)moduleContext).ShowClr) : Enumerable.Empty<string>();
         }
 
         #endregion

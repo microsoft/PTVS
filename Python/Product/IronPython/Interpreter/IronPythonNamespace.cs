@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.Scripting.Actions;
 
@@ -25,7 +26,10 @@ namespace Microsoft.IronPythonTools.Interpreter {
         #region IPythonModule Members
 
         public string Name {
-            get { return Interpreter.Remote.GetNamespaceName(Value); }
+            get {
+                var ri = RemoteInterpreter;
+                return ri != null ? ri.GetNamespaceName(Value) : string.Empty;
+            }
         }
 
         public void Imported(IModuleContext context) {
@@ -33,7 +37,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
         }
 
         public IEnumerable<string> GetChildrenModules() {
-            return Interpreter.Remote.GetNamespaceChildren(Value);
+            var ri = RemoteInterpreter;
+            return ri != null ? ri.GetNamespaceChildren(Value) : Enumerable.Empty<string>();
         }
 
         public string Documentation {

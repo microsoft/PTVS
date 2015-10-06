@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using Microsoft.PythonTools.Interpreter;
@@ -20,14 +21,22 @@ namespace Microsoft.IronPythonTools.Interpreter {
     class IronPythonConstructorFunction : IPythonFunction {
         private readonly ObjectIdentityHandle[] _infos;
         private readonly IronPythonInterpreter _interpreter;
+        private RemoteInterpreterProxy _remote;
         private readonly IPythonType _type;
         private IPythonFunctionOverload[] _overloads;
         private IPythonType _declaringType;
 
         public IronPythonConstructorFunction(IronPythonInterpreter interpreter, ObjectIdentityHandle[] infos, IPythonType type) {
             _interpreter = interpreter;
+            _interpreter.UnloadingDomain += Interpreter_UnloadingDomain;
+            _remote = _interpreter.Remote;
             _infos = infos;
             _type = type;
+        }
+
+        private void Interpreter_UnloadingDomain(object sender, EventArgs e) {
+            _remote = null;
+            _interpreter.UnloadingDomain -= Interpreter_UnloadingDomain;
         }
 
         #region IBuiltinFunction Members
@@ -57,7 +66,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
         public IPythonType DeclaringType {
             get {
                 if (_declaringType == null) {
-                    _declaringType = _interpreter.GetTypeFromType(_interpreter.Remote.GetConstructorDeclaringPythonType(_infos[0]));
+                    var ri = _remote;
+                    _declaringType = ri != null ? _interpreter.GetTypeFromType(ri.GetConstructorDeclaringPythonType(_infos[0])) : null;
                 }
                 return _declaringType;
             }

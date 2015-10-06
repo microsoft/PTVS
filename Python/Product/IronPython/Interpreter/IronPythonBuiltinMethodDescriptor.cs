@@ -29,9 +29,12 @@ namespace Microsoft.IronPythonTools.Interpreter {
         public IPythonFunction Function {
             get {
                 if (_function == null) {
-                    var func = Interpreter.Remote.GetBuiltinMethodDescriptorTemplate(Value);
+                    var ri = RemoteInterpreter;
+                    if (ri != null) {
+                        var func = ri.GetBuiltinMethodDescriptorTemplate(Value);
 
-                    _function = (IPythonFunction)Interpreter.MakeObject(func);
+                        _function = (IPythonFunction)Interpreter.MakeObject(func);
+                    }
                 }
                 return _function;
             }

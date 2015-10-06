@@ -30,11 +30,17 @@ namespace Microsoft.IronPythonTools.Interpreter {
         #region IBuiltinFunction Members
 
         public string Name {
-            get { return Interpreter.Remote.GetBuiltinFunctionName(Value); }
+            get {
+                var ri = RemoteInterpreter;
+                return ri != null ? ri.GetBuiltinFunctionName(Value) : string.Empty;
+            }
         }
 
         public string Documentation {
-            get { return Interpreter.Remote.GetBuiltinFunctionDocumentation(Value); }
+            get {
+                var ri = RemoteInterpreter;
+                return ri != null ? ri.GetBuiltinFunctionDocumentation(Value) : string.Empty;
+            }
         }
 
         public IList<IPythonFunctionOverload> Overloads {
@@ -43,7 +49,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 // object.Equals(Object_#1, object other))
 
                 if (_targets == null) {
-                    var overloads = Interpreter.Remote.GetBuiltinFunctionOverloads(Value);
+                    var ri = RemoteInterpreter;
+                    var overloads = ri != null ? ri.GetBuiltinFunctionOverloads(Value) : new ObjectIdentityHandle[0];
                     var result = new IronPythonBuiltinFunctionTarget[overloads.Length];
                     var decltype = (IronPythonType)DeclaringType;
                     for(int i = 0; i<overloads.Length; i++){
@@ -65,7 +72,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
         public IPythonType DeclaringType {
             get {
                 if (_declaringType == null) {
-                    _declaringType = Interpreter.GetTypeFromType(Interpreter.Remote.GetBuiltinFunctionDeclaringPythonType(Value));
+                    var ri = RemoteInterpreter;
+                    _declaringType = ri != null ? Interpreter.GetTypeFromType(ri.GetBuiltinFunctionDeclaringPythonType(Value)) : null;
                 }
                 return _declaringType;
             }
@@ -86,7 +94,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
         public IPythonModule DeclaringModule {
             get {
                 if (_declaringModule == null) {
-                    _declaringModule = Interpreter.GetModule(Interpreter.Remote.GetBuiltinFunctionModule(Value));
+                    var ri = RemoteInterpreter;
+                    _declaringModule = ri != null ? Interpreter.GetModule(ri.GetBuiltinFunctionModule(Value)) : null;
                 }
                 return _declaringModule;
             }

@@ -29,7 +29,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
         public IPythonType Type {
             get {
                 if (_propertyType == null) {
-                    _propertyType = Interpreter.GetTypeFromType(Interpreter.Remote.GetExtensionPropertyType(Value));
+                    var ri = RemoteInterpreter;
+                    _propertyType = ri != null ? Interpreter.GetTypeFromType(ri.GetExtensionPropertyType(Value)) : null;
                 }
                 return _propertyType;
             }
@@ -42,7 +43,10 @@ namespace Microsoft.IronPythonTools.Interpreter {
         }
 
         public string Documentation {
-            get { return Interpreter.Remote.GetExtensionPropertyDocumentation(Value); }
+            get {
+                var ri = RemoteInterpreter;
+                return ri != null ? ri.GetExtensionPropertyDocumentation(Value) : string.Empty;
+            }
         }
 
         public string Description {
