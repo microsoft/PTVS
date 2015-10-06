@@ -16,9 +16,6 @@
     <!-- Include ML by default, and force to false for VS 2010 and VS 2012 -->
     <IncludeML Condition="'$(IncludeML)' == ''">true</IncludeML>
     <IncludeML Condition="'$(VSTarget)' == '10.0' or '$(VSTarget)' == '11.0'">false</IncludeML>
-    
-    <IncludeExpressInteractiveWorkaround Condition="'$(IncludeExpressInteractiveWorkaround)' == '' and $(VSMajorVersion) == 14">true</IncludeExpressInteractiveWorkaround>
-    <IncludeExpressInteractiveWorkaround Condition="'$(IncludeExpressInteractiveWorkaround)' == ''">false</IncludeExpressInteractiveWorkaround>
 
     <!-- Features default to true for release builds -->
     <FeatureAzureRemoteDebug>$(ReleaseBuild)</FeatureAzureRemoteDebug>
