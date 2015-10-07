@@ -44,6 +44,9 @@ namespace TestUtilities.Python {
         private static IContentTypeRegistryService CreateContentTypeRegistryService() {
             var service = new MockContentTypeRegistryService();
             service.AddContentType(PythonCoreConstants.ContentType, new[] { "code" });
+#if DEV14_OR_LATER
+            service.AddContentType("Interactive Command", new[] { "code" });
+#endif
             return service;
         }
 

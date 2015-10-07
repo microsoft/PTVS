@@ -42,17 +42,22 @@ namespace DebuggerUITests {
         }
 
         bool PrevWaitOnNormalExit;
+        bool PrevPromptBeforeRunningWithBuildErrorSetting;
 
         [TestInitialize]
         public void MyTestInit() {
             var options = GetOptions();
             PrevWaitOnNormalExit = options.WaitOnNormalExit;
+            PrevPromptBeforeRunningWithBuildErrorSetting = options.PromptBeforeRunningWithBuildErrorSetting;
             options.WaitOnNormalExit = false;
+            options.PromptBeforeRunningWithBuildErrorSetting = false;
         }
 
         [TestCleanup]
         public void MyTestCleanup() {
-            GetOptions().WaitOnNormalExit = PrevWaitOnNormalExit;
+            var options = GetOptions();
+            options.WaitOnNormalExit = PrevWaitOnNormalExit;
+            options.PromptBeforeRunningWithBuildErrorSetting = PrevPromptBeforeRunningWithBuildErrorSetting;
         }
 
         #region Test Cases
@@ -647,10 +652,9 @@ namespace DebuggerUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("VSTestHost")]
         public void TestLaunchWithErrorsDontRun() {
-            var app = new PythonVisualStudioApp();
-            var originalValue = GetOptions().PromptBeforeRunningWithBuildErrorSetting;
-            GetOptions().PromptBeforeRunningWithBuildErrorSetting = true;
-            try {
+            using (var app = new PythonVisualStudioApp()) {
+                GetOptions().PromptBeforeRunningWithBuildErrorSetting = true;
+
                 var project = app.OpenProject(@"TestData\ErrorProject.sln");
 
                 var debug3 = (Debugger3)app.Dte.Debugger;
@@ -666,9 +670,6 @@ namespace DebuggerUITests {
                 }
 
                 WaitForMode(app, dbgDebugMode.dbgDesignMode);
-            } finally {
-                GetOptions().PromptBeforeRunningWithBuildErrorSetting = originalValue;
-                app.Dispose();
             }
         }
 

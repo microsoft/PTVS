@@ -697,18 +697,19 @@ namespace VisualStudioToolsUITests {
             foreach (var projectType in ProjectTypes) {
                 using (var solution = MultiProjectLinkedFiles(projectType).ToVs()) {
                     var project = (solution as VisualStudioInstance).Project;
-                    
+
                     // save the project to an odd location.  This will result in project home being set.
-                    var newProjName = "TempFile";
+                    var projectDir = TestData.GetTempPath();
+                    var newProjName = Path.GetRandomFileName();
                     try {
-                        project.SaveAs(Path.GetTempPath() +  newProjName + projectType.ProjectExtension);
+                        project.SaveAs(Path.Combine(projectDir, newProjName + projectType.ProjectExtension));
                     } catch (UnauthorizedAccessException) {
                         Assert.Inconclusive("Couldn't save the file");
                     }
                     
                     // create a temporary file and add a link to it in the project
                     solution.FindItem(newProjName).Select();
-                    var tempFile  = Path.GetTempFileName();
+                    var tempFile = Path.Combine(projectDir, Path.GetTempFileName());
                     using (var addExistingDlg = AddExistingItemDialog.FromDte((solution as VisualStudioInstance).App)) {
                         addExistingDlg.FileName = tempFile;
                         addExistingDlg.AddLink();
