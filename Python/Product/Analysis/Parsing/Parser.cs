@@ -2997,8 +2997,8 @@ namespace Microsoft.PythonTools.Parsing {
                         string tokenString = _tokenizer.GetTokenString(); ;
                         Debug.Assert(tokenString.Length > 0);
 
-                        if (tokenString[tokenString.Length - 1] != 'L' &&
-                            tokenString[tokenString.Length - 1] != 'l') {
+                        char c = tokenString[tokenString.Length - 1];
+                        if (c != 'L' && c != 'l') {
                             string minusWhiteSpace = _tokenWhiteSpace;
 
                             NextToken();

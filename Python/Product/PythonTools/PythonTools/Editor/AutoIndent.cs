@@ -84,7 +84,10 @@ namespace Microsoft.PythonTools.Editor {
                 }
 
                 string sline = tokens[tokenIndex].Span.GetText();
-                var lastChar = sline.Length == 0 ? '\0' : sline[sline.Length - 1];
+                char lastChar = '\0';
+                if (sline.Length > 0) {
+                    lastChar = sline[sline.Length - 1];
+                }
 
                 // use the expression parser to figure out if we're in a grouping...
                 var spans = textView.BufferGraph.MapDownToFirstMatch(
