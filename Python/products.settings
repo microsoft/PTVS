@@ -21,9 +21,5 @@
     <FeatureAzureRemoteDebug>$(ReleaseBuild)</FeatureAzureRemoteDebug>
     <FeatureAzureRemoteDebug Condition="$(VSMajorVersion) > 12 or ($(VSMajorVersion) == 12 and $(VSUpdateVersion) >= 30723)">true</FeatureAzureRemoteDebug>
     <FeatureAzureRemoteDebug Condition="'$(FeatureAzureRemoteDebug)' == ''">false</FeatureAzureRemoteDebug>
-    
-    <FeatureInteractiveCommandsContentType>false</FeatureInteractiveCommandsContentType>
-    <FeatureInteractiveCommandsContentType Condition="$(VSMajorVersion) > 14 or ($(VSMajorVersion) == 14 and $(VSUpdateVersion) > 24600)">true</FeatureInteractiveCommandsContentType>
-    <FeatureInteractiveCommandsContentType Condition="'$(FeatureInteractiveCommandsContentType)' == ''">false</FeatureInteractiveCommandsContentType>
   </PropertyGroup>
 </Project>

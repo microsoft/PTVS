@@ -45,9 +45,7 @@ using ReplRoleAttribute = Microsoft.PythonTools.Repl.InteractiveWindowRoleAttrib
 namespace Microsoft.PythonTools.Repl {
     [ReplRole("Debug")]
     [ContentType(PythonCoreConstants.ContentType)]
-#if FEATURE_INTERACTIVE_COMMANDS_CONTENT_TYPE
     [ContentType(PredefinedInteractiveCommandsContentTypes.InteractiveCommandContentTypeName)]
-#endif
     internal class PythonDebugReplEvaluator : IReplEvaluator, IMultipleScopeEvaluator, IPythonReplIntellisense {
         private IReplWindow _window;
         private PythonDebugProcessReplEvaluator _activeEvaluator;
