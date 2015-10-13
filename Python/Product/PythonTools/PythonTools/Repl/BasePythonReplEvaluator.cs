@@ -141,7 +141,12 @@ namespace Microsoft.PythonTools.Repl {
         #region IReplEvaluator Members
 
         protected virtual void WriteInitializationMessage() {
-            Window.WriteLine(SR.GetString(SR.ReplInitializationMessage));
+            Window.WriteLine(SR.GetString(
+                SR.ReplInitializationMessage,
+                LanguageVersion.ToVersion(),
+                AssemblyVersionInfo.Version,
+                AssemblyVersionInfo.VSVersion
+            ));
         }
 
 #if !DEV14_OR_LATER

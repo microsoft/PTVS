@@ -319,7 +319,9 @@ Please update the environment in Tools-&gt;Options-&gt;Python Tools-&gt;Environm
 </value>
   </data>
   <data name="ReplInitializationMessage" xml:space="preserve">
-    <value>Python interactive window. Type $help for a list of commands.</value>
+    <value>Python {0} interactive window [PTVS {1}-{2}]
+Type $help for a list of commands.</value>
+    <comment>{0} is the Python language version, {1} is the PTVS version, {2} is the VS version</comment>
   </data>
   <data name="CustomCommandPrerequisitesContent" xml:space="preserve">
     <value>'{0}' command requires some packages that are not installed in your Python environment. Those packages need to be installed first before the command can be run.</value>
