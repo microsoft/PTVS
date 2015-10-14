@@ -49,7 +49,7 @@ namespace ReplWindowUITests {
                 s.AddNewLineAtEndOfFullyTypedWord = addNewLineAtEndOfFullyTypedWord;
             }
 
-            return ReplWindowProxy.Prepare(Settings);
+            return ReplWindowProxy.Prepare(s);
         }
 
         #region Miscellaneous tests
@@ -1309,11 +1309,7 @@ namespace ReplWindowUITests {
 
                 interactive.ClearInput();
                 interactive.Paste(comment + "\r\n");
-#if DEV14_OR_LATER
-                interactive.WaitForText(">" + comment, ".");
-#else
                 interactive.WaitForText(">" + comment);
-#endif
 
                 interactive.ClearInput();
                 interactive.Paste(comment + "\r\ndef f():\r\n    pass");
