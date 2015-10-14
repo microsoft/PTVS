@@ -21,6 +21,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -50,9 +51,9 @@ using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
 using Microsoft.VisualStudio.Text.Projection;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
-using SR = Microsoft.PythonTools.Project.SR;
 using System.Windows.Media;
 using System.Windows.Markup;
+using SR = Microsoft.PythonTools.Project.SR;
 
 #if DEV14_OR_LATER
 using IReplEvaluator = Microsoft.VisualStudio.InteractiveWindow.IInteractiveEvaluator;
@@ -72,6 +73,7 @@ namespace Microsoft.PythonTools.Repl {
         internal readonly IServiceProvider _serviceProvider;
 #if DEV14_OR_LATER
         private IInteractiveWindowCommands _commands;
+        private static Version _vsInteractiveVersion;
 #endif
 
         internal static readonly object InputBeforeReset = new object();    // used to mark buffers which are no longer valid because we've done a reset
@@ -1783,6 +1785,19 @@ namespace Microsoft.PythonTools.Repl {
         }
 
 #if DEV14_OR_LATER
+        internal static Version VSInteractiveVersion {
+            get {
+                if (_vsInteractiveVersion == null) {
+                    _vsInteractiveVersion = typeof(IInteractiveWindow).Assembly
+                        .GetCustomAttributes(typeof(AssemblyInformationalVersionAttribute), false)
+                        .OfType<AssemblyInformationalVersionAttribute>()
+                        .Select(a => { Version v; return Version.TryParse(a.InformationalVersion, out v) ? v : null; })
+                        .FirstOrDefault(v => v != null) ?? new Version();
+                }
+                return _vsInteractiveVersion;
+            }
+        }
+
         public IContentType ContentType {
             get {
                 return _serviceProvider.GetPythonContentType();

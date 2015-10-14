@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.Reflection;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.Language.StandardClassification;
@@ -26,6 +27,10 @@ using Microsoft.VisualStudio.Repl;
 
 namespace Microsoft.PythonTools.Editor {
     internal static class AutoIndent {
+#if DEV14_OR_LATER
+        private static readonly Version RequireMapIndentToSurfaceBuffer = new Version(1, 0, 0, 50618);
+#endif
+
         internal static int GetIndentation(string line, int tabSize) {
             int res = 0;
             for (int i = 0; i < line.Length; i++) {
@@ -179,7 +184,18 @@ namespace Microsoft.PythonTools.Editor {
                     (current.ShouldDedentAfter ? tabSize : 0);
             }
 
-            return indentation;
+            // Map indentation back to the view's text buffer.
+            int offset = 0;
+#if DEV14_OR_LATER
+            if (Repl.BasePythonReplEvaluator.VSInteractiveVersion >= RequireMapIndentToSurfaceBuffer) {
+                var viewLineStart = textView.BufferGraph.MapUpToSnapshot(line.Start, PointTrackingMode.Positive, PositionAffinity.Successor, textView.TextSnapshot);
+                if (viewLineStart.HasValue) {
+                    offset = viewLineStart.Value.Position - viewLineStart.Value.GetContainingLine().Start.Position;
+                }
+            }
+#endif
+
+            return offset + indentation;
         }
 
         private static bool IsUnterminatedStringToken(ClassificationSpan lastToken) {
