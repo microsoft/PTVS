@@ -1684,6 +1684,15 @@ namespace DebuggerTests {
 
             TestException(
                 debugger,
+                Path.Combine(DebuggerTestPath, "SysExitNone.py"),
+                true, ExceptionMode.Unhandled,
+                null,
+                PythonDebugOptions.BreakOnSystemExitZero,
+                new ExceptionInfo("SystemExit", 1)
+            );
+
+            TestException(
+                debugger,
                 Path.Combine(DebuggerTestPath, "SysExitZeroRaise.py"),
                 true, ExceptionMode.Unhandled,
                 null,
@@ -1698,6 +1707,14 @@ namespace DebuggerTests {
                 null,
                 PythonDebugOptions.BreakOnSystemExitZero,
                 new ExceptionInfo("SystemExit", 2)
+            );
+
+            TestException(
+                debugger,
+                Path.Combine(DebuggerTestPath, "SysExitNone.py"),
+                true, ExceptionMode.Unhandled,
+                null,
+                PythonDebugOptions.RedirectOutput
             );
 
             TestException(

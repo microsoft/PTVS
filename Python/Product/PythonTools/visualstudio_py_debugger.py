@@ -455,8 +455,7 @@ class ExceptionBreakInfo(object):
         if break_type:
             if issubclass(ex_type, SystemExit):
                 if not BREAK_ON_SYSTEMEXIT_ZERO:
-                    if ((isinstance(ex_value, int) and not ex_value) or 
-                        (isinstance(ex_value, SystemExit) and not ex_value.code)):
+                    if not ex_value or (isinstance(ex_value, SystemExit) and not ex_value.code):
                         break_type = BREAK_TYPE_NONE
 
         return break_type
@@ -2189,7 +2188,7 @@ def attach_process_from_socket(sock, debug_options, report = False, block = Fals
     def _excepthook(exc_type, exc_value, exc_tb):
         # Display the exception and wait on exit
         if exc_type is SystemExit:
-            if (wait_on_abnormal_exit and exc_value.code != 0) or (wait_on_normal_exit and exc_value.code == 0):
+            if (wait_on_abnormal_exit and exc_value.code) or (wait_on_normal_exit and not exc_value.code):
                 print_exception(exc_type, exc_value, exc_tb)
                 do_wait()
         else:
