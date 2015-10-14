@@ -14,8 +14,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -24,6 +26,7 @@ using Microsoft.PythonTools;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Profiling;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 using Microsoft.VisualStudioTools.VSTestHost;
 using Microsoft.Win32;
@@ -45,7 +48,13 @@ namespace ProfilingUITests {
 
         [TestInitialize]
         public void TestInitialize() {
-            var pyService = (PythonToolsService)VSTestContext.ServiceProvider.GetService(typeof(PythonToolsService));
+            PythonToolsService pyService;
+            try {
+                pyService = (PythonToolsService)VSTestContext.ServiceProvider.GetService(typeof(PythonToolsService));
+            } catch (InvalidOperationException) {
+                // Nothing to initialize
+                return;
+            }
             _waitOnNormalExit = pyService.DebuggerOptions.WaitOnNormalExit;
             _waitOnAbnormalExit = pyService.DebuggerOptions.WaitOnAbnormalExit;
             pyService.DebuggerOptions.WaitOnNormalExit = false;
@@ -54,10 +63,6 @@ namespace ProfilingUITests {
 
         [TestCleanup]
         public void DeleteVspFiles() {
-            var pyService = (PythonToolsService)VSTestContext.ServiceProvider.GetService(typeof(PythonToolsService));
-            pyService.DebuggerOptions.WaitOnNormalExit = _waitOnNormalExit;
-            pyService.DebuggerOptions.WaitOnAbnormalExit = _waitOnAbnormalExit;
-
             try {
                 foreach (var file in Directory.EnumerateFiles(Path.GetTempPath(), "*.vsp", SearchOption.TopDirectoryOnly)) {
                     try {
@@ -68,6 +73,16 @@ namespace ProfilingUITests {
                 }
             } catch {
             }
+
+            PythonToolsService pyService;
+            try {
+                pyService = (PythonToolsService)VSTestContext.ServiceProvider.GetService(typeof(PythonToolsService));
+            } catch (InvalidOperationException) {
+                // Nothing to uninitialize
+                return;
+            }
+            pyService.DebuggerOptions.WaitOnNormalExit = _waitOnNormalExit;
+            pyService.DebuggerOptions.WaitOnAbnormalExit = _waitOnAbnormalExit;
         }
 
         public TestContext TestContext { get; set; }
@@ -271,6 +286,64 @@ namespace ProfilingUITests {
                     Assert.AreEqual("Python 2.7", perfTarget.SelectedInterpreter);
                     Assert.AreEqual(TestData.GetPath(@"TestData\ProfileTest\Program.py"), perfTarget.ScriptName);
                 }
+            }
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        public async Task ProfileWithEncoding() {
+            var proflaun = Path.Combine(
+                Path.GetDirectoryName(typeof(IPythonProfiling).Assembly.Location),
+                "proflaun.py"
+            );
+            var vspyprof = Path.Combine(
+                Path.GetDirectoryName(proflaun),
+                "vspyprofX86.dll"
+            );
+
+            Assert.IsTrue(File.Exists(proflaun), "Did not find " + proflaun);
+            Assert.IsTrue(File.Exists(vspyprof), "Did not find " + vspyprof);
+
+            var testFiles = new[] { "UTF8", "UTF8BOM" }
+                .Select(encoding => TestData.GetPath(string.Format("TestData\\ProfileTest\\{0}Profile.py", encoding)))
+                .ToList();
+            foreach (var testFile in testFiles) {
+                Assert.IsTrue(File.Exists(testFile), "Did not find " + testFile);
+            }
+
+            // Test in 3.4 for tokenize.open and 3.1 for tokenize.detect_encoding
+            // Python 2.x uses execfile() and we do not handle encoding at all
+            foreach (var python in new[] { PythonPaths.Python31, PythonPaths.Python34 }) {
+                if (python == null) {
+                    continue;
+                }
+
+                Trace.TraceInformation(python.InterpreterPath);
+
+                foreach (var testFile in testFiles) {
+                    Trace.TraceInformation("  {0}", Path.GetFileName(testFile));
+
+                    using (var p = ProcessOutput.Run(
+                        python.InterpreterPath,
+                        new[] { proflaun, vspyprof, Path.GetDirectoryName(testFile), testFile },
+                        Environment.CurrentDirectory,
+                        new[] { new KeyValuePair<string, string>("PYTHONIOENCODING", "utf-8") },
+                        false,
+                        null,
+                        outputEncoding: Encoding.UTF8
+                    )) {
+                        Trace.TraceInformation(p.Arguments);
+                        var exitCode = await p;
+                        foreach (var line in p.StandardErrorLines) {
+                            Trace.TraceError("STDERR: " + line);
+                        }
+                        foreach (var line in p.StandardOutputLines) {
+                            Trace.TraceWarning("STDOUT: " + line);
+                        }
+                        Assert.AreEqual(0, exitCode);
+                    }
+                }
+
+                Trace.TraceInformation("OK");
             }
         }
 

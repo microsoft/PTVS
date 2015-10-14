@@ -33,7 +33,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
         public IPythonFunction GetConstructors() {
             if (_ctors == null) {
-                if (!Interpreter.Remote.TypeGroupHasNewOrInitMethods(Value)) {
+                var ri = RemoteInterpreter;
+                if (ri != null && !ri.TypeGroupHasNewOrInitMethods(Value)) {
                     _ctors = GetClrOverloads();
                 }
 
@@ -54,30 +55,36 @@ namespace Microsoft.IronPythonTools.Interpreter {
         /// Returns the overloads for a normal .NET type
         /// </summary>
         private IPythonFunction GetClrOverloads() {
-            ObjectIdentityHandle declType;
-            var ctors = Interpreter.Remote.GetTypeGroupConstructors(Value, out declType);
+            ObjectIdentityHandle declType = default(ObjectIdentityHandle);
+            var ri = RemoteInterpreter;
+            var ctors = ri != null ? ri.GetTypeGroupConstructors(Value, out declType) : null;
             if (ctors != null) {
                 return new IronPythonConstructorFunction(Interpreter, ctors, Interpreter.GetTypeFromType(declType));
             }
-            return null;            
+            return null;
         }
 
         public override PythonMemberType MemberType {
             get {
                 if (_memberType == PythonMemberType.Unknown) {
-                    _memberType = Interpreter.Remote.GetTypeGroupMemberType(Value);
+                    var ri = RemoteInterpreter;
+                    _memberType = ri != null ? ri.GetTypeGroupMemberType(Value) : PythonMemberType.Unknown;
                 }
                 return _memberType;
             }
         }
 
         public string Name {
-            get { return Interpreter.Remote.GetTypeGroupName(Value); }
+            get {
+                var ri = RemoteInterpreter;
+                return ri != null ? ri.GetTypeGroupName(Value) : string.Empty;
+            }
         }
 
         public string Documentation {
             get {
-                return Interpreter.Remote.GetTypeGroupDocumentation(Value);
+                var ri = RemoteInterpreter;
+                return ri != null ? ri.GetTypeGroupDocumentation(Value) : string.Empty;
             }
         }
 
@@ -89,9 +96,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
         public IPythonModule DeclaringModule {
             get {
-                return Interpreter.ImportModule(
-                    Interpreter.Remote.GetTypeGroupDeclaringModule(Value)
-                );
+                var ri = RemoteInterpreter;
+                return ri != null ? Interpreter.ImportModule(ri.GetTypeGroupDeclaringModule(Value)) : null;
             }
         }
 
@@ -128,7 +134,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
         public IList<IPythonType> GetTypesPropagatedOnCall() {
             if (_eventInvokeArgs == null) {
-                var types = Interpreter.Remote.GetTypeGroupEventInvokeArgs(Value);
+                var ri = RemoteInterpreter;
+                var types = ri != null ? ri.GetTypeGroupEventInvokeArgs(Value) : null;
                 if (types == null) {
                     _eventInvokeArgs = IronPythonType.EmptyTypes;
                 } else {
@@ -150,7 +157,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
         public bool IsGenericTypeDefinition {
             get {
                 if (_genericTypeDefinition == null) {
-                    _genericTypeDefinition = Interpreter.Remote.TypeGroupIsGenericTypeDefinition(Value);
+                    var ri = RemoteInterpreter;
+                    _genericTypeDefinition = ri != null ? ri.TypeGroupIsGenericTypeDefinition(Value) : false;
                 }
                 return _genericTypeDefinition.Value;
             }
@@ -163,7 +171,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 types[i] = ((IronPythonType)indexTypes[i]).Value;
             }
 
-            return Interpreter.GetTypeFromType(Interpreter.Remote.TypeGroupMakeGenericType(Value, types));
+            var ri = RemoteInterpreter;
+            return ri != null ? Interpreter.GetTypeFromType(ri.TypeGroupMakeGenericType(Value, types)) : null;
         }
 
         #endregion

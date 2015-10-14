@@ -298,12 +298,13 @@ namespace Microsoft.PythonTools.Interpreter {
                         DateTime lastModified;
                         if (!File.Exists(columns[extensionModuleFilenameIndex]) ||  // extension has been deleted
                             !DateTime.TryParseExact(columns[extensionTimeStamp], "O", null, System.Globalization.DateTimeStyles.RoundtripKind, out lastModified) ||
-                            lastModified != new FileInfo(extensionModuleFilename).LastWriteTime) { // extension has been modified
+                            lastModified != File.GetLastWriteTime(columns[extensionModuleFilenameIndex])) { // extension has been modified
 
                             // cleanup the stale DB files as we go...
                             try {
-                                File.Delete(columns[4]);
+                                File.Delete(columns[dbFileIndex]);
                             } catch (IOException) {
+                            } catch (UnauthorizedAccessException) {
                             }
                             continue;
                         }

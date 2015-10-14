@@ -46,7 +46,7 @@ namespace Microsoft.PythonTools.Repl {
     [ReplRole("Execution")]
     [ReplRole("Reset")]
     [ContentType(PythonCoreConstants.ContentType)]
-#if FEATURE_INTERACTIVE_COMMANDS_CONTENT_TYPE
+#if DEV14_OR_LATER
     [ContentType(PredefinedInteractiveCommandsContentTypes.InteractiveCommandContentTypeName)]
 #endif
     internal class PythonReplEvaluator : BasePythonReplEvaluator {
