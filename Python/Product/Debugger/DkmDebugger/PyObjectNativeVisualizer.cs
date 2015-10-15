@@ -249,21 +249,23 @@ namespace Microsoft.PythonTools.DkmDebugger {
 
             if (DebuggerOptions.ShowPythonViewNodes) {
                 var pythonViewEvalResult = GetPythonView(visualizedExpression);
-                var pythonView = DkmChildVisualizedExpression.Create(
-                    visualizedExpression.InspectionContext,
-                    visualizedExpression.VisualizerId,
-                    visualizedExpression.SourceId,
-                    visualizedExpression.StackFrame,
-                    visualizedExpression.ValueHome,
-                    pythonViewEvalResult,
-                    visualizedExpression,
-                    (uint)rawEnumContext.Count, null);
-                if (pythonView != null) {
-                    enumContext = DkmEvaluationResultEnumContext.Create(
-                        rawEnumContext.Count + 1,
-                        rawEnumContext.StackFrame,
-                        rawEnumContext.InspectionContext,
-                        new RawEnumContextData { RawContext = rawEnumContext, PythonView = pythonView });
+                if (pythonViewEvalResult != null) {
+                    var pythonView = DkmChildVisualizedExpression.Create(
+                        visualizedExpression.InspectionContext,
+                        visualizedExpression.VisualizerId,
+                        visualizedExpression.SourceId,
+                        visualizedExpression.StackFrame,
+                        visualizedExpression.ValueHome,
+                        pythonViewEvalResult,
+                        visualizedExpression,
+                        (uint)rawEnumContext.Count, null);
+                    if (pythonView != null) {
+                        enumContext = DkmEvaluationResultEnumContext.Create(
+                            rawEnumContext.Count + 1,
+                            rawEnumContext.StackFrame,
+                            rawEnumContext.InspectionContext,
+                            new RawEnumContextData { RawContext = rawEnumContext, PythonView = pythonView });
+                    }
                 }
             }
         }
