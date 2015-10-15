@@ -16,17 +16,15 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Security;
 using System.Text;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudioTools;
-using Microsoft.VisualStudioTools.Project;
-using System.Security;
-#if DEV14_OR_LATER
 using Microsoft.VisualStudio.Imaging;
 using Microsoft.VisualStudio.Imaging.Interop;
-#endif
+using Microsoft.VisualStudioTools;
+using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project {
 
@@ -277,7 +275,6 @@ namespace Microsoft.PythonTools.Project {
             return base.ExcludeFromProject();
         }
 
-#if DEV14_OR_LATER
         protected override ImageMoniker CodeFileIconMoniker {
             get { return KnownMonikers.PYFileNode; }
         }
@@ -285,6 +282,5 @@ namespace Microsoft.PythonTools.Project {
         protected override ImageMoniker StartupCodeFileIconMoniker {
             get { return KnownMonikers.PYFileNode; }
         }
-#endif
     }
 }

@@ -7,28 +7,15 @@
   <Product Id="*" Name="$(var.ProductName)" Language="1033" Version="$(var.MsiVersion)" Manufacturer="Microsoft Corporation" UpgradeCode="$(var.InstallerUpgradeGuid)">
     <Package InstallerVersion="300" Compressed="yes" InstallScope="perMachine" />
     <MajorUpgrade AllowDowngrades="no" AllowSameVersionUpgrades="yes" DowngradeErrorMessage="!(loc.DowngradeErrorMessage)" />
-    <PropertyRef Id="UpgradeVersionsDummyProperty" />
 
     <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
 
-    <!-- Detect other installed software (IronPython, HPC pack) and set the
+    <!-- Detect other installed software (IronPython, Django) and set the
          install level of the feature to 2 if they're not installed. This will
          cause them to be unselected by default. -->
     <Property Id="INSTALLLEVEL" Value="1"/>
 
     <!-- Conditions for install -->
-    <?if "$(var.IncludeHpc)" ~= "True" ?>
-    <PropertyRef Id="HPC_CLIENT_INSTALLED"/>
-    <?endif ?>
-    
-    <?ifdef CheckPTVS15PerUser ?>
-    <PropertyRef Id="PTVS_15_PERUSER"/>
-    <Condition Message="!(loc.PTVS15PerUserInstalled)">NOT PTVS_15_PERUSER OR Installed</Condition>
-    <?endif ?>
-    
-    <PropertyRef Id="IPYTOOLS_INSTALLED"/>
-    <Condition Message="!(loc.IronPythonToolsInstalled)">NOT IPYTOOLS_INSTALLED OR REMOVE ~= "ALL"</Condition>
-    
     <PropertyRef Id="VS_PRERELEASE"/>
     <Condition Message="!(loc.VSPrerelease)"> NOT VS_PRERELEASE OR Installed </Condition>
     
@@ -178,15 +165,6 @@
         <RegistryValue Root='HKCR' Key='.pyw\OpenWithProgids' Name='VWDExpress.py.$(var.VSTargetVersion)' Type='string' Value='' />
       </Component>
 
-      <?if "$(var.IncludeReplWindow)" ~= "True" ?>
-      <Merge Id="Merge_ReplWindow" Language="1033" SourceFile="ReplWindow.msm" DiskId="1">
-        <?foreach key in VS;WD;VWD?>
-        <ConfigurationData Name="Config_$(var.key)ExtensionsParent" Value="Dir_$(var.key)Extensions" />
-        <ConfigurationData Name="Config_$(var.key)TemplatesParent" Value="Dir_$(var.key)Templates"/>
-        <?endforeach?>
-        <ConfigurationData Name="Config_MSBuildLocation" Value="Dir_MSBuildTargets"/>
-      </Merge>
-      <?endif ?>
       <Merge Id="Merge_Profiling" Language="1033" SourceFile="Profiling.msm" DiskId="1">
         <?foreach key in VS;WD;VWD?>
         <ConfigurationData Name="Config_$(var.key)ExtensionsParent" Value="Dir_$(var.key)Extensions" />
@@ -219,15 +197,6 @@
 
         <ConfigurationData Name="Config_StartMenuLocation" Value="Dir_StartMenu"/>
       </Merge>
-      <?if "$(var.IncludeHpc)" ~= "True" ?>
-      <Merge Id="Merge_Hpc" Language="1033" SourceFile="Hpc.msm" DiskId="1">
-        <?foreach key in VS;WD;VWD?>
-        <ConfigurationData Name="Config_$(var.key)ExtensionsParent" Value="Dir_$(var.key)Extensions" />
-        <ConfigurationData Name="Config_$(var.key)TemplatesParent" Value="Dir_$(var.key)Templates"/>
-        <?endforeach?>
-        <ConfigurationData Name="Config_MSBuildLocation" Value="Dir_MSBuildTargets"/>
-      </Merge>
-      <?endif ?>
       <Merge Id="Merge_IronPython" Language="1033" SourceFile="IronPython.msm" DiskId="1">
         <?foreach key in VS;WD;VWD?>
         <ConfigurationData Name="Config_$(var.key)ExtensionsParent" Value="Dir_$(var.key)Extensions" />
@@ -254,9 +223,6 @@
       <ComponentRef Id="Comp_ProgramMenuFolder" />
 
       <MergeRef Id="Merge_PythonTools"/>
-      <?if "$(var.IncludeReplWindow)" ~= "True" ?>
-      <MergeRef Id="Merge_ReplWindow"/>
-      <?endif ?>
       <MergeRef Id="Merge_Profiling"/>
 
       <?if "$(var.IncludeVsLogger)" ~= "True" ?>
@@ -276,13 +242,6 @@
       <Feature Id="Feature_IronPython" AllowAdvertise="no" Level="1" Title="IronPython support" Description="IronPython support">
         <MergeRef Id="Merge_IronPython"/>
       </Feature>
-
-      <?if "$(var.IncludeHpc)" ~= "True" ?>
-      <Feature Id="Feature_WinHpc" AllowAdvertise="no" Level="1" Title="Windows HPC Support" Description="Windows HPC Support">
-        <Condition Level="2">NOT HPC_CLIENT_INSTALLED</Condition>
-        <MergeRef Id="Merge_Hpc"/>
-      </Feature>
-      <?endif ?>
 
       <Feature Id="Feature_VsPyFile" AllowAdvertise="no" Level="1" Title="Register file associations" Description="Associates Python projects and source files with Visual Studio (existing source file associations are not modified).">
         <ComponentRef Id="Comp_VSPyFileProgId"/>

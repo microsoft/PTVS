@@ -16,19 +16,15 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Imaging;
+using Microsoft.VisualStudio.Imaging.Interop;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 using OleConstants = Microsoft.VisualStudio.OLE.Interop.Constants;
 using VsCommands = Microsoft.VisualStudio.VSConstants.VSStd97CmdID;
 using VsMenus = Microsoft.VisualStudioTools.Project.VsMenus;
-#if DEV14_OR_LATER
-using Microsoft.VisualStudio.Imaging;
-using Microsoft.VisualStudio.Imaging.Interop;
-#endif
 
 namespace Microsoft.PythonTools.Project {
     /// <summary>
@@ -83,17 +79,6 @@ namespace Microsoft.PythonTools.Project {
             get { return false; }
         }
 
-#if DEV11_OR_LATER && !DEV14_OR_LATER
-        protected override VSOVERLAYICON OverlayIconIndex {
-            get {
-                return Directory.Exists(Url) || File.Exists(Url) ?
-                    base.OverlayIconIndex :
-                    (VSOVERLAYICON)__VSOVERLAYICON2.OVERLAYICON_NOTONDISK;
-            }
-        }
-#endif
-
-#if DEV14_OR_LATER
         protected override bool SupportsIconMonikers {
             get { return true; }
         }
@@ -103,22 +88,6 @@ namespace Microsoft.PythonTools.Project {
                 KnownMonikers.Reference :
                 KnownMonikers.ReferenceWarning;
         }
-#else
-        public override int ImageIndex {
-            get {
-                return _project.GetIconIndex(
-#if DEV11_OR_LATER
-                    PythonProjectImageName.SearchPath
-#else
-                    (Directory.Exists(Url) || File.Exists(Url)) ? 
-                        PythonProjectImageName.SearchPath : 
-                        PythonProjectImageName.MissingSearchPath
-#endif
-                );
-            }
-        }
-#endif
-
 
         /// <summary>
         /// Search path node cannot be dragged.

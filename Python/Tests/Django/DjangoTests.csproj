@@ -1,6 +1,16 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Choose>
+    <When Condition=" '$(VisualStudioVersion)'=='15.0'  Or '$(TargetVisualStudioVersion)'=='VS150' ">
+      <PropertyGroup>
+        <MinimumVisualStudioVersion>15.0</MinimumVisualStudioVersion>
+        <FileUpgradeFlags>
+        </FileUpgradeFlags>
+        <UpgradeBackupLocation>
+        </UpgradeBackupLocation>
+        <OldToolsVersion>14.0</OldToolsVersion>
+      </PropertyGroup>
+    </When>
     <When Condition=" '$(VisualStudioVersion)'=='14.0'  Or '$(TargetVisualStudioVersion)'=='VS140' ">
       <PropertyGroup>
         <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
@@ -8,27 +18,7 @@
         </FileUpgradeFlags>
         <UpgradeBackupLocation>
         </UpgradeBackupLocation>
-        <OldToolsVersion>4.0</OldToolsVersion>
-      </PropertyGroup>
-    </When>
-    <When Condition=" '$(VisualStudioVersion)'=='12.0'  Or '$(TargetVisualStudioVersion)'=='VS120' ">
-      <PropertyGroup>
-        <MinimumVisualStudioVersion>12.0</MinimumVisualStudioVersion>
-        <FileUpgradeFlags>
-        </FileUpgradeFlags>
-        <UpgradeBackupLocation>
-        </UpgradeBackupLocation>
-        <OldToolsVersion>4.0</OldToolsVersion>
-      </PropertyGroup>
-    </When>
-    <When Condition=" '$(VisualStudioVersion)'=='11.0'  Or '$(TargetVisualStudioVersion)'=='VS110' ">
-      <PropertyGroup>
-        <MinimumVisualStudioVersion>11.0</MinimumVisualStudioVersion>
-        <FileUpgradeFlags>
-        </FileUpgradeFlags>
-        <UpgradeBackupLocation>
-        </UpgradeBackupLocation>
-        <OldToolsVersion>4.0</OldToolsVersion>
+        <OldToolsVersion>14.0</OldToolsVersion>
       </PropertyGroup>
     </When>
   </Choose>
@@ -68,23 +58,12 @@
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
     <Reference Include="System.Web" />
-  </ItemGroup>
-  <PropertyGroup>
-    <WebEditorHintPath>$(DevEnvDir)\CommonExtensions\Microsoft\Web\Editor\</WebEditorHintPath>
-    <WebEditorHintPath Condition="'$(VSTarget)' == '14.0'">$(DevEnvDir)\Extensions\Microsoft\Web Tools\Editors\</WebEditorHintPath>
-  </PropertyGroup>
-  <ItemGroup Condition="'$(VSTarget)' != '10.0' And '$(VSTarget)' != '11.0'">
     <Reference Include="Microsoft.VisualStudio.Html.Package, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>$(WebEditorHintPath)Microsoft.VisualStudio.Html.Package.dll</HintPath>
+      <HintPath>$(DevEnvDir)\Extensions\Microsoft\Web Tools\Editors\Microsoft.VisualStudio.Html.Package.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.VisualStudio.Web.HTML, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" Condition="'$(VSTarget)' == '14.0'">
+    <Reference Include="Microsoft.VisualStudio.Web.HTML, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>$(DevEnvDir)Microsoft.VisualStudio.Web.Html.dll</HintPath>
     </Reference>
-  </ItemGroup>
-  <ItemGroup>
-    <CodeAnalysisDependentAssemblyPaths Condition=" '$(VS100COMNTOOLS)' != '' " Include="$(VS100COMNTOOLS)..\IDE\PrivateAssemblies">
-      <Visible>False</Visible>
-    </CodeAnalysisDependentAssemblyPaths>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\..\..\Common\Product\SharedProject\ProcessOutput.cs">
@@ -93,7 +72,6 @@
     <Compile Include="..\..\..\Common\Product\SharedProject\TaskExtensions.cs">
       <Link>TaskExtensions.cs</Link>
     </Compile>
-    <Compile Include="SnapshotSpanSourceCodeReaderTests.cs" />
     <Compile Include="AttributeTests.cs" />
     <Compile Include="DjangoAnalyzerTests.cs" />
     <Compile Include="DjangoDebuggerTests.cs" />

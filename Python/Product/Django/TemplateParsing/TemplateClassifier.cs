@@ -12,8 +12,6 @@
  *
  * ***************************************************************************/
 
-#if DEV12_OR_LATER
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -21,12 +19,7 @@ using System.Threading;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Projection;
-
-#if DEV14_OR_LATER
 using Microsoft.Html.Editor.Document;
-#else
-using Microsoft.Html.Editor;
-#endif
 
 namespace Microsoft.PythonTools.Django.TemplateParsing {
     internal class TemplateClassifier : TemplateClassifierBase {
@@ -116,5 +109,3 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
         }
     }
 }
-
-#endif

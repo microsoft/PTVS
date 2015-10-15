@@ -12,22 +12,15 @@
  *
  * ***************************************************************************/
 
-using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using Microsoft.VisualStudio.InteractiveWindow;
+using Microsoft.VisualStudio.InteractiveWindow.Commands;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Utilities;
-#if DEV14_OR_LATER
-using Microsoft.VisualStudio.InteractiveWindow;
-using Microsoft.VisualStudio.InteractiveWindow.Commands;
-#else
-using Microsoft.VisualStudio.Repl;
-using IInteractiveWindow = Microsoft.VisualStudio.Repl.IReplWindow;
-using IInteractiveWindowCommand = Microsoft.VisualStudio.Repl.IReplCommand;
-#endif
 
 namespace Microsoft.PythonTools.Repl {
     [Export(typeof(IInteractiveWindowCommand))]
@@ -50,13 +43,6 @@ namespace Microsoft.PythonTools.Repl {
             get { return "mod"; }
         }
 
-        public object ButtonContent {
-            get {
-                return null;
-            }
-        }
-
-#if DEV14_OR_LATER
         public IEnumerable<ClassificationSpan> ClassifyArguments(ITextSnapshot snapshot, Span argumentsSpan, Span spanToClassify) {
             yield break;
         }
@@ -84,6 +70,5 @@ namespace Microsoft.PythonTools.Repl {
                 yield return "mod";
             }
         }
-#endif
     }
 }

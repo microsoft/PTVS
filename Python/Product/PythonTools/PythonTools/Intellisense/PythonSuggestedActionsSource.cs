@@ -24,7 +24,6 @@ using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Intellisense {
-#if DEV14_OR_LATER
     class PythonSuggestedActionsSource : ISuggestedActionsSource {
         internal readonly IServiceProvider _provider;
         internal readonly ITextView _view;
@@ -115,5 +114,4 @@ namespace Microsoft.PythonTools.Intellisense {
             return false;
         }
     }
-#endif
 }

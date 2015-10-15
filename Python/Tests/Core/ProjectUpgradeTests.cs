@@ -128,11 +128,7 @@ namespace PythonToolsTests {
             var upgrade = (IVsProjectUpgradeViaFactory)factory;
             
             foreach (var testCase in new[] {
-#if DEV12_OR_LATER
                 new { Name = "12.0", Expected = 0 },
-#else
-                new { Name = "12.0", Expected = 1 },
-#endif
                 new { Name = "4.0", Expected = 0 }
             }) {
                 int actual;
@@ -312,7 +308,6 @@ namespace PythonToolsTests {
             Assert.AreEqual(Guid.Empty, factoryGuid);
         }
 
-#if DEV12_OR_LATER
         [TestMethod, Priority(0)]
         public void WebProjectCompatibility() {
             const int ExpressSkuValue = 500;
@@ -368,6 +363,5 @@ namespace PythonToolsTests {
                 Assert.AreEqual(testCase.Expected, actual, string.Format("Wrong result for {0}", testCase.Name));
             }
         }
-#endif
     }
 }

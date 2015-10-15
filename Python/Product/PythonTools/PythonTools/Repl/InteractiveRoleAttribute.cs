@@ -12,12 +12,7 @@
  *
  * ***************************************************************************/
 
-#if DEV14_OR_LATER
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Microsoft.PythonTools.Repl {
     [AttributeUsage(AttributeTargets.All, AllowMultiple = true)]
@@ -25,8 +20,10 @@ namespace Microsoft.PythonTools.Repl {
         private readonly string _name;
 
         public InteractiveWindowRoleAttribute(string name) {
-            if (name.Contains(","))
-                throw new ArgumentException("ReplRoleAttribute name cannot contain any commas. Apply multiple attributes if you want to support multiple roles.", "name");
+            if (name.Contains(",")) {
+                throw new ArgumentException("ReplRoleAttribute name cannot contain any commas. " +
+                    "Apply multiple attributes if you want to support multiple roles.", "name");
+            }
 
             _name = name;
         }
@@ -36,4 +33,3 @@ namespace Microsoft.PythonTools.Repl {
         }
     }
 }
-#endif

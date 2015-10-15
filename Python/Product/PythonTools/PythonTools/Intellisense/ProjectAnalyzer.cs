@@ -20,33 +20,22 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Navigation;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
-#if DEV14_OR_LATER
-using Microsoft.VisualStudio.InteractiveWindow;
-#else
-using Microsoft.VisualStudio.Repl;
-#endif
 using Microsoft.PythonTools.Project;
 using Microsoft.PythonTools.Repl;
+using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudioTools;
-using System.Threading.Tasks;
 
 namespace Microsoft.PythonTools.Intellisense {
-    using Microsoft.PythonTools.Repl;
-#if DEV14_OR_LATER
-    using IReplEvaluator = IInteractiveEvaluator;
-#endif
-
-
     /// <summary>
     /// Performs centralized parsing and analysis of Python source code within Visual Studio.
     /// 
@@ -215,7 +204,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
                 var projEntry = CreateProjectEntry(buffers[0], new SnapshotCookie(buffers[0].CurrentSnapshot));
 
-                bool doSquiggles = !buffers[0].Properties.ContainsProperty(typeof(IReplEvaluator));
+                bool doSquiggles = !buffers[0].Properties.ContainsProperty(typeof(IInteractiveEvaluator));
                 if (doSquiggles) {
                     _unresolvedSquiggles.ListenForNextNewAnalysis(projEntry as IPythonProjectEntry);
                 }
@@ -282,7 +271,7 @@ namespace Microsoft.PythonTools.Intellisense {
         internal MonitoredBufferResult MonitorTextBuffer(ITextView textView, ITextBuffer buffer) {
             IProjectEntry projEntry = CreateProjectEntry(buffer, new SnapshotCookie(buffer.CurrentSnapshot));
 
-            if (!buffer.Properties.ContainsProperty(typeof(IReplEvaluator))) {
+            if (!buffer.Properties.ContainsProperty(typeof(IInteractiveEvaluator))) {
                 ConnectErrorList(projEntry, buffer);
                 _errorProvider.AddBufferForErrorSource(projEntry, UnresolvedImportMoniker, buffer);
                 _unresolvedSquiggles.ListenForNextNewAnalysis(projEntry as IPythonProjectEntry);
@@ -1037,9 +1026,9 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private static SignatureAnalysis TryGetLiveSignatures(ITextSnapshot snapshot, int paramIndex, string text, ITrackingSpan applicableSpan, string lastKeywordArg) {
-            IReplEvaluator eval;
+            IInteractiveEvaluator eval;
             IPythonReplIntellisense dlrEval;
-            if (snapshot.TextBuffer.Properties.TryGetProperty<IReplEvaluator>(typeof(IReplEvaluator), out eval) &&
+            if (snapshot.TextBuffer.Properties.TryGetProperty<IInteractiveEvaluator>(typeof(IInteractiveEvaluator), out eval) &&
                 (dlrEval = eval as IPythonReplIntellisense) != null) {
                 if (text.EndsWith("(")) {
                     text = text.Substring(0, text.Length - 1);

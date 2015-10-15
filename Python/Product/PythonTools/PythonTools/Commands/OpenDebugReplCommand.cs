@@ -13,30 +13,15 @@
  * ***************************************************************************/
 
 using System;
-using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Navigation;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
-#if DEV14_OR_LATER
-using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.InteractiveWindow.Shell;
-#else
-using Microsoft.VisualStudio.Repl;
-#endif
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Commands {
-#if DEV14_OR_LATER
-    using IReplWindow = IInteractiveWindow;
-    using IVsReplWindow = IVsInteractiveWindow;
-    using IReplEvaluator = IInteractiveEvaluator;
-    using IReplWindowProvider = InteractiveWindowProvider;
-#else
-    using IVsReplWindow = IReplWindow;
-#endif
-
     /// <summary>
     /// Provides the command for starting the Python Debug REPL window.
     /// </summary>
@@ -47,17 +32,17 @@ namespace Microsoft.PythonTools.Commands {
             _serviceProvider = serviceProvider;
         }
 
-        internal static IVsReplWindow/*!*/ EnsureReplWindow(IServiceProvider serviceProvider) {
+        internal static IVsInteractiveWindow/*!*/ EnsureReplWindow(IServiceProvider serviceProvider) {
             var compModel = serviceProvider.GetComponentModel();
-            var provider = compModel.GetService<IReplWindowProvider>();
+            var provider = compModel.GetService<InteractiveWindowProvider>();
 
             string replId = PythonDebugReplEvaluatorProvider.GetDebugReplId();
             var window = provider.FindReplWindow(replId);
             if (window == null) {
-                window = provider.CreateReplWindow(serviceProvider.GetPythonContentType(), "Python Debug Interactive", typeof(PythonLanguageInfo).GUID, replId);
+                window = provider.CreateInteractiveWindow(serviceProvider.GetPythonContentType(), "Python Debug Interactive", typeof(PythonLanguageInfo).GUID, replId);
 
                 var pyService = serviceProvider.GetPythonToolsService();
-                window.SetSmartUpDown(pyService.DebugInteractiveOptions.ReplSmartHistory);
+                window.InteractiveWindow.SetSmartUpDown(pyService.DebugInteractiveOptions.ReplSmartHistory);
             }
             return window;
         }
@@ -67,7 +52,7 @@ namespace Microsoft.PythonTools.Commands {
             IVsWindowFrame windowFrame = (IVsWindowFrame)((ToolWindowPane)window).Frame;
 
             ErrorHandler.ThrowOnFailure(windowFrame.Show());
-            window.Focus();
+            window.Show(true);
         }
 
         public override EventHandler BeforeQueryStatus {

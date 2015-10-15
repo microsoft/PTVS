@@ -20,14 +20,10 @@ VsPyProf* VsPyProf::Create(HMODULE pythonModule) {
     wchar_t buffer[MAX_PATH];
     buffer[0] = '\0';
 
-#if DEV14
+#if DEV15
+    const wchar_t *dllName = L"\\System32\\VsPerf150.dll";
+#elif DEV14
     const wchar_t *dllName = L"\\System32\\VsPerf140.dll";
-#elif DEV12
-    const wchar_t *dllName = L"\\System32\\VsPerf120.dll";
-#elif DEV11
-    const wchar_t *dllName = L"\\System32\\VsPerf110.dll";
-#elif DEV10
-    const wchar_t *dllName = L"\\System32\\VsPerf100.dll";
 #else
 #error Unsupported version of Visual Studio
 #endif

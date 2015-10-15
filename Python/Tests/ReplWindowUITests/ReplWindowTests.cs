@@ -29,9 +29,6 @@ using TestUtilities;
 using TestUtilities.UI;
 using TestUtilities.UI.Python;
 using Keyboard = TestUtilities.UI.Keyboard;
-#if !DEV14_OR_LATER
-using Microsoft.VisualStudio.Repl;
-#endif
 
 namespace ReplWindowUITests {
     [TestClass, Ignore]
@@ -67,37 +64,6 @@ namespace ReplWindowUITests {
                 interactive.WaitForText(">2", "2", ">");
             }
         }
-
-#if !DEV14_OR_LATER // Interactive options don't need to be tested by us
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
-        public virtual void ReplWindowOptions() {
-            using (var interactive = Prepare()) {
-                interactive.SetOptionValue(ReplOptions.CommandPrefix, "%");
-                Assert.AreEqual(interactive.GetOptionValue(ReplOptions.CommandPrefix), "%");
-                interactive.SetOptionValue(ReplOptions.CommandPrefix, "$");
-                Assert.AreEqual(interactive.GetOptionValue(ReplOptions.CommandPrefix), "$");
-
-                Assert.AreEqual(interactive.GetOptionValue(ReplOptions.PrimaryPrompt), interactive.Settings.PrimaryPrompt);
-                Assert.AreEqual(interactive.GetOptionValue(ReplOptions.SecondaryPrompt), interactive.Settings.SecondaryPrompt);
-
-                Assert.AreEqual(interactive.GetOptionValue(ReplOptions.DisplayPromptInMargin), !interactive.Settings.InlinePrompts);
-                Assert.AreEqual(interactive.GetOptionValue(ReplOptions.ShowOutput), true);
-
-                Assert.AreEqual(interactive.GetOptionValue(ReplOptions.UseSmartUpDown), true);
-
-                AssertUtil.Throws<InvalidOperationException>(
-                    () => interactive.SetOptionValue(ReplOptions.PrimaryPrompt, 42)
-                );
-                AssertUtil.Throws<InvalidOperationException>(
-                    () => interactive.SetOptionValue(ReplOptions.PrimaryPrompt, null)
-                );
-                AssertUtil.Throws<InvalidOperationException>(
-                    () => interactive.SetOptionValue((ReplOptions)(-1), null)
-                );
-            }
-        }
-#endif
 
         [TestMethod, Priority(0)]
         [HostType("VSTestHost")]
@@ -407,9 +373,6 @@ namespace ReplWindowUITests {
         public virtual void TestRawInput() {
             using (var interactive = Prepare()) {
                 EnsureInputFunction(interactive);
-#if !DEV14_OR_LATER
-                interactive.SetOptionValue(ReplOptions.StandardInputPrompt, "INPUT: ");
-#endif
 
                 interactive.SubmitCode("x = input()");
                 interactive.WaitForText(">x = input()", "<");
@@ -428,9 +391,6 @@ namespace ReplWindowUITests {
         public virtual void OnlyTypeInRawInput() {
             using (var interactive = Prepare()) {
                 EnsureInputFunction(interactive);
-#if !DEV14_OR_LATER
-                interactive.SetOptionValue(ReplOptions.StandardInputPrompt, "INPUT: ");
-#endif
 
                 interactive.SubmitCode("input()");
                 interactive.WaitForText(">input()", "<");
@@ -452,9 +412,6 @@ namespace ReplWindowUITests {
         public virtual void DeleteCharactersInRawInput() {
             using (var interactive = Prepare()) {
                 EnsureInputFunction(interactive);
-#if !DEV14_OR_LATER
-                interactive.SetOptionValue(ReplOptions.StandardInputPrompt, "INPUT: ");
-#endif
 
                 interactive.Type("input()");
                 interactive.WaitForText(">input()", "<");
@@ -476,9 +433,6 @@ namespace ReplWindowUITests {
         [HostType("VSTestHost")]
         public virtual void TestIndirectInput() {
             using (var interactive = Prepare()) {
-#if !DEV14_OR_LATER
-                interactive.SetOptionValue(ReplOptions.StandardInputPrompt, "INPUT: ");
-#endif
                 var t = Task.Run(() => interactive.Window.ReadStandardInput());
 
                 // prompt should disappear
@@ -487,11 +441,7 @@ namespace ReplWindowUITests {
                 Keyboard.Type("abc\r");
                 interactive.WaitForText("<abc", ">");
 
-#if DEV14_OR_LATER
                 var text = t.Result?.ReadToEnd();
-#else
-                var text = t.Result;
-#endif
                 Assert.AreEqual("abc\r\n", text);
             }
         }
@@ -653,11 +603,7 @@ namespace ReplWindowUITests {
                 Keyboard.Type(Key.Right);
                 Keyboard.PressAndRelease(Key.Enter, Key.LeftCtrl);
 
-#if DEV14_OR_LATER
                 interactive.WaitForText(">" + code, ">" + code);
-#else
-                interactive.WaitForText(">" + code, ">" + code, ".");
-#endif
 
                 Keyboard.PressAndRelease(Key.Escape);
 
@@ -977,71 +923,6 @@ namespace ReplWindowUITests {
             }
         }
 
-#if !DEV14_OR_LATER // cannot cancel standard input on VS 2015
-        /// <summary>
-        /// Ctrl-Break while entering standard input should return an empty input and append a primary prompt.
-        /// </summary>
-        [TestMethod, Priority(0)]
-        [TestCategory("Interactive")]
-        [HostType("VSTestHost")]
-        public virtual void CtrlBreakInStandardInput() {
-            using (var interactive = Prepare()) {
-                EnsureInputFunction(interactive);
-                interactive.SetOptionValue(ReplOptions.StandardInputPrompt, "INPUT: ");
-
-                interactive.WaitForText(">");
-
-                interactive.SubmitCode("input()");
-                interactive.WaitForText(">input()", "<");
-
-                interactive.Type("ignored", commitLastLine: false);
-                interactive.WaitForText(">input()", "<ignored");
-
-                interactive.CancelExecution();
-
-                interactive.WaitForText(
-                    ">input()",
-                    "<ignored",
-                    "''",
-                    ">"
-                );
-
-                interactive.PreviousHistoryItem();
-                interactive.SubmitCurrentText();
-
-                interactive.WaitForText(
-                    ">input()",
-                    "<ignored",
-                    "''",
-                    ">input()",
-                    "<"
-                );
-
-                interactive.Type("ignored2", commitLastLine: false);
-
-                interactive.WaitForText(
-                    ">input()",
-                    "<ignored",
-                    "''",
-                    ">input()",
-                    "<ignored2"
-                );
-
-                interactive.CancelExecution(1);
-
-                interactive.WaitForText(
-                    ">input()",
-                    "<ignored",
-                    "''",
-                    ">input()",
-                    "<ignored2",
-                    "''",
-                    ">"
-                );
-            }
-        }
-#endif
-
         /// <summary>
         /// Enter "while True: pass", then hit up/down arrow, should move the caret in the edit buffer
         /// </summary>
@@ -1309,11 +1190,7 @@ namespace ReplWindowUITests {
 
                 interactive.ClearInput();
                 interactive.Paste(comment + "\r\n");
-#if DEV14_OR_LATER
                 interactive.WaitForText(">" + comment, ".");
-#else
-                interactive.WaitForText(">" + comment);
-#endif
 
                 interactive.ClearInput();
                 interactive.Paste(comment + "\r\ndef f():\r\n    pass");
@@ -1328,43 +1205,6 @@ namespace ReplWindowUITests {
                 interactive.WaitForText(">" + comment, "." + comment, ".");
             }
         }
-
-#if !DEV14_OR_LATER // VS 2015 interactive window does not split statements on paste
-        /// <summary>
-        /// def f(): pass
-        /// 
-        /// X
-        /// 
-        /// def g(): pass
-        /// 
-        /// </summary>
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost")]
-        public virtual void PasteWithError() {
-            using (var interactive = Prepare()) {
-                interactive.RequirePrimaryPrompt();
-
-                const string code = @"def f(): pass
-
-X
-
-def g(): pass
-
-";
-                interactive.Paste(code);
-
-                interactive.WaitForText(
-                    ">def f(): pass",
-                    ".",
-                    ">X",
-                    "Traceback (most recent call last):",
-                    "  File \"<" + ((PythonReplWindowProxySettings)interactive.Settings).SourceFileName + ">\", line 1, in <module>",
-                    "NameError: name 'X' is not defined",
-                    ">"
-                );
-            }
-        }
-#endif
 
         [TestMethod, Priority(1)]
         [HostType("VSTestHost")]
@@ -1411,9 +1251,6 @@ def g(): pass
                 // >>> 
 
                 interactive.RequireSecondaryPrompt();
-#if !DEV14_OR_LATER
-                interactive.SetOptionValue(ReplOptions.StandardInputPrompt, "INPUT: ");
-#endif
                 EnsureInputFunction(interactive);
                 interactive.Type(@"def fob():
 print('hi')
@@ -1615,12 +1452,8 @@ input()");
 
                 interactive.WaitForTextStart(
                     ">$help",
-#if DEV14_OR_LATER
                     "Keyboard shortcuts:",
                     "  Enter                Evaluate the current input if it appears to be complete."
-#else
- string.Format("  {0,-24}  {1}", "$help", "Show a list of REPL commands")
-#endif
 );
             }
         }
@@ -1826,74 +1659,6 @@ $cls
 
         #endregion
 
-        #region Projection Buffer tests
-#if !DEV14_OR_LATER
-
-        /// <summary>
-        /// Replacing a snippet including a single line break with another
-        /// snippet that also includes a single line break (line delta is zero).
-        /// </summary>
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
-        public virtual void TestProjectionBuffers_ZeroLineDeltaChange() {
-            using (var interactive = Prepare()) {
-                interactive.Invoke(() => {
-                    var buffer = interactive.Window.CurrentLanguageBuffer;
-                    buffer.Replace(new Span(0, 0), "def f():\r\n    pass");
-                    VerifyProjectionSpans((ReplWindow)interactive.Window);
-
-                    var snapshot = buffer.CurrentSnapshot;
-
-                    var spanToReplace = new Span("def f():".Length, "\r\n    ".Length);
-                    Assert.AreEqual("\r\n    ", snapshot.GetText(spanToReplace));
-
-                    using (var edit = buffer.CreateEdit(EditOptions.None, null, null)) {
-                        edit.Replace(spanToReplace.Start, spanToReplace.Length, "\r\n");
-                        edit.Apply();
-                    }
-
-                    VerifyProjectionSpans((ReplWindow)interactive.Window);
-                });
-            }
-        }
-
-        /// <summary>
-        /// Verifies that current langauge buffer is projected as:
-        /// {Prompt1}{Language Span}\r\n
-        /// {Prompt2}{Language Span}\r\n
-        /// {Prompt2}{Language Span}
-        /// </summary>
-        private static void VerifyProjectionSpans(ReplWindow repl) {
-            var projectionSpans = repl.ProjectionSpans;
-            var projectionBuffer = repl.TextBuffer;
-            var snapshot = repl.CurrentLanguageBuffer.CurrentSnapshot;
-
-            int firstLangSpan = projectionSpans.Count - snapshot.LineCount * 2 + 1;
-            int projectionLine = projectionBuffer.CurrentSnapshot.LineCount - snapshot.LineCount;
-            for (int i = firstLangSpan; i < projectionSpans.Count; i += 2, projectionLine++) {
-                // prompt:
-                if (i == firstLangSpan) {
-                    Assert.IsTrue(projectionSpans[i - 1].Kind == ReplSpanKind.Prompt);
-                } else {
-                    Assert.IsTrue(projectionSpans[i - 1].Kind == ReplSpanKind.SecondaryPrompt);
-                }
-
-                // language span:
-                Assert.IsTrue(projectionSpans[i].Kind == ReplSpanKind.Language);
-                var trackingSpan = projectionSpans[i].TrackingSpan;
-                Assert.IsNotNull(trackingSpan);
-
-                var text = trackingSpan.GetText(snapshot);
-                var lineBreak = projectionBuffer.CurrentSnapshot.GetLineFromLineNumber(projectionLine).GetLineBreakText();
-                Assert.IsTrue(text.EndsWith(lineBreak));
-                Assert.IsTrue(text.IndexOf("\n") == -1 || text.IndexOf("\n") >= text.Length - lineBreak.Length);
-
-            }
-        }
-
-#endif
-        #endregion
-
         #region Helper methods
 
         internal static void AssertContainingRegion(ReplWindowProxy interactive, int position, string expectedText) {
@@ -1937,32 +1702,4 @@ $cls
             }
         }
     }
-
-#if !DEV14_OR_LATER
-    [TestClass]
-    public class ReplWindowTestsGlyphPrompt : ReplWindowTests {
-        internal override PythonReplWindowProxySettings Settings {
-            get {
-                return new PythonReplWindowProxySettings {
-                    Version = PythonPaths.Python27 ?? PythonPaths.Python27_x64,
-                    InlinePrompts = false
-                };
-            }
-        }
-
-        // The following tests are skipped when running in this class
-        public override void CtrlEnterOnPreviousInput() { }
-        public override void BackspaceSecondaryPromptSelected() { }
-        public override void DeleteSecondaryPromptSelected() { }
-        public override void EditTypeSecondaryPromptSelected() { }
-        public override void TestDelAtEndOfLine() { }
-        public override void CursorWhileCodeIsRunning() { }
-        public override void HistoryBackForward() { }
-        public override void PasteWithError() { }
-        public override void EditCutIncludingPrompt() { }
-        public override void EditPasteSecondaryPromptSelected() { }
-        public override void EditPasteSecondaryPromptSelectedInPromptMargin() { }
-
-    }
-#endif
 }

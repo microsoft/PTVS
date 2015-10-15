@@ -13,9 +13,7 @@
  * ***************************************************************************/
 
 using System;
-using System.Collections.Generic;
 using System.Windows.Forms;
-using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Repl;
 
 namespace Microsoft.PythonTools.Options {
@@ -25,10 +23,6 @@ namespace Microsoft.PythonTools.Options {
             InitializeComponent();
 
             AddToolTips();
-
-#if DEV14_OR_LATER
-            _inlinePrompts.Visible = false;
-#endif
         }
 
         internal void EnableUserDefinedPrompts(bool enable) {
@@ -57,12 +51,10 @@ namespace Microsoft.PythonTools.Options {
         }
 
         private void AddToolTips() {
-            const string inlinePromptsToolTip = "When checked the prompts are in the editor buffer.  When unchecked the prompts are on the side in a separate margin.";
             const string useInterpreterPromptsToolTip = "When checked the prompts are the ones configured here.  When unchecked the prompt strings are defined by sys.ps1 and sys.ps2.";
             const string smartReplHistoryToolTip = "Causes the up/down arrow keys to navigate history when the cursor is at the end of an input.";
             const string liveCompletionsToolTip = @"When offering completions don't use values that have come from analysis of the REPL buffer.  Instead, only use values from live objects.";
 
-            _tooltips.SetToolTip(_inlinePrompts, inlinePromptsToolTip);
             _tooltips.SetToolTip(_useUserDefinedPrompts, useInterpreterPromptsToolTip);
             _tooltips.SetToolTip(_smartReplHistory, smartReplHistoryToolTip);
             _tooltips.SetToolTip(_liveCompletionsOnly, liveCompletionsToolTip);
@@ -78,7 +70,6 @@ namespace Microsoft.PythonTools.Options {
         internal void SyncControlWithPageSettings(PythonToolsService pyService) {
             _smartReplHistory.Checked = pyService.DebugInteractiveOptions.ReplSmartHistory;
             ReplIntellisenseMode = pyService.DebugInteractiveOptions.ReplIntellisenseMode;
-            _inlinePrompts.Checked = pyService.DebugInteractiveOptions.InlinePrompts;
             _priPrompt.Text = pyService.DebugInteractiveOptions.PrimaryPrompt;
             _secPrompt.Text = pyService.DebugInteractiveOptions.SecondaryPrompt;
             EnableUserDefinedPrompts(!pyService.DebugInteractiveOptions.UseInterpreterPrompts);
@@ -87,7 +78,6 @@ namespace Microsoft.PythonTools.Options {
 
         internal void SyncPageWithControlSettings(PythonToolsService pyService) {
             pyService.DebugInteractiveOptions.ReplSmartHistory = _smartReplHistory.Checked;
-            pyService.DebugInteractiveOptions.InlinePrompts = _inlinePrompts.Checked;
             pyService.DebugInteractiveOptions.PrimaryPrompt = _priPrompt.Text;
             pyService.DebugInteractiveOptions.SecondaryPrompt = _secPrompt.Text;
             pyService.DebugInteractiveOptions.LiveCompletionsOnly = _liveCompletionsOnly.Checked;

@@ -71,7 +71,7 @@ namespace PythonToolsTests {
                         Assert.IsTrue(!completed);
                         Thread.Sleep(1000);
 
-                        evaluator.AbortCommand();
+                        evaluator.AbortExecution();
                     }, 
                     false, 
                     20000, 
@@ -83,15 +83,15 @@ namespace PythonToolsTests {
         [TestMethod, Priority(0)]
         public void TestCanExecute() {
             using (var evaluator = MakeEvaluator()) {
-                Assert.IsTrue(evaluator.CanExecuteText("print 'hello'"));
-                Assert.IsTrue(evaluator.CanExecuteText("42"));
-                Assert.IsTrue(evaluator.CanExecuteText("for i in xrange(2):  print i\r\n\r\n"));
-                Assert.IsTrue(evaluator.CanExecuteText("raise Exception()\n"));
+                Assert.IsTrue(evaluator.CanExecuteCode("print 'hello'"));
+                Assert.IsTrue(evaluator.CanExecuteCode("42"));
+                Assert.IsTrue(evaluator.CanExecuteCode("for i in xrange(2):  print i\r\n\r\n"));
+                Assert.IsTrue(evaluator.CanExecuteCode("raise Exception()\n"));
 
-                Assert.IsTrue(evaluator.CanExecuteText("try:\r\n    print 'hello'\r\nexcept:\r\n    print 'goodbye'\r\n    \r\n    "));
-                Assert.IsTrue(evaluator.CanExecuteText("try:\r\n    print 'hello'\r\nfinally:\r\n    print 'goodbye'\r\n    \r\n    "));
-                Assert.IsFalse(evaluator.CanExecuteText("x = \\"));
-                Assert.IsTrue(evaluator.CanExecuteText("x = \\\r\n42\r\n\r\n"));
+                Assert.IsTrue(evaluator.CanExecuteCode("try:\r\n    print 'hello'\r\nexcept:\r\n    print 'goodbye'\r\n    \r\n    "));
+                Assert.IsTrue(evaluator.CanExecuteCode("try:\r\n    print 'hello'\r\nfinally:\r\n    print 'goodbye'\r\n    \r\n    "));
+                Assert.IsFalse(evaluator.CanExecuteCode("x = \\"));
+                Assert.IsTrue(evaluator.CanExecuteCode("x = \\\r\n42\r\n\r\n"));
             }
         }
 

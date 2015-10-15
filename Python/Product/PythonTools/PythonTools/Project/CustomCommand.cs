@@ -30,11 +30,6 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Navigation;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
-#if DEV14_OR_LATER
-using IReplWindowProvider = Microsoft.PythonTools.Repl.InteractiveWindowProvider;
-#else
-using Microsoft.VisualStudio.Repl;
-#endif
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
@@ -587,7 +582,7 @@ namespace Microsoft.PythonTools.Project {
             var replWindowId = PythonReplEvaluatorProvider.GetConfigurableReplId(ReplId + executeIn.Substring(4));
             
             var model = _project.Site.GetComponentModel();
-            var replProvider = model.GetService<IReplWindowProvider>();
+            var replProvider = model.GetService<InteractiveWindowProvider>();
             if (replProvider == null) {
                 return false;
             }
@@ -595,7 +590,7 @@ namespace Microsoft.PythonTools.Project {
             var replWindow = replProvider.FindReplWindow(replWindowId);
             bool created = replWindow == null;
             if (created) {
-                replWindow = replProvider.CreateReplWindow(
+                replWindow = replProvider.CreateInteractiveWindow(
                     _project.Site.GetPythonContentType(),
                     replTitle,
                     typeof(PythonLanguageInfo).GUID,
@@ -606,11 +601,7 @@ namespace Microsoft.PythonTools.Project {
             var replToolWindow = replWindow as ToolWindowPane;
             var replFrame = (replToolWindow != null) ? replToolWindow.Frame as IVsWindowFrame : null;
 
-#if DEV14_OR_LATER
             var pyEvaluator = replWindow.InteractiveWindow.Evaluator as PythonReplEvaluator;
-#else
-            var pyEvaluator = replWindow.Evaluator as PythonReplEvaluator;
-#endif
             var options = (pyEvaluator != null) ? pyEvaluator.CurrentOptions as ConfigurablePythonReplOptions : null;
             if (options == null) {
                 if (created && replFrame != null) {

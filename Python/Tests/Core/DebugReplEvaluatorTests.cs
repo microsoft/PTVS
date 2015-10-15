@@ -20,12 +20,8 @@ using System.Threading;
 using DebuggerTests;
 using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.Repl;
-#if DEV14_OR_LATER
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.InteractiveWindow.Commands;
-#else
-using Microsoft.VisualStudio.Repl;
-#endif
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
@@ -34,13 +30,6 @@ using TestUtilities.Mocks;
 using TestUtilities.Python;
 
 namespace PythonToolsTests {
-#if DEV14_OR_LATER
-    using IReplEvaluator = IInteractiveEvaluator;
-    using IReplWindow = IInteractiveWindow;
-    using IReplWindowProvider = InteractiveWindowProvider;
-    using IReplCommand = Microsoft.VisualStudio.InteractiveWindow.Commands.IInteractiveWindowCommand;
-#endif
-
     [TestClass]
     public class DebugReplEvaluatorTests {
         private PythonDebugReplEvaluator _evaluator;
@@ -250,7 +239,7 @@ NameError: name 'does_not_exist' is not defined
 
             _window.ClearScreen();
             var execute = _evaluator.ExecuteText("for i in range(0,20): time.sleep(0.5)");
-            _evaluator.AbortCommand();
+            _evaluator.AbortExecution();
             execute.Wait();
             Assert.IsTrue(execute.Result.IsSuccessful);
             Assert.AreEqual("Abort is not supported.", _window.Error.TrimEnd());
@@ -276,7 +265,7 @@ NameError: name 'does_not_exist' is not defined
             Assert.AreEqual("<module>", thread.Frames[0].FunctionName);
         }
 
-        private string ExecuteCommand(IReplCommand cmd, string args) {
+        private string ExecuteCommand(IInteractiveWindowCommand cmd, string args) {
             _window.ClearScreen();
             var execute = cmd.Execute(_window, args);
             execute.Wait();
@@ -318,12 +307,9 @@ NameError: name 'does_not_exist' is not defined
                     process.Start();
                 } catch (Win32Exception ex) {
                     _processes.Remove(process);
-#if DEV11_OR_LATER
                     if (ex.HResult == -2147467259 /*0x80004005*/) {
                         Assert.Inconclusive("Required Python interpreter is not installed");
-                    } else
-#endif
-                    {
+                    } else {
                         Assert.Fail("Process start failed:\r\n" + ex.ToString());
                     }
                 }

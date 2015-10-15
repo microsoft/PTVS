@@ -81,16 +81,10 @@ namespace Microsoft.PythonTools.Interpreter {
 
 
         private readonly Thread _serviceThread;
-#if !DEV12_OR_LATER
-        private readonly SynchronizationContext _serviceContext;
-#endif
 
         [ImportingConstructor]
         public InterpreterOptionsService([Import(typeof(SVsServiceProvider), AllowDefault = true)] IServiceProvider provider) {
             _serviceThread = Thread.CurrentThread;
-#if !DEV12_OR_LATER
-            _serviceContext = SynchronizationContext.Current;
-#endif
             _settings = SettingsManagerCreator.GetSettingsManager(provider);
             if (provider != null) {
                 _activityLog = provider.GetService(typeof(SVsActivityLog)) as IVsActivityLog;
@@ -395,14 +389,6 @@ namespace Microsoft.PythonTools.Interpreter {
         public event EventHandler InterpretersChanged;
 
         private void DefaultInterpreterRegistry_Changed(object sender, RegistryChangedEventArgs e) {
-#if !DEV12_OR_LATER
-            // Pre-VS 2013 has trouble obtaining services from the original
-            // thread, so attempt to get back to the thread we started on.
-            if (_serviceContext != null && Thread.CurrentThread != _serviceThread) {
-                _serviceContext.Post(_ => DefaultInterpreterRegistry_Changed(sender, e), null);
-                return;
-            }
-#endif
             try {
                 LoadDefaultInterpreter();
             } catch (InvalidComObjectException) {

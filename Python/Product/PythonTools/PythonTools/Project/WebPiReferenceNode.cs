@@ -15,16 +15,13 @@
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Globalization;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Imaging;
+using Microsoft.VisualStudio.Imaging.Interop;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 using VSLangProj;
-#if DEV14_OR_LATER
-using Microsoft.VisualStudio.Imaging;
-using Microsoft.VisualStudio.Imaging.Interop;
-#endif
 
 namespace Microsoft.PythonTools.Project {
     [ComVisible(true)]
@@ -67,7 +64,6 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-#if DEV14_OR_LATER
         protected override bool SupportsIconMonikers {
             get { return true; }
         }
@@ -75,13 +71,6 @@ namespace Microsoft.PythonTools.Project {
         protected override ImageMoniker GetIconMoniker(bool open) {
             return KnownMonikers.XWorldFile;
         }
-#else
-        public override int ImageIndex {
-            get {
-                return ProjectMgr.GetIconIndex(ProjectNode.ImageName.XWorld);
-            }
-        }
-#endif
 
         protected override NodeProperties CreatePropertiesObject() {
             return new WebPiReferenceNodeProperties(this);

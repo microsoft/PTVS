@@ -18,7 +18,6 @@ using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Utilities;
 
-#if DEV14_OR_LATER
 namespace Microsoft.PythonTools.Repl {
     [Export(typeof(EditorFormatDefinition))]
     [ClassificationType(ClassificationTypeNames = Name)]
@@ -297,4 +296,3 @@ namespace Microsoft.PythonTools.Repl {
         }
     }
 }
-#endif

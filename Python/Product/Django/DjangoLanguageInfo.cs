@@ -40,22 +40,6 @@ namespace Microsoft.PythonTools.Django {
         }
 
         public int GetCodeWindowManager(IVsCodeWindow pCodeWin, out IVsCodeWindowManager ppCodeWinMgr) {
-#if !DEV12_OR_LATER
-            var model = _serviceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
-            var service = model.GetService<IVsEditorAdaptersFactoryService>();
-
-            IVsTextView textView;
-            if (ErrorHandler.Succeeded(pCodeWin.GetPrimaryView(out textView))) {
-                var wpfView = service.GetWpfTextView(textView);
-
-                var controller = DjangoIntellisenseControllerProvider.GetOrCreateController(model, wpfView);
-                controller.AttachKeyboardFilter();
-
-#if DEV11
-                new TextViewFilter(textView);
-#endif
-            }
-#endif
             ppCodeWinMgr = null;
             return VSConstants.E_FAIL;
         }

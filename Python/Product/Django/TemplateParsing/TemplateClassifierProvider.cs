@@ -12,8 +12,6 @@
  *
  * ***************************************************************************/
 
-#if DEV12_OR_LATER
-
 using System.ComponentModel.Composition;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Utilities;
@@ -27,5 +25,3 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
         }
     }
 }
-
-#endif

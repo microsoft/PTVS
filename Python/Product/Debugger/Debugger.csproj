@@ -1,6 +1,16 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Choose>
+    <When Condition=" '$(VisualStudioVersion)'=='15.0'  Or '$(TargetVisualStudioVersion)'=='VS150' ">
+      <PropertyGroup>
+        <MinimumVisualStudioVersion>15.0</MinimumVisualStudioVersion>
+        <FileUpgradeFlags>
+        </FileUpgradeFlags>
+        <UpgradeBackupLocation>
+        </UpgradeBackupLocation>
+        <OldToolsVersion>14.0</OldToolsVersion>
+      </PropertyGroup>
+    </When>
     <When Condition=" '$(VisualStudioVersion)'=='14.0'  Or '$(TargetVisualStudioVersion)'=='VS140' ">
       <PropertyGroup>
         <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
@@ -8,27 +18,7 @@
         </FileUpgradeFlags>
         <UpgradeBackupLocation>
         </UpgradeBackupLocation>
-        <OldToolsVersion>4.0</OldToolsVersion>
-      </PropertyGroup>
-    </When>
-    <When Condition=" '$(VisualStudioVersion)'=='12.0'  Or '$(TargetVisualStudioVersion)'=='VS120' ">
-      <PropertyGroup>
-        <MinimumVisualStudioVersion>12.0</MinimumVisualStudioVersion>
-        <FileUpgradeFlags>
-        </FileUpgradeFlags>
-        <UpgradeBackupLocation>
-        </UpgradeBackupLocation>
-        <OldToolsVersion>4.0</OldToolsVersion>
-      </PropertyGroup>
-    </When>
-    <When Condition=" '$(VisualStudioVersion)'=='11.0'  Or '$(TargetVisualStudioVersion)'=='VS110' ">
-      <PropertyGroup>
-        <MinimumVisualStudioVersion>11.0</MinimumVisualStudioVersion>
-        <FileUpgradeFlags>
-        </FileUpgradeFlags>
-        <UpgradeBackupLocation>
-        </UpgradeBackupLocation>
-        <OldToolsVersion>4.0</OldToolsVersion>
+        <OldToolsVersion>14.0</OldToolsVersion>
       </PropertyGroup>
     </When>
   </Choose>
@@ -85,27 +75,12 @@
     <Reference Include="System.XML" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="WindowsBase" />
+    <Reference Include="Microsoft.Dia.Interop.$(VSTarget), Version=2.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+      <HintPath>DkmDebugger\Microsoft.Dia.Interop.$(VSTarget).dll</HintPath>
+    </Reference>
   </ItemGroup>
-  <Choose>
-    <When Condition="'$(VSTarget)' == '11.0' Or '$(VSTarget)' == '12.0'">
-      <ItemGroup>
-        <Reference Include="Microsoft.Dia.Interop, Version=2.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <SpecificVersion>False</SpecificVersion>
-          <EmbedInteropTypes>True</EmbedInteropTypes>
-          <HintPath>DkmDebugger\Microsoft.Dia.Interop.dll</HintPath>
-        </Reference>
-      </ItemGroup>
-    </When>
-    <When Condition="'$(VSTarget)' == '14.0'">
-      <ItemGroup>
-        <Reference Include="Microsoft.Dia.Interop.14.0, Version=2.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <SpecificVersion>False</SpecificVersion>
-          <EmbedInteropTypes>True</EmbedInteropTypes>
-          <HintPath>DkmDebugger\Microsoft.Dia.Interop.14.0.dll</HintPath>
-        </Reference>
-      </ItemGroup>
-    </When>
-  </Choose>
   <ItemGroup>
     <Compile Include="..\..\..\Common\Product\SharedProject\CommonUtils.cs">
       <Link>CommonUtils.cs</Link>
@@ -239,7 +214,6 @@
     <None Include="DkmDebugger\RemoteComponent.vsdconfigxml">
       <SubType>Designer</SubType>
     </None>
-    <Content Include="DkmDebugger\PythonDkm_12.0.natvis" />
     <Content Include="DkmDebugger\PythonDkm.natvis" />
   </ItemGroup>
   <ItemGroup>
@@ -275,8 +249,7 @@
     <NatvisOutput>$(IntermediateOutputPath)\PythonDkm.natvis</NatvisOutput>
   </PropertyGroup>
   <Target Name="CopyNatvis" Inputs="DkmDebugger\*.natvis" Outputs="$(NatvisOutput)" AfterTargets="CoreCompile">
-    <Copy SourceFiles="DkmDebugger\PythonDkm_12.0.natvis" DestinationFiles="$(NatvisOutput)" Condition="'$(VSTarget)' == '12.0'" />
-    <Copy SourceFiles="DkmDebugger\PythonDkm.natvis" DestinationFiles="$(NatvisOutput)" Condition="'$(VSTarget)' != '12.0'" />
+    <Copy SourceFiles="DkmDebugger\PythonDkm.natvis" DestinationFiles="$(NatvisOutput)" />
   </Target>
   <Target Name="TransformVsdConfigXml" Inputs="%(VsdConfigXml.Identity)" Outputs="$(IntermediateOutputPath)\%(VsdConfigXml.Filename)%(VsdConfigXml.Extension)" AfterTargets="CoreCompile">
     <Message Text="Transforming @(VsdConfigXml)" />

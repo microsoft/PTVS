@@ -11,7 +11,6 @@ using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudio.Shell;
 
 namespace Microsoft.PythonTools.Intellisense {
-#if DEV14_OR_LATER
     [Export(typeof(ISuggestedActionsSourceProvider))]
     [Name("Python Suggested Actions")]
     [ContentType(PythonCoreConstants.ContentType)]
@@ -31,5 +30,4 @@ namespace Microsoft.PythonTools.Intellisense {
             return new PythonSuggestedActionsSource(_provider, textView, textBuffer);
         }
     }
-#endif
 }

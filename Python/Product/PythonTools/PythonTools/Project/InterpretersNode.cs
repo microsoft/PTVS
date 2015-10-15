@@ -18,26 +18,20 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text.RegularExpressions;
 using System.Threading;
 using Microsoft.Build.Evaluation;
-using Microsoft.PythonTools.Commands;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Imaging;
+using Microsoft.VisualStudio.Imaging.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 using Clipboard = System.Windows.Forms.Clipboard;
-using MessageBox = System.Windows.Forms.MessageBox;
 using Task = System.Threading.Tasks.Task;
-using VsCommands = Microsoft.VisualStudio.VSConstants.VSStd97CmdID;
 using VsCommands2K = Microsoft.VisualStudio.VSConstants.VSStd2KCmdID;
 using VsMenus = Microsoft.VisualStudioTools.Project.VsMenus;
-#if DEV14_OR_LATER
-using Microsoft.VisualStudio.Imaging;
-using Microsoft.VisualStudio.Imaging.Interop;
-#endif
 
 namespace Microsoft.PythonTools.Project {
     /// <summary>
@@ -400,7 +394,6 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-#if DEV14_OR_LATER
         protected override bool SupportsIconMonikers {
             get { return true; }
         }
@@ -416,26 +409,6 @@ namespace Microsoft.PythonTools.Project {
             // TODO: Change to PYEnvironment
             return KnownMonikers.DockPanel;
         }
-#else
-        public override int ImageIndex {
-            get {
-                if (ProjectMgr == null) {
-                    return NoImage;
-                }
-
-                int index;
-                if (!_interpreters.IsAvailable(_factory)) {
-                    index = ProjectMgr.GetIconIndex(PythonProjectImageName.MissingInterpreter);
-                } else if (_interpreters.ActiveInterpreter == _factory) {
-                    index = ProjectMgr.GetIconIndex(PythonProjectImageName.ActiveInterpreter);
-                } else {
-                    index = ProjectMgr.GetIconIndex(PythonProjectImageName.Interpreter);
-                }
-                return index;
-            }
-        }
-
-#endif
 
         /// <summary>
         /// Interpreter node cannot be dragged.

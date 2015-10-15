@@ -12,8 +12,6 @@
  *
  * ***************************************************************************/
 
-#if DEV12_OR_LATER
-
 using System.ComponentModel.Composition;
 using Microsoft.VisualStudio.Utilities;
 using Microsoft.Web.Editor.Formatting;
@@ -31,5 +29,3 @@ namespace Microsoft.PythonTools.Django.Formatting {
         }
     }
 }
-
-#endif

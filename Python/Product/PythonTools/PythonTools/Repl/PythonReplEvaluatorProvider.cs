@@ -13,31 +13,18 @@
  * ***************************************************************************/
 
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
-using System.Linq;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project;
-#if DEV14_OR_LATER
 using Microsoft.VisualStudio.InteractiveWindow;
-#else
-using Microsoft.VisualStudio.Repl;
-#endif
-
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Repl {
-#if DEV14_OR_LATER
-using IReplEvaluator = IInteractiveEvaluator;
-using IReplEvaluatorProvider = Microsoft.PythonTools.Repl.IInteractiveEvaluatorProvider;
-#endif
-
-    [Export(typeof(IReplEvaluatorProvider))]
-    class PythonReplEvaluatorProvider : IReplEvaluatorProvider {
+    [Export(typeof(IInteractiveEvaluatorProvider))]
+    class PythonReplEvaluatorProvider : IInteractiveEvaluatorProvider {
         readonly IInterpreterOptionsService _interpreterService;
         readonly IServiceProvider _serviceProvider;
 
@@ -55,9 +42,7 @@ using IReplEvaluatorProvider = Microsoft.PythonTools.Repl.IInteractiveEvaluatorP
             _serviceProvider = serviceProvider;
         }
 
-        #region IReplEvaluatorProvider Members
-
-        public IReplEvaluator GetEvaluator(string replId) {
+        public IInteractiveEvaluator GetEvaluator(string replId) {
             if (replId.StartsWith(_replGuid, StringComparison.OrdinalIgnoreCase)) {
                 string[] components = replId.Split(new[] { ' ' }, 3);
                 if (components.Length == 3) {
@@ -84,7 +69,7 @@ using IReplEvaluatorProvider = Microsoft.PythonTools.Repl.IInteractiveEvaluatorP
         /// <summary>
         /// Creates an interactive evaluator programmatically for some plugin
         /// </summary>
-        private IReplEvaluator CreateConfigurableEvaluator(string replId) {
+        private IInteractiveEvaluator CreateConfigurableEvaluator(string replId) {
             string[] components = replId.Split(new[] { '|' }, 5);
             if (components.Length == 5) {
                 string interpreter = components[1];
@@ -122,8 +107,6 @@ using IReplEvaluatorProvider = Microsoft.PythonTools.Repl.IInteractiveEvaluatorP
             }
             return null;
         }
-
-        #endregion
 
         internal static string GetReplId(IPythonInterpreterFactory interpreter, PythonProjectNode project = null) {
             return GetReplId(interpreter, project, false);

@@ -15,12 +15,10 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Utilities;
-
-#if DEV14_OR_LATER
-using Microsoft.VisualStudio.InteractiveWindow;
 
 namespace Microsoft.PythonTools.Repl {
     /// <summary>
@@ -50,13 +48,8 @@ namespace Microsoft.PythonTools.Repl {
             _classTypes[ConsoleColor.White] = classificationService.GetClassificationType(InteractiveWhiteFormatDefinition.Name);
         }
 
-#region IClassifierProvider Members
-
         public IClassifier GetClassifier(ITextBuffer textBuffer) {
             return new ReplOutputClassifier(this, textBuffer);
         }
-
-        #endregion
     }
 }
-#endif

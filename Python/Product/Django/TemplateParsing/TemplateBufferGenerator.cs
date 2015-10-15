@@ -12,17 +12,10 @@
  *
  * ***************************************************************************/
 
-#if DEV12_OR_LATER
-
-#if DEV14_OR_LATER
 using Microsoft.Html.Editor.ContainedLanguage.Common;
 using Microsoft.Html.Editor.ContainedLanguage.Generators;
 using Microsoft.Html.Editor.ContentType;
 using Microsoft.Html.Editor.Tree;
-#else
-using Microsoft.Html.Editor;
-using Microsoft.Html.Editor.ContainedLanguage;
-#endif
 
 namespace Microsoft.PythonTools.Django.TemplateParsing {
     internal class TemplateBufferGenerator : ArtifactBasedBufferGenerator {
@@ -31,5 +24,3 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
         }
     }
 }
-
-#endif

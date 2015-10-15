@@ -13,11 +13,6 @@
  * ***************************************************************************/
 
 using Microsoft.PythonTools.Repl;
-#if DEV14_OR_LATER
-using IReplWindowProvider = Microsoft.PythonTools.Repl.InteractiveWindowProvider;
-#else
-using Microsoft.VisualStudio.Repl;
-#endif
 
 namespace Microsoft.PythonTools.Options {
     class PythonDebugInteractiveOptionsPage : PythonDialogPage {
@@ -74,22 +69,12 @@ namespace Microsoft.PythonTools.Options {
                 return;
             }
 
-            var replProvider = model.GetService<IReplWindowProvider>();
+            var replProvider = model.GetService<InteractiveWindowProvider>();
             
             foreach (var replWindow in replProvider.GetReplWindows()) {
                 PythonDebugReplEvaluator pyEval = replWindow.Evaluator as PythonDebugReplEvaluator;
                 if (pyEval != null) {
-                    // HACK: Many more changes required to support updating
-                    // prompts in Dev14. Fixing the crash for now and deferring
-                    // the other work until we revamp REPLs completely.
-#if !DEV14_OR_LATER
-                    if (Options.UseInterpreterPrompts) {
-                        replWindow.SetPrompts(pyEval.PrimaryPrompt, pyEval.SecondaryPrompt);
-                    } else {
-                        replWindow.SetPrompts(Options.PrimaryPrompt, Options.SecondaryPrompt);
-                    }
-                    replWindow.SetOptionValue(ReplOptions.DisplayPromptInMargin, !Options.InlinePrompts);
-#endif
+                    // TODO: Update REPL prompts
                     replWindow.SetSmartUpDown(Options.ReplSmartHistory);
                 }
             }

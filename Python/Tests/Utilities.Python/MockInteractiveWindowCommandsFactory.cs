@@ -12,8 +12,6 @@
  *
  * ***************************************************************************/
 
-#if DEV14_OR_LATER
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -99,5 +97,3 @@ namespace TestUtilities.Python {
         }
     }
 }
-
-#endif

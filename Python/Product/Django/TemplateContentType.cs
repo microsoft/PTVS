@@ -12,16 +12,9 @@
  *
  * ***************************************************************************/
 
-#if DEV12_OR_LATER
-
 using System.ComponentModel.Composition;
 using Microsoft.VisualStudio.Utilities;
-
-#if DEV14_OR_LATER
 using Microsoft.Web.Core.ContentTypes;
-#else
-using Microsoft.Web.Editor;
-#endif
 
 namespace Microsoft.PythonTools.Django {
     /// <summary>
@@ -52,5 +45,3 @@ namespace Microsoft.PythonTools.Django {
         internal static ContentTypeDefinition ContentTypeDefinition;
     }
 }
-
-#endif

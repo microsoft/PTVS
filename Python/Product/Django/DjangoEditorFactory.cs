@@ -12,16 +12,9 @@
  *
  * ***************************************************************************/
 
-#if DEV12_OR_LATER
-
 using System;
 using System.Runtime.InteropServices;
-
-#if DEV14_OR_LATER
 using Microsoft.VisualStudio.Html.Package.Package.Common;
-#else
-using Microsoft.VisualStudio.Web.Editor;
-#endif
 
 namespace Microsoft.PythonTools.Django {
     [Guid(GuidList.guidDjangoEditorFactoryString)]
@@ -31,5 +24,3 @@ namespace Microsoft.PythonTools.Django {
         }
     }
 }
-
-#endif

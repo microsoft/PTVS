@@ -14,26 +14,19 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Imaging;
+using Microsoft.VisualStudio.Imaging.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 using NativeMethods = Microsoft.VisualStudioTools.Project.NativeMethods;
 using OleConstants = Microsoft.VisualStudio.OLE.Interop.Constants;
-using Task = System.Threading.Tasks.Task;
 using VsCommands = Microsoft.VisualStudio.VSConstants.VSStd97CmdID;
 using VsMenus = Microsoft.VisualStudioTools.Project.VsMenus;
-#if DEV14_OR_LATER
-using Microsoft.VisualStudio.Imaging;
-using Microsoft.VisualStudio.Imaging.Interop;
-#endif
 
 namespace Microsoft.PythonTools.Project {
     /// <summary>
@@ -152,7 +145,6 @@ namespace Microsoft.PythonTools.Project {
             return null;
         }
 
-#if DEV14_OR_LATER
         protected override bool SupportsIconMonikers {
             get { return true; }
         }
@@ -160,13 +152,6 @@ namespace Microsoft.PythonTools.Project {
         protected override ImageMoniker GetIconMoniker(bool open) {
             return KnownMonikers.PythonPackage;
         }
-#else
-        public override int ImageIndex {
-            get {
-                return ProjectMgr.GetIconIndex(PythonProjectImageName.InterpretersPackage);
-            }
-        }
-#endif
 
         /// <summary>
         /// Package node cannot be dragged.

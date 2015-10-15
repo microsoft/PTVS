@@ -25,9 +25,6 @@ using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.IncrementalSearch;
 using Microsoft.VisualStudio.Text.Operations;
 using Microsoft.VisualStudio.Utilities;
-#if !DEV14_OR_LATER
-using Microsoft.VisualStudio.Repl;
-#endif
 
 namespace Microsoft.PythonTools.Intellisense {
     [Export(typeof(IIntellisenseControllerProvider)), ContentType(PythonCoreConstants.ContentType), Order]

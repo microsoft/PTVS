@@ -400,7 +400,6 @@ namespace Microsoft.PythonTools.Uwp.Project {
                 appPackageDebugTarget[0].AppPackageLaunchInfo.PackageMoniker = DeployPackageMoniker;
                 appPackageDebugTarget[0].AppPackageLaunchInfo.AppPlatform = VsAppPackagePlatform.APPPLAT_WindowsAppx;
 
-#if DEV14_OR_LATER
                 // Check if this project contains a startup task and set launch flag appropriately
                 IVsBuildPropertyStorage bps = (IVsBuildPropertyStorage)this.PythonConfig;
                 string canonicalName;
@@ -414,7 +413,6 @@ namespace Microsoft.PythonTools.Uwp.Project {
                 if (containsStartupTaskValue != null && bool.TryParse(containsStartupTaskValue, out containsStartupTask) && containsStartupTask) {
                     grfLaunch |= (uint)__VSDBGLAUNCHFLAGS140.DBGLAUNCH_ContainsStartupTask;
                 }
-#endif
 
                 appPackageDebugTarget[0].dlo = (uint)_DEBUG_LAUNCH_OPERATION4.DLO_AppPackageDebug;
                 appPackageDebugTarget[0].LaunchFlags = grfLaunch;
@@ -785,11 +783,9 @@ namespace Microsoft.PythonTools.Uwp.Project {
 
             bool containsStartupTask = GetDebugFlag("ContainsStartupTask", false);
 
-#if DEV14_OR_LATER
             if (containsStartupTask) {
                 grfLaunch |= (uint)__VSDBGLAUNCHFLAGS140.DBGLAUNCH_ContainsStartupTask;
             }
-#endif
 
             rgDebugTargetInfo[0].dlo = (uint)_DEBUG_LAUNCH_OPERATION4.DLO_AppPackageDebug;
             rgDebugTargetInfo[0].LaunchFlags = grfLaunch;

@@ -19,26 +19,15 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
-#if DEV14_OR_LATER
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.InteractiveWindow.Shell;
-#else
-using Microsoft.VisualStudio.Repl;
-#endif
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudioTools;
+using IServiceProvider = System.IServiceProvider;
 
 namespace Microsoft.PythonTools.Commands {
-    using IServiceProvider = System.IServiceProvider;
-#if DEV14_OR_LATER
-    using IReplWindow = IInteractiveWindow;
-    using IVsReplWindow = IVsInteractiveWindow;
-#else
-    using IVsReplWindow = IReplWindow;
-#endif
-
     /// <summary>
     /// Provides the command to send selected text from a buffer to the remote REPL window.
     /// </summary>
@@ -58,22 +47,14 @@ namespace Microsoft.PythonTools.Commands {
 
             IVsWindowFrame windowFrame = (IVsWindowFrame)window.Frame;
             ErrorHandler.ThrowOnFailure(windowFrame.Show());
-            var repl = (IVsReplWindow)window;
+            var repl = (IVsInteractiveWindow)window;
 
-#if DEV14_OR_LATER
             PythonReplEvaluator eval = repl.InteractiveWindow.Evaluator as PythonReplEvaluator;
-#else
-            PythonReplEvaluator eval = repl.Evaluator as PythonReplEvaluator;
-#endif
 
             eval.EnsureConnected();
-#if DEV14_OR_LATER
             repl.InteractiveWindow.Submit(GetActiveInputs(activeView, eval));
-#else
-            repl.Submit(GetActiveInputs(activeView, eval));
-#endif
 
-            repl.Focus();
+            repl.Show(true);
         }
 
         private static IEnumerable<string> GetActiveInputs(IWpfTextView activeView, PythonReplEvaluator eval) {

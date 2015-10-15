@@ -1,6 +1,16 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Choose>
+    <When Condition=" '$(VisualStudioVersion)'=='15.0'  Or '$(TargetVisualStudioVersion)'=='VS150' ">
+      <PropertyGroup>
+        <MinimumVisualStudioVersion>15.0</MinimumVisualStudioVersion>
+        <FileUpgradeFlags>
+        </FileUpgradeFlags>
+        <UpgradeBackupLocation>
+        </UpgradeBackupLocation>
+        <OldToolsVersion>14.0</OldToolsVersion>
+      </PropertyGroup>
+    </When>
     <When Condition=" '$(VisualStudioVersion)'=='14.0'  Or '$(TargetVisualStudioVersion)'=='VS140' ">
       <PropertyGroup>
         <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
@@ -8,27 +18,7 @@
         </FileUpgradeFlags>
         <UpgradeBackupLocation>
         </UpgradeBackupLocation>
-        <OldToolsVersion>4.0</OldToolsVersion>
-      </PropertyGroup>
-    </When>
-    <When Condition=" '$(VisualStudioVersion)'=='12.0'  Or '$(TargetVisualStudioVersion)'=='VS120' ">
-      <PropertyGroup>
-        <MinimumVisualStudioVersion>12.0</MinimumVisualStudioVersion>
-        <FileUpgradeFlags>
-        </FileUpgradeFlags>
-        <UpgradeBackupLocation>
-        </UpgradeBackupLocation>
-        <OldToolsVersion>4.0</OldToolsVersion>
-      </PropertyGroup>
-    </When>
-    <When Condition=" '$(VisualStudioVersion)'=='11.0'  Or '$(TargetVisualStudioVersion)'=='VS110' ">
-      <PropertyGroup>
-        <MinimumVisualStudioVersion>11.0</MinimumVisualStudioVersion>
-        <FileUpgradeFlags>
-        </FileUpgradeFlags>
-        <UpgradeBackupLocation>
-        </UpgradeBackupLocation>
-        <OldToolsVersion>4.0</OldToolsVersion>
+        <OldToolsVersion>14.0</OldToolsVersion>
       </PropertyGroup>
     </When>
   </Choose>
@@ -82,50 +72,15 @@
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
+    <Reference Include="Microsoft.VisualStudio.Settings.$(VSTarget), Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=x86" />
+    <Reference Include="Microsoft.VisualStudio.ImageCatalog, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.VisualStudio.Imaging, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.VisualStudio.Utilities, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
   </ItemGroup>
-  <Choose>
-    <When Condition="'$(VSTarget)' == '10.0'">
-      <ItemGroup>
-        <Reference Include="Microsoft.VisualStudio.Settings, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=x86" />
-      </ItemGroup>
-    </When>
-    <Otherwise>
-      <ItemGroup>
-        <Reference Include="Microsoft.VisualStudio.Settings.$(VSTarget), Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=x86" />
-      </ItemGroup>
-    </Otherwise>
-  </Choose>
-  <Choose>
-    <When Condition="'$(VSTarget)' == '14.0'">
-      <ItemGroup>
-        <Reference Include="Microsoft.VisualStudio.ImageCatalog, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
-        <Reference Include="Microsoft.VisualStudio.Imaging, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
-        <Reference Include="Microsoft.VisualStudio.Utilities, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
-      </ItemGroup>
-    </When>
-  </Choose>
   <ItemGroup>
     <Page Include="images\images.xaml">
       <SubType>Designer</SubType>
     </Page>
-    <None Include="images12.0\images.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="images12.0\ActiveEnvironment.png" />
-    <None Include="images12.0\Checkmark.png" />
-    <None Include="images12.0\ExclamationPoint.png" />
-    <None Include="images12.0\FolderClosed.png" />
-    <None Include="images12.0\FolderOpened.png" />
-    <None Include="images12.0\PYApplication.png" />
-    <None Include="images12.0\PYConsoleApplication.png" />
-    <None Include="images12.0\PYEnvironment.png" />
-    <None Include="images12.0\PYInteractiveWindow.png" />
-    <None Include="images12.0\PythonPackage.png" />
-    <None Include="images12.0\Refresh.png" />
-    <None Include="images12.0\Settings.png" />
   </ItemGroup>
   <ItemGroup>
     <Page Include="..\..\..\Common\Product\SharedProject\Wpf\Controls.xaml">
@@ -281,23 +236,4 @@
   <Target Name="AfterBuild">
   </Target>
   -->
-  <Target Name="_RemoveImages" AfterTargets="PrepareForBuild">
-    <ItemGroup>
-      <None Remove="images12.0\images.xaml;images12.0\*.png" />
-    </ItemGroup>
-  </Target>
-  <Target Name="_IncludeImages" AfterTargets="_RemoveImages" Condition="$(VSTarget) == '12.0'">
-    <ItemGroup>
-      <Page Remove="images\images.xaml" />
-      <Page Include="images12.0\images.xaml">
-        <SubType>Designer</SubType>
-        <Generator>MSBuild:Compile</Generator>
-        <Link>images\images.xaml</Link>
-      </Page>
-      <_ImageResources Include="images12.0\*.png" />
-      <Resource Include="@(_ImageResources)">
-        <Link>images\%(_ImageResources.Filename).png</Link>
-      </Resource>
-    </ItemGroup>
-  </Target>
 </Project>

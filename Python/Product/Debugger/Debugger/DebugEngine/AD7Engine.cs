@@ -257,7 +257,6 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         }
 
         private static bool IsDebuggingPythonOnly(IDebugProgram2 program) {
-#if DEV11_OR_LATER
             IDebugProcess2 process;
             program.GetProcess(out process);
 
@@ -278,7 +277,6 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                     return false;
                 }
             }
-#endif
 
             return true;
         }

@@ -26,11 +26,7 @@ namespace Microsoft.PythonTools {
         /// The extension for Python files which represent Windows applications.
         /// </summary>
         internal const string WindowsFileExtension = ".pyw";
-#if DEV11_OR_LATER
         internal const string ProjectImageList = "Microsoft.PythonImageList.png";
-#else
-        internal const string ProjectImageList = "Microsoft.PythonImageList.bmp";
-#endif
 
         internal const string IssueTrackerUrl = "http://go.microsoft.com/fwlink/?LinkId=402428";
 
@@ -62,9 +58,6 @@ namespace Microsoft.PythonTools {
         // IDs of the icons for product registration (see Resources.resx)
         internal const int IconIfForSplashScreen = 300;
         internal const int IconIdForAboutBox = 400;
-#if !DEV14_OR_LATER
-        internal const int ResourceIdForReplImages = 407;
-#endif
 
         // Command IDs
         internal const int AddEnvironment = 0x4006;

@@ -35,18 +35,12 @@ namespace AzurePublishingUITests {
             AssertListener.Initialize();
             PythonTestData.Deploy();
 
-#if DEV11_OR_LATER
             // The tests currently only support Azure Tools v2.2.
             // Support for other versions will be added later.
             var azureToolsVersion = AzureUtility.ToolsVersion.V22;
             if (!AzureUtility.AzureToolsInstalled(azureToolsVersion)) {
                 Assert.Inconclusive(string.Format("Azure Tools v{0} required", azureToolsVersion));
             }
-#else
-            // Azure Tools v2.2 is not available for VS2010.
-            // We'll need to support Azure Tools v2.1 to test VS2010
-            Assert.Inconclusive("Test not yet compatible with VS2010 (Azure Tools v2.1)");
-#endif
 
             publishSettingsFilePath = Environment.GetEnvironmentVariable("TEST_AZURE_SUBSCRIPTION_FILE");
             Assert.IsFalse(string.IsNullOrEmpty(publishSettingsFilePath), "TEST_AZURE_SUBSCRIPTION_FILE environment variable must be set to the path of a .publishSettings file for the Azure subscription.");

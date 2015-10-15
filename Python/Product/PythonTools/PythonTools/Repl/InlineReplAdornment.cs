@@ -13,12 +13,7 @@
  * ***************************************************************************/
 
 using System.ComponentModel.Composition;
-using System.Windows;
-#if DEV14_OR_LATER
 using Microsoft.VisualStudio.InteractiveWindow;
-#else
-using Microsoft.VisualStudio.Repl;
-#endif
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Tagging;
@@ -27,26 +22,22 @@ using Microsoft.VisualStudio.Utilities;
 namespace Microsoft.PythonTools.Repl {
     [Export(typeof(IViewTaggerProvider))]
     [TagType(typeof(IntraTextAdornmentTag))]
-#if DEV14_OR_LATER
     [ContentType(PredefinedInteractiveContentTypes.InteractiveContentTypeName)]
-#else
-    [ContentType(ReplConstants.ReplContentTypeName)]
-#endif
     internal class InlineReplAdornmentProvider : IViewTaggerProvider {
         public ITagger<T> CreateTagger<T>(ITextView textView, ITextBuffer buffer) where T : ITag {
             if (buffer == null || textView == null || typeof(T) != typeof(IntraTextAdornmentTag)) {
                 return null;
             }
 
-            return (ITagger<T>)textView.Properties.GetOrCreateSingletonProperty<InlineReplAdornmentManager>(
+            return (ITagger<T>)textView.Properties.GetOrCreateSingletonProperty(
                 typeof(InlineReplAdornmentManager),
                 () => new InlineReplAdornmentManager(textView)
-                );
+            );
         }
 
         internal static InlineReplAdornmentManager GetManager(ITextView view) {
             InlineReplAdornmentManager result;
-            if (!view.Properties.TryGetProperty<InlineReplAdornmentManager>(typeof(InlineReplAdornmentManager), out result)) {
+            if (!view.Properties.TryGetProperty(typeof(InlineReplAdornmentManager), out result)) {
                 return null;
             }
             return result;
