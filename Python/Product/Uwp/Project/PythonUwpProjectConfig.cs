@@ -96,7 +96,6 @@ namespace Microsoft.PythonTools.Uwp.Project {
         }
 
         private async System.Threading.Tasks.Task RemoteProcessAttachAsync(string remoteMachine, string secret, string port, string sourceDir, string targetDir) {
-            bool attached = false;
             bool stoppedDebugging = false;
             const int attachRetryLimit = 10;
             int attachRetryCount = 0;
@@ -134,7 +133,9 @@ namespace Microsoft.PythonTools.Uwp.Project {
                 return;
             }
 
-            while (!attached && attachRetryCount++ < attachRetryLimit) {
+            EnvDTE90.Process3 pythonDebuggee = null;
+
+            while (pythonDebuggee == null && attachRetryCount++ < attachRetryLimit) {
                 try {
                     if (debugger.DebuggedProcesses == null || debugger.DebuggedProcesses.Count == 0) {
                         // We are no longer debugging, so just bail
@@ -151,15 +152,22 @@ namespace Microsoft.PythonTools.Uwp.Project {
                     if (processes.Count > 0) {
                         foreach (EnvDTE90.Process3 process in processes) {
                             process.Attach();
-                            attached = true;
+                            pythonDebuggee = process;
                             break;
                         }
 
-                        if (attached) {
+                        if (pythonDebuggee != null) {
                             IVsDebugger vsDebugger = Package.GetGlobalService(typeof(SVsShellDebugger)) as IVsDebugger;
 
                             if (vsDebugger != null) {
                                 vsDebugger.UnadviseDebugEventCallback(Debugger.PythonRemoteDebugEvents.Instance);
+                            }
+
+                            // The AD7 / python debugger is now attached.  Detach the native / Concord debugger.
+                            foreach (EnvDTE90.Process3 process in debugger.DebuggedProcesses) {
+                                if (process.ProcessID == pythonDebuggee.ProcessID && process != pythonDebuggee) {
+                                    process.Detach(false);
+                                }
                             }
 
                             break;
@@ -174,7 +182,7 @@ namespace Microsoft.PythonTools.Uwp.Project {
                 await System.Threading.Tasks.Task.Delay(TimeSpan.FromMilliseconds(100));
             }
 
-            if (!attached && !stoppedDebugging) {
+            if (pythonDebuggee == null && !stoppedDebugging) {
                 MessageBox.Show("Could not attach to remote Python debug session.", null, MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
@@ -450,7 +458,7 @@ namespace Microsoft.PythonTools.Uwp.Project {
                 var debugPort = PythonConfig.GetProjectProperty("RemoteDebugPort") ?? DefaultRemoteDebugPort;
                 var debugId = Guid.NewGuid();
                 var serializer = new JavaScriptSerializer();
-                var debugCmdJson = serializer.Serialize(new string[] { "visualstudio_py_remote_launcher.py", debugPort.ToString(), debugId.ToString(), "--redirect-output" });
+                var debugCmdJson = serializer.Serialize(new string[] { "visualstudio_py_remote_launcher.py", debugPort.ToString(), debugId.ToString() });
 
                 Debugger.PythonRemoteDebugEvents.Instance.RemoteDebugCommandInfo = Encoding.Unicode.GetBytes(debugCmdJson);
                 Debugger.PythonRemoteDebugEvents.Instance.AttachRemoteProcessFunction = () => {
@@ -965,3 +973,4 @@ namespace Microsoft.PythonTools.Uwp.Project {
         }
     }
 }
+
