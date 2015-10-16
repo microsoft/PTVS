@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.Language.StandardClassification;
@@ -173,7 +174,14 @@ namespace Microsoft.PythonTools.Editor {
                     (current.ShouldDedentAfter ? tabSize : 0);
             }
 
-            return indentation;
+            // Map indentation back to the view's text buffer.
+            int offset = 0;
+            var viewLineStart = textView.BufferGraph.MapUpToSnapshot(line.Start, PointTrackingMode.Positive, PositionAffinity.Successor, textView.TextSnapshot);
+            if (viewLineStart.HasValue) {
+                offset = viewLineStart.Value.Position - viewLineStart.Value.GetContainingLine().Start.Position;
+            }
+
+            return offset + indentation;
         }
 
         private static bool IsUnterminatedStringToken(ClassificationSpan lastToken) {

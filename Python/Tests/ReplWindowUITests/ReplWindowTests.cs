@@ -46,7 +46,7 @@ namespace ReplWindowUITests {
                 s.AddNewLineAtEndOfFullyTypedWord = addNewLineAtEndOfFullyTypedWord;
             }
 
-            return ReplWindowProxy.Prepare(Settings);
+            return ReplWindowProxy.Prepare(s);
         }
 
         #region Miscellaneous tests

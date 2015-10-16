@@ -36,7 +36,10 @@
   </ItemGroup>
   
   <Target Name="CustomOutputGroupForPackaging" Returns="@(CustomOutputGroupForPackagingOutput)">
-    <AssignTargetPath Files="@(PythonHost->'%(FullPath)')" RootFolder="$(OutputPath)">
+    <AssignTargetPath Files="%(PythonHost.FullPath)" RootFolder="%(PythonHost.RootFolder)" Condition="'%(PythonHost.RootFolder)' != ''">
+      <Output TaskParameter="AssignedFiles" ItemName="CustomOutputGroupForPackagingOutput" />
+    </AssignTargetPath>
+    <AssignTargetPath Files="%(PythonHost.FullPath)" RootFolder="%(PythonHost.RootDir)%(PythonHost.Directory)" Condition="'%(PythonHost.RootFolder)' == ''">
       <Output TaskParameter="AssignedFiles" ItemName="CustomOutputGroupForPackagingOutput" />
     </AssignTargetPath>
     <AssignTargetPath Files="@(Compile->'%(FullPath)')" RootFolder="$(OutputPath)">
@@ -123,7 +126,7 @@
 
   <Target Name="BuildStartupInfo" BeforeTargets="CoreCompile">
     <CreateStartupInfo Arguments="$(PythonArguments)" StartupInfoFile="$(StartupInfoFile)" />
-    <UnZip InputFileName="$(CPythonSDKPath)\References\CommonConfiguration\Neutral\lib.zip" OutputDirectory="$(ProjectDir)\lib.zip" />
+    <UnZip InputFileName="$(CPythonSDKPath)\References\CommonConfiguration\Neutral\PythonHome\lib.zip" OutputDirectory="$(ProjectDir)\lib.zip" />
   </Target>
 
   <PropertyGroup>

@@ -465,7 +465,7 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
                             "Some project interpreters failed to load:",
                             @"Interpreter $env\ has invalid value for 'Id': INVALID ID",
                             @"Interpreter $env\ has invalid value for 'Version': INVALID VERSION",
-                            @"Base interpreter $env\ has invalid value for 'BaseInterpreter': INVALID BASE",
+                            @"Interpreter $env\ has invalid value for 'BaseInterpreter': INVALID BASE",
                             @"Interpreter $env\ has invalid value for 'InterpreterPath': INVALID<>PATH",
                             @"Interpreter $env\ has invalid value for 'WindowsInterpreterPath': INVALID<>PATH",
                             @"Interpreter $env\ has invalid value for 'LibraryPath': INVALID<>PATH",
