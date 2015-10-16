@@ -37,5 +37,6 @@
     <Property name="VSVersion" value="14.0" />
     <Property name="VSDebugMixedMode" value="false" />
     <Property name="VSLaunchTimeoutInSeconds" value="300" />
+    <Property Name="ScreenCapture" value="Caps" />
   </Properties>
 </TestSettings>
