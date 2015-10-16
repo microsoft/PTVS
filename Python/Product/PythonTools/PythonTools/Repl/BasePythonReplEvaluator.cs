@@ -1912,8 +1912,20 @@ namespace Microsoft.PythonTools.Repl {
             window.Show(true);
         }
 
-        public static void Submit(this IInteractiveWindow window, IEnumerable<string> inputs) {
-            window.SubmitAsync(inputs);
+        public static async void Submit(this IInteractiveWindow window, IEnumerable<string> inputs) {
+            // A workaround for https://github.com/dotnet/roslyn/issues/6072
+            // SubmitAsync on VS 2015 Update 1 will only correctly submit one
+            // entry at a time.
+            try {
+                var arr = new string[1];
+                foreach (var input in inputs) {
+                    arr[0] = input;
+                    await window.SubmitAsync(arr);
+                }
+            } catch (OperationCanceledException) {
+                // Do not want to let cancellations escape, as they will bring
+                // down VS.
+            }
         }
 
         public static IReplEvaluator GetReplEvaluator(this ITextBuffer buffer) {
