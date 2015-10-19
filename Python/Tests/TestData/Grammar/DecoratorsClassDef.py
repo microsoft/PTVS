@@ -1,4 +1,4 @@
-﻿@fob
+@fob
 class C: pass
 
 @fob.oar

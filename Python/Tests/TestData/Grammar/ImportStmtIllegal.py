@@ -1,1 +1,1 @@
-﻿from sys import ((winver))
+from sys import ((winver))

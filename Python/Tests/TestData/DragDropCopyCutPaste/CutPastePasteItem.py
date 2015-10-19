@@ -1,1 +1,1 @@
-﻿#CutPastePasteItem.py
+#CutPastePasteItem.py

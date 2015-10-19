@@ -1,4 +1,4 @@
-﻿fob()
+fob()
 fob(1)
 fob(oar = 1)
 fob(*oar)

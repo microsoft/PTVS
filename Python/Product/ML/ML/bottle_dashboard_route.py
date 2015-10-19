@@ -1,4 +1,4 @@
-﻿import {1}
+import {1}
 
 @route('/{0}')
 @view('{0}_dashboard')

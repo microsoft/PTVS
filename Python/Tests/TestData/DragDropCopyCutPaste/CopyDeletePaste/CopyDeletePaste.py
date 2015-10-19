@@ -1,1 +1,1 @@
-﻿#CopyDeletePaste.py
+#CopyDeletePaste.py

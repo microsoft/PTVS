@@ -1,4 +1,4 @@
-﻿from __future__ import *
+from __future__ import *
 from __future__ import braces
 from __future__ import unknown
 

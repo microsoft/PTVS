@@ -1,4 +1,4 @@
-﻿True
+True
 False
 111222333444
 u"unicode string"

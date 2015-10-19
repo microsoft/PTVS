@@ -1,1 +1,1 @@
-﻿#CutFolderAndFile.py
+#CutFolderAndFile.py

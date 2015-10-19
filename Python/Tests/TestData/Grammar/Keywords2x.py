@@ -1,2 +1,2 @@
-﻿True = 1
+True = 1
 False = 0

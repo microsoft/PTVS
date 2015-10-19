@@ -1,4 +1,4 @@
-﻿"abc"
+"abc"
 r"raw string"
 R"raw string"
 """abc"""

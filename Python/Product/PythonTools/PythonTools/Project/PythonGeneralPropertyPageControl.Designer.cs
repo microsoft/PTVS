@@ -1,4 +1,4 @@
-﻿namespace Microsoft.PythonTools.Project {
+namespace Microsoft.PythonTools.Project {
     partial class PythonGeneralPropertyPageControl {
         /// <summary> 
         /// Required designer variable.

@@ -1,4 +1,4 @@
-﻿def g():
+def g():
     def f():
         nonlocal a
 

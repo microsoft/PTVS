@@ -1,4 +1,4 @@
-﻿namespace Microsoft.PythonTools.Options {
+namespace Microsoft.PythonTools.Options {
     partial class PythonAdvancedEditorOptionsControl {
         /// <summary> 
         /// Required designer variable.

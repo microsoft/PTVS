@@ -1,4 +1,4 @@
-﻿<PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
+<PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
   <Metadata>
     <Identity Id="D793AEE5-B080-4A0F-AF00-4F40016BB0D2" Version="3.0" Language="en-US" Publisher="Microsoft Corporation" />
     <DisplayName>Python Tools for Visual Studio - Samples</DisplayName>
