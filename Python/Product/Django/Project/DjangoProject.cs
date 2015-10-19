@@ -469,11 +469,7 @@ namespace Microsoft.PythonTools.Django.Project {
 
                     // TODO: Use the actual Django version
                     var sln = (EnvDTE80.Solution2)project.DTE.Solution;
-#if DEV10
-                    var newAppTemplate = sln.GetProjectItemTemplate("DjangoNewAppFiles14.zip", "{888888a0-9f3d-457c-b088-3a5042f75d52}");
-#else
                     var newAppTemplate = sln.GetProjectItemTemplate("DjangoNewAppFiles14.zip", "Python");
-#endif
 
                     bool cancel;
                     name = ResolveAppNameCollisionWithUser(parentItems, name, out cancel);
@@ -625,14 +621,12 @@ namespace Microsoft.PythonTools.Django.Project {
                 }
             }
 
-#if DEV14_OR_LATER
             var id8 = (__VSHPROPID8)propId;
             switch (id8) {
                 case __VSHPROPID8.VSHPROPID_SupportsIconMonikers:
                     property = true;
                     return VSConstants.S_OK;
             }
-#endif
 
             return base.GetProperty(itemId, propId, out property);
         }

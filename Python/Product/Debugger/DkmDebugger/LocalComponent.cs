@@ -36,9 +36,7 @@ using Microsoft.VisualStudio.Debugger.Symbols;
 namespace Microsoft.PythonTools.DkmDebugger {
     public class LocalComponent :
         ComponentBase,
-#if DEV14_OR_LATER
         IDkmIntrinsicFunctionEvaluator140,
-#endif
         IDkmModuleSymbolsLoadedNotification,
         IDkmRuntimeInstanceLoadNotification,
         IDkmCallStackFilter,
@@ -510,14 +508,10 @@ namespace Microsoft.PythonTools.DkmDebugger {
             natVis.UseDefaultEvaluationBehavior(visualizedExpression, out useDefaultEvaluationBehavior, out defaultEvaluationResult);
         }
 
-#if DEV14_OR_LATER 
-
         DkmILEvaluationResult[] IDkmIntrinsicFunctionEvaluator140.Execute(DkmILExecuteIntrinsic executeIntrinsic, DkmILContext iLContext, DkmCompiledILInspectionQuery inspectionQuery, DkmILEvaluationResult[] arguments, ReadOnlyCollection<DkmCompiledInspectionQuery> subroutines, out DkmILFailureReason failureReason) {
             var natVis = iLContext.StackFrame.Process.GetOrCreateDataItem(() => new PyObjectNativeVisualizer());
             return natVis.Execute(executeIntrinsic, iLContext, inspectionQuery, arguments, subroutines, out failureReason);
         }
-
-#endif
 
         DkmCompilerId IDkmSymbolCompilerIdQuery.GetCompilerId(DkmInstructionSymbol instruction, DkmInspectionSession inspectionSession) {
             return new DkmCompilerId(Guids.MicrosoftVendorGuid, Guids.PythonLanguageGuid);

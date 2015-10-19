@@ -27,10 +27,8 @@ namespace Microsoft.PythonTools.Project {
             _properties = properties;
             InitializeComponent();
 
-#if DEV11_OR_LATER
             _debugGroup.Visible = true;
             _mixedMode.Visible = true;
-#endif
         }
 
         #region ILauncherOptionsControl Members

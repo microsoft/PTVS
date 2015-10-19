@@ -19,11 +19,7 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
-#if DEV14_OR_LATER
 using Microsoft.VisualStudio.InteractiveWindow.Shell;
-#else
-using Microsoft.VisualStudio.Repl;
-#endif
 
 namespace Microsoft.PythonTools.Commands {
     /// <summary>
@@ -73,13 +69,7 @@ namespace Microsoft.PythonTools.Commands {
             // These commands are project-insensitive, so pass null for project.
             var window = (ToolWindowPane)ExecuteInReplCommand.EnsureReplWindow(_serviceProvider, factory, null);
 
-#if DEV14_OR_LATER
             ((IVsInteractiveWindow)window).Show(true);
-#else
-            IVsWindowFrame windowFrame = (IVsWindowFrame)window.Frame;
-            ErrorHandler.ThrowOnFailure(windowFrame.Show());
-            ((IReplWindow)window).Focus();
-#endif
         }
 
         public override EventHandler BeforeQueryStatus {

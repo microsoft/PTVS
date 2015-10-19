@@ -12,8 +12,6 @@
  *
  * ***************************************************************************/
 
-#if DEV12_OR_LATER
-
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
@@ -22,12 +20,7 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
-
-#if DEV14_OR_LATER
 using Microsoft.Web.Editor.Services;
-#else
-using Microsoft.Web.Editor;
-#endif
 
 namespace Microsoft.PythonTools.Django.Intellisense {
     [Export(typeof(IIntellisenseControllerProvider)), ContentType(TemplateTagContentType.ContentTypeName), Order]
@@ -55,5 +48,3 @@ namespace Microsoft.PythonTools.Django.Intellisense {
         }
     }
 }
-
-#endif

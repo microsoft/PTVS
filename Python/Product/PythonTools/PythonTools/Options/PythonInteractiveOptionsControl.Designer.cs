@@ -28,9 +28,8 @@
             this._completionModeGroup = new System.Windows.Forms.GroupBox();
             this.tableLayoutPanel5 = new System.Windows.Forms.TableLayoutPanel();
             this._evalNever = new System.Windows.Forms.RadioButton();
-            this._evalAlways = new System.Windows.Forms.RadioButton();
             this._evalNoCalls = new System.Windows.Forms.RadioButton();
-            this._inlinePrompts = new System.Windows.Forms.CheckBox();
+            this._evalAlways = new System.Windows.Forms.RadioButton();
             this._useUserDefinedPrompts = new System.Windows.Forms.CheckBox();
             this._priPromptLabel = new System.Windows.Forms.Label();
             this._priPrompt = new System.Windows.Forms.TextBox();
@@ -79,7 +78,7 @@
             this._completionModeGroup.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this._completionModeGroup.Controls.Add(this.tableLayoutPanel5);
             this._completionModeGroup.Dock = System.Windows.Forms.DockStyle.Fill;
-            this._completionModeGroup.Location = new System.Drawing.Point(6, 194);
+            this._completionModeGroup.Location = new System.Drawing.Point(6, 171);
             this._completionModeGroup.Margin = new System.Windows.Forms.Padding(6, 8, 6, 8);
             this._completionModeGroup.Name = "_completionModeGroup";
             this._completionModeGroup.Padding = new System.Windows.Forms.Padding(6, 8, 6, 8);
@@ -120,19 +119,6 @@
             this._evalNever.Text = "&Never evaluate expressions";
             this._evalNever.UseVisualStyleBackColor = true;
             // 
-            // _evalAlways
-            // 
-            this._evalAlways.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this._evalAlways.AutoSize = true;
-            this._evalAlways.Location = new System.Drawing.Point(6, 49);
-            this._evalAlways.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
-            this._evalAlways.Name = "_evalAlways";
-            this._evalAlways.Size = new System.Drawing.Size(160, 17);
-            this._evalAlways.TabIndex = 2;
-            this._evalAlways.TabStop = true;
-            this._evalAlways.Text = "&Always evaluate expressions";
-            this._evalAlways.UseVisualStyleBackColor = true;
-            // 
             // _evalNoCalls
             // 
             this._evalNoCalls.Anchor = System.Windows.Forms.AnchorStyles.Left;
@@ -146,28 +132,28 @@
             this._evalNoCalls.Text = "Never evaluate expressions containing &calls";
             this._evalNoCalls.UseVisualStyleBackColor = true;
             // 
-            // _inlinePrompts
+            // _evalAlways
             // 
-            this._inlinePrompts.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this._inlinePrompts.AutoSize = true;
-            this._inlinePrompts.Location = new System.Drawing.Point(6, 26);
-            this._inlinePrompts.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
-            this._inlinePrompts.Name = "_inlinePrompts";
-            this._inlinePrompts.Size = new System.Drawing.Size(112, 17);
-            this._inlinePrompts.TabIndex = 2;
-            this._inlinePrompts.Text = "Use &inline prompts";
-            this._inlinePrompts.UseVisualStyleBackColor = true;
-            this._inlinePrompts.CheckedChanged += new System.EventHandler(this._inlinePrompts_CheckedChanged);
+            this._evalAlways.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this._evalAlways.AutoSize = true;
+            this._evalAlways.Location = new System.Drawing.Point(6, 49);
+            this._evalAlways.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
+            this._evalAlways.Name = "_evalAlways";
+            this._evalAlways.Size = new System.Drawing.Size(160, 17);
+            this._evalAlways.TabIndex = 2;
+            this._evalAlways.TabStop = true;
+            this._evalAlways.Text = "&Always evaluate expressions";
+            this._evalAlways.UseVisualStyleBackColor = true;
             // 
             // _useUserDefinedPrompts
             // 
             this._useUserDefinedPrompts.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this._useUserDefinedPrompts.AutoSize = true;
-            this._useUserDefinedPrompts.Location = new System.Drawing.Point(6, 49);
+            this._useUserDefinedPrompts.Location = new System.Drawing.Point(6, 26);
             this._useUserDefinedPrompts.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
             this._useUserDefinedPrompts.Name = "_useUserDefinedPrompts";
             this._useUserDefinedPrompts.Size = new System.Drawing.Size(146, 17);
-            this._useUserDefinedPrompts.TabIndex = 4;
+            this._useUserDefinedPrompts.TabIndex = 2;
             this._useUserDefinedPrompts.Text = "Use use&r defined prompts";
             this._useUserDefinedPrompts.UseVisualStyleBackColor = true;
             this._useUserDefinedPrompts.CheckedChanged += new System.EventHandler(this._useInterpreterPrompts_CheckedChanged);
@@ -422,18 +408,17 @@
             this.tableLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 55F));
             this.tableLayoutPanel3.Controls.Add(this._smartReplHistory, 0, 0);
             this.tableLayoutPanel3.Controls.Add(this._enableAttach, 1, 0);
-            this.tableLayoutPanel3.Controls.Add(this._inlinePrompts, 0, 1);
             this.tableLayoutPanel3.Controls.Add(this._liveCompletionsOnly, 1, 1);
-            this.tableLayoutPanel3.Controls.Add(this._useUserDefinedPrompts, 0, 2);
+            this.tableLayoutPanel3.Controls.Add(this._useUserDefinedPrompts, 0, 1);
             this.tableLayoutPanel3.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel3.Location = new System.Drawing.Point(3, 91);
             this.tableLayoutPanel3.Margin = new System.Windows.Forms.Padding(3, 0, 3, 0);
             this.tableLayoutPanel3.Name = "tableLayoutPanel3";
-            this.tableLayoutPanel3.RowCount = 3;
+            this.tableLayoutPanel3.RowCount = 2;
             this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel3.Size = new System.Drawing.Size(485, 69);
+            this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.tableLayoutPanel3.Size = new System.Drawing.Size(485, 46);
             this.tableLayoutPanel3.TabIndex = 1;
             // 
             // tableLayoutPanel4
@@ -452,7 +437,7 @@
             this.tableLayoutPanel4.Controls.Add(this._secPromptLabel, 3, 0);
             this.tableLayoutPanel4.Controls.Add(this._secPrompt, 4, 0);
             this.tableLayoutPanel4.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel4.Location = new System.Drawing.Point(3, 160);
+            this.tableLayoutPanel4.Location = new System.Drawing.Point(3, 137);
             this.tableLayoutPanel4.Margin = new System.Windows.Forms.Padding(3, 0, 3, 0);
             this.tableLayoutPanel4.Name = "tableLayoutPanel4";
             this.tableLayoutPanel4.RowCount = 1;
@@ -491,7 +476,6 @@
         private System.Windows.Forms.RadioButton _evalAlways;
         private System.Windows.Forms.RadioButton _evalNoCalls;
         private System.Windows.Forms.RadioButton _evalNever;
-        private System.Windows.Forms.CheckBox _inlinePrompts;
         private System.Windows.Forms.CheckBox _useUserDefinedPrompts;
         private System.Windows.Forms.TextBox _secPrompt;
         private System.Windows.Forms.TextBox _priPrompt;

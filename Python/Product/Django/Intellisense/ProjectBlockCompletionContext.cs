@@ -12,18 +12,11 @@
  *
  * ***************************************************************************/
 
-#if DEV12_OR_LATER
-
 using System.Linq;
+using Microsoft.Html.Editor.Document;
 using Microsoft.PythonTools.Django.Project;
 using Microsoft.PythonTools.Django.TemplateParsing;
 using Microsoft.VisualStudio.Text;
-
-#if DEV14_OR_LATER
-using Microsoft.Html.Editor.Document;
-#else
-using Microsoft.Html.Editor;
-#endif
 
 namespace Microsoft.PythonTools.Django.Intellisense {
     internal class ProjectBlockCompletionContext : ProjectBlockCompletionContextBase {
@@ -49,5 +42,3 @@ namespace Microsoft.PythonTools.Django.Intellisense {
         }
     }
 }
-
-#endif

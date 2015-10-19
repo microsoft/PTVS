@@ -17,7 +17,6 @@ using System.Collections.Generic;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 
-#if DEV14_OR_LATER
 namespace Microsoft.PythonTools.Repl {
     /// <summary>
     /// Classifies regions for REPL error output spans.  These are always classified as errors.
@@ -99,4 +98,3 @@ namespace Microsoft.PythonTools.Repl {
         }
     }
 }
-#endif

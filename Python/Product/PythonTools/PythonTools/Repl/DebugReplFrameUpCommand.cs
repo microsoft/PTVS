@@ -12,36 +12,21 @@
  *
  * ***************************************************************************/
 
+using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Threading.Tasks;
-using Microsoft.PythonTools.Debugger.DebugEngine;
-using System;
-using System.Collections.Generic;
-using Microsoft.VisualStudio.Text.Classification;
-using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Utilities;
-#if DEV14_OR_LATER
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.InteractiveWindow.Commands;
-#else
-using Microsoft.VisualStudio.Repl;
-#endif
+using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Classification;
+using Microsoft.VisualStudio.Utilities;
 
 namespace Microsoft.PythonTools.Repl {
-#if DEV14_OR_LATER
-    using IReplWindow = IInteractiveWindow;
-    using IReplCommand = IInteractiveWindowCommand;
-    using IReplCommand2 = IInteractiveWindowCommand;
-    using ReplRoleAttribute = Microsoft.PythonTools.Repl.InteractiveWindowRoleAttribute;
-#endif
-
-    [Export(typeof(IReplCommand))]
-    [ReplRole("Debug")]
+    [Export(typeof(IInteractiveWindowCommand))]
+    [InteractiveWindowRole("Debug")]
     [ContentType(PythonCoreConstants.ContentType)]
-    class DebugReplFrameUpCommand : IReplCommand2 {
-        #region IReplCommand Members
-
-        public Task<ExecutionResult> Execute(IReplWindow window, string arguments) {
+    class DebugReplFrameUpCommand : IInteractiveWindowCommand {
+        public Task<ExecutionResult> Execute(IInteractiveWindow window, string arguments) {
             var eval = window.Evaluator as PythonDebugReplEvaluator;
             if (eval != null) {
                 eval.FrameUp();
@@ -57,17 +42,6 @@ namespace Microsoft.PythonTools.Repl {
             get { return "up"; }
         }
 
-        public object ButtonContent {
-            get {
-                return null;
-            }
-        }
-
-        public System.Collections.Generic.IEnumerable<string> Aliases {
-            get { return new string[] { "u" }; }
-        }
-
-#if DEV14_OR_LATER
         public IEnumerable<ClassificationSpan> ClassifyArguments(ITextSnapshot snapshot, Span argumentsSpan, Span spanToClassify) {
             yield break;
         }
@@ -93,10 +67,8 @@ namespace Microsoft.PythonTools.Repl {
         public IEnumerable<string> Names {
             get {
                 yield return Command;
+                yield return "u";
             }
         }
-#endif
-
-        #endregion
     }
 }

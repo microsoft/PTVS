@@ -17,14 +17,11 @@ using System.ComponentModel.Design;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Options;
-using Microsoft.VisualStudio.ComponentModelHost;
+using Microsoft.VisualStudio.InteractiveWindow.Commands;
 using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudioTools;
 using TestUtilities.Mocks;
-#if DEV14_OR_LATER
-using Microsoft.VisualStudio.InteractiveWindow.Commands;
-#endif
 
 namespace TestUtilities.Python {
     public static class PythonToolsTestUtilities {
@@ -45,9 +42,7 @@ namespace TestUtilities.Python {
             var service = new MockContentTypeRegistryService();
             service.AddContentType(PythonCoreConstants.ContentType, new[] { "code" });
 
-#if DEV14_OR_LATER
             service.AddContentType("Interactive Command", new[] { "code" });
-#endif
             return service;
         }
 
@@ -69,12 +64,10 @@ namespace TestUtilities.Python {
                 CreateContentTypeRegistryService
             );
 
-#if DEV14_OR_LATER
             serviceProvider.ComponentModel.AddExtension(
                 typeof(IInteractiveWindowCommandsFactory),
                 () => new MockInteractiveWindowCommandsFactory()
             );
-#endif
 
             serviceProvider.AddService(typeof(ErrorTaskProvider), CreateTaskProviderService, true);
             serviceProvider.AddService(typeof(CommentTaskProvider), CreateTaskProviderService, true);

@@ -61,11 +61,6 @@
       </RegistryKey>
     </Component>
 
-    <Component Directory="Dir_VSInstallLocation" Guid="*">
-      <Condition>NOT ALLUSERS = 1</Condition>
-      <File KeyPath="yes" Source='VSTemplateStore.pkgdef' />
-    </Component>
-
     <ComponentGroupRef Id="CGroup_PythonToolsFiles"/>
   </Module>
 </Wix>

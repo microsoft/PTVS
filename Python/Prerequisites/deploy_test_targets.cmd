@@ -13,8 +13,8 @@ echo This script should be run as an administrator.
 
 set D=%~dp0
 
+call :docopy "%ProgramFiles(x86)%\MSBuild\Microsoft\VisualStudio\v15.0"
 call :docopy "%ProgramFiles(x86)%\MSBuild\Microsoft\VisualStudio\v14.0"
-call :docopy "%ProgramFiles(x86)%\MSBuild\Microsoft\VisualStudio\v12.0"
 
 pause
 exit /B 0

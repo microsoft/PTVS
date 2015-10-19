@@ -13,7 +13,6 @@
  * ***************************************************************************/
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -23,7 +22,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows;
 using System.Windows.Forms;
 using System.Xml;
 using System.Xml.XPath;
@@ -36,6 +34,8 @@ using Microsoft.PythonTools.Navigation;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Azure;
+using Microsoft.VisualStudio.Imaging;
+using Microsoft.VisualStudio.Imaging.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TextManager.Interop;
@@ -47,10 +47,6 @@ using NativeMethods = Microsoft.VisualStudioTools.Project.NativeMethods;
 using Task = System.Threading.Tasks.Task;
 using VsCommands2K = Microsoft.VisualStudio.VSConstants.VSStd2KCmdID;
 using VsMenus = Microsoft.VisualStudioTools.Project.VsMenus;
-#if DEV14_OR_LATER
-using Microsoft.VisualStudio.Imaging;
-using Microsoft.VisualStudio.Imaging.Interop;
-#endif
 
 namespace Microsoft.PythonTools.Project {
     [Guid(PythonConstants.ProjectNodeGuid)]
@@ -77,16 +73,7 @@ namespace Microsoft.PythonTools.Project {
         private Dictionary<object, Action<object>> _actionsOnClose;
         private readonly CommentTaskProvider _commentTaskProvider;
 
-        public PythonProjectNode(IServiceProvider serviceProvider)
-            : base(
-                  serviceProvider,
-#if DEV14_OR_LATER
-                  null
-#else
-                  Utilities.GetImageList(typeof(PythonProjectNode).Assembly.GetManifestResourceStream(PythonConstants.ProjectImageList))
-#endif
-        ) {
-
+        public PythonProjectNode(IServiceProvider serviceProvider) : base(serviceProvider, null) {
             Type projectNodePropsType = typeof(PythonProjectNodeProperties);
             AddCATIDMapping(projectNodePropsType, projectNodePropsType.GUID);
 
@@ -175,11 +162,7 @@ namespace Microsoft.PythonTools.Project {
 
         protected override Stream ProjectIconsImageStripStream {
             get {
-#if DEV14_OR_LATER
                 throw new NotSupportedException("Python Tools does not support project image strip");
-#else
-                return typeof(ProjectNode).Assembly.GetManifestResourceStream("Microsoft.PythonTools.Project.Resources.imagelis.bmp");
-#endif
             }
         }
 
@@ -196,7 +179,6 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-#if DEV14_OR_LATER
         protected override bool SupportsIconMonikers {
             get { return true; }
         }
@@ -204,15 +186,6 @@ namespace Microsoft.PythonTools.Project {
         protected override ImageMoniker GetIconMoniker(bool open) {
             return KnownMonikers.PYProjectNode;
         }
-#else
-        internal int GetIconIndex(PythonProjectImageName name) {
-            return ImageOffset + (int)name;
-        }
-
-        internal IntPtr GetIconHandleByName(PythonProjectImageName name) {
-            return ImageHandler.GetIconHandle(GetIconIndex(name));
-        }
-#endif
 
         internal override string IssueTrackerUrl {
             get { return PythonConstants.IssueTrackerUrl; }
@@ -1496,7 +1469,7 @@ namespace Microsoft.PythonTools.Project {
                 var pane = window as ToolWindowPane;
                 if (pane != null) {
                     ErrorHandler.ThrowOnFailure(((IVsWindowFrame)pane.Frame).Show());
-                    window.Focus();
+                    window.Show(true);
                 }
             } catch (InvalidOperationException ex) {
                 MessageBox.Show(SR.GetString(SR.ErrorOpeningInteractiveWindow, ex), SR.ProductName);

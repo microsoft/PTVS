@@ -26,14 +26,10 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyFileVersion(AssemblyVersionInfo.Version)]
 
 class AssemblyVersionInfo {
-#if DEV10
-    public const string VSMajorVersion = "10";
-#elif DEV11
-    public const string VSMajorVersion = "11";
-#elif DEV12
-    public const string VSMajorVersion = "12";
-#elif DEV14
+#if DEV14
     public const string VSMajorVersion = "14";
+#elif DEV15
+    public const string VSMajorVersion = "15";
 #else
 #error Unrecognized VS Version.
 #endif

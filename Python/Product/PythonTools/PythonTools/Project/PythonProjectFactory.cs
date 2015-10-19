@@ -93,7 +93,6 @@ namespace Microsoft.PythonTools.Project {
         ) {
             Version version;
 
-#if DEV12_OR_LATER
             // Web projects are incompatible with WDExpress/Shell
             ProjectPropertyElement projectType;
             if (!IsWebProjectSupported &&
@@ -111,7 +110,6 @@ namespace Microsoft.PythonTools.Project {
                     return ProjectUpgradeState.Incompatible;
                 }
             }
-#endif
 
             var imports = new HashSet<string>(projectXml.Imports.Select(p => p.Project), StringComparer.OrdinalIgnoreCase);
             // Importing a targets file from 2.1 Beta
@@ -130,16 +128,6 @@ namespace Microsoft.PythonTools.Project {
                 version < new Version(4, 0)) {
                 return ProjectUpgradeState.SafeRepair;
             }
-
-#if !DEV12_OR_LATER
-            // ToolsVersion later than 4.0 cannot be loaded in VS 2010 or 2012.
-            if (userProjectXml != null) {
-                if (!Version.TryParse(userProjectXml.ToolsVersion, out version) ||
-                    version > new Version(4, 0)) {
-                    return ProjectUpgradeState.SafeRepair;
-                }
-            }
-#endif
 
             return ProjectUpgradeState.NotNeeded;
         }
@@ -195,16 +183,6 @@ namespace Microsoft.PythonTools.Project {
                 projectXml.AddImport(CommonTargets).Condition = "!Exists($(PtvsTargetsFile))";
                 log(__VSUL_ERRORLEVEL.VSUL_INFORMATIONAL, SR.GetString(SR.UpgradedRemoveCommonTargets));
             }
-
-#if !DEV12_OR_LATER
-            if (userProjectXml != null) {
-                if (!Version.TryParse(userProjectXml.ToolsVersion, out version) ||
-                    version > new Version(4, 0)) {
-                    userProjectXml.ToolsVersion = "4.0";
-                    log(__VSUL_ERRORLEVEL.VSUL_INFORMATIONAL, SR.GetString(SR.UpgradedUserToolsVersion));
-                }
-            }
-#endif
         }
 
         private const int ExpressSkuValue = 500;

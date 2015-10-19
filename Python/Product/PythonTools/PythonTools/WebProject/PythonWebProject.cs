@@ -148,14 +148,12 @@ namespace Microsoft.PythonTools.Project.Web {
                     }
             }
 
-#if DEV14_OR_LATER
             var id8 = (__VSHPROPID8)propId;
             switch(id8) {
                 case __VSHPROPID8.VSHPROPID_SupportsIconMonikers:
                     property = true;
                     return VSConstants.S_OK;
             }
-#endif
 
             return base.GetProperty(itemId, propId, out property);
         }

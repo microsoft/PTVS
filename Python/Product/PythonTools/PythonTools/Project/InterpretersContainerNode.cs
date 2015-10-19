@@ -24,10 +24,8 @@ using Microsoft.VisualStudioTools.Project;
 using OleConstants = Microsoft.VisualStudio.OLE.Interop.Constants;
 using VsCommands = Microsoft.VisualStudio.VSConstants.VSStd97CmdID;
 using VsMenus = Microsoft.VisualStudioTools.Project.VsMenus;
-#if DEV14_OR_LATER
 using Microsoft.VisualStudio.Imaging;
 using Microsoft.VisualStudio.Imaging.Interop;
-#endif
 
 namespace Microsoft.PythonTools.Project {
     /// <summary>
@@ -98,7 +96,6 @@ namespace Microsoft.PythonTools.Project {
             return null;
         }
 
-#if DEV14_OR_LATER
         protected override bool SupportsIconMonikers {
             get { return true; }
         }
@@ -107,13 +104,6 @@ namespace Microsoft.PythonTools.Project {
             // TODO: Update to PYEnvironment
             return KnownMonikers.DockPanel;
         }
-#else
-        public override int ImageIndex {
-            get {
-                return _projectNode.GetIconIndex(PythonProjectImageName.InterpretersContainer);
-            }
-        }
-#endif
 
         /// <summary>
         /// Interpreter container node cannot be dragged.

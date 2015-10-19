@@ -12,17 +12,10 @@
  *
  * ***************************************************************************/
 
-#if DEV14_OR_LATER
 using Microsoft.VisualStudio.InteractiveWindow;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Microsoft.PythonTools.Repl {
     interface IInteractiveEvaluatorProvider {
         IInteractiveEvaluator GetEvaluator(string replId);
     }
 }
-#endif

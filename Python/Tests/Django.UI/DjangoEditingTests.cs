@@ -18,6 +18,9 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using EnvDTE;
+using Microsoft.Html.Editor.Document;
+using Microsoft.Html.Editor.Settings;
+using Microsoft.Html.Editor.Tree;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
@@ -31,14 +34,6 @@ using Microsoft.VisualStudioTools.VSTestHost;
 using TestUtilities;
 using TestUtilities.Python;
 using TestUtilities.UI;
-
-#if DEV14_OR_LATER
-using Microsoft.Html.Editor.Document;
-using Microsoft.Html.Editor.Settings;
-using Microsoft.Html.Editor.Tree;
-#elif DEV12_OR_LATER
-using Microsoft.Html.Editor;
-#endif
 
 namespace DjangoUITests {
     [TestClass]
@@ -96,7 +91,6 @@ namespace DjangoUITests {
         }
 
         private static void WaitForHtmlTreeUpdate(IWpfTextView textView) {
-#if DEV12_OR_LATER
             var htmlDoc = HtmlEditorDocument.TryFromTextView(textView);
             Assert.IsNotNull(htmlDoc);
 
@@ -119,14 +113,7 @@ namespace DjangoUITests {
             htmlDoc.HtmlEditorTree.UpdateCompleted += updateCompletedHandler;
 
             Assert.IsTrue(are.WaitOne(5000), "Failed to see HTML tree update");
-#endif
         }
-
-#if DEV12_OR_LATER
-        private const string DjangoComment = "HTML Comment";
-#else
-        private const string DjangoComment = "comment";
-#endif
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("VSTestHost")]
@@ -551,7 +538,7 @@ namespace DjangoUITests {
         public void Insertion5() {
             InsertionTest("Insertion5.html.djt", 1, 2, "#",
                 new Classification("Django template tag", 0, 2, "{#"),
-                new Classification(DjangoComment, 2, 11, "{<html>\r\n"),
+                new Classification("HTML Comment", 2, 11, "{<html>\r\n"),
                 new Classification("Django template tag", 11, 13, "#}")
             );
         }
@@ -783,15 +770,11 @@ namespace DjangoUITests {
                 new Classification("HTML Attribute Value", 87, 90, "\"1\""),
                 new Classification("HTML Attribute Name", 91, 96, "style"),
                 new Classification("HTML Operator", 96, 97, "="),
-#if DEV12_OR_LATER
- new Classification("HTML Attribute Value", 97, 98, "\""),
+                new Classification("HTML Attribute Value", 97, 98, "\""),
                 new Classification("CSS Property Name", 98, 103, "width"),
                 new Classification("CSS Property Value", 105, 109, "100%"),
                 new Classification("HTML Attribute Value", 109, 110, "\""),
-#else
-                new Classification("HTML Attribute Value", 97, 110, "\"width: 100%\""),
-#endif
- new Classification("HTML Tag Delimiter", 110, 111, ">"),
+                new Classification("HTML Tag Delimiter", 110, 111, ">"),
                 new Classification("HTML Tag Delimiter", 121, 122, "<"),
                 new Classification("HTML Element Name", 122, 124, "tr"),
                 new Classification("HTML Tag Delimiter", 124, 125, ">"),
@@ -945,15 +928,11 @@ namespace DjangoUITests {
                 new Classification("HTML Element Name", 894, 899, "table"),
                 new Classification("HTML Attribute Name", 900, 905, "style"),
                 new Classification("HTML Operator", 905, 906, "="),
-#if DEV12_OR_LATER
- new Classification("HTML Attribute Value", 906, 907, "\""),
+                new Classification("HTML Attribute Value", 906, 907, "\""),
                 new Classification("CSS Property Name", 907, 912, "width"),
                 new Classification("CSS Property Value", 914, 918, "100%"),
                 new Classification("HTML Attribute Value", 918, 919, "\""),
-#else
-                new Classification("HTML Attribute Value", 906, 919, "\"width: 100%\""),
-#endif
- new Classification("HTML Tag Delimiter", 919, 920, ">"),
+                new Classification("HTML Tag Delimiter", 919, 920, ">"),
                 new Classification("HTML Tag Delimiter", 926, 927, "<"),
                 new Classification("HTML Element Name", 927, 929, "tr"),
                 new Classification("HTML Tag Delimiter", 929, 930, ">"),
@@ -1272,12 +1251,10 @@ namespace DjangoUITests {
 
         private static bool SetBraceCompletion(VisualStudioApp app, bool value) {
             bool oldValue = false;
-#if DEV12_OR_LATER
             ThreadHelper.Generic.Invoke(() => {
                 HtmlSettings.InsertMatchingBraces = false;
                 HtmlSettings.InsertEndTags = false;
             });
-#endif
             return oldValue;
         }
 
@@ -1661,11 +1638,7 @@ namespace DjangoUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("VSTestHost")]
         public void IntellisenseCompletions8() {
-            string keySequence = Keyboard.CtrlSpace.ToString();
-#if !DEV12_OR_LATER
-            keySequence += "\t";
-#endif
-            InsertionTest("TestApp\\Templates\\page2.html.djt", 7, 8, -1, keySequence,
+            InsertionTest("TestApp\\Templates\\page2.html.djt", 7, 8, -1, Keyboard.CtrlSpace.ToString(),
                 paste: false,
                 checkInsertionLen: false,
                 projectName: @"TestData\DjangoTemplateCodeIntelligence.sln",
@@ -1709,10 +1682,7 @@ namespace DjangoUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("VSTestHost")]
         public void IntellisenseCompletions9() {
-            string keySequence = Keyboard.CtrlSpace.ToString();
-#if DEV12_OR_LATER
-            keySequence = "c" + keySequence;
-#endif
+            string keySequence = "c" + Keyboard.CtrlSpace.ToString();
             InsertionTest("TestApp\\Templates\\page2.html.djt", 8, 4, -1, keySequence,
                 paste: false,
                 checkInsertionLen: false,
@@ -1920,8 +1890,6 @@ namespace DjangoUITests {
             );
         }
 
-#if DEV12_OR_LATER
-
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("VSTestHost")]
         public void IntellisenseCompletionsCss() {
@@ -2027,8 +1995,6 @@ namespace DjangoUITests {
                 }
             );
         }
-
-#endif
 
         private static EditorWindow OpenDjangoProjectItem(VisualStudioApp app, string startItem, out Window window, string projectName = @"TestData\DjangoEditProject.sln", bool wait = false) {
             var project = app.OpenProject(projectName, startItem);

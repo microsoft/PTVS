@@ -16,27 +16,18 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Threading.Tasks;
+using Microsoft.VisualStudio.InteractiveWindow;
+using Microsoft.VisualStudio.InteractiveWindow.Commands;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Utilities;
-#if DEV14_OR_LATER
-using Microsoft.VisualStudio.InteractiveWindow;
-
-using IReplCommand = Microsoft.VisualStudio.InteractiveWindow.Commands.IInteractiveWindowCommand;
-using IReplWindow = Microsoft.VisualStudio.InteractiveWindow.IInteractiveWindow;
-using ReplRoleAttribute = Microsoft.PythonTools.Repl.InteractiveWindowRoleAttribute;
-#else
-using Microsoft.VisualStudio.Repl;
-#endif
 
 namespace Microsoft.PythonTools.Repl {
-    [Export(typeof(IReplCommand))]
-    [ReplRole("Execution")]
+    [Export(typeof(IInteractiveWindowCommand))]
+    [InteractiveWindowRole("Execution")]
     [ContentType(PythonCoreConstants.ContentType)]
-    class AttachDebuggerReplCommand : IReplCommand {
-        #region IReplCommand Members
-
-        public Task<ExecutionResult> Execute(IReplWindow window, string arguments) {
+    class AttachDebuggerReplCommand : IInteractiveWindowCommand {
+        public Task<ExecutionResult> Execute(IInteractiveWindow window, string arguments) {
             var eval = window.Evaluator as PythonReplEvaluator;
             if (eval != null) {
                 if (eval.AttachEnabled) {
@@ -75,7 +66,6 @@ Environment.NewLine + Environment.NewLine +
             }
         }
 
-#if DEV14_OR_LATER
         public IEnumerable<ClassificationSpan> ClassifyArguments(ITextSnapshot snapshot, Span argumentsSpan, Span spanToClassify) {
             yield break;
         }
@@ -103,8 +93,5 @@ Environment.NewLine + Environment.NewLine +
                 yield return Command;
             }
         }
-#endif
-
-        #endregion
     }
 }

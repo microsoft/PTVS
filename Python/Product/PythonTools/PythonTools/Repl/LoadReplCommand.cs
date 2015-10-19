@@ -18,38 +18,22 @@ using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using Microsoft.PythonTools;
-using Microsoft.PythonTools.Repl;
-using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
-using Microsoft.VisualStudioTools;
-using Microsoft.VisualStudio.Text.Classification;
-using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Utilities;
-#if DEV14_OR_LATER
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.InteractiveWindow.Commands;
-#else
-using Microsoft.VisualStudio.Repl;
-#endif
+using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Classification;
+using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
+using Microsoft.VisualStudio.Utilities;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Repl {
-#if DEV14_OR_LATER
-    using IReplWindow = IInteractiveWindow;
-    using IReplCommand = IInteractiveWindowCommand;
-    using IReplCommand2 = IInteractiveWindowCommand;
-    using ReplRoleAttribute = Microsoft.PythonTools.Repl.InteractiveWindowRoleAttribute;
-#endif
-
-    [Export(typeof(IReplCommand))]
+    [Export(typeof(IInteractiveWindowCommand))]
     [ContentType(PythonCoreConstants.ContentType)]
-    class LoadReplCommand : IReplCommand {
+    class LoadReplCommand : IInteractiveWindowCommand {
         const string _commentPrefix = "%%";
 
-        #region IReplCommand Members
-
-        public Task<ExecutionResult> Execute(IReplWindow window, string arguments) {
+        public Task<ExecutionResult> Execute(IInteractiveWindow window, string arguments) {
             var finder = new FileFinder(arguments);
 
             var eval = window.Evaluator as BasePythonReplEvaluator;
@@ -59,11 +43,7 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             finder.ThrowIfNotFound();
-#if DEV14_OR_LATER
             string commandPrefix = "$";
-#else
-            string commandPrefix = (string)window.GetOptionValue(ReplOptions.CommandPrefix);
-#endif
             string lineBreak = window.TextView.Options.GetNewLineCharacter();
 
             IEnumerable<string> lines = File.ReadLines(finder.Filename);
@@ -122,14 +102,6 @@ namespace Microsoft.PythonTools.Repl {
             get { return "load"; }
         }
 
-        public object ButtonContent {
-            get {
-                return null;
-            }
-        }
-
-
-#if DEV14_OR_LATER
         public IEnumerable<ClassificationSpan> ClassifyArguments(ITextSnapshot snapshot, Span argumentsSpan, Span spanToClassify) {
             yield break;
         }
@@ -157,8 +129,6 @@ namespace Microsoft.PythonTools.Repl {
                 yield return Command;
             }
         }
-#endif
-        #endregion
 
         class FileFinder {
             private readonly string _baseName;

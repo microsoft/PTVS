@@ -12,8 +12,6 @@
  *
  * ***************************************************************************/
 
-#if DEV12_OR_LATER
-
 using System;
 using System.ComponentModel.Composition;
 using Microsoft.VisualStudio.Language.Intellisense;
@@ -45,5 +43,3 @@ namespace Microsoft.PythonTools.Django.Intellisense {
         }
     }
 }
-
-#endif

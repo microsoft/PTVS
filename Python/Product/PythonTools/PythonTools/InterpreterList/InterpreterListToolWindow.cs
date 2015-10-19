@@ -32,12 +32,8 @@ using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 using SR = Microsoft.PythonTools.Project.SR;
 using Microsoft.PythonTools.Repl;
-#if DEV14_OR_LATER
 using Microsoft.VisualStudio.Imaging;
 using Microsoft.VisualStudio.InteractiveWindow.Shell;
-#else
-using Microsoft.VisualStudio.Repl;
-#endif
 
 namespace Microsoft.PythonTools.InterpreterList {
     [Guid(PythonConstants.InterpreterListToolWindowGuid)]
@@ -57,13 +53,8 @@ namespace Microsoft.PythonTools.InterpreterList {
 
             _pyService = _site.GetPythonToolsService();
 
-#if DEV14_OR_LATER
             // TODO: Get PYEnvironment added to image list
             BitmapImageMoniker = KnownMonikers.DockPanel;
-#else
-            BitmapResourceID = PythonConstants.ResourceIdForReplImages;
-            BitmapIndex = 0;
-#endif
             Caption = SR.GetString(SR.Environments);
 
             _service = _site.GetComponentModel().GetService<IInterpreterOptionsService>();
@@ -225,11 +216,7 @@ namespace Microsoft.PythonTools.InterpreterList {
         private void OpenInteractiveWindow_Executed(object sender, ExecutedRoutedEventArgs e) {
             var view = (EnvironmentView)e.Parameter;
             var factory = view.Factory;
-#if DEV14_OR_LATER
             IVsInteractiveWindow window;
-#else
-            IReplWindow window;
-#endif
 
             var provider = _service.KnownProviders.OfType<LoadedProjectInterpreterFactoryProvider>().FirstOrDefault();
             var vsProject = provider == null ?
@@ -247,7 +234,7 @@ namespace Microsoft.PythonTools.InterpreterList {
                 if (pane != null) {
                     ErrorHandler.ThrowOnFailure(((IVsWindowFrame)pane.Frame).Show());
                 }
-                window.Focus();
+                window.Show(true);
             }
         }
 

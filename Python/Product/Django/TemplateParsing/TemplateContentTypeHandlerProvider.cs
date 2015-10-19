@@ -12,16 +12,9 @@
  *
  * ***************************************************************************/
 
-#if DEV12_OR_LATER
-
 using System.ComponentModel.Composition;
 using Microsoft.VisualStudio.Utilities;
-
-#if DEV14_OR_LATER
 using Microsoft.Html.Editor.ContentType.Def;
-#else
-using Microsoft.Html.Editor;
-#endif
 
 namespace Microsoft.PythonTools.Django.TemplateParsing {
     [Export(typeof(IContentTypeHandlerProvider))]
@@ -32,5 +25,3 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
         }
     }
 }
-
-#endif

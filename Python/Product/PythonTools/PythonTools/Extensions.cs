@@ -36,11 +36,7 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Language.StandardClassification;
-#if DEV14_OR_LATER
 using Microsoft.VisualStudio.InteractiveWindow;
-#else
-using Microsoft.VisualStudio.Repl;
-#endif
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
@@ -50,14 +46,7 @@ using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 
-// Disables obsolete warning for ISmartTag* interfaces - http://go.microsoft.com/fwlink/?LinkId=394601
-#pragma warning disable 618
-
 namespace Microsoft.PythonTools {
-#if DEV14_OR_LATER
-    using IReplEvaluator = IInteractiveEvaluator;
-#endif
-
     public static class Extensions {
         internal static bool IsAppxPackageableProject(this ProjectNode projectNode) {
             var appxProp = projectNode.BuildProject.GetPropertyValue(ProjectFileConstants.AppxPackage);
@@ -195,9 +184,7 @@ namespace Microsoft.PythonTools {
             return buffer.CurrentSnapshot.CreateTrackingSpan(position, 1, SpanTrackingMode.EdgeInclusive);
         }
 
-#if DEV14_OR_LATER
 #pragma warning disable 0618
-#endif
 
         // TODO: Switch from smart tags to Light Bulb: http://go.microsoft.com/fwlink/?LinkId=394601
         internal static ITrackingSpan CreateTrackingSpan(this ISmartTagSession session, ITextBuffer buffer) {
@@ -216,9 +203,7 @@ namespace Microsoft.PythonTools {
             return buffer.CurrentSnapshot.CreateTrackingSpan(position, 1, SpanTrackingMode.EdgeInclusive);
         }
 
-#if DEV14_OR_LATER
 #pragma warning restore 0618
-#endif
 
         public static IPythonInterpreterFactory GetPythonInterpreterFactory(this IVsHierarchy self) {
             var node = (self.GetProject().GetCommonProject() as PythonProjectNode);
@@ -680,7 +665,7 @@ namespace Microsoft.PythonTools {
         /// Checks to see if this is a REPL buffer starting with a extensible command such as %cls, %load, etc...
         /// </summary>
         internal static bool IsReplBufferWithCommand(this ITextSnapshot snapshot) {
-            return snapshot.TextBuffer.Properties.ContainsProperty(typeof(IReplEvaluator)) &&
+            return snapshot.TextBuffer.Properties.ContainsProperty(typeof(IInteractiveEvaluator)) &&
                    snapshot.Length != 0 &&
                    (snapshot[0] == '%' || snapshot[0] == '$'); // IPython and normal repl commands
         }

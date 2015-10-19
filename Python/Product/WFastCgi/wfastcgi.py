@@ -32,7 +32,7 @@ try:
 except ImportError:
     from _thread import start_new_thread
 
-__version__ = '2.2.0'
+__version__ = '3.0.0'
 
 if sys.version_info[0] == 3:
     def to_str(value):

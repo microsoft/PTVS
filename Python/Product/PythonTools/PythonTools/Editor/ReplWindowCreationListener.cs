@@ -18,22 +18,15 @@ using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Language;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.ComponentModelHost;
+using Microsoft.VisualStudio.InteractiveWindow;
+using Microsoft.VisualStudio.InteractiveWindow.Shell;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Operations;
 using Microsoft.VisualStudio.Utilities;
 using IOleCommandTarget = Microsoft.VisualStudio.OLE.Interop.IOleCommandTarget;
 
-#if DEV14_OR_LATER
-using Microsoft.VisualStudio.InteractiveWindow;
-using Microsoft.VisualStudio.InteractiveWindow.Shell;
-#else
-using Microsoft.VisualStudio.Editor;
-using Microsoft.VisualStudio.Repl;
-#endif
-
 namespace Microsoft.PythonTools.Editor {
-#if DEV14_OR_LATER
     [Export(typeof(IVsInteractiveWindowOleCommandTargetProvider))]
     [ContentType(PythonCoreConstants.ContentType)]
     public class PythonOleCommandTargetProvider : IVsInteractiveWindowOleCommandTargetProvider {
@@ -69,40 +62,4 @@ namespace Microsoft.PythonTools.Editor {
             return filter;
         }
     }
-#else
-
-    [Export(typeof(IReplWindowCreationListener))]
-    [ContentType(PythonCoreConstants.ContentType)]
-    class ReplWindowCreationListener : IReplWindowCreationListener {
-        private readonly IVsEditorAdaptersFactoryService _adapterFact;
-        private readonly IEditorOperationsFactoryService _editorOpsFactory;
-        private readonly IServiceProvider _serviceProvider;
-
-        [ImportingConstructor]
-        public ReplWindowCreationListener([Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider, IVsEditorAdaptersFactoryService adapterFact, IEditorOperationsFactoryService editorOpsFactory) {
-            _adapterFact = adapterFact;
-            _editorOpsFactory = editorOpsFactory;
-            _serviceProvider = serviceProvider;
-        }
-
-        public void ReplWindowCreated(IReplWindow window) {
-            var model = _serviceProvider.GetComponentModel();
-            var textView = window.TextView;
-            var vsTextView = _adapterFact.GetViewAdapter(textView);
-            if (window.Evaluator is PythonReplEvaluator) {
-                textView.Properties.AddProperty(typeof(PythonReplEvaluator), (PythonReplEvaluator)window.Evaluator);
-            }
-
-            var editFilter = new EditFilter(window.TextView, _editorOpsFactory.GetEditorOperations(textView), _serviceProvider);
-            var intellisenseController = IntellisenseControllerProvider.GetOrCreateController(
-                _serviceProvider,
-                model,
-                textView
-            );
-
-            editFilter.AttachKeyboardFilter(vsTextView);
-            intellisenseController.AttachKeyboardFilter();
-        }
-    }
-#endif
 }

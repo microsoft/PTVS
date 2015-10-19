@@ -68,9 +68,7 @@ namespace PythonToolsUITests {
                 var sln = (Solution2)app.Dte.Solution;
 
                 foreach (var templateName in new[] {
-#if DEV14_OR_LATER
                     "BackgroundService.zip",
-#endif
                     PythonVisualStudioApp.PythonApplicationTemplate,
                     PythonVisualStudioApp.BottleWebProjectTemplate,
                     PythonVisualStudioApp.DjangoWebProjectTemplate
@@ -1118,25 +1116,13 @@ namespace PythonToolsUITests {
                 Keyboard.Type("."); // bad filename
                 Keyboard.Type(System.Windows.Input.Key.Enter);
 
-#if DEV14_OR_LATER
                 VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, "Directory names cannot:", "be '.' or '..'");
-#elif DEV11_OR_LATER
-                VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, "Directory names cannot contain any of the following characters");
-#else
-                VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, ". is an invalid filename");
-#endif
                 Thread.Sleep(1000);
 
                 Keyboard.Type(".."); // another bad filename
                 Keyboard.Type(System.Windows.Input.Key.Enter);
 
-#if DEV14_OR_LATER
                 VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, "Directory names cannot:", "be '.' or '..'");
-#elif DEV11_OR_LATER
-                VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, "Directory names cannot contain any of the following characters");
-#else
-                VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, ".. is an invalid filename");
-#endif
                 Thread.Sleep(1000);
 
                 Keyboard.Type("Y"); // another bad filename
@@ -1465,7 +1451,6 @@ while True: pass
             }
         }
 
-#if DEV11_OR_LATER
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("VSTestHost")]
         public void PreviewFile() {
@@ -1525,8 +1510,6 @@ while True: pass
                 Assert.AreEqual(0, app.OpenDocumentWindows.Count());
             }
         }
-
-#endif
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("VSTestHost")]

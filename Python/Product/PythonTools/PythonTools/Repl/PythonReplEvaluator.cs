@@ -19,36 +19,22 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
-using System.Windows;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Project;
-#if DEV14_OR_LATER
-using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.InteractiveWindow.Commands;
-#else
-using Microsoft.VisualStudio.Repl;
-#endif
+using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 using SR = Microsoft.PythonTools.Project.SR;
 
 namespace Microsoft.PythonTools.Repl {
-#if DEV14_OR_LATER
-    using IReplWindow = IInteractiveWindow;
-    using IReplEvaluator = IInteractiveEvaluator;
-    using ReplRoleAttribute = InteractiveWindowRoleAttribute;
-    using VisualStudio.Utilities;
-#endif
-
-    [ReplRole("Execution")]
-    [ReplRole("Reset")]
+    [InteractiveWindowRole("Execution")]
+    [InteractiveWindowRole("Reset")]
     [ContentType(PythonCoreConstants.ContentType)]
-#if DEV14_OR_LATER
     [ContentType(PredefinedInteractiveCommandsContentTypes.InteractiveCommandContentTypeName)]
-#endif
     internal class PythonReplEvaluator : BasePythonReplEvaluator {
         private IPythonInterpreterFactory _interpreter;
         private readonly IInterpreterOptionsService _interpreterService;
@@ -355,7 +341,7 @@ namespace Microsoft.PythonTools.Repl {
     }
 
 
-    [ReplRole("DontPersist")]
+    [InteractiveWindowRole("DontPersist")]
     class PythonReplEvaluatorDontPersist : PythonReplEvaluator {
         public PythonReplEvaluatorDontPersist(IPythonInterpreterFactory interpreter, IServiceProvider serviceProvider, PythonReplEvaluatorOptions options, IInterpreterOptionsService interpreterService) :
             base(interpreter, serviceProvider, options, interpreterService) {
@@ -406,10 +392,6 @@ namespace Microsoft.PythonTools.Repl {
             get;
         }
 
-        public abstract bool InlinePrompts {
-            get;
-        }
-
         public abstract bool ReplSmartHistory {
             get;
         }
@@ -442,14 +424,12 @@ namespace Microsoft.PythonTools.Repl {
         internal string _executionMode;
         internal bool _liveCompletionsOnly;
         internal bool _replSmartHistory;
-        internal bool _inlinePrompts;
         internal bool _enableAttach;
         internal string _primaryPrompt;
         internal string _secondaryPrompt;
 
         public ConfigurablePythonReplOptions() {
             _replSmartHistory = true;
-            _inlinePrompts = true;
             _primaryPrompt = ">>> ";
             _secondaryPrompt = "... ";
         }
@@ -523,10 +503,6 @@ namespace Microsoft.PythonTools.Repl {
 
         public override bool EnableAttach {
             get { return _enableAttach; }
-        }
-
-        public override bool InlinePrompts {
-            get { return _inlinePrompts; }
         }
 
         public override bool ReplSmartHistory {
@@ -637,10 +613,6 @@ namespace Microsoft.PythonTools.Repl {
 
         public override bool UseInterpreterPrompts {
             get { return _options().UseInterpreterPrompts; }
-        }
-
-        public override bool InlinePrompts {
-            get { return _options().InlinePrompts;  }
         }
 
         public override bool ReplSmartHistory {

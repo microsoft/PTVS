@@ -12,8 +12,6 @@
  *
  * ***************************************************************************/
 
-#if DEV11_OR_LATER
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -32,12 +30,10 @@ namespace Microsoft.PythonTools.ProjectWizards {
         private IWizard _wizard;
         private readonly bool _recommendUpgrade;
 
-#if DEV11
-        const string AzureToolsDownload = "https://go.microsoft.com/fwlink/p/?linkid=323511";
-#elif DEV12
-        const string AzureToolsDownload = "https://go.microsoft.com/fwlink/p/?linkid=323510";
-#elif DEV14
+#if DEV14
         const string AzureToolsDownload = "http://go.microsoft.com/fwlink/?linkid=518003";
+#elif DEV15
+        const string AzureToolsDownload = "about:blank";
 #else
 #error Unsupported VS version
 #endif
@@ -188,5 +184,3 @@ namespace Microsoft.PythonTools.ProjectWizards {
         }
     }
 }
-
-#endif

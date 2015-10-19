@@ -12,17 +12,9 @@
  *
  * ***************************************************************************/
 
-#if DEV12_OR_LATER
-
 using Microsoft.VisualStudio.Text.Editor;
-
-#if DEV14_OR_LATER
 using Microsoft.Web.Editor.Completion;
 using Microsoft.Web.Editor.Services;
-#else
-using Microsoft.Web.Editor;
-using Microsoft.Web.Editor.Intellisense;
-#endif
 
 namespace Microsoft.PythonTools.Django.Intellisense {
     internal class TemplateCompletionCommandHandler : CompletionCommandHandler {
@@ -37,5 +29,3 @@ namespace Microsoft.PythonTools.Django.Intellisense {
         }
     }
 }
-
-#endif

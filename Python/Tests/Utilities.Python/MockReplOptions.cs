@@ -68,10 +68,6 @@ namespace TestUtilities.Python {
             get { return ""; }
         }
 
-        public override bool InlinePrompts {
-            get { return false; }
-        }
-
         public override bool ReplSmartHistory {
             get { return false; }
         }

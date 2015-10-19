@@ -37,12 +37,8 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Language;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio;
-#if DEV14_OR_LATER
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.InteractiveWindow.Shell;
-#else
-using Microsoft.VisualStudio.Repl;
-#endif
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
@@ -53,26 +49,24 @@ using Microsoft.VisualStudioTools.Project;
 using SR = Microsoft.PythonTools.Project.SR;
 using System.Windows.Media;
 using System.Windows.Markup;
-
-#if DEV14_OR_LATER
-using IReplEvaluator = Microsoft.VisualStudio.InteractiveWindow.IInteractiveEvaluator;
-using IReplWindow = Microsoft.VisualStudio.InteractiveWindow.IInteractiveWindow;
 using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudio.InteractiveWindow.Commands;
-#endif
 
 namespace Microsoft.PythonTools.Repl {
-    internal abstract class BasePythonReplEvaluator : IPythonReplEvaluator, IPythonReplIntellisense, IReplEvaluator, IMultipleScopeEvaluator {
+    internal abstract class BasePythonReplEvaluator :
+        IPythonReplEvaluator,
+        IPythonReplIntellisense,
+        IInteractiveEvaluator,
+        IMultipleScopeEvaluator
+    {
         private CommandProcessorThread _curListener;
-        private IReplWindow _window;
+        private IInteractiveWindow _window;
         private bool _multipleScopes = true, _attached;
         internal Task<ExecutionResult> _lastExecutionResult;
         private readonly PythonReplEvaluatorOptions _options;
         internal readonly PythonToolsService _pyService;
         internal readonly IServiceProvider _serviceProvider;
-#if DEV14_OR_LATER
         private IInteractiveWindowCommands _commands;
-#endif
 
         internal static readonly object InputBeforeReset = new object();    // used to mark buffers which are no longer valid because we've done a reset
 
@@ -138,29 +132,9 @@ namespace Microsoft.PythonTools.Repl {
             }
         }
 
-        #region IReplEvaluator Members
-
         protected virtual void WriteInitializationMessage() {
             Window.WriteLine(SR.GetString(SR.ReplInitializationMessage));
         }
-
-#if !DEV14_OR_LATER
-        public Task<ExecutionResult> Initialize(IReplWindow window) {            
-            _window = window;
-            _window.SetOptionValue(ReplOptions.CommandPrefix, "$");
-
-            window.SetOptionValue(ReplOptions.UseSmartUpDown, CurrentOptions.ReplSmartHistory);
-            UpdatePrompts(true);
-            window.SetOptionValue(ReplOptions.DisplayPromptInMargin, !CurrentOptions.InlinePrompts);
-            window.SetOptionValue(ReplOptions.SupportAnsiColors, true);
-            window.SetOptionValue(ReplOptions.FormattedPrompts, true);
-
-            WriteInitializationMessage();
-
-            _window.TextView.BufferGraph.GraphBuffersChanged += BufferGraphGraphBuffersChanged;
-            return ExecutionResult.Succeeded;
-        }
-#endif
 
         public void ActiveLanguageBufferChanged(ITextBuffer currentBuffer, ITextBuffer previousBuffer) {
         }
@@ -220,13 +194,10 @@ namespace Microsoft.PythonTools.Repl {
             internal string _currentScope = "__main__";
             private MemberResults _memberResults;
             internal string _prompt1 = ">>> ", _prompt2 = "... ";
-#if DEV14_OR_LATER
             internal string _userPrompt1, _userPrompt2;
-#endif
 
             private CommandProcessorThread(BasePythonReplEvaluator evaluator) {
                 _eval = evaluator;
-#if DEV14_OR_LATER
                 var options = _eval._options;
                 if (options == null || options.UseInterpreterPrompts) {
                     _userPrompt1 = _userPrompt2 = null;
@@ -234,7 +205,6 @@ namespace Microsoft.PythonTools.Repl {
                     _userPrompt1 = options.PrimaryPrompt;
                     _userPrompt2 = options.SecondaryPrompt;
                 }
-#endif
             }
 
             public CommandProcessorThread(BasePythonReplEvaluator evaluator, Stream stream, bool redirectOutput, Process process)
@@ -314,7 +284,7 @@ namespace Microsoft.PythonTools.Repl {
                     if (_stream == null) {
                         AppendPreConnectionOutput(e);
                     } else {
-                        Window.WriteOutput(FixNewLines(e.Data) + Environment.NewLine);
+                        Window.AppendEscapedText(FixNewLines(e.Data) + Environment.NewLine);
                     }
                 }
             }
@@ -420,11 +390,7 @@ namespace Microsoft.PythonTools.Repl {
                 // (this is called on the output thread)
                 var window = Window;
                 ThreadPool.QueueUserWorkItem(x => {
-#if DEV14_OR_LATER
                     string input = window?.ReadStandardInput()?.ReadToEnd();
-#else
-                    string input = window != null ? window.ReadStandardInput() : null;
-#endif
                     input = input != null ? UnfixNewLines(input) : "\n";
                     try {
                         using (new StreamLock(this, throwIfDisconnected: true)) {
@@ -574,13 +540,13 @@ namespace Microsoft.PythonTools.Repl {
                 _prompt2 = _stream.ReadString();
                 bool updateAll = _stream.ReadInt32() == 1;
                 Trace.TraceInformation("New prompts: \"{0}\" \"{1}\" updateAll={2}", _prompt1, _prompt2, updateAll);
-#if !DEV14_OR_LATER
-                if (Window != null) {
-                    using (new StreamUnlock(this)) {
-                        _eval.UpdatePrompts(updateAll);
-                    }
-                }
-#endif
+
+                // TODO: Fix prompt handling
+                //if (Window != null) {
+                //    using (new StreamUnlock(this)) {
+                //        _eval.UpdatePrompts(updateAll);
+                //    }
+                //}
             }
 
             private void HandleModulesChanged() {
@@ -637,9 +603,7 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             private void WriteFrameworkElement(UIElement control, Size desiredSize) {
-#if DEV14_OR_LATER
                 Window.Write("");
-#endif
                 Window.FlushOutput();
 
                 var caretPos = Window.TextView.Caret.Position.BufferPosition;
@@ -732,11 +696,7 @@ namespace Microsoft.PythonTools.Repl {
                 if (data != null) {
                     Trace.TraceInformation("Data = \"{0}\"", FixNewLines(data).Replace("\r\n", "\\r\\n"));
                     using (new StreamUnlock(this)) {
-#if DEV14_OR_LATER
                         Window.AppendEscapedText(FixNewLines(data), false);
-#else
-                        Window.WriteOutput(FixNewLines(data));
-#endif
                     }
                 }
             }
@@ -747,11 +707,7 @@ namespace Microsoft.PythonTools.Repl {
                 string data = _stream.ReadString();
                 Trace.TraceInformation("Data = \"{0}\"", FixNewLines(data).Replace("\r\n", "\\r\\n"));
                 using (new StreamUnlock(this)) {
-#if DEV14_OR_LATER
                     Window.AppendEscapedText(FixNewLines(data), true);
-#else
-                    Window.WriteError(FixNewLines(data));
-#endif
                 }
             }
 
@@ -1075,7 +1031,7 @@ namespace Microsoft.PythonTools.Repl {
                 return dict;
             }
 
-            private IReplWindow Window {
+            private IInteractiveWindow Window {
                 get {
                     return _eval._window;
                 }
@@ -1137,18 +1093,6 @@ namespace Microsoft.PythonTools.Repl {
             return new string(new char[] { (char)cmd_buffer[0], (char)cmd_buffer[1], (char)cmd_buffer[2], (char)cmd_buffer[3] });
         }
 
-#if !DEV14_OR_LATER
-        private void UpdatePrompts(bool updateAll) {
-            if (CurrentOptions.UseInterpreterPrompts && _curListener != null) {
-                _window.SetOptionValue(updateAll ? ReplOptions.PrimaryPrompt : ReplOptions.CurrentPrimaryPrompt, _curListener._prompt1);
-                _window.SetOptionValue(updateAll ? ReplOptions.SecondaryPrompt : ReplOptions.CurrentSecondaryPrompt, _curListener._prompt2);
-            } else {
-                _window.SetOptionValue(updateAll ? ReplOptions.PrimaryPrompt : ReplOptions.CurrentPrimaryPrompt, CurrentOptions.PrimaryPrompt);
-                _window.SetOptionValue(updateAll ? ReplOptions.SecondaryPrompt : ReplOptions.CurrentSecondaryPrompt, CurrentOptions.SecondaryPrompt);
-            }
-        }
-#endif
-
         /// <summary>
         /// Transforms lone \r or \n into \r\n.
         /// </summary>
@@ -1205,14 +1149,10 @@ namespace Microsoft.PythonTools.Repl {
             }
         }
 
-#if DEV14_OR_LATER
         public bool CanExecuteCode(string text) {
             if (_commands.InCommand) {
                 return true;
             }
-#else
-        public bool CanExecuteText(string text) {
-#endif
             int newLines = 0;
             for (int i = text.Length - 1; i >= 0; i--) {
                 if (text[i] == '\n') {
@@ -1253,12 +1193,10 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         private Task<ExecutionResult> ExecuteTextWorker(string text) {
-#if DEV14_OR_LATER
             var res = _commands.TryExecuteCommand();
             if (res != null) {
                 return res;
             }
-#endif
 
             var parser = Parser.CreateParser(new StringReader(text), LanguageVersion);
             ParseResult parseResult;
@@ -1354,11 +1292,7 @@ namespace Microsoft.PythonTools.Repl {
             }
         }
 
-#if DEV14_OR_LATER
         public void AbortExecution() {
-#else
-        public void AbortCommand() {
-#endif
             if (_curListener != null) {
                 _curListener.AbortCommand();
             }
@@ -1467,10 +1401,6 @@ namespace Microsoft.PythonTools.Repl {
             return "'" + item.Replace("\\", "\\\\").Replace("'", "\\'") + "'";
         }
 
-        #endregion
-
-        #region IDisposable Members
-
         public virtual void Dispose() {
             if (_window != null) {
                 _window.TextView.BufferGraph.GraphBuffersChanged -= BufferGraphGraphBuffersChanged;
@@ -1488,10 +1418,6 @@ namespace Microsoft.PythonTools.Repl {
             }
             _attached = false;
         }
-
-        #endregion
-
-        #region IPythonReplIntellisense Members
 
         public bool LiveCompletionsOnly {
             get {
@@ -1518,8 +1444,6 @@ namespace Microsoft.PythonTools.Repl {
 
             return new KeyValuePair<string, bool>[0];
         }
-
-        #endregion
 
         private static MemberResult CreateMemberResult(string name, string typeName) {
             switch (typeName) {
@@ -1587,41 +1511,29 @@ namespace Microsoft.PythonTools.Repl {
         public string PrimaryPrompt {
             get {
                 if (_curListener != null) {
-                    return
-#if DEV14_OR_LATER
-                        _curListener._userPrompt1 ??
-#endif
-                        _curListener._prompt1;
+                    return _curListener._userPrompt1 ?? _curListener._prompt1;
                 }
                 return ">>> ";
             }
-#if DEV14_OR_LATER
             set {
                 if (_curListener != null) {
                     _curListener._userPrompt1 = value;
                 }
             }
-#endif
         }
 
         public string SecondaryPrompt {
             get {
                 if (_curListener != null) {
-                    return
-#if DEV14_OR_LATER
-                        _curListener._userPrompt2 ??
-#endif
-                        _curListener._prompt2;
+                    return _curListener._userPrompt2 ?? _curListener._prompt2;
                 }
                 return "... ";
             }
-#if DEV14_OR_LATER
             set {
                 if (_curListener != null) {
                     _curListener._userPrompt2 = value;
                 }
             }
-#endif
         }
 
         internal string AttachDebugger() {
@@ -1729,7 +1641,7 @@ namespace Microsoft.PythonTools.Repl {
             return true;
         }
 
-        public IReplWindow Window {
+        public IInteractiveWindow Window {
             get {
                 return _window;
             }
@@ -1751,12 +1663,8 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         internal static void CloseReplWindow(object key) {
-#if DEV14_OR_LATER
             var vsWindow = key as IVsInteractiveWindow;
             var window = vsWindow != null ? vsWindow.InteractiveWindow : null;
-#else
-            var window = key as IReplWindow;
-#endif
             Debug.Assert(window != null);
             if (window == null) {
                 return;
@@ -1771,25 +1679,20 @@ namespace Microsoft.PythonTools.Repl {
 
             // Close project-specific REPL windows when the project
             // closes.
-#if DEV14_OR_LATER
             var pane = vsWindow as ToolWindowPane;
-#else
-            var pane = window as ToolWindowPane;
-#endif
             var frame = pane != null ? pane.Frame as IVsWindowFrame : null;
             if (frame != null) {
                 frame.CloseFrame((uint)__FRAMECLOSE.FRAMECLOSE_NoSave);
             }
         }
 
-#if DEV14_OR_LATER
         public IContentType ContentType {
             get {
                 return _serviceProvider.GetPythonContentType();
             }
         }
 
-        public IReplWindow CurrentWindow {
+        public IInteractiveWindow CurrentWindow {
             get {
                 return _window;
             }
@@ -1813,7 +1716,7 @@ namespace Microsoft.PythonTools.Repl {
         internal static IInteractiveWindowCommands GetInteractiveCommands(
             IServiceProvider serviceProvider,
             IInteractiveWindow window,
-            IReplEvaluator eval
+            IInteractiveEvaluator eval
         ) {
             var model = serviceProvider.GetComponentModel();
             var cmdFactory = model.GetService<IInteractiveWindowCommandsFactory>();
@@ -1880,28 +1783,14 @@ namespace Microsoft.PythonTools.Repl {
                 return PrimaryPrompt;
             }
         }
-#endif
     }
 
     static class ReplWindowExtensions {
-#if DEV14_OR_LATER
-        public static void WriteOutput(this IReplWindow window, string message) {
-            AppendEscapedText(window, message);
-        }
-
-        public static void WriteLine(this IVsInteractiveWindow window, string message) {
-            window.InteractiveWindow.WriteLine(message);
-        }
-
-        public static void Focus(this IVsInteractiveWindow window) {
-            window.Show(true);
-        }
-
         public static void Submit(this IInteractiveWindow window, IEnumerable<string> inputs) {
             window.SubmitAsync(inputs);
         }
 
-        public static IReplEvaluator GetReplEvaluator(this ITextBuffer buffer) {
+        public static IInteractiveEvaluator GetReplEvaluator(this ITextBuffer buffer) {
             var res = buffer.GetInteractiveWindow();
             if (res != null) {
                 return res.Evaluator;
@@ -1909,20 +1798,8 @@ namespace Microsoft.PythonTools.Repl {
             return null;
         }
 
-        public static void SetSmartUpDown(this IVsInteractiveWindow window, bool setting) {
-            window.InteractiveWindow.SetSmartUpDown(setting);
-        }
-
-        public static void SetSmartUpDown(this IReplWindow window, bool setting) {
+        public static void SetSmartUpDown(this IInteractiveWindow window, bool setting) {
             window.TextView.Options.SetOptionValue(InteractiveWindowOptions.SmartUpDown, setting);
-        }
-
-        public static bool CanExecuteText(this IReplEvaluator window, string text) {
-            return window.CanExecuteCode(text);
-        }
-
-        public static void AbortCommand(this IReplEvaluator window) {
-            window.AbortExecution();
         }
 
         public static void SetPrompts(this IInteractiveWindow window, string primary, string secondary) {
@@ -2084,28 +1961,6 @@ namespace Microsoft.PythonTools.Repl {
                 colors.Add(new ColoredSpan(span, color));
             }
         }
-#else
-        public static void SetPrompts(this IReplWindow window, string primary, string secondary) {
-            window.SetOptionValue(ReplOptions.PrimaryPrompt, primary);
-            window.SetOptionValue(ReplOptions.SecondaryPrompt, secondary);
-        }
-
-        public static void UseInterpreterPrompts(this IReplWindow window) {
-            var eval = window.Evaluator as BasePythonReplEvaluator;
-            window.SetPrompts(eval.PrimaryPrompt, eval.SecondaryPrompt);
-        }
-
-        public static void SetSmartUpDown(this IReplWindow window, bool setting) {
-            window.SetOptionValue(ReplOptions.UseSmartUpDown, setting);
-        }
-
-        public static void FlushOutput(this IReplWindow window) {
-            // hacky way to force flushing of the output buffer as there is no API for it.
-            window.SetOptionValue(ReplOptions.SupportAnsiColors, window.GetOptionValue(ReplOptions.SupportAnsiColors));
-
-        }
-#endif
-
     }
 
 }

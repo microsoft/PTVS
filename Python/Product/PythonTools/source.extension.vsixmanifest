@@ -1,25 +1,25 @@
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
   <Metadata>
-    <Identity Id="96492FC7-7BC6-46F7-8559-66BB4E09FD1E" Version="2.2" Language="en-US" Publisher="Microsoft" />
+    <Identity Id="96492FC7-7BC6-46F7-8559-66BB4E09FD1E" Version="3.0" Language="en-US" Publisher="Microsoft Corporation" />
     <DisplayName>Python Tools for Visual Studio</DisplayName>
     <Description xml:space="preserve">Provides support for editing and debugging Python programs.</Description>
-    <MoreInfo>http://pytools.codeplex.com</MoreInfo>
-    <GettingStartedGuide>http://pytools.codeplex.com</GettingStartedGuide>
+    <MoreInfo>http://aka.ms/ptvs</MoreInfo>
+    <GettingStartedGuide>http://aka.ms/ptvstutorial</GettingStartedGuide>
     <Icon>PythonProject.ico</Icon>
     <PreviewImage>PythonProjectBig.ico</PreviewImage>
   </Metadata>
-  <!-- Version="11.0" specifies the minimum (not the maximum) version, and the
+  <!-- Version="14.0" specifies the minimum (not the maximum) version, and the
        Id specifications are minimums; any SKU equal or 'higher' will accept
        them. -->
   <Installation InstalledByMsi="true">
-    <InstallationTarget Id="Microsoft.VisualStudio.Pro" Version="11.0" />
-    <InstallationTarget Id="Microsoft.VisualStudio.IntegratedShell" Version="12.0" />
-    <InstallationTarget Id="Microsoft.VisualStudio.WDExpress" Version="12.0" />
-    <InstallationTarget Id="Microsoft.VisualStudio.VWDExpress" Version="12.0" />
+    <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="14.0" />
+    <InstallationTarget Id="Microsoft.VisualStudio.IntegratedShell" Version="14.0" />
+    <InstallationTarget Id="Microsoft.VisualStudio.WDExpress" Version="14.0" />
+    <InstallationTarget Id="Microsoft.VisualStudio.VWDExpress" Version="14.0" />
   </Installation>
   <Dependencies>
-    <Dependency Id="Microsoft.Framework.NDP" DisplayName="Microsoft .NET Framework" Version="4.5" />
-    <Dependency IsRequired="false" Version="[14.0,15.0)" d:Source="Installed" Id="TestWindow.Microsoft.0771d463-d74d-4e95-aac2-39d3c7ec1f97" DisplayName="Test Explorer" />
+    <Dependency Id="Microsoft.Framework.NDP" DisplayName="Microsoft .NET Framework" Version="4.6" />
+    <Dependency IsRequired="false" Version="[14.0,16.0)" d:Source="Installed" Id="TestWindow.Microsoft.0771d463-d74d-4e95-aac2-39d3c7ec1f97" DisplayName="Test Explorer" />
     <Dependency d:Source="Installed" Id="1F42C6D0-F876-4AF0-8185-1BEB0A325BB2" DisplayName="VisualStudio Interactive Components" Version="[1.0.0.50618,2.0)" />
   </Dependencies>
   <Assets>

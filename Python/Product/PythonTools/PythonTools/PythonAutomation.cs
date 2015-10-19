@@ -249,12 +249,9 @@ namespace Microsoft.PythonTools {
 
         bool IPythonInteractiveOptions.InlinePrompts {
             get {
-                return CurrentOptions.InlinePrompts;
+                return true;
             }
-            set {
-                CurrentOptions.InlinePrompts = value;
-                SaveSettingsToStorage();
-            }
+            set { }
         }
 
         bool IPythonInteractiveOptions.ReplSmartHistory {

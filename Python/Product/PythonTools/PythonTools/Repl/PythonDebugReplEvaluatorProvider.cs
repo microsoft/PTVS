@@ -14,23 +14,12 @@
 
 using System;
 using System.ComponentModel.Composition;
-using Microsoft.PythonTools.Interpreter;
-#if DEV14_OR_LATER
 using Microsoft.VisualStudio.InteractiveWindow;
-#else
-using Microsoft.VisualStudio.Repl;
-#endif
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Text.Adornments;
-#if DEV14_OR_LATER
-using IReplEvaluator = Microsoft.VisualStudio.InteractiveWindow.IInteractiveEvaluator;
-using IReplEvaluatorProvider = Microsoft.PythonTools.Repl.IInteractiveEvaluatorProvider;
-#endif
 
 namespace Microsoft.PythonTools.Repl {
-
-    [Export(typeof(IReplEvaluatorProvider))]
-    class PythonDebugReplEvaluatorProvider : IReplEvaluatorProvider {
+    [Export(typeof(IInteractiveEvaluatorProvider))]
+    class PythonDebugReplEvaluatorProvider : IInteractiveEvaluatorProvider {
         private const string _debugReplGuid = "BA417560-5A78-46F1-B065-638D27E1CDD0";
         private readonly PythonToolsService _pyService;
         private readonly IServiceProvider _serviceProvider;
@@ -41,16 +30,12 @@ namespace Microsoft.PythonTools.Repl {
             _pyService = serviceProvider.GetPythonToolsService();
         }
 
-        #region IReplEvaluatorProvider Members
-
-        public IReplEvaluator GetEvaluator(string replId) {
+        public IInteractiveEvaluator GetEvaluator(string replId) {
             if (replId.StartsWith(_debugReplGuid)) {
                 return new PythonDebugReplEvaluator(_serviceProvider);
             }
             return null;
         }
-
-        #endregion
 
         internal static string GetDebugReplId() {
             return _debugReplGuid;

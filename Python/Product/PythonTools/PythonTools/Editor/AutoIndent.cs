@@ -21,9 +21,6 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
-#if !DEV14_OR_LATER
-using Microsoft.VisualStudio.Repl;
-#endif
 
 namespace Microsoft.PythonTools.Editor {
     internal static class AutoIndent {

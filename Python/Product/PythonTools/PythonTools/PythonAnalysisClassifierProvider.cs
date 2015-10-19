@@ -16,29 +16,15 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Windows.Media;
-using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Parsing;
-using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.PythonTools.Project;
-#if DEV14_OR_LATER
 using Microsoft.VisualStudio.InteractiveWindow;
-#else
-using Microsoft.VisualStudio.Repl;
-#endif
-
 using Microsoft.VisualStudio.Language.StandardClassification;
-using Microsoft.VisualStudio.PlatformUI;
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Utilities;
 
 namespace Microsoft.PythonTools {
-#if DEV14_OR_LATER
-    using IReplEvaluator = IInteractiveEvaluator;
-#endif
-
     [Export(typeof(IClassifierProvider)), ContentType(PythonCoreConstants.ContentType)]
     internal class PythonAnalysisClassifierProvider : IClassifierProvider {
         private Dictionary<string, IClassificationType> _categoryMap;
@@ -85,7 +71,7 @@ namespace Microsoft.PythonTools {
         #region IDlrClassifierProvider
 
         public IClassifier GetClassifier(ITextBuffer buffer) {
-            if (buffer.Properties.ContainsProperty(typeof(IReplEvaluator))) {
+            if (buffer.Properties.ContainsProperty(typeof(IInteractiveEvaluator))) {
                 return null;
             }
             

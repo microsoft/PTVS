@@ -15,14 +15,11 @@
 using System;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudioTools;
-using Microsoft.VisualStudioTools.Project;
-using OleConstants = Microsoft.VisualStudio.OLE.Interop.Constants;
-#if DEV14_OR_LATER
 using Microsoft.VisualStudio.Imaging;
 using Microsoft.VisualStudio.Imaging.Interop;
-#endif
+using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudioTools.Project;
+using OleConstants = Microsoft.VisualStudio.OLE.Interop.Constants;
 
 namespace Microsoft.PythonTools.Project {
     /// <summary>
@@ -85,12 +82,11 @@ namespace Microsoft.PythonTools.Project {
 
         /// <summary>
         /// Disable inline editing of Caption of a SearchPathContainer Node
-        /// </summary>        
+        /// </summary>
         public override string GetEditLabel() {
             return null;
         }
 
-#if DEV14_OR_LATER
         protected override bool SupportsIconMonikers {
             get { return true; }
         }
@@ -98,17 +94,10 @@ namespace Microsoft.PythonTools.Project {
         protected override ImageMoniker GetIconMoniker(bool open) {
             return KnownMonikers.Reference;
         }
-#else
-        public override int ImageIndex {
-            get {
-                return _projectNode.GetIconIndex(PythonProjectImageName.SearchPathContainer);
-            }
-        }
-#endif
 
         /// <summary>
         /// Search path node cannot be dragged.
-        /// </summary>        
+        /// </summary>
         protected internal override string PrepareSelectedNodesForClipBoard() {
             return null;
         }

@@ -12,20 +12,11 @@
  *
  * ***************************************************************************/
 
-#if DEV12_OR_LATER
-
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Operations;
-
-#if DEV14_OR_LATER
 using Microsoft.Web.Editor.Completion;
 using Microsoft.Web.Editor.Services;
-#else
-using System.ComponentModel.Composition;
-using Microsoft.Web.Editor;
-using Microsoft.Web.Editor.Intellisense;
-#endif
 
 namespace Microsoft.PythonTools.Django.Intellisense {
     internal class TemplateTypingCommandHandler : TypingCommandHandler {
@@ -37,11 +28,7 @@ namespace Microsoft.PythonTools.Django.Intellisense {
             ITextBuffer textBuffer,
             IEditorOptions editorOptions,
             IEditorOperations editorOperations)
-#if DEV14_OR_LATER
             : base(textView, _ => textBuffer)
-#else
-            : base(textView, textBuffer)
-#endif
         {
             _editorOperations = editorOperations;
             _editorOptions = editorOptions;
@@ -55,5 +42,3 @@ namespace Microsoft.PythonTools.Django.Intellisense {
     }
 
 }
-
-#endif

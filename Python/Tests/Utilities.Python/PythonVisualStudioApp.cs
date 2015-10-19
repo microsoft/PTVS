@@ -94,14 +94,6 @@ namespace TestUtilities.UI.Python {
         private const string _templateLanguageName = "Python";
         public static string TemplateLanguageName {
             get {
-#if DEV10
-                // VS 2010 looks up language names as if they are progids, which means
-                // passing "Python" may fail, whereas passing the GUID will always
-                // succeed.
-                using (var progid = Registry.ClassesRoot.OpenSubKey(_templateLanguageName)) {
-                    Assert.IsNull(progid, "Python is a registered progid. Templates cannot be created in VS 2010");
-                }
-#endif
                 return _templateLanguageName;
             }
         }
@@ -190,14 +182,10 @@ namespace TestUtilities.UI.Python {
         }
 
         public InteractiveWindow GetInteractiveWindow(string title) {
-#if !DEV14_OR_LATER
-            string autoId = GetName(title);
-#endif
             AutomationElement element = null;
             for (int i = 0; i < 5 && element == null; i++) {
                 element = Element.FindFirst(TreeScope.Descendants,
                     new AndCondition(
-#if DEV14_OR_LATER
                         new PropertyCondition(
                             AutomationElement.NameProperty,
                             title
@@ -206,16 +194,6 @@ namespace TestUtilities.UI.Python {
                             AutomationElement.ControlTypeProperty,
                             ControlType.Pane
                         )
-#else
-                        new PropertyCondition(
-                            AutomationElement.AutomationIdProperty,
-                            autoId
-                        ),
-                        new PropertyCondition(
-                            AutomationElement.ClassNameProperty,
-                            ""
-                        )
-#endif
                     )
                 );
                 if (element == null) {

@@ -12,7 +12,10 @@
  *
  * ***************************************************************************/
 
-#if DEV14_OR_LATER
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.Composition;
+using System.Linq;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.InteractiveWindow.Shell;
@@ -20,36 +23,26 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Utilities;
 using Microsoft.Win32;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.Composition;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using IReplEvaluatorProvider = Microsoft.PythonTools.Repl.IInteractiveEvaluatorProvider;
-using IReplWindow = Microsoft.VisualStudio.InteractiveWindow.IInteractiveWindow;
-using IReplEvaluator = Microsoft.VisualStudio.InteractiveWindow.IInteractiveEvaluator;
-using ReplRoleAttribute = Microsoft.PythonTools.Repl.InteractiveWindowRoleAttribute;
 
 namespace Microsoft.PythonTools.Repl {
     [Export(typeof(InteractiveWindowProvider))]
     [PartCreationPolicy(CreationPolicy.Shared)]
     class InteractiveWindowProvider {
-        private readonly Dictionary<int, ReplWindowInfo> _windows = new Dictionary<int, ReplWindowInfo>();
-        private readonly IReplEvaluatorProvider[] _evaluators;
+        private readonly Dictionary<int, InteractiveWindowInfo> _windows = new Dictionary<int, InteractiveWindowInfo>();
+        private readonly IInteractiveEvaluatorProvider[] _evaluators;
         private readonly IVsInteractiveWindowFactory _windowFactory;
 
         [ImportingConstructor]
-        public InteractiveWindowProvider([Import]IVsInteractiveWindowFactory factory, [ImportMany]IReplEvaluatorProvider[] evaluators) {
+        public InteractiveWindowProvider([Import]IVsInteractiveWindowFactory factory, [ImportMany]IInteractiveEvaluatorProvider[] evaluators) {
             _evaluators = evaluators;
             _windowFactory = factory;
         }
 
-        class ReplWindowInfo {
+        class InteractiveWindowInfo {
             public readonly string Id;
             public readonly IVsInteractiveWindow Window;
 
-            public ReplWindowInfo(IVsInteractiveWindow replWindow, string replId) {
+            public InteractiveWindowInfo(IVsInteractiveWindow replWindow, string replId) {
                 Window = replWindow;
                 Id = replId;
             }
@@ -65,10 +58,15 @@ namespace Microsoft.PythonTools.Repl {
             return null;
         }
 
-        public IVsInteractiveWindow CreateReplWindow(IContentType contentType, string/*!*/ title, Guid languageServiceGuid, string replId) {
+        public IVsInteractiveWindow CreateInteractiveWindow(
+            IContentType contentType,
+            string/*!*/ title,
+            Guid languageServiceGuid,
+            string replId
+        ) {
             int curId = 0;
 
-            ReplWindowInfo window;
+            InteractiveWindowInfo window;
             do {
                 curId++;
                 window = FindReplWindowInternal(curId);
@@ -77,18 +75,21 @@ namespace Microsoft.PythonTools.Repl {
             foreach (var provider in _evaluators) {
                 var evaluator = provider.GetEvaluator(replId);
                 if (evaluator != null) {
-                    string[] roles = evaluator.GetType().GetCustomAttributes(typeof(ReplRoleAttribute), true).Select(r => ((ReplRoleAttribute)r).Name).ToArray();
-                    window = CreateReplWindowInternal(evaluator, contentType, roles, curId, title, languageServiceGuid, replId);
+                    string[] roles = evaluator.GetType().GetCustomAttributes(typeof(InteractiveWindowRoleAttribute), true)
+                        .OfType<InteractiveWindowRoleAttribute>()
+                        .Select(r => r.Name)
+                        .ToArray();
+                    window = CreateInteractiveWindowInternal(evaluator, contentType, roles, curId, title, languageServiceGuid, replId);
 
                     return window.Window;
                 }
             }
 
-            throw new InvalidOperationException(String.Format("ReplId {0} was not provided by an IReplWindowProvider", replId));
+            throw new InvalidOperationException(String.Format("ReplId {0} was not provided by an IInteractiveWindowProvider", replId));
         }
 
-        private ReplWindowInfo FindReplWindowInternal(int id) {
-            ReplWindowInfo res;
+        private InteractiveWindowInfo FindReplWindowInternal(int id) {
+            InteractiveWindowInfo res;
             if (_windows.TryGetValue(id, out res)) {
                 return res;
             }
@@ -106,7 +107,7 @@ namespace Microsoft.PythonTools.Repl {
             return VSRegistry.RegistryRoot(__VsLocalRegistryType.RegType_UserSettings, writable: true).CreateSubKey(ActiveReplsKey);
         }
 
-        private void SaveReplInfo(int id, IInteractiveEvaluator evaluator, IContentType contentType, string[] roles, string title, Guid languageServiceGuid, string replId) {
+        private void SaveInteractiveInfo(int id, IInteractiveEvaluator evaluator, IContentType contentType, string[] roles, string title, Guid languageServiceGuid, string replId) {
             using (var root = GetRegistryRoot()) {
                 if (root != null) {
                     using (var replInfo = root.CreateSubKey(id.ToString())) {
@@ -166,16 +167,16 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             string[] roles;
-            var evaluator = GetReplEvaluator(model, replId, out roles);
+            var evaluator = GetInteractiveEvaluator(model, replId, out roles);
             if (evaluator == null) {
                 return false;
             }
 
-            CreateReplWindow(evaluator, contentType, roles, id, title, languageServiceGuid, replId);
+            CreateInteractiveWindow(evaluator, contentType, roles, id, title, languageServiceGuid, replId);
             return true;
         }
 
-        public IEnumerable<IReplWindow> GetReplWindows() {
+        public IEnumerable<IInteractiveWindow> GetReplWindows() {
             return _windows.Values.Select(x => x.Window.InteractiveWindow);
         }
 
@@ -183,28 +184,31 @@ namespace Microsoft.PythonTools.Repl {
             return _windows.Values.Select(x => x.Window).OfType<ToolWindowPane>();
         }
 
-        private static IInteractiveEvaluator GetReplEvaluator(IComponentModel model, string replId, out string[] roles) {
+        private static IInteractiveEvaluator GetInteractiveEvaluator(IComponentModel model, string replId, out string[] roles) {
             roles = new string[0];
-            foreach (var provider in model.GetExtensions<IReplEvaluatorProvider>()) {
+            foreach (var provider in model.GetExtensions<IInteractiveEvaluatorProvider>()) {
                 var evaluator = provider.GetEvaluator(replId);
 
                 if (evaluator != null) {
-                    roles = evaluator.GetType().GetCustomAttributes(typeof(ReplRoleAttribute), true).Select(r => ((ReplRoleAttribute)r).Name).ToArray();
+                    roles = evaluator.GetType().GetCustomAttributes(typeof(InteractiveWindowRoleAttribute), true)
+                        .OfType<InteractiveWindowRoleAttribute>()
+                        .Select(r => r.Name)
+                        .ToArray();
                     return evaluator;
                 }
             }
             return null;
         }
 
-        private ReplWindowInfo CreateReplWindow(IReplEvaluator/*!*/ evaluator, IContentType/*!*/ contentType, string[] roles, int id, string/*!*/ title, Guid languageServiceGuid, string replId) {
-            return CreateReplWindowInternal(evaluator, contentType, roles, id, title, languageServiceGuid, replId);
+        private InteractiveWindowInfo CreateInteractiveWindow(IInteractiveEvaluator/*!*/ evaluator, IContentType/*!*/ contentType, string[] roles, int id, string/*!*/ title, Guid languageServiceGuid, string replId) {
+            return CreateInteractiveWindowInternal(evaluator, contentType, roles, id, title, languageServiceGuid, replId);
         }
 
-        private ReplWindowInfo CreateReplWindowInternal(IReplEvaluator evaluator, IContentType contentType, string[] roles, int id, string title, Guid languageServiceGuid, string replId) {
+        private InteractiveWindowInfo CreateInteractiveWindowInternal(IInteractiveEvaluator evaluator, IContentType contentType, string[] roles, int id, string title, Guid languageServiceGuid, string replId) {
             var service = (IVsUIShell)ServiceProvider.GlobalProvider.GetService(typeof(SVsUIShell));
             var model = (IComponentModel)ServiceProvider.GlobalProvider.GetService(typeof(SComponentModel));
 
-            SaveReplInfo(id, evaluator, contentType, roles, title, languageServiceGuid, replId);
+            SaveInteractiveInfo(id, evaluator, contentType, roles, title, languageServiceGuid, replId);
 
             // we don't pass __VSCREATETOOLWIN.CTW_fMultiInstance because multi instance panes are
             // destroyed when closed.  We are really multi instance but we don't want to be closed.  This
@@ -218,10 +222,8 @@ namespace Microsoft.PythonTools.Repl {
             replWindow.SetLanguage(GuidList.guidPythonLanguageServiceGuid, contentType);
             replWindow.InteractiveWindow.InitializeAsync();
 
-            return _windows[id] = new ReplWindowInfo(replWindow, replId);
+            return _windows[id] = new InteractiveWindowInfo(replWindow, replId);
         }
 
     }
 }
-
-#endif

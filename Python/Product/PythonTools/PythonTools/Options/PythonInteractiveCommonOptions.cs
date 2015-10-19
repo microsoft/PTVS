@@ -19,7 +19,7 @@ namespace Microsoft.PythonTools.Options {
     /// Stores options related to the all interactive windows.
     /// </summary>
     class PythonInteractiveCommonOptions {
-        private bool _smartHistory, _interpreterPrompts, _inlinePrompts, _liveCompletionsOnly;
+        private bool _smartHistory, _interpreterPrompts, _liveCompletionsOnly;
         private ReplIntellisenseMode _replIntellisenseMode;
         private string _priPrompt, _secPrompt;
 
@@ -45,9 +45,8 @@ namespace Microsoft.PythonTools.Options {
             _id = id;
             _priPrompt = DefaultPrompt;
             _secPrompt = DefaultSecondaryPrompt;
-            _inlinePrompts = true;
             _interpreterPrompts = true;
-            _replIntellisenseMode = Repl.ReplIntellisenseMode.DontEvaluateCalls;
+            _replIntellisenseMode = ReplIntellisenseMode.DontEvaluateCalls;
             _smartHistory = true;
         }
 
@@ -64,11 +63,6 @@ namespace Microsoft.PythonTools.Options {
         public bool UseInterpreterPrompts {
             get { return _interpreterPrompts; }
             set { _interpreterPrompts = value; }
-        }
-
-        public bool InlinePrompts {
-            get { return _inlinePrompts; }
-            set { _inlinePrompts = value; }
         }
 
         internal ReplIntellisenseMode ReplIntellisenseMode {
@@ -89,7 +83,6 @@ namespace Microsoft.PythonTools.Options {
         public void Load() {
             PrimaryPrompt = _pyService.LoadString(_id + PrimaryPromptSetting, _category) ?? DefaultPrompt;
             SecondaryPrompt = _pyService.LoadString(_id + SecondaryPromptSetting, _category) ?? DefaultSecondaryPrompt;
-            InlinePrompts = _pyService.LoadBool(_id + InlinePromptsSetting, _category) ?? true;
             UseInterpreterPrompts = _pyService.LoadBool(_id + UseInterpreterPromptsSetting, _category) ?? true;
             ReplIntellisenseMode = _pyService.LoadEnum<ReplIntellisenseMode>(_id + ReplIntellisenseModeSetting, _category) ?? ReplIntellisenseMode.DontEvaluateCalls;
             ReplSmartHistory = _pyService.LoadBool(_id + SmartHistorySetting, _category) ?? true;
@@ -99,7 +92,6 @@ namespace Microsoft.PythonTools.Options {
         public void Save() {
             _pyService.SaveString(_id + PrimaryPromptSetting, _category, PrimaryPrompt);
             _pyService.SaveString(_id + SecondaryPromptSetting, _category, SecondaryPrompt);
-            _pyService.SaveBool(_id + InlinePromptsSetting, _category, InlinePrompts);
             _pyService.SaveBool(_id + UseInterpreterPromptsSetting, _category, UseInterpreterPrompts);
             _pyService.SaveEnum<ReplIntellisenseMode>(_id + ReplIntellisenseModeSetting, _category, ReplIntellisenseMode);
             _pyService.SaveBool(_id + SmartHistorySetting, _category, ReplSmartHistory);
@@ -109,7 +101,6 @@ namespace Microsoft.PythonTools.Options {
         public void Reset() {
             PrimaryPrompt = DefaultPrompt;
             SecondaryPrompt = DefaultSecondaryPrompt;
-            InlinePrompts = true;
             UseInterpreterPrompts = true;
             ReplIntellisenseMode = ReplIntellisenseMode.DontEvaluateCalls;
             ReplSmartHistory = true;

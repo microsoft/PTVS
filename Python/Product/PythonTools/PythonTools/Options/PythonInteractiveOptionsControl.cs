@@ -42,10 +42,6 @@ namespace Microsoft.PythonTools.Options {
                 _executionMode.Items.Add(mode.FriendlyName);
             }
 
-#if DEV14_OR_LATER
-            // This isn't supported in the Dev14 interactive window
-            _inlinePrompts.Visible = false;
-#endif
             UpdateInterpreters();
 
             AddToolTips();
@@ -109,7 +105,6 @@ namespace Microsoft.PythonTools.Options {
         }
 
         private void AddToolTips() {
-            const string inlinePromptsToolTip = "When checked the prompts are in the editor buffer.  When unchecked the prompts are on the side in a separate margin.";
             const string useInterpreterPromptsToolTip = "When checked the prompts are the ones configured here.  When unchecked the prompt strings are defined by sys.ps1 and sys.ps2.";
             const string backendToolTop = @"Specifies the mode to be used for the interactive window.
 
@@ -132,7 +127,6 @@ visualstudio_py_repl.BACKEND.attach()";
             const string liveCompletionsToolTip = @"When offering completions don't use values that have come from analysis of the REPL buffer.  Instead, only use values from live objects.";
 
 
-            _tooltips.SetToolTip(_inlinePrompts, inlinePromptsToolTip);
             _tooltips.SetToolTip(_useUserDefinedPrompts, useInterpreterPromptsToolTip);
             _tooltips.SetToolTip(_executionMode, backendToolTop);
             _tooltips.SetToolTip(_executionModeLabel, backendToolTop);
@@ -156,7 +150,6 @@ visualstudio_py_repl.BACKEND.attach()";
 
                 ReplIntellisenseMode = CurrentOptions.ReplIntellisenseMode;
 
-                _inlinePrompts.Checked = CurrentOptions.InlinePrompts;
                 _useUserDefinedPrompts.Checked = !CurrentOptions.UseInterpreterPrompts;
                 _priPrompt.Text = CurrentOptions.PrimaryPrompt;
                 _secPrompt.Text = CurrentOptions.SecondaryPrompt;
@@ -222,10 +215,6 @@ visualstudio_py_repl.BACKEND.attach()";
         private void _useInterpreterPrompts_CheckedChanged(object sender, EventArgs e) {
             _priPromptLabel.Enabled = _secPromptLabel.Enabled = _secPrompt.Enabled = _priPrompt.Enabled = _useUserDefinedPrompts.Checked;
             CurrentOptions.UseInterpreterPrompts = !_useUserDefinedPrompts.Checked;
-        }
-
-        private void _inlinePrompts_CheckedChanged(object sender, EventArgs e) {
-            CurrentOptions.InlinePrompts = _inlinePrompts.Checked;
         }
 
         private void _priPrompt_TextChanged(object sender, EventArgs e) {

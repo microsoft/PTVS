@@ -30,9 +30,6 @@ using TestUtilities;
 using TestUtilities.Python;
 using TestUtilities.UI;
 using TestUtilities.UI.Python;
-#if !DEV14_OR_LATER
-using Microsoft.VisualStudio.Repl;
-#endif
 
 namespace PythonToolsUITests {
     [TestClass]

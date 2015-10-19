@@ -12,16 +12,11 @@
  *
  * ***************************************************************************/
 
-#if DEV12_OR_LATER
-
 using System;
+using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.Web.Editor;
-
-#if DEV14_OR_LATER
-using Microsoft.VisualStudio;
 using Microsoft.Web.Editor.Controller.Command;
-#endif
 
 namespace Microsoft.PythonTools.Django.Formatting {
     internal class TemplateFormatSelectionCommandHandler : EditingCommand {
@@ -38,5 +33,3 @@ namespace Microsoft.PythonTools.Django.Formatting {
         }
     }
 }
-
-#endif

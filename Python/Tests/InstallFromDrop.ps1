@@ -20,10 +20,8 @@ $exitcode = 1
 $ErrorActionPreference = 'SilentlyContinue'
 
 $vsinstalldir = Split-Path (Split-Path (&{switch($vsversion) {
+    "15.0" { $env:VS150COMNTOOLS }
     "14.0" { $env:VS140COMNTOOLS }
-    "12.0" { $env:VS120COMNTOOLS }
-    "11.0" { $env:VS110COMNTOOLS }
-    "10.0" { $env:VS100COMNTOOLS }
 }}))
 
 if ($install) {

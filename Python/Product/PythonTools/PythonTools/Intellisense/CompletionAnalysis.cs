@@ -20,20 +20,12 @@ using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Language.StandardClassification;
-#if DEV14_OR_LATER
 using Microsoft.VisualStudio.InteractiveWindow;
-#else
-using Microsoft.VisualStudio.Repl;
-#endif
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.PythonTools.Repl;
 
 namespace Microsoft.PythonTools.Intellisense {
-#if DEV14_OR_LATER
-    using IReplEvaluator = IInteractiveEvaluator;
-#endif
-
     /// <summary>
     /// Provides various completion services after the text around the current location has been
     /// processed. The completion services are specific to the current context
@@ -132,8 +124,8 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             IPythonReplIntellisense pyReplEval = null;
-            IReplEvaluator eval;
-            if (TextBuffer.Properties.TryGetProperty<IReplEvaluator>(typeof(IReplEvaluator), out eval)) {
+            IInteractiveEvaluator eval;
+            if (TextBuffer.Properties.TryGetProperty(typeof(IInteractiveEvaluator), out eval)) {
                 pyReplEval = eval as IPythonReplIntellisense;
             }
             IEnumerable<KeyValuePair<string, bool>> replScopes = null;

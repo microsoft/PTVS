@@ -9,12 +9,10 @@
 
   <ItemGroup>
     <ProjectFile Include="Django\Django.wixproj"/>
-    <ProjectFile Include="ReplWindow\ReplWindow.wixproj" Condition="$(IncludeReplWindow)"/>
     <ProjectFile Include="IronPythonInterpreter\IronPythonInterpreter.wixproj"/>
-    <ProjectFile Include="Uwp\Uwp.wixproj" Condition="$(IncludeUwp)"/>
+    <ProjectFile Include="Uwp\Uwp.wixproj"/>
     <ProjectFile Include="PythonTools\PythonTools.wixproj"/>
     <ProjectFile Include="PythonProfiling\PythonProfiling.wixproj"/>
-    <ProjectFile Include="PythonHpcSupport\PythonHpcSupport.wixproj" Condition="$(IncludeHpc)"/>
     <ProjectFile Include="$(PTVSPRPath)VsLoggerSetup\VsLogger.wixproj" Condition="'$(IncludeVsLogger)' == 'True'"/>
     <ProjectFile Include="PythonToolsInstaller\PythonToolsInstaller.wixproj"/>
   </ItemGroup>

@@ -4,6 +4,7 @@
   <Extern href="vsshlids.h"/>
   <Extern href="VSDbgCmd.h"/>
   <Extern href="VsDebugGuids.h"/>
+  <Include href="KnownImageIds.vsct"/>
 
   <!--The Commands section is where we the commands, menus and menu groups are defined.
       This section uses a Guid to identify the package that provides the command defined inside it. -->
@@ -149,7 +150,7 @@
       <Group guid="guidPythonToolsCmdSet" id="EnvironmentsViewCommandsGroup" priority="0x0200">
         <Parent guid="guidPythonToolsCmdSet" id="EnvironmentsContainerMenu"/>
       </Group>
-      <Group guid="guidSHLMainMenu" id="IDG_VS_CTXT_PROJWIN_SCOPE" priority="0x0300" Condition="!Defined(DEV10)">
+      <Group guid="guidSHLMainMenu" id="IDG_VS_CTXT_PROJWIN_SCOPE" priority="0x0300">
         <Parent guid="guidPythonToolsCmdSet" id="EnvironmentsContainerMenu" />
       </Group>
 
@@ -159,7 +160,7 @@
       <Group guid="guidPythonToolsCmdSet" id="EnvironmentCommandsGroup" priority="0x0006">
         <Parent guid="guidPythonToolsCmdSet" id="EnvironmentMenu"/>
       </Group>
-      <Group guid="guidSHLMainMenu" id="IDG_VS_CTXT_PROJWIN_SCOPE" priority="0x0200" Condition="!Defined(DEV10)">
+      <Group guid="guidSHLMainMenu" id="IDG_VS_CTXT_PROJWIN_SCOPE" priority="0x0200">
         <Parent guid="guidPythonToolsCmdSet" id="EnvironmentMenu" />
       </Group>
       <Group guid="guidSHLMainMenu" id="IDG_VS_CTXT_DELETE" priority="0x0300">
@@ -205,7 +206,7 @@
       <!--
           Standard groups appearing in our context menus
       -->
-      <Group guid="guidSHLMainMenu" id="IDG_VS_CTXT_PROJWIN_SCOPE" priority="0x0208" Condition="!Defined(DEV10)">
+      <Group guid="guidSHLMainMenu" id="IDG_VS_CTXT_PROJWIN_SCOPE" priority="0x0208">
         <Parent guid="guidPythonToolsCmdSet" id="SearchPathContainerMenu" />
       </Group>
 
@@ -244,10 +245,11 @@
       <Button guid="guidPythonToolsCmdSet" id="cmdidExecuteFileInRepl" priority="0x0100" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="PythonDebugMenuGroup"/>
         <!-- Also placed in IDG_EXECUTION -->
-        <Icon guid="guidImages" id="pyExecuteInReplPic" />
+        <Icon guid="ImageCatalogGuid" id="PYDebugInteractiveWindow" />
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <CommandFlag>TextChanges</CommandFlag>
+        <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
           <ButtonText>Execute File in Python &amp;Interactive</ButtonText>
           <ToolTipText>Execute File in Python Interactive</ToolTipText>
@@ -321,7 +323,9 @@
 
       <Button guid="guidPythonToolsCmdSet" id="cmdidViewAllEnvironments" priority="0x0100" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="EnvironmentsViewCommandsGroup" />
-        <Icon guid="guidImages" id="pyListPic"/>
+        <!-- No PYEnvironment image yet -->
+        <Icon guid="ImageCatalogGuid" id="DockPanel"/>
+        <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
           <ButtonText>Vie&amp;w All Python Environments</ButtonText>
           <ToolTipText>Open the Python Environments window.</ToolTipText>
@@ -341,7 +345,7 @@
 
       <Button guid="guidPythonToolsCmdSet" id="cmdidOpenInteractiveForEnvironment" priority="0x0200" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="EnvironmentCommandsGroup"/>
-        <Icon guid="guidImages" id="pyReplPic" />
+        <Icon guid="ImageCatalogGuid" id="PYInteractiveWindow" />
         <CommandFlag>AllowParams</CommandFlag>
         <Strings>
           <ButtonText>Open I&amp;nteractive Window</ButtonText>
@@ -416,9 +420,10 @@
 
       <Button guid="guidPythonToolsCmdSet" id="cmdidRemoveImportsCurrentScope" priority="0x200" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="RemoveImportsGroup"/>
-        <Icon guid="guidImagesRefactoring" id="imgRemoveUsing" />
+        <Icon guid="ImageCatalogGuid" id="RemoveNamespace" />
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
+        <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
           <ButtonText>Current &amp;Scope</ButtonText>
           <ToolTipText>Remove unused imports in the current scope.</ToolTipText>
@@ -428,9 +433,10 @@
 
       <Button guid="guidPythonToolsCmdSet" id="cmdidRemoveImports" priority="0x200" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="RemoveImportsGroup"/>
-        <Icon guid="guidImagesRefactoring" id="imgRemoveUsing" />
+        <Icon guid="ImageCatalogGuid" id="RemoveNamespace" />
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
+        <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
           <ButtonText>&amp;All Scopes</ButtonText>
           <ToolTipText>Remove unused imports in all scopes.</ToolTipText>
@@ -440,9 +446,10 @@
 
       <Button guid="guidPythonToolsCmdSet" id="cmdidDebugReplWindow" priority="0x0950" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="PythonDebugMenuGroup"/>
-        <Icon guid="guidImages" id="pyReplPic" />
+        <Icon guid="ImageCatalogGuid" id="PYInteractiveWindow" />
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
+        <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
           <ButtonText>P&amp;ython Debug Interactive</ButtonText>
           <ToolTipText>Opens the Python Debug Interactive window.</ToolTipText>
@@ -452,8 +459,10 @@
 
       <Button guid="guidPythonToolsCmdSet" id="cmdidInterpreterList" priority="0x0100" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="WindowCommandsGroup"/>
-        <Icon guid="guidImages" id="pyListPic"/>
+        <!-- No PYEnvironment image yet -->
+        <Icon guid="ImageCatalogGuid" id="DockPanel"/>
         <CommandFlag>TextChanges</CommandFlag>
+        <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
           <ButtonText>Python &amp;Environments</ButtonText>
           <ToolTipText>Python Environments</ToolTipText>
@@ -464,10 +473,11 @@
 
       <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindow" priority="0x0200" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="WindowCommandsGroup"/>
-        <Icon guid="guidImages" id="pyReplPic" />
+        <Icon guid="ImageCatalogGuid" id="PYInteractiveWindow" />
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <CommandFlag>TextChanges</CommandFlag>
+        <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
           <ButtonText>Python Interactive Default</ButtonText>
           <ToolTipText>Open the default Python Interactive window</ToolTipText>
@@ -477,10 +487,11 @@
 
       <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindow2" priority="0x0201" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="WindowCommandsGroup"/>
-        <Icon guid="guidImages" id="pyReplPic" />
+        <Icon guid="ImageCatalogGuid" id="PYInteractiveWindow" />
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <CommandFlag>TextChanges</CommandFlag>
+        <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
           <ButtonText>Python Interactive 1</ButtonText>
           <ToolTipText>Opens a Python Interactive window.</ToolTipText>
@@ -490,10 +501,11 @@
 
       <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindow3" priority="0x0202" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="WindowCommandsGroup"/>
-        <Icon guid="guidImages" id="pyReplPic" />
+        <Icon guid="ImageCatalogGuid" id="PYInteractiveWindow" />
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <CommandFlag>TextChanges</CommandFlag>
+        <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
           <ButtonText>Python Interactive 2</ButtonText>
           <ToolTipText>Opens a Python Interactive window.</ToolTipText>
@@ -503,10 +515,11 @@
 
       <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindow4" priority="0x0203" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="WindowCommandsGroup"/>
-        <Icon guid="guidImages" id="pyReplPic" />
+        <Icon guid="ImageCatalogGuid" id="PYInteractiveWindow" />
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <CommandFlag>TextChanges</CommandFlag>
+        <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
           <ButtonText>Python Interactive 3</ButtonText>
           <ToolTipText>Opens a Python Interactive window.</ToolTipText>
@@ -516,10 +529,11 @@
 
       <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindow5" priority="0x0204" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="WindowCommandsGroup"/>
-        <Icon guid="guidImages" id="pyReplPic" />
+        <Icon guid="ImageCatalogGuid" id="PYInteractiveWindow" />
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <CommandFlag>TextChanges</CommandFlag>
+        <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
           <ButtonText>Python Interactive 4</ButtonText>
           <ToolTipText>Opens a Python Interactive window.</ToolTipText>
@@ -529,10 +543,11 @@
 
       <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindow6" priority="0x0205" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="WindowCommandsGroup"/>
-        <Icon guid="guidImages" id="pyReplPic" />
+        <Icon guid="ImageCatalogGuid" id="PYInteractiveWindow" />
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <CommandFlag>TextChanges</CommandFlag>
+        <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
           <ButtonText>Python Interactive 5</ButtonText>
           <ToolTipText>Opens a Python Interactive window.</ToolTipText>
@@ -542,10 +557,11 @@
 
       <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindow7" priority="0x0206" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="WindowCommandsGroup"/>
-        <Icon guid="guidImages" id="pyReplPic" />
+        <Icon guid="ImageCatalogGuid" id="PYInteractiveWindow" />
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <CommandFlag>TextChanges</CommandFlag>
+        <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
           <ButtonText>Python Interactive 6</ButtonText>
           <ToolTipText>Opens a Python Interactive window.</ToolTipText>
@@ -555,10 +571,11 @@
 
       <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindow8" priority="0x0207" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="WindowCommandsGroup"/>
-        <Icon guid="guidImages" id="pyReplPic" />
+        <Icon guid="ImageCatalogGuid" id="PYInteractiveWindow" />
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <CommandFlag>TextChanges</CommandFlag>
+        <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
           <ButtonText>Python Interactive 7</ButtonText>
           <ToolTipText>Opens a Python Interactive window.</ToolTipText>
@@ -568,10 +585,11 @@
 
       <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindow9" priority="0x0208" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="WindowCommandsGroup"/>
-        <Icon guid="guidImages" id="pyReplPic" />
+        <Icon guid="ImageCatalogGuid" id="PYInteractiveWindow" />
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <CommandFlag>TextChanges</CommandFlag>
+        <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
           <ButtonText>Python Interactive 8</ButtonText>
           <ToolTipText>Opens a Python Interactive window.</ToolTipText>
@@ -581,10 +599,11 @@
 
       <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindowA" priority="0x0209" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="WindowCommandsGroup"/>
-        <Icon guid="guidImages" id="pyReplPic" />
+        <Icon guid="ImageCatalogGuid" id="PYInteractiveWindow" />
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <CommandFlag>TextChanges</CommandFlag>
+        <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
           <ButtonText>Python Interactive 9</ButtonText>
           <ToolTipText>Opens a Python Interactive window.</ToolTipText>
@@ -594,10 +613,11 @@
 
       <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindowB" priority="0x020A" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="WindowCommandsGroup"/>
-        <Icon guid="guidImages" id="pyReplPic" />
+        <Icon guid="ImageCatalogGuid" id="PYInteractiveWindow" />
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <CommandFlag>TextChanges</CommandFlag>
+        <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
           <ButtonText>Python Interactive 10</ButtonText>
           <ToolTipText>Opens a Python Interactive window.</ToolTipText>
@@ -607,10 +627,11 @@
 
       <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindowC" priority="0x020B" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="WindowCommandsGroup"/>
-        <Icon guid="guidImages" id="pyReplPic" />
+        <Icon guid="ImageCatalogGuid" id="PYInteractiveWindow" />
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <CommandFlag>TextChanges</CommandFlag>
+        <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
           <ButtonText>Python Interactive 11</ButtonText>
           <ToolTipText>Opens a Python Interactive window.</ToolTipText>
@@ -620,10 +641,11 @@
 
       <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindowD" priority="0x020C" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="WindowCommandsGroup"/>
-        <Icon guid="guidImages" id="pyReplPic" />
+        <Icon guid="ImageCatalogGuid" id="PYInteractiveWindow" />
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <CommandFlag>TextChanges</CommandFlag>
+        <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
           <ButtonText>Python Interactive 12</ButtonText>
           <ToolTipText>Opens a Python Interactive window.</ToolTipText>
@@ -633,10 +655,11 @@
 
       <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindowE" priority="0x020D" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="WindowCommandsGroup"/>
-        <Icon guid="guidImages" id="pyReplPic" />
+        <Icon guid="ImageCatalogGuid" id="PYInteractiveWindow" />
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <CommandFlag>TextChanges</CommandFlag>
+        <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
           <ButtonText>Python Interactive 13</ButtonText>
           <ToolTipText>Opens a Python Interactive window.</ToolTipText>
@@ -646,10 +669,11 @@
 
       <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindowF" priority="0x020E" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="WindowCommandsGroup"/>
-        <Icon guid="guidImages" id="pyReplPic" />
+        <Icon guid="ImageCatalogGuid" id="PYInteractiveWindow" />
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <CommandFlag>TextChanges</CommandFlag>
+        <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
           <ButtonText>Python Interactive 14</ButtonText>
           <ToolTipText>Opens a Python Interactive window.</ToolTipText>
@@ -679,8 +703,8 @@
           <ToolTipText>Add Folder to Search Path...</ToolTipText>
           <LocCanonicalName>.Project.AddSearchPathFolder</LocCanonicalName>
         </Strings>
-
       </Button>
+
       <Button guid="guidPythonToolsCmdSet" id="cmdIdAddSearchPathZip" priority="0x0302" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="SearchPathCommandsGroup"/>
         <Strings>
@@ -764,7 +788,7 @@
       <Button guid="guidPythonToolsCmdSet" id="cmdidExtractMethod" priority="0x200" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="RefactoringCommon"/>
 
-        <!-- <Icon guid="guidImages" id="pyReplPic" /> -->
+        <!-- <Icon guid="ImageCatalogGuid" id="PYInteractiveWindow" /> -->
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <Strings>
@@ -777,7 +801,7 @@
       <Button guid="guidPythonToolsCmdSet" id="cmdidRefactorRename" priority="0x100" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="RefactoringCommon"/>
 
-        <!-- <Icon guid="guidImages" id="pyReplPic" /> -->
+        <!-- <Icon guid="ImageCatalogGuid" id="PYInteractiveWindow" /> -->
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <Strings>
@@ -858,8 +882,7 @@
              idCommandList="comboIdReplScopesGetList" 
              priority="0x0400" 
              type="DropDownCombo" 
-             defaultWidth="130" 
-             Condition="Defined(DEV14_OR_LATER)">
+             defaultWidth="130">
         <Parent guid="guidInteractiveWindowCmdSet" id="InteractiveToolbarGroup"/>
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
@@ -872,25 +895,6 @@
         </Strings>
       </Combo>
     </Combos>
-
-    <!--The bitmaps section is used to define the bitmaps that are used for the commands.-->
-    <Bitmaps>
-      <!-- For newer versions we use an icon map to get scalable icons. -->
-      <Bitmaps Condition="Defined(DEV12_OR_LATER)">
-        <Bitmap guid="guidImages" href="..\Icons\Dev12.0\Images_32bit.png" usedList="pyReplPic, pyListPic, bmpPicSearch, bmpPicX, bmpPicArrows, pyExecuteInReplPic"/>
-        <Bitmap guid="guidImagesRefactoring" href="..\Icons\Dev12.0\Refactoring_Commands.bmp" usedList="imgRemoveUsing, imgSortUsings"/>
-      </Bitmaps>
-
-      <Bitmaps Condition="Defined(DEV11)">
-        <Bitmap guid="guidImages" href="..\Icons\Dev11.0\Images_32bit.png" usedList="pyReplPic, pyListPic, bmpPicSearch, bmpPicX, bmpPicArrows, pyExecuteInReplPic"/>
-        <Bitmap guid="guidImagesRefactoring" href="..\Icons\Dev11.0\Refactoring_Commands.bmp" usedList="imgRemoveUsing, imgSortUsings"/>
-      </Bitmaps>
-
-      <Bitmaps Condition="Defined(DEV10)">
-        <Bitmap guid="guidImages" href="..\Icons\Dev10.0\Images_32bit.bmp" usedList="pyReplPic, pyListPic, bmpPicSearch, bmpPicX, bmpPicArrows, pyExecuteInReplPic"/>
-        <Bitmap guid="guidImagesRefactoring" href="..\Icons\Dev10.0\Refactoring_Commands.bmp" usedList="imgRemoveUsing, imgSortUsings"/>
-      </Bitmaps>
-    </Bitmaps>
   </Commands>
 
   <CommandPlacements>
@@ -1100,20 +1104,6 @@
       <IDSymbol name="cmdidOpenCommandPromptHere" value="0x10002" />
       <IDSymbol name="cmdidCopyFullPath" value="0x10003" />
 
-    </GuidSymbol>
-
-    <GuidSymbol name="guidImages" value="{7f103a95-8141-4004-a01d-e3f739caa27d}" >
-      <IDSymbol name="pyReplPic" value="1" />
-      <IDSymbol name="pyListPic" value="2" />
-      <IDSymbol name="bmpPicSearch" value="3" />
-      <IDSymbol name="bmpPicX" value="4" />
-      <IDSymbol name="bmpPicArrows" value="5" />
-      <IDSymbol name="pyExecuteInReplPic" value="6" />
-    </GuidSymbol>
-
-    <GuidSymbol name="guidImagesRefactoring" value="{6EE47620-9481-4D89-A56F-104CBD7ED3D2}" >
-      <IDSymbol name="imgRemoveUsing" value="1" />
-      <IDSymbol name="imgSortUsings" value="2" />
     </GuidSymbol>
 
     <GuidSymbol name="guidAzureExplorerCmdId" value="{2F32C14E-B908-42E6-AE7E-B8B3E2DED633}">

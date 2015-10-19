@@ -17,16 +17,12 @@
     
     <ProjectFile Include="EnvironmentsList\EnvironmentsList.csproj"/>
 
-    <ProjectFile Include="TestAdapter\TestAdapter.csproj" Condition="$(IncludeTestAdapter)"/>
+    <ProjectFile Include="TestAdapter\TestAdapter.csproj"/>
 
     <ProjectFile Include="ImportWizard\ImportWizard.csproj"/>
     <ProjectFile Include="ProjectWizards\ProjectWizards.csproj"/>
 
-    <ProjectFile Include="ReplWindow\ReplWindow.csproj" Condition="$(IncludeReplWindow)"/>
     <ProjectFile Include="PythonTools\PythonTools.csproj"/>
-
-    <ProjectFile Include="MpiShim\MpiShim.csproj"/>
-    <ProjectFile Include="Hpc\Hpc.csproj" Condition="$(IncludeHpc)"/>
 
     <ProjectFile Include="IronPythonResolver\IronPythonResolver.csproj"/>
     <ProjectFile Include="IronPython\IronPython.Interpreter.csproj"/>
@@ -48,7 +44,7 @@
 
     <ProjectFile Include="ML\ML.csproj" Condition="$(IncludeML)"/>
     
-    <ProjectFile Include="Uwp\Uwp.csproj" Condition="$(IncludeUwp)"/>
+    <ProjectFile Include="Uwp\Uwp.csproj"/>
   </ItemGroup>
 
   <Import Project="$(TargetsPath)\Common.Build.Traversal.targets" />

@@ -13,12 +13,7 @@
  * ***************************************************************************/
 
 using System.Threading.Tasks;
-#if DEV14_OR_LATER
 using Microsoft.VisualStudio.InteractiveWindow;
-#else
-using Microsoft.VisualStudio.Repl;
-#endif
-
 
 namespace Microsoft.PythonTools.Repl {
     /// <summary>
@@ -29,12 +24,7 @@ namespace Microsoft.PythonTools.Repl {
     /// This interface provides additional functionality for interacting with the Python REPL
     /// above and beyond the standard IReplEvaluator interface.
     /// </summary>
-    public interface IPythonReplEvaluator :
-#if DEV14_OR_LATER
-        IInteractiveEvaluator
-#else
-        IReplEvaluator 
-#endif
+    public interface IPythonReplEvaluator : IInteractiveEvaluator
         {
         /// <summary>
         /// Executes the specified file in the REPL window.

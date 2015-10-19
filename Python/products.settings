@@ -1,29 +1,7 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <!-- Include UWP -->
-    <IncludeUwp Condition="'$(IncludeUwp)' == '' and $(VSMajorVersion) >= 14">true</IncludeUwp>
-    <IncludeUwp Condition="'$(IncludeUwp)' == ''">false</IncludeUwp>
-
-    <!-- Include HPC by default, and force to ReleaseBuild if dependencies are missing -->
-    <IncludeHpc Condition="'$(IncludeHpc)' == '' and $(VSMajorVersion) >= 14">false</IncludeHpc>
-    <IncludeHpc Condition="'$(IncludeHpc)' == ''">true</IncludeHpc>
-    <IncludeHpc Condition="'$(registry:HKEY_CLASSES_ROOT\CLSID\{3C376723-5FF9-4C55-89BB-E9E7A31577E1})' == ''">$(ReleaseBuild)</IncludeHpc>
-    
-    <!-- Include test adapter by default, and force to false for VS 2010 -->
-    <IncludeTestAdapter Condition="'$(IncludeTestAdapter)' == ''">true</IncludeTestAdapter>
-    <IncludeTestAdapter Condition="'$(VSTarget)' == '10.0'">false</IncludeTestAdapter>
-    
-    <!-- Include ML by default, and force to false for VS 2010 and VS 2012 -->
+    <!-- Include ML by default, and force to false for VS "15" -->
     <IncludeML Condition="'$(IncludeML)' == ''">true</IncludeML>
-    <IncludeML Condition="'$(VSTarget)' == '10.0' or '$(VSTarget)' == '11.0'">false</IncludeML>
-
-    <!-- Include ReplWindow by default, and force to false for VS 2015 and later -->
-    <IncludeReplWindow Condition="'$(IncludeReplWindow)' == ''">true</IncludeReplWindow>
-    <IncludeReplWindow Condition="$(VSMajorVersion) >= 14">false</IncludeReplWindow>
-
-    <!-- Features default to true for release builds -->
-    <FeatureAzureRemoteDebug>$(ReleaseBuild)</FeatureAzureRemoteDebug>
-    <FeatureAzureRemoteDebug Condition="$(VSMajorVersion) > 12 or ($(VSMajorVersion) == 12 and $(VSUpdateVersion) >= 30723)">true</FeatureAzureRemoteDebug>
-    <FeatureAzureRemoteDebug Condition="'$(FeatureAzureRemoteDebug)' == ''">false</FeatureAzureRemoteDebug>
+    <IncludeML Condition="'$(VSTarget)' == '15.0'">false</IncludeML>
   </PropertyGroup>
 </Project>

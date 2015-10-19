@@ -43,14 +43,9 @@ using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Debugger;
-using Microsoft.VisualStudio.Debugger.Interop;
 using Microsoft.VisualStudio.Editor;
-#if DEV14_OR_LATER
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.InteractiveWindow.Shell;
-#else
-using Microsoft.VisualStudio.Repl;
-#endif
 using Microsoft.VisualStudio.Settings;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -63,11 +58,6 @@ using Microsoft.VisualStudioTools.Navigation;
 using Microsoft.VisualStudioTools.Project;
 using NativeMethods = Microsoft.VisualStudioTools.Project.NativeMethods;
 using SR = Microsoft.PythonTools.Project.SR;
-#if DEV14_OR_LATER
-using IReplWindow = Microsoft.VisualStudio.InteractiveWindow.IInteractiveWindow;
-using IReplWindowProvider = Microsoft.VisualStudio.InteractiveWindow.Shell.IVsInteractiveWindowFactory;
-using IReplEvaluatorProvider = Microsoft.PythonTools.Repl.IInteractiveEvaluatorProvider;
-#endif
 
 namespace Microsoft.PythonTools {
     /// <summary>
@@ -85,11 +75,7 @@ namespace Microsoft.PythonTools {
     [InstalledProductRegistration("#110", "#112", AssemblyVersionInfo.Version, IconResourceID = 400)]
 
     // This attribute is needed to let the shell know that this package exposes some menus.
-#if DEV14_OR_LATER
-    [ProvideMenuResource(1000, 1, IconMappingFilename = "PythonTools_iconmap.csv")]
-#else
     [ProvideMenuResource(1000, 1)]
-#endif
     [ProvideAutoLoad(Microsoft.VisualStudio.Shell.Interop.UIContextGuids.NoSolution)]
     [ProvideAutoLoad(Microsoft.VisualStudio.Shell.Interop.UIContextGuids.SolutionExists)]
     [Description("Python Tools Package")]
@@ -196,14 +182,9 @@ namespace Microsoft.PythonTools {
     [ProvidePythonInterpreterFactoryProvider("ConfigurablePythonInterpreterFactoryProvider", typeof(ConfigurablePythonInterpreterFactoryProvider))]
     [ProvidePythonInterpreterFactoryProvider(GuidList.guidLoadedProjectInterpreterFactoryProviderString, typeof(LoadedProjectInterpreterFactoryProvider))]
     [ProvideDiffSupportedContentType(".py;.pyw", ";")]
-#if DEV11_OR_LATER // TODO: UNSURE IF WE NEED THIS FOR DEV12
-    [ProvideX64DebuggerFixForIntegratedShell]
-#endif
     [ProvideCodeExpansions(GuidList.guidPythonLanguageService, false, 106, "Python", @"Snippets\%LCID%\SnippetsIndex.xml", @"Snippets\%LCID%\Python\")]
     [ProvideCodeExpansionPath("Python", "Test", @"Snippets\%LCID%\Test\")]
-#if DEV14_OR_LATER
     [ProvideInteractiveWindow(GuidList.guidPythonInteractiveWindow, Style = VsDockStyle.Linked, Orientation = ToolWindowOrientation.none, Window = ToolWindowGuids80.Outputwindow)]
-#endif
     [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",
         Justification = "Object is owned by VS and cannot be disposed")]
     public sealed class PythonToolsPackage : CommonPackage, IVsComponentSelectorProvider, IPythonToolsToolWindowService {
@@ -350,7 +331,6 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             }
         }
 
-#if DEV14_OR_LATER
         protected override int CreateToolWindow(ref Guid toolWindowType, int id) {
             if (toolWindowType == GuidList.guidPythonInteractiveWindowGuid) {
                 var res = ComponentModel.GetService<InteractiveWindowProvider>().CreateFromRegistry(
@@ -363,7 +343,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
 
             return base.CreateToolWindow(ref toolWindowType, id);
         }
-#endif
+
         internal static void OpenNoInterpretersHelpPage(System.IServiceProvider serviceProvider, string page = null) {
             OpenVsWebBrowser(serviceProvider, page ?? PythonToolsInstallPath.GetFile("NoInterpreters.mht"));
         }
@@ -566,14 +546,12 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
                 promote: true
             );
 
-#if DEV11_OR_LATER
             // Register custom debug event service
             var customDebuggerEventHandler = new CustomDebuggerEventHandler(this);
             services.AddService(customDebuggerEventHandler.GetType(), customDebuggerEventHandler, promote: true);
 
             // Enable the mixed-mode debugger UI context
             UIContext.FromUIContextGuid(DkmEngineId.NativeEng).IsActive = true;
-#endif
 
             // Add our command handlers for menu (commands must exist in the .vsct file)
             RegisterCommands(new Command[] { 
@@ -590,32 +568,26 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
                 new OpenInterpreterListCommand(this),
                 new ImportWizardCommand(this),
                 new SurveyNewsCommand(this),
-#if DEV11_OR_LATER
                 new ShowPythonViewCommand(this),
                 new ShowCppViewCommand(this),
                 new ShowNativePythonFrames(this),
                 new UsePythonStepping(this),
-#endif
             }, GuidList.guidPythonToolsCmdSet);
 
-#if FEATURE_AZURE_REMOTE_DEBUG
             try {
                 RegisterCommands(new Command[] {
                     new AzureExplorerAttachDebuggerCommand(this)
                 }, GuidList.guidPythonToolsCmdSet);
             } catch (NotSupportedException) {
             }
-#endif
 
 
             RegisterCommands(GetReplCommands(), GuidList.guidPythonToolsCmdSet);
 
             RegisterProjectFactory(new PythonWebProjectFactory(this));
 
-#if DEV11_OR_LATER
             // Enable the Python debugger UI context
             UIContext.FromUIContextGuid(AD7Engine.DebugEngineGuid).IsActive = true;
-#endif
 
             var interpreterService = ComponentModel.GetService<IInterpreterOptionsService>();
             interpreterService.InterpretersChanged += RefreshReplCommands;
@@ -774,7 +746,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
         /// <param name="startupFile">The file to be executed on the startup of the REPL.  Can be null, which will result in an interactive REPL.</param>
         /// <param name="workingDir">The working directory of the REPL process</param>
         /// <param name="project">The IVsHierarchy representing the Python project.</param>
-        public IReplWindow CreatePythonRepl(string id, string title, IPythonInterpreterFactory interpreter, string workingDir, Dictionary<string, string> envVars = null, IVsHierarchy project = null) {
+        public IInteractiveWindow CreatePythonRepl(string id, string title, IPythonInterpreterFactory interpreter, string workingDir, Dictionary<string, string> envVars = null, IVsHierarchy project = null) {
             Utilities.ArgumentNotNull("interpreter", interpreter);
             Utilities.ArgumentNotNull("id", id);
             Utilities.ArgumentNotNull("title", title);
@@ -795,22 +767,14 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
 
             string replId = PythonReplEvaluatorProvider.GetConfigurableReplId(realId);
 
-#if DEV14_OR_LATER
             var replProvider = ComponentModel.GetService<InteractiveWindowProvider>();
-            var vsWindow =
-#else
-            var replProvider = ComponentModel.GetService<IReplWindowProvider>();
-            var window = 
-#endif
-            replProvider.FindReplWindow(replId) ?? replProvider.CreateReplWindow(
+            var vsWindow = replProvider.FindReplWindow(replId) ?? replProvider.CreateInteractiveWindow(
                 this.GetPythonContentType(),
                 title,
                 typeof(PythonLanguageInfo).GUID,
                 replId
             );
-#if DEV14_OR_LATER
             var window = vsWindow.InteractiveWindow;
-#endif
             var commandProvider = project as IPythonProject2;
             if (commandProvider != null) {
                 commandProvider.AddActionOnClose((object)window, BasePythonReplEvaluator.CloseReplWindow);
