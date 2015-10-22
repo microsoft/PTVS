@@ -29,6 +29,21 @@
       </WebTestRunConfiguration>
     </TestTypeSpecific>
     <AgentRule name="LocalMachineDefaultRole">
+      <DataCollectors>
+        <DataCollector uri="datacollector://microsoft/EventLog/1.0" assemblyQualifiedName="Microsoft.VisualStudio.TestTools.DataCollection.EventLog.EventLogDataCollector, Microsoft.VisualStudio.TestTools.DataCollection.EventLog, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" friendlyName="Event Log">
+          <Configuration>
+            <Setting name="EventLogs" value="Application, System" xmlns="" />
+            <Setting name="EntryTypes" value="Error, Warning" xmlns="" />
+            <Setting name="MaxEventLogEntriesToCollect" value="5000" xmlns="" />
+            <Setting name="CollectForInnerTests" value="False" xmlns="" />
+          </Configuration>
+        </DataCollector>
+        <DataCollector uri="datacollector://microsoft/VideoRecorder/1.0" assemblyQualifiedName="Microsoft.VisualStudio.TestTools.DataCollection.VideoRecorder.VideoRecorderDataCollector, Microsoft.VisualStudio.TestTools.DataCollection.VideoRecorder, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" friendlyName="Screen and Voice Recorder">
+          <Configuration>
+            <MediaRecorder sendRecordedMediaForPassedTestCase="false" xmlns="" />
+          </Configuration>
+        </DataCollector>
+      </DataCollectors>
     </AgentRule>
   </Execution>
   <Properties>
@@ -37,6 +52,5 @@
     <Property name="VSVersion" value="14.0" />
     <Property name="VSDebugMixedMode" value="false" />
     <Property name="VSLaunchTimeoutInSeconds" value="300" />
-    <Property Name="ScreenCapture" value="Caps" />
   </Properties>
 </TestSettings>
