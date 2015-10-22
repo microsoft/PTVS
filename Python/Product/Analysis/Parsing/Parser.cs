@@ -58,7 +58,8 @@ namespace Microsoft.PythonTools.Parsing {
 
         private bool _alwaysAllowContextDependentSyntax;
 
-        private static Encoding _utf8throwing;
+        private static readonly Encoding _utf8throwing = new UTF8Encoding(false, true);
+        private static readonly Encoding _utf8nonthrowing = new UTF8Encoding(false, false);
         private static Regex _codingRegex;
 
         #region Construction
@@ -131,7 +132,7 @@ namespace Microsoft.PythonTools.Parsing {
 
             var defaultEncoding = version.Is2x() ? PythonAsciiEncoding.Instance : Encoding.UTF8;
 
-            var reader = GetStreamReaderWithEncoding(stream, defaultEncoding, options.ErrorSink);
+            var reader = GetStreamReaderWithEncoding(stream, defaultEncoding, options.ErrorSink, true);
 
             return CreateParser(reader, version, options);
         }
@@ -4830,11 +4831,14 @@ namespace Microsoft.PythonTools.Parsing {
         /// 
         /// New in 1.1.
         /// </summary>
+        /// <remarks>
+        /// Always returns a non-throwing stream.
+        /// </remarks>
         public static Encoding GetEncodingFromStream(Stream stream) {
-            return GetStreamReaderWithEncoding(stream, new UTF8Encoding(false), ErrorSink.Null).CurrentEncoding;
+            return GetStreamReaderWithEncoding(stream, DefaultEncodingNoFallback, ErrorSink.Null, false).CurrentEncoding;
         }
 
-        private static StreamReader/*!*/ GetStreamReaderWithEncoding(Stream/*!*/ stream, Encoding/*!*/ defaultEncoding, ErrorSink errors) {
+        private static StreamReader/*!*/ GetStreamReaderWithEncoding(Stream/*!*/ stream, Encoding/*!*/ defaultEncoding, ErrorSink errors, bool throwing) {
             // Python 2.x should pass ASCII as the default
             // Python 3.x should pass UTF-8
             // A BOM or encoding comment can override the default
@@ -4871,6 +4875,9 @@ namespace Microsoft.PythonTools.Parsing {
                     gotEncoding = TryGetEncoding(defaultEncoding, line, ref encoding, out encodingName, out encodingIndex);
                     encodingIndex += prevLineLength;
                 }
+                if (gotEncoding == true && !throwing) {
+                    encoding.DecoderFallback = new SourceNonStrictDecoderFallbackNoFallback();
+                }
 
                 if ((gotEncoding == null || gotEncoding == true) && isUtf8 && encodingName != "utf-8") {
                     // we have both a BOM & an encoding type, throw an error
@@ -4881,9 +4888,9 @@ namespace Microsoft.PythonTools.Parsing {
                         ErrorCodes.SyntaxError,
                         Severity.FatalError
                     );
-                    encoding = Encoding.UTF8;
+                    encoding = throwing ? _utf8throwing : _utf8nonthrowing;
                 } else if (isUtf8) {
-                    return new StreamReader(new PartiallyReadStream(readBytes, stream), UTF8Throwing);
+                    return new StreamReader(new PartiallyReadStream(readBytes, stream), throwing ? _utf8throwing : _utf8nonthrowing);
                 } else if (encoding == null) {
                     if (gotEncoding == null) {
                         // get line number information for the bytes we've read...
@@ -4929,17 +4936,6 @@ namespace Microsoft.PythonTools.Parsing {
             return lineNos;
         }
 
-        private static Encoding UTF8Throwing {
-            get {
-                if (_utf8throwing == null) {
-                    var tmp = (Encoding)Encoding.UTF8.Clone();
-                    tmp.DecoderFallback = new SourceNonStrictDecoderFallback();
-                    _utf8throwing = tmp;
-                }
-                return _utf8throwing;
-            }
-        }
-
         /// <summary>
         /// Attempts to get the encoding from a # coding: line.  
         /// 
@@ -4972,6 +4968,7 @@ namespace Microsoft.PythonTools.Parsing {
 
             // and we have the magic ending as well...
             if (TryGetEncoding(encName, out enc)) {
+                // Assume throwing, the caller can change it if they like.
                 enc.DecoderFallback = new SourceNonStrictDecoderFallback();
                 return true;
             }
@@ -5303,7 +5300,7 @@ namespace Microsoft.PythonTools.Parsing {
         /// </summary>
         public static Encoding DefaultEncoding {
             get {
-                return PythonAsciiEncoding.SourceEncoding;
+                return _utf8throwing;
             }
         }
 
@@ -5312,7 +5309,7 @@ namespace Microsoft.PythonTools.Parsing {
         /// </summary>
         public static Encoding DefaultEncodingNoFallback {
             get {
-                return PythonAsciiEncoding.SourceEncodingNoFallback;
+                return _utf8nonthrowing;
             }
         }
 
