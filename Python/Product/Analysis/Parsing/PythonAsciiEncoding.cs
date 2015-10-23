@@ -294,7 +294,7 @@ namespace Microsoft.PythonTools.Parsing {
         public override char GetNextChar() {
             if (_fallbackLen > 0) {
                 _fallbackLen--;
-                return '\uFFFD';
+                return '?';
             }
             return '\0';
         }
