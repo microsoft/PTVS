@@ -14,6 +14,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Text;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
@@ -338,6 +342,30 @@ string'''";
 
             SnapshotOutlineTest(content,
                 new ExpectedTag(7, 36, "\r\nis\r\na\r\nmultiline\r\nstring'''"));
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        public void EncodingDetectionAndFallback() {
+            var prefixes = new[] {
+                new byte[0],
+                new byte[] { 0xEF, 0xBB, 0xBF }
+            };
+            var contents = new[] {
+                Encoding.ASCII.GetBytes("# Not a C.O.D.I.N.G. comment"),
+                Encoding.ASCII.GetBytes("# coding: utf-8"),
+                Encoding.GetEncoding(1252).GetBytes("# coding: utf-8\n# \xA9"),
+                Encoding.GetEncoding(1252).GetBytes("# \xA9")
+            };
+
+            // We should never crash with the editor's encoding detector
+            var detector = new Microsoft.PythonTools.Project.PythonEncodingDetector();
+
+            foreach (var buffer in prefixes.SelectMany(p => contents.Select(c => p.Concat(c)))) {
+                var stream = new MemoryStream(buffer.ToArray());
+                var encoding = detector.GetStreamEncoding(stream);
+                stream.Seek(0, SeekOrigin.Begin);
+                Trace.TraceInformation(new StreamReader(stream, encoding).ReadToEnd());
+            }
         }
 
         private void SnapshotOutlineTest(string fileContents, params ExpectedTag[] expected) {
