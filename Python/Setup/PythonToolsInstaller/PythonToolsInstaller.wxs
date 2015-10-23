@@ -303,12 +303,12 @@
 
     <InstallExecuteSequence>
       <InstallExecute Before="DevEnvSetup_Rollback" />
-      <Custom Action="DevEnvSetup_Rollback" Before="DevEnvSetup" Overridable="yes">NOT SKIP_DEVENV_SETUP AND DEVENV_PATH</Custom>
-      <Custom Action="DevEnvSetup" Before="InstallFinalize" Overridable="yes">NOT SKIP_DEVENV_SETUP AND DEVENV_PATH</Custom>
-      <Custom Action="WDExpressSetup_Rollback" Before="WDExpressSetup" Overridable="yes">NOT SKIP_DEVENV_SETUP AND WDEXPRESS_PATH</Custom>
-      <Custom Action="WDExpressSetup" Before="InstallFinalize" Overridable="yes">NOT SKIP_DEVENV_SETUP AND WDEXPRESS_PATH</Custom>
-      <Custom Action="VWDExpressSetup_Rollback" Before="VWDExpressSetup" Overridable="yes">NOT SKIP_DEVENV_SETUP AND VWDEXPRESS_PATH</Custom>
-      <Custom Action="VWDExpressSetup" Before="InstallFinalize" Overridable="yes">NOT SKIP_DEVENV_SETUP AND VWDEXPRESS_PATH</Custom>
+      <Custom Action="DevEnvSetup_Rollback" Before="DevEnvSetup" Overridable="yes">NOT SKIP_DEVENV_SETUP AND NOT UPGRADINGPRODUCTCODE AND DEVENV_PATH</Custom>
+      <Custom Action="DevEnvSetup" Before="InstallFinalize" Overridable="yes">NOT SKIP_DEVENV_SETUP AND NOT UPGRADINGPRODUCTCODE AND DEVENV_PATH</Custom>
+      <Custom Action="WDExpressSetup_Rollback" Before="WDExpressSetup" Overridable="yes">NOT SKIP_DEVENV_SETUP AND NOT UPGRADINGPRODUCTCODE AND WDEXPRESS_PATH</Custom>
+      <Custom Action="WDExpressSetup" Before="InstallFinalize" Overridable="yes">NOT SKIP_DEVENV_SETUP AND NOT UPGRADINGPRODUCTCODE AND WDEXPRESS_PATH</Custom>
+      <Custom Action="VWDExpressSetup_Rollback" Before="VWDExpressSetup" Overridable="yes">NOT SKIP_DEVENV_SETUP AND NOT UPGRADINGPRODUCTCODE AND VWDEXPRESS_PATH</Custom>
+      <Custom Action="VWDExpressSetup" Before="InstallFinalize" Overridable="yes">NOT SKIP_DEVENV_SETUP AND NOT UPGRADINGPRODUCTCODE AND VWDEXPRESS_PATH</Custom>
     </InstallExecuteSequence>
     <InstallUISequence>
       <Show Dialog="CustomAdvancedWelcomeEulaDlg" Before="FindRelatedProducts">NOT Installed</Show>
