@@ -38,7 +38,7 @@ namespace PythonToolsTests {
             PythonTestData.Deploy();
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void AutosRangeCheck() {
             string code = @"
 a; b.\
@@ -49,12 +49,12 @@ len(i)";
             ProximityTest(code, 3, 4, "b.c.d[e]", "e", "abs(f.g)", "f.g");
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void AutosNames() {
             ProximityTest("a", "a");
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void AutosMembers() {
             string code = @"
 a.b.c
@@ -67,7 +67,7 @@ h(i.j).k
             ProximityTest(code, "a.b.c", "d", "d.e[0].f", "g", " (g + 1).e", "abs(f.g).e", "f.g", "i.j");
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void AutosIndexing() {
             string code = @"
 a[b.c[d.e], f:g].h[abs(i[j])].k[l(m[n])].o[p]
@@ -79,7 +79,7 @@ abs(q[r])[s]
                 "m[n]", "n", "p", "abs(q[r])[s]", "q[r]", "r", "s");
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void AutosCalls() {
             string code = @"
 abs(a, len(b))
@@ -89,7 +89,7 @@ e.f.g(h)
             ProximityTest(code, "abs(a,len(b))", "a", "len(b)", "b", "d", "e.f", "h");
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void AutosNoYield() {
             string code = @"
 a.b
@@ -99,7 +99,7 @@ a.b
             ProximityTest(code, "a.b", "c", "e");
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void AutosNoBackQuotes() {
             string code = @"
 a.b

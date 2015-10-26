@@ -47,23 +47,23 @@ namespace DjangoTests {
             Assert.AreEqual(value, values.Single().GetConstantValueAsString());
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void TestRender() {
             TestSingleRenderVariable("test_render.html");
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void TestRenderToResponse() {
             TestSingleRenderVariable("test_render_to_response.html");
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void TestRequestContext() {
             TestSingleRenderVariable("test_RequestContext.html");
             TestSingleRenderVariable("test_RequestContext2.html");
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void TestCustomFilter() {
             var proj = AnalyzerTest(TestData.GetPath("TestData\\DjangoAnalysisTestApp"));
 
@@ -88,7 +88,7 @@ namespace DjangoTests {
             );
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void TestCustomTag() {
             var proj = AnalyzerTest(TestData.GetPath("TestData\\DjangoAnalysisTestApp"));
 
@@ -117,7 +117,7 @@ namespace DjangoTests {
             );
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void TestListView() {
             var proj = AnalyzerTest(TestData.GetPath("TestData\\DjangoAnalysisTestApp"));
             var templates = TestData.GetPath("TestData\\DjangoAnalysisTestApp\\myapp\\templates\\myapp\\");
@@ -127,7 +127,7 @@ namespace DjangoTests {
             AssertUtil.ContainsExactly(detailsVars.Keys, "latest_poll_list");
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void TestDetailsView() {
             var proj = AnalyzerTest(TestData.GetPath("TestData\\DjangoAnalysisTestApp"));
             var templates = TestData.GetPath("TestData\\DjangoAnalysisTestApp\\myapp\\templates\\myapp\\");

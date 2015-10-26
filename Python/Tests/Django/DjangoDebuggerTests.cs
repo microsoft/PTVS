@@ -38,9 +38,6 @@ namespace DjangoTests {
 
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
-            AssertListener.Initialize();
-            PythonTestData.Deploy();
-            
             var dbFile = Path.Combine(Environment.GetEnvironmentVariable("LOCALAPPDATA"), "DjangoProjectDatabase.db");
             if (File.Exists(dbFile)) {
                 File.Delete(dbFile);
@@ -57,7 +54,7 @@ namespace DjangoTests {
                 switch (requiredState) {
                     case DbState.OarApp:
                         using (var output = ProcessOutput.Run(Version.InterpreterPath,
-                            new [] {"manage.py", "syncdb", "--noinput"},
+                            new [] {"manage.py", "migrate"},
                             DebuggerTestPath,
                             null, false, null)) {
                             output.Wait();
@@ -91,7 +88,7 @@ namespace DjangoTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TemplateStepping() {
             Init(DbState.OarApp);
 
@@ -152,7 +149,8 @@ namespace DjangoTests {
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
+        [TestCategory("10s")]
         public void BreakInTemplate() {
             Init(DbState.OarApp);
 
@@ -174,7 +172,7 @@ namespace DjangoTests {
             }.Run();
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TemplateLocals() {
             Init(DbState.OarApp);
 

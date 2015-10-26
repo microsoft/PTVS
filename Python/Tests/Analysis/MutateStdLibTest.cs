@@ -28,7 +28,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(1)]
         public void TestMutateStdLib() {
             Version.AssertInstalled();
 

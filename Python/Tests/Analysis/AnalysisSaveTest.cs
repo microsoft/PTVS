@@ -37,7 +37,7 @@ namespace AnalysisTests {
             PythonTestData.Deploy(includeTestData: false);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void General() {
             string code = @"def f(a, *b, **c): pass
 
@@ -130,7 +130,7 @@ Aliased = test.Aliased
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void OverloadDocString() {
             string code = @"
 class FunctionNoRetType(object):
@@ -183,7 +183,7 @@ Overloaded = test.Overloaded
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void Inheritance() {
             string code = @"
 class WithInstanceMembers(object):
@@ -231,7 +231,7 @@ MultipleInheritance = test.MultipleInheritance
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void MultiplyDefinedClasses() {
             string code = @"
 class MultiplyDefinedClass(object): pass
@@ -260,7 +260,7 @@ ReturningMultiplyDefinedClass = test.ReturningMultiplyDefinedClass
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void RecursionClasses() {
             string code = @"
 class C(object): pass
@@ -271,7 +271,7 @@ C.abc = C
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void RecursionSequenceClasses() {
             string code = @"
 C = []
@@ -286,7 +286,7 @@ C = test.C";
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void ModuleRef() {
             string fob = @"
 import oar
@@ -306,7 +306,7 @@ abc = fob.x
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void CrossModuleTypeRef() {
             string fob = @"
 class Fob(object):
@@ -338,7 +338,7 @@ baz_Fob = baz.Fob
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void FunctionOverloads() {
             string code = @"
 def f(a, b):
@@ -355,7 +355,7 @@ f([1, 2], 3)
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void StandaloneMethods() {
             string code = @"
 class A(object):
@@ -388,7 +388,7 @@ inst_f = A().f
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void DefaultParameters() {
             var code = @"
 def f(x = None): pass
@@ -431,7 +431,7 @@ def m(x = math.atan2(1, 0)): pass
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void ChildModuleThroughSysModules() {
             var code = @"# This is what the os module does
 
@@ -466,7 +466,7 @@ sys.modules['test.imported'] = test_import_2
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void SpecializedCallableWithNoOriginal() {
             string code = @"
 import unittest

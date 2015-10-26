@@ -18,7 +18,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace AnalysisTests {
     [TestClass]
     public class ModulePathTests {
-        [TestMethod]
+        [TestMethod, Priority(1)]
         public void ModuleName() {
             foreach (var test in new[] {
                 new { FullName = "abc", Name = "abc", ModuleName = "abc", IsSpecialName = false },
@@ -33,7 +33,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(1)]
         public void ModuleIsCompiled() {
             foreach (var test in new[] {
                 new { SourceFile = "abc.py", IsCompiled = false, IsNative = false },
@@ -50,7 +50,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(1)]
         public void IsPythonFile() {
             foreach (var test in new[] {
                 new { SourceFile = @"spam\abc.py", ExpectedStrict = true, ExpectedNoStrict = true },

@@ -95,7 +95,8 @@ namespace AzurePublishingUITests {
 
         const int BottlePublishTimeout = 30 * 60 * 1000;
 
-        [TestMethod, Priority(0), TestCategory("Core"), Timeout(BottlePublishTimeout)]
+        [TestMethod, Priority(1), Timeout(BottlePublishTimeout)]
+        [TestCategory("10s"), TestCategory("60s"), TestCategory("Installed"), TestCategory("Interactive")]
         [HostType("VSTestHost")]
         public void BottlePublish() {
             TestPublishToWebRole(
@@ -110,7 +111,8 @@ namespace AzurePublishingUITests {
 
         const int FlaskPublishTimeout = 30 * 60 * 1000;
 
-        [TestMethod, Priority(0), TestCategory("Core"), Timeout(FlaskPublishTimeout)]
+        [TestMethod, Priority(1), Timeout(FlaskPublishTimeout)]
+        [TestCategory("10s"), TestCategory("60s"), TestCategory("Installed"), TestCategory("Interactive")]
         [HostType("VSTestHost")]
         public void FlaskPublish() {
             TestPublishToWebRole(
@@ -125,7 +127,8 @@ namespace AzurePublishingUITests {
 
         const int DjangoPublishTimeout = 30 * 60 * 1000;
 
-        [TestMethod, Priority(0), TestCategory("Core"), Timeout(DjangoPublishTimeout)]
+        [TestMethod, Priority(1), Timeout(DjangoPublishTimeout)]
+        [TestCategory("10s"), TestCategory("60s"), TestCategory("Installed"), TestCategory("Interactive")]
         [HostType("VSTestHost")]
         public void DjangoPublish() {
             TestPublishToWebRole(

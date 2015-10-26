@@ -96,8 +96,8 @@ namespace PythonToolsUITests {
             return WaitForFiles(dir);
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestPublishFiles() {
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\HelloWorld.sln");
@@ -122,8 +122,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestPublishReadOnlyFiles() {
             var sourceFile = TestData.GetPath(@"TestData\HelloWorld\Program.py");
             Assert.IsTrue(File.Exists(sourceFile), sourceFile + " not found");
@@ -157,8 +157,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestPublishFilesControlled() {
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\PublishTest.sln");
@@ -187,8 +187,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestPublishFilesImpersonate() {
             WNetCancelConnection2(TestSharePrivate, 0, true);
             using (var app = new VisualStudioApp()) {
@@ -259,8 +259,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestPublishFilesImpersonateNoMachineName() {
             WNetCancelConnection2(TestSharePrivate, 0, true);
             using (var app = new VisualStudioApp()) {
@@ -294,8 +294,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestPublishFilesImpersonateWrongCredentials() {
             WNetCancelConnection2(TestSharePrivate, 0, true);
             using (var app = new VisualStudioApp()) {
@@ -333,8 +333,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestPublishFilesImpersonateCancelCredentials() {
             WNetCancelConnection2(TestSharePrivate, 0, true);
             using (var app = new VisualStudioApp()) {
@@ -373,8 +373,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestPublishFtp() {
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\HelloWorld.sln");
@@ -406,8 +406,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestPublishVirtualEnvironment() {
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\VirtualEnv.sln");

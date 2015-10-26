@@ -39,8 +39,8 @@ namespace DebuggerUITests {
             PythonTestData.Deploy();
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestAttachBasic() {
 
             string debugSolution = TestData.GetPath(@"TestData\DebugAttach\DebugAttach.sln");
@@ -61,8 +61,8 @@ namespace DebuggerUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestAttachBreakImmediately() {
 
             string debugSolution = TestData.GetPath(@"TestData\DebugAttach\DebugAttach.sln");
@@ -85,8 +85,8 @@ namespace DebuggerUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestAttachUserSetsBreakpoint() {
 
             string debugSolution = TestData.GetPath(@"TestData\DebugAttach\DebugAttach.sln");
@@ -110,8 +110,8 @@ namespace DebuggerUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestAttachThreadsBreakAllAndSetExitFlag() {
             string debugSolution = TestData.GetPath(@"TestData\DebugAttach\DebugAttach.sln");
             string startFile = "fg.py";
@@ -144,8 +144,8 @@ namespace DebuggerUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestAttachThreadsBreakOneAndSetExitFlag() {
             string debugSolution = TestData.GetPath(@"TestData\DebugAttach\DebugAttach.sln");
             string startFile = "fg.py";
@@ -180,8 +180,8 @@ namespace DebuggerUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestAttachLotsOfThreads() {
             string debugSolution = TestData.GetPath(@"TestData\DebugAttach\DebugAttach.sln");
             string startFile = "LotsOfThreads.py";

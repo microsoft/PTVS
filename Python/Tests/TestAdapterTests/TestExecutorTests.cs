@@ -33,7 +33,7 @@ namespace TestAdapterTests {
             PythonTestData.Deploy();
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void FromCommandLineArgsRaceCondition() {
             // https://pytools.codeplex.com/workitem/1429
 
@@ -57,7 +57,8 @@ namespace TestAdapterTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
+        [TestCategory("10s")]
         public void TestRun() {
             PythonPaths.Python27_x64.AssertInstalled();
             PythonPaths.Python33_x64.AssertInstalled();
@@ -79,7 +80,8 @@ namespace TestAdapterTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
+        [TestCategory("10s")]
         public void TestRunAll() {
             PythonPaths.Python27_x64.AssertInstalled();
             PythonPaths.Python33_x64.AssertInstalled();
@@ -100,7 +102,7 @@ namespace TestAdapterTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestCancel() {
             PythonPaths.Python27_x64.AssertInstalled();
             PythonPaths.Python33_x64.AssertInstalled();
@@ -137,7 +139,8 @@ namespace TestAdapterTests {
             Assert.IsTrue(recorder.Results.Count < expectedTests.Length);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
+        [TestCategory("10s")]
         public void TestMultiprocessing() {
             var executor = new TestExecutor();
             var recorder = new MockTestExecutionRecorder();
@@ -156,7 +159,8 @@ namespace TestAdapterTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
+        [TestCategory("10s")]
         public void TestEnvironment() {
             var executor = new TestExecutor();
             var recorder = new MockTestExecutionRecorder();
@@ -175,7 +179,8 @@ namespace TestAdapterTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
+        [TestCategory("10s")]
         public void TestExtensionReference() {
             PythonPaths.Python27.AssertInstalled();
 

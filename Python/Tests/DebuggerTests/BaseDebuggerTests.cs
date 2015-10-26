@@ -22,9 +22,15 @@ using System.Threading.Tasks;
 using Microsoft.PythonTools.Debugger;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
+using TestUtilities.Python;
 
 namespace DebuggerTests {
     public class BaseDebuggerTests {
+        static BaseDebuggerTests() {
+            AssertListener.Initialize();
+            PythonTestData.Deploy();
+        }
+
         protected const int DefaultWaitForExitTimeout = 20000;
 
         internal virtual string DebuggerTestPath {

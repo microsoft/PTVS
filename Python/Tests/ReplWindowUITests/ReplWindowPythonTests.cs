@@ -35,8 +35,8 @@ namespace ReplWindowUITests {
     /// </summary>
     [TestClass, Ignore]
     public abstract class ReplWindowPythonTests : ReplWindowPythonSmokeTests {
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void RegressionImportSysBackspace() {
             using (var interactive = Prepare()) {
                 const string importCode = ">import sys";
@@ -56,8 +56,8 @@ namespace ReplWindowUITests {
             }
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void RegressionImportMultipleModules() {
             using (var interactive = Prepare(addNewLineAtEndOfFullyTypedWord: true)) {
                 Keyboard.Type("import ");
@@ -75,8 +75,8 @@ namespace ReplWindowUITests {
         /// Type "raise Exception()", hit enter, raise Exception() should have
         /// appropriate syntax color highlighting.
         /// </summary>
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void SyntaxHighlightingRaiseException() {
             using (var interactive = Prepare())
             using (var newClassifications = new AutoResetEvent(false)) {
@@ -116,8 +116,8 @@ namespace ReplWindowUITests {
         /// also outputs, make sure the auto indent is gone before we do the
         /// input. (regression for http://pytools.codeplex.com/workitem/92)
         /// </summary>
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void PrintWithParens() {
             using (var interactive = Prepare()) {
                 const string inputCode = ">print ('a',";
@@ -139,8 +139,8 @@ namespace ReplWindowUITests {
         /// Make sure that we can successfully delete an autoindent inputted span
         /// (regression for http://pytools.codeplex.com/workitem/93)
         /// </summary>
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void UndeletableIndent() {
             using (var interactive = Prepare()) {
                 const string inputCode = ">print (('a',";
@@ -159,8 +159,8 @@ namespace ReplWindowUITests {
             }
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void InlineImage() {
             using (var interactive = Prepare()) {
                 interactive.SubmitCode(@"import sys
@@ -221,8 +221,8 @@ repl is not None");
             }
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void ImportCompletions() {
             using (var interactive = Prepare()) {
                 if (((PythonReplWindowProxySettings)interactive.Settings).Version.IsIronPython) {
@@ -250,8 +250,8 @@ repl is not None");
             }
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void Comments() {
             using (var interactive = Prepare()) {
                 const string code = "# fob";
@@ -269,8 +269,8 @@ repl is not None");
             }
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void NoSnippets() {
             // https://pytools.codeplex.com/workitem/2945 is the reason for
             // disabling snippets; https://pytools.codeplex.com/workitem/2947 is

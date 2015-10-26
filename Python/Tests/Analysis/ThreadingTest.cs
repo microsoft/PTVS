@@ -38,7 +38,7 @@ namespace AnalysisTests {
         }
 
 
-        [TestMethod]
+        [TestMethod, Priority(1)]
         public void CrossThreadAnalysisCalls() {
             var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
 

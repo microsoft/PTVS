@@ -34,8 +34,8 @@ namespace ReplWindowUITests {
             return Prepare(useIPython: true, addNewLineAtEndOfFullyTypedWord: addNewLineAtEndOfFullyTypedWord);
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void IPythonMode() {
             using (var interactive = PrepareIPython()) {
                 interactive.SubmitCode("x = 42\n?x");
@@ -49,8 +49,8 @@ namespace ReplWindowUITests {
             }
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void IPythonCtrlBreakAborts() {
             using (var interactive = PrepareIPython()) {
                 var code = "while True: pass";
@@ -72,8 +72,8 @@ namespace ReplWindowUITests {
             }
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void IPythonSimpleCompletion() {
             using (var interactive = PrepareIPython(addNewLineAtEndOfFullyTypedWord: false)) {
                 interactive.SubmitCode("x = 42");
@@ -99,8 +99,8 @@ namespace ReplWindowUITests {
             }
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void IPythonSimpleSignatureHelp() {
             using (var interactive = PrepareIPython()) {
                 Assert.IsNotNull(interactive);
@@ -116,8 +116,8 @@ namespace ReplWindowUITests {
             }
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void IPythonInlineGraph() {
             using (var interactive = PrepareIPython()) {
                 interactive.SubmitCode(@"from pylab import *
@@ -137,8 +137,8 @@ plot(x, x)");
             }
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void IPythonStartInInteractive() {
             using (var interactive = PrepareIPython())
             using (new DefaultInterpreterSetter(interactive.Window.TextView.GetAnalyzer(interactive.App.ServiceProvider).InterpreterFactory)) {
@@ -149,8 +149,8 @@ plot(x, x)");
             }
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void ExecuteInIPythonReplSysArgv() {
             using (var interactive = PrepareIPython())
             using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer(interactive.App.ServiceProvider).InterpreterFactory)) {
@@ -161,8 +161,8 @@ plot(x, x)");
             }
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void ExecuteInIPythonReplSysArgvScriptArgs() {
             using (var interactive = PrepareIPython())
             using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer(interactive.App.ServiceProvider).InterpreterFactory)) {

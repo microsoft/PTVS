@@ -66,7 +66,8 @@ namespace FastCgiTest {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
+        [TestCategory("10s")]
         public void DjangoHelloWorld() {
             using (var site = ConfigureIISForDjango(AppCmdPath, InterpreterPath, "DjangoTestApp.settings")) {
                 site.StartServer();
@@ -82,7 +83,7 @@ namespace FastCgiTest {
         }
         /*
          * Currently disabled, we need to unify this w/ where web.config lives in Azure first 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void ConfigVariables() {
             using (var site = ConfigureIISForDjango(AppCmdPath, InterpreterPath, "DjangoTestApp.settings")) {
                 File.Copy("TestData\\DjangoTestApp\\web.config", Path.Combine(site.SiteDir, "web.config"));
@@ -101,7 +102,7 @@ namespace FastCgiTest {
             }
         }*/
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void LargeResponse() {
             using (var site = ConfigureIISForDjango(AppCmdPath, InterpreterPath, "DjangoTestApp.settings")) {
                 site.StartServer();
@@ -125,7 +126,8 @@ namespace FastCgiTest {
         }
 
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
+        [TestCategory("10s")]
         public void DjangoHelloWorldParallel() {
             using (var site = ConfigureIISForDjango(AppCmdPath, InterpreterPath, "DjangoTestApp.settings")) {
                 site.StartServer();
@@ -154,7 +156,7 @@ namespace FastCgiTest {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void CustomHandler() {
             using (var site = ConfigureIISForCustomHandler(AppCmdPath, InterpreterPath, "custom_handler.handler")) {
                 site.StartServer();
@@ -168,7 +170,7 @@ namespace FastCgiTest {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void CustomCallableHandler() {
             using (var site = ConfigureIISForCustomHandler(AppCmdPath, InterpreterPath, "custom_handler.callable_handler()")) {
                 site.StartServer();
@@ -180,7 +182,7 @@ namespace FastCgiTest {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void ErrorHandler() {
             using (var site = ConfigureIISForCustomHandler(AppCmdPath, InterpreterPath, "custom_handler.error_handler")) {
                 site.StartServer();
@@ -433,7 +435,7 @@ namespace FastCgiTest {
 
         #region Test Cases
 
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void TestDjangoNewApp() {
             EnsureDjango();
             IisExpressTest(
@@ -442,7 +444,7 @@ namespace FastCgiTest {
             );
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void TestDjangoNewAppUrlRewrite() {
             EnsureDjango();
             IisExpressTest(
@@ -451,7 +453,7 @@ namespace FastCgiTest {
             );
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void TestHelloWorld() {
             IisExpressTest(
                 "TestData\\WFastCgi\\HelloWorld",
@@ -459,7 +461,7 @@ namespace FastCgiTest {
             );
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void TestHelloWorldCallable() {
             IisExpressTest(
                 "TestData\\WFastCgi\\HelloWorldCallable",
@@ -470,7 +472,7 @@ namespace FastCgiTest {
         /// <summary>
         /// Handler doesn't exist in imported module
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void TestBadHandler() {
             IisExpressTest(
                 "TestData\\WFastCgi\\BadHandler",
@@ -481,7 +483,7 @@ namespace FastCgiTest {
         /// <summary>
         /// WSGI_HANDLER module doesn't exist
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void TestBadHandler2() {
             IisExpressTest(
                 "TestData\\WFastCgi\\BadHandler2",
@@ -492,7 +494,7 @@ namespace FastCgiTest {
         /// <summary>
         /// WSGI_HANDLER raises an exceptoin during import
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void TestBadHandler3() {
             IisExpressTest(
                 "TestData\\WFastCgi\\BadHandler3",
@@ -503,7 +505,7 @@ namespace FastCgiTest {
         /// <summary>
         /// WSGI_HANDLER is just set to modulename
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void TestBadHandler4() {
             IisExpressTest(
                 "TestData\\WFastCgi\\BadHandler4",
@@ -514,7 +516,7 @@ namespace FastCgiTest {
         /// <summary>
         /// WSGI_HANDLER env var isn't set at all
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void TestBadHandler5() {
             IisExpressTest(
                 "TestData\\WFastCgi\\BadHandler5",
@@ -525,7 +527,7 @@ namespace FastCgiTest {
         /// <summary>
         /// WSGI_HANDLER points to object of NoneType
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void TestBadHandler6() {
             IisExpressTest(
                 "TestData\\WFastCgi\\BadHandler6",
@@ -536,7 +538,7 @@ namespace FastCgiTest {
         /// <summary>
         /// WSGI_HANDLER writes to std err and std out, and raises.
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void TestBadHandler7() {
             IisExpressTest(
                 "TestData\\WFastCgi\\BadHandler7",
@@ -550,7 +552,7 @@ namespace FastCgiTest {
         /// <summary>
         /// Validates environment dict passed to handler
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void TestEnvironment() {
             IisExpressTest(
                 "TestData\\WFastCgi\\Environment",
@@ -564,7 +566,8 @@ namespace FastCgiTest {
         /// <summary>
         /// Validates wfastcgi exits when changes to .py or .config files are detected
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
+        [TestCategory("10s")]
         public void TestFileSystemChanges() {
             var location = TestData.GetTempPath(randomSubPath: true);
             FileUtils.CopyDirectory(TestData.GetPath(@"TestData\WFastCgi\FileSystemChanges"), location);
@@ -593,7 +596,7 @@ namespace FastCgiTest {
         /// <summary>
         /// Validates wfastcgi exits when changes to .py files in a subdirectory are detected
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void TestFileSystemChangesPackage() {
             var location = TestData.GetTempPath(randomSubPath: true);
             FileUtils.CopyDirectory(TestData.GetPath(@"TestData\WFastCgi\FileSystemChangesPackage"), location);
@@ -617,7 +620,7 @@ namespace FastCgiTest {
         /// <summary>
         /// Validates wfastcgi exits when changes to a file pattern specified in web.config changes.
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void TestFileSystemChangesCustomRegex() {
             var location = TestData.GetTempPath(randomSubPath: true);
             FileUtils.CopyDirectory(TestData.GetPath(@"TestData\WFastCgi\FileSystemChangesCustomRegex"), location);
@@ -639,7 +642,7 @@ namespace FastCgiTest {
         /// <summary>
         /// Validates wfastcgi doesn't exit when file system change checks are disabled.
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void TestFileSystemChangesDisabled() {
             var location = TestData.GetTempPath(randomSubPath: true);
             FileUtils.CopyDirectory(TestData.GetPath(@"TestData\WFastCgi\FileSystemChangesDisabled"), location);
@@ -663,7 +666,7 @@ namespace FastCgiTest {
         /// <summary>
         /// Validates that we can setup IIS to serve static files properly
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void TestStaticFiles() {
             EnsureDjango();
             IisExpressTest(
@@ -680,7 +683,7 @@ namespace FastCgiTest {
         /// <summary>
         /// Validates that we can setup IIS to serve static files properly
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void TestStaticFilesUrlRewrite() {
             EnsureDjango();
             IisExpressTest(
@@ -697,7 +700,7 @@ namespace FastCgiTest {
         /// <summary>
         /// Validates environment dict passed to handler using URL rewriting
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void TestEnvironmentUrlRewrite() {
             IisExpressTest(
                 "TestData\\WFastCgi\\EnvironmentUrlRewrite",
@@ -711,7 +714,7 @@ namespace FastCgiTest {
         /// <summary>
         /// Tests that we send portions of the response as they are given to us.
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void TestStreamingHandler() {
             int partCount = 0;
             IisExpressTest(
@@ -738,7 +741,7 @@ namespace FastCgiTest {
         /// <summary>
         /// Tests that we send portions of the response as they are given to us.
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void TestDjangoQueryString() {
             EnsureDjango();
             IisExpressTest(
@@ -753,7 +756,7 @@ namespace FastCgiTest {
         /// <summary>
         /// Tests that we can post values to Django and it gets them 
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void TestDjangoPost() {
             EnsureDjango();
             IisExpressTest(
@@ -770,7 +773,7 @@ namespace FastCgiTest {
         /// <summary>
         /// Tests that we send portions of the response as they are given to us.
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void TestDjangoPath() {
             EnsureDjango();
             IisExpressTest(
@@ -785,7 +788,7 @@ namespace FastCgiTest {
         /// <summary>
         /// Tests that we send portions of the response as they are given to us.
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void TestDjangoQueryStringUrlRewrite() {
             EnsureDjango();
             IisExpressTest(
@@ -800,7 +803,7 @@ namespace FastCgiTest {
         /// <summary>
         /// Tests that we can post values to Django and it gets them when using URL rewriting
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void TestDjangoPostUrlRewrite() {
             EnsureDjango();
             IisExpressTest(
@@ -817,7 +820,7 @@ namespace FastCgiTest {
         /// <summary>
         /// Tests that we send portions of the response as they are given to us.
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void TestDjangoPathUrlRewrite() {
             EnsureDjango();
             IisExpressTest(
@@ -832,7 +835,7 @@ namespace FastCgiTest {
         /// <summary>
         /// Tests expand path
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void TestExpandPathEnvironmentVariables() {
             IisExpressTest(
                 null,
@@ -845,7 +848,7 @@ namespace FastCgiTest {
             );
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void TestBadHeaders1() {
             IisExpressTest(
                 "TestData\\WFastCgi\\BadHeaders",
@@ -856,7 +859,7 @@ namespace FastCgiTest {
             );
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void TestBadHeaders2() {
             IisExpressTest(
                 "TestData\\WFastCgi\\BadHeaders",
@@ -867,7 +870,7 @@ namespace FastCgiTest {
             );
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void TestBadHeaders3() {
             IisExpressTest(
                 "TestData\\WFastCgi\\BadHeaders",
@@ -878,7 +881,7 @@ namespace FastCgiTest {
             );
         }
         
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void TestBadHeaders4() {
             IisExpressTest(
                 "TestData\\WFastCgi\\BadHeaders",

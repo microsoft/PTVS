@@ -28,7 +28,7 @@ namespace DjangoTests {
     public class DjangoTemplateParserTests {
         #region Filter parser tests
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void FilterRegexTests() {
             var testCases = new[] { 
                 new { Got = ("100"), Expected = DjangoVariable.Number("100", 0) },
@@ -102,7 +102,7 @@ namespace DjangoTests {
 
         #region Block parser tests
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void BlockParserTests() {
             var testCases = new[] { 
                 new { 
@@ -479,7 +479,7 @@ namespace DjangoTests {
 
         #region Template tokenizer tests
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestSimpleVariable() {
             var code = @"<html>
 <head><title></title></head>
@@ -499,7 +499,7 @@ namespace DjangoTests {
 
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestEmbeddedWrongClose() {
             var code = @"<html>
 <head><title></title></head>
@@ -518,7 +518,7 @@ namespace DjangoTests {
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void SingleTrailingChar() {
             foreach (var code in new[] { "{{fob}}\n", "{{fob}}a" }) {
                 TokenizerTest(code,
@@ -543,7 +543,7 @@ namespace DjangoTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestSimpleBlock() {
             var code = @"<html>
 <head><title></title></head>
@@ -563,7 +563,7 @@ namespace DjangoTests {
         }
 
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestSimpleComment() {
             var code = @"<html>
 <head><title></title></head>
@@ -582,7 +582,7 @@ namespace DjangoTests {
 
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestUnclosedVariable() {
             var code = @"<html>
 <head><title></title></head>
@@ -601,7 +601,7 @@ namespace DjangoTests {
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestTextStartAndEnd() {
             var code = @"<html>
 <head><title></title></head>
@@ -628,7 +628,7 @@ namespace DjangoTests {
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestUnclosedComment() {
             var code = @"<html>
 <head><title></title></head>
@@ -647,7 +647,7 @@ namespace DjangoTests {
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestUnclosedBlock() {
             var code = @"<html>
 <head><title></title></head>

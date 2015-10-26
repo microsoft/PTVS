@@ -34,7 +34,7 @@ namespace PythonToolsTests {
         #region Test Cases
 
         #region Outlining Regions
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void OutlineRegions() {
             string content = @"print('Hello World')
 #region
@@ -57,7 +57,7 @@ class someClass:
                 new ExpectedTag(160, 269, "\r\nclass someClass:\r\n    def this( self ):\r\n        return self._hidden_variable * 2\r\n#    endregion someClass"));
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void OutlineUnbalancedRegions() {
             string content = @"#region
 #endregion
@@ -73,7 +73,7 @@ class someClass:
 
         #region Outline Compound Statements
 
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void OutlineIf() {
             string content = @"if param:
     print('hello')
@@ -103,7 +103,7 @@ if param and \
                 new ExpectedTag(223, 291, "\r\n    param:\r\n    print('hello')\r\n    print('world')\r\n    print('!')"));
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void OutlineWhile() {
             string content = @"while b and c and d \
     and e \
@@ -114,7 +114,7 @@ if param and \
                new ExpectedTag(21, 66, "\r\n    and e \\\r\n    and f:\r\n    print('hello')"));
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void OutlineFor() {
             string content = @"for x in [ 
     1,
@@ -140,7 +140,7 @@ for x in [1,2,3,4]:
                 new ExpectedTag(158, 215, "\r\n    print('for2')\r\n    print('for2')\r\n    print('for2')"));
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void OutlineTry() {
             string content = @"
 try: 
@@ -176,7 +176,7 @@ finally:
                 new ExpectedTag(333, 379, "\r\n    print('finally2')\r\n    print('finally2')"));
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void OutlineWith() {
             string content = @"with open('file.txt') as f:
     line = f.readline()
@@ -186,7 +186,7 @@ finally:
                 new ExpectedTag(27, 69, "\r\n    line = f.readline()\r\n    print(line)"));
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void OutlineFuncDef() {
             string content = @"@decorator_stmt_made_up
 def f():
@@ -202,7 +202,7 @@ def f():
                 new ExpectedTag(64, 134, "\r\n          b, \r\n          c):\r\n        print('g')\r\n        print('g')"));
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void OutlineClassDef() {
             string content = @"class SomeClass:
     def this( self ):
@@ -212,7 +212,7 @@ def f():
                 new ExpectedTag(16, 60, "\r\n    def this( self ):\r\n        return self"));
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void OutlineDecorated() {
             string content = @"
 @decorator_stmt(a,
@@ -227,7 +227,7 @@ def f():
 
         #region Outlining Statements
 
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void OutlineLists() {
             string content = @"a = [1,
      2,
@@ -249,7 +249,7 @@ def f():
                 new ExpectedTag(45, 104, "\r\n         3,\r\n         5, 6, 7,\r\n         9,\r\n         10]"));
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void OutlineTuple() {
             string content = @"( 'value1', 
   'value2',
@@ -259,7 +259,7 @@ def f():
                 new ExpectedTag(12, 38, "\r\n  'value2',\r\n  'value3')"));
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void OutlineDictionary() {
             string content = @"dict = {""hello"":""world"",
         ""hello"":""world"",""hello"":[1,
@@ -285,7 +285,7 @@ def f():
                 new ExpectedTag(195, 282, "\r\n                  \"tuple2\",\r\n                  \"tuple3\",\r\n                  \"tuple4\")"));
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void OutlineParenthesesExpression() {
             string content = @"
 (   'abc'
@@ -298,7 +298,7 @@ def f():
                 new ExpectedTag(11, 48, "\r\n    'def'\r\n    'qrt'\r\n    'quox'\r\n)"));
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void OutlineCallExpression() {
             string content = @"function_call(arg1,
               arg2,
@@ -308,7 +308,7 @@ def f():
                 new ExpectedTag(19, 61, "\r\n              arg2,\r\n              arg3)"));
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void OutlineFromImportStatement() {
             string content = @"from sys \
 import argv \
@@ -318,7 +318,7 @@ as c";
                 new ExpectedTag(10, 31, "\r\nimport argv \\\r\nas c"));
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void OutlineSetExpression() {
             string content = @"{1,
  2,
@@ -328,7 +328,7 @@ as c";
                 new ExpectedTag(3, 13, "\r\n 2,\r\n 3}"));
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void OutlineConstantExpression() {
             string content = @"'''this
 is

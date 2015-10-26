@@ -36,7 +36,7 @@ namespace PythonToolsTests {
             PythonTestData.Deploy();
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestCodeFormattingSelection() {
             var input = @"print('Hello World')
 
@@ -74,7 +74,7 @@ class Oar(object):
             CodeFormattingTest(input, selection, expected, "    def say_hello .. method_end", options);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestCodeFormattingEndOfFile() {
             var input = @"print('Hello World')
 
@@ -98,7 +98,7 @@ class Oar(object):
             CodeFormattingTest(input, new Span(input.Length, 0), input, null, options);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestCodeFormattingInMethodExpression() {
             var input = @"print('Hello World')
 
@@ -122,7 +122,7 @@ class Oar(object):
             CodeFormattingTest(input, "method_end", input, null, options);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestCodeFormattingStartOfMethodSelection() {
             var input = @"print('Hello World')
 
@@ -160,7 +160,7 @@ class Oar(object):
             CodeFormattingTest(input, selection, expected, "    def say_hello .. method_end", options);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void FormatDocument() {
             var input = @"fob('Hello World')";
             var expected = @"fob( 'Hello World' )";

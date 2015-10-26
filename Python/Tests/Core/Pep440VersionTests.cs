@@ -79,7 +79,7 @@ v1.0rc1 == 1.0rc1 == 1.0c1 == 1.0_pre1 == 1.0preview-1
 1!1.0 == 01!1.0
 ".Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
 
-        [TestMethod]
+        [TestMethod, Priority(1)]
         public void VersionParsing() {
             foreach (var s in ExampleVersions) {
                 Pep440Version ver;
@@ -88,7 +88,7 @@ v1.0rc1 == 1.0rc1 == 1.0c1 == 1.0_pre1 == 1.0preview-1
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(1)]
         public void VersionOrdering() {
             var versions = ExampleVersions.Select(Pep440Version.Parse).ToList();
             var rnd = new Random();
@@ -109,7 +109,7 @@ v1.0rc1 == 1.0rc1 == 1.0c1 == 1.0_pre1 == 1.0preview-1
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(1)]
         public void VersionNormalization() {
             foreach (var line in ExampleNormalizedVersions) {
                 var versions = line.Split(new[] { "==" }, StringSplitOptions.RemoveEmptyEntries)
@@ -123,7 +123,7 @@ v1.0rc1 == 1.0rc1 == 1.0c1 == 1.0_pre1 == 1.0preview-1
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(1)]
         public void LocalVersionEquality() {
             // Numeric sections of local versions are compared (but not
             // normalized!) as integers.

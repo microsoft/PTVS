@@ -31,7 +31,7 @@ namespace PythonToolsTests {
             PythonTestData.Deploy();
         }
         
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void FactoryProvider() {
             var provider = InterpFactory;
             var factories = provider.GetInterpreterFactories().ToArray();
@@ -51,7 +51,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void DiscoverRegistryRace() {
             // https://github.com/Microsoft/PTVS/issues/558
 

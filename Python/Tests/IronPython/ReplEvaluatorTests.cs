@@ -53,7 +53,7 @@ namespace IronPythonTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void IronPythonModuleName() {
             var replEval = new PythonReplEvaluator(IronPythonInterpreter, PythonToolsTestUtilities.CreateMockServiceProvider(), new ReplTestReplOptions());
             var replWindow = new MockReplWindow(replEval);
@@ -66,7 +66,7 @@ namespace IronPythonTests {
             replWindow.ClearScreen();
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void IronPythonSignatures() {
             var replEval = new PythonReplEvaluator(IronPythonInterpreter, PythonToolsTestUtilities.CreateMockServiceProvider(), new ReplTestReplOptions());
             var replWindow = new MockReplWindow(replEval);
@@ -84,7 +84,7 @@ namespace IronPythonTests {
             Assert.AreEqual("Array[int](: int)\r\n", sigs[0].Documentation);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void IronPythonCommentInput() {
             // http://pytools.codeplex.com/workitem/649
             var replEval = new PythonReplEvaluator(IronPythonInterpreter, PythonToolsTestUtilities.CreateMockServiceProvider(), new ReplTestReplOptions());
@@ -95,7 +95,7 @@ namespace IronPythonTests {
             Assert.IsTrue(execute.Result.IsSuccessful);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void ConsoleWriteLineTest() {
             // http://pytools.codeplex.com/workitem/649
             var replEval = new PythonReplEvaluator(IronPythonInterpreter, PythonToolsTestUtilities.CreateMockServiceProvider(), new ReplTestReplOptions());
@@ -121,7 +121,7 @@ namespace IronPythonTests {
             Assert.AreEqual(replWindow.Output, "42");
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void GenericMethodCompletions() {
             // http://pytools.codeplex.com/workitem/661
             var fact = IronPythonInterpreter;
@@ -157,7 +157,7 @@ namespace IronPythonTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void NoTraceFunction() {
             // http://pytools.codeplex.com/workitem/662
             var replEval = new PythonReplEvaluator(IronPythonInterpreter, PythonToolsTestUtilities.CreateMockServiceProvider(), new ReplTestReplOptions());
@@ -177,7 +177,7 @@ namespace IronPythonTests {
             replWindow.ClearScreen();
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void CommentFollowedByBlankLine() {
             // http://pytools.codeplex.com/workitem/659
             var replEval = new PythonReplEvaluator(IronPythonInterpreter, PythonToolsTestUtilities.CreateMockServiceProvider(), new ReplTestReplOptions());
@@ -191,7 +191,7 @@ namespace IronPythonTests {
 
 
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void AttachSupportMultiThreaded() {
             // http://pytools.codeplex.com/workitem/663
             var replEval = new PythonReplEvaluator(IronPythonInterpreter, PythonToolsTestUtilities.CreateMockServiceProvider(), new ReplTestReplOptions());

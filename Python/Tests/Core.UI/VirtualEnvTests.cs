@@ -76,8 +76,8 @@ namespace PythonToolsUITests {
             return project;
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void InstallUninstallPackage() {
             using (var app = new PythonVisualStudioApp())
             using (var dis = Init(app)) {
@@ -115,8 +115,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void CreateInstallRequirementsTxt() {
             using (var app = new PythonVisualStudioApp())
             using (var dis = Init(app)) {
@@ -138,8 +138,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void InstallGenerateRequirementsTxt() {
             using (var app = new PythonVisualStudioApp())
             using (var dis = Init(app)) {
@@ -185,8 +185,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void LoadVirtualEnv() {
             using (var app = new PythonVisualStudioApp())
             using (var dis = Init(app)) {
@@ -210,8 +210,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ActivateVirtualEnv() {
             using (var app = new PythonVisualStudioApp())
             using (var dis = Init(app)) {
@@ -244,8 +244,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void RemoveVirtualEnv() {
             using (var app = new PythonVisualStudioApp())
             using (var dis = Init(app)) {
@@ -272,8 +272,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void DeleteVirtualEnv() {
             using (var app = new PythonVisualStudioApp())
             using (var dis = Init(app)) {
@@ -320,8 +320,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void DefaultBaseInterpreterSelection() {
             // The project that will be loaded references these environments.
             PythonPaths.Python27.AssertInstalled();
@@ -352,8 +352,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void NoGlobalSitePackages() {
             using (var app = new PythonVisualStudioApp())
             using (var dis = Init(app)) {
@@ -380,8 +380,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void CreateVEnv() {
             using (var app = new PythonVisualStudioApp())
             using (var dis = Init3(app)) {
@@ -408,8 +408,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void AddExistingVEnv() {
             var python = PythonPaths.Python35 ?? PythonPaths.Python34 ?? PythonPaths.Python33;
             python.AssertInstalled();
@@ -434,8 +434,8 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void LaunchUnknownEnvironment() {
             using (var app = new PythonVisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\Environments\Unknown.sln");
@@ -445,7 +445,7 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void UnavailableEnvironments() {
             var collection = new Microsoft.Build.Evaluation.ProjectCollection();
             try {
@@ -541,8 +541,8 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void EnvironmentReplWorkingDirectory() {
             using (var app = new PythonVisualStudioApp())
             using (var dis = Init(app)) {
@@ -561,8 +561,8 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void VirtualEnvironmentReplWorkingDirectory() {
             using (var app = new PythonVisualStudioApp())
             using (var dis = Init(app)) {

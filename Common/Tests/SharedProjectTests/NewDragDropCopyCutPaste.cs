@@ -27,14 +27,14 @@ using Mouse = TestUtilities.UI.Mouse;
 namespace Microsoft.VisualStudioTools.SharedProjectTests {
     [TestClass]
     public class NewDragDropCopyCutPaste : SharedProjectTest {
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void MoveToMissingFolderKeyboard() {
             MoveToMissingFolder(MoveByKeyboard);
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void MoveToMissingFolderMouse() {
             MoveToMissingFolder(MoveByMouse);
         }
@@ -65,14 +65,14 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void MoveExcludedFolderKeyboard() {
             MoveExcludedFolder(MoveByKeyboard);
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void MoveExcludedFolderMouse() {
             MoveExcludedFolder(MoveByMouse);
         }
@@ -104,14 +104,14 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void MoveExcludedItemToFolderKeyboard() {
             MoveExcludedItemToFolder(MoveByKeyboard);
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void MoveExcludedItemToFolderMouse() {
             MoveExcludedItemToFolder(MoveByMouse);
         }
@@ -145,14 +145,14 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void MoveDuplicateFileNameSkipMoveKeyboard() {
             MoveDuplicateFileNameSkipMove(MoveByKeyboard);
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void MoveDuplicateFileNameSkipMoveMouse() {
             MoveDuplicateFileNameSkipMove(MoveByMouse);
         }
@@ -190,14 +190,14 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void MoveDuplicateFileNamesSkipOneKeyboard() {
             MoveDuplicateFileNamesSkipOne(MoveByKeyboard);
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void MoveDuplicateFileNamesSkipOneMouse() {
             MoveDuplicateFileNamesSkipOne(MoveByMouse);
         }
@@ -248,14 +248,14 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VsTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void MoveDuplicateFileNamesFoldersSkipOneKeyboard() {
             MoveDuplicateFileNamesFoldersSkipOne(MoveByKeyboard);
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VsTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void MoveDuplicateFileNamesFoldersSkipOneMouse() {
             MoveDuplicateFileNamesFoldersSkipOne(MoveByMouse);
         }
@@ -308,14 +308,14 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void MoveDuplicateFileNamesCrossProjectSkipOneKeyboard() {
             MoveDuplicateFileNamesCrossProjectSkipOne(MoveByKeyboard);
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void MoveDuplicateFileNamesCrossProjectSkipOneMouse() {
             MoveDuplicateFileNamesCrossProjectSkipOne(MoveByMouse);
         }
@@ -375,14 +375,14 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void MoveDuplicateFileNameCrossProjectSkipMoveKeyboard() {
             MoveDuplicateFileNameCrossProjectSkipMove(MoveByKeyboard);
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void MoveDuplicateFileNameCrossProjectSkipMoveMouse() {
             MoveDuplicateFileNameCrossProjectSkipMove(MoveByMouse);
         }
@@ -430,14 +430,14 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void MoveDuplicateFileNameCrossProjectCSharpSkipMoveKeyboard() {
             MoveDuplicateFileNameCrossProjectCSharpSkipMove(MoveByKeyboard);
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void MoveDuplicateFileNameCrossProjectCSharpSkipMoveMouse() {
             MoveDuplicateFileNameCrossProjectCSharpSkipMove(MoveByMouse);
         }
@@ -483,14 +483,14 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(2)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void MoveFileFromFolderToLinkedFolderKeyboard() {
             MoveFileFromFolderToLinkedFolder(MoveByKeyboard);
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(2)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void MoveFileFromFolderToLinkedFolderMouse() {
             MoveFileFromFolderToLinkedFolder(MoveByMouse);
         }
