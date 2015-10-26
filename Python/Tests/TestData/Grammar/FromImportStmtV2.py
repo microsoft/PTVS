@@ -1,4 +1,4 @@
-﻿def f():
+def f():
     from sys import *
 
 class C:

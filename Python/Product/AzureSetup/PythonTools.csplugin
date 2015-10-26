@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" ?>
+<?xml version="1.0" ?>
 <RoleModule
   xmlns="http://schemas.microsoft.com/ServiceHosting/2008/10/ServiceDefinition"
   namespace="Microsoft.PythonTools.Azure">

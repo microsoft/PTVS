@@ -1,4 +1,4 @@
-﻿def f():
+def f():
     yield
 
 def f():

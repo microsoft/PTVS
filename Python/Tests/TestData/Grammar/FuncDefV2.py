@@ -1,1 +1,1 @@
-﻿def f(a, (b, c), d): pass
+def f(a, (b, c), d): pass

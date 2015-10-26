@@ -1,14 +1,13 @@
-$tf/
-Internal/
 BuildOutput/
-obj/
 *.sdf
 *.opensdf
 *.suo
 TestResults/
 *.vspscc
 *.user
+*.ipch
 .hg
+.vs
 Python/Product/PythonTools/Templates/Files/*/*RoleConfiguration.mht
 Python/Product/PythonTools/Templates/Projects/*/*RoleConfiguration.mht
 Python/Product/PythonTools/Templates/Files/*/ConfigureCloudService.ps1
@@ -20,4 +19,4 @@ Python/Product/PythonTools/Templates/Projects/*/LaunchWorker.ps1
 Python/Product/Django/Templates/Projects/*/*RoleConfiguration.mht
 Python/Product/Django/Templates/Projects/*/ConfigureCloudService.ps1
 Python/Product/Django/Templates/Projects/*/ps.cmd
-Python/Setup/FastCgiInstaller/PythonVersions.dll
+__pycache__/

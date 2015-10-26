@@ -1,4 +1,4 @@
-﻿"""
+"""
 Starts profiling, expected to start with normal program
 to start as first argument and directory to run from as
 the second argument.

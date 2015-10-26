@@ -1,4 +1,4 @@
-﻿async def f():
+async def f():
     async for fob in oar:
         pass
     

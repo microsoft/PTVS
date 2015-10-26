@@ -1,4 +1,4 @@
-﻿<PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
+<PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
   <Metadata>
     <Identity Id="56dfe430-f4a7-4f22-b5cf-9b713a4b4c36" Version="3.0" Language="en-US" Publisher="Microsoft Corporation" />
     <DisplayName>Python Tools for Visual Studio - UWP</DisplayName>

@@ -1,4 +1,4 @@
-﻿namespace Microsoft.PythonTools.Django.Project {
+namespace Microsoft.PythonTools.Django.Project {
     partial class DjangoPropertyPageControl {
         /// <summary> 
         /// Required designer variable.

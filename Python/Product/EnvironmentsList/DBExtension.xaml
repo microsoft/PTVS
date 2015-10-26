@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="Microsoft.PythonTools.EnvironmentsList.DBExtension"
+<UserControl x:Class="Microsoft.PythonTools.EnvironmentsList.DBExtension"
              x:ClassModifier="internal"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"

@@ -1,4 +1,4 @@
-﻿
+
 namespace Microsoft.PythonTools.Parsing.Ast {
     public enum ParameterKind {
         Normal,

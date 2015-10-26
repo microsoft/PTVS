@@ -1,4 +1,4 @@
-﻿fob + oar = 1
+fob + oar = 1
 fob() = 1
 None = 1
 2 = 1

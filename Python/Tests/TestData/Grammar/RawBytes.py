@@ -1,4 +1,4 @@
-﻿rb'\fob'
+rb'\fob'
 rb'''\fob'''
 rb"\fob"
 rb"""\fob"""

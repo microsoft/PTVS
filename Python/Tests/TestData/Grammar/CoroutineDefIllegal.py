@@ -1,4 +1,4 @@
-﻿async def f():
+async def f():
     yield True
     x = yield True
 

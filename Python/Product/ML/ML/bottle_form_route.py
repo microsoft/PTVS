@@ -1,4 +1,4 @@
-﻿import {1}
+import {1}
 from bottle import get, post, request
 
 @get('/{0}_form')

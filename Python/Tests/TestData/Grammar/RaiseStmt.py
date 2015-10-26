@@ -1,2 +1,2 @@
-﻿raise
+raise
 raise fob

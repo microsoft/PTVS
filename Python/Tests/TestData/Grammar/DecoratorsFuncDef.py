@@ -1,4 +1,4 @@
-﻿@fob
+@fob
 def f():
     pass
 

@@ -1,4 +1,4 @@
-﻿@fob
+@fob
 async def f():
     pass
 

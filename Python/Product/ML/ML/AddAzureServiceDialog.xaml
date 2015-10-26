@@ -1,4 +1,4 @@
-﻿<ui:DialogWindowVersioningWorkaround
+<ui:DialogWindowVersioningWorkaround
  x:Class="Microsoft.PythonTools.ML.AddAzureServiceDialog"
     xmlns:ui="clr-namespace:Microsoft.PythonTools.ML"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"

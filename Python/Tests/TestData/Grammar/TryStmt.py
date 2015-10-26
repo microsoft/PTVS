@@ -1,4 +1,4 @@
-﻿try:
+try:
     pass
 except:
     pass

@@ -1,4 +1,4 @@
-﻿namespace Microsoft.PythonTools.Parsing.Ast {
+namespace Microsoft.PythonTools.Parsing.Ast {
     public class SublistParameter : Parameter {
         private readonly TupleExpression _tuple;
 

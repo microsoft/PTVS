@@ -1,4 +1,4 @@
-﻿def g():
+def g():
     pass
 
 def f():

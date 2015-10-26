@@ -1,4 +1,4 @@
-﻿namespace Microsoft.PythonTools.Uwp.Project {
+namespace Microsoft.PythonTools.Uwp.Project {
     partial class PythonUwpPropertyPageControl {
         /// <summary> 
         /// Required designer variable.

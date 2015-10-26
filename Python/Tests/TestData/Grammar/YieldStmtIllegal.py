@@ -1,4 +1,4 @@
-﻿yield 1
+yield 1
 
 def f():
     return 42
