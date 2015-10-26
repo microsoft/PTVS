@@ -1,35 +1,41 @@
 From: "Saved by Internet Explorer 11"
 Subject: Kinect Game Configuration
-Date: Fri, 13 Jun 2014 13:07:17 -0700
+Date: Mon, 26 Oct 2015 15:58:56 -0700
 MIME-Version: 1.0
 Content-Type: multipart/related;
 	type="text/html";
-	boundary="----=_NextPart_000_0000_01CF8708.674C3750"
-X-MimeOLE: Produced By Microsoft MimeOLE V6.3.9600.16384
+	boundary="----=_NextPart_000_0000_01D11007.3858E360"
+X-MimeOLE: Produced By Microsoft MimeOLE V10.0.10011.16384
 
 This is a multi-part message in MIME format.
 
-------=_NextPart_000_0000_01CF8708.674C3750
+------=_NextPart_000_0000_01D11007.3858E360
 Content-Type: text/html;
 	charset="utf-8"
 Content-Transfer-Encoding: quoted-printable
-Content-Location: file://C:\Projects\DEVDIV\PTVS\Python\Samples\KinectGame\Readme\readme.html
+Content-Location: file://D:\PTVS\PTVS\Python\Samples\KinectGame\Readme\readme.html
 
 =EF=BB=BF<!DOCTYPE HTML>
 <!DOCTYPE html PUBLIC "" ""><!--=0A=
- Copyright (c) Microsoft Corporation.=0A=
+Python Tools for Visual Studio=0A=
+Copyright(c) Microsoft Corporation=0A=
+All rights reserved.=0A=
 =0A=
- This source code is subject to terms and conditions of the Apache =
-License, Version 2.0. A=0A=
- copy of the license can be found in the License.html file at the root =
-of this distribution. If=0A=
- you cannot locate the Apache License, Version 2.0, please send an email =
-to=0A=
- vspython@microsoft.com. By using this source code in any fashion, you =
-are agreeing to be bound=0A=
- by the terms of the Apache License, Version 2.0.=0A=
+Licensed under the Apache License, Version 2.0 (the License); you may =
+not use=0A=
+this file except in compliance with the License. You may obtain a copy =
+of the=0A=
+License at http://www.apache.org/licenses/LICENSE-2.0=0A=
 =0A=
- You must not remove this notice, or any other, from this software.=0A=
+THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR =
+CONDITIONS=0A=
+OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY=0A=
+IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR =
+PURPOSE,=0A=
+MERCHANTABLITY OR NON-INFRINGEMENT.=0A=
+=0A=
+See the Apache Version 2.0 License for specific language governing=0A=
+permissions and limitations under the License.=0A=
 --><HTML=20
 lang=3D"en" xmlns=3D"http://www.w3.org/1999/xhtml"><HEAD><META =
 content=3D"IE=3D11.0000"=20
@@ -37,9 +43,10 @@ http-equiv=3D"X-UA-Compatible">
     =20
 <META charset=3D"utf-8">     <TITLE>Kinect Game Configuration</TITLE>    =
  <LINK=20
-href=3D"../../../../ReadmeStyle.css" rel=3D"stylesheet" =
+href=3D"file:///D:/PTVS/PTVS/Python/Product/PythonTools/ReadmeStyle.css" =
+rel=3D"stylesheet"=20
 type=3D"text/css">=20
-<META name=3D"GENERATOR" content=3D"MSHTML 11.00.9600.17126"></HEAD>=20
+<META name=3D"GENERATOR" content=3D"MSHTML 11.00.10240.16542"></HEAD>=20
 <BODY>
 <H1 class=3D"top">One more thing...</H1>
 <P>        To run this project, you will need to <STRONG>install =
@@ -57,8 +64,8 @@ target=3D"_blank">http://www.lfd.uci.edu/~gohlke/pythonlibs/#pygame</A>. =
   <LI>
   <P>Right-click on the Python environment and select Install Python=20
   Package.</P><IMG =
-src=3D"file:///C:/Projects/DEVDIV/PTVS/Python/Samples/KinectGame/Readme/I=
-nstallPythonPackage.png">=20
+src=3D"file:///D:/PTVS/PTVS/Python/Samples/KinectGame/Readme/InstallPytho=
+nPackage.png">=20
           </LI>
   <LI>
   <P>                In the combo box, select easy_install. In the text =
@@ -66,8 +73,8 @@ box,=20
   type the                full path to the pygame executable, in =
 double-quotes. =20
              </P><IMG =
-src=3D"file:///C:/Projects/DEVDIV/PTVS/Python/Samples/KinectGame/Readme/I=
-nstallPygameDialog.png">=20
+src=3D"file:///D:/PTVS/PTVS/Python/Samples/KinectGame/Readme/InstallPygam=
+eDialog.png">=20
           </LI></OL>
 <BLOCKQUOTE>
   <P>            If you get an error installing pygame, you can try =
@@ -78,10 +85,10 @@ folder:   =20
   =20
 </BLOCKQUOTE></BODY></HTML>
 
-------=_NextPart_000_0000_01CF8708.674C3750
+------=_NextPart_000_0000_01D11007.3858E360
 Content-Type: image/png
 Content-Transfer-Encoding: base64
-Content-Location: file:///C:/Projects/DEVDIV/PTVS/Python/Samples/KinectGame/Readme/InstallPythonPackage.png
+Content-Location: file:///D:/PTVS/PTVS/Python/Samples/KinectGame/Readme/InstallPythonPackage.png
 
 iVBORw0KGgoAAAANSUhEUgAAAcIAAACqCAIAAACxqtiRAAAAAXNSR0IArs4c6QAAAARnQU1BAACx
 jwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAABwuSURBVHhe7Z3Pj1zHccf9F+RP4E1AoKvhnCVA
@@ -213,10 +220,10 @@ Bzo1kS4JwNmznxpVWSpiStYaY95iislzi4XRXxY48glt70A8MGTjGm0m0xwAe0qvGh1Ci05F6seN
 A40C0BfQaAk0OhFoFACmP42ePdAoAGAFoNHZAY0C0BfQ6OyARgHoC2h0dkCjAPQFNDo7oFEA+qKi
 0YcP/x9ErfwUerrSVwAAAABJRU5ErkJggg==
 
-------=_NextPart_000_0000_01CF8708.674C3750
+------=_NextPart_000_0000_01D11007.3858E360
 Content-Type: image/png
 Content-Transfer-Encoding: base64
-Content-Location: file:///C:/Projects/DEVDIV/PTVS/Python/Samples/KinectGame/Readme/InstallPygameDialog.png
+Content-Location: file:///D:/PTVS/PTVS/Python/Samples/KinectGame/Readme/InstallPygameDialog.png
 
 iVBORw0KGgoAAAANSUhEUgAAAfQAAAD3CAYAAADrNaaQAAAAAXNSR0IArs4c6QAAAARnQU1BAACx
 jwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAACigSURBVHhe7Z2/jjS5dbd1JRMo2gswlC4UqTHR
@@ -404,4 +411,52 @@ HbNz5A4AAHBHlI7ZOXIHAADoEAQdAABgY7Qcs3PkDgAAsHFajtk5cgcAAOgQBB0AAKADPi3oAAAA
 sA0srRYWBR0AAAC2D4IOAADQAQg6AABAByDoAAAAHYCgAwAAdACCDgAA0AGjoAMAAMA9883xfwHd
 AuLudnGowQAAAABJRU5ErkJggg==
 
-------=_NextPart_000_0000_01CF8708.674C3750--
+------=_NextPart_000_0000_01D11007.3858E360
+Content-Type: text/css;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Location: file:///D:/PTVS/PTVS/Python/Product/PythonTools/ReadmeStyle.css
+
+body {
+	font-family: "Segoe UI", Arial, Helvetica, sans-serif; font-size: 11pt; =
+font-weight: 200;
+}
+p {
+	margin: 0px; padding: 0px;
+}
+h1 {
+	margin: 0px; padding: 0px;
+}
+h2 {
+	margin: 0px; padding: 0px;
+}
+h1 {
+	padding-top: 1em; font-size: 20pt; font-weight: bold;
+}
+h1.top {
+	padding-top: 0em;
+}
+h2 {
+	padding-top: 0.5em; padding-left: 0em; font-size: 16pt; font-weight: =
+300;
+}
+p {
+	padding-bottom: 0.5em; padding-left: 0.5em;
+}
+p.hint {
+	color: rgb(102, 102, 102);
+}
+code {
+	font-family: Consolas, "Lucida Console", monospace;
+}
+ol {
+	padding-top: 0px; margin-top: 0px;
+}
+ol > li {
+	padding-top: 1.5em;
+}
+li > img {
+	vertical-align: middle;
+}
+
+------=_NextPart_000_0000_01D11007.3858E360--

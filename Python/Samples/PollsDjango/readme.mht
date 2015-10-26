@@ -1,35 +1,41 @@
 From: "Saved by Internet Explorer 11"
 Subject: Django Web App Configuration
-Date: Fri, 13 Jun 2014 15:42:59 -0700
+Date: Mon, 26 Oct 2015 15:59:36 -0700
 MIME-Version: 1.0
 Content-Type: multipart/related;
 	type="text/html";
-	boundary="----=_NextPart_000_0000_01CF871E.2743B0F0"
-X-MimeOLE: Produced By Microsoft MimeOLE V6.3.9600.16384
+	boundary="----=_NextPart_000_0029_01D11007.5058AFE0"
+X-MimeOLE: Produced By Microsoft MimeOLE V10.0.10011.16384
 
 This is a multi-part message in MIME format.
 
-------=_NextPart_000_0000_01CF871E.2743B0F0
+------=_NextPart_000_0029_01D11007.5058AFE0
 Content-Type: text/html;
 	charset="utf-8"
 Content-Transfer-Encoding: quoted-printable
-Content-Location: file://C:\Projects\DEVDIV\PTVS\Python\Samples\PollsDjango\Readme\readme.html
+Content-Location: file://D:\PTVS\PTVS\Python\Samples\PollsDjango\Readme\readme.html
 
 =EF=BB=BF<!DOCTYPE HTML>
 <!DOCTYPE html PUBLIC "" ""><!--=0A=
- Copyright (c) Microsoft Corporation.=0A=
+Python Tools for Visual Studio=0A=
+Copyright(c) Microsoft Corporation=0A=
+All rights reserved.=0A=
 =0A=
- This source code is subject to terms and conditions of the Apache =
-License, Version 2.0. A=0A=
- copy of the license can be found in the License.html file at the root =
-of this distribution. If=0A=
- you cannot locate the Apache License, Version 2.0, please send an email =
-to=0A=
- vspython@microsoft.com. By using this source code in any fashion, you =
-are agreeing to be bound=0A=
- by the terms of the Apache License, Version 2.0.=0A=
+Licensed under the Apache License, Version 2.0 (the License); you may =
+not use=0A=
+this file except in compliance with the License. You may obtain a copy =
+of the=0A=
+License at http://www.apache.org/licenses/LICENSE-2.0=0A=
 =0A=
- You must not remove this notice, or any other, from this software.=0A=
+THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR =
+CONDITIONS=0A=
+OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY=0A=
+IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR =
+PURPOSE,=0A=
+MERCHANTABLITY OR NON-INFRINGEMENT.=0A=
+=0A=
+See the Apache Version 2.0 License for specific language governing=0A=
+permissions and limitations under the License.=0A=
 --><HTML=20
 lang=3D"en" xmlns=3D"http://www.w3.org/1999/xhtml"><HEAD><META =
 content=3D"IE=3D11.0000"=20
@@ -37,9 +43,10 @@ http-equiv=3D"X-UA-Compatible">
     =20
 <META charset=3D"utf-8">     <TITLE>Django Web App Configuration</TITLE> =
     <LINK=20
-href=3D"../../../../../PythonTools/ReadmeStyle.css" rel=3D"stylesheet" =
+href=3D"file:///D:/PTVS/PTVS/Python/Product/PythonTools/ReadmeStyle.css" =
+rel=3D"stylesheet"=20
 type=3D"text/css">=20
-<META name=3D"GENERATOR" content=3D"MSHTML 11.00.9600.17126"></HEAD>=20
+<META name=3D"GENERATOR" content=3D"MSHTML 11.00.10240.16542"></HEAD>=20
 <BODY>
 <H1 class=3D"top">One more thing...</H1>
 <P>        Before running this project, you need to <STRONG>           =20
@@ -55,9 +62,9 @@ sqlite). =20
   <P>Right-click the project node and select Python-&gt;Django Sync =
 DB.</P><IMG=20
   =
-src=3D"file:///C:/Projects/DEVDIV/PTVS/Python/Samples/PollsDjango/Readme/=
-SyncDB.png">=20
-          </LI>
+src=3D"file:///D:/PTVS/PTVS/Python/Samples/PollsDjango/Readme/SyncDB.png"=
+>      =20
+    </LI>
   <LI>You will be prompted to create a super user, enter yes.</LI>
   <LI>            Enter a user name, email and password when prompted. =
 The=20
@@ -65,10 +72,10 @@ The=20
 account.   =20
        </LI></OL></BODY></HTML>
 
-------=_NextPart_000_0000_01CF871E.2743B0F0
+------=_NextPart_000_0029_01D11007.5058AFE0
 Content-Type: image/png
 Content-Transfer-Encoding: base64
-Content-Location: file:///C:/Projects/DEVDIV/PTVS/Python/Samples/PollsDjango/Readme/SyncDB.png
+Content-Location: file:///D:/PTVS/PTVS/Python/Samples/PollsDjango/Readme/SyncDB.png
 
 iVBORw0KGgoAAAANSUhEUgAAAlcAAAEECAYAAAAFyRFAAAAAAXNSR0IArs4c6QAAAARnQU1BAACx
 jwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAWdEVYdFNvZnR3YXJlAHBhaW50Lm5ldCA0LjA7
@@ -319,4 +326,52 @@ rY89k9z0O2eOOQw6z3z7KgDAJMgYg1ztSpNcmW02x4xWdIrtul236mZ8jTPiaOVKxOqf/N5fJff/
 oMiUrFaxcgUAxwTjHMD0HKVcCXbFSmHQAYC1wzgHMD1HK1c8cwUAx4iMcwAwPaVcJTf9f5cWl7hK
 +pW5AAAAAElFTkSuQmCC
 
-------=_NextPart_000_0000_01CF871E.2743B0F0--
+------=_NextPart_000_0029_01D11007.5058AFE0
+Content-Type: text/css;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Location: file:///D:/PTVS/PTVS/Python/Product/PythonTools/ReadmeStyle.css
+
+body {
+	font-family: "Segoe UI", Arial, Helvetica, sans-serif; font-size: 11pt; =
+font-weight: 200;
+}
+p {
+	margin: 0px; padding: 0px;
+}
+h1 {
+	margin: 0px; padding: 0px;
+}
+h2 {
+	margin: 0px; padding: 0px;
+}
+h1 {
+	padding-top: 1em; font-size: 20pt; font-weight: bold;
+}
+h1.top {
+	padding-top: 0em;
+}
+h2 {
+	padding-top: 0.5em; padding-left: 0em; font-size: 16pt; font-weight: =
+300;
+}
+p {
+	padding-bottom: 0.5em; padding-left: 0.5em;
+}
+p.hint {
+	color: rgb(102, 102, 102);
+}
+code {
+	font-family: Consolas, "Lucida Console", monospace;
+}
+ol {
+	padding-top: 0px; margin-top: 0px;
+}
+ol > li {
+	padding-top: 1.5em;
+}
+li > img {
+	vertical-align: middle;
+}
+
+------=_NextPart_000_0029_01D11007.5058AFE0--
