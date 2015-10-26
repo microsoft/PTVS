@@ -496,6 +496,7 @@ abc = 200
         }
 
         [TestMethod, Priority(1)]
+        [TestCategory("10s")]
         public void TupleForVariable() {
             RefactorTest("baz", "abc",
                 new[] { 
@@ -635,6 +636,7 @@ a.fob
         }
 
         [TestMethod, Priority(1)]
+        [TestCategory("10s")]
         public void SanityParameter() {
             RefactorTest("fob", "abc",
                 new[] { 
@@ -1289,6 +1291,7 @@ abc = 100
         }
 
         [TestMethod, Priority(1)]
+        [TestCategory("10s")]
         public void SanityRenameClass() {
             RefactorTest("fob", "abc",
             new[] { 

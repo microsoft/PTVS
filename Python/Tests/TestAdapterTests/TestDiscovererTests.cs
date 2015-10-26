@@ -34,6 +34,7 @@ namespace TestAdapterTests {
         }
 
         [TestMethod, Priority(1)]
+        [TestCategory("10s")]
         public void TestDiscover() {
             var ctx = new MockDiscoveryContext();
             var sink = new MockTestCaseDiscoverySink();

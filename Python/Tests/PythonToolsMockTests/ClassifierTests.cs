@@ -231,10 +231,17 @@ class F:
                 _classificationsReady1 = new ManualResetEventSlim();
                 _classificationsReady2 = new ManualResetEventSlim();
 
-                AstClassifier.ClassificationChanged += (s, e) => _classificationsReady1.Set();
-                AnalysisClassifier.ClassificationChanged += (s, e) => _classificationsReady2.Set();
+                AstClassifier.ClassificationChanged += (s, e) => SafeSetEvent(_classificationsReady1);
+                AnalysisClassifier.ClassificationChanged += (s, e) => SafeSetEvent(_classificationsReady2);
 
                 _view.Text = code;
+            }
+
+            private static void SafeSetEvent(ManualResetEventSlim evt) {
+                try {
+                    evt.Set();
+                } catch (ObjectDisposedException) {
+                }
             }
 
             public void Dispose() {

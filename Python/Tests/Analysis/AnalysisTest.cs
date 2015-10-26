@@ -4532,13 +4532,16 @@ min(a, D())
             var cancelSource = new CancellationTokenSource();
             var task = Task.Run(() => {
                 new AnalysisTest().AnalyzeDir(ver.LibPath, ver.Version, cancel: cancelSource.Token);
-            });
+            }, cancelSource.Token);
 
             // Allow 10 seconds for parsing to complete and analysis to start
             cancelSource.CancelAfter(TimeSpan.FromSeconds(10));
 
             if (!task.Wait(TimeSpan.FromSeconds(15))) {
-                task.Dispose();
+                try {
+                    task.Dispose();
+                } catch (InvalidOperationException) {
+                }
                 Assert.Fail("Analysis did not abort within 5 seconds");
             }
         }
