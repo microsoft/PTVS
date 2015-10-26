@@ -55,6 +55,7 @@
     <Compile Include="..\..\..\Common\Product\SharedProject\ProcessOutput.cs">
       <Link>ProcessOutput.cs</Link>
     </Compile>
+    <Compile Include="AttachTests.cs" />
     <Compile Include="BaseDebuggerTests.cs" />
     <Compile Include="DebuggerTests.cs" />
     <Compile Include="DebugExtensions.cs" />

@@ -487,6 +487,11 @@ namespace TestUtilities.UI {
         }
 
         [DebuggerStepThrough]
+        public static ScrollItemPattern GetScrollItemPattern(this AutomationElement node) {
+            return node.Pattern<ScrollItemPattern>(ScrollItemPattern.Pattern);
+        }
+
+        [DebuggerStepThrough]
         public static SelectionPattern GetSelectionPattern(this AutomationElement node) {
             return node.Pattern<SelectionPattern>(SelectionPattern.Pattern);
         }
