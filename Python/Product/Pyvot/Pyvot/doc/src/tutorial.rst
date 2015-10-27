@@ -363,4 +363,4 @@ Pyvot is written on top of `Excel's COM API <http://msdn.microsoft.com/en-us/lib
 Feedback
 --------
 
-Pyvot is a very new public release, and we would appreciate hearing about your first experiences with Pyvot. Please `email the PTVS team <mailto:vspython@microsoft.com>`_ with any feedback.
+Pyvot is a very new public release, and we would appreciate hearing about your first experiences with Pyvot. Please `email the PTVS team <mailto:ptvshelp@microsoft.com>`_ with any feedback.
