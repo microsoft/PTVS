@@ -119,7 +119,7 @@ NameError: name 'does_not_exist' is not defined
 ", _window.Error);
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(3)]
         public void ChangeVariables() {
             Attach("DebugReplTest2.py", 13);
 
@@ -145,7 +145,7 @@ NameError: name 'does_not_exist' is not defined
             Assert.AreEqual("'hello'", ExecuteText("a"));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(2)]
         public void ChangeFrame() {
             Attach("DebugReplTest2.py", 13);
 

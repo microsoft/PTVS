@@ -4539,12 +4539,13 @@ min(a, D())
             // Allow 10 seconds for parsing to complete and analysis to start
             cancelSource.CancelAfter(TimeSpan.FromSeconds(10));
 
-            if (!task.Wait(TimeSpan.FromSeconds(15))) {
+            // Allow 20 seconds after cancellation to abort
+            if (!task.Wait(TimeSpan.FromSeconds(30))) {
                 try {
                     task.Dispose();
                 } catch (InvalidOperationException) {
                 }
-                Assert.Fail("Analysis did not abort within 5 seconds");
+                Assert.Fail("Analysis did not abort within 20 seconds");
             }
         }
 

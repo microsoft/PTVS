@@ -70,7 +70,7 @@ namespace DebuggerTests {
             psi.UseShellExecute = false;
             Process p = Process.Start(psi);
             try {
-                System.Threading.Thread.Sleep(1000);
+                Thread.Sleep(1000);
 
                 var proc = PythonProcess.Attach(p.Id);
                 try {
@@ -112,12 +112,12 @@ namespace DebuggerTests {
                         };
 
                         proc.StartListening();
-                        Assert.IsTrue(attached.WaitOne(10000), "Failed to attach within 10s");
+                        Assert.IsTrue(attached.WaitOne(30000), "Failed to attach within 30s");
 
-                        Assert.IsTrue(readyToContinue.WaitOne(20000), "Failed to hit the main thread breakpoint within 20s");
+                        Assert.IsTrue(readyToContinue.WaitOne(30000), "Failed to hit the main thread breakpoint within 30s");
                         proc.Continue();
 
-                        Assert.IsTrue(threadBreakpointHit.WaitOne(20000), "Failed to hit the background thread breakpoint within 10s");
+                        Assert.IsTrue(threadBreakpointHit.WaitOne(30000), "Failed to hit the background thread breakpoint within 30s");
                         Assert.IsFalse(wrongLine, "Breakpoint broke on the wrong line");
 
                         Assert.AreNotEqual(mainThread, bpThread);
@@ -135,7 +135,7 @@ namespace DebuggerTests {
         public virtual void AttachReattach() {
             Process p = Process.Start(Version.InterpreterPath, "\"" + TestData.GetPath(@"TestData\DebuggerProject\InfiniteRun.py") + "\"");
             try {
-                System.Threading.Thread.Sleep(1000);
+                Thread.Sleep(1000);
 
                 AutoResetEvent attached = new AutoResetEvent(false);
                 AutoResetEvent detached = new AutoResetEvent(false);
@@ -179,7 +179,7 @@ namespace DebuggerTests {
             // http://pytools.codeplex.com/discussions/285741 1/12/2012 6:20 PM
             Process p = Process.Start(Version.InterpreterPath, "\"" + TestData.GetPath(@"TestData\DebuggerProject\AttachMultithreadedSleeper.py") + "\"");
             try {
-                System.Threading.Thread.Sleep(1000);
+                Thread.Sleep(1000);
 
                 AutoResetEvent attached = new AutoResetEvent(false);
 
@@ -212,7 +212,7 @@ namespace DebuggerTests {
             // http://pytools.codeplex.com/discussions/285741 1/12/2012 6:20 PM
             Process p = Process.Start(Version.InterpreterPath, "\"" + TestData.GetPath(@"TestData\DebuggerProject\AttachSingleThreadedSleeper.py") + "\"");
             try {
-                System.Threading.Thread.Sleep(1000);
+                Thread.Sleep(1000);
 
                 AutoResetEvent attached = new AutoResetEvent(false);
 
@@ -239,7 +239,7 @@ namespace DebuggerTests {
         public void AttachReattach64() {
             Process p = Process.Start("C:\\Python27_x64\\python.exe", "\"" + TestData.GetPath(@"TestData\DebuggerProject\InfiniteRun.py") + "\"");
             try {
-                System.Threading.Thread.Sleep(1000);
+                Thread.Sleep(1000);
 
                 for (int i = 0; i < 10; i++) {
                     Console.WriteLine(i);
@@ -262,7 +262,7 @@ namespace DebuggerTests {
         public virtual void AttachReattachThreadingInited() {
             Process p = Process.Start(Version.InterpreterPath, "\"" + TestData.GetPath(@"TestData\DebuggerProject\InfiniteRunThreadingInited.py") + "\"");
             try {
-                System.Threading.Thread.Sleep(1000);
+                Thread.Sleep(1000);
 
                 AutoResetEvent attached = new AutoResetEvent(false);
                 AutoResetEvent detached = new AutoResetEvent(false);
@@ -293,7 +293,7 @@ namespace DebuggerTests {
         public virtual void AttachReattachInfiniteThreads() {
             Process p = Process.Start(Version.InterpreterPath, "\"" + TestData.GetPath(@"TestData\DebuggerProject\InfiniteThreads.py") + "\"");
             try {
-                System.Threading.Thread.Sleep(1000);
+                Thread.Sleep(1000);
 
                 AutoResetEvent attached = new AutoResetEvent(false);
                 AutoResetEvent detached = new AutoResetEvent(false);
@@ -310,9 +310,9 @@ namespace DebuggerTests {
                     };
                     proc.StartListening();
 
-                    Assert.IsTrue(attached.WaitOne(20000), "Failed to attach within 20s");
+                    Assert.IsTrue(attached.WaitOne(30000), "Failed to attach within 30s");
                     proc.Detach();
-                    Assert.IsTrue(detached.WaitOne(20000), "Failed to detach within 20s");
+                    Assert.IsTrue(detached.WaitOne(30000), "Failed to detach within 30s");
 
                 }
             } finally {
@@ -448,7 +448,7 @@ void main()
             // start the test process w/ our handle
             Process p = RunHost(exe);
             try {
-                System.Threading.Thread.Sleep(1500);
+                Thread.Sleep(1500);
 
                 AutoResetEvent attached = new AutoResetEvent(false);
                 AutoResetEvent bpHit = new AutoResetEvent(false);
@@ -575,7 +575,7 @@ void main()
             // start the test process w/ our handle
             Process p = RunHost(exe);
             try {
-                System.Threading.Thread.Sleep(1500);
+                Thread.Sleep(1500);
 
                 AutoResetEvent attached = new AutoResetEvent(false);
                 AutoResetEvent bpHit = new AutoResetEvent(false);
@@ -737,7 +737,7 @@ int main(int argc, char* argv[]) {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(2)]
         [TestCategory("10s")]
         public virtual void AttachWithOutputRedirection() {
             var expectedOutput = new[] { "stdout", "stderr" };

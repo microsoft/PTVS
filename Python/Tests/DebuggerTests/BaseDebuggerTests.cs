@@ -368,11 +368,14 @@ namespace DebuggerTests {
             }
 
             private static void WaitForAny(int timeout, params Task[] tasks) {
-                Task.WhenAny(tasks.Concat(new[] { Task.Delay(Timeout.Infinite, new CancellationTokenSource(timeout).Token) }))
-                    .GetAwaiter().GetResult()
-                    // At this point we have the task that ran to completion first. Now we need to
-                    // get its result to get an exception if that task failed or got canceled.
-                    .GetAwaiter().GetResult();
+                try {
+                    Task.WhenAny(tasks.Concat(new[] { Task.Delay(Timeout.Infinite, new CancellationTokenSource(timeout).Token) }))
+                        .GetAwaiter().GetResult()
+                        // At this point we have the task that ran to completion first. Now we need to
+                        // get its result to get an exception if that task failed or got canceled.
+                        .GetAwaiter().GetResult();
+                } catch (OperationCanceledException) {
+                }
             }
         }
 

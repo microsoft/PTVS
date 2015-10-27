@@ -68,12 +68,13 @@ namespace DebuggerTests {
             ChildTest(EnumChildrenTestName, lastLine, "s", GetSetChildren(
                 new ChildInfo("[0]", "next((v for i, v in enumerate(s) if i == 0))", Version.Version.Is3x() ? "frozenset({2, 3, 4})" : "frozenset([2, 3, 4])")));
 
-            if (GetType() != typeof(DebuggerTestsIpy) && Version.Version.Is2x()) {
+            if (Version.Version.Is2x() && !(this is DebuggerTestsIpy)) {
                 // IronPython unicode repr differs
                 // 3.x: http://pytools.codeplex.com/workitem/76
                 ChildTest(EnumChildrenTestName, lastLine, "cinst",
                     new ChildInfo("abc", null, "42", "0x2a"),
-                    new ChildInfo("uc", null, "u\'привет мир\'"));
+                    // "u\'привет мир\'"
+                    new ChildInfo("uc", null, @"u'\xd0\xbf\xd1\x80\xd0\xb8\xd0\xb2\xd0\xb5\xd1\x82 \xd0\xbc\xd0\xb8\xd1\x80'"));
             }
             ChildTest(EnumChildrenTestName, lastLine, "c2inst",
                 new ChildInfo("abc", null, "42", "0x2a"),
