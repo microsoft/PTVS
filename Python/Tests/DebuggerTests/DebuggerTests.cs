@@ -63,7 +63,7 @@ namespace DebuggerTests {
         [TestMethod, Priority(1)]
         [TestCategory("10s")]
         public void EnumChildrenTest() {
-            const int lastLine = 41;
+            const int lastLine = 42;
 
             ChildTest(EnumChildrenTestName, lastLine, "s", GetSetChildren(
                 new ChildInfo("[0]", "next((v for i, v in enumerate(s) if i == 0))", Version.Version.Is3x() ? "frozenset({2, 3, 4})" : "frozenset([2, 3, 4])")));
@@ -73,8 +73,7 @@ namespace DebuggerTests {
                 // 3.x: http://pytools.codeplex.com/workitem/76
                 ChildTest(EnumChildrenTestName, lastLine, "cinst",
                     new ChildInfo("abc", null, "42", "0x2a"),
-                    // "u\'привет мир\'"
-                    new ChildInfo("uc", null, @"u'\xd0\xbf\xd1\x80\xd0\xb8\xd0\xb2\xd0\xb5\xd1\x82 \xd0\xbc\xd0\xb8\xd1\x80'"));
+                    new ChildInfo("uc", null, "u\'привет мир\'"));
             }
             ChildTest(EnumChildrenTestName, lastLine, "c2inst",
                 new ChildInfo("abc", null, "42", "0x2a"),
@@ -140,7 +139,7 @@ namespace DebuggerTests {
         [TestMethod, Priority(1)]
         [TestCategory("10s")]
         public void EnumChildrenTestPrevFrame() {
-            const int breakLine = 2;
+            const int breakLine = 3;
 
             ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "s", 1, GetSetChildren(
                 new ChildInfo("[0]", "next((v for i, v in enumerate(s) if i == 0))", Version.Version.Is3x() ? "frozenset({2, 3, 4})" : "frozenset([2, 3, 4])")));
@@ -150,8 +149,7 @@ namespace DebuggerTests {
                 // 3.x: http://pytools.codeplex.com/workitem/76
                 ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "cinst", 1,
                     new ChildInfo("abc", null, "42", "0x2a"),
-                    // "u\'привет мир\'"
-                    new ChildInfo("uc", null, @"u'\xd0\xbf\xd1\x80\xd0\xb8\xd0\xb2\xd0\xb5\xd1\x82 \xd0\xbc\xd0\xb8\xd1\x80'"));
+                    new ChildInfo("uc", null, "u\'привет мир\'"));
             }
             ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "c2inst", 1,
                 new ChildInfo("abc", null, "42", "0x2a"),
@@ -1930,6 +1928,9 @@ namespace DebuggerTests {
                 if (resumeOnProcessLoaded) {
                     process.Resume();
                 }
+            };
+            process.DebuggerOutput += (sender, args) => {
+                Console.WriteLine(args.Output);
             };
 
             return process;
