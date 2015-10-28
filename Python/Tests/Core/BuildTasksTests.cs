@@ -42,7 +42,7 @@ namespace PythonToolsTests {
             PythonTestData.Deploy();
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void TestResolveProjectHome() {
             var proj = ProjectRootElement.Create();
             var g = proj.AddPropertyGroup();

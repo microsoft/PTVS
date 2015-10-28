@@ -284,7 +284,7 @@ namespace FactoryProviderTypeLoadException {
             Assert.AreEqual(1, service.KnownProviders.Count());
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void InvalidInterpreterVersion() {
             try {
                 var lv = new Version(1, 0).ToLanguageVersion();

@@ -33,7 +33,7 @@ namespace PythonToolsTests {
             PythonTestData.Deploy();
         }
         
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void FactoryProvider() {
             var provider = InterpFactory;
             var factories = provider.GetInterpreterFactories().ToArray();

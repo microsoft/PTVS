@@ -93,7 +93,7 @@ namespace AnalysisTests {
         private static readonly AnalysisValue nsCU3 = nsCU2.UnionMergeTypes(nsC2, 100);
         private static readonly AnalysisValue nsCU4 = nsCU3.UnionMergeTypes(nsC2, 100);
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void SetOfOne_Object() {
             var set = AnalysisSet.Create(nsA1);
             Assert.AreSame(nsA1, set);
@@ -108,7 +108,7 @@ namespace AnalysisTests {
             Assert.AreNotSame(nsA1, set);
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void SetOfOne_Union() {
             var set = AnalysisSet.CreateUnion(nsA1, UnionComparer.Instances[0]);
             Assert.IsInstanceOfType(set, typeof(AnalysisSetOneUnion));
@@ -127,7 +127,7 @@ namespace AnalysisTests {
             AssertUtil.ContainsExactly(set, nsAU1);
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void SetOfTwo_Object() {
             var set = AnalysisSet.Create(new[] { nsA1, nsA2 });
             Assert.IsInstanceOfType(set, typeof(AnalysisSetTwoObject));
@@ -138,7 +138,7 @@ namespace AnalysisTests {
             AssertUtil.ContainsExactly(set, nsA1, nsA2);
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void SetOfTwo_Union() {
             var set = AnalysisSet.CreateUnion(new[] { nsA1, nsA2, nsB1, nsB2 }, UnionComparer.Instances[0]);
             Assert.IsInstanceOfType(set, typeof(AnalysisSetTwoUnion));
@@ -149,7 +149,7 @@ namespace AnalysisTests {
             AssertUtil.ContainsExactly(set, nsAU2, nsBU2);
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void ManySet_Object() {
             var set = AnalysisSet.Create(new[] { nsA1, nsA2, nsB1, nsB2 });
             Assert.IsInstanceOfType(set, typeof(AnalysisHashSet));
@@ -162,7 +162,7 @@ namespace AnalysisTests {
             AssertUtil.ContainsExactly(set, nsA1, nsA2, nsB1, nsB2);
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void ManySet_Union() {
             var set = AnalysisSet.CreateUnion(new[] { nsA1, nsA2, nsB1, nsB2, nsC1 }, UnionComparer.Instances[0]);
             Assert.IsInstanceOfType(set, typeof(AnalysisHashSet));
@@ -177,7 +177,7 @@ namespace AnalysisTests {
 
 
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void EmptySet_Add_Object() {
             var set = AnalysisSet.Empty;
             Assert.IsInstanceOfType(set, typeof(AnalysisSetEmptyObject));
@@ -197,7 +197,7 @@ namespace AnalysisTests {
             Assert.AreSame(nsA1, set);
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void EmptySet_Add_Union() {
             var set = AnalysisSet.EmptyUnion;
             Assert.IsInstanceOfType(set, typeof(AnalysisSetEmptyUnion));
@@ -217,7 +217,7 @@ namespace AnalysisTests {
             AssertUtil.ContainsExactly(set, nsA1);
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void SetOfOne_Add_Object() {
             var set = AnalysisSet.Create(nsA1);
 
@@ -241,7 +241,7 @@ namespace AnalysisTests {
             AssertUtil.ContainsExactly(set2, nsA1);
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void SetOfOne_Add_Union() {
             var set = AnalysisSet.CreateUnion(nsA1, UnionComparer.Instances[0]);
 
@@ -266,7 +266,7 @@ namespace AnalysisTests {
             AssertUtil.ContainsExactly(set2, nsAU1);
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void SetOfTwo_Add_Object() {
             var set = AnalysisSet.Create(new[] { nsA1, nsB1 });
             IAnalysisSet set2;
@@ -295,7 +295,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void SetOfTwo_Add_Union() {
             var set = AnalysisSet.CreateUnion(new[] { nsA1, nsB1 }, UnionComparer.Instances[0]);
             IAnalysisSet set2;
@@ -336,7 +336,7 @@ namespace AnalysisTests {
             Assert.IsTrue(added);
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void ManySet_Add_Object() {
             var set = AnalysisSet.Create(new[] { nsA1, nsB1, nsC1 });
             IAnalysisSet set2;
@@ -366,7 +366,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void ManySet_Add_Union() {
             var set = AnalysisSet.CreateUnion(new[] { nsA1, nsB1, nsC1 }, UnionComparer.Instances[0]);
             IAnalysisSet set2;

@@ -77,7 +77,7 @@ namespace PythonToolsTests {
                 notifyKeyChange);
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void RegistryWatcherUpdateNonRecursive() {
             string keyName = "RegistryWatcherUpdateNonRecursive";
 
@@ -123,7 +123,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void RegistryWatcherAddNonRecursive() {
             string keyName = "RegistryWatcherAddNonRecursive";
 
@@ -172,7 +172,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void RegistryWatcherDeleteNonRecursive() {
             string keyName = "RegistryWatcherDeleteNonRecursive";
 
@@ -226,7 +226,7 @@ namespace PythonToolsTests {
 
 
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void RegistryWatcherUpdateRecursive() {
             string keyName = "RegistryWatcherUpdateRecursive";
 
@@ -276,7 +276,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void RegistryWatcherAddRecursive() {
             string keyName = "RegistryWatcherAddRecursive";
 
@@ -330,7 +330,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void RegistryWatcherDeleteRecursive() {
             string keyName = "RegistryWatcherDeleteRecursive";
 
@@ -404,7 +404,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void RegistryWatcher100Keys() {
             string keyName = "RegistryWatcher100Keys";
 
