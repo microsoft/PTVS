@@ -41,6 +41,13 @@ namespace DebuggerTests {
             }
         }
 
+        internal static void ForEachLine(TextReader reader, Action<string> action) {
+            for (var line = reader.ReadLine(); line != null; line = reader.ReadLine()) {
+                action(line);
+            }
+        }
+
+
         internal class EvalResult {
             private readonly string _typeName, _repr;
             private readonly long? _length;
@@ -656,6 +663,12 @@ namespace DebuggerTests {
             try {
                 if (!p.HasExited) {
                     p.Kill();
+                }
+                if (p.StartInfo.RedirectStandardOutput) {
+                    ForEachLine(p.StandardOutput, s => Trace.TraceInformation("STDOUT: {0}", s));
+                }
+                if (p.StartInfo.RedirectStandardError) {
+                    ForEachLine(p.StandardError, s => Trace.TraceWarning("STDERR: {0}", s));
                 }
             } catch (Exception ex) {
                 Console.WriteLine("Failed to kill process");

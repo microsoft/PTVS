@@ -11,6 +11,7 @@
             <Directory path="%ProgramFiles(x86)%\Microsoft Visual Studio 14.0\Common7\IDE\PublicAssemblies" includeSubDirectories="false" />
             <Directory path="%ProgramFiles(x86)%\Microsoft Visual Studio 14.0\Common7\IDE\PrivateAssemblies" includeSubDirectories="false" />
             <Directory path="%ProgramFiles(x86)%\Microsoft Visual Studio 14.0\Common7\IDE\CommonExtensions\Microsoft\TestWindow" includeSubDirectories="false" />
+            <Directory path="%ProgramFiles(x86)%\Microsoft Visual Studio 14.0\Common7\IDE\Extensions\Microsoft\Web Tools\Editors" includeSubDirectories="false" />
           </RuntimeResolution>
           <DiscoveryResolution>
             <Directory path="%ProgramFiles(x86)%\Microsoft Visual Studio 14.0\Common7\IDE\PublicAssemblies" includeSubDirectories="false" />

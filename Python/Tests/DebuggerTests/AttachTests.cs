@@ -68,9 +68,13 @@ namespace DebuggerTests {
             psi.WorkingDirectory = TestData.GetPath(@"TestData\DebuggerProject");
             psi.EnvironmentVariables["PYTHONPATH"] = @"..\..";
             psi.UseShellExecute = false;
+            psi.RedirectStandardOutput = true;
+            psi.RedirectStandardError = true;
             Process p = Process.Start(psi);
             try {
-                Thread.Sleep(1000);
+                if (p.WaitForExit(1000)) {
+                    Assert.Fail("Process exited");
+                }
 
                 var proc = PythonProcess.Attach(p.Id);
                 try {

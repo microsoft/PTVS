@@ -150,7 +150,8 @@ namespace DebuggerTests {
                 // 3.x: http://pytools.codeplex.com/workitem/76
                 ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "cinst", 1,
                     new ChildInfo("abc", null, "42", "0x2a"),
-                    new ChildInfo("uc", null, "u\'привет мир\'"));
+                    // "u\'привет мир\'"
+                    new ChildInfo("uc", null, @"u'\xd0\xbf\xd1\x80\xd0\xb8\xd0\xb2\xd0\xb5\xd1\x82 \xd0\xbc\xd0\xb8\xd1\x80'"));
             }
             ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "c2inst", 1,
                 new ChildInfo("abc", null, "42", "0x2a"),
@@ -181,10 +182,10 @@ namespace DebuggerTests {
             };
 
             if (Version.Version < PythonLanguageVersion.V26) {
-                children.RemoveAll(c => c.Expression == "gi_code");
+                children.RemoveAll(c => c.ChildText == "gi_code");
             }
             if (Version.Version < PythonLanguageVersion.V35) {
-                children.RemoveAll(c => c.Expression == "gi_yieldfrom");
+                children.RemoveAll(c => c.ChildText == "gi_yieldfrom");
             }
 
             ChildTest("GeneratorTest.py", 6, "a", 0, children.ToArray());
