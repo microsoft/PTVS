@@ -100,6 +100,12 @@ namespace Microsoft.PythonTools.Uwp.Project {
             const int attachRetryLimit = 10;
             int attachRetryCount = 0;
 
+            // Remove the port number if exist
+            int index = remoteMachine.IndexOf(':');
+            if (index != -1) {
+                remoteMachine = remoteMachine.Substring(0, index);
+            }
+
             var qualifierString = string.Format(
                 "tcp://{0}@{1}:{2}?{3}={4}&{5}={6}&{7}={8}",
                 secret,
