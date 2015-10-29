@@ -100,7 +100,7 @@ namespace PythonToolsTests {
             Assert.AreEqual("'hello'", ExecuteText("a"));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(3)]
         public void DisplayFunctionLocalsAndGlobals() {
             Attach("DebugReplTest2.py", 13);
 
@@ -108,7 +108,7 @@ namespace PythonToolsTests {
             Assert.AreEqual("5", ExecuteText("print(global_val)"));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(3)]
         public void ErrorInInput() {
             Attach("DebugReplTest2.py", 13);
 
@@ -236,7 +236,7 @@ NameError: name 'does_not_exist' is not defined
             Assert.AreEqual("60", ExecuteText("b2"));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(3)]
         [TestCategory("10s")]
         public void Abort() {
             Attach("DebugReplTest5.py", 3);

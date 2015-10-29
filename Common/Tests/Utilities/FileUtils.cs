@@ -67,6 +67,10 @@ namespace TestUtilities {
             }
         }
 
+        public static void DeleteDirectory(string path) {
+            Trace.TraceInformation("Removing directory: {0}", path);
+            NativeMethods.RecursivelyDeleteDirectory(path, silent: true);
+        }
 
         public static IDisposable Backup(string path) {
             var backup = Path.GetTempFileName();

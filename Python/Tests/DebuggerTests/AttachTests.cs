@@ -60,7 +60,7 @@ namespace DebuggerTests {
         /// in addition to patching the thread method so that breakpoints on threads created after
         /// attach via the threading module can be hit.
         /// </summary>
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(3)]
         public virtual void AttachThreadingStartNewThread() {
             // http://pytools.codeplex.com/workitem/638
             // http://pytools.codeplex.com/discussions/285741#post724014
@@ -177,7 +177,7 @@ namespace DebuggerTests {
         /// hits resume the thread will eventually return back to Python code, and then we'll block it
         /// because we haven't cleared the stepping bit.
         /// </summary>
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(3)]
         [TestCategory("10s")]
         public virtual void AttachMultithreadedSleeper() {
             // http://pytools.codeplex.com/discussions/285741 1/12/2012 6:20 PM
@@ -292,7 +292,7 @@ namespace DebuggerTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(3)]
         [TestCategory("10s")]
         public virtual void AttachReattachInfiniteThreads() {
             Process p = Process.Start(Version.InterpreterPath, "\"" + TestData.GetPath(@"TestData\DebuggerProject\InfiniteThreads.py") + "\"");

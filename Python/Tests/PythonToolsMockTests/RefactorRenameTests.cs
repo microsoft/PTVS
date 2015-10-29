@@ -1659,7 +1659,7 @@ abc = 100
 
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(3)]
         [TestCategory("10s")]
         public void Decorators() {
             RefactorTest("abc", "fob",

@@ -38,11 +38,20 @@ namespace DjangoTests {
             OarApp
         }
 
-        [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
-            var dbFile = Path.Combine(Environment.GetEnvironmentVariable("LOCALAPPDATA"), "DjangoProjectDatabase.db");
-            if (File.Exists(dbFile)) {
-                File.Delete(dbFile);
+        private void AssertDjangoVersion(Version min = null, Version max = null) {
+            Version.AssertInstalled();
+            using (var output = ProcessOutput.RunHiddenAndCapture(
+                Version.InterpreterPath,
+                new[] { "-c", "import django; print(django.get_version())" })) {
+                output.Wait();
+                Assert.AreEqual(0, output.ExitCode);
+                var version = System.Version.Parse(output.StandardOutputLines.FirstOrDefault());
+                if (min != null && version < min) {
+                    Assert.Inconclusive("Django before {0} not supported", min);
+                }
+                if (max != null && version >= max) {
+                    Assert.Inconclusive("Django {0} and later not supported", max);
+                }
             }
         }
 
@@ -56,7 +65,7 @@ namespace DjangoTests {
                 switch (requiredState) {
                     case DbState.OarApp:
                         using (var output = ProcessOutput.Run(Version.InterpreterPath,
-                            new [] {"manage.py", "migrate"},
+                            new [] {"manage.py", "syncdb", "--noinput"},
                             DebuggerTestPath,
                             null, false, null)) {
                             output.Wait();
@@ -91,7 +100,11 @@ namespace DjangoTests {
         }
 
         [TestMethod, Priority(1)]
+        [TestCategory("10s"), TestCategory("60s")]
         public void TemplateStepping() {
+            // https://github.com/Microsoft/PTVS/issues/938
+            AssertDjangoVersion(max: new Version(1, 8));
+
             Init(DbState.OarApp);
 
             StepTest(

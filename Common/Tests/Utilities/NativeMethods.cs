@@ -270,12 +270,15 @@ namespace TestUtilities {
         /// handle long file names
         /// </summary>
         /// <param name="dir"></param>
-        public static void RecursivelyDeleteDirectory(string dir) {
+        public static void RecursivelyDeleteDirectory(string dir, bool silent = false) {
             SHFILEOPSTRUCT fileOp = new SHFILEOPSTRUCT();
             fileOp.pFrom = dir + '\0';  // pFrom must be double null terminated
             fileOp.wFunc = FO_Func.FO_DELETE;
             fileOp.fFlags = FILEOP_FLAGS_ENUM.FOF_NOCONFIRMATION |
                 FILEOP_FLAGS_ENUM.FOF_NOERRORUI;
+            if (silent) {
+                fileOp.fFlags |= FILEOP_FLAGS_ENUM.FOF_SILENT;
+            }
             int res = SHFileOperation(ref fileOp);
             if (res != 0) {
                 throw new System.IO.IOException("Failed to delete dir " + res);

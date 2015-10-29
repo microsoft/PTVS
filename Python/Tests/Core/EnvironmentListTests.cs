@@ -48,6 +48,15 @@ namespace PythonToolsUITests {
             PythonTestData.Deploy(includeTestData: false);
         }
 
+        private static readonly List<string> DeleteFolder = new List<string>();
+
+        [ClassCleanup]
+        public static void DoCleanup() {
+            foreach (var folder in DeleteFolder) {
+                FileUtils.DeleteDirectory(folder);
+            }
+        }
+
 
         private static InterpreterConfiguration MockInterpreterConfiguration(Version version, InterpreterUIMode uiMode) {
             return new InterpreterConfiguration(null, null, null, null, null, ProcessorArchitecture.None, version, uiMode);
@@ -701,7 +710,7 @@ namespace PythonToolsUITests {
             return true;
         }
 
-        private static IInterpreterOptionsService MakeEmptyVEnv() {
+        private IInterpreterOptionsService MakeEmptyVEnv() {
             var python = PythonPaths.Versions.FirstOrDefault(p =>
                 p.IsCPython && Directory.Exists(Path.Combine(p.LibPath, "venv"))
             );
@@ -710,6 +719,10 @@ namespace PythonToolsUITests {
             }
 
             var env = TestData.GetTempPath(randomSubPath: true);
+            if (env.Length > 140) {
+                env = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+                DeleteFolder.Add(env);
+            }
             using (var proc = ProcessOutput.RunHiddenAndCapture(
                 python.InterpreterPath, "-m", "venv", env, "--clear"
             )) {

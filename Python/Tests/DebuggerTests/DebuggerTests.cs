@@ -237,7 +237,11 @@ namespace DebuggerTests {
                 } else {
                     Assert.IsNull(evalRes.ExceptionText, "exception while evaluating: " + evalRes.ExceptionText);
                     Assert.IsTrue(evalRes.IsExpandable, "result is not expandable");
-                    var childrenReceived = new List<PythonEvaluationResult>(evalRes.GetChildren(Int32.MaxValue));
+                    var childrenReceived = evalRes.GetChildren(Int32.MaxValue).ToList();
+                    for (int retries = 3; childrenReceived.Count == 0 && retries > 0; retries -= 1) {
+                        Thread.Sleep(100);
+                        childrenReceived = evalRes.GetChildren(Int32.MaxValue).ToList();
+                    }
 
                     Console.WriteLine("{0} children received:", childrenReceived.Count);
                     foreach (var childReceived in childrenReceived) {
