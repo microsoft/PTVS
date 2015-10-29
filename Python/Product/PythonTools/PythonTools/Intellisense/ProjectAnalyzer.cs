@@ -963,6 +963,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 try {
                     ast = parser.ParseFile();
                 } catch (BadSourceException) {
+                } catch (System.Text.EncoderFallbackException) {
                 } catch (Exception e) {
                     if (e.IsCriticalException()) {
                         throw;

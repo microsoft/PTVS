@@ -292,8 +292,11 @@ namespace Microsoft.PythonTools.Parsing {
         }
 
         public override char GetNextChar() {
-            _fallbackLen--;
-            return '?';
+            if (_fallbackLen > 0) {
+                _fallbackLen--;
+                return '?';
+            }
+            return '\0';
         }
 
         public override bool MovePrevious() {
