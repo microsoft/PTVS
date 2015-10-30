@@ -211,7 +211,7 @@ namespace DebuggerTests {
         /// 
         /// http://pytools.codeplex.com/workitem/834
         /// </summary>
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(3)]
         public virtual void AttachSingleThreadedSleeper() {
             // http://pytools.codeplex.com/discussions/285741 1/12/2012 6:20 PM
             Process p = Process.Start(Version.InterpreterPath, "\"" + TestData.GetPath(@"TestData\DebuggerProject\AttachSingleThreadedSleeper.py") + "\"");

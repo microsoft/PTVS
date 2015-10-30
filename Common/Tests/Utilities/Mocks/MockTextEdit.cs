@@ -120,8 +120,8 @@ namespace TestUtilities.Mocks {
             }
 
             List<MockTextChange> changes = new List<MockTextChange>();
-            for (int i = 0; i < _edits.Count; i++) {
-                var curEdit = _edits[i];
+            int adjustment = adjust;
+            foreach(var curEdit in _edits.OrderBy(e => e.Position)) {
                 InsertionEdit insert = curEdit as InsertionEdit;
                 if (insert != null) {
                     changes.Add(
@@ -131,10 +131,11 @@ namespace TestUtilities.Mocks {
                                 insert.Position,
                                 0
                             ),
-                            insert.Position,
+                            insert.Position + adjustment,
                             insert.Text
                         )
                     );
+                    adjustment += insert.Text.Length;
                 } else {
                     DeletionEdit delete = curEdit as DeletionEdit;
                     changes.Add(
@@ -144,10 +145,11 @@ namespace TestUtilities.Mocks {
                                 delete.Position,
                                 delete.Length
                             ),
-                            delete.Position + adjust,
+                            delete.Position + adjustment,
                             ""
                         )
                     );
+                    adjustment -= delete.Length;
                 }
             }
 

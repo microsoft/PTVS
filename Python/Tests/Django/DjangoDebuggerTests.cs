@@ -164,7 +164,7 @@ namespace DjangoTests {
             );
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(3)]
         [TestCategory("10s")]
         public void BreakInTemplate() {
             Init(DbState.OarApp);

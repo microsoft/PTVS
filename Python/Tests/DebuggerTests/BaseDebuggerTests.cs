@@ -277,7 +277,7 @@ namespace DebuggerTests {
                             thread = newthread;
                             processLoaded.SetResult(true);
                         } catch (Exception ex) {
-                            backgroundException.SetException(ex);
+                            backgroundException.TrySetException(ex);
                         }
                     },
                     interpreterOptions: InterpreterOptions
@@ -305,7 +305,7 @@ namespace DebuggerTests {
                                 allBreakpointBindResults.SetResult(true);
                             }
                         } catch (Exception ex) {
-                            backgroundException.SetException(ex);
+                            backgroundException.TrySetException(ex);
                         }
                     };
 
@@ -319,7 +319,7 @@ namespace DebuggerTests {
                                 allBreakpointBindResults.SetResult(true);
                             }
                         } catch (Exception ex) {
-                            backgroundException.SetException(ex);
+                            backgroundException.TrySetException(ex);
                         }
                     };
 
@@ -348,7 +348,7 @@ namespace DebuggerTests {
                             }
                             process.Continue();
                         } catch (Exception ex) {
-                            backgroundException.SetException(ex);
+                            backgroundException.TrySetException(ex);
                         }
                     };
 

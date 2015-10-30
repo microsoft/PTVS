@@ -841,7 +841,7 @@ namespace DebuggerTests {
 
         #region Stepping Tests
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(3)]
         [TestCategory("10s"), TestCategory("60s")]
         public void StepTest() {
             // Bug 1315: https://pytools.codeplex.com/workitem/1315

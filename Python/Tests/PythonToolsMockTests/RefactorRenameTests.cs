@@ -637,7 +637,7 @@ a.fob
             );
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(3)]
         [TestCategory("10s")]
         public void SanityParameter() {
             RefactorTest("fob", "abc",

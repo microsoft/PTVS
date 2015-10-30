@@ -106,7 +106,7 @@ namespace PythonToolsTests {
             Assert.IsTrue(proj.Build("TestCommands", new ILogger[] { new ConsoleLogger(LoggerVerbosity.Detailed) }));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(3)]
         [TestCategory("10s"), TestCategory("60s")]
         public void TestRunPythonCommand() {
             var expectedSearchPath = string.Format("['{0}', '{1}']",
