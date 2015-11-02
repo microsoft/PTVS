@@ -84,13 +84,8 @@ namespace TestUtilities.Mocks {
             StringBuilder text = new StringBuilder(_snapshot.GetText());
             var deletes = new NormalizedSnapshotSpanCollection(
                 _snapshot,
-                _edits.Where(edit => edit is DeletionEdit)
-                .Select(edit =>
-                    new Span(
-                        ((DeletionEdit)edit).Position,
-                        ((DeletionEdit)edit).Length
-                    )
-                )
+                _edits.OfType<DeletionEdit>()
+                .Select(edit => new Span(edit.Position, edit.Length))
             );
 
             // apply the deletes
@@ -101,7 +96,7 @@ namespace TestUtilities.Mocks {
             // now apply the inserts
             int curDelete = 0, adjust = 0;
             int deletesBorrowed = 0;
-            foreach (InsertionEdit insert in _edits.Where(edit => edit is InsertionEdit)) {
+            foreach (var insert in _edits.OfType<InsertionEdit>()) {
                 while (curDelete < deletes.Count && deletes[curDelete].Start < insert.Position) {
                     if (deletes[curDelete].Start + deletes[curDelete].Length < insert.Position) {
                         adjust -= deletes[curDelete].Length - deletesBorrowed;
@@ -120,36 +115,28 @@ namespace TestUtilities.Mocks {
             }
 
             List<MockTextChange> changes = new List<MockTextChange>();
-            int adjustment = adjust;
+            adjust = 0;
             foreach(var curEdit in _edits.OrderBy(e => e.Position)) {
                 InsertionEdit insert = curEdit as InsertionEdit;
                 if (insert != null) {
                     changes.Add(
                         new MockTextChange(
-                            new SnapshotSpan(
-                                _snapshot,
-                                insert.Position,
-                                0
-                            ),
-                            insert.Position + adjustment,
+                            new SnapshotSpan(_snapshot, insert.Position, 0),
+                            insert.Position + adjust,
                             insert.Text
                         )
                     );
-                    adjustment += insert.Text.Length;
+                    adjust += insert.Text.Length;
                 } else {
-                    DeletionEdit delete = curEdit as DeletionEdit;
+                    DeletionEdit delete = (DeletionEdit)curEdit;
                     changes.Add(
                         new MockTextChange(
-                            new SnapshotSpan(
-                                _snapshot,
-                                delete.Position,
-                                delete.Length
-                            ),
-                            delete.Position + adjustment,
+                            new SnapshotSpan(_snapshot, delete.Position, delete.Length),
+                            delete.Position + adjust,
                             ""
                         )
                     );
-                    adjustment -= delete.Length;
+                    adjust -= delete.Length;
                 }
             }
 

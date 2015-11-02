@@ -99,7 +99,7 @@ namespace DjangoTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(3)]
         [TestCategory("10s"), TestCategory("60s")]
         public void TemplateStepping() {
             // https://github.com/Microsoft/PTVS/issues/938
@@ -187,7 +187,7 @@ namespace DjangoTests {
             }.Run();
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(3)]
         public void TemplateLocals() {
             Init(DbState.OarApp);
 
