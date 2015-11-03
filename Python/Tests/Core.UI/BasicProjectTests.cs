@@ -62,8 +62,8 @@ namespace PythonToolsUITests {
             PythonTestData.Deploy();
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void TemplateDirectories() {
             var languageName = PythonVisualStudioApp.TemplateLanguageName;
             using (var app = new VisualStudioApp()) {
@@ -85,8 +85,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void UserProjectFile() {
             using (var app = new VisualStudioApp()) {
                 var project = app.CreateProject(
@@ -110,8 +110,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestSetDefaultInterpreter() {
             using (var app = new VisualStudioApp()) {
                 var props = app.Dte.get_Properties("Python Tools", "Interpreters");
@@ -133,8 +133,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void LoadPythonProject() {
             using (var app = new VisualStudioApp()) {
                 string fullPath = Path.GetFullPath(@"TestData\HelloWorld.sln");
@@ -151,8 +151,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void LoadFlavoredProject() {
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\FlavoredProject.sln");
@@ -167,8 +167,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void SaveProjectAs() {
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\HelloWorld.sln");
@@ -214,8 +214,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void RenameProjectTest() {
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\RenameProjectTest.sln");
@@ -260,8 +260,8 @@ namespace PythonToolsUITests {
 
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ProjectAddItem() {
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\HelloWorld.sln");
@@ -295,8 +295,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ProjectAddFolder() {
             string fullPath = TestData.GetPath(@"TestData\HelloWorld.sln");
             using (var app = new VisualStudioApp()) {
@@ -333,8 +333,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ProjectAddFolderThroughUI() {
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\AddFolderExists.sln");
@@ -372,8 +372,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestAddExistingFolder() {
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\AddExistingFolder.sln");
@@ -404,8 +404,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestAddExistingFolderDebugging() {
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\AddExistingFolder.sln");
@@ -449,8 +449,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ProjectBuild() {
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\HelloWorld.sln");
@@ -459,8 +459,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ProjectRenameAndDeleteItem() {
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\RenameItemsTest.sln");
@@ -567,8 +567,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ChangeDefaultInterpreterProjectClosed() {
             using (var app = new PythonVisualStudioApp()) {
                 
@@ -585,8 +585,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void AddTemplateItem() {
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\HelloWorld.sln");
@@ -604,8 +604,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestAutomationProperties() {
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\HelloWorld.sln");
@@ -643,8 +643,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestAutomationProject() {
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\HelloWorld.sln");
@@ -685,8 +685,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestProjectItemAutomation() {
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\HelloWorld.sln");
@@ -707,8 +707,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestRelativePaths() {
             // link to outside file should show up as top-level item
             using (var app = new VisualStudioApp()) {
@@ -719,8 +719,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ProjectConfiguration() {
             Assert.Fail("Test excluded because it crashes VS");
 
@@ -751,8 +751,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void DependentNodes() {
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\XamlProject.sln");
@@ -764,8 +764,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void DotNetReferences() {
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\XamlProject.sln");
@@ -780,8 +780,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void DotNetSearchPathReferences() {
             var dllPath = TestData.GetPath(@"TestData\AssemblyReference\PythonApplication\Assemblies\ClassLibrary3.dll");
             Directory.CreateDirectory(Path.GetDirectoryName(dllPath));
@@ -814,8 +814,8 @@ namespace PythonToolsUITests {
         /// Opens a project w/ a reference to a .NET project.  Makes sure we get completion after a build, changes the assembly, rebuilds, makes
         /// sure the completion info changes.
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void DotNetProjectReferences() {
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\ProjectReference\ProjectReference.sln", expectedProjects: 2, projectName: "PythonApplication");
@@ -865,8 +865,8 @@ namespace PythonToolsUITests {
         /// Opens a project w/ a reference to a .NET assembly (not a project).  Makes sure we get completion against the assembly, changes the assembly, rebuilds, makes
         /// sure the completion info changes.
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void DotNetAssemblyReferences() {
             CompileFile("ClassLibrary.cs", "ClassLibrary.dll");
 
@@ -898,8 +898,8 @@ namespace PythonToolsUITests {
         /// Opens a project w/ a reference to a .NET assembly (not a project).  Makes sure we get completion against the assembly, changes the assembly, rebuilds, makes
         /// sure the completion info changes.
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void MultipleDotNetAssemblyReferences() {
             CompileFile("ClassLibrary.cs", "ClassLibrary.dll");
             CompileFile("ClassLibrary2.cs", "ClassLibrary2.dll");
@@ -1013,8 +1013,8 @@ namespace PythonToolsUITests {
         /// Opens a project w/ a reference to a .NET assembly (not a project).  Makes sure we get completion against the assembly, changes the assembly, rebuilds, makes
         /// sure the completion info changes.
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void MultiProjectAnalysis() {
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\MultiProjectAnalysis\MultiProjectAnalysis.sln", projectName: "PythonApplication", expectedProjects: 2);
@@ -1034,8 +1034,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void CProjectReference() {
             var pythons = PythonPaths.Versions.Where(p => p.Version.Is3x() && !p.Isx64).Reverse().Take(2).ToList();
             if (pythons.Count != 2) {
@@ -1093,8 +1093,8 @@ namespace PythonToolsUITests {
         /// Opens a project w/ a reference to a .NET assembly (not a project).  Makes sure we get completion against the assembly, changes the assembly, rebuilds, makes
         /// sure the completion info changes.
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void AddFolderExists() {
             try {
                 // Ensure X does not exist, otherwise we won't be able to create
@@ -1141,8 +1141,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void AddFolderCopyAndPasteFile() {
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\AddFolderCopyAndPasteFile.sln");
@@ -1177,8 +1177,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void CopyAndPasteFolder() {
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\CopyAndPasteFolder.sln");
@@ -1219,8 +1219,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void AddFromFileInSubDirectory() {
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\AddExistingFolder.sln");
@@ -1245,8 +1245,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void AddFromFileOutsideOfProject() {
             using (var app = new VisualStudioApp()) {
                 var options = app.GetService<PythonToolsService>().GeneralOptions;
@@ -1299,8 +1299,8 @@ namespace PythonToolsUITests {
         /// <summary>
         /// Verify we can copy a folder with multiple items in it.
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void CopyFolderWithMultipleItems() {
             // http://mpfproj10.codeplex.com/workitem/11618
             using (var app = new VisualStudioApp()) {
@@ -1327,8 +1327,8 @@ namespace PythonToolsUITests {
         /// <summary>
         /// Verify we can start the interactive window when focus in within solution explorer in one of our projects.
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void OpenInteractiveFromSolutionExplorer() {
             // http://pytools.codeplex.com/workitem/765
             var python = PythonPaths.Python26 ?? PythonPaths.Python27;
@@ -1363,8 +1363,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void LoadProjectWithDuplicateItems() {
             using (var app = new VisualStudioApp()) {
                 var solution = app.OpenProject(@"TestData\DuplicateItems.sln");
@@ -1383,8 +1383,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void EnvironmentVariablesWithDebugging() {
             var filename = Path.Combine(TestData.GetTempPath(), Path.GetRandomFileName());
             Console.WriteLine("Temp file is: {0}", filename);
@@ -1419,8 +1419,8 @@ while True: pass
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void EnvironmentVariablesWithoutDebugging() {
             var filename = Path.Combine(TestData.GetTempPath(), Path.GetRandomFileName());
             Console.WriteLine("Temp file is: {0}", filename);
@@ -1453,8 +1453,8 @@ while True: pass
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void PreviewFile() {
             using (var app = new PythonVisualStudioApp()) {
                 var solution = app.OpenProject(@"TestData\HelloWorld.sln");
@@ -1485,8 +1485,8 @@ while True: pass
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void PreviewMissingFile() {
             using (var app = new PythonVisualStudioApp()) {
                 var solution = app.OpenProject(@"TestData\MissingFiles.sln");
@@ -1513,8 +1513,8 @@ while True: pass
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void CopyFullPath() {
             foreach (var projectType in ProjectTypes) {
                 var def = new ProjectDefinition(

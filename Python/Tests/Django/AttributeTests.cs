@@ -32,7 +32,7 @@ namespace DjangoTests {
             PythonTestData.Deploy();
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void ProvideDebugLanguageTests() {
             var attr = new ProvideDebugLanguageAttribute("Django Templates",
                 DjangoPackage.DjangoTemplateLanguageId,
@@ -54,7 +54,7 @@ SetValue: Engine, 0{EC1375B7-E2CE-43E8-BF75-DC638DE1F1F9}
 ", mockCtx._result.ToString());
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void ProvideLanguageTemplatesAttributeTests() {
             var attr = new ProvideLanguageTemplatesAttribute(
                 "{349C5851-65DF-11DA-9384-00065B846F21}", 
@@ -87,7 +87,7 @@ Closed Key: Projects\{9AF89C0F-85F6-4A20-9023-5D15D912F3B1}
 ", mockCtx._result.ToString());
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void ProvideEditorExtension2AttributeTests() {
             var attr = new ProvideEditorExtension2Attribute(
                     typeof(DjangoEditorFactory),

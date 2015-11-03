@@ -8,7 +8,7 @@
     <ProjectGuid>{0372b0eb-ce83-4d63-b97f-7ad9b4744054}</ProjectGuid>
     <ProjectHome>.</ProjectHome>
     <ProjectTypeGuids>{5F0BE9CA-D677-4A4D-8806-6076C0FAAD37};{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
-    <StartupFile>DjangoApplication1.py</StartupFile>
+    <StartupFile>manage.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -16,6 +16,7 @@
     <OutputPath>.</OutputPath>
     <Name>DjangoApplication1</Name>
     <RootNamespace>DjangoApplication1</RootNamespace>
+    <DjangoSettingsModule>settings</DjangoSettingsModule>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -31,11 +32,15 @@
     <Compile Include="Oar\tests.py" />
     <Compile Include="Oar\views.py" />
     <Compile Include="Oar\__init__.py" />
-    <Compile Include="__init__.py" />
     <Compile Include="manage.py" />
     <Compile Include="settings.py" />
     <Compile Include="urls.py" />
-    <Compile Include="Templates\polls\index.html" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Templates\polls\index.html" />
+    <Content Include="Templates\polls\loop.html" />
+    <Content Include="Templates\polls\loop2.html" />
+    <Content Include="Templates\polls\loop_nobom.html" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Oar\" />

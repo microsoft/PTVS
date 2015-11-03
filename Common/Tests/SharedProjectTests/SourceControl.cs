@@ -60,8 +60,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         /// C# project.  Once enables in Tools->Options->Source Control you can get
         /// the list of events from Tools->Show Scc Track Document Events.
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         // Currently Fails: https://pytools.codeplex.com/workitem/2609
         public void MoveFolderWithItem() {
             using (var app = new VisualStudioApp()) {
@@ -116,8 +116,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void AddNewItem() {
             using (var app = new VisualStudioApp()) {
 
@@ -184,8 +184,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void IncludeInProject() {
             using (var app = new VisualStudioApp()) {
                 // close any projects before switching source control...
@@ -223,8 +223,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void RemoveItem() {
             using (var app = new VisualStudioApp()) {
 
@@ -266,8 +266,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         /// <summary>
         /// Verify we get called w/ a project which does have source control enabled.
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void BasicSourceControl() {
             using (var app = new VisualStudioApp()) {
 
@@ -314,8 +314,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         /// <summary>
         /// Verify the glyph change APIs update the glyphs appropriately
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void SourceControlGlyphChanged() {
             using (var app = new VisualStudioApp()) {
 
@@ -366,8 +366,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         /// <summary>
         /// Verify we don't get called for a project which doesn't have source control enabled.
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void SourceControlNoControl() {
             using (var app = new VisualStudioApp()) {
 
@@ -402,8 +402,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         /// 
         /// https://pytools.codeplex.com/workitem/1417
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void SourceControlExcludedFilesNotPresent() {
             using (var app = new VisualStudioApp()) {
                 foreach (var projectType in ProjectTypes) {
@@ -431,8 +431,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         /// <summary>
         /// Verify we get called w/ a project which does have source control enabled.
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void SourceControlRenameFolder() {
             using (var app = new VisualStudioApp()) {
                 foreach (var projectType in ProjectTypes) {

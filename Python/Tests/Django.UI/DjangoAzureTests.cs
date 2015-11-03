@@ -30,8 +30,8 @@ namespace DjangoUITests {
             PythonTestData.Deploy();
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void AddCloudProject() {
             using (var app = new VisualStudioApp()) {
                 var project = app.CreateProject(

@@ -25,7 +25,7 @@ using TestUtilities.Mocks;
 namespace IronPythonTests {
     [TestClass]
     public class IronPythonDatabaseTest {
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void InvalidIronPythonDatabase() {
             using (var db = MockCompletionDB.Create(PythonLanguageVersion.V27,
                 // __bad_builtin__ is missing str

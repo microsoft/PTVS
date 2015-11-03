@@ -26,8 +26,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
     /// </summary>
     [TestClass]
     public class ScriptProjectTests : SharedProjectTest {
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void RunWithoutStartupFile() {
             foreach (var projectType in ProjectTypes) {
                 var testDef = new ProjectDefinition("RunWithoutStartupFile", projectType);
@@ -46,8 +46,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         /// Renaming the folder containing the startup script should update the startup script
         /// https://nodejstools.codeplex.com/workitem/476
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void RenameStartupFileFolder() {
             foreach (var projectType in ProjectTypes) {
                 var testDef = new ProjectDefinition(
@@ -72,8 +72,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void RenameStartupFile() {
             foreach (var projectType in ProjectTypes) {
                 var testDef = new ProjectDefinition(

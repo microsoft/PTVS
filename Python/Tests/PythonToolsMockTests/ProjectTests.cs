@@ -34,7 +34,7 @@ namespace PythonToolsMockTests {
     public class ProjectTests : SharedProjectTest {
         public static ProjectType PythonProject = ProjectTypes.First(x => x.ProjectExtension == ".pyproj");
 
-        [TestMethod]
+        [TestMethod, Priority(1)]
         public void BasicProjectTest() {
             var sln = new ProjectDefinition(
                 "HelloWorld",
@@ -57,7 +57,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void CutRenamePaste() {
             foreach (var projectType in ProjectTypes) {
                 var testDef = new ProjectDefinition("DragDropCopyCutPaste",
@@ -89,7 +89,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(1)]
         public void ShouldWarnOnRun() {
             var sln = new ProjectDefinition(
                 "HelloWorld",

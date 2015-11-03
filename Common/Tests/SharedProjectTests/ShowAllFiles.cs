@@ -36,8 +36,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             AssertListener.Initialize();
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ShowAllFilesToggle() {
             foreach (var projectType in ProjectTypes) {
                 var def = new ProjectDefinition(
@@ -59,8 +59,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ShowAllFilesFilesAlwaysHidden() {
             foreach (var projectType in ProjectTypes) {
                 var def = MakeBasicProject(projectType);
@@ -72,8 +72,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ShowAllFilesSymLinks() {
             foreach (var projectType in ProjectTypes) {
                 var def = new ProjectDefinition(
@@ -134,8 +134,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ShowAllFilesLinked() {
             foreach (var projectType in ProjectTypes) {
                 var def = new ProjectDefinition(
@@ -175,8 +175,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ShowAllFilesIncludeExclude() {
             foreach (var projectType in ProjectTypes) {
                 var def = new ProjectDefinition(
@@ -371,8 +371,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ShowAllFilesChanges() {
             foreach (var projectType in ProjectTypes) {
                 using (var solution = MakeBasicProject(projectType).Generate().ToVs()) {
@@ -455,8 +455,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ShowAllFilesHiddenFiles() {
             foreach (var projectType in ProjectTypes) {
                 var def = new ProjectDefinition(
@@ -548,8 +548,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ShowAllFilesOnPerUser() {
             foreach (var projectType in ProjectTypes) {
                 var solutionFile = SolutionFile.Generate("ShowAllFilesOnPerUser",
@@ -586,8 +586,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ShowAllFilesOnPerProject() {
             foreach (var projectType in ProjectTypes) {
                 var def = new ProjectDefinition(
@@ -618,8 +618,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ShowAllFilesOffPerUser() {
             foreach (var projectType in ProjectTypes) {
                 var solutionFile = SolutionFile.Generate("ShowAllFilesOffPerUser",
@@ -656,8 +656,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ShowAllFilesOffPerProject() {
             foreach (var projectType in ProjectTypes) {
                 var def = new ProjectDefinition(
@@ -687,8 +687,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ShowAllFilesDefault() {
             foreach (var projectType in ProjectTypes) {
                 var def = new ProjectDefinition(
@@ -724,8 +724,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         /// <summary>
         /// https://nodejstools.codeplex.com/workitem/240
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ShowAllMoveNotInProject() {
             foreach (var projectType in ProjectTypes) {
                 var def = new ProjectDefinition(
@@ -781,8 +781,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         /// <summary>
         /// https://pytools.codeplex.com/workitem/1996
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ShowAllExcludeSelected() {
             foreach (var projectType in ProjectTypes) {
                 var def = new ProjectDefinition(
@@ -844,8 +844,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         /// 
         /// https://nodejstools.codeplex.com/workitem/380
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ShowAllFilesRapidChanges() {
             foreach (var projectType in ProjectTypes) {
                 var def = new ProjectDefinition(
@@ -877,8 +877,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         /// Creating & deleting and then re-creating files rapidly should have the files be 
         /// present in solution explorer.
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ShowAllFilesRapidChanges2() {
             foreach (var projectType in ProjectTypes) {
                 var def = new ProjectDefinition(
@@ -910,14 +910,14 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ShowAllFilesCopyExcludedFolderWithItemByKeyboard() {
             ShowAllFilesCopyExcludedFolderWithItem(DragDropCopyCutPaste.CopyByKeyboard);
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ShowAllFilesCopyExcludedFolderWithItemByMouse() {
             ShowAllFilesCopyExcludedFolderWithItem(DragDropCopyCutPaste.CopyByMouse);
         }
@@ -958,14 +958,14 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ShowAllFilesMoveExcludedItemToExcludedFolderByKeyboard() {
             ShowAllFilesMoveExcludedItemToExcludedFolder(DragDropCopyCutPaste.MoveByKeyboard);
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ShowAllFilesMoveExcludedItemToExcludedFolderByMouse() {
             ShowAllFilesMoveExcludedItemToExcludedFolder(DragDropCopyCutPaste.MoveByMouse);
         }

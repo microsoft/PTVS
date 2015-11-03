@@ -83,7 +83,8 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
+        [TestCategory("10s"), TestCategory("Installed")]
         public void TestResolveEnvironment() {
             var proj1 = new ProjectInstance(TestData.GetPath(@"TestData\Targets\Environments1.pyproj"));
             Assert.IsTrue(proj1.Build("TestResolveEnvironment", new ILogger[] { new ConsoleLogger(LoggerVerbosity.Detailed) }));
@@ -92,19 +93,21 @@ namespace PythonToolsTests {
             Assert.IsTrue(proj2.Build("TestResolveEnvironment", new ILogger[] { new ConsoleLogger(LoggerVerbosity.Detailed) }));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
+        [TestCategory("10s"), TestCategory("Installed")]
         public void TestResolveEnvironmentReference() {
             var proj = new ProjectInstance(TestData.GetPath(@"TestData\Targets\EnvironmentReferences1.pyproj"));
             Assert.IsTrue(proj.Build("TestResolveEnvironment", new ILogger[] { new ConsoleLogger(LoggerVerbosity.Detailed) }));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1), TestCategory("Installed")]
         public void TestCommandDefinitions() {
             var proj = new ProjectInstance(TestData.GetPath(@"TestData\Targets\Commands1.pyproj"));
             Assert.IsTrue(proj.Build("TestCommands", new ILogger[] { new ConsoleLogger(LoggerVerbosity.Detailed) }));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(3)]
+        [TestCategory("10s"), TestCategory("60s")]
         public void TestRunPythonCommand() {
             var expectedSearchPath = string.Format("['{0}', '{1}']",
                 TestData.GetPath(@"TestData").Replace("\\", "\\\\"),

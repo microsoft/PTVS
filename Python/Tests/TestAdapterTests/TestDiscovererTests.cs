@@ -35,7 +35,8 @@ namespace TestAdapterTests {
             PythonTestData.Deploy();
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
+        [TestCategory("10s")]
         public void TestDiscover() {
             var ctx = new MockDiscoveryContext();
             var sink = new MockTestCaseDiscoverySink();
@@ -75,7 +76,7 @@ namespace TestAdapterTests {
             PrintTestCases(sink.Tests);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void DecoratedTests() {
             using (var analyzer = MakeTestAnalyzer()) {
                 AddModule(analyzer, "Fob", @"import unittest
@@ -97,7 +98,7 @@ class MyTest(unittest.TestCase):
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestCaseSubclasses() {
             using (var analyzer = MakeTestAnalyzer()) {
                 AddModule(analyzer, "Pkg.SubPkg", @"import unittest
@@ -135,7 +136,7 @@ class MyTest3(TestBase):
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestCaseRunTests() {
             using (var analyzer = MakeTestAnalyzer()) {
                 AddModule(analyzer, "__main__", @"import unittest
@@ -155,7 +156,7 @@ class TestBase(unittest.TestCase):
         /// <summary>
         /// If we have test* and runTest we shouldn't discover runTest
         /// </summary>
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestCaseRunTestsWithTest() {
             using (var analyzer = MakeTestAnalyzer()) {
                 AddModule(analyzer, "__main__", @"import unittest

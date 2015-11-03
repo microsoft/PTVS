@@ -49,7 +49,7 @@ namespace PythonToolsMockTests {
             PythonTestData.Deploy();
         }
 
-        [TestMethod, Priority(0), TestCategory("Mock")]
+        [TestMethod, Priority(1)]
         public void GetApplicableSpanTest() {
             var text = "if fob.oar(eggs, spam<=ham) :";
 
@@ -82,7 +82,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Mock")]
+        [TestMethod, Priority(1)]
         public void CtrlSpaceCompletions() {
             using (var view = new PythonEditor()) {
                 view.Text = @"def f(param1, param2):
@@ -115,7 +115,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Mock")]
+        [TestMethod, Priority(1)]
         public void KeywordCompletions() {
             using (var view = new PythonEditor(version: PythonLanguageVersion.V35)) {
                 var completionList = new HashSet<string>(view.GetCompletions(0));
@@ -143,7 +143,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Mock")]
+        [TestMethod, Priority(1)]
         public void KeywordOrIdentifierCompletions() {
             // http://pytools.codeplex.com/workitem/560
             string code = @"
@@ -176,7 +176,7 @@ yield_expression = 42
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Mock")]
+        [TestMethod, Priority(1)]
         public void TrueFalseNoneCompletions() {
             // http://pytools.codeplex.com/workitem/1905
             foreach (var version in new[] { PythonLanguageVersion.V27, PythonLanguageVersion.V33 }) {
@@ -201,7 +201,7 @@ yield_expression = 42
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Mock")]
+        [TestMethod, Priority(1)]
         public void CtrlSpaceAfterKeyword() {
             // http://pytools.codeplex.com/workitem/560
             string code = @"
@@ -218,7 +218,7 @@ print
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Mock")]
+        [TestMethod, Priority(1)]
         public void CtrlSpaceAfterNumber() {
             // http://pytools.codeplex.com/workitem/2323
             string code = @"
@@ -236,7 +236,7 @@ print
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Mock")]
+        [TestMethod, Priority(1)]
         public void ExceptionCompletions() {
             using (var vs = new MockVs()) {
                 foreach (string code in new[] { 
@@ -296,7 +296,7 @@ except (sys."}) {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Mock")]
+        [TestMethod, Priority(1)]
         public void MemberCompletions() {
             using (var view = new PythonEditor("x = 2\r\nx.")) {
                 // TODO: Negative tests
@@ -330,7 +330,7 @@ except (sys."}) {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Mock")]
+        [TestMethod, Priority(1)]
         public void SignatureHelp() {
             var prefixes = new[] { "", "(", "a = ", "f(", "l[", "{", "if " };
             var sigs = new[] { 
@@ -387,7 +387,7 @@ except (sys."}) {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Mock")]
+        [TestMethod, Priority(1)]
         public void SignatureHelpStarArgs() {
             SignatureAnalysis sigResult = null;
             using (var view = new PythonEditor(@"def f(a, *b, c=None): pass
@@ -406,7 +406,7 @@ f(1, 2, 3, 4,")) {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Mock")]
+        [TestMethod, Priority(1)]
         public void ImportCompletions() {
             using (var view = new PythonEditor()) {
                 view.Text ="import ";
@@ -432,7 +432,7 @@ f(1, 2, 3, 4,")) {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Mock")]
+        [TestMethod, Priority(1)]
         public void FromImportCompletions() {
             using (var view = new PythonEditor()) {
                 view.Text = "from ";
@@ -493,7 +493,7 @@ f(1, 2, 3, 4,")) {
         }
 
 
-        [TestMethod, Priority(0), TestCategory("Mock")]
+        [TestMethod, Priority(1)]
         public void FromOSPathImportCompletions2x() {
             using (var vs = new MockVs())
             using (var db = MockCompletionDB.Create(PythonLanguageVersion.V27, "os", "ntpath", "posixpath", "os2emxpath")) {
@@ -501,7 +501,7 @@ f(1, 2, 3, 4,")) {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Mock")]
+        [TestMethod, Priority(1)]
         public void FromOSPathImportCompletions3x() {
             using (var vs = new MockVs())
             using (var db = MockCompletionDB.Create(PythonLanguageVersion.V33, "os", "ntpath", "posixpath", "os2emxpath")) {
@@ -541,7 +541,7 @@ f(1, 2, 3, 4,")) {
             AssertUtil.ContainsAtLeast(GetCompletions(vs, -1, code, db.Factory), allNames);
         }
 
-        [TestMethod, Priority(0), TestCategory("Mock")]
+        [TestMethod, Priority(1)]
         public void FromImportMultilineCompletions() {
             using (var vs = new MockVs()) {
                 var code = "from sys import (";
@@ -575,7 +575,8 @@ f(1, 2, 3, 4,")) {
             return GetCompletionNames(analysis.GetCompletions(new MockGlyphService()));
         }
 
-        [TestMethod, Priority(0), TestCategory("Mock")]
+        [TestMethod, Priority(1)]
+        [TestCategory("10s")]
         public void Scenario_CompletionInTripleQuotedString() {
             string code = @"
 '''
@@ -594,7 +595,7 @@ sys.
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Mock")]
+        [TestMethod, Priority(1)]
         public void GotoDefinition() {
             using (var vs = new MockVs()) {
                 string code = @"
@@ -619,7 +620,7 @@ C().fff";
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Mock")]
+        [TestMethod, Priority(1)]
         public void QuickInfo() {
             string code = @"
 x = ""ABCDEFGHIJKLMNOPQRSTUVWYXZ""
@@ -673,7 +674,7 @@ e): <unknown type>");
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Mock")]
+        [TestMethod, Priority(1)]
         public void NormalOverrideCompletions() {
             using (var view2 = new PythonEditor(version: PythonLanguageVersion.V27))
             using (var view3 = new PythonEditor(version: PythonLanguageVersion.V33)) {
@@ -758,7 +759,7 @@ class Baz(Fob, Oar):
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Mock")]
+        [TestMethod, Priority(1)]
         public void BuiltinOverrideCompletions() {
             using (var view2 = new PythonEditor(version: PythonLanguageVersion.V27))
             using (var view3 = new PythonEditor(version: PythonLanguageVersion.V33)) {
@@ -811,7 +812,7 @@ class Baz(Fob, Oar):
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Mock")]
+        [TestMethod, Priority(1)]
         public void OverridesWithMismatchedAnalysis() {
             // Here we create a buffer and analyze. We then add some newlines
             // and a def, expecting completions from A (int). Because the def
@@ -844,7 +845,7 @@ class B(dict):
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Mock")]
+        [TestMethod, Priority(1)]
         public void HideAdvancedMembers() {
             using (var view = new PythonEditor()) {
                 // No text - expect all non-advanced members
@@ -898,7 +899,7 @@ class B(dict):
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Mock")]
+        [TestMethod, Priority(1)]
         public void CompletionWithLongDocString() {
             using (var vs = new MockVs()) {
                 var docString = GenerateText(100, 72, "    ").ToArray();
@@ -951,7 +952,7 @@ def func(a):
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Mock")]
+        [TestMethod, Priority(1)]
         public void ClassCompletionOutsideFunction() {
             // Note that "eggs_and_spam" is longer than the indentation of each
             // scope.
@@ -984,7 +985,7 @@ class Spam(object):
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Mock")]
+        [TestMethod, Priority(1)]
         public void ArgumentNameCompletion() {
             const string code = @"
 def f(param1 = 123, param2 : int = 234):
@@ -999,7 +1000,7 @@ x = f(";
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Mock")]
+        [TestMethod, Priority(1)]
         public void MethodArgumentNameCompletion() {
             const string code = @"
 class MyClass:
@@ -1023,7 +1024,7 @@ x = m.f(";
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Mock")]
+        [TestMethod, Priority(1)]
         public void YieldFromExpressionCompletion() {
             const string code = @"
 def f():
@@ -1052,7 +1053,7 @@ def g():
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Mock")]
+        [TestMethod, Priority(1)]
         public void AwaitExpressionCompletion() {
             const string code = @"
 async def f():

@@ -27,7 +27,7 @@ using CommonUtils = pythontools::Microsoft.VisualStudioTools.CommonUtils;
 namespace PythonToolsTests {
     [TestClass]
     public class CommonUtilsTests {
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestMakeUri() {
             Assert.AreEqual(@"C:\a\b\c\", CommonUtils.MakeUri(@"C:\a\b\c", true, UriKind.Absolute).LocalPath);
             Assert.AreEqual(@"C:\a\b\c", CommonUtils.MakeUri(@"C:\a\b\c", false, UriKind.Absolute).LocalPath);
@@ -99,7 +99,7 @@ namespace PythonToolsTests {
             Assert.IsTrue(CommonUtils.IsSamePath(first, second), string.Format("First: {0} Second: {1}", first, second));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestIsSamePath() {
             // These paths should all look like files. Separators are added to the end
             // to test the directory cases. Paths ending in "." or ".." are always directories,
@@ -172,7 +172,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestCreateFriendlyDirectoryPath() {
             foreach (var testCase in Triples(
                 @"C:\a\b", @"C:\", @"..\..",
@@ -201,7 +201,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestCreateFriendlyFilePath() {
             foreach (var testCase in Triples(
                 @"C:\a\b", @"C:\file.exe", @"..\..\file.exe",
@@ -229,7 +229,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestGetRelativeDirectoryPath() {
             foreach (var testCase in Triples(
                 @"C:\a\b", @"C:\", @"..\..\",
@@ -269,7 +269,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestGetRelativeFilePath() {
             foreach (var testCase in Triples(
                 @"C:\a\b", @"C:\file.exe", @"..\..\file.exe",
@@ -317,7 +317,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestGetAbsoluteDirectoryPath() {
             foreach (var testCase in Triples(
                 @"C:\a\b", @"\", @"C:\",
@@ -344,7 +344,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestGetAbsoluteFilePath() {
             foreach (var testCase in Triples(
                 @"C:\a\b", @"\file.exe", @"C:\file.exe",
@@ -372,7 +372,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestNormalizeDirectoryPath() {
             foreach (var testCase in Pairs(
                 @"a\b\c", @"a\b\c\",
@@ -408,7 +408,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestNormalizePath() {
             foreach (var testCase in Pairs(
                 @"a\b\c", @"a\b\c",
@@ -453,7 +453,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestTrimEndSeparator() {
             // TrimEndSeparator uses System.IO.Path.(Alt)DirectorySeparatorChar
             // Here we assume these are '\\' and '/'
@@ -482,7 +482,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestIsSubpathOf() {
             // Positive tests
             foreach (var testCase in Pairs(
@@ -510,7 +510,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestGetLastDirectoryName() {
             foreach (var testCase in Pairs(
                 @"a\b\c", "b",
@@ -546,7 +546,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestGetParentOfDirectory() {
             foreach (var testCase in Pairs(
                 @"a\b\c", @"a\b\",
@@ -581,7 +581,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestGetFileOrDirectoryName() {
             foreach (var testCase in Pairs(
                 @"a\b\c", @"c",

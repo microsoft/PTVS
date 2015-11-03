@@ -32,7 +32,7 @@ namespace PythonToolsTests {
             PythonTestData.Deploy();
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void UpgradeCheckToolsVersion() {
             var factory = new PythonProjectFactory(null);
             var sp = new MockServiceProvider();
@@ -64,7 +64,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void UpgradeToolsVersion() {
             var factory = new PythonProjectFactory(null);
             var sp = new MockServiceProvider();
@@ -117,7 +117,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void UpgradeCheckUserToolsVersion() {
             var factory = new PythonProjectFactory(null);
             var sp = new MockServiceProvider();
@@ -310,7 +310,7 @@ namespace PythonToolsTests {
             Assert.AreEqual(Guid.Empty, factoryGuid);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void WebProjectCompatibility() {
             const int ExpressSkuValue = 500;
             const int ShellSkuValue = 1000;

@@ -28,8 +28,8 @@ namespace DjangoUITests {
             PythonTestData.Deploy();
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void DebugDjangoProject() {
             using (var app = new VisualStudioApp()) {
                 DebuggerUITests.DebugProject.OpenProjectAndBreak(

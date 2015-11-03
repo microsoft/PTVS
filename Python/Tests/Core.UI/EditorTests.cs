@@ -49,8 +49,8 @@ namespace PythonToolsUITests {
 
         #region Test Cases
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void UnregisteredFileExtensionEditor() {
             using (var app = new PythonVisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\UnregisteredFileExtension.sln");
@@ -70,8 +70,8 @@ namespace PythonToolsUITests {
         }
 
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void OutliningTest() {
             OutlineTest("Program.py",
                 new ExpectedTag(8, 64, "\r\n    print('hello')\r\n    print('world')\r\n    print('!')"),
@@ -86,16 +86,16 @@ namespace PythonToolsUITests {
             );
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void OutlineNestedFuncDef() {
             OutlineTest("NestedFuncDef.py",
                 new ExpectedTag(8, 90, "\r\n    def g():\r\n        print('hello')\r\n        print('world')\r\n        print('!')"),
                 new ExpectedTag(22, 90, "\r\n        print('hello')\r\n        print('world')\r\n        print('!')"));
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void OutliningBadForStatement() {
             // there should be no exceptions and no outlining when parsing a malformed for statement
             OutlineTest("BadForStatement.py");
@@ -126,8 +126,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ClassificationTest() {
             Classification.Verify(GetClassifications("Program.py"),
                 new Classification("comment", 0, 8, "#comment"),
@@ -155,8 +155,8 @@ namespace PythonToolsUITests {
             );
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ClassificationMultiLineStringTest() {
             Classification.Verify(GetClassifications("MultiLineString.py"),
                 new Classification("identifier", 0, 1, "x"),
@@ -168,8 +168,8 @@ namespace PythonToolsUITests {
         /// <summary>
         /// http://pytools.codeplex.com/workitem/749
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ClassificationMultiLineStringTest2() {
             Classification.Verify(GetClassifications("MultiLineString2.py"),
                 new Classification("string", 0, 15, "'''\r\nfob oar'''"),
@@ -178,8 +178,8 @@ namespace PythonToolsUITests {
             );
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void SignaturesTest() {
             using (var app = new PythonVisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\Signatures.sln");
@@ -221,8 +221,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void MultiLineSignaturesTest() {
             using (var app = new PythonVisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\Signatures.sln");
@@ -275,8 +275,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void CompletionsCaseSensitive() {
             // http://pytools.codeplex.com/workitem/457
             using (var app = new PythonVisualStudioApp()) {
@@ -298,8 +298,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void AutoIndent() {
             using (var app = new PythonVisualStudioApp()) {
                 var options = app.GetService<PythonToolsService>().AdvancedOptions;
@@ -468,8 +468,8 @@ pass");
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void AutoIndentExisting() {
             using (var app = new PythonVisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\AutoIndent.sln");
@@ -551,8 +551,8 @@ pass");
             window.Document.Close(vsSaveChanges.vsSaveChangesNo);
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void TypingTest() {
             using (var app = new PythonVisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\EditorTests.sln");
@@ -588,8 +588,8 @@ def f(): pass
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void CompletionTests() {
             using (var app = new PythonVisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\EditorTests.sln");
@@ -642,8 +642,8 @@ x\
             Assert.AreEqual(expectedText, actual);
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void OpenInvalidUnicodeFile() {
             using (var app = new PythonVisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\ErrorProjectUnicode.sln");
@@ -663,8 +663,8 @@ x\
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void IndentationInconsistencyWarning() {
             using (var app = new PythonVisualStudioApp()) {
                 var options = app.Options;
@@ -683,8 +683,8 @@ x\
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void IndentationInconsistencyError() {
             using (var app = new PythonVisualStudioApp()) {
                 var options = app.Options;
@@ -703,8 +703,8 @@ x\
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void IndentationInconsistencyIgnore() {
             using (var app = new PythonVisualStudioApp()) {
                 var options = app.Options;
@@ -745,8 +745,8 @@ x\
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core"), TestCategory("Squiggle")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1), TestCategory("Squiggle")]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ImportPresent() {
             SquiggleShowHide("ImportPresent.py", app => {
                 var items = app.WaitForErrorListItems(0);
@@ -754,8 +754,8 @@ x\
             });
         }
 
-        [TestMethod, Priority(0), TestCategory("Core"), TestCategory("Squiggle")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1), TestCategory("Squiggle")]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ImportSelf() {
             SquiggleShowHide("ImportSelf.py", app => {
                 var items = app.WaitForErrorListItems(0);
@@ -763,8 +763,8 @@ x\
             });
         }
 
-        [TestMethod, Priority(0), TestCategory("Core"), TestCategory("Squiggle")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1), TestCategory("Squiggle")]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ImportMissingThenAddThenExcludeFile() {
             SquiggleShowHide("ImportMissing.py", app => {
                 string text;
@@ -788,8 +788,8 @@ x\
             });
         }
 
-        [TestMethod, Priority(0), TestCategory("Core"), TestCategory("Squiggle")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1), TestCategory("Squiggle")]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ImportPresentThenAddThenRemoveReference() {
             var python = PythonPaths.Versions.LastOrDefault(p => p.Version.Is3x() && !p.Isx64);
             python.AssertInstalled();

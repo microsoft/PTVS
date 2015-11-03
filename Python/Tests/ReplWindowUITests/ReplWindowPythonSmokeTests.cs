@@ -70,8 +70,8 @@ namespace ReplWindowUITests {
             return ReplWindowProxy.Prepare(s, useIPython: useIPython);
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void ExecuteInReplSysArgv() {
             using (var interactive = Prepare())
             using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer(interactive.App.ServiceProvider).InterpreterFactory)) {
@@ -82,8 +82,8 @@ namespace ReplWindowUITests {
             }
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void ExecuteInReplSysArgvScriptArgs() {
             using (var interactive = Prepare())
             using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer(interactive.App.ServiceProvider).InterpreterFactory)) {
@@ -94,8 +94,8 @@ namespace ReplWindowUITests {
             }
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void ExecuteInReplUnicodeFilename() {
             using (var interactive = Prepare())
             using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer(interactive.App.ServiceProvider).InterpreterFactory)) {
@@ -106,8 +106,8 @@ namespace ReplWindowUITests {
             }
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void CwdImport() {
             using (var interactive = Prepare()) {
                 interactive.SubmitCode("import sys\nsys.path");
@@ -137,8 +137,8 @@ namespace ReplWindowUITests {
             }
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void QuitAndReset() {
             using (var interactive = Prepare()) {
                 interactive.SubmitCode("quit()");
@@ -152,8 +152,8 @@ namespace ReplWindowUITests {
             }
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void PrintAllCharacters() {
             using (var interactive = Prepare()) {
                 interactive.SubmitCode("print(\"" +
@@ -166,8 +166,8 @@ namespace ReplWindowUITests {
             }
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void AttachReplTest() {
             using (var interactive = Prepare(enableAttach: true)) {
                 var app = interactive.App;

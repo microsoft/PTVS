@@ -95,8 +95,8 @@ namespace ProfilingUITests {
             }
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void DefaultInterpreterSelected() {
             using (var app = new PythonVisualStudioApp()) {
                 var service = app.InterpreterService;
@@ -116,8 +116,8 @@ namespace ProfilingUITests {
             }
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void StartupProjectSelected() {
             using (var app = new PythonVisualStudioApp()) {
                 app.OpenProject(TestData.GetPath(@"TestData\MultiProjectAnalysis\MultiProjectAnalysis.sln"));
@@ -240,8 +240,8 @@ namespace ProfilingUITests {
         }
 
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void NewProfilingSession() {
             PythonPaths.Python27.AssertInstalled();
 
@@ -291,7 +291,7 @@ namespace ProfilingUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public async Task ProfileWithEncoding() {
             var proflaun = Path.Combine(
                 Path.GetDirectoryName(typeof(IPythonProfiling).Assembly.Location),
@@ -352,8 +352,8 @@ namespace ProfilingUITests {
         /// <summary>
         /// https://pytools.codeplex.com/workitem/1179
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void DeleteMultipleSessions() {
             using (var app = new PythonVisualStudioApp()) {
                 app.Dte.Solution.Close(false);
@@ -390,8 +390,8 @@ namespace ProfilingUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void NewProfilingSessionOpenSolution() {
             EnvDTE.Project project;
             IPythonProfiling profiling;
@@ -431,8 +431,8 @@ namespace ProfilingUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void LaunchPythonProfilingWizard() {
             using (var app = new PythonVisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\ProfileTest.sln");
@@ -463,8 +463,8 @@ namespace ProfilingUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void LaunchProject() {
             EnvDTE.Project project;
             IPythonProfiling profiling;
@@ -490,8 +490,8 @@ namespace ProfilingUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void LaunchProjectWithSpaceInFilename() {
             EnvDTE.Project project;
             IPythonProfiling profiling;
@@ -517,8 +517,8 @@ namespace ProfilingUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void LaunchProjectWithSearchPath() {
             EnvDTE.Project project;
             IPythonProfiling profiling;
@@ -544,8 +544,8 @@ namespace ProfilingUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void LaunchProjectWithPythonPathSet() {
             EnvDTE.Project project;
             IPythonProfiling profiling;
@@ -581,8 +581,8 @@ namespace ProfilingUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void LaunchProjectWithPythonPathClear() {
             EnvDTE.Project project;
             IPythonProfiling profiling;
@@ -619,8 +619,8 @@ namespace ProfilingUITests {
         }
 
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void LaunchProjectWithEnvironment() {
             EnvDTE.Project project;
             IPythonProfiling profiling;
@@ -644,8 +644,8 @@ namespace ProfilingUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestSaveDirtySession() {
             EnvDTE.Project project;
             IPythonProfiling profiling;
@@ -683,8 +683,8 @@ namespace ProfilingUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestDeleteReport() {
             EnvDTE.Project project;
             IPythonProfiling profiling;
@@ -705,8 +705,8 @@ namespace ProfilingUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestCompareReports() {
             EnvDTE.Project project;
             IPythonProfiling profiling;
@@ -776,8 +776,8 @@ namespace ProfilingUITests {
         }
 
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestRemoveReport() {
             EnvDTE.Project project;
             IPythonProfiling profiling;
@@ -796,8 +796,8 @@ namespace ProfilingUITests {
 
         // P2 because the report viewer may crash VS depending on prior state.
         // We will restart VS before running this test to ensure it is clean.
-        [TestMethod, Priority(2), TestCategory("Core"), TestCategory("RestartVS")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(2), TestCategory("RestartVS")]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestOpenReport() {
             EnvDTE.Project project;
             IPythonProfiling profiling;
@@ -843,8 +843,8 @@ namespace ProfilingUITests {
             AutomationWrapper.EnsureExpanded(child);
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestOpenReportCtxMenu() {
             EnvDTE.Project project;
             IPythonProfiling profiling;
@@ -867,8 +867,8 @@ namespace ProfilingUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestTargetPropertiesForProject() {
             EnvDTE.Project project;
             IPythonProfiling profiling;
@@ -892,8 +892,8 @@ namespace ProfilingUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestTargetPropertiesForInterpreter() {
             PythonPaths.Python27.AssertInstalled();
 
@@ -936,8 +936,8 @@ namespace ProfilingUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestTargetPropertiesForExecutable() {
             var interp = PythonPaths.Python27;
             interp.AssertInstalled();
@@ -975,8 +975,8 @@ namespace ProfilingUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestStopProfiling() {
             var interp = PythonPaths.Python27;
             interp.AssertInstalled();
@@ -1036,8 +1036,8 @@ namespace ProfilingUITests {
             Keyboard.PressAndRelease(System.Windows.Input.Key.Delete);
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void MultipleTargets() {
             EnvDTE.Project project;
             IPythonProfiling profiling;
@@ -1096,8 +1096,8 @@ namespace ProfilingUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void MultipleTargetsWithProjectHome() {
             EnvDTE.Project project;
             IPythonProfiling profiling;
@@ -1156,8 +1156,8 @@ namespace ProfilingUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void MultipleReports() {
             EnvDTE.Project project;
             IPythonProfiling profiling;
@@ -1194,8 +1194,8 @@ namespace ProfilingUITests {
         }
 
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void LaunchExecutable() {
             var interp = PythonPaths.Python27;
             interp.AssertInstalled();
@@ -1229,8 +1229,8 @@ namespace ProfilingUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ClassProfile() {
             var interp = PythonPaths.Python27;
             interp.AssertInstalled();
@@ -1265,8 +1265,8 @@ namespace ProfilingUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void OldClassProfile() {
             bool anyMissing = false;
 
@@ -1314,8 +1314,8 @@ namespace ProfilingUITests {
         }
 
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void DerivedProfile() {
             var interp = PythonPaths.Python27;
             interp.AssertInstalled();
@@ -1349,8 +1349,8 @@ namespace ProfilingUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void Pystone() {
             var interp = PythonPaths.Python27;
             interp.AssertInstalled();
@@ -1419,8 +1419,8 @@ namespace ProfilingUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void BuiltinsProfilePython25() {
             BuiltinsProfile(
                 PythonPaths.Python25,
@@ -1429,8 +1429,8 @@ namespace ProfilingUITests {
             );
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void BuiltinsProfilePython26() {
             BuiltinsProfile(
                 PythonPaths.Python26,
@@ -1439,8 +1439,8 @@ namespace ProfilingUITests {
             );
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void BuiltinsProfilePython27() {
             BuiltinsProfile(
                 PythonPaths.Python27,
@@ -1449,8 +1449,8 @@ namespace ProfilingUITests {
             );
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void BuiltinsProfilePython27x64() {
             BuiltinsProfile(
                 PythonPaths.Python27_x64,
@@ -1459,8 +1459,8 @@ namespace ProfilingUITests {
             );
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void BuiltinsProfilePython31() {
             BuiltinsProfile(
                 PythonPaths.Python31,
@@ -1469,8 +1469,8 @@ namespace ProfilingUITests {
             );
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void BuiltinsProfilePython32() {
             BuiltinsProfile(
                 PythonPaths.Python32,
@@ -1479,8 +1479,8 @@ namespace ProfilingUITests {
             );
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void BuiltinsProfilePython32x64() {
             BuiltinsProfile(
                 PythonPaths.Python32_x64,
@@ -1489,8 +1489,8 @@ namespace ProfilingUITests {
             );
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void BuiltinsProfilePython33() {
             BuiltinsProfile(
                 PythonPaths.Python33,
@@ -1499,8 +1499,8 @@ namespace ProfilingUITests {
             );
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void BuiltinsProfilePython33x64() {
             BuiltinsProfile(
                 PythonPaths.Python33_x64,
@@ -1509,8 +1509,8 @@ namespace ProfilingUITests {
             );
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void BuiltinsProfilePython34() {
             BuiltinsProfile(
                 PythonPaths.Python34,
@@ -1519,8 +1519,8 @@ namespace ProfilingUITests {
             );
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void BuiltinsProfilePython34x64() {
             BuiltinsProfile(
                 PythonPaths.Python34_x64,
@@ -1529,8 +1529,8 @@ namespace ProfilingUITests {
             );
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void BuiltinsProfilePython35() {
             BuiltinsProfile(
                 PythonPaths.Python35,
@@ -1539,8 +1539,8 @@ namespace ProfilingUITests {
             );
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void BuiltinsProfilePython35x64() {
             BuiltinsProfile(
                 PythonPaths.Python35_x64,
@@ -1549,8 +1549,8 @@ namespace ProfilingUITests {
             );
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void Python64Bit() {
             PythonPaths.Python27_x64.AssertInstalled();
 
@@ -1586,8 +1586,8 @@ namespace ProfilingUITests {
         }
 
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void LaunchExecutableUsingInterpreterGuid() {
             PythonPaths.Python27.AssertInstalled();
 

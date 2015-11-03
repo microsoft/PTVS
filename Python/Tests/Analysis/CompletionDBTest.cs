@@ -110,52 +110,52 @@ namespace PythonToolsTests {
             Console.WriteLine("Passed: {0}", path.InterpreterPath);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestOpen25() {
             TestOpen(PythonPaths.Python25 ?? PythonPaths.Python25_x64);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestOpen26() {
             TestOpen(PythonPaths.Python26 ?? PythonPaths.Python26_x64);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestOpen27() {
             TestOpen(PythonPaths.Python27 ?? PythonPaths.Python27_x64);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestOpen30() {
             TestOpen(PythonPaths.Python30 ?? PythonPaths.Python30_x64);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestOpen31() {
             TestOpen(PythonPaths.Python31 ?? PythonPaths.Python31_x64);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestOpen32() {
             TestOpen(PythonPaths.Python32 ?? PythonPaths.Python32_x64);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestOpen33() {
             TestOpen(PythonPaths.Python33 ?? PythonPaths.Python33_x64);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestOpen34() {
             TestOpen(PythonPaths.Python34 ?? PythonPaths.Python34_x64);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestOpen35() {
             TestOpen(PythonPaths.Python35 ?? PythonPaths.Python35_x64);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestPthFiles() {
             var outputPath = TestData.GetTempPath(randomSubPath: true);
             Console.WriteLine("Writing to: " + outputPath);
@@ -196,7 +196,7 @@ namespace PythonToolsTests {
             Assert.AreEqual(PythonMemberType.Class, cClass.MemberType);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void PydInPackage() {
             PythonPaths.Python27.AssertInstalled();
 
@@ -269,7 +269,7 @@ namespace PythonToolsTests {
         /// Checks that members removed or introduced in later versions show up or don't in
         /// earlier versions as appropriate.
         /// </summary>
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void VersionedSharedDatabase() {
             var twoFive = PythonTypeDatabase.CreateDefaultTypeDatabase(new Version(2, 5));
             var twoSix = PythonTypeDatabase.CreateDefaultTypeDatabase(new Version(2, 6));
@@ -330,7 +330,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(2)]
         public void CheckObsoleteGenerateFunction() {
             var path = PythonPaths.Versions.LastOrDefault(p => p != null && p.IsCPython);
             path.AssertInstalled();

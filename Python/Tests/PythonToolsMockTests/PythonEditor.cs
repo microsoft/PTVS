@@ -120,17 +120,26 @@ namespace PythonToolsMockTests {
         public string Text {
             get { return View.Text; }
             set {
-                using (var edit = View.TextView.TextBuffer.CreateEdit()) {
-                    edit.Delete(0, edit.Snapshot.Length);
-                    edit.Apply();
-                }
-                using (var edit = View.TextView.TextBuffer.CreateEdit()) {
-                    edit.Insert(0, value);
-                    edit.Apply();
-                }
+                using (var mre = new ManualResetEventSlim()) {
+                    EventHandler evt = (s, e) => mre.Set();
+                    Analyzer.AnalysisStarted += evt;
+                    using (var edit = View.TextView.TextBuffer.CreateEdit()) {
+                        edit.Delete(0, edit.Snapshot.Length);
+                        edit.Apply();
+                    }
+                    mre.Reset();
+                    using (var edit = View.TextView.TextBuffer.CreateEdit()) {
+                        edit.Insert(0, value);
+                        edit.Apply();
+                    }
 
-                VS.Sleep(20);
-                Analyzer.WaitForCompleteAnalysis(_ => true);
+                    if (!mre.Wait(10000)) {
+                        Analyzer.AnalysisStarted -= evt;
+                        throw new TimeoutException("Failed to see buffer start analyzing");
+                    }
+                    Analyzer.AnalysisStarted -= evt;
+                    Analyzer.WaitForCompleteAnalysis(_ => true);
+                }
             }
         }
 

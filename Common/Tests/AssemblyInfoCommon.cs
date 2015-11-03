@@ -40,14 +40,17 @@ class AssemblyVersionInfo {
     const string VSVersionSuffix = "2013";
 #elif DEV14
     public const string VSMajorVersion = "14";
-    const string VSVersionSuffix = "2014";
+    const string VSVersionSuffix = "2015";
+#elif DEV15
+    public const string VSMajorVersion = "15";
+    const string VSVersionSuffix = "15";
 #else
 #error Unrecognized VS Version.
 #endif
 
     public const string VSVersion = VSMajorVersion + ".0";
 
-    // Defaults to "1.0.0.(2010|2012|2013)"
+    // Defaults to "1.0.0.(2010|2012|2013|2015)"
     public const string StableVersion = ReleaseVersion + "." + MinorVersion + "." + VSVersionSuffix;
 
     // Defaults to "1.0.0.00"

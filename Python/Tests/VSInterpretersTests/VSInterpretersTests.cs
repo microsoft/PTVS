@@ -98,7 +98,7 @@ namespace FactoryProviderSuccess {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void ProviderLoadLog_Success() {
             var sp = new MockServiceProvider();
             var log = new MockActivityLog();
@@ -124,7 +124,7 @@ namespace FactoryProviderSuccess {
             Assert.AreEqual(1, service.KnownProviders.Count());
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void ProviderLoadLog_FileNotFound() {
             var sp = new MockServiceProvider();
             var log = new MockActivityLog();
@@ -178,7 +178,7 @@ namespace FactoryProviderSuccess {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void ProviderLoadLog_CorruptImage() {
             var sp = new MockServiceProvider();
             var log = new MockActivityLog();
@@ -230,7 +230,7 @@ namespace FactoryProviderTypeLoadException {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void ProviderLoadLog_TypeLoadException() {
             var sp = new MockServiceProvider();
             var log = new MockActivityLog();
@@ -256,7 +256,7 @@ namespace FactoryProviderTypeLoadException {
             Assert.AreEqual(0, service.KnownProviders.Count());
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void ProviderLoadLog_SuccessAndFailure() {
             var sp = new MockServiceProvider();
             var log = new MockActivityLog();

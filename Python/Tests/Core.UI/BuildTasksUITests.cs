@@ -69,8 +69,8 @@ namespace PythonToolsUITests {
             dteProject.Save();
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void CustomCommandsAdded() {
             using (var app = new VisualStudioApp()) {
                 PythonProjectNode node;
@@ -111,8 +111,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void CustomCommandsWithResourceLabel() {
             using (var app = new VisualStudioApp()) {
                 PythonProjectNode node;
@@ -131,8 +131,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void CustomCommandsReplWithResourceLabel() {
             using (var app = new PythonVisualStudioApp()) {
                 PythonProjectNode node;
@@ -152,8 +152,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void CustomCommandsRunInRepl() {
             using (var app = new PythonVisualStudioApp()) {
                 PythonProjectNode node;
@@ -175,8 +175,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void CustomCommandsRunProcessInRepl() {
             using (var app = new PythonVisualStudioApp()) {
                 PythonProjectNode node;
@@ -215,8 +215,8 @@ namespace PythonToolsUITests {
             Assert.IsTrue(outputText.Contains(expected), string.Format("Expected to see:\r\n\r\n{0}\r\n\r\nActual content:\r\n\r\n{1}", expected, outputText));
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void CustomCommandsRunProcessInOutput() {
             using (var app = new PythonVisualStudioApp()) {
                 PythonProjectNode node;
@@ -237,8 +237,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void CustomCommandsRunProcessInConsole() {
             using (var app = new PythonVisualStudioApp()) {
                 PythonProjectNode node;
@@ -269,8 +269,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void CustomCommandsErrorList() {
             using (var app = new PythonVisualStudioApp()) {
                 PythonProjectNode node;
@@ -333,8 +333,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void CustomCommandsRequiredPackages() {
             using (var app = new PythonVisualStudioApp())
             using (var dis = app.SelectDefaultInterpreter(PythonVersion, "virtualenv")) {
@@ -425,8 +425,8 @@ namespace PythonToolsUITests {
         }
 
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void CustomCommandsSearchPath() {
             var expectedSearchPath = string.Format("['{0}', '{1}']",
                 TestData.GetPath(@"TestData\Targets").Replace("\\", "\\\\"),

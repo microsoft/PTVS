@@ -40,8 +40,8 @@ namespace DjangoUITests {
             PythonTestData.Deploy();
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void NewDjangoProject() {
             using (var app = new VisualStudioApp()) {
                 var project = app.CreateProject(
@@ -59,8 +59,8 @@ namespace DjangoUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void NewDjangoProjectSafeProjectName() {
             using (var app = new VisualStudioApp()) {
                 var project = app.CreateProject(
@@ -81,8 +81,8 @@ namespace DjangoUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void DjangoCollectStaticFilesCommand() {
             using (var app = new PythonVisualStudioApp()) {
                 var service = app.GetService<IComponentModel>(typeof(SComponentModel)).GetService<IInterpreterOptionsService>();
@@ -112,8 +112,8 @@ namespace DjangoUITests {
         /// <summary>
         /// http://pytools.codeplex.com/workitem/778
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void DjangoCommandsNonDjangoApp() {
             using (var app = new PythonVisualStudioApp()) {
                 var project = app.CreateProject(
@@ -142,8 +142,8 @@ namespace DjangoUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void StartNewApp() {
             using (var app = new PythonVisualStudioApp()) {
                 var project = app.CreateProject(
@@ -193,8 +193,8 @@ namespace DjangoUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void StartNewAppDuplicateName() {
             using (var app = new VisualStudioApp()) {
                 var project = app.CreateProject(
@@ -232,8 +232,8 @@ namespace DjangoUITests {
         /// <summary>
         /// http://pytools.codeplex.com/workitem/748
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void StartNewAppSameAsProjectName() {
             using (var app = new VisualStudioApp()) {
                 var project = app.CreateProject(
@@ -253,8 +253,8 @@ namespace DjangoUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void DebugProjectProperties() {
             using (var app = new PythonVisualStudioApp()) {
                 var project = app.CreateProject(
@@ -282,8 +282,8 @@ namespace DjangoUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void DjangoProjectWithSubdirectory() {
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject("TestData\\DjangoProjectWithSubDirectory.sln");

@@ -34,14 +34,14 @@ namespace AnalyzerStatusTests {
             GC.WaitForPendingFinalizers();
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void InitializeWithoutCrashing() {
             using (var updater = new AnalyzerStatusUpdater("InitializeWithoutCrashing")) { }
 
             using (var updater = new AnalyzerStatusListener(x => { })) { }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void SendUpdates() {
             Dictionary<string, AnalysisProgress> results = null;
 
@@ -129,7 +129,7 @@ namespace AnalyzerStatusTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void LotsOfUpdaters() {
             var updaters = new List<AnalyzerStatusUpdater>();
 
@@ -162,7 +162,7 @@ namespace AnalyzerStatusTests {
             updaters.Clear();
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void IdentifierInUse() {
             using (var updater = new AnalyzerStatusUpdater("IdentifierInUse")) {
                 updater.UpdateStatus(1, 100);
@@ -183,7 +183,7 @@ namespace AnalyzerStatusTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void MessageMaximumLength() {
             Dictionary<string, AnalysisProgress> results = null;
 

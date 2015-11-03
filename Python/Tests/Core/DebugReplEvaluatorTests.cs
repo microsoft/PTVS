@@ -92,7 +92,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void DisplayVariables() {
             Attach("DebugReplTest1.py", 3);
 
@@ -100,7 +100,7 @@ namespace PythonToolsTests {
             Assert.AreEqual("'hello'", ExecuteText("a"));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(3)]
         public void DisplayFunctionLocalsAndGlobals() {
             Attach("DebugReplTest2.py", 13);
 
@@ -108,7 +108,7 @@ namespace PythonToolsTests {
             Assert.AreEqual("5", ExecuteText("print(global_val)"));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(3)]
         public void ErrorInInput() {
             Attach("DebugReplTest2.py", 13);
 
@@ -119,7 +119,7 @@ NameError: name 'does_not_exist' is not defined
 ", _window.Error);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(3)]
         public void ChangeVariables() {
             Attach("DebugReplTest2.py", 13);
 
@@ -127,7 +127,7 @@ NameError: name 'does_not_exist' is not defined
             Assert.AreEqual("1", ExecuteText("print(innermost_val)"));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void ChangeModule() {
             Attach("DebugReplTest1.py", 3);
 
@@ -145,7 +145,7 @@ NameError: name 'does_not_exist' is not defined
             Assert.AreEqual("'hello'", ExecuteText("a"));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         public void ChangeFrame() {
             Attach("DebugReplTest2.py", 13);
 
@@ -179,7 +179,8 @@ NameError: name 'does_not_exist' is not defined
             Assert.AreEqual("1", ExecuteCommand(new DebugReplFrameCommand(), ""));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(3)]
+        [TestCategory("10s")]
         public void ChangeThread() {
             Attach("DebugReplTest3.py", 39);
 
@@ -208,7 +209,7 @@ NameError: name 'does_not_exist' is not defined
             Assert.AreEqual("'thread1'", ExecuteText("t1_val"));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void ChangeProcess() {
             Attach("DebugReplTest4A.py", 3);
             Attach("DebugReplTest4B.py", 3);
@@ -235,7 +236,8 @@ NameError: name 'does_not_exist' is not defined
             Assert.AreEqual("60", ExecuteText("b2"));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(3)]
+        [TestCategory("10s")]
         public void Abort() {
             Attach("DebugReplTest5.py", 3);
 
@@ -247,7 +249,7 @@ NameError: name 'does_not_exist' is not defined
             Assert.AreEqual("Abort is not supported.", _window.Error.TrimEnd());
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void StepInto() {
             // Make sure that we don't step into the internal repl code
             // http://pytools.codeplex.com/workitem/777
@@ -287,6 +289,13 @@ NameError: name 'does_not_exist' is not defined
             return _window.Output.TrimEnd();
         }
 
+        private void SafeSetEvent(AutoResetEvent evt) {
+            try {
+                evt.Set();
+            } catch (ObjectDisposedException) {
+            }
+        }
+
         private void Attach(string filename, int lineNo) {
             var debugger = new PythonDebugger();
             PythonProcess process = debugger.DebugProcess(Version, DebuggerTestPath + filename, (newproc, newthread) => {
@@ -300,8 +309,8 @@ NameError: name 'does_not_exist' is not defined
 
             using (var brkHit = new AutoResetEvent(false))
             using (var procExited = new AutoResetEvent(false)) {
-                EventHandler<BreakpointHitEventArgs> breakpointHitHandler = (s, e) => brkHit.Set();
-                EventHandler<ProcessExitedEventArgs> processExitedHandler = (s, e) => procExited.Set();
+                EventHandler<BreakpointHitEventArgs> breakpointHitHandler = (s, e) => SafeSetEvent(brkHit);
+                EventHandler<ProcessExitedEventArgs> processExitedHandler = (s, e) => SafeSetEvent(procExited);
                 process.BreakpointHit += breakpointHitHandler;
                 process.ProcessExited += processExitedHandler;
 

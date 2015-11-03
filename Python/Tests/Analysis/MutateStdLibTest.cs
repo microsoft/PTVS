@@ -16,7 +16,6 @@
 
 using System;
 using System.IO;
-using System.Text;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
@@ -24,13 +23,18 @@ using TestUtilities;
 namespace AnalysisTests {
     [TestClass]
     public class MutateStdLibTest {
+        static MutateStdLibTest() {
+            AssertListener.Initialize();
+        }
+
         public virtual PythonVersion Version {
             get {
                 return PythonPaths.Python25;
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(2)]
+        [TestCategory("10s"), TestCategory("60s")]
         public void TestMutateStdLib() {
             Version.AssertInstalled();
 

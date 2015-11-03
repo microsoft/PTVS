@@ -41,8 +41,8 @@ namespace PythonToolsUITests {
             PythonTestData.Deploy();
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ToggleableOptionTest() {
             using (var app = new PythonVisualStudioApp()) {
                 var pyService = app.ServiceProvider.GetPythonToolsService();
@@ -73,8 +73,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void FormatDocument() {
             // Fails due to https://pytools.codeplex.com/workitem/1952
             FormattingTest("document.py", null, @"# the quick brown fox jumped over the slow lazy dog the quick brown fox jumped
@@ -88,8 +88,8 @@ def g():
         }
 
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void FormatSelection() {
             // Fails due to https://pytools.codeplex.com/workitem/1952
             FormattingTest("selection.py", new Span(0, 121), @"# the quick brown fox jumped over the slow lazy dog the quick brown fox jumped
@@ -102,8 +102,8 @@ def g():
     pass", new[] { new Span(0, 104) });
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void FormatSelectionNoSelection() {
             FormattingTest("selection2.py", new Span(5, 0), @"x=1
 
@@ -112,8 +112,8 @@ y=2
 z=3", new Span[0]);
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void FormatReduceLines() {
             var pyService = VSTestContext.ServiceProvider.GetPythonToolsService();
             pyService.SetFormattingOption("SpacesAroundBinaryOperators", true);

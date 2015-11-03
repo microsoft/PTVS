@@ -108,8 +108,8 @@ namespace VisualStudioToolsUITests {
             AssertListener.Initialize();
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void RenameLinkedNode() {
             foreach (var projectType in ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
@@ -155,8 +155,8 @@ namespace VisualStudioToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void MoveLinkedNode() {
             foreach (var projectType in ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
@@ -206,8 +206,8 @@ namespace VisualStudioToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void MultiProjectMove() {
             foreach (var projectType in ProjectTypes) {
                 using (var solution = MultiProjectLinkedFiles(projectType).ToVs()) {
@@ -235,8 +235,8 @@ namespace VisualStudioToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void MultiProjectMoveExists2() {
             foreach (var projectType in ProjectTypes) {
                 using (var solution = MultiProjectLinkedFiles(projectType).ToVs()) {
@@ -260,8 +260,8 @@ namespace VisualStudioToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void MoveLinkedNodeOpen() {
             foreach (var projectType in ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
@@ -293,8 +293,8 @@ namespace VisualStudioToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void MoveLinkedNodeOpenEdited() {
             foreach (var projectType in ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
@@ -335,8 +335,8 @@ namespace VisualStudioToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void MoveLinkedNodeFileExistsButNotInProject() {
             foreach (var projectType in ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
@@ -363,8 +363,8 @@ namespace VisualStudioToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void DeleteLinkedNode() {
             foreach (var projectType in ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
@@ -381,8 +381,8 @@ namespace VisualStudioToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void LinkedFileInProjectIgnored() {
             foreach (var projectType in ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
@@ -393,8 +393,8 @@ namespace VisualStudioToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void SaveAsCreateLink() {
             foreach (var projectType in ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
@@ -415,8 +415,8 @@ namespace VisualStudioToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void SaveAsCreateFile() {
             foreach (var projectType in ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
@@ -436,8 +436,8 @@ namespace VisualStudioToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void SaveAsCreateFileNewDirectory() {
             foreach (var projectType in ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
@@ -462,8 +462,8 @@ namespace VisualStudioToolsUITests {
         /// <summary>
         /// Adding a duplicate link to the same item
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void AddExistingItem() {
             foreach (var projectType in ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
@@ -485,8 +485,8 @@ namespace VisualStudioToolsUITests {
         /// <summary>
         /// Adding a link to a folder which is already linked in somewhere else.
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void AddExistingItemAndItemIsAlreadyLinked() {
             foreach (var projectType in ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
@@ -512,8 +512,8 @@ namespace VisualStudioToolsUITests {
         /// this verifies we deal with the project name string comparison correctly (including a \ at the end of the
         /// path).
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void AddExistingItemAndLinkAlreadyExists() {
             foreach (var projectType in ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
@@ -535,8 +535,8 @@ namespace VisualStudioToolsUITests {
         /// <summary>
         /// Adding new linked item when file of same name exists (when the file only exists on disk)
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void AddExistingItemAndFileByNameExistsOnDiskButNotInProject() {
             foreach (var projectType in ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
@@ -559,8 +559,8 @@ namespace VisualStudioToolsUITests {
         /// <summary>
         /// Adding new linked item when file of same name exists (both in the project and on disk)
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void AddExistingItemAndFileByNameExistsOnDiskAndInProject() {
             foreach (var projectType in ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
@@ -583,8 +583,8 @@ namespace VisualStudioToolsUITests {
         /// <summary>
         /// Adding new linked item when file of same name exists (in the project, but not on disk)
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void AddExistingItemAndFileByNameExistsInProjectButNotOnDisk() {
             foreach (var projectType in ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
@@ -607,8 +607,8 @@ namespace VisualStudioToolsUITests {
         /// Adding new linked item when the file lives in the project dir but not in the directory we selected
         /// Add Existing Item from.  We should add the file to the directory where it lives.
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void AddExistingItemAsLinkButFileExistsInProjectDirectory() {
             foreach (var projectType in ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
@@ -630,8 +630,8 @@ namespace VisualStudioToolsUITests {
         /// <summary>
         /// Reaming the file name in the Link attribute is ignored.
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void RenamedLinkedFile() {
             foreach (var projectType in ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
@@ -647,8 +647,8 @@ namespace VisualStudioToolsUITests {
         /// <summary>
         /// A link path outside of our project dir will result in the link being ignored.
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void BadLinkPath() {
             foreach (var projectType in ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
@@ -664,8 +664,8 @@ namespace VisualStudioToolsUITests {
         /// <summary>
         /// A rooted link path is ignored.
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void RootedLinkIgnored() {
             foreach (var projectType in ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
@@ -678,8 +678,8 @@ namespace VisualStudioToolsUITests {
         /// <summary>
         /// A rooted link path is ignored.
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void RootedIncludeIgnored() {
             foreach (var projectType in ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
@@ -693,8 +693,8 @@ namespace VisualStudioToolsUITests {
         /// Test linked files with a project home set (done by save as in this test)
         /// https://nodejstools.codeplex.com/workitem/1511
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestLinkedWithProjectHome() {
             foreach (var projectType in ProjectTypes) {
                 using (var solution = MultiProjectLinkedFiles(projectType).ToVs()) {

@@ -4379,7 +4379,7 @@ t.x, t. =
             Assert.AreEqual((double)memory1, (double)memory2, memory2 * 0.1, string.Format("Memory increased by {0}", delta));
         }
 
-        //[TestMethod, Timeout(5 * 60 * 1000), Priority(2)]
+        //[TestMethod, Priority(2), Timeout(5 * 60 * 1000)]
         public void MemLeak() {
             using (var state = PythonAnalyzer.CreateSynchronously(InterpreterFactory, Interpreter)) {
 
@@ -4429,7 +4429,7 @@ min(a, D())
             }
         }
 
-        //[TestMethod, Timeout(15 * 60 * 1000), Priority(2)]
+        //[TestMethod, Priority(2), Timeout(15 * 60 * 1000)]
         public void MemLeak2() {
             bool anyTested = false;
 
@@ -4524,7 +4524,7 @@ min(a, D())
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void CancelAnalysis() {
             var ver = PythonPaths.Versions.LastOrDefault(v => v != null);
             if (ver == null) {
@@ -4534,14 +4534,18 @@ min(a, D())
             var cancelSource = new CancellationTokenSource();
             var task = Task.Run(() => {
                 new AnalysisTest().AnalyzeDir(ver.LibPath, ver.Version, cancel: cancelSource.Token);
-            });
+            }, cancelSource.Token);
 
             // Allow 10 seconds for parsing to complete and analysis to start
             cancelSource.CancelAfter(TimeSpan.FromSeconds(10));
 
-            if (!task.Wait(TimeSpan.FromSeconds(15))) {
-                task.Dispose();
-                Assert.Fail("Analysis did not abort within 5 seconds");
+            // Allow 20 seconds after cancellation to abort
+            if (!task.Wait(TimeSpan.FromSeconds(30))) {
+                try {
+                    task.Dispose();
+                } catch (InvalidOperationException) {
+                }
+                Assert.Fail("Analysis did not abort within 20 seconds");
             }
         }
 

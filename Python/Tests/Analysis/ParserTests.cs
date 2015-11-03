@@ -2491,7 +2491,8 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod, Priority(0), Timeout(10 * 60 * 1000)]
+        [TestMethod, Priority(2), Timeout(10 * 60 * 1000)]
+        [TestCategory("10s"), TestCategory("60s")]
         public async Task StdLib() {
             var tasks = new List<KeyValuePair<string, Task<string>>>();
 

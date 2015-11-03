@@ -49,7 +49,7 @@ namespace PythonToolsMockTests {
             PythonTestData.Deploy(includeTestData: false);
         }
 
-        [TestMethod, Priority(0), TestCategory("Mock")]
+        [TestMethod, Priority(1)]
         public void KeywordClassification27() {
             var code = string.Join(Environment.NewLine, PythonKeywords.All(PythonLanguageVersion.V27));
             code += "\r\nTrue\r\nFalse";
@@ -72,7 +72,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Mock")]
+        [TestMethod, Priority(1)]
         public void KeywordClassification33() {
             var code = string.Join(Environment.NewLine, PythonKeywords.All(PythonLanguageVersion.V33));
 
@@ -94,7 +94,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Mock")]
+        [TestMethod, Priority(1)]
         public void ModuleClassification() {
             var code = @"import abc
 import os
@@ -114,7 +114,7 @@ abc = True
             return new MockTextBuffer(code, PythonCoreConstants.ContentType, "C:\\fob.py");
         }
 
-        [TestMethod, Priority(0), TestCategory("Mock")]
+        [TestMethod, Priority(1)]
         public void ImportClassifications() {
             var code = @"import abc as x
 from os import fdopen
@@ -130,7 +130,7 @@ fdopen
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Mock")]
+        [TestMethod, Priority(1)]
         public void TypeClassification() {
             var code = @"class MyClass(object):
     pass
@@ -146,7 +146,7 @@ MyClassType = type(mc)
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Mock")]
+        [TestMethod, Priority(1)]
         public void ParameterClassification() {
             var code = @"def f(a, b, c):
     a = b
@@ -163,7 +163,7 @@ b = c
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Mock")]
+        [TestMethod, Priority(1)]
         public void ParameterAnnotationClassification() {
             var code = @"class A: pass
 class B: pass
@@ -177,7 +177,7 @@ def f(a = A, b : B):
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Mock")]
+        [TestMethod, Priority(1)]
         public void TrueFalseClassification() {
             var code = "True False";
 
@@ -190,7 +190,7 @@ def f(a = A, b : B):
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Mock")]
+        [TestMethod, Priority(1)]
         public void AsyncAwaitClassification() {
             var code = @"
 await f
@@ -233,10 +233,17 @@ class F:
                 _classificationsReady1 = new ManualResetEventSlim();
                 _classificationsReady2 = new ManualResetEventSlim();
 
-                AstClassifier.ClassificationChanged += (s, e) => _classificationsReady1.Set();
-                AnalysisClassifier.ClassificationChanged += (s, e) => _classificationsReady2.Set();
+                AstClassifier.ClassificationChanged += (s, e) => SafeSetEvent(_classificationsReady1);
+                AnalysisClassifier.ClassificationChanged += (s, e) => SafeSetEvent(_classificationsReady2);
 
                 _view.Text = code;
+            }
+
+            private static void SafeSetEvent(ManualResetEventSlim evt) {
+                try {
+                    evt.Set();
+                } catch (ObjectDisposedException) {
+                }
             }
 
             public void Dispose() {

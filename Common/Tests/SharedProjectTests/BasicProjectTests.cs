@@ -41,8 +41,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         }
 
 #if FALSE
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void LoadNodejsProject() {
             string fullPath = Path.GetFullPath(@"TestData\NodejsProjectData\HelloWorld.sln");
             Assert.IsTrue(File.Exists(fullPath), "Can't find project file");
@@ -57,8 +57,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             Assert.AreEqual("HelloWorld.njsproj", Path.GetFileName(project.FileName), "Wrong project file name");
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void SaveProjectAs() {
             try {
                 var project = OpenProject(@"TestData\NodejsProjectData\HelloWorld.sln");
@@ -96,8 +96,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void RenameProjectTest() {
             try {
                 var project = OpenProject(@"TestData\NodejsProjectData\RenameProjectTest.sln");
@@ -156,8 +156,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             );
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ProjectAddItem() {
             try {
                 foreach (var projectType in ProjectTypes) {
@@ -201,8 +201,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void CleanSolution() {
             foreach (var projectType in ProjectTypes) {
                 var proj = new ProjectDefinition(
@@ -233,8 +233,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void BuildSolution() {
             foreach (var projectType in ProjectTypes) {
                 var proj = new ProjectDefinition(
@@ -265,8 +265,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 #if FALSE
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ProjectAddFolder() {
             try {
                 string fullPath = TestData.GetPath(@"TestData\NodejsProjectData\HelloWorld.sln");
@@ -309,8 +309,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ProjectAddFolderThroughUI() {
             try {
                 var project = OpenProject(@"TestData\NodejsProjectData\AddFolderExists.sln");
@@ -356,8 +356,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestAddExistingFolder() {
             var project = OpenProject(@"TestData\NodejsProjectData\AddExistingFolder.sln");
             using (var app = new VisualStudioApp()) {
@@ -388,8 +388,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestAddExistingFolderProject() {
             var project = OpenProject(@"TestData\NodejsProjectData\AddExistingFolder.sln");
             using (var app = new VisualStudioApp()) {
@@ -408,8 +408,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestAddExistingFolderDebugging() {
             var project = OpenProject(@"TestData\NodejsProjectData\AddExistingFolder.sln");
             var window = project.ProjectItems.Item("server.js").Open();
@@ -467,8 +467,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         /// 4) Change name
         /// 5) Enter to commit
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ProjectAddAndRenameFolder() {
             try {
                 var project = OpenProject(@"TestData\NodejsProjectData\HelloWorld.sln");
@@ -500,8 +500,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         /// 3) Rename nested folder
         /// 4) Drag and drop nested folder onto project
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ProjectAddAndMoveRenamedFolder() {
             try {
                 var project = OpenProject(@"TestData\NodejsProjectData\HelloWorld.sln");
@@ -540,8 +540,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ProjectBuild() {
             try {
                 var project = OpenProject(@"TestData\NodejsProjectData\HelloWorld.sln");
@@ -554,8 +554,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ProjectRenameAndDeleteItem() {
             try {
                 var project = OpenProject(@"TestData\NodejsProjectData\RenameItemsTest.sln");
@@ -633,8 +633,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestAutomationProperties() {
             try {
                 var project = OpenProject(@"TestData\NodejsProjectData\HelloWorld.sln");
@@ -706,8 +706,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestAutomationProject() {
             try {
                 var project = OpenProject(@"TestData\NodejsProjectData\HelloWorld.sln");
@@ -751,8 +751,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestProjectItemAutomation() {
             var project = OpenProject(@"TestData\NodejsProjectData\HelloWorld.sln");
 
@@ -771,8 +771,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             AssertError<ArgumentException>(() => item.Open("ThisIsNotTheGuidYoureLookingFor"));
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestRelativePaths() {
             // link to outside file should show up as top-level item
             var project = OpenProject(@"TestData\NodejsProjectData\RelativePaths.sln");
@@ -781,8 +781,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             Assert.IsNotNull(item);
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ProjectConfiguration() {
             var project = OpenProject(@"TestData\NodejsProjectData\HelloWorld.sln");
 
@@ -813,8 +813,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         /// Opens a project w/ a reference to a .NET assembly (not a project).  Makes sure we get completion against the assembly, changes the assembly, rebuilds, makes
         /// sure the completion info changes.
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void AddFolderExists() {
             Directory.CreateDirectory(TestData.GetPath(@"TestData\NodejsProjectData\\AddFolderExists\\X"));
             Directory.CreateDirectory(TestData.GetPath(@"TestData\NodejsProjectData\\AddFolderExists\\Y"));
@@ -865,8 +865,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void AddFolderCopyAndPasteFile() {
             var project = OpenProject(@"TestData\NodejsProjectData\AddFolderCopyAndPasteFile.sln");
             using (var app = new VisualStudioApp()) {
@@ -906,8 +906,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void CopyAndPasteFolder() {
             var project = OpenProject(@"TestData\NodejsProjectData\CopyAndPasteFolder.sln");
             using (var app = new VisualStudioApp()) {
@@ -946,8 +946,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void CopyAndPasteEmptyFolder() {
             var project = OpenProject(@"TestData\NodejsProjectData\CopyAndPasteFolder.sln");
             using (var app = new VisualStudioApp()) {
@@ -996,8 +996,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         /// <summary>
         /// Verify we can copy a folder with multiple items in it.
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void CopyFolderWithMultipleItems() {
             // http://mpfproj10.codeplex.com/workitem/11618
             var project = OpenProject(@"TestData\NodejsProjectData\FolderMultipleItems.sln");
@@ -1021,8 +1021,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void LoadProjectWithDuplicateItems() {
             var solution = OpenProject(@"TestData\NodejsProjectData\DuplicateItems.sln");
 
@@ -1188,8 +1188,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 #endif
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void OpenCommandHere() {
             var existing = System.Diagnostics.Process.GetProcesses().Select(x => x.Id).ToSet();
             try {
@@ -1233,8 +1233,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void PasteFileWhileOpenInEditor() {
             foreach (var projectType in ProjectTypes) {
                 var proj = new ProjectDefinition(
@@ -1280,8 +1280,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         /// Checks various combinations of item visibility from within the users project
         /// and from imported projects and how it's controlled by the Visible metadata.
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ItemVisibility() {
             try {
                 foreach (var projectType in ProjectTypes) {
@@ -1324,8 +1324,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ProjectAddExistingExcludedFolder() {
             foreach (var projectType in ProjectTypes) {
                 var def = new ProjectDefinition(
@@ -1466,8 +1466,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         /// 
         /// Make sure that our events fire correctly for the rename
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void RenameFile() {
             foreach (var projectType in ProjectTypes) {
                 var proj = new ProjectDefinition(
@@ -1512,8 +1512,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void IsDocumentInProject() {
             foreach (var projectType in ProjectTypes) {
                 var proj = new ProjectDefinition(
@@ -1548,8 +1548,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         }
 
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void DeleteFolderWithReadOnlyFile() {
             foreach (var projectType in ProjectTypes) {
                 var proj = new ProjectDefinition(

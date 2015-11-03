@@ -31,7 +31,7 @@ namespace AnalysisTests {
             PythonTestData.Deploy();
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestSimpleDeserialize() {
             var obj = Unpickle.Load(TestData.Open(@"TestData\empty_dict.pickle"));
 

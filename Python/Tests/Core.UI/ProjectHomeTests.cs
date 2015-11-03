@@ -41,8 +41,8 @@ namespace PythonToolsUITests {
             PythonTestData.Deploy();
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void LoadRelativeProjects() {
             using (var app = new VisualStudioApp()) {
             string fullPath = TestData.GetPath(@"TestData\ProjectHomeProjects.sln");
@@ -92,8 +92,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void AddDeleteItem() {
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\ProjectHomeSingleProject.sln");
@@ -117,8 +117,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void AddDeleteItem2() {
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\ProjectHomeSingleProject.sln");
@@ -144,8 +144,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void AddDeleteFolder() {
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\ProjectHomeSingleProject.sln");
@@ -161,8 +161,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void AddDeleteSubfolder() {
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\ProjectHomeSingleProject.sln");
@@ -180,8 +180,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void SaveProjectAs() {
             using (var app = new VisualStudioApp()) {
                 EnvDTE.Project project;
@@ -209,8 +209,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void DragDropTest() {
             using (var app = new VisualStudioApp()) {
                 app.OpenProject(@"TestData\DragDropRelocatedTest.sln");
@@ -239,8 +239,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void CutPasteTest() {
             using (var app = new VisualStudioApp()) {
                 app.OpenProject(@"TestData\CutPasteRelocatedTest.sln");

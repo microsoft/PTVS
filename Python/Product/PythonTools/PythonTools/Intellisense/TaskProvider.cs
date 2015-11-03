@@ -480,11 +480,13 @@ namespace Microsoft.PythonTools.Intellisense {
             try {
                 WorkerWorker();
             } catch (OperationCanceledException) {
+            } catch (ObjectDisposedException ex) {
+                Trace.TraceError(ex.ToString());
             } catch (Exception ex) {
                 if (ex.IsCriticalException()) {
                     throw;
                 }
-                Debug.Fail(ex.ToString());
+                VsTaskExtensions.ReportUnhandledException(ex, SR.ProductName, GetType());
             } finally {
                 var oldWorker = Interlocked.CompareExchange(ref _worker, null, self);
                 Debug.Assert(oldWorker == self, "Worker was changed while running");
