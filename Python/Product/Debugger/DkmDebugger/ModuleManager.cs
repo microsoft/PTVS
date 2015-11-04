@@ -132,7 +132,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
         }
 
         private class PythonDllBreakpointHandlers {
-            public static void PyCode_New(DkmThread thread, ulong frameBase, ulong vframe) {
+            public static void PyCode_New(DkmThread thread, ulong frameBase, ulong vframe, ulong returnAddress) {
                 var process = thread.Process;
                 var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
 
@@ -153,7 +153,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
                 }.SendLower(process);
             }
 
-            public static void PyCode_NewEmpty(DkmThread thread, ulong frameBase, ulong vframe) {
+            public static void PyCode_NewEmpty(DkmThread thread, ulong frameBase, ulong vframe, ulong returnAddress) {
                 var process = thread.Process;
                 var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
 

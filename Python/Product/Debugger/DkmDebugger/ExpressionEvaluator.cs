@@ -757,7 +757,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
             }
         }
 
-        private void OnEvalComplete(DkmThread thread, ulong frameBase, ulong vframe) {
+        private void OnEvalComplete(DkmThread thread, ulong frameBase, ulong vframe, ulong returnAddress) {
             var e = _evalCompleteEvent;
             if (e != null) {
                 new RemoteComponent.EndFuncEvalExecutionRequest { ThreadId = thread.UniqueId }.SendLower(thread.Process);

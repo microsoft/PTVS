@@ -299,7 +299,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
                 Handler = handler,
                 HasMultipleExitPoints = hasMultipleExitPoints,
                 Breakpoint = LocalComponent.CreateRuntimeDllFunctionBreakpoint(module, funcName,
-                    (thread, frameBase, vframe) => handler(thread, frameBase, vframe, useRegisters: thread.Process.Is64Bit()))
+                    (thread, frameBase, vframe, retAddr) => handler(thread, frameBase, vframe, useRegisters: thread.Process.Is64Bit()))
             };
             _stepInGates.Add(gate);
         }
@@ -463,7 +463,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
                 _owner = owner;
             }
 
-            public void new_threadstate(DkmThread thread, ulong frameBase, ulong vframe) {
+            public void new_threadstate(DkmThread thread, ulong frameBase, ulong vframe, ulong returnAddress) {
                 var process = thread.Process;
                 var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
 

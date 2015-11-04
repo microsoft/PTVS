@@ -134,7 +134,8 @@ namespace Microsoft.PythonTools.DkmDebugger {
                     BreakpointId = runtimeBreakpoint.UniqueId,
                     ThreadId = thread.UniqueId,
                     FrameBase = frameBase,
-                    VFrame = vframe
+                    VFrame = vframe,
+                    ReturnAddress = retAddr
                 }.SendHigher(thread.Process);
             } else if (runtimeBreakpoint.SourceId == Guids.PythonTraceManagerSourceGuid || runtimeBreakpoint.SourceId == Guids.PythonStepTargetSourceGuid) {
                 var traceManager = runtimeBreakpoint.Process.GetDataItem<TraceManager>();
