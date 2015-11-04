@@ -123,7 +123,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
             if (initialized.Read() == 0) {
                 // When Py_InitializeEx is hit, suspend the thread.
                 DkmRuntimeBreakpoint makePendingCallsBP = null;
-                makePendingCallsBP = CreateRuntimeDllExportedFunctionBreakpoint(pyrtInfo.DLLs.Python, "Py_InitializeEx", (thread, frameBase, vFrame) => {
+                makePendingCallsBP = CreateRuntimeDllExportedFunctionBreakpoint(pyrtInfo.DLLs.Python, "Py_InitializeEx", (thread, frameBase, vFrame, retAddr) => {
                     makePendingCallsBP.Close();
                     if (process.GetPythonRuntimeInstance() == null) {
                         thread.Suspend(true);
@@ -235,7 +235,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
                         OnHelperDllInitialized(moduleInstance);
                     } else {
                         DkmRuntimeBreakpoint initBP = null;
-                        initBP = CreateRuntimeDllExportedFunctionBreakpoint(moduleInstance, "OnInitialized", (thread, frameBase, vFrame) => {
+                        initBP = CreateRuntimeDllExportedFunctionBreakpoint(moduleInstance, "OnInitialized", (thread, frameBase, vFrame, retAddr) => {
                             initBP.Close();
                             OnHelperDllInitialized(moduleInstance);
                         });
@@ -581,23 +581,32 @@ namespace Microsoft.PythonTools.DkmDebugger {
             }
         }
 
-        public delegate void RuntimeDllBreakpointHandler(DkmThread thread, ulong frameBase, ulong vframe);
+        public delegate void RuntimeDllBreakpointHandler(DkmThread thread, ulong frameBase, ulong vframe, ulong returnAddress);
 
         private class RuntimeDllBreakpoints : DkmDataItem {
             public readonly Dictionary<Guid, RuntimeDllBreakpointHandler> Handlers = new Dictionary<Guid, RuntimeDllBreakpointHandler>();
         }
 
-        public static DkmRuntimeInstructionBreakpoint CreateRuntimeDllFunctionBreakpoint(DkmNativeModuleInstance moduleInstance, string funcName, RuntimeDllBreakpointHandler handler, bool enable = false, bool debugStart = false) {
-            var process = moduleInstance.Process;
-            var runtimeBreakpoints = process.GetOrCreateDataItem(() => new RuntimeDllBreakpoints());
 
-            var addr = moduleInstance.GetFunctionAddress(funcName, debugStart);
+        private static DkmRuntimeInstructionBreakpoint CreateBreakpoint(DkmProcess process, ulong addr, RuntimeDllBreakpointHandler handler, bool enable) {
+            var runtimeBreakpoints = process.GetOrCreateDataItem(() => new RuntimeDllBreakpoints());
             var bp = process.CreateBreakpoint(Guids.LocalComponentGuid, addr);
             if (enable) {
                 bp.Enable();
             }
             runtimeBreakpoints.Handlers.Add(bp.UniqueId, handler);
             return bp;
+        }
+
+        private static void ClearBreakpoint(DkmProcess process, DkmRuntimeInstructionBreakpoint breakpoint) {
+            var runtimeBreakpoints = process.GetOrCreateDataItem(() => new RuntimeDllBreakpoints());
+            runtimeBreakpoints.Handlers.Remove(breakpoint.UniqueId);
+            breakpoint.Close();
+        }
+
+        public static DkmRuntimeInstructionBreakpoint CreateRuntimeDllFunctionBreakpoint(DkmNativeModuleInstance moduleInstance, string funcName, RuntimeDllBreakpointHandler handler, bool enable = false, bool debugStart = false) {
+            var addr = moduleInstance.GetFunctionAddress(funcName, debugStart);
+            return CreateBreakpoint(moduleInstance.Process, addr, handler, enable);
         }
 
         public static DkmRuntimeBreakpoint CreateRuntimeDllExportedFunctionBreakpoint(DkmNativeModuleInstance moduleInstance, string funcName, RuntimeDllBreakpointHandler handler, bool enable = false) {
@@ -619,7 +628,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
 
             using (var moduleSym = moduleInstance.GetSymbols()) 
             using (var funcSym = moduleSym.Object.GetSymbol(SymTagEnum.SymTagFunction, funcName)) {
-                var funcEnds = funcSym.Object.GetSymbols(SymTagEnum.SymTagFuncDebugEnd, null);
+                var funcEnds = funcSym.Object.GetSymbols(SymTagEnum.SymTagFuncDebugStart, null);
                 try {
                     if (funcEnds.Length == 0) {
                         Debug.Fail("Cannot set exit breakpoint for function " + funcName + " because it has no FuncDebugEnd symbols.");
@@ -640,7 +649,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
                         }
                         bps.Add(bp);
 
-                        runtimeBreakpoints.Handlers.Add(bp.UniqueId, handler);
+                        runtimeBreakpoints.Handlers.Add(bp.UniqueId, new FunctionExitBreakpointHandler(handler).Handle);
                     }
 
                     return bps.ToArray();
@@ -649,6 +658,24 @@ namespace Microsoft.PythonTools.DkmDebugger {
                         funcEnd.Dispose();
                     }
                 }
+            }
+        }
+
+        private class FunctionExitBreakpointHandler {
+            private readonly RuntimeDllBreakpointHandler _handler;
+            private DkmRuntimeInstructionBreakpoint _bp;
+
+            public FunctionExitBreakpointHandler(RuntimeDllBreakpointHandler handler) {
+                _handler = handler;
+            }
+
+            public void Handle(DkmThread thread, ulong frameBase, ulong frame, ulong returnAddress) {
+                _bp = CreateBreakpoint(thread.Process, returnAddress, HandleStepOut, true);
+            }
+
+            private void HandleStepOut(DkmThread thread, ulong frameBase, ulong frame, ulong returnAddress) {
+                ClearBreakpoint(thread.Process, _bp);
+                _handler(thread, frameBase, frame, returnAddress);
             }
         }
 
@@ -667,12 +694,15 @@ namespace Microsoft.PythonTools.DkmDebugger {
             [DataMember]
             public ulong VFrame { get; set; }
 
+            [DataMember]
+            public ulong ReturnAddress { get; set; }
+
             public override void Handle(DkmProcess process) {
                 var thread = process.GetThreads().Single(t => t.UniqueId == ThreadId);
                 var runtimeBreakpoints = process.GetDataItem<RuntimeDllBreakpoints>();
                 RuntimeDllBreakpointHandler handler;
                 if (runtimeBreakpoints.Handlers.TryGetValue(BreakpointId, out handler)) {
-                    handler(thread, FrameBase, VFrame);
+                    handler(thread, FrameBase, VFrame, ReturnAddress);
                 } else {
                     Debug.Fail("LocalComponent received a HandleBreakpointRequest for a breakpoint that it does not know about.");
                 }

@@ -69,10 +69,12 @@ namespace Microsoft.PythonTools.Project {
             ProjectMgr.OnInvalidateItems(Parent);
         }
 
-        private void InitializeFileChangeListener() {
+        private async void InitializeFileChangeListener() {
             if (_observing != null) {
                 _fileChangeListener.StopObservingItem(_observing);
             }
+
+            await Task.Delay(500).ConfigureAwait(true);
 
             _observing = ReferencedProjectOutputPath;
             if (_observing != null) {
