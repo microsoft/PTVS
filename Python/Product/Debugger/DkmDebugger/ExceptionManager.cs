@@ -203,11 +203,11 @@ namespace Microsoft.PythonTools.DkmDebugger {
                 _owner = owner;
             }
 
-            public void PyErr_SetObject(DkmThread thread, ulong frameBase, ulong vframe) {
+            public void PyErr_SetObject(DkmThread thread, ulong frameBase, ulong vframe, ulong returnAddress) {
                 _owner.OnException(thread);
             }
 
-            public void do_raise(DkmThread thread, ulong frameBase, ulong vframe) {
+            public void do_raise(DkmThread thread, ulong frameBase, ulong vframe, ulong returnAddress) {
                 _owner.OnException(thread);
             }
         }
