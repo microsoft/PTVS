@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Web;
@@ -721,16 +722,15 @@ namespace Microsoft.PythonTools.Uwp.Project {
         }
 
         private string GetProjectUniqueName() {
-            EnvDTE.DTE dte = (EnvDTE.DTE)Package.GetGlobalService(typeof(EnvDTE.DTE));
-            EnvDTE.SolutionBuild sb = dte.Solution.SolutionBuild;
-            string projectUniqueName = string.Empty;
-            foreach (String s in (Array)sb.StartupProjects) {
-                // There should only be one startup project so get the first one we find.
-                projectUniqueName = s;
-                break;
+            string projectUniqueName = null;
+
+            IVsSolution vsSolution = Package.GetGlobalService(typeof(SVsSolution)) as IVsSolution;
+            if (vsSolution != null) {
+                int hr = vsSolution.GetUniqueNameOfProject(this.PythonConfig, out projectUniqueName);
             }
-            if (projectUniqueName.Equals(string.Empty)) {
-                throw new Exception("Could not find a startup project.");
+
+            if (projectUniqueName == null) {
+                throw new Exception("Failed to get an unique project name.");
             }
             return projectUniqueName;
         }
@@ -750,7 +750,7 @@ namespace Microsoft.PythonTools.Uwp.Project {
             IVsSolution solution = (IVsSolution)Package.GetGlobalService(typeof(SVsSolution));
             IVsHierarchy hierarchy;
             solution.GetProjectOfUniqueName(GetProjectUniqueName(), out hierarchy);
-            IVsBuildPropertyStorage bps = hierarchy as IVsBuildPropertyStorage;
+            IVsBuildPropertyStorage bps = (IVsBuildPropertyStorage)hierarchy;
 
             string canonicalName = null;
             string property = null;
@@ -1015,16 +1015,9 @@ namespace Microsoft.PythonTools.Uwp.Project {
         }
 
         private IEnumerable<IVsDeployStatusCallback> GetSinkCollection() {
-            List<IVsDeployStatusCallback> toNotify = null;
-
             lock (syncObject) {
-                toNotify = new List<IVsDeployStatusCallback>(this.deployCallbackCollection.Count);
-                foreach (IVsDeployStatusCallback callback in this.deployCallbackCollection) {
-                    toNotify.Add(callback);
-                }
+                return this.deployCallbackCollection.Cast<IVsDeployStatusCallback>().ToList();
             }
-
-            return toNotify;
         }
 
         int IVsQueryDebuggableProjectCfg.QueryDebugTargets(uint grfLaunch, uint cTargets, VsDebugTargetInfo2[] rgDebugTargetInfo, uint[] pcActual) {
