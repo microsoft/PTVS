@@ -95,6 +95,9 @@ namespace Microsoft.PythonTools.Repl {
         public IEnumerable<string> Names {
             get {
                 yield return Command;
+                foreach (var a in Aliases) {
+                    yield return a;
+                }
             }
         }
 #endif
