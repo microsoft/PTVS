@@ -981,10 +981,6 @@ namespace Microsoft.PythonTools.Uwp.Project {
 
         private bool NotifyBeginDeploy() {
             foreach (IVsDeployStatusCallback callback in GetSinkCollection()) {
-                if (callback == null) {
-                    continue;
-                }
-
                 int fContinue = 1;
 
                 if (ErrorHandler.Failed(callback.OnStartDeploy(ref fContinue)) || fContinue == 0) {
@@ -1012,7 +1008,7 @@ namespace Microsoft.PythonTools.Uwp.Project {
 
         private IEnumerable<IVsDeployStatusCallback> GetSinkCollection() {
             lock (syncObject) {
-                return this.deployCallbackCollection.Cast<IVsDeployStatusCallback>().ToList();
+                return this.deployCallbackCollection.OfType<IVsDeployStatusCallback>().ToList();
             }
         }
 
