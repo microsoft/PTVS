@@ -253,7 +253,8 @@ namespace Microsoft.PythonTools.Intellisense {
         private bool ShouldTriggerIdentifierCompletionSession(out bool commitByDefault) {
             commitByDefault = true;
 
-            if (!_provider.PythonService.AdvancedOptions.AutoListIdentifiers ||
+            if (_bufferParser == null ||
+                !_provider.PythonService.AdvancedOptions.AutoListIdentifiers ||
                 !_provider.PythonService.AdvancedOptions.AutoListMembers) {
                 return false;
             }
