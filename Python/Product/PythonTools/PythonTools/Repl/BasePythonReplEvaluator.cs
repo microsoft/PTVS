@@ -296,12 +296,24 @@ namespace Microsoft.PythonTools.Repl {
 
                 if (_preConnectionOutput != null) {
                     lock (_preConnectionOutput) {
-                        Window.WriteError(FixNewLines(_preConnectionOutput.ToString()));
+                        try {
+                            Window.WriteError(FixNewLines(_preConnectionOutput.ToString()));
+                        } catch (Exception ex) {
+                            if (ex.IsCriticalException()) {
+                                throw;
+                            }
+                        }
                     }
                 }
 
                 if (!IsProcessExpectedToExit) {
-                    Window.WriteError("The Python REPL process has exited\r\n");
+                    try {
+                        Window.WriteError("The Python REPL process has exited\r\n");
+                    } catch (Exception ex) {
+                        if (ex.IsCriticalException()) {
+                            throw;
+                        }
+                    }
                 }
                 IsProcessExpectedToExit = false;
             }
