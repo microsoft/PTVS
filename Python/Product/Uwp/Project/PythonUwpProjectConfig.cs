@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Web;
@@ -48,7 +49,8 @@ namespace Microsoft.PythonTools.Uwp.Project {
         IVsProjectCfgDebugTargetSelection,
         IVsQueryDebuggableProjectCfg,
         IVsQueryDebuggableProjectCfg2,
-        IVsAppContainerProjectDeployCallback {
+        IVsAppContainerProjectDeployCallback,
+        IVsAppContainerBootstrapperLogger {
         private readonly IVsCfg _pythonCfg;
         private readonly IVsProjectFlavorCfg _uwpCfg;
         private readonly object syncObject = new object();
@@ -451,6 +453,13 @@ namespace Microsoft.PythonTools.Uwp.Project {
                 appPackageDebugTarget[0].guidProcessLanguage = targets[0].guidProcessLanguage;
                 appPackageDebugTarget[0].project = PythonConfig;
 
+                // Get remote machine name and port from bootstrapper
+                IVsAppContainerBootstrapperResult bootstrapResult = this.BootstrapForDebuggingSync(targets[0].bstrRemoteMachine);
+                if (bootstrapResult == null || !bootstrapResult.Succeeded) {
+                    return VSConstants.E_FAIL;
+                }
+                appPackageDebugTarget[0].bstrRemoteMachine = bootstrapResult.Address;
+
                 // Pass the debug launch targets to the debugger
                 IVsDebugger4 debugger4 = (IVsDebugger4)Package.GetGlobalService(typeof(SVsShellDebugger));
 
@@ -591,91 +600,56 @@ namespace Microsoft.PythonTools.Uwp.Project {
         }
 
         public int StartDeploy(IVsOutputWindowPane pIVsOutputWindowPane, uint dwOptions) {
-            int continueOn = 1;
-
             outputWindow = pIVsOutputWindowPane;
 
-            if (connection != null) {
-                lock (syncObject) {
-                    if (connection != null) {
-                        connection.Dispose();
-                        connection = null;
-                    }
-                }
+            if (!NotifyBeginDeploy()) {
+                return VSConstants.E_ABORT;
             }
 
-            // Loop through deploy status callbacks
-            foreach (IVsDeployStatusCallback callback in deployCallbackCollection) {
-                if (ErrorHandler.Failed(callback.OnStartDeploy(ref continueOn))) {
-                    continueOn = 0;
-                }
-
-                if (continueOn == 0) {
-                    outputWindow = null;
-                    return VSConstants.E_ABORT;
-                }
-            }
-
-            try {
-                VsDebugTargetInfo2[] targets;
-                uint deployFlags = (uint)(_AppContainerDeployOptions.ACDO_NetworkLoopbackEnable | _AppContainerDeployOptions.ACDO_SetNetworkLoopback);
-                string recipeFile = null;
-                string layoutDir = null;
-                var pythonProject = PythonConfig;
-                IVsBuildPropertyStorage bps = (IVsBuildPropertyStorage)pythonProject;
-                int hr = QueryDebugTargets(out targets);
-                if (ErrorHandler.Failed(hr)) {
-                    NotifyEndDeploy(0);
-                    return hr;
-                }
-
-                string canonicalName;
-
-                get_CanonicalName(out canonicalName);
-
-                bps.GetPropertyValue("AppxPackageRecipe", canonicalName, (uint)_PersistStorageType.PST_PROJECT_FILE, out recipeFile);
-
-                string projectUniqueName = null;
-                IVsSolution vsSolution = Package.GetGlobalService(typeof(SVsSolution)) as IVsSolution;
-                if (vsSolution != null) {
-                    hr = vsSolution.GetUniqueNameOfProject(pythonProject, out projectUniqueName);
-                }
-
-                IVsAppContainerProjectDeploy deployHelper = (IVsAppContainerProjectDeploy)Package.GetGlobalService(typeof(SVsAppContainerProjectDeploy));
-                if (String.IsNullOrEmpty(targets[0].bstrRemoteMachine)) {
-                    bps.GetPropertyValue("LayoutDir", canonicalName, (uint)_PersistStorageType.PST_PROJECT_FILE, out layoutDir);
-
-                    deployOp = deployHelper.StartDeployAsync(deployFlags, recipeFile, layoutDir, projectUniqueName, this);
-                } else {
-                    IVsDebuggerDeploy deploy = (IVsDebuggerDeploy)Package.GetGlobalService(typeof(SVsShellDebugger));
-                    IVsDebuggerDeployConnection deployConnection;
-
-                    hr = deploy.ConnectToTargetComputer(targets[0].bstrRemoteMachine, VsDebugRemoteAuthenticationMode.VSAUTHMODE_None, out deployConnection);
-                    if (ErrorHandler.Failed(hr)) {
-                        NotifyEndDeploy(0);
-                        return hr;
-                    }
-
-                    connection = deployConnection;
-
-                    deployOp = deployHelper.StartRemoteDeployAsync(deployFlags, connection, recipeFile, projectUniqueName, this);
-                }
-            } catch (Exception) {
-                if (connection != null) {
-                    lock (syncObject) {
-                        if (connection != null) {
-                            connection.Dispose();
-                            connection = null;
-                        }
-                    }
-                }
-                connection = null;
-
+            VsDebugTargetInfo2[] targets;
+            int hr = QueryDebugTargets(out targets);
+            if (ErrorHandler.Failed(hr)) {
                 NotifyEndDeploy(0);
-
-                // Rethrow exception
-                throw;
+                return hr;
             }
+
+            string projectUniqueName = this.GetProjectUniqueName();
+
+            IVsAppContainerBootstrapper4 bootstrapper = (IVsAppContainerBootstrapper4)ServiceProvider.GlobalProvider.GetService(typeof(SVsAppContainerProjectDeploy));
+            VsBootstrapperPackageInfo[] packagesToDeployList = new VsBootstrapperPackageInfo[] {
+                new VsBootstrapperPackageInfo { PackageName = "EB22551A-7F66-465F-B53F-E5ABA0C0574E" }, // NativeMsVsMon
+                new VsBootstrapperPackageInfo { PackageName = "62B807E2-6539-46FB-8D67-A73DC9499940" } // ManagedMsVsMon
+            };
+            VsBootstrapperPackageInfo[] optionalPackagesToDeploy = new VsBootstrapperPackageInfo[] {
+                new VsBootstrapperPackageInfo { PackageName = "FEC73B34-86DE-4EA8-BFF4-3600A0443E9C" }, // NativeMsVsMonDependency
+                new VsBootstrapperPackageInfo { PackageName = "B968CC6A-D2C8-4197-88E3-11662042C291" }, // XamlUIDebugging
+                new VsBootstrapperPackageInfo { PackageName = "8CDEABEF-33E1-4A23-A13F-94A49FF36E84" }  // XamlUIDebuggingDependency
+            };
+
+            BootstrapMode bootStrapMode = BootstrapMode.UniversalBootstrapMode;
+            
+            IVsTask localAppContainerBootstrapperOperation = bootstrapper.BootstrapAsync(projectUniqueName,
+                                                                            targets[0].bstrRemoteMachine,
+                                                                            bootStrapMode,
+                                                                            packagesToDeployList.Length,
+                                                                            packagesToDeployList,
+                                                                            optionalPackagesToDeploy.Length,
+                                                                            optionalPackagesToDeploy,
+                                                                            this);
+
+            lock (syncObject) {
+                this.appContainerBootstrapperOperation = localAppContainerBootstrapperOperation;
+            }
+
+            ThreadHelper.JoinableTaskFactory.RunAsync(async () => {
+                IVsAppContainerBootstrapperResult result = null;
+                try {
+                    object taskResult = await localAppContainerBootstrapperOperation;
+                    result = (IVsAppContainerBootstrapperResult)taskResult;
+                } finally {
+                    this.OnBootstrapEnd(projectUniqueName, result);
+                }
+            });
 
             return VSConstants.S_OK;
         }
@@ -713,6 +687,78 @@ namespace Microsoft.PythonTools.Uwp.Project {
             return result;
         }
 
+        private void OnBootstrapEnd(string projectUniqueName, IVsAppContainerBootstrapperResult result) {
+            if (result == null || !result.Succeeded) {
+                this.NotifyEndDeploy(0);
+                return;
+            }
+
+            IVsDebuggerDeploy deploy = (IVsDebuggerDeploy)Package.GetGlobalService(typeof(SVsShellDebugger));
+            IVsDebuggerDeployConnection deployConnection;
+
+            int hr = deploy.ConnectToTargetComputer(result.Address, VsDebugRemoteAuthenticationMode.VSAUTHMODE_None, out deployConnection);
+            lock (syncObject) {
+                connection = deployConnection;
+            }
+
+            if (ErrorHandler.Failed(hr)) {
+                NotifyEndDeploy(0);
+                return;
+            }
+
+            string recipeFile = GetRecipeFile();
+            IVsAppContainerProjectDeploy deployHelper = (IVsAppContainerProjectDeploy)Package.GetGlobalService(typeof(SVsAppContainerProjectDeploy));
+            uint deployFlags = (uint)(_AppContainerDeployOptions.ACDO_NetworkLoopbackEnable | _AppContainerDeployOptions.ACDO_SetNetworkLoopback);
+            IVsAppContainerProjectDeployOperation localAppContainerDeployOperation = deployHelper.StartRemoteDeployAsync(deployFlags, connection, recipeFile, projectUniqueName, this);
+
+            lock (syncObject) {
+                this.deployOp = localAppContainerDeployOperation;
+            }
+        }
+
+        private IVsAppContainerBootstrapperResult BootstrapForDebuggingSync(string targetDevice) {
+            IVsAppContainerBootstrapper4 bootstrapper = (IVsAppContainerBootstrapper4)ServiceProvider.GlobalProvider.GetService(typeof(SVsAppContainerProjectDeploy));
+            return (IVsAppContainerBootstrapperResult)bootstrapper.BootstrapForDebuggingAsync(this.GetProjectUniqueName(), targetDevice, BootstrapMode.UniversalBootstrapMode, this.GetRecipeFile(), logger: null).GetResult();
+        }
+
+        private string GetProjectUniqueName() {
+            string projectUniqueName = null;
+
+            IVsSolution vsSolution = Package.GetGlobalService(typeof(SVsSolution)) as IVsSolution;
+            if (vsSolution != null) {
+                int hr = vsSolution.GetUniqueNameOfProject(this.PythonConfig, out projectUniqueName);
+            }
+
+            if (projectUniqueName == null) {
+                throw new Exception("Failed to get an unique project name.");
+            }
+            return projectUniqueName;
+        }
+
+        private string GetRecipeFile() {
+            string recipeFile = this.GetStringPropertyValue("AppxPackageRecipe");
+            if (recipeFile == null) {
+                string targetDir = this.GetStringPropertyValue("TargetDir");
+                string projectName = this.GetStringPropertyValue("ProjectName");
+                recipeFile = System.IO.Path.Combine(targetDir, projectName + ".appxrecipe");
+            }
+
+            return recipeFile;
+        }
+
+        private string GetStringPropertyValue(string propertyName) {
+            IVsSolution solution = (IVsSolution)Package.GetGlobalService(typeof(SVsSolution));
+            IVsHierarchy hierarchy;
+            solution.GetProjectOfUniqueName(GetProjectUniqueName(), out hierarchy);
+            IVsBuildPropertyStorage bps = (IVsBuildPropertyStorage)hierarchy;
+
+            string canonicalName = null;
+            string property = null;
+            get_CanonicalName(out canonicalName);
+            bps.GetPropertyValue(propertyName, canonicalName, (uint)_PersistStorageType.PST_PROJECT_FILE, out property);
+            return property;
+        }
+
         int IVsDeployableProjectCfg.UnadviseDeployStatusCallback(uint dwCookie) {
             lock (syncObject) {
                 deployCallbackCollection.RemoveAt(dwCookie);
@@ -727,31 +773,44 @@ namespace Microsoft.PythonTools.Uwp.Project {
 
         #endregion
 
+        #region IVsAppContainerBootstrapperLogger
+
+        void IVsAppContainerBootstrapperLogger.OutputMessage(string bstrMessage) {
+            if (this.outputWindow != null) {
+                this.outputWindow.OutputString(bstrMessage);
+            }
+        }
+
+        #endregion
+
         #region IVsAppContainerProjectDeployCallback Members
 
         void IVsAppContainerProjectDeployCallback.OnEndDeploy(bool successful, string deployedPackageMoniker, string deployedAppUserModelID) {
             try {
                 if (successful) {
+                    var result = deployOp.GetDeployResult();
+                    this.LayoutDir = result.LayoutFolder;
+
                     deployPackageMoniker = deployedPackageMoniker;
                     deployAppUserModelID = deployedAppUserModelID;
                     NotifyEndDeploy(1);
-
-                    var result = deployOp.GetDeployResult();
-
-                    this.LayoutDir = result.LayoutFolder;
                 } else {
                     deployPackageMoniker = null;
                     deployAppUserModelID = null;
                     NotifyEndDeploy(0);
                 }
             } finally {
-                lock (syncObject) {
-                    deployOp = null;
+                IVsDebuggerDeployConnection localConnection = null;
 
-                    if (connection != null) {
-                        connection.Dispose();
-                        connection = null;
-                    }
+                lock (syncObject) {
+                    this.appContainerBootstrapperOperation = null;
+                    this.deployOp = null;
+                    localConnection = this.connection;
+                    this.connection = null;
+                }
+
+                if (localConnection != null) {
+                    localConnection.Dispose();
                 }
             }
         }
@@ -924,29 +983,37 @@ namespace Microsoft.PythonTools.Uwp.Project {
             return value.Equals("true", StringComparison.OrdinalIgnoreCase);
         }
 
-        private int Deploy() {
-            try {
-                foreach (IVsDeployStatusCallback callback in deployCallbackCollection) {
-                    callback.OnEndDeploy(1);
-                }
-            } finally {
-                lock (syncObject) {
-                    appContainerBootstrapperOperation = null;
-                    deployOp = null;
+        private bool NotifyBeginDeploy() {
+            foreach (IVsDeployStatusCallback callback in GetSinkCollection()) {
+                int fContinue = 1;
+
+                if (ErrorHandler.Failed(callback.OnStartDeploy(ref fContinue)) || fContinue == 0) {
+                    return false;
                 }
             }
 
-            this.outputWindow = null;
-
-            return VSConstants.S_OK;
+            return true;
         }
 
         private void NotifyEndDeploy(int success) {
-            foreach (IVsDeployStatusCallback callback in deployCallbackCollection) {
-                callback.OnEndDeploy(success);
+            try {
+                foreach (IVsDeployStatusCallback callback in GetSinkCollection()) {
+                    callback.OnEndDeploy(success);
+                }
+            } finally {
+                lock (syncObject) {
+                    this.appContainerBootstrapperOperation = null;
+                    this.deployOp = null;
+                }
             }
 
             outputWindow = null;
+        }
+
+        private IEnumerable<IVsDeployStatusCallback> GetSinkCollection() {
+            lock (syncObject) {
+                return this.deployCallbackCollection.OfType<IVsDeployStatusCallback>().ToList();
+            }
         }
 
         int IVsQueryDebuggableProjectCfg.QueryDebugTargets(uint grfLaunch, uint cTargets, VsDebugTargetInfo2[] rgDebugTargetInfo, uint[] pcActual) {
