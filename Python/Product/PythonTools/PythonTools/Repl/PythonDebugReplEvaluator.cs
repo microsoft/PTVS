@@ -595,6 +595,11 @@ namespace Microsoft.PythonTools.Repl {
 #endif
     }
 
+    [ReplRole("Debug")]
+    [ContentType(PythonCoreConstants.ContentType)]
+#if DEV14_OR_LATER
+    [ContentType(PredefinedInteractiveCommandsContentTypes.InteractiveCommandContentTypeName)]
+#endif
     internal class PythonDebugProcessReplEvaluator : BasePythonReplEvaluator {
         private readonly PythonProcess _process;
         private readonly IThreadIdMapper _threadIdMapper;
