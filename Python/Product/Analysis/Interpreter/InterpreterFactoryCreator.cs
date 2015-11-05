@@ -16,6 +16,7 @@ using System;
 using System.IO;
 using System.Reflection;
 using Microsoft.PythonTools.Interpreter.Default;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Interpreter {
     /// <summary>
@@ -32,7 +33,7 @@ namespace Microsoft.PythonTools.Interpreter {
             var description = options.Description ?? string.Format("Unknown Python {0}", ver);
             var prefixPath = options.PrefixPath;
             if (string.IsNullOrEmpty(prefixPath) && !string.IsNullOrEmpty(options.InterpreterPath)) {
-                prefixPath = Path.GetDirectoryName(options.InterpreterPath);
+                prefixPath = CommonUtils.GetParent(options.InterpreterPath);
             }
 
             return new CPythonInterpreterFactory(

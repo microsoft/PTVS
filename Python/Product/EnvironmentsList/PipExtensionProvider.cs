@@ -244,7 +244,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public bool CanExecute {
             get {
                 if (_factory == null || _factory.Configuration == null ||
-                    string.IsNullOrEmpty(_factory.Configuration.InterpreterPath)) {
+                    !File.Exists(_factory.Configuration.InterpreterPath)) {
                     return false;
                 }
 
@@ -254,7 +254,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         private void AbortOnInvalidConfiguration() {
             if (_factory == null || _factory.Configuration == null ||
-                string.IsNullOrEmpty(_factory.Configuration.InterpreterPath)) {
+                !File.Exists(_factory.Configuration.InterpreterPath)) {
                 throw new InvalidOperationException(Resources.MisconfiguredEnvironment);
             }
         }
