@@ -1,7 +1,7 @@
 # Set the default behavior (used when a rule below doesn't match)
 * text=auto
 
-*.sln eol=crlf
+*.sln -text
 *.ico -text
 *.bmp -text
 *.png -text
