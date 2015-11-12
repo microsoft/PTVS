@@ -119,6 +119,10 @@ namespace Microsoft.PythonTools.Intellisense {
             PropagateAnalyzer(subjectBuffer);
 
             Debug.Assert(_bufferParser != null, "SetBufferParser has not been called");
+            if (_bufferParser == null) {
+                return;
+            }
+
             BufferParser existingParser;
             if (!subjectBuffer.Properties.TryGetProperty(typeof(BufferParser), out existingParser)) {
                 _bufferParser.AddBuffer(subjectBuffer);
