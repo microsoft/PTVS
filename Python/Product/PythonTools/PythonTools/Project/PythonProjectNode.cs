@@ -1129,9 +1129,14 @@ namespace Microsoft.PythonTools.Project {
                 var env = new Dictionary<string, string>(props.GetEnvironment(true), StringComparer.OrdinalIgnoreCase);
 
                 var paths = new List<string>();
-                paths.Add(CommonUtils.GetParent(((IPythonProjectLaunchProperties)this).GetInterpreterPath()));
+                var prefix = config.PrefixPath;
+                if (factory == null) {
+                    paths.Add(CommonUtils.GetParent(props.GetInterpreterPath()));
+                }
                 paths.Add(CommonUtils.GetParent(config.InterpreterPath));
-                paths.Add(CommonUtils.GetAbsoluteDirectoryPath(config.PrefixPath, "Scripts"));
+                if (!string.IsNullOrEmpty(config.PrefixPath)) {
+                    paths.Add(CommonUtils.GetAbsoluteDirectoryPath(config.PrefixPath, "Scripts"));
+                }
                 if (psi.EnvironmentVariables.ContainsKey("PATH")) {
                     paths.AddRange(psi.EnvironmentVariables["PATH"].Split(Path.PathSeparator));
                 }
