@@ -22,6 +22,7 @@ __version__ = "3.0.0.0"
 import re
 import sys
 from visualstudio_py_repl import BasicReplBackend, ReplBackend, UnsupportedReplException, _command_line_to_args_list
+from visualstudio_py_util import to_bytes
 try:
     import thread
 except:
@@ -293,7 +294,7 @@ class IPythonBackend(ReplBackend):
     def execute_file_as_main(self, filename, arg_string):
         f = open(filename, 'rb')
         try:
-            contents = f.read().replace("\r\n", "\n")
+            contents = f.read().replace(to_bytes("\r\n"), to_bytes("\n"))
         finally:
             f.close()
         args = [filename] + _command_line_to_args_list(arg_string)

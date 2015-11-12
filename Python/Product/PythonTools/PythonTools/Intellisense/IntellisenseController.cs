@@ -119,6 +119,10 @@ namespace Microsoft.PythonTools.Intellisense {
             PropagateAnalyzer(subjectBuffer);
 
             Debug.Assert(_bufferParser != null, "SetBufferParser has not been called");
+            if (_bufferParser == null) {
+                return;
+            }
+
             BufferParser existingParser;
             if (!subjectBuffer.Properties.TryGetProperty(typeof(BufferParser), out existingParser)) {
                 _bufferParser.AddBuffer(subjectBuffer);
@@ -255,7 +259,8 @@ namespace Microsoft.PythonTools.Intellisense {
         private bool ShouldTriggerIdentifierCompletionSession(out bool commitByDefault) {
             commitByDefault = true;
 
-            if (!_provider.PythonService.AdvancedOptions.AutoListIdentifiers ||
+            if (_bufferParser == null ||
+                !_provider.PythonService.AdvancedOptions.AutoListIdentifiers ||
                 !_provider.PythonService.AdvancedOptions.AutoListMembers) {
                 return false;
             }
