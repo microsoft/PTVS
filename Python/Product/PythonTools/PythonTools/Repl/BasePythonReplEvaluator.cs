@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -30,6 +31,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Markup;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Debugger;
@@ -40,19 +43,17 @@ using Microsoft.PythonTools.Language;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.InteractiveWindow;
+using Microsoft.VisualStudio.InteractiveWindow.Commands;
 using Microsoft.VisualStudio.InteractiveWindow.Shell;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
 using Microsoft.VisualStudio.Text.Projection;
+using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 using SR = Microsoft.PythonTools.Project.SR;
-using System.Windows.Media;
-using System.Windows.Markup;
-using Microsoft.VisualStudio.Utilities;
-using Microsoft.VisualStudio.InteractiveWindow.Commands;
 
 namespace Microsoft.PythonTools.Repl {
     internal abstract class BasePythonReplEvaluator :
@@ -88,6 +89,8 @@ namespace Microsoft.PythonTools.Repl {
         const string ExecuteFileEx_Script = "script";
         const string ExecuteFileEx_Module = "module";
         const string ExecuteFileEx_Process = "process";
+
+        private static Version _vsInteractiveVersion;
 
         protected BasePythonReplEvaluator(IServiceProvider serviceProvider, PythonToolsService pyService, PythonReplEvaluatorOptions options) {
             _pyService = pyService;
