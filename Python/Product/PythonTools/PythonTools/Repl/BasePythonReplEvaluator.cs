@@ -1797,6 +1797,19 @@ namespace Microsoft.PythonTools.Repl {
                 return PrimaryPrompt;
             }
         }
+
+        internal static Version VSInteractiveVersion {
+            get {
+                if (_vsInteractiveVersion == null) {
+                    _vsInteractiveVersion = typeof(IInteractiveWindow).Assembly
+                        .GetCustomAttributes(typeof(AssemblyInformationalVersionAttribute), false)
+                        .OfType<AssemblyInformationalVersionAttribute>()
+                        .Select(a => { Version v; return Version.TryParse(a.InformationalVersion, out v) ? v : null; })
+                        .FirstOrDefault(v => v != null) ?? new Version();
+                }
+                return _vsInteractiveVersion;
+            }
+        }
     }
 
     static class ReplWindowExtensions {

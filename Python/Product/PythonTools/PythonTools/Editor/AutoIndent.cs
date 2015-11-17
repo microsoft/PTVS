@@ -1,4 +1,4 @@
-// Python Tools for Visual Studio
+﻿// Python Tools for Visual Studio
 // Copyright(c) Microsoft Corporation
 // All rights reserved.
 //
@@ -15,7 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
-
+using System.Reflection;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.Language.StandardClassification;
@@ -26,6 +26,8 @@ using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
 
 namespace Microsoft.PythonTools.Editor {
     internal static class AutoIndent {
+        private static readonly Version RequireMapIndentToSurfaceBuffer = new Version(1, 0, 0, 50618);
+
         internal static int GetIndentation(string line, int tabSize) {
             int res = 0;
             for (int i = 0; i < line.Length; i++) {
@@ -178,9 +180,11 @@ namespace Microsoft.PythonTools.Editor {
 
             // Map indentation back to the view's text buffer.
             int offset = 0;
-            var viewLineStart = textView.BufferGraph.MapUpToSnapshot(line.Start, PointTrackingMode.Positive, PositionAffinity.Successor, textView.TextSnapshot);
-            if (viewLineStart.HasValue) {
-                offset = viewLineStart.Value.Position - viewLineStart.Value.GetContainingLine().Start.Position;
+            if (Repl.BasePythonReplEvaluator.VSInteractiveVersion >= RequireMapIndentToSurfaceBuffer) {
+                var viewLineStart = textView.BufferGraph.MapUpToSnapshot(line.Start, PointTrackingMode.Positive, PositionAffinity.Successor, textView.TextSnapshot);
+                if (viewLineStart.HasValue) {
+                    offset = viewLineStart.Value.Position - viewLineStart.Value.GetContainingLine().Start.Position;
+                }
             }
 
             return offset + indentation;
