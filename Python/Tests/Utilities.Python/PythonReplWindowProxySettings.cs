@@ -100,7 +100,7 @@ namespace TestUtilities.UI.Python {
             );
 
             var provider = app.ComponentModel.GetService<InteractiveWindowProvider>();
-            return (ToolWindowPane)provider.FindReplWindow(replId);
+            return (ToolWindowPane)provider.OpenOrCreate(replId);
         }
 
         public const string Python2IntDocumentation = @"Type:        int

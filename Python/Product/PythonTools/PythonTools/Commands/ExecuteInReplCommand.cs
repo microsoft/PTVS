@@ -47,28 +47,13 @@ namespace Microsoft.PythonTools.Commands {
             var compModel = serviceProvider.GetComponentModel();
             var provider = compModel.GetService<InteractiveWindowProvider>();
 
-            string replId = PythonReplEvaluatorProvider.GetReplId(factory, project);
-            var window = provider.FindReplWindow(replId);
-            if (window == null) {
-                window = provider.CreateInteractiveWindow(
-                    serviceProvider.GetPythonContentType(),
-                    factory.Description + " Interactive",
-                    typeof(PythonLanguageInfo).GUID,
-                    replId
-                );
-
-                var toolWindow = window as ToolWindowPane;
-                if (toolWindow != null) {
-                    toolWindow.BitmapImageMoniker = KnownMonikers.PYInteractiveWindow;
-                }
-
-                var pyService = serviceProvider.GetPythonToolsService();
-                window.InteractiveWindow.SetSmartUpDown(pyService.GetInteractiveOptions(factory).ReplSmartHistory);
-            }
-
-            if (project != null && project.Interpreters.IsProjectSpecific(factory)) {
-                project.AddActionOnClose(window, BasePythonReplEvaluator.CloseReplWindow);
-            }
+            string replId = project != null ?
+                PythonReplEvaluatorProvider.GetEvaluatorId(project) :
+                PythonReplEvaluatorProvider.GetEvaluatorId(factory);
+            var window = provider.OpenOrCreate(replId);
+            //if (project != null && project.Interpreters.IsProjectSpecific(factory)) {
+            //    project.AddActionOnClose(window, BasePythonReplEvaluator.CloseReplWindow);
+            //}
 
             return window;
         }

@@ -74,11 +74,6 @@ namespace Microsoft.PythonTools.InterpreterList {
                 OpenInteractiveWindow_CanExecute
             ));
             list.CommandBindings.Add(new CommandBinding(
-                EnvironmentView.OpenInteractiveOptions,
-                OpenInteractiveOptions_Executed,
-                OpenInteractiveOptions_CanExecute
-            ));
-            list.CommandBindings.Add(new CommandBinding(
                 EnvironmentPathsExtension.StartInterpreter,
                 StartInterpreter_Executed,
                 StartInterpreter_CanExecute
@@ -218,39 +213,20 @@ namespace Microsoft.PythonTools.InterpreterList {
         private void OpenInteractiveWindow_Executed(object sender, ExecutedRoutedEventArgs e) {
             var view = (EnvironmentView)e.Parameter;
             var factory = view.Factory;
-            IVsInteractiveWindow window;
 
-            var provider = _service.KnownProviders.OfType<LoadedProjectInterpreterFactoryProvider>().FirstOrDefault();
-            var vsProject = provider == null ?
-                null :
-                provider.GetProject(factory);
-            var project = vsProject == null ? null : vsProject.GetPythonProject();
+            var replId = PythonReplEvaluatorProvider.GetEvaluatorId(factory);
+
+            var compModel = _site.GetComponentModel();
+            var service = compModel.GetService<InteractiveWindowProvider>();
+            IVsInteractiveWindow window;
             try {
-                window = ExecuteInReplCommand.EnsureReplWindow(_site, factory, project);
-            } catch (InvalidOperationException ex) {
+                window = service.OpenOrCreate(replId);
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
                 MessageBox.Show(SR.GetString(SR.ErrorOpeningInteractiveWindow, ex), SR.ProductName);
                 return;
             }
-            if (window != null) {
-                var pane = window as ToolWindowPane;
-                if (pane != null) {
-                    ErrorHandler.ThrowOnFailure(((IVsWindowFrame)pane.Frame).Show());
-                }
-                window.Show(true);
-            }
-        }
 
-        private void OpenInteractiveOptions_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
-            var view = e.Parameter as EnvironmentView;
-            e.CanExecute = view != null && view.Factory != null && view.Factory.CanBeConfigured();
-        }
-
-        private void OpenInteractiveOptions_Executed(object sender, ExecutedRoutedEventArgs e) {
-            PythonToolsPackage.ShowOptionPage(
-                _site,
-                typeof(PythonInteractiveOptionsPage),
-                ((EnvironmentView)e.Parameter).Factory
-            );
+            window?.Show(true);
         }
 
         private void StartInterpreter_CanExecute(object sender, CanExecuteRoutedEventArgs e) {

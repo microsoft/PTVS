@@ -53,9 +53,9 @@ namespace Microsoft.PythonTools {
         private readonly AdvancedEditorOptions _advancedOptions;
         private readonly DebuggerOptions _debuggerOptions;
         private readonly GeneralOptions _generalOptions;
-        private readonly PythonInteractiveCommonOptions _debugInteractiveOptions;
+        private readonly PythonInteractiveOptions _debugInteractiveOptions;
         private readonly GlobalInterpreterOptions _globalInterpreterOptions;
-        internal readonly Dictionary<IPythonInterpreterFactory, PythonInteractiveOptions> _interactiveOptions = new Dictionary<IPythonInterpreterFactory, PythonInteractiveOptions>();
+        private readonly PythonInteractiveOptions _interactiveOptions;
         internal readonly Dictionary<IPythonInterpreterFactory, InterpreterOptions> _interpreterOptions = new Dictionary<IPythonInterpreterFactory, InterpreterOptions>();
         private readonly SurveyNewsService _surveyNews;
         private readonly IdleManager _idleManager;
@@ -106,7 +106,10 @@ namespace Microsoft.PythonTools {
             _surveyNews = new SurveyNewsService(container);
             _globalInterpreterOptions = new GlobalInterpreterOptions(this, _interpreterOptionsService);
             _globalInterpreterOptions.Load();
-            _debugInteractiveOptions = new PythonInteractiveCommonOptions(this, "Debug Interactive Window", "");
+            _interactiveOptions = new PythonInteractiveOptions(this, "Interactive");
+            _interactiveOptions.Load();
+            _debugInteractiveOptions = new PythonInteractiveOptions(this, "Debug Interactive Window");
+            _debuggerOptions.Load();
 
             _logger = new PythonToolsLogger(ComponentModel.GetExtensions<IPythonToolsLogger>().ToArray());
             InitializeLogging();
@@ -251,7 +254,7 @@ namespace Microsoft.PythonTools {
             }
         }
 
-        internal PythonInteractiveCommonOptions DebugInteractiveOptions {
+        internal PythonInteractiveOptions DebugInteractiveOptions {
             get {
                 return _debugInteractiveOptions;
             }
@@ -394,7 +397,6 @@ namespace Microsoft.PythonTools {
                     // Remove any items
                     foreach (var option in InterpreterOptions.Select(kv => kv.Value).Where(o => o.Removed).ToList()) {
                         configurable.RemoveInterpreter(option.Id);
-                        RemoveInteractiveOptions(option.Factory);
                         RemoveInterpreterOptions(option.Factory);
                     }
 
@@ -421,10 +423,6 @@ namespace Microsoft.PythonTools {
                                     Description = option.Display,
                                 }
                             );
-                            if (option.InteractiveOptions != null) {
-                                option.InteractiveOptions._id = GetInteractivePath(actualFactory);
-                                option.InteractiveOptions.Save(actualFactory);
-                            }
                         }
                     }
                 }
@@ -445,7 +443,7 @@ namespace Microsoft.PythonTools {
         internal InterpreterOptions GetInterpreterOptions(IPythonInterpreterFactory interpreterFactory) {
             InterpreterOptions options;
             if (!_interpreterOptions.TryGetValue(interpreterFactory, out options)) {
-                var path = GetInteractivePath(interpreterFactory);
+                var path = GetOptionsPath(interpreterFactory);
                 _interpreterOptions[interpreterFactory] = options = new InterpreterOptions(this, interpreterFactory);
                 options.Load();
                 RaiseEnvironmentsChanged();
@@ -462,11 +460,8 @@ namespace Microsoft.PythonTools {
             RaiseEnvironmentsChanged();
         }
 
-        internal void AddInterpreterOptions(IPythonInterpreterFactory interpreterFactory, InterpreterOptions options, bool addInteractive = false) {
+        internal void AddInterpreterOptions(IPythonInterpreterFactory interpreterFactory, InterpreterOptions options) {
             _interpreterOptions[interpreterFactory] = options;
-            if (addInteractive) {
-                _interactiveOptions[interpreterFactory] = options.InteractiveOptions;
-            }
             RaiseEnvironmentsChanged();
         }
 
@@ -528,38 +523,12 @@ namespace Microsoft.PythonTools {
 
         #region Interactive Options
 
-        internal PythonInteractiveOptions GetInteractiveOptions(IPythonInterpreterFactory interpreterFactory) {
-            PythonInteractiveOptions options;
-            if (!_interactiveOptions.TryGetValue(interpreterFactory, out options)) {
-                var path = GetInteractivePath(interpreterFactory);
-                _interactiveOptions[interpreterFactory] = options = new PythonInteractiveOptions(_container, this, "Interactive Windows", path);
-                options.Load();
-            }
-            return options;
-        }
-
-        internal IEnumerable<KeyValuePair<IPythonInterpreterFactory, PythonInteractiveOptions>> InteractiveOptions {
-            get {
-                return _interactiveOptions;
-            }
-        }
-
-        internal void AddInteractiveOptions(IPythonInterpreterFactory interpreterFactory, PythonInteractiveOptions options) {
-            _interactiveOptions[interpreterFactory] = options;
-        }
-
-        internal void RemoveInteractiveOptions(IPythonInterpreterFactory interpreterFactory) {
-            _interactiveOptions.Remove(interpreterFactory);
-        }
-
-        internal void ClearInteractiveOptions() {
-            _interactiveOptions.Clear();
-        }
+        internal PythonInteractiveOptions InteractiveOptions => _interactiveOptions;
 
         /// <summary>
         /// Gets a path which is unique for this interpreter (based upon the Id and version).
         /// </summary>
-        internal static string GetInteractivePath(IPythonInterpreterFactory interpreterFactory) {
+        internal static string GetOptionsPath(IPythonInterpreterFactory interpreterFactory) {
             return interpreterFactory.Id.ToString("B") + "\\" + interpreterFactory.Configuration.Version + "\\";
         }
 

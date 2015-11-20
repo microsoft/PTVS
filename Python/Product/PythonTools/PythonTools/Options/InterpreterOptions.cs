@@ -42,7 +42,6 @@ namespace Microsoft.PythonTools.Options {
         public bool IsConfigurable;
         public bool SupportsCompletionDb;
         public IPythonInterpreterFactory Factory;
-        public PythonInteractiveOptions InteractiveOptions;
 
         public InterpreterOptions(PythonToolsService pyService, IPythonInterpreterFactory interpreter) {
             _pyService = pyService;

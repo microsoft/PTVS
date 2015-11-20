@@ -33,20 +33,7 @@ namespace Microsoft.PythonTools {
         public const uint cmdidSurveyNews = 0x10e;
 
         public const uint cmdidReplWindow = 0x201;
-        public const uint cmdidReplWindow2 = 0x202;
-        public const uint cmdidReplWindow3 = 0x203;
-        public const uint cmdidReplWindow4 = 0x204;
-        public const uint cmdidReplWindow5 = 0x205;
-        public const uint cmdidReplWindow6 = 0x206;
-        public const uint cmdidReplWindow7 = 0x207;
-        public const uint cmdidReplWindow8 = 0x208;
-        public const uint cmdidReplWindow9 = 0x209;
-        public const uint cmdidReplWindowA = 0x20A;
-        public const uint cmdidReplWindowB = 0x20B;
-        public const uint cmdidReplWindowC = 0x20C;
-        public const uint cmdidReplWindowD = 0x20D;
-        public const uint cmdidReplWindowE = 0x20E;
-        public const uint cmdidReplWindowF = 0x20F;
+        public const uint cmdidNewInteractiveWindow = 0x202;
         public const uint cmdidDebugReplWindow = 0x210;
         public const uint cmdidInterpreterList = 0x220;
 
@@ -69,5 +56,7 @@ namespace Microsoft.PythonTools {
 
         public const uint comboIdReplScopes = 0x5000;
         public const uint comboIdReplScopesGetList = 0x5001;
+        public const uint comboIdReplEvaluators = 0x5002;
+        public const uint comboIdReplEvaluatorsGetList = 0x5003;
     };
 }

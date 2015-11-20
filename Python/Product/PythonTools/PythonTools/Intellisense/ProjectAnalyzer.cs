@@ -1029,9 +1029,9 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private static SignatureAnalysis TryGetLiveSignatures(ITextSnapshot snapshot, int paramIndex, string text, ITrackingSpan applicableSpan, string lastKeywordArg) {
             IInteractiveEvaluator eval;
-            IPythonReplIntellisense dlrEval;
+            IPythonInteractiveIntellisense dlrEval;
             if (snapshot.TextBuffer.Properties.TryGetProperty<IInteractiveEvaluator>(typeof(IInteractiveEvaluator), out eval) &&
-                (dlrEval = eval as IPythonReplIntellisense) != null) {
+                (dlrEval = eval as IPythonInteractiveIntellisense) != null) {
                 if (text.EndsWith("(")) {
                     text = text.Substring(0, text.Length - 1);
                 }
@@ -1086,18 +1086,21 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal bool ShouldEvaluateForCompletion(string source) {
-            switch (_pyService.GetInteractiveOptions(_interpreterFactory).ReplIntellisenseMode) {
-                case ReplIntellisenseMode.AlwaysEvaluate: return true;
-                case ReplIntellisenseMode.NeverEvaluate: return false;
+            switch (_pyService.InteractiveOptions.CompletionMode) {
+                case ReplIntellisenseMode.AlwaysEvaluate:
+                    return true;
+                case ReplIntellisenseMode.NeverEvaluate:
+                    return false;
                 case ReplIntellisenseMode.DontEvaluateCalls:
-                    var parser = Parser.CreateParser(new StringReader(source), _interpreterFactory.GetLanguageVersion());
+                    using (var parser = Parser.CreateParser(new StringReader(source), _interpreterFactory.GetLanguageVersion())) {
+                        var stmt = parser.ParseSingleStatement();
+                        var exprWalker = new ExprWalker();
 
-                    var stmt = parser.ParseSingleStatement();
-                    var exprWalker = new ExprWalker();
-
-                    stmt.Walk(exprWalker);
-                    return exprWalker.ShouldExecute;
-                default: throw new InvalidOperationException();
+                        stmt.Walk(exprWalker);
+                        return exprWalker.ShouldExecute;
+                    }
+                default:
+                    throw new InvalidOperationException();
             }
         }
 

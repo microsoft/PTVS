@@ -57,8 +57,8 @@ using SR = Microsoft.PythonTools.Project.SR;
 
 namespace Microsoft.PythonTools.Repl {
     internal abstract class BasePythonReplEvaluator :
-        IPythonReplEvaluator,
-        IPythonReplIntellisense,
+        IPythonInteractiveEvaluator,
+        IPythonInteractiveIntellisense,
         IInteractiveEvaluator,
         IMultipleScopeEvaluator
     {
@@ -102,7 +102,7 @@ namespace Microsoft.PythonTools.Repl {
 
         protected abstract PythonLanguageVersion LanguageVersion { get; }
 
-        internal abstract string DisplayName { get; }
+        public abstract string DisplayName { get; }
 
         internal PythonReplEvaluatorOptions CurrentOptions {
             get {
@@ -1248,7 +1248,7 @@ namespace Microsoft.PythonTools.Repl {
             }
         }
 
-        public Task<ExecutionResult> ExecuteFile(string filename, string extraArgs) {
+        public Task<ExecutionResult> ExecuteFileAsync(string filename, string extraArgs) {
             Utilities.ArgumentNotNullOrEmpty("filename", filename);
             Utilities.ArgumentNotNull("extraArgs", extraArgs);
             EnsureConnected();
@@ -1719,7 +1719,7 @@ namespace Microsoft.PythonTools.Repl {
             }
         }
 
-        public Task<ExecutionResult> InitializeAsync() {
+        public async Task<ExecutionResult> InitializeAsync() {
             WriteInitializationMessage();
             _window.TextView.BufferGraph.GraphBuffersChanged += BufferGraphGraphBuffersChanged;
 
@@ -1727,7 +1727,13 @@ namespace Microsoft.PythonTools.Repl {
 
             _commands = GetInteractiveCommands(_serviceProvider, _window, this);
 
-            return ExecutionResult.Succeeded;
+            if (File.Exists(CurrentOptions.StartupScript)) {
+                if (!(await ExecuteFileAsync(CurrentOptions.StartupScript, null)).IsSuccessful) {
+                    _window.WriteErrorLine("Error executing " + CurrentOptions.StartupScript);
+                }
+            }
+
+            return ExecutionResult.Success;
         }
 
         internal static IInteractiveWindowCommands GetInteractiveCommands(

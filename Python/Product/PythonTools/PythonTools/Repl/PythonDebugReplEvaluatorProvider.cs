@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.Shell;
@@ -25,6 +26,8 @@ namespace Microsoft.PythonTools.Repl {
         private const string _debugReplGuid = "BA417560-5A78-46F1-B065-638D27E1CDD0";
         private readonly PythonToolsService _pyService;
         private readonly IServiceProvider _serviceProvider;
+
+        public event EventHandler EvaluatorsChanged { add { } remove { } }
 
         [ImportingConstructor]
         public PythonDebugReplEvaluatorProvider([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider) {
@@ -37,6 +40,10 @@ namespace Microsoft.PythonTools.Repl {
                 return new PythonDebugReplEvaluator(_serviceProvider);
             }
             return null;
+        }
+
+        public IEnumerable<KeyValuePair<string, string>> GetEvaluators() {
+            yield return new KeyValuePair<string, string>("Current debuggee", GetDebugReplId());
         }
 
         internal static string GetDebugReplId() {

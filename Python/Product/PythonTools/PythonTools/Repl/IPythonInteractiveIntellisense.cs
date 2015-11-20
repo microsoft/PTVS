@@ -25,7 +25,7 @@ using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
 using Microsoft.PythonTools.Analysis;
 
 namespace Microsoft.PythonTools.Repl {
-    interface IPythonReplIntellisense {
+    interface IPythonInteractiveIntellisense {
         bool LiveCompletionsOnly { get; }
         IEnumerable<KeyValuePair<string, bool>> GetAvailableScopesAndKind();
         MemberResult[] GetMemberNames(string text);

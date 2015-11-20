@@ -44,7 +44,7 @@ namespace Microsoft.PythonTools.Repl {
         private bool _ownsAnalyzer, _enableAttach, _supportsMultipleCompleteStatementInputs;
 
         public PythonReplEvaluator(IPythonInterpreterFactory interpreter, IServiceProvider serviceProvider, IInterpreterOptionsService interpreterService = null)
-            : this(interpreter, serviceProvider, new DefaultPythonReplEvaluatorOptions(serviceProvider, () => serviceProvider.GetPythonToolsService().GetInteractiveOptions(interpreter)), interpreterService) {
+            : this(interpreter, serviceProvider, new DefaultPythonReplEvaluatorOptions(serviceProvider, () => serviceProvider.GetPythonToolsService().InteractiveOptions), interpreterService) {
         }
 
         public PythonReplEvaluator(IPythonInterpreterFactory interpreter, IServiceProvider serviceProvider, PythonReplEvaluatorOptions options, IInterpreterOptionsService interpreterService = null)
@@ -67,7 +67,7 @@ namespace Microsoft.PythonTools.Repl {
             public IPythonInterpreter CreateInterpreter() { return null; }
         }
 
-        public static IPythonReplEvaluator Create(
+        public static IPythonInteractiveEvaluator Create(
             IServiceProvider serviceProvider,
             string id,
             string version,
@@ -147,7 +147,7 @@ namespace Microsoft.PythonTools.Repl {
             }
         }
 
-        internal override string DisplayName {
+        public override string DisplayName {
             get {
                 return Interpreter != null ? Interpreter.Description : string.Empty;
             }
@@ -284,32 +284,28 @@ namespace Microsoft.PythonTools.Repl {
             args.Add("--port");
             args.Add(portNum.ToString());
 
-            if (!String.IsNullOrWhiteSpace(CurrentOptions.StartupScript)) {
-                args.Add("--launch_file");
-                args.Add(ProcessOutput.QuoteSingleArgument(CurrentOptions.StartupScript));
-            }
-
             _enableAttach = CurrentOptions.EnableAttach;
             if (CurrentOptions.EnableAttach) {
                 args.Add("--enable-attach");
             }
 
             bool multipleScopes = true;
-            if (!String.IsNullOrWhiteSpace(CurrentOptions.ExecutionMode)) {
-                // change ID to module name if we have a registered mode
-                var modes = Microsoft.PythonTools.Options.ExecutionMode.GetRegisteredModes(_serviceProvider);
-                string modeValue = CurrentOptions.ExecutionMode;
-                foreach (var mode in modes) {
-                    if (mode.Id == CurrentOptions.ExecutionMode) {
-                        modeValue = mode.Type;
-                        multipleScopes = mode.SupportsMultipleScopes;
-                        _supportsMultipleCompleteStatementInputs = mode.SupportsMultipleCompleteStatementInputs;
-                        break;
-                    }
-                }
-                args.Add("--execution_mode");
-                args.Add(modeValue);
-            }
+            //if (!String.IsNullOrWhiteSpace(CurrentOptions.ExecutionMode)) {
+            //    // change ID to module name if we have a registered mode
+            //    var modes = Microsoft.PythonTools.Options.ExecutionMode.GetRegisteredModes(_serviceProvider);
+            //    string modeValue = CurrentOptions.ExecutionMode;
+            //    foreach (var mode in modes) {
+            //        if (mode.Id == CurrentOptions.ExecutionMode) {
+            //            modeValue = mode.Type;
+            //            multipleScopes = mode.SupportsMultipleScopes;
+            //            _supportsMultipleCompleteStatementInputs = mode.SupportsMultipleCompleteStatementInputs;
+            //            break;
+            //        }
+            //    }
+            //    args.Add("--execution-mode");
+            //    args.Add(modeValue);
+            //}
+            _supportsMultipleCompleteStatementInputs = false;
 
             SetMultipleScopes(multipleScopes);
 
@@ -528,35 +524,35 @@ namespace Microsoft.PythonTools.Repl {
     /// Provides REPL options based upon options stored in our UI.
     /// </summary>
     class DefaultPythonReplEvaluatorOptions : PythonReplEvaluatorOptions {
-        private readonly Func<PythonInteractiveCommonOptions> _options;
+        private readonly Func<PythonInteractiveOptions> _options;
         private readonly IServiceProvider _serviceProvider;
 
-        public DefaultPythonReplEvaluatorOptions(IServiceProvider serviceProvider, Func<PythonInteractiveCommonOptions> options) {
+        public DefaultPythonReplEvaluatorOptions(IServiceProvider serviceProvider, Func<PythonInteractiveOptions> options) {
             _serviceProvider = serviceProvider;
             _options = options;
         }
 
         public override string InterpreterOptions {
             get {
-                return ((PythonInteractiveOptions)_options()).InterpreterOptions;
+                return "";
             }
         }
 
         public override bool EnableAttach {
             get {
-                return ((PythonInteractiveOptions)_options()).EnableAttach;
+                return false;
             }
         }
 
         public override string StartupScript {
             get {
-                return ((PythonInteractiveOptions)_options()).StartupScript;
+                return ((PythonInteractiveOptions)_options()).Scripts;
             }
         }
 
         public override string ExecutionMode {
             get {
-                return ((PythonInteractiveOptions)_options()).ExecutionMode;
+                return "Standard";
             }
         }
 
@@ -614,11 +610,11 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public override bool UseInterpreterPrompts {
-            get { return _options().UseInterpreterPrompts; }
+            get { return true; }
         }
 
         public override bool ReplSmartHistory {
-            get { return _options().ReplSmartHistory; }
+            get { return _options().UseSmartHistory; }
         }
 
         public override bool LiveCompletionsOnly {
@@ -626,11 +622,11 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public override string PrimaryPrompt {
-            get { return _options().PrimaryPrompt; }
+            get { return ">>> "; }
         }
 
         public override string SecondaryPrompt {
-            get { return _options().SecondaryPrompt;  }
+            get { return "... ";  }
         }
     }
 }

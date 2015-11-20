@@ -77,7 +77,7 @@ namespace TestUtilities.UI {
             var replWindowProvider = compModel.GetService<InteractiveWindowProvider>();
             _replWindow = replWindowProvider
 #if DEV14_OR_LATER
-                .GetReplToolWindows()
+                .AllOpenWindows
 #else
                 .GetReplWindows()
 #endif
@@ -111,7 +111,7 @@ namespace TestUtilities.UI {
                 compModel = (IComponentModel)VSTestContext.ServiceProvider.GetService(typeof(SComponentModel));
             }
             var replWindowProvider = compModel.GetService<InteractiveWindowProvider>();
-            foreach (var frame in replWindowProvider.GetReplWindows()
+            foreach (var frame in replWindowProvider.AllOpenWindows
                 .OfType<ToolWindowPane>()
                 .Select(r => r.Frame)
                 .OfType<IVsWindowFrame>()) {

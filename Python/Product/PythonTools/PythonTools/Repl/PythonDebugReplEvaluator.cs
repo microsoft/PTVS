@@ -39,7 +39,7 @@ namespace Microsoft.PythonTools.Repl {
     [InteractiveWindowRole("Debug")]
     [ContentType(PythonCoreConstants.ContentType)]
     [ContentType(PredefinedInteractiveCommandsContentTypes.InteractiveCommandContentTypeName)]
-    internal class PythonDebugReplEvaluator : IInteractiveEvaluator, IMultipleScopeEvaluator, IPythonReplIntellisense {
+    internal class PythonDebugReplEvaluator : IInteractiveEvaluator, IMultipleScopeEvaluator, IPythonInteractiveIntellisense {
         private IInteractiveWindow _window;
         private PythonDebugProcessReplEvaluator _activeEvaluator;
         private readonly Dictionary<int, PythonDebugProcessReplEvaluator> _evaluators = new Dictionary<int, PythonDebugProcessReplEvaluator>(); // process id to evaluator
@@ -83,7 +83,7 @@ namespace Microsoft.PythonTools.Repl {
             }
         }
 
-        internal PythonInteractiveCommonOptions CurrentOptions {
+        internal PythonInteractiveOptions CurrentOptions {
             get {
                 return _pyService.DebugInteractiveOptions;
             }
@@ -100,7 +100,7 @@ namespace Microsoft.PythonTools.Repl {
 
         public Task<ExecutionResult> Initialize(IInteractiveWindow window) {
             _window = window;
-            _window.SetSmartUpDown(CurrentOptions.ReplSmartHistory);
+            _window.SetSmartUpDown(CurrentOptions.UseSmartHistory);
             _window.WriteLine("Python debug interactive window.  Type $help for a list of commands.");
 
             _window.TextView.BufferGraph.GraphBuffersChanged += BufferGraphGraphBuffersChanged;
@@ -481,29 +481,16 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         private void evaluator_MultipleScopeSupportChanged(object sender, EventArgs e) {
-            var supportChanged = MultipleScopeSupportChanged;
-            if (supportChanged != null) {
-                supportChanged(this, EventArgs.Empty);
-            }
+            MultipleScopeSupportChanged?.Invoke(this, EventArgs.Empty);
         }
 
         private void evaluator_AvailableScopesChanged(object sender, EventArgs e) {
-            var curScopesChanged = AvailableScopesChanged;
-            if (curScopesChanged != null) {
-                curScopesChanged(this, EventArgs.Empty);
-            }
+            AvailableScopesChanged?.Invoke(this, EventArgs.Empty);
         }
 
         private void ActiveProcessChanged() {
-            var supportChanged = MultipleScopeSupportChanged;
-            if (supportChanged != null) {
-                supportChanged(this, EventArgs.Empty);
-            }
-
-            var curScopesChanged = AvailableScopesChanged;
-            if (curScopesChanged != null) {
-                curScopesChanged(this, EventArgs.Empty);
-            }
+            MultipleScopeSupportChanged?.Invoke(this, EventArgs.Empty);
+            AvailableScopesChanged?.Invoke(this, EventArgs.Empty);
         }
 
         private void NoProcessError() {
@@ -592,9 +579,9 @@ namespace Microsoft.PythonTools.Repl {
             }
         }
 
-        internal override string DisplayName {
+        public override string DisplayName {
             get {
-                return "Debug" + _languageVersion.ToString();
+                return "Debug " + _languageVersion.ToString();
             }
         }
 

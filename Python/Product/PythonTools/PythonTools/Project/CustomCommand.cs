@@ -589,19 +589,10 @@ namespace Microsoft.PythonTools.Project {
                 return false;
             }
 
-            var replWindow = replProvider.FindReplWindow(replWindowId);
-            bool created = replWindow == null;
-            if (created) {
-                replWindow = replProvider.CreateInteractiveWindow(
-                    _project.Site.GetPythonContentType(),
-                    replTitle,
-                    typeof(PythonLanguageInfo).GUID,
-                    replWindowId
-                );
-            }
+            bool created;
+            var replWindow = replProvider.OpenOrCreateTemporary(replWindowId, replTitle, out created);
 
-            var replToolWindow = replWindow as ToolWindowPane;
-            var replFrame = (replToolWindow != null) ? replToolWindow.Frame as IVsWindowFrame : null;
+            var replFrame = (replWindow as ToolWindowPane)?.Frame as IVsWindowFrame;
 
             var pyEvaluator = replWindow.InteractiveWindow.Evaluator as PythonReplEvaluator;
             var options = (pyEvaluator != null) ? pyEvaluator.CurrentOptions as ConfigurablePythonReplOptions : null;
@@ -647,7 +638,7 @@ namespace Microsoft.PythonTools.Project {
                     if (startInfo.IsScript) {
                         pyEvaluator.Window.WriteLine(string.Format("Executing {0} {1}", Path.GetFileName(filename), arguments));
                         Debug.WriteLine("Executing {0} {1}", filename, arguments);
-                        result = await pyEvaluator.ExecuteFile(filename, arguments);
+                        result = await pyEvaluator.ExecuteFileAsync(filename, arguments);
                     } else if (startInfo.IsModule) {
                         pyEvaluator.Window.WriteLine(string.Format("Executing -m {0} {1}", filename, arguments));
                         Debug.WriteLine("Executing -m {0} {1}", filename, arguments);

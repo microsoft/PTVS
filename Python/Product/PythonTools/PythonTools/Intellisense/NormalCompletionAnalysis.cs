@@ -84,12 +84,8 @@ namespace Microsoft.PythonTools.Intellisense {
             IEnumerable<MemberResult> members = null;
             IEnumerable<MemberResult> replMembers = null;
 
-            IInteractiveEvaluator eval;
-            IPythonReplIntellisense pyReplEval = null;
-
-            if (_snapshot.TextBuffer.Properties.TryGetProperty(typeof(IInteractiveEvaluator), out eval)) {
-                pyReplEval = eval as IPythonReplIntellisense;
-            }
+            var interactiveWindow = _snapshot.TextBuffer.GetInteractiveWindow();
+            var pyReplEval = interactiveWindow?.Evaluator as IPythonInteractiveIntellisense;
 
             var analysis = GetAnalysisEntry();
 

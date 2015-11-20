@@ -26,27 +26,27 @@ namespace Microsoft.PythonTools.Repl {
     /// This interface provides additional functionality for interacting with the Python REPL
     /// above and beyond the standard IReplEvaluator interface.
     /// </summary>
-    public interface IPythonReplEvaluator : IInteractiveEvaluator
-        {
+    public interface IPythonInteractiveEvaluator : IInteractiveEvaluator {
         /// <summary>
         /// Executes the specified file in the REPL window.
         /// 
         /// Does not reset the process, and the process will remain after the file is executed.
         /// </summary>
-        Task<ExecutionResult> ExecuteFile(string filename, string extraArgs);
+        Task<ExecutionResult> ExecuteFileAsync(string filename, string extraArgs);
 
         /// <summary>
         /// Returns true if the REPL window process has exited.
         /// </summary>
-        bool IsDisconnected {
-            get;
-        }
+        bool IsDisconnected { get; }
 
         /// <summary>
         /// Returns true if the REPL window is currently executing user code.
         /// </summary>
-        bool IsExecuting {
-            get;
-        }
+        bool IsExecuting { get; }
+
+        /// <summary>
+        /// User friendly name of the evaluator.
+        /// </summary>
+        string DisplayName { get; }
     }
 }

@@ -32,36 +32,34 @@ namespace Microsoft.PythonTools.Editor {
     [Export(typeof(IVsInteractiveWindowOleCommandTargetProvider))]
     [ContentType(PythonCoreConstants.ContentType)]
     public class PythonOleCommandTargetProvider : IVsInteractiveWindowOleCommandTargetProvider {
-        private readonly IEditorOperationsFactoryService _editorOpsFactory;
         private readonly IServiceProvider _serviceProvider;
+        private readonly IComponentModel _componentModel;
 
         [ImportingConstructor]
-        public PythonOleCommandTargetProvider([Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider, IEditorOperationsFactoryService editorOpsFactory) {
-            _editorOpsFactory = editorOpsFactory;
+        public PythonOleCommandTargetProvider([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider) {
             _serviceProvider = serviceProvider;
+            _componentModel = _serviceProvider.GetComponentModel();
         }
 
         public IOleCommandTarget GetCommandTarget(IWpfTextView textView, IOleCommandTarget nextTarget) {
-            EditFilter filter;
-            if (!textView.Properties.TryGetProperty<EditFilter>(typeof(EditFilter), out filter)) {
-                textView.Properties[typeof(EditFilter)] = filter = new EditFilter(
-                    textView,
-                    _editorOpsFactory.GetEditorOperations(textView),
-                    _serviceProvider
-                );
-                var window = textView.TextBuffer.GetInteractiveWindow();
-                if (window != null && window.Evaluator is PythonReplEvaluator) {
-                    textView.Properties.AddProperty(typeof(PythonReplEvaluator), (PythonReplEvaluator)window.Evaluator);
-                }
-                var intellisenseController = IntellisenseControllerProvider.GetOrCreateController(
-                    _serviceProvider,
-                    (IComponentModel)_serviceProvider.GetService(typeof(SComponentModel)),
-                    textView
-                );
-                intellisenseController._oldTarget = nextTarget;
-                filter._next = intellisenseController;
+            var window = textView.TextBuffer.GetInteractiveWindow();
+
+            var compModel = _serviceProvider.GetComponentModel();
+
+            var controller = IntellisenseControllerProvider.GetOrCreateController(
+                _serviceProvider,
+                _componentModel,
+                textView
+            );
+            controller._oldTarget = nextTarget;
+
+            var editFilter = EditFilter.GetOrCreate(_serviceProvider, _serviceProvider.GetComponentModel(), textView, controller);
+
+            if (window != null) {
+                return ReplEditFilter.GetOrCreate(_serviceProvider, _componentModel, textView, editFilter);
             }
-            return filter;
+
+            return editFilter;
         }
     }
 }

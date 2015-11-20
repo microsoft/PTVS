@@ -110,8 +110,19 @@ namespace Microsoft.PythonTools.Project {
         public const string ImportWizardUwpProjectCustomization = "ImportWizardUwpProjectCustomization";
 
         public const string ReplInitializationMessage = "ReplInitializationMessage";
+        public const string ReplCannotReadFile = "ReplCannotReadFile";
+        public const string ReplCaption = "ReplCaption";
+        public const string ReplCaptionNoEvaluator = "ReplCaptionNoEvaluator";
+        public const string ReplDisconnected = "ReplDisconnected";
+        public const string ReplDisconnectedReset = "ReplDisconnectedReset";
         public const string ReplEvaluatorInterpreterNotFound = "ReplEvaluatorInterpreterNotFound";
         public const string ReplEvaluatorInterpreterNotConfigured = "ReplEvaluatorInterpreterNotConfigured";
+        public const string ReplExited = "ReplExited";
+        public const string ReplModuleChanged = "ReplModuleChanged";
+        public const string ReplModuleCannotChange = "ReplModuleCannotChange";
+        public const string ReplNotStarted = "ReplNotStarted";
+        public const string ReplReset = "ReplReset";
+        public const string ReplUnknownCommand = "ReplUnknownCommand";
         public const string ErrorOpeningInteractiveWindow = "ErrorOpeningInteractiveWindow";
         public const string ErrorStartingInteractiveProcess = "ErrorStartingInteractiveProcess";
 

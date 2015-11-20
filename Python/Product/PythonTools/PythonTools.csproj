@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Choose>
     <When Condition=" '$(VisualStudioVersion)'=='15.0'  Or '$(TargetVisualStudioVersion)'=='VS150' ">
@@ -81,6 +81,7 @@
     <ProjectReference2 Include="..\ImportWizard\ImportWizard.csproj" />
     <ProjectReference2 Include="..\ProjectWizards\ProjectWizards.csproj" />
     <ProjectReference2 Include="..\TestAdapter\TestAdapter.csproj" />
+    <Reference Include="Microsoft.VisualStudio.Threading, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.Windows.Design.Host, Version=4.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>$(DevEnvDir)PrivateAssemblies\Microsoft.Windows.Design.Host.dll</HintPath>
@@ -229,6 +230,15 @@
     <Compile Include="..\Analysis\IEnumerableExtensions.cs">
       <Link>IEnumerableExtensions.cs</Link>
     </Compile>
+    <Compile Include="PythonTools\Options\PythonInteractiveOptionsControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PythonTools\Options\PythonInteractiveOptionsControl.Designer.cs">
+      <DependentUpon>PythonInteractiveOptionsControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PythonTools\Options\PythonInteractiveOptionsPage.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="PythonTools\Repl\IMultipleScopeEvaluator.cs" />
     <Compile Include="PythonTools\Repl\InlineReplAdornment.cs" />
     <Compile Include="PythonTools\Repl\InlineReplAdornmentManager.cs" />
@@ -239,6 +249,8 @@
     <Compile Include="PythonTools\Repl\IInteractiveEvaluatorProvider.cs" />
     <Compile Include="PythonTools\Repl\InteractiveRoleAttribute.cs" />
     <Compile Include="PythonTools\Debugger\ProximityExpressionWalker.cs" />
+    <Compile Include="PythonTools\Repl\PythonInteractiveEvaluator.cs" />
+    <Compile Include="PythonTools\Repl\ReplEditFilter.cs" />
     <Compile Include="PythonTools\Repl\ReplOutputClassificationFormatDefinitions.cs" />
     <Compile Include="PythonTools\Repl\ReplOutputClassifier.cs" />
     <Compile Include="PythonTools\Repl\ReplOutputClassifierProvider.cs" />
@@ -248,6 +260,7 @@
     <Compile Include="PythonTools\Project\IPythonProjectLaunchProperties.cs" />
     <Compile Include="PythonTools\Project\PythonProjectLaunchProperties.cs" />
     <Compile Include="PythonTools\Repl\ResizingAdorner.cs" />
+    <Compile Include="PythonTools\Repl\SelectableReplEvaluator.cs" />
     <Compile Include="PythonTools\Repl\ZoomableInlineAdornment.cs" />
     <Compile Include="PythonTools\SurveyNewsService.cs" />
     <Compile Include="PythonTools\Options\GlobalInterpreterOptions.cs" />
@@ -430,16 +443,7 @@
     <Compile Include="PythonTools\Options\PythonFormattingStatementsOptionsPage.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="PythonTools\Options\PythonInteractiveCommonOptions.cs" />
-    <Compile Include="PythonTools\Options\PythonDebugInteractiveOptionsControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="PythonTools\Options\PythonDebugInteractiveOptionsControl.Designer.cs">
-      <DependentUpon>PythonDebugInteractiveOptionsControl.cs</DependentUpon>
-    </Compile>
-    <Compile Include="PythonTools\Options\PythonDebugInteractiveOptionsPage.cs">
-      <SubType>Component</SubType>
-    </Compile>
+    <Compile Include="PythonTools\Options\PythonInteractiveOptions.cs" />
     <Compile Include="PythonTools\Project\PythonAssemblyReferenceNode.cs" />
     <Compile Include="PythonTools\Project\Automation\OAWebPiReference.cs" />
     <Compile Include="PythonTools\Project\Automation\OAPythonExtensionReference.cs" />
@@ -467,8 +471,8 @@
     <Compile Include="PythonTools\Repl\DebugReplStepOverCommand.cs" />
     <Compile Include="PythonTools\Repl\DebugReplThreadCommand.cs" />
     <Compile Include="PythonTools\Repl\DebugReplThreadsCommand.cs" />
-    <Compile Include="PythonTools\Repl\IPythonReplEvaluator.cs" />
-    <Compile Include="PythonTools\Repl\IPythonReplIntellisense.cs" />
+    <Compile Include="PythonTools\Repl\IPythonInteractiveEvaluator.cs" />
+    <Compile Include="PythonTools\Repl\IPythonInteractiveIntellisense.cs" />
     <Compile Include="PythonTools\Repl\PythonDebugReplEvaluator.cs" />
     <Compile Include="PythonTools\Repl\PythonDebugReplEvaluatorProvider.cs" />
     <Compile Include="PythonTools\Editor\SmartIndentProvider.cs" />
@@ -530,16 +534,6 @@
     </Compile>
     <Compile Include="PythonTools\Options\NewInterpreter.Designer.cs">
       <DependentUpon>NewInterpreter.cs</DependentUpon>
-    </Compile>
-    <Compile Include="PythonTools\Options\PythonInteractiveOptions.cs" />
-    <Compile Include="PythonTools\Options\PythonInteractiveOptionsControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="PythonTools\Options\PythonInteractiveOptionsControl.Designer.cs">
-      <DependentUpon>PythonInteractiveOptionsControl.cs</DependentUpon>
-    </Compile>
-    <Compile Include="PythonTools\Options\PythonInteractiveOptionsPage.cs">
-      <SubType>Component</SubType>
     </Compile>
     <Compile Include="PythonTools\Project\WebPiReferenceNode.cs" />
     <Compile Include="PythonTools\Project\BaseSearchPathNode.cs" />
@@ -607,15 +601,6 @@
     <Compile Include="PythonTools\Navigation\AstScopeNode.cs" />
     <Compile Include="PythonTools\Navigation\ClassScopeNode.cs" />
     <Compile Include="PythonTools\Navigation\FunctionScopeNode.cs" />
-    <Compile Include="PythonTools\Options\PythonInterpreterOptionsPage.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="PythonTools\Options\PythonInterpreterOptionsControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="PythonTools\Options\PythonInterpreterOptionsControl.Designer.cs">
-      <DependentUpon>PythonInterpreterOptionsControl.cs</DependentUpon>
-    </Compile>
     <Compile Include="PythonTools\Options\PythonDialogPage.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -877,6 +862,7 @@
   </ItemGroup>
   <ItemGroup>
     <!-- VSIX -->
+    <Compile Include="PythonTools\Repl\PythonInteractiveEvaluator.CommandProcessorThread.cs" />
     <None Include="Theme\contrast.vstheme" />
     <None Include="NoSurveyNewsFeed.html" />
     <None Include="NoInterpreters.html" />
@@ -1131,9 +1117,6 @@
     <EmbeddedResource Include="PythonTools\Options\NewInterpreter.resx">
       <DependentUpon>NewInterpreter.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="PythonTools\Options\PythonDebugInteractiveOptionsControl.resx">
-      <DependentUpon>PythonDebugInteractiveOptionsControl.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="PythonTools\Options\PythonGeneralOptionsControl.resx">
       <DependentUpon>PythonGeneralOptionsControl.cs</DependentUpon>
     </EmbeddedResource>
@@ -1160,9 +1143,6 @@
     <!-- Resources -->
     <EmbeddedResource Include="PythonTools\Project\StartWithErrorsDialog.resx">
       <DependentUpon>StartWithErrorsDialog.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="PythonTools\Options\PythonInterpreterOptionsControl.resx">
-      <DependentUpon>PythonInterpreterOptionsControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="PythonTools\Options\PythonAdvancedEditorOptionsControl.resx">
       <DependentUpon>PythonAdvancedEditorOptionsControl.cs</DependentUpon>

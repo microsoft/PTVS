@@ -319,7 +319,9 @@ Please update the environment in Tools-&gt;Options-&gt;Python Tools-&gt;Environm
 </value>
   </data>
   <data name="ReplInitializationMessage" xml:space="preserve">
-    <value>Python interactive window. Type $help for a list of commands.</value>
+    <value>&amp;#x1b;[94;21m{0} interactive window &amp;#x1b;[m[PTVS {1}-{2}]
+Type $help for a list of commands.</value>
+    <comment>{0} is the Python description, {1} is the PTVS version, {2} is the VS version</comment>
   </data>
   <data name="CustomCommandPrerequisitesContent" xml:space="preserve">
     <value>'{0}' command requires some packages that are not installed in your Python environment. Those packages need to be installed first before the command can be run.</value>
@@ -583,5 +585,38 @@ Packages that cannot be installed using pip may prevent all listed packages from
   <data name="ErrorLoadingEnvironmentViewExtensions" xml:space="preserve">
     <value>An error occurred loading extensions for the environments window.
 {1}</value>
+  </data>
+  <data name="ReplCannotReadFile" xml:space="preserve">
+    <value>Unable to read file '{0}'</value>
+  </data>
+  <data name="ReplDisconnected" xml:space="preserve">
+    <value>Current interactive window is disconnected.</value>
+  </data>
+  <data name="ReplDisconnectedReset" xml:space="preserve">
+    <value>This interactive window has encountered an issue. Please Reset the window.</value>
+  </data>
+  <data name="ReplExited" xml:space="preserve">
+    <value>The interactive Python process has exited.</value>
+  </data>
+  <data name="ReplModuleCannotChange" xml:space="preserve">
+    <value>Cannot change module, interactive window is disconnected</value>
+  </data>
+  <data name="ReplModuleChanged" xml:space="preserve">
+    <value>Current module changed to {0}</value>
+  </data>
+  <data name="ReplNotStarted" xml:space="preserve">
+    <value>Interactive window is not yet started.</value>
+  </data>
+  <data name="ReplReset" xml:space="preserve">
+    <value>Resetting Python state.</value>
+  </data>
+  <data name="ReplUnknownCommand" xml:space="preserve">
+    <value>Unknown command '{0}', use '$help' for a list of commands.</value>
+  </data>
+  <data name="ReplCaption" xml:space="preserve">
+    <value>{0} Interactive</value>
+  </data>
+  <data name="ReplCaptionNoEvaluator" xml:space="preserve">
+    <value>Python Interactive</value>
   </data>
 </root>
