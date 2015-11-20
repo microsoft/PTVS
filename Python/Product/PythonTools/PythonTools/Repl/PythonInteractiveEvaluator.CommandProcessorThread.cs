@@ -430,19 +430,12 @@ namespace Microsoft.PythonTools.Repl {
             private void HandlePromptChanged() {
                 Debug.Assert(Monitor.IsEntered(_streamLock));
 
-                // prompt change
-                //Trace.TraceInformation("Old prompts: \"{0}\" \"{1}\"", _prompt1, _prompt2);
                 var prompt1 = _stream.ReadString();
                 var prompt2 = _stream.ReadString();
-                bool updateAll = _stream.ReadInt32() == 1;
-                Trace.TraceInformation("New prompts: \"{0}\" \"{1}\" updateAll={2}", prompt1, prompt2, updateAll);
+                Trace.TraceInformation("New prompts: \"{0}\" \"{1}\"", prompt1, prompt2);
 
-                // TODO: Fix prompt handling
-                //if (Window != null) {
-                //    using (new StreamUnlock(this)) {
-                //        _eval.UpdatePrompts(updateAll);
-                //    }
-                //}
+                PrimaryPrompt = prompt1;
+                SecondaryPrompt = prompt2;
             }
 
             public event EventHandler AvailableScopesChanged;
@@ -931,6 +924,10 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             public bool IsExecuting => _completion != null && !_completion.Task.IsCompleted;
+
+            public string PrimaryPrompt { get; internal set; }
+
+            public string SecondaryPrompt { get; internal set; }
 
             /// <summary>
             /// Helper struct for locking and tracking the current holding thread.  This allows

@@ -555,8 +555,7 @@ namespace Microsoft.PythonTools.Repl {
                 Trace.TraceInformation("Old prompts: \"{0}\" \"{1}\"", _prompt1, _prompt2);
                 _prompt1 = _stream.ReadString();
                 _prompt2 = _stream.ReadString();
-                bool updateAll = _stream.ReadInt32() == 1;
-                Trace.TraceInformation("New prompts: \"{0}\" \"{1}\" updateAll={2}", _prompt1, _prompt2, updateAll);
+                Trace.TraceInformation("New prompts: \"{0}\" \"{1}\"", _prompt1, _prompt2);
 
                 // TODO: Fix prompt handling
                 //if (Window != null) {

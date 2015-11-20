@@ -407,13 +407,12 @@ actual inspection and introspection."""
             write_int(self.conn, len(xaml_bytes))
             write_bytes(self.conn, xaml_bytes)
 
-    def send_prompt(self, ps1, ps2, update_all = True):
+    def send_prompt(self, ps1, ps2):
         """sends the current prompt to the interactive window"""
         with self.send_lock:
             write_bytes(self.conn, ReplBackend._PRPC)
             write_string(self.conn, ps1)
             write_string(self.conn, ps2)
-            write_int(self.conn, update_all)
     
     def send_error(self):
         """reports that an error occured to the interactive window"""

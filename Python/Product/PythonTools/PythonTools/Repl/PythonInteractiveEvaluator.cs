@@ -59,8 +59,9 @@ namespace Microsoft.PythonTools.Repl {
             _deferredOutput = new StringBuilder();
             EnvironmentVariables = new Dictionary<string, string>();
             _enableMultipleScopes = true;
-            // TODO: Create global setting for smart history keys
-            UseSmartHistoryKeys = true;
+            var options = _serviceProvider.GetPythonToolsService().InteractiveOptions;
+            UseSmartHistoryKeys = options.UseSmartHistory;
+            LiveCompletionsOnly = options.LiveCompletionsOnly;
         }
 
         public string DisplayName { get; set; }
@@ -259,11 +260,10 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public string GetPrompt() {
-            // TODO: Support prompts
             if ((_window?.CurrentLanguageBuffer.CurrentSnapshot.LineCount ?? 1) > 1) {
-                return "... ";
+                return _thread?.SecondaryPrompt ?? "... ";
             } else {
-                return ">>> ";
+                return _thread?.PrimaryPrompt ?? ">>> ";
             }
         }
 
