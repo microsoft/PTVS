@@ -286,17 +286,6 @@ permissions and limitations under the License.
         </Strings>
       </Button>
 
-      <Button guid="guidPythonToolsCmdSet" id="cmdidSendToDefiningModule" priority="0x201" type="Button">
-        <Parent guid="guidPythonToolsCmdSet" id="EditMenuGroup"/>
-        <CommandFlag>DynamicVisibility</CommandFlag>
-        <CommandFlag>DefaultInvisible</CommandFlag>
-        <Strings>
-          <ButtonText>Send to &amp;Defining Module</ButtonText>
-          <ToolTipText>Sends the current editor selection to the defining module in a Python Interactive window.</ToolTipText>
-          <LocCanonicalName>.Python.SendSelectionToInteractiveDefiningModule</LocCanonicalName>
-        </Strings>
-      </Button>
-
       <Button guid="guidPythonToolsCmdSet" id="cmdidFillParagraph" priority="0x7f0f" type="Button">
         <Parent guid="guidStdEditor" id="IDG_VS_EDITOR_ADVANCED_CMDS"/>
         <CommandFlag>DynamicVisibility</CommandFlag>
@@ -783,7 +772,6 @@ permissions and limitations under the License.
     <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidDebugReplWindow" mod1="Alt Shift" key1="I" editor="guidVSStd97"/>
     <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidSendToRepl" key1="E" mod1="Control" key2="E" editor="guidVSStd97"/>
     <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidSendToRepl" key1="E" mod1="Control" key2="E" mod2="Control" editor="guidVSStd97"/>
-    <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidSendToDefiningModule" key1="E" mod1="Control" key2="M" editor="guidVSStd97"/>
     <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidFillParagraph" key1="E" mod1="Control" key2="P" mod2="Control" editor="guidVSStd97"/>
     <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidReplWindow" key1="I" mod1="Alt" editor="guidVSStd97"/>
     <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidInterpreterList" key1="K" mod1="Control" key2="VK_OEM_3" editor="guidVSStd97"/>
@@ -805,7 +793,6 @@ permissions and limitations under the License.
     <GuidSymbol name="guidPythonToolsCmdSet" value="{bdfa79d2-2cd2-474a-a82a-ce8694116825}">
       <IDSymbol name="cmdidExecuteFileInRepl" value="0x0102" />
       <IDSymbol name="cmdidSendToRepl" value="0x0103"/>
-      <IDSymbol name="cmdidSendToDefiningModule" value="0x0104"/>
       <IDSymbol name="cmdidFillParagraph" value="0x0105"/>
       <IDSymbol name="cmdidDiagnostics" value ="0x0106" />
       <IDSymbol name="cmdidRemoveImports" value ="0x0107" />

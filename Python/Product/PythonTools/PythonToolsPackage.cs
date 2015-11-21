@@ -328,19 +328,6 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             }
         }
 
-        protected override int CreateToolWindow(ref Guid toolWindowType, int id) {
-            //if (toolWindowType == GuidList.guidPythonInteractiveWindowGuid) {
-            //    var res = ComponentModel.GetService<InteractiveWindowProvider>().CreateFromRegistry(
-            //        ComponentModel,
-            //        id
-            //    );
-            //
-            //    return res ? VSConstants.S_OK : VSConstants.E_FAIL;
-            //}
-
-            return base.CreateToolWindow(ref toolWindowType, id);
-        }
-
         internal static void OpenNoInterpretersHelpPage(System.IServiceProvider serviceProvider, string page = null) {
             OpenVsWebBrowser(serviceProvider, page ?? PythonToolsInstallPath.GetFile("NoInterpreters.mht"));
         }
@@ -529,7 +516,6 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
                 new StartWithoutDebuggingCommand(this), 
                 new StartDebuggingCommand(this), 
                 new FillParagraphCommand(this), 
-                new SendToDefiningModuleCommand(this), 
                 new DiagnosticsCommand(this),
                 new RemoveImportsCommand(this),
                 new RemoveImportsCurrentScopeCommand(this),

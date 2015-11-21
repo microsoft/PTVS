@@ -317,8 +317,8 @@ namespace Microsoft.PythonTools.Intellisense {
                 return null;
             }
 
-            var replEval = buffer.GetReplEvaluator();
-            if (replEval != null) {
+            var interactive = buffer.GetInteractiveWindow();
+            if (interactive != null) {
                 // We have a repl window, create an untracked module.
                 return _pyAnalyzer.AddModule(null, null, analysisCookie);
             }
@@ -851,7 +851,7 @@ namespace Microsoft.PythonTools.Intellisense {
             IPythonProjectEntry pyProjEntry = entry as IPythonProjectEntry;
             List<PythonAst> asts = new List<PythonAst>();
             foreach (var snapshot in snapshots) {
-                if (snapshot.TextBuffer.Properties.ContainsProperty(PythonReplEvaluator.InputBeforeReset)) {
+                if (snapshot.TextBuffer.Properties.ContainsProperty(ParseQueue.DoNotParse)) {
                     continue;
                 }
 

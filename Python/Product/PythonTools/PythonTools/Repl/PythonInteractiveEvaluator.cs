@@ -20,18 +20,24 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows;
 using System.Windows.Forms;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Intellisense;
+using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Language;
+using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.InteractiveWindow.Commands;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
 using Microsoft.VisualStudio.Utilities;
+using Microsoft.VisualStudioTools;
 using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.Repl {
@@ -42,26 +48,53 @@ namespace Microsoft.PythonTools.Repl {
     partial class PythonInteractiveEvaluator :
         IPythonInteractiveEvaluator,
         IMultipleScopeEvaluator,
-        IPythonInteractiveIntellisense
+        IPythonInteractiveIntellisense, 
+        IDisposable
     {
-        private readonly IServiceProvider _serviceProvider;
+        protected readonly IServiceProvider _serviceProvider;
         private readonly StringBuilder _deferredOutput;
 
-        private CommandProcessorThread _thread;
+        protected CommandProcessorThread _thread;
         private IInteractiveWindowCommands _commands;
         private IInteractiveWindow _window;
+        private PythonInteractiveOptions _options;
+        private VsProjectAnalyzer _analyzer;
 
         private bool _enableMultipleScopes;
         private IReadOnlyList<string> _availableScopes;
+
+        private bool _isDisposed;
 
         public PythonInteractiveEvaluator(IServiceProvider serviceProvider) {
             _serviceProvider = serviceProvider;
             _deferredOutput = new StringBuilder();
             EnvironmentVariables = new Dictionary<string, string>();
             _enableMultipleScopes = true;
-            var options = _serviceProvider.GetPythonToolsService().InteractiveOptions;
-            UseSmartHistoryKeys = options.UseSmartHistory;
-            LiveCompletionsOnly = options.LiveCompletionsOnly;
+        }
+
+        protected void Dispose(bool disposing) {
+            if (_isDisposed) {
+                return;
+            }
+
+            _isDisposed = true;
+            if (disposing) {
+                var thread = Interlocked.Exchange(ref _thread, null);
+                if (thread != null) {
+                    thread.Dispose();
+                    WriteError(SR.GetString(SR.ReplExited));
+                }
+                _analyzer?.Dispose();
+            }
+        }
+
+        public void Dispose() {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        ~PythonInteractiveEvaluator() {
+            Dispose(false);
         }
 
         public string DisplayName { get; set; }
@@ -78,6 +111,24 @@ namespace Microsoft.PythonTools.Repl {
         internal virtual void OnConnected() { }
         internal virtual void OnAttach() { }
         internal virtual void OnDetach() { }
+
+        internal VsProjectAnalyzer Analyzer {
+            get {
+                if (_analyzer != null) {
+                    return _analyzer;
+                }
+
+                // HACK: We use the interpreter path as the id for the factory
+                // Eventually, we will remove factories completely and always
+                // use the path as the ID, but right now this is a hack.
+                var interpreters = _serviceProvider.GetComponentModel().GetService<IInterpreterOptionsService>();
+                var factory = interpreters.Interpreters.FirstOrDefault(
+                    f => CommonUtils.IsSamePath(f.Configuration.InterpreterPath, InterpreterPath)
+                );
+                _analyzer = new VsProjectAnalyzer(_serviceProvider, factory, interpreters.Interpreters.ToArray());
+                return _analyzer;
+            }
+        }
 
         internal void WriteOutput(string text, bool addNewline = true) {
             var wnd = CurrentWindow;
@@ -125,9 +176,36 @@ namespace Microsoft.PythonTools.Repl {
                         AppendTextWithEscapes(value, _deferredOutput.ToString(), false, false);
                         _deferredOutput.Clear();
                     }
+
+                    _options = _serviceProvider.GetPythonToolsService().InteractiveOptions;
+                    _options.Changed += InteractiveOptions_Changed;
+                    UseSmartHistoryKeys = _options.UseSmartHistory;
+                    LiveCompletionsOnly = _options.LiveCompletionsOnly;
+                } else {
+                    if (_options != null) {
+                        _options.Changed -= InteractiveOptions_Changed;
+                        _options = null;
+                    }
                 }
                 _window = value;
             }
+        }
+
+        private async void InteractiveOptions_Changed(object sender, EventArgs e) {
+            if (!ReferenceEquals(sender, _options)) {
+                return;
+            }
+
+            UseSmartHistoryKeys = _options.UseSmartHistory;
+            LiveCompletionsOnly = _options.LiveCompletionsOnly;
+
+            var window = CurrentWindow;
+            if (window == null) {
+                return;
+            }
+
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+            window.TextView.Options.SetOptionValue(InteractiveWindowOptions.SmartUpDown, UseSmartHistoryKeys);
         }
 
         public bool EnableMultipleScopes {
@@ -183,15 +261,7 @@ namespace Microsoft.PythonTools.Repl {
             return true;
         }
 
-        public void Dispose() {
-            var thread = Interlocked.Exchange(ref _thread, null);
-            if (thread != null) {
-                thread.Dispose();
-                WriteError(SR.GetString(SR.ReplExited));
-            }
-        }
-
-        private async Task<CommandProcessorThread> EnsureConnectedAsync() {
+        protected async Task<CommandProcessorThread> EnsureConnectedAsync() {
             var thread = Volatile.Read(ref _thread);
             if (thread != null) {
                 return thread;
@@ -247,8 +317,78 @@ namespace Microsoft.PythonTools.Repl {
             return ExecutionResult.Failure;
         }
 
+        public async Task<ExecutionResult> ExecuteModuleAsync(string name, string extraArgs) {
+            var thread = await EnsureConnectedAsync();
+            if (thread != null) {
+                return await thread.ExecuteFile(name, extraArgs, "module");
+            }
+
+            WriteError(SR.GetString(SR.ReplDisconnected));
+            return ExecutionResult.Failure;
+        }
+
+        public async Task<ExecutionResult> ExecuteProcessAsync(string filename, string extraArgs) {
+            var thread = await EnsureConnectedAsync();
+            if (thread != null) {
+                return await thread.ExecuteFile(filename, extraArgs, "process");
+            }
+
+            WriteError(SR.GetString(SR.ReplDisconnected));
+            return ExecutionResult.Failure;
+        }
+
+        const string _splitRegexPattern = @"(?x)\s*,\s*(?=(?:[^""]*""[^""]*"")*[^""]*$)"; // http://regexhero.net/library/52/
+        private static Regex _splitLineRegex = new Regex(_splitRegexPattern);
+
         public string FormatClipboard() {
-            return System.Windows.Forms.Clipboard.GetText();
+            if (Clipboard.ContainsData(DataFormats.CommaSeparatedValue)) {
+                string data = Clipboard.GetData(DataFormats.CommaSeparatedValue) as string;
+                if (data != null) {
+                    string[] lines = data.Split(new[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+                    StringBuilder res = new StringBuilder();
+                    res.AppendLine("[");
+                    foreach (var line in lines) {
+                        string[] items = _splitLineRegex.Split(line);
+
+                        res.Append("  [");
+                        for (int i = 0; i < items.Length; i++) {
+                            res.Append(FormatItem(items[i]));
+
+                            if (i != items.Length - 1) {
+                                res.Append(", ");
+                            }
+                        }
+                        res.AppendLine("],");
+                    }
+                    res.AppendLine("]");
+                    return res.ToString();
+                }
+            }
+            return EditFilter.RemoveReplPrompts(
+                _serviceProvider.GetPythonToolsService(),
+                Clipboard.GetText(),
+                _window.TextView.Options.GetNewLineCharacter()
+            );
+        }
+
+        private static string FormatItem(string item) {
+            if (String.IsNullOrWhiteSpace(item)) {
+                return "None";
+            }
+            double doubleVal;
+            int intVal;
+            if (Double.TryParse(item, out doubleVal) ||
+                Int32.TryParse(item, out intVal)) {
+                return item;
+            }
+
+            if (item[0] == '"' && item[item.Length - 1] == '"' && item.IndexOf(',') != -1) {
+                // remove outer quotes, remove "" escaping
+                item = item.Substring(1, item.Length - 2).Replace("\"\"", "\"");
+            }
+
+            // put in single quotes and escape single quotes and backslashes
+            return "'" + item.Replace("\\", "\\\\").Replace("'", "\\'") + "'";
         }
 
         public IEnumerable<string> GetAvailableScopes() {
@@ -294,6 +434,10 @@ namespace Microsoft.PythonTools.Repl {
             return ResetWorkerAsync(initialize, false);
         }
 
+        public Task<ExecutionResult> ResetAsync(bool initialize, bool quiet) {
+            return ResetWorkerAsync(initialize, quiet);
+        }
+
         private async Task<ExecutionResult> ResetWorkerAsync(bool initialize, bool quiet) {
             // suppress reporting "failed to launch repl" process
             var thread = Interlocked.Exchange(ref _thread, null);
@@ -304,6 +448,10 @@ namespace Microsoft.PythonTools.Repl {
                 return ExecutionResult.Success;
             }
 
+            foreach (var buffer in CurrentWindow.TextView.BufferGraph.GetTextBuffers(b => b.ContentType.IsOfType(PythonCoreConstants.ContentType))) {
+                buffer.Properties[ParseQueue.DoNotParse] = ParseQueue.DoNotParse;
+            }
+
             if (!quiet) {
                 WriteOutput(SR.GetString(SR.ReplReset));
             }
@@ -311,17 +459,23 @@ namespace Microsoft.PythonTools.Repl {
             thread.IsProcessExpectedToExit = quiet;
             thread.Dispose();
 
-            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-            thread = Connect();
-            
+            var options = _serviceProvider.GetPythonToolsService().InteractiveOptions;
+            UseSmartHistoryKeys = options.UseSmartHistory;
+            LiveCompletionsOnly = options.LiveCompletionsOnly;
+
+            if (initialize) {
+                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+                thread = Connect();
+            }
+
             return ExecutionResult.Success;
         }
 
         internal Task InvokeAsync(Action action) {
-            return ((UIElement)_window).Dispatcher.InvokeAsync(action).Task;
+            return ((System.Windows.UIElement)_window).Dispatcher.InvokeAsync(action).Task;
         }
 
-        internal void WriteFrameworkElement(UIElement control, Size desiredSize) {
+        internal void WriteFrameworkElement(System.Windows.UIElement control, System.Windows.Size desiredSize) {
             if (_window == null) {
                 return;
             }
@@ -538,5 +692,37 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         #endregion
+
+        #region Compatibility
+
+        private static Version _vsInteractiveVersion;
+
+        internal static Version VSInteractiveVersion {
+            get {
+                if (_vsInteractiveVersion == null) {
+                    _vsInteractiveVersion = typeof(IInteractiveWindow).Assembly
+                        .GetCustomAttributes(typeof(System.Reflection.AssemblyInformationalVersionAttribute), false)
+                        .OfType<System.Reflection.AssemblyInformationalVersionAttribute>()
+                        .Select(a => { Version v; return Version.TryParse(a.InformationalVersion, out v) ? v : null; })
+                        .FirstOrDefault(v => v != null) ?? new Version();
+                }
+                return _vsInteractiveVersion;
+            }
+        }
+
+
+        #endregion
+    }
+
+    internal static class PythonInteractiveEvaluatorExtensions {
+        public static PythonInteractiveEvaluator GetPythonEvaluator(this IInteractiveWindow window) {
+            var pie = window?.Evaluator as PythonInteractiveEvaluator;
+            if (pie != null) {
+                return pie;
+            }
+
+            pie = (window?.Evaluator as SelectableReplEvaluator)?.Evaluator as PythonInteractiveEvaluator;
+            return pie;
+        }
     }
 }

@@ -581,7 +581,10 @@ namespace Microsoft.PythonTools.Project {
 
             replTitle = PerformSubstitutions(project, replTitle);
 
-            var replWindowId = PythonReplEvaluatorProvider.GetConfigurableReplId(ReplId + executeIn.Substring(4));
+            var replWindowId = PythonReplEvaluatorProvider.GetTemporaryId(
+                ReplId + executeIn.Substring(4),
+                _project.GetInterpreterFactory()
+            );
             
             var model = _project.Site.GetComponentModel();
             var replProvider = model.GetService<InteractiveWindowProvider>();
@@ -594,9 +597,9 @@ namespace Microsoft.PythonTools.Project {
 
             var replFrame = (replWindow as ToolWindowPane)?.Frame as IVsWindowFrame;
 
-            var pyEvaluator = replWindow.InteractiveWindow.Evaluator as PythonReplEvaluator;
-            var options = (pyEvaluator != null) ? pyEvaluator.CurrentOptions as ConfigurablePythonReplOptions : null;
-            if (options == null) {
+            var interactive = replWindow.InteractiveWindow;
+            var pyEvaluator = replWindow.InteractiveWindow.Evaluator as PythonInteractiveEvaluator;
+            if (pyEvaluator == null) {
                 if (created && replFrame != null) {
                     // We created the window, but it isn't valid, so we'll close
                     // it again immediately.
@@ -610,17 +613,11 @@ namespace Microsoft.PythonTools.Project {
                 throw new InvalidOperationException(SR.GetString(SR.ErrorCommandAlreadyRunning));
             }
 
-            var ipp3 = project as IPythonProject3;
-            if (ipp3 != null) {
-                options.InterpreterFactory = ipp3.GetInterpreterFactoryOrThrow();
-            } else {
-                options.InterpreterFactory = project.GetInterpreterFactory();
-            }
-            options.Project = project as PythonProjectNode;
-            options._workingDir = startInfo.WorkingDirectory;
-            options._envVars = startInfo.EnvironmentVariables;
+            var props = PythonProjectLaunchProperties.Create(project);
+            pyEvaluator.WorkingDirectory = startInfo.WorkingDirectory;
+            pyEvaluator.EnvironmentVariables = startInfo.EnvironmentVariables;
 
-            project.AddActionOnClose((object)replWindow, BasePythonReplEvaluator.CloseReplWindow);
+            project.AddActionOnClose((object)replWindow, InteractiveWindowProvider.Close);
 
             var pane = replWindow as ToolWindowPane;
             var frame = pane != null ? pane.Frame as IVsWindowFrame : null;
@@ -628,7 +625,7 @@ namespace Microsoft.PythonTools.Project {
                 ErrorHandler.ThrowOnFailure(frame.Show());
             }
 
-            var result = await pyEvaluator.Reset(quiet: true);
+            var result = await pyEvaluator.ResetAsync(true, quiet: true);
 
             if (result.IsSuccessful) {
                 try {
@@ -636,25 +633,25 @@ namespace Microsoft.PythonTools.Project {
                     var arguments = startInfo.Arguments ?? string.Empty;
 
                     if (startInfo.IsScript) {
-                        pyEvaluator.Window.WriteLine(string.Format("Executing {0} {1}", Path.GetFileName(filename), arguments));
+                        interactive.WriteLine(string.Format("Executing {0} {1}", Path.GetFileName(filename), arguments));
                         Debug.WriteLine("Executing {0} {1}", filename, arguments);
                         result = await pyEvaluator.ExecuteFileAsync(filename, arguments);
                     } else if (startInfo.IsModule) {
-                        pyEvaluator.Window.WriteLine(string.Format("Executing -m {0} {1}", filename, arguments));
+                        interactive.WriteLine(string.Format("Executing -m {0} {1}", filename, arguments));
                         Debug.WriteLine("Executing -m {0} {1}", filename, arguments);
-                        result = await pyEvaluator.ExecuteModule(filename, arguments);
+                        result = await pyEvaluator.ExecuteModuleAsync(filename, arguments);
                     } else if (startInfo.IsCode) {
                         Debug.WriteLine("Executing -c \"{0}\"", filename, arguments);
-                        result = await pyEvaluator.ExecuteText(filename);
+                        result = await pyEvaluator.ExecuteCodeAsync(filename);
                     } else {
-                        pyEvaluator.Window.WriteLine(string.Format("Executing {0} {1}", Path.GetFileName(filename), arguments));
+                        interactive.WriteLine(string.Format("Executing {0} {1}", Path.GetFileName(filename), arguments));
                         Debug.WriteLine("Executing {0} {1}", filename, arguments);
-                        result = await pyEvaluator.ExecuteProcess(filename, arguments);
+                        result = await pyEvaluator.ExecuteProcessAsync(filename, arguments);
                     }
 
                     if (resetRepl) {
                         // We really close the backend, rather than resetting.
-                        pyEvaluator.Close();
+                        pyEvaluator.Dispose();
                     }
                 } catch (Exception ex) {
                     ActivityLog.LogError(SR.ProductName, SR.GetString(SR.ErrorRunningCustomCommand, _label, ex));

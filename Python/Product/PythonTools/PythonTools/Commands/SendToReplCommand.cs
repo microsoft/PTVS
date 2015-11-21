@@ -28,6 +28,7 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudioTools;
 using IServiceProvider = System.IServiceProvider;
+using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Commands {
     /// <summary>
@@ -40,7 +41,7 @@ namespace Microsoft.PythonTools.Commands {
             _serviceProvider = serviceProvider;
         }
 
-        public override void DoCommand(object sender, EventArgs args) {
+        public override async void DoCommand(object sender, EventArgs args) {
             var activeView = CommonPackage.GetActiveTextView(_serviceProvider);
             var project = activeView.TextBuffer.GetProject(_serviceProvider);
             var analyzer = activeView.GetAnalyzer(_serviceProvider);
@@ -51,16 +52,20 @@ namespace Microsoft.PythonTools.Commands {
             ErrorHandler.ThrowOnFailure(windowFrame.Show());
             var repl = (IVsInteractiveWindow)window;
 
-            PythonReplEvaluator eval = repl.InteractiveWindow.Evaluator as PythonReplEvaluator;
-
-            eval.EnsureConnected();
-            repl.InteractiveWindow.Submit(GetActiveInputs(activeView, eval));
+            var version = analyzer.InterpreterFactory.Configuration.Version.ToLanguageVersion();
 
             repl.Show(true);
+
+            foreach (var code in GetActiveInputs(activeView, version)) {
+                await repl.InteractiveWindow.SubmitAsync(new[] { code });
+            }
         }
 
-        private static IEnumerable<string> GetActiveInputs(IWpfTextView activeView, PythonReplEvaluator eval) {
-            return eval.JoinCode(activeView.Selection.SelectedSpans.SelectMany(s => eval.SplitCode(s.GetText())));
+        private static IEnumerable<string> GetActiveInputs(IWpfTextView activeView, PythonLanguageVersion version) {
+            return ReplEditFilter.JoinCodeLines(
+                activeView.Selection.SelectedSpans.SelectMany(s => ReplEditFilter.SplitCode(s.GetText())),
+                version
+            );
         }
 
         private bool IsRealInterpreter(IPythonInterpreterFactory factory) {

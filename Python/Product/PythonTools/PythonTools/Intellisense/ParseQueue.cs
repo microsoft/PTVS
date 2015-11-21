@@ -40,6 +40,8 @@ namespace Microsoft.PythonTools.Intellisense {
         internal readonly VsProjectAnalyzer _parser;
         internal int _analysisPending;
 
+        public readonly static object DoNotParse = new object();
+
         /// <summary>
         /// Creates a new parse queue which will parse using the provided parser.
         /// </summary>
@@ -217,9 +219,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public ITextBuffer[] Buffers {
             get {
-                return _buffers.Where(
-                    x => !x.Properties.ContainsProperty(PythonReplEvaluator.InputBeforeReset)
-                ).ToArray();
+                return _buffers.Where(x => !x.Properties.ContainsProperty(ParseQueue.DoNotParse)).ToArray();
             }
         }
 

@@ -250,6 +250,7 @@
     <Compile Include="PythonTools\Repl\InteractiveRoleAttribute.cs" />
     <Compile Include="PythonTools\Debugger\ProximityExpressionWalker.cs" />
     <Compile Include="PythonTools\Repl\PythonInteractiveEvaluator.cs" />
+    <Compile Include="PythonTools\Repl\PythonReplEvaluatorProvider.cs" />
     <Compile Include="PythonTools\Repl\ReplEditFilter.cs" />
     <Compile Include="PythonTools\Repl\ReplOutputClassificationFormatDefinitions.cs" />
     <Compile Include="PythonTools\Repl\ReplOutputClassifier.cs" />
@@ -394,7 +395,6 @@
     <Compile Include="PythonTools\Commands\ExecuteInReplCommand.cs" />
     <Compile Include="PythonTools\Commands\FillParagraphCommand.cs" />
     <Compile Include="PythonTools\Commands\OpenReplCommand.cs" />
-    <Compile Include="PythonTools\Commands\SendToDefiningModuleCommand.cs" />
     <Compile Include="PythonTools\Commands\SendToReplCommand.cs" />
     <Compile Include="PythonTools\Commands\StartScriptCommand.cs" />
     <Compile Include="PythonTools\Intellisense\AnalysisSynchronizationContext.cs" />
@@ -458,7 +458,6 @@
     <Compile Include="PythonTools\Refactoring\ImportRemover.cs" />
     <Compile Include="PythonTools\Refactoring\LinePreservingCodeReplacer.cs" />
     <Compile Include="PythonTools\Refactoring\RenameVariableRequestView.cs" />
-    <Compile Include="PythonTools\Repl\BasePythonReplEvaluator.cs" />
     <Compile Include="PythonTools\Repl\DebugReplFrameCommand.cs" />
     <Compile Include="PythonTools\Repl\DebugReplFrameDownCommand.cs" />
     <Compile Include="PythonTools\Repl\DebugReplFramesCommand.cs" />
@@ -568,7 +567,6 @@
     </Compile>
     <Compile Include="PythonTools\Refactoring\SelectionTarget.cs" />
     <Compile Include="PythonTools\Refactoring\VariableRenamer.cs" />
-    <Compile Include="PythonTools\Repl\AttachDebuggerReplCommand.cs" />
     <Compile Include="PythonTools\Repl\LoadReplCommand.cs" />
     <Compile Include="PythonTools\Repl\OverloadDoc.cs" />
     <Compile Include="PythonTools\Designer\WpfEventBindingProvider.cs" />
@@ -633,8 +631,6 @@
     <Compile Include="PythonTools\Project\PythonNonCodeFileNode.cs" />
     <Compile Include="PythonTools\PythonClassifierProvider.cs" />
     <Compile Include="PythonTools\PythonCoreConstants.cs" />
-    <Compile Include="PythonTools\Repl\PythonReplEvaluator.cs" />
-    <Compile Include="PythonTools\Repl\PythonReplEvaluatorProvider.cs" />
     <Compile Include="PythonTools\Repl\ReplIntellisenseMode.cs" />
     <Compile Include="PythonTools\Repl\SwitchModuleCommand.cs" />
     <Compile Include="PythonTools\SnapshotSpanSourceCodeReader.cs" />

@@ -180,7 +180,7 @@ namespace Microsoft.PythonTools.Editor {
 
             // Map indentation back to the view's text buffer.
             int offset = 0;
-            if (Repl.BasePythonReplEvaluator.VSInteractiveVersion > RequireMapIndentToSurfaceBuffer) {
+            if (Repl.PythonInteractiveEvaluator.VSInteractiveVersion > RequireMapIndentToSurfaceBuffer) {
                 var viewLineStart = textView.BufferGraph.MapUpToSnapshot(line.Start, PointTrackingMode.Positive, PositionAffinity.Successor, textView.TextSnapshot);
                 if (viewLineStart.HasValue) {
                     offset = viewLineStart.Value.Position - viewLineStart.Value.GetContainingLine().Start.Position;

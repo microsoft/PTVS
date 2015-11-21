@@ -100,17 +100,18 @@ namespace Microsoft.PythonTools.Commands {
             }
         }
 
-        public override void DoCommand(object sender, EventArgs args) {
+        public override async void DoCommand(object sender, EventArgs e) {
             var pyProj = CommonPackage.GetStartupProject(_serviceProvider) as PythonProjectNode;
             var textView = CommonPackage.GetActiveTextView(_serviceProvider);
 
             VsProjectAnalyzer analyzer;
-            string filename, dir = null;
+            string filename, dir = null, args = null;
 
             if (pyProj != null) {
                 analyzer = pyProj.GetAnalyzer();
                 filename = pyProj.GetStartupFile();
                 dir = pyProj.GetWorkingDirectory();
+                args = ((IPythonProjectLaunchProperties)pyProj).GetArguments();
             } else if (textView != null) {
                 var pyService = _serviceProvider.GetPythonToolsService();
                 analyzer = pyService.DefaultAnalyzer;
@@ -131,14 +132,15 @@ namespace Microsoft.PythonTools.Commands {
 
             window.Show(true);
 
+            var eval = window.InteractiveWindow.Evaluator as IPythonInteractiveEvaluator;
+
             // The interpreter may take some time to startup, do this off the UI thread.
-            ThreadPool.QueueUserWorkItem(x => {
-                window.InteractiveWindow.Evaluator.ResetAsync().WaitAndUnwrapExceptions();
+            await ThreadHelper.JoinableTaskFactory.RunAsync(async () => {
+                await eval.ResetAsync();
 
-                window.InteractiveWindow.WriteLine(String.Format("Running {0}", filename));
-                string scopeName = Path.GetFileNameWithoutExtension(filename);
+                window.InteractiveWindow.WriteLine(string.Format("Running {0}", filename));
 
-                ((PythonReplEvaluator)window.InteractiveWindow.Evaluator).ExecuteFile(filename);
+                await eval.ExecuteFileAsync(filename, args);
             });
         }
 

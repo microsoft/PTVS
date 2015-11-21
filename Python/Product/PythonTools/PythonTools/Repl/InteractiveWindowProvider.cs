@@ -89,7 +89,7 @@ namespace Microsoft.PythonTools.Repl {
             var window = CreateInteractiveWindowInternal(
                 new SelectableReplEvaluator(_evaluators, replId),
                 _pythonContentType,
-                true,
+                false,
                 curId + 1,
                 SR.GetString(SR.ReplCaptionNoEvaluator),
                 typeof(Navigation.PythonLanguageInfo).GUID,
@@ -140,7 +140,7 @@ namespace Microsoft.PythonTools.Repl {
             var window = CreateInteractiveWindowInternal(
                 _evaluators.Select(p => p.GetEvaluator(replId)).FirstOrDefault(e => e != null),
                 _pythonContentType,
-                true,
+                false,
                 curId + 1,
                 title,
                 typeof(Navigation.PythonLanguageInfo).GUID,
@@ -162,86 +162,6 @@ namespace Microsoft.PythonTools.Repl {
 
             return window;
         }
-
-        //private const string ActiveReplsKey = "ActiveRepls";
-        //private const string ContentTypeKey = "ContentType";
-        //private const string RolesKey = "Roles";
-        //private const string TitleKey = "Title";
-        //private const string ReplIdKey = "ReplId";
-        //private const string LanguageServiceGuidKey = "LanguageServiceGuid";
-
-        //private static RegistryKey GetRegistryRoot() {
-        //    return VSRegistry.RegistryRoot(__VsLocalRegistryType.RegType_UserSettings, writable: true).CreateSubKey(ActiveReplsKey);
-        //}
-
-        //private void SaveInteractiveInfo(int id, IInteractiveEvaluator evaluator, IContentType contentType, string[] roles, string title, Guid languageServiceGuid, string replId) {
-        //    using (var root = GetRegistryRoot()) {
-        //        if (root != null) {
-        //            using (var replInfo = root.CreateSubKey(id.ToString())) {
-        //                replInfo.SetValue(ContentTypeKey, contentType.TypeName);
-        //                replInfo.SetValue(TitleKey, title);
-        //                replInfo.SetValue(ReplIdKey, replId.ToString());
-        //                replInfo.SetValue(LanguageServiceGuidKey, languageServiceGuid.ToString());
-        //            }
-        //        }
-        //    }
-        //}
-
-        //internal bool CreateFromRegistry(IComponentModel model, int id) {
-        //    string contentTypeName, title, replId, languageServiceId;
-
-        //    using (var root = GetRegistryRoot()) {
-        //        if (root == null) {
-        //            return false;
-        //        }
-
-        //        using (var replInfo = root.OpenSubKey(id.ToString())) {
-        //            if (replInfo == null) {
-        //                return false;
-        //            }
-
-        //            contentTypeName = replInfo.GetValue(ContentTypeKey) as string;
-        //            if (contentTypeName == null) {
-        //                return false;
-        //            }
-
-        //            title = replInfo.GetValue(TitleKey) as string;
-        //            if (title == null) {
-        //                return false;
-        //            }
-
-        //            replId = replInfo.GetValue(ReplIdKey) as string;
-        //            if (replId == null) {
-        //                return false;
-        //            }
-
-        //            languageServiceId = replInfo.GetValue(LanguageServiceGuidKey) as string;
-        //            if (languageServiceId == null) {
-        //                return false;
-        //            }
-        //        }
-        //    }
-
-        //    Guid languageServiceGuid;
-        //    if (!Guid.TryParse(languageServiceId, out languageServiceGuid)) {
-        //        return false;
-        //    }
-
-        //    var contentTypes = model.GetService<IContentTypeRegistryService>();
-        //    var contentType = contentTypes.GetContentType(contentTypeName);
-        //    if (contentType == null) {
-        //        return false;
-        //    }
-
-        //    string[] roles;
-        //    var evaluator = GetInteractiveEvaluator(model, replId, out roles);
-        //    if (evaluator == null) {
-        //        return false;
-        //    }
-
-        //    CreateInteractiveWindow(evaluator, contentType, roles, id, title, languageServiceGuid, replId);
-        //    return true;
-        //}
 
         private IVsInteractiveWindow CreateInteractiveWindowInternal(
             IInteractiveEvaluator evaluator,
@@ -274,5 +194,11 @@ namespace Microsoft.PythonTools.Repl {
             return replWindow;
         }
 
+        internal static void Close(object obj) {
+            var vwnd = obj as IVsInteractiveWindow;
+            if (vwnd != null) {
+                vwnd.InteractiveWindow.Close();
+            }
+        }
     }
 }

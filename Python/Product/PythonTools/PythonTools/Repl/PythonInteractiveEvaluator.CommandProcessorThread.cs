@@ -197,6 +197,15 @@ namespace Microsoft.PythonTools.Repl {
                 return thread;
             }
 
+            public static CommandProcessorThread Create(
+                PythonInteractiveEvaluator evaluator,
+                Stream stream
+            ) {
+                var thread = new CommandProcessorThread(evaluator, null);
+                thread._stream = stream;
+                thread.StartOutputThread(false);
+                return thread;
+            }
 
             public bool IsConnected {
                 get {

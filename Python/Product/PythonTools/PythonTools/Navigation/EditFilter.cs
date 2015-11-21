@@ -617,7 +617,7 @@ namespace Microsoft.PythonTools.Language {
             if (pguidCmdGroup == VSConstants.GUID_VSStandardCommandSet97) {
                 switch ((VSConstants.VSStd97CmdID)nCmdID) {
                     case VSConstants.VSStd97CmdID.Paste:
-                        string updated = RemoveReplPrompts(_pyService, _textView.Options.GetNewLineCharacter());
+                        string updated = RemoveReplPrompts(_pyService, Clipboard.GetText(), _textView.Options.GetNewLineCharacter());
                         if (updated != null) {
                             _editorOps.ReplaceSelection(updated);
                             return VSConstants.S_OK;
@@ -873,34 +873,42 @@ namespace Microsoft.PythonTools.Language {
 
 #endregion
 
-        internal static string RemoveReplPrompts(PythonToolsService pyService, string newline) {
-            if (pyService.AdvancedOptions.PasteRemovesReplPrompts) {
-                string text = Clipboard.GetText();
-                if (text != null) {
-                    string[] lines = text.Replace("\r\n", "\n").Split('\n');
+        internal static string RemoveReplPrompts(
+            PythonToolsService pyService,
+            string text,
+            string newline
+        ) {
+            if (string.IsNullOrEmpty(text)) {
+                return text;
+            }
 
-                    bool allPrompts = true;
-                    foreach (var line in lines) {
-                        if (!(line.StartsWith("... ") || line.StartsWith(">>> "))) {
-                            if (!String.IsNullOrWhiteSpace(line)) {
-                                allPrompts = false;
-                                break;
-                            }
-                        }
-                    }
+            if (!pyService.AdvancedOptions.PasteRemovesReplPrompts) {
+                return null;
+            }
 
-                    if (allPrompts) {
-                        for (int i = 0; i < lines.Length; i++) {
-                            if (!String.IsNullOrWhiteSpace(lines[i])) {
-                                lines[i] = lines[i].Substring(4);
-                            }
-                        }
+            string[] lines = text.Replace("\r\n", "\n").Split('\n');
 
-                        return String.Join(newline, lines);
+            bool allPrompts = true;
+            foreach (var line in lines) {
+                if (!(line.StartsWith("... ") || line.StartsWith(">>> "))) {
+                    if (!string.IsNullOrWhiteSpace(line)) {
+                        allPrompts = false;
+                        break;
                     }
                 }
             }
-            return null;
+
+            if (!allPrompts) {
+                return text;
+            }
+
+            for (int i = 0; i < lines.Length; i++) {
+                if (!string.IsNullOrWhiteSpace(lines[i])) {
+                    lines[i] = lines[i].Substring(4);
+                }
+            }
+
+            return string.Join(newline, lines);
         }
 
         internal void DoIdle(IOleComponentManager compMgr) {

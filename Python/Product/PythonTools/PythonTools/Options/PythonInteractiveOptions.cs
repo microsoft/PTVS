@@ -14,6 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using Microsoft.PythonTools.Repl;
 
 namespace Microsoft.PythonTools.Options {
@@ -67,6 +68,7 @@ namespace Microsoft.PythonTools.Options {
             UseSmartHistory = _pyService.LoadBool(UseSmartHistorySetting, _category) ?? true;
             LiveCompletionsOnly = _pyService.LoadBool(LiveCompletionsOnlySetting, _category) ?? false;
             Scripts = _pyService.LoadString(ScriptsSetting, _category) ?? string.Empty;
+            Changed?.Invoke(this, EventArgs.Empty);
         }
 
         public void Save() {
@@ -74,6 +76,7 @@ namespace Microsoft.PythonTools.Options {
             _pyService.SaveBool(UseSmartHistorySetting, _category, UseSmartHistory);
             _pyService.SaveBool(LiveCompletionsOnlySetting, _category, LiveCompletionsOnly);
             _pyService.SaveString(ScriptsSetting, _category, Scripts);
+            Changed?.Invoke(this, EventArgs.Empty);
         }
 
         public void Reset() {
@@ -81,6 +84,9 @@ namespace Microsoft.PythonTools.Options {
             UseSmartHistory = true;
             LiveCompletionsOnly = false;
             Scripts = string.Empty;
+            Changed?.Invoke(this, EventArgs.Empty);
         }
+
+        public event EventHandler Changed;
     }
 }

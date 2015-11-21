@@ -22,7 +22,6 @@ namespace Microsoft.PythonTools {
     static class PkgCmdIDList {
         public const uint cmdidExecuteFileInRepl = 0x102;
         public const uint cmdidSendToRepl = 0x103;
-        public const uint cmdidSendToDefiningModule = 0x104;
         public const uint cmdidFillParagraph = 0x105;
         public const uint cmdidDiagnostics = 0x106;
         public const uint cmdidRemoveImports = 0x107;

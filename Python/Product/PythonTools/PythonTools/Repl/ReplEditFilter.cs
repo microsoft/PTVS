@@ -38,6 +38,8 @@ using Clipboard = System.Windows.Forms.Clipboard;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.PythonTools.Project;
+using Microsoft.PythonTools.Parsing;
+using System.IO;
 
 namespace Microsoft.PythonTools.Repl {
     class ReplEditFilter : IOleCommandTarget {
@@ -174,12 +176,16 @@ namespace Microsoft.PythonTools.Repl {
                         }
                         break;
                     case VSConstants.VSStd97CmdID.Paste:
-                        //string pasting = eval.FormatClipboard() ?? Clipboard.GetText();
-                        //if (pasting != null) {
-                        //    //PasteReplCode(eval, pasting);
-                        //
-                        //    return VSConstants.S_OK;
-                        //}
+                        string pasting = eval.FormatClipboard();
+                        if (pasting != null) {
+                            PasteReplCode(
+                                _interactive,
+                                pasting, 
+                                (eval as PythonInteractiveEvaluator)?.LanguageVersion ?? PythonLanguageVersion.None
+                            ).DoNotWait();
+                        
+                            return VSConstants.S_OK;
+                        }
                         break;
                 }
             } else if (pguidCmdGroup == CommonConstants.Std2KCmdGroupGuid) {
@@ -392,20 +398,24 @@ namespace Microsoft.PythonTools.Repl {
             return VSConstants.S_OK;
         }
 
-        private static void PasteReplCode(BasePythonReplEvaluator eval, string pasting) {
+        private static async System.Threading.Tasks.Task PasteReplCode(
+            IInteractiveWindow window,
+            string pasting,
+            PythonLanguageVersion version
+        ) {
             // there's some text in the buffer...
-            var view = eval.Window.TextView;
+            var view = window.TextView;
             var caret = view.Caret;
 
             if (view.Selection.IsActive && !view.Selection.IsEmpty) {
                 foreach (var span in view.Selection.SelectedSpans) {
-                    foreach (var normalizedSpan in view.BufferGraph.MapDownToBuffer(span, SpanTrackingMode.EdgeInclusive, eval.Window.CurrentLanguageBuffer)) {
+                    foreach (var normalizedSpan in view.BufferGraph.MapDownToBuffer(span, SpanTrackingMode.EdgeInclusive, window.CurrentLanguageBuffer)) {
                         normalizedSpan.Snapshot.TextBuffer.Delete(normalizedSpan);
                     }
                 }
             }
 
-            var curBuffer = eval.Window.CurrentLanguageBuffer;
+            var curBuffer = window.CurrentLanguageBuffer;
             var inputPoint = view.BufferGraph.MapDownToBuffer(
                 caret.Position.BufferPosition,
                 PointTrackingMode.Positive,
@@ -416,12 +426,12 @@ namespace Microsoft.PythonTools.Repl {
 
             // if we didn't find a location then see if we're in a prompt, and if so, then we want
             // to insert after the prompt.
-            if (caret.Position.BufferPosition != eval.Window.TextView.TextBuffer.CurrentSnapshot.Length) {
+            if (caret.Position.BufferPosition != window.TextView.TextBuffer.CurrentSnapshot.Length) {
                 for (int i = caret.Position.BufferPosition + 1;
-                    inputPoint == null && i <= eval.Window.TextView.TextBuffer.CurrentSnapshot.Length;
+                    inputPoint == null && i <= window.TextView.TextBuffer.CurrentSnapshot.Length;
                     i++) {
                     inputPoint = view.BufferGraph.MapDownToBuffer(
-                        new SnapshotPoint(eval.Window.TextView.TextBuffer.CurrentSnapshot, i),
+                        new SnapshotPoint(window.TextView.TextBuffer.CurrentSnapshot, i),
                         PointTrackingMode.Positive,
                         curBuffer,
                         PositionAffinity.Successor
@@ -443,7 +453,7 @@ namespace Microsoft.PythonTools.Repl {
                 curBuffer.CurrentSnapshot.Length - inputPoint.Value);
 
 
-            var splitCode = eval.JoinCode(eval.SplitCode(startText + pasting + endText)).ToList();
+            var splitCode = JoinCodeLines(SplitCode(startText + pasting + endText), version).ToList();
             curBuffer.Delete(new Span(0, curBuffer.CurrentSnapshot.Length));
 
             if (splitCode.Count == 1) {
@@ -462,29 +472,124 @@ namespace Microsoft.PythonTools.Repl {
                 var lastCode = splitCode[splitCode.Count - 1];
                 splitCode.RemoveAt(splitCode.Count - 1);
 
-                eval.Window.ReadyForInput += new PendLastSplitCode(eval.CurrentWindow, lastCode).AppendCode;
-                eval.Window.Submit(splitCode);
-            } else {
-                eval.Window.CurrentLanguageBuffer.Insert(0, startText + pasting + endText);
-            }
-        }
-
-        class PendLastSplitCode {
-            public readonly IInteractiveWindow Window;
-            public readonly string Text;
-
-            public PendLastSplitCode(IInteractiveWindow window, string text) {
-                Window = window;
-                Text = text;
-            }
-
-            public void AppendCode() {
-                if (((PythonReplEvaluator)Window.Evaluator)._lastExecutionResult.Result.IsSuccessful) {
-                    Window.CurrentLanguageBuffer.Insert(0, Text);
+                foreach (var code in splitCode) {
+                    await window.SubmitAsync(new[] { code });
                 }
-                Window.ReadyForInput -= AppendCode;
+                window.CurrentLanguageBuffer.Insert(0, lastCode);
+            } else {
+                window.CurrentLanguageBuffer.Insert(0, startText + pasting + endText);
             }
         }
+
+        internal IEnumerable<string> TrimIndent(IEnumerable<string> lines) {
+            string indent = null;
+            foreach (var line in lines) {
+                if (indent == null) {
+                    indent = line.Substring(0, line.TakeWhile(char.IsWhiteSpace).Count());
+                }
+
+                if (line.StartsWith(indent)) {
+                    yield return line.Substring(indent.Length);
+                } else {
+                    yield return line.TrimStart();
+                }
+            }
+        }
+
+        internal static IEnumerable<string> JoinCodeLines(IEnumerable<string> lines, PythonLanguageVersion version) {
+            StringBuilder temp = new StringBuilder();
+            string prevText = null;
+            ParseResult? prevParseResult = null;
+
+            using (var e = new PeekableEnumerator<string>(lines)) {
+                bool skipNextMoveNext = false;
+                while (skipNextMoveNext || e.MoveNext()) {
+                    skipNextMoveNext = false;
+                    var line = e.Current;
+
+                    if (e.HasNext) {
+                        temp.AppendLine(line);
+                    } else {
+                        temp.Append(line);
+                    }
+                    string newCode = temp.ToString();
+
+                    var parser = Parser.CreateParser(new StringReader(newCode), version);
+                    ParseResult result;
+                    parser.ParseInteractiveCode(out result);
+
+                    // if this parse is invalid then we need more text to be valid.
+                    // But if this text is invalid and the previous parse was incomplete
+                    // then appending more text won't fix things - the code in invalid, the user
+                    // needs to fix it, so let's not break it up which would prevent that from happening.
+                    if (result == ParseResult.Empty) {
+                        if (!String.IsNullOrWhiteSpace(newCode)) {
+                            // comment line, include w/ following code.
+                            prevText = newCode;
+                            prevParseResult = result;
+                        } else {
+                            temp.Clear();
+                        }
+                    } else if (result == ParseResult.Complete) {
+                        yield return FixEndingNewLine(newCode);
+                        temp.Clear();
+
+                        prevParseResult = null;
+                        prevText = null;
+                    } else if (ShouldAppendCode(prevParseResult, result)) {
+                        prevText = newCode;
+                        prevParseResult = result;
+                    } else if (prevText != null) {
+                        // we have a complete input
+                        yield return FixEndingNewLine(prevText);
+                        temp.Clear();
+
+                        // reparse this line so our state remains consistent as if we just started out.
+                        skipNextMoveNext = true;
+                        prevParseResult = null;
+                        prevText = null;
+                    } else {
+                        prevParseResult = result;
+                    }
+                }
+            }
+
+            if (temp.Length > 0) {
+                yield return FixEndingNewLine(temp.ToString());
+            }
+        }
+
+        internal static IEnumerable<string> SplitCode(string code) {
+            return code.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
+        }
+
+        private static string FixEndingNewLine(string prevText) {
+            if ((prevText.IndexOf('\n') == prevText.LastIndexOf('\n')) &&
+                (prevText.IndexOf('\r') == prevText.LastIndexOf('\r'))) {
+                prevText = prevText.TrimEnd();
+            } else if (prevText.EndsWith("\r\n\r\n")) {
+                prevText = prevText.Substring(0, prevText.Length - 2);
+            } else if (prevText.EndsWith("\n\n") || prevText.EndsWith("\r\r")) {
+                prevText = prevText.Substring(0, prevText.Length - 1);
+            }
+            return prevText;
+        }
+
+        internal IEnumerable<string> JoinCode(IEnumerable<string> code) {
+            var version = _textView.GetLanguageVersion(_serviceProvider);
+            var split = JoinCodeLines(TrimIndent(code), version);
+            return Enumerable.Repeat(string.Join(Environment.NewLine, split), 1);
+        }
+
+        private static bool ShouldAppendCode(ParseResult? prevParseResult, ParseResult result) {
+            if (result == ParseResult.Invalid) {
+                if (prevParseResult == ParseResult.IncompleteStatement || prevParseResult == ParseResult.Invalid) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
 
         internal void DoIdle(IOleComponentManager compMgr) {
         }

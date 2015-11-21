@@ -24,7 +24,6 @@ using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.InteractiveWindow.Shell;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text.Editor;
-using Microsoft.VisualStudio.Text.Operations;
 using Microsoft.VisualStudio.Utilities;
 using IOleCommandTarget = Microsoft.VisualStudio.OLE.Interop.IOleCommandTarget;
 
@@ -44,8 +43,6 @@ namespace Microsoft.PythonTools.Editor {
         public IOleCommandTarget GetCommandTarget(IWpfTextView textView, IOleCommandTarget nextTarget) {
             var window = textView.TextBuffer.GetInteractiveWindow();
 
-            var compModel = _serviceProvider.GetComponentModel();
-
             var controller = IntellisenseControllerProvider.GetOrCreateController(
                 _serviceProvider,
                 _componentModel,
@@ -53,13 +50,13 @@ namespace Microsoft.PythonTools.Editor {
             );
             controller._oldTarget = nextTarget;
 
-            var editFilter = EditFilter.GetOrCreate(_serviceProvider, _serviceProvider.GetComponentModel(), textView, controller);
+            var editFilter = EditFilter.GetOrCreate(_serviceProvider, _componentModel, textView, controller);
 
-            if (window != null) {
-                return ReplEditFilter.GetOrCreate(_serviceProvider, _componentModel, textView, editFilter);
+            if (window == null) {
+                return editFilter;
             }
 
-            return editFilter;
+            return ReplEditFilter.GetOrCreate(_serviceProvider, _componentModel, textView, editFilter);
         }
     }
 }
