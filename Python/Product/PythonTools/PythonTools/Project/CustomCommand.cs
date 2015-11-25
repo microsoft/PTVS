@@ -625,7 +625,7 @@ namespace Microsoft.PythonTools.Project {
                 ErrorHandler.ThrowOnFailure(frame.Show());
             }
 
-            var result = await pyEvaluator.ResetAsync(true, quiet: true);
+            var result = await pyEvaluator.ResetAsync(false, quiet: true);
 
             if (result.IsSuccessful) {
                 try {

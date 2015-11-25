@@ -125,6 +125,7 @@ namespace Microsoft.PythonTools.Project {
         public const string ReplUnknownCommand = "ReplUnknownCommand";
         public const string ErrorOpeningInteractiveWindow = "ErrorOpeningInteractiveWindow";
         public const string ErrorStartingInteractiveProcess = "ErrorStartingInteractiveProcess";
+        public const string DebugReplDisplayName = "DebugReplDisplayName";
 
         public const string DefaultLauncherName = "DefaultLauncherName";
         public const string DefaultLauncherDescription = "DefaultLauncherDescription";

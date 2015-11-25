@@ -18,12 +18,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Editor.Core;
+using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.InteractiveWindow.Commands;
 using Microsoft.VisualStudio.InteractiveWindow.Shell;
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudioTools;
 
@@ -32,7 +34,11 @@ namespace Microsoft.PythonTools.Repl {
     [InteractiveWindowRole("Reset")]
     [ContentType(PythonCoreConstants.ContentType)]
     [ContentType(PredefinedInteractiveCommandsContentTypes.InteractiveCommandContentTypeName)]
-    sealed class SelectableReplEvaluator : IPythonInteractiveEvaluator, IMultipleScopeEvaluator, IDisposable {
+    sealed class SelectableReplEvaluator : 
+        IPythonInteractiveEvaluator,
+        IMultipleScopeEvaluator,
+        IPythonInteractiveIntellisense,
+        IDisposable {
         private readonly IReadOnlyList<IInteractiveEvaluatorProvider> _providers;
 
         private IInteractiveEvaluator _evaluator;
@@ -63,6 +69,20 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public IInteractiveEvaluator Evaluator => _evaluator;
+        public string CurrentEvaluator => _evaluatorId;
+
+
+        public bool IsDisconnected => (_evaluator as IPythonInteractiveEvaluator)?.IsDisconnected ?? true;
+        public bool IsExecuting => (_evaluator as IPythonInteractiveEvaluator)?.IsExecuting ?? false;
+        public string DisplayName => (_evaluator as IPythonInteractiveEvaluator)?.DisplayName;
+
+        public bool LiveCompletionsOnly => (_evaluator as IPythonInteractiveIntellisense)?.LiveCompletionsOnly ?? false;
+
+        public VsProjectAnalyzer Analyzer => (_evaluator as IPythonInteractiveIntellisense)?.Analyzer;
+
+        // Test methods
+        internal string PrimaryPrompt => ((dynamic)_evaluator)?.PrimaryPrompt ?? ">>> ";
+        internal string SecondaryPrompt => ((dynamic)_evaluator)?.SecondaryPrompt ?? "... ";
 
         public void SetEvaluator(string id) {
             if (_evaluatorId == id && _evaluator != null) {
@@ -76,17 +96,19 @@ namespace Microsoft.PythonTools.Repl {
             var oldEval = _evaluator;
             _evaluator = null;
             if (oldEval != null) {
+                DetachWindow(oldEval);
+                DetachMultipleScopeHandling(oldEval);
                 // TODO: Keep the evaluator around for a while?
                 // In case the user wants it back
                 oldEval.Dispose();
                 oldEval.CurrentWindow = null;
             }
-            DetachMultipleScopeHandling(oldEval);
 
             if (eval != null) {
                 eval.CurrentWindow = CurrentWindow;
                 if (eval.CurrentWindow != null) {
                     // Otherwise, we'll initialize when the window is set
+                    AttachWindow(eval);
                     eval.InitializeAsync().DoNotWait();
                 }
             }
@@ -99,7 +121,39 @@ namespace Microsoft.PythonTools.Repl {
             AttachMultipleScopeHandling(eval);
         }
 
-        public string CurrentEvaluator => _evaluatorId;
+        private void DetachWindow(IInteractiveEvaluator oldEval) {
+            var view = oldEval.CurrentWindow?.TextView;
+            if (view == null) {
+                return;
+            }
+
+            foreach (var buffer in view.BufferGraph.GetTextBuffers(EditorExtensions.IsPythonContent)) {
+                if (oldEval.CurrentWindow.CurrentLanguageBuffer == buffer) {
+                    continue;
+                }
+                buffer.Properties[ParseQueue.DoNotParse] = ParseQueue.DoNotParse;
+            }
+        }
+
+        private void AttachWindow(IInteractiveEvaluator eval) {
+            var view = eval.CurrentWindow?.TextView;
+            if (view == null) {
+                return;
+            }
+
+            VsProjectAnalyzer oldAnalyzer;
+            if (view.TextBuffer.Properties.TryGetProperty(typeof(VsProjectAnalyzer), out oldAnalyzer)) {
+                view.TextBuffer.Properties.RemoveProperty(typeof(VsProjectAnalyzer));
+            }
+
+            var newAnalyzer = (eval as IPythonInteractiveIntellisense)?.Analyzer;
+            if (newAnalyzer != null) {
+                view.TextBuffer.Properties[typeof(VsProjectAnalyzer)] = newAnalyzer;
+                if (oldAnalyzer != null) {
+                    newAnalyzer.SwitchAnalyzers(oldAnalyzer);
+                }
+            }
+        }
 
         private void UpdateCaption() {
             var display = DisplayName;
@@ -133,7 +187,9 @@ namespace Microsoft.PythonTools.Repl {
             set {
                 _window = value;
                 if (_evaluator != null && _evaluator.CurrentWindow != value) {
+                    DetachWindow(_evaluator);
                     _evaluator.CurrentWindow = value;
+                    AttachWindow(_evaluator);
                     if (value != null) {
                         _evaluator.InitializeAsync().DoNotWait();
                     }
@@ -168,9 +224,6 @@ namespace Microsoft.PythonTools.Repl {
 
         public string CurrentScopeName => (_evaluator as IMultipleScopeEvaluator)?.CurrentScopeName;
         public bool EnableMultipleScopes => (_evaluator as IMultipleScopeEvaluator)?.EnableMultipleScopes ?? false;
-        public bool IsDisconnected => (_evaluator as IPythonInteractiveEvaluator)?.IsDisconnected ?? true;
-        public bool IsExecuting => (_evaluator as IPythonInteractiveEvaluator)?.IsExecuting ?? false;
-        public string DisplayName => (_evaluator as IPythonInteractiveEvaluator)?.DisplayName;
 
         private void Evaluator_MultipleScopeSupportChanged(object sender, EventArgs e) {
             MultipleScopeSupportChanged?.Invoke(this, e);
@@ -230,34 +283,23 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public Task<ExecutionResult> ExecuteFileAsync(string filename, string extraArgs) {
-            throw new NotImplementedException();
+            return (_evaluator as IPythonInteractiveEvaluator)?.ExecuteFileAsync(filename, extraArgs)
+                ?? ExecutionResult.Failed;
         }
 
-        public struct AvailableEvaluator {
-            public readonly string DisplayName;
-            private readonly IInteractiveEvaluatorProvider _provider;
-            private readonly string _id;
+        public IEnumerable<KeyValuePair<string, bool>> GetAvailableScopesAndKind() {
+            return (_evaluator as IPythonInteractiveIntellisense)?.GetAvailableScopesAndKind()
+                ?? Enumerable.Empty<KeyValuePair<string, bool>>();
+        }
 
-            public AvailableEvaluator(string displayName, IInteractiveEvaluatorProvider provider, string id) {
-                DisplayName = displayName;
-                _provider = provider;
-                _id = id;
-            }
+        public MemberResult[] GetMemberNames(string text) {
+            return (_evaluator as IPythonInteractiveIntellisense)?.GetMemberNames(text)
+                ?? new MemberResult[0];
+        }
 
-            public IInteractiveEvaluator Create() {
-                return _provider.GetEvaluator(_id);
-            }
-
-            public override bool Equals(object obj) {
-                if (!(obj is AvailableEvaluator)) {
-                    return false;
-                }
-                return _id == ((AvailableEvaluator)obj)._id;
-            }
-
-            public override int GetHashCode() {
-                return _id.GetHashCode();
-            }
+        public OverloadDoc[] GetSignatureDocumentation(string text) {
+            return (_evaluator as IPythonInteractiveIntellisense)?.GetSignatureDocumentation(text)
+                ?? new OverloadDoc[0];
         }
     }
 }

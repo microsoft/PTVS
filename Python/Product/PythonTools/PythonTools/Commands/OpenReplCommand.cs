@@ -29,9 +29,11 @@ namespace Microsoft.PythonTools.Commands {
     /// </summary>
     class OpenReplCommand : Command {
         private readonly IServiceProvider _serviceProvider;
+        private readonly int _cmdId;
 
-        public OpenReplCommand(IServiceProvider serviceProvider) {
+        public OpenReplCommand(IServiceProvider serviceProvider, int cmdId) {
             _serviceProvider = serviceProvider;
+            _cmdId = cmdId;
         }
 
         public override void DoCommand(object sender, EventArgs e) {
@@ -74,9 +76,20 @@ namespace Microsoft.PythonTools.Commands {
                 throw new InvalidOperationException(SR.GetString(SR.ErrorOpeningInteractiveWindow, ex));
             }
         }
-        
+
+        public override EventHandler BeforeQueryStatus => QueryStatusMethod;
+
+        private void QueryStatusMethod(object sender, EventArgs args) {
+            var oleMenu = (OleMenuCommand)sender;
+            oleMenu.ParametersDescription = "e,env,environment:";
+
+            oleMenu.Visible = true;
+            oleMenu.Enabled = true;
+            oleMenu.Supported = true;
+        }
+
         public override int CommandId {
-            get { return (int)PkgCmdIDList.cmdidReplWindow; }
+            get { return _cmdId; }
         }
     }
 }

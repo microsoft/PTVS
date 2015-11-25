@@ -1339,15 +1339,6 @@ namespace PythonToolsUITests {
                 var interpreterName = dis.CurrentDefault.Description;
                 var project = app.OpenProject(@"TestData\HelloWorld.sln");
 
-                var replService = (IPythonOptions)app.Dte.GetObject("VsPython");
-                Assert.IsNotNull(replService, "Unable to get VsPython object");
-                var options = replService.GetInteractiveOptions(interpreterName);
-
-                options.InlinePrompts = true;
-                options.UseInterpreterPrompts = false;
-                options.PrimaryPrompt = ">>> ";
-                options.SecondaryPrompt = "... ";
-
                 var solutionExplorer = app.OpenSolutionExplorer();
 
                 var programNode = solutionExplorer.WaitForChildOfProject(project, "Program.py");
@@ -1357,9 +1348,10 @@ namespace PythonToolsUITests {
                 Keyboard.PressAndRelease(System.Windows.Input.Key.I, System.Windows.Input.Key.LeftAlt);
 
                 Keyboard.Type("print('hi')\r");
-                var interactive = app.GetInteractiveWindow(interpreterName + " Interactive");
-                Assert.IsNotNull(interactive, "Unable to find " + interpreterName + " Interactive");
-                interactive.WaitForTextEnd("hi", ">>> ");
+                using (var interactive = app.GetInteractiveWindow(interpreterName + " Interactive")) {
+                    Assert.IsNotNull(interactive, "Unable to find " + interpreterName + " Interactive");
+                    interactive.WaitForTextEnd("hi", ">");
+                }
             }
         }
 

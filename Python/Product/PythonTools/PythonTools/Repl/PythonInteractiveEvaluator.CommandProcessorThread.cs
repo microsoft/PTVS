@@ -137,6 +137,9 @@ namespace Microsoft.PythonTools.Repl {
                     throw new Win32Exception(Microsoft.VisualStudioTools.Project.NativeMethods.ERROR_FILE_NOT_FOUND);
                 }
                 process = Process.Start(processInfo);
+                if (process.WaitForExit(100)) {
+                    throw new Win32Exception(process.ExitCode);
+                }
             } catch (Win32Exception e) {
                 if (e.NativeErrorCode == Microsoft.VisualStudioTools.Project.NativeMethods.ERROR_FILE_NOT_FOUND) {
                     WriteError(SR.GetString(SR.ReplEvaluatorInterpreterNotFound));
@@ -301,9 +304,15 @@ namespace Microsoft.PythonTools.Repl {
 
             private void OutputThread() {
                 try {
+                    Socket listenerSocket = null;
                     using (new StreamLock(this, throwIfDisconnected: false)) {
                         if (_stream == null) {
-                            var socket = _listenerSocket.Accept();
+                            listenerSocket = _listenerSocket;
+                        }
+                    }
+                    if (listenerSocket != null) {
+                        var socket = listenerSocket.Accept();
+                        using (new StreamLock(this, throwIfDisconnected: false)) {
                             _listenerSocket = null;
                             _stream = new NetworkStream(socket, ownsSocket: true);
                         }

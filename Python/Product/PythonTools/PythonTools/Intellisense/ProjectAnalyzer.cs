@@ -24,6 +24,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Navigation;
 using Microsoft.PythonTools.Parsing;
@@ -236,7 +237,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     // A buffer may have multiple DropDownBarClients, given one may open multiple CodeWindows
                     // over a single buffer using Window/New Window
                     List<DropDownBarClient> clients;
-                    if (buffer.Properties.TryGetProperty<List<DropDownBarClient>>(typeof(DropDownBarClient), out clients)) {
+                    if (buffer.Properties.TryGetProperty(typeof(DropDownBarClient), out clients)) {
                         foreach (var client in clients) {
                             client.UpdateProjectEntry(projEntry);
                         }
@@ -298,11 +299,11 @@ namespace Microsoft.PythonTools.Intellisense {
             _errorProvider.ClearErrorSource(bufferParser._currentProjEntry, ParserTaskMoniker);
             _errorProvider.ClearErrorSource(bufferParser._currentProjEntry, UnresolvedImportMoniker);
 
-                if (ImplicitProject) {
-                    // remove the file from the error list
+            if (ImplicitProject) {
+                // remove the file from the error list
                 _errorProvider.Clear(bufferParser._currentProjEntry, ParserTaskMoniker);
                 _errorProvider.Clear(bufferParser._currentProjEntry, UnresolvedImportMoniker);
-                }
+            }
 
             _commentTaskProvider.ClearErrorSource(bufferParser._currentProjEntry, ParserTaskMoniker);
             if (ImplicitProject) {
@@ -859,7 +860,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     continue;
                 }
 
-                if (pyProjEntry != null && snapshot.TextBuffer.ContentType.IsOfType(PythonCoreConstants.ContentType)) {
+                if (pyProjEntry != null && snapshot.IsPythonContent()) {
                     PythonAst ast;
                     CollectingErrorSink errorSink;
                     List<TaskProviderItem> commentTasks;
@@ -918,9 +919,9 @@ namespace Microsoft.PythonTools.Intellisense {
             var tasks = commentTasks = new List<TaskProviderItem>();
 
             var options = new ParserOptions {
-                    ErrorSink = errorSink,
-                    IndentationInconsistencySeverity = indentationSeverity,
-                    BindReferences = true
+                ErrorSink = errorSink,
+                IndentationInconsistencySeverity = indentationSeverity,
+                BindReferences = true
             };
             options.ProcessComment += (sender, e) => ProcessComment(tasks, snapshot, e.Span, e.Text);
 
@@ -938,8 +939,8 @@ namespace Microsoft.PythonTools.Intellisense {
             var tasks = commentTasks = new List<TaskProviderItem>();
 
             var options = new ParserOptions {
-                    ErrorSink = errorSink,
-                    IndentationInconsistencySeverity = indentationSeverity,
+                ErrorSink = errorSink,
+                IndentationInconsistencySeverity = indentationSeverity,
                 BindReferences = true,
             };
             options.ProcessComment += (sender, e) => ProcessComment(tasks, snapshot, e.Span, e.Text);
@@ -954,10 +955,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 try {
                     ast = parser.ParseFile();
                 } catch (BadSourceException) {
-                } catch (Exception e) {
-                    if (e.IsCriticalException()) {
-                        throw;
-                    }
+                } catch (Exception e) when (!e.IsCriticalException()) {
                     Debug.Assert(false, String.Format("Failure in Python parser: {0}", e.ToString()));
                 }
 

@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.Shell;
 
@@ -24,7 +25,6 @@ namespace Microsoft.PythonTools.Repl {
     [Export(typeof(IInteractiveEvaluatorProvider))]
     class PythonDebugReplEvaluatorProvider : IInteractiveEvaluatorProvider {
         private const string _debugReplGuid = "BA417560-5A78-46F1-B065-638D27E1CDD0";
-        private readonly PythonToolsService _pyService;
         private readonly IServiceProvider _serviceProvider;
 
         public event EventHandler EvaluatorsChanged { add { } remove { } }
@@ -32,7 +32,6 @@ namespace Microsoft.PythonTools.Repl {
         [ImportingConstructor]
         public PythonDebugReplEvaluatorProvider([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider) {
             _serviceProvider = serviceProvider;
-            _pyService = serviceProvider.GetPythonToolsService();
         }
 
         public IInteractiveEvaluator GetEvaluator(string replId) {
@@ -43,7 +42,7 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public IEnumerable<KeyValuePair<string, string>> GetEvaluators() {
-            yield return new KeyValuePair<string, string>("Current debuggee", GetDebugReplId());
+            yield return new KeyValuePair<string, string>(SR.GetString(SR.DebugReplDisplayName), GetDebugReplId());
         }
 
         internal static string GetDebugReplId() {

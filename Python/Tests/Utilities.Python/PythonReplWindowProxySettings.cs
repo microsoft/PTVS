@@ -23,6 +23,7 @@ using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudioTools;
 
 namespace TestUtilities.UI.Python {
     public sealed class PythonReplWindowProxySettings : ReplWindowProxySettings {
@@ -64,18 +65,8 @@ namespace TestUtilities.UI.Python {
 
             var automation = (IVsPython)app.Dte.GetObject("VsPython");
             var options = (IPythonOptions)automation;
-            var replOptions = options.GetInteractiveOptions(description);
+            var replOptions = options.Interactive;
             Assert.IsNotNull(replOptions, "Could not find options for " + description);
-
-            replOptions.InlinePrompts = InlinePrompts;
-            replOptions.UseInterpreterPrompts = UseInterpreterPrompts;
-            replOptions.PrimaryPrompt = PrimaryPrompt;
-            replOptions.SecondaryPrompt = SecondaryPrompt;
-            replOptions.EnableAttach = EnableAttach;
-
-            var oldExecutionMode = replOptions.ExecutionMode;
-            app.OnDispose(() => replOptions.ExecutionMode = oldExecutionMode);
-            replOptions.ExecutionMode = executionMode;
 
             var oldAddNewLineAtEndOfFullyTypedWord = options.Intellisense.AddNewLineAtEndOfFullyTypedWord;
             app.OnDispose(() => options.Intellisense.AddNewLineAtEndOfFullyTypedWord = oldAddNewLineAtEndOfFullyTypedWord);
@@ -95,12 +86,14 @@ namespace TestUtilities.UI.Python {
             }
             Assert.IsTrue(success, "Unable to open " + description + " through DTE");
             var interpreters = app.ComponentModel.GetService<IInterpreterOptionsService>();
-            var replId = PythonReplEvaluatorProvider.GetReplId(
+            var replId = PythonReplEvaluatorProvider.GetEvaluatorId(
                 interpreters.FindInterpreter(Version.Id, Version.Version.ToVersion())
             );
 
-            var provider = app.ComponentModel.GetService<InteractiveWindowProvider>();
-            return (ToolWindowPane)provider.OpenOrCreate(replId);
+            return app.ServiceProvider.GetUIThread().Invoke(() => {
+                var provider = app.ComponentModel.GetService<InteractiveWindowProvider>();
+                return (ToolWindowPane)provider.OpenOrCreate(replId);
+            });
         }
 
         public const string Python2IntDocumentation = @"Type:        int

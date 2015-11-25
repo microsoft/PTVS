@@ -30,6 +30,7 @@ using Microsoft.PythonTools.Debugger.Remote;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Parsing;
+using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.InteractiveWindow.Commands;
 using Microsoft.VisualStudio.Text;
@@ -41,7 +42,11 @@ namespace Microsoft.PythonTools.Repl {
     [InteractiveWindowRole("Debug")]
     [ContentType(PythonCoreConstants.ContentType)]
     [ContentType(PredefinedInteractiveCommandsContentTypes.InteractiveCommandContentTypeName)]
-    internal class PythonDebugReplEvaluator : IInteractiveEvaluator, IMultipleScopeEvaluator, IPythonInteractiveIntellisense {
+    internal class PythonDebugReplEvaluator :
+        IPythonInteractiveEvaluator,
+        IMultipleScopeEvaluator,
+        IPythonInteractiveIntellisense
+    {
         private PythonDebugProcessReplEvaluator _activeEvaluator;
         private readonly Dictionary<int, PythonDebugProcessReplEvaluator> _evaluators = new Dictionary<int, PythonDebugProcessReplEvaluator>(); // process id to evaluator
         private EnvDTE.DebuggerEvents _debuggerEvents;
@@ -215,6 +220,14 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public IInteractiveWindow CurrentWindow { get; set; }
+
+        public VsProjectAnalyzer Analyzer => _activeEvaluator?.Analyzer;
+
+        public bool IsDisconnected => _activeEvaluator?.IsDisconnected ?? true;
+
+        public bool IsExecuting => _activeEvaluator?.IsExecuting ?? false;
+
+        public string DisplayName => SR.GetString(SR.DebugReplDisplayName);
 
         public IEnumerable<KeyValuePair<string, bool>> GetAvailableScopesAndKind() {
             if (_activeEvaluator != null) {

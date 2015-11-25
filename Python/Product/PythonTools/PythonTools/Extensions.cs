@@ -445,15 +445,21 @@ namespace Microsoft.PythonTools {
         }
 
         internal static VsProjectAnalyzer GetAnalyzer(this ITextBuffer buffer, IServiceProvider serviceProvider) {
+            VsProjectAnalyzer analyzer;
+            if (buffer.Properties.TryGetProperty(typeof(VsProjectAnalyzer), out analyzer) && analyzer != null) {
+                return analyzer;
+            }
+
+            var interactive = buffer.GetInteractiveWindow();
+            if (interactive != null &&
+                interactive.TextView.TextBuffer.Properties.TryGetProperty(typeof(VsProjectAnalyzer), out analyzer) &&
+                analyzer != null) {
+                return analyzer;
+            }
+
             var pyProj = buffer.Properties.GetOrCreateSingletonProperty(() => buffer.GetProject(serviceProvider));
             if (pyProj != null) {
                 return pyProj.GetAnalyzer();
-            }
-
-            VsProjectAnalyzer analyzer;
-            // exists for tests where we don't run in VS and for the existing changes preview
-            if (buffer.Properties.TryGetProperty(typeof(VsProjectAnalyzer), out analyzer)) {
-                return analyzer;
             }
 
             return serviceProvider.GetPythonToolsService().DefaultAnalyzer;

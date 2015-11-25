@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -97,9 +98,14 @@ namespace ReplWindowUITests {
         [TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void ExecuteInReplUnicodeFilename() {
+            var tempProject = TestData.GetTempPath(randomSubPath: true);
+            FileUtils.CopyDirectory(TestData.GetPath("TestData\\UnicodePath"), Path.Combine(tempProject, "UnicodePathä"));
+            var tempSln = Path.Combine(tempProject, "UnicodePathä.sln");
+            File.Copy(TestData.GetPath("TestData\\UnicodePath.sln"), tempSln);
+
             using (var interactive = Prepare())
             using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer(interactive.App.ServiceProvider).InterpreterFactory)) {
-                var project = interactive.App.OpenProject(@"TestData\UnicodePathä.sln");
+                var project = interactive.App.OpenProject(tempSln);
 
                 interactive.App.ExecuteCommand("Python.ExecuteInInteractive");
                 interactive.WaitForTextEnd("hello world from unicode path", ">");

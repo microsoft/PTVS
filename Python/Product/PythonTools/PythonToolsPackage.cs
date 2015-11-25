@@ -509,7 +509,8 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
 
             // Add our command handlers for menu (commands must exist in the .vsct file)
             RegisterCommands(new Command[] { 
-                new OpenReplCommand(this),
+                new OpenReplCommand(this, (int)PkgCmdIDList.cmdidReplWindow),
+                new OpenReplCommand(this, (int)PythonConstants.OpenInteractiveForEnvironment),
                 new OpenDebugReplCommand(this), 
                 new ExecuteInReplCommand(this), 
                 new SendToReplCommand(this), 

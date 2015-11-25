@@ -1410,7 +1410,7 @@ input()");
             using (var interactive = Prepare()) {
                 const string code = "$unknown";
                 interactive.SubmitCode(code);
-                interactive.WaitForText(">" + code, "Unknown command 'unknown', use \"$help\" for help", ">");
+                interactive.WaitForText(">" + code, "Unknown command '$unknown', use '$help' for a list of commands.", ">");
             }
         }
 

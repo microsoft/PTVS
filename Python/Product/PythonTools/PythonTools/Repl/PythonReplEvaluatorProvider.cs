@@ -147,10 +147,6 @@ namespace Microsoft.PythonTools.Repl {
             return (Version.TryParse(versionStr, out version) ? version : new Version()).ToLanguageVersion();
         }
 
-        private static PythonLanguageVersion GetVersion(PythonProjectNode project) {
-            return (project.GetInterpreterFactory()?.Configuration.Version ?? new Version()).ToLanguageVersion();
-        }
-
         private IInteractiveEvaluator GetEnvironmentEvaluator(IReadOnlyList<string> args) {
             var eval = new PythonInteractiveEvaluator(_serviceProvider) {
                 DisplayName = args.ElementAtOrDefault(0),
@@ -159,67 +155,20 @@ namespace Microsoft.PythonTools.Repl {
                 WorkingDirectory = args.ElementAtOrDefault(3)
             };
 
-            eval.ScriptsPath = GetScriptsPath(null, eval.DisplayName)
-                ?? GetScriptsPath(null, eval.LanguageVersion.ToVersion().ToString());
-
             return eval;
         }
 
         private IInteractiveEvaluator GetProjectEvaluator(IReadOnlyList<string> args) {
             var project = args.ElementAtOrDefault(1);
 
-            IVsHierarchy hier;
-            if (string.IsNullOrEmpty(project) ||
-                ErrorHandler.Failed(_solution.GetProjectOfUniqueName(project, out hier))) {
-                return null;
-            }
-            var pyProj = hier?.GetProject()?.GetPythonProject();
-            if (pyProj == null) {
-                return null;
-            }
-
-            var props = PythonProjectLaunchProperties.Create(pyProj);
-            if (props == null) {
-                return null;
-            }
-
             var eval = new PythonInteractiveEvaluator(_serviceProvider) {
                 DisplayName = args.ElementAtOrDefault(0),
-                InterpreterPath = props.GetInterpreterPath(),
-                InterpreterArguments = props.GetInterpreterArguments(),
-                LanguageVersion = GetVersion(pyProj),
-                WorkingDirectory = props.GetWorkingDirectory(),
-                EnvironmentVariables = props.GetEnvironment(true)
+                ProjectMoniker = project
             };
 
-            eval.ScriptsPath = GetScriptsPath(pyProj.ProjectHome, "Scripts");
+            eval.UpdatePropertiesFromProjectMoniker();
 
             return eval;
-        }
-
-        private string GetScriptsPath(string root, params string[] parts) {
-            if (string.IsNullOrEmpty(root)) {
-                // TODO: Allow customizing the scripts path
-                //root = _serviceProvider.GetPythonToolsService().InteractiveOptions.ScriptsPath;
-                if (string.IsNullOrEmpty(root)) {
-                    root = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-                    parts = new[] { "Visual Studio " + AssemblyVersionInfo.VSName, "Python Scripts" }
-                        .Concat(parts).ToArray();
-                }
-            }
-            if (parts.Length > 0) {
-                try {
-                    root = CommonUtils.GetAbsoluteDirectoryPath(root, Path.Combine(parts));
-                } catch (ArgumentException) {
-                    return null;
-                }
-            }
-
-            if (!Directory.Exists(root)) {
-                return null;
-            }
-
-            return root;
         }
     }
 

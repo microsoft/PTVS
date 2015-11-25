@@ -311,7 +311,7 @@ namespace TestUtilities.UI {
 #if NTVS_FEATURE_INTERACTIVEWINDOW
 #error Implement for NTVS
 #else
-                return (ReplWindow.Evaluator as BasePythonReplEvaluator)?.PrimaryPrompt ?? ">>>";
+                return _interactive.GetPythonEvaluator()?.PrimaryPrompt ?? ">>> ";
 #endif
 #else
                 return (string)ReplWindow.GetOptionValue(ReplOptions.CurrentPrimaryPrompt);
@@ -325,7 +325,7 @@ namespace TestUtilities.UI {
 #if NTVS_FEATURE_INTERACTIVEWINDOW
 #error Implement for NTVS
 #else
-                return (ReplWindow.Evaluator as BasePythonReplEvaluator)?.SecondaryPrompt ?? "...";
+                return _interactive.GetPythonEvaluator()?.SecondaryPrompt ?? "... ";
 #endif
 #else
                 return (string)ReplWindow.GetOptionValue(ReplOptions.CurrentSecondaryPrompt);

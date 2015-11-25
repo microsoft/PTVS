@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System.Threading.Tasks;
+using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.InteractiveWindow;
 
 namespace Microsoft.PythonTools.Repl {

@@ -31,11 +31,14 @@ using Microsoft.PythonTools.Language;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Project;
+using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.InteractiveWindow.Commands;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
+using Microsoft.VisualStudio.Text.Projection;
 using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudioTools;
 using Task = System.Threading.Tasks.Task;
@@ -98,6 +101,7 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public string DisplayName { get; set; }
+        public string ProjectMoniker { get; set; }
         public string InterpreterPath { get; set; }
         public PythonLanguageVersion LanguageVersion { get; set; }
         public string InterpreterArguments {get; set; }
@@ -112,7 +116,7 @@ namespace Microsoft.PythonTools.Repl {
         internal virtual void OnAttach() { }
         internal virtual void OnDetach() { }
 
-        internal VsProjectAnalyzer Analyzer {
+        public VsProjectAnalyzer Analyzer {
             get {
                 if (_analyzer != null) {
                     return _analyzer;
@@ -268,6 +272,11 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+            if (!string.IsNullOrEmpty(ProjectMoniker)) {
+                UpdatePropertiesFromProjectMoniker();
+            }
+
             thread = Connect();
 
             var newerThread = Interlocked.CompareExchange(ref _thread, thread, null);
@@ -276,12 +285,18 @@ namespace Microsoft.PythonTools.Repl {
                 return newerThread;
             }
 
-            if (File.Exists(ScriptsPath)) {
-                if (!(await ExecuteFileAsync(ScriptsPath, null)).IsSuccessful) {
-                    WriteError("Error executing " + ScriptsPath);
+            var scriptsPath = ScriptsPath;
+            if (string.IsNullOrEmpty(scriptsPath)) {
+                scriptsPath = GetScriptsPath(null, DisplayName) ??
+                    GetScriptsPath(null, LanguageVersion.ToVersion().ToString());
+            }
+
+            if (File.Exists(scriptsPath)) {
+                if (!(await ExecuteFileAsync(scriptsPath, null)).IsSuccessful) {
+                    WriteError("Error executing " + scriptsPath);
                 }
-            } else if (Directory.Exists(ScriptsPath)) {
-                foreach (var file in Directory.EnumerateFiles(ScriptsPath, "*.py", SearchOption.TopDirectoryOnly)) {
+            } else if (Directory.Exists(scriptsPath)) {
+                foreach (var file in Directory.EnumerateFiles(scriptsPath, "*.py", SearchOption.TopDirectoryOnly)) {
                     if (!(await ExecuteFileAsync(file, null)).IsSuccessful) {
                         WriteError("Error executing " + file);
                     }
@@ -291,6 +306,62 @@ namespace Microsoft.PythonTools.Repl {
             thread.AvailableScopesChanged += Thread_AvailableScopesChanged;
             return thread;
         }
+
+        internal void UpdatePropertiesFromProjectMoniker() {
+            var solution = _serviceProvider.GetService(typeof(SVsSolution)) as IVsSolution;
+            if (solution == null) {
+                return;
+            }
+
+            IVsHierarchy hier;
+            if (string.IsNullOrEmpty(ProjectMoniker) ||
+                ErrorHandler.Failed(solution.GetProjectOfUniqueName(ProjectMoniker, out hier))) {
+                return;
+            }
+            var pyProj = hier?.GetProject()?.GetPythonProject();
+            if (pyProj == null) {
+                return;
+            }
+
+            var props = PythonProjectLaunchProperties.Create(pyProj);
+            if (props == null) {
+                return;
+            }
+
+            InterpreterPath = props.GetInterpreterPath();
+            InterpreterArguments = props.GetInterpreterArguments();
+            var version = (pyProj.GetInterpreterFactory()?.Configuration.Version ?? new Version()).ToLanguageVersion();
+            LanguageVersion = version;
+            WorkingDirectory = props.GetWorkingDirectory();
+            EnvironmentVariables = props.GetEnvironment(true);
+            ScriptsPath = GetScriptsPath(pyProj.ProjectHome, "Scripts");
+        }
+
+        internal string GetScriptsPath(string root, params string[] parts) {
+            if (string.IsNullOrEmpty(root)) {
+                // TODO: Allow customizing the scripts path
+                //root = _serviceProvider.GetPythonToolsService().InteractiveOptions.ScriptsPath;
+                if (string.IsNullOrEmpty(root)) {
+                    root = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                    parts = new[] { "Visual Studio " + AssemblyVersionInfo.VSName, "Python Scripts" }
+                        .Concat(parts).ToArray();
+                }
+            }
+            if (parts.Length > 0) {
+                try {
+                    root = CommonUtils.GetAbsoluteDirectoryPath(root, Path.Combine(parts));
+                } catch (ArgumentException) {
+                    return null;
+                }
+            }
+
+            if (!Directory.Exists(root)) {
+                return null;
+            }
+
+            return root;
+        }
+
 
         public async Task<ExecutionResult> ExecuteCodeAsync(string text) {
             var cmdRes = _commands.TryExecuteCommand();
@@ -401,11 +472,14 @@ namespace Microsoft.PythonTools.Repl {
 
         public string GetPrompt() {
             if ((_window?.CurrentLanguageBuffer.CurrentSnapshot.LineCount ?? 1) > 1) {
-                return _thread?.SecondaryPrompt ?? "... ";
+                return SecondaryPrompt;
             } else {
-                return _thread?.PrimaryPrompt ?? ">>> ";
+                return PrimaryPrompt;
             }
         }
+
+        internal string PrimaryPrompt => _thread?.PrimaryPrompt ?? ">>> ";
+        internal string SecondaryPrompt => _thread?.SecondaryPrompt ?? "... ";
 
         public async Task<ExecutionResult> InitializeAsync() {
             if (_commands != null) {
@@ -422,12 +496,21 @@ namespace Microsoft.PythonTools.Repl {
 
             WriteOutput(msg, addNewline: true);
 
-            //_window.TextView.BufferGraph.GraphBuffersChanged += BufferGraphGraphBuffersChanged;
+            _window.TextView.BufferGraph.GraphBuffersChanged += BufferGraphGraphBuffersChanged;
 
             _window.TextView.Options.SetOptionValue(InteractiveWindowOptions.SmartUpDown, UseSmartHistoryKeys);
             _commands = GetInteractiveCommands(_serviceProvider, _window, this);
 
             return ExecutionResult.Success;
+        }
+
+        private void BufferGraphGraphBuffersChanged(object sender, GraphBuffersChangedEventArgs e) {
+            foreach (var removed in e.RemovedBuffers) {
+                BufferParser parser;
+                if (removed.Properties.TryGetProperty(typeof(BufferParser), out parser)) {
+                    parser.RemoveBuffer(removed);
+                }
+            }
         }
 
         public Task<ExecutionResult> ResetAsync(bool initialize = true) {
@@ -462,11 +545,6 @@ namespace Microsoft.PythonTools.Repl {
             var options = _serviceProvider.GetPythonToolsService().InteractiveOptions;
             UseSmartHistoryKeys = options.UseSmartHistory;
             LiveCompletionsOnly = options.LiveCompletionsOnly;
-
-            if (initialize) {
-                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                thread = Connect();
-            }
 
             return ExecutionResult.Success;
         }

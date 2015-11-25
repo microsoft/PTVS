@@ -301,7 +301,7 @@ namespace Microsoft.PythonTools.Repl {
             // getting the current value
             if (outCurrentValue != IntPtr.Zero) {
                 Marshal.GetNativeVariantForObject(
-                    (_selectEval.Evaluator as PythonInteractiveEvaluator)?.DisplayName ?? "<unknown>",
+                    (_selectEval.Evaluator as IPythonInteractiveEvaluator)?.DisplayName ?? "<unknown>",
                     outCurrentValue
                 );
             }
