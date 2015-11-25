@@ -34,7 +34,9 @@ namespace Microsoft.PythonTools.Repl {
     [Export(typeof(InteractiveWindowProvider))]
     [PartCreationPolicy(CreationPolicy.Shared)]
     class InteractiveWindowProvider {
-        private readonly List<IVsInteractiveWindow> _windows = new List<IVsInteractiveWindow>();
+        private readonly Dictionary<int, IVsInteractiveWindow> _windows = new Dictionary<int, IVsInteractiveWindow>();
+        private int _nextId = 1;
+
         private readonly List<IVsInteractiveWindow> _mruWindows = new List<IVsInteractiveWindow>();
         private readonly Dictionary<string, int> _temporaryWindows = new Dictionary<string, int>();
 
@@ -58,21 +60,28 @@ namespace Microsoft.PythonTools.Repl {
 
         public IEnumerable<IVsInteractiveWindow> AllOpenWindows {
             get {
-                return _windows.Where(w => w != null).ToArray();
+                lock (_windows) {
+                    return _windows.Values.ToArray();
+                }
+            }
+        }
+
+        private int GetNextId() {
+            lock (_windows) {
+                return _nextId++;
             }
         }
 
         public IVsInteractiveWindow OpenOrCreate(string replId) {
             IVsInteractiveWindow wnd;
-            int curId = 0;
-            while (curId < _windows.Count) {
-                wnd = _windows[curId];
-                var eval = wnd?.InteractiveWindow?.Evaluator as SelectableReplEvaluator;
-                if (eval?.CurrentEvaluator == replId) {
-                    wnd.Show(true);
-                    return wnd;
+            lock (_windows) {
+                foreach(var window in _windows.Values) {
+                    var eval = window.InteractiveWindow?.Evaluator as SelectableReplEvaluator;
+                    if (eval?.CurrentEvaluator == replId) {
+                        window.Show(true);
+                        return window;
+                    }
                 }
-                ++curId;
             }
 
             wnd = Create(replId);
@@ -81,30 +90,27 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public IVsInteractiveWindow Create(string replId) {
-            int curId = 0;
-            while (curId < _windows.Count && _windows[curId] != null) {
-                ++curId;
-            }
+            int curId = GetNextId();
 
             var window = CreateInteractiveWindowInternal(
                 new SelectableReplEvaluator(_evaluators, replId),
                 _pythonContentType,
                 false,
-                curId + 1,
+                curId,
                 SR.GetString(SR.ReplCaptionNoEvaluator),
                 typeof(Navigation.PythonLanguageInfo).GUID,
                 "PythonInteractive"
             );
 
-            if (curId >= _windows.Count) {
-                _windows.Add(window);
-            } else {
+            lock (_windows) {
                 _windows[curId] = window;
             }
 
             window.InteractiveWindow.TextView.Closed += (s, e) => {
-                Debug.Assert(ReferenceEquals(_windows[curId], window));
-                _windows[curId] = null;
+                lock (_windows) {
+                    Debug.Assert(ReferenceEquals(_windows[curId], window));
+                    _windows.Remove(curId);
+                }
             };
 
             return window;
@@ -117,12 +123,16 @@ namespace Microsoft.PythonTools.Repl {
 
         public IVsInteractiveWindow OpenOrCreateTemporary(string replId, string title, out bool wasCreated) {
             IVsInteractiveWindow wnd;
-            int curId;
-            if (_temporaryWindows.TryGetValue(replId, out curId)) {
-                wnd = curId >= 0 && curId < _windows.Count ? _windows[curId] : null;
-                wnd.Show(true);
-                wasCreated = false;
-                return wnd;
+            lock (_windows) {
+                int curId;
+                if (_temporaryWindows.TryGetValue(replId, out curId)) {
+                    if (_windows.TryGetValue(curId, out wnd)) {
+                        wnd.Show(true);
+                        wasCreated = false;
+                        return wnd;
+                    }
+                }
+                _temporaryWindows.Remove(replId);
             }
 
             wnd = CreateTemporary(replId, title);
@@ -132,32 +142,29 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public IVsInteractiveWindow CreateTemporary(string replId, string title) {
-            int curId = 0;
-            while (curId < _windows.Count && _windows[curId] != null) {
-                ++curId;
-            }
+            int curId = GetNextId();
 
             var window = CreateInteractiveWindowInternal(
                 _evaluators.Select(p => p.GetEvaluator(replId)).FirstOrDefault(e => e != null),
                 _pythonContentType,
                 false,
-                curId + 1,
+                curId,
                 title,
                 typeof(Navigation.PythonLanguageInfo).GUID,
                 replId
             );
 
-            if (curId >= _windows.Count) {
-                _windows.Add(window);
-            } else {
+            lock (_windows) {
                 _windows[curId] = window;
+                _temporaryWindows[replId] = curId;
             }
-            _temporaryWindows[replId] = curId;
 
             window.InteractiveWindow.TextView.Closed += (s, e) => {
-                Debug.Assert(ReferenceEquals(_windows[curId], window));
-                _windows[curId] = null;
-                _temporaryWindows.Remove(replId);
+                lock (_windows) {
+                    Debug.Assert(ReferenceEquals(_windows[curId], window));
+                    _windows.Remove(curId);
+                    _temporaryWindows.Remove(replId);
+                }
             };
 
             return window;

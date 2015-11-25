@@ -1455,7 +1455,7 @@ input()");
                     ">$help",
                     "Keyboard shortcuts:",
                     "  Enter                Evaluate the current input if it appears to be complete."
-);
+                );
             }
         }
 

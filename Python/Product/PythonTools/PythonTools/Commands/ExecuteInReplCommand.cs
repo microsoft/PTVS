@@ -51,6 +51,7 @@ namespace Microsoft.PythonTools.Commands {
                 PythonReplEvaluatorProvider.GetEvaluatorId(project) :
                 PythonReplEvaluatorProvider.GetEvaluatorId(factory);
             var window = provider.OpenOrCreate(replId);
+            project?.AddActionOnClose(window, InteractiveWindowProvider.Close);
             //if (project != null && project.Interpreters.IsProjectSpecific(factory)) {
             //    project.AddActionOnClose(window, BasePythonReplEvaluator.CloseReplWindow);
             //}
@@ -132,7 +133,7 @@ namespace Microsoft.PythonTools.Commands {
 
             window.Show(true);
 
-            var eval = window.InteractiveWindow.Evaluator as IPythonInteractiveEvaluator;
+            var eval = (IPythonInteractiveEvaluator)window.InteractiveWindow.Evaluator;
 
             // The interpreter may take some time to startup, do this off the UI thread.
             await ThreadHelper.JoinableTaskFactory.RunAsync(async () => {

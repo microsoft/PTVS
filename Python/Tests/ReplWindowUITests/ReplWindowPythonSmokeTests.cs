@@ -74,41 +74,36 @@ namespace ReplWindowUITests {
         [TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void ExecuteInReplSysArgv() {
-            using (var interactive = Prepare())
-            using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer(interactive.App.ServiceProvider).InterpreterFactory)) {
-                var project = interactive.App.OpenProject(@"TestData\SysArgvRepl.sln");
+            using (var app = new PythonVisualStudioApp()) {
+                var project = app.OpenProject(@"TestData\SysArgvRepl.sln");
 
-                interactive.App.ExecuteCommand("Python.ExecuteInInteractive");
-                interactive.WaitForTextEnd("Program.py']", ">");
+                using (var interactive = app.ExecuteInInteractive(project)) {
+                    interactive.WaitForTextEnd("Program.py']", ">");
+                }
             }
         }
 
         [TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void ExecuteInReplSysArgvScriptArgs() {
-            using (var interactive = Prepare())
-            using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer(interactive.App.ServiceProvider).InterpreterFactory)) {
-                var project = interactive.App.OpenProject(@"TestData\SysArgvScriptArgsRepl.sln");
+            using (var app = new PythonVisualStudioApp()) {
+                var project = app.OpenProject(@"TestData\SysArgvScriptArgsRepl.sln");
 
-                interactive.App.ExecuteCommand("Python.ExecuteInInteractive");
-                interactive.WaitForTextEnd(@"Program.py', '-source', 'C:\\Projects\\BuildSuite', '-destination', 'C:\\Projects\\TestOut', '-pattern', '*.txt', '-recurse', 'true']", ">");
+                using (var interactive = app.ExecuteInInteractive(project)) {
+                    interactive.WaitForTextEnd(@"Program.py', '-source', 'C:\\Projects\\BuildSuite', '-destination', 'C:\\Projects\\TestOut', '-pattern', '*.txt', '-recurse', 'true']", ">");
+                }
             }
         }
 
         [TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void ExecuteInReplUnicodeFilename() {
-            var tempProject = TestData.GetTempPath(randomSubPath: true);
-            FileUtils.CopyDirectory(TestData.GetPath("TestData\\UnicodePath"), Path.Combine(tempProject, "UnicodePathä"));
-            var tempSln = Path.Combine(tempProject, "UnicodePathä.sln");
-            File.Copy(TestData.GetPath("TestData\\UnicodePath.sln"), tempSln);
+            using (var app = new PythonVisualStudioApp()) {
+                var project = app.OpenProject(PythonTestData.GetUnicodePathSolution());
 
-            using (var interactive = Prepare())
-            using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer(interactive.App.ServiceProvider).InterpreterFactory)) {
-                var project = interactive.App.OpenProject(tempSln);
-
-                interactive.App.ExecuteCommand("Python.ExecuteInInteractive");
-                interactive.WaitForTextEnd("hello world from unicode path", ">");
+                using (var interactive = app.ExecuteInInteractive(project)) {
+                    interactive.WaitForTextEnd("hello world from unicode path", ">");
+                }
             }
         }
 

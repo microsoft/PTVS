@@ -192,12 +192,19 @@ namespace TestUtilities.UI.Python {
             }
         }
 
+        public ReplWindowProxy ExecuteInInteractive(Project project, PythonReplWindowProxySettings settings = null) {
+            OpenSolutionExplorer().SelectProject(project);
+            ExecuteCommand("Python.ExecuteInInteractive");
+            return GetInteractiveWindow(project);
+        }
+
+        public ReplWindowProxy GetInteractiveWindow(Project project, PythonReplWindowProxySettings settings = null) {
+            return GetInteractiveWindow(project.Name + " Interactive", settings);
+        }
+
         public ReplWindowProxy GetInteractiveWindow(string title, PythonReplWindowProxySettings settings = null) {
             var iwp = GetService<IComponentModel>(typeof(SComponentModel))?.GetService<InteractiveWindowProvider>();
-            if (iwp == null) {
-                return null;
-            }
-            var window = iwp.AllOpenWindows.FirstOrDefault(w => ((ToolWindowPane)w).Caption == title);
+            var window = iwp?.AllOpenWindows.FirstOrDefault(w => ((ToolWindowPane)w).Caption == title);
             if (window == null) {
                 return null;
             }
