@@ -49,7 +49,7 @@ namespace Microsoft.PythonTools.Repl {
 
 
         protected virtual CommandProcessorThread Connect() {
-            ThreadHelper.ThrowIfNotOnUIThread();
+            _serviceProvider.GetUIThread().MustBeCalledFromUIThreadOrThrow();
 
             if (string.IsNullOrWhiteSpace(InterpreterPath)) {
                 WriteError(SR.GetString(SR.ReplEvaluatorInterpreterNotConfigured, DisplayName));

@@ -271,40 +271,40 @@ namespace Microsoft.PythonTools.Repl {
                 return thread;
             }
 
-            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-            if (!string.IsNullOrEmpty(ProjectMoniker)) {
-                UpdatePropertiesFromProjectMoniker();
-            }
-
-            thread = Connect();
-
-            var newerThread = Interlocked.CompareExchange(ref _thread, thread, null);
-            if (newerThread != null) {
-                thread.Dispose();
-                return newerThread;
-            }
-
-            var scriptsPath = ScriptsPath;
-            if (string.IsNullOrEmpty(scriptsPath)) {
-                scriptsPath = GetScriptsPath(null, DisplayName) ??
-                    GetScriptsPath(null, LanguageVersion.ToVersion().ToString());
-            }
-
-            if (File.Exists(scriptsPath)) {
-                if (!(await ExecuteFileAsync(scriptsPath, null)).IsSuccessful) {
-                    WriteError("Error executing " + scriptsPath);
+            return await _serviceProvider.GetUIThread().InvokeTask(async () => {
+                if (!string.IsNullOrEmpty(ProjectMoniker)) {
+                    UpdatePropertiesFromProjectMoniker();
                 }
-            } else if (Directory.Exists(scriptsPath)) {
-                foreach (var file in Directory.EnumerateFiles(scriptsPath, "*.py", SearchOption.TopDirectoryOnly)) {
-                    if (!(await ExecuteFileAsync(file, null)).IsSuccessful) {
-                        WriteError("Error executing " + file);
+
+                thread = Connect();
+
+                var newerThread = Interlocked.CompareExchange(ref _thread, thread, null);
+                if (newerThread != null) {
+                    thread.Dispose();
+                    return newerThread;
+                }
+
+                var scriptsPath = ScriptsPath;
+                if (string.IsNullOrEmpty(scriptsPath)) {
+                    scriptsPath = GetScriptsPath(null, DisplayName) ??
+                        GetScriptsPath(null, LanguageVersion.ToVersion().ToString());
+                }
+
+                if (File.Exists(scriptsPath)) {
+                    if (!(await ExecuteFileAsync(scriptsPath, null)).IsSuccessful) {
+                        WriteError("Error executing " + scriptsPath);
+                    }
+                } else if (Directory.Exists(scriptsPath)) {
+                    foreach (var file in Directory.EnumerateFiles(scriptsPath, "*.py", SearchOption.TopDirectoryOnly)) {
+                        if (!(await ExecuteFileAsync(file, null)).IsSuccessful) {
+                            WriteError("Error executing " + file);
+                        }
                     }
                 }
-            }
 
-            thread.AvailableScopesChanged += Thread_AvailableScopesChanged;
-            return thread;
+                thread.AvailableScopesChanged += Thread_AvailableScopesChanged;
+                return thread;
+            });
         }
 
         internal void UpdatePropertiesFromProjectMoniker() {
