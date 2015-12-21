@@ -803,6 +803,13 @@ def main():
                     record.params['SCRIPT_NAME'] = ''
                     record.params['wsgi.script_name'] = wsgi_encode('')
 
+                # correct SCRIPT_NAME and PATH_INFO if we are told what our SCRIPT_NAME should be
+                if 'SCRIPT_NAME' in os.environ:
+                    record.params['SCRIPT_NAME'] = os.environ['SCRIPT_NAME']
+                    record.params['PATH_INFO'] = record.params['PATH_INFO'][len(record.params['SCRIPT_NAME']):]
+                    record.params['wsgi.script_name'] = wsgi_encode(record.params['SCRIPT_NAME'])
+                    record.params['wsgi.path_info'] = wsgi_encode(record.params['PATH_INFO'])
+
                 # Send each part of the response to FCGI_STDOUT.
                 # Exceptions raised in the handler will be logged by the context
                 # manager and we will then wait for the next record.
