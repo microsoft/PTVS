@@ -804,7 +804,7 @@ def main():
                     record.params['wsgi.script_name'] = wsgi_encode('')
 
                 # correct SCRIPT_NAME and PATH_INFO if we are told what our SCRIPT_NAME should be
-                if 'SCRIPT_NAME' in os.environ:
+                if 'SCRIPT_NAME' in os.environ and record.params['PATH_INFO'].lower().startswith(os.environ['SCRIPT_NAME'].lower()):
                     record.params['SCRIPT_NAME'] = os.environ['SCRIPT_NAME']
                     record.params['PATH_INFO'] = record.params['PATH_INFO'][len(record.params['SCRIPT_NAME']):]
                     record.params['wsgi.script_name'] = wsgi_encode(record.params['SCRIPT_NAME'])
