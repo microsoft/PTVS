@@ -3,7 +3,7 @@
   <Identifier Id="a8637c34-aa55-46e2-973c-9c3e09afc17b">
     <Name>Python Tools for Visual Studio - Django</Name>
     <Author>Microsoft</Author>
-    <Version>2.2.2</Version>
+    <Version>2.2.3</Version>
     <Description xml:space="preserve">Provides templates and integration for the Django web framework.</Description>
     <MoreInfoUrl>http://aka.ms/ptvs</MoreInfoUrl>
     <GettingStartedGuide>http://aka.ms/ptvs</GettingStartedGuide>
@@ -34,11 +34,11 @@
     <SupportedFrameworkRuntimeEdition MinVersion="4.5" />
   </Identifier>
   <References>
-    <Reference Id="96492FC7-7BC6-46F7-8559-66BB4E09FD1E" MinVersion="2.2.2" MaxVersion="2.2.2">
+    <Reference Id="96492FC7-7BC6-46F7-8559-66BB4E09FD1E" MinVersion="2.2.3" MaxVersion="2.2.3">
       <Name>Python Tools for Visual Studio</Name>
       <MoreInfoUrl>http://aka.ms/ptvs</MoreInfoUrl>
     </Reference>
-    <Reference Id="ce8d8e55-ad29-423e-aca2-810d0b16cdc4" MinVersion="2.2.2">
+    <Reference Id="ce8d8e55-ad29-423e-aca2-810d0b16cdc4" MinVersion="2.2.3">
       <Name>Python Tools for Visual Studio - Interactive</Name>
       <MoreInfoUrl>http://aka.ms/ptvs</MoreInfoUrl>
     </Reference>
