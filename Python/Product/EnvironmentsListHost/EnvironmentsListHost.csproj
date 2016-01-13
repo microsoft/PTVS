@@ -75,11 +75,11 @@
     <When Condition="$(VSMajorVersion) >= 14">
       <ItemGroup>
         <Reference Include="Microsoft.VisualStudio.InteractiveWindow">
-          <HintPath>$(DevEnvDir)PrivateAssemblies\Microsoft.VisualStudio.InteractiveWindow.dll</HintPath>
+          <HintPath>..\PythonTools\Microsoft.VisualStudio.InteractiveWindow.dll</HintPath>
           <Private>false</Private>
         </Reference>
         <Reference Include="Microsoft.VisualStudio.VsInteractiveWindow">
-          <HintPath>$(DevEnvDir)PrivateAssemblies\Microsoft.VisualStudio.VsInteractiveWindow.dll</HintPath>
+          <HintPath>..\PythonTools\Microsoft.VisualStudio.VsInteractiveWindow.dll</HintPath>
           <Private>false</Private>
         </Reference>
       </ItemGroup>
