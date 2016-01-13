@@ -21,6 +21,7 @@ using Microsoft.PythonTools.Django.TemplateParsing;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Projection;
 
 #if DEV14_OR_LATER
 using Microsoft.Html.Editor.Document;
@@ -37,13 +38,17 @@ namespace Microsoft.PythonTools.Django.Intellisense {
         }
 
         public override void AugmentCompletionSession(ICompletionSession session, IList<CompletionSet> completionSets) {
-            var doc = HtmlEditorDocument.FromTextBuffer(_buffer);
+            var doc = TemplateClassifier.HtmlEditorDocumentFromTextBuffer(_buffer);
             if (doc == null) {
                 return;
             }
-            doc.HtmlEditorTree.EnsureTreeReady();
+            var tree = doc.HtmlEditorTree;
+            if (tree == null) {
+                return;
+            }
+            tree.EnsureTreeReady();
 
-            var primarySnapshot = doc.PrimaryView.TextSnapshot;
+            var primarySnapshot = tree.TextSnapshot;
             var nullableTriggerPoint = session.GetTriggerPoint(primarySnapshot);
             if (!nullableTriggerPoint.HasValue) {
                 return;

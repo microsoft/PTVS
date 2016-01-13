@@ -106,12 +106,12 @@
     <When Condition="$(VSMajorVersion) &gt;= 14">
       <ItemGroup>
         <Reference Include="Microsoft.VisualStudio.InteractiveWindow">
-          <HintPath>$(DevEnvDir)PrivateAssemblies\Microsoft.VisualStudio.InteractiveWindow.dll</HintPath>
+          <HintPath>$(BuildRoot)Python\Product\PythonTools\Microsoft.VisualStudio.InteractiveWindow.dll</HintPath>
           <!-- Need a copy of the correct DLL for non-UI tests -->
           <Private>true</Private>
         </Reference>
         <Reference Include="Microsoft.VisualStudio.VsInteractiveWindow">
-          <HintPath>$(DevEnvDir)PrivateAssemblies\Microsoft.VisualStudio.VsInteractiveWindow.dll</HintPath>
+          <HintPath>$(BuildRoot)Python\Product\PythonTools\Microsoft.VisualStudio.VsInteractiveWindow.dll</HintPath>
           <!-- Need a copy of the correct DLL for non-UI tests -->
           <Private>true</Private>
         </Reference>

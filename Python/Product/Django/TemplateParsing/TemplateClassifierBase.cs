@@ -89,7 +89,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
             );
         }
 
-        private IClassificationType GetClassification(Classification classification) {
+        protected IClassificationType GetClassification(Classification classification) {
             switch (classification) {
                 case Classification.None:           return _classifierProvider._classType;                    
                 case Classification.Keyword:        return _classifierProvider._keywordType;
