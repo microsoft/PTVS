@@ -126,6 +126,7 @@
           <SpecificVersion>True</SpecificVersion>
           <HintPath Condition="Exists('$(DevEnvDir)PrivateAssemblies\Microsoft.VisualStudio.Web.WindowsAzure.Contracts.dll')">$(DevEnvDir)PrivateAssemblies\Microsoft.VisualStudio.Web.WindowsAzure.Contracts.dll</HintPath>
           <HintPath Condition="Exists('$(DevEnvDir)Extensions\Microsoft\Web Tools\WindowsAzure\Microsoft.VisualStudio.Web.WindowsAzure.Contracts.dll')">$(DevEnvDir)Extensions\Microsoft\Web Tools\WindowsAzure\Microsoft.VisualStudio.Web.WindowsAzure.Contracts.dll</HintPath>
+          <HintPath Condition="Exists('$(DevEnvDir)Extensions\Microsoft\Web Tools Azure\Microsoft.VisualStudio.Web.WindowsAzure.Contracts.dll')">$(DevEnvDir)Extensions\Microsoft\Web Tools Azure\Microsoft.VisualStudio.Web.WindowsAzure.Contracts.dll</HintPath>
           <Private>false</Private>
         </Reference>
       </ItemGroup>
