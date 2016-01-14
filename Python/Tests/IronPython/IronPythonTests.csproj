@@ -89,11 +89,11 @@
     <Reference Include="System.Xml.Linq" />
     <Reference Include="WindowsBase" />
     <Reference Include="Microsoft.VisualStudio.InteractiveWindow">
-      <HintPath>$(DevEnvDir)PrivateAssemblies\Microsoft.VisualStudio.InteractiveWindow.dll</HintPath>
+      <HintPath>$(BuildRoot)Python\Product\PythonTools\Microsoft.VisualStudio.InteractiveWindow.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.VsInteractiveWindow">
-      <HintPath>$(DevEnvDir)PrivateAssemblies\Microsoft.VisualStudio.VsInteractiveWindow.dll</HintPath>
+      <HintPath>$(BuildRoot)Python\Product\PythonTools\Microsoft.VisualStudio.VsInteractiveWindow.dll</HintPath>
       <Private>false</Private>
     </Reference>
   </ItemGroup>

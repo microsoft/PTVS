@@ -204,11 +204,11 @@
     <Reference Include="System.Xaml" />
     <Reference Include="WindowsFormsIntegration" />
     <Reference Include="Microsoft.VisualStudio.InteractiveWindow">
-      <HintPath>$(DevEnvDir)PrivateAssemblies\Microsoft.VisualStudio.InteractiveWindow.dll</HintPath>
+      <HintPath>Microsoft.VisualStudio.InteractiveWindow.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.VsInteractiveWindow">
-      <HintPath>$(DevEnvDir)PrivateAssemblies\Microsoft.VisualStudio.VsInteractiveWindow.dll</HintPath>
+      <HintPath>Microsoft.VisualStudio.VsInteractiveWindow.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.ImageCatalog, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
