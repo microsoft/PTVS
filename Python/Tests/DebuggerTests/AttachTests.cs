@@ -799,7 +799,7 @@ int main(int argc, char* argv[]) {
             get { return ""; }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(3)]
         public void AttachPtvsd() {
             var expectedOutput = new[] { "stdout", "stderr" };
 
