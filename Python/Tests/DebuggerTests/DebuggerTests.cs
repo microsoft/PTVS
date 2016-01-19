@@ -24,6 +24,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Debugger;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools;
@@ -1626,8 +1627,8 @@ namespace DebuggerTests {
                     Environment.NewLine,
                     thread.Frames.Select(f => {
                         var fn = f.FileName;
-                        if (CommonUtils.IsSubpathOf(TestData.GetPath("TestData"), fn)) {
-                            fn = CommonUtils.GetRelativeFilePath(TestData.GetPath(), fn);
+                        if (PathUtils.IsSubpathOf(TestData.GetPath("TestData"), fn)) {
+                            fn = PathUtils.GetRelativeFilePath(TestData.GetPath(), fn);
                         }
                         return string.Format("    {0} in {1}:{2}", f.FunctionName, fn, f.LineNo);
                     })

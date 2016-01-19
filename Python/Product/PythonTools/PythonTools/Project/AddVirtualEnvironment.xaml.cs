@@ -30,6 +30,7 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudioTools;
 using WpfCommands = Microsoft.VisualStudioTools.Wpf.Commands;
@@ -40,11 +41,13 @@ namespace Microsoft.PythonTools.Project {
     /// </summary>
     partial class AddVirtualEnvironment : DialogWindowVersioningWorkaround {
         public static readonly ICommand WebChooseInterpreter = new RoutedCommand();
-        
+
+        private readonly IServiceProvider _site;
         private readonly AddVirtualEnvironmentView _view;
         private Task _currentOperation;
 
-        private AddVirtualEnvironment(AddVirtualEnvironmentView view) {
+        private AddVirtualEnvironment(IServiceProvider site, AddVirtualEnvironmentView view) {
+            _site = site;
             _view = view;
             _view.PropertyChanged += View_PropertyChanged;
             DataContext = _view;
@@ -58,7 +61,7 @@ namespace Microsoft.PythonTools.Project {
             bool browseForExisting = false
         ) {
             using (var view = new AddVirtualEnvironmentView(project, service, project.Interpreters.ActiveInterpreter)) {
-                var wnd = new AddVirtualEnvironment(view);
+                var wnd = new AddVirtualEnvironment(project.Site, view);
 
                 if (browseForExisting) {
                     var path = project.Site.BrowseForDirectory(IntPtr.Zero, project.ProjectHome);
@@ -69,7 +72,7 @@ namespace Microsoft.PythonTools.Project {
                     view.WillInstallRequirementsTxt = false;
                     await view.WaitForReady();
                     if (view.WillAddVirtualEnv) {
-                        await view.Create().HandleAllExceptions(SR.ProductName, typeof(AddVirtualEnvironment));
+                        await view.Create().HandleAllExceptions(project.Site, typeof(AddVirtualEnvironment));
                         return;
                     }
 
@@ -121,7 +124,7 @@ namespace Microsoft.PythonTools.Project {
 
         private async void Save_Executed(object sender, ExecutedRoutedEventArgs e) {
             Debug.Assert(_currentOperation == null);
-            _currentOperation = _view.Create().HandleAllExceptions(SR.ProductName, GetType());
+            _currentOperation = _view.Create().HandleAllExceptions(_site, GetType());
             
             await _currentOperation;
 

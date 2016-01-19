@@ -54,7 +54,7 @@ def main():
             sleep(0.1)
         try:
             debugger_helper = windll['Microsoft.PythonTools.Debugger.Helper.x86.dll']
-        except WinError:
+        except WindowsError:
             debugger_helper = windll['Microsoft.PythonTools.Debugger.Helper.x64.dll']
         isTracing = c_char.in_dll(debugger_helper, "isTracing")
         while True:

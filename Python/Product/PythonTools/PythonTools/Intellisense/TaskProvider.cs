@@ -25,16 +25,15 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.VisualStudio.Text.Tagging;
 using Microsoft.VisualStudioTools;
-using SR = Microsoft.PythonTools.Project.SR;
 
 namespace Microsoft.PythonTools.Intellisense {
     class TaskProviderItem {
@@ -159,9 +158,9 @@ namespace Microsoft.PythonTools.Intellisense {
         ) {
             string message;
             if (factory != null && !factory.IsCurrent) {
-                message = SR.GetString(SR.UnresolvedModuleTooltipRefreshing, importName);
+                message = Strings.UnresolvedModuleTooltipRefreshing.FormatUI(importName);
             } else {
-                message = SR.GetString(SR.UnresolvedModuleTooltip, importName);
+                message = Strings.UnresolvedModuleTooltip.FormatUI(importName);
             }
 
             return new TaskProviderItem(
@@ -486,7 +485,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 if (ex.IsCriticalException()) {
                     throw;
                 }
-                VsTaskExtensions.ReportUnhandledException(ex, SR.ProductName, GetType());
+                ex.ReportUnhandledException(_serviceProvider, GetType());
             } finally {
                 var oldWorker = Interlocked.CompareExchange(ref _worker, null, self);
                 Debug.Assert(oldWorker == self, "Worker was changed while running");
@@ -546,7 +545,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private void Refresh() {
             if (_taskList != null || _errorProvider != null) {
                 _serviceProvider.GetUIThread().MustNotBeCalledFromUIThread();
-                RefreshAsync().WaitAndHandleAllExceptions(SR.ProductName, GetType());
+                RefreshAsync().WaitAndHandleAllExceptions(_serviceProvider, GetType());
             }
         }
 
@@ -827,7 +826,7 @@ namespace Microsoft.PythonTools.Intellisense {
             } catch (DirectoryNotFoundException) {
                 // This may happen when the error was in a file that's located inside a .zip archive.
                 // Let's walk the path and see if it is indeed the case.
-                for (var path = SourceFile; CommonUtils.IsValidPath(path); path = Path.GetDirectoryName(path)) {
+                for (var path = SourceFile; PathUtils.IsValidPath(path); path = Path.GetDirectoryName(path)) {
                     if (!File.Exists(path)) {
                         continue;
                     }

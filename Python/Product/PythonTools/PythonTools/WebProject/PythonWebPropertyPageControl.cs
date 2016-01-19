@@ -34,14 +34,14 @@ namespace Microsoft.PythonTools.Project.Web {
             _validateStaticPatternTimer.Tick += ValidateStaticPattern;
             _validateStaticPatternTimer.Interval = 500;
 
-            _toolTip.SetToolTip(_staticPattern, SR.GetString(SR.StaticPatternHelp));
-            _toolTip.SetToolTip(_staticPatternLabel, SR.GetString(SR.StaticPatternHelp));
+            _toolTip.SetToolTip(_staticPattern, Strings.StaticPatternHelp);
+            _toolTip.SetToolTip(_staticPatternLabel, Strings.StaticPatternHelp);
 
-            _toolTip.SetToolTip(_staticRewrite, SR.GetString(SR.StaticRewriteHelp));
-            _toolTip.SetToolTip(_staticRewriteLabel, SR.GetString(SR.StaticRewriteHelp));
+            _toolTip.SetToolTip(_staticRewrite, Strings.StaticRewriteHelp);
+            _toolTip.SetToolTip(_staticRewriteLabel, Strings.StaticRewriteHelp);
 
-            _toolTip.SetToolTip(_wsgiHandler, SR.GetString(SR.WsgiHandlerHelp));
-            _toolTip.SetToolTip(_wsgiHandlerLabel, SR.GetString(SR.WsgiHandlerHelp));
+            _toolTip.SetToolTip(_wsgiHandler, Strings.WsgiHandlerHelp);
+            _toolTip.SetToolTip(_wsgiHandlerLabel, Strings.WsgiHandlerHelp);
         }
 
         private void ValidateStaticPattern(object sender, EventArgs e) {
@@ -51,7 +51,7 @@ namespace Microsoft.PythonTools.Project.Web {
                 new Regex(_staticPattern.Text);
                 _errorProvider.SetError(_staticPattern, null);
             } catch (ArgumentException) {
-                _errorProvider.SetError(_staticPattern, SR.GetString(SR.StaticPatternError));
+                _errorProvider.SetError(_staticPattern, Strings.StaticPatternError);
             }
         }
 

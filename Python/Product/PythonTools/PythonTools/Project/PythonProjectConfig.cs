@@ -56,7 +56,7 @@ namespace Microsoft.PythonTools.Project {
             try {
                 return base.DebugLaunch(flags);
             } catch (MissingInterpreterException ex) {
-                MessageBox.Show(ex.Message, SR.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                MessageBox.Show(ex.Message, Strings.ProductTitle, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 return VSConstants.S_OK;
             } catch (NoInterpretersException ex) {
                 PythonToolsPackage.OpenNoInterpretersHelpPage(ProjectMgr.Site, ex.HelpPage);

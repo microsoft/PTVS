@@ -23,9 +23,10 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Common.Infrastructure;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter.Default;
 using Microsoft.PythonTools.Parsing;
-using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Interpreter {
     /// <summary>
@@ -286,7 +287,7 @@ namespace Microsoft.PythonTools.Interpreter {
         private void OnDatabaseVerChanged(object sender, FileSystemEventArgs e) {
             if ((!e.Name.Equals("database.ver", StringComparison.OrdinalIgnoreCase) &&
                 !e.Name.Equals("database.pid", StringComparison.OrdinalIgnoreCase)) ||
-                !CommonUtils.IsSubpathOf(DatabasePath, e.FullPath)) {
+                !PathUtils.IsSubpathOf(DatabasePath, e.FullPath)) {
                 return;
             }
 
@@ -719,11 +720,11 @@ namespace Microsoft.PythonTools.Interpreter {
             FileSystemWatcher watcher = null;
 
             lock (_verWatcherLock) {
-                var dirName = CommonUtils.GetFileOrDirectoryName(DatabasePath);
+                var dirName = PathUtils.GetFileOrDirectoryName(DatabasePath);
                 var dir = Path.GetDirectoryName(DatabasePath);
 
-                while (CommonUtils.IsValidPath(dir) && !Directory.Exists(dir)) {
-                    dirName = CommonUtils.GetFileOrDirectoryName(dir);
+                while (PathUtils.IsValidPath(dir) && !Directory.Exists(dir)) {
+                    dirName = PathUtils.GetFileOrDirectoryName(dir);
                     dir = Path.GetDirectoryName(dir);
                 }
 

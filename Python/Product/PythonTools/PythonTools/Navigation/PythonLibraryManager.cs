@@ -17,11 +17,11 @@
 using System;
 using System.Runtime.InteropServices;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Navigation;
 using Microsoft.VisualStudioTools.Project;
-using SR = Microsoft.PythonTools.Project.SR;
 
 namespace Microsoft.PythonTools.Navigation {
 
@@ -75,7 +75,7 @@ namespace Microsoft.PythonTools.Navigation {
                 // links elsewhere in the object browser).
                 item.OnNewAnalysis += (sender, args) => {
                     _package.GetUIThread().InvokeAsync(() => FileParsed(task, new AstScopeNode(item.Tree, item)))
-                        .HandleAllExceptions(SR.ProductName, GetType())
+                        .HandleAllExceptions(_package, GetType())
                         .DoNotWait();
                 };
             }

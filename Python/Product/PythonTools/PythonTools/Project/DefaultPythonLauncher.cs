@@ -23,6 +23,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
 using Microsoft.PythonTools.Debugger.DebugEngine;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Debugger;
@@ -118,7 +119,7 @@ namespace Microsoft.PythonTools.Project {
                 SetupDebugInfo(ref dbgInfo, startupFile, props);
 
                 if (string.IsNullOrEmpty(dbgInfo.bstrExe)) {
-                    MessageBox.Show(SR.GetString(SR.DebugLaunchInterpreterMissing), SR.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(Strings.DebugLaunchInterpreterMissing, Strings.ProductTitle, MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
 
@@ -257,7 +258,7 @@ namespace Microsoft.PythonTools.Project {
             string startupFile = _project.GetStartupFile();
             if (string.IsNullOrEmpty(startupFile)) {
                 //TODO: need to start active file then
-                throw new InvalidOperationException(SR.GetString(SR.NoStartupFileAvailable));
+                throw new InvalidOperationException(Strings.NoStartupFileAvailable);
             }
             return startupFile;
         }

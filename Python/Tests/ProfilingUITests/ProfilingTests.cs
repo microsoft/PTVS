@@ -25,6 +25,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Automation;
 using Microsoft.PythonTools;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Profiling;
 using Microsoft.VisualStudio.TestTools.UnitTesting;

@@ -83,11 +83,11 @@
     <Reference Include="UIAutomationTypes" />
     <Reference Include="WindowsBase" />
     <Reference Include="Microsoft.VisualStudio.InteractiveWindow">
-      <HintPath>$(DevEnvDir)PrivateAssemblies\Microsoft.VisualStudio.InteractiveWindow.dll</HintPath>
+      <HintPath>$(BuildRoot)Python\Product\PythonTools\Microsoft.VisualStudio.InteractiveWindow.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.VsInteractiveWindow">
-      <HintPath>$(DevEnvDir)PrivateAssemblies\Microsoft.VisualStudio.VsInteractiveWindow.dll</HintPath>
+      <HintPath>$(BuildRoot)Python\Product\PythonTools\Microsoft.VisualStudio.VsInteractiveWindow.dll</HintPath>
       <Private>false</Private>
     </Reference>
   </ItemGroup>
@@ -143,6 +143,14 @@
     <ProjectReference Include="$(BuildRoot)Python\Tests\Utilities.Python.Analysis\TestUtilities.Python.Analysis.csproj">
       <Project>{a731c4c3-3741-4080-a946-c47574c1f3bf}</Project>
       <Name>TestUtilities.Python.Analysis</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Product\Common\Common.csproj">
+      <Project>{b3db0521-d9e3-4f48-9e2e-e5ecae886049}</Project>
+      <Name>Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Product\VSCommon\VSCommon.csproj">
+      <Project>{a52ac77f-6df9-4387-bb08-8ded3fd95a0f}</Project>
+      <Name>VSCommon</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(BuildRoot)Python\Tests\TestProjectAfter.settings" />

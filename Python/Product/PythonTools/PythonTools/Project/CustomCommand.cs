@@ -28,13 +28,13 @@ using Microsoft.Build.Execution;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Logging;
 using Microsoft.PythonTools.BuildTasks;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Navigation;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 using Task = System.Threading.Tasks.Task;
 
@@ -177,7 +177,7 @@ namespace Microsoft.PythonTools.Project {
                 var rm = new System.Resources.ResourceManager(ns, asm);
                 return rm.GetString(key, CultureInfo.CurrentUICulture) ?? key;
             } catch (Exception ex) {
-                ActivityLog.LogError(SR.ProductName, SR.GetString(SR.FailedToReadResource, assembly, ns, key, ex));
+                ActivityLog.LogError(Strings.ProductTitle, Strings.FailedToReadResource.FormatUI(assembly, ns, key, ex));
                 return key;
             }
         }
@@ -228,7 +228,7 @@ namespace Microsoft.PythonTools.Project {
             }
 
             if (string.IsNullOrEmpty(label)) {
-                return SR.GetString(SR.PythonMenuLabel);
+                return Strings.PythonMenuLabel;
             }
 
             return PerformSubstitutions(projectNode, label);
@@ -291,7 +291,7 @@ namespace Microsoft.PythonTools.Project {
                     }
 
                     // Log error to the ActivityLog.
-                    ActivityLog.LogError(SR.ProductName, SR.GetString(SR.ErrorRunningCustomCommand, _target, ex));
+                    ActivityLog.LogError(Strings.ProductTitle, Strings.ErrorRunningCustomCommand.FormatUI(_target, ex));
                 }
             });
 
@@ -367,7 +367,7 @@ namespace Microsoft.PythonTools.Project {
                 if (task != null) {
                     string document;
                     try {
-                        document = CommonUtils.GetAbsoluteFilePath(_workingDirectory, task.Document);
+                        document = PathUtils.GetAbsoluteFilePath(_workingDirectory, task.Document);
                     } catch (ArgumentException) {
                         // If it's not a valid path, then it's not a navigable error item.
                         return;
@@ -392,15 +392,15 @@ namespace Microsoft.PythonTools.Project {
 
             if (packagesToInstall.Any()) {
                 var installMissingButton = new TaskDialogButton(
-                    SR.GetString(SR.CustomCommandPrerequisitesInstallMissing),
-                    SR.GetString(SR.CustomCommandPrerequisitesInstallMissingSubtext) + "\r\n\r\n" + string.Join("\r\n", packagesToInstall));
-                var runAnywayButton = new TaskDialogButton(SR.GetString(SR.CustomCommandPrerequisitesRunAnyway));
-                var doNotRunButton = new TaskDialogButton(SR.GetString(SR.CustomCommandPrerequisitesDoNotRun));
+                    Strings.CustomCommandPrerequisitesInstallMissing,
+                    Strings.CustomCommandPrerequisitesInstallMissingSubtext + "\r\n\r\n" + string.Join("\r\n", packagesToInstall));
+                var runAnywayButton = new TaskDialogButton(Strings.CustomCommandPrerequisitesRunAnyway);
+                var doNotRunButton = new TaskDialogButton(Strings.CustomCommandPrerequisitesDoNotRun);
 
                 var taskDialog = new TaskDialog(project.Site) {
-                    Title = SR.ProductName,
-                    MainInstruction = SR.GetString(SR.CustomCommandPrerequisitesInstruction),
-                    Content = SR.GetString(SR.CustomCommandPrerequisitesContent, DisplayLabelWithoutAccessKeys),
+                    Title = Strings.ProductTitle,
+                    MainInstruction = Strings.CustomCommandPrerequisitesInstruction,
+                    Content = Strings.CustomCommandPrerequisitesContent.FormatUI(DisplayLabelWithoutAccessKeys),
                     AllowCancellation = true,
                     Buttons = { installMissingButton, runAnywayButton, doNotRunButton, TaskDialogButton.Cancel }
                 };
@@ -494,11 +494,11 @@ namespace Microsoft.PythonTools.Project {
                     VSConstants.OutputWindowPaneGuid.BuildOutputPane_guid,
                     "Build"
                 );
-                outputWindow.WriteErrorLine(SR.GetString(SR.ErrorBuildingCustomCommand, target));
+                outputWindow.WriteErrorLine(Strings.ErrorBuildingCustomCommand.FormatUI(target));
                 foreach (var line in logger.Lines) {
                     outputWindow.WriteErrorLine(line.TrimEnd('\r', '\n'));
                 }
-                throw new InvalidOperationException(SR.GetString(SR.ErrorBuildingCustomCommand, target));
+                throw new InvalidOperationException(Strings.ErrorBuildingCustomCommand.FormatUI(target));
             }
 
             return outputs;
@@ -516,7 +516,7 @@ namespace Microsoft.PythonTools.Project {
                 );
 
             if (item == null) {
-                throw new InvalidOperationException(SR.GetString(SR.ErrorBuildingCustomCommand, _target));
+                throw new InvalidOperationException(Strings.ErrorBuildingCustomCommand.FormatUI(_target));
             }
 
             var startInfo = new CommandStartInfo {
@@ -530,7 +530,7 @@ namespace Microsoft.PythonTools.Project {
             };
 
             try {
-                startInfo.WorkingDirectory = CommonUtils.GetAbsoluteFilePath(project.ProjectHome, startInfo.WorkingDirectory);
+                startInfo.WorkingDirectory = PathUtils.GetAbsoluteFilePath(project.ProjectHome, startInfo.WorkingDirectory);
             } catch (ArgumentException) {
             }
 
@@ -567,7 +567,7 @@ namespace Microsoft.PythonTools.Project {
 
             var replTitle = executeIn.Substring(4).TrimStart(' ', ':');
             if (string.IsNullOrEmpty(replTitle)) {
-                replTitle = SR.GetString(SR.CustomCommandReplTitle, DisplayLabelWithoutAccessKeys);
+                replTitle = Strings.CustomCommandReplTitle.FormatUI(DisplayLabelWithoutAccessKeys);
             } else {
                 var match = _customCommandLabelRegex.Match(replTitle);
                 if (match.Success) {
@@ -610,7 +610,7 @@ namespace Microsoft.PythonTools.Project {
             }
 
             if (pyEvaluator.IsExecuting) {
-                throw new InvalidOperationException(SR.GetString(SR.ErrorCommandAlreadyRunning));
+                throw new InvalidOperationException(Strings.ErrorCommandAlreadyRunning);
             }
 
             var props = PythonProjectLaunchProperties.Create(project);
@@ -654,10 +654,10 @@ namespace Microsoft.PythonTools.Project {
                         pyEvaluator.Dispose();
                     }
                 } catch (Exception ex) {
-                    ActivityLog.LogError(SR.ProductName, SR.GetString(SR.ErrorRunningCustomCommand, _label, ex));
+                    ActivityLog.LogError(Strings.ProductTitle, Strings.ErrorRunningCustomCommand.FormatUI(_label, ex));
                     var outWindow = OutputWindowRedirector.GetGeneral(project.Site);
                     if (outWindow != null) {
-                        outWindow.WriteErrorLine(SR.GetString(SR.ErrorRunningCustomCommand, _label, ex));
+                        outWindow.WriteErrorLine(Strings.ErrorRunningCustomCommand.FormatUI(_label, ex));
                         outWindow.Show();
                     }
                 }

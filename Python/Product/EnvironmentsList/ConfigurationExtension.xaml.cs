@@ -26,9 +26,9 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using Microsoft.PythonTools.EnvironmentsList.Properties;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudioTools;
-using Microsoft.VisualStudioTools.Project;
 using Microsoft.VisualStudioTools.Wpf;
 
 namespace Microsoft.PythonTools.EnvironmentsList {
@@ -145,7 +145,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                     // any settings.
                     return view;
                 }
-                while (Directory.Exists(view.PrefixPath) && !File.Exists(CommonUtils.FindFile(view.PrefixPath, "site.py"))) {
+                while (Directory.Exists(view.PrefixPath) && !File.Exists(PathUtils.FindFile(view.PrefixPath, "site.py"))) {
                     view.PrefixPath = Path.GetDirectoryName(view.PrefixPath);
                 }
             }
@@ -157,21 +157,21 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             }
 
             if (!File.Exists(view.InterpreterPath)) {
-                view.InterpreterPath = CommonUtils.FindFile(
+                view.InterpreterPath = PathUtils.FindFile(
                     view.PrefixPath,
                     CPythonInterpreterFactoryConstants.ConsoleExecutable,
                     firstCheck: new[] { "scripts" }
                 );
             }
             if (!File.Exists(view.WindowsInterpreterPath)) {
-                view.WindowsInterpreterPath = CommonUtils.FindFile(
+                view.WindowsInterpreterPath = PathUtils.FindFile(
                     view.PrefixPath,
                     CPythonInterpreterFactoryConstants.WindowsExecutable,
                     firstCheck: new[] { "scripts" }
                 );
             }
             if (!Directory.Exists(view.LibraryPath)) {
-                var sitePy = CommonUtils.FindFile(
+                var sitePy = PathUtils.FindFile(
                     view.PrefixPath,
                     "os.py",
                     firstCheck: new[] { "lib" }

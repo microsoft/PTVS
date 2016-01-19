@@ -27,17 +27,14 @@ using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Language.Intellisense;
-using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.IncrementalSearch;
 using Microsoft.VisualStudio.Text.Operations;
 using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudioTools.Project;
 using IServiceProvider = System.IServiceProvider;
-using SR = Microsoft.PythonTools.Project.SR;
 using VSConstants = Microsoft.VisualStudio.VSConstants;
 
 namespace Microsoft.PythonTools.Intellisense {
@@ -994,10 +991,10 @@ namespace Microsoft.PythonTools.Intellisense {
                 string prompt;
                 string[] snippetTypes;
                 if ((VSConstants.VSStd2KCmdID)nCmdID == VSConstants.VSStd2KCmdID.SURROUNDWITH) {
-                    prompt = SR.GetString(SR.SurroundWith);
+                    prompt = Strings.SurroundWith;
                     snippetTypes = _surroundsWithSnippetTypes;
                 } else {
-                    prompt = SR.GetString(SR.InsertSnippet);
+                    prompt = Strings.InsertSnippet;
                     snippetTypes = _allStandardSnippetTypes;
                 }
 

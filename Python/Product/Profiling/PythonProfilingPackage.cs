@@ -25,6 +25,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Windows;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
@@ -233,7 +234,7 @@ namespace Microsoft.PythonTools.Profiling {
             var model = (IComponentModel)(session._serviceProvider.GetService(typeof(SComponentModel)));
             var interpreterService = model.GetService<IInterpreterOptionsService>();
 
-            var projectHome = CommonUtils.GetAbsoluteDirectoryPath(
+            var projectHome = PathUtils.GetAbsoluteDirectoryPath(
                 Path.GetDirectoryName(projectToProfile.FullName),
                 (string)projectToProfile.Properties.Item("ProjectHome").Value
             );
@@ -278,8 +279,8 @@ namespace Microsoft.PythonTools.Profiling {
                 }
 
                 env[pathEnvVarName] = string.Join(";", searchPaths
-                    .Where(CommonUtils.IsValidPath)
-                    .Select(p => CommonUtils.GetAbsoluteDirectoryPath(projectHome, p))
+                    .Where(PathUtils.IsValidPath)
+                    .Select(p => PathUtils.GetAbsoluteDirectoryPath(projectHome, p))
                     .Where(Directory.Exists)
                     .Distinct(StringComparer.OrdinalIgnoreCase)
                 );

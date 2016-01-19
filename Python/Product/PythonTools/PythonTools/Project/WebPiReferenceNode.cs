@@ -18,6 +18,7 @@ using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Imaging;
 using Microsoft.VisualStudio.Imaging.Interop;
@@ -139,7 +140,7 @@ namespace Microsoft.PythonTools.Project {
                 if (null != extensionRefNode) {
                     // We will check if Url of the assemblies is the same.
                     // TODO: Check full assembly name?
-                    if (CommonUtils.IsSamePath(extensionRefNode.Url, Url)) {
+                    if (PathUtils.IsSamePath(extensionRefNode.Url, Url)) {
                         return true;
                     }
                 }

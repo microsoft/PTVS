@@ -18,9 +18,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Windows.Forms;
-using Microsoft.VisualStudioTools;
-using Microsoft.VisualStudioTools.Project;
-using SR = Microsoft.PythonTools.Project.SR;
+using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Commands {
     public partial class DiagnosticsForm : Form {
@@ -65,7 +63,7 @@ namespace Microsoft.PythonTools.Commands {
             var path = _provider.BrowseForFileSave(
                 Handle,
                 "Text Files (*.txt)|*.txt|All Files (*.*)|*.*",
-                CommonUtils.GetAbsoluteFilePath(
+                PathUtils.GetAbsoluteFilePath(
                     Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
                     string.Format("Diagnostic Info {0:yyyy-MM-dd'T'HHmmss}.txt", DateTime.Now)
                 )
@@ -79,11 +77,11 @@ namespace Microsoft.PythonTools.Commands {
                 TaskDialog.CallWithRetry(
                     _ => File.WriteAllText(path, _textBox.Text),
                     _provider,
-                    SR.ProductName,
-                    SR.GetString(SR.FailedToSaveDiagnosticInfo),
-                    SR.GetString(SR.ErrorDetail),
-                    SR.GetString(SR.Retry),
-                    SR.GetString(SR.Cancel)
+                    Strings.ProductTitle,
+                    Strings.FailedToSaveDiagnosticInfo,
+                    Strings.ErrorDetail,
+                    Strings.Retry,
+                    Strings.Cancel
                 );
 
                 Process.Start("explorer.exe", "/select," + ProcessOutput.QuoteSingleArgument(path));

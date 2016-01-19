@@ -23,7 +23,7 @@ using System.Runtime.InteropServices;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 
-namespace Microsoft.VisualStudioTools {
+namespace Microsoft.VisualStudioTools.Infrastructure {
     sealed class TaskDialog {
         private readonly IServiceProvider _provider;
         private readonly List<TaskDialogButton> _buttons;

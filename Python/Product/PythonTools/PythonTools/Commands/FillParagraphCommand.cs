@@ -66,7 +66,7 @@ namespace Microsoft.PythonTools.Commands {
             
             // TODO: Fix doc string parsing
             if (fillPrefix.Prefix == null || fillPrefix.Prefix.Length == 0 || fillPrefix.IsDocString) {
-                System.Windows.MessageBox.Show(SR.GetString(SR.FillCommentSelectionError), SR.ProductName);
+                System.Windows.MessageBox.Show(Strings.FillCommentSelectionError, Strings.ProductTitle);
                 return;
             }
 

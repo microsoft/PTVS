@@ -23,9 +23,9 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
-using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Analysis.MemoryTester {
     class Program {

@@ -20,7 +20,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using Microsoft.PythonTools.ProjectWizards.Properties;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.Settings;
 using Microsoft.VisualStudio.TemplateWizard;
 using Microsoft.VisualStudioTools;
@@ -117,12 +117,12 @@ namespace Microsoft.PythonTools.ProjectWizards {
                 }
 
                 var dlg = new TaskDialog(provider) {
-                    Title = Resources.PythonToolsForVisualStudio,
-                    MainInstruction = Resources.AzureToolsRequired,
-                    Content = Resources.AzureToolsInstallInstructions,
+                    Title = Strings.ProductTitle,
+                    MainInstruction = Strings.AzureToolsRequired,
+                    Content = Strings.AzureToolsInstallInstructions,
                     AllowCancellation = true
                 };
-                var download = new TaskDialogButton(Resources.DownloadAndInstall);
+                var download = new TaskDialogButton(Strings.DownloadAndInstall);
                 dlg.Buttons.Add(download);
                 dlg.Buttons.Add(TaskDialogButton.Cancel);
 
@@ -142,15 +142,15 @@ namespace Microsoft.PythonTools.ProjectWizards {
                 if (!store.CollectionExists(PythonConstants.DontShowUpgradeDialogAgainCollection) ||
                     !store.GetBoolean(PythonConstants.DontShowUpgradeDialogAgainCollection, DontShowUpgradeDialogAgainProperty, false)) {
                     var dlg = new TaskDialog(provider) {
-                        Title = Resources.PythonToolsForVisualStudio,
-                        MainInstruction = Resources.AzureToolsUpgradeRecommended,
-                        Content = Resources.AzureToolsUpgradeInstructions,
+                        Title = Strings.ProductTitle,
+                        MainInstruction = Strings.AzureToolsUpgradeRecommended,
+                        Content = Strings.AzureToolsUpgradeInstructions,
                         AllowCancellation = true,
-                        VerificationText = Resources.DontShowAgain
+                        VerificationText = Strings.DontShowAgain
                     };
-                    var download = new TaskDialogButton(Resources.DownloadAndInstall);
+                    var download = new TaskDialogButton(Strings.DownloadAndInstall);
                     dlg.Buttons.Add(download);
-                    var cont = new TaskDialogButton(Resources.ContinueWithoutAzureToolsUpgrade);
+                    var cont = new TaskDialogButton(Strings.ContinueWithoutAzureToolsUpgrade);
                     dlg.Buttons.Add(cont);
                     dlg.Buttons.Add(TaskDialogButton.Cancel);
 

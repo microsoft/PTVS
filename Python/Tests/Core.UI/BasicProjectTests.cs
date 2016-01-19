@@ -28,6 +28,7 @@ using System.Windows.Input;
 using EnvDTE;
 using EnvDTE80;
 using Microsoft.PythonTools;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Parsing;
@@ -48,7 +49,6 @@ using VSLangProj;
 using Keyboard = TestUtilities.UI.Keyboard;
 using MessageBoxButton = TestUtilities.MessageBoxButton;
 using Mouse = TestUtilities.UI.Mouse;
-using ProcessOutput = pythontools::Microsoft.VisualStudioTools.Project.ProcessOutput;
 using Thread = System.Threading.Thread;
 
 namespace PythonToolsUITests {

@@ -15,9 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
-using System.IO;
 using System.Reflection;
-using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Interpreter.Default {
     class CPythonInterpreterFactory : PythonInterpreterFactoryWithDatabase {

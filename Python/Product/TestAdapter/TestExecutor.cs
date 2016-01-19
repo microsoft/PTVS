@@ -26,6 +26,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Settings;

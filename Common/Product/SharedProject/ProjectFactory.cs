@@ -21,6 +21,7 @@ using Microsoft.Build.Construction;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudioTools.Infrastructure;
 using MSBuild = Microsoft.Build.Evaluation;
 
 namespace Microsoft.VisualStudioTools.Project {

@@ -21,7 +21,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
-using Microsoft.VisualStudioTools;
+using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Interpreter.Default {
     class CPythonInterpreter : IPythonInterpreter, IPythonInterpreterWithProjectReferences2, IDisposable {

@@ -19,8 +19,8 @@ using System.IO;
 using System.Net;
 using System.Net.WebSockets;
 using System.Windows.Forms;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.Debugger.Interop;
-using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Debugger.Remote {
     internal class PythonRemoteDebugProcess : IDebugProcess2, IDebugProcessSecurity2 {
@@ -141,7 +141,7 @@ namespace Microsoft.PythonTools.Debugger.Remote {
         // AzureExplorerAttachDebuggerCommand looks up remote processes by name, and has to be updated if the format of this property changes.
         private string BaseName {
             get {
-                string fileName = CommonUtils.GetFileOrDirectoryName(_exe);
+                string fileName = PathUtils.GetFileOrDirectoryName(_exe);
                 if (string.IsNullOrEmpty(fileName)) {
                     fileName = _exe;
                 }

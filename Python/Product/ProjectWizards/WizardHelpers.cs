@@ -17,7 +17,6 @@
 using System;
 using System.Windows.Forms;
 using EnvDTE;
-using Microsoft.PythonTools.ProjectWizards.Properties;
 using Microsoft.VisualStudio.Shell;
 using IOleServiceProvider = Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
 
@@ -28,7 +27,7 @@ namespace Microsoft.PythonTools.ProjectWizards {
             if (oleProvider != null) {
                 return new ServiceProvider(oleProvider);
             }
-            MessageBox.Show(Resources.ErrorNoDte, Resources.PythonToolsForVisualStudio);
+            MessageBox.Show(Strings.ErrorNoDte, Strings.ProductTitle);
             return null;
         }
 
@@ -41,7 +40,7 @@ namespace Microsoft.PythonTools.ProjectWizards {
                 }
             }
             if (dte == null) {
-                MessageBox.Show(Resources.ErrorNoDte, Resources.PythonToolsForVisualStudio);
+                MessageBox.Show(Strings.ErrorNoDte, Strings.ProductTitle);
             }
             return dte;
         }

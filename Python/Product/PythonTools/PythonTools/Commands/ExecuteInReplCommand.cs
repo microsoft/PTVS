@@ -27,6 +27,7 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudio.Imaging;
 using Microsoft.VisualStudio.InteractiveWindow.Shell;
+using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Commands {
     /// <summary>
@@ -126,7 +127,7 @@ namespace Microsoft.PythonTools.Commands {
                 return;
             }
             if (string.IsNullOrEmpty(dir)) {
-                dir = CommonUtils.GetParent(filename);
+                dir = PathUtils.GetParent(filename);
             }
 
             var window = EnsureReplWindow(_serviceProvider, analyzer, pyProj);

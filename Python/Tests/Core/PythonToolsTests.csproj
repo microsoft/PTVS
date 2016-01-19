@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Choose>
     <When Condition=" '$(VisualStudioVersion)'=='15.0'  Or '$(TargetVisualStudioVersion)'=='VS150' ">
@@ -92,11 +92,11 @@
     <Reference Include="System.Xml.Linq" />
     <Reference Include="WindowsBase" />
     <Reference Include="Microsoft.VisualStudio.InteractiveWindow">
-      <HintPath>$(DevEnvDir)PrivateAssemblies\Microsoft.VisualStudio.InteractiveWindow.dll</HintPath>
+      <HintPath>$(BuildRoot)Python\Product\PythonTools\Microsoft.VisualStudio.InteractiveWindow.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.VsInteractiveWindow">
-      <HintPath>$(DevEnvDir)PrivateAssemblies\Microsoft.VisualStudio.VsInteractiveWindow.dll</HintPath>
+      <HintPath>$(BuildRoot)Python\Product\PythonTools\Microsoft.VisualStudio.VsInteractiveWindow.dll</HintPath>
       <Private>false</Private>
     </Reference>
   </ItemGroup>
@@ -165,6 +165,10 @@
     <ProjectReference Include="$(BuildRoot)Python\Tests\Utilities.Python\TestUtilities.Python.csproj">
       <Project>{62641b47-1abb-4638-a3d5-2a834d089667}</Project>
       <Name>TestUtilities.Python</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Product\Common\Common.csproj">
+      <Project>{b3db0521-d9e3-4f48-9e2e-e5ecae886049}</Project>
+      <Name>Common</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Product\EnvironmentsList\EnvironmentsList.csproj">
       <Project>{b20e082b-4d3c-457d-b2bd-60420b434573}</Project>

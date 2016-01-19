@@ -27,6 +27,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.InterpreterList;
 using Microsoft.VisualStudio.PlatformUI;
@@ -72,7 +73,7 @@ namespace Microsoft.PythonTools.Project {
             }
             VirtualEnvName = venvName;
 
-            CanInstallRequirementsTxt = File.Exists(CommonUtils.GetAbsoluteFilePath(_projectHome, "requirements.txt"));
+            CanInstallRequirementsTxt = File.Exists(PathUtils.GetAbsoluteFilePath(_projectHome, "requirements.txt"));
             WillInstallRequirementsTxt = CanInstallRequirementsTxt;
         }
 
@@ -159,7 +160,7 @@ namespace Microsoft.PythonTools.Project {
                 d.SetValue(VirtualEnvPathPropertyKey, d.GetValue(VirtualEnvBasePathProperty));
             } else {
                 name = name.TrimEnd('.', ' ');
-                d.SetValue(VirtualEnvPathPropertyKey, CommonUtils.GetAbsoluteDirectoryPath(path, name));
+                d.SetValue(VirtualEnvPathPropertyKey, PathUtils.GetAbsoluteDirectoryPath(path, name));
             }
         }
 
@@ -185,11 +186,11 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private static bool IsValidVirtualEnvPath(string path) {
-            if (!CommonUtils.IsValidPath(path)) {
+            if (!PathUtils.IsValidPath(path)) {
                 return false;
             }
 
-            path = CommonUtils.TrimEndSeparator(path);
+            path = PathUtils.TrimEndSeparator(path);
             if (File.Exists(path)) {
                 return false;
             }

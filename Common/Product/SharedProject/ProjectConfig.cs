@@ -25,8 +25,8 @@ using System.Runtime.InteropServices;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
-//#define ConfigTrace
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudioTools.Infrastructure;
 using MSBuildConstruction = Microsoft.Build.Construction;
 using MSBuildExecution = Microsoft.Build.Execution;
 

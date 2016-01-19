@@ -20,6 +20,7 @@ using System.Net.Sockets;
 using System.Threading;
 using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.Debugger.Remote;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools.Project;
@@ -799,7 +800,7 @@ int main(int argc, char* argv[]) {
             get { return ""; }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(3)]
         public void AttachPtvsd() {
             var expectedOutput = new[] { "stdout", "stderr" };
 

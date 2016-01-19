@@ -23,10 +23,11 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Analysis.Values;
+using Microsoft.PythonTools.Common.Infrastructure;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
-using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Analysis {
     /// <summary>

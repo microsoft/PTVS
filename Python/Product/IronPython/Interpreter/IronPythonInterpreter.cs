@@ -26,10 +26,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using IronPython.Runtime;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
-using Microsoft.VisualStudioTools;
 
 namespace Microsoft.IronPythonTools.Interpreter {
     class IronPythonInterpreter :
@@ -320,7 +320,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
                         if (asm == null && _state != null) {
                             foreach (var dir in _state.AnalysisDirectories) {
-                                if (!CommonUtils.IsValidPath(dir) && !CommonUtils.IsValidPath(asmName)) {
+                                if (!PathUtils.IsValidPath(dir) && !PathUtils.IsValidPath(asmName)) {
                                     string path = Path.Combine(dir, asmName);
                                     if (File.Exists(path)) {
                                         asm = Remote.LoadAssemblyFrom(path);

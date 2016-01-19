@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Choose>
     <When Condition=" '$(VisualStudioVersion)'=='15.0'  Or '$(TargetVisualStudioVersion)'=='VS150' ">
@@ -55,12 +55,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\..\..\Common\Product\SharedProject\CommonUtils.cs">
-      <Link>CommonUtils.cs</Link>
-    </Compile>
-    <Compile Include="..\PythonTools\PythonToolsInstallPath.cs">
-      <Link>PythonToolsInstallPath.cs</Link>
-    </Compile>
     <Compile Include="ConvertPathToModuleName.cs" />
     <Compile Include="PythonCommand.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -116,6 +110,10 @@
     <ProjectReference Include="$(BuildRoot)Python\Product\VSInterpreters\VSInterpreters.csproj">
       <Project>{815db0cd-c0dd-4997-b43c-abee4dbeffe7}</Project>
       <Name>Microsoft.PythonTools.VSInterpreters</Name>
+    </ProjectReference>
+    <ProjectReference Include="$(BuildRoot)Python\Product\Common\Common.csproj">
+      <Project>{b3db0521-d9e3-4f48-9e2e-e5ecae886049}</Project>
+      <Name>Microsoft.PythonTools.Common</Name>
     </ProjectReference>
     <ProjectReference2 Include="$(BuildRoot)Python\Product\AzureSetup\AzureSetup.csproj" />
     <ProjectReference2 Include="$(BuildRoot)Python\Product\WebRole\WebRole.csproj" />

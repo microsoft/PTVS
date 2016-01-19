@@ -27,6 +27,7 @@
     <Asset Type="Microsoft.VisualStudio.Assembly" Path="|%CurrentProject%;_GetTargetPath|" AssemblyName="|%CurrentProject%;_GetAssemblyName|" />
     <Asset Type="Microsoft.VisualStudio.Assembly" Path="|Microsoft.PythonTools.Analysis;_GetTargetPath|" AssemblyName="|Microsoft.PythonTools.Analysis;_GetAssemblyName|" />
     <Asset Type="Microsoft.VisualStudio.Assembly" Path="|Microsoft.PythonTools.BuildTasks;_GetTargetPath|" AssemblyName="|Microsoft.PythonTools.BuildTasks;_GetAssemblyName|" />
+    <Asset Type="Microsoft.VisualStudio.Assembly" Path="|Microsoft.PythonTools.Common;_GetTargetPath|" AssemblyName="|Microsoft.PythonTools.Common;_GetAssemblyName|" />
     <Asset Type="Microsoft.VisualStudio.Assembly" Path="|Microsoft.PythonTools.Debugger;_GetTargetPath|" AssemblyName="|Microsoft.PythonTools.Debugger;_GetAssemblyName|" />
     <Asset Type="Microsoft.VisualStudio.Assembly" Path="|Microsoft.PythonTools.EnvironmentsList;_GetTargetPath|" AssemblyName="|Microsoft.PythonTools.EnvironmentsList;_GetAssemblyName|" />
     <Asset Type="Microsoft.VisualStudio.Assembly" Path="|ImportWizard;_GetTargetPath|" AssemblyName="|ImportWizard;AssemblyName|" />

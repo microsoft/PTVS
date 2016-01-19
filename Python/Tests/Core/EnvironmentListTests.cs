@@ -14,7 +14,6 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-extern alias analysis;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -28,6 +27,7 @@ using System.Windows.Input;
 using System.Windows.Threading;
 using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.EnvironmentsList;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Project;
@@ -36,8 +36,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.Mocks;
 using TestUtilities.Python;
-using CommonUtils = analysis::Microsoft.VisualStudioTools.CommonUtils;
-using ProcessOutput = analysis::Microsoft.VisualStudioTools.Project.ProcessOutput;
 
 namespace PythonToolsUITests {
     [TestClass]
@@ -743,12 +741,12 @@ namespace PythonToolsUITests {
             var provider = new MockPythonInterpreterFactoryProvider("VEnv Provider");
             provider.AddFactory(new MockPythonInterpreterFactory(
                 Guid.NewGuid(),
-                Path.GetFileName(CommonUtils.TrimEndSeparator(env)),
+                Path.GetFileName(PathUtils.TrimEndSeparator(env)),
                 new InterpreterConfiguration(
                     env,
-                    CommonUtils.FindFile(env, "python.exe"),
-                    CommonUtils.FindFile(env, "python.exe"),
-                    Path.GetDirectoryName(CommonUtils.FindFile(env, "site.py", 3)),
+                    PathUtils.FindFile(env, "python.exe"),
+                    PathUtils.FindFile(env, "python.exe"),
+                    Path.GetDirectoryName(PathUtils.FindFile(env, "site.py", 3)),
                     "PYTHONPATH",
                     python.Isx64 ? ProcessorArchitecture.Amd64 : ProcessorArchitecture.X86,
                     python.Version.ToVersion()

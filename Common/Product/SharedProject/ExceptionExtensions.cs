@@ -17,7 +17,7 @@
 using System;
 using System.Threading;
 
-namespace Microsoft.VisualStudioTools {
+namespace Microsoft.VisualStudioTools.Infrastructure {
     static class ExceptionExtensions {
         /// <summary>
         /// Returns true if an exception should not be handled by logging code.

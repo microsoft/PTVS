@@ -22,6 +22,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Microsoft.Build.Evaluation;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Imaging;
@@ -72,7 +73,7 @@ namespace Microsoft.PythonTools.Project {
             _canDelete = canDelete;
             _isGlobalDefault = isGlobalDefault;
             _canRemove = !isGlobalDefault;
-            _captionSuffix = isGlobalDefault ? SR.GetString(SR.GlobalDefaultSuffix) : "";
+            _captionSuffix = isGlobalDefault ? Strings.GlobalDefaultSuffix : "";
 
             if (Directory.Exists(_factory.Configuration.LibraryPath)) {
                 // TODO: Need to handle watching for creation
@@ -164,7 +165,7 @@ namespace Microsoft.PythonTools.Project {
 
         private void CheckPackages(object arg) {
             ProjectMgr.Site.GetUIThread().InvokeTask(() => CheckPackagesAsync())
-                .HandleAllExceptions(SR.ProductName, GetType())
+                .HandleAllExceptions(ProjectMgr.Site, GetType())
                 .DoNotWait();
         }
 
@@ -338,11 +339,13 @@ namespace Microsoft.PythonTools.Project {
             }
 
             if (showPrompt && !Utilities.IsInAutomationFunction(ProjectMgr.Site)) {
-                string message = SR.GetString(removeFromStorage ?
-                        SR.EnvironmentDeleteConfirmation :
-                        SR.EnvironmentRemoveConfirmation,
+                string message = (removeFromStorage ?
+                        Strings.EnvironmentDeleteConfirmation :
+                        Strings.EnvironmentRemoveConfirmation
+                ).FormatUI(
                     Caption,
-                    _factory.Configuration.PrefixPath);
+                    _factory.Configuration.PrefixPath
+                );
                 int res = VsShellUtilities.ShowMessageBox(
                     ProjectMgr.Site,
                     string.Empty,
@@ -457,7 +460,7 @@ namespace Microsoft.PythonTools.Project {
                         return VSConstants.S_OK;
                     case PythonConstants.InstallRequirementsTxt:
                         result |= QueryStatusResult.SUPPORTED;
-                        if (File.Exists(CommonUtils.GetAbsoluteFilePath(ProjectMgr.ProjectHome, "requirements.txt"))) {
+                        if (File.Exists(PathUtils.GetAbsoluteFilePath(ProjectMgr.ProjectHome, "requirements.txt"))) {
                             result |= QueryStatusResult.ENABLED;
                         }
                         return VSConstants.S_OK;
@@ -504,7 +507,7 @@ namespace Microsoft.PythonTools.Project {
 
         public override string Url {
             get {
-                if (!CommonUtils.IsValidPath(_factory.Configuration.PrefixPath)) {
+                if (!PathUtils.IsValidPath(_factory.Configuration.PrefixPath)) {
                     return string.Format("UnknownInterpreter\\{0}\\{1}", _factory.Id, _factory.Configuration.Version);
                 }
 

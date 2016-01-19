@@ -551,7 +551,7 @@
       <Link>SharedProject\UIThread.cs</Link>
       <Visible>true</Visible>
     </Compile>
-    <Compile Include="$(_ProjectSystemFilesLocation)\UIThreadBase.cs">
+    <Compile Include="$(_ProjectSystemFilesLocation)\UIThreadBase.cs" Condition="$(SharedProject_IncludeUIThreadBase) != 'false'">
       <Link>SharedProject\UIThreadBase.cs</Link>
       <Visible>true</Visible>
     </Compile>

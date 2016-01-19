@@ -15,7 +15,7 @@
 // permissions and limitations under the License.
 
 using System.IO;
-using Microsoft.VisualStudioTools;
+using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Debugger {
     class PythonModule {
@@ -36,7 +36,7 @@ namespace Microsoft.PythonTools.Debugger {
         public string Name {
             get {
                 
-                if (CommonUtils.IsValidPath(_filename)) {
+                if (PathUtils.IsValidPath(_filename)) {
                     return Path.GetFileNameWithoutExtension(_filename);
                 }
                 return _filename;

@@ -24,6 +24,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using Microsoft.PythonTools.Editor;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Logging;

@@ -20,6 +20,7 @@ using System.Diagnostics;
 using System.Threading;
 using System.Web.Script.Serialization;
 using System.Windows.Forms;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Options;
 using Microsoft.VisualStudioTools;
 

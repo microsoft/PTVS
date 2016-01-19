@@ -21,6 +21,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.InteractiveWindow.Commands;
 using Microsoft.VisualStudio.Text;
@@ -142,7 +143,7 @@ namespace Microsoft.PythonTools.Repl {
             public FileFinder(string baseName) {
                 _baseName = (baseName ?? "").Trim(' ', '\"');
 
-                if (CommonUtils.IsValidPath(_baseName) && Path.IsPathRooted(_baseName) && File.Exists(_baseName)) {
+                if (PathUtils.IsValidPath(_baseName) && Path.IsPathRooted(_baseName) && File.Exists(_baseName)) {
                     Found = true;
                     Filename = _baseName;
                 }
@@ -159,11 +160,11 @@ namespace Microsoft.PythonTools.Repl {
                     return false;
                 }
 
-                if (!CommonUtils.IsValidPath(path) || !Path.IsPathRooted(path)) {
+                if (!PathUtils.IsValidPath(path) || !Path.IsPathRooted(path)) {
                     return false;
                 }
 
-                var fullPath = CommonUtils.GetAbsoluteFilePath(path, _baseName);
+                var fullPath = PathUtils.GetAbsoluteFilePath(path, _baseName);
                 if (File.Exists(fullPath)) {
                     Found = true;
                     Filename = fullPath;

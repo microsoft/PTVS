@@ -26,6 +26,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Threading;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Analysis.Browser {
@@ -430,7 +431,7 @@ namespace Microsoft.PythonTools.Analysis.Browser {
         public bool NamesOnly { get; set; }
 
         private IEnumerable<string> GetParentDirectory(string dir) {
-            if (!IncludeParentDirectory || ! CommonUtils.IsValidPath(dir)) {
+            if (!IncludeParentDirectory || !PathUtils.IsValidPath(dir)) {
                 yield break;
             }
 

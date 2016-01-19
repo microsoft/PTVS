@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Choose>
     <When Condition=" '$(VisualStudioVersion)'=='15.0'  Or '$(TargetVisualStudioVersion)'=='VS150' ">
@@ -82,14 +82,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\..\..\Common\Product\SharedProject\CommonUtils.cs">
-      <Link>CommonUtils.cs</Link>
-    </Compile>
     <Compile Include="..\..\..\Common\Product\SharedProject\WebSocketStream.cs">
       <Link>Debugger\Transports\WebSocketStream.cs</Link>
-    </Compile>
-    <Compile Include="..\PythonTools\PythonToolsInstallPath.cs">
-      <Link>PythonToolsInstallPath.cs</Link>
     </Compile>
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="Debugger\BreakpointHitEventArgs.cs" />
@@ -217,14 +211,18 @@
     <Content Include="DkmDebugger\PythonDkm.natvis" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Analysis\Analysis.csproj">
+    <ProjectReference Include="$(BuildRoot)Python\Product\Analysis\Analysis.csproj">
       <Project>{A85D479D-67A9-4BDB-904A-7D86DAF68A6F}</Project>
-      <Name>Analysis</Name>
+      <Name>Microsoft.PythonTools.Analysis</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Attacher\Attacher.csproj">
+    <ProjectReference Include="$(BuildRoot)Python\Product\Attacher\Attacher.csproj">
       <Project>{666A22BB-0CB5-4C08-A20F-E17450DA6573}</Project>
-      <Name>Attacher</Name>
+      <Name>Microsoft.PythonTools.Attacher</Name>
       <IncludeInVSIX>true</IncludeInVSIX>
+    </ProjectReference>
+    <ProjectReference Include="$(BuildRoot)Python\Product\Common\Common.csproj">
+      <Project>{b3db0521-d9e3-4f48-9e2e-e5ecae886049}</Project>
+      <Name>Microsoft.PythonTools.Common</Name>
     </ProjectReference>
     <ProjectReference2 Include="..\DebuggerHelper\DebuggerHelper.vcxproj" />
     <ProjectReference2 Include="..\DebuggerHelper\DebuggerHelperX86.vcxproj" />

@@ -22,9 +22,9 @@ using System.Text;
 using System.Windows;
 using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.DkmDebugger;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Debugger.Interop;
-using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Debugger {
     [Guid(Guids.CustomDebuggerEventHandlerId)]

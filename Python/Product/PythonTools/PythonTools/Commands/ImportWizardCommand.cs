@@ -17,13 +17,11 @@
 using System;
 using System.IO;
 using System.Windows;
-using Microsoft.PythonTools.Project;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
-using Microsoft.VisualStudioTools.Project;
-using SR = Microsoft.PythonTools.Project.SR;
 
 namespace Microsoft.PythonTools.Commands {
     /// <summary>
@@ -54,17 +52,17 @@ namespace Microsoft.PythonTools.Commands {
                     return;
                 }
             } catch (UnauthorizedAccessException) {
-                MessageBox.Show(SR.GetString(SR.ErrorImportWizardUnauthorizedAccess), SR.ProductName);
+                MessageBox.Show(Strings.ErrorImportWizardUnauthorizedAccess, Strings.ProductTitle);
             } catch (Exception ex) {
-                ActivityLog.LogError(SR.ProductName, ex.ToString());
-                MessageBox.Show(SR.GetString(SR.ErrorImportWizardException, ex.GetType().Name), SR.ProductName);
+                ActivityLog.LogError(Strings.ProductTitle, ex.ToString());
+                MessageBox.Show(Strings.ErrorImportWizardException.FormatUI(ex.GetType().Name), Strings.ProductTitle);
             }
-            statusBar.SetText(SR.GetString(SR.StatusImportWizardError));
+            statusBar.SetText(Strings.StatusImportWizardError);
         }
 
         public override void DoCommand(object sender, EventArgs args) {
             var statusBar = (IVsStatusbar)_serviceProvider.GetService(typeof(SVsStatusbar));
-            statusBar.SetText(SR.GetString(SR.StatusImportWizardStarting));
+            statusBar.SetText(Strings.StatusImportWizardStarting);
 
             string initialProjectPath = null, initialSourcePath = null;
 
@@ -74,7 +72,7 @@ namespace Microsoft.PythonTools.Commands {
                 if (projectArgs != null) {
                     var argItems = projectArgs.Split('|');
                     if (argItems.Length == 2) {
-                        initialProjectPath = CommonUtils.GetAvailableFilename(
+                        initialProjectPath = PathUtils.GetAvailableFilename(
                             argItems[1],
                             argItems[0],
                             ".pyproj"

@@ -22,9 +22,11 @@
     <!-- Core extension -->
     <File Include="!(bindpath.bin)\Microsoft.PythonTools.dll;
                    !(bindpath.bin)\Microsoft.PythonTools.Analysis.dll;
+                   !(bindpath.bin)\Microsoft.PythonTools.Common.dll;
                    !(bindpath.bin)\Microsoft.PythonTools.EnvironmentsList.dll;
                    !(bindpath.bin)\Microsoft.PythonTools.ImportWizard.dll;
                    !(bindpath.bin)\Microsoft.PythonTools.ProjectWizards.dll;
+                   !(bindpath.bin)\Microsoft.PythonTools.VSCommon.dll;
                    !(bindpath.bin)\Microsoft.PythonTools.VSInterpreters.dll;
                    pip_downloader.py" />
 

@@ -18,6 +18,7 @@ using System;
 using System.ComponentModel;
 using System.IO;
 using System.Runtime.InteropServices;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
@@ -48,7 +49,7 @@ namespace Microsoft.PythonTools.Project {
         [AutomationBrowsable(false)]
         public string FolderName {
             get {
-                return CommonUtils.GetFileOrDirectoryName(this.HierarchyNode.Url);
+                return PathUtils.GetFileOrDirectoryName(this.HierarchyNode.Url);
             }
         }
 
@@ -64,8 +65,8 @@ namespace Microsoft.PythonTools.Project {
 
 #if DEBUG
         [SRCategory(SR.Misc)]
-        [SRDisplayName(SR.EnvironmentIdDisplayName)]
-        [SRDescription(SR.EnvironmentIdDescription)]
+        [SRDisplayName("EnvironmentIdDisplayName")]
+        [SRDescription("EnvironmentIdDescription")]
         [AutomationBrowsable(true)]
         public string Id {
             get {
@@ -76,8 +77,8 @@ namespace Microsoft.PythonTools.Project {
 #endif
 
         [SRCategory(SR.Misc)]
-        [SRDisplayName(SR.EnvironmentVersionDisplayName)]
-        [SRDescription(SR.EnvironmentVersionDescription)]
+        [SRDisplayName("EnvironmentVersionDisplayName")]
+        [SRDescription("EnvironmentVersionDescription")]
         [AutomationBrowsable(true)]
         public string Version {
             get {
@@ -113,8 +114,8 @@ namespace Microsoft.PythonTools.Project {
     [Guid(PythonConstants.InterpretersWithBaseInterpreterPropertiesGuid)]
     public class InterpretersNodeWithBaseInterpreterProperties : InterpretersNodeProperties {
         [SRCategory(SR.Misc)]
-        [SRDisplayName(SR.BaseInterpreterDisplayName)]
-        [SRDescription(SR.BaseInterpreterDescription)]
+        [SRDisplayName("BaseInterpreterDisplayName")]
+        [SRDescription("BaseInterpreterDescription")]
         [AutomationBrowsable(true)]
         public string BaseInterpreter {
             get {

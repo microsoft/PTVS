@@ -20,6 +20,7 @@ using System.IO;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools {
 
@@ -231,7 +232,7 @@ namespace Microsoft.PythonTools {
                     if (_templateDir.Length != 0) {
                         Uri url = new Uri(context.ComponentType.Assembly.CodeBase);
                         string templates = url.LocalPath;
-                        templates = CommonUtils.GetAbsoluteDirectoryPath(Path.GetDirectoryName(templates), _templateDir);
+                        templates = PathUtils.GetAbsoluteDirectoryPath(Path.GetDirectoryName(templates), _templateDir);
                         templates = context.EscapePath(templates);
                         projectKey.SetValue("TemplatesDir", templates);
                     }

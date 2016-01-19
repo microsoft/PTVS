@@ -97,7 +97,7 @@ namespace PythonToolsUITests {
 
                 var azure = app.SolutionExplorerTreeView.WaitForChildOfProject(
                     project,
-                    SR.GetString(SR.Environments),
+                    Strings.Environments,
                     envName,
                     "azure (0.6.2)"
                 );
@@ -110,7 +110,7 @@ namespace PythonToolsUITests {
 
                 app.SolutionExplorerTreeView.WaitForChildOfProjectRemoved(
                     project,
-                    SR.GetString(SR.Environments),
+                    Strings.Environments,
                     envName,
                     "azure (0.6.2)"
                 );
@@ -133,7 +133,7 @@ namespace PythonToolsUITests {
 
                 app.SolutionExplorerTreeView.WaitForChildOfProject(
                     project,
-                    SR.GetString(SR.Environments),
+                    Strings.Environments,
                     envName,
                     "azure (0.6.2)"
                 );
@@ -166,7 +166,7 @@ namespace PythonToolsUITests {
 
                 app.SolutionExplorerTreeView.WaitForChildOfProject(
                     project,
-                    SR.GetString(SR.Environments),
+                    Strings.Environments,
                     envName,
                     "azure (0.6.2)"
                 );
@@ -206,7 +206,7 @@ namespace PythonToolsUITests {
 
                 app.OpenSolutionExplorer().WaitForChildOfProject(
                     project,
-                    SR.GetString(SR.Environments),
+                    Strings.Environments,
                     envName
                 );
             }
@@ -264,7 +264,7 @@ namespace PythonToolsUITests {
 
                 app.OpenSolutionExplorer().WaitForChildOfProjectRemoved(
                     project,
-                    SR.GetString(SR.Environments),
+                    Strings.Environments,
                     envName
                 );
 
@@ -307,7 +307,7 @@ namespace PythonToolsUITests {
 
                 app.OpenSolutionExplorer().WaitForChildOfProjectRemoved(
                     project,
-                    SR.GetString(SR.Environments),
+                    Strings.Environments,
                     envName
                 );
 
@@ -553,7 +553,7 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
 
                 var envName = dis.CurrentDefault.Description;
                 var sln = app.OpenSolutionExplorer();
-                var env = sln.FindChildOfProject(project, SR.GetString(SR.Environments), envName);
+                var env = sln.FindChildOfProject(project, Strings.Environments, envName);
 
                 EnvironmentReplWorkingDirectoryTest(app, project, env);
             }

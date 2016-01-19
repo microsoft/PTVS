@@ -24,7 +24,7 @@ namespace Microsoft.PythonTools.Project {
             : base(node) { }
 
         public override string GetClassName() {
-            return SR.GetString(SR.SearchPathContainerProperties);
+            return Strings.SearchPathContainerProperties;
         }
     }
 }

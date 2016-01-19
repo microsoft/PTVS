@@ -25,18 +25,17 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Editor.Core;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Navigation;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
-using Microsoft.PythonTools.Project;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
-using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Intellisense {
     /// <summary>
@@ -116,7 +115,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             if (interpreter != null) {
                 _pyAnalyzer = PythonAnalyzer.Create(factory, interpreter);
-                ReloadTask = _pyAnalyzer.ReloadModulesAsync().HandleAllExceptions(SR.ProductName, GetType());
+                ReloadTask = _pyAnalyzer.ReloadModulesAsync().HandleAllExceptions(_serviceProvider, GetType());
                 ReloadTask.ContinueWith(_ => ReloadTask = null);
                 interpreter.ModuleNamesChanged += OnModulesChanged;
             }
@@ -373,14 +372,14 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private void QueueDirectoryAnalysis(string path) {
             ThreadPool.QueueUserWorkItem(x => {
-                AnalyzeDirectory(CommonUtils.NormalizeDirectoryPath(Path.GetDirectoryName(path)));
+                AnalyzeDirectory(PathUtils.NormalizeDirectoryPath(Path.GetDirectoryName(path)));
             });
         }
 
         private bool ShouldAnalyzePath(string path) {
             foreach (var fact in _allFactories) {
-                if (CommonUtils.IsValidPath(fact.Configuration.InterpreterPath) &&
-                    CommonUtils.IsSubpathOf(Path.GetDirectoryName(fact.Configuration.InterpreterPath), path)) {
+                if (PathUtils.IsValidPath(fact.Configuration.InterpreterPath) &&
+                    PathUtils.IsSubpathOf(Path.GetDirectoryName(fact.Configuration.InterpreterPath), path)) {
                     return false;
                 }
             }
@@ -1288,7 +1287,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         if (cancel.IsCancellationRequested) {
                             break;
                         }
-                        if (File.Exists(CommonUtils.GetAbsoluteFilePath(innerDir, "__init__.py"))) {
+                        if (File.Exists(PathUtils.GetAbsoluteFilePath(innerDir, "__init__.py"))) {
                             AnalyzeDirectoryWorker(innerDir, false, onFileAnalyzed, cancel);
                         }
                     }
@@ -1414,7 +1413,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 string pathInZip = entry.FullName.Replace('/', '\\');
                 string path;
                 try {
-                    path = CommonUtils.GetAbsoluteFilePath(zipFileName, pathInZip);
+                    path = PathUtils.GetAbsoluteFilePath(zipFileName, pathInZip);
                 } catch (ArgumentException) {
                     return null;
                 }
@@ -1432,7 +1431,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         modName = ModulePath.FromFullPath(
                             pathInZip,
                             isPackage: dir => entry.Archive.GetEntry(
-                                (CommonUtils.EnsureEndSeparator(dir) + "__init__.py").Replace('\\', '/')
+                                (PathUtils.EnsureEndSeparator(dir) + "__init__.py").Replace('\\', '/')
                             ) != null).ModuleName;
                     } catch (ArgumentException) {
                         return null;
