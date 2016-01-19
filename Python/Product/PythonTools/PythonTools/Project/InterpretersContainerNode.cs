@@ -88,7 +88,7 @@ namespace Microsoft.PythonTools.Project {
         /// Gets the caption of the hierarchy node.
         /// </summary>
         public override string Caption {
-            get { return SR.GetString(SR.Environments); }
+            get { return Strings.Environments; }
         }
 
         /// <summary>

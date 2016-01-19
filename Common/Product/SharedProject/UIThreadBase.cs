@@ -75,4 +75,38 @@ namespace Microsoft.VisualStudioTools {
             get { throw new NotImplementedException(); }
         }
     }
+
+    /// <summary>
+    /// Provides a no-op implementation of <see cref="UIThreadBase"/> that will
+    /// not execute any tasks.
+    /// </summary>
+    public sealed class NoOpUIThread : MockUIThreadBase {
+        public override void Invoke(Action action) { }
+
+        public override T Invoke<T>(Func<T> func) {
+            return default(T);
+        }
+
+        public override Task InvokeAsync(Action action) {
+            return Task.FromResult<object>(null);
+        }
+
+        public override Task<T> InvokeAsync<T>(Func<T> func) {
+            return Task.FromResult<T>(default(T));
+        }
+
+        public override Task InvokeTask(Func<Task> func) {
+            return Task.FromResult<object>(null);
+        }
+
+        public override Task<T> InvokeTask<T>(Func<Task<T>> func) {
+            return Task.FromResult<T>(default(T));
+        }
+
+        public override void MustBeCalledFromUIThreadOrThrow() { }
+
+        public override bool InvokeRequired {
+            get { return false; }
+        }
+    }
 }

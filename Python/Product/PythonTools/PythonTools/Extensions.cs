@@ -47,6 +47,7 @@ using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
+using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools {
     public static class Extensions {

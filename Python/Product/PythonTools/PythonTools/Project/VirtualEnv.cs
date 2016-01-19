@@ -21,9 +21,8 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.VisualStudioTools;
-using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project {
     static class VirtualEnv {
@@ -50,12 +49,12 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private static async Task ContinueCreate(IServiceProvider provider, IPythonInterpreterFactory factory, string path, bool useVEnv, Redirector output) {
-            path = CommonUtils.TrimEndSeparator(path);
+            path = PathUtils.TrimEndSeparator(path);
             var name = Path.GetFileName(path);
             var dir = Path.GetDirectoryName(path);
 
             if (output != null) {
-                output.WriteLine(SR.GetString(SR.VirtualEnvCreating, path));
+                output.WriteLine(Strings.VirtualEnvCreating.FormatUI(path));
                 if (provider.GetPythonToolsService().GeneralOptions.ShowOutputWindowForVirtualEnvCreate) {
                     output.ShowAndActivate();
                 } else {
@@ -78,9 +77,9 @@ namespace Microsoft.PythonTools.Project {
 
                 if (output != null) {
                     if (exitCode == 0) {
-                        output.WriteLine(SR.GetString(SR.VirtualEnvCreationSucceeded, path));
+                        output.WriteLine(Strings.VirtualEnvCreationSucceeded.FormatUI(path));
                     } else {
-                        output.WriteLine(SR.GetString(SR.VirtualEnvCreationFailedExitCode, path, exitCode));
+                        output.WriteLine(Strings.VirtualEnvCreationFailedExitCode.FormatUI(path, exitCode));
                     }
                     if (provider.GetPythonToolsService().GeneralOptions.ShowOutputWindowForVirtualEnvCreate) {
                         output.ShowAndActivate();
@@ -90,7 +89,7 @@ namespace Microsoft.PythonTools.Project {
                 }
 
                 if (exitCode != 0 || !Directory.Exists(path)) {
-                    throw new InvalidOperationException(SR.GetString(SR.VirtualEnvCreationFailed, path));
+                    throw new InvalidOperationException(Strings.VirtualEnvCreationFailed.FormatUI(path));
                 }
             }
         }
@@ -136,7 +135,7 @@ namespace Microsoft.PythonTools.Project {
                     await Pip.InstallPip(provider, factory, elevate, output);
                 }
                 if (!await Install(provider, factory, output)) {
-                    throw new InvalidOperationException(SR.GetString(SR.VirtualEnvCreationFailed, path));
+                    throw new InvalidOperationException(Strings.VirtualEnvCreationFailed.FormatUI(path));
                 }
             }
 
@@ -170,8 +169,8 @@ namespace Microsoft.PythonTools.Project {
                 interpExe = Path.GetFileName(baseInterpreter.Configuration.InterpreterPath);
                 winterpExe = Path.GetFileName(baseInterpreter.Configuration.WindowsInterpreterPath);
                 var scripts = new[] { "Scripts", "bin" };
-                result.InterpreterPath = CommonUtils.FindFile(prefixPath, interpExe, firstCheck: scripts);
-                result.WindowInterpreterPath = CommonUtils.FindFile(prefixPath, winterpExe, firstCheck: scripts);
+                result.InterpreterPath = PathUtils.FindFile(prefixPath, interpExe, firstCheck: scripts);
+                result.WindowInterpreterPath = PathUtils.FindFile(prefixPath, winterpExe, firstCheck: scripts);
                 result.PathEnvironmentVariableName = baseInterpreter.Configuration.PathEnvironmentVariable;
             } else {
                 result.InterpreterPath = string.Empty;
@@ -182,7 +181,7 @@ namespace Microsoft.PythonTools.Project {
             if (baseInterpreter != null) {
                 result.Description = string.Format(
                     "{0} ({1})",
-                    CommonUtils.GetFileOrDirectoryName(prefixPath),
+                    PathUtils.GetFileOrDirectoryName(prefixPath),
                     baseInterpreter.Description
                 );
 
@@ -191,7 +190,7 @@ namespace Microsoft.PythonTools.Project {
                 result.Architecture = baseInterpreter.Configuration.Architecture;
                 result.WatchLibraryForNewModules = true;
             } else {
-                result.Description = CommonUtils.GetFileOrDirectoryName(prefixPath);
+                result.Description = PathUtils.GetFileOrDirectoryName(prefixPath);
 
                 result.Id = Guid.Empty;
                 result.LanguageVersion = new Version(0, 0);
@@ -208,7 +207,7 @@ namespace Microsoft.PythonTools.Project {
         //    using (var output = ProcessOutput.RunHiddenAndCapture(interpreterPath, "-c", "import site; print(site.__file__)")) {
         //        output.Wait();
         //        return output.StandardOutputLines
-        //            .Where(CommonUtils.IsValidPath)
+        //            .Where(PathUtils.IsValidPath)
         //            .Select(line => Path.GetDirectoryName(line))
         //            .LastOrDefault(dir => Directory.Exists(dir));
         //    }

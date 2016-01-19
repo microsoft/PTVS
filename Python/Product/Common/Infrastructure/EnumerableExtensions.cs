@@ -1,4 +1,4 @@
-// Python Tools for Visual Studio
+﻿// Python Tools for Visual Studio
 // Copyright(c) Microsoft Corporation
 // All rights reserved.
 //
@@ -14,35 +14,38 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace Microsoft.PythonTools.Analysis {
-    static class IEnumerableExtensions {
+namespace Microsoft.PythonTools.Common.Infrastructure {
+    public static class EnumerableExtensions {
+        public static IEnumerable<T> MaybeEnumerate<T>(this IEnumerable<T> source) {
+            return source ?? Enumerable.Empty<T>();
+        }
+
         private static T Identity<T>(T source) {
             return source;
         }
 
         public static IEnumerable<T> SelectMany<T>(this IEnumerable<IEnumerable<T>> source) {
-            return source.SelectMany(Identity<IEnumerable<T>>);
+            return source.SelectMany(Identity);
         }
 
-        public static bool AnyContains<T>(this IEnumerable<IEnumerable<T>> source, T value) {
-            foreach (var set in source) {
-                if (set.Contains(value)) {
-                    return true;
-                }
-            }
-            return false;
+        public static IEnumerable<T> Ordered<T>(this IEnumerable<T> source) {
+            return source.OrderBy(Identity);
         }
 
-        public static bool AnyContains(this IEnumerable<IAnalysisSet> source, AnalysisValue value) {
-            foreach (var set in source) {
-                if (set.Contains(value)) {
-                    return true;
+        public static IEnumerable<T> Except<T>(this IEnumerable<T> source, T value) {
+            return source.Where(v => {
+                try {
+                    return !v.Equals(value);
+                } catch (NullReferenceException) {
+                    return false;
                 }
-            }
-            return false;
+            });
         }
 
         private static TKey GetKey<TKey, TValue>(KeyValuePair<TKey, TValue> source) {

@@ -290,10 +290,7 @@ namespace TestUtilities.UI.Python {
         }
 
         public TreeNode CreateVirtualEnvironment(EnvDTE.Project project, out string envName, out string envPath) {
-            var environmentsNode = OpenSolutionExplorer().FindChildOfProject(
-                project,
-                SR.GetString(SR.Environments)
-            );
+            var environmentsNode = OpenSolutionExplorer().FindChildOfProject(project, Strings.Environments);
             environmentsNode.Select();
 
             using (var pss = new ProcessScope("python")) {
@@ -335,11 +332,7 @@ namespace TestUtilities.UI.Python {
             }
 
             try {
-                return OpenSolutionExplorer().WaitForChildOfProject(
-                    project,
-                    SR.GetString(SR.Environments),
-                    envName
-                );
+                return OpenSolutionExplorer().WaitForChildOfProject(project, Strings.Environments, envName);
             } finally {
                 var text = GetOutputWindowText("General");
                 if (!string.IsNullOrEmpty(text)) {
@@ -352,10 +345,7 @@ namespace TestUtilities.UI.Python {
         }
 
         public TreeNode AddExistingVirtualEnvironment(EnvDTE.Project project, string envPath, out string envName) {
-            var environmentsNode = OpenSolutionExplorer().FindChildOfProject(
-                project,
-                SR.GetString(SR.Environments)
-            );
+            var environmentsNode = OpenSolutionExplorer().FindChildOfProject(project, Strings.Environments);
             environmentsNode.Select();
 
             using (var createVenv = AutomationDialog.FromDte(this, "Python.AddVirtualEnvironment")) {
@@ -369,11 +359,7 @@ namespace TestUtilities.UI.Python {
                 createVenv.ClickButtonAndClose("Add", nameIsAutomationId: true);
             }
 
-            return OpenSolutionExplorer().WaitForChildOfProject(
-                project,
-                SR.GetString(SR.Environments),
-                envName
-            );
+            return OpenSolutionExplorer().WaitForChildOfProject(project, Strings.Environments, envName);
         }
 
         public IPythonOptions Options {

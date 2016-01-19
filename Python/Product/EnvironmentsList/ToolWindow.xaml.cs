@@ -29,8 +29,8 @@ using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Threading;
 using Microsoft.PythonTools.Analysis.Analyzer;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.EnvironmentsList {
     public partial class ToolWindow : UserControl, IDisposable {
@@ -59,6 +59,8 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             CreateListener();
             SizeChanged += ToolWindow_SizeChanged;
         }
+
+        public IServiceProvider Site { get; set; }
 
         internal static async void SendUnhandledException(UIElement element, ExceptionDispatchInfo edi) {
             try {
@@ -236,7 +238,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 // Because we are currently on the listener's thread, we need to
                 // recreate on a separate thread so that this one can terminate.
                 Task.Run((Action)CreateListener)
-                    .HandleAllExceptions(Properties.Resources.PythonToolsForVisualStudio)
+                    .HandleAllExceptions(Site, GetType())
                     .DoNotWait();
             }
         }
@@ -254,7 +256,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             var view = (EnvironmentView)e.Parameter;
             await StartRefreshDBAsync(view)
                 .SilenceException<OperationCanceledException>()
-                .HandleAllExceptions(Properties.Resources.PythonToolsForVisualStudio);
+                .HandleAllExceptions(Site, GetType());
         }
 
         private async Task StartRefreshDBAsync(EnvironmentView view) {

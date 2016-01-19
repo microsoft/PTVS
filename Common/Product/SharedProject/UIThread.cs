@@ -19,6 +19,7 @@ using System.ComponentModel.Design;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.VisualStudioTools.Infrastructure;
 using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.VisualStudioTools {

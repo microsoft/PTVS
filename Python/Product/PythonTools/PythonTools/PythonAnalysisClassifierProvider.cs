@@ -124,7 +124,7 @@ namespace Microsoft.PythonTools {
     [Order(After = LanguagePriority.NaturalLanguage, Before = LanguagePriority.FormalLanguage)]
     internal sealed class ClassFormat : ClassificationFormatDefinition {
         public ClassFormat() {
-            DisplayName = SR.GetString(SR.ClassClassificationType);
+            DisplayName = Strings.ClassClassificationType;
             // Matches "C++ User Types"
             ForegroundColor = Color.FromArgb(255, 43, 145, 175);
         }
@@ -137,7 +137,7 @@ namespace Microsoft.PythonTools {
     [Order(After = LanguagePriority.NaturalLanguage, Before = LanguagePriority.FormalLanguage)]
     internal sealed class ModuleFormat : ClassificationFormatDefinition {
         public ModuleFormat() {
-            DisplayName = SR.GetString(SR.ModuleClassificationType);
+            DisplayName = Strings.ModuleClassificationType;
             // Matches "C++ Macros"
             ForegroundColor = Color.FromArgb(255, 111, 0, 138);
         }
@@ -150,7 +150,7 @@ namespace Microsoft.PythonTools {
     [Order(After = LanguagePriority.NaturalLanguage, Before = LanguagePriority.FormalLanguage)]
     internal sealed class ParameterFormat : ClassificationFormatDefinition {
         public ParameterFormat() {
-            DisplayName = SR.GetString(SR.ParameterClassificationType);
+            DisplayName = Strings.ParameterClassificationType;
             // Matches "C++ Parameters"
             ForegroundColor = Color.FromArgb(255, 128, 128, 128);
         }
@@ -163,7 +163,7 @@ namespace Microsoft.PythonTools {
     [Order(After = LanguagePriority.NaturalLanguage, Before = LanguagePriority.FormalLanguage)]
     internal sealed class FunctionFormat : ClassificationFormatDefinition {
         public FunctionFormat() {
-            DisplayName = SR.GetString(SR.FunctionClassificationType);
+            DisplayName = Strings.FunctionClassificationType;
             // Matches "C++ Functions"
             ForegroundColor = Colors.Black;
         }

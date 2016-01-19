@@ -27,9 +27,6 @@ using VsShellUtil = Microsoft.VisualStudio.Shell.VsShellUtilities;
 
 namespace Microsoft.VisualStudioTools {
     static class VsExtensions {
-        public static string GetFilePath(this ITextView textView) {
-            return textView.TextBuffer.GetFilePath();
-        }
 #if FALSE
         internal static ITrackingSpan CreateTrackingSpan(this IIntellisenseSession session, ITextBuffer buffer) {
             var triggerPoint = session.GetTriggerPoint(buffer);
@@ -85,15 +82,6 @@ namespace Microsoft.VisualStudioTools {
             return res;
         }
 
-        internal static string GetFilePath(this ITextBuffer textBuffer) {
-            ITextDocument textDocument;
-            if (textBuffer.Properties.TryGetProperty<ITextDocument>(typeof(ITextDocument), out textDocument)) {
-                return textDocument.FilePath;
-            } else {
-                return null;
-            }
-        }
-
         internal static IClipboardService GetClipboardService(this IServiceProvider serviceProvider) {
             return (IClipboardService)serviceProvider.GetService(typeof(IClipboardService));
         }
@@ -126,44 +114,6 @@ namespace Microsoft.VisualStudioTools {
             Debug.Assert(self is MockUIThreadBase || self.InvokeRequired, message);
         }
 
-
-        #region NoOpUIThread class
-
-        /// <summary>
-        /// Provides a no-op implementation of <see cref="UIThreadBase"/> that will
-        /// not execute any tasks.
-        /// </summary>
-        private sealed class NoOpUIThread : MockUIThreadBase {
-            public override void Invoke(Action action) { }
-
-            public override T Invoke<T>(Func<T> func) {
-                return default(T);
-            }
-
-            public override Task InvokeAsync(Action action) {
-                return Task.FromResult<object>(null);
-            }
-
-            public override Task<T> InvokeAsync<T>(Func<T> func) {
-                return Task.FromResult<T>(default(T));
-            }
-
-            public override Task InvokeTask(Func<Task> func) {
-                return Task.FromResult<object>(null);
-            }
-
-            public override Task<T> InvokeTask<T>(Func<Task<T>> func) {
-                return Task.FromResult<T>(default(T));
-            }
-
-            public override void MustBeCalledFromUIThreadOrThrow() { }
-
-            public override bool InvokeRequired {
-                get { return false; }
-            }
-        }
-
-        #endregion
 
         /// <summary>
         /// Use the line ending of the first line for the line endings.  

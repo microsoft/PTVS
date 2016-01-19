@@ -216,7 +216,7 @@ namespace Microsoft.PythonTools.Project.Web {
                             if (!AddWebRoleSupportFiles()) {
                                 VsShellUtilities.ShowMessageBox(
                                     this,
-                                    SR.GetString(SR.AddWebRoleSupportFiles),
+                                    Strings.AddWebRoleSupportFiles,
                                     null,
                                     OLEMSGICON.OLEMSGICON_INFO,
                                     OLEMSGBUTTON.OLEMSGBUTTON_OK,

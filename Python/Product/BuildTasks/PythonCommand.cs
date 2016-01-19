@@ -17,15 +17,11 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
 using System.Linq;
-using System.Reflection;
 using System.Text;
-using System.Text.RegularExpressions;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using Microsoft.PythonTools.Interpreter;
-using Microsoft.VisualStudioTools;
+using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.BuildTasks {
     /// <summary>
@@ -310,7 +306,7 @@ namespace Microsoft.PythonTools.BuildTasks {
                     psi.FileName,
                     psi.Arguments
                 );
-                psi.FileName = CommonUtils.GetAbsoluteFilePath(System.Environment.SystemDirectory, "cmd.exe");
+                psi.FileName = PathUtils.GetAbsoluteFilePath(System.Environment.SystemDirectory, "cmd.exe");
             }
 
             psi.RedirectStandardOutput = true;

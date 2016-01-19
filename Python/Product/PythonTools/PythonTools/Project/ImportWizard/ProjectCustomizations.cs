@@ -65,7 +65,7 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
 
         public override string DisplayName {
             get {
-                return SR.GetString(SR.ImportWizardDefaultProjectCustomization);
+                return Strings.ImportWizardDefaultProjectCustomization;
             }
         }
 
@@ -91,7 +91,7 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
 
         public override string DisplayName {
             get {
-                return SR.GetString(SR.ImportWizardBottleProjectCustomization);
+                return Strings.ImportWizardBottleProjectCustomization;
             }
         }
 
@@ -120,7 +120,7 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
 
         public override string DisplayName {
             get {
-                return SR.GetString(SR.ImportWizardDjangoProjectCustomization);
+                return Strings.ImportWizardDjangoProjectCustomization;
             }
         }
 
@@ -148,7 +148,7 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
 
         public override string DisplayName {
             get {
-                return SR.GetString(SR.ImportWizardFlaskProjectCustomization);
+                return Strings.ImportWizardFlaskProjectCustomization;
             }
         }
 
@@ -176,7 +176,7 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
 
         public override string DisplayName {
             get {
-                return SR.GetString(SR.ImportWizardGenericWebProjectCustomization);
+                return Strings.ImportWizardGenericWebProjectCustomization;
             }
         }
 
@@ -203,7 +203,7 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
 
         public override string DisplayName {
             get {
-                return SR.GetString(SR.ImportWizardUwpProjectCustomization);
+                return Strings.ImportWizardUwpProjectCustomization;
             }
         }
 

@@ -21,6 +21,7 @@ using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using System.Threading;
 using Microsoft.PythonTools.EnvironmentsList.Properties;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.EnvironmentsList {

@@ -22,6 +22,7 @@ using System.Reflection;
 using System.Windows;
 using Microsoft.Win32;
 using Microsoft.VisualStudioTools.Project;
+using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Profiling {
     class ProfiledProcess {

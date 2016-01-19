@@ -25,6 +25,7 @@ using System.Xml.XPath;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudioTools.Infrastructure;
 using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.VisualStudioTools.Project {

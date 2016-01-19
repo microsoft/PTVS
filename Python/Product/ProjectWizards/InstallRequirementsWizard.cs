@@ -17,9 +17,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Microsoft.PythonTools.ProjectWizards.Properties;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.TemplateWizard;
-using Microsoft.VisualStudioTools;
 using Project = EnvDTE.Project;
 using ProjectItem = EnvDTE.ProjectItem;
 
@@ -78,31 +77,31 @@ namespace Microsoft.PythonTools.ProjectWizards {
             }
 
             var td = new TaskDialog(provider) {
-                Title = string.Format("{0} - {1}", project.Name, Resources.PythonToolsForVisualStudio),
-                MainInstruction = Resources.InstallRequirementsHeading,
-                Content = Resources.InstallRequirementsMessage,
+                Title = string.Format("{0} - {1}", project.Name, Strings.ProductTitle),
+                MainInstruction = Strings.InstallRequirementsHeading,
+                Content = Strings.InstallRequirementsMessage,
                 EnableHyperlinks = true,
                 AllowCancellation = true,
             };
 
             var venv = new TaskDialogButton(
-                Resources.InstallRequirementsIntoVirtualEnv,
-                Resources.InstallRequirementsIntoVirtualEnvTip
+                Strings.InstallRequirementsIntoVirtualEnv,
+                Strings.InstallRequirementsIntoVirtualEnvTip
             );
-            description = description ?? Resources.DefaultInterpreterDescription;
+            description = description ?? Strings.DefaultInterpreterDescription;
             var install = new TaskDialogButton(
-                string.Format(Resources.InstallRequirementsIntoGlobalEnv, description),
-                Resources.InstallRequirementsIntoGlobalEnvTip
+                string.Format(Strings.InstallRequirementsIntoGlobalEnv, description),
+                Strings.InstallRequirementsIntoGlobalEnvTip
             );
-            var goAway = new TaskDialogButton(Resources.InstallRequirementsNowhere);
+            var goAway = new TaskDialogButton(Strings.InstallRequirementsNowhere);
             td.Buttons.Add(venv);
             td.Buttons.Add(install);
             td.Buttons.Add(goAway);
 
             try {
                 td.ExpandedInformation = File.ReadAllText(txt);
-                td.CollapsedControlText = Resources.InstallRequirementsShowPackages;
-                td.ExpandedControlText = Resources.InstallRequirementsHidePackages;
+                td.CollapsedControlText = Strings.InstallRequirementsShowPackages;
+                td.ExpandedControlText = Strings.InstallRequirementsHidePackages;
             } catch (IOException) {
             } catch (NotSupportedException) {
             } catch (UnauthorizedAccessException) {
@@ -131,7 +130,7 @@ namespace Microsoft.PythonTools.ProjectWizards {
                     TaskDialog.ForException(
                         provider,
                         ex,
-                        Resources.InstallRequirementsFailed,
+                        Strings.InstallRequirementsFailed,
                         PythonConstants.IssueTrackerUrl
                     ).ShowModal();
                 }

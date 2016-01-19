@@ -45,13 +45,13 @@ namespace Microsoft.PythonTools.Project.Web {
 
         public string LocalizedName {
             get {
-                return SR.GetString(SR.PythonWebLauncherName);
+                return Strings.PythonWebLauncherName;
             }
         }
 
         public string Description {
             get {
-                return SR.GetString(SR.PythonWebLauncherDescription);
+                return Strings.PythonWebLauncherDescription;
             }
         }
 

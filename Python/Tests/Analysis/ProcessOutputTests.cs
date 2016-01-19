@@ -21,10 +21,10 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using Microsoft.PythonTools;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.VisualStudioTools.Project;
 using TestUtilities;
 using TestUtilities.Python;
 

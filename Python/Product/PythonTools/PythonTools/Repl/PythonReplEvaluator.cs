@@ -21,6 +21,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Options;
@@ -29,8 +30,6 @@ using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.InteractiveWindow.Commands;
 using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudioTools;
-using Microsoft.VisualStudioTools.Project;
-using SR = Microsoft.PythonTools.Project.SR;
 
 namespace Microsoft.PythonTools.Repl {
     [InteractiveWindowRole("Execution")]
@@ -182,7 +181,7 @@ namespace Microsoft.PythonTools.Repl {
 
         protected override void WriteInitializationMessage() {
             if (Interpreter is UnavailableFactory) {
-                Window.WriteError(SR.GetString(SR.ReplEvaluatorInterpreterNotFound));
+                Window.WriteError(Strings.ReplEvaluatorInterpreterNotFound);
             } else {
                 base.WriteInitializationMessage();
             }
@@ -197,10 +196,10 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             if (Interpreter == null || Interpreter is UnavailableFactory) {
-                Window.WriteError(SR.GetString(SR.ReplEvaluatorInterpreterNotFound));
+                Window.WriteError(Strings.ReplEvaluatorInterpreterNotFound);
                 return;
             } else if (String.IsNullOrWhiteSpace(Interpreter.Configuration.InterpreterPath)) {
-                Window.WriteError(SR.GetString(SR.ReplEvaluatorInterpreterNotConfigured, Interpreter.Description));
+                Window.WriteError(Strings.ReplEvaluatorInterpreterNotConfigured.FormatUI(Interpreter.Description));
                 return;
             }
             var processInfo = new ProcessStartInfo(Interpreter.Configuration.InterpreterPath);
@@ -329,9 +328,9 @@ namespace Microsoft.PythonTools.Repl {
 
                 Win32Exception wex = e as Win32Exception;
                 if (wex != null && wex.NativeErrorCode == Microsoft.VisualStudioTools.Project.NativeMethods.ERROR_FILE_NOT_FOUND) {
-                    Window.WriteError(SR.GetString(SR.ReplEvaluatorInterpreterNotFound));
+                    Window.WriteError(Strings.ReplEvaluatorInterpreterNotFound);
                 } else {
-                    Window.WriteError(SR.GetString(SR.ErrorStartingInteractiveProcess, e.ToString()));
+                    Window.WriteError(Strings.ErrorStartingInteractiveProcess.FormatUI(e.ToString()));
                 }
                 return;
             }

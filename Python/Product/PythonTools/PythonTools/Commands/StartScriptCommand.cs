@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
@@ -27,7 +28,6 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
-using SR = Microsoft.PythonTools.Project.SR;
 
 namespace Microsoft.PythonTools.Commands {
     /// <summary>
@@ -97,7 +97,7 @@ namespace Microsoft.PythonTools.Commands {
                         CommandId == CommonConstants.StartDebuggingCmdId,
                         new LaunchFileProperties(
                             null,
-                            CommonUtils.GetParent(file),
+                            PathUtils.GetParent(file),
                             pythonProject.GetInterpreterFactory().Configuration.PathEnvironmentVariable,
                             pythonProject.GetWorkingDirectory()
                         )
@@ -106,7 +106,7 @@ namespace Microsoft.PythonTools.Commands {
                     launcher.LaunchFile(file, CommandId == CommonConstants.StartDebuggingCmdId);
                 }
             } catch (MissingInterpreterException ex) {
-                MessageBox.Show(ex.Message, SR.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                MessageBox.Show(ex.Message, Strings.ProductTitle, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
             } catch (NoInterpretersException ex) {
                 PythonToolsPackage.OpenNoInterpretersHelpPage(_serviceProvider, ex.HelpPage);
             }

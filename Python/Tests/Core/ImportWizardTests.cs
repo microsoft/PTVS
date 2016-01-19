@@ -14,7 +14,6 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-extern alias analysis;
 using System;
 using System.IO;
 using System.Linq;
@@ -25,6 +24,7 @@ using System.Windows;
 using System.Windows.Threading;
 using System.Xml.Linq;
 using Microsoft.PythonTools;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Project.ImportWizard;
@@ -32,8 +32,6 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.Python;
-using CommonUtils = analysis::Microsoft.VisualStudioTools.CommonUtils;
-using ProcessOutput = analysis::Microsoft.VisualStudioTools.Project.ProcessOutput;
 
 namespace PythonToolsTests {
     [TestClass]
@@ -57,7 +55,7 @@ namespace PythonToolsTests {
         [TestMethod, Priority(1)]
         public void ImportWizardSimple() {
             using (var wpf = new WpfProxy()) {
-                var settings = wpf.Create(() => new ImportSettings(null));
+                var settings = wpf.Create(() => new ImportSettings(null, null));
                 settings.SourcePath = TestData.GetPath("TestData\\HelloWorld\\");
                 settings.Filters = "*.py;*.pyproj";
                 settings.SearchPaths = TestData.GetPath("TestData\\SearchPath1\\") + Environment.NewLine + TestData.GetPath("TestData\\SearchPath2\\");
@@ -81,7 +79,7 @@ namespace PythonToolsTests {
         [TestMethod, Priority(1)]
         public void ImportWizardFiltered() {
             using (var wpf = new WpfProxy()) {
-                var settings = wpf.Create(() => new ImportSettings(null));
+                var settings = wpf.Create(() => new ImportSettings(null, null));
                 settings.SourcePath = TestData.GetPath("TestData\\HelloWorld\\");
                 settings.Filters = "*.py";
                 settings.SearchPaths = TestData.GetPath("TestData\\SearchPath1\\") + Environment.NewLine + TestData.GetPath("TestData\\SearchPath2\\");
@@ -103,7 +101,7 @@ namespace PythonToolsTests {
         [TestMethod, Priority(1)]
         public void ImportWizardFolders() {
             using (var wpf = new WpfProxy()) {
-                var settings = wpf.Create(() => new ImportSettings(null));
+                var settings = wpf.Create(() => new ImportSettings(null, null));
                 settings.SourcePath = TestData.GetPath("TestData\\HelloWorld2\\");
                 settings.Filters = "*";
                 settings.ProjectPath = TestData.GetPath("TestData\\TestDestination\\Subdirectory\\ProjectName.pyproj");
@@ -131,7 +129,7 @@ namespace PythonToolsTests {
         [TestMethod, Priority(1)]
         public void ImportWizardInterpreter() {
             using (var wpf = new WpfProxy()) {
-                var settings = wpf.Create(() => new ImportSettings(null));
+                var settings = wpf.Create(() => new ImportSettings(null, null));
                 settings.SourcePath = TestData.GetPath("TestData\\HelloWorld\\");
                 settings.Filters = "*.py;*.pyproj";
 
@@ -158,7 +156,7 @@ namespace PythonToolsTests {
         [TestMethod, Priority(1)]
         public void ImportWizardStartupFile() {
             using (var wpf = new WpfProxy()) {
-                var settings = wpf.Create(() => new ImportSettings(null));
+                var settings = wpf.Create(() => new ImportSettings(null, null));
                 settings.SourcePath = TestData.GetPath("TestData\\HelloWorld\\");
                 settings.Filters = "*.py;*.pyproj";
                 settings.StartupFile = "Program.py";
@@ -177,7 +175,7 @@ namespace PythonToolsTests {
         public void ImportWizardSemicolons() {
             // https://pytools.codeplex.com/workitem/2022
             using (var wpf = new WpfProxy()) {
-                var settings = wpf.Create(() => new ImportSettings(null));
+                var settings = wpf.Create(() => new ImportSettings(null, null));
                 var sourcePath = TestData.GetTempPath(randomSubPath: true);
                 // Create a fake set of files to import
                 Directory.CreateDirectory(Path.Combine(sourcePath, "ABC"));
@@ -215,7 +213,7 @@ namespace PythonToolsTests {
             ));
 
             using (var wpf = new WpfProxy()) {
-                var settings = wpf.Create(() => new ImportSettings(mockService));
+                var settings = wpf.Create(() => new ImportSettings(null, mockService));
                 var sourcePath = TestData.GetTempPath(randomSubPath: true);
                 // Create a fake set of files to import
                 File.WriteAllText(Path.Combine(sourcePath, "main.py"), "");
@@ -247,7 +245,7 @@ namespace PythonToolsTests {
 
                 Console.WriteLine("All files:");
                 foreach (var f in Directory.EnumerateFiles(sourcePath, "*", SearchOption.AllDirectories)) {
-                    Console.WriteLine(CommonUtils.GetRelativeFilePath(sourcePath, f));
+                    Console.WriteLine(PathUtils.GetRelativeFilePath(sourcePath, f));
                 }
 
                 Assert.IsTrue(
@@ -340,7 +338,7 @@ namespace PythonToolsTests {
 
         private static void ImportWizardCustomizationsWorker(ProjectCustomization customization, Action<XDocument> verify) {
             using (var wpf = new WpfProxy()) {
-                var settings = wpf.Create(() => new ImportSettings(null));
+                var settings = wpf.Create(() => new ImportSettings(null, null));
                 settings.SourcePath = TestData.GetPath("TestData\\HelloWorld\\");
                 settings.Filters = "*.py;*.pyproj";
                 settings.StartupFile = "Program.py";

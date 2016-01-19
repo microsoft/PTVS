@@ -33,6 +33,7 @@ using Microsoft.PythonTools.Commands;
 using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.Debugger.Remote;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.InterpreterList;
@@ -59,7 +60,6 @@ using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Navigation;
 using Microsoft.VisualStudioTools.Project;
 using NativeMethods = Microsoft.VisualStudioTools.Project.NativeMethods;
-using SR = Microsoft.PythonTools.Project.SR;
 
 namespace Microsoft.PythonTools {
     /// <summary>
@@ -792,7 +792,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             options._workingDir = workingDir;
             options._envVars = new Dictionary<string, string>(envVars);
             evaluator.Reset(quiet: true)
-                .HandleAllExceptions(SR.ProductName, GetType())
+                .HandleAllExceptions(this, GetType())
                 .DoNotWait();
 
             return window;

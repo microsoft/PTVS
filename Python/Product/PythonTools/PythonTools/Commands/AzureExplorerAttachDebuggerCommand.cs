@@ -28,6 +28,7 @@ using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Linq;
 using Microsoft.PythonTools.Debugger.Remote;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Web.WindowsAzure.Contracts;
 using Microsoft.VisualStudio.WindowsAzure.Authentication;

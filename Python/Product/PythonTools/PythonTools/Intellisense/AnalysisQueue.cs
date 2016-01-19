@@ -20,8 +20,8 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Project;
-using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Intellisense {
     /// <summary>
@@ -206,7 +206,8 @@ namespace Microsoft.PythonTools.Intellisense {
                         if (ex.IsCriticalException() || System.Diagnostics.Debugger.IsAttached) {
                             throw;
                         }
-                        VsTaskExtensions.ReportUnhandledException(ex, SR.ProductName, GetType());
+                        
+                        ex.ReportUnhandledException(null, GetType());
                         _cancel.Cancel();
                     }
                 } else {

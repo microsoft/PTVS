@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
@@ -161,7 +162,7 @@ namespace Microsoft.PythonTools.Navigation.NavigateTo {
                 } finally {
                     callback.Done();
                 }
-            }).HandleAllExceptions(SR.ProductName, GetType()).DoNotWait();
+            }).HandleAllExceptions(_serviceProvider, GetType()).DoNotWait();
         }
 
         public void StopSearch() {

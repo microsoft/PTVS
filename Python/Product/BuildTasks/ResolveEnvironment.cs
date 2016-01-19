@@ -21,10 +21,10 @@ using System.Linq;
 using Microsoft.Build.Evaluation;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.BuildTasks {
     /// <summary>
@@ -120,7 +120,7 @@ namespace Microsoft.PythonTools.BuildTasks {
                     project = collection.LoadProject(_projectPath);
                 }
 
-                var projectHome = CommonUtils.GetAbsoluteDirectoryPath(
+                var projectHome = PathUtils.GetAbsoluteDirectoryPath(
                     project.DirectoryPath,
                     project.GetPropertyValue("ProjectHome")
                 );
@@ -128,7 +128,7 @@ namespace Microsoft.PythonTools.BuildTasks {
                 var searchPath = project.GetPropertyValue("SearchPath");
                 if (!string.IsNullOrEmpty(searchPath)) {
                     SearchPaths = searchPath.Split(';')
-                        .Select(p => CommonUtils.GetAbsoluteFilePath(projectHome, p))
+                        .Select(p => PathUtils.GetAbsoluteFilePath(projectHome, p))
                         .ToArray();
                 } else {
                     SearchPaths = new string[0];
@@ -162,15 +162,15 @@ namespace Microsoft.PythonTools.BuildTasks {
                     );
                     return false;
                 } else if (factory != null) {
-                    PrefixPath = CommonUtils.EnsureEndSeparator(factory.Configuration.PrefixPath);
-                    if (CommonUtils.IsSubpathOf(projectHome, PrefixPath)) {
-                        ProjectRelativePrefixPath = CommonUtils.GetRelativeDirectoryPath(projectHome, PrefixPath);
+                    PrefixPath = PathUtils.EnsureEndSeparator(factory.Configuration.PrefixPath);
+                    if (PathUtils.IsSubpathOf(projectHome, PrefixPath)) {
+                        ProjectRelativePrefixPath = PathUtils.GetRelativeDirectoryPath(projectHome, PrefixPath);
                     } else {
                         ProjectRelativePrefixPath = string.Empty;
                     }
                     InterpreterPath = factory.Configuration.InterpreterPath;
                     WindowsInterpreterPath = factory.Configuration.WindowsInterpreterPath;
-                    LibraryPath = CommonUtils.EnsureEndSeparator(factory.Configuration.LibraryPath);
+                    LibraryPath = PathUtils.EnsureEndSeparator(factory.Configuration.LibraryPath);
                     Architecture = factory.Configuration.Architecture.ToString();
                     PathEnvironmentVariable = factory.Configuration.PathEnvironmentVariable;
                     Description = factory.Description;

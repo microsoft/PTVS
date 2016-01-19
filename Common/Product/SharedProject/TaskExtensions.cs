@@ -15,14 +15,10 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using Microsoft.VisualStudioTools.Project;
 using Task = System.Threading.Tasks.Task;
 
-namespace Microsoft.VisualStudioTools {
+namespace Microsoft.VisualStudioTools.Infrastructure {
     static class TaskExtensions {
         /// <summary>
         /// Suppresses warnings about unawaited tasks and ensures that unhandled

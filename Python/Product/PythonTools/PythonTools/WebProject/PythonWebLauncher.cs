@@ -28,6 +28,7 @@ using System.Text.RegularExpressions;
 using System.Web;
 using System.Windows.Forms;
 using Microsoft.PythonTools.Debugger.DebugEngine;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio;
@@ -117,7 +118,7 @@ namespace Microsoft.PythonTools.Project.Web {
                     if (string.IsNullOrEmpty(target) && !File.Exists(_project.GetStartupFile())) {
                         // The exception was raised because no startup file
                         // is set.
-                        throw new InvalidOperationException(SR.GetString(SR.NoStartupFileAvailable), ex);
+                        throw new InvalidOperationException(Strings.NoStartupFileAvailable, ex);
                     } else {
                         throw;
                     }
@@ -126,7 +127,7 @@ namespace Microsoft.PythonTools.Project.Web {
 
             if (startInfo == null) {
                 if (!File.Exists(_project.GetStartupFile())) {
-                    throw new InvalidOperationException(SR.GetString(SR.NoStartupFileAvailable));
+                    throw new InvalidOperationException(Strings.NoStartupFileAvailable);
                 }
 
                 // No command, so set up a startInfo that looks like the default
@@ -208,10 +209,10 @@ namespace Microsoft.PythonTools.Project.Web {
             string result;
             result = (_project.GetProperty(PythonConstants.InterpreterPathSetting) ?? string.Empty).Trim();
             if (!String.IsNullOrEmpty(result)) {
-                result = CommonUtils.GetAbsoluteFilePath(_project.ProjectDirectory, result);
+                result = PathUtils.GetAbsoluteFilePath(_project.ProjectDirectory, result);
 
                 if (!File.Exists(result)) {
-                    throw new FileNotFoundException(SR.GetString(SR.DebugLaunchInterpreterMissing_Path, result));
+                    throw new FileNotFoundException(Strings.DebugLaunchInterpreterMissing_Path.FormatUI(result));
                 }
 
                 return result;
@@ -281,15 +282,15 @@ namespace Microsoft.PythonTools.Project.Web {
 
             public string Validate() {
                 if (!Directory.Exists(UnquotePath(Info.bstrCurDir))) {
-                    return SR.GetString(SR.DebugLaunchWorkingDirectoryMissing, Info.bstrCurDir);
+                    return Strings.DebugLaunchWorkingDirectoryMissing.FormatUI(Info.bstrCurDir);
                 }
 
                 var exe = UnquotePath(Info.bstrExe);
                 if (string.IsNullOrEmpty(exe)) {
-                    return SR.GetString(SR.DebugLaunchInterpreterMissing);
+                    return Strings.DebugLaunchInterpreterMissing;
                 }
                 if (!File.Exists(exe)) {
-                    return SR.GetString(SR.DebugLaunchInterpreterMissing, exe);
+                    return Strings.DebugLaunchInterpreterMissing.FormatUI(exe);
                 }
 
                 return null;
@@ -298,7 +299,7 @@ namespace Microsoft.PythonTools.Project.Web {
             public void Launch(IServiceProvider provider) {
                 var error = Validate();
                 if (!string.IsNullOrEmpty(error)) {
-                    MessageBox.Show(error, SR.ProductName);
+                    MessageBox.Show(error, Strings.ProductTitle);
                     return;
                 }
 
@@ -484,7 +485,7 @@ namespace Microsoft.PythonTools.Project.Web {
                 return GetFullUrl(host, TestServerPort);
             } catch (UriFormatException) {
                 var output = OutputWindowRedirector.GetGeneral(_serviceProvider);
-                output.WriteErrorLine(SR.GetString(SR.ErrorInvalidLaunchUrl, host));
+                output.WriteErrorLine(Strings.ErrorInvalidLaunchUrl.FormatUI(host));
                 output.ShowAndActivate();
                 return string.Empty;
             }

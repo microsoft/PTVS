@@ -180,7 +180,7 @@ namespace Microsoft.PythonTools {
     [Order(After = LanguagePriority.NaturalLanguage, Before = LanguagePriority.FormalLanguage)]
     internal sealed class OperatorFormat : ClassificationFormatDefinition {
         public OperatorFormat() {
-            DisplayName = SR.GetString(SR.OperatorClassificationType);
+            DisplayName = Strings.OperatorClassificationType;
             // Matches "Operator"
             ForegroundColor = Colors.Black;
         }
@@ -193,7 +193,7 @@ namespace Microsoft.PythonTools {
     [Order(After = LanguagePriority.NaturalLanguage, Before = LanguagePriority.FormalLanguage)]
     internal sealed class GroupingFormat : ClassificationFormatDefinition {
         public GroupingFormat() {
-            DisplayName = SR.GetString(SR.GroupingClassificationType);
+            DisplayName = Strings.GroupingClassificationType;
             // Matches "Operator"
             ForegroundColor = Colors.Black;
         }
@@ -206,7 +206,7 @@ namespace Microsoft.PythonTools {
     [Order(After = LanguagePriority.NaturalLanguage, Before = LanguagePriority.FormalLanguage)]
     internal sealed class CommaFormat : ClassificationFormatDefinition {
         public CommaFormat() {
-            DisplayName = SR.GetString(SR.CommaClassificationType);
+            DisplayName = Strings.CommaClassificationType;
             // Matches "Operator"
             ForegroundColor = Colors.Black;
         }
@@ -219,7 +219,7 @@ namespace Microsoft.PythonTools {
     [Order(After = LanguagePriority.NaturalLanguage, Before = LanguagePriority.FormalLanguage)]
     internal sealed class DotFormat : ClassificationFormatDefinition {
         public DotFormat() {
-            DisplayName = SR.GetString(SR.DotClassificationType);
+            DisplayName = Strings.DotClassificationType;
             // Matches "Operator"
             ForegroundColor = Colors.Black;
         }
@@ -232,7 +232,7 @@ namespace Microsoft.PythonTools {
     [Order(After = LanguagePriority.NaturalLanguage, Before = LanguagePriority.FormalLanguage)]
     internal sealed class BuiltinFormat : ClassificationFormatDefinition {
         public BuiltinFormat() {
-            DisplayName = SR.GetString(SR.BuiltinClassificationType);
+            DisplayName = Strings.BuiltinClassificationType;
             // Matches "Keyword"
             ForegroundColor = Colors.Blue;
         }

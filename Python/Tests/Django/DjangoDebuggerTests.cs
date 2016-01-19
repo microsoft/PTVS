@@ -23,6 +23,7 @@ using System.Net.Sockets;
 using System.Threading;
 using DebuggerTests;
 using Microsoft.PythonTools.Debugger;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools.Project;
 using TestUtilities;

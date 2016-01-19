@@ -19,7 +19,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using Microsoft.VisualStudioTools.Project;
-using SR = Microsoft.PythonTools.Project.SR;
 
 namespace Microsoft.PythonTools.Project.Web {
     [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",
@@ -60,7 +59,7 @@ namespace Microsoft.PythonTools.Project.Web {
         }
 
         public override string Name {
-            get { return SR.GetString(SR.PythonWebPropertyPageTitle); }
+            get { return Strings.PythonWebPropertyPageTitle; }
         }
     }
 }
