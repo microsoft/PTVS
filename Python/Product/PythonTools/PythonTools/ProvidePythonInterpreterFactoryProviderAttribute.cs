@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudioTools;
 
@@ -64,7 +65,7 @@ namespace Microsoft.PythonTools {
             //
             using (var engineKey = context.CreateKey(PythonCoreConstants.BaseRegistryKey + "\\InterpreterFactories")) {
                 using (var subKey = engineKey.CreateSubkey(_id)) {
-                    var filename = CommonUtils.GetFileOrDirectoryName(_provider.Assembly.CodeBase);
+                    var filename = PathUtils.GetFileOrDirectoryName(_provider.Assembly.CodeBase);
                     subKey.SetValue("CodeBase", "$PackageFolder$\\" + filename);
                 }
             }

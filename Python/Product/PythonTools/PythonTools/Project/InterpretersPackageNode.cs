@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Imaging;
 using Microsoft.VisualStudio.Imaging.Interop;
@@ -92,15 +93,13 @@ namespace Microsoft.PythonTools.Project {
                 nodes.Cast<InterpretersPackageNode>().All(n => n.Parent == Parent)) {
                 string message;
                 if (nodes.Count == 1) {
-                    message = SR.GetString(
-                        SR.UninstallPackage,
+                    message = Strings.UninstallPackage.FormatUI(
                         Caption,
                         Parent._factory.Description,
                         Parent._factory.Configuration.PrefixPath
                     );
                 } else {
-                    message = SR.GetString(
-                        SR.UninstallPackages,
+                    message = Strings.UninstallPackages.FormatUI(
                         string.Join(Environment.NewLine, nodes.Select(n => n.Caption)),
                         Parent._factory.Description,
                         Parent._factory.Configuration.PrefixPath

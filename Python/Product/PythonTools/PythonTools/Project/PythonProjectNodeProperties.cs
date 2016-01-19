@@ -17,6 +17,7 @@
 using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project.Automation;
 using Microsoft.VisualStudioTools;
@@ -64,7 +65,7 @@ namespace Microsoft.PythonTools.Project {
                 if (!string.IsNullOrEmpty(res)) {
                     var proj = Node.ProjectMgr as CommonProjectNode;
                     if (proj != null) {
-                        res = CommonUtils.GetAbsoluteFilePath(proj.GetWorkingDirectory(), res);
+                        res = PathUtils.GetAbsoluteFilePath(proj.GetWorkingDirectory(), res);
                     }
                 }
                 return res;

@@ -21,6 +21,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Interpreter {
@@ -278,7 +279,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
             if (Directory.Exists(basePath)) {
                 return service.Interpreters.FirstOrDefault(interp =>
-                    CommonUtils.IsSamePath(interp.Configuration.PrefixPath, basePath)
+                    PathUtils.IsSamePath(interp.Configuration.PrefixPath, basePath)
                 );
             }
             return null;
@@ -301,7 +302,7 @@ namespace Microsoft.PythonTools.Interpreter {
                         .Select(m => m.Groups["path"])
                         .Where(g => g != null && g.Success)
                         .Select(g => g.Value)
-                        .FirstOrDefault(CommonUtils.IsValidPath);
+                        .FirstOrDefault(PathUtils.IsValidPath);
                 } catch (IOException) {
                 } catch (UnauthorizedAccessException) {
                 } catch (System.Security.SecurityException) {
@@ -320,7 +321,7 @@ namespace Microsoft.PythonTools.Interpreter {
             if (basePath == null && File.Exists(prefixFile)) {
                 try {
                     var lines = File.ReadAllLines(prefixFile);
-                    basePath = lines.FirstOrDefault(CommonUtils.IsValidPath);
+                    basePath = lines.FirstOrDefault(PathUtils.IsValidPath);
                 } catch (IOException) {
                 } catch (UnauthorizedAccessException) {
                 } catch (System.Security.SecurityException) {
@@ -331,7 +332,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
         public static string FindLibPath(string prefixPath) {
             // Find site.py to find the library
-            var libPath = CommonUtils.FindFile(prefixPath, "site.py", firstCheck: new[] { "Lib" });
+            var libPath = PathUtils.FindFile(prefixPath, "site.py", firstCheck: new[] { "Lib" });
             if (!File.Exists(libPath)) {
                 // Python 3.3 venv does not add site.py, but always puts the
                 // library in prefixPath\Lib

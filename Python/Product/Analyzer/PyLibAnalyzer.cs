@@ -27,12 +27,12 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis.Analyzer;
+using Microsoft.PythonTools.Common.Infrastructure;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
-using Microsoft.VisualStudioTools;
-using Microsoft.VisualStudioTools.Project;
 using Microsoft.Win32;
 
 namespace Microsoft.PythonTools.Analysis {
@@ -321,13 +321,13 @@ namespace Microsoft.PythonTools.Analysis {
             if (!options.TryGetValue("python", out value) && !options.TryGetValue("py", out value)) {
                 value = null;
             }
-            if (!string.IsNullOrEmpty(value) && !CommonUtils.IsValidPath(value)) {
+            if (!string.IsNullOrEmpty(value) && !PathUtils.IsValidPath(value)) {
                 throw new ArgumentException(value, "python");
             }
             interpreter = value;
 
             if (options.TryGetValue("library", out value) || options.TryGetValue("lib", out value)) {
-                if (!CommonUtils.IsValidPath(value)) {
+                if (!PathUtils.IsValidPath(value)) {
                     throw new ArgumentException(value, "library");
                 }
                 if (Directory.Exists(value)) {
@@ -344,28 +344,28 @@ namespace Microsoft.PythonTools.Analysis {
             if (!options.TryGetValue("outdir", out value)) {
                 value = cwd;
             }
-            if (!CommonUtils.IsValidPath(value)) {
+            if (!PathUtils.IsValidPath(value)) {
                 throw new ArgumentException(value, "outdir");
             }
-            outDir = CommonUtils.GetAbsoluteDirectoryPath(cwd, value);
+            outDir = PathUtils.GetAbsoluteDirectoryPath(cwd, value);
 
             if (!options.TryGetValue("basedb", out value)) {
                 value = Environment.CurrentDirectory;
             }
-            if (!CommonUtils.IsValidPath(value)) {
+            if (!PathUtils.IsValidPath(value)) {
                 throw new ArgumentException(value, "basedb");
             }
-            baseDb = value.Split(';').Select(p => CommonUtils.GetAbsoluteDirectoryPath(cwd, p)).ToList();
+            baseDb = value.Split(';').Select(p => PathUtils.GetAbsoluteDirectoryPath(cwd, p)).ToList();
 
             // Private log defaults to in current directory
             if (!options.TryGetValue("log", out value)) {
                 value = "AnalysisLog.txt";
             }
-            if (!CommonUtils.IsValidPath(value)) {
+            if (!PathUtils.IsValidPath(value)) {
                 throw new ArgumentException(value, "log");
             }
             if (!Path.IsPathRooted(value)) {
-                value = CommonUtils.GetAbsoluteFilePath(outDir, value);
+                value = PathUtils.GetAbsoluteFilePath(outDir, value);
             }
             logPrivate = value;
 
@@ -373,11 +373,11 @@ namespace Microsoft.PythonTools.Analysis {
             if (!options.TryGetValue("glog", out value)) {
                 value = null;
             }
-            if (!string.IsNullOrEmpty(value) && !CommonUtils.IsValidPath(value)) {
+            if (!string.IsNullOrEmpty(value) && !PathUtils.IsValidPath(value)) {
                 throw new ArgumentException(value, "glog");
             }
             if (!string.IsNullOrEmpty(value) && !Path.IsPathRooted(value)) {
-                value = CommonUtils.GetAbsoluteFilePath(outDir, value);
+                value = PathUtils.GetAbsoluteFilePath(outDir, value);
             }
             logGlobal = value;
 
@@ -389,11 +389,11 @@ namespace Microsoft.PythonTools.Analysis {
                     }
                 }
             }
-            if (!string.IsNullOrEmpty(value) && !CommonUtils.IsValidPath(value)) {
+            if (!string.IsNullOrEmpty(value) && !PathUtils.IsValidPath(value)) {
                 throw new ArgumentException(value, "diag");
             }
             if (!string.IsNullOrEmpty(value) && !Path.IsPathRooted(value)) {
-                value = CommonUtils.GetAbsoluteFilePath(outDir, value);
+                value = PathUtils.GetAbsoluteFilePath(outDir, value);
             }
             logDiagnostic = value;
 
@@ -430,7 +430,7 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         internal async Task StartTraceListener() {
-            if (!CommonUtils.IsValidPath(_logPrivate)) {
+            if (!PathUtils.IsValidPath(_logPrivate)) {
                 return;
             }
 
@@ -563,7 +563,7 @@ namespace Microsoft.PythonTools.Analysis {
             // library paths as standard library so that output files are put at
             // the top level in the database.
             var sitePackageGroups = fileGroups
-                .Where(g => g.Any() && CommonUtils.GetFileOrDirectoryName(g[0].LibraryPath) == "site-packages")
+                .Where(g => g.Any() && PathUtils.GetFileOrDirectoryName(g[0].LibraryPath) == "site-packages")
                 .ToList();
             fileGroups.RemoveAll(sitePackageGroups.Contains);
             fileGroups.InsertRange(1, sitePackageGroups);
@@ -821,7 +821,7 @@ namespace Microsoft.PythonTools.Analysis {
 
             return builtinNames
                 .Where(n => !SkipBuiltinNames.Contains(n))
-                .Where(CommonUtils.IsValidPath)
+                .Where(PathUtils.IsValidPath)
                 .Select(n => GetOutputFile(n));
         }
 
@@ -991,12 +991,12 @@ namespace Microsoft.PythonTools.Analysis {
 
                 if (_updater != null) {
                     _updater.UpdateStatus(_progressOffset++, _progressTotal,
-                        "Scraping " + CommonUtils.GetFileOrDirectoryName(file.LibraryPath));
+                        "Scraping " + PathUtils.GetFileOrDirectoryName(file.LibraryPath));
                 }
 
                 var destFile = Path.ChangeExtension(GetOutputFile(file), null);
                 if (_dryRun) {
-                    TraceDryRun("SCRAPE;{0};{1}.idb", file.SourceFile, CommonUtils.CreateFriendlyDirectoryPath(_outDir, destFile));
+                    TraceDryRun("SCRAPE;{0};{1}.idb", file.SourceFile, PathUtils.CreateFriendlyDirectoryPath(_outDir, destFile));
                 } else {
                     Directory.CreateDirectory(Path.GetDirectoryName(destFile));
 
@@ -1105,7 +1105,7 @@ namespace Microsoft.PythonTools.Analysis {
                         }
 
                         Debug.Assert(!file.IsCompiled);
-                        var idbFile = CommonUtils.CreateFriendlyDirectoryPath(
+                        var idbFile = PathUtils.CreateFriendlyDirectoryPath(
                             _outDir,
                             Path.Combine(outDir, file.ModuleName)
                         );
@@ -1123,7 +1123,7 @@ namespace Microsoft.PythonTools.Analysis {
                 if (_treatPathsAsStandardLibrary.Contains(files[0].LibraryPath)) {
                     currentLibrary = "standard library";
                 } else {
-                    currentLibrary = CommonUtils.GetFileOrDirectoryName(files[0].LibraryPath);
+                    currentLibrary = PathUtils.GetFileOrDirectoryName(files[0].LibraryPath);
                 }
 
                 using (var factory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(
@@ -1297,7 +1297,7 @@ namespace Microsoft.PythonTools.Analysis {
                 return _outDir;
             } else {
                 return Path.Combine(_outDir, Regex.Replace(
-                    CommonUtils.TrimEndSeparator(CommonUtils.GetFileOrDirectoryName(file.LibraryPath)),
+                    PathUtils.TrimEndSeparator(PathUtils.GetFileOrDirectoryName(file.LibraryPath)),
                     @"[.\\/\s]",
                     "_"
                 ));
@@ -1305,11 +1305,11 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         private string GetOutputFile(string builtinName) {
-            return CommonUtils.GetAbsoluteFilePath(_outDir, builtinName + ".idb");
+            return PathUtils.GetAbsoluteFilePath(_outDir, builtinName + ".idb");
         }
 
         private string GetOutputFile(ModulePath file) {
-            return CommonUtils.GetAbsoluteFilePath(GetOutputDir(file), file.ModuleName + ".idb");
+            return PathUtils.GetAbsoluteFilePath(GetOutputDir(file), file.ModuleName + ".idb");
         }
 
         class AnalysisItem {

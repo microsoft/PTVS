@@ -21,6 +21,7 @@ using System.IO;
 using System.Security;
 using System.Text;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Imaging;
@@ -69,7 +70,7 @@ namespace Microsoft.PythonTools.Project {
         private static string GetNodeNameForPackage(HierarchyNode node) {
             var project = node as ProjectNode;
             if (project != null) {
-                return CommonUtils.GetFileOrDirectoryName(project.ProjectHome);
+                return PathUtils.GetFileOrDirectoryName(project.ProjectHome);
             } else {
                 return node.Caption;
             }
@@ -85,7 +86,7 @@ namespace Microsoft.PythonTools.Project {
                         // Set the StartupFile project property to the Url of this node
                         ProjectMgr.SetProjectProperty(
                             CommonConstants.StartupFile,
-                            CommonUtils.GetRelativeFilePath(this.ProjectMgr.ProjectHome, Url)
+                            PathUtils.GetRelativeFilePath(this.ProjectMgr.ProjectHome, Url)
                         );
                         return VSConstants.S_OK;
                     case CommonConstants.StartDebuggingCmdId:
@@ -104,7 +105,7 @@ namespace Microsoft.PythonTools.Project {
                                     cmd == CommonConstants.StartDebuggingCmdId,
                                     new Microsoft.PythonTools.Commands.StartScriptCommand.LaunchFileProperties(
                                         null,
-                                        CommonUtils.GetParent(this.Url),
+                                        PathUtils.GetParent(this.Url),
                                         ((PythonProjectNode)ProjectMgr).GetInterpreterFactory().Configuration.PathEnvironmentVariable,
                                         ProjectMgr.GetWorkingDirectory()
                                     )
@@ -129,7 +130,7 @@ namespace Microsoft.PythonTools.Project {
                             //the file is in project home dir and if the file is not the startup file already.
                             string startupFile = ((CommonProjectNode)ProjectMgr).GetStartupFile();
                             if (IsInProjectHome() && 
-                                !CommonUtils.IsSamePath(startupFile, Url) &&
+                                !PathUtils.IsSamePath(startupFile, Url) &&
                                 !IsNonMemberItem) {
                                 result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
                             }

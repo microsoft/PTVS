@@ -21,6 +21,7 @@ using System.IO;
 using System.Net;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
@@ -50,8 +51,8 @@ namespace Microsoft.PythonTools.Project {
                     // try copying without impersonating first...
                     CopyOneFile(destination, item);
                 } catch (UnauthorizedAccessException) {
-                    var resource = new NativeMethods._NETRESOURCE();
-                    resource.dwType = NativeMethods.RESOURCETYPE_DISK;
+                    var resource = new VisualStudioTools.Project.NativeMethods._NETRESOURCE();
+                    resource.dwType = VisualStudioTools.Project.NativeMethods.RESOURCETYPE_DISK;
                     resource.lpRemoteName = Path.GetPathRoot(destination.LocalPath);
 
                     NetworkCredential creds = null;
@@ -64,7 +65,7 @@ namespace Microsoft.PythonTools.Project {
                         throw;
                     }
 
-                    var netAddRes = NativeMethods.WNetAddConnection3(
+                    var netAddRes = VisualStudioTools.Project.NativeMethods.WNetAddConnection3(
                         Process.GetCurrentProcess().MainWindowHandle,
                         ref resource,
                         creds.Password,
@@ -86,7 +87,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private static void CopyOneFile(Uri destination, IPublishFile item) {
-            var destFile = CommonUtils.GetAbsoluteFilePath(destination.LocalPath, item.DestinationFile);
+            var destFile = PathUtils.GetAbsoluteFilePath(destination.LocalPath, item.DestinationFile);
             Debug.WriteLine("CopyingOneFile: " + destFile);
             string destDir = Path.GetDirectoryName(destFile);
             if (!Directory.Exists(destDir)) {

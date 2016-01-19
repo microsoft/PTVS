@@ -23,7 +23,7 @@ namespace Microsoft.PythonTools {
     public class NoInterpretersException : Exception {
         private readonly string _helpPage;
 
-        public NoInterpretersException() : this(SR.GetString(SR.NoInterpretersAvailable)) { }
+        public NoInterpretersException() : this(Strings.NoInterpretersAvailable) { }
         public NoInterpretersException(string message) : base(message) { }
         public NoInterpretersException(string message, Exception inner) : base(message, inner) { }
 

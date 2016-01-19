@@ -18,6 +18,7 @@ using System;
 using System.ComponentModel;
 using System.IO;
 using System.Runtime.InteropServices;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 
@@ -32,7 +33,7 @@ namespace Microsoft.PythonTools.Project {
         [AutomationBrowsable(false)]
         public string FolderName {
             get {
-                return CommonUtils.GetFileOrDirectoryName(this.HierarchyNode.Url);
+                return PathUtils.GetFileOrDirectoryName(this.HierarchyNode.Url);
             }
         }
 
@@ -65,7 +66,7 @@ namespace Microsoft.PythonTools.Project {
         #endregion
 
         public override string GetClassName() {
-            return SR.GetString(SR.SearchPathProperties);
+            return Strings.SearchPathProperties;
         }
     }
 }

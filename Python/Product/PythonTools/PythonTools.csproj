@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Choose>
     <When Condition=" '$(VisualStudioVersion)'=='15.0'  Or '$(TargetVisualStudioVersion)'=='VS150' ">
@@ -45,42 +45,52 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Analysis\Analysis.csproj">
+    <ProjectReference Include="$(BuildRoot)Python\Product\Analysis\Analysis.csproj">
       <Project>{A85D479D-67A9-4BDB-904A-7D86DAF68A6F}</Project>
       <Name>Microsoft.PythonTools.Analysis</Name>
       <IncludeInVSIX>True</IncludeInVSIX>
     </ProjectReference>
-    <ProjectReference Include="..\BuildTasks\BuildTasks.csproj">
+    <ProjectReference Include="$(BuildRoot)Python\Product\BuildTasks\BuildTasks.csproj">
       <Project>{89d51398-a003-44ba-b1b2-cfc6f8396d7e}</Project>
       <Name>Microsoft.PythonTools.BuildTasks</Name>
       <IncludeInVSIX>True</IncludeInVSIX>
     </ProjectReference>
-    <ProjectReference Include="..\Debugger\Debugger.csproj">
+    <ProjectReference Include="$(BuildRoot)Python\Product\Debugger\Debugger.csproj">
       <Project>{DECC7971-FA58-4DB0-9561-BFFADD393BBD}</Project>
       <Name>Microsoft.PythonTools.Debugger</Name>
       <IncludeInVSIX>True</IncludeInVSIX>
     </ProjectReference>
-    <ProjectReference Include="..\EnvironmentsList\EnvironmentsList.csproj">
+    <ProjectReference Include="$(BuildRoot)Python\Product\EnvironmentsList\EnvironmentsList.csproj">
       <Project>{b20e082b-4d3c-457d-b2bd-60420b434573}</Project>
       <Name>Microsoft.PythonTools.EnvironmentsList</Name>
       <IncludeInVSIX>True</IncludeInVSIX>
       <Private>False</Private>
     </ProjectReference>
-    <ProjectReference Include="..\VSInterpreters\VSInterpreters.csproj">
+    <ProjectReference Include="$(BuildRoot)Python\Product\VSInterpreters\VSInterpreters.csproj">
       <Project>{815db0cd-c0dd-4997-b43c-abee4dbeffe7}</Project>
       <Name>Microsoft.PythonTools.VSInterpreters</Name>
       <IncludeInVSIX>True</IncludeInVSIX>
     </ProjectReference>
-    <ProjectReference2 Include="..\Analyzer\Analyzer.csproj" />
-    <ProjectReference Include="..\Attacher\Attacher.csproj">
+    <ProjectReference2 Include="$(BuildRoot)Python\Product\Analyzer\Analyzer.csproj" />
+    <ProjectReference Include="$(BuildRoot)Python\Product\Attacher\Attacher.csproj">
       <Project>{666A22BB-0CB5-4C08-A20F-E17450DA6573}</Project>
       <Name>Attacher</Name>
       <IncludeInVSIX>True</IncludeInVSIX>
     </ProjectReference>
-    <ProjectReference2 Include="..\AttacherX86\AttacherX86.csproj" />
-    <ProjectReference2 Include="..\ImportWizard\ImportWizard.csproj" />
-    <ProjectReference2 Include="..\ProjectWizards\ProjectWizards.csproj" />
-    <ProjectReference2 Include="..\TestAdapter\TestAdapter.csproj" />
+    <ProjectReference2 Include="$(BuildRoot)Python\Product\AttacherX86\AttacherX86.csproj" />
+    <ProjectReference Include="$(BuildRoot)Python\Product\Common\Common.csproj">
+      <Project>{b3db0521-d9e3-4f48-9e2e-e5ecae886049}</Project>
+      <Name>Microsoft.PythonTools.Common</Name>
+      <IncludeInVSIX>True</IncludeInVSIX>
+    </ProjectReference>
+    <ProjectReference Include="$(BuildRoot)Python\Product\VSCommon\VSCommon.csproj">
+      <Project>{A52AC77F-6DF9-4387-BB08-8DED3FD95A0F}</Project>
+      <Name>Microsoft.PythonTools.VSCommon</Name>
+      <IncludeInVSIX>True</IncludeInVSIX>
+    </ProjectReference>
+    <ProjectReference2 Include="$(BuildRoot)Python\Product\ImportWizard\ImportWizard.csproj" />
+    <ProjectReference2 Include="$(BuildRoot)Python\Product\ProjectWizards\ProjectWizards.csproj" />
+    <ProjectReference2 Include="$(BuildRoot)Python\Product\TestAdapter\TestAdapter.csproj" />
     <Reference Include="Microsoft.Windows.Design.Host, Version=4.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>$(DevEnvDir)PrivateAssemblies\Microsoft.Windows.Design.Host.dll</HintPath>
@@ -227,9 +237,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\Analysis\IEnumerableExtensions.cs">
-      <Link>IEnumerableExtensions.cs</Link>
-    </Compile>
     <Compile Include="PythonTools\Repl\IMultipleScopeEvaluator.cs" />
     <Compile Include="PythonTools\Repl\InlineReplAdornment.cs" />
     <Compile Include="PythonTools\Repl\InlineReplAdornmentManager.cs" />
@@ -258,7 +265,6 @@
     <Compile Include="Legacy\ObsoleteResources.cs" />
     <Compile Include="NoInterpretersException.cs" />
     <Compile Include="ProvideLanguageTemplatesAttribute.cs" />
-    <Compile Include="PythonToolsInstallPath.cs" />
     <Compile Include="PythonToolsService.cs" />
     <Compile Include="PythonTools\AzureToolsContracts.cs" />
     <Compile Include="PythonTools\Commands\AzureExplorerAttachDebuggerCommand.cs" />
@@ -286,7 +292,6 @@
     <Compile Include="PythonTools\Project\AnalyzerChangingEventArgs.cs" />
     <Compile Include="PythonTools\Project\Attributes.cs" />
     <Compile Include="PythonTools\Project\Conda.cs" />
-    <Compile Include="PythonTools\Project\ProjectResources.cs" />
     <Compile Include="ProvideComponentPickerPropertyPageAttribute.cs" />
     <Compile Include="ProvideDiffSupportedContentTypeAttribute.cs" />
     <Compile Include="ProvideEditorExtension2Attribute.cs" />
@@ -1256,6 +1261,9 @@
   <ItemGroup>
     <Folder Include="Templates\Files\EmptyPackage\package\" />
   </ItemGroup>
+  <PropertyGroup>
+    <SharedProject_IncludeUIThreadBase>false</SharedProject_IncludeUIThreadBase>
+  </PropertyGroup>
   <Import Project="$(BuildRoot)\Common\Product\SharedProject\SharedProject.proj" />
   <Import Project="..\ProjectAfter.settings" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

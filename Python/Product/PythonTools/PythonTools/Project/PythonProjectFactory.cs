@@ -108,7 +108,7 @@ namespace Microsoft.PythonTools.Project {
                     })
                     .Contains(webProjectGuid)
                 ) {
-                    log(__VSUL_ERRORLEVEL.VSUL_ERROR, SR.GetString(SR.ProjectRequiresVWDExpress));
+                    log(__VSUL_ERRORLEVEL.VSUL_ERROR, Strings.ProjectRequiresVWDExpress);
                     return ProjectUpgradeState.Incompatible;
                 }
             }
@@ -146,7 +146,7 @@ namespace Microsoft.PythonTools.Project {
             if (!Version.TryParse(projectXml.ToolsVersion, out version) ||
                 version < new Version(4, 0)) {
                 projectXml.ToolsVersion = "4.0";
-                log(__VSUL_ERRORLEVEL.VSUL_INFORMATIONAL, SR.GetString(SR.UpgradedToolsVersion));
+                log(__VSUL_ERRORLEVEL.VSUL_INFORMATIONAL, Strings.UpgradedToolsVersion);
             }
 
             // Importing a targets file from 2.1 Beta
@@ -160,18 +160,18 @@ namespace Microsoft.PythonTools.Project {
                 var globals = projectXml.PropertyGroups.FirstOrDefault() ?? projectXml.AddPropertyGroup();
                 AddOrSetProperty(globals, "PythonDebugWebServerCommandArguments", "--debug $(CommandLineArguments)");
                 AddOrSetProperty(globals, "PythonWsgiHandler", "{StartupModule}.wsgi_app()");
-                log(__VSUL_ERRORLEVEL.VSUL_INFORMATIONAL, SR.GetString(SR.UpgradedBottleImports));
+                log(__VSUL_ERRORLEVEL.VSUL_INFORMATIONAL, Strings.UpgradedBottleImports);
             }
             if (flaskImports.Any()) {
                 var globals = projectXml.PropertyGroups.FirstOrDefault() ?? projectXml.AddPropertyGroup();
                 AddOrSetProperty(globals, "PythonWsgiHandler", "{StartupModule}.wsgi_app");
-                log(__VSUL_ERRORLEVEL.VSUL_INFORMATIONAL, SR.GetString(SR.UpgradedFlaskImports));
+                log(__VSUL_ERRORLEVEL.VSUL_INFORMATIONAL, Strings.UpgradedFlaskImports);
             }
 
             var commonPropsImports = projectXml.Imports.Where(p => p.Project.Equals(CommonProps, StringComparison.OrdinalIgnoreCase)).ToList();
             foreach (var p in commonPropsImports) {
                 projectXml.RemoveChild(p);
-                log(__VSUL_ERRORLEVEL.VSUL_INFORMATIONAL, SR.GetString(SR.UpgradedRemoveCommonProps));
+                log(__VSUL_ERRORLEVEL.VSUL_INFORMATIONAL, Strings.UpgradedRemoveCommonProps);
             }
             
             if (projectXml.Imports.Count == 1 && projectXml.Imports.First().Project.Equals(CommonTargets, StringComparison.OrdinalIgnoreCase)) {
@@ -183,7 +183,7 @@ namespace Microsoft.PythonTools.Project {
                 group.AddProperty("PtvsTargetsFile", PtvsTargets);
                 projectXml.AddImport("$(PtvsTargetsFile)").Condition = "Exists($(PtvsTargetsFile))";
                 projectXml.AddImport(CommonTargets).Condition = "!Exists($(PtvsTargetsFile))";
-                log(__VSUL_ERRORLEVEL.VSUL_INFORMATIONAL, SR.GetString(SR.UpgradedRemoveCommonTargets));
+                log(__VSUL_ERRORLEVEL.VSUL_INFORMATIONAL, Strings.UpgradedRemoveCommonTargets);
             }
         }
 

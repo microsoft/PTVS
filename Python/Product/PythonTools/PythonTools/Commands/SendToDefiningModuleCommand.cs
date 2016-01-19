@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudioTools;
 

@@ -19,6 +19,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
@@ -343,7 +344,7 @@ namespace Microsoft.PythonTools.Project {
                         continue;
                     }
 
-                    var absPath = CommonUtils.GetAbsoluteFilePath(project.ProjectDirectory, path);
+                    var absPath = PathUtils.GetAbsoluteFilePath(project.ProjectDirectory, path);
                     if (seen.Add(absPath)) {
                         yield return absPath;
                     }
@@ -356,13 +357,13 @@ namespace Microsoft.PythonTools.Project {
                     if (r.Kind == ProjectReferenceKind.ExtensionModule) {
                         string absPath;
                         try {
-                            absPath = CommonUtils.GetAbsoluteFilePath(project.ProjectDirectory, r.Name);
+                            absPath = PathUtils.GetAbsoluteFilePath(project.ProjectDirectory, r.Name);
                         } catch (InvalidOperationException) {
                             continue;
                         }
 
                         if (!string.IsNullOrEmpty(absPath)) {
-                            var parentPath = CommonUtils.GetParent(absPath);
+                            var parentPath = PathUtils.GetParent(absPath);
                             if (!string.IsNullOrEmpty(parentPath) && seen.Add(parentPath)) {
                                 yield return parentPath;
                             }

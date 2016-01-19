@@ -28,6 +28,7 @@ using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.XPath;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.EnvironmentsList {
@@ -276,7 +277,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                             FileOptions.DeleteOnClose
                         );
                     } catch (DirectoryNotFoundException) {
-                        var dir = CommonUtils.GetParent(filename);
+                        var dir = PathUtils.GetParent(filename);
                         if (!Directory.Exists(dir)) {
                             Directory.CreateDirectory(dir);
                         } else {

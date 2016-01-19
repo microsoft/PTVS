@@ -26,7 +26,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Win32.SafeHandles;
 
-namespace Microsoft.VisualStudioTools.Project {
+namespace Microsoft.VisualStudioTools.Infrastructure {
     /// <summary>
     /// Base class that can receive output from <see cref="ProcessOutput"/>.
     /// 

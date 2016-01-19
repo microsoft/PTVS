@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Choose>
     <When Condition=" '$(VisualStudioVersion)'=='15.0'  Or '$(TargetVisualStudioVersion)'=='VS150' ">
@@ -135,15 +135,6 @@
     </COMReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\..\..\Common\Product\SharedProject\CommonUtils.cs">
-      <Link>CommonUtils.cs</Link>
-    </Compile>
-    <Compile Include="..\..\..\Common\Product\SharedProject\ProcessOutput.cs">
-      <Link>Profiling\ProcessOutput.cs</Link>
-    </Compile>
-    <Compile Include="..\PythonTools\PythonToolsInstallPath.cs">
-      <Link>Profiling\PythonToolsInstallPath.cs</Link>
-    </Compile>
     <Compile Include="DialogWindowVersioningWorkaround.cs" />
     <Compile Include="Profiling\AutomationProfiling.cs" />
     <Compile Include="Profiling\AutomationReport.cs" />
@@ -241,20 +232,24 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Analysis\Analysis.csproj">
+    <ProjectReference Include="$(BuildRoot)Python\Product\Analysis\Analysis.csproj">
       <Project>{A85D479D-67A9-4BDB-904A-7D86DAF68A6F}</Project>
-      <Name>Analysis</Name>
+      <Name>Microsoft.PythonTools.Analysis</Name>
     </ProjectReference>
-    <ProjectReference Include="..\PythonTools\PythonTools.csproj">
+    <ProjectReference Include="$(BuildRoot)Python\Product\Common\Common.csproj">
+      <Project>{b3db0521-d9e3-4f48-9e2e-e5ecae886049}</Project>
+      <Name>Microsoft.PythonTools.Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="$(BuildRoot)Python\Product\PythonTools\PythonTools.csproj">
       <Project>{FA7BE5F5-E04F-4613-B7AC-70CE10D1BB68}</Project>
-      <Name>PythonTools</Name>
+      <Name>Microsoft.PythonTools</Name>
     </ProjectReference>
-    <ProjectReference Include="..\VSInterpreters\VSInterpreters.csproj">
+    <ProjectReference Include="$(BuildRoot)Python\Product\VSInterpreters\VSInterpreters.csproj">
       <Project>{815db0cd-c0dd-4997-b43c-abee4dbeffe7}</Project>
-      <Name>VSInterpreters</Name>
+      <Name>Microsoft.PythonTools.VSInterpreters</Name>
     </ProjectReference>
-    <ProjectReference2 Include="..\VsPyProf\VsPyProf.vcxproj" />
-    <ProjectReference2 Include="..\VsPyProf\VsPyProfX86.vcxproj" />
+    <ProjectReference2 Include="$(BuildRoot)Python\Product\VsPyProf\VsPyProf.vcxproj" />
+    <ProjectReference2 Include="$(BuildRoot)Python\Product\VsPyProf\VsPyProfX86.vcxproj" />
   </ItemGroup>
   <Import Project="..\ProjectAfter.settings" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

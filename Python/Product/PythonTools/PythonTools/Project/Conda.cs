@@ -20,9 +20,8 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.VisualStudioTools;
-using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project {
     static class Conda {
@@ -34,7 +33,7 @@ namespace Microsoft.PythonTools.Project {
             IPythonInterpreterFactory target,
             IInterpreterOptionsService service
         ) {
-            var condaMetaPath = CommonUtils.GetAbsoluteDirectoryPath(
+            var condaMetaPath = PathUtils.GetAbsoluteDirectoryPath(
                 target.Configuration.PrefixPath,
                 "conda-meta"
             );
@@ -72,7 +71,7 @@ namespace Microsoft.PythonTools.Project {
 
                     var prefix = Path.GetDirectoryName(Path.GetDirectoryName(pkg));
                     var factory = service.Interpreters.FirstOrDefault(
-                        f => CommonUtils.IsSameDirectory(f.Configuration.PrefixPath, prefix)
+                        f => PathUtils.IsSameDirectory(f.Configuration.PrefixPath, prefix)
                     );
 
                     if (factory != null && !(await factory.FindModulesAsync("conda")).Any()) {
@@ -116,7 +115,7 @@ namespace Microsoft.PythonTools.Project {
             condaFactory.ThrowIfNotRunnable();
 
             if (output != null) {
-                output.WriteLine(SR.GetString(SR.PackageInstalling, package));
+                output.WriteLine(Strings.PackageInstalling.FormatUI(package));
                 if (provider.GetPythonToolsService().GeneralOptions.ShowOutputWindowForPackageInstallation) {
                     output.ShowAndActivate();
                 } else {
@@ -135,9 +134,9 @@ namespace Microsoft.PythonTools.Project {
                 var exitCode = await proc;
                 if (output != null) {
                     if (exitCode == 0) {
-                        output.WriteLine(SR.GetString(SR.PackageInstallSucceeded, package));
+                        output.WriteLine(Strings.PackageInstallSucceeded.FormatUI(package));
                     } else {
-                        output.WriteLine(SR.GetString(SR.PackageInstallFailedExitCode, package, exitCode));
+                        output.WriteLine(Strings.PackageInstallFailedExitCode.FormatUI(package, exitCode));
                     }
                     if (provider.GetPythonToolsService().GeneralOptions.ShowOutputWindowForPackageInstallation) {
                         output.ShowAndActivate();

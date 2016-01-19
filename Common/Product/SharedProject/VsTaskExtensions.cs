@@ -26,7 +26,7 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudioTools.Project;
 using Task = System.Threading.Tasks.Task;
 
-namespace Microsoft.VisualStudioTools {
+namespace Microsoft.VisualStudioTools.Infrastructure {
     static class VsTaskExtensions {
         private static readonly HashSet<string> _displayedMessages = new HashSet<string>();
 

@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Imaging;
 using Microsoft.VisualStudio.Imaging.Interop;
@@ -40,7 +41,7 @@ namespace Microsoft.PythonTools.Project {
         public BaseSearchPathNode(PythonProjectNode project, string path, ProjectElement element)
             : base(project, element) {
             _project = project;
-            _path = CommonUtils.TrimEndSeparator(path);
+            _path = PathUtils.TrimEndSeparator(path);
             this.ExcludeNodeFromScc = true;
         }
 
@@ -56,7 +57,7 @@ namespace Microsoft.PythonTools.Project {
         public override string Caption {
             get {
                 if (_caption == null) {
-                    _caption = CommonUtils.CreateFriendlyDirectoryPath(this.ProjectMgr.ProjectHome, this.Url);
+                    _caption = PathUtils.CreateFriendlyDirectoryPath(this.ProjectMgr.ProjectHome, this.Url);
                 }
                 return _caption;
             }
@@ -129,7 +130,7 @@ namespace Microsoft.PythonTools.Project {
 
         public override string Url {
             get {
-                return CommonUtils.GetAbsoluteFilePath(this.ProjectMgr.ProjectHome, _path);
+                return PathUtils.GetAbsoluteFilePath(this.ProjectMgr.ProjectHome, _path);
             }
         }
 

@@ -44,6 +44,7 @@ using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Navigation;
 using IServiceProvider = System.IServiceProvider;
+using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Language {
     /// <summary>
@@ -152,7 +153,7 @@ namespace Microsoft.PythonTools.Language {
             Debug.Assert(location.Line > 0);
             Debug.Assert(location.Column > 0);
 
-            if (CommonUtils.IsSamePath(location.FilePath, _textView.GetFilePath())) {
+            if (PathUtils.IsSamePath(location.FilePath, _textView.GetFilePath())) {
                 var viewAdapter = GetViewAdapter();
                 viewAdapter.SetCaretPos(location.Line - 1, location.Column - 1);
                 viewAdapter.CenterLines(location.Line - 1, 1);

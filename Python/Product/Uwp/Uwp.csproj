@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Choose>
     <When Condition=" '$(VisualStudioVersion)'=='15.0'  Or '$(TargetVisualStudioVersion)'=='VS150' ">
@@ -193,12 +193,6 @@
   <ItemGroup>
     <Compile Include="$(BuildRoot)\Common\Product\SharedProject\SolutionListener.cs">
       <Link>Project\SolutionListener.cs</Link>
-    </Compile>
-    <Compile Include="..\..\..\Common\Product\SharedProject\CommonUtils.cs">
-      <Link>Project\CommonUtils.cs</Link>
-    </Compile>
-    <Compile Include="..\..\..\Common\Product\SharedProject\ExceptionExtensions.cs">
-      <Link>ExceptionExtensions.cs</Link>
     </Compile>
     <Compile Include="Extensions.cs" />
     <Compile Include="Guids.cs" />

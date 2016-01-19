@@ -24,6 +24,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Interop;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudioTools;
@@ -38,6 +39,7 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
         public static readonly RoutedCommand BrowseOpenFileCommand = new RoutedCommand();
         public static readonly RoutedCommand BrowseSaveFileCommand = new RoutedCommand();
 
+        private readonly IServiceProvider _site;
 
 
         public ImportSettings ImportSettings {
@@ -77,7 +79,8 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
 
         public ImportWizard(IServiceProvider serviceProvider, string sourcePath, string projectPath) {
             var interpreterService = serviceProvider.GetComponentModel().GetService<IInterpreterOptionsService>();
-            ImportSettings = new ImportSettings(interpreterService);
+            _site = serviceProvider;
+            ImportSettings = new ImportSettings(serviceProvider, interpreterService);
 
             _pageSequence = new CollectionViewSource {
                 Source = new ObservableCollection<Page>(new Page[] {
@@ -108,7 +111,7 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
 
         async void ImportWizard_Loaded(object sender, RoutedEventArgs e) {
             Loaded -= ImportWizard_Loaded;
-            await ImportSettings.UpdateSourcePathAsync().HandleAllExceptions(SR.ProductName);
+            await ImportSettings.UpdateSourcePathAsync().HandleAllExceptions(_site);
         }
 
         private void PageSequence_CurrentChanged(object sender, EventArgs e) {
@@ -123,8 +126,8 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
         private void Finish_Executed(object sender, ExecutedRoutedEventArgs e) {
             if (ImportSettings.ProjectFileExists) {
                 if (MessageBoxResult.Cancel == MessageBox.Show(
-                    SR.GetString(SR.ImportWizardProjectExists),
-                    SR.ProductName,
+                    Strings.ImportWizardProjectExists,
+                    Strings.ProductTitle,
                     MessageBoxButton.OKCancel
                 )) {
                     return;

@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Microsoft.PythonTools.Analysis.Analyzer;
+using Microsoft.PythonTools.Common.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -513,11 +514,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     IEnumerable<AnalysisValue> mro1;
                     AnalysisValue[] mro2;
                     if (IsFirstForMroUnion(ClassDefinition, ci.ClassDefinition)) {
-                        mro1 = Mro.SelectMany().Except(_projectState.DoNotUnionInMro);
-                        mro2 = ci.Mro.SelectMany().Except(_projectState.DoNotUnionInMro).ToArray();
+                        mro1 = Mro.SelectMany().Except(_projectState.DoNotUnionInMro.AsEnumerable());
+                        mro2 = ci.Mro.SelectMany().Except(_projectState.DoNotUnionInMro.AsEnumerable()).ToArray();
                     } else {
-                        mro1 = ci.Mro.SelectMany().Except(_projectState.DoNotUnionInMro);
-                        mro2 = Mro.SelectMany().Except(_projectState.DoNotUnionInMro).ToArray();
+                        mro1 = ci.Mro.SelectMany().Except(_projectState.DoNotUnionInMro.AsEnumerable());
+                        mro2 = Mro.SelectMany().Except(_projectState.DoNotUnionInMro.AsEnumerable()).ToArray();
                     }
                     return mro1.FirstOrDefault(cls => mro2.Contains(cls)) ?? _projectState.ClassInfos[BuiltinTypeId.Object];
                 }
@@ -542,11 +543,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     IEnumerable<AnalysisValue> mro1;
                     AnalysisValue[] mro2;
                     if (IsFirstForMroUnion(ClassDefinition, ci.ClassDefinition)) {
-                        mro1 = Mro.SelectMany().Except(_projectState.DoNotUnionInMro);
-                        mro2 = ci.Mro.SelectMany().Except(_projectState.DoNotUnionInMro).ToArray();
+                        mro1 = Mro.SelectMany().Except(_projectState.DoNotUnionInMro.AsEnumerable());
+                        mro2 = ci.Mro.SelectMany().Except(_projectState.DoNotUnionInMro.AsEnumerable()).ToArray();
                     } else {
-                        mro1 = ci.Mro.SelectMany().Except(_projectState.DoNotUnionInMro);
-                        mro2 = Mro.SelectMany().Except(_projectState.DoNotUnionInMro).ToArray();
+                        mro1 = ci.Mro.SelectMany().Except(_projectState.DoNotUnionInMro.AsEnumerable());
+                        mro2 = Mro.SelectMany().Except(_projectState.DoNotUnionInMro.AsEnumerable()).ToArray();
                     }
                     return mro1.Any(cls => mro2.Contains(cls));
                 }
@@ -555,7 +556,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 if (bci != null &&
                     !_projectState.DoNotUnionInMro.Contains(this) &&
                     !_projectState.DoNotUnionInMro.Contains(bci)) {
-                    return Mro.AnyContains(bci);
+                    return Mro.Any(m => m.Contains(bci));
                 }
             }
 

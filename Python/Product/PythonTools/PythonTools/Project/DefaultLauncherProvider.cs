@@ -47,13 +47,13 @@ namespace Microsoft.PythonTools.Project {
 
         public string LocalizedName {
             get {
-                return SR.GetString(SR.DefaultLauncherName);
+                return Strings.DefaultLauncherName;
             }
         }
 
         public string Description {
             get {
-                return SR.GetString(SR.DefaultLauncherDescription);
+                return Strings.DefaultLauncherDescription;
             }
         }
 

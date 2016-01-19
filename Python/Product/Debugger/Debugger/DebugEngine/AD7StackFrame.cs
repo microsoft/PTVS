@@ -17,9 +17,9 @@
 using System;
 using System.IO;
 using System.Linq;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Debugger.Interop;
-using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Debugger.DebugEngine {
     // Represents a logical stack frame on the thread stack. 
@@ -74,7 +74,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             if ((dwFieldSpec & enum_FRAMEINFO_FLAGS.FIF_FUNCNAME) != 0) {
                 string funcName = _stackFrame.GetQualifiedFunctionName();
                 if (funcName == "<module>") {
-                    if (CommonUtils.IsValidPath(_stackFrame.FileName)) {
+                    if (PathUtils.IsValidPath(_stackFrame.FileName)) {
                         funcName = Path.GetFileNameWithoutExtension(_stackFrame.FileName) + " module";
                     } else if (_stackFrame.FileName.EndsWith("<string>")) {
                         funcName = "<exec or eval>";
@@ -84,7 +84,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                         funcName = _stackFrame.FileName + " unknown code";
                     }
                 } else if ((dwFieldSpec & enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_MODULE) != 0) {
-                    if (CommonUtils.IsValidPath(_stackFrame.FileName)) {
+                    if (PathUtils.IsValidPath(_stackFrame.FileName)) {
                         funcName += " in " + Path.GetFileNameWithoutExtension(_stackFrame.FileName);
                     } else {
                         funcName += " in " + _stackFrame.FileName;
@@ -117,7 +117,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
             // The debugger is requesting the name of the module for this stack frame.
             if ((dwFieldSpec & enum_FRAMEINFO_FLAGS.FIF_MODULE) != 0) {
-                if (CommonUtils.IsValidPath(_stackFrame.FileName)) {
+                if (PathUtils.IsValidPath(_stackFrame.FileName)) {
                     frameInfo.m_bstrModule = Path.GetFileNameWithoutExtension(this._stackFrame.FileName);
                 } else if (_stackFrame.FileName.EndsWith("<string>")) {
                     frameInfo.m_bstrModule = "<exec/eval>";

@@ -22,6 +22,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudioTools;
 using MSBuild = Microsoft.Build.Evaluation;
 
@@ -104,7 +105,7 @@ namespace Microsoft.PythonTools.Interpreter {
             errors.AppendLine("Some project interpreters failed to load:");
             bool anyChange = false, anyError = false;
 
-            var projectHome = CommonUtils.GetAbsoluteDirectoryPath(_project.DirectoryPath, _project.GetPropertyValue("ProjectHome"));
+            var projectHome = PathUtils.GetAbsoluteDirectoryPath(_project.DirectoryPath, _project.GetPropertyValue("ProjectHome"));
             var factories = new Dictionary<IPythonInterpreterFactory, FactoryInfo>();
             foreach (var item in _project.GetItems(InterpreterItem)) {
                 IPythonInterpreterFactory fact;
@@ -113,12 +114,12 @@ namespace Microsoft.PythonTools.Interpreter {
                 // Errors in these options are fatal, so we set anyError and
                 // continue with the next entry.
                 var dir = item.EvaluatedInclude;
-                if (!CommonUtils.IsValidPath(dir)) {
+                if (!PathUtils.IsValidPath(dir)) {
                     errors.AppendLine(string.Format("Interpreter has invalid path: {0}", dir ?? "(null)"));
                     anyError = true;
                     continue;
                 }
-                dir = CommonUtils.GetAbsoluteDirectoryPath(projectHome, dir);
+                dir = PathUtils.GetAbsoluteDirectoryPath(projectHome, dir);
 
                 var value = item.GetMetadataValue(IdKey);
                 if (string.IsNullOrEmpty(value) || !Guid.TryParse(value, out id)) {
@@ -147,7 +148,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
                 var description = item.GetMetadataValue(DescriptionKey);
                 if (string.IsNullOrEmpty(description)) {
-                    description = CommonUtils.CreateFriendlyDirectoryPath(projectHome, dir);
+                    description = PathUtils.CreateFriendlyDirectoryPath(projectHome, dir);
                 }
 
                 value = item.GetMetadataValue(BaseInterpreterKey);
@@ -164,30 +165,30 @@ namespace Microsoft.PythonTools.Interpreter {
                 }
 
                 var path = item.GetMetadataValue(InterpreterPathKey);
-                if (!CommonUtils.IsValidPath(path)) {
+                if (!PathUtils.IsValidPath(path)) {
                     errors.AppendLine(string.Format("Interpreter {0} has invalid value for '{1}': {2}", dir, InterpreterPathKey, path));
                     hasError = true;
                 } else if (!hasError) {
-                    path = CommonUtils.GetAbsoluteFilePath(dir, path);
+                    path = PathUtils.GetAbsoluteFilePath(dir, path);
                 }
 
                 var winPath = item.GetMetadataValue(WindowsPathKey);
-                if (!CommonUtils.IsValidPath(winPath)) {
+                if (!PathUtils.IsValidPath(winPath)) {
                     errors.AppendLine(string.Format("Interpreter {0} has invalid value for '{1}': {2}", dir, WindowsPathKey, winPath));
                     hasError = true;
                 } else if (!hasError) {
-                    winPath = CommonUtils.GetAbsoluteFilePath(dir, winPath);
+                    winPath = PathUtils.GetAbsoluteFilePath(dir, winPath);
                 }
 
                 var libPath = item.GetMetadataValue(LibraryPathKey);
                 if (string.IsNullOrEmpty(libPath)) {
                     libPath = "lib";
                 }
-                if (!CommonUtils.IsValidPath(libPath)) {
+                if (!PathUtils.IsValidPath(libPath)) {
                     errors.AppendLine(string.Format("Interpreter {0} has invalid value for '{1}': {2}", dir, LibraryPathKey, libPath));
                     hasError = true;
                 } else if (!hasError) {
-                    libPath = CommonUtils.GetAbsoluteDirectoryPath(dir, libPath);
+                    libPath = PathUtils.GetAbsoluteDirectoryPath(dir, libPath);
                 }
 
                 var pathVar = item.GetMetadataValue(PathEnvVarKey);
@@ -359,8 +360,8 @@ namespace Microsoft.PythonTools.Interpreter {
         /// </param>
         /// <returns>The ID of the created interpreter.</returns>
         public Guid CreateInterpreterFactory(InterpreterFactoryCreationOptions options) {
-            var projectHome = CommonUtils.GetAbsoluteDirectoryPath(_project.DirectoryPath, _project.GetPropertyValue("ProjectHome"));
-            var rootPath = CommonUtils.GetAbsoluteDirectoryPath(projectHome, options.PrefixPath);
+            var projectHome = PathUtils.GetAbsoluteDirectoryPath(_project.DirectoryPath, _project.GetPropertyValue("ProjectHome"));
+            var rootPath = PathUtils.GetAbsoluteDirectoryPath(projectHome, options.PrefixPath);
 
             IPythonInterpreterFactory fact;
             var id = Guid.NewGuid();
@@ -374,7 +375,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
                 var description = options.Description;
                 if (string.IsNullOrEmpty(description)) {
-                    description = CommonUtils.CreateFriendlyDirectoryPath(projectHome, rootPath);
+                    description = PathUtils.CreateFriendlyDirectoryPath(projectHome, rootPath);
                     int i = description.LastIndexOf("\\scripts", StringComparison.OrdinalIgnoreCase);
                     if (i > 0) {
                         description = description.Remove(i);
@@ -426,7 +427,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 bool success = false;
                 try {
                     foreach (var file in Directory.GetFiles(oldPath, "*", SearchOption.AllDirectories)) {
-                        var newFile = CommonUtils.GetAbsoluteFilePath(newPath, CommonUtils.GetRelativeFilePath(oldPath, file));
+                        var newFile = PathUtils.GetAbsoluteFilePath(newPath, PathUtils.GetRelativeFilePath(oldPath, file));
                         var newDirectory = Path.GetDirectoryName(newFile);
                         Directory.CreateDirectory(newDirectory);
                         File.Move(file, newFile);
@@ -474,20 +475,20 @@ namespace Microsoft.PythonTools.Interpreter {
 
             var derived = factory as DerivedInterpreterFactory;
             if (derived != null) {
-                var projectHome = CommonUtils.GetAbsoluteDirectoryPath(_project.DirectoryPath, _project.GetPropertyValue("ProjectHome"));
-                var rootPath = CommonUtils.EnsureEndSeparator(factory.Configuration.PrefixPath);
+                var projectHome = PathUtils.GetAbsoluteDirectoryPath(_project.DirectoryPath, _project.GetPropertyValue("ProjectHome"));
+                var rootPath = PathUtils.EnsureEndSeparator(factory.Configuration.PrefixPath);
                 _rootPaths[factory.Id] = rootPath;
 
                 item = _project.AddItem(InterpreterItem,
-                    CommonUtils.GetRelativeDirectoryPath(projectHome, rootPath),
+                    PathUtils.GetRelativeDirectoryPath(projectHome, rootPath),
                     new Dictionary<string, string> {
                         { IdKey, derived.Id.ToString("B") },
                         { BaseInterpreterKey, derived.BaseInterpreter.Id.ToString("B") },
                         { VersionKey, derived.BaseInterpreter.Configuration.Version.ToString() },
                         { DescriptionKey, derived.Description },
-                        { InterpreterPathKey, CommonUtils.GetRelativeFilePath(rootPath, derived.Configuration.InterpreterPath) },
-                        { WindowsPathKey, CommonUtils.GetRelativeFilePath(rootPath, derived.Configuration.WindowsInterpreterPath) },
-                        { LibraryPathKey, CommonUtils.GetRelativeDirectoryPath(rootPath, derived.Configuration.LibraryPath) },
+                        { InterpreterPathKey, PathUtils.GetRelativeFilePath(rootPath, derived.Configuration.InterpreterPath) },
+                        { WindowsPathKey, PathUtils.GetRelativeFilePath(rootPath, derived.Configuration.WindowsInterpreterPath) },
+                        { LibraryPathKey, PathUtils.GetRelativeDirectoryPath(rootPath, derived.Configuration.LibraryPath) },
                         { PathEnvVarKey, derived.Configuration.PathEnvironmentVariable },
                         { ArchitectureKey, derived.Configuration.Architecture.ToString() }
                     }).FirstOrDefault();
@@ -499,18 +500,18 @@ namespace Microsoft.PythonTools.Interpreter {
             } else {
                 // Can't find the interpreter anywhere else, so add its
                 // configuration to the project file.
-                var projectHome = CommonUtils.GetAbsoluteDirectoryPath(_project.DirectoryPath, _project.GetPropertyValue("ProjectHome"));
-                var rootPath = CommonUtils.EnsureEndSeparator(factory.Configuration.PrefixPath);
+                var projectHome = PathUtils.GetAbsoluteDirectoryPath(_project.DirectoryPath, _project.GetPropertyValue("ProjectHome"));
+                var rootPath = PathUtils.EnsureEndSeparator(factory.Configuration.PrefixPath);
 
                 item = _project.AddItem(InterpreterItem,
-                    CommonUtils.GetRelativeDirectoryPath(projectHome, rootPath),
+                    PathUtils.GetRelativeDirectoryPath(projectHome, rootPath),
                     new Dictionary<string, string> {
                         { IdKey, factory.Id.ToString("B") },
                         { VersionKey, factory.Configuration.Version.ToString() },
                         { DescriptionKey, factory.Description },
-                        { InterpreterPathKey, CommonUtils.GetRelativeFilePath(rootPath, factory.Configuration.InterpreterPath) },
-                        { WindowsPathKey, CommonUtils.GetRelativeFilePath(rootPath, factory.Configuration.WindowsInterpreterPath) },
-                        { LibraryPathKey, CommonUtils.GetRelativeDirectoryPath(rootPath, factory.Configuration.LibraryPath) },
+                        { InterpreterPathKey, PathUtils.GetRelativeFilePath(rootPath, factory.Configuration.InterpreterPath) },
+                        { WindowsPathKey, PathUtils.GetRelativeFilePath(rootPath, factory.Configuration.WindowsInterpreterPath) },
+                        { LibraryPathKey, PathUtils.GetRelativeDirectoryPath(rootPath, factory.Configuration.LibraryPath) },
                         { PathEnvVarKey, factory.Configuration.PathEnvironmentVariable },
                         { ArchitectureKey, factory.Configuration.Architecture.ToString() }
                     }).FirstOrDefault();
@@ -669,11 +670,11 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         public IPythonInterpreterFactory FindInterpreter(string rootPath) {
-            var projectHome = CommonUtils.GetAbsoluteDirectoryPath(
+            var projectHome = PathUtils.GetAbsoluteDirectoryPath(
                 _project.DirectoryPath,
                 _project.GetPropertyValue("ProjectHome")
             );
-            rootPath = CommonUtils.GetAbsoluteDirectoryPath(projectHome, rootPath);
+            rootPath = PathUtils.GetAbsoluteDirectoryPath(projectHome, rootPath);
 
             foreach (var kv in _rootPaths) {
                 if (kv.Value.Equals(rootPath, StringComparison.OrdinalIgnoreCase)) {

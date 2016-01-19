@@ -20,8 +20,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project {
     static class EasyInstall {
@@ -108,11 +108,11 @@ namespace Microsoft.PythonTools.Project {
 
             bool isScript;
             if (site != null && GetEasyInstallPath(factory, out isScript) == null) {
-                await Pip.QueryInstallPip(factory, site, SR.GetString(SR.InstallEasyInstall), elevate, output);
+                await Pip.QueryInstallPip(factory, site, Strings.InstallEasyInstall, elevate, output);
             }
 
             if (output != null) {
-                output.WriteLine(SR.GetString(SR.PackageInstalling, package));
+                output.WriteLine(Strings.PackageInstalling.FormatUI(package));
                 if (provider.GetPythonToolsService().GeneralOptions.ShowOutputWindowForPackageInstallation) {
                     output.ShowAndActivate();
                 } else {
@@ -124,9 +124,9 @@ namespace Microsoft.PythonTools.Project {
 
             if (output != null) {
                 if (exitCode == 0) {
-                    output.WriteLine(SR.GetString(SR.PackageInstallSucceeded, package));
+                    output.WriteLine(Strings.PackageInstallSucceeded.FormatUI(package));
                 } else {
-                    output.WriteLine(SR.GetString(SR.PackageInstallFailedExitCode, package, exitCode));
+                    output.WriteLine(Strings.PackageInstallFailedExitCode.FormatUI(package, exitCode));
                 }
                 if (provider.GetPythonToolsService().GeneralOptions.ShowOutputWindowForPackageInstallation) {
                     output.ShowAndActivate();

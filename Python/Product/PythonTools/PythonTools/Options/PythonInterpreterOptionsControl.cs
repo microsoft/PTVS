@@ -21,6 +21,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
@@ -179,7 +180,7 @@ namespace Microsoft.PythonTools.Options {
                 if (string.IsNullOrEmpty(_path.Text)) {
                     CurrentOptions.InterpreterPath = string.Empty;
                     HideErrorBalloon(_invalidPathToolTip, _pathLabel);
-                } else if (!CommonUtils.IsValidPath(_path.Text)) {
+                } else if (!PathUtils.IsValidPath(_path.Text)) {
                     ShowErrorBalloon(_invalidPathToolTip, _pathLabel, _path, "The path contains invalid characters.");
                 } else {
                     CurrentOptions.InterpreterPath = _path.Text;
@@ -225,7 +226,7 @@ namespace Microsoft.PythonTools.Options {
 
         private void WindowsPathTextChanged(object sender, EventArgs e) {
             if (!_loadingOptions) {
-                if (!string.IsNullOrEmpty(_windowsPath.Text) && !CommonUtils.IsValidPath(_windowsPath.Text)) {
+                if (!string.IsNullOrEmpty(_windowsPath.Text) && !PathUtils.IsValidPath(_windowsPath.Text)) {
                     ShowErrorBalloon(_invalidWindowsPathToolTip, _windowsPathLabel, _windowsPath, "The path contains invalid characters.");
                 } else {
                     CurrentOptions.WindowsInterpreterPath = _windowsPath.Text;
@@ -236,7 +237,7 @@ namespace Microsoft.PythonTools.Options {
 
         private void LibraryPathTextChanged(object sender, EventArgs e) {
             if (!_loadingOptions) {
-                if (!string.IsNullOrEmpty(_libraryPath.Text) && !CommonUtils.IsValidPath(_libraryPath.Text)) {
+                if (!string.IsNullOrEmpty(_libraryPath.Text) && !PathUtils.IsValidPath(_libraryPath.Text)) {
                     ShowErrorBalloon(_invalidLibraryPathToolTip, _libraryPathLabel, _libraryPath, "The path contains invalid characters.");
                 } else {
                     CurrentOptions.LibraryPath = _libraryPath.Text;

@@ -14,7 +14,6 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-extern alias analysis;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -27,11 +26,11 @@ using Microsoft.Build.Execution;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Logging;
 using Microsoft.PythonTools;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.Python;
-using CommonUtils = analysis::Microsoft.VisualStudioTools.CommonUtils;
 
 namespace PythonToolsTests {
     [TestClass]
@@ -64,13 +63,13 @@ namespace PythonToolsTests {
             errTask.SetParameter("Text", "Expected did not match QualifiedProjectHome");
 
             
-            var loc = CommonUtils.EnsureEndSeparator(TestData.GetTempPath(randomSubPath: true));
+            var loc = PathUtils.EnsureEndSeparator(TestData.GetTempPath(randomSubPath: true));
             proj.Save(Path.Combine(loc, string.Format("test.proj")));
 
             foreach(var test in new [] {
                 new { ProjectHome="", Expected=loc },
                 new { ProjectHome=".", Expected=loc },
-                new { ProjectHome="..", Expected=CommonUtils.EnsureEndSeparator(Path.GetDirectoryName(Path.GetDirectoryName(loc))) },
+                new { ProjectHome="..", Expected=PathUtils.EnsureEndSeparator(Path.GetDirectoryName(Path.GetDirectoryName(loc))) },
                 new { ProjectHome="\\", Expected=Directory.GetDirectoryRoot(loc) },
                 new { ProjectHome="abc", Expected=loc + @"abc\" },
                 new { ProjectHome=@"a\b\c", Expected=loc + @"a\b\c\" },

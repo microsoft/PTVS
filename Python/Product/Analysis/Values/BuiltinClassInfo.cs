@@ -298,7 +298,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
                 var ci = ns as ClassInfo;
                 if (ci != null && TypeId != BuiltinTypeId.Object) {
-                    return ci.Mro.AnyContains(this);
+                    return ci.Mro.Any(m => m.Contains(this));
                 }
             }
 

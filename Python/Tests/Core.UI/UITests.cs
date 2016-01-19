@@ -184,7 +184,7 @@ namespace PythonToolsUITests {
 
                 const string sln = "Solution 'LoadSearchPaths' (1 project)";
                 const string proj = "LoadSearchPaths";
-                var sp = SR.GetString(SR.SearchPaths);
+                var sp = Strings.SearchPaths;
 
                 // Entered in file as ..\AddSearchPaths\
                 var path1 = tree.WaitForItem(sln, proj, sp, "..\\AddSearchPaths");
@@ -908,7 +908,7 @@ namespace PythonToolsUITests {
                 var folderNode = solutionTree.FindItem(
                     "Solution 'ExtensionReference' (1 project)",
                     "ExtensionReference",
-                    SR.GetString(SR.ReferencesNodeName)
+                    Strings.ReferencesNodeName
                 );
                 folderNode.Select();
                 var dialog = new AddReferenceDialog(AutomationElement.FromHandle(app.OpenDialogWithDteExecuteCommand("Project.AddReference")));
@@ -923,7 +923,7 @@ namespace PythonToolsUITests {
                 var spamItem = solutionTree.WaitForItem(
                     "Solution 'ExtensionReference' (1 project)",
                     "ExtensionReference",
-                    SR.GetString(SR.ReferencesNodeName),
+                    Strings.ReferencesNodeName,
                     "spam.pyd"
                 );
                 Assert.IsNotNull(spamItem);
@@ -965,7 +965,7 @@ namespace PythonToolsUITests {
                 solutionTree.WaitForItemRemoved(
                     "Solution 'ExtensionReference' (1 project)",
                     "ExtensionReference",
-                    SR.GetString(SR.ReferencesNodeName),
+                    Strings.ReferencesNodeName,
                     "spam.pyd"
                 );
 
@@ -976,7 +976,7 @@ namespace PythonToolsUITests {
 
                 using (var sh = doc.WaitForSession<ICompletionSession>()) {
                     var completion = sh.Session.CompletionSets.First().Completions.Select(x => x.DisplayText).Single();
-                    Assert.AreEqual(SR.GetString(SR.NoCompletionsCompletion), completion);
+                    Assert.AreEqual(Strings.NoCompletionsCompletion, completion);
                 }
             }
         }
