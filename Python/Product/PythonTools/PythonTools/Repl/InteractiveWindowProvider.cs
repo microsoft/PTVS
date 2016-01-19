@@ -97,7 +97,7 @@ namespace Microsoft.PythonTools.Repl {
                 _pythonContentType,
                 false,
                 curId,
-                SR.GetString(SR.ReplCaptionNoEvaluator),
+                Strings.ReplCaptionNoEvaluator,
                 typeof(Navigation.PythonLanguageInfo).GUID,
                 "PythonInteractive"
             );

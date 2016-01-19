@@ -228,7 +228,7 @@ namespace Microsoft.PythonTools.Repl {
 
         public bool IsExecuting => _activeEvaluator?.IsExecuting ?? false;
 
-        public string DisplayName => SR.GetString(SR.DebugReplDisplayName);
+        public string DisplayName => Strings.DebugReplDisplayName;
 
         public IEnumerable<KeyValuePair<string, bool>> GetAvailableScopesAndKind() {
             if (_activeEvaluator != null) {

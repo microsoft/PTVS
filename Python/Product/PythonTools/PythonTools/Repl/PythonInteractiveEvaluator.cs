@@ -25,6 +25,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Language;
@@ -85,7 +86,7 @@ namespace Microsoft.PythonTools.Repl {
                 var thread = Interlocked.Exchange(ref _thread, null);
                 if (thread != null) {
                     thread.Dispose();
-                    WriteError(SR.GetString(SR.ReplExited));
+                    WriteError(Strings.ReplExited);
                 }
                 _analyzer?.Dispose();
             }
@@ -374,7 +375,7 @@ namespace Microsoft.PythonTools.Repl {
                 return await thread.ExecuteText(text);
             }
 
-            WriteError(SR.GetString(SR.ReplDisconnected));
+            WriteError(Strings.ReplDisconnected);
             return ExecutionResult.Failure;
         }
 
@@ -384,7 +385,7 @@ namespace Microsoft.PythonTools.Repl {
                 return await thread.ExecuteFile(filename, extraArgs, "script");
             }
 
-            WriteError(SR.GetString(SR.ReplDisconnected));
+            WriteError(Strings.ReplDisconnected);
             return ExecutionResult.Failure;
         }
 
@@ -394,7 +395,7 @@ namespace Microsoft.PythonTools.Repl {
                 return await thread.ExecuteFile(name, extraArgs, "module");
             }
 
-            WriteError(SR.GetString(SR.ReplDisconnected));
+            WriteError(Strings.ReplDisconnected);
             return ExecutionResult.Failure;
         }
 
@@ -404,7 +405,7 @@ namespace Microsoft.PythonTools.Repl {
                 return await thread.ExecuteFile(filename, extraArgs, "process");
             }
 
-            WriteError(SR.GetString(SR.ReplDisconnected));
+            WriteError(Strings.ReplDisconnected);
             return ExecutionResult.Failure;
         }
 
@@ -487,8 +488,7 @@ namespace Microsoft.PythonTools.Repl {
                 return ExecutionResult.Success;
             }
 
-            var msg = SR.GetString(
-                SR.ReplInitializationMessage,
+            var msg = Strings.ReplInitializationMessage.FormatUI(
                 DisplayName,
                 AssemblyVersionInfo.Version,
                 AssemblyVersionInfo.VSVersion
@@ -526,7 +526,7 @@ namespace Microsoft.PythonTools.Repl {
             var thread = Interlocked.Exchange(ref _thread, null);
             if (thread == null) {
                 if (!quiet) {
-                    WriteError(SR.GetString(SR.ReplNotStarted));
+                    WriteError(Strings.ReplNotStarted);
                 }
                 return ExecutionResult.Success;
             }
@@ -536,7 +536,7 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             if (!quiet) {
-                WriteOutput(SR.GetString(SR.ReplReset));
+                WriteOutput(Strings.ReplReset);
             }
 
             thread.IsProcessExpectedToExit = quiet;

@@ -42,7 +42,7 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public IEnumerable<KeyValuePair<string, string>> GetEvaluators() {
-            yield return new KeyValuePair<string, string>(SR.GetString(SR.DebugReplDisplayName), GetDebugReplId());
+            yield return new KeyValuePair<string, string>(Strings.DebugReplDisplayName, GetDebugReplId());
         }
 
         internal static string GetDebugReplId() {

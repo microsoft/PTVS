@@ -1,29 +1,28 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Net.Sockets;
-using System.IO;
-using Microsoft.VisualStudio.InteractiveWindow;
-using System.Diagnostics;
-using System.Threading;
-using Microsoft.PythonTools.Debugger;
-using Microsoft.VisualStudioTools.Project;
-using Microsoft.VisualStudioTools;
-using System.Windows;
-using System.Windows.Markup;
-using System.Windows.Media.Imaging;
-using System.Windows.Controls;
-using System.Windows.Media;
-using Microsoft.PythonTools.Analysis;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using Microsoft.PythonTools.Interpreter;
-using Microsoft.VisualStudio.Shell;
-using SR = Microsoft.PythonTools.Project.SR;
-using Task = System.Threading.Tasks.Task;
+using System.IO;
+using System.Linq;
 using System.Net;
+using System.Net.Sockets;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Markup;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Debugger;
+using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Interpreter;
+using Microsoft.VisualStudio.InteractiveWindow;
+using Microsoft.VisualStudioTools;
+using Microsoft.VisualStudioTools.Project;
+using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.Repl {
     partial class PythonInteractiveEvaluator {
@@ -52,10 +51,10 @@ namespace Microsoft.PythonTools.Repl {
             _serviceProvider.GetUIThread().MustBeCalledFromUIThreadOrThrow();
 
             if (string.IsNullOrWhiteSpace(InterpreterPath)) {
-                WriteError(SR.GetString(SR.ReplEvaluatorInterpreterNotConfigured, DisplayName));
+                WriteError(Strings.ReplEvaluatorInterpreterNotConfigured.FormatUI(DisplayName));
                 return null;
             } else if (!File.Exists(InterpreterPath)) {
-                WriteError(SR.GetString(SR.ReplEvaluatorInterpreterNotFound));
+                WriteError(Strings.ReplEvaluatorInterpreterNotFound);
                 return null;
             }
 
@@ -142,9 +141,9 @@ namespace Microsoft.PythonTools.Repl {
                 }
             } catch (Win32Exception e) {
                 if (e.NativeErrorCode == Microsoft.VisualStudioTools.Project.NativeMethods.ERROR_FILE_NOT_FOUND) {
-                    WriteError(SR.GetString(SR.ReplEvaluatorInterpreterNotFound));
+                    WriteError(Strings.ReplEvaluatorInterpreterNotFound);
                 } else {
-                    WriteError(SR.GetString(SR.ErrorStartingInteractiveProcess, e.ToString()));
+                    WriteError(Strings.ErrorStartingInteractiveProcess.FormatUI(e.ToString()));
                 }
                 return null;
             } catch (Exception e) when(!e.IsCriticalException()) {
@@ -268,7 +267,7 @@ namespace Microsoft.PythonTools.Repl {
 
                 if (!IsProcessExpectedToExit) {
                     try {
-                        _eval.WriteError(SR.GetString(SR.ReplExited));
+                        _eval.WriteError(Strings.ReplExited);
                     } catch (Exception ex) when(!ex.IsCriticalException()) {
                     }
                 }
@@ -473,7 +472,7 @@ namespace Microsoft.PythonTools.Repl {
                     DisplayImage(File.ReadAllBytes(filename));
                 } catch (IOException) {
                     // can't read the file
-                    _eval.WriteError(SR.GetString(SR.ReplCannotReadFile, filename));
+                    _eval.WriteError(Strings.ReplCannotReadFile.FormatUI(filename));
                 }
             }
 
@@ -624,7 +623,7 @@ namespace Microsoft.PythonTools.Repl {
 
             public Task<ExecutionResult> ExecuteText(string text) {
                 if (text.StartsWith("$")) {
-                    _eval.WriteError(SR.GetString(SR.ReplUnknownCommand, text.Trim()));
+                    _eval.WriteError(Strings.ReplUnknownCommand.FormatUI(text.Trim()));
                     return ExecutionResult.Failed;
                 }
 
@@ -650,7 +649,7 @@ namespace Microsoft.PythonTools.Repl {
                             _completion = new TaskCompletionSource<ExecutionResult>();
                             return _completion.Task;
                         } else {
-                            _eval.WriteError(SR.GetString(SR.ReplDisconnectedReset));
+                            _eval.WriteError(Strings.ReplDisconnectedReset);
                             return ExecutionResult.Failed;
                         }
                     }
@@ -658,7 +657,7 @@ namespace Microsoft.PythonTools.Repl {
                     try {
                         send();
                     } catch (IOException) {
-                        _eval.WriteError(SR.GetString(SR.ReplDisconnectedReset));
+                        _eval.WriteError(Strings.ReplDisconnectedReset);
                         return ExecutionResult.Failed;
                     }
                 }
@@ -689,7 +688,7 @@ namespace Microsoft.PythonTools.Repl {
                             _completion = new TaskCompletionSource<ExecutionResult>();
                             return _completion.Task;
                         } else {
-                            _eval.WriteError(SR.GetString(SR.ReplDisconnectedReset));
+                            _eval.WriteError(Strings.ReplDisconnectedReset);
                             return ExecutionResult.Failed;
                         }
                     }
@@ -697,7 +696,7 @@ namespace Microsoft.PythonTools.Repl {
                     try {
                         send();
                     } catch (IOException) {
-                        _eval.WriteError(SR.GetString(SR.ReplDisconnectedReset));
+                        _eval.WriteError(Strings.ReplDisconnectedReset);
                         return ExecutionResult.Failed;
                     }
                 }
@@ -819,13 +818,13 @@ namespace Microsoft.PythonTools.Repl {
                             SendString(scopeName);
                             _currentScope = scopeName;
 
-                            _eval.WriteOutput(SR.GetString(SR.ReplModuleChanged, scopeName));
+                            _eval.WriteOutput(Strings.ReplModuleChanged.FormatUI(scopeName));
                         } else {
                             _eval.WriteOutput(_currentScope);
                         }
                     }
                 } catch (DisconnectedException) {
-                    _eval.WriteError(SR.GetString(SR.ReplModuleCannotChange));
+                    _eval.WriteError(Strings.ReplModuleCannotChange);
                 } catch (IOException) {
                 }
             }

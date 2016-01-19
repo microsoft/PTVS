@@ -280,6 +280,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Current debuggee.
+        /// </summary>
+        public static string DebugReplDisplayName {
+            get {
+                return ResourceManager.GetString("DebugReplDisplayName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Start &amp;debug server.
         /// </summary>
         public static string DebugWebServerLabel {
@@ -1091,6 +1100,51 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable to read file &apos;{0}&apos;.
+        /// </summary>
+        public static string ReplCannotReadFile {
+            get {
+                return ResourceManager.GetString("ReplCannotReadFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} Interactive.
+        /// </summary>
+        public static string ReplCaption {
+            get {
+                return ResourceManager.GetString("ReplCaption", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Python Interactive.
+        /// </summary>
+        public static string ReplCaptionNoEvaluator {
+            get {
+                return ResourceManager.GetString("ReplCaptionNoEvaluator", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Current interactive window is disconnected..
+        /// </summary>
+        public static string ReplDisconnected {
+            get {
+                return ResourceManager.GetString("ReplDisconnected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This interactive window has encountered an issue. Please Reset the window..
+        /// </summary>
+        public static string ReplDisconnectedReset {
+            get {
+                return ResourceManager.GetString("ReplDisconnectedReset", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} cannot be started because the path to the interpreter has not been configured.
         ///Please update the environment in Tools-&gt;Options-&gt;Python Tools-&gt;Environment Options
         ///.
@@ -1113,11 +1167,47 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The interactive Python process has exited..
+        /// </summary>
+        public static string ReplExited {
+            get {
+                return ResourceManager.GetString("ReplExited", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Python interactive window. Type $help for a list of commands..
         /// </summary>
         public static string ReplInitializationMessage {
             get {
                 return ResourceManager.GetString("ReplInitializationMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot change module, interactive window is disconnected.
+        /// </summary>
+        public static string ReplModuleCannotChange {
+            get {
+                return ResourceManager.GetString("ReplModuleCannotChange", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Current module changed to {0}.
+        /// </summary>
+        public static string ReplModuleChanged {
+            get {
+                return ResourceManager.GetString("ReplModuleChanged", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Interactive window is not yet started..
+        /// </summary>
+        public static string ReplNotStarted {
+            get {
+                return ResourceManager.GetString("ReplNotStarted", resourceCulture);
             }
         }
         
@@ -1129,6 +1219,24 @@ namespace Microsoft.PythonTools {
         public static string ReplOpeningError {
             get {
                 return ResourceManager.GetString("ReplOpeningError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Resetting Python state..
+        /// </summary>
+        public static string ReplReset {
+            get {
+                return ResourceManager.GetString("ReplReset", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unknown command &apos;{0}&apos;, use &apos;$help&apos; for a list of commands..
+        /// </summary>
+        public static string ReplUnknownCommand {
+            get {
+                return ResourceManager.GetString("ReplUnknownCommand", resourceCulture);
             }
         }
         

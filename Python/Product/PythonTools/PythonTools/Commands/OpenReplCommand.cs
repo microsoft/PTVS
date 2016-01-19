@@ -16,8 +16,8 @@
 
 using System;
 using System.Linq;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -73,7 +73,7 @@ namespace Microsoft.PythonTools.Commands {
                     factory != null ? Repl.PythonReplEvaluatorProvider.GetEvaluatorId(factory) : null
                 );
             } catch (Exception ex) when (!ex.IsCriticalException()) {
-                throw new InvalidOperationException(SR.GetString(SR.ErrorOpeningInteractiveWindow, ex));
+                throw new InvalidOperationException(Strings.ErrorOpeningInteractiveWindow.FormatUI(ex));
             }
         }
 

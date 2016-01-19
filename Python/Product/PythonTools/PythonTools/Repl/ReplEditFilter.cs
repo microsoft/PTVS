@@ -17,29 +17,24 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Forms;
-using Microsoft.PythonTools.Intellisense;
+using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
+using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.OLE.Interop;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Operations;
 using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudioTools;
 using IServiceProvider = System.IServiceProvider;
-using Clipboard = System.Windows.Forms.Clipboard;
-using Microsoft.VisualStudio.Editor;
-using Microsoft.VisualStudio.Shell;
-using Microsoft.PythonTools.Project;
-using Microsoft.PythonTools.Parsing;
-using System.IO;
 
 namespace Microsoft.PythonTools.Repl {
     class ReplEditFilter : IOleCommandTarget {
@@ -357,7 +352,7 @@ namespace Microsoft.PythonTools.Repl {
             // TODO: Check saved preference
 
             var td = new TaskDialog(_serviceProvider) {
-                Title = SR.ProductName,
+                Title = Strings.ProductTitle,
                 MainInstruction = "Really change to " + newEvaluator,
                 VerificationText = "Remember my selection",
                 AllowCancellation = true
