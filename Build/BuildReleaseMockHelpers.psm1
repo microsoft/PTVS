@@ -98,18 +98,25 @@ job.Keywords:     $jobKeywords"
     
     if ($certificates -match "authenticode") {
         $msg = "$msg
-job.SelectCertificate(10006)"
-        $job.SelectCertificate("10006")  # Authenticode
+job.SelectCertificate(401)"
+        $job.SelectCertificate("401")    # Authenticode for binaries
+    }
+    if ($certificates -match "msi") {
+        $msg = "$msg
+job.SelectCertificate(400)"
+        $job.SelectCertificate("400")    # Authenticode for MSI
     }
     if ($certificates -match "strongname") {
         $msg = "$msg
 job.SelectCertificate(67)"
         $job.SelectCertificate("67")     # StrongName key
     }
-    if ($certificates -match "opc") {
-        $job.SelectCertificate("160")     # Microsoft OPC Publisher (VSIX)
+    if ($certificates -match "vsix") {
+        $msg = "$msg
+job.SelectCertificate(100040160)"
+        $job.SelectCertificate("100040160") # Microsoft OPC Publisher (VSIX)
     }
-    
+
     foreach ($approver in $approvers) {
         $msg = "$msg
 job.AddApprover($approver)"
