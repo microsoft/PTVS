@@ -279,7 +279,7 @@ $native_files = (
 
 $supported_vs_versions = (
     @{number="14.0"; name="VS 2015"; build_by_default=$true},
-    @{number="12.0"; name="VS 2013"; build_by_default=$true},
+    @{number="12.0"; name="VS 2013"; build_by_default=$false},
     @{number="11.0"; name="VS 2012"; build_by_default=$false},
     @{number="10.0"; name="VS 2010"; build_by_default=$false}
 )
@@ -593,7 +593,7 @@ try {
 
                     $jobs += begin_sign_files $msi_files $i.signed_msidir $approvers `
                         $project_name $project_url "$project_name $($i.VSName) - installer" $project_keywords `
-                        "authenticode"
+                        "msi"
                 }
 
 
@@ -607,7 +607,7 @@ try {
 
                     $jobs += begin_sign_files $vsix_files $i.signed_msidir $approvers `
                         $project_name $project_url "$project_name $($i.VSName) - VSIX" $project_keywords `
-                        "authenticode;opc"
+                        "vsix"
                 }
             }
 
