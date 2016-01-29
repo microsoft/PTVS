@@ -167,7 +167,7 @@
   -->
 
   <PropertyGroup>
-    <PythonCommands>DjangoShellCommand;DjangoValidateAppCommand;DjangoSyncDbCommand;DjangoCollectStaticCommand;$(PythonCommands)</PythonCommands>
+    <PythonCommands>DjangoShellCommand;DjangoValidateAppCommand;DjangoMigrateCommand;DjangoCollectStaticCommand;DjangoSyncDbCommand;$(PythonCommands)</PythonCommands>
 
     <StartupPathOrManagePy>$(QualifiedProjectHome)manage.py</StartupPathOrManagePy>
     <StartupPathOrManagePy Condition="Exists($(StartupPath))">$(StartupPath)</StartupPathOrManagePy>
@@ -197,6 +197,20 @@
     <CreatePythonCommandItem Target="$(StartupPathOrManagePy)"
                              TargetType="script"
                              Arguments="validate"
+                             WorkingDirectory="$(WorkingDirectory)"
+                             Environment="DJANGO_SETTINGS_MODULE=$(DjangoSettingsModule)"
+                             ExecuteIn="Repl:resource:Microsoft.PythonTools.Django;Microsoft.PythonTools.Django.Resources;CommandReplTitle">
+      <Output TaskParameter="Command" ItemName="Commands" />
+    </CreatePythonCommandItem>
+  </Target>
+
+  <Target Name="DjangoMigrateCommand"
+          Label="resource:Microsoft.PythonTools.Django;Microsoft.PythonTools.Django.Resources;MigrateLabel"
+          DependsOnTargets="SetStartupPathOrManagePy"
+          Returns="@(Commands)">
+    <CreatePythonCommandItem Target="$(StartupPathOrManagePy)"
+                             TargetType="script"
+                             Arguments="migrate"
                              WorkingDirectory="$(WorkingDirectory)"
                              Environment="DJANGO_SETTINGS_MODULE=$(DjangoSettingsModule)"
                              ExecuteIn="Repl:resource:Microsoft.PythonTools.Django;Microsoft.PythonTools.Django.Resources;CommandReplTitle">
