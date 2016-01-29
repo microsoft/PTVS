@@ -469,11 +469,7 @@ namespace Microsoft.PythonTools.Django.Project {
 
                     // TODO: Use the actual Django version
                     var sln = (EnvDTE80.Solution2)project.DTE.Solution;
-#if DEV10
-                    var newAppTemplate = sln.GetProjectItemTemplate("DjangoNewAppFiles14.zip", "{888888a0-9f3d-457c-b088-3a5042f75d52}");
-#else
-                    var newAppTemplate = sln.GetProjectItemTemplate("DjangoNewAppFiles14.zip", "Python");
-#endif
+                    var newAppTemplate = sln.GetProjectItemTemplate("DjangoNewAppFiles19.zip", "Python");
 
                     bool cancel;
                     name = ResolveAppNameCollisionWithUser(parentItems, name, out cancel);

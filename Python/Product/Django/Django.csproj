@@ -114,7 +114,7 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <Choose>
-    <When Condition="$(VSMajorVersion) >= 14">
+    <When Condition="$(VSMajorVersion) &gt;= 14">
       <ItemGroup>
         <Reference Include="Microsoft.VisualStudio.InteractiveWindow">
           <HintPath>..\PythonTools\Microsoft.VisualStudio.InteractiveWindow.dll</HintPath>
@@ -163,7 +163,7 @@
     </Reference>
   </ItemGroup>
   <Choose>
-    <When Condition="$(VSMajorVersion) >= 14">
+    <When Condition="$(VSMajorVersion) &gt;= 14">
       <ItemGroup>
         <Reference Include="Microsoft.VisualStudio.Shell.Interop.$(VSTarget).DesignTime, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
           <EmbedInteropTypes>True</EmbedInteropTypes>
@@ -427,6 +427,17 @@
     <Compile Include="TemplateParsing\TemplateTokenKind.cs" />
     <Compile Include="Utilities.cs" />
     <Compile Include="VsMenus.cs" />
+    <ZipItem Include="Templates\Files\DjangoNewAppFiles19\admin.py" />
+    <ZipItem Include="Templates\Files\DjangoNewAppFiles19\apps.py" />
+    <ZipItem Include="Templates\Files\DjangoNewAppFiles19\migrations-__init__.py" />
+    <ZipItem Include="Templates\Files\DjangoNewAppFiles19\views.py" />
+    <ZipItem Include="Templates\Files\DjangoNewAppFiles19\tests.py" />
+    <ZipItem Include="Templates\Files\DjangoNewAppFiles19\models.py" />
+    <ZipItem Include="Templates\Files\DjangoNewAppFiles19\DjangoTemplate.html" />
+    <ZipItem Include="Templates\Files\DjangoNewAppFiles19\DjangoNewAppFiles.vstemplate">
+      <SubType>Designer</SubType>
+    </ZipItem>
+    <ZipItem Include="Templates\Files\DjangoNewAppFiles19\__init__.py" />
     <ZipProject Include="Templates\Projects\DjangoProject\requirements.txt" />
     <Resource Include="Templates\Projects\StarterDjangoProject\Readme\SyncDB.png" />
     <ZipProject Include="Templates\Projects\StarterDjangoProject\readme.mht" />
