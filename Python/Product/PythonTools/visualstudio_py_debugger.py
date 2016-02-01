@@ -679,10 +679,26 @@ class DjangoBreakpointInfo(object):
 def get_django_frame_source(frame):
     if frame.f_code.co_name == 'render':
         self_obj = frame.f_locals.get('self', None)
-        if self_obj is not None and type(self_obj).__name__ != 'TextNode':
-            source_obj = getattr(self_obj, 'source', None)
-            if source_obj is not None:
-                return source_obj
+        if self_obj is None:
+            return None
+        name = type(self_obj).__name__
+        if name in ('Template', 'TextNode'):
+            return None
+        source_obj = getattr(self_obj, 'source', None)
+        if source_obj and hasattr(source_obj, __len__) and len(source_obj) == 2:
+            return str(source_obj[0]), source_obj[1]
+
+        token_obj = getattr(self_obj, 'token', None)
+        if token_obj is None:
+            return None
+        template_obj = getattr(frame.f_locals.get('context', None), 'template', None)
+        if template_obj is None:
+            return None
+        template_name = getattr(template_obj, 'origin', None)
+        position = getattr(token_obj, 'position', None)
+        if template_name and position:
+            return str(template_name), position
+
 
     return None
 
@@ -883,8 +899,8 @@ class Thread(object):
             source_obj = get_django_frame_source(frame)
             if source_obj is not None:
                 origin, (start, end) = source_obj
-                    
-                active_bps = DJANGO_BREAKPOINTS.get(origin.name.lower())
+                
+                active_bps = DJANGO_BREAKPOINTS.get(origin.lower())
                 should_break = False
                 if active_bps is not None:
                     should_break, bkpt_id = active_bps.should_break(start, end)
