@@ -1,4 +1,4 @@
-// Python Tools for Visual Studio
+﻿// Python Tools for Visual Studio
 // Copyright(c) Microsoft Corporation
 // All rights reserved.
 //
@@ -472,7 +472,7 @@ namespace Microsoft.PythonTools.Django.Project {
 
                     // TODO: Use the actual Django version
                     var sln = (EnvDTE80.Solution2)project.DTE.Solution;
-                    var newAppTemplate = sln.GetProjectItemTemplate("DjangoNewAppFiles14.zip", "Python");
+                    var newAppTemplate = sln.GetProjectItemTemplate("DjangoNewAppFiles19.zip", "Python");
 
                     bool cancel;
                     name = ResolveAppNameCollisionWithUser(parentItems, name, out cancel);
