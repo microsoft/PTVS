@@ -646,9 +646,12 @@ class DjangoBreakpointInfo(object):
                     line_info = []
                     file_len = 0
                     for line in contents:
+                        line_len = len(line)
                         if not line_info and line.startswith(BOM_UTF8):
-                            line = line[3:] # Strip the BOM, Django seems to ignore this...
-                        file_len += len(line)
+                            line_len -= len(BOM_UTF8) # Strip the BOM, Django seems to ignore this...
+                        if line.endswith(to_bytes('\r\n')):
+                            line_len -= 1 # Django normalizes newlines to \n
+                        file_len += line_len
                         line_info.append(file_len)
                     contents.close()
                     self._line_locations = line_info
@@ -685,7 +688,7 @@ def get_django_frame_source(frame):
         if name in ('Template', 'TextNode'):
             return None
         source_obj = getattr(self_obj, 'source', None)
-        if source_obj and hasattr(source_obj, __len__) and len(source_obj) == 2:
+        if source_obj and hasattr(source_obj, '__len__') and len(source_obj) == 2:
             return str(source_obj[0]), source_obj[1]
 
         token_obj = getattr(self_obj, 'token', None)
