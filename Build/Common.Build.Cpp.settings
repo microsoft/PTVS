@@ -13,7 +13,13 @@
     <Language>C++</Language>        <!-- Duplicated from the C++ targets file -->
     <Platform Condition="'$(Platform)'==''">Win32</Platform>
   </PropertyGroup>
-  
+
+  <ItemDefinitionGroup Condition="'$(VSTarget)' == '15.0'">
+    <ClCompile>
+      <PreprocessorDefinitions>DEV15;DEV15_OR_LATER;DEV14_OR_LATER;DEV12_OR_LATER;DEV11_OR_LATER;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+
   <ItemDefinitionGroup Condition="'$(VSTarget)' == '14.0'">
     <ClCompile>
       <PreprocessorDefinitions>DEV14;DEV14_OR_LATER;DEV12_OR_LATER;DEV11_OR_LATER;%(PreprocessorDefinitions)</PreprocessorDefinitions>
