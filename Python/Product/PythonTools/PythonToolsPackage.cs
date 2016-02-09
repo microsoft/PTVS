@@ -576,12 +576,14 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
                 new UsePythonStepping(this),
             }, GuidList.guidPythonToolsCmdSet);
 
+#if DEV14
             try {
                 RegisterCommands(new Command[] {
                     new AzureExplorerAttachDebuggerCommand(this)
                 }, GuidList.guidPythonToolsCmdSet);
             } catch (NotSupportedException) {
             }
+#endif
 
 
             RegisterCommands(GetReplCommands(), GuidList.guidPythonToolsCmdSet);

@@ -76,7 +76,8 @@
   </Target>
 
   <PropertyGroup>
-    <VSSDKTargets>$(BuildRoot)\BuildOutput\Microsoft.VSSDK.BuildTools.14.0.23205\tools\VSSDK\Microsoft.VsSDK.targets</VSSDKTargets>
+    <VSSDKTargets Condition="$(VSTarget) == '14.0'">$(BuildRoot)\BuildOutput\Microsoft.VSSDK.BuildTools.14.0.23205\tools\VSSDK\Microsoft.VsSDK.targets</VSSDKTargets>
+    <VSSDKTargets Condition="$(VSTarget) == '15.0'">$(BuildRoot)\BuildOutput\Microsoft.VSSDK.BuildTools.15.0.25001-Dev15CTP1\tools\VSSDK\Microsoft.VsSDK.targets</VSSDKTargets>
   </PropertyGroup>
   
   <!-- Import the VS SDK headers -->
