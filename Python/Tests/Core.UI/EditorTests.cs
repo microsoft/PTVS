@@ -48,6 +48,75 @@ namespace PythonToolsUITests {
         }
 
         #region Test Cases
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
+        public void AutomaticBraceCompletion() {
+            using (var app = new PythonVisualStudioApp()) {
+                EnableDisableAutoBraceCompletion(app);
+                var project = app.OpenProject(@"TestData\AutomaticBraceCompletion.sln");
+
+                // check that braces get auto completed
+                AutoBraceCompetionTest(app, project, "foo(", "foo()");
+                AutoBraceCompetionTest(app, project, "foo[", "foo[]");
+                AutoBraceCompetionTest(app, project, "foo{", "foo{}");
+                AutoBraceCompetionTest(app, project, "\"foo", "\"foo\"");
+                AutoBraceCompetionTest(app, project, "'foo", "'foo'");
+
+                // check that braces get not autocompleted in comments and strings
+                AutoBraceCompetionTest(app, project, "\"foo(\"", "\"foo(\"");
+                AutoBraceCompetionTest(app, project, "#foo(", "#foo(");
+                AutoBraceCompetionTest(app, project, "\"\"\"\rfoo(\r\"\"\"\"", "\"\"\"\r\nfoo(\r\n\"\"\"\"");
+
+                // check that end braces gets skiped
+                AutoBraceCompetionTest(app, project, "foo(bar)", "foo(bar)");
+                AutoBraceCompetionTest(app, project, "foo[bar]", "foo[bar]");
+                AutoBraceCompetionTest(app, project, "foo{bar}", "foo{bar}");
+                AutoBraceCompetionTest(app, project, "\"foo\"", "\"foo\"");
+                AutoBraceCompetionTest(app, project, "'foo'", "'foo'");
+                AutoBraceCompetionTest(app, project, "foo({[\"\"]})", "foo({[\"\"]})");
+
+                EnableDisableAutoBraceCompletion(app);
+            }
+        }
+
+        private static void AutoBraceCompetionTest(VisualStudioApp app, Project project, string typedText, string expectedText) {
+            var item = project.ProjectItems.Item("Program.py");
+            var window = item.Open();
+            window.Activate();
+
+            Keyboard.Type(typedText);
+
+            var doc = app.GetDocument(item.Document.FullName);
+
+            string actual = null;
+            for (int i = 0; i < 100; i++) {
+                actual = doc.TextView.TextBuffer.CurrentSnapshot.GetText();
+
+                if (expectedText == actual) {
+                    break;
+                }
+                System.Threading.Thread.Sleep(100);
+            }
+
+            if (expectedText != actual)
+                EnableDisableAutoBraceCompletion(app);
+
+            Assert.AreEqual(expectedText, actual);
+
+            window.Document.Close(vsSaveChanges.vsSaveChangesNo);
+        }
+
+
+
+        private static void EnableDisableAutoBraceCompletion(VisualStudioApp app) {
+            app.OpenDialogWithDteExecuteCommand("Tools.Options");
+            Keyboard.PressAndRelease(System.Windows.Input.Key.E, System.Windows.Input.Key.LeftCtrl);
+            Keyboard.Type("Python General\r");
+            System.Threading.Thread.Sleep(1000);
+            Keyboard.PressAndRelease(System.Windows.Input.Key.B, System.Windows.Input.Key.LeftAlt);
+            System.Threading.Thread.Sleep(500);
+            Keyboard.PressAndRelease(System.Windows.Input.Key.Enter);
+        }
 
         [TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
