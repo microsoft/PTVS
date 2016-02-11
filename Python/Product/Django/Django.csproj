@@ -103,28 +103,6 @@
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
     <Reference Include="WindowsBase" />
-    <Choose>
-      <When Condition="$(VSTarget) == '14.0'">
-        <Reference Include="Microsoft.VisualStudio.InteractiveWindow">
-          <HintPath>..\PythonTools\Microsoft.VisualStudio.InteractiveWindow.dll</HintPath>
-          <Private>false</Private>
-        </Reference>
-        <Reference Include="Microsoft.VisualStudio.VsInteractiveWindow">
-          <HintPath>..\PythonTools\Microsoft.VisualStudio.VsInteractiveWindow.dll</HintPath>
-          <Private>false</Private>
-        </Reference>
-      </When>
-      <Otherwise>
-        <Reference Include="Microsoft.VisualStudio.InteractiveWindow">
-          <HintPath>$(DevEnvDir)PrivateAssemblies\Microsoft.VisualStudio.InteractiveWindow.dll</HintPath>
-          <Private>false</Private>
-        </Reference>
-        <Reference Include="Microsoft.VisualStudio.VsInteractiveWindow">
-          <HintPath>$(DevEnvDir)PrivateAssemblies\Microsoft.VisualStudio.VsInteractiveWindow.dll</HintPath>
-          <Private>false</Private>
-        </Reference>
-      </Otherwise>
-    </Choose>
     <Reference Include="Microsoft.Web.Core, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>$(DevEnvDir)\Extensions\Microsoft\Web Tools\Editors\Microsoft.Web.Core.dll</HintPath>
     </Reference>
@@ -147,6 +125,32 @@
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
   </ItemGroup>
+  <Choose>
+    <When Condition="$(VSTarget) == '14.0'">
+      <ItemGroup>
+        <Reference Include="Microsoft.VisualStudio.InteractiveWindow">
+          <HintPath>..\PythonTools\Microsoft.VisualStudio.InteractiveWindow.dll</HintPath>
+          <Private>false</Private>
+        </Reference>
+        <Reference Include="Microsoft.VisualStudio.VsInteractiveWindow">
+          <HintPath>..\PythonTools\Microsoft.VisualStudio.VsInteractiveWindow.dll</HintPath>
+          <Private>false</Private>
+        </Reference>
+      </ItemGroup>
+    </When>
+    <Otherwise>
+      <ItemGroup>
+        <Reference Include="Microsoft.VisualStudio.InteractiveWindow">
+          <HintPath>$(DevEnvDir)PrivateAssemblies\Microsoft.VisualStudio.InteractiveWindow.dll</HintPath>
+          <Private>false</Private>
+        </Reference>
+        <Reference Include="Microsoft.VisualStudio.VsInteractiveWindow">
+          <HintPath>$(DevEnvDir)PrivateAssemblies\Microsoft.VisualStudio.VsInteractiveWindow.dll</HintPath>
+          <Private>false</Private>
+        </Reference>
+      </ItemGroup>
+    </Otherwise>
+  </Choose>
   <ItemGroup>
     <COMReference Include="EnvDTE">
       <Guid>{80CC9F66-E7D8-4DDD-85B6-D9E6CD0E93E2}</Guid>
