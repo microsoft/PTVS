@@ -120,7 +120,10 @@ function begin_sign_files {
             $job.Send()
             return @{job=$job; description=$jobDescription; filecount=$($files.Count); outdir=$outdir}
         } catch [Exception] {
-            echo $_.Exception.Message
+            if ($job -and $job.ErrorList -and $job.ErrorList.Values) {
+                Write-Output $job.ErrorList.Values.Explanation
+            }
+            Write-Error $_
             sleep 60
         }
     }

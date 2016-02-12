@@ -3,7 +3,7 @@ param($root, $build, [switch] $mock)
 if ($mock) {
     Import-Module "$root\Build\BuildReleaseMockHelpers.psm1" -Force
 } else {
-    Import-Module "$root\Build\BuildReleaseHelpers.psm1"
+    Import-Module "$root\Build\BuildReleaseHelpers.psm1" -Force
 }
 
 $AuthenticodeAndStrongNameFiles = @(
@@ -25,7 +25,7 @@ $AuthenticodeAndStrongNameFiles = @(
     "Microsoft.IronPythonTools.Resolver.dll",
     "Microsoft.PythonTools.TestAdapter.dll",
     "Microsoft.PythonTools.Uwp.dll"
-) | %{ @{path="$build\raw\binaries\$_"; name="Python Tools for Visual Studio"} } | ?{ $_ }
+) | %{ @{path="$build\raw\binaries\$_"; name="$_"} } | ?{ Test-Path "$($_.path)" }
 
 $AuthenticodeFiles = @(
     "Microsoft.PythonTools.WebRole.dll",
@@ -36,21 +36,24 @@ $AuthenticodeFiles = @(
     "Microsoft.PythonTools.Debugger.Helper.x64.dll",
     "VsPyProf.dll",
     "VsPyProfX86.dll"
-) | %{ @{path="$build\raw\binaries\$_"; name="Python Tools for Visual Studio"} } | ?{ $_ }
+) | %{ @{path="$build\raw\binaries\$_"; name="$_"} } | ?{ Test-Path "$($_.path)" }
 
 $ErrorActionPreference = "Stop"
 
 $jobs = @()
 $jobs += begin_sign_files $AuthenticodeFiles `
-         (mkdir "$build\raw\signed" -Force) "ddcctlab" `
+         (mkdir "$build\raw\signed" -Force) @("stevdo", "dinov") `
          "Python Tools for Visual Studio" "http://aka.ms/ptvs" "Python Tools for Visual Studio - authenticode" `
          "authenticode"
 
 $jobs += begin_sign_files $AuthenticodeAndStrongNameFiles `
-         (mkdir "$build\raw\signed" -Force) "ddcctlab" `
+         (mkdir "$build\raw\signed" -Force) @("stevdo", "dinov") `
          "Python Tools for Visual Studio" "http://aka.ms/ptvs" "Python Tools for Visual Studio - strongname;authenticode" `
          "authenticode;strongname" -delaysigned
 
 end_sign_files $jobs
 
-gci "$build\raw\signed" | %{ $src = "$build\raw\signed\$_"; gci "$build\layout\$($_.Name)" -r | %{ copy $src "$_" -force; Write-Output "Copied $src to $_"; } }
+gci "$build\raw\signed" | `
+    %{ $src = "$build\raw\signed\$_"; gci "$build\layout\$($_.Name)" -r | `
+    %{ copy $src "$_" -force; Write-Output "Copied $src to $_"; } }
+
