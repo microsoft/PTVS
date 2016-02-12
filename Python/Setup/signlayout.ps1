@@ -43,12 +43,12 @@ $ErrorActionPreference = "Stop"
 $jobs = @()
 $jobs += begin_sign_files $AuthenticodeFiles `
          (mkdir "$build\raw\signed" -Force) @("stevdo", "dinov") `
-         "Python Tools for Visual Studio" "http://aka.ms/ptvs" "Python Tools for Visual Studio - authenticode" `
+         "Python Tools for Visual Studio" "http://aka.ms/ptvs" "Python Tools for Visual Studio" "python;visual studio" `
          "authenticode"
 
 $jobs += begin_sign_files $AuthenticodeAndStrongNameFiles `
          (mkdir "$build\raw\signed" -Force) @("stevdo", "dinov") `
-         "Python Tools for Visual Studio" "http://aka.ms/ptvs" "Python Tools for Visual Studio - strongname;authenticode" `
+         "Python Tools for Visual Studio" "http://aka.ms/ptvs" "Python Tools for Visual Studio" "python;visual studio" `
          "authenticode;strongname" -delaysigned
 
 end_sign_files $jobs
