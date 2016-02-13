@@ -16,7 +16,7 @@ $jobs = @()
 $jobs += begin_sign_files $AuthenticodeFiles `
          (mkdir "$build\raw\setup\signed" -Force) @("stevdo", "dinov") `
          "Python Tools for Visual Studio" "http://aka.ms/ptvs" "Python Tools for Visual Studio" "python;visual studio" `
-         "authenticode"
+         "msi"
 
 end_sign_files $jobs
 
