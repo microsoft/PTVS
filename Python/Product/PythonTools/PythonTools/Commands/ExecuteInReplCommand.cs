@@ -58,10 +58,12 @@ namespace Microsoft.PythonTools.Commands {
                     replId
                 );
 
+#if DEV14
                 var toolWindow = window as ToolWindowPane;
                 if (toolWindow != null) {
                     toolWindow.BitmapImageMoniker = KnownMonikers.PYInteractiveWindow;
                 }
+#endif
 
                 var pyService = serviceProvider.GetPythonToolsService();
                 window.InteractiveWindow.SetSmartUpDown(pyService.GetInteractiveOptions(factory).ReplSmartHistory);

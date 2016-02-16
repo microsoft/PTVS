@@ -1472,12 +1472,7 @@ namespace Microsoft.PythonTools.Project {
             IPythonInterpreterFactory selectedInterpreterFactory;
             GetSelectedInterpreterOrDefault(selectedNodes, args, out selectedInterpreter, out selectedInterpreterFactory);
             try {
-                var window = ExecuteInReplCommand.EnsureReplWindow(Site, selectedInterpreterFactory, this);
-                var pane = window as ToolWindowPane;
-                if (pane != null) {
-                    ErrorHandler.ThrowOnFailure(((IVsWindowFrame)pane.Frame).Show());
-                    window.Show(true);
-                }
+                ExecuteInReplCommand.EnsureReplWindow(Site, selectedInterpreterFactory, this).Show(true);
             } catch (InvalidOperationException ex) {
                 MessageBox.Show(Strings.ErrorOpeningInteractiveWindow.FormatUI(ex), Strings.ProductTitle);
             }

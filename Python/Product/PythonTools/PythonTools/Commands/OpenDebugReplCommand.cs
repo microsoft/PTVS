@@ -50,11 +50,7 @@ namespace Microsoft.PythonTools.Commands {
         }
 
         public override void DoCommand(object sender, EventArgs args) {
-            var window = EnsureReplWindow(_serviceProvider);
-            IVsWindowFrame windowFrame = (IVsWindowFrame)((ToolWindowPane)window).Frame;
-
-            ErrorHandler.ThrowOnFailure(windowFrame.Show());
-            window.Show(true);
+            EnsureReplWindow(_serviceProvider).Show(true);
         }
 
         public override EventHandler BeforeQueryStatus {
