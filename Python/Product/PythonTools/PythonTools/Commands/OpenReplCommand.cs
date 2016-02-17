@@ -69,9 +69,7 @@ namespace Microsoft.PythonTools.Commands {
             }
 
             // These commands are project-insensitive, so pass null for project.
-            var window = (ToolWindowPane)ExecuteInReplCommand.EnsureReplWindow(_serviceProvider, factory, null);
-
-            ((IVsInteractiveWindow)window).Show(true);
+            ExecuteInReplCommand.EnsureReplWindow(_serviceProvider, factory, null).Show(true);
         }
 
         public override EventHandler BeforeQueryStatus {

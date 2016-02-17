@@ -86,8 +86,8 @@ You may need to skip strong name verification on this machine."
         }
     }
     
-    [Reflection.Assembly]::Load("CODESIGN.Submitter, Version=3.0.0.6, Culture=neutral, PublicKeyToken=3d8252bd1272440d, processorArchitecture=MSIL") | Out-Null
-    [Reflection.Assembly]::Load("CODESIGN.PolicyManager, Version=1.0.0.0, Culture=neutral, PublicKeyToken=3d8252bd1272440d, processorArchitecture=MSIL") | Out-Null
+    [Reflection.Assembly]::Load("CODESIGN.Submitter, Version=4.1.0.0, Culture=neutral, PublicKeyToken=3d8252bd1272440d, processorArchitecture=MSIL") | Out-Null
+    [Reflection.Assembly]::Load("CODESIGN.PolicyManager, Version=4.1.0.0, Culture=neutral, PublicKeyToken=3d8252bd1272440d, processorArchitecture=MSIL") | Out-Null
 
     $job = [CODESIGN.Submitter.Job]::Initialize("codesign.gtm.microsoft.com", 9556, $True)
     $msg = "*** Signing Job Details ***
@@ -98,18 +98,25 @@ job.Keywords:     $jobKeywords"
     
     if ($certificates -match "authenticode") {
         $msg = "$msg
-job.SelectCertificate(10006)"
-        $job.SelectCertificate("10006")  # Authenticode
+job.SelectCertificate(401)"
+        $job.SelectCertificate("401")    # Authenticode for binaries
+    }
+    if ($certificates -match "msi") {
+        $msg = "$msg
+job.SelectCertificate(400)"
+        $job.SelectCertificate("400")    # Authenticode for MSI
     }
     if ($certificates -match "strongname") {
         $msg = "$msg
 job.SelectCertificate(67)"
         $job.SelectCertificate("67")     # StrongName key
     }
-    if ($certificates -match "opc") {
-        $job.SelectCertificate("160")     # Microsoft OPC Publisher (VSIX)
+    if ($certificates -match "vsix") {
+        $msg = "$msg
+job.SelectCertificate(100040160)"
+        $job.SelectCertificate("100040160") # Microsoft OPC Publisher (VSIX)
     }
-    
+
     foreach ($approver in $approvers) {
         $msg = "$msg
 job.AddApprover($approver)"
@@ -174,11 +181,11 @@ function end_sign_files {
         do {
             $files = @()
             Write-Progress -activity $activity -status "Waiting for completion: $jobCompletionPath" -percentcomplete $percent;
-            $percent = ($percent + 1) % 100
+            $percent = ($percent + 5) % 100
             if ($percent -eq 90) {
                 $files = dir $jobCompletionPath
             }
-            sleep -Milliseconds 50 
+            sleep -Milliseconds 50
         } while(-not $files -or $files.Count -ne $filecount);
         
         mkdir $outdir -EA 0 | Out-Null

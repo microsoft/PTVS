@@ -9,10 +9,6 @@
 
 
   <ItemGroup>
-    <GACAssembly Include="!(bindpath.bin)\Microsoft.PythonTools.Analysis.dll;
-                          !(bindpath.bin)\Microsoft.PythonTools.Attacher.exe;
-                          !(bindpath.bin)\Microsoft.PythonTools.Debugger.dll" />
-
     <!-- Registration files -->
     <File Include="extension.vsixmanifest" />
     <File Include="Microsoft.PythonTools.pkgdef;

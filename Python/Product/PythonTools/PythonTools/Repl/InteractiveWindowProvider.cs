@@ -182,8 +182,8 @@ namespace Microsoft.PythonTools.Repl {
             return _windows.Values.Select(x => x.Window.InteractiveWindow);
         }
 
-        internal IEnumerable<ToolWindowPane> GetReplToolWindows() {
-            return _windows.Values.Select(x => x.Window).OfType<ToolWindowPane>();
+        internal IEnumerable<IVsInteractiveWindow> GetReplToolWindows() {
+            return _windows.Values.Select(x => x.Window);
         }
 
         private static IInteractiveEvaluator GetInteractiveEvaluator(IComponentModel model, string replId, out string[] roles) {

@@ -45,11 +45,8 @@ namespace Microsoft.PythonTools.Commands {
             var project = activeView.TextBuffer.GetProject(_serviceProvider);
             var analyzer = activeView.GetAnalyzer(_serviceProvider);
 
-            ToolWindowPane window = (ToolWindowPane)ExecuteInReplCommand.EnsureReplWindow(_serviceProvider, analyzer, project);
-
-            IVsWindowFrame windowFrame = (IVsWindowFrame)window.Frame;
-            ErrorHandler.ThrowOnFailure(windowFrame.Show());
-            var repl = (IVsInteractiveWindow)window;
+            var repl = ExecuteInReplCommand.EnsureReplWindow(_serviceProvider, analyzer, project);
+            repl.Show(true);
 
             PythonReplEvaluator eval = repl.InteractiveWindow.Evaluator as PythonReplEvaluator;
 

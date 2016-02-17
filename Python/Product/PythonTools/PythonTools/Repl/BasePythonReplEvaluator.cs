@@ -1693,6 +1693,7 @@ namespace Microsoft.PythonTools.Repl {
 
             // Close project-specific REPL windows when the project
             // closes.
+            // TODO: Find alternative way to close on Dev15
             var pane = vsWindow as ToolWindowPane;
             var frame = pane != null ? pane.Frame as IVsWindowFrame : null;
             if (frame != null) {

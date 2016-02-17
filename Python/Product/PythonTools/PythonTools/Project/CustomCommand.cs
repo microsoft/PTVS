@@ -600,6 +600,7 @@ namespace Microsoft.PythonTools.Project {
                 );
             }
 
+            // TODO: Find alternative way of closing repl window on Dev15
             var replToolWindow = replWindow as ToolWindowPane;
             var replFrame = (replToolWindow != null) ? replToolWindow.Frame as IVsWindowFrame : null;
 
@@ -631,11 +632,7 @@ namespace Microsoft.PythonTools.Project {
 
             project.AddActionOnClose((object)replWindow, BasePythonReplEvaluator.CloseReplWindow);
 
-            var pane = replWindow as ToolWindowPane;
-            var frame = pane != null ? pane.Frame as IVsWindowFrame : null;
-            if (frame != null) {
-                ErrorHandler.ThrowOnFailure(frame.Show());
-            }
+            replWindow.Show(true);
 
             var result = await pyEvaluator.Reset(quiet: true);
 
