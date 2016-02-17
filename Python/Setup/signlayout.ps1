@@ -24,12 +24,12 @@ $AuthenticodeAndStrongNameFiles = @(
     "Microsoft.PythonTools.Django.dll",
     "Microsoft.IronPythonTools.Resolver.dll",
     "Microsoft.PythonTools.TestAdapter.dll",
-    "Microsoft.PythonTools.Uwp.dll"
+    "Microsoft.PythonTools.Uwp.dll",
+    "Microsoft.PythonTools.WebRole.dll",
+    "Microsoft.PythonTools.AzureSetup.exe"
 ) | %{ @{path="$build\raw\binaries\$_"; name="$_"} } | ?{ Test-Path "$($_.path)" }
 
 $AuthenticodeFiles = @(
-    "Microsoft.PythonTools.WebRole.dll",
-    "Microsoft.PythonTools.AzureSetup.exe",
     "PyDebugAttach.dll",
     "PyDebugAttachX86.dll",
     "Microsoft.PythonTools.Debugger.Helper.x86.dll",
