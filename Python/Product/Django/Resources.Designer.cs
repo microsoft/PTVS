@@ -88,6 +88,15 @@ namespace Microsoft.PythonTools.Django {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Django Create S&amp;uperuser (Django 1.7+).
+        /// </summary>
+        internal static string CreateSuperUserLabel {
+            get {
+                return ResourceManager.GetString("CreateSuperUserLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to C&amp;reate anyway.
         /// </summary>
         internal static string DjangoAppAlreadyExistsCreateAnyway {
@@ -160,7 +169,16 @@ namespace Microsoft.PythonTools.Django {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Django &amp;Migrate... (Django 1.7 and later).
+        ///   Looks up a localized string similar to Django Ma&amp;ke Migrations (Django 1.7+).
+        /// </summary>
+        internal static string MakeMigrationsLabel {
+            get {
+                return ResourceManager.GetString("MakeMigrationsLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Django &amp;Migrate... (Django 1.7+).
         /// </summary>
         internal static string MigrateLabel {
             get {
@@ -207,7 +225,7 @@ namespace Microsoft.PythonTools.Django {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Django &amp;Sync DB... (Django 1.6 and earlier).
+        ///   Looks up a localized string similar to Django &amp;Sync DB... (Django up to 1.6).
         /// </summary>
         internal static string SyncDbLabel {
             get {
