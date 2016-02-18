@@ -70,6 +70,15 @@ namespace Microsoft.PythonTools.Django {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Django C&amp;heck (Django &gt;= 1.7).
+        /// </summary>
+        internal static string CheckLabel {
+            get {
+                return ResourceManager.GetString("CheckLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &amp;Collect Static Files.
         /// </summary>
         internal static string CollectStaticLabel {
@@ -88,7 +97,7 @@ namespace Microsoft.PythonTools.Django {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Django Create S&amp;uperuser (Django 1.7+).
+        ///   Looks up a localized string similar to Django Create S&amp;uperuser (Django &gt;= 1.7).
         /// </summary>
         internal static string CreateSuperUserLabel {
             get {
@@ -169,7 +178,7 @@ namespace Microsoft.PythonTools.Django {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Django Ma&amp;ke Migrations (Django 1.7+).
+        ///   Looks up a localized string similar to Django Ma&amp;ke Migrations (Django &gt;= 1.7).
         /// </summary>
         internal static string MakeMigrationsLabel {
             get {
@@ -178,7 +187,7 @@ namespace Microsoft.PythonTools.Django {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Django &amp;Migrate... (Django 1.7+).
+        ///   Looks up a localized string similar to Django &amp;Migrate... (Django &gt;= 1.7).
         /// </summary>
         internal static string MigrateLabel {
             get {
@@ -225,7 +234,7 @@ namespace Microsoft.PythonTools.Django {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Django &amp;Sync DB... (Django up to 1.6).
+        ///   Looks up a localized string similar to Django &amp;Sync DB... (Django &lt;= 1.6).
         /// </summary>
         internal static string SyncDbLabel {
             get {
@@ -234,7 +243,7 @@ namespace Microsoft.PythonTools.Django {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &amp;Validate Django App....
+        ///   Looks up a localized string similar to &amp;Validate Django App... (Django &lt;= 1.6).
         /// </summary>
         internal static string ValidateAppLabel {
             get {
