@@ -191,7 +191,7 @@ namespace Microsoft.PythonTools.Project {
         ) {
             var commandNames = project.GetPropertyValue(PythonCommands);
             if (!string.IsNullOrEmpty(commandNames)) {
-                foreach (var name in commandNames.Split(';').Where(n => !string.IsNullOrEmpty(n)).Distinct()) {
+                foreach (var name in commandNames.Split(';').Select(s => s.Trim()).Where(n => !string.IsNullOrEmpty(n)).Distinct()) {
                     ProjectTargetInstance targetInstance;
                     if (!project.Targets.TryGetValue(name, out targetInstance)) {
                         continue;
