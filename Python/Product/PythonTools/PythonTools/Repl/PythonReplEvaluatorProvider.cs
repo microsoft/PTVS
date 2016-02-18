@@ -40,6 +40,7 @@ using IReplEvaluatorProvider = Microsoft.PythonTools.Repl.IInteractiveEvaluatorP
     class PythonReplEvaluatorProvider : IReplEvaluatorProvider {
         readonly IInterpreterOptionsService _interpreterService;
         readonly IServiceProvider _serviceProvider;
+        readonly Dictionary<string, PythonReplEvaluatorOptions> _preSetOptions;
 
         private const string _replGuid = "FAEC7F47-85D8-4899-8D7B-0B855B732CC8";
         private const string _configurableGuid = "3C4CB167-E213-4377-8909-437139C3C553";
@@ -53,6 +54,7 @@ using IReplEvaluatorProvider = Microsoft.PythonTools.Repl.IInteractiveEvaluatorP
             Debug.Assert(interpreterService != null);
             _interpreterService = interpreterService;
             _serviceProvider = serviceProvider;
+            _preSetOptions = new Dictionary<string, PythonReplEvaluatorOptions>();
         }
 
         #region IReplEvaluatorProvider Members
@@ -71,14 +73,34 @@ using IReplEvaluatorProvider = Microsoft.PythonTools.Repl.IInteractiveEvaluatorP
             } else if (replId.StartsWith(_configurableGuid, StringComparison.OrdinalIgnoreCase)) {
                 return CreateConfigurableEvaluator(replId);
             } else if (replId.StartsWith(_configurable2Guid, StringComparison.OrdinalIgnoreCase)) {
-                return new PythonReplEvaluatorDontPersist(
-                    null,
-                    _serviceProvider,
-                    new ConfigurablePythonReplOptions(),
-                    _interpreterService
-                );
+                PythonReplEvaluatorOptions opts;
+                lock (_preSetOptions) {
+                    if (_preSetOptions.TryGetValue(replId, out opts)) {
+                        _preSetOptions.Remove(replId);
+                    } else {
+                        opts = new ConfigurablePythonReplOptions();
+                    }
+                }
+                var configOpts = opts as ConfigurablePythonReplOptions;
+                IPythonInterpreterFactory fact = null;
+                if (configOpts != null) {
+                    fact = configOpts.InterpreterFactory;
+                }
+                return new PythonReplEvaluatorDontPersist(fact, _serviceProvider, opts, _interpreterService);
             }
             return null;
+        }
+
+        public void PreSetEvaluatorOptions(
+            string replId,
+            PythonReplEvaluatorOptions options
+        ) {
+            if (!replId.StartsWith(_configurable2Guid, StringComparison.OrdinalIgnoreCase)) {
+                throw new ArgumentException("Cannot set options for this evaluator");
+            }
+            lock (_preSetOptions) {
+                _preSetOptions[replId] = options;
+            }
         }
 
         /// <summary>
