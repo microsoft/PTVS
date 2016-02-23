@@ -8,7 +8,7 @@ if ($mock) {
 
 $MsiFiles = @(@(
     "PythonToolsInstaller.msi"
-) | %{ @{path="$build\raw\setup\en-us\$_"; name="$_"} } | ?{ Test-Path "$($_.path)" })
+) | %{ @{path="$build\raw\setup\en-us\$_"; name="PTVS$buildidentifier"} } | ?{ Test-Path "$($_.path)" })
 
 $ErrorActionPreference = "Stop"
 
@@ -21,4 +21,4 @@ $jobs += begin_sign_files $MsiFiles `
 end_sign_files $jobs
 
 mkdir "$build\release" -Force
-copy "$build\raw\setup\signed\PythonToolsInstaller.msi" "$build\release\PTVS$buildidentifier.msi"
+copy "$build\raw\setup\signed\PTVS$buildidentifier.msi" "$build\release\"
