@@ -53,7 +53,14 @@ $jobs += begin_sign_files $AuthenticodeAndStrongNameFiles `
 
 end_sign_files $jobs
 
+mkdir "$build\raw\unsigned" -Force
+copy $AuthenticodeAndStrongNameFiles.path "$build\raw\unsigned\" -Force
+copy $AuthenticodeFiles.path "$build\raw\unsigned\" -Force
+
 gci "$build\raw\signed" | `
-    %{ $src = "$build\raw\signed\$_"; gci "$build\layout\$($_.Name)" -r | `
-    %{ copy $src "$_" -force; Write-Output "Copied $src to $_"; } }
+    %{ 
+        $src = "$build\raw\signed\$_";
+        copy $src "$build\raw\binaries\$_" -Force;
+        gci "$build\layout\$($_.Name)" -r | %{ copy $src "$_" -Force; Write-Output "Copied $src to $_"; } 
+    }
 
