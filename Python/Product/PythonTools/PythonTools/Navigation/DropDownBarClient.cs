@@ -57,7 +57,7 @@ namespace Microsoft.PythonTools.Navigation {
     /// the drop down to remove grayed out elements.
     /// </summary>
     class DropDownBarClient : IVsDropdownBarClient {
-        private IPythonProjectEntry _projectEntry;                      // project entry which gets updated with new ASTs for us to inspect.
+        private ProjectFileInfo _projectEntry;                      // project entry which gets updated with new ASTs for us to inspect.
         private ReadOnlyCollection<DropDownEntryInfo> _topLevelEntries; // entries for top-level members of the file
         private ReadOnlyCollection<DropDownEntryInfo> _nestedEntries;   // entries for nested members in the file
         private readonly Dispatcher _dispatcher;                        // current dispatcher so we can get back to our thread
@@ -72,14 +72,14 @@ namespace Microsoft.PythonTools.Navigation {
         private const int TopLevelComboBoxId = 0;
         private const int NestedComboBoxId = 1;
 
-        public DropDownBarClient(IServiceProvider serviceProvider, IWpfTextView textView, IPythonProjectEntry pythonProjectEntry) {
+        public DropDownBarClient(IServiceProvider serviceProvider, IWpfTextView textView, ProjectFileInfo pythonProjectEntry) {
             Utilities.ArgumentNotNull("serviceProvider", serviceProvider);
             Utilities.ArgumentNotNull("textView", textView);
             Utilities.ArgumentNotNull("pythonProjectEntry", pythonProjectEntry);
 
             _serviceProvider = serviceProvider;
             _projectEntry = pythonProjectEntry;
-            _projectEntry.OnNewParseTree += ParserOnNewParseTree;
+            //_projectEntry.OnNewParseTree += ParserOnNewParseTree;
             _textView = textView;
             _topLevelEntries = _nestedEntries = EmptyEntries;
             _dispatcher = Dispatcher.CurrentDispatcher;
@@ -112,7 +112,7 @@ namespace Microsoft.PythonTools.Navigation {
         }
 
         internal int Unregister(IVsDropdownBarManager manager) {
-            _projectEntry.OnNewParseTree -= ParserOnNewParseTree;
+            //_projectEntry.OnNewParseTree -= ParserOnNewParseTree;
             _textView.Caret.PositionChanged -= CaretPositionChanged;
 
             // A buffer may have multiple DropDownBarClients, given one may open multiple CodeWindows
@@ -665,10 +665,10 @@ namespace Microsoft.PythonTools.Navigation {
         /// Calculates the members of the drop down for top-level members.
         /// </summary>
         private void CalculateTopLevelEntries() {
-            PythonAst ast = _projectEntry.Tree;
-            if (ast != null) {
-                _topLevelEntries = CalculateEntries(ast.Body as SuiteStatement);
-            }
+            //PythonAst ast = _projectEntry.Tree;
+            //if (ast != null) {
+            //    _topLevelEntries = CalculateEntries(ast.Body as SuiteStatement);
+            //}
         }
 
         /// <summary>
@@ -733,9 +733,9 @@ namespace Microsoft.PythonTools.Navigation {
 
         internal void UpdateProjectEntry(IProjectEntry newEntry) {
             if (newEntry is IPythonProjectEntry) {
-                _projectEntry.OnNewParseTree -= ParserOnNewParseTree;
-                _projectEntry = (IPythonProjectEntry)newEntry;
-                _projectEntry.OnNewParseTree += ParserOnNewParseTree;
+                //_projectEntry.OnNewParseTree -= ParserOnNewParseTree;
+                //_projectEntry = (IPythonProjectEntry)newEntry;
+                //_projectEntry.OnNewParseTree += ParserOnNewParseTree;
             }
         }
     }

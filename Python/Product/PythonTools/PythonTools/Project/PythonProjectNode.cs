@@ -65,7 +65,7 @@ namespace Microsoft.PythonTools.Project {
 
         private object _designerContext;
         private VsProjectAnalyzer _analyzer;
-        private readonly HashSet<IProjectEntry> _warnOnLaunchFiles = new HashSet<IProjectEntry>();
+        private readonly HashSet<ProjectFileInfo> _warnOnLaunchFiles = new HashSet<ProjectFileInfo>();
         private PythonDebugPropertyPage _debugPropPage;
         private CommonSearchPathContainerNode _searchPathContainer;
         private InterpretersContainerNode _interpretersContainer;
@@ -194,13 +194,13 @@ namespace Microsoft.PythonTools.Project {
             get { return PythonConstants.IssueTrackerUrl; }
         }
 
-        private static string GetSearchPathEntry(IProjectEntry entry) {
+        private static string GetSearchPathEntry(ProjectFileInfo entry) {
             object result;
             entry.Properties.TryGetValue(_searchPathEntryKey, out result);
             return (string)result;
         }
 
-        private static void SetSearchPathEntry(IProjectEntry entry, string value) {
+        private static void SetSearchPathEntry(ProjectFileInfo entry, string value) {
             entry.Properties[_searchPathEntryKey] = value;
         }
 
@@ -650,7 +650,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
 
-        private void PythonProjectNode_OnProjectPropertyChanged(object sender, ProjectPropertyChangedArgs e) {
+        private async void PythonProjectNode_OnProjectPropertyChanged(object sender, ProjectPropertyChangedArgs e) {
             switch (e.PropertyName) {
                 case CommonConstants.StartupFile:
                     var genProp = GeneralPropertyPageControl;
@@ -675,7 +675,7 @@ namespace Microsoft.PythonTools.Project {
                     // figure out all the possible directory names we could be removing...
                     foreach (var fileProject in _analyzer.LoadedFiles) {
                         string file = fileProject.Key;
-                        IProjectEntry projectEntry = fileProject.Value;
+                        var projectEntry = fileProject.Value;
                         string searchPathEntry = GetSearchPathEntry(fileProject.Value);
                         if (searchPathEntry != null && !newDirs.Contains(searchPathEntry)) {
                             _analyzer.UnloadFile(projectEntry);
@@ -685,7 +685,7 @@ namespace Microsoft.PythonTools.Project {
                     // find the values only in the old list, and let the analyzer know it shouldn't be watching those dirs
                     oldDirs.ExceptWith(newDirs);
                     foreach (var dir in oldDirs) {
-                        _analyzer.StopAnalyzingDirectory(dir);
+                        await _analyzer.StopAnalyzingDirectory(dir);
                     }
 
                     AnalyzeSearchPaths(newDirs);
@@ -698,15 +698,15 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        private void AnalyzeSearchPaths(IEnumerable<string> newDirs) {
+        private async void AnalyzeSearchPaths(IEnumerable<string> newDirs) {
             // now add all of the missing files, any dups will automatically not be re-analyzed
             foreach (var dir in newDirs) {
                 if (File.Exists(dir)) {
                     // If it's a file and not a directory, parse it as a .zip
                     // file in accordance with PEP 273.
-                    _analyzer.AnalyzeZipArchive(dir, onFileAnalyzed: entry => SetSearchPathEntry(entry, dir));
+                    await _analyzer.AnalyzeZipArchive(dir, onFileAnalyzed: entry => SetSearchPathEntry(entry, dir));
                 } else if (Directory.Exists(dir)) {
-                    _analyzer.AnalyzeDirectory(dir, onFileAnalyzed: entry => SetSearchPathEntry(entry, dir));
+                    await _analyzer.AnalyzeDirectory(dir, onFileAnalyzed: entry => SetSearchPathEntry(entry, dir));
                 }
             }
         }
@@ -738,17 +738,19 @@ namespace Microsoft.PythonTools.Project {
                 return _designerContext;
             }
         }
-
+        /*
         public PythonAnalyzer GetProjectAnalyzer() {
             return GetAnalyzer().Project;
         }
-
+        */
         VsProjectAnalyzer IPythonProject.GetProjectAnalyzer() {
             return GetAnalyzer();
         }
 
         public event EventHandler ProjectAnalyzerChanged;
-        public event EventHandler<AnalyzerChangingEventArgs> ProjectAnalyzerChanging;
+        public event EventHandler<AnalyzerChangingEventArgs> ProjectAnalyzerChanging {
+            add { } remove { }
+        }
 
         public override IProjectLauncher GetLauncher() {
             return PythonToolsPackage.GetLauncher(Site, this);
@@ -1000,13 +1002,14 @@ namespace Microsoft.PythonTools.Project {
                 var analyzer = CreateAnalyzer();
                 Debug.Assert(analyzer != null);
 
+                /*
                 var analyzerChanging = ProjectAnalyzerChanging;
                 if (analyzerChanging != null) {
                     analyzerChanging(this, new AnalyzerChangingEventArgs(
                         _analyzer != null ? _analyzer.Project : null,
                         analyzer != null ? analyzer.Project : null
                     ));
-                }
+                }*/
 
                 Reanalyze(analyzer);
                 var oldAnalyzer = Interlocked.Exchange(ref _analyzer, analyzer);
@@ -1041,9 +1044,9 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        private void Reanalyze(VsProjectAnalyzer newAnalyzer) {
+        private async void Reanalyze(VsProjectAnalyzer newAnalyzer) {
             foreach (var child in AllVisibleDescendants.OfType<FileNode>()) {
-                newAnalyzer.AnalyzeFile(child.Url);
+                await newAnalyzer.AnalyzeFile(child.Url);
             }
 
             var references = GetReferenceContainer();

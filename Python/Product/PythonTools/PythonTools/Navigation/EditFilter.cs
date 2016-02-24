@@ -622,7 +622,7 @@ namespace Microsoft.PythonTools.Language {
                     case VSConstants.VSStd97CmdID.FindReferences: return FindAllReferences();
                 }
             } else if (pguidCmdGroup == CommonConstants.Std2KCmdGroupGuid) {
-                OutliningTaggerProvider.OutliningTagger tagger;
+                //OutliningTaggerProvider.OutliningTagger tagger;
                 switch ((VSConstants.VSStd2KCmdID)nCmdID) {
                     case VSConstants.VSStd2KCmdID.FORMATDOCUMENT:
                         FormatCode(new SnapshotSpan(_textView.TextBuffer.CurrentSnapshot, 0, _textView.TextBuffer.CurrentSnapshot.Length), false);
@@ -662,7 +662,7 @@ namespace Microsoft.PythonTools.Language {
                             return VSConstants.S_OK;
                         }
                         break;
-
+#if FALSE
                     case VSConstants.VSStd2KCmdID.OUTLN_STOP_HIDING_ALL:
                         tagger = _textView.GetOutliningTagger();
                         if (tagger != null) {
@@ -678,7 +678,7 @@ namespace Microsoft.PythonTools.Language {
                         }
                         // let VS get the event as well
                         break;
-
+#endif
                     case VSConstants.VSStd2KCmdID.COMMENT_BLOCK:
                     case VSConstants.VSStd2KCmdID.COMMENTBLOCK:
                         if (_textView.CommentOrUncommentBlock(comment: true)) {
@@ -976,7 +976,7 @@ namespace Microsoft.PythonTools.Language {
                     }
                 }
             } else if (pguidCmdGroup == CommonConstants.Std2KCmdGroupGuid) {
-                OutliningTaggerProvider.OutliningTagger tagger;
+                //OutliningTaggerProvider.OutliningTagger tagger;
                 for (int i = 0; i < cCmds; i++) {
                     switch ((VSConstants.VSStd2KCmdID)prgCmds[i].cmdID) {
                         case VSConstants.VSStd2KCmdID.FORMATDOCUMENT:
@@ -989,19 +989,19 @@ namespace Microsoft.PythonTools.Language {
                             prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
                             return VSConstants.S_OK;
 
-                        case VSConstants.VSStd2KCmdID.OUTLN_STOP_HIDING_ALL:
-                            tagger = _textView.GetOutliningTagger();
-                            if (tagger != null && tagger.Enabled) {
-                                prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
-                            }
-                            return VSConstants.S_OK;
+                        //case VSConstants.VSStd2KCmdID.OUTLN_STOP_HIDING_ALL:
+                        //    tagger = _textView.GetOutliningTagger();
+                        //    if (tagger != null && tagger.Enabled) {
+                        //        prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
+                        //    }
+                        //    return VSConstants.S_OK;
 
-                        case VSConstants.VSStd2KCmdID.OUTLN_START_AUTOHIDING:
-                            tagger = _textView.GetOutliningTagger();
-                            if (tagger != null && !tagger.Enabled) {
-                                prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
-                            }
-                            return VSConstants.S_OK;
+                        //case VSConstants.VSStd2KCmdID.OUTLN_START_AUTOHIDING:
+                        //    tagger = _textView.GetOutliningTagger();
+                        //    if (tagger != null && !tagger.Enabled) {
+                        //        prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
+                        //    }
+                        //    return VSConstants.S_OK;
 
                         case VSConstants.VSStd2KCmdID.COMMENT_BLOCK:
                         case VSConstants.VSStd2KCmdID.COMMENTBLOCK:

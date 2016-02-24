@@ -32,6 +32,7 @@ ASSEMBLIES = sorted([
     "Microsoft.PythonTools.ImportWizard",
     "Microsoft.PythonTools.IronPython",
     "Microsoft.PythonTools.IronPython.Interpreter",
+    "Microsoft.PythonTools.JsonComm",
     "Microsoft.PythonTools.ML",
     "Microsoft.PythonTools.Profiling",
     "Microsoft.PythonTools.ProjectWizards",

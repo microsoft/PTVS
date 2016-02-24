@@ -237,6 +237,7 @@ namespace Microsoft.PythonTools.Intellisense {
             if (importList.Count > 0) {
                 var projEntry = _textView.TextBuffer.GetPythonProjectEntry();
                 if (projEntry != null) {
+#if FALSE
                     PythonAst ast;
                     IAnalysisCookie cookie;
                     projEntry.GetTreeAndCookie(out ast, out cookie);
@@ -256,6 +257,7 @@ namespace Microsoft.PythonTools.Intellisense {
                             }
                         }
                     }
+#endif
                 }
             }
         }

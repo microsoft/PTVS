@@ -133,8 +133,8 @@ namespace Microsoft.PythonTools.Repl {
 
         protected override PythonLanguageVersion AnalyzerProjectLanguageVersion {
             get {
-                if (_replAnalyzer != null && _replAnalyzer.Project != null) {
-                    return _replAnalyzer.Project.LanguageVersion;
+                if (_replAnalyzer != null ) {
+                    return _replAnalyzer.LanguageVersion;
                 }
                 return LanguageVersion;
             }

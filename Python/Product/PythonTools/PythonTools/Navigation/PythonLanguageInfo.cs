@@ -93,7 +93,8 @@ namespace Microsoft.PythonTools.Navigation {
             var model = _serviceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
             var service = model.GetService<IVsEditorAdaptersFactoryService>();
             var buffer = service.GetDataBuffer(pBuffer);
-            IPythonProjectEntry projEntry;
+#if FALSE
+            PyprojEntry;
             if (buffer.TryGetPythonProjectEntry(out projEntry)) {
                 var tree = projEntry.Tree;
                 var name = FindNodeInTree(tree, tree.Body as SuiteStatement, iLine);
@@ -106,6 +107,7 @@ namespace Microsoft.PythonTools.Navigation {
                 }
                 return VSConstants.S_OK;
             }
+#endif
             
             pbstrName = "";
             piLineOffset = iCol;
@@ -155,6 +157,7 @@ namespace Microsoft.PythonTools.Navigation {
             var model = _serviceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
             var service = model.GetService<IVsEditorAdaptersFactoryService>();
             var buffer = service.GetDataBuffer(pBuffer);
+#if FALSE
             IPythonProjectEntry projEntry;
             if (buffer.TryGetPythonProjectEntry(out projEntry)) {
                 int startLine = Math.Max(iLine - cLines + 1, 0);
@@ -167,7 +170,7 @@ namespace Microsoft.PythonTools.Navigation {
                     return VSConstants.S_OK;
                 }
             }
-
+#endif
             ppEnum = null;
             return VSConstants.E_FAIL;
         }
@@ -208,6 +211,6 @@ namespace Microsoft.PythonTools.Navigation {
             return VSConstants.E_NOTIMPL;
         }
 
-        #endregion
+#endregion
     }
 }

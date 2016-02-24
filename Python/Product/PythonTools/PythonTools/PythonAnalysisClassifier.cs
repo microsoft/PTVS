@@ -47,7 +47,7 @@ namespace Microsoft.PythonTools {
         private readonly object _spanCacheLock = new object();
         private readonly PythonAnalysisClassifierProvider _provider;
         private readonly ITextBuffer _buffer;
-        private IPythonProjectEntry _entry;
+        private ProjectFileInfo _entry;
 
         internal PythonAnalysisClassifier(PythonAnalysisClassifierProvider provider, ITextBuffer buffer) {
             buffer.Changed += BufferChanged;
@@ -81,7 +81,7 @@ namespace Microsoft.PythonTools {
         }
 
         private void OnNewAnalysis(object sender, EventArgs e) {
-            var entry = sender as IPythonProjectEntry;
+            var entry = sender as ProjectFileInfo;
             if (entry == null || entry != _entry || !entry.IsAnalyzed) {
                 Debug.Fail("Project entry does not match expectation");
                 return;
@@ -99,6 +99,7 @@ namespace Microsoft.PythonTools {
                 return;
             }
 
+#if FALSE
             PythonAst tree;
             IAnalysisCookie cookie;
             entry.GetTreeAndCookie(out tree, out cookie);
@@ -126,6 +127,7 @@ namespace Microsoft.PythonTools {
             if (snapshot != null) {
                 OnNewClassifications(snapshot);
             }
+#endif
         }
 
         private void OnNewClassifications(ITextSnapshot snapshot) {
@@ -181,7 +183,7 @@ namespace Microsoft.PythonTools {
             }
         }
 
-        #region Private Members
+#region Private Members
 
         private void BufferContentTypeChanged(object sender, ContentTypeChangedEventArgs e) {
             _spanCache = null;
@@ -198,7 +200,7 @@ namespace Microsoft.PythonTools {
             EnsureAnalysis();
         }
 
-        #endregion
+#endregion
     }
 
     internal static partial class ClassifierExtensions {

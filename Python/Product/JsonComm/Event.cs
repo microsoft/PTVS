@@ -14,23 +14,23 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace Microsoft.PythonTools.Cdp {
-    public class Request {
-        public string command;
+    public class Event {
+        public string name;
 
+        public Event(string name) {
+            this.name = name;
+        }
     }
 
-    public class GenericRequest : Request<Response>  {
+    public class GenericEvent : Event {
         public Dictionary<string, object> body;
-    }
 
-    public class Request<TResponse> : Request where TResponse : Response, new() {
-
+        public GenericEvent(string name) : base(name) {
+        }
     }
 }
+

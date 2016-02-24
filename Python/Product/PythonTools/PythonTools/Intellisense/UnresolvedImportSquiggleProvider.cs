@@ -45,8 +45,21 @@ namespace Microsoft.PythonTools.Intellisense {
                 entry.OnNewAnalysis += OnNewAnalysis;
             }
         }
-
+        /*
         public void StopListening(IPythonProjectEntry entry) {
+            if (entry != null) {
+                entry.OnNewAnalysis -= OnNewAnalysis;
+                _taskProvider.Clear(entry, VsProjectAnalyzer.UnresolvedImportMoniker);
+            }
+        }*/
+
+        public void ListenForNextNewAnalysis(ProjectFileInfo entry) {
+            if (entry != null && !string.IsNullOrEmpty(entry.FilePath)) {
+                entry.OnNewAnalysis += OnNewAnalysis;
+            }
+        }
+
+        public void StopListening(ProjectFileInfo entry) {
             if (entry != null) {
                 entry.OnNewAnalysis -= OnNewAnalysis;
                 _taskProvider.Clear(entry, VsProjectAnalyzer.UnresolvedImportMoniker);
@@ -60,7 +73,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     return;
                 }
             }
-
+#if FALSE
             var entry = sender as IPythonProjectEntry;
             if (entry == null ||
                 string.IsNullOrEmpty(entry.ModuleName) ||
@@ -103,6 +116,7 @@ namespace Microsoft.PythonTools.Intellisense {
             } else {
                 _taskProvider.Clear(entry, VsProjectAnalyzer.UnresolvedImportMoniker);
             }
+#endif
         }
 
         class ImportStatementWalker : PythonWalker {

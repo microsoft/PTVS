@@ -106,7 +106,7 @@ namespace Microsoft.PythonTools.Intellisense {
                             analysis
                         );
                         var parameters = Enumerable.Empty<MemberResult>();
-                        var sigs = VsProjectAnalyzer.GetSignatures(_serviceProvider, _snapshot, Span);
+                        var sigs = VsProjectAnalyzer.GetSignatures(_serviceProvider, _snapshot, Span).Result;
                         if (sigs.Signatures.Any()) {
                             parameters = sigs.Signatures
                                 .SelectMany(s => s.Parameters)

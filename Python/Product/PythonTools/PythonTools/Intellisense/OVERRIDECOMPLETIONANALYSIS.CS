@@ -109,7 +109,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var snapshot = TextBuffer.CurrentSnapshot;
             var pos = VsProjectAnalyzer.TranslateIndex(startPos, snapshot, analysis);
-
+#if FALSE
             var cls = analysis.GetDefinitionTree(pos).LastOrDefault(member => member.MemberType == Interpreter.PythonMemberType.Class);
             var members = analysis.GetOverrideable(pos).ToArray();
             var completions = members
@@ -142,6 +142,8 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             return res;
+#endif
+            return new CompletionSet();
         }
     }
 }

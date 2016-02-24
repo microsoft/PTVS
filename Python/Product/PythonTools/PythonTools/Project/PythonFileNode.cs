@@ -206,10 +206,10 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        public IProjectEntry GetProjectEntry() {
+        public ProjectFileInfo GetProjectEntry() {
             var textBuffer = GetTextBuffer(false);
 
-            IProjectEntry entry;
+            ProjectFileInfo entry;
             if (textBuffer != null && textBuffer.TryGetProjectEntry(out entry)) {
                 return entry;
             }
@@ -263,7 +263,7 @@ namespace Microsoft.PythonTools.Project {
 
         internal override int IncludeInProject(bool includeChildren) {
             var analyzer = ((PythonProjectNode)this.ProjectMgr).GetAnalyzer();
-            analyzer.AnalyzeFile(Url);
+            analyzer.AnalyzeFile(Url).DoNotWait();
 
             return base.IncludeInProject(includeChildren);
         }

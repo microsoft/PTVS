@@ -21,9 +21,9 @@ namespace Microsoft.PythonTools.Intellisense {
     struct MonitoredBufferResult {
         public readonly BufferParser BufferParser;
         public readonly ITextView TextView;
-        public readonly IProjectEntry ProjectEntry;
+        public readonly ProjectFileInfo ProjectEntry;
 
-        public MonitoredBufferResult(BufferParser bufferParser, ITextView textView, IProjectEntry projectEntry) {
+        public MonitoredBufferResult(BufferParser bufferParser, ITextView textView, ProjectFileInfo projectEntry) {
             BufferParser = bufferParser;
             TextView = textView;
             ProjectEntry = projectEntry;

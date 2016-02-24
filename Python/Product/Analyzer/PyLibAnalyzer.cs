@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Composition.Hosting;
 using System.Configuration;
 using System.Diagnostics;
 using System.IO;
@@ -27,6 +28,8 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis.Analyzer;
+using Microsoft.PythonTools.Analysis.Communication;
+using Microsoft.PythonTools.Cdp;
 using Microsoft.PythonTools.Common.Infrastructure;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
@@ -51,7 +54,7 @@ namespace Microsoft.PythonTools.Analysis {
         private readonly string _waitForAnalysis;
         private readonly int _repeatCount;
 
-        private bool _all;
+        private bool _all, _interactive;
         private FileStream _pidMarkerFile;
 
         private readonly AnalyzerStatusUpdater _updater;
@@ -60,6 +63,7 @@ namespace Microsoft.PythonTools.Analysis {
         internal readonly List<List<ModulePath>> _scrapeFileGroups, _analyzeFileGroups;
         private readonly HashSet<string> _treatPathsAsStandardLibrary;
         private IEnumerable<string> _readModulePath;
+        private OutOfProcProjectAnalyzer _analyzer;
 
         private int _progressOffset;
         private int _progressTotal;
@@ -78,6 +82,8 @@ namespace Microsoft.PythonTools.Analysis {
             Console.WriteLine();
             Console.WriteLine(" /id         [GUID]             - specify GUID of the interpreter being used");
             Console.WriteLine(" /v[ersion]  [version]          - specify language version to be used (x.y format)");
+            Console.WriteLine(" /interactive                   - start interactive analyzer");
+
             Console.WriteLine(" /py[thon]   [filename]         - full path to the Python interpreter to use");
             Console.WriteLine(" /lib[rary]  [directory]        - full path to the Python library to analyze");
             Console.WriteLine(" /outdir     [output dir]       - specify output directory for analysis (default " +
@@ -171,25 +177,45 @@ namespace Microsoft.PythonTools.Analysis {
             return 0;
         }
 
+        private async Task RunInteractive() {
+            var catalog = new AssemblyCatalog(typeof(IInterpreterOptionsService).Assembly);
+            var container = new CompositionContainer(catalog);
+            var interpConfig = container.GetExportedValue<IInterpreterOptionsService>();
+            var factory = interpConfig.FindInterpreter(_id, _version);
+            
+            _analyzer = new OutOfProcProjectAnalyzer(
+                Console.OpenStandardOutput(),
+                Console.OpenStandardInput(),
+                factory,
+                interpConfig.Interpreters.ToArray()
+            );
+
+            await _analyzer.ProcessMessages();
+        }
+
         private async Task RunWorker() {
-            WaitForOtherRun();
+            if (_interactive) {
+                await RunInteractive();
+            } else {
+                WaitForOtherRun();
 
-            while (true) {
-                try {
-                    await StartTraceListener();
-                    break;
-                } catch (IOException) {
+                while (true) {
+                    try {
+                        await StartTraceListener();
+                        break;
+                    } catch (IOException) {
+                    }
+                    await Task.Delay(20000);
                 }
-                await Task.Delay(20000);
-            }
 
-            LogToGlobal("START_STDLIB");
+                LogToGlobal("START_STDLIB");
 
-            for (int i = 0; i < _repeatCount && await Prepare(i == 0); ++i) {
-                await Scrape();
-                await Analyze();
+                for (int i = 0; i < _repeatCount && await Prepare(i == 0); ++i) {
+                    await Scrape();
+                    await Analyze();
+                }
+                await Epilogue();
             }
-            await Epilogue();
         }
 
         public PyLibAnalyzer(
@@ -205,7 +231,8 @@ namespace Microsoft.PythonTools.Analysis {
             bool rescanAll,
             bool dryRun,
             string waitForAnalysis,
-            int repeatCount
+            int repeatCount,
+            bool interactive = false
         ) {
             _id = id;
             _version = langVersion;
@@ -219,6 +246,7 @@ namespace Microsoft.PythonTools.Analysis {
             _dryRun = dryRun;
             _waitForAnalysis = waitForAnalysis;
             _repeatCount = repeatCount;
+            _interactive = interactive;
 
             _scrapeFileGroups = new List<List<ModulePath>>();
             _analyzeFileGroups = new List<List<ModulePath>>();
@@ -301,10 +329,14 @@ namespace Microsoft.PythonTools.Analysis {
             var library = new List<PythonLibraryPath>();
             List<string> baseDb;
             string logPrivate, logGlobal, logDiagnostic;
-            bool rescanAll, dryRun;
+            bool rescanAll, dryRun, interactive = false;
             int repeatCount;
 
             var cwd = Environment.CurrentDirectory;
+
+            if (options.ContainsKey("interactive")) {
+                interactive = true;
+            }
 
             if (!options.TryGetValue("id", out value)) {
                 id = Guid.Empty;
@@ -425,7 +457,8 @@ namespace Microsoft.PythonTools.Analysis {
                 rescanAll,
                 dryRun,
                 waitForAnalysis, 
-                repeatCount
+                repeatCount,
+                interactive
             );
         }
 

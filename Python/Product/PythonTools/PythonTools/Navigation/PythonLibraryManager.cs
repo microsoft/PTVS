@@ -18,6 +18,7 @@ using System;
 using System.Runtime.InteropServices;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Navigation;
@@ -59,13 +60,13 @@ namespace Microsoft.PythonTools.Navigation {
             if (IsNonMemberItem(task.ModuleID.Hierarchy, task.ModuleID.ItemID)) {
                 return;
             }
-            IPythonProjectEntry item;
+            ProjectFileInfo item;
             if (task.TextBuffer == null || !task.TextBuffer.TryGetPythonProjectEntry(out item)) {
                 item = task.ModuleID.Hierarchy
                     .GetProject()
                     .GetPythonProject()
                     .GetAnalyzer()
-                    .AnalyzeFile(task.FileName) as IPythonProjectEntry;
+                    .AnalyzeFile(task.FileName).Result;
             }
 
             if (item != null) {
@@ -73,11 +74,13 @@ namespace Microsoft.PythonTools.Navigation {
                 // in the future we can use the analysis to include type information in the
                 // object browser (for example we could include base type information with
                 // links elsewhere in the object browser).
+#if FALSE
                 item.OnNewAnalysis += (sender, args) => {
                     _package.GetUIThread().InvokeAsync(() => FileParsed(task, new AstScopeNode(item.Tree, item)))
                         .HandleAllExceptions(_package, GetType())
                         .DoNotWait();
                 };
+#endif
             }
         }
     }

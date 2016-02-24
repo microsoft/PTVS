@@ -32,6 +32,7 @@ using Microsoft.VisualStudio.Text.Tagging;
 using Microsoft.VisualStudio.Utilities;
 
 namespace Microsoft.PythonTools {
+#if FALSE
     [Export(typeof(ITaggerProvider)), ContentType(PythonCoreConstants.ContentType)]
     [TagType(typeof(IOutliningRegionTag))]
     class OutliningTaggerProvider : ITaggerProvider {
@@ -42,13 +43,13 @@ namespace Microsoft.PythonTools {
             _pyService = serviceProvider.GetPythonToolsService();
         }
 
-        #region ITaggerProvider Members
+#region ITaggerProvider Members
 
         public ITagger<T> CreateTagger<T>(ITextBuffer buffer) where T : ITag {
             return (ITagger<T>)(buffer.GetOutliningTagger() ?? new OutliningTagger(_pyService, buffer));
         }
 
-        #endregion
+#endregion
 
         [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",
             Justification = "Object is owned by VS and cannot be disposed")]
@@ -92,7 +93,7 @@ namespace Microsoft.PythonTools {
                 }
             }
 
-            #region ITagger<IOutliningRegionTag> Members
+#region ITagger<IOutliningRegionTag> Members
 
             public IEnumerable<ITagSpan<IOutliningRegionTag>> GetTags(NormalizedSnapshotSpanCollection spans) {
                 IPythonProjectEntry entry;
@@ -225,7 +226,7 @@ namespace Microsoft.PythonTools {
 
             public event EventHandler<SnapshotSpanEventArgs> TagsChanged;
 
-            #endregion
+#endregion
         }
 
         class OutliningWalker : PythonWalker {
@@ -423,7 +424,7 @@ namespace Microsoft.PythonTools {
                 _tag = tag;
             }
 
-            #region ITagSpan<IOutliningRegionTag> Members
+#region ITagSpan<IOutliningRegionTag> Members
 
             public SnapshotSpan Span {
                 get { return _span; }
@@ -433,7 +434,7 @@ namespace Microsoft.PythonTools {
                 get { return _tag; }
             }
 
-            #endregion
+#endregion
         }
 
         internal class OutliningTag : IOutliningRegionTag {
@@ -447,7 +448,7 @@ namespace Microsoft.PythonTools {
                 _isImplementation = isImplementation;
             }
 
-            #region IOutliningRegionTag Members
+#region IOutliningRegionTag Members
 
             public object CollapsedForm {
                 get { return "..."; }
@@ -491,7 +492,7 @@ namespace Microsoft.PythonTools {
                 get { return _isImplementation; }
             }
 
-            #endregion
+#endregion
         }
     }
 
@@ -508,4 +509,5 @@ namespace Microsoft.PythonTools {
             return null;
         }
     }
+#endif
 }

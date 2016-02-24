@@ -70,6 +70,7 @@ namespace Microsoft.PythonTools.Navigation {
         public override IVsSimpleObjectList2 DoSearch(VSOBSEARCHCRITERIA2 criteria) {
             var node = _hierarchy as PythonFileNode;
             if(node != null) {
+#if FALSE
                 var analysis = node.GetProjectEntry() as IPythonProjectEntry;
 
                 if (analysis != null) {
@@ -84,8 +85,9 @@ namespace Microsoft.PythonTools.Navigation {
 
                     return EditFilter.GetFindRefLocations(_hierarchy.ProjectMgr.Site, exprAnalysis);
                 }
+#endif
             }
-            
+
             return null;
         }
     }

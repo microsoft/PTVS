@@ -21,20 +21,16 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Analysis.Communication;
+using Microsoft.PythonTools.Cdp;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Navigation;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
-using Microsoft.PythonTools.Repl;
-using Microsoft.VisualStudio.InteractiveWindow;
-using Microsoft.VisualStudio.Language.Intellisense;
-using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Editor;
 
 namespace Microsoft.PythonTools.Intellisense {
     /// <summary>
@@ -50,7 +46,7 @@ namespace Microsoft.PythonTools.Intellisense {
     /// 
     /// New in 1.5.
     /// </summary>
-    public sealed class VsProjectAnalyzer : IDisposable {
+    sealed class OutOfProcProjectAnalyzer : IDisposable {
         // For entries that were loaded from a .zip file, IProjectEntry.Properties[_zipFileName] contains the full path to that archive.
         private static readonly object _zipFileName = new { Name = "ZipFileName" };
 
@@ -60,14 +56,12 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly ParseQueue _queue;
         private readonly AnalysisQueue _analysisQueue;
         private readonly IPythonInterpreterFactory _interpreterFactory;
-        private readonly Dictionary<BufferParser, IProjectEntry> _openFiles = new Dictionary<BufferParser, IProjectEntry>();
-        private readonly ConcurrentDictionary<string, IProjectEntry> _projectFiles;
+        //private readonly Dictionary<BufferParser, IProjectEntry> _openFiles = new Dictionary<BufferParser, IProjectEntry>();
+        private readonly ProjectEntryMap _projectFiles;
         private readonly PythonAnalyzer _pyAnalyzer;
-        private readonly bool _implicitProject;
         private readonly AutoResetEvent _queueActivityEvent = new AutoResetEvent(false);
         private readonly IPythonInterpreterFactory[] _allFactories;
-
-        private int _userCount;
+        private OptionsChangedEvent _options;
 
         internal readonly HashSet<IProjectEntry> _hasParseErrors = new HashSet<IProjectEntry>();
         internal readonly object _hasParseErrorsLock = new object();
@@ -77,49 +71,59 @@ namespace Microsoft.PythonTools.Intellisense {
         private const string ParserTaskMoniker = "Parser";
         internal const string UnresolvedImportMoniker = "UnresolvedImport";
 
+#if PORT
         private ErrorTaskProvider _errorProvider;
         private CommentTaskProvider _commentTaskProvider;
 
         private readonly UnresolvedImportSquiggleProvider _unresolvedSquiggles;
         private readonly PythonToolsService _pyService;
         private readonly IServiceProvider _serviceProvider;
+#endif
 
+        private readonly Connection _connection;
         internal Task ReloadTask;
 
-        internal VsProjectAnalyzer(
-            IServiceProvider serviceProvider,
+        internal OutOfProcProjectAnalyzer(
+            Stream writer, Stream reader,
             IPythonInterpreterFactory factory,
             IPythonInterpreterFactory[] allFactories)
-            : this(serviceProvider, factory.CreateInterpreter(), factory, allFactories) {
+            : this(writer, reader, factory.CreateInterpreter(), factory, allFactories) {
         }
 
-        internal VsProjectAnalyzer(
-            IServiceProvider serviceProvider,
+        internal OutOfProcProjectAnalyzer(
+            Stream writer, Stream reader,
             IPythonInterpreter interpreter,
             IPythonInterpreterFactory factory,
-            IPythonInterpreterFactory[] allFactories,
-            bool implicitProject = true
+            IPythonInterpreterFactory[] allFactories
         ) {
+#if PORT
             _errorProvider = (ErrorTaskProvider)serviceProvider.GetService(typeof(ErrorTaskProvider));
             _commentTaskProvider = (CommentTaskProvider)serviceProvider.GetService(typeof(CommentTaskProvider));
             _unresolvedSquiggles = new UnresolvedImportSquiggleProvider(serviceProvider, _errorProvider);
+#endif
 
             _queue = new ParseQueue(this);
             _analysisQueue = new AnalysisQueue(this);
             _analysisQueue.AnalysisStarted += AnalysisQueue_AnalysisStarted;
             _allFactories = allFactories;
-
+            _options = new OptionsChangedEvent() {
+                implicitProject = false,
+                indentation_inconsistency_severity = Severity.Ignore
+            };
             _interpreterFactory = factory;
-            _implicitProject = implicitProject;
 
             if (interpreter != null) {
                 _pyAnalyzer = PythonAnalyzer.Create(factory, interpreter);
-                ReloadTask = _pyAnalyzer.ReloadModulesAsync().HandleAllExceptions(_serviceProvider, GetType());
+                ReloadTask = _pyAnalyzer.ReloadModulesAsync()/*.HandleAllExceptions(_serviceProvider, GetType())*/;
                 ReloadTask.ContinueWith(_ => ReloadTask = null);
                 interpreter.ModuleNamesChanged += OnModulesChanged;
             }
 
-            _projectFiles = new ConcurrentDictionary<string, IProjectEntry>(StringComparer.OrdinalIgnoreCase);
+            _projectFiles = new ProjectEntryMap();
+            _connection = new Connection(writer, reader, RequestHandler, Requests.RegisteredTypes);
+            _connection.EventReceived += ConectionReceivedEvent;
+
+#if PORT
             _pyService = serviceProvider.GetPythonToolsService();
             _serviceProvider = serviceProvider;
 
@@ -127,8 +131,238 @@ namespace Microsoft.PythonTools.Intellisense {
                 _pyAnalyzer.Limits.CrossModule = _pyService.GeneralOptions.CrossModuleAnalysisLimit;
                 // TODO: Load other limits from options
             }
+#endif
 
-            _userCount = 1;
+        }
+
+        private void ConectionReceivedEvent(object sender, EventReceivedEventArgs e) {
+            switch (e.Event.name) {
+                case ModulesChangedEvent.Name: OnModulesChanged(this, EventArgs.Empty); break;
+            }
+
+        }
+
+        private async Task<Response> RequestHandler(Request request) {
+            await Task.FromResult((object)null);
+
+            switch (request.command) {
+                case UnloadFileRequest.Command: return UnloadFile((UnloadFileRequest)request);
+                case HasErrorsRequest.Command: return HasErrors((HasErrorsRequest)request);
+                case AddFileRequest.Command: return AnalyzeFile((AddFileRequest)request);
+
+                case TopLevelCompletionsRequest.Command: return GetTopLevelCompletions(request);
+                case CompletionsRequest.Command: return GetCompletions(request);
+                case GetModulesRequest.Command: return GetModules(request);
+                case GetModuleMembers.Command: return GeModuleMembers(request);
+                case SignaturesRequest.Command: return GetSignatures((SignaturesRequest)request);
+                //return _analyzer.Qneue((HasErrorsRequest)request);
+                default:
+                    return new Response() {
+                        message = "Unknown command",
+                        failure = true
+                    };
+            }
+
+        }
+
+        private Response GetSignatures(SignaturesRequest request) {
+            var pyEntry = _projectFiles[request.fileId] as IPythonProjectEntry;
+            IEnumerable<IOverloadResult> sigs;
+            if (pyEntry.Analysis != null) {
+                sigs = pyEntry.Analysis.GetSignaturesByIndex(
+                    request.text,
+                    request.location
+                );
+            } else {
+                sigs = Enumerable.Empty<IOverloadResult>();
+            }
+
+            return new SignaturesResponse() {
+                sigs = ToSignatures(sigs)
+            };
+
+        }
+
+        private Response GetTopLevelCompletions(Request request) {
+            var topLevelCompletions = (TopLevelCompletionsRequest)request;
+
+            var pyEntry = _projectFiles[topLevelCompletions.fileId] as IPythonProjectEntry;
+            IEnumerable<MemberResult> members;
+            if (pyEntry.Analysis != null) {
+
+                members = pyEntry.Analysis.GetAllAvailableMembers(
+                    new SourceLocation(topLevelCompletions.location, 1, topLevelCompletions.column),
+                    topLevelCompletions.options
+                );
+            } else {
+                members = Enumerable.Empty<MemberResult>();
+            }
+
+            return new CompletionsResponse() {
+                completions = ToCompletions(members.ToArray())
+            };
+        }
+
+        private Response GeModuleMembers(Request request) {
+            var getModuleMembers = (GetModuleMembers)request;
+
+            return new CompletionsResponse() {
+                completions = ToCompletions(_pyAnalyzer.GetModuleMembers(
+                    null, // TODO: ModuleContext
+                    getModuleMembers.package,
+                    getModuleMembers.includeMembers
+                ))
+            };
+        }
+
+        private Response GetModules(Request request) {
+            var getModules = (GetModulesRequest)request;
+
+            return new CompletionsResponse() {
+                completions = ToCompletions(_pyAnalyzer.GetModules(
+                    getModules.topLevelOnly
+                ))
+            };
+        }
+
+        private Response GetCompletions(Request request) {
+            var completions = (CompletionsRequest)request;
+
+            var pyEntry = _projectFiles[completions.fileId] as IPythonProjectEntry;
+            IEnumerable<MemberResult> members;
+            if (pyEntry.Analysis != null) {
+
+                members = pyEntry.Analysis.GetMembersByIndex(
+                    completions.text,
+                    completions.location,
+                    completions.options
+                );
+            } else {
+                members = Enumerable.Empty<MemberResult>();
+            }
+
+            return new CompletionsResponse() {
+                completions = ToCompletions(members.ToArray())
+            };
+        }
+
+        private Signature[] ToSignatures(IEnumerable<IOverloadResult> sigs) {
+            return sigs.Select(
+                sig => new Signature() {
+                    name = sig.Name,
+                    doc = sig.Documentation,
+                    parameters = sig.Parameters.Select(
+                        param => new Analysis.Communication.Parameter() {
+                            name = param.Name,
+                            defaultValue = param.DefaultValue,
+                            optional = param.IsOptional,
+                            doc = param.Documentation,
+                            type = param.Type
+                        }
+                    ).ToArray()
+                }
+            ).ToArray();
+        }
+
+        private Completion[] ToCompletions(MemberResult[] memberResult) {
+            Completion[] res = new Completion[memberResult.Length];
+            for (int i = 0; i < memberResult.Length; i++) {
+                res[i] = new Completion() {
+                    name = memberResult[i].Name,
+                    completion = memberResult[i].Completion,
+                    memberType = memberResult[i].MemberType
+                };
+            }
+            return res;
+        }
+
+        private Response AnalyzeFile(AddFileRequest request) {
+            var entry = AnalyzeFile(request.path, request.addingFromDir);
+
+            if (entry != null) {
+                return new AddFileResponse() {
+                    fileId = ProjectEntryMap.GetId(entry)
+                };
+            }
+
+            return new AddFileResponse() {
+                failure = false,
+                message = "failed to add item"
+            };
+        }
+
+        private Response UnloadFile(UnloadFileRequest command) {
+            var entry = _projectFiles[command.fileId];
+            if (entry == null) {
+                return new Response() {
+                    failure = true,
+                    message = "Unknown project entry"
+                };
+            }
+
+            UnloadFile(entry);
+            return new Response();
+        }
+
+        public void SetOptions(OptionsChangedEvent options) {
+            _options = options;
+        }
+
+        public HasErrorsResponse HasErrors(HasErrorsRequest request) {
+            var entry = _projectFiles[request.fileId];
+            if (entry == null) {
+                return new HasErrorsResponse() {
+                    failure = true,
+                    message = "Unknown project entry"
+                };
+            }
+
+            return new HasErrorsResponse() {
+                hasErrors = ShouldWarnOnLaunch(entry)
+            };
+        }
+
+        public void ApplyChanges(FileChangedEvent request) {
+            var entry = _projectFiles[request.fileId];
+            if (entry != null) {
+                var curCode = entry.GetCurrentCode();
+                if (curCode == null) {
+                    entry.SetCurrentCode(curCode = new StringBuilder());
+                }
+
+                foreach (var change in request.changes) {
+                    curCode.Remove(change.start, change.length);
+                    curCode.Insert(change.start, change.newText);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets a CompletionList providing a list of possible members the user can dot through.
+        /// </summary>
+        internal CompletionsResponse GetCompletions(CompletionsRequest request) {
+            var file = _projectFiles[request.fileId];
+            if (file == null) {
+                return new CompletionsResponse() {
+                    message = "Unknown project entry",
+                    failure = true
+                };
+            }
+
+            return //TrySpecialCompletions(serviceProvider, snapshot, span, point, options) ??
+                GetNormalCompletions(file, request);
+            //return 
+              //         GetNormalCompletionContext(request);
+        }
+
+        internal Task ProcessMessages() {
+            return _connection.ProcessMessages();
+        }
+
+        public OptionsChangedEvent Options {
+            get {
+                return _options;
+            }
         }
 
         private void AnalysisQueue_AnalysisStarted(object sender, EventArgs e) {
@@ -138,23 +372,13 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
+#if PORT
         internal PythonToolsService PyService {
             get {
                 return _pyService;
             }
         }
-
-        public void AddUser() {
-            Interlocked.Increment(ref _userCount);
-        }
-
-        /// <summary>
-        /// Reduces the number of known users by one and returns true if the
-        /// analyzer should be disposed.
-        /// </summary>
-        public bool RemoveUser() {
-            return Interlocked.Decrement(ref _userCount) == 0;
-        }
+#endif
 
         internal static string GetZipFileName(IProjectEntry entry) {
             object result;
@@ -176,7 +400,7 @@ namespace Microsoft.PythonTools.Intellisense {
             entry.Properties[_pathInZipFile] = value;
         }
 
-        private async void OnModulesChanged(object sender, EventArgs e) {
+        private async void OnModulesChanged(object sender, EventArgs args) {
             Debug.Assert(_pyAnalyzer != null, "Should not have null _pyAnalyzer here");
             if (_pyAnalyzer == null) {
                 return;
@@ -190,6 +414,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
+#if PORT
         /// <summary>
         /// Creates a new ProjectEntry for the collection of buffers.
         /// 
@@ -231,6 +456,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 bufferParser._currentProjEntry = _openFiles[bufferParser] = projEntry;
                 bufferParser._parser = this;
 
+
                 foreach (var buffer in buffers) {
                     // A buffer may have multiple DropDownBarClients, given one may open multiple CodeWindows
                     // over a single buffer using Window/New Window
@@ -242,10 +468,12 @@ namespace Microsoft.PythonTools.Intellisense {
                     }
                 }
 
-                bufferParser.Requeue();
+            bufferParser.Requeue();
             }
-        }
+    }
+#endif
 
+#if PORT
         public void ConnectErrorList(IProjectEntry projEntry, ITextBuffer buffer) {
             _errorProvider.AddBufferForErrorSource(projEntry, ParserTaskMoniker, buffer);
             _commentTaskProvider.AddBufferForErrorSource(projEntry, ParserTaskMoniker, buffer);
@@ -256,6 +484,7 @@ namespace Microsoft.PythonTools.Intellisense {
             _commentTaskProvider.RemoveBufferForErrorSource(projEntry, ParserTaskMoniker, buffer);
         }
 
+
         internal void SwitchAnalyzers(VsProjectAnalyzer oldAnalyzer) {
             lock (_openFiles) {
                 // copy the Keys here as ReAnalyzeTextBuffers can mutuate the dictionary
@@ -264,7 +493,8 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             }
         }
-
+#endif
+#if PORT
         /// <summary>
         /// Starts monitoring a buffer for changes so we will re-parse the buffer to update the analysis
         /// as the text changes.
@@ -368,7 +598,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             return entry;
         }
-
+#endif
         private void QueueDirectoryAnalysis(string path) {
             ThreadPool.QueueUserWorkItem(x => {
                 AnalyzeDirectory(PathUtils.NormalizeDirectoryPath(Path.GetDirectoryName(path)));
@@ -428,7 +658,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
 
                 if (item != null) {
-                    _projectFiles[path] = item;
+                    _projectFiles.Add(path, item);
                     _queue.EnqueueFile(item, path);
                 }
             } else if (addingFromDirectory != null) {
@@ -469,7 +699,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
             return null;
         }
-
+#if PORT
         /// <summary>
         /// Gets a ExpressionAnalysis for the expression at the provided span.  If the span is in
         /// part of an identifier then the expression is extended to complete the identifier.
@@ -507,15 +737,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
             return ExpressionAnalysis.Empty;
         }
-
-        /// <summary>
-        /// Gets a CompletionList providing a list of possible members the user can dot through.
-        /// </summary>
-        internal static CompletionAnalysis GetCompletions(IServiceProvider serviceProvider, ITextSnapshot snapshot, ITrackingSpan span, ITrackingPoint point, CompletionOptions options) {
-            return TrySpecialCompletions(serviceProvider, snapshot, span, point, options) ??
-                   GetNormalCompletionContext(serviceProvider, snapshot, span, point, options);
-        }
-
+#endif
+#if PORT
         /// <summary>
         /// Gets a list of signatuers available for the expression at the provided location in the snapshot.
         /// </summary>
@@ -670,7 +893,7 @@ namespace Microsoft.PythonTools.Intellisense {
             // if we have type information don't offer to add imports
             return MissingImportAnalysis.Empty;
         }
-
+#endif
         private static NameExpression GetFirstNameExpression(Statement stmt) {
             return GetFirstNameExpression(Statement.GetExpression(stmt));
         }
@@ -740,7 +963,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// </summary>
         internal bool ImplicitProject {
             get {
-                return _implicitProject;
+                return _options.implicitProject;
             }
         }
 
@@ -761,7 +984,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 return _pyAnalyzer;
             }
         }
-
+#if FALSE
         internal PythonAst ParseSnapshot(ITextSnapshot snapshot) {
             using (var parser = Parser.CreateParser(
                 new SnapshotSpanSourceCodeReader(
@@ -773,40 +996,23 @@ namespace Microsoft.PythonTools.Intellisense {
                 return ParseOneFile(null, parser);
             }
         }
-
-        internal ITextSnapshot GetOpenSnapshot(IProjectEntry entry) {
-            if (entry == null) {
-                return null;
-            }
-
-            lock (_openFiles) {
-                var item = _openFiles.FirstOrDefault(kv => kv.Value == entry);
-                if (item.Value == null) {
-                    return null;
-                }
-                var document = item.Key.Document;
-                if (document == null) {
-                    return null;
-                }
-
-                var textBuffer = document.TextBuffer;
-                // TextBuffer may be null if we are racing with file close
-                return textBuffer != null ? textBuffer.CurrentSnapshot : null;
-            }
-        }
+#endif
 
         internal void ParseFile(IProjectEntry entry, string filename, Stream content, Severity indentationSeverity) {
             IPythonProjectEntry pyEntry;
             IExternalProjectEntry externalEntry;
 
             TextReader reader = null;
-            ITextSnapshot snapshot = GetOpenSnapshot(entry);
+            var snapshot = entry.GetCurrentCode();
             string zipFileName = GetZipFileName(entry);
             string pathInZipFile = GetPathInZipFile(entry);
             IAnalysisCookie cookie;
             if (snapshot != null) {
+                cookie = new FileCookie(filename);
+#if FALSE
                 cookie = new SnapshotCookie(snapshot);
-                reader = new SnapshotSpanSourceCodeReader(new SnapshotSpan(snapshot, 0, snapshot.Length));
+#endif
+                reader = new StringReader(snapshot.ToString());
             } else if (zipFileName != null) {
                 cookie = new ZipFileCookie(zipFileName, pathInZipFile);
             } else {
@@ -816,11 +1022,11 @@ namespace Microsoft.PythonTools.Intellisense {
             if ((pyEntry = entry as IPythonProjectEntry) != null) {
                 PythonAst ast;
                 CollectingErrorSink errorSink;
-                List<TaskProviderItem> commentTasks;
+                List<TaskItem> commentTasks;
                 if (reader != null) {
-                    ParsePythonCode(snapshot, reader, indentationSeverity, out ast, out errorSink, out commentTasks);
+                    ParsePythonCode(reader, indentationSeverity, out ast, out errorSink, out commentTasks);
                 } else {
-                    ParsePythonCode(snapshot, content, indentationSeverity, out ast, out errorSink, out commentTasks);
+                    ParsePythonCode(content, indentationSeverity, out ast, out errorSink, out commentTasks);
                 }
 
                 if (ast != null) {
@@ -829,10 +1035,11 @@ namespace Microsoft.PythonTools.Intellisense {
                     // notify that we failed to update the existing analysis
                     pyEntry.UpdateTree(null, null);
                 }
-
+#if FALSE
                 // update squiggles for the buffer. snapshot may be null if we
                 // are analyzing a file that is not open
                 UpdateErrorsAndWarnings(entry, snapshot, errorSink, commentTasks);
+#endif
 
                 // enqueue analysis of the file
                 if (ast != null) {
@@ -844,6 +1051,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
+#if PORT
         internal void ParseBuffers(BufferParser bufferParser, Severity indentationSeverity, params ITextSnapshot[] snapshots) {
             IProjectEntry entry = bufferParser._currentProjEntry;
 
@@ -907,21 +1115,21 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             }
         }
-
+#endif
         private void ParsePythonCode(
-            ITextSnapshot snapshot, Stream content, Severity indentationSeverity,
-            out PythonAst ast, out CollectingErrorSink errorSink, out List<TaskProviderItem> commentTasks
+            Stream content, Severity indentationSeverity,
+            out PythonAst ast, out CollectingErrorSink errorSink, out List<TaskItem> commentTasks
         ) {
             ast = null;
             errorSink = new CollectingErrorSink();
-            var tasks = commentTasks = new List<TaskProviderItem>();
+            var tasks = commentTasks = new List<TaskItem>();
 
             var options = new ParserOptions {
-                    ErrorSink = errorSink,
-                    IndentationInconsistencySeverity = indentationSeverity,
-                    BindReferences = true
+                ErrorSink = errorSink,
+                IndentationInconsistencySeverity = indentationSeverity,
+                BindReferences = true
             };
-            options.ProcessComment += (sender, e) => ProcessComment(tasks, snapshot, e.Span, e.Text);
+            options.ProcessComment += (sender, e) => ProcessComment(tasks, e.Span, e.Text);
 
             using (var parser = Parser.CreateParser(content, Project.LanguageVersion, options)) {
                 ast = ParseOneFile(ast, parser);
@@ -929,19 +1137,19 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private void ParsePythonCode(
-            ITextSnapshot snapshot, TextReader content, Severity indentationSeverity,
-            out PythonAst ast, out CollectingErrorSink errorSink, out List<TaskProviderItem> commentTasks
+            TextReader content, Severity indentationSeverity,
+            out PythonAst ast, out CollectingErrorSink errorSink, out List<TaskItem> commentTasks
         ) {
             ast = null;
             errorSink = new CollectingErrorSink();
-            var tasks = commentTasks = new List<TaskProviderItem>();
+            var tasks = commentTasks = new List<TaskItem>();
 
             var options = new ParserOptions {
-                    ErrorSink = errorSink,
-                    IndentationInconsistencySeverity = indentationSeverity,
+                ErrorSink = errorSink,
+                IndentationInconsistencySeverity = indentationSeverity,
                 BindReferences = true,
             };
-            options.ProcessComment += (sender, e) => ProcessComment(tasks, snapshot, e.Span, e.Text);
+            options.ProcessComment += (sender, e) => ProcessComment(tasks, e.Span, e.Text);
 
             using (var parser = Parser.CreateParser(content, Project.LanguageVersion, options)) {
                 ast = ParseOneFile(ast, parser);
@@ -965,18 +1173,25 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         // Tokenizer callback. Extracts comment tasks (like "TODO" or "HACK") from comments.
-        private void ProcessComment(List<TaskProviderItem> commentTasks, ITextSnapshot snapshot, SourceSpan span, string text) {
+        private void ProcessComment(List<TaskItem> commentTasks, SourceSpan span, string text) {
+#if PORT
             if (text.Length > 0) {
                 var tokens = _commentTaskProvider.Tokens;
                 if (tokens != null) {
                     foreach (var kv in tokens) {
                         if (text.IndexOf(kv.Key, StringComparison.OrdinalIgnoreCase) >= 0) {
-                            commentTasks.Add(new TaskProviderItem(_serviceProvider, text.Substring(1).Trim(), span, kv.Value, VSTASKCATEGORY.CAT_COMMENTS, false, snapshot));
+                            commentTasks.Add(new TaskItem(
+                                _serviceProvider, 
+                                text.Substring(1).Trim()
+                                , span, 
+                                kv.Value, VSTASKCATEGORY.CAT_COMMENTS, false, snapshot));
                         }
                     }
                 }
             }
+#endif
         }
+#if PORT
 
         private void UpdateErrorsAndWarnings(
             IProjectEntry entry,
@@ -1015,8 +1230,8 @@ namespace Microsoft.PythonTools.Intellisense {
                 _commentTaskProvider.Clear(entry, ParserTaskMoniker);
             }
         }
-
-        #region Implementation Details
+#endif
+#region Implementation Details
 
         private static Stopwatch _stopwatch = MakeStopWatch();
 
@@ -1025,7 +1240,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 return _stopwatch;
             }
         }
-
+#if PORT
         private static SignatureAnalysis TryGetLiveSignatures(ITextSnapshot snapshot, int paramIndex, string text, ITrackingSpan applicableSpan, string lastKeywordArg) {
             IInteractiveEvaluator eval;
             IPythonReplIntellisense dlrEval;
@@ -1067,7 +1282,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 _parameters = parameters;
             }
 
-            #region IOverloadResult Members
+#region IOverloadResult Members
 
             public string Name {
                 get { return _name; }
@@ -1081,7 +1296,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 get { return _parameters; }
             }
 
-            #endregion
+#endregion
         }
 
         internal bool ShouldEvaluateForCompletion(string source) {
@@ -1109,7 +1324,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        private static CompletionAnalysis TrySpecialCompletions(IServiceProvider serviceProvider, ITextSnapshot snapshot, ITrackingSpan span, ITrackingPoint point, CompletionOptions options) {
+        private static CompletionAnalysis TrySpecialCompletions(CompletionsRequest request) {
             var snapSpan = span.GetSpan(snapshot);
             var buffer = snapshot.TextBuffer;
             var classifier = buffer.GetPythonClassifier();
@@ -1146,7 +1361,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     lastClass.Span.GetText() == "@") {
 
                     if (tokens.Count == 1) {
-                    return new DecoratorCompletionAnalysis(span, buffer, options);
+                        return new DecoratorCompletionAnalysis(span, buffer, options);
                     }
                     // TODO: Handle completions automatically popping up
                     // after '@' when it is used as a binary operator.
@@ -1178,34 +1393,35 @@ namespace Microsoft.PythonTools.Intellisense {
 
             return null;
         }
+#endif
+        private CompletionsResponse GetNormalCompletions(IProjectEntry projectEntry, CompletionsRequest request /*IServiceProvider serviceProvider, ITextSnapshot snapshot, ITrackingSpan applicableSpan, ITrackingPoint point, CompletionOptions options*/) {
+            var code = projectEntry.GetCurrentCode();
 
-        private static CompletionAnalysis GetNormalCompletionContext(IServiceProvider serviceProvider, ITextSnapshot snapshot, ITrackingSpan applicableSpan, ITrackingPoint point, CompletionOptions options) {
-            var span = applicableSpan.GetSpan(snapshot);
-
-            if (IsSpaceCompletion(snapshot, point) && !IntellisenseController.ForceCompletions) {
-                return CompletionAnalysis.EmptyCompletionContext;
+            if (IsSpaceCompletion(code, request.location) && !request.forceCompletions) {
+                return new CompletionsResponse() { 
+                    completions = new Completion[0]
+                };
             }
 
-            var parser = new ReverseExpressionParser(snapshot, snapshot.TextBuffer, applicableSpan);
-            if (parser.IsInGrouping()) {
-                options = options.Clone();
-                options.IncludeStatementKeywords = false;
-            }
-
-            return new NormalCompletionAnalysis(
-                snapshot.TextBuffer.GetAnalyzer(serviceProvider),
-                snapshot,
-                applicableSpan,
-                snapshot.TextBuffer,
-                options,
-                serviceProvider
+            var analysis = ((IPythonProjectEntry)projectEntry).Analysis;
+            var members = analysis.GetMembers(
+                request.text,
+                new SourceLocation(
+                    request.location,
+                    1,
+                    request.column
+                ),
+                request.options
             );
+
+            return new CompletionsResponse() {
+                completions = ToCompletions(members.ToArray())
+            };
         }
 
-        private static bool IsSpaceCompletion(ITextSnapshot snapshot, ITrackingPoint loc) {
-            var pos = loc.GetPosition(snapshot);
-            if (pos > 0) {
-                return snapshot.GetText(pos - 1, 1) == " ";
+        private bool IsSpaceCompletion(StringBuilder text, int location) {
+            if (location > 0 && location < text.Length - 1) {
+                return text[location - 1] == ' ';
             }
             return false;
         }
@@ -1230,15 +1446,15 @@ namespace Microsoft.PythonTools.Intellisense {
         class AddDirectoryAnalysis : IAnalyzable {
             private readonly string _dir;
             private readonly Action<IProjectEntry> _onFileAnalyzed;
-            private readonly VsProjectAnalyzer _analyzer;
+            private readonly OutOfProcProjectAnalyzer _analyzer;
 
-            public AddDirectoryAnalysis(string dir, Action<IProjectEntry> onFileAnalyzed, VsProjectAnalyzer analyzer) {
+            public AddDirectoryAnalysis(string dir, Action<IProjectEntry> onFileAnalyzed, OutOfProcProjectAnalyzer analyzer) {
                 _dir = dir;
                 _onFileAnalyzed = onFileAnalyzed;
                 _analyzer = analyzer;
             }
 
-            #region IAnalyzable Members
+#region IAnalyzable Members
 
             public void Analyze(CancellationToken cancel) {
                 if (cancel.IsCancellationRequested) {
@@ -1248,7 +1464,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 AnalyzeDirectoryWorker(_dir, true, _onFileAnalyzed, cancel);
             }
 
-            #endregion
+#endregion
 
             private void AnalyzeDirectoryWorker(string dir, bool addDir, Action<IProjectEntry> onFileAnalyzed, CancellationToken cancel) {
                 if (_analyzer._pyAnalyzer == null) {
@@ -1311,15 +1527,15 @@ namespace Microsoft.PythonTools.Intellisense {
         private class AddZipArchiveAnalysis : IAnalyzable {
             private readonly string _zipFileName;
             private readonly Action<IProjectEntry> _onFileAnalyzed;
-            private readonly VsProjectAnalyzer _analyzer;
+            private readonly OutOfProcProjectAnalyzer _analyzer;
 
-            public AddZipArchiveAnalysis(string zipFileName, Action<IProjectEntry> onFileAnalyzed, VsProjectAnalyzer analyzer) {
+            public AddZipArchiveAnalysis(string zipFileName, Action<IProjectEntry> onFileAnalyzed, OutOfProcProjectAnalyzer analyzer) {
                 _zipFileName = zipFileName;
                 _onFileAnalyzed = onFileAnalyzed;
                 _analyzer = analyzer;
             }
 
-            #region IAnalyzable Members
+#region IAnalyzable Members
 
             public void Analyze(CancellationToken cancel) {
                 if (cancel.IsCancellationRequested) {
@@ -1329,7 +1545,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 _analyzer.AnalyzeZipArchiveWorker(_zipFileName, _onFileAnalyzed, cancel);
             }
 
-            #endregion
+#endregion
         }
 
 
@@ -1443,7 +1659,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
                 SetZipFileName(item, zipFileName);
                 SetPathInZipFile(item, pathInZip);
-                _projectFiles[path] = item;
+                _projectFiles.Add(path, item);
                 IPythonProjectEntry pyEntry = item as IPythonProjectEntry;
                 if (pyEntry != null) {
                     pyEntry.BeginParsingTree();
@@ -1489,8 +1705,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
                 ClearParserTasks(entry);
                 _pyAnalyzer.RemoveModule(entry);
-                IProjectEntry removed;
-                _projectFiles.TryRemove(entry.FilePath, out removed);
+                _projectFiles.Remove(entry);
 
                 if (reanalyzeEntries != null) {
                     foreach (var existing in reanalyzeEntries) {
@@ -1502,9 +1717,11 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal void ClearParserTasks(IProjectEntry entry) {
             if (entry != null) {
+#if PORT
                 _errorProvider.Clear(entry, ParserTaskMoniker);
                 _commentTaskProvider.Clear(entry, ParserTaskMoniker);
                 _unresolvedSquiggles.StopListening(entry as IPythonProjectEntry);
+#endif
 
                 bool removed = false;
                 lock (_hasParseErrorsLock) {
@@ -1517,8 +1734,10 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal void ClearAllTasks() {
+#if PORT
             _errorProvider.ClearAll();
             _commentTaskProvider.ClearAll();
+#endif
 
             lock (_hasParseErrorsLock) {
                 _hasParseErrors.Clear();
@@ -1532,23 +1751,29 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private void OnShouldWarnOnLaunchChanged(IProjectEntry entry) {
+#if FALSE
             var evt = ShouldWarnOnLaunchChanged;
             if (evt != null) {
                 evt(this, new EntryEventArgs(entry));
             }
+#endif
         }
 
+#if FALSE
         internal event EventHandler<EntryEventArgs> ShouldWarnOnLaunchChanged;
+#endif
 
-        #endregion
+#endregion
 
-        #region IDisposable Members
+#region IDisposable Members
 
         public void Dispose() {
-                foreach (var entry in _projectFiles.Values) {
-                _errorProvider.Clear(entry, ParserTaskMoniker);
-                _errorProvider.Clear(entry, UnresolvedImportMoniker);
-                _commentTaskProvider.Clear(entry, ParserTaskMoniker);
+            foreach (var pathAndEntry in _projectFiles) {
+#if PORT
+                _errorProvider.Clear(pathAndEntry.Value, ParserTaskMoniker);
+                _errorProvider.Clear(pathAndEntry.Value, UnresolvedImportMoniker);
+                _commentTaskProvider.Clear(pathAndEntry.Value, ParserTaskMoniker);
+#endif
             }
 
             _analysisQueue.AnalysisStarted -= AnalysisQueue_AnalysisStarted;
@@ -1561,7 +1786,7 @@ namespace Microsoft.PythonTools.Intellisense {
             _queueActivityEvent.Dispose();
         }
 
-        #endregion
+#endregion
 
         internal void RemoveReference(ProjectAssemblyReference reference) {
             var interp = Interpreter as IPythonInterpreterWithProjectReferences;

@@ -19,6 +19,7 @@ using Microsoft.PythonTools.Analysis;
 using System;
 
 namespace Microsoft.PythonTools.Intellisense {
+#if FALSE
     /// <summary>
     /// Provides the synchronization context for our analysis.  This enables working with
     /// System.Threading.Tasks to post work back onto the analysis queue thread in a simple
@@ -55,13 +56,13 @@ namespace Microsoft.PythonTools.Intellisense {
                 _state = state;
             }
 
-            #region IAnalyzable Members
+#region IAnalyzable Members
 
             public virtual void Analyze(CancellationToken cancel) {
                 _delegate(_state);
             }
 
-            #endregion
+#endregion
         }
 
         class WaitableAnalysisItem : AnalysisItem {
@@ -75,4 +76,5 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
     }
+#endif
 }

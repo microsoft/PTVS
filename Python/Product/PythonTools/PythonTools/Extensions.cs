@@ -258,7 +258,9 @@ namespace Microsoft.PythonTools {
             if (entry == null) {
                 return null;
             }
-            return entry.AnalysisContext;
+
+            throw new NotImplementedException();
+            //return entry.AnalysisContext;
         }
 
         internal static PythonProjectNode GetPythonProject(this IVsProject project) {
@@ -270,7 +272,7 @@ namespace Microsoft.PythonTools {
         }
         
         internal static void GotoSource(this LocationInfo location, IServiceProvider serviceProvider) {
-            string zipFileName = VsProjectAnalyzer.GetZipFileName(location.ProjectEntry);
+            string zipFileName = null;// VsProjectAnalyzer.GetZipFileName(location.ProjectEntry);
             if (zipFileName == null) {
                 PythonToolsPackage.NavigateTo(
                     serviceProvider,
@@ -281,27 +283,27 @@ namespace Microsoft.PythonTools {
             }
         }
 
-        internal static bool TryGetProjectEntry(this ITextBuffer buffer, out IProjectEntry entry) {
-            return buffer.Properties.TryGetProperty<IProjectEntry>(typeof(IProjectEntry), out entry);
+        internal static bool TryGetProjectEntry(this ITextBuffer buffer, out ProjectFileInfo entry) {
+            return buffer.Properties.TryGetProperty<ProjectFileInfo>(typeof(ProjectFileInfo), out entry);
         }
 
-        internal static bool TryGetPythonProjectEntry(this ITextBuffer buffer, out IPythonProjectEntry entry) {
-            IProjectEntry e;
-            if (buffer.TryGetProjectEntry(out e) && (entry = e as IPythonProjectEntry) != null) {
+        internal static bool TryGetPythonProjectEntry(this ITextBuffer buffer, out ProjectFileInfo entry) {
+            ProjectFileInfo e;
+            if (buffer.TryGetProjectEntry(out e) && (entry = e as ProjectFileInfo) != null) {
                 return true;
             }
             entry = null;
             return false;
         }
 
-        internal static IProjectEntry GetProjectEntry(this ITextBuffer buffer) {
-            IProjectEntry res;
+        internal static ProjectFileInfo GetProjectEntry(this ITextBuffer buffer) {
+            ProjectFileInfo res;
             buffer.TryGetProjectEntry(out res);
             return res;
         }
 
-        internal static IPythonProjectEntry GetPythonProjectEntry(this ITextBuffer buffer) {
-            IPythonProjectEntry res;
+        internal static ProjectFileInfo GetPythonProjectEntry(this ITextBuffer buffer) {
+            ProjectFileInfo res;
             buffer.TryGetPythonProjectEntry(out res);
             return res;
         }

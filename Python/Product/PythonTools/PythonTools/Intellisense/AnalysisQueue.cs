@@ -24,6 +24,7 @@ using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Project;
 
 namespace Microsoft.PythonTools.Intellisense {
+#if FALSE
     /// <summary>
     /// Provides a single threaded analysis queue.  Items can be enqueued into the
     /// analysis at various priorities.  
@@ -144,7 +145,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        #region IDisposable Members
+#region IDisposable Members
 
         public void Dispose() {
             Stop();
@@ -152,7 +153,7 @@ namespace Microsoft.PythonTools.Intellisense {
             _cancel.Dispose();
         }
 
-        #endregion
+#endregion
 
         private IAnalyzable GetNextItem(out AnalysisPriority priority) {
             for (int i = PriorityCount - 1; i >= 0; i--) {
@@ -230,14 +231,15 @@ namespace Microsoft.PythonTools.Intellisense {
                 _queue = queue;
             }
 
-            #region IAnalyzable Members
+#region IAnalyzable Members
 
             public void Analyze(CancellationToken cancel) {
                 _queue._enqueuedGroups.Remove(_project);
                 _project.AnalyzeQueuedEntries(cancel);
             }
 
-            #endregion
+#endregion
         }
     }
+#endif
 }

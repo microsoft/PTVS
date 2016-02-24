@@ -14,16 +14,16 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Microsoft.PythonTools.Cdp {
-    public class Event {
-        public string name;
-    }
-
-    public class GenericEvent : Event {
-        public Dictionary<string, object> body;
+    public class Response {
+        public bool? failure;
+        public string message;
     }
 }
-

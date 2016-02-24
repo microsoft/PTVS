@@ -100,14 +100,14 @@ namespace Microsoft.PythonTools.Intellisense {
             return result;
         }
 
-        internal ModuleAnalysis GetAnalysisEntry() {
-            IPythonProjectEntry entry;
+        internal ProjectFileInfo GetAnalysisEntry() {
+            ProjectFileInfo entry;
             if (TextBuffer.TryGetPythonProjectEntry(out entry) && entry != null) {
-                Debug.Assert(
-                    entry.Analysis != null,
-                    string.Format("Failed to get analysis for buffer {0} with file {1}", TextBuffer, entry.FilePath)
-                );
-                return entry.Analysis;
+                //Debug.Assert(
+                //    entry.Analysis != null,
+                //    string.Format("Failed to get analysis for buffer {0} with file {1}", TextBuffer, entry.FilePath)
+                //);
+                return entry;
             }
             Debug.Fail("Failed to get project entry for buffer " + TextBuffer.ToString());
             return null;

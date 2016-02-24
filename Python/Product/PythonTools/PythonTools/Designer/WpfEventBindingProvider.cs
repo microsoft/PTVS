@@ -96,6 +96,7 @@ namespace Microsoft.PythonTools.Designer {
 
         private ClassDefinition GetClassForEvents(out PythonAst ast) {
             ast = null;
+#if FALSE
             var analysis = _pythonFileNode.GetProjectEntry() as IPythonProjectEntry;
 
             if (analysis != null) {
@@ -110,6 +111,7 @@ namespace Microsoft.PythonTools.Designer {
                     }
                 }
             }
+#endif
             return null;
         }
 

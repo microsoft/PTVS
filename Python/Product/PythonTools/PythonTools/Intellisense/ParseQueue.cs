@@ -31,6 +31,8 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 
 namespace Microsoft.PythonTools.Intellisense {
+    using ProjectFileEntry = ProjectFileInfo;
+
     /// <summary>
     /// Provides an asynchronous queue for parsing source code.  Multiple items
     /// may be parsed simultaneously.  Text buffers are monitored for changes and
@@ -47,13 +49,13 @@ namespace Microsoft.PythonTools.Intellisense {
         public ParseQueue(VsProjectAnalyzer parser) {
             _parser = parser;
         }
-
+#if FALSE
         /// <summary>
         /// Parses the specified text buffer.  Continues to monitor the parsed buffer and updates
         /// the parse tree asynchronously as the buffer changes.
         /// </summary>
         /// <param name="buffer"></param>
-        public BufferParser EnqueueBuffer(IProjectEntry projEntry, ITextView textView, ITextBuffer buffer) {
+        public BufferParser EnqueueBuffer(ProjectFileEntry projEntry, ITextView textView, ITextBuffer buffer) {
             // only attach one parser to each buffer, we can get multiple enqueue's
             // for example if a document is already open when loading a project.
             BufferParser bufferParser;
@@ -82,7 +84,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// Parses the specified file on disk.
         /// </summary>
         /// <param name="filename"></param>
-        public void EnqueueFile(IProjectEntry projEntry, string filename) {
+        public void EnqueueFile(ProjectFileEntry projEntry, string filename) {
             var severity = _parser.PyService.GeneralOptions.IndentationInconsistencySeverity;
             EnqueWorker(() => {
                 for (int i = 0; i < 10; i++) {
@@ -102,23 +104,19 @@ namespace Microsoft.PythonTools.Intellisense {
                         Thread.Sleep(100);
                     }
                 }
-
-                IPythonProjectEntry pyEntry = projEntry as IPythonProjectEntry;
-                if (pyEntry != null) {
-                    // failed to parse, keep the UpdateTree calls balanced
-                    pyEntry.UpdateTree(null, null);
-                }
+                // failed to parse, keep the UpdateTree calls balanced
+                projEntry.UpdateTree(null, null);
             });
         }
-
-        public void EnqueueZipArchiveEntry(IProjectEntry projEntry, string zipFileName, ZipArchiveEntry entry, Action onComplete) {
+#endif
+        public void EnqueueZipArchiveEntry(ProjectFileEntry projEntry, string zipFileName, ZipArchiveEntry entry, Action onComplete) {
             var pathInArchive = entry.FullName.Replace('/', '\\');
             var fileName = Path.Combine(zipFileName, pathInArchive);
             var severity = _parser.PyService.GeneralOptions.IndentationInconsistencySeverity;
             EnqueWorker(() => {
                 try {
                     using (var stream = entry.Open()) {
-                        _parser.ParseFile(projEntry, fileName, stream, severity);
+                        //_parser.ParseFile(projEntry, fileName, stream, severity);
                         return;
                     }
                 } catch (IOException ex) {
@@ -128,12 +126,13 @@ namespace Microsoft.PythonTools.Intellisense {
                 } finally {
                     onComplete();
                 }
-
+#if FALSE
                 IPythonProjectEntry pyEntry = projEntry as IPythonProjectEntry;
                 if (pyEntry != null) {
                     // failed to parse, keep the UpdateTree calls balanced
                     pyEntry.UpdateTree(null, null);
                 }
+#endif
             });
         }
 
@@ -168,19 +167,17 @@ namespace Microsoft.PythonTools.Intellisense {
         Justification = "ownership is unclear")]
     class BufferParser {
         internal VsProjectAnalyzer _parser;
-        private readonly ParseQueue _queue;
         private readonly Timer _timer;
         private readonly Dispatcher _dispatcher;
         private IList<ITextBuffer> _buffers;
         private bool _parsing, _requeue, _textChange;
-        internal IProjectEntry _currentProjEntry;
+        internal ProjectFileEntry _currentProjEntry;
         private ITextDocument _document;
         public int AttachedViews;
 
         private const int ReparseDelay = 1000;      // delay in MS before we re-parse a buffer w/ non-line changes.
 
-        public BufferParser(ParseQueue queue, Dispatcher dispatcher, IProjectEntry initialProjectEntry, VsProjectAnalyzer parser, ITextBuffer buffer) {
-            _queue = queue;
+        public BufferParser(Dispatcher dispatcher, ProjectFileEntry initialProjectEntry, VsProjectAnalyzer parser, ITextBuffer buffer) {
             _parser = parser;
             _timer = new Timer(ReparseTimer, null, Timeout.Infinite, Timeout.Infinite);
             _buffers = new[] { buffer };
@@ -252,7 +249,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 _document.EncodingChanged -= EncodingChanged;
                 _document = null;
             }
-            subjectBuffer.Properties.RemoveProperty(typeof(IProjectEntry));
+            subjectBuffer.Properties.RemoveProperty(typeof(ProjectFileEntry));
             subjectBuffer.Properties.RemoveProperty(typeof(BufferParser));
             subjectBuffer.ChangedLowPriority -= BufferChangedLowPriority;
         }
@@ -260,7 +257,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private void InitBuffer(ITextBuffer buffer) {
             buffer.Properties.AddProperty(typeof(BufferParser), this);
             buffer.ChangedLowPriority += BufferChangedLowPriority;
-            buffer.Properties.AddProperty(typeof(IProjectEntry), _currentProjEntry);
+            buffer.Properties.AddProperty(typeof(ProjectFileEntry), _currentProjEntry);
             
             if (_document != null) {
                 _document.EncodingChanged -= EncodingChanged;
@@ -286,7 +283,7 @@ namespace Microsoft.PythonTools.Intellisense {
             lock (this) {
                 if (_parsing) {
                     NotReparsing();
-                    Interlocked.Decrement(ref _queue._analysisPending);
+                    Interlocked.Decrement(ref _parser._analysisPending);
                     return;
                 }
 
@@ -299,7 +296,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             _parser.ParseBuffers(this, IndentationInconsistencySeverity, snapshots);
-            Interlocked.Decrement(ref _queue._analysisPending);
+            Interlocked.Decrement(ref _parser._analysisPending);
 
             lock (this) {
                 _parsing = false;
@@ -315,10 +312,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// </summary>
         internal void EnqueingEntry() {
             lock (this) {
-                IPythonProjectEntry pyEntry = _currentProjEntry as IPythonProjectEntry;
-                if (pyEntry != null) {
-                    pyEntry.BeginParsingTree();
-                }
+                _currentProjEntry.BeginParsingTree();
             }
         }
 
@@ -328,10 +322,12 @@ namespace Microsoft.PythonTools.Intellisense {
         /// </summary>
         private void NotReparsing() {
             lock (this) {
+                _currentProjEntry.UpdateTree(null, null);
+                /*
                 IPythonProjectEntry pyEntry = _currentProjEntry as IPythonProjectEntry;
                 if (pyEntry != null) {
                     pyEntry.UpdateTree(null, null);
-                }
+                }*/
             }
         }
 
@@ -372,7 +368,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private void RequeueWorker() {
-            Interlocked.Increment(ref _queue._analysisPending);
+            Interlocked.Increment(ref _parser._analysisPending);
             EnqueingEntry();
             ThreadPool.QueueUserWorkItem(ReparseWorker);
         }

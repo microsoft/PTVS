@@ -87,7 +87,7 @@ namespace Microsoft.PythonTools.Navigation {
                 return VSConstants.E_FAIL;
             }
 
-            IPythonProjectEntry pythonProjectEntry;
+            ProjectFileInfo pythonProjectEntry;
             if (!wpfTextView.TextBuffer.TryGetPythonProjectEntry(out pythonProjectEntry)) {
                 return VSConstants.E_FAIL;
             }

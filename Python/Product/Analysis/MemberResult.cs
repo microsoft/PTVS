@@ -42,7 +42,7 @@ namespace Microsoft.PythonTools.Analysis {
             _vars = () => Empty;
         }
 
-        internal MemberResult(string name, string completion, IEnumerable<AnalysisValue> vars, PythonMemberType? type) {
+        public MemberResult(string name, string completion, IEnumerable<AnalysisValue> vars, PythonMemberType? type) {
             _name = name;
             _vars = () => vars ?? Empty;
             _completion = completion;
