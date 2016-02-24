@@ -13,10 +13,11 @@ namespace Microsoft.PythonTools.Intellisense {
         public readonly int _fileId;
         public readonly string _path;
         public readonly VsProjectAnalyzer ProjectState;
-        public ITextSnapshot _currentAnalysisVersion;
+        public ITextSnapshot _currentAnalysisSnapshot;
         public IAnalysisCookie AnalysisCookie;
 
         private readonly Dictionary<object, object> _properties = new Dictionary<object, object>();
+        internal BufferParser BufferParser;
 
         public ProjectFileInfo(VsProjectAnalyzer analyzer, string path, int fileId) {
             ProjectState = analyzer;
@@ -41,10 +42,10 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal ITextSnapshot CurrentAnalysisVersion {
             get {
-                return _currentAnalysisVersion;
+                return _currentAnalysisSnapshot;
             }
             set {
-                _currentAnalysisVersion = value;
+                _currentAnalysisSnapshot = value;
             }
         }
 

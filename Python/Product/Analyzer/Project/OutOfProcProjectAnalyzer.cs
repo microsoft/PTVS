@@ -61,10 +61,11 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly PythonAnalyzer _pyAnalyzer;
         private readonly AutoResetEvent _queueActivityEvent = new AutoResetEvent(false);
         private readonly IPythonInterpreterFactory[] _allFactories;
+        private volatile Dictionary<string, TaskPriority> _commentPriorityMap = new Dictionary<string, TaskPriority>() { 
+            { "TODO", TaskPriority.normal },
+            { "HACK", TaskPriority.high },
+        };
         private OptionsChangedEvent _options;
-
-        internal readonly HashSet<IProjectEntry> _hasParseErrors = new HashSet<IProjectEntry>();
-        internal readonly object _hasParseErrorsLock = new object();
 
         // Moniker strings allow the task provider to distinguish between
         // different sources of items for the same file.
@@ -72,12 +73,7 @@ namespace Microsoft.PythonTools.Intellisense {
         internal const string UnresolvedImportMoniker = "UnresolvedImport";
 
 #if PORT
-        private ErrorTaskProvider _errorProvider;
-        private CommentTaskProvider _commentTaskProvider;
-
         private readonly UnresolvedImportSquiggleProvider _unresolvedSquiggles;
-        private readonly PythonToolsService _pyService;
-        private readonly IServiceProvider _serviceProvider;
 #endif
 
         private readonly Connection _connection;
@@ -122,24 +118,21 @@ namespace Microsoft.PythonTools.Intellisense {
             _projectFiles = new ProjectEntryMap();
             _connection = new Connection(writer, reader, RequestHandler, Requests.RegisteredTypes);
             _connection.EventReceived += ConectionReceivedEvent;
-
-#if PORT
-            _pyService = serviceProvider.GetPythonToolsService();
-            _serviceProvider = serviceProvider;
-
-            if (_pyAnalyzer != null) {
-                _pyAnalyzer.Limits.CrossModule = _pyService.GeneralOptions.CrossModuleAnalysisLimit;
-                // TODO: Load other limits from options
-            }
-#endif
-
         }
 
         private void ConectionReceivedEvent(object sender, EventReceivedEventArgs e) {
             switch (e.Event.name) {
                 case ModulesChangedEvent.Name: OnModulesChanged(this, EventArgs.Empty); break;
+                case FileChangedEvent.Name: ApplyChanges((FileChangedEvent)e.Event); break;
+                case FileContentEvent.Name: SetContent((FileContentEvent)e.Event); break;
+                case OptionsChangedEvent.Name: SetOptions((OptionsChangedEvent)e.Event); break;
+                case SetCommentTaskTokens.Name: _commentPriorityMap = ((SetCommentTaskTokens)e.Event).tokens; break;
             }
+        }
 
+        private void SetOptions(OptionsChangedEvent options) {
+            _pyAnalyzer.Limits.CrossModule = options.crossModuleAnalysisLimit;
+            _options = options;
         }
 
         private async Task<Response> RequestHandler(Request request) {
@@ -147,7 +140,6 @@ namespace Microsoft.PythonTools.Intellisense {
 
             switch (request.command) {
                 case UnloadFileRequest.Command: return UnloadFile((UnloadFileRequest)request);
-                case HasErrorsRequest.Command: return HasErrors((HasErrorsRequest)request);
                 case AddFileRequest.Command: return AnalyzeFile((AddFileRequest)request);
 
                 case TopLevelCompletionsRequest.Command: return GetTopLevelCompletions(request);
@@ -304,22 +296,13 @@ namespace Microsoft.PythonTools.Intellisense {
             return new Response();
         }
 
-        public void SetOptions(OptionsChangedEvent options) {
-            _options = options;
-        }
-
-        public HasErrorsResponse HasErrors(HasErrorsRequest request) {
+        public void SetContent(FileContentEvent request) {
             var entry = _projectFiles[request.fileId];
-            if (entry == null) {
-                return new HasErrorsResponse() {
-                    failure = true,
-                    message = "Unknown project entry"
-                };
-            }
+            if (entry != null) {
+                entry.SetCurrentCode(new StringBuilder(request.content));
 
-            return new HasErrorsResponse() {
-                hasErrors = ShouldWarnOnLaunch(entry)
-            };
+                ParseFile(entry, entry.FilePath);
+            }
         }
 
         public void ApplyChanges(FileChangedEvent request) {
@@ -334,6 +317,8 @@ namespace Microsoft.PythonTools.Intellisense {
                     curCode.Remove(change.start, change.length);
                     curCode.Insert(change.start, change.newText);
                 }
+
+                ParseFile(entry, entry.FilePath);
             }
         }
 
@@ -984,21 +969,8 @@ namespace Microsoft.PythonTools.Intellisense {
                 return _pyAnalyzer;
             }
         }
-#if FALSE
-        internal PythonAst ParseSnapshot(ITextSnapshot snapshot) {
-            using (var parser = Parser.CreateParser(
-                new SnapshotSpanSourceCodeReader(
-                    new SnapshotSpan(snapshot, 0, snapshot.Length)
-                ),
-                Project.LanguageVersion,
-                new ParserOptions() { Verbatim = true, BindReferences = true }
-            )) {
-                return ParseOneFile(null, parser);
-            }
-        }
-#endif
 
-        internal void ParseFile(IProjectEntry entry, string filename, Stream content, Severity indentationSeverity) {
+        internal void ParseFile(IProjectEntry entry, string filename, Stream content = null) {
             IPythonProjectEntry pyEntry;
             IExternalProjectEntry externalEntry;
 
@@ -1020,34 +992,35 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             if ((pyEntry = entry as IPythonProjectEntry) != null) {
-                PythonAst ast;
-                CollectingErrorSink errorSink;
-                List<TaskItem> commentTasks;
+                ParseResult result;
                 if (reader != null) {
-                    ParsePythonCode(reader, indentationSeverity, out ast, out errorSink, out commentTasks);
+                    result = ParsePythonCode(reader);
                 } else {
-                    ParsePythonCode(content, indentationSeverity, out ast, out errorSink, out commentTasks);
+                    result = ParsePythonCode(content);
                 }
 
-                if (ast != null) {
-                    pyEntry.UpdateTree(ast, cookie);
-                } else {
-                    // notify that we failed to update the existing analysis
-                    pyEntry.UpdateTree(null, null);
-                }
-#if FALSE
-                // update squiggles for the buffer. snapshot may be null if we
-                // are analyzing a file that is not open
-                UpdateErrorsAndWarnings(entry, snapshot, errorSink, commentTasks);
-#endif
-
-                // enqueue analysis of the file
-                if (ast != null) {
-                    _analysisQueue.Enqueue(pyEntry, AnalysisPriority.Normal);
-                }
+                FinishParse(pyEntry, cookie, result);
             } else if ((externalEntry = entry as IExternalProjectEntry) != null) {
                 externalEntry.ParseContent(reader ?? new StreamReader(content), cookie);
                 _analysisQueue.Enqueue(entry, AnalysisPriority.Normal);
+            }
+        }
+
+        private void FinishParse(IPythonProjectEntry pyEntry, IAnalysisCookie cookie, ParseResult result) {
+            if (result.Ast != null) {
+                pyEntry.UpdateTree(result.Ast, cookie);
+            } else {
+                // notify that we failed to update the existing analysis
+                pyEntry.UpdateTree(null, null);
+            }
+
+            // update squiggles for the buffer. snapshot may be null if we
+            // are analyzing a file that is not open
+            UpdateErrorsAndWarnings(pyEntry, result.Errors, result.Tasks);
+
+            // enqueue analysis of the file
+            if (result.Ast != null) {
+                _analysisQueue.Enqueue(pyEntry, AnalysisPriority.Normal);
             }
         }
 
@@ -1116,50 +1089,89 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 #endif
-        private void ParsePythonCode(
-            Stream content, Severity indentationSeverity,
-            out PythonAst ast, out CollectingErrorSink errorSink, out List<TaskItem> commentTasks
-        ) {
-            ast = null;
-            errorSink = new CollectingErrorSink();
-            var tasks = commentTasks = new List<TaskItem>();
 
+        class ParseResult {
+            public readonly PythonAst Ast;
+            public readonly CollectingErrorSink Errors;
+            public readonly List<TaskItem> Tasks;
+
+            public ParseResult(PythonAst ast, CollectingErrorSink errors, List<TaskItem> tasks) {
+                Ast = ast;
+                Errors = errors;
+                Tasks = tasks;
+            }
+        }
+
+        private async void UpdateErrorsAndWarnings(IProjectEntry entry, CollectingErrorSink errorSink, List<TaskItem> commentTasks) {
+            // Update the warn-on-launch state for this entry
+            await _connection.SendEventAsync(
+                new ErrorsEvent() {
+                    fileId = ProjectEntryMap.GetId(entry),
+                    hasErrors = errorSink.Errors.Any(),
+                    tasks = commentTasks.ToArray(),
+                    errors = errorSink.Errors.Select(MakeError).ToArray(),
+                    warnings = errorSink.Warnings.Select(MakeError).ToArray()
+                }
+            );
+        }
+
+        private static Error MakeError(ErrorResult error) {
+            return new Error() {
+                message = error.Message,
+                startLine = error.Span.Start.Line,
+                startColumn = error.Span.Start.Column,
+                startIndex = error.Span.Start.Index,
+                endLine = error.Span.End.Line,
+                endColumn = error.Span.End.Column,
+                length = error.Span.Length
+            };
+        }
+
+        private ParseResult ParsePythonCode(Stream content) {
+            var errorSink = new CollectingErrorSink();
+            var tasks = new List<TaskItem>();
+
+            ParserOptions options = MakeParserOptions(errorSink, tasks);
+
+            using (var parser = Parser.CreateParser(content, Project.LanguageVersion, options)) {
+                return new ParseResult(
+                    ParseOneFile(parser),
+                    errorSink,
+                    tasks
+                );
+            }
+        }
+
+        private ParseResult ParsePythonCode(TextReader content) {
+            var errorSink = new CollectingErrorSink();
+            var tasks = new List<TaskItem>();
+
+            ParserOptions options = MakeParserOptions(errorSink, tasks);
+
+            using (var parser = Parser.CreateParser(content, Project.LanguageVersion, options)) {
+                return new ParseResult(
+                    ParseOneFile(parser),
+                    errorSink,
+                    tasks
+                );
+            }
+        }
+
+
+        private ParserOptions MakeParserOptions(CollectingErrorSink errorSink, List<TaskItem> tasks) {
             var options = new ParserOptions {
                 ErrorSink = errorSink,
-                IndentationInconsistencySeverity = indentationSeverity,
+                IndentationInconsistencySeverity = _options.indentation_inconsistency_severity,
                 BindReferences = true
             };
             options.ProcessComment += (sender, e) => ProcessComment(tasks, e.Span, e.Text);
-
-            using (var parser = Parser.CreateParser(content, Project.LanguageVersion, options)) {
-                ast = ParseOneFile(ast, parser);
-            }
+            return options;
         }
 
-        private void ParsePythonCode(
-            TextReader content, Severity indentationSeverity,
-            out PythonAst ast, out CollectingErrorSink errorSink, out List<TaskItem> commentTasks
-        ) {
-            ast = null;
-            errorSink = new CollectingErrorSink();
-            var tasks = commentTasks = new List<TaskItem>();
-
-            var options = new ParserOptions {
-                ErrorSink = errorSink,
-                IndentationInconsistencySeverity = indentationSeverity,
-                BindReferences = true,
-            };
-            options.ProcessComment += (sender, e) => ProcessComment(tasks, e.Span, e.Text);
-
-            using (var parser = Parser.CreateParser(content, Project.LanguageVersion, options)) {
-                ast = ParseOneFile(ast, parser);
-            }
-        }
-
-        private static PythonAst ParseOneFile(PythonAst ast, Parser parser) {
+        private static PythonAst ParseOneFile(Parser parser) {
             if (parser != null) {
                 try {
-                    ast = parser.ParseFile();
+                    return parser.ParseFile();
                 } catch (BadSourceException) {
                 } catch (Exception e) {
                     if (e.IsCriticalException()) {
@@ -1169,68 +1181,36 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
 
             }
-            return ast;
+            return null;
         }
 
         // Tokenizer callback. Extracts comment tasks (like "TODO" or "HACK") from comments.
         private void ProcessComment(List<TaskItem> commentTasks, SourceSpan span, string text) {
-#if PORT
             if (text.Length > 0) {
-                var tokens = _commentTaskProvider.Tokens;
+                var tokens = _commentPriorityMap;
                 if (tokens != null) {
                     foreach (var kv in tokens) {
                         if (text.IndexOf(kv.Key, StringComparison.OrdinalIgnoreCase) >= 0) {
-                            commentTasks.Add(new TaskItem(
-                                _serviceProvider, 
-                                text.Substring(1).Trim()
-                                , span, 
-                                kv.Value, VSTASKCATEGORY.CAT_COMMENTS, false, snapshot));
+                            commentTasks.Add(
+                                new TaskItem() {
+                                    message = text.Substring(1).Trim(),
+                                    startLine = span.Start.Line,
+                                    startColumn = span.Start.Column,
+                                    startIndex = span.Start.Index,
+                                    endLine = span.End.Line,
+                                    endColumn = span.End.Column,
+                                    length = span.Length,
+                                    priority = kv.Value,
+                                    category = TaskCategory.comments,
+                                    squiggle = false
+                                }
+                            );
                         }
                     }
                 }
             }
-#endif
         }
-#if PORT
 
-        private void UpdateErrorsAndWarnings(
-            IProjectEntry entry,
-            ITextSnapshot snapshot,
-            CollectingErrorSink errorSink,
-            List<TaskProviderItem> commentTasks
-        ) {
-            // Update the warn-on-launch state for this entry
-            bool changed = false;
-            lock (_hasParseErrorsLock) {
-                changed = errorSink.Errors.Any() ? _hasParseErrors.Add(entry) : _hasParseErrors.Remove(entry);
-            }
-            if (changed) {
-                OnShouldWarnOnLaunchChanged(entry);
-            }
-            
-            // Update the parser warnings/errors.
-            var factory = new TaskProviderItemFactory(snapshot);
-            if (errorSink.Warnings.Any() || errorSink.Errors.Any()) {
-                _errorProvider.ReplaceItems(
-                    entry,
-                    ParserTaskMoniker,
-                    errorSink.Warnings
-                        .Select(er => factory.FromErrorResult(_serviceProvider, er, VSTASKPRIORITY.TP_NORMAL, VSTASKCATEGORY.CAT_BUILDCOMPILE))
-                        .Concat(errorSink.Errors.Select(er => factory.FromErrorResult(_serviceProvider, er, VSTASKPRIORITY.TP_HIGH, VSTASKCATEGORY.CAT_BUILDCOMPILE)))
-                        .ToList()
-                );
-            } else {
-                _errorProvider.Clear(entry, ParserTaskMoniker);
-            }
-
-            // Update comment tasks.
-            if (commentTasks.Count != 0) {
-                _commentTaskProvider.ReplaceItems(entry, ParserTaskMoniker, commentTasks);
-            } else {
-                _commentTaskProvider.Clear(entry, ParserTaskMoniker);
-            }
-        }
-#endif
 #region Implementation Details
 
         private static Stopwatch _stopwatch = MakeStopWatch();
@@ -1703,7 +1683,6 @@ namespace Microsoft.PythonTools.Intellisense {
                     reanalyzeEntries = _pyAnalyzer.GetEntriesThatImportModule(pyEntry.ModuleName, false).ToArray();
                 }
 
-                ClearParserTasks(entry);
                 _pyAnalyzer.RemoveModule(entry);
                 _projectFiles.Remove(entry);
 
@@ -1714,54 +1693,6 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             }
         }
-
-        internal void ClearParserTasks(IProjectEntry entry) {
-            if (entry != null) {
-#if PORT
-                _errorProvider.Clear(entry, ParserTaskMoniker);
-                _commentTaskProvider.Clear(entry, ParserTaskMoniker);
-                _unresolvedSquiggles.StopListening(entry as IPythonProjectEntry);
-#endif
-
-                bool removed = false;
-                lock (_hasParseErrorsLock) {
-                    removed = _hasParseErrors.Remove(entry);
-                }
-                if (removed) {
-                    OnShouldWarnOnLaunchChanged(entry);
-                }
-            }
-        }
-
-        internal void ClearAllTasks() {
-#if PORT
-            _errorProvider.ClearAll();
-            _commentTaskProvider.ClearAll();
-#endif
-
-            lock (_hasParseErrorsLock) {
-                _hasParseErrors.Clear();
-            }
-        }
-
-        internal bool ShouldWarnOnLaunch(IProjectEntry entry) {
-            lock (_hasParseErrorsLock) {
-                return _hasParseErrors.Contains(entry);
-            }
-        }
-
-        private void OnShouldWarnOnLaunchChanged(IProjectEntry entry) {
-#if FALSE
-            var evt = ShouldWarnOnLaunchChanged;
-            if (evt != null) {
-                evt(this, new EntryEventArgs(entry));
-            }
-#endif
-        }
-
-#if FALSE
-        internal event EventHandler<EntryEventArgs> ShouldWarnOnLaunchChanged;
-#endif
 
 #endregion
 

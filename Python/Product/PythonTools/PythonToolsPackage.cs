@@ -523,22 +523,12 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             _autoObject = new PythonAutomation(this);
 
             services.AddService(
-                typeof(ErrorTaskProvider),
+                typeof(Intellisense.TaskProvider),
                 (container, serviceType) => {
                     var errorList = GetService(typeof(SVsErrorList)) as IVsTaskList;
                     var model = ComponentModel;
                     var errorProvider = model != null ? model.GetService<IErrorProviderFactory>() : null;
-                    return new ErrorTaskProvider(this, errorList, errorProvider);
-                },
-                promote: true);
-
-            services.AddService(
-                typeof(CommentTaskProvider),
-                (container, serviceType) => {
-                    var taskList = GetService(typeof(SVsTaskList)) as IVsTaskList;
-                    var model = ComponentModel;
-                    var errorProvider = model != null ? model.GetService<IErrorProviderFactory>() : null;
-                    return new CommentTaskProvider(this, taskList, errorProvider);
+                    return new Intellisense.TaskProvider(this, errorList, errorProvider);
                 },
                 promote: true);
 

@@ -194,8 +194,12 @@ namespace Microsoft.PythonTools.Cdp {
                                     body = body.ToObject<Dictionary<string, object>>()
                                 };
                             }
-
-                            EventReceived?.Invoke(this, new EventReceivedEventArgs(eventObj));
+                            try {
+                                EventReceived?.Invoke(this, new EventReceivedEventArgs(eventObj));
+                            } catch (Exception) {
+                                // TODO: Report unhandled exception?
+                                Console.WriteLine("HI");
+                            }
                             break;
                         default:
                             await WriteError("Bad packet type: " + type ?? "<null>").ConfigureAwait(false);

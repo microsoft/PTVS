@@ -30,17 +30,27 @@ namespace Microsoft.PythonTools.Analysis.Communication {
         }
     }
 
-    public class HasErrorsRequest : Request<HasErrorsResponse> {
-        public const string Command = "hasErrors";
+    public class ErrorsEvent : Event {
+        public const string Name = "hasErrors";
 
         public int fileId;
+        public bool hasErrors;
+        public Error[] errors;
+        public Error[] warnings;
+        public TaskItem[] tasks;
 
-        public HasErrorsRequest() : base(Command) {
+        public ErrorsEvent() : base(Name) {
         }
     }
 
-    public class HasErrorsResponse : Response {
-        public bool hasErrors;
+    public struct CodeSpan {
+        public int start, length;
+    }
+
+    public class Error {
+        public string message;
+        public int startLine, startColumn, startIndex;
+        public int endLine, endColumn, length;
     }
 
     public class AddFileRequest : Request<AddFileResponse> {
@@ -241,14 +251,22 @@ namespace Microsoft.PythonTools.Analysis.Communication {
 
         public Severity indentation_inconsistency_severity;
         public bool implicitProject;
+        public int crossModuleAnalysisLimit;
 
         public OptionsChangedEvent() : base(Name) {
         }
     }
 
-    public sealed class TaskItem {
-        public string message;
-        public CodeSpan span;
+    public sealed class SetCommentTaskTokens : Event {
+        public const string Name = "setCommentTaskTokens";
+
+        public Dictionary<string, TaskPriority> tokens;
+
+        public SetCommentTaskTokens() : base(Name) {
+        }
+    }
+
+    public sealed class TaskItem : Error {
         public TaskPriority priority;
         public TaskCategory category;
         public bool squiggle;

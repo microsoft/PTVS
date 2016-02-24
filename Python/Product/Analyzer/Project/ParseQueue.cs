@@ -75,7 +75,6 @@ namespace Microsoft.PythonTools.Intellisense {
         /// </summary>
         /// <param name="filename"></param>
         public void EnqueueFile(IProjectEntry projEntry, string filename) {
-            var severity = _parser.Options.indentation_inconsistency_severity;
             EnqueWorker(() => {
                 for (int i = 0; i < 10; i++) {
                     try {
@@ -83,7 +82,7 @@ namespace Microsoft.PythonTools.Intellisense {
                             break;
                         }
                         using (var reader = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete)) {
-                            _parser.ParseFile(projEntry, filename, reader, severity);
+                            _parser.ParseFile(projEntry, filename, reader);
                             return;
                         }
                     } catch (IOException) {
@@ -106,11 +105,10 @@ namespace Microsoft.PythonTools.Intellisense {
         public void EnqueueZipArchiveEntry(IProjectEntry projEntry, string zipFileName, ZipArchiveEntry entry, Action onComplete) {
             var pathInArchive = entry.FullName.Replace('/', '\\');
             var fileName = Path.Combine(zipFileName, pathInArchive);
-            var severity = _parser.Options.indentation_inconsistency_severity;
             EnqueWorker(() => {
                 try {
                     using (var stream = entry.Open()) {
-                        _parser.ParseFile(projEntry, fileName, stream, severity);
+                        _parser.ParseFile(projEntry, fileName, stream);
                         return;
                     }
                 } catch (IOException ex) {

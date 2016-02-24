@@ -5,7 +5,5 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace Microsoft.PythonTools {
-    public struct CodeSpan {
-        public readonly int start, length;
-    }
+    
 }

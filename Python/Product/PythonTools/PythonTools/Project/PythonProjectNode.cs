@@ -74,16 +74,10 @@ namespace Microsoft.PythonTools.Project {
         internal List<CustomCommand> _customCommands;
         private string _customCommandsDisplayLabel;
         private Dictionary<object, Action<object>> _actionsOnClose;
-        private readonly CommentTaskProvider _commentTaskProvider;
 
         public PythonProjectNode(IServiceProvider serviceProvider) : base(serviceProvider, null) {
             Type projectNodePropsType = typeof(PythonProjectNodeProperties);
             AddCATIDMapping(projectNodePropsType, projectNodePropsType.GUID);
-
-            _commentTaskProvider = ((CommentTaskProvider)serviceProvider.GetService(typeof(CommentTaskProvider)));
-            if (_commentTaskProvider != null) {
-                _commentTaskProvider.TokensChanged += CommentTaskTokensChanged;
-            }
         }
 
         private static KeyValuePair<string, string>[] outputGroupNames = {
@@ -779,10 +773,6 @@ namespace Microsoft.PythonTools.Project {
                             keyValue.Value(keyValue.Key);
                         }
                     }
-                }
-
-                if (_commentTaskProvider != null) {
-                    _commentTaskProvider.TokensChanged -= CommentTaskTokensChanged;
                 }
 
                 if (_analyzer != null) {

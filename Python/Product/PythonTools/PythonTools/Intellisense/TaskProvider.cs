@@ -36,6 +36,7 @@ using Microsoft.VisualStudio.Text.Tagging;
 using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Intellisense {
+    using Analysis.Communication;
     using ProjectFileEntry = ProjectFileInfo;
 
     class TaskProviderItem {
@@ -132,23 +133,29 @@ namespace Microsoft.PythonTools.Intellisense {
     sealed class TaskProviderItemFactory {
         private readonly ITextSnapshot _snapshot;
 
-        public TaskProviderItemFactory(
-            ITextSnapshot snapshot
-        ) {
+        public TaskProviderItemFactory(ITextSnapshot snapshot) {
             _snapshot = snapshot;
         }
 
         #region Factory Functions
 
-        public TaskProviderItem FromErrorResult(IServiceProvider serviceProvider, ErrorResult result, VSTASKPRIORITY priority, VSTASKCATEGORY category) {
+        public TaskProviderItem FromErrorResult(IServiceProvider serviceProvider, Error result, VSTASKPRIORITY priority, VSTASKCATEGORY category) {
             return new TaskProviderItem(
                 serviceProvider,
-                result.Message,
-                result.Span,
+                result.message,
+                GetSpan
+                (result),
                 priority,
                 category,
                 true,
                 _snapshot
+            );
+        }
+
+        internal static SourceSpan GetSpan(Error result) {
+            return new SourceSpan(
+                new SourceLocation(result.startIndex, result.startLine, result.startColumn),
+                new SourceLocation(result.startIndex + result.length, result.endLine, result.endColumn)
             );
         }
 
@@ -315,14 +322,15 @@ namespace Microsoft.PythonTools.Intellisense {
         }
     }
 
-    abstract class TaskProvider : IVsTaskProvider, IDisposable {
+    sealed class TaskProvider : IVsTaskProvider, IDisposable, IVsTaskListEvents {
+        private volatile Dictionary<string, VSTASKPRIORITY> _tokens;
         private readonly Dictionary<EntryKey, List<TaskProviderItem>> _items;
         private readonly Dictionary<EntryKey, HashSet<ITextBuffer>> _errorSources;
         private readonly object _itemsLock = new object();
         private uint _cookie;
         private readonly IVsTaskList _taskList;
-        internal readonly IErrorProviderFactory _errorProvider;
-        protected readonly IServiceProvider _serviceProvider;
+        private readonly IErrorProviderFactory _errorProvider;
+        private readonly IServiceProvider _serviceProvider;
 
         private Thread _worker;
         private readonly Queue<WorkerMessage> _workerQueue = new Queue<WorkerMessage>();
@@ -333,8 +341,52 @@ namespace Microsoft.PythonTools.Intellisense {
             _items = new Dictionary<EntryKey, List<TaskProviderItem>>();
             _errorSources = new Dictionary<EntryKey, HashSet<ITextBuffer>>();
 
+            RefreshTokens();
             _taskList = taskList;
             _errorProvider = errorProvider;
+        }
+
+        public Dictionary<string, VSTASKPRIORITY> Tokens {
+            get { return _tokens; }
+        }
+
+        public event EventHandler TokensChanged;
+
+        public int OnCommentTaskInfoChanged() {
+            RefreshTokens();
+            return VSConstants.S_OK;
+        }
+
+        // Retrieves token settings as defined by user in Tools -> Options -> Environment -> Task List.
+        private void RefreshTokens() {
+            var taskInfo = (IVsCommentTaskInfo)_serviceProvider.GetService(typeof(SVsTaskList));
+            if (taskInfo == null) {
+                return;
+            }
+
+            IVsEnumCommentTaskTokens enumTokens;
+            ErrorHandler.ThrowOnFailure(taskInfo.EnumTokens(out enumTokens));
+
+            var newTokens = new Dictionary<string, VSTASKPRIORITY>();
+
+            var token = new IVsCommentTaskToken[1];
+            uint fetched;
+            string text;
+            var priority = new VSTASKPRIORITY[1];
+
+            // DevDiv bug 1135485: EnumCommentTaskTokens.Next returns E_FAIL instead of S_FALSE
+            while (enumTokens.Next(1, token, out fetched) == VSConstants.S_OK && fetched > 0) {
+                ErrorHandler.ThrowOnFailure(token[0].Text(out text));
+                ErrorHandler.ThrowOnFailure(token[0].Priority(priority));
+                newTokens[text] = priority[0];
+            }
+
+            _tokens = newTokens;
+
+            var tokensChanged = TokensChanged;
+            if (tokensChanged != null) {
+                tokensChanged(this, EventArgs.Empty);
+            }
         }
 
         public void Dispose() {
@@ -342,7 +394,7 @@ namespace Microsoft.PythonTools.Intellisense {
             GC.SuppressFinalize(this);
         }
 
-        protected virtual void Dispose(bool disposing) {
+        private void Dispose(bool disposing) {
             if (disposing) {
                 var worker = _worker;
                 if (worker != null) {
@@ -903,66 +955,6 @@ namespace Microsoft.PythonTools.Intellisense {
             }
             Message = bstrName;
             return VSConstants.S_OK;
-        }
-    }
-
-    // Two distinct types are used to distinguish the two in the VS service registry.
-
-    sealed class ErrorTaskProvider : TaskProvider {
-        public ErrorTaskProvider(IServiceProvider serviceProvider, IVsTaskList taskList, IErrorProviderFactory errorProvider)
-            : base(serviceProvider, taskList, errorProvider) {
-        }
-    }
-
-    sealed class CommentTaskProvider : TaskProvider, IVsTaskListEvents {
-        private volatile Dictionary<string, VSTASKPRIORITY> _tokens;
-
-        public CommentTaskProvider(IServiceProvider serviceProvider, IVsTaskList taskList, IErrorProviderFactory errorProvider)
-            : base(serviceProvider, taskList, errorProvider) {
-            RefreshTokens();
-        }
-
-        public Dictionary<string, VSTASKPRIORITY> Tokens {
-            get { return _tokens; }
-        }
-
-        public event EventHandler TokensChanged;
-
-        public int OnCommentTaskInfoChanged() {
-            RefreshTokens();
-            return VSConstants.S_OK;
-        }
-
-        // Retrieves token settings as defined by user in Tools -> Options -> Environment -> Task List.
-        private void RefreshTokens() {
-            var taskInfo = (IVsCommentTaskInfo)_serviceProvider.GetService(typeof(SVsTaskList));
-            if (taskInfo == null) {
-                return;
-            }
-
-            IVsEnumCommentTaskTokens enumTokens;
-            ErrorHandler.ThrowOnFailure(taskInfo.EnumTokens(out enumTokens));
-
-            var newTokens = new Dictionary<string, VSTASKPRIORITY>();
-
-            var token = new IVsCommentTaskToken[1];
-            uint fetched;
-            string text;
-            var priority = new VSTASKPRIORITY[1];
-
-            // DevDiv bug 1135485: EnumCommentTaskTokens.Next returns E_FAIL instead of S_FALSE
-            while (enumTokens.Next(1, token, out fetched) == VSConstants.S_OK && fetched > 0) {
-                ErrorHandler.ThrowOnFailure(token[0].Text(out text));
-                ErrorHandler.ThrowOnFailure(token[0].Priority(priority));
-                newTokens[text] = priority[0];
-            }
-
-            _tokens = newTokens;
-
-            var tokensChanged = TokensChanged;
-            if (tokensChanged != null) {
-                tokensChanged(this, EventArgs.Empty);
-            }
         }
     }
 }
