@@ -68,7 +68,6 @@
     <Compile Include="Project\AnalysisQueue.cs" />
     <Compile Include="Project\AnalysisSynchronizationContext.cs" />
     <Compile Include="Project\CompletionOptions.cs" />
-    <Compile Include="Project\ParseQueue.cs" />
     <Compile Include="Project\OutOfProcProjectAnalyzer.cs" />
     <Compile Include="Project\ProjectEntryExtensions.cs" />
     <Compile Include="Project\ProjectEntryMap.cs" />
