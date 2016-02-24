@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <WixLocalization Culture="en-us" xmlns="http://schemas.microsoft.com/wix/2006/localization">
   <String Id="ProductName">Python Tools</String>
-  <String Id="ForVisualStudio">for Visual Studio 15</String>
-  <String Id="VSProductName">Visual Studio 15</String>
-  <String Id="WDProductName">Visual Studio Express 15 for Desktop</String>
-  <String Id="VWDProductName">Visual Studio Express 15 for Web</String>
-  <String Id="ProductDescription">Python Tools for Visual Studio 15</String>
+  <String Id="ForVisualStudio">for Visual Studio vNext</String>
+  <String Id="VSProductName">Visual Studio vNext</String>
+  <String Id="WDProductName">Visual Studio Express vNext for Desktop</String>
+  <String Id="VWDProductName">Visual Studio Express vNext for Web</String>
+  <String Id="ProductDescription">Python Tools for Visual Studio vNext</String>
 
   <String Id="DowngradeErrorMessage">A newer version of !(loc.ProductDescription) is already installed.</String>
   <String Id="NoInstallPath">!(loc.VSProductName) is required.  The free Community edition can be downloaded from http://www.visualstudio.com/.</String>
