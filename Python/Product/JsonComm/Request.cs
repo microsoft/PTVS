@@ -22,23 +22,14 @@ using Newtonsoft.Json.Linq;
 
 namespace Microsoft.PythonTools.Cdp {
     public class Request {
-        public string command;
-
-        public Request(string command) {
-            this.command = command;
-        }
+        [JsonIgnore]
+        public virtual string command => null;
     }
 
     public class GenericRequest : Request<Response> {
         public Dictionary<string, object> body;
-
-        public GenericRequest(string command) : base(command) {
-        }
     }
 
     public class Request<TResponse> : Request where TResponse : Response, new() {
-        public Request(string command) : base(command) {
-        }
-
     }
 }

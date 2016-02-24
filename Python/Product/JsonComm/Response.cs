@@ -23,7 +23,7 @@ using Newtonsoft.Json.Linq;
 
 namespace Microsoft.PythonTools.Cdp {
     public class Response {
-        public bool? failure;
-        public string message;
+        public Response() {
+        }
     }
 }

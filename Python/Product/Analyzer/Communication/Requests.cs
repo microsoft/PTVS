@@ -30,17 +30,30 @@ namespace Microsoft.PythonTools.Analysis.Communication {
         }
     }
 
-    public class ErrorsEvent : Event {
-        public const string Name = "hasErrors";
+    public class QuickInfoRequest : Request<QuickInfoResponse> {
+        public const string Command = "quickInfo";
 
         public int fileId;
+        public string expr;
+        public int line, column, index;
+
+        public override string command => Command;
+    }
+
+    public class QuickInfoResponse : Response {
+        public string text;
+    }
+
+    public class FileParsedEvent : Event {
+        public const string Name = "fileParsed";
+
+        public int fileId, version;
         public bool hasErrors;
         public Error[] errors;
         public Error[] warnings;
         public TaskItem[] tasks;
 
-        public ErrorsEvent() : base(Name) {
-        }
+        public override string name => Name;
     }
 
     public struct CodeSpan {
@@ -59,8 +72,7 @@ namespace Microsoft.PythonTools.Analysis.Communication {
         public string path;
         public string addingFromDir;
 
-        public AddFileRequest() : base(Command) {
-        }
+        public override string command => Command;
     }
 
     public class AddFileResponse : Response {
@@ -71,8 +83,7 @@ namespace Microsoft.PythonTools.Analysis.Communication {
         public const string Command = "addDir";
 
         public string dir;
-        public AddDirectoryRequest() : base(Command) {
-        }
+        public override string command => Command;
     }
 
     public sealed class RemoveDirectoryRequest : Request<Response> {
@@ -80,16 +91,14 @@ namespace Microsoft.PythonTools.Analysis.Communication {
 
         public string dir;
 
-        public RemoveDirectoryRequest() : base(Command) {
-        }
+        public override string command => Command;
     }
 
     public sealed class UnloadFileRequest : Request<Response> {
         public const string Command = "unloadFile";
 
         public int fileId;
-        public UnloadFileRequest() : base(Command) {
-        }
+        public override string command => Command;
     }
 
 
@@ -99,30 +108,27 @@ namespace Microsoft.PythonTools.Analysis.Communication {
         public string filename;
         public int fileId;
 
-        public DirectoryFileAddedEvent() : base(Name) {
-        }
+        public override string name => Name;
     }
 
     public sealed class FileContentEvent : Event {
         public const string Name = "fileContent";
 
-        public FileContentEvent() : base(Name) {
-        }
+        public override string name => Name;
 
-        public int fileId;
+        public int fileId, version;
         public string content;
     }
 
     public sealed class FileChangedEvent : Event {
         public const string Name = "fileChanged";
 
-        public FileChangedEvent() : base(Name) {
-        }
+        public override string name => Name;
 
-        public int fileId;
+        public int fileId, version;
         public ChangeInfo[] changes;
     }
-
+    
     public sealed class ChangeInfo {
         public string newText;
         public int start;
@@ -136,9 +142,7 @@ namespace Microsoft.PythonTools.Analysis.Communication {
     public sealed class AddZipArchiveRequest : Request<Response> {
         public const string Command = "addZipArchive";
         public string archive;
-
-        public AddZipArchiveRequest() : base(Command) {
-        }
+        public override string command => Command;
     }
 
     public class TopLevelCompletionsRequest : Request<CompletionsResponse> {
@@ -148,8 +152,7 @@ namespace Microsoft.PythonTools.Analysis.Communication {
         public int location, column;
         public GetMemberOptions options;
 
-        public TopLevelCompletionsRequest() : base(Command) {
-        }
+        public override string command => Command;
     }
 
     public class GetModulesRequest : Request<CompletionsResponse> {
@@ -158,8 +161,7 @@ namespace Microsoft.PythonTools.Analysis.Communication {
         public int fileId;
         public bool topLevelOnly;
 
-        public GetModulesRequest() : base(Command) {
-        }
+        public override string command => Command;
     }
 
     public class GetModuleMembers : Request<CompletionsResponse> {
@@ -169,8 +171,7 @@ namespace Microsoft.PythonTools.Analysis.Communication {
         public string[] package;
         public bool includeMembers;
 
-        public GetModuleMembers() : base(Command) {
-        }
+        public override string command => Command;
     }
 
     public class CompletionsRequest : Request<CompletionsResponse> {
@@ -182,17 +183,13 @@ namespace Microsoft.PythonTools.Analysis.Communication {
         public GetMemberOptions options;
         public bool forceCompletions;
 
-        public CompletionsRequest() : base(Command) {
-
-
-        }
+        public override string command => Command;
     }
 
     public class SignaturesRequest : Request<SignaturesResponse> {
         public const string Command = "sigs";
 
-        public SignaturesRequest() : base(Command) {
-        }
+        public override string command => Command;
 
         public string text;
         public int location, column;
@@ -202,15 +199,13 @@ namespace Microsoft.PythonTools.Analysis.Communication {
     public sealed class ModulesChangedEvent : Event {
         public const string Name = "modulesChanged";
 
-        public ModulesChangedEvent() : base(Name)  {
-        }
+        public override string name => Name;
     }
 
     public sealed class AnalysisCompleted : Event {
         public const string Name = "analysisCompleted";
 
-        public AnalysisCompleted() : base(Name) {
-        }
+        public override string name => Name;
     }
 
     public sealed class SignaturesResponse : Response {
@@ -232,8 +227,7 @@ namespace Microsoft.PythonTools.Analysis.Communication {
         public const string Name = "analysisComplete";
         public int fileId;
 
-        public AnalysisCompleteEvent() : base(Name) {
-        }
+        public override string name => Name;
     }
 
     public class CompletionsResponse : Response {
@@ -253,8 +247,7 @@ namespace Microsoft.PythonTools.Analysis.Communication {
         public bool implicitProject;
         public int crossModuleAnalysisLimit;
 
-        public OptionsChangedEvent() : base(Name) {
-        }
+        public override string name => Name;
     }
 
     public sealed class SetCommentTaskTokens : Event {
@@ -262,8 +255,7 @@ namespace Microsoft.PythonTools.Analysis.Communication {
 
         public Dictionary<string, TaskPriority> tokens;
 
-        public SetCommentTaskTokens() : base(Name) {
-        }
+        public override string name => Name;
     }
 
     public sealed class TaskItem : Error {

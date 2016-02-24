@@ -13,7 +13,8 @@ namespace Microsoft.PythonTools.Intellisense {
         public readonly int _fileId;
         public readonly string _path;
         public readonly VsProjectAnalyzer ProjectState;
-        public ITextSnapshot _currentAnalysisSnapshot;
+        private readonly Dictionary<int, ITextSnapshot> _parsedSnapshots = new Dictionary<int, ITextSnapshot>();
+        public ITextSnapshot _lastSentSnapshot, _lastParsedSnapshot;
         public IAnalysisCookie AnalysisCookie;
 
         private readonly Dictionary<object, object> _properties = new Dictionary<object, object>();
@@ -40,12 +41,21 @@ namespace Microsoft.PythonTools.Intellisense {
         internal void UpdateTree(object p1, object p2) {
         }
 
-        internal ITextSnapshot CurrentAnalysisVersion {
+        internal ITextSnapshot LastSentSnapshot {
             get {
-                return _currentAnalysisSnapshot;
+                return _lastSentSnapshot;
             }
             set {
-                _currentAnalysisSnapshot = value;
+                _lastSentSnapshot = value;
+            }
+        }
+
+        internal ITextSnapshot LastParsedSnapshot {
+            get {
+                return _lastParsedSnapshot;
+            }
+            set {
+                _lastParsedSnapshot = value;
             }
         }
 
@@ -65,6 +75,14 @@ namespace Microsoft.PythonTools.Intellisense {
             return ProjectState.GetModuleMembers(this, package, v);
         }
 
+        public string GetQuickInfo(string text, SourceLocation location) {
+            return ProjectState.GetQuickInfo(
+                this,
+                text,
+                location
+            ).Result;
+        }
+
         public IEnumerable<MemberResult> GetModules(bool v) {
             return ProjectState.GetModules(this, v);
         }
@@ -79,6 +97,19 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal PythonAst GetAstFromText(string _expr, SourceLocation translatedLocation) {
             throw new NotImplementedException();
+        }
+
+        internal void PushSnapshot(ITextSnapshot snapshot) {
+            lock(_parsedSnapshots) {
+                _parsedSnapshots[snapshot.Version.VersionNumber] = snapshot;
+            }
+        }
+        internal ITextSnapshot PopSnapshot(int version) {
+            lock (_parsedSnapshots) {
+                var res = _parsedSnapshots[version];
+                _parsedSnapshots.Remove(version);
+                return res;
+            }
         }
     }
 }

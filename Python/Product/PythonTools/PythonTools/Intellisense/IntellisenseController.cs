@@ -92,16 +92,24 @@ namespace Microsoft.PythonTools.Intellisense {
             _bufferParser = bufferParser;
         }
 
-        private void TextViewMouseHover(object sender, MouseHoverEventArgs e) {
+        private async void TextViewMouseHover(object sender, MouseHoverEventArgs e) {
             if (_quickInfoSession != null && !_quickInfoSession.IsDismissed) {
                 _quickInfoSession.Dismiss();
             }
             var pt = e.TextPosition.GetPoint(EditorExtensions.IsPythonContent, PositionAffinity.Successor);
             if (pt != null) {
+                var quickInfo = await VsProjectAnalyzer.GetQuickInfo(
+                    _textView.TextBuffer.CurrentSnapshot,
+                    pt.Value                    
+                );
+
+                QuickInfoSource.AddQuickInfo(_textView.TextBuffer, quickInfo);
+
                 _quickInfoSession = _provider._QuickInfoBroker.TriggerQuickInfo(
                     _textView,
                     pt.Value.Snapshot.CreateTrackingPoint(pt.Value.Position, PointTrackingMode.Positive),
-                    true);
+                    true
+                );
             }
         }
 

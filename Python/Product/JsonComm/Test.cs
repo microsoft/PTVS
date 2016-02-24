@@ -13,8 +13,7 @@ namespace Microsoft.PythonTools.Analysis.Communication {
         public const string Command = "test";
         public string foo;
 
-        public TestRequest() : base(Command) {
-        }
+        public override string command => Command;
     }
 
     class TestResponse : Response {
@@ -42,13 +41,13 @@ namespace Microsoft.PythonTools.Analysis.Communication {
             var client = StartClient(inp, outp);
 
             Console.WriteLine("Sending request");
-            var resp = await client.SendRequestAsync(new TestRequest() { command = "test", foo = "hi" });
+            var resp = await client.SendRequestAsync(new TestRequest() { foo = "hi" });
 
             Console.WriteLine("Response received " + resp);
 
-            resp = await client.SendRequestAsync(new TestRequest() { command = "test", foo = "test" });
+            resp = await client.SendRequestAsync(new TestRequest() { foo = "test" });
             Console.WriteLine("Response received " + resp.data);
-            Console.WriteLine("Response received " + resp.failure);
+            Console.WriteLine("Response received ");
         }
 
         private static Connection StartClient(MemoryStream inp, MemoryStream outp) {
@@ -58,14 +57,18 @@ namespace Microsoft.PythonTools.Analysis.Communication {
         }
 
         private static Connection StartServer(MemoryStream inp, MemoryStream outp) {
-            var res = new Connection(outp, inp, request => {
+            var res = new Connection(outp, inp, requestArgs => {
                 Console.WriteLine("Request received");
+                var request = requestArgs.Request;
 
                 TestRequest req = (TestRequest)request;
                 if (req.foo == "hi") {
-                    return Task.FromResult((Response)new TestResponse() { message = "hi", failure = false, data = "yo" });
+                    return Task.FromResult((Response)new TestResponse() { data = "yo" });
                 }
-                return Task.FromResult((Response)new TestResponse2() { message = "hi", failure = false, data = "yo", foo = "hi" });
+                return Task.FromResult((Response)new TestResponse2() { data = "yo", foo = "hi" });
+            },
+            new Dictionary<string, Type>() {
+                { "request.test", typeof(TestRequest) }
             });
             res.StartProcessing();
             return res;

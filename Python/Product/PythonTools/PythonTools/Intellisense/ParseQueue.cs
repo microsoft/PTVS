@@ -168,7 +168,6 @@ namespace Microsoft.PythonTools.Intellisense {
     class BufferParser {
         internal VsProjectAnalyzer _parser;
         private readonly Timer _timer;
-        private readonly Dispatcher _dispatcher;
         private IList<ITextBuffer> _buffers;
         private bool _parsing, _requeue, _textChange;
         internal ProjectFileEntry _currentProjEntry;
@@ -177,12 +176,11 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private const int ReparseDelay = 1000;      // delay in MS before we re-parse a buffer w/ non-line changes.
 
-        public BufferParser(Dispatcher dispatcher, ProjectFileEntry initialProjectEntry, VsProjectAnalyzer parser, ITextBuffer buffer) {
+        public BufferParser(ProjectFileEntry initialProjectEntry, VsProjectAnalyzer parser, ITextBuffer buffer) {
             _parser = parser;
             _timer = new Timer(ReparseTimer, null, Timeout.Infinite, Timeout.Infinite);
             _buffers = new[] { buffer };
             _currentProjEntry = initialProjectEntry;
-            _dispatcher = dispatcher;
             AttachedViews = 1;
 
             InitBuffer(buffer);
@@ -204,12 +202,6 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             }
             _timer.Dispose();
-        }
-
-        public Dispatcher Dispatcher {
-            get {
-                return _dispatcher;
-            }
         }
 
         public ITextBuffer[] Buffers {

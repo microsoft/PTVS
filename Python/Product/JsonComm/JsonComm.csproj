@@ -58,6 +58,7 @@
     <Compile Include="JsonCreationConverter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Request.cs" />
+    <Compile Include="RequestArgs.cs" />
     <Compile Include="Response.cs" />
     <Compile Include="Test.cs" />
   </ItemGroup>

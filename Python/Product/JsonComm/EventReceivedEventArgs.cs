@@ -18,13 +18,16 @@ using System;
 
 namespace Microsoft.PythonTools.Cdp {
     public sealed class EventReceivedEventArgs : EventArgs {
+        private readonly string _name;
         private readonly Event _event;
 
-        public EventReceivedEventArgs(Event event_) {
+        public EventReceivedEventArgs(string name, Event event_) {
+            _name = name;
             _event = event_;
         }
 
         public Event Event => _event;
+        public string Name => _name;
     }
 }
 

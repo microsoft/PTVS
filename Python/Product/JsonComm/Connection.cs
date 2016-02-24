@@ -32,7 +32,7 @@ namespace Microsoft.PythonTools.Cdp {
         private readonly SemaphoreSlim _writeLock = new SemaphoreSlim(1);
         private readonly Dictionary<int, RequestInfo> _requestCache;
         private readonly Dictionary<string, Type> _types;
-        private readonly Func<Request, Task<Response>> _requestHandler;
+        private readonly Func<RequestArgs, Task<Response>> _requestHandler;
         private readonly Stream _writer, _reader;
         private int _seq;
         private static char[] _headerSeperator = new[] { ':' };
@@ -47,7 +47,7 @@ namespace Microsoft.PythonTools.Cdp {
         /// where command_name and event_name correspond to the fields in the Request and Event objects.  The type is the type of object
         /// which will be deserialized and instantiated.  If a type is not registered a GenericRequest or GenericEvent object will be created
         /// which will include the complete body of the request as a dictionary.</param>
-        public Connection(Stream writer, Stream reader, Func<Request, Task<Response>> requestHandler = null,
+        public Connection(Stream writer, Stream reader, Func<RequestArgs, Task<Response>> requestHandler = null,
             Dictionary<string, Type> types = null) {
             _requestCache = new Dictionary<int, RequestInfo>();
             _requestHandler = requestHandler;
@@ -82,14 +82,21 @@ namespace Microsoft.PythonTools.Cdp {
 
             T res;
             try {
-                await SendMessage(new Packet() { body = r.Request, seq = seq, type = PacketType.Request }).ConfigureAwait(false);
+                await SendMessage(
+                    new RequestMessage() {
+                        command = r.Request.command,
+                        arguments = r.Request,
+                        seq = seq,
+                        type = PacketType.Request
+                    }
+                ).ConfigureAwait(false);
 
                 res = await r._task.Task.ConfigureAwait(false);
-                if (res.failure ?? false) {
-                    throw new FailedRequestException(res.message, res);
+                if (r.success) {
+                    return res;
                 }
 
-                return res;
+                throw new FailedRequestException(r.message, res);
             } finally {
                 lock (_cacheLock) {
                     _requestCache.Remove(seq);
@@ -105,7 +112,14 @@ namespace Microsoft.PythonTools.Cdp {
         public Task SendEventAsync(Event eventValue) {
             int seq = Interlocked.Increment(ref _seq);
 
-            return SendMessage(new Packet() { body = eventValue, seq = seq, type = PacketType.Event });
+            return SendMessage(
+                new EventMessage() {
+                    @event = eventValue.name,
+                    body = eventValue,
+                    seq = seq,
+                    type = PacketType.Event
+                }
+            );
         }
 
         /// <summary>
@@ -128,79 +142,17 @@ namespace Microsoft.PythonTools.Cdp {
                 while ((line = await ReadPacket(reader).ConfigureAwait(false)) != null) {
                     var packet = JsonConvert.DeserializeObject<JObject>(line);
 
-                    var body = packet["body"];
                     var type = packet["type"].ToObject<string>();
                     var seq = packet["seq"].ToObject<int?>();
+
                     if (seq == null) {
                         await WriteError("Missing sequence number").ConfigureAwait(false);
                     }
 
                     switch (type) {
-                        case PacketType.Request:
-                            var command = body["command"].ToObject<string>();
-                            Request request;
-                            Type requestType;
-                            if (command != null &&
-                                _types != null &&
-                                _types.TryGetValue("request." + command, out requestType)) {
-                                // We have a strongly typed request type registered, use that...
-                                request = body.ToObject(requestType) as Request;
-                            } else {
-                                // There's no strogly typed request type, give the user a generic
-                                // request object and they can look through the dictionary.
-                                request = new GenericRequest(command) {
-                                    body = body.ToObject<Dictionary<string, object>>()
-                                };
-                            }
-
-                            Response result;
-                            try {
-                                result = await _requestHandler(request).ConfigureAwait(false);
-                            } catch (Exception e) {
-                                result = new Response() {
-                                    failure = true,
-                                    message = e.ToString()
-                                };
-                            }
-
-                            await SendResponseAsync(seq.Value, result).ConfigureAwait(false);
-                            break;
-                        case PacketType.Response:
-                            RequestInfo r;
-                            bool found = false;
-                            lock (_cacheLock) {
-                                if (_requestCache.TryGetValue(seq.Value, out r)) {
-                                    found = true;
-                                    r.SetResponse(body);
-                                }
-                            }
-
-                            if (!found) {
-                                await WriteError("Response to unknown sequence: " + seq.Value).ConfigureAwait(false);
-                            }
-                            break;
-                        case PacketType.Event:
-                            var name = body["name"].ToObject<string>();
-                            Event eventObj;
-                            if (name != null &&
-                                _types != null &&
-                                _types.TryGetValue("event." + name, out requestType)) {
-                                // We have a strongly typed event type registered, use that.
-                                eventObj = body.ToObject(requestType) as Event;
-                            } else {
-                                // We have no strongly typed event type, so give the user a 
-                                // GenericEvent and they can look through the body manually.
-                                eventObj = new GenericEvent(name) {
-                                    body = body.ToObject<Dictionary<string, object>>()
-                                };
-                            }
-                            try {
-                                EventReceived?.Invoke(this, new EventReceivedEventArgs(eventObj));
-                            } catch (Exception) {
-                                // TODO: Report unhandled exception?
-                                Console.WriteLine("HI");
-                            }
-                            break;
+                        case PacketType.Request: await ProcessRequest(packet, seq); break;
+                        case PacketType.Response: await ProcessResponse(packet, seq); break;
+                        case PacketType.Event: ProcessEvent(packet); break;
                         default:
                             await WriteError("Bad packet type: " + type ?? "<null>").ConfigureAwait(false);
                             break;
@@ -209,6 +161,83 @@ namespace Microsoft.PythonTools.Cdp {
                 }
             } catch (ObjectDisposedException) {
             }
+        }
+
+        private void ProcessEvent(JObject packet) {
+            Type requestType;
+            var name = packet["event"].ToObject<string>();
+            var eventBody = packet["body"];
+            Event eventObj;
+            if (name != null &&
+                _types != null &&
+                _types.TryGetValue("event." + name, out requestType)) {
+                // We have a strongly typed event type registered, use that.
+                eventObj = eventBody.ToObject(requestType) as Event;
+            } else {
+                // We have no strongly typed event type, so give the user a 
+                // GenericEvent and they can look through the body manually.
+                eventObj = new GenericEvent() {
+                    body = eventBody.ToObject<Dictionary<string, object>>()
+                };
+            }
+            try {
+                EventReceived?.Invoke(this, new EventReceivedEventArgs(name, eventObj));
+            } catch (Exception) {
+                // TODO: Report unhandled exception?
+            }
+        }
+
+        private async Task ProcessResponse(JObject packet, int? seq) {
+            var body = packet["body"];
+
+            var reqSeq = packet["request_seq"].ToObject<int?>();
+            RequestInfo r;
+            bool found = false;
+            lock (_cacheLock) {
+                if (_requestCache.TryGetValue(reqSeq.Value, out r)) {
+                    found = true;
+                    r.message = packet["message"].ToObject<string>();
+                    r.success = packet["success"].ToObject<bool>();
+                    r.SetResponse(body);
+                }
+            }
+
+            if (!found) {
+                await WriteError("Response to unknown sequence: " + seq.Value).ConfigureAwait(false);
+            }
+        }
+
+        private async Task ProcessRequest(JObject packet, int? seq) {
+            var command = packet["command"].ToObject<string>();            
+            var arguments = packet["arguments"];
+
+            Request request;
+            Type requestType;
+            if (command != null &&
+                _types != null &&
+                _types.TryGetValue("request." + command, out requestType)) {
+                // We have a strongly typed request type registered, use that...
+                request = (Request)arguments.ToObject(requestType);
+            } else {
+                // There's no strogly typed request type, give the user a generic
+                // request object and they can look through the dictionary.
+                request = new GenericRequest() {
+                    body = arguments.ToObject<Dictionary<string, object>>()
+                };
+            }
+
+            Response result;
+            bool success = true;
+            string message = null;
+            try {
+                result = await _requestHandler(new RequestArgs(command, request)).ConfigureAwait(false);
+            } catch (Exception e) {
+                success = false;
+                message = e.ToString();
+                result = null;
+            }
+
+            await SendResponseAsync(seq.Value, command, success, message, result).ConfigureAwait(false);
         }
 
         public void Dispose() {
@@ -264,14 +293,24 @@ namespace Microsoft.PythonTools.Cdp {
             return new string(buffer);
         }
 
-        private async Task SendResponseAsync(int sequence, Response response) {
-            await SendMessage(new Packet() { body = response, seq = sequence, type = PacketType.Response }).ConfigureAwait(false);
+        private async Task SendResponseAsync(int sequence, string command, bool success, string message, Response response) {
+            await SendMessage(
+                new ResponseMessage() {
+                    request_seq = sequence,
+                    success = success,
+                    message = message,
+                    command = command,
+                    body = response,
+                    seq = Interlocked.Increment(ref _seq),
+                    type = PacketType.Response
+                }
+            ).ConfigureAwait(false);
         }
 
         /// <summary>
         /// Sends a single message across the wire.
         /// </summary>
-        private async Task SendMessage(Packet packet) {
+        private async Task SendMessage(ProtocolMessage packet) {
             var str = JsonConvert.SerializeObject(packet);
             var bytes = Encoding.UTF8.GetBytes(str);
             await _writeLock.WaitAsync().ConfigureAwait(false);
@@ -292,7 +331,7 @@ namespace Microsoft.PythonTools.Cdp {
         /// </summary>
         private async Task WriteError(string message) {
             await SendMessage(
-                new Packet() {
+                new ErrorMessage() {
                     seq = Interlocked.Increment(ref _seq),
                     type = PacketType.Error,
                     body = new Dictionary<string, object>() { { "message", message } }
@@ -308,9 +347,30 @@ namespace Microsoft.PythonTools.Cdp {
         /// number (requests and responses have linked sequence numbers), and a body which is 
         /// the rest of the JSON payload.
         /// </summary>
-        private class Packet {
+        private class ProtocolMessage {
             public string type;
             public int seq;
+        }
+
+        private class RequestMessage : ProtocolMessage {
+            public string command;
+            public object arguments;
+        }
+
+        private class ResponseMessage : ProtocolMessage {
+            public int request_seq;
+            public bool success;
+            public string command;
+            public string message;
+            public object body;
+        }
+
+        private class EventMessage : ProtocolMessage {
+            public string @event;
+            public object body;
+        }
+
+        private class ErrorMessage : ProtocolMessage {
             public object body;
         }
 
@@ -337,6 +397,8 @@ namespace Microsoft.PythonTools.Cdp {
         private abstract class RequestInfo {
             private readonly Request _request;
             private readonly int _sequence;
+            public bool success;
+            public string message;
 
             internal RequestInfo(Request request, int sequence) {
                 _request = request;

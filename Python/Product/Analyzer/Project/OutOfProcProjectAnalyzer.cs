@@ -53,7 +53,6 @@ namespace Microsoft.PythonTools.Intellisense {
         // For entries that were loaded from a .zip file, IProjectEntry.Properties[_pathInZipFile] contains the path of the item inside the archive.
         private static readonly object _pathInZipFile = new { Name = "PathInZipFile" };
 
-        private readonly ParseQueue _queue;
         private readonly AnalysisQueue _analysisQueue;
         private readonly IPythonInterpreterFactory _interpreterFactory;
         //private readonly Dictionary<BufferParser, IProjectEntry> _openFiles = new Dictionary<BufferParser, IProjectEntry>();
@@ -66,6 +65,7 @@ namespace Microsoft.PythonTools.Intellisense {
             { "HACK", TaskPriority.high },
         };
         private OptionsChangedEvent _options;
+        internal int _analysisPending;
 
         // Moniker strings allow the task provider to distinguish between
         // different sources of items for the same file.
@@ -98,7 +98,6 @@ namespace Microsoft.PythonTools.Intellisense {
             _unresolvedSquiggles = new UnresolvedImportSquiggleProvider(serviceProvider, _errorProvider);
 #endif
 
-            _queue = new ParseQueue(this);
             _analysisQueue = new AnalysisQueue(this);
             _analysisQueue.AnalysisStarted += AnalysisQueue_AnalysisStarted;
             _allFactories = allFactories;
@@ -135,10 +134,12 @@ namespace Microsoft.PythonTools.Intellisense {
             _options = options;
         }
 
-        private async Task<Response> RequestHandler(Request request) {
+        private async Task<Response> RequestHandler(RequestArgs requestArgs) {
             await Task.FromResult((object)null);
+            var command = requestArgs.Command;
+            var request = requestArgs.Request;
 
-            switch (request.command) {
+            switch (command) {
                 case UnloadFileRequest.Command: return UnloadFile((UnloadFileRequest)request);
                 case AddFileRequest.Command: return AnalyzeFile((AddFileRequest)request);
 
@@ -147,14 +148,124 @@ namespace Microsoft.PythonTools.Intellisense {
                 case GetModulesRequest.Command: return GetModules(request);
                 case GetModuleMembers.Command: return GeModuleMembers(request);
                 case SignaturesRequest.Command: return GetSignatures((SignaturesRequest)request);
+                case QuickInfoRequest.Command: return GetQuickInfo((QuickInfoRequest)request);
                 //return _analyzer.Qneue((HasErrorsRequest)request);
                 default:
-                    return new Response() {
-                        message = "Unknown command",
-                        failure = true
-                    };
+                    throw new InvalidOperationException("Unknown command");
             }
 
+        }
+
+        private Response GetQuickInfo(QuickInfoRequest request) {
+            var pyEntry = _projectFiles[request.fileId] as IPythonProjectEntry;
+            string text = null;
+            if (pyEntry.Analysis != null) {
+                var values = pyEntry.Analysis.GetValues(
+                    request.expr,
+                    new SourceLocation(
+                        request.index,
+                        request.line,
+                        request.column
+                    )
+                );
+
+                bool first = true;
+                var result = new StringBuilder();
+                int count = 0;
+                List<AnalysisValue> listVars = new List<AnalysisValue>(values);
+                HashSet<string> descriptions = new HashSet<string>();
+                bool multiline = false;
+                foreach (var v in listVars) {
+                    string description = null;
+                    if (listVars.Count == 1) {
+                        if (!String.IsNullOrWhiteSpace(v.Description)) {
+                            description = v.Description;
+                        }
+                    } else {
+                        if (!String.IsNullOrWhiteSpace(v.ShortDescription)) {
+                            description = v.ShortDescription;
+                        }
+                    }
+
+                    description = LimitLines(description);
+
+                    if (description != null && descriptions.Add(description)) {
+                        if (first) {
+                            first = false;
+                        } else {
+                            if (result.Length == 0 || result[result.Length - 1] != '\n') {
+                                result.Append(", ");
+                            } else {
+                                multiline = true;
+                            }
+                        }
+                        result.Append(description);
+                        count++;
+                    }
+                }
+
+                string expr = request.expr;
+                if (expr.Length > 4096) {
+                    expr = expr.Substring(0, 4093) + "...";
+                }
+                if (multiline) {
+                    result.Insert(0, expr + ": " + Environment.NewLine);
+                } else if (result.Length > 0) {
+                    result.Insert(0, expr + ": ");
+                } else {
+                    result.Append(expr);
+                    result.Append(": ");
+                    result.Append("<unknown type>");
+                }
+
+                text = result.ToString();
+            }
+
+            return new QuickInfoResponse() {
+                text = text
+            };
+        }
+
+
+        internal static string LimitLines(
+            string str,
+            int maxLines = 30,
+            int charsPerLine = 200,
+            bool ellipsisAtEnd = true,
+            bool stopAtFirstBlankLine = false
+        ) {
+            if (string.IsNullOrEmpty(str)) {
+                return str;
+            }
+
+            int lineCount = 0;
+            var prettyPrinted = new StringBuilder();
+            bool wasEmpty = true;
+
+            using (var reader = new StringReader(str)) {
+                for (var line = reader.ReadLine(); line != null && lineCount < maxLines; line = reader.ReadLine()) {
+                    if (string.IsNullOrWhiteSpace(line)) {
+                        if (wasEmpty) {
+                            continue;
+                        }
+                        wasEmpty = true;
+                        if (stopAtFirstBlankLine) {
+                            lineCount = maxLines;
+                            break;
+                        }
+                        lineCount += 1;
+                        prettyPrinted.AppendLine();
+                    } else {
+                        wasEmpty = false;
+                        lineCount += (line.Length / charsPerLine) + 1;
+                        prettyPrinted.AppendLine(line);
+                    }
+                }
+            }
+            if (ellipsisAtEnd && lineCount >= maxLines) {
+                prettyPrinted.AppendLine("...");
+            }
+            return prettyPrinted.ToString().Trim();
         }
 
         private Response GetSignatures(SignaturesRequest request) {
@@ -277,19 +388,13 @@ namespace Microsoft.PythonTools.Intellisense {
                 };
             }
 
-            return new AddFileResponse() {
-                failure = false,
-                message = "failed to add item"
-            };
+            throw new InvalidOperationException("Failed to add item");
         }
 
         private Response UnloadFile(UnloadFileRequest command) {
             var entry = _projectFiles[command.fileId];
             if (entry == null) {
-                return new Response() {
-                    failure = true,
-                    message = "Unknown project entry"
-                };
+                throw new InvalidOperationException("Unknown project entry");
             }
 
             UnloadFile(entry);
@@ -301,7 +406,7 @@ namespace Microsoft.PythonTools.Intellisense {
             if (entry != null) {
                 entry.SetCurrentCode(new StringBuilder(request.content));
 
-                ParseFile(entry, entry.FilePath);
+                EnqueWorker(() => ParseFile(entry, entry.FilePath, request.version));
             }
         }
 
@@ -318,7 +423,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     curCode.Insert(change.start, change.newText);
                 }
 
-                ParseFile(entry, entry.FilePath);
+                EnqueWorker(() => ParseFile(entry, entry.FilePath, request.version));
             }
         }
 
@@ -328,10 +433,7 @@ namespace Microsoft.PythonTools.Intellisense {
         internal CompletionsResponse GetCompletions(CompletionsRequest request) {
             var file = _projectFiles[request.fileId];
             if (file == null) {
-                return new CompletionsResponse() {
-                    message = "Unknown project entry",
-                    failure = true
-                };
+                throw new InvalidOperationException("Unknown project entry");
             }
 
             return //TrySpecialCompletions(serviceProvider, snapshot, span, point, options) ??
@@ -395,7 +497,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             // re-analyze all of the modules when we get a new set of modules loaded...
             foreach (var nameAndEntry in _projectFiles) {
-                _queue.EnqueueFile(nameAndEntry.Value, nameAndEntry.Key);
+                EnqueueFile(nameAndEntry.Value, nameAndEntry.Key);
             }
         }
 
@@ -644,7 +746,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
                 if (item != null) {
                     _projectFiles.Add(path, item);
-                    _queue.EnqueueFile(item, path);
+                    EnqueueFile(item, path);
                 }
             } else if (addingFromDirectory != null) {
                 var module = item as IPythonProjectEntry;
@@ -914,7 +1016,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal bool IsAnalyzing {
             get {
-                return _queue.IsParsing || _analysisQueue.IsAnalyzing;
+                return IsParsing || _analysisQueue.IsAnalyzing;
             }
         }
 
@@ -925,7 +1027,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 while (IsAnalyzing) {
                     QueueActivityEvent.WaitOne(100);
 
-                    int itemsLeft = _queue.ParsePending + _analysisQueue.AnalysisPending;
+                    int itemsLeft = ParsePending + _analysisQueue.AnalysisPending;
 
                     if (!itemsLeftUpdated(itemsLeft)) {
                         break;
@@ -970,7 +1072,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        internal void ParseFile(IProjectEntry entry, string filename, Stream content = null) {
+        internal void ParseFile(IProjectEntry entry, string filename, int version, Stream content = null) {
             IPythonProjectEntry pyEntry;
             IExternalProjectEntry externalEntry;
 
@@ -982,7 +1084,7 @@ namespace Microsoft.PythonTools.Intellisense {
             if (snapshot != null) {
                 cookie = new FileCookie(filename);
 #if FALSE
-                cookie = new SnapshotCookie(snapshot);
+            cookie = new SnapshotCookie(snapshot);
 #endif
                 reader = new StringReader(snapshot.ToString());
             } else if (zipFileName != null) {
@@ -999,14 +1101,14 @@ namespace Microsoft.PythonTools.Intellisense {
                     result = ParsePythonCode(content);
                 }
 
-                FinishParse(pyEntry, cookie, result);
+                FinishParse(pyEntry, cookie, result, version);
             } else if ((externalEntry = entry as IExternalProjectEntry) != null) {
                 externalEntry.ParseContent(reader ?? new StreamReader(content), cookie);
                 _analysisQueue.Enqueue(entry, AnalysisPriority.Normal);
             }
         }
 
-        private void FinishParse(IPythonProjectEntry pyEntry, IAnalysisCookie cookie, ParseResult result) {
+        private void FinishParse(IPythonProjectEntry pyEntry, IAnalysisCookie cookie, ParseResult result, int version) {
             if (result.Ast != null) {
                 pyEntry.UpdateTree(result.Ast, cookie);
             } else {
@@ -1016,7 +1118,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             // update squiggles for the buffer. snapshot may be null if we
             // are analyzing a file that is not open
-            UpdateErrorsAndWarnings(pyEntry, result.Errors, result.Tasks);
+            UpdateErrorsAndWarnings(pyEntry, result.Errors, result.Tasks, version);
 
             // enqueue analysis of the file
             if (result.Ast != null) {
@@ -1102,15 +1204,16 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        private async void UpdateErrorsAndWarnings(IProjectEntry entry, CollectingErrorSink errorSink, List<TaskItem> commentTasks) {
+        private async void UpdateErrorsAndWarnings(IProjectEntry entry, CollectingErrorSink errorSink, List<TaskItem> commentTasks, int version) {
             // Update the warn-on-launch state for this entry
             await _connection.SendEventAsync(
-                new ErrorsEvent() {
+                new FileParsedEvent() {
                     fileId = ProjectEntryMap.GetId(entry),
                     hasErrors = errorSink.Errors.Any(),
                     tasks = commentTasks.ToArray(),
                     errors = errorSink.Errors.Select(MakeError).ToArray(),
-                    warnings = errorSink.Warnings.Select(MakeError).ToArray()
+                    warnings = errorSink.Warnings.Select(MakeError).ToArray(),
+                    version = version
                 }
             );
         }
@@ -1645,7 +1748,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     pyEntry.BeginParsingTree();
                 }
 
-                _queue.EnqueueZipArchiveEntry(item, zipFileName, entry, onComplete);
+                EnqueueZipArchiveEntry(item, zipFileName, entry, onComplete);
                 onComplete = null;
                 return item;
             } finally {
@@ -1694,9 +1797,92 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-#endregion
+        /// <summary>
+        /// Parses the specified file on disk.
+        /// </summary>
+        /// <param name="filename"></param>
+        public void EnqueueFile(IProjectEntry projEntry, string filename) {
+            EnqueWorker(() => {
+                for (int i = 0; i < 10; i++) {
+                    try {
+                        if (!File.Exists(filename)) {
+                            break;
+                        }
+                        using (var reader = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete)) {
+                            ParseFile(projEntry, filename, 0, reader);
+                            return;
+                        }
+                    } catch (IOException) {
+                        // file being copied, try again...
+                        Thread.Sleep(100);
+                    } catch (UnauthorizedAccessException) {
+                        // file is inaccessible, try again...
+                        Thread.Sleep(100);
+                    }
+                }
 
-#region IDisposable Members
+                IPythonProjectEntry pyEntry = projEntry as IPythonProjectEntry;
+                if (pyEntry != null) {
+                    // failed to parse, keep the UpdateTree calls balanced
+                    pyEntry.UpdateTree(null, null);
+                }
+            });
+        }
+
+        public void EnqueueZipArchiveEntry(IProjectEntry projEntry, string zipFileName, ZipArchiveEntry entry, Action onComplete) {
+            var pathInArchive = entry.FullName.Replace('/', '\\');
+            var fileName = Path.Combine(zipFileName, pathInArchive);
+            EnqueWorker(() => {
+                try {
+                    using (var stream = entry.Open()) {
+                        ParseFile(projEntry, fileName, 0, stream);
+                        return;
+                    }
+                } catch (IOException ex) {
+                    Debug.Fail(ex.Message);
+                } catch (InvalidDataException ex) {
+                    Debug.Fail(ex.Message);
+                } finally {
+                    onComplete();
+                }
+
+                IPythonProjectEntry pyEntry = projEntry as IPythonProjectEntry;
+                if (pyEntry != null) {
+                    // failed to parse, keep the UpdateTree calls balanced
+                    pyEntry.UpdateTree(null, null);
+                }
+            });
+        }
+
+        private void EnqueWorker(Action parser) {
+            Interlocked.Increment(ref _analysisPending);
+
+            ThreadPool.QueueUserWorkItem(
+                dummy => {
+                    try {
+                        parser();
+                    } finally {
+                        Interlocked.Decrement(ref _analysisPending);
+                    }
+                }
+            );
+        }
+
+        public bool IsParsing {
+            get {
+                return _analysisPending > 0;
+            }
+        }
+
+        public int ParsePending {
+            get {
+                return _analysisPending;
+            }
+        }
+
+        #endregion
+
+        #region IDisposable Members
 
         public void Dispose() {
             foreach (var pathAndEntry in _projectFiles) {

@@ -14,18 +14,16 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Collections.Generic;
-using Newtonsoft.Json;
+using Microsoft.VisualStudio.Text;
 
-namespace Microsoft.PythonTools.Cdp {
-    public class Event {
-        [JsonIgnore]
-        public virtual string name => null;
-    }
+namespace Microsoft.PythonTools.Intellisense {
+    public sealed class QuickInfo {
+        public readonly string Text;
+        public readonly ITrackingSpan Span;
 
-
-    public class GenericEvent : Event {
-        public Dictionary<string, object> body;
+        public QuickInfo(string text, ITrackingSpan span) {
+            Text = text;
+            Span = span;
+        }
     }
 }
-

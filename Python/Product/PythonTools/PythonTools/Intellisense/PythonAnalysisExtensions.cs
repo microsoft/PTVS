@@ -42,6 +42,10 @@ namespace Microsoft.PythonTools.Intellisense {
             return VsProjectAnalyzer.GetCompletions(serviceProvider, snapshot, span, point, options);
         }
 
+        /*public static string GetQuickInfo(this ITextSnapshot snapshot, IServiceProvider serviceProvider, ITrackingSpan span, out ITrackingSpan applicableTo) {
+            return VsProjectAnalyzer.GetQuickInfo(snapshot, span, out applicableTo).Result;
+        }*/
+
         /// <summary>
         /// <summary>
         /// Gets a ImportAnalysis providing a list of imports for the selected identifer if the identifier is 
