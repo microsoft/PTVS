@@ -24,15 +24,17 @@ using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
 
 namespace Microsoft.PythonTools.Intellisense {
+    using AP = AnalysisProtocol;
+
     internal class PythonSignature : ISignature {
         private readonly ITrackingSpan _span;
         private readonly string _content, _ppContent;
         private readonly string _documentation;
         private readonly ReadOnlyCollection<IParameter> _parameters;
         private IParameter _currentParameter;
-        private readonly Signature _overload;
+        private readonly AP.Signature _overload;
 
-        public PythonSignature(VsProjectAnalyzer analyzer, ITrackingSpan span, Signature overload, int paramIndex, string lastKeywordArg = null) {
+        public PythonSignature(VsProjectAnalyzer analyzer, ITrackingSpan span, AP.Signature overload, int paramIndex, string lastKeywordArg = null) {
             _span = span;
             _overload = overload;
             if (lastKeywordArg != null) {
@@ -163,11 +165,5 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         #endregion
-
-        public Signature Overload {
-            get {
-                return _overload;
-            }
-        }
     }
 }

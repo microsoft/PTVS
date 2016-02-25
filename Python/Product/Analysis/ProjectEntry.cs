@@ -266,10 +266,6 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        public string GetLine(int lineNo) {
-            return _cookie.GetLine(lineNo);
-        }
-
         public ModuleAnalysis Analysis {
             get { return _currentAnalysis; }
         }
@@ -355,11 +351,6 @@ namespace Microsoft.PythonTools.Analysis {
         /// Returns the project entries file path.
         /// </summary>
         string FilePath { get; }
-
-        /// <summary>
-        /// Gets the specified line of text from the project entry.
-        /// </summary>
-        string GetLine(int lineNo);
 
         /// <summary>
         /// Provides storage of arbitrary properties associated with the project entry.

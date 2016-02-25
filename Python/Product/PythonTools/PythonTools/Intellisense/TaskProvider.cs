@@ -34,10 +34,10 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.VisualStudio.Text.Tagging;
 using Microsoft.VisualStudioTools;
+using Microsoft.PythonTools.Analysis.Communication;
 
 namespace Microsoft.PythonTools.Intellisense {
-    using Analysis.Communication;
-    using ProjectFileEntry = ProjectFileInfo;
+    using AP = AnalysisProtocol;
 
     class TaskProviderItem {
         private readonly string _message;
@@ -139,7 +139,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         #region Factory Functions
 
-        public TaskProviderItem FromErrorResult(IServiceProvider serviceProvider, Error result, VSTASKPRIORITY priority, VSTASKCATEGORY category) {
+        public TaskProviderItem FromErrorResult(IServiceProvider serviceProvider, AP.Error result, VSTASKPRIORITY priority, VSTASKCATEGORY category) {
             return new TaskProviderItem(
                 serviceProvider,
                 result.message,
@@ -152,7 +152,7 @@ namespace Microsoft.PythonTools.Intellisense {
             );
         }
 
-        internal static SourceSpan GetSpan(Error result) {
+        internal static SourceSpan GetSpan(AP.Error result) {
             return new SourceSpan(
                 new SourceLocation(result.startIndex, result.startLine, result.startColumn),
                 new SourceLocation(result.startIndex + result.length, result.endLine, result.endColumn)
@@ -187,12 +187,12 @@ namespace Microsoft.PythonTools.Intellisense {
     }
 
     struct EntryKey : IEquatable<EntryKey> {
-        public ProjectFileEntry Entry;
+        public ProjectFileInfo Entry;
         public string Moniker;
 
         public static readonly EntryKey Empty = new EntryKey(null, null);
 
-        public EntryKey(ProjectFileEntry entry, string moniker) {
+        public EntryKey(ProjectFileInfo entry, string moniker) {
             Entry = entry;
             Moniker = moniker;
         }
@@ -234,11 +234,11 @@ namespace Microsoft.PythonTools.Intellisense {
             return new ClearMessage(new EntryKey(entry, moniker));
         }
 
-        public static WorkerMessage Replace(ProjectFileEntry entry, string moniker, List<TaskProviderItem> items) {
+        public static WorkerMessage Replace(ProjectFileInfo entry, string moniker, List<TaskProviderItem> items) {
             return new ReplaceMessage(new EntryKey(entry, moniker), items);
         }
 
-        public static WorkerMessage Append(ProjectFileEntry entry, string moniker, List<TaskProviderItem> items) {
+        public static WorkerMessage Append(ProjectFileInfo entry, string moniker, List<TaskProviderItem> items) {
             return new AppendMessage(new EntryKey(entry, moniker), items);
         }
 
@@ -431,14 +431,14 @@ namespace Microsoft.PythonTools.Intellisense {
         /// <summary>
         /// Replaces the items for the specified entry.
         /// </summary>
-        public void ReplaceItems(ProjectFileEntry entry, string moniker, List<TaskProviderItem> items) {
+        public void ReplaceItems(ProjectFileInfo entry, string moniker, List<TaskProviderItem> items) {
             SendMessage(WorkerMessage.Replace(entry, moniker, items));
         }
 
         /// <summary>
         /// Adds items to the specified entry's existing items.
         /// </summary>
-        public void AddItems(ProjectFileEntry entry, string moniker, List<TaskProviderItem> items) {
+        public void AddItems(ProjectFileInfo entry, string moniker, List<TaskProviderItem> items) {
             SendMessage(WorkerMessage.Append(entry, moniker, items));
         }
 
@@ -452,7 +452,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// <summary>
         /// Removes all items for the specified entry.
         /// </summary>
-        public void Clear(ProjectFileEntry entry, string moniker) {
+        public void Clear(ProjectFileInfo entry, string moniker) {
             SendMessage(WorkerMessage.Clear(entry, moniker));
         }
 
@@ -473,7 +473,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// Adds the buffer to be tracked for reporting squiggles and error list entries
         /// for the given project entry and moniker for the error source.
         /// </summary>
-        public void AddBufferForErrorSource(ProjectFileEntry entry, string moniker, ITextBuffer buffer) {
+        public void AddBufferForErrorSource(ProjectFileInfo entry, string moniker, ITextBuffer buffer) {
             lock (_errorSources) {
                 var key = new EntryKey(entry, moniker);
                 HashSet<ITextBuffer> buffers;
@@ -488,7 +488,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// Removes the buffer from tracking for reporting squiggles and error list entries
         /// for the given project entry and moniker for the error source.
         /// </summary>
-        public void RemoveBufferForErrorSource(ProjectFileEntry entry, string moniker, ITextBuffer buffer) {
+        public void RemoveBufferForErrorSource(ProjectFileInfo entry, string moniker, ITextBuffer buffer) {
             lock (_errorSources) {
                 var key = new EntryKey(entry, moniker);
                 HashSet<ITextBuffer> buffers;
@@ -502,7 +502,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// Clears all tracked buffers for the given project entry and moniker for
         /// the error source.
         /// </summary>
-        public void ClearErrorSource(ProjectFileEntry entry, string moniker) {
+        public void ClearErrorSource(ProjectFileInfo entry, string moniker) {
             lock (_errorSources) {
                 _errorSources.Remove(new EntryKey(entry, moniker));
             }

@@ -4,8 +4,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
@@ -20,12 +18,12 @@ using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
+using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.PythonTools.Intellisense {
-    using System.Windows;
-    using System.Windows.Threading;
     using Repl;
-    using VisualStudio.Shell.Interop;
+    using AP = AnalysisProtocol;
+
     public sealed class VsProjectAnalyzer : IDisposable {
         private readonly Connection _conn;
         // For entries that were loaded from a .zip file, IProjectEntry.Properties[_zipFileName] contains the full path to that archive.
@@ -83,7 +81,7 @@ namespace Microsoft.PythonTools.Intellisense {
             _projectFiles = new ConcurrentDictionary<string, ProjectFileInfo>();
             _projectFilesById = new ConcurrentDictionary<int, ProjectFileInfo>();
 
-            var libAnalyzer = typeof(FileChangedEvent).Assembly.Location;
+            var libAnalyzer = typeof(AP.FileChangedEvent).Assembly.Location;
             var psi = new ProcessStartInfo(libAnalyzer,
                 String.Format(
                     "/id {0} /version {1} /interactive",
@@ -105,7 +103,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 process.StandardInput.BaseStream,
                 process.StandardOutput.BaseStream,
                 null,
-                Requests.RegisteredTypes
+                AnalysisProtocol.RegisteredTypes
             );
             process.Exited += Process_Exited;
             Task.Run(async () => {
@@ -120,7 +118,7 @@ namespace Microsoft.PythonTools.Intellisense {
             Task.Run(() => _conn.ProcessMessages());
 
             _conn.SendEventAsync(
-                new OptionsChangedEvent() {
+                new AP.OptionsChangedEvent() {
                     implicitProject = implicitProject,
                     indentation_inconsistency_severity = _pyService.GeneralOptions.IndentationInconsistencySeverity
                 }
@@ -129,12 +127,12 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private void CommentTaskTokensChanged(object sender, EventArgs e) {
-            Dictionary<string, TaskPriority> priorities = new Dictionary<string, TaskPriority>();
+            Dictionary<string, AP.TaskPriority> priorities = new Dictionary<string, AP.TaskPriority>();
             foreach (var keyValue in _taskProvider.Tokens) {
                 priorities[keyValue.Key] = GetPriority(keyValue.Value);
             }
             _conn.SendEventAsync(
-                new SetCommentTaskTokens() {
+                new AP.SetCommentTaskTokens() {
                     tokens = priorities
                 }
             ).DoNotWait();
@@ -148,11 +146,11 @@ namespace Microsoft.PythonTools.Intellisense {
             Debug.WriteLine(String.Format("Event received: {0}", e.Event.name));
 
             switch (e.Event.name) {
-                case AnalysisCompleteEvent.Name:
+                case AP.AnalysisCompleteEvent.Name:
                     OnAnalysisComplete(e);
                     break;
-                case FileParsedEvent.Name:
-                    var parsed = (FileParsedEvent)e.Event;
+                case AP.FileParsedEvent.Name:
+                    var parsed = (AP.FileParsedEvent)e.Event;
                     ProjectFileInfo projFile;
                     if (_projectFilesById.TryGetValue(parsed.fileId, out projFile)) {
                         UpdateErrorsAndWarnings(projFile, parsed);
@@ -163,7 +161,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private void OnAnalysisComplete(EventReceivedEventArgs e) {
-            var analysisComplete = (AnalysisCompleteEvent)e.Event;
+            var analysisComplete = (AP.AnalysisCompleteEvent)e.Event;
             ProjectFileInfo info;
             if (_projectFilesById.TryGetValue(analysisComplete.fileId, out info)) {
                 info.RaiseOnNewAnalysis();
@@ -204,7 +202,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private void OnModulesChanged(object sender, EventArgs e) {
-            _conn.SendEventAsync(new ModulesChangedEvent()).DoNotWait();
+            _conn.SendEventAsync(new AP.ModulesChangedEvent()).DoNotWait();
         }
 
         /// <summary>
@@ -321,7 +319,7 @@ namespace Microsoft.PythonTools.Intellisense {
             // kick off initial processing on the buffer
             lock (_openFiles) {
                 _conn.SendEventAsync(
-                    new FileContentEvent() { fileId = projEntry._fileId, content = buffer.CurrentSnapshot.GetText() }
+                    new AP.FileContentEvent() { fileId = projEntry._fileId, content = buffer.CurrentSnapshot.GetText() }
                 ).DoNotWait();
 
                 var bufferParser = EnqueueBuffer(projEntry, textView, buffer);
@@ -348,7 +346,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        private async Task<ProjectFileInfo> CreateProjectEntry(ITextBuffer buffer, IAnalysisCookie analysisCookie) {
+        private async Task<ProjectFileInfo> CreateProjectEntry(ITextBuffer buffer, IIntellisenseCookie intellisenseCookie) {
             // TODO: Analysis Cookie is getting lost...
             if (_conn == null) {
                 // We aren't able to analyze code, so don't create an entry.
@@ -370,13 +368,13 @@ namespace Microsoft.PythonTools.Intellisense {
 
             ProjectFileInfo entry;
             if (!_projectFiles.TryGetValue(path, out entry)) {
-                var res = await _conn.SendRequestAsync(new AddFileRequest() { path = path }).ConfigureAwait(false);
+                var res = await _conn.SendRequestAsync(new AP.AddFileRequest() { path = path }).ConfigureAwait(false);
                 var id = res.fileId;
 
                 _projectFilesById[id] = _projectFiles[path] = new ProjectFileInfo(this, path, id);
 
             }
-            entry.AnalysisCookie = analysisCookie;
+            entry.AnalysisCookie = intellisenseCookie;
 
             return entry;
         }
@@ -392,7 +390,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 return null;
             }
 
-            var response = await _conn.SendRequestAsync(new AddFileRequest() { path = path }).ConfigureAwait(false);
+            var response = await _conn.SendRequestAsync(new AP.AddFileRequest() { path = path }).ConfigureAwait(false);
 
             var res = _projectFilesById[response.fileId] = _projectFiles[path] = new ProjectFileInfo(this, path, response.fileId);
             res.AnalysisCookie = new FileCookie(path);
@@ -424,6 +422,56 @@ namespace Microsoft.PythonTools.Intellisense {
                 Text = text;
                 Span = span;
                 Location = location;
+            }
+        }
+
+        internal async Task<IEnumerable<OutliningTaggerProvider.TagSpan>> GetOutliningTags(ITextSnapshot snapshot) {
+            ProjectFileInfo entry;
+            if (snapshot.TextBuffer.TryGetPythonProjectEntry(out entry)) {
+                var outliningTags = await _conn.SendRequestAsync(
+                    new AP.OutlingRegionsRequest() {
+                        fileId = entry.FileId
+                    }
+                );
+
+                var lastParsed = entry.LastParsedSnapshot;
+                if (lastParsed.Version.VersionNumber == outliningTags.version) {
+                    return ConvertOutliningTags(snapshot, entry, outliningTags);
+                }
+
+                // race with another vesion being parsed, we should get called again when
+                // we get notified of another new parse tree
+                Debug.Assert(outliningTags.version > lastParsed.Version.VersionNumber);
+            }
+            return Enumerable.Empty<OutliningTaggerProvider.TagSpan>();
+        }
+
+        private static IEnumerable<OutliningTaggerProvider.TagSpan> ConvertOutliningTags(ITextSnapshot snapshot, ProjectFileInfo entry, AP.OutliningRegionsResponse outliningTags) {
+            foreach (var tag in outliningTags.tags) {
+                // translate the span from the version we last parsed to the current version
+                var span = Tracking.TrackSpanForwardInTime(
+                    SpanTrackingMode.EdgeInclusive,
+                    Span.FromBounds(tag.startIndex, tag.endIndex),
+                    entry.LastParsedSnapshot.Version,
+                    snapshot.Version
+                );
+
+                int headerIndex = tag.headerIndex;
+                if (tag.headerIndex != -1) {
+                    headerIndex = Tracking.TrackPositionForwardInTime(
+                        PointTrackingMode.Positive,
+                        headerIndex,
+                        entry.LastParsedSnapshot.Version,
+                        snapshot.Version
+                    );
+                }
+
+                yield return OutliningTaggerProvider.OutliningTagger.GetTagSpan(
+                    snapshot,
+                    span.Start,
+                    span.End,
+                    headerIndex
+                );
             }
         }
 
@@ -470,7 +518,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             if (analysis != null) {
                 var location = analysis.Location;
-                var req = new QuickInfoRequest() {
+                var req = new AP.QuickInfoRequest() {
                     expr = analysis.Text,
                     column = location.Column,
                     index = location.Index,
@@ -487,7 +535,7 @@ namespace Microsoft.PythonTools.Intellisense {
             return null;
         }
 
-        internal AnalysisVariable ToAnalysisVariable(Reference arg) {
+        internal AnalysisVariable ToAnalysisVariable(AP.Reference arg) {
             VariableType type = VariableType.None;
             switch (arg.kind) {
                 case "definition": type = VariableType.Definition; break;
@@ -510,7 +558,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             if (analysis != null) {
                 var location = analysis.Location;
-                var req = new AnalyzeExpressionRequest() {
+                var req = new AP.AnalyzeExpressionRequest() {
                     expr = analysis.Text,
                     column = location.Column,
                     index = location.Index,
@@ -582,7 +630,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 // TODO: Need to deal with version here...
                 var location = TranslateIndex(loc.Start, snapshot, projEntry);
                 var sigs = await _conn.SendRequestAsync(
-                    new SignaturesRequest() {
+                    new AP.SignaturesRequest() {
                         text = text,
                         location = location.Index,
                         column = location.Column,
@@ -850,7 +898,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             if ((pyEntry = entry as IPythonProjectEntry) != null) {
                 await _conn.SendEventAsync(
-                    new FileContentEvent() {
+                    new AP.FileContentEvent() {
                         fileId = entry.FileId,
                         changes = GetChanges(curVersion)
                     }
@@ -909,12 +957,12 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
 
                 if (pyProjEntry != null && snapshot.TextBuffer.ContentType.IsOfType(PythonCoreConstants.ContentType)) {
-                    if (pyProjEntry._lastSentSnapshot == null) {
+                    if (pyProjEntry._lastSentSnapshot == null || pyProjEntry._lastSentSnapshot.TextBuffer != snapshot.TextBuffer) {
                         // First time parsing from a live buffer, send the entire
                         // file and set our initial snapshot.  We'll roll forward
                         // to new snapshots when we receive the errors event.
                         await _conn.SendEventAsync(
-                            new FileContentEvent() {
+                            new AP.FileContentEvent() {
                                 fileId = entry.FileId,
                                 content = snapshot.GetText(),
                                 version = snapshot.Version.VersionNumber
@@ -925,7 +973,7 @@ namespace Microsoft.PythonTools.Intellisense {
                             curVersion != snapshot.Version;
                             curVersion = curVersion.Next) {
                             await _conn.SendEventAsync(
-                                new FileChangedEvent() {
+                                new AP.FileChangedEvent() {
                                     fileId = entry.FileId,
                                     changes = GetChanges(curVersion),
                                     version = snapshot.Version.VersionNumber
@@ -987,21 +1035,23 @@ namespace Microsoft.PythonTools.Intellisense {
 #endif
         }
 
-        private static ChangeInfo[] GetChanges(ITextVersion curVersion) {
-            List<ChangeInfo> changes = new List<ChangeInfo>();
-            foreach (var change in curVersion.Changes) {
-                changes.Add(
-                    new ChangeInfo() {
-                        start = change.OldPosition,
-                        length = change.OldLength,
-                        newText = change.NewText
-                    }
-                );
+        private static AP.ChangeInfo[] GetChanges(ITextVersion curVersion) {
+            var changes = new List<AP.ChangeInfo>();
+            if (curVersion.Changes != null) {
+                foreach (var change in curVersion.Changes) {
+                    changes.Add(
+                        new AP.ChangeInfo() {
+                            start = change.OldPosition,
+                            length = change.OldLength,
+                            newText = change.NewText
+                        }
+                    );
+                }
             }
             return changes.ToArray();
         }
 
-        private void UpdateErrorsAndWarnings(ProjectFileInfo entry, FileParsedEvent parsedEvent) {
+        private void UpdateErrorsAndWarnings(ProjectFileInfo entry, AP.FileParsedEvent parsedEvent) {
             // Update the warn-on-launch state for this entry
             bool changed = false;
             lock (_hasParseErrorsLock) {
@@ -1057,29 +1107,30 @@ namespace Microsoft.PythonTools.Intellisense {
                 _taskProvider.Clear(entry, ParserTaskMoniker);
             }
 
+            entry.RaiseOnNewParseTree();
         }
 
-        private static VSTASKCATEGORY GetCategory(TaskCategory category) {
+        private static VSTASKCATEGORY GetCategory(AP.TaskCategory category) {
             switch (category) {
-                case TaskCategory.buildCompile: return VSTASKCATEGORY.CAT_BUILDCOMPILE;
-                case TaskCategory.comments: return VSTASKCATEGORY.CAT_COMMENTS;
+                case AP.TaskCategory.buildCompile: return VSTASKCATEGORY.CAT_BUILDCOMPILE;
+                case AP.TaskCategory.comments: return VSTASKCATEGORY.CAT_COMMENTS;
                 default: return VSTASKCATEGORY.CAT_MISC;
             }
         }
 
-        private static VSTASKPRIORITY GetPriority(TaskPriority priority) {
+        private static VSTASKPRIORITY GetPriority(AP.TaskPriority priority) {
             switch (priority) {
-                case TaskPriority.high: return VSTASKPRIORITY.TP_HIGH;
-                case TaskPriority.low: return VSTASKPRIORITY.TP_LOW;
+                case AP.TaskPriority.high: return VSTASKPRIORITY.TP_HIGH;
+                case AP.TaskPriority.low: return VSTASKPRIORITY.TP_LOW;
                 default: return VSTASKPRIORITY.TP_NORMAL;
             }
         }
 
-        private TaskPriority GetPriority(VSTASKPRIORITY value) {
+        private AP.TaskPriority GetPriority(VSTASKPRIORITY value) {
             switch (value) {
-                case VSTASKPRIORITY.TP_HIGH: return TaskPriority.high;
-                case VSTASKPRIORITY.TP_LOW: return TaskPriority.low;
-                default: return TaskPriority.normal;
+                case VSTASKPRIORITY.TP_HIGH: return AP.TaskPriority.high;
+                case VSTASKPRIORITY.TP_LOW: return AP.TaskPriority.low;
+                default: return AP.TaskPriority.normal;
             }
         }
 
@@ -1117,12 +1168,12 @@ namespace Microsoft.PythonTools.Intellisense {
                 res[i++] = new PythonSignature(
                     this,
                     span,
-                    new Signature() {
+                    new AP.Signature() {
                         name = text,
                         doc = sig.Documentation,
                         parameters = sig.Parameters
                             .Select(
-                                x => new Analysis.Communication.Parameter() {
+                                x => new AP.Parameter() {
                                     name = x.Name,
                                     doc = x.Documentation,
                                     type = x.Type,
@@ -1280,7 +1331,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// that is analyzed while analyzing this directory.</param>
         /// <remarks>The callback may be invoked on a thread different from the one that this function was originally invoked on.</remarks>
         public async Task AnalyzeDirectory(string dir, Action<ProjectFileInfo> onFileAnalyzed = null) {
-            await _conn.SendRequestAsync(new AddDirectoryRequest() { dir = dir }).ConfigureAwait(false);
+            await _conn.SendRequestAsync(new AP.AddDirectoryRequest() { dir = dir }).ConfigureAwait(false);
 
             // TODO: Need to deal with onFileAnalyzed event
         }
@@ -1294,14 +1345,14 @@ namespace Microsoft.PythonTools.Intellisense {
         /// <remarks>The callback may be invoked on a thread different from the one that this function was originally invoked on.</remarks>
         public async Task AnalyzeZipArchive(string zipFileName, Action<ProjectFileInfo> onFileAnalyzed = null) {
             await _conn.SendRequestAsync(
-                new AddZipArchiveRequest() { archive = zipFileName }
+                new AP.AddZipArchiveRequest() { archive = zipFileName }
             ).ConfigureAwait(false);
             //_analysisQueue.Enqueue(new AddZipArchiveAnalysis(zipFileName, onFileAnalyzed, this), AnalysisPriority.High);
             // TODO: Need to deal with onFileAnalyzed event
         }
 
         internal async Task StopAnalyzingDirectory(string directory) {
-            await _conn.SendRequestAsync(new RemoveDirectoryRequest() { dir = directory }).ConfigureAwait(false);
+            await _conn.SendRequestAsync(new AP.RemoveDirectoryRequest() { dir = directory }).ConfigureAwait(false);
         }
 
         internal void Cancel() {
@@ -1312,7 +1363,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal async void UnloadFile(ProjectFileInfo entry) {
             // TODO: Need to get file ID
-            await _conn.SendRequestAsync(new UnloadFileRequest() { fileId = entry._fileId }).ConfigureAwait(false);
+            await _conn.SendRequestAsync(new AP.UnloadFileRequest() { fileId = entry._fileId }).ConfigureAwait(false);
         }
 
         internal void ClearParserTasks(ProjectFileInfo entry) {
@@ -1378,7 +1429,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal IEnumerable<MemberResult> GetAllAvailableMembers(ProjectFileInfo file, SourceLocation location, GetMemberOptions options) {
-            var members = Task.Run(() => _conn.SendRequestAsync(new TopLevelCompletionsRequest() {
+            var members = Task.Run(() => _conn.SendRequestAsync(new AP.TopLevelCompletionsRequest() {
                 fileId = file.FileId,
                 options = options,
                 location = location.Index,
@@ -1390,7 +1441,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        private static MemberResult ToMemberResult(Analysis.Communication.Completion member) {
+        private static MemberResult ToMemberResult(AP.Completion member) {
             return new MemberResult(
                 member.name,
                 member.completion,
@@ -1400,7 +1451,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal IEnumerable<MemberResult> GetMembers(ProjectFileInfo file, string text, SourceLocation location, GetMemberOptions options) {
-            var members = Task.Run(() => _conn.SendRequestAsync(new CompletionsRequest() {
+            var members = Task.Run(() => _conn.SendRequestAsync(new AP.CompletionsRequest() {
                 fileId = file.FileId,
                 text = text,
                 options = options,
@@ -1416,7 +1467,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal IEnumerable<MemberResult> GetModules(ProjectFileInfo file, bool v) {
             // TODO: Deal with this v option
-            var members = _conn.SendRequestAsync(new GetModulesRequest() {
+            var members = _conn.SendRequestAsync(new AP.GetModulesRequest() {
                 fileId = file.FileId,
             }).Result;
 
@@ -1427,7 +1478,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal IEnumerable<MemberResult> GetModuleMembers(ProjectFileInfo file, string[] package, bool v) {
-            var members = _conn.SendRequestAsync(new GetModuleMembers() {
+            var members = _conn.SendRequestAsync(new AP.GetModuleMembers() {
                 fileId = file.FileId,
                 package = package
             }).Result;

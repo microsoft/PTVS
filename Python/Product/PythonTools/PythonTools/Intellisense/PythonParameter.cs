@@ -20,14 +20,16 @@ using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
 
 namespace Microsoft.PythonTools.Intellisense {
+    using AP = AnalysisProtocol;
+
     internal class PythonParameter : IParameter {
         private readonly ISignature _signature;
-        private readonly Parameter _param;
+        private readonly AP.Parameter _param;
         private readonly string _documentation;
         private readonly AnalysisVariable[] _variables;
         private readonly Span _locus, _ppLocus;
 
-        public PythonParameter(ISignature signature, Parameter param, Span locus, Span ppLocus, AnalysisVariable[] variables) {
+        public PythonParameter(ISignature signature, AP.Parameter param, Span locus, Span ppLocus, AnalysisVariable[] variables) {
             _signature = signature;
             _param = param;
             _locus = locus;

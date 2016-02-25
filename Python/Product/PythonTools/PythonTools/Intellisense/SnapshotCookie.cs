@@ -18,7 +18,7 @@ using Microsoft.PythonTools.Analysis;
 using Microsoft.VisualStudio.Text;
 
 namespace Microsoft.PythonTools.Intellisense {
-    class SnapshotCookie : IAnalysisCookie {
+    class SnapshotCookie : IIntellisenseCookie {
         private readonly ITextSnapshot _snapshot;
         
         public SnapshotCookie(ITextSnapshot snapshot) {

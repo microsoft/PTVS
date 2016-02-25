@@ -19,10 +19,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Text;
+using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Parsing;
 
-namespace Microsoft.PythonTools.Analysis {
-    public class FileCookie : IAnalysisCookie {
+namespace Microsoft.PythonTools.Intellisense {
+    public class FileCookie : IIntellisenseCookie {
         private readonly string _path;
         private string[] _allLines;
 
@@ -57,7 +58,7 @@ namespace Microsoft.PythonTools.Analysis {
         #endregion
     }
 
-    public class ZipFileCookie : IAnalysisCookie {
+    public class ZipFileCookie : IIntellisenseCookie {
         private readonly string _zipFileName;
         private readonly string _pathInZip;
         private List<string> _allLines;

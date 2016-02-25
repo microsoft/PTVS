@@ -127,7 +127,6 @@
     <Compile Include="Parsing\TokenizerOptions.cs" />
     <Compile Include="SetOfOne.cs" />
     <Compile Include="Deque.cs" />
-    <Compile Include="FileCookie.cs" />
     <Compile Include="Interpreter\Default\CPythonMultipleMembers.cs" />
     <Compile Include="Interpreter\IDotNetPythonInterpreter.cs" />
     <Compile Include="Interpreter\IPythonMultipleMembers.cs" />

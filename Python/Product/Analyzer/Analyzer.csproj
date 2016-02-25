@@ -63,7 +63,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
-    <Compile Include="Communication\Requests.cs" />
+    <Compile Include="Communication\AnalysisProtocol.cs" />
     <Compile Include="Project\AnalysisPriority.cs" />
     <Compile Include="Project\AnalysisQueue.cs" />
     <Compile Include="Project\AnalysisSynchronizationContext.cs" />
@@ -73,6 +73,7 @@
     <Compile Include="Project\ProjectEntryMap.cs" />
     <Compile Include="Project\ReverseExpressionParser.cs" />
     <Compile Include="Project\Span.cs" />
+    <Compile Include="Project\VersionCookie.cs" />
     <Compile Include="PyLibAnalyzer.cs" />
   </ItemGroup>
   <ItemGroup>

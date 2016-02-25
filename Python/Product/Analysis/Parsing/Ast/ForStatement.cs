@@ -38,6 +38,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         }
 
         public int HeaderIndex {
+            get { return _headerIndex;  }
             set { _headerIndex = value; }
         }
 

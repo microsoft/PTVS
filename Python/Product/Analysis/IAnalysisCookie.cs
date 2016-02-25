@@ -16,10 +16,9 @@
 
 namespace Microsoft.PythonTools.Analysis {
     /// <summary>
-    /// Used to track information about where the analysis came from and
-    /// get back the original content.
+    /// Marker interface for analysis cookies.  Analysis cookies are opaque objects
+    /// which allow you to attach information along with an analysis entry.
     /// </summary>
     public interface IAnalysisCookie {
-        string GetLine(int lineNo);
     }
 }

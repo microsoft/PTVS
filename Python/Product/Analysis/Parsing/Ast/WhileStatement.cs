@@ -42,6 +42,12 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             get { return _else; }
         }
 
+        public int HeaderIndex {
+            get {
+                return _indexHeader;
+            }
+        }
+
         public void SetLoc(int start, int header, int end) {
             SetLoc(start, end);
             _indexHeader = header;

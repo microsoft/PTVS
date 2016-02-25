@@ -16,7 +16,7 @@ namespace Microsoft.PythonTools.Intellisense {
         public readonly VsProjectAnalyzer ProjectState;
         private readonly Dictionary<int, ITextSnapshot> _parsedSnapshots = new Dictionary<int, ITextSnapshot>();
         public ITextSnapshot _lastSentSnapshot, _lastParsedSnapshot;
-        public IAnalysisCookie AnalysisCookie;
+        public IIntellisenseCookie AnalysisCookie;
 
         private readonly Dictionary<object, object> _properties = new Dictionary<object, object>();
         internal BufferParser BufferParser;
@@ -107,6 +107,12 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal string GetLine(int line) {
             return AnalysisCookie.GetLine(line);
+        }
+
+        internal event EventHandler OnNewParseTree;
+
+        internal void RaiseOnNewParseTree() {
+            OnNewParseTree?.Invoke(this, EventArgs.Empty);
         }
     }
 }
