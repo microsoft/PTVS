@@ -344,10 +344,12 @@ namespace Microsoft.PythonTools {
             );
         }
 
+#if FALSE
         internal static ExpressionAnalysis GetExpressionAnalysis(this ITextView view, IServiceProvider serviceProvider) {
             ITrackingSpan span = GetCaretSpan(view);
             return span.TextBuffer.CurrentSnapshot.AnalyzeExpression(serviceProvider, span, false);
         }
+#endif
 
         internal static ITrackingSpan GetCaretSpan(this ITextView view) {
             var caretPoint = view.GetCaretPosition();

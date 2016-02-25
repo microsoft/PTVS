@@ -24,14 +24,16 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly ISignature _signature;
         private readonly Parameter _param;
         private readonly string _documentation;
+        private readonly AnalysisVariable[] _variables;
         private readonly Span _locus, _ppLocus;
 
-        public PythonParameter(ISignature signature, Parameter param, Span locus, Span ppLocus) {
+        public PythonParameter(ISignature signature, Parameter param, Span locus, Span ppLocus, AnalysisVariable[] variables) {
             _signature = signature;
             _param = param;
             _locus = locus;
             _ppLocus = ppLocus;
             _documentation = _param.doc.LimitLines(15, stopAtFirstBlankLine: true);
+            _variables = variables;
         }
 
         public string Documentation {
@@ -52,6 +54,12 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public Span PrettyPrintedLocus {
             get { return _ppLocus; }
+        }
+
+        public AnalysisVariable[] Variables {
+            get {
+                return _variables;
+            }
         }
     }
 }

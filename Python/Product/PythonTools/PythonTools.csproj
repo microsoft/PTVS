@@ -264,6 +264,7 @@
   <ItemGroup>
     <Compile Include="PythonTools\Intellisense\NewVsProjectAnalyzer.cs" />
     <Compile Include="PythonTools\Intellisense\ProjectFileInfo.cs" />
+    <Compile Include="PythonTools\Intellisense\QuickInfo.cs" />
     <Compile Include="PythonTools\Repl\IMultipleScopeEvaluator.cs" />
     <Compile Include="PythonTools\Repl\InlineReplAdornment.cs" />
     <Compile Include="PythonTools\Repl\InlineReplAdornmentManager.cs" />

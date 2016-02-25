@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Text;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Analysis.Communication;
@@ -23,7 +24,7 @@ using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
 
 namespace Microsoft.PythonTools.Intellisense {
-    internal class PythonSignature : ISignature, IOverloadResult {
+    internal class PythonSignature : ISignature {
         private readonly ITrackingSpan _span;
         private readonly string _content, _ppContent;
         private readonly string _documentation;
@@ -31,7 +32,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private IParameter _currentParameter;
         private readonly Signature _overload;
 
-        public PythonSignature(ITrackingSpan span, Signature overload, int paramIndex, string lastKeywordArg = null) {
+        public PythonSignature(VsProjectAnalyzer analyzer, ITrackingSpan span, Signature overload, int paramIndex, string lastKeywordArg = null) {
             _span = span;
             _overload = overload;
             if (lastKeywordArg != null) {
@@ -88,7 +89,13 @@ namespace Microsoft.PythonTools.Intellisense {
                     paramIndex = i;
                 }
 
-                parameters[i] = new PythonParameter(this, param, paramSpan, ppParamSpan);
+                parameters[i] = new PythonParameter(
+                    this, 
+                    param, 
+                    paramSpan, 
+                    ppParamSpan,
+                    param.variables != null ? param.variables.Select(analyzer.ToAnalysisVariable).ToArray() : null
+                );
             }
             content.Append(')');
             ppContent.Append(')');
@@ -157,18 +164,9 @@ namespace Microsoft.PythonTools.Intellisense {
 
         #endregion
 
-        string IOverloadResult.Name {
-            get { return _overload.name; }
-        }
-
-        string IOverloadResult.Documentation {
-            get { return _documentation; }
-        }
-
-        ParameterResult[] IOverloadResult.Parameters {
+        public Signature Overload {
             get {
-                throw new NotImplementedException();
-                //return _overload.parameters;
+                return _overload;
             }
         }
     }

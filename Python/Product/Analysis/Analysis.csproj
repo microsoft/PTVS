@@ -332,6 +332,7 @@
     <Compile Include="Parsing\Ast\AndExpression.cs" />
     <Compile Include="Interpreter\BuiltinTypeId.cs" />
     <Compile Include="Interpreter\Default\CPythonFunction.cs" />
+    <Compile Include="VariablesResult.cs" />
     <Compile Include="VariableType.cs" />
     <Compile Include="XamlAnalysis.cs" />
     <Compile Include="XamlProjectEntry.cs" />

@@ -376,6 +376,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 _projectFilesById[id] = _projectFiles[path] = new ProjectFileInfo(this, path, id);
 
             }
+            entry.AnalysisCookie = analysisCookie;
 
             return entry;
         }
@@ -391,9 +392,11 @@ namespace Microsoft.PythonTools.Intellisense {
                 return null;
             }
 
-            var res = await _conn.SendRequestAsync(new AddFileRequest() { path = path }).ConfigureAwait(false);
+            var response = await _conn.SendRequestAsync(new AddFileRequest() { path = path }).ConfigureAwait(false);
 
-            return _projectFilesById[res.fileId] = _projectFiles[path] = new ProjectFileInfo(this, path, res.fileId);
+            var res = _projectFilesById[response.fileId] = _projectFiles[path] = new ProjectFileInfo(this, path, response.fileId);
+            res.AnalysisCookie = new FileCookie(path);
+            return res;
         }
 
         internal IEnumerable<KeyValuePair<string, ProjectFileInfo>> LoadedFiles {
@@ -410,7 +413,21 @@ namespace Microsoft.PythonTools.Intellisense {
             return null;
         }
 
-        internal static async Task<QuickInfo> GetQuickInfo(ITextSnapshot snapshot, SnapshotPoint point) {
+        class ApplicableExpression {
+            public readonly string Text;
+            public readonly ProjectFileInfo File;
+            public readonly ITrackingSpan Span;
+            public readonly SourceLocation Location;
+
+            public ApplicableExpression(ProjectFileInfo file, string text, ITrackingSpan span, SourceLocation location) {
+                File = file;
+                Text = text;
+                Span = span;
+                Location = location;
+            }
+        }
+
+        private static ApplicableExpression GetApplicableExpression(ITextSnapshot snapshot, SnapshotPoint point) {
             var buffer = snapshot.TextBuffer;
             var span = snapshot.CreateTrackingSpan(
                 point.Position == snapshot.Length ?
@@ -436,13 +453,11 @@ namespace Microsoft.PythonTools.Intellisense {
                     var lineNo = parser.Snapshot.GetLineNumberFromPosition(loc.Start);
 
                     var location = TranslateIndex(loc.Start, parser.Snapshot, entry);
-                    return new QuickInfo(
-                        await entry.ProjectState.GetQuickInfo(
-                            entry,
-                            text,
-                            location
-                        ),
-                        applicableTo
+                    return new ApplicableExpression(
+                        entry,
+                        text,
+                        applicableTo,
+                        location
                     );
                 }
             }
@@ -450,42 +465,72 @@ namespace Microsoft.PythonTools.Intellisense {
             return null;
         }
 
-        /// <summary>
-        /// Gets a ExpressionAnalysis for the expression at the provided span.  If the span is in
-        /// part of an identifier then the expression is extended to complete the identifier.
-        /// </summary>
-        internal static ExpressionAnalysis AnalyzeExpression(IServiceProvider serviceProvider, ITextSnapshot snapshot, ITrackingSpan span, bool forCompletion = true) {
-            var buffer = snapshot.TextBuffer;
-            ReverseExpressionParser parser = new ReverseExpressionParser(snapshot, buffer, span);
+        internal static async Task<QuickInfo> GetQuickInfo(ITextSnapshot snapshot, SnapshotPoint point) {
+            var analysis = GetApplicableExpression(snapshot, point);
 
-            var loc = parser.Span.GetSpan(parser.Snapshot.Version);
-            var exprRange = parser.GetExpressionRange(forCompletion);
+            if (analysis != null) {
+                var location = analysis.Location;
+                var req = new QuickInfoRequest() {
+                    expr = analysis.Text,
+                    column = location.Column,
+                    index = location.Index,
+                    line = location.Line,
+                    fileId = analysis.File.FileId
+                };
 
-            if (exprRange == null) {
-                return ExpressionAnalysis.Empty;
-            }
-
-            string text = exprRange.Value.GetText();
-
-            var applicableSpan = parser.Snapshot.CreateTrackingSpan(
-                exprRange.Value.Span,
-                SpanTrackingMode.EdgeExclusive
-            );
-
-            ProjectFileInfo entry;
-            if (buffer.TryGetPythonProjectEntry(out entry) && text.Length > 0) {
-                var lineNo = parser.Snapshot.GetLineNumberFromPosition(loc.Start);
-                return new ExpressionAnalysis(
-                    snapshot.TextBuffer.GetAnalyzer(serviceProvider),
-                    text,
-                    entry,
-                    loc.Start,
-                    applicableSpan,
-                    parser.Snapshot
+                return new QuickInfo(
+                    (await analysis.File.ProjectState._conn.SendRequestAsync(req)).text,
+                    analysis.Span
                 );
             }
 
-            return ExpressionAnalysis.Empty;
+            return null;
+        }
+
+        internal AnalysisVariable ToAnalysisVariable(Reference arg) {
+            VariableType type = VariableType.None;
+            switch (arg.kind) {
+                case "definition": type = VariableType.Definition; break;
+                case "reference": type = VariableType.Reference; break;
+                case "value": type = VariableType.Value; break;
+            }
+
+            ProjectFileInfo projectFile;
+            _projectFiles.TryGetValue(arg.file, out projectFile);
+            var location = new AnalysisLocation(
+                projectFile,
+                arg.line,
+                arg.column
+            );
+            return new AnalysisVariable(type, location);
+        }
+
+        internal static async Task<ExpressionAnalysis> AnalyzeExpression(ITextSnapshot snapshot, SnapshotPoint point) {
+            var analysis = GetApplicableExpression(snapshot, point);
+
+            if (analysis != null) {
+                var location = analysis.Location;
+                var req = new AnalyzeExpressionRequest() {
+                    expr = analysis.Text,
+                    column = location.Column,
+                    index = location.Index,
+                    line = location.Line,
+                    fileId = analysis.File.FileId
+                };
+
+                var definitions = await analysis.File.ProjectState._conn.SendRequestAsync(req);
+
+                return new ExpressionAnalysis(
+                    analysis.File.ProjectState,
+                    analysis.Text,
+                    analysis.Span,
+                    definitions.variables.Select(analysis.File.ProjectState.ToAnalysisVariable).ToArray(),
+                    definitions.privatePrefix,
+                    definitions.memberName
+                );
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -552,7 +597,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
 
                 foreach (var sig in sigs.sigs) {
-                    result.Add(new PythonSignature(applicableSpan, sig, paramIndex, lastKeywordArg));
+                    result.Add(new PythonSignature(this, applicableSpan, sig, paramIndex, lastKeywordArg));
                 }
             }
 
@@ -889,6 +934,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         }
                     }
                     Debug.WriteLine("Sent parse request {0}", snapshot.Version.VersionNumber);
+                    pyProjEntry.AnalysisCookie = new SnapshotCookie(snapshot);
                     pyProjEntry._lastSentSnapshot = snapshot;
                     pyProjEntry.PushSnapshot(snapshot);
 
@@ -1037,7 +1083,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        #region Implementation Details
+#region Implementation Details
 
         private static Stopwatch _stopwatch = MakeStopWatch();
 
@@ -1047,7 +1093,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        private static SignatureAnalysis TryGetLiveSignatures(ITextSnapshot snapshot, int paramIndex, string text, ITrackingSpan applicableSpan, string lastKeywordArg) {
+        private SignatureAnalysis TryGetLiveSignatures(ITextSnapshot snapshot, int paramIndex, string text, ITrackingSpan applicableSpan, string lastKeywordArg) {
             IInteractiveEvaluator eval;
             IPythonReplIntellisense dlrEval;
             if (snapshot.TextBuffer.Properties.TryGetProperty<IInteractiveEvaluator>(typeof(IInteractiveEvaluator), out eval) &&
@@ -1064,11 +1110,12 @@ namespace Microsoft.PythonTools.Intellisense {
             return null;
         }
 
-        private static ISignature[] GetLiveSignatures(string text, ICollection<OverloadDoc> liveSigs, int paramIndex, ITrackingSpan span, string lastKeywordArg) {
+        private ISignature[] GetLiveSignatures(string text, ICollection<OverloadDoc> liveSigs, int paramIndex, ITrackingSpan span, string lastKeywordArg) {
             ISignature[] res = new ISignature[liveSigs.Count];
             int i = 0;
             foreach (var sig in liveSigs) {
                 res[i++] = new PythonSignature(
+                    this,
                     span,
                     new Signature() {
                         name = text,
@@ -1089,33 +1136,6 @@ namespace Microsoft.PythonTools.Intellisense {
                 );
             }
             return res;
-        }
-
-        class LiveOverloadResult : IOverloadResult {
-            private readonly string _name, _doc;
-            private readonly ParameterResult[] _parameters;
-
-            public LiveOverloadResult(string name, string documentation, ParameterResult[] parameters) {
-                _name = name;
-                _doc = documentation;
-                _parameters = parameters;
-            }
-
-            #region IOverloadResult Members
-
-            public string Name {
-                get { return _name; }
-            }
-
-            public string Documentation {
-                get { return _doc; }
-            }
-
-            public ParameterResult[] Parameters {
-                get { return _parameters; }
-            }
-
-            #endregion
         }
 
         internal PythonToolsService PyService {
@@ -1333,25 +1353,22 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal event EventHandler<EntryEventArgs> ShouldWarnOnLaunchChanged;
 
-        #endregion
+#endregion
 
-        #region IDisposable Members
+#region IDisposable Members
 
         public void Dispose() {
-#if FALSE
             foreach (var entry in _projectFiles.Values) {
-                _errorProvider.Clear(entry, ParserTaskMoniker);
-                _errorProvider.Clear(entry, UnresolvedImportMoniker);
-                _commentTaskProvider.Clear(entry, ParserTaskMoniker);
+                _taskProvider.Clear(entry, ParserTaskMoniker);
+                _taskProvider.Clear(entry, UnresolvedImportMoniker);
             }
-#endif
 
             _taskProvider.TokensChanged -= CommentTaskTokensChanged;
             _analysisProcess.Kill();
             _analysisProcess.Dispose();
         }
 
-        #endregion
+#endregion
 
         internal void RemoveReference(ProjectAssemblyReference reference) {
             var interp = Interpreter as IPythonInterpreterWithProjectReferences;
@@ -1419,16 +1436,6 @@ namespace Microsoft.PythonTools.Intellisense {
             foreach (var member in members.completions) {
                 yield return ToMemberResult(member);
             }
-        }
-
-        internal async Task<string> GetQuickInfo(ProjectFileInfo file, string text, SourceLocation location) {
-            return (await _conn.SendRequestAsync(new QuickInfoRequest() {
-                expr = text,
-                column = location.Column,
-                index = location.Index,
-                line = location.Line,
-                fileId = file.FileId
-            })).text;
         }
 
         internal IEnumerable<IAnalysisVariable> GetVariables(ProjectFileInfo file, string expr, SourceLocation translatedLocation) {

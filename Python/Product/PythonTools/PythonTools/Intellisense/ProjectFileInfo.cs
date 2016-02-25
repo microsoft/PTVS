@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -75,14 +76,6 @@ namespace Microsoft.PythonTools.Intellisense {
             return ProjectState.GetModuleMembers(this, package, v);
         }
 
-        public string GetQuickInfo(string text, SourceLocation location) {
-            return ProjectState.GetQuickInfo(
-                this,
-                text,
-                location
-            ).Result;
-        }
-
         public IEnumerable<MemberResult> GetModules(bool v) {
             return ProjectState.GetModules(this, v);
         }
@@ -110,6 +103,10 @@ namespace Microsoft.PythonTools.Intellisense {
                 _parsedSnapshots.Remove(version);
                 return res;
             }
+        }
+
+        internal string GetLine(int line) {
+            return AnalysisCookie.GetLine(line);
         }
     }
 }

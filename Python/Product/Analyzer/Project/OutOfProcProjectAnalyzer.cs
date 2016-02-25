@@ -60,7 +60,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly PythonAnalyzer _pyAnalyzer;
         private readonly AutoResetEvent _queueActivityEvent = new AutoResetEvent(false);
         private readonly IPythonInterpreterFactory[] _allFactories;
-        private volatile Dictionary<string, TaskPriority> _commentPriorityMap = new Dictionary<string, TaskPriority>() { 
+        private volatile Dictionary<string, TaskPriority> _commentPriorityMap = new Dictionary<string, TaskPriority>() {
             { "TODO", TaskPriority.normal },
             { "HACK", TaskPriority.high },
         };
@@ -149,11 +149,76 @@ namespace Microsoft.PythonTools.Intellisense {
                 case GetModuleMembers.Command: return GeModuleMembers(request);
                 case SignaturesRequest.Command: return GetSignatures((SignaturesRequest)request);
                 case QuickInfoRequest.Command: return GetQuickInfo((QuickInfoRequest)request);
+                case AnalyzeExpressionRequest.Command: return AnalyzeExpression((AnalyzeExpressionRequest)request);
                 //return _analyzer.Qneue((HasErrorsRequest)request);
                 default:
                     throw new InvalidOperationException("Unknown command");
             }
 
+        }
+
+        private Response AnalyzeExpression(AnalyzeExpressionRequest request) {
+            var pyEntry = _projectFiles[request.fileId] as IPythonProjectEntry;
+            Reference[] references;
+            string privatePrefix = null;
+            string memberName = null;
+            if (pyEntry.Analysis != null) {
+                var variables = pyEntry.Analysis.GetVariables(
+                    request.expr,
+                    new SourceLocation(
+                        request.index,
+                        request.line,
+                        request.column
+                    )
+                );
+
+                var ast = variables.Ast;
+                var expr = Statement.GetExpression(ast.Body);
+
+                NameExpression ne = expr as NameExpression;
+                MemberExpression me;
+                if (ne != null) {
+                    memberName = ne.Name;
+                } else if ((me = expr as MemberExpression) != null) {
+                    memberName = me.Name;
+                }
+
+                privatePrefix = variables.Ast.PrivatePrefix;
+                references = variables.Select(MakeReference).ToArray();
+            } else {
+                references = new Reference[0];
+            }
+
+            return new AnalyzeExpressionResponse() {
+                variables = references,
+                privatePrefix = privatePrefix,
+                memberName = memberName
+            };
+        }
+
+        private Reference MakeReference(IAnalysisVariable arg) {
+            return new Reference() {
+                column = arg.Location.Column,
+                line = arg.Location.Line,
+                kind = GetVariableType(arg.Type),
+                file = GetFile(arg.Location.ProjectEntry)
+            };
+        }
+
+        private string GetFile(IProjectEntry projectEntry) {
+            if (projectEntry != null) {
+                return projectEntry.FilePath;
+            }
+            return null;
+        }
+
+        private static string GetVariableType(VariableType type) {
+            switch (type) {
+                case VariableType.Definition: return "definition";
+                case VariableType.Reference: return "reference";
+                case VariableType.Value: return "value";
+            }
+            return null;
         }
 
         private Response GetQuickInfo(QuickInfoRequest request) {
@@ -360,7 +425,8 @@ namespace Microsoft.PythonTools.Intellisense {
                             defaultValue = param.DefaultValue,
                             optional = param.IsOptional,
                             doc = param.Documentation,
-                            type = param.Type
+                            type = param.Type,
+                            variables = param.Variables != null ? param.Variables.Select(MakeReference).ToArray() : null
                         }
                     ).ToArray()
                 }
@@ -439,7 +505,7 @@ namespace Microsoft.PythonTools.Intellisense {
             return //TrySpecialCompletions(serviceProvider, snapshot, span, point, options) ??
                 GetNormalCompletions(file, request);
             //return 
-              //         GetNormalCompletionContext(request);
+            //         GetNormalCompletionContext(request);
         }
 
         internal Task ProcessMessages() {
@@ -1314,7 +1380,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-#region Implementation Details
+        #region Implementation Details
 
         private static Stopwatch _stopwatch = MakeStopWatch();
 
@@ -1365,7 +1431,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 _parameters = parameters;
             }
 
-#region IOverloadResult Members
+        #region IOverloadResult Members
 
             public string Name {
                 get { return _name; }
@@ -1379,7 +1445,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 get { return _parameters; }
             }
 
-#endregion
+        #endregion
         }
 
         internal bool ShouldEvaluateForCompletion(string source) {
@@ -1481,7 +1547,7 @@ namespace Microsoft.PythonTools.Intellisense {
             var code = projectEntry.GetCurrentCode();
 
             if (IsSpaceCompletion(code, request.location) && !request.forceCompletions) {
-                return new CompletionsResponse() { 
+                return new CompletionsResponse() {
                     completions = new Completion[0]
                 };
             }
@@ -1537,7 +1603,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 _analyzer = analyzer;
             }
 
-#region IAnalyzable Members
+            #region IAnalyzable Members
 
             public void Analyze(CancellationToken cancel) {
                 if (cancel.IsCancellationRequested) {
@@ -1547,7 +1613,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 AnalyzeDirectoryWorker(_dir, true, _onFileAnalyzed, cancel);
             }
 
-#endregion
+            #endregion
 
             private void AnalyzeDirectoryWorker(string dir, bool addDir, Action<IProjectEntry> onFileAnalyzed, CancellationToken cancel) {
                 if (_analyzer._pyAnalyzer == null) {
@@ -1618,7 +1684,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 _analyzer = analyzer;
             }
 
-#region IAnalyzable Members
+            #region IAnalyzable Members
 
             public void Analyze(CancellationToken cancel) {
                 if (cancel.IsCancellationRequested) {
@@ -1628,7 +1694,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 _analyzer.AnalyzeZipArchiveWorker(_zipFileName, _onFileAnalyzed, cancel);
             }
 
-#endregion
+            #endregion
         }
 
 
@@ -1903,7 +1969,7 @@ namespace Microsoft.PythonTools.Intellisense {
             _queueActivityEvent.Dispose();
         }
 
-#endregion
+        #endregion
 
         internal void RemoveReference(ProjectAssemblyReference reference) {
             var interp = Interpreter as IPythonInterpreterWithProjectReferences;

@@ -27,18 +27,18 @@ namespace Microsoft.PythonTools.Refactoring {
     /// and rename variable request.
     /// </summary>
     class PreviewChangesEngine : IVsPreviewChangesEngine {
-        private readonly ExpressionAnalysis _analysis;
+        private readonly string _expr;
         private readonly RenameVariableRequest _renameReq;
         private readonly PreviewList _list;
         internal readonly IRenameVariableInput _input;
         internal readonly VsProjectAnalyzer _analyzer;
         private readonly string _originalName, _privatePrefix;
-        private readonly IEnumerable<IAnalysisVariable> _variables;
+        private readonly IEnumerable<AnalysisVariable> _variables;
         internal readonly IServiceProvider _serviceProvider;
 
-        public PreviewChangesEngine(IServiceProvider serviceProvider, IRenameVariableInput input, ExpressionAnalysis analysis, RenameVariableRequest request, string originalName, string privatePrefix, VsProjectAnalyzer analyzer, IEnumerable<IAnalysisVariable> variables) {
+        public PreviewChangesEngine(IServiceProvider serviceProvider, IRenameVariableInput input, string expr, RenameVariableRequest request, string originalName, string privatePrefix, VsProjectAnalyzer analyzer, IEnumerable<AnalysisVariable> variables) {
             _serviceProvider = serviceProvider;
-            _analysis = analysis;
+            _expr = expr;
             _analyzer = analyzer;
             _renameReq = request;
             _originalName = originalName;
@@ -50,7 +50,7 @@ namespace Microsoft.PythonTools.Refactoring {
 
         private List<FilePreviewItem> CreatePreviewItems() {
             Dictionary<string, FilePreviewItem> files = new Dictionary<string, FilePreviewItem>();
-            Dictionary<FilePreviewItem, HashSet<LocationInfo>> allItems = new Dictionary<FilePreviewItem, HashSet<LocationInfo>>();
+            Dictionary<FilePreviewItem, HashSet<AnalysisLocation>> allItems = new Dictionary<FilePreviewItem, HashSet<AnalysisLocation>>();
 
             foreach (var variable in _variables) {
                 switch (variable.Type) {
@@ -58,10 +58,10 @@ namespace Microsoft.PythonTools.Refactoring {
                     case VariableType.Reference:
                         string file = variable.Location.FilePath;
                         FilePreviewItem fileItem;
-                        HashSet<LocationInfo> curLocations;
+                        HashSet<AnalysisLocation> curLocations;
                         if (!files.TryGetValue(file, out fileItem)) {
                             files[file] = fileItem = new FilePreviewItem(this, file);
-                            allItems[fileItem] = curLocations = new HashSet<LocationInfo>(LocationInfo.FullComparer);
+                            allItems[fileItem] = curLocations = new HashSet<AnalysisLocation>(AnalysisLocation.FullComparer);
                         } else {
                             curLocations = allItems[fileItem];
                         }
@@ -149,7 +149,7 @@ namespace Microsoft.PythonTools.Refactoring {
         }
 
         public int GetDescription(out string pbstrDescription) {
-            pbstrDescription = String.Format("&Rename '{0}' to '{1}'", _analysis.Expression, _renameReq.Name);
+            pbstrDescription = String.Format("&Rename '{0}' to '{1}'", _expr, _renameReq.Name);
             return VSConstants.S_OK;
         }
 

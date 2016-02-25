@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Parsing;
@@ -36,33 +37,27 @@ namespace Microsoft.PythonTools.Refactoring {
             _serviceProvider = serviceProvider;
         }
 
-        public void RenameVariable(IRenameVariableInput input, IVsPreviewChangesService previewChanges) {
+        public async void RenameVariable(IRenameVariableInput input, IVsPreviewChangesService previewChanges) {
             if (IsModuleName(input)) {
                 input.CannotRename("Cannot rename a module name");
                 return;
             }
 
-            var analysis = _view.GetExpressionAnalysis(_serviceProvider);
+            var caret = _view.GetCaretPosition();
+            var analysis = await VsProjectAnalyzer.AnalyzeExpression(
+                _view.TextBuffer.CurrentSnapshot,
+                caret.Value
+            );
             
             string originalName = null;
             string privatePrefix = null;
             Expression expr = null;
-            if (analysis != ExpressionAnalysis.Empty) {
-                PythonAst ast = analysis.GetEvaluatedAst();
+            if (!String.IsNullOrWhiteSpace(analysis.Text)) {
+                originalName = analysis.MemberName;
 
-                expr = Statement.GetExpression(ast.Body);
-
-                NameExpression ne = expr as NameExpression;
-                MemberExpression me;
-                if (ne != null) {
-                    originalName = ne.Name;
-                } else if ((me = expr as MemberExpression) != null) {
-                    originalName = me.Name;
-                }
-
-                if (ast.PrivatePrefix != null && originalName != null && originalName.StartsWith("_" + ast.PrivatePrefix)) {
-                    originalName = originalName.Substring(ast.PrivatePrefix.Length + 1);
-                    privatePrefix = ast.PrivatePrefix;
+                if (analysis.PrivatePrefix != null && originalName != null && originalName.StartsWith("_" + analysis.PrivatePrefix)) {
+                    originalName = originalName.Substring(analysis.PrivatePrefix.Length + 1);
+                    privatePrefix = analysis.PrivatePrefix;
                 }
 
                 if (originalName != null && _view.Selection.IsActive && !_view.Selection.IsEmpty) {
@@ -79,16 +74,16 @@ namespace Microsoft.PythonTools.Refactoring {
             }
 
             bool hasVariables = false;
-            foreach (var variable in analysis.Variables) {
+            foreach (var variable in analysis.References) {
                 if (variable.Type == VariableType.Definition || variable.Type == VariableType.Reference) {
                     hasVariables = true;
                     break;
                 }
             }
 
-            IEnumerable<IAnalysisVariable> variables;
+            IEnumerable<AnalysisVariable> variables;
             if (!hasVariables) {
-                List<IAnalysisVariable> paramVars = GetKeywordParameters(expr, originalName);
+                List<AnalysisVariable> paramVars = GetKeywordParameters(expr, originalName);
 
                 if (paramVars.Count == 0) {
                     input.CannotRename(string.Format("No information is available for the variable '{0}'.", originalName));
@@ -97,7 +92,7 @@ namespace Microsoft.PythonTools.Refactoring {
 
                 variables = paramVars;
             } else {
-                variables = analysis.Variables;
+                variables = analysis.References;
 
             }
 
@@ -110,7 +105,7 @@ namespace Microsoft.PythonTools.Refactoring {
 
             var info = input.GetRenameInfo(originalName, languageVersion);
             if (info != null) {
-                var engine = new PreviewChangesEngine(_serviceProvider, input, analysis, info, originalName, privatePrefix, _view.GetAnalyzer(_serviceProvider), variables);
+                var engine = new PreviewChangesEngine(_serviceProvider, input, analysis.Text, info, originalName, privatePrefix, _view.GetAnalyzer(_serviceProvider), variables);
                 if (info.Preview) {
                     previewChanges.PreviewChanges(engine);
                 } else {
@@ -119,17 +114,17 @@ namespace Microsoft.PythonTools.Refactoring {
             }
         }
 
-        private List<IAnalysisVariable> GetKeywordParameters(Expression expr, string originalName) {
-            List<IAnalysisVariable> paramVars = new List<IAnalysisVariable>();
+        private List<AnalysisVariable> GetKeywordParameters(Expression expr, string originalName) {
+            List<AnalysisVariable> paramVars = new List<AnalysisVariable>();
             if (expr is NameExpression) {
                 // let's check if we'r re-naming a keyword argument...
                 ITrackingSpan span = _view.GetCaretSpan();
                 var sigs = _view.TextBuffer.CurrentSnapshot.GetSignatures(_serviceProvider, span);
 
                 foreach (var sig in sigs.Signatures) {
-                    IOverloadResult overloadRes = sig as IOverloadResult;
+                    PythonSignature overloadRes = sig as PythonSignature;
                     if (overloadRes != null) {
-                        foreach (var param in overloadRes.Parameters) {
+                        foreach (PythonParameter param in overloadRes.Parameters) {
                             if (param.Name == originalName && param.Variables != null) {
                                 paramVars.AddRange(param.Variables);
                             }
@@ -137,6 +132,7 @@ namespace Microsoft.PythonTools.Refactoring {
                     }
                 }
             }
+
             return paramVars;
         }
 

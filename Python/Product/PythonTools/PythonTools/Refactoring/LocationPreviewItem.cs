@@ -17,6 +17,7 @@
 using System;
 using System.Diagnostics;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
@@ -35,11 +36,11 @@ namespace Microsoft.PythonTools.Refactoring {
         private bool _checked = true;
         private static readonly char[] _whitespace = new[] { ' ', '\t', '\f' };
 
-        public LocationPreviewItem(FilePreviewItem parent, LocationInfo locationInfo, VariableType type) {
+        public LocationPreviewItem(FilePreviewItem parent, AnalysisLocation locationInfo, VariableType type) {
             _lineNo = locationInfo.Line;
             _columnNo = locationInfo.Column;            
             _parent = parent;
-            string text = locationInfo.ProjectEntry.GetLine(locationInfo.Line);
+            string text = locationInfo.File.GetLine(locationInfo.Line);
             string trimmed = text.TrimStart(_whitespace);
             _text = trimmed;
             _type = type;

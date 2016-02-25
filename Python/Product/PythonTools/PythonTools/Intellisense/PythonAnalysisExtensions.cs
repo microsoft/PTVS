@@ -20,6 +20,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.PythonTools.Intellisense {
     public static class PythonAnalysisExtensions {
+#if FALSE
         /// <summary>
         /// Gets a ExpressionAnalysis for the expression at the provided span.  If the span is in
         /// part of an identifier then the expression is extended to complete the identifier.
@@ -27,7 +28,7 @@ namespace Microsoft.PythonTools.Intellisense {
         public static ExpressionAnalysis AnalyzeExpression(this ITextSnapshot snapshot, IServiceProvider serviceProvider, ITrackingSpan span, bool forCompletion = true) {
             return VsProjectAnalyzer.AnalyzeExpression(serviceProvider, snapshot, span, forCompletion);
         }
-
+#endif
         /// <summary>
         /// Gets a list of signatures available for the expression at the provided location in the snapshot.
         /// </summary>

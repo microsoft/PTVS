@@ -128,7 +128,7 @@ namespace Microsoft.PythonTools.Analysis.Communication {
         public int fileId, version;
         public ChangeInfo[] changes;
     }
-    
+
     public sealed class ChangeInfo {
         public string newText;
         public int start;
@@ -221,6 +221,7 @@ namespace Microsoft.PythonTools.Analysis.Communication {
     public class Parameter {
         public string name, defaultValue, doc, type;
         public bool optional;
+        public Reference[] variables;
     }
 
     public class AnalysisCompleteEvent : Event {
@@ -275,5 +276,35 @@ namespace Microsoft.PythonTools.Analysis.Communication {
         comments
     }
 
+    
 
+    public class Reference {
+        public string kind; // definition, reference, value
+        public string expr;
+        public string file;
+        public int line, column;
+
+    }
+
+    public sealed class AnalyzeExpressionRequest : Request<AnalyzeExpressionResponse> {
+        public const string Command = "findDefs";
+
+        public int fileId;
+        public string expr;
+        public int line, column, index;
+
+        public override string command => Command;
+    }
+
+    public sealed class AnalyzeExpressionResponse : Response {
+        public Reference[] variables;
+        /// <summary>
+        /// The private prefix for the member if defined inside a class with name mangling.
+        /// </summary>
+        public string privatePrefix;
+        /// <summary>
+        /// The plain member name, e.g. "member" in a statement like "container.member"
+        /// </summary>
+        public string memberName;
+    }
 }

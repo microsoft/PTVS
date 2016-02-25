@@ -22,6 +22,7 @@ using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio.Text;
 
 namespace Microsoft.PythonTools.Intellisense {
+#if FALSE
     /// <summary>
     /// Provides the results of analyzing a simple expression.  Returned from Analysis.AnalyzeExpression.
     /// </summary>
@@ -110,4 +111,5 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
     }
+#endif
 }

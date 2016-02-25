@@ -151,7 +151,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// The 0-based absolute index into the file where the expression should
         /// be evaluated.
         /// </param>
-        public IEnumerable<IAnalysisVariable> GetVariablesByIndex(string exprText, int index) {
+        public VariablesResult GetVariablesByIndex(string exprText, int index) {
             return GetVariables(exprText, _unit.Tree.IndexToLocation(index));
         }
 
@@ -169,39 +169,42 @@ namespace Microsoft.PythonTools.Analysis {
         /// The location in the file where the expression should be evaluated.
         /// </param>
         /// <remarks>New in 2.2</remarks>
-        public IEnumerable<IAnalysisVariable> GetVariables(string exprText, SourceLocation location) {
+        public VariablesResult GetVariables(string exprText, SourceLocation location) {
             var scope = FindScope(location);
             string privatePrefix = GetPrivatePrefixClassName(scope);
-            var expr = Statement.GetExpression(GetAstFromText(exprText, privatePrefix).Body);
+            var ast = GetAstFromText(exprText, privatePrefix);
+            var expr = Statement.GetExpression(ast.Body);
 
             var unit = GetNearestEnclosingAnalysisUnit(scope);
             NameExpression name = expr as NameExpression;
+            IEnumerable<IAnalysisVariable> variables = Enumerable.Empty<IAnalysisVariable>();
             if (name != null) {
                 var defScope = scope.EnumerateTowardsGlobal.FirstOrDefault(s =>
                     s.ContainsVariable(name.Name) && (s == scope || s.VisibleToChildren || IsFirstLineOfFunction(scope, s, location)));
 
                 if (defScope == null) {
-                    var variables = _unit.ProjectState.BuiltinModule.GetDefinitions(name.Name);
-                    return variables.SelectMany(ToVariables);
+                    variables = _unit.ProjectState.BuiltinModule.GetDefinitions(name.Name)
+                        .SelectMany(ToVariables);
                 }
 
-                return GetVariablesInScope(name, defScope).Distinct();
-            }
+                variables = GetVariablesInScope(name, defScope).Distinct();
+            } else {
+                MemberExpression member = expr as MemberExpression;
+                if (member != null && !string.IsNullOrEmpty(member.Name)) {
+                    var eval = new ExpressionEvaluator(unit.CopyForEval(), scope, mergeScopes: true);
+                    var objects = eval.Evaluate(member.Target);
 
-            MemberExpression member = expr as MemberExpression;
-            if (member != null && !string.IsNullOrEmpty(member.Name)) {
-                var eval = new ExpressionEvaluator(unit.CopyForEval(), scope, mergeScopes: true);
-                var objects = eval.Evaluate(member.Target);
-
-                foreach (var v in objects) {
-                    var container = v as IReferenceableContainer;
-                    if (container != null) {
-                        return ReferencablesToVariables(container.GetDefinitions(member.Name));
+                    foreach (var v in objects) {
+                        var container = v as IReferenceableContainer;
+                        if (container != null) {
+                            variables = ReferencablesToVariables(container.GetDefinitions(member.Name));
+                            break;
+                        }
                     }
                 }
             }
 
-            return Enumerable.Empty<IAnalysisVariable>();
+            return new VariablesResult(variables, ast);
         }
 
         private IEnumerable<IAnalysisVariable> GetVariablesInScope(NameExpression name, InterpreterScope scope) {
@@ -784,19 +787,6 @@ namespace Microsoft.PythonTools.Analysis {
                 ownerDict = null;
             }
             return MemberDictToResultList(GetPrivatePrefix(scope), options, memberDict, ownerDict, namespacesCount);
-        }
-
-        /// <summary>
-        /// Gets the expression for the given text.  
-        /// 
-        /// This overload shipped in v1 but does not take into account private members 
-        /// prefixed with __'s.   Calling the GetExpressionFromText(string exprText, int lineNumber)
-        /// overload will take into account the current class and therefore will
-        /// work properly with name mangled private members.  
-        /// </summary>
-        [Obsolete("Use GetAstFromTextByIndex")]
-        public Expression GetExpressionFromText(string exprText) {
-            return Statement.GetExpression(GetAstFromText(exprText, null).Body);
         }
 
         /// <summary>

@@ -100,46 +100,51 @@ namespace Microsoft.PythonTools.Language {
         /// no references displays a dialog box to the user.  Otherwise it opens the find
         /// symbols dialog with the list of results.
         /// </summary>
-        private int GotoDefinition() {
+        private async void GotoDefinition() {
             UpdateStatusForIncompleteAnalysis();
 
-            var analysis = _textView.GetExpressionAnalysis(_serviceProvider);
+            var caret = _textView.GetCaretPosition();
+            if (caret != null) {
 
-            Dictionary<LocationInfo, SimpleLocationInfo> references, definitions, values;
-            GetDefsRefsAndValues(_serviceProvider, analysis, out definitions, out references, out values);
-
-            if ((values.Count + definitions.Count) == 1) {
-                if (values.Count != 0) {
-                    foreach (var location in values.Keys) {
-                        GotoLocation(location);
-                        break;
-                    }
-                } else {
-                    foreach (var location in definitions.Keys) {
-                        GotoLocation(location);
-                        break;
-                    }
-                }
-            } else if (values.Count + definitions.Count == 0) {
-                if (String.IsNullOrWhiteSpace(analysis.Expression)) {
-                    MessageBox.Show(String.Format("Cannot go to definition.  The cursor is not on a symbol."), "Python Tools for Visual Studio");
-                } else {
-                    MessageBox.Show(String.Format("Cannot go to definition \"{0}\"", analysis.Expression), "Python Tools for Visual Studio");
-                }
-            } else if (definitions.Count == 0) {
-                ShowFindSymbolsDialog(analysis, new SymbolList("Values", StandardGlyphGroup.GlyphForwardType, values.Values));
-            } else if (values.Count == 0) {
-                ShowFindSymbolsDialog(analysis, new SymbolList("Definitions", StandardGlyphGroup.GlyphLibrary, definitions.Values));
-            } else {
-                ShowFindSymbolsDialog(analysis,
-                    new LocationCategory("Goto Definition", 
-                        new SymbolList("Definitions", StandardGlyphGroup.GlyphLibrary, definitions.Values),
-                        new SymbolList("Values", StandardGlyphGroup.GlyphForwardType, values.Values)
-                    )
+                var defs = await VsProjectAnalyzer.AnalyzeExpression(
+                    _textView.TextBuffer.CurrentSnapshot,
+                    caret.Value
                 );
-            }
 
-            return VSConstants.S_OK;
+                Dictionary<AnalysisLocation, SimpleLocationInfo> references, definitions, values;
+                GetDefsRefsAndValues(_serviceProvider, defs.Text, defs.References, out definitions, out references, out values);
+
+                if ((values.Count + definitions.Count) == 1) {
+                    if (values.Count != 0) {
+                        foreach (var location in values.Keys) {
+                            GotoLocation(location);
+                            break;
+                        }
+                    } else {
+                        foreach (var location in definitions.Keys) {
+                            GotoLocation(location);
+                            break;
+                        }
+                    }
+                } else if (values.Count + definitions.Count == 0) {
+                    if (String.IsNullOrWhiteSpace(defs.Text)) {
+                        MessageBox.Show(String.Format("Cannot go to definition.  The cursor is not on a symbol."), "Python Tools for Visual Studio");
+                    } else {
+                        MessageBox.Show(String.Format("Cannot go to definition \"{0}\"", defs.Text), "Python Tools for Visual Studio");
+                    }
+                } else if (definitions.Count == 0) {
+                    ShowFindSymbolsDialog(defs.Text, new SymbolList("Values", StandardGlyphGroup.GlyphForwardType, values.Values));
+                } else if (values.Count == 0) {
+                    ShowFindSymbolsDialog(defs.Text, new SymbolList("Definitions", StandardGlyphGroup.GlyphLibrary, definitions.Values));
+                } else {
+                    ShowFindSymbolsDialog(defs.Text,
+                        new LocationCategory("Goto Definition",
+                            new SymbolList("Definitions", StandardGlyphGroup.GlyphLibrary, definitions.Values),
+                            new SymbolList("Values", StandardGlyphGroup.GlyphForwardType, values.Values)
+                        )
+                    );
+                }
+            }
         }
 
         /// <summary>
@@ -148,7 +153,7 @@ namespace Microsoft.PythonTools.Language {
         /// 
         /// https://pytools.codeplex.com/workitem/1649
         /// </summary>
-        private void GotoLocation(LocationInfo location) {
+        private void GotoLocation(AnalysisLocation location) {
             Debug.Assert(location != null);
             Debug.Assert(location.Line > 0);
             Debug.Assert(location.Column > 0);
@@ -174,21 +179,25 @@ namespace Microsoft.PythonTools.Language {
         /// 
         /// Always opens the Find Symbol Results box to display the results.
         /// </summary>
-        private int FindAllReferences() {
+        private async void FindAllReferences() {
             UpdateStatusForIncompleteAnalysis();
 
-            var analysis = _textView.GetExpressionAnalysis(_serviceProvider);
+            var caret = _textView.GetCaretPosition();
+            if (caret != null) {
+                var references = await VsProjectAnalyzer.AnalyzeExpression(
+                    _textView.TextBuffer.CurrentSnapshot,
+                    caret.Value
+                );
 
-            var locations = GetFindRefLocations(_serviceProvider, analysis);
+                var locations = GetFindRefLocations(_serviceProvider, references.Text, references.References);
 
-            ShowFindSymbolsDialog(analysis, locations);
-
-            return VSConstants.S_OK;
+                ShowFindSymbolsDialog(references.Text, locations);
+            }
         }
 
-        internal static LocationCategory GetFindRefLocations(IServiceProvider serviceProvider, ExpressionAnalysis analysis) {
-            Dictionary<LocationInfo, SimpleLocationInfo> references, definitions, values;
-            GetDefsRefsAndValues(serviceProvider, analysis, out definitions, out references, out values);
+        internal static LocationCategory GetFindRefLocations(IServiceProvider serviceProvider, string expr, AnalysisVariable[] analysis) {
+            Dictionary<AnalysisLocation, SimpleLocationInfo> references, definitions, values;
+            GetDefsRefsAndValues(serviceProvider, expr, analysis, out definitions, out references, out values);
 
             var locations = new LocationCategory("Find All References",
                     new SymbolList("Definitions", StandardGlyphGroup.GlyphLibrary, definitions.Values),
@@ -198,12 +207,12 @@ namespace Microsoft.PythonTools.Language {
             return locations;
         }
 
-        private static void GetDefsRefsAndValues(IServiceProvider serviceProvider, ExpressionAnalysis provider, out Dictionary<LocationInfo, SimpleLocationInfo> definitions, out Dictionary<LocationInfo, SimpleLocationInfo> references, out Dictionary<LocationInfo, SimpleLocationInfo> values) {
-            references = new Dictionary<LocationInfo, SimpleLocationInfo>();
-            definitions = new Dictionary<LocationInfo, SimpleLocationInfo>();
-            values = new Dictionary<LocationInfo,SimpleLocationInfo>();
+        private static void GetDefsRefsAndValues(IServiceProvider serviceProvider, string expr, AnalysisVariable[] variables, out Dictionary<AnalysisLocation, SimpleLocationInfo> definitions, out Dictionary<AnalysisLocation, SimpleLocationInfo> references, out Dictionary<AnalysisLocation, SimpleLocationInfo> values) {
+            references = new Dictionary<AnalysisLocation, SimpleLocationInfo>();
+            definitions = new Dictionary<AnalysisLocation, SimpleLocationInfo>();
+            values = new Dictionary<AnalysisLocation, SimpleLocationInfo>();
 
-            foreach (var v in provider.Variables) {
+            foreach (var v in variables) {
                 if (v.Location.FilePath == null) {
                     // ignore references in the REPL
                     continue;
@@ -212,14 +221,14 @@ namespace Microsoft.PythonTools.Language {
                 switch (v.Type) {
                     case VariableType.Definition:
                         values.Remove(v.Location);
-                        definitions[v.Location] = new SimpleLocationInfo(serviceProvider, provider.Expression, v.Location, StandardGlyphGroup.GlyphGroupField);
+                        definitions[v.Location] = new SimpleLocationInfo(serviceProvider, expr, v.Location, StandardGlyphGroup.GlyphGroupField);
                         break;
                     case VariableType.Reference:
-                        references[v.Location] = new SimpleLocationInfo(serviceProvider, provider.Expression, v.Location, StandardGlyphGroup.GlyphGroupField);
+                        references[v.Location] = new SimpleLocationInfo(serviceProvider, expr, v.Location, StandardGlyphGroup.GlyphGroupField);
                         break;
                     case VariableType.Value:
                         if (!definitions.ContainsKey(v.Location)) {
-                            values[v.Location] = new SimpleLocationInfo(serviceProvider, provider.Expression, v.Location, StandardGlyphGroup.GlyphGroupField);
+                            values[v.Location] = new SimpleLocationInfo(serviceProvider, expr, v.Location, StandardGlyphGroup.GlyphGroupField);
                         }
                         break;
                 }
@@ -232,17 +241,17 @@ namespace Microsoft.PythonTools.Language {
         /// that request by extracting the prvoided symbol list out and using that for the
         /// search results.
         /// </summary>
-        private void ShowFindSymbolsDialog(ExpressionAnalysis provider, IVsNavInfo symbols) {
+        private void ShowFindSymbolsDialog(string expr, IVsNavInfo symbols) {
             // ensure our library is loaded so find all references will go to our library
             _serviceProvider.GetService(typeof(IPythonLibraryManager));
 
-            if (!string.IsNullOrEmpty(provider.Expression)) {
+            if (!string.IsNullOrEmpty(expr)) {
                 var findSym = (IVsFindSymbol)_serviceProvider.GetService(typeof(SVsObjectSearch));
                 VSOBSEARCHCRITERIA2 searchCriteria = new VSOBSEARCHCRITERIA2();
                 searchCriteria.eSrchType = VSOBSEARCHTYPE.SO_ENTIREWORD;
                 searchCriteria.pIVsNavInfo = symbols;
                 searchCriteria.grfOptions = (uint)_VSOBSEARCHOPTIONS2.VSOBSO_LISTREFERENCES;
-                searchCriteria.szName = provider.Expression;
+                searchCriteria.szName = expr;
 
                 Guid guid = Guid.Empty;
                 //  new Guid("{a5a527ea-cf0a-4abf-b501-eafe6b3ba5c6}")
@@ -304,17 +313,17 @@ namespace Microsoft.PythonTools.Language {
         }
 
         internal class SimpleLocationInfo : SimpleObject, IVsNavInfoNode {
-            private readonly LocationInfo _locationInfo;
+            private readonly AnalysisLocation _locationInfo;
             private readonly StandardGlyphGroup _glyphType;
             private readonly string _pathText, _lineText;
             private readonly IServiceProvider _serviceProvider;
 
-            public SimpleLocationInfo(IServiceProvider serviceProvider, string searchText, LocationInfo locInfo, StandardGlyphGroup glyphType) {
+            public SimpleLocationInfo(IServiceProvider serviceProvider, string searchText, AnalysisLocation locInfo, StandardGlyphGroup glyphType) {
                 _serviceProvider = serviceProvider;
                 _locationInfo = locInfo;
                 _glyphType = glyphType;
                 _pathText = GetSearchDisplayText();
-                _lineText = _locationInfo.ProjectEntry.GetLine(_locationInfo.Line);
+                _lineText = _locationInfo.File.GetLine(_locationInfo.Line);
             }
 
             public override string Name {
@@ -618,8 +627,8 @@ namespace Microsoft.PythonTools.Language {
                             }
                         }
                         break;
-                    case VSConstants.VSStd97CmdID.GotoDefn: return GotoDefinition();
-                    case VSConstants.VSStd97CmdID.FindReferences: return FindAllReferences();
+                    case VSConstants.VSStd97CmdID.GotoDefn: GotoDefinition(); return VSConstants.S_OK;
+                    case VSConstants.VSStd97CmdID.FindReferences: FindAllReferences(); return VSConstants.S_OK;
                 }
             } else if (pguidCmdGroup == CommonConstants.Std2KCmdGroupGuid) {
                 //OutliningTaggerProvider.OutliningTagger tagger;
