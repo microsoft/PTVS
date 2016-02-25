@@ -7,24 +7,26 @@ if ($mock) {
 }
 
 $AuthenticodeAndStrongNameFiles = @(
+    "Microsoft.IronPythonTools.Resolver.dll",
     "Microsoft.PythonTools.Analysis.dll",
     "Microsoft.PythonTools.Analyzer.exe",
     "Microsoft.PythonTools.Attacher.exe",
     "Microsoft.PythonTools.AttacherX86.exe",
     "Microsoft.PythonTools.BuildTasks.dll",
+    "Microsoft.PythonTools.Common.dll",
     "Microsoft.PythonTools.Debugger.dll",
-    "Microsoft.PythonTools.EnvironmentsList.dll",
+    "Microsoft.PythonTools.Django.dll",
     "Microsoft.PythonTools.dll",
-    "Microsoft.PythonTools.VSInterpreters.dll",
+    "Microsoft.PythonTools.EnvironmentsList.dll",
     "Microsoft.PythonTools.ImportWizard.dll",
     "Microsoft.PythonTools.IronPython.dll",
     "Microsoft.PythonTools.IronPython.Interpreter.dll",
     "Microsoft.PythonTools.Profiling.dll",
     "Microsoft.PythonTools.ProjectWizards.dll",
-    "Microsoft.PythonTools.Django.dll",
-    "Microsoft.IronPythonTools.Resolver.dll",
     "Microsoft.PythonTools.TestAdapter.dll",
     "Microsoft.PythonTools.Uwp.dll",
+    "Microsoft.PythonTools.VsCommon.dll",
+    "Microsoft.PythonTools.VSInterpreters.dll",
     "Microsoft.PythonTools.WebRole.dll",
     "Microsoft.PythonTools.AzureSetup.exe"
 ) | %{ @{path="$build\raw\binaries\$_"; name="$_"} } | ?{ Test-Path "$($_.path)" }
@@ -53,7 +55,14 @@ $jobs += begin_sign_files $AuthenticodeAndStrongNameFiles `
 
 end_sign_files $jobs
 
+mkdir "$build\raw\unsigned" -Force
+copy $AuthenticodeAndStrongNameFiles.path "$build\raw\unsigned\" -Force
+copy $AuthenticodeFiles.path "$build\raw\unsigned\" -Force
+
 gci "$build\raw\signed" | `
-    %{ $src = "$build\raw\signed\$_"; gci "$build\layout\$($_.Name)" -r | `
-    %{ copy $src "$_" -force; Write-Output "Copied $src to $_"; } }
+    %{ 
+        $src = "$build\raw\signed\$_";
+        copy $src "$build\raw\binaries\$_" -Force;
+        gci "$build\layout\$($_.Name)" -r | %{ copy $src "$_" -Force; Write-Output "Copied $src to $_"; } 
+    }
 

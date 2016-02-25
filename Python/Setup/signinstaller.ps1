@@ -8,7 +8,7 @@ if ($mock) {
 
 $MsiFiles = @(@(
     "PythonToolsInstaller.msi"
-) | %{ @{path="$build\raw\setup\en-us\$_"; name="$_"} } | ?{ Test-Path "$($_.path)" })
+) | %{ @{path="$build\raw\setup\en-us\$_"; name="PTVS$buildidentifier"} } | ?{ Test-Path "$($_.path)" })
 
 $ErrorActionPreference = "Stop"
 
