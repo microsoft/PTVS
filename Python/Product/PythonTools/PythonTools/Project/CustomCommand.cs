@@ -191,7 +191,7 @@ namespace Microsoft.PythonTools.Project {
         ) {
             var commandNames = project.GetPropertyValue(PythonCommands);
             if (!string.IsNullOrEmpty(commandNames)) {
-                foreach (var name in commandNames.Split(';').Where(n => !string.IsNullOrEmpty(n)).Distinct()) {
+                foreach (var name in commandNames.Split(';').Select(s => s.Trim()).Where(n => !string.IsNullOrEmpty(n)).Distinct()) {
                     ProjectTargetInstance targetInstance;
                     if (!project.Targets.TryGetValue(name, out targetInstance)) {
                         continue;
@@ -585,16 +585,31 @@ namespace Microsoft.PythonTools.Project {
             replTitle = PerformSubstitutions(project, replTitle);
 
             var replWindowId = PythonReplEvaluatorProvider.GetConfigurableReplId(ReplId + executeIn.Substring(4));
-            
+
             var model = _project.Site.GetComponentModel();
             var replProvider = model.GetService<IReplWindowProvider>();
             if (replProvider == null) {
+                Debug.Fail("Failed to get repl window provider service");
                 return false;
             }
 
             var replWindow = replProvider.FindReplWindow(replWindowId);
             bool created = replWindow == null;
+            bool configured = false;
             if (created) {
+                // HACK: Preconfigure the evaluator options to ensure that
+                // analysis works correctly.
+                // With a better REPL interface design, we would not have to do
+                // this, but there's no changing the past now.
+                var pyReplProvider = model.GetExtensions<IInteractiveEvaluatorProvider>()
+                    .OfType<PythonReplEvaluatorProvider>()
+                    .FirstOrDefault();
+                if (pyReplProvider != null) {
+                    configured = true;
+                    var options = new ConfigurablePythonReplOptions();
+                    ConfigureEvaluator(options, project, startInfo);
+                    pyReplProvider.PreSetEvaluatorOptions(replWindowId, options);
+                }
                 replWindow = replProvider.CreateReplWindow(
                     _project.Site.GetPythonContentType(),
                     replTitle,
@@ -611,30 +626,24 @@ namespace Microsoft.PythonTools.Project {
 #else
             var pyEvaluator = replWindow.Evaluator as PythonReplEvaluator;
 #endif
-            var options = (pyEvaluator != null) ? pyEvaluator.CurrentOptions as ConfigurablePythonReplOptions : null;
-            if (options == null) {
-                if (created && replFrame != null) {
-                    // We created the window, but it isn't valid, so we'll close
-                    // it again immediately.
-                    replFrame.CloseFrame((uint)__FRAMECLOSE.FRAMECLOSE_NoSave);
-                }
-
-                return false;
-            }
-
             if (pyEvaluator.IsExecuting) {
                 throw new InvalidOperationException(SR.GetString(SR.ErrorCommandAlreadyRunning));
             }
 
-            var ipp3 = project as IPythonProject3;
-            if (ipp3 != null) {
-                options.InterpreterFactory = ipp3.GetInterpreterFactoryOrThrow();
-            } else {
-                options.InterpreterFactory = project.GetInterpreterFactory();
+            if (!configured) {
+                var options = (pyEvaluator != null) ? pyEvaluator.CurrentOptions as ConfigurablePythonReplOptions : null;
+                if (options == null) {
+                    if (created && replFrame != null) {
+                        // We created the window, but it isn't valid, so we'll close
+                        // it again immediately.
+                        replFrame.CloseFrame((uint)__FRAMECLOSE.FRAMECLOSE_NoSave);
+                    }
+
+                    return false;
+                }
+
+                ConfigureEvaluator(options, project, startInfo);
             }
-            options.Project = project as PythonProjectNode;
-            options._workingDir = startInfo.WorkingDirectory;
-            options._envVars = startInfo.EnvironmentVariables;
 
             project.AddActionOnClose((object)replWindow, BasePythonReplEvaluator.CloseReplWindow);
 
@@ -684,6 +693,18 @@ namespace Microsoft.PythonTools.Project {
             }
 
             return false;
+        }
+
+        private static void ConfigureEvaluator(ConfigurablePythonReplOptions options, IPythonProject2 project, CommandStartInfo startInfo) {
+            var ipp3 = project as IPythonProject3;
+            if (ipp3 != null) {
+                options.InterpreterFactory = ipp3.GetInterpreterFactoryOrThrow();
+            } else {
+                options.InterpreterFactory = project.GetInterpreterFactory();
+            }
+            options.Project = project as PythonProjectNode;
+            options._workingDir = startInfo.WorkingDirectory;
+            options._envVars = startInfo.EnvironmentVariables;
         }
 
         private async void RunInOutput(IPythonProject2 project, CommandStartInfo startInfo) {
