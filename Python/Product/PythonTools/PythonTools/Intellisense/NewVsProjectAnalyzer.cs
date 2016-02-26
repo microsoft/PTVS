@@ -64,6 +64,13 @@ namespace Microsoft.PythonTools.Intellisense {
             : this(serviceProvider, factory.CreateInterpreter(), factory, allFactories) {
         }
 
+        internal async Task<AP.UnresolvedImport[]> GetMissingImports(ProjectFileInfo projectFile) {
+            var resp = await _conn.SendRequestAsync(new AP.UnresolvedImportsRequest() {
+                fileId = projectFile.FileId
+            });
+            return resp.unresolved;
+        }
+
         internal VsProjectAnalyzer(
             IServiceProvider serviceProvider,
             IPythonInterpreter interpreter,
@@ -81,7 +88,7 @@ namespace Microsoft.PythonTools.Intellisense {
             _projectFiles = new ConcurrentDictionary<string, ProjectFileInfo>();
             _projectFilesById = new ConcurrentDictionary<int, ProjectFileInfo>();
 
-            var libAnalyzer = typeof(AP.FileChangedEvent).Assembly.Location;
+            var libAnalyzer = typeof(AP.FileChangedRequest).Assembly.Location;
             var psi = new ProcessStartInfo(libAnalyzer,
                 String.Format(
                     "/id {0} /version {1} /interactive",
@@ -154,6 +161,8 @@ namespace Microsoft.PythonTools.Intellisense {
                     ProjectFileInfo projFile;
                     if (_projectFilesById.TryGetValue(parsed.fileId, out projFile)) {
                         UpdateErrorsAndWarnings(projFile, parsed);
+                    } else {
+                        Debug.WriteLine("Unknown file id for fileParsed event: {0}", parsed.fileId);
                     }
                     break;
             }
@@ -314,12 +323,12 @@ namespace Microsoft.PythonTools.Intellisense {
                 _unresolvedSquiggles.ListenForNextNewAnalysis(projEntry);
             }
 
+            await _conn.SendRequestAsync(
+                new AP.FileContentRequest() { fileId = projEntry._fileId, content = buffer.CurrentSnapshot.GetText() }
+            ).ConfigureAwait(false);
+
             // kick off initial processing on the buffer
             lock (_openFiles) {
-                _conn.SendEventAsync(
-                    new AP.FileContentEvent() { fileId = projEntry._fileId, content = buffer.CurrentSnapshot.GetText() }
-                ).DoNotWait();
-
                 var bufferParser = EnqueueBuffer(projEntry, textView, buffer);
                 _openFiles[bufferParser] = projEntry;
                 return new MonitoredBufferResult(bufferParser, textView, projEntry);
@@ -1024,25 +1033,31 @@ namespace Microsoft.PythonTools.Intellisense {
                         // First time parsing from a live buffer, send the entire
                         // file and set our initial snapshot.  We'll roll forward
                         // to new snapshots when we receive the errors event.
-                        await _conn.SendEventAsync(
-                            new AP.FileContentEvent() {
+                        await _conn.SendRequestAsync(
+                            new AP.FileContentRequest() {
                                 fileId = entry.FileId,
                                 content = snapshot.GetText(),
                                 version = snapshot.Version.VersionNumber
                             }
                         );
                     } else {
+                        List<AP.ChangeInfo> changes = new List<AnalysisProtocol.ChangeInfo>();
                         for (var curVersion = pyProjEntry._lastSentSnapshot.Version;
                             curVersion != snapshot.Version;
                             curVersion = curVersion.Next) {
-                            await _conn.SendEventAsync(
-                                new AP.FileChangedEvent() {
-                                    fileId = entry.FileId,
-                                    changes = GetChanges(curVersion),
-                                    version = snapshot.Version.VersionNumber
-                                }
-                            );
+                            changes.AddRange(GetChanges(curVersion));
                         }
+
+                        var response = await _conn.SendRequestAsync(
+                            new AP.FileChangedRequest() {
+                                fileId = entry.FileId,
+                                changes = changes.ToArray(),
+                                version = snapshot.Version.VersionNumber
+                            }
+                        );
+#if DEBUG
+                        Debug.Assert(response.newCode == snapshot.GetText());
+#endif
                     }
                     Debug.WriteLine("Sent parse request {0}", snapshot.Version.VersionNumber);
                     pyProjEntry.AnalysisCookie = new SnapshotCookie(snapshot);
@@ -1129,9 +1144,13 @@ namespace Microsoft.PythonTools.Intellisense {
             if (entry.LastParsedSnapshot != null &&
                 snapshot.Version.VersionNumber < entry.LastParsedSnapshot.Version.VersionNumber) {
                 // ignore receiving responses out of order...
+                Debug.WriteLine("Ignoring out of order parse {0} {1}",
+                    snapshot.Version.VersionNumber,
+                    entry.LastParsedSnapshot.Version.VersionNumber
+                );
                 return;
             }
-            
+            Debug.Assert(snapshot.Version.VersionNumber == parsedEvent.version);
             entry.LastParsedSnapshot = snapshot;
 
             // Update the parser warnings/errors.

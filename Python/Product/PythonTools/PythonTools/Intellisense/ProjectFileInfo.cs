@@ -33,6 +33,7 @@ namespace Microsoft.PythonTools.Intellisense {
         public int FileId => _fileId;
 
         internal void RaiseOnNewAnalysis() {
+            IsAnalyzed = true;
             OnNewAnalysis?.Invoke(this, EventArgs.Empty);
         }
 
@@ -86,10 +87,6 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal IEnumerable<AnalysisValue> GetValues(string expr, SourceLocation translatedLocation) {
             return ProjectState.GetValues(this, expr, translatedLocation);
-        }
-
-        internal PythonAst GetAstFromText(string _expr, SourceLocation translatedLocation) {
-            throw new NotImplementedException();
         }
 
         internal void PushSnapshot(ITextSnapshot snapshot) {

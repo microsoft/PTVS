@@ -111,22 +111,46 @@ namespace Microsoft.PythonTools.Analysis.Communication {
             public override string name => Name;
         }
 
-        public sealed class FileContentEvent : Event {
-            public const string Name = "fileContent";
+        public sealed class FileContentRequest : Request<Response> {
+            public const string Command = "fileContent";
 
-            public override string name => Name;
+            public override string command => Command;
 
             public int fileId, version;
             public string content;
         }
 
-        public sealed class FileChangedEvent : Event {
-            public const string Name = "fileChanged";
+        public sealed class FileChangedRequest : Request<FileChangedResponse> {
+            public const string Command = "fileChanged";
 
-            public override string name => Name;
+            public override string command => Command;
 
             public int fileId, version;
             public ChangeInfo[] changes;
+        }
+
+        public sealed class UnresolvedImportsRequest  : Request<UnresolvedImportsResponse> {
+            public const string Command = "unresolvedImports";
+
+            public override string command => Command;
+
+            public int fileId;
+        }
+
+        public sealed class UnresolvedImportsResponse : Response {
+            public int version;
+            public UnresolvedImport[] unresolved;
+        }
+
+        public sealed class UnresolvedImport {
+            public string name;
+            public int startIndex, endIndex, startLine, endLine, startColumn, endColumn;
+        }
+
+        public sealed class FileChangedResponse : Response {
+#if DEBUG
+            public string newCode;
+#endif
         }
 
         public sealed class ChangeInfo {
@@ -198,12 +222,6 @@ namespace Microsoft.PythonTools.Analysis.Communication {
 
         public sealed class ModulesChangedEvent : Event {
             public const string Name = "modulesChanged";
-
-            public override string name => Name;
-        }
-
-        public sealed class AnalysisCompleted : Event {
-            public const string Name = "analysisCompleted";
 
             public override string name => Name;
         }

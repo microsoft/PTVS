@@ -40,19 +40,6 @@ namespace Microsoft.PythonTools.Intellisense {
             _taskProvider = taskProvider;
         }
 
-        public void ListenForNextNewAnalysis(IPythonProjectEntry entry) {
-            if (entry != null && !string.IsNullOrEmpty(entry.FilePath)) {
-                entry.OnNewAnalysis += OnNewAnalysis;
-            }
-        }
-        /*
-        public void StopListening(IPythonProjectEntry entry) {
-            if (entry != null) {
-                entry.OnNewAnalysis -= OnNewAnalysis;
-                _taskProvider.Clear(entry, VsProjectAnalyzer.UnresolvedImportMoniker);
-            }
-        }*/
-
         public void ListenForNextNewAnalysis(ProjectFileInfo entry) {
             if (entry != null && !string.IsNullOrEmpty(entry.FilePath)) {
                 entry.OnNewAnalysis += OnNewAnalysis;
@@ -66,136 +53,37 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        private void OnNewAnalysis(object sender, EventArgs e) {
+        private async void OnNewAnalysis(object sender, EventArgs e) {
             if (!_alwaysCreateSquiggle) {
                 var service = _serviceProvider.GetPythonToolsService();
                 if (service == null || !service.GeneralOptions.UnresolvedImportWarning) {
                     return;
                 }
-            }
-#if FALSE
-            var entry = sender as IPythonProjectEntry;
-            if (entry == null ||
-                string.IsNullOrEmpty(entry.ModuleName) ||
-                string.IsNullOrEmpty(entry.FilePath)
-            ) {
-                return;
-            }
 
-            var analysis = entry.Analysis;
-            var analyzer = analysis != null ? analysis.ProjectState : null;
-            if (analyzer == null) {
-                return;
+                ProjectFileInfo entry = sender as ProjectFileInfo;
+                var missingImports = await entry.ProjectState.GetMissingImports(entry);
+
+                if (missingImports.Any()) {
+                    var f = new TaskProviderItemFactory(entry.LastParsedSnapshot);
+
+                    _taskProvider.ReplaceItems(
+                        entry,
+                        VsProjectAnalyzer.UnresolvedImportMoniker,
+                        missingImports.Select(t => f.FromUnresolvedImport(
+                            _serviceProvider,
+                            entry.ProjectState.InterpreterFactory as IPythonInterpreterFactoryWithDatabase,
+                            t.name,
+                            new SourceSpan(
+                                new SourceLocation(t.startIndex, t.startLine, t.startColumn),
+                                new SourceLocation(t.endIndex, t.endLine, t.endColumn)
+                            )
+                        )).ToList()
+                    );
+                } else {
+                    _taskProvider.Clear(entry, VsProjectAnalyzer.UnresolvedImportMoniker);
+                }
             }
-
-            PythonAst ast;
-            IAnalysisCookie cookie;
-            entry.GetTreeAndCookie(out ast, out cookie);
-            var snapshotCookie = cookie as SnapshotCookie;
-            var snapshot = snapshotCookie != null ? snapshotCookie.Snapshot : null;
-            if (ast == null || snapshot == null) {
-                return;
-            }
-
-            var walker = new ImportStatementWalker(entry, analyzer);
-            ast.Walk(walker);
-
-            if (walker.Imports.Any()) {
-                var f = new TaskProviderItemFactory(snapshot);
-
-                _taskProvider.ReplaceItems(
-                    entry,
-                    VsProjectAnalyzer.UnresolvedImportMoniker,
-                    walker.Imports.Select(t => f.FromUnresolvedImport(
-                        _serviceProvider,
-                        analyzer.InterpreterFactory as IPythonInterpreterFactoryWithDatabase,
-                        t.Item1,
-                        t.Item2.GetSpan(ast)
-                    )).ToList()
-                );
-            } else {
-                _taskProvider.Clear(entry, VsProjectAnalyzer.UnresolvedImportMoniker);
-            }
-#endif
         }
 
-        class ImportStatementWalker : PythonWalker {
-            public readonly List<Tuple<string, DottedName>> Imports = new List<Tuple<string, DottedName>>();
-
-            readonly IPythonProjectEntry _entry;
-            readonly PythonAnalyzer _analyzer;
-
-            public ImportStatementWalker(IPythonProjectEntry entry, PythonAnalyzer analyzer) {
-                _entry = entry;
-                _analyzer = analyzer;
-            }
-
-            public override bool Walk(FromImportStatement node) {
-                var name = node.Root.MakeString();
-                if (!_analyzer.IsModuleResolved(_entry, name, node.ForceAbsolute)) {
-                    Imports.Add(Tuple.Create(name, node.Root));
-                }
-                return base.Walk(node);
-            }
-
-            public override bool Walk(ImportStatement node) {
-                foreach (var nameNode in node.Names) {
-                    var name = nameNode.MakeString();
-                    if (!_analyzer.IsModuleResolved(_entry, name, node.ForceAbsolute)) {
-                        Imports.Add(Tuple.Create(name, nameNode));
-                    }
-                }
-                return base.Walk(node);
-            }
-
-            private static bool IsImportError(Expression expr) {
-                var name = expr as NameExpression;
-                if (name != null) {
-                    return name.Name == "Exception" || name.Name == "BaseException" || name.Name == "ImportError";
-                }
-
-                var tuple = expr as TupleExpression;
-                if (tuple != null) {
-                    return tuple.Items.Any(IsImportError);
-                }
-
-                return false;
-            }
-
-            private static bool ShouldWalkNormally(TryStatement node) {
-                if (node.Handlers == null) {
-                    return true;
-                }
-
-                foreach (var handler in node.Handlers) {
-                    if (handler.Test == null || IsImportError(handler.Test)) {
-                        return false;
-                    }
-                }
-
-                return true;
-            }
-
-            public override bool Walk(TryStatement node) {
-                if (ShouldWalkNormally(node)) {
-                    return base.Walk(node);
-                }
-
-                // Don't walk 'try' body, but walk everything else
-                if (node.Handlers != null) {
-                    foreach (var handler in node.Handlers) {
-                        handler.Walk(this);
-                    }
-                }
-                if (node.Else != null) {
-                    node.Else.Walk(this);
-                }
-                if (node.Finally != null) {
-                    node.Finally.Walk(this);
-                }
-
-                return false;
-            }
-        }
     }
 }
