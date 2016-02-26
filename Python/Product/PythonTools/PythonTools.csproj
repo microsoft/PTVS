@@ -262,6 +262,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="PythonTools\Intellisense\NavigationInfo.cs" />
     <Compile Include="PythonTools\Intellisense\FileCookie.cs" />
     <Compile Include="PythonTools\Intellisense\IIntellisenseCookie.cs" />
     <Compile Include="PythonTools\Intellisense\NewVsProjectAnalyzer.cs" />

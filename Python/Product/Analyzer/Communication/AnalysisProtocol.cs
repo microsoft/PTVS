@@ -324,5 +324,22 @@ namespace Microsoft.PythonTools.Analysis.Communication {
             public int headerIndex, startIndex, endIndex;
         }
 
+        public sealed class NavigationRequest : Request<NavigationResponse> {
+            public const string Command = "navigation";
+            public int fileId;
+
+            public override string command => Command;
+        }
+
+        public sealed class NavigationResponse : Response {
+            public int version;
+            public Navigation[] navigations;
+        }
+
+        public sealed class Navigation {
+            public string name, type;
+            public int startIndex, endIndex;
+            public Navigation[] children;
+        }
     }
 }

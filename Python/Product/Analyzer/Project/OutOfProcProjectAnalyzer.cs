@@ -155,6 +155,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 case AP.QuickInfoRequest.Command: return GetQuickInfo((AP.QuickInfoRequest)request);
                 case AP.AnalyzeExpressionRequest.Command: return AnalyzeExpression((AP.AnalyzeExpressionRequest)request);
                 case AP.OutlingRegionsRequest.Command: return GetOutliningRegions((AP.OutlingRegionsRequest)request);
+                case AP.NavigationRequest.Command: return GetNavigations((AP.NavigationRequest)request);
                 //return _analyzer.Qneue((HasErrorsRequest)request);
                 default:
                     throw new InvalidOperationException("Unknown command");
@@ -183,6 +184,89 @@ namespace Microsoft.PythonTools.Intellisense {
             return new AP.OutliningRegionsResponse() {
                 version = version,
                 tags = tags
+            };
+        }
+
+        private Response GetNavigations(AP.NavigationRequest request) {
+            var pyEntry = _projectFiles[request.fileId] as IPythonProjectEntry;
+            int version = 0;
+
+            var navs = new List<AP.Navigation>();
+
+            IAnalysisCookie cookie;
+            PythonAst tree;
+            pyEntry.GetTreeAndCookie(out tree, out cookie);
+            if (tree != null) {
+                version = ((VersionCookie)cookie).Version;
+                var suite = tree.Body as SuiteStatement;
+                if (suite != null) {
+                    foreach (var stmt in suite.Statements) {
+                        var classDef = stmt as ClassDefinition;
+                        if (classDef != null) {
+                            // classes have nested defs
+                            var classSuite = classDef.Body as SuiteStatement;
+                            var nestedNavs = new List<AP.Navigation>();
+                            if (classSuite != null) {
+                                foreach (var child in classSuite.Statements) {
+                                    if (child is ClassDefinition || child is FunctionDefinition) {
+                                        nestedNavs.Add(GetNavigation(child));
+                                    }
+                                }
+                            }
+
+                            navs.Add(new AP.Navigation() {
+                                type = "class",
+                                name = classDef.Name,
+                                startIndex = classDef.StartIndex,
+                                endIndex = classDef.EndIndex,
+                                children = nestedNavs.ToArray()
+                            });
+
+                        } else if (stmt is FunctionDefinition) {
+                            navs.Add(GetNavigation(stmt));
+                        }
+                    }
+                }
+            }
+
+            return new AP.NavigationResponse() {
+                version = version,
+                navigations = navs.ToArray()
+            };
+        }
+
+        private static AP.Navigation GetNavigation(Statement stmt) {
+            string type, name;
+            FunctionDefinition funcDef = stmt as FunctionDefinition;
+            if (funcDef != null) {
+                name = funcDef.Name;
+                type = "function";
+                if (funcDef.Decorators != null && funcDef.Decorators.Decorators.Count == 1) {
+                    foreach (var decorator in funcDef.Decorators.Decorators) {
+                        NameExpression nameExpr = decorator as NameExpression;
+                        if (nameExpr != null) {
+                            if (nameExpr.Name == "property") {
+                                type = "property";
+                                break;
+                            } else if (nameExpr.Name == "staticmethod") {
+                                type = "staticmethod";
+                                break;
+                            } else if (nameExpr.Name == "classmethod") {
+                                type = "classmethod";
+                                break;
+                            }
+                        }
+                    }
+                }
+            } else {
+                name = ((ClassDefinition)stmt).Name;
+                type = "class";
+            }
+            return new AP.Navigation() {
+                type = type,
+                name = name,
+                startIndex = stmt.StartIndex,
+                endIndex = stmt.EndIndex
             };
         }
 

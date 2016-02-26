@@ -251,9 +251,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     List<DropDownBarClient> clients;
                     if (buffer.Properties.TryGetProperty<List<DropDownBarClient>>(typeof(DropDownBarClient), out clients)) {
                         foreach (var client in clients) {
-#if FALSE
                             client.UpdateProjectEntry(projEntry);
-#endif
                         }
                     }
                 }
@@ -422,6 +420,71 @@ namespace Microsoft.PythonTools.Intellisense {
                 Text = text;
                 Span = span;
                 Location = location;
+            }
+        }
+
+        internal async Task<NavigationInfo> GetNavigations(ITextSnapshot snapshot) {
+            ProjectFileInfo entry;
+            if (snapshot.TextBuffer.TryGetPythonProjectEntry(out entry)) {
+                var navigations = await _conn.SendRequestAsync(
+                    new AP.NavigationRequest() {
+                        fileId = entry.FileId
+                    }
+                );
+
+                var lastParsed = entry.LastParsedSnapshot;
+                if (lastParsed.Version.VersionNumber == navigations.version) {
+                    return new NavigationInfo(
+                        null, 
+                        NavigationKind.None, 
+                        new Span(), 
+                        ConvertNavigations(snapshot, entry, navigations.navigations)
+                    );
+                }
+
+                // race with another vesion being parsed, we should get called again when
+                // we get notified of another new parse tree
+                Debug.Assert(navigations.version > lastParsed.Version.VersionNumber);
+            }
+
+            return new NavigationInfo(null, NavigationKind.None, new Span(), Array.Empty<NavigationInfo>());
+        }
+
+        private NavigationInfo[] ConvertNavigations(ITextSnapshot snapshot, ProjectFileInfo entry, AP.Navigation[] navigations) {
+            if (navigations == null) {
+                return null;
+            }
+
+            List<NavigationInfo> res = new List<NavigationInfo>();
+            foreach (var nav in navigations) {
+                // translate the span from the version we last parsed to the current version
+                var span = Tracking.TrackSpanForwardInTime(
+                    SpanTrackingMode.EdgeInclusive,
+                    Span.FromBounds(nav.startIndex, nav.endIndex),
+                    entry.LastParsedSnapshot.Version,
+                    snapshot.Version
+                );
+
+                res.Add(
+                    new NavigationInfo(
+                        nav.name,
+                        GetNavigationKind(nav.type),
+                        span,
+                        ConvertNavigations(snapshot, entry, nav.children)
+                    )
+                );
+            }
+            return res.ToArray();
+        }
+
+        private NavigationKind GetNavigationKind(string type) {
+            switch (type) {
+                case "property": return NavigationKind.Property;
+                case "function": return NavigationKind.Function;
+                case "class": return NavigationKind.Class;
+                case "classmethod": return NavigationKind.ClassMethod;
+                case "staticmethod": return NavigationKind.StaticMethod;
+                default: return NavigationKind.None;
             }
         }
 
