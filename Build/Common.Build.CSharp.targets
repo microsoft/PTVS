@@ -13,6 +13,19 @@
     </Compile>
   </ItemGroup>
 
+  <!-- If any references packages have been installed, use them. -->
+  <PropertyGroup>
+    <ResolveAssemblyReferencesDependsOn>$(ResolveAssemblyReferencesDependsOn);_AddPTVSReferences</ResolveAssemblyReferencesDependsOn>
+  </PropertyGroup>
+  <Target Name="_AddPTVSReferences">
+    <ItemGroup>
+      <_ReferenceDirectories Include="$(BuildRoot)BuildOutput\**\PTVS.References.$(VSTarget)*.nupkg" />
+    </ItemGroup>
+    <PropertyGroup>
+      <AssemblySearchPaths>@(_ReferenceDirectories->'%(RootDir)%(Directory)lib');$(AssemblySearchPaths)</AssemblySearchPaths>
+    </PropertyGroup>
+  </Target>
+
   <!--
   Returns the paths and names required for generating a vsixmanifest file.
   The default targets for this occasionally return the wrong files depending
