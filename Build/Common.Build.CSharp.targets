@@ -22,7 +22,7 @@
       <_ReferenceDirectories Include="$(BuildRoot)BuildOutput\**\PTVS.References.$(VSTarget)*.nupkg" />
     </ItemGroup>
     <PropertyGroup>
-      <AssemblySearchPaths>@(_ReferenceDirectories->'%(RootDir)%(Directory)lib');$(AssemblySearchPaths)</AssemblySearchPaths>
+      <AssemblySearchPaths>@(_ReferenceDirectories->'%(RootDir)%(Directory)lib');$(AssemblySearchPaths);$(DevEnvDir)PrivateAssemblies</AssemblySearchPaths>
     </PropertyGroup>
   </Target>
 
