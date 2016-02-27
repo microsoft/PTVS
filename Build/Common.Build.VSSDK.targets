@@ -201,7 +201,7 @@
     </ItemGroup>
   </Target>
 
-  <Target Name="_RezipSingleVSIX_Dev12" DependsOnTargets="_GetRezipVSIXFiles" BeforeTargets="Build" Inputs="@(VSIX)" Outputs="%(VSIX.Container)" Condition="'$(VSTarget)' == '12.0'">
+  <Target Name="_RezipSingleVSIX_Dev12_14" DependsOnTargets="_GetRezipVSIXFiles" BeforeTargets="Build" Inputs="@(VSIX)" Outputs="%(VSIX.Container)" Condition="'$(VSTarget)' == '12.0' or '$(VSTarget)' == '14.0'">
     <Message Text="Rezipping %(VSIX.SourceDir)" Importance="high" />
     
     <ItemGroup>
