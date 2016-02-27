@@ -7,7 +7,7 @@
     <!-- Include HPC by default, and force to ReleaseBuild if dependencies are missing -->
     <IncludeHpc Condition="'$(IncludeHpc)' == '' and $(VSMajorVersion) >= 14">false</IncludeHpc>
     <IncludeHpc Condition="'$(IncludeHpc)' == ''">true</IncludeHpc>
-    <IncludeHpc Condition="'$(registry:HKEY_CLASSES_ROOT\CLSID\{3C376723-5FF9-4C55-89BB-E9E7A31577E1})' == ''">$(ReleaseBuild)</IncludeHpc>
+    <!--<IncludeHpc Condition="'$(registry:HKEY_CLASSES_ROOT\CLSID\{3C376723-5FF9-4C55-89BB-E9E7A31577E1})' == ''">$(ReleaseBuild)</IncludeHpc>-->
     
     <!-- Include test adapter by default, and force to false for VS 2010 -->
     <IncludeTestAdapter Condition="'$(IncludeTestAdapter)' == ''">true</IncludeTestAdapter>
