@@ -316,7 +316,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// as the text changes.
         /// </summary>
         internal async Task<MonitoredBufferResult> MonitorTextBuffer(ITextView textView, ITextBuffer buffer) {
-            var projEntry = await CreateProjectEntry(buffer, new SnapshotCookie(buffer.CurrentSnapshot));
+            var projEntry = await CreateProjectEntry(buffer, new SnapshotCookie(buffer.CurrentSnapshot)).ConfigureAwait(false);
 
             if (!buffer.Properties.ContainsProperty(typeof(IInteractiveEvaluator))) {
                 ConnectErrorList(projEntry, buffer);
@@ -351,31 +351,33 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private async Task<ProjectFileInfo> CreateProjectEntry(ITextBuffer buffer, IIntellisenseCookie intellisenseCookie) {
-            // TODO: Analysis Cookie is getting lost...
             if (_conn == null) {
                 // We aren't able to analyze code, so don't create an entry.
                 return null;
             }
 
-#if FALSE
+            string path;
             var replEval = buffer.GetReplEvaluator();
             if (replEval != null) {
-                // We have a repl window, create an untracked module.
-                return _pyAnalyzer.AddModule(null, null, analysisCookie);
+                path = Guid.NewGuid().ToString() + ".py";
+            } else {
+                path = buffer.GetFilePath();
             }
-#endif
 
-            string path = buffer.GetFilePath();
             if (path == null) {
                 return null;
             }
 
             ProjectFileInfo entry;
             if (!_projectFiles.TryGetValue(path, out entry)) {
-                var res = await _conn.SendRequestAsync(new AP.AddFileRequest() { path = path }).ConfigureAwait(false);
+                var res = await _conn.SendRequestAsync(
+                    new AP.AddFileRequest() {
+                        path = path
+                    }).ConfigureAwait(false);
+
                 var id = res.fileId;
 
-                _projectFilesById[id] = _projectFiles[path] = new ProjectFileInfo(this, path, id);
+                entry = _projectFilesById[id] = _projectFiles[path] = new ProjectFileInfo(this, path, id);
 
             }
             entry.AnalysisCookie = intellisenseCookie;

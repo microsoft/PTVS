@@ -253,7 +253,7 @@ namespace Microsoft.PythonTools.Analysis {
             _treatPathsAsStandardLibrary = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             _library = library != null ? library.ToList() : new List<PythonLibraryPath>();
 
-            if (_id != Guid.Empty) {
+            if (_id != Guid.Empty && !interactive) {
                 var identifier = AnalyzerStatusUpdater.GetIdentifier(_id, _version);
                 _updater = new AnalyzerStatusUpdater(identifier);
                 // We worry about initialization exceptions here, specifically
