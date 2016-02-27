@@ -38,28 +38,17 @@ namespace Microsoft.PythonTools.Analysis {
     public sealed class ModuleAnalysis {
         private readonly AnalysisUnit _unit;
         private readonly InterpreterScope _scope;
-        private readonly IAnalysisCookie _cookie;
         private static Regex _otherPrivateRegex = new Regex("^_[a-zA-Z_]\\w*__[a-zA-Z_]\\w*$");
 
         private static readonly IEnumerable<IOverloadResult> GetSignaturesError =
             new[] { new SimpleOverloadResult(new ParameterResult[0], "Unknown", "IntellisenseError_Sigs") };
 
-        internal ModuleAnalysis(AnalysisUnit unit, InterpreterScope scope, IAnalysisCookie cookie) {
+        internal ModuleAnalysis(AnalysisUnit unit, InterpreterScope scope) {
             _unit = unit;
             _scope = scope;
-            _cookie = cookie;
         }
 
         #region Public API
-
-        /// <summary>
-        /// Returns the IAnalysisCookie which was used to produce this ModuleAnalysis.
-        /// </summary>
-        public IAnalysisCookie AnalysisCookie {
-            get {
-                return _cookie;
-            }
-        }
 
         /// <summary>
         /// Evaluates the given expression in at the provided line number and returns the values

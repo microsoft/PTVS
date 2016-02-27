@@ -256,8 +256,8 @@ namespace Microsoft.PythonTools.Analysis {
             // publish the analysis now that it's complete/running
             _currentAnalysis = new ModuleAnalysis(
                 _unit, 
-                ((ModuleScope)_unit.Scope).CloneForPublish(),
-                cookie);
+                ((ModuleScope)_unit.Scope).CloneForPublish()
+            );
         }
 
         public IGroupableAnalysisProject AnalysisGroup {

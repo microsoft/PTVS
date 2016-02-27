@@ -14,8 +14,6 @@ namespace Microsoft.PythonTools.Intellisense {
         public readonly int _fileId;
         public readonly string _path;
         public readonly VsProjectAnalyzer ProjectState;
-        private readonly Dictionary<int, ITextSnapshot> _parsedSnapshots = new Dictionary<int, ITextSnapshot>();
-        public ITextSnapshot _lastSentSnapshot, _lastParsedSnapshot;
         public IIntellisenseCookie AnalysisCookie;
 
         private readonly Dictionary<object, object> _properties = new Dictionary<object, object>();
@@ -27,43 +25,26 @@ namespace Microsoft.PythonTools.Intellisense {
             _fileId = fileId;
         }
 
-        public event EventHandler OnNewAnalysis;
+        public event EventHandler AnalysisComplete;
+
+        internal void OnAnalysisComplete() {
+            IsAnalyzed = true;
+            AnalysisComplete?.Invoke(this, EventArgs.Empty);
+        }
+
+        internal event EventHandler ParseComplete;
+
+        internal void OnParseComplete() {
+            ParseComplete?.Invoke(this, EventArgs.Empty);
+        }
 
         public string FilePath => _path;
+
         public int FileId => _fileId;
 
-        internal void RaiseOnNewAnalysis() {
-            IsAnalyzed = true;
-            OnNewAnalysis?.Invoke(this, EventArgs.Empty);
-        }
-
-        internal void BeginParsingTree() {
-        }
-
-        internal void UpdateTree(object p1, object p2) {
-        }
-
-        internal ITextSnapshot LastSentSnapshot {
-            get {
-                return _lastSentSnapshot;
-            }
-            set {
-                _lastSentSnapshot = value;
-            }
-        }
-
-        internal ITextSnapshot LastParsedSnapshot {
-            get {
-                return _lastParsedSnapshot;
-            }
-            set {
-                _lastParsedSnapshot = value;
-            }
-        }
+        public bool IsAnalyzed { get; internal set; }
 
         public Dictionary<object, object> Properties => _properties;
-
-        public bool IsAnalyzed { get; internal set; }
 
         public IEnumerable<MemberResult> GetAllAvailableMembers(SourceLocation location, GetMemberOptions options) {
             return ProjectState.GetAllAvailableMembers(this, location, options);
@@ -89,27 +70,8 @@ namespace Microsoft.PythonTools.Intellisense {
             return ProjectState.GetValues(this, expr, translatedLocation);
         }
 
-        internal void PushSnapshot(ITextSnapshot snapshot) {
-            lock(_parsedSnapshots) {
-                _parsedSnapshots[snapshot.Version.VersionNumber] = snapshot;
-            }
-        }
-        internal ITextSnapshot PopSnapshot(int version) {
-            lock (_parsedSnapshots) {
-                var res = _parsedSnapshots[version];
-                _parsedSnapshots.Remove(version);
-                return res;
-            }
-        }
-
         internal string GetLine(int line) {
             return AnalysisCookie.GetLine(line);
-        }
-
-        internal event EventHandler OnNewParseTree;
-
-        internal void RaiseOnNewParseTree() {
-            OnNewParseTree?.Invoke(this, EventArgs.Empty);
         }
     }
 }

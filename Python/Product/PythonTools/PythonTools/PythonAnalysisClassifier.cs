@@ -62,10 +62,10 @@ namespace Microsoft.PythonTools {
             var newEntry = _buffer.GetPythonProjectEntry();
             var oldEntry = Interlocked.Exchange(ref _entry, newEntry);
             if (oldEntry != null && oldEntry != newEntry) {
-                oldEntry.OnNewAnalysis -= OnNewAnalysis;
+                oldEntry.AnalysisComplete -= OnNewAnalysis;
             }
             if (newEntry != null) {
-                newEntry.OnNewAnalysis += OnNewAnalysis;
+                newEntry.AnalysisComplete += OnNewAnalysis;
                 if (newEntry.IsAnalyzed) {
                     // Ensure we get classifications if we've already been
                     // analyzed
@@ -190,7 +190,7 @@ namespace Microsoft.PythonTools {
             _buffer.Changed -= BufferChanged;
             _buffer.ContentTypeChanged -= BufferContentTypeChanged;
             if (_entry != null) {
-                _entry.OnNewAnalysis -= OnNewAnalysis;
+                _entry.AnalysisComplete -= OnNewAnalysis;
                 _entry = null;
             }
             _buffer.Properties.RemoveProperty(typeof(PythonAnalysisClassifier));

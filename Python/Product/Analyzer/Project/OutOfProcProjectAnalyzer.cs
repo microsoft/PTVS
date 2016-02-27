@@ -155,15 +155,13 @@ namespace Microsoft.PythonTools.Intellisense {
                 case AP.AnalyzeExpressionRequest.Command: return AnalyzeExpression((AP.AnalyzeExpressionRequest)request);
                 case AP.OutlingRegionsRequest.Command: return GetOutliningRegions((AP.OutlingRegionsRequest)request);
                 case AP.NavigationRequest.Command: return GetNavigations((AP.NavigationRequest)request);
-                case AP.FileChangedRequest.Command: return ApplyChanges((AP.FileChangedRequest)request);
-                case AP.FileContentRequest.Command: return SetContent((AP.FileContentRequest)request);
+                case AP.FileUpdateRequest.Command: return UpdateContent((AP.FileUpdateRequest)request);
                 case AP.UnresolvedImportsRequest.Command: return GetUnresolvedImports((AP.UnresolvedImportsRequest)request);
                 default:
                     throw new InvalidOperationException("Unknown command");
             }
 
         }
-
         private Response GetUnresolvedImports(AP.UnresolvedImportsRequest request) {
             var entry = _projectFiles[request.fileId] as IPythonProjectEntry;
             if (entry == null ||
@@ -182,17 +180,32 @@ namespace Microsoft.PythonTools.Intellisense {
             PythonAst ast;
             IAnalysisCookie cookie;
             entry.GetTreeAndCookie(out ast, out cookie);
-            var snapshotCookie = cookie as VersionCookie;
-            if (ast == null) {
-                return new AP.UnresolvedImportsResponse();
+
+            var versions = cookie as VersionCookie;
+            var imports = new List<AP.BufferUnresolvedImports>();
+            if (versions != null) {
+                foreach (var version in versions.Versions) {
+                    if (version.Value.Ast != null) {
+                        var walker = new ImportStatementWalker(
+                            version.Value.Ast, 
+                            entry, 
+                            analyzer
+                        );
+
+                        version.Value.Ast.Walk(walker);
+                        imports.Add(
+                            new AP.BufferUnresolvedImports() {
+                                bufferId = version.Key,
+                                version = version.Value.Version,
+                                unresolved = walker.Imports.ToArray()
+                            }
+                        );
+                    }
+                }
             }
 
-            var walker = new ImportStatementWalker(ast, entry, analyzer);
-            ast.Walk(walker);
-
             return new AP.UnresolvedImportsResponse() {
-                version = ((VersionCookie)cookie).Version,
-                unresolved = walker.Imports.ToArray()
+                buffers = imports.ToArray()
             };
         }
 
@@ -292,41 +305,60 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private Response GetOutliningRegions(AP.OutlingRegionsRequest request) {
             var pyEntry = _projectFiles[request.fileId] as IPythonProjectEntry;
-            AP.OutliningTag[] tags = null;
             PythonAst tree;
-            int version = 0;
             IAnalysisCookie cookie;
             pyEntry.GetTreeAndCookie(out tree, out cookie);
+            var versions = cookie as VersionCookie;
+            List<AP.BufferOutliningTags> buffers = new List<AP.BufferOutliningTags>();
+            if (versions != null) {
 
-            if (tree != null) {
-                version = ((VersionCookie)cookie).Version;
-                var walker = new OutliningWalker(tree);
-                tree.Walk(walker);
-                tags = walker.TagSpans
-                    .GroupBy(s => tree.IndexToLocation(s.startIndex).Line)
-                    .Select(ss => ss.OrderBy(s => tree.IndexToLocation(s.endIndex).Line - ss.Key).Last())
-                    .ToArray();
+                foreach (var version in versions.Versions) {
+                    if (version.Value.Ast != null) {
+                        var walker = new OutliningWalker(version.Value.Ast);
+
+                        version.Value.Ast.Walk(walker);
+
+                        var tags = walker.TagSpans
+                            .GroupBy(s => version.Value.Ast.IndexToLocation(s.startIndex).Line)
+                            .Select(ss => ss.OrderBy(s => version.Value.Ast.IndexToLocation(s.endIndex).Line - ss.Key).Last())
+                            .ToArray();
+
+                        buffers.Add(
+                            new AP.BufferOutliningTags() {
+                                bufferId = version.Key,
+                                version = version.Value.Version,
+                                tags = tags
+                            }
+                        );
+                    }
+                }
             }
 
-            return new AP.OutliningRegionsResponse() {
-                version = version,
-                tags = tags
-            };
+            return new AP.OutliningRegionsResponse() { buffers = buffers.ToArray() };
         }
 
         private Response GetNavigations(AP.NavigationRequest request) {
             var pyEntry = _projectFiles[request.fileId] as IPythonProjectEntry;
-            int version = 0;
 
-            var navs = new List<AP.Navigation>();
-
+            List<AP.BufferNavigations> buffers = new List<AP.BufferNavigations>();
             IAnalysisCookie cookie;
             PythonAst tree;
             pyEntry.GetTreeAndCookie(out tree, out cookie);
-            if (tree != null) {
-                version = ((VersionCookie)cookie).Version;
-                var suite = tree.Body as SuiteStatement;
-                if (suite != null) {
+
+            var versions = cookie as VersionCookie;
+            if (versions != null) {
+                foreach (var version in versions.Versions) {
+                    if (version.Value.Ast == null) {
+                        continue;
+                    }
+
+                    var navs = new List<AP.Navigation>();
+
+                    var suite = version.Value.Ast.Body as SuiteStatement;
+                    if (suite == null) {
+                        continue;
+                    }
+
                     foreach (var stmt in suite.Statements) {
                         var classDef = stmt as ClassDefinition;
                         if (classDef != null) {
@@ -353,13 +385,16 @@ namespace Microsoft.PythonTools.Intellisense {
                             navs.Add(GetNavigation(stmt));
                         }
                     }
+
+                    buffers.Add(new AP.BufferNavigations() {
+                        bufferId = version.Key,
+                        version = version.Value.Version,
+                        navigations = navs.ToArray()
+                    });
                 }
             }
 
-            return new AP.NavigationResponse() {
-                version = version,
-                navigations = navs.ToArray()
-            };
+            return new AP.NavigationResponse() { buffers = buffers.ToArray() };
         }
 
         private static AP.Navigation GetNavigation(Statement stmt) {
@@ -707,37 +742,99 @@ namespace Microsoft.PythonTools.Intellisense {
             return new Response();
         }
 
-        public Response SetContent(AP.FileContentRequest request) {
-            var entry = _projectFiles[request.fileId];
-            if (entry != null) {
-                entry.SetCurrentCode(new StringBuilder(request.content));
+        abstract class CodeInfo {
+            public readonly int Version;
+            public object Code; // Stream or TextReader
 
-                EnqueWorker(() => ParseFile(entry, entry.FilePath, request.version));
+            public CodeInfo(int version) {
+                Version = version;
             }
-            return new Response();
+
+            public abstract Parser CreateParser(PythonLanguageVersion version, ParserOptions options);
+
+            public abstract TextReader GetReader();
         }
 
-        public Response ApplyChanges(AP.FileChangedRequest request) {
-            var entry = _projectFiles[request.fileId];
-#if DEBUG
-            string newCode = null;
-#endif
-            if (entry != null) {
-                var curCode = entry.GetCurrentCode();
-                if (curCode == null) {
-                    entry.SetCurrentCode(curCode = new StringBuilder());
-                }
+        class StreamCodeInfo : CodeInfo {
+            private readonly Stream _stream;
 
-                foreach (var change in request.changes) {
-                    curCode.Remove(change.start, change.length);
-                    curCode.Insert(change.start, change.newText);
-                }
-#if DEBUG
-                newCode = curCode.ToString();
-#endif
-                EnqueWorker(() => ParseFile(entry, entry.FilePath, request.version));
+            public StreamCodeInfo(int version, Stream stream) : base(version) {
+                _stream = stream;
             }
-            return new AP.FileChangedResponse() {
+
+            public override Parser CreateParser(PythonLanguageVersion version, ParserOptions options) {
+                return Parser.CreateParser(_stream, version, options);
+            }
+
+            public override TextReader GetReader() {
+                return new StreamReader(_stream);
+            }
+        }
+
+        class TextCodeInfo : CodeInfo {
+            private readonly TextReader _text;
+            public TextCodeInfo(int version, TextReader text) : base(version) {
+                _text = text;
+            }
+
+            public override Parser CreateParser(PythonLanguageVersion version, ParserOptions options) {
+                return Parser.CreateParser(_text, version, options);
+            }
+
+            public override TextReader GetReader() {
+                return _text;
+            }
+        }
+
+        private Response UpdateContent(FileUpdateRequest request) {
+            var entry = _projectFiles[request.fileId];
+
+            SortedDictionary<int, CodeInfo> codeByBuffer = new SortedDictionary<int, CodeInfo>();
+#if DEBUG
+            Dictionary<int, string> newCode = new Dictionary<int, string>();
+#endif
+            foreach (var update in request.updates) {
+                switch (update.kind) {
+                    case AP.FileUpdateKind.changes:
+                        if (entry != null) {
+                            var curCode = entry.GetCurrentCode(update.bufferId);
+                            if (curCode == null) {
+                                entry.SetCurrentCode(curCode = new StringBuilder(), update.bufferId);
+                            }
+
+                            foreach (var change in update.changes) {
+                                curCode.Remove(change.start, change.length);
+                                curCode.Insert(change.start, change.newText);
+                            }
+
+                            var newCodeStr = curCode.ToString();
+                            codeByBuffer[update.bufferId] = new TextCodeInfo(
+                                update.version,
+                                new StringReader(newCodeStr)
+                            );
+#if DEBUG
+                            newCode[update.bufferId] = newCodeStr;
+#endif
+                        }
+                        break;
+                    case AP.FileUpdateKind.reset:
+                        entry.SetCurrentCode(new StringBuilder(update.content), update.bufferId);
+                        codeByBuffer[update.bufferId] = new TextCodeInfo(
+                            update.version,
+                            new StringReader(update.content)
+                        );
+#if DEBUG
+                        newCode[update.bufferId] = update.content;
+#endif                        
+                        break;
+                    default:
+                        throw new InvalidOperationException("unsupported update kind");
+                }
+            }
+
+            EnqueWorker(() => ParseFile(entry, codeByBuffer));
+
+            return new AP.FileUpdateResponse() {
 #if DEBUG
                 newCode = newCode
 #endif
@@ -1131,139 +1228,111 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        internal void ParseFile(IProjectEntry entry, string filename, int version, Stream content = null) {
-            IPythonProjectEntry pyEntry;
-            IExternalProjectEntry externalEntry;
-
-            TextReader reader = null;
-            var snapshot = entry.GetCurrentCode();
-            string zipFileName = GetZipFileName(entry);
-            string pathInZipFile = GetPathInZipFile(entry);
-            IAnalysisCookie cookie = new VersionCookie(version);
-            if (snapshot != null) {
-                reader = new StringReader(snapshot.ToString());
-            }
-
-            if ((pyEntry = entry as IPythonProjectEntry) != null) {
-                ParseResult result;
-                if (reader != null) {
-                    result = ParsePythonCode(reader);
-                } else {
-                    result = ParsePythonCode(content);
-                }
-
-                FinishParse(pyEntry, cookie, result, version);
-            } else if ((externalEntry = entry as IExternalProjectEntry) != null) {
-                externalEntry.ParseContent(reader ?? new StreamReader(content), cookie);
-                _analysisQueue.Enqueue(entry, AnalysisPriority.Normal);
-            }
-        }
-
-        private void FinishParse(IPythonProjectEntry pyEntry, IAnalysisCookie cookie, ParseResult result, int version) {
-            if (result.Ast != null) {
-                pyEntry.UpdateTree(result.Ast, cookie);
-            } else {
-                // notify that we failed to update the existing analysis
-                pyEntry.UpdateTree(null, null);
-            }
-
-            // update squiggles for the buffer. snapshot may be null if we
-            // are analyzing a file that is not open
-            SendParseComplete(pyEntry, result.Errors, result.Tasks, version);
-            
-            // enqueue analysis of the file
-            if (result.Ast != null) {
-                _analysisQueue.Enqueue(pyEntry, AnalysisPriority.Normal);
-            }
-        }
-
-#if PORT
-        internal void ParseBuffers(BufferParser bufferParser, Severity indentationSeverity, params ITextSnapshot[] snapshots) {
-            IProjectEntry entry = bufferParser._currentProjEntry;
-
-            IPythonProjectEntry pyProjEntry = entry as IPythonProjectEntry;
-            List<PythonAst> asts = new List<PythonAst>();
-            foreach (var snapshot in snapshots) {
-                if (snapshot.TextBuffer.Properties.ContainsProperty(PythonReplEvaluator.InputBeforeReset)) {
-                    continue;
-                }
-
-                if (snapshot.IsReplBufferWithCommand()) {
-                    continue;
-                }
-
-                if (pyProjEntry != null && snapshot.TextBuffer.ContentType.IsOfType(PythonCoreConstants.ContentType)) {
-                    PythonAst ast;
-                    CollectingErrorSink errorSink;
-                    List<TaskProviderItem> commentTasks;
-                    var reader = new SnapshotSpanSourceCodeReader(new SnapshotSpan(snapshot, new Span(0, snapshot.Length)));
-                    ParsePythonCode(snapshot, reader, indentationSeverity, out ast, out errorSink, out commentTasks);
-
-                    if (ast != null) {
-                        asts.Add(ast);
-                    }
-
-                    // update squiggles for the buffer
-                    UpdateErrorsAndWarnings(entry, snapshot, errorSink, commentTasks);
-                } else {
-                    // other file such as XAML
-                    IExternalProjectEntry externalEntry;
-                    if ((externalEntry = (entry as IExternalProjectEntry)) != null) {
-                        var snapshotContent = new SnapshotSpanSourceCodeReader(new SnapshotSpan(snapshot, new Span(0, snapshot.Length)));
-                        externalEntry.ParseContent(snapshotContent, new SnapshotCookie(snapshotContent.Snapshot));
-                        _analysisQueue.Enqueue(entry, AnalysisPriority.High);
-                    }
-                }
-            }
-
-            if (pyProjEntry != null) {
-                if (asts.Count > 0) {
-                    PythonAst finalAst;
-                    if (asts.Count == 1) {
-                        finalAst = asts[0];
-                    } else {
-                        // multiple ASTs, merge them together
-                        finalAst = new PythonAst(
-                            new SuiteStatement(asts.Select(ast => ast.Body).ToArray()),
-                            new int[0],
-                            asts[0].LanguageVersion
-                        );
-                    }
-
-                    pyProjEntry.UpdateTree(finalAst, new SnapshotCookie(snapshots[0])); // SnapshotCookie is not entirely right, we should merge the snapshots
-                    _analysisQueue.Enqueue(entry, AnalysisPriority.High);
-                } else {
-                    // indicate that we are done parsing.
-                    PythonAst prevTree;
-                    IAnalysisCookie prevCookie;
-                    pyProjEntry.GetTreeAndCookie(out prevTree, out prevCookie);
-                    pyProjEntry.UpdateTree(prevTree, prevCookie);
-                }
-            }
-        }
-#endif
-
         class ParseResult {
-            public readonly PythonAst Ast;
+            public readonly PythonAst Ast; 
             public readonly CollectingErrorSink Errors;
             public readonly List<AP.TaskItem> Tasks;
+            public readonly int Version;
 
-            public ParseResult(PythonAst ast, CollectingErrorSink errors, List<AP.TaskItem> tasks) {
+            public ParseResult(PythonAst ast, CollectingErrorSink errors, List<AP.TaskItem> tasks, int version) {
                 Ast = ast;
                 Errors = errors;
                 Tasks = tasks;
+                Version = version;
             }
         }
 
-        private async void SendParseComplete(IPythonProjectEntry entry, CollectingErrorSink errorSink, List<AP.TaskItem> commentTasks, int version) {
+
+        private void ParseFile(IProjectEntry entry, IDictionary<int, CodeInfo> buffers) {
+            IPythonProjectEntry pyEntry;
+            IExternalProjectEntry externalEntry;
+
+            string zipFileName = GetZipFileName(entry);
+            string pathInZipFile = GetPathInZipFile(entry);
+
+            SortedDictionary<int, ParseResult> parseResults = new SortedDictionary<int, ParseResult>();
+
+            if ((pyEntry = entry as IPythonProjectEntry) != null) {
+                foreach (var buffer in buffers) {
+                    var errorSink = new CollectingErrorSink();
+                    var tasks = new List<AP.TaskItem>();
+                    ParserOptions options = MakeParserOptions(errorSink, tasks);
+
+                    using (var parser = buffer.Value.CreateParser(Project.LanguageVersion, options)) {
+                        var ast = ParseOneFile(parser);
+                        parseResults[buffer.Key] = new ParseResult(
+                            ast, 
+                            errorSink, 
+                            tasks, 
+                            buffer.Value.Version
+                        );
+                    }
+                }
+
+                // Save the single or combined tree into the project entry
+                UpdateAnalysisTree(pyEntry, parseResults);
+
+                // update squiggles for the buffer. snapshot may be null if we
+                // are analyzing a file that is not open
+                SendParseComplete(pyEntry, parseResults);
+
+                // enqueue analysis of the file
+                if (parseResults.Where(x => x.Value.Ast != null).Any()) {
+                    _analysisQueue.Enqueue(pyEntry, AnalysisPriority.Normal);
+                }
+            } else if ((externalEntry = entry as IExternalProjectEntry) != null) {
+                foreach(var keyValue in buffers) { 
+                    externalEntry.ParseContent(keyValue.Value.GetReader(), null);
+                    _analysisQueue.Enqueue(entry, AnalysisPriority.Normal);
+                }
+            }
+        }
+
+        private static void UpdateAnalysisTree(IPythonProjectEntry pyEntry, SortedDictionary<int, ParseResult> parseResults) {
+            IAnalysisCookie cookie = new VersionCookie(
+                parseResults.ToDictionary(
+                    x => x.Key,
+                    x => new VersionInfo(x.Value.Version, x.Value.Ast)
+                )
+            );
+
+            var asts = parseResults.Where(x => x.Value.Ast != null).Select(x => x.Value.Ast).ToArray();
+            PythonAst finalAst;
+            if (asts.Length == 1) {
+                finalAst = asts[0];
+            } else if (asts.Length > 0) {
+                // multiple ASTs, merge them together
+                finalAst = new PythonAst(
+                    new SuiteStatement(
+                        asts.Select(ast => ast.Body).ToArray()
+                    ),
+                    new int[0],
+                    asts[0].LanguageVersion
+                );
+            } else {
+                // we failed to get any sort of AST out, so we can't analyze...
+                // But we need to balance the UpdateTree call, so just fetch the
+                // last valid ast and cookie.
+                pyEntry.GetTreeAndCookie(out finalAst, out cookie);
+            }
+
+            pyEntry.UpdateTree(finalAst, cookie);
+        }
+
+        private async void SendParseComplete(IPythonProjectEntry entry, SortedDictionary<int, ParseResult> parseResults) {
             await _connection.SendEventAsync(
                 new AP.FileParsedEvent() {
                     fileId = ProjectEntryMap.GetId(entry),
-                    hasErrors = errorSink.Errors.Any(),
-                    tasks = commentTasks.ToArray(),
-                    errors = errorSink.Errors.Select(MakeError).ToArray(),
-                    warnings = errorSink.Warnings.Select(MakeError).ToArray(),
-                    version = version
+                    buffers = parseResults.Select(
+                        x => new BufferParseInfo() {
+                            bufferId = x.Key,
+                            version = x.Value.Version,
+                            errors = x.Value.Errors.Errors.Select(MakeError).ToArray(),
+                            warnings = x.Value.Errors.Warnings.Select(MakeError).ToArray(),
+                            hasErrors = x.Value.Errors.Errors.Any(),
+                            tasks = x.Value.Tasks.ToArray()
+                        }
+                    ).ToArray()
                 }
             );
         }
@@ -1279,37 +1348,6 @@ namespace Microsoft.PythonTools.Intellisense {
                 length = error.Span.Length
             };
         }
-
-        private ParseResult ParsePythonCode(Stream content) {
-            var errorSink = new CollectingErrorSink();
-            var tasks = new List<AP.TaskItem>();
-
-            ParserOptions options = MakeParserOptions(errorSink, tasks);
-
-            using (var parser = Parser.CreateParser(content, Project.LanguageVersion, options)) {
-                return new ParseResult(
-                    ParseOneFile(parser),
-                    errorSink,
-                    tasks
-                );
-            }
-        }
-
-        private ParseResult ParsePythonCode(TextReader content) {
-            var errorSink = new CollectingErrorSink();
-            var tasks = new List<AP.TaskItem>();
-
-            ParserOptions options = MakeParserOptions(errorSink, tasks);
-
-            using (var parser = Parser.CreateParser(content, Project.LanguageVersion, options)) {
-                return new ParseResult(
-                    ParseOneFile(parser),
-                    errorSink,
-                    tasks
-                );
-            }
-        }
-
 
         private ParserOptions MakeParserOptions(CollectingErrorSink errorSink, List<AP.TaskItem> tasks) {
             var options = new ParserOptions {
@@ -1859,7 +1897,12 @@ namespace Microsoft.PythonTools.Intellisense {
                             break;
                         }
                         using (var reader = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete)) {
-                            ParseFile(projEntry, filename, 0, reader);
+                            ParseFile(
+                                projEntry, 
+                                new Dictionary<int, CodeInfo> {
+                                    { 0, new StreamCodeInfo(0, reader) }
+                                }
+                            );
                             return;
                         }
                     } catch (IOException) {
@@ -1885,7 +1928,12 @@ namespace Microsoft.PythonTools.Intellisense {
             EnqueWorker(() => {
                 try {
                     using (var stream = entry.Open()) {
-                        ParseFile(projEntry, fileName, 0, stream);
+                        ParseFile(
+                            projEntry,
+                            new Dictionary<int, CodeInfo> {
+                                { 0, new StreamCodeInfo(0, stream) }
+                            }
+                        );
                         return;
                     }
                 } catch (IOException ex) {
@@ -2144,33 +2192,6 @@ namespace Microsoft.PythonTools.Intellisense {
                     AddTagIfNecessary(parent.StartIndex, node.EndIndex);
                 }
             }
-#if FALSE
-            /// <summary>
-            /// Given a node and lineAboveText enable collapsing for line
-            /// showing the line above text.
-            /// </summary>
-            /// <param name="node"></param>
-            /// <param name="lineAboveText"></param>
-            private void AddTagIfNecessaryShowLineAbove(Node node, string lineAboveText) {
-                int line = _ast.IndexToLocation(node.StartIndex).Line;
-                var startsWithElse = _snapshot.GetLineFromLineNumber(line).GetText().Trim().StartsWith(lineAboveText);
-                if (startsWithElse) {
-                    // try: foo, lineAboveText == "try", startIndex = start of try line
-                    // this line starts with the 'above' line, don't adjust line
-                    int startIndex = _snapshot.GetLineFromLineNumber(line).Start.Position;
-                    AddTagIfNecessary(startIndex, node.EndIndex);
-                } else {
-                    // try:
-                    //     foo
-                    // lineAboveText == "try", startIndex == start of try line
-
-                    // line is below the 'above' line
-                    int startIndex = _snapshot.GetLineFromLineNumber(line - 1).Start.Position;
-                    AddTagIfNecessary(startIndex, node.EndIndex);
-                }
-            }
-#endif
         }
-
     }
 }

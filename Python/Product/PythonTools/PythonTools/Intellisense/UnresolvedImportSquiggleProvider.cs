@@ -42,13 +42,13 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public void ListenForNextNewAnalysis(ProjectFileInfo entry) {
             if (entry != null && !string.IsNullOrEmpty(entry.FilePath)) {
-                entry.OnNewAnalysis += OnNewAnalysis;
+                entry.AnalysisComplete += OnNewAnalysis;
             }
         }
 
         public void StopListening(ProjectFileInfo entry) {
             if (entry != null) {
-                entry.OnNewAnalysis -= OnNewAnalysis;
+                entry.AnalysisComplete -= OnNewAnalysis;
                 _taskProvider.Clear(entry, VsProjectAnalyzer.UnresolvedImportMoniker);
             }
         }
@@ -63,24 +63,26 @@ namespace Microsoft.PythonTools.Intellisense {
                 ProjectFileInfo entry = sender as ProjectFileInfo;
                 var missingImports = await entry.ProjectState.GetMissingImports(entry);
 
-                if (missingImports.Any()) {
-                    var f = new TaskProviderItemFactory(entry.LastParsedSnapshot);
+                foreach (var buffer in missingImports) {
+                    if (missingImports.Any()) {
+                        var f = new TaskProviderItemFactory(entry.BufferParser.GetLastParsedSnapshot(buffer.bufferId));
 
-                    _taskProvider.ReplaceItems(
-                        entry,
-                        VsProjectAnalyzer.UnresolvedImportMoniker,
-                        missingImports.Select(t => f.FromUnresolvedImport(
-                            _serviceProvider,
-                            entry.ProjectState.InterpreterFactory as IPythonInterpreterFactoryWithDatabase,
-                            t.name,
-                            new SourceSpan(
-                                new SourceLocation(t.startIndex, t.startLine, t.startColumn),
-                                new SourceLocation(t.endIndex, t.endLine, t.endColumn)
-                            )
-                        )).ToList()
-                    );
-                } else {
-                    _taskProvider.Clear(entry, VsProjectAnalyzer.UnresolvedImportMoniker);
+                        _taskProvider.ReplaceItems(
+                            entry,
+                            VsProjectAnalyzer.UnresolvedImportMoniker,
+                            buffer.unresolved.Select(t => f.FromUnresolvedImport(
+                                _serviceProvider,
+                                entry.ProjectState.InterpreterFactory as IPythonInterpreterFactoryWithDatabase,
+                                t.name,
+                                new SourceSpan(
+                                    new SourceLocation(t.startIndex, t.startLine, t.startColumn),
+                                    new SourceLocation(t.endIndex, t.endLine, t.endColumn)
+                                )
+                            )).ToList()
+                        );
+                    } else {
+                        _taskProvider.Clear(entry, VsProjectAnalyzer.UnresolvedImportMoniker);
+                    }
                 }
             }
         }

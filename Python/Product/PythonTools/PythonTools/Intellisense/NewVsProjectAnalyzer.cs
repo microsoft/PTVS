@@ -25,7 +25,7 @@ namespace Microsoft.PythonTools.Intellisense {
     using AP = AnalysisProtocol;
 
     public sealed class VsProjectAnalyzer : IDisposable {
-        private readonly Connection _conn;
+        internal readonly Connection _conn;
         // For entries that were loaded from a .zip file, IProjectEntry.Properties[_zipFileName] contains the full path to that archive.
         private static readonly object _zipFileName = new { Name = "ZipFileName" };
 
@@ -64,11 +64,11 @@ namespace Microsoft.PythonTools.Intellisense {
             : this(serviceProvider, factory.CreateInterpreter(), factory, allFactories) {
         }
 
-        internal async Task<AP.UnresolvedImport[]> GetMissingImports(ProjectFileInfo projectFile) {
+        internal async Task<AP.BufferUnresolvedImports[]> GetMissingImports(ProjectFileInfo projectFile) {
             var resp = await _conn.SendRequestAsync(new AP.UnresolvedImportsRequest() {
                 fileId = projectFile.FileId
             });
-            return resp.unresolved;
+            return resp.buffers;
         }
 
         internal VsProjectAnalyzer(
@@ -88,38 +88,12 @@ namespace Microsoft.PythonTools.Intellisense {
             _projectFiles = new ConcurrentDictionary<string, ProjectFileInfo>();
             _projectFilesById = new ConcurrentDictionary<int, ProjectFileInfo>();
 
-            var libAnalyzer = typeof(AP.FileChangedRequest).Assembly.Location;
-            var psi = new ProcessStartInfo(libAnalyzer,
-                String.Format(
-                    "/id {0} /version {1} /interactive",
-                    factory.Id,
-                    factory.Configuration.Version
-                )
-            );
+            var libAnalyzer = typeof(AP.FileChangedResponse).Assembly.Location;
             _pyService = serviceProvider.GetPythonToolsService();
-            psi.RedirectStandardInput = true;
-            psi.RedirectStandardOutput = true;
-            psi.RedirectStandardError = true;
-            psi.UseShellExecute = false;
-            psi.CreateNoWindow = true;
 
             _taskProvider.TokensChanged += CommentTaskTokensChanged;
-            var process = _analysisProcess = Process.Start(psi);
 
-            _conn = new Connection(
-                process.StandardInput.BaseStream,
-                process.StandardOutput.BaseStream,
-                null,
-                AnalysisProtocol.RegisteredTypes
-            );
-            process.Exited += Process_Exited;
-            Task.Run(async () => {
-                while (!process.HasExited) {
-                    var line = await process.StandardError.ReadLineAsync();
-                    Debug.WriteLine(line);
-                }
-            });
-            _conn.EventReceived += _conn_EventReceived;
+            _conn = StartConnection(factory, libAnalyzer);
             _userCount = 1;
 
             Task.Run(() => _conn.ProcessMessages());
@@ -131,6 +105,40 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             ).DoNotWait();
             CommentTaskTokensChanged(null, EventArgs.Empty);
+        }
+
+        private Connection StartConnection(IPythonInterpreterFactory factory, string libAnalyzer) {
+            var psi = new ProcessStartInfo(libAnalyzer,
+                String.Format(
+                    "/id {0} /version {1} /interactive",
+                    factory.Id,
+                    factory.Configuration.Version
+                )
+            );
+            psi.RedirectStandardInput = true;
+            psi.RedirectStandardOutput = true;
+            psi.RedirectStandardError = true;
+            psi.UseShellExecute = false;
+            psi.CreateNoWindow = true;
+
+            var process = _analysisProcess = Process.Start(psi);
+
+            var conn = new Connection(
+                process.StandardInput.BaseStream,
+                process.StandardOutput.BaseStream,
+                null,
+                AP.RegisteredTypes
+            );
+
+            process.Exited += Process_Exited;
+            Task.Run(async () => {
+                while (!process.HasExited) {
+                    var line = await process.StandardError.ReadLineAsync();
+                    Debug.WriteLine(line);
+                }
+            });
+            conn.EventReceived += _conn_EventReceived;
+            return conn;
         }
 
         private void CommentTaskTokensChanged(object sender, EventArgs e) {
@@ -166,14 +174,13 @@ namespace Microsoft.PythonTools.Intellisense {
                     }
                     break;
             }
-
         }
 
         private void OnAnalysisComplete(EventReceivedEventArgs e) {
             var analysisComplete = (AP.AnalysisCompleteEvent)e.Event;
             ProjectFileInfo info;
             if (_projectFilesById.TryGetValue(analysisComplete.fileId, out info)) {
-                info.RaiseOnNewAnalysis();
+                info.OnAnalysisComplete();
             }
         }
 
@@ -297,12 +304,6 @@ namespace Microsoft.PythonTools.Intellisense {
             BufferParser bufferParser;
             if (!buffer.Properties.TryGetProperty<BufferParser>(typeof(BufferParser), out bufferParser)) {
                 bufferParser = new BufferParser(projEntry, this, buffer);
-                projEntry.BufferParser = bufferParser;
-
-                var curSnapshot = buffer.CurrentSnapshot;
-                var severity = PyService.GeneralOptions.IndentationInconsistencySeverity;
-                bufferParser.EnqueingEntry();
-                ParseBuffers(bufferParser, severity, curSnapshot);
             } else {
                 bufferParser.AttachedViews++;
             }
@@ -322,10 +323,6 @@ namespace Microsoft.PythonTools.Intellisense {
                 _taskProvider.AddBufferForErrorSource(projEntry, UnresolvedImportMoniker, buffer);
                 _unresolvedSquiggles.ListenForNextNewAnalysis(projEntry);
             }
-
-            await _conn.SendRequestAsync(
-                new AP.FileContentRequest() { fileId = projEntry._fileId, content = buffer.CurrentSnapshot.GetText() }
-            ).ConfigureAwait(false);
 
             // kick off initial processing on the buffer
             lock (_openFiles) {
@@ -440,26 +437,27 @@ namespace Microsoft.PythonTools.Intellisense {
                         fileId = entry.FileId
                     }
                 );
+                foreach (var buffer in navigations.buffers) {
+                    var lastParsed = entry.BufferParser.GetLastParsedSnapshot(buffer.bufferId);
+                    if (lastParsed.Version.VersionNumber == buffer.version) {
+                        return new NavigationInfo(
+                            null,
+                            NavigationKind.None,
+                            new Span(),
+                            ConvertNavigations(snapshot, lastParsed, buffer.navigations)
+                        );
+                    }
 
-                var lastParsed = entry.LastParsedSnapshot;
-                if (lastParsed.Version.VersionNumber == navigations.version) {
-                    return new NavigationInfo(
-                        null, 
-                        NavigationKind.None, 
-                        new Span(), 
-                        ConvertNavigations(snapshot, entry, navigations.navigations)
-                    );
+                    // race with another vesion being parsed, we should get called again when
+                    // we get notified of another new parse tree
+                    Debug.Assert(buffer.version > lastParsed.Version.VersionNumber);
                 }
-
-                // race with another vesion being parsed, we should get called again when
-                // we get notified of another new parse tree
-                Debug.Assert(navigations.version > lastParsed.Version.VersionNumber);
             }
 
             return new NavigationInfo(null, NavigationKind.None, new Span(), Array.Empty<NavigationInfo>());
         }
 
-        private NavigationInfo[] ConvertNavigations(ITextSnapshot snapshot, ProjectFileInfo entry, AP.Navigation[] navigations) {
+        private NavigationInfo[] ConvertNavigations(ITextSnapshot currentSnapshot, ITextSnapshot lastParsedSnapshot, AP.Navigation[] navigations) {
             if (navigations == null) {
                 return null;
             }
@@ -470,8 +468,8 @@ namespace Microsoft.PythonTools.Intellisense {
                 var span = Tracking.TrackSpanForwardInTime(
                     SpanTrackingMode.EdgeInclusive,
                     Span.FromBounds(nav.startIndex, nav.endIndex),
-                    entry.LastParsedSnapshot.Version,
-                    snapshot.Version
+                    lastParsedSnapshot.Version,
+                    currentSnapshot.Version
                 );
 
                 res.Add(
@@ -479,7 +477,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         nav.name,
                         GetNavigationKind(nav.type),
                         span,
-                        ConvertNavigations(snapshot, entry, nav.children)
+                        ConvertNavigations(currentSnapshot, lastParsedSnapshot, nav.children)
                     )
                 );
             }
@@ -506,26 +504,29 @@ namespace Microsoft.PythonTools.Intellisense {
                     }
                 );
 
-                var lastParsed = entry.LastParsedSnapshot;
-                if (lastParsed.Version.VersionNumber == outliningTags.version) {
-                    return ConvertOutliningTags(snapshot, entry, outliningTags);
+                foreach (var bufferTags in outliningTags.buffers) {
+                    var lastParsed = entry.BufferParser.GetLastParsedSnapshot(bufferTags.bufferId);
+                    if (lastParsed.Version.VersionNumber == bufferTags.version) {
+                        return ConvertOutliningTags(snapshot, lastParsed, bufferTags);
+                    }
+
+                    // race with another vesion being parsed, we should get called again when
+                    // we get notified of another new parse tree
+                    Debug.Assert(bufferTags.version > lastParsed.Version.VersionNumber);
                 }
 
-                // race with another vesion being parsed, we should get called again when
-                // we get notified of another new parse tree
-                Debug.Assert(outliningTags.version > lastParsed.Version.VersionNumber);
             }
             return Enumerable.Empty<OutliningTaggerProvider.TagSpan>();
         }
 
-        private static IEnumerable<OutliningTaggerProvider.TagSpan> ConvertOutliningTags(ITextSnapshot snapshot, ProjectFileInfo entry, AP.OutliningRegionsResponse outliningTags) {
+        private static IEnumerable<OutliningTaggerProvider.TagSpan> ConvertOutliningTags(ITextSnapshot currentSnapshot, ITextSnapshot lastParsedSnapshot, AP.BufferOutliningTags outliningTags) {
             foreach (var tag in outliningTags.tags) {
                 // translate the span from the version we last parsed to the current version
                 var span = Tracking.TrackSpanForwardInTime(
                     SpanTrackingMode.EdgeInclusive,
                     Span.FromBounds(tag.startIndex, tag.endIndex),
-                    entry.LastParsedSnapshot.Version,
-                    snapshot.Version
+                    lastParsedSnapshot.Version,
+                    currentSnapshot.Version
                 );
 
                 int headerIndex = tag.headerIndex;
@@ -533,13 +534,13 @@ namespace Microsoft.PythonTools.Intellisense {
                     headerIndex = Tracking.TrackPositionForwardInTime(
                         PointTrackingMode.Positive,
                         headerIndex,
-                        entry.LastParsedSnapshot.Version,
-                        snapshot.Version
+                        lastParsedSnapshot.Version,
+                        currentSnapshot.Version
                     );
                 }
 
                 yield return OutliningTaggerProvider.OutliningTagger.GetTagSpan(
-                    snapshot,
+                    currentSnapshot,
                     span.Start,
                     span.End,
                     headerIndex
@@ -776,48 +777,7 @@ namespace Microsoft.PythonTools.Intellisense {
             if (exprRange == null || isParameterName) {
                 return MissingImportAnalysis.Empty;
             }
-#if FALSE
-            IPythonProjectEntry entry;
-            ModuleAnalysis analysis;
-            if (!snapshot.TextBuffer.TryGetPythonProjectEntry(out entry) ||
-                entry == null ||
-                (analysis = entry.Analysis) == null) {
-                return MissingImportAnalysis.Empty;
-            }
 
-            var text = exprRange.Value.GetText();
-            if (string.IsNullOrEmpty(text)) {
-                return MissingImportAnalysis.Empty;
-            }
-
-            var analyzer = analysis.ProjectState;
-            var index = (parser.GetStatementRange() ?? span.GetSpan(snapshot)).Start.Position;
-
-            var location = TranslateIndex(
-                index,
-                snapshot,
-                analysis
-            );
-            var nameExpr = GetFirstNameExpression(analysis.GetAstFromText(text, location).Body);
-
-            if (nameExpr != null && !IsImplicitlyDefinedName(nameExpr)) {
-                var name = nameExpr.Name;
-                lock (snapshot.TextBuffer.GetAnalyzer(serviceProvider)) {
-                    var hasVariables = analysis.GetVariables(name, location).Any(IsDefinition);
-                    var hasValues = analysis.GetValues(name, location).Any();
-
-                    // if we have type information or an assignment to the variable we won't offer 
-                    // an import smart tag.
-                    if (!hasValues && !hasVariables) {
-                        var applicableSpan = parser.Snapshot.CreateTrackingSpan(
-                            exprRange.Value.Span,
-                            SpanTrackingMode.EdgeExclusive
-                        );
-                        return new MissingImportAnalysis(name, analysis.ProjectState, applicableSpan);
-                    }
-                }
-            }
-#endif
             // if we have type information don't offer to add imports
             return MissingImportAnalysis.Empty;
         }
@@ -949,247 +909,82 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-#if FALSE
-        internal async void ParseFile(ProjectFileInfo entry, string filename, Stream content, Severity indentationSeverity) {
-            IPythonProjectEntry pyEntry;
-            IExternalProjectEntry externalEntry;
-
-            TextReader reader = null;
-            ITextSnapshot snapshot = GetOpenSnapshot(entry);
-            string zipFileName = GetZipFileName(entry);
-            string pathInZipFile = GetPathInZipFile(entry);
-            IAnalysisCookie cookie;
-            if (snapshot != null) {
-                cookie = new SnapshotCookie(snapshot);
-                reader = new SnapshotSpanSourceCodeReader(new SnapshotSpan(snapshot, 0, snapshot.Length));
-            } else if (zipFileName != null) {
-                cookie = new ZipFileCookie(zipFileName, pathInZipFile);
-            } else {
-                cookie = new FileCookie(filename);
-            }
-
-            if ((pyEntry = entry as IPythonProjectEntry) != null) {
-                await _conn.SendEventAsync(
-                    new AP.FileContentEvent() {
-                        fileId = entry.FileId,
-                        changes = GetChanges(curVersion)
-                    }
-                );
-                for (var curVersion = pyProjEntry._currentAnalysisVersion.Version;
-                        curVersion != null;
-                        curVersion = curVersion.Next) {
-                   
-                }
-
-                PythonAst ast;
-                CollectingErrorSink errorSink;
-                List<TaskProviderItem> commentTasks;
-                if (reader != null) {
-                    ParsePythonCode(snapshot, reader, indentationSeverity, out ast, out errorSink, out commentTasks);
-                } else {
-                    ParsePythonCode(snapshot, content, indentationSeverity, out ast, out errorSink, out commentTasks);
-                }
-
-                if (ast != null) {
-                    pyEntry.UpdateTree(ast, cookie);
-                } else {
-                    // notify that we failed to update the existing analysis
-                    pyEntry.UpdateTree(null, null);
-                }
-
-                // update squiggles for the buffer. snapshot may be null if we
-                // are analyzing a file that is not open
-                UpdateErrorsAndWarnings(entry, snapshot, errorSink, commentTasks);
-
-                // enqueue analysis of the file
-                if (ast != null) {
-                    _analysisQueue.Enqueue(pyEntry, AnalysisPriority.Normal);
-                }
-            } else if ((externalEntry = entry as IExternalProjectEntry) != null) {
-                /*
-                externalEntry.ParseContent(reader ?? new StreamReader(content), cookie);
-                _analysisQueue.Enqueue(entry, AnalysisPriority.Normal);
-                */
-            }
-        }
-#endif
-
-        internal async void ParseBuffers(BufferParser bufferParser, Severity indentationSeverity, params ITextSnapshot[] snapshots) {
-            ProjectFileInfo entry = bufferParser._currentProjEntry;
-
-            var pyProjEntry = entry;
-            List<PythonAst> asts = new List<PythonAst>();
-            foreach (var snapshot in snapshots) {
-                if (snapshot.TextBuffer.Properties.ContainsProperty(PythonReplEvaluator.InputBeforeReset)) {
-                    continue;
-                }
-
-                if (snapshot.IsReplBufferWithCommand()) {
-                    continue;
-                }
-
-                if (pyProjEntry != null && snapshot.TextBuffer.ContentType.IsOfType(PythonCoreConstants.ContentType)) {
-                    if (pyProjEntry._lastSentSnapshot == null || pyProjEntry._lastSentSnapshot.TextBuffer != snapshot.TextBuffer) {
-                        // First time parsing from a live buffer, send the entire
-                        // file and set our initial snapshot.  We'll roll forward
-                        // to new snapshots when we receive the errors event.
-                        await _conn.SendRequestAsync(
-                            new AP.FileContentRequest() {
-                                fileId = entry.FileId,
-                                content = snapshot.GetText(),
-                                version = snapshot.Version.VersionNumber
-                            }
-                        );
-                    } else {
-                        List<AP.ChangeInfo> changes = new List<AnalysisProtocol.ChangeInfo>();
-                        for (var curVersion = pyProjEntry._lastSentSnapshot.Version;
-                            curVersion != snapshot.Version;
-                            curVersion = curVersion.Next) {
-                            changes.AddRange(GetChanges(curVersion));
-                        }
-
-                        var response = await _conn.SendRequestAsync(
-                            new AP.FileChangedRequest() {
-                                fileId = entry.FileId,
-                                changes = changes.ToArray(),
-                                version = snapshot.Version.VersionNumber
-                            }
-                        );
-#if DEBUG
-                        Debug.Assert(response.newCode == snapshot.GetText());
-#endif
-                    }
-                    Debug.WriteLine("Sent parse request {0}", snapshot.Version.VersionNumber);
-                    pyProjEntry.AnalysisCookie = new SnapshotCookie(snapshot);
-                    pyProjEntry._lastSentSnapshot = snapshot;
-                    pyProjEntry.PushSnapshot(snapshot);
-
-#if FALSE
-                    var reader = new SnapshotSpanSourceCodeReader(new SnapshotSpan(snapshot, new Span(0, snapshot.Length)));
-                    ParsePythonCode(snapshot, reader, indentationSeverity, out ast, out errorSink, out commentTasks);
-
-                    if (ast != null) {
-                        asts.Add(ast);
-                    }
-#endif
-                } else {
-                    // other file such as XAML
-#if FALSE
-                    IExternalProjectEntry externalEntry;
-                    if ((externalEntry = (entry as IExternalProjectEntry)) != null) {
-                        var snapshotContent = new SnapshotSpanSourceCodeReader(new SnapshotSpan(snapshot, new Span(0, snapshot.Length)));
-                        externalEntry.ParseContent(snapshotContent, new SnapshotCookie(snapshotContent.Snapshot));
-                        _analysisQueue.Enqueue(entry, AnalysisPriority.High);
-                    }
-#endif
-                }
-            }
-
-#if FALSE
-            if (pyProjEntry != null) {
-                if (asts.Count > 0) {
-                    PythonAst finalAst;
-                    if (asts.Count == 1) {
-                        finalAst = asts[0];
-                    } else {
-                        // multiple ASTs, merge them together
-                        finalAst = new PythonAst(
-                            new SuiteStatement(asts.Select(ast => ast.Body).ToArray()),
-                            new int[0],
-                            asts[0].LanguageVersion
-                        );
-                    }
-
-                    pyProjEntry.UpdateTree(finalAst, new SnapshotCookie(snapshots[0])); // SnapshotCookie is not entirely right, we should merge the snapshots
-                    _analysisQueue.Enqueue(entry, AnalysisPriority.High);
-                } else {
-                    // indicate that we are done parsing.
-                    PythonAst prevTree;
-                    IAnalysisCookie prevCookie;
-                    pyProjEntry.GetTreeAndCookie(out prevTree, out prevCookie);
-                    pyProjEntry.UpdateTree(prevTree, prevCookie);
-                }
-            }
-#endif
-        }
-
-        private static AP.ChangeInfo[] GetChanges(ITextVersion curVersion) {
-            var changes = new List<AP.ChangeInfo>();
-            if (curVersion.Changes != null) {
-                foreach (var change in curVersion.Changes) {
-                    changes.Add(
-                        new AP.ChangeInfo() {
-                            start = change.OldPosition,
-                            length = change.OldLength,
-                            newText = change.NewText
-                        }
-                    );
-                }
-            }
-            return changes.ToArray();
-        }
-
         private void UpdateErrorsAndWarnings(ProjectFileInfo entry, AP.FileParsedEvent parsedEvent) {
+            bool hasErrors = false;
+
             // Update the warn-on-launch state for this entry
+
+            foreach (var buffer in parsedEvent.buffers) {
+                hasErrors |= buffer.errors.Any();
+
+                Debug.WriteLine("Received updated parse {0} {1}", parsedEvent.fileId, buffer.version);
+
+                var bufferParser = entry.BufferParser;
+                ITextSnapshot snapshot = null;
+                if (bufferParser!= null) {
+                    snapshot = bufferParser.SnapshotParsed(buffer.bufferId, buffer.version);
+                    var lastParsed = bufferParser.GetLastParsedSnapshot(buffer.bufferId);
+
+                    if (lastParsed != null &&
+                        snapshot.Version.VersionNumber < lastParsed.Version.VersionNumber) {
+                        // ignore receiving responses out of order...
+                        Debug.WriteLine("Ignoring out of order parse {0} {1}",
+                            snapshot.Version.VersionNumber,
+                            lastParsed.Version.VersionNumber
+                        );
+                        return;
+                    }
+
+                    Debug.Assert(snapshot.Version.VersionNumber == buffer.version);
+                    entry.BufferParser.SetLastParsedSnapshot(snapshot);
+                }
+
+                // Update the parser warnings/errors.
+                var factory = new TaskProviderItemFactory(snapshot);
+                if (buffer.errors.Any() || buffer.warnings.Any() || buffer.tasks.Any()) {
+                    var warningItems = buffer.warnings.Select(er => factory.FromErrorResult(
+                        _serviceProvider,
+                        er,
+                        VSTASKPRIORITY.TP_NORMAL,
+                        VSTASKCATEGORY.CAT_BUILDCOMPILE)
+                    );
+                    var errorItems = buffer.errors.Select(er => factory.FromErrorResult(
+                        _serviceProvider,
+                        er,
+                        VSTASKPRIORITY.TP_HIGH,
+                        VSTASKCATEGORY.CAT_BUILDCOMPILE)
+                    );
+
+                    var taskItems = buffer.tasks.Select(x => new TaskProviderItem(
+                            _serviceProvider,
+                            x.message,
+                            TaskProviderItemFactory.GetSpan(x),
+                            GetPriority(x.priority),
+                            GetCategory(x.category),
+                            x.squiggle,
+                            snapshot
+                        )
+                    );
+
+                    _taskProvider.ReplaceItems(
+                        entry,
+                        ParserTaskMoniker,
+                        errorItems.Concat(warningItems).Concat(taskItems).ToList()
+                    );
+                } else {
+                    _taskProvider.Clear(entry, ParserTaskMoniker);
+                }
+            }
+
             bool changed = false;
             lock (_hasParseErrorsLock) {
-                changed = parsedEvent.errors.Any() ? _hasParseErrors.Add(entry) : _hasParseErrors.Remove(entry);
+                changed = hasErrors ? _hasParseErrors.Add(entry) : _hasParseErrors.Remove(entry);
             }
             if (changed) {
                 OnShouldWarnOnLaunchChanged(entry);
             }
 
-            Debug.WriteLine("Received updated parse {0}", parsedEvent.version);
-            var snapshot = entry.PopSnapshot(parsedEvent.version);
-            if (entry.LastParsedSnapshot != null &&
-                snapshot.Version.VersionNumber < entry.LastParsedSnapshot.Version.VersionNumber) {
-                // ignore receiving responses out of order...
-                Debug.WriteLine("Ignoring out of order parse {0} {1}",
-                    snapshot.Version.VersionNumber,
-                    entry.LastParsedSnapshot.Version.VersionNumber
-                );
-                return;
-            }
-            Debug.Assert(snapshot.Version.VersionNumber == parsedEvent.version);
-            entry.LastParsedSnapshot = snapshot;
-
-            // Update the parser warnings/errors.
-            var factory = new TaskProviderItemFactory(snapshot);
-            if (parsedEvent.errors.Any() || parsedEvent.warnings.Any() || parsedEvent.tasks.Any()) {
-                var warningItems = parsedEvent.warnings.Select(er => factory.FromErrorResult(
-                    _serviceProvider, 
-                    er, 
-                    VSTASKPRIORITY.TP_NORMAL, 
-                    VSTASKCATEGORY.CAT_BUILDCOMPILE)
-                );
-                var errorItems = parsedEvent.errors.Select(er => factory.FromErrorResult(
-                    _serviceProvider,
-                    er,
-                    VSTASKPRIORITY.TP_HIGH,
-                    VSTASKCATEGORY.CAT_BUILDCOMPILE)
-                );
-
-                var taskItems = parsedEvent.tasks.Select(x => new TaskProviderItem(
-                        _serviceProvider,
-                        x.message,
-                        TaskProviderItemFactory.GetSpan(x),
-                        GetPriority(x.priority),
-                        GetCategory(x.category),
-                        x.squiggle,
-                        entry._lastSentSnapshot
-                    )
-                );
-
-                _taskProvider.ReplaceItems(
-                    entry,
-                    ParserTaskMoniker,
-                    errorItems.Concat(warningItems).Concat(taskItems).ToList()
-                );
-            } else {
-                _taskProvider.Clear(entry, ParserTaskMoniker);
-            }
-
-            entry.RaiseOnNewParseTree();
+            entry.OnParseComplete();
         }
 
         private static VSTASKCATEGORY GetCategory(AP.TaskCategory category) {
@@ -1216,7 +1011,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-#region Implementation Details
+        #region Implementation Details
 
         private static Stopwatch _stopwatch = MakeStopWatch();
 
@@ -1486,9 +1281,9 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal event EventHandler<EntryEventArgs> ShouldWarnOnLaunchChanged;
 
-#endregion
+        #endregion
 
-#region IDisposable Members
+        #region IDisposable Members
 
         public void Dispose() {
             foreach (var entry in _projectFiles.Values) {
@@ -1501,7 +1296,7 @@ namespace Microsoft.PythonTools.Intellisense {
             _analysisProcess.Dispose();
         }
 
-#endregion
+        #endregion
 
         internal void RemoveReference(ProjectAssemblyReference reference) {
             var interp = Interpreter as IPythonInterpreterWithProjectReferences;

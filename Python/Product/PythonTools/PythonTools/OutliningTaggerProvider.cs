@@ -97,7 +97,7 @@ namespace Microsoft.PythonTools {
                 ProjectFileInfo entry;
                 if (_enabled && _buffer.TryGetPythonProjectEntry(out entry)) {
                     if (!_eventHooked) {
-                        entry.OnNewParseTree += OnNewParseTree;
+                        entry.ParseComplete += OnNewParseTree;
                         _eventHooked = true;
                     }
 

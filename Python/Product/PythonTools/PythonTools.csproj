@@ -557,7 +557,7 @@
     <Compile Include="PythonTools\Intellisense\AnalysisPriority.cs" />
     <Compile Include="PythonTools\Intellisense\AnalysisQueue.cs" />
     <Compile Include="PythonTools\Intellisense\MonitoredBufferResult.cs" />
-    <Compile Include="PythonTools\Intellisense\ParseQueue.cs" />
+    <Compile Include="PythonTools\Intellisense\BufferParser.cs" />
     <Compile Include="PythonTools\ISnapshotTextReader.cs" />
     <Compile Include="PythonTools\PythonAutomation.cs" />
     <Compile Include="PythonTools\Options\InterpreterOptions.cs" />

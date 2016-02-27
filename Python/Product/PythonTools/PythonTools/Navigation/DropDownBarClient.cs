@@ -76,7 +76,7 @@ namespace Microsoft.PythonTools.Navigation {
 
             _serviceProvider = serviceProvider;
             _projectEntry = pythonProjectEntry;
-            _projectEntry.OnNewParseTree += ParserOnNewParseTree;
+            _projectEntry.ParseComplete += ParserOnNewParseTree;
             _textView = textView;
             _dispatcher = Dispatcher.CurrentDispatcher;
             _textView.Caret.PositionChanged += CaretPositionChanged;
@@ -515,9 +515,9 @@ namespace Microsoft.PythonTools.Navigation {
         #endregion
 
         internal void UpdateProjectEntry(ProjectFileInfo newEntry) {
-            _projectEntry.OnNewParseTree -= ParserOnNewParseTree;
+            _projectEntry.ParseComplete -= ParserOnNewParseTree;
             _projectEntry = newEntry;
-            _projectEntry.OnNewParseTree += ParserOnNewParseTree;
+            _projectEntry.ParseComplete += ParserOnNewParseTree;
         }
     }
 }

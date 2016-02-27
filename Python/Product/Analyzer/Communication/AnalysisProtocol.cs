@@ -47,14 +47,20 @@ namespace Microsoft.PythonTools.Analysis.Communication {
         public class FileParsedEvent : Event {
             public const string Name = "fileParsed";
 
-            public int fileId, version;
+            public int fileId;
+            public BufferParseInfo[] buffers;
+
+            public override string name => Name;
+        }
+
+        public class BufferParseInfo {
+            public int bufferId, version;
             public bool hasErrors;
             public Error[] errors;
             public Error[] warnings;
             public TaskItem[] tasks;
-
-            public override string name => Name;
         }
+
 
         public struct CodeSpan {
             public int start, length;
@@ -111,22 +117,38 @@ namespace Microsoft.PythonTools.Analysis.Communication {
             public override string name => Name;
         }
 
-        public sealed class FileContentRequest : Request<Response> {
-            public const string Command = "fileContent";
+        public sealed class FileUpdateRequest : Request<FileUpdateResponse> {
+            public const string Command = "fileUpdate";
+
+            public int fileId;
+            public FileUpdate[] updates;
 
             public override string command => Command;
+        }
 
-            public int fileId, version;
+        public enum FileUpdateKind {
+            none,
+            /// <summary>
+            /// Reset the content to the specified content string
+            /// </summary>
+            reset,
+            /// <summary>
+            /// Apply the list of changes to the content
+            /// </summary>
+            changes
+        }
+
+        public sealed class FileUpdate {
+            public FileUpdateKind kind;
+            public int bufferId, version;
+            public ChangeInfo[] changes;
             public string content;
         }
 
-        public sealed class FileChangedRequest : Request<FileChangedResponse> {
-            public const string Command = "fileChanged";
-
-            public override string command => Command;
-
-            public int fileId, version;
-            public ChangeInfo[] changes;
+        public sealed class FileUpdateResponse : Response {
+#if DEBUG
+            public Dictionary<int, string> newCode;
+#endif
         }
 
         public sealed class UnresolvedImportsRequest  : Request<UnresolvedImportsResponse> {
@@ -138,9 +160,14 @@ namespace Microsoft.PythonTools.Analysis.Communication {
         }
 
         public sealed class UnresolvedImportsResponse : Response {
-            public int version;
+            public BufferUnresolvedImports[] buffers;
+        }
+
+        public class BufferUnresolvedImports {
+            public int bufferId, version;
             public UnresolvedImport[] unresolved;
         }
+
 
         public sealed class UnresolvedImport {
             public string name;
@@ -334,7 +361,11 @@ namespace Microsoft.PythonTools.Analysis.Communication {
         }
 
         public sealed class OutliningRegionsResponse : Response {
-            public int version;
+            public BufferOutliningTags[] buffers;
+        }
+
+        public class BufferOutliningTags {
+            public int bufferId, version;
             public OutliningTag[] tags;
         }
 
@@ -349,14 +380,18 @@ namespace Microsoft.PythonTools.Analysis.Communication {
             public override string command => Command;
         }
 
-        public sealed class NavigationResponse : Response {
-            public int version;
+        public sealed class BufferNavigations {
+            public int bufferId, version;
             public Navigation[] navigations;
+        }
+
+        public sealed class NavigationResponse : Response {
+            public BufferNavigations[] buffers;
         }
 
         public sealed class Navigation {
             public string name, type;
-            public int startIndex, endIndex;
+            public int startIndex, endIndex, bufferId;
             public Navigation[] children;
         }
     }
