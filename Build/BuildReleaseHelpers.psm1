@@ -108,6 +108,9 @@ function begin_sign_files {
             if ($certificates -match "vsix") {
                 $job.SelectCertificate("100040160") # Microsoft OPC Publisher (VSIX)
             }
+            if ($certificates -match "sha1opc") {
+                $job.SelectCertificate("160")    # Legacy OPC signing
+            }
             
             foreach ($approver in $approvers) {
                 $job.AddApprover($approver)
