@@ -116,6 +116,11 @@ job.SelectCertificate(67)"
 job.SelectCertificate(100040160)"
         $job.SelectCertificate("100040160") # Microsoft OPC Publisher (VSIX)
     }
+    if ($certificates -match "sha1opc") {
+        $msg = "$msg
+job.SelectCertificate(160)"
+        $job.SelectCertificate("160")    # Legacy OPC signing
+    }
 
     foreach ($approver in $approvers) {
         $msg = "$msg
