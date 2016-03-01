@@ -298,7 +298,7 @@ namespace Microsoft.PythonTools.Interpreter {
                         .Where(m => m != null && m.Success)
                         .Select(m => m.Groups["path"])
                         .Where(g => g != null && g.Success)
-                        .Select(g => g.Value)
+                        .Select(g => g.Value.Trim())
                         .FirstOrDefault(CommonUtils.IsValidPath);
                 } catch (IOException) {
                 } catch (UnauthorizedAccessException) {
@@ -318,7 +318,7 @@ namespace Microsoft.PythonTools.Interpreter {
             if (basePath == null && File.Exists(prefixFile)) {
                 try {
                     var lines = File.ReadAllLines(prefixFile);
-                    basePath = lines.FirstOrDefault(CommonUtils.IsValidPath);
+                    basePath = (lines.FirstOrDefault(CommonUtils.IsValidPath) ?? string.Empty).Trim();
                 } catch (IOException) {
                 } catch (UnauthorizedAccessException) {
                 } catch (System.Security.SecurityException) {
