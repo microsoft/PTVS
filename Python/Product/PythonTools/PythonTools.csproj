@@ -407,7 +407,6 @@
     <Compile Include="PythonTools\Project\InterpretersPackageNode.cs" />
     <Compile Include="PythonTools\Project\InterpretersPackageNodeProperties.cs" />
     <Compile Include="PythonTools\Commands\OpenDebugReplCommand.cs" />
-    <Compile Include="PythonTools\Commands\RemoveImportsCurrentScopeCommand.cs" />
     <Compile Include="PythonTools\Commands\RemoveImportsCommand.cs" />
     <Compile Include="PythonTools\Commands\DiagnosticsCommand.cs" />
     <Compile Include="PythonTools\Commands\DiagnosticsForm.cs">
@@ -489,7 +488,6 @@
     <Compile Include="PythonTools\Refactoring\CodeFormatter.cs" />
     <Compile Include="PythonTools\Refactoring\EnclosingNodeWalker.cs" />
     <Compile Include="PythonTools\Refactoring\ExtractMethodRequestView.cs" />
-    <Compile Include="PythonTools\Refactoring\ImportRemover.cs" />
     <Compile Include="PythonTools\Refactoring\LinePreservingCodeReplacer.cs" />
     <Compile Include="PythonTools\Refactoring\RenameVariableRequestView.cs" />
     <Compile Include="PythonTools\Repl\BasePythonReplEvaluator.cs" />

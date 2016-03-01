@@ -160,10 +160,28 @@ namespace Microsoft.PythonTools.Intellisense {
                 case AP.IsMissingImportRequest.Command: return IsMissingImport((AP.IsMissingImportRequest)request);
                 case AP.AvailableImportsRequest.Command: return AvailableImports((AP.AvailableImportsRequest)request);
                 case AP.FormatCodeRequest.Command: return FormatCode((AP.FormatCodeRequest)request);
+                case AP.RemoveImportsRequest.Command: return RemoveImports((AP.RemoveImportsRequest)request);
                 default:
                     throw new InvalidOperationException("Unknown command");
             }
 
+        }
+
+        private Response RemoveImports(AP.RemoveImportsRequest request) {
+            var projectFile = _projectFiles[request.fileId] as IPythonProjectEntry;
+            var ast = GetVerbatimAst(projectFile, request.bufferId);
+
+            var remover = new ImportRemover(
+                ast, 
+                projectFile.GetCurrentCode(request.bufferId).ToString(), 
+                request.allScopes,
+                request.index
+
+            );
+
+            return new AP.RemoveImportsResponse() {
+                changes = remover.RemoveImports()
+            };
         }
 
         private Response FormatCode(AP.FormatCodeRequest request) {

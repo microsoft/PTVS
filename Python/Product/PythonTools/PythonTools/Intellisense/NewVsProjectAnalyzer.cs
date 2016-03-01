@@ -39,6 +39,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly ConcurrentDictionary<string, ProjectFileInfo> _projectFiles;
         private readonly ConcurrentDictionary<int, ProjectFileInfo> _projectFilesById;
 
+
         internal readonly HashSet<ProjectFileInfo> _hasParseErrors = new HashSet<ProjectFileInfo>();
         internal readonly object _hasParseErrorsLock = new object();
 
@@ -124,6 +125,21 @@ namespace Microsoft.PythonTools.Intellisense {
                     newLine = newLine
                 }
             );
+        }
+
+        internal async Task<AP.ChangeInfo[]> RemoveImports(ITextBuffer buffer, bool allScopes) {
+            var fileInfo = buffer.GetProjectEntry();
+            await fileInfo.BufferParser.EnsureCodeSynced(buffer);
+
+            var res = await _conn.SendRequestAsync(
+                new AP.RemoveImportsRequest() {
+                    fileId = fileInfo.FileId,
+                    bufferId = fileInfo.BufferParser.GetBufferId(buffer),
+                    allScopes = allScopes
+                }
+            );
+
+            return res.changes;
         }
 
         internal async Task<AP.ImportInfo[]> FindNameInAllModules(string name, CancellationToken cancel = default(CancellationToken)) {

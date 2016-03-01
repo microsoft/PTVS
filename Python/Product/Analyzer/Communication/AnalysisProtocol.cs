@@ -252,6 +252,19 @@ namespace Microsoft.PythonTools.Analysis.Communication {
             }
         }
 
+        public sealed class RemoveImportsRequest : Request<RemoveImportsResponse> {
+            public const string Command = "removeImports";
+
+            public int fileId, bufferId, index;
+            public bool allScopes;
+
+            public override string command => Command;
+        }
+
+        public sealed class RemoveImportsResponse : Response {
+            public ChangeInfo[] changes;
+        }
+
         public class EnqueueFileResponse : Response {
             public int fileId;
         }

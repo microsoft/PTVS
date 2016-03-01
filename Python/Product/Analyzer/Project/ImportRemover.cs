@@ -17,30 +17,31 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using Microsoft.PythonTools.Analysis.Communication;
+using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
-using Microsoft.VisualStudio.Text.Editor;
 
 namespace Microsoft.PythonTools.Refactoring {
+    using AP = AnalysisProtocol;
+
     class ImportRemover {
-        private readonly ITextView _view;
         private readonly PythonAst _ast;
         private readonly bool _allScopes;
-        private readonly IServiceProvider _serviceProvider;
+        private readonly string _code;
+        private readonly int _index;
 
-        public ImportRemover(IServiceProvider serviceProvider, ITextView textView, bool allScopes) {
-            _view = textView;
-            _serviceProvider = serviceProvider;
-            var snapshot = _view.TextBuffer.CurrentSnapshot;
-
-            _ast = _view.GetAnalyzer(_serviceProvider).ParseSnapshot(snapshot);
+        public ImportRemover(PythonAst ast, string code, bool allScopes, int index) {
+            _code = code;
+            _ast = ast;
             _allScopes = allScopes;
+            _index = index;
         }
 
-        internal void RemoveImports() {
+        internal AP.ChangeInfo[] RemoveImports() {
             ScopeStatement targetStmt = null;
             if (!_allScopes) {
-                var enclosingNodeWalker = new EnclosingNodeWalker(_ast, _view.Caret.Position.BufferPosition, _view.Caret.Position.BufferPosition);
+                var enclosingNodeWalker = new EnclosingNodeWalker(_ast, _index, _index);
                 _ast.Walk(enclosingNodeWalker);
                 targetStmt = enclosingNodeWalker.Target.Parents[enclosingNodeWalker.Target.Parents.Length - 1];
             }
@@ -48,46 +49,56 @@ namespace Microsoft.PythonTools.Refactoring {
             var walker = new ImportWalker(targetStmt);
             _ast.Walk(walker);
 
-            using (var edit = _view.TextBuffer.CreateEdit()) {
-                foreach (var removeInfo in walker.GetToRemove()) {
-                    // see if we're removing some or all of the 
-                    //var node = removeInfo.Node;
-                    var removing = removeInfo.ToRemove;
-                    var removed = removeInfo.Statement;
-                    UpdatedStatement updatedStatement = removed.InitialStatement;
+            List<AP.ChangeInfo> changes = new List<AnalysisProtocol.ChangeInfo>();
+            foreach (var removeInfo in walker.GetToRemove()) {
+                // see if we're removing some or all of the 
+                //var node = removeInfo.Node;
+                var removing = removeInfo.ToRemove;
+                var removed = removeInfo.Statement;
+                UpdatedStatement updatedStatement = removed.InitialStatement;
 
-                    int removeCount = 0;
-                    for (int i = 0, curRemoveIndex = 0; i < removed.NameCount; i++) {
-                        if (removed.IsRemoved(i, removing)) {
-                            removeCount++;
-                            updatedStatement = updatedStatement.RemoveName(_ast, curRemoveIndex);
-                        } else {
-                            curRemoveIndex++;
-                        }
-                    }
-
-                    var span = removed.Node.GetSpan(_ast);
-                    if (removeCount == removed.NameCount) {
-                        removeInfo.SiblingCount.Value--;
-                        
-                        DeleteStatement(edit, span, removeInfo.SiblingCount.Value == 0);
+                int removeCount = 0;
+                for (int i = 0, curRemoveIndex = 0; i < removed.NameCount; i++) {
+                    if (removed.IsRemoved(i, removing)) {
+                        removeCount++;
+                        updatedStatement = updatedStatement.RemoveName(_ast, curRemoveIndex);
                     } else {
-                        var newCode = updatedStatement.ToCodeString(_ast);
-
-                        int proceedingLength = (removed.Node.GetLeadingWhiteSpace(_ast) ?? "").Length;
-                        int start = span.Start.Index - proceedingLength;
-                        int length = span.Length + proceedingLength;
-
-                        edit.Delete(start, length);
-                        edit.Insert(span.Start.Index, newCode);
+                        curRemoveIndex++;
                     }
                 }
 
-                edit.Apply();
+                var span = removed.Node.GetSpan(_ast);
+                if (removeCount == removed.NameCount) {
+                    removeInfo.SiblingCount.Value--;
+                        
+                    DeleteStatement(changes, span, removeInfo.SiblingCount.Value == 0);
+                } else {
+                    var newCode = updatedStatement.ToCodeString(_ast);
+
+                    int proceedingLength = (removed.Node.GetLeadingWhiteSpace(_ast) ?? "").Length;
+                    int start = span.Start.Index - proceedingLength;
+                    int length = span.Length + proceedingLength;
+
+                    changes.Add(
+                        new AP.ChangeInfo() {
+                            start = start,
+                            length = length,
+                            newText = ""
+                        }
+                    );
+                    changes.Add(
+                        new AP.ChangeInfo() {
+                            start = span.Start.Index,
+                            length = 0,
+                            newText = newCode
+                        }
+                    );
+                }
             }
+            return changes.ToArray();
         }
 
-        private static void DeleteStatement(VisualStudio.Text.ITextEdit edit, SourceSpan span, bool insertPass) {
+        private void DeleteStatement(List<AP.ChangeInfo> changes, SourceSpan span, bool insertPass) {
             // remove the entire node, leave any trailing whitespace/comments, but include the
             // newline and any indentation.
 
@@ -98,8 +109,8 @@ namespace Microsoft.PythonTools.Refactoring {
             if (!insertPass) {
                 // backup to remove any indentation
                 while (start - 1 > 0) {
-                    var curChar = edit.Snapshot.GetText(start - 1, 1);
-                    if (curChar[0] == ' ' || curChar[0] == '\t' || curChar[0] == '\f') {
+                    var curChar = _code[start - 1];
+                    if (curChar == ' ' || curChar == '\t' || curChar == '\f') {
                         length++;
                         start--;
                     } else {
@@ -109,9 +120,9 @@ namespace Microsoft.PythonTools.Refactoring {
             }
 
             // extend past any trailing whitespace characters
-            while (start + length < edit.Snapshot.Length) {
-                var curChar = edit.Snapshot.GetText(start + length, 1);
-                if (curChar[0] == ' ' || curChar[0] == '\t' || curChar[0] == '\f') {
+            while (start + length < _code.Length) {
+                var curChar = _code[start + length];
+                if (curChar == ' ' || curChar == '\t' || curChar == '\f') {
                     length++;
                 } else {
                     break;
@@ -120,12 +131,12 @@ namespace Microsoft.PythonTools.Refactoring {
 
             // remove the trailing newline as well.
             if (!insertPass) {
-                if (start + length < edit.Snapshot.Length) {
-                    var newlineText = edit.Snapshot.GetText(start + length, 1);
-                    if (newlineText == "\r") {
-                        if (start + length + 1 < edit.Snapshot.Length) {
-                            newlineText = edit.Snapshot.GetText(start + length + 1, 1);
-                            if (newlineText == "\n") {
+                if (start + length < _code.Length) {
+                    var newlineText = _code[start + length];
+                    if (newlineText == '\r') {
+                        if (start + length + 1 < _code.Length) {
+                            newlineText = _code[start + length + 1];
+                            if (newlineText == '\n') {
                                 length += 2;
                             } else {
                                 length++;
@@ -133,16 +144,20 @@ namespace Microsoft.PythonTools.Refactoring {
                         } else {
                             length++;
                         }
-                    } else if (newlineText == "\n") {
+                    } else if (newlineText == '\n') {
                         length++;
                     }
                 }
             }
-            edit.Delete(start, length);
 
-            if (insertPass) {
-                edit.Insert(start, "pass");
-            }
+            changes.Add(
+                new AP.ChangeInfo() {
+                    start = start,
+                    length = length,
+                    newText = insertPass ? "pass" : ""
+                }
+            );
+            
         }
 
         /// <summary>

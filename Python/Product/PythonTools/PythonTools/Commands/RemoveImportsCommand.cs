@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using Microsoft.PythonTools.Analysis.Communication;
 using Microsoft.PythonTools.Refactoring;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
@@ -22,24 +23,37 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Commands {
+    using AP = AnalysisProtocol;
+
     /// <summary>
     /// Provides the command to send selected text from a buffer to the remote REPL window.
     /// </summary>
     class RemoveImportsCommand : Command {
         private readonly System.IServiceProvider _serviceProvider;
+        private readonly bool _allScopes;
         
-        public RemoveImportsCommand(System.IServiceProvider serviceProvider) {
+        public RemoveImportsCommand(System.IServiceProvider serviceProvider, bool allScopes) {
             _serviceProvider = serviceProvider;
+            _allScopes = allScopes;
         }
 
-        public override void DoCommand(object sender, EventArgs args) {
-            new ImportRemover(_serviceProvider, CommonPackage.GetActiveTextView(_serviceProvider), true).RemoveImports();
+        public override async void DoCommand(object sender, EventArgs args) {
+            var view = CommonPackage.GetActiveTextView(_serviceProvider);
+            var analyzer = view.GetAnalyzer(_serviceProvider);
+
+            AP.ChangeInfo[] changes = await analyzer.RemoveImports(view.TextBuffer, _allScopes);
+            using (var edit = view.TextBuffer.CreateEdit()) {
+                foreach (var change in changes) {
+                    edit.Replace(change.start, change.length, change.newText);
+                }
+                edit.Apply();
+            }
         }
 
         public override int? EditFilterQueryStatus(ref VisualStudio.OLE.Interop.OLECMD cmd, IntPtr pCmdText) {
             var activeView = CommonPackage.GetActiveTextView(_serviceProvider);
             if (activeView != null && activeView.TextBuffer.ContentType.IsOfType(PythonCoreConstants.ContentType)) {                
-                cmd.cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);                
+                cmd.cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
             } else {
                 cmd.cmdf = (uint)(OLECMDF.OLECMDF_INVISIBLE);
             }
@@ -57,7 +71,9 @@ namespace Microsoft.PythonTools.Commands {
         }
 
         public override int CommandId {
-            get { return (int)PkgCmdIDList.cmdidRemoveImports; }
+            get {
+                return _allScopes ? (int)PkgCmdIDList.cmdidRemoveImports : (int)PkgCmdIDList.cmdidRemoveImportsCurrentScope;
+            }
         }
     }
 }

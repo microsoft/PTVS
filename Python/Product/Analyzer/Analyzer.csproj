@@ -69,6 +69,7 @@
     <Compile Include="Project\AnalysisSynchronizationContext.cs" />
     <Compile Include="Project\CompletionOptions.cs" />
     <Compile Include="Project\EnclosingNodeWalker.cs" />
+    <Compile Include="Project\ImportRemover.cs" />
     <Compile Include="Project\LinePreservingCodeReplacer.cs" />
     <Compile Include="Project\OutOfProcProjectAnalyzer.cs" />
     <Compile Include="Project\ProjectEntryExtensions.cs" />
