@@ -28,6 +28,7 @@
 
     <!-- Templates -->
     <ItemTemplate Include="ItemTemplates\Python\DjangoNewAppFiles14.zip" />
+    <ItemTemplate Include="ItemTemplates\Python\DjangoNewAppFiles19.zip" />
     <WebProjectTemplate Include="ProjectTemplates\Python\Web\DjangoProject.zip;
                                  ProjectTemplates\Python\Web\StarterDjangoProject.zip" />
     
