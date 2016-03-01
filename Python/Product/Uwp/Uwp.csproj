@@ -182,13 +182,6 @@
     <None Include="Debugger\RemoteDebugServerComponent.vsdconfigxml">
       <SubType>Designer</SubType>
     </None>
-    <ZipProject Include="Templates\Projects\BackgroundService\Package.appxmanifest">
-      <SubType>Designer</SubType>
-    </ZipProject>
-    <ZipProject Include="Templates\Projects\BackgroundService\Application_TemporaryKey.pfx" />
-    <ZipProject Include="Templates\Projects\BackgroundService\PythonBackgroundService.pyproj">
-      <SubType>Designer</SubType>
-    </ZipProject>
   </ItemGroup>
   <ItemGroup>
     <ConditionalEmbeddedResource Include="VSPackage.resx">
@@ -207,10 +200,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <ZipProject Include="Templates\Projects\BackgroundService\PythonBackgroundService.vstemplate">
-      <SubType>Designer</SubType>
-    </ZipProject>
-    <ZipProject Include="Templates\Projects\BackgroundService\StartupTask.py" />
     <None Include="source.extension.vsixmanifest">
       <SubType>Designer</SubType>
     </None>

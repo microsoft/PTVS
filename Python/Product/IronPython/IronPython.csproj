@@ -160,25 +160,7 @@
     </Content>
     <None Include="NoIronPython.html" />
   </ItemGroup>
-  <ItemDefinitionGroup>
-    <ZipProject>
-      <Language>Python</Language>
-    </ZipProject>
-    <ZipItem>
-      <Language>Python</Language>
-    </ZipItem>
-  </ItemDefinitionGroup>
   <ItemGroup>
-    <ZipItem Include="Templates\Files\WpfWindow\WpfWindow.py" />
-    <ZipProject Include="Templates\Projects\ConsoleProject\ConsoleProject.pyproj" />
-    <ZipProject Include="Templates\Projects\WinformsProject\WinformsApp.pyproj" />
-    <ZipItem Include="Templates\Files\WpfWindow\WpfWindow.vstemplate" />
-    <ZipProject Include="Templates\Projects\ConsoleProject\Program.py" />
-    <ZipProject Include="Templates\Projects\ConsoleProject\ConsoleProject.vstemplate" />
-    <ZipProject Include="Templates\Projects\WpfProject\Program.py" />
-    <ZipProject Include="Templates\Projects\WinformsProject\Program.py" />
-    <ZipProject Include="Templates\Projects\WinformsProject\WinformsApp.vstemplate" />
-    <ZipProject Include="Templates\Projects\WpfProject\WpfApp.vstemplate" />
     <Content Include="NoIronPython.mht">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
@@ -186,22 +168,11 @@
     <None Include="source.extension.vsixmanifest">
       <SubType>Designer</SubType>
     </None>
-    <ZipProject Include="Templates\Projects\SilverlightProject\SilverlightProject.pyproj" />
-    <ZipProject Include="Templates\Projects\WpfProject\WpfApp.pyproj" />
-    <ZipProject Include="Templates\Projects\SilverlightProject\Program.html" />
-    <ZipProject Include="Templates\Projects\SilverlightProject\SilverlightProject.vstemplate" />
-    <ZipProject Include="Templates\Projects\SilverlightProject\Program.py" />
-    <ZipItem Include="Templates\Files\WpfWindow\WpfWindow.xaml" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Debugger\IronPythonLauncherOptions.resx">
       <DependentUpon>IronPythonLauncherOptions.cs</DependentUpon>
     </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
-    <ZipProject Include="Templates\Projects\WpfProject\Program.xaml">
-      <SubType>Designer</SubType>
-    </ZipProject>
   </ItemGroup>
   <Import Project="..\ProjectAfter.settings" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
