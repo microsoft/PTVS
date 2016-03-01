@@ -272,11 +272,11 @@ namespace Microsoft.PythonTools.Interpreter {
             string libPath,
             IInterpreterOptionsService service
         ) {
-            string basePath = GetOrigPrefixPath(prefixPath, libPath);
+            string basePath = CommonUtils.TrimEndSeparator(GetOrigPrefixPath(prefixPath, libPath));
 
             if (Directory.Exists(basePath)) {
                 return service.Interpreters.FirstOrDefault(interp =>
-                    CommonUtils.IsSamePath(interp.Configuration.PrefixPath, basePath)
+                    CommonUtils.IsSamePath(CommonUtils.TrimEndSeparator(interp.Configuration.PrefixPath), basePath)
                 );
             }
             return null;
