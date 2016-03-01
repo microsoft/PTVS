@@ -21,6 +21,7 @@
   </ItemGroup>
   <ItemGroup>
     <LinkerBindInputPaths Include="$(LayoutOutputPath)\Microsoft.PythonTools.Django" />
+    <LinkerBindInputPaths Include="$(BuildRoot)\Python\Templates\Django" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="..\MergeModule.wxi">

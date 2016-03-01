@@ -5,6 +5,12 @@
 
     <?include ..\MergeModule.wxi ?>
 
+    <?foreach key in VS;WD;VWD?>
+    <DirectoryRef Id="Dir_$(var.key)UwpProjectTemplates">
+      <Directory Id="Dir_$(var.key)UwpProjectTemplates_BackgroundService" Name="BackgroundService" />
+    </DirectoryRef>
+    <?endforeach?>
+
     <Component Id="PerUserInstallRegistry" Directory="Dir_VSInstallLocation" Guid="{D6DEC397-028C-473B-8449-B7AB415B21BB}">
       <Condition>NOT ALLUSERS = 1</Condition>
       <RegistryKey Root='HKCU' Key='Software\Microsoft\VisualStudio\$(var.VSTargetVersion)\ExtensionManager\EnabledExtensions'>

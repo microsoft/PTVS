@@ -22,11 +22,21 @@
                    NoIronPython.mht" />
 
     <!-- Templates -->
-    <ItemTemplate Include="ItemTemplates\Python\WpfWindow.zip" />
-    <ProjectTemplate Include="ProjectTemplates\Python\SilverlightProject.zip;
-                              ProjectTemplates\Python\WinformsProject.zip;
-                              ProjectTemplates\Python\WpfProject.zip;
-                              ProjectTemplates\Python\ConsoleProject.zip" />
+    <ItemTemplate Include="$(BuildRoot)Python\Templates\IronPython\ItemTemplates\Python\WpfWindow\*">
+      <TemplateName>WpfWindow</TemplateName>
+    </ItemTemplate>
+    <ProjectTemplate Include="$(BuildRoot)Python\Templates\IronPython\ProjectTemplates\Python\SilverlightProject\*">
+      <TemplateName>SilverlightProject</TemplateName>
+    </ProjectTemplate>
+    <ProjectTemplate Include="$(BuildRoot)Python\Templates\IronPython\ProjectTemplates\Python\WinformsProject\*">
+      <TemplateName>WinformsProject</TemplateName>
+    </ProjectTemplate>
+    <ProjectTemplate Include="$(BuildRoot)Python\Templates\IronPython\ProjectTemplates\Python\WpfProject\*">
+      <TemplateName>WpfProject</TemplateName>
+    </ProjectTemplate>
+    <ProjectTemplate Include="$(BuildRoot)Python\Templates\IronPython\ProjectTemplates\Python\ConsoleProject\*">
+      <TemplateName>ConsoleProject</TemplateName>
+    </ProjectTemplate>
   </ItemGroup>
 
   <Import Project="..\WixGenerator.targets"/>

@@ -7,10 +7,6 @@ $web_role_common = @('ps.cmd', 'ConfigureCloudService.ps1', 'WebRoleConfiguratio
 $worker_role_common = @('ps.cmd', 'ConfigureCloudService.ps1', 'LaunchWorker.ps1', 'WorkerRoleConfiguration.mht') | %{ gi $_ }
 
 $web_role_targets = @(
-    "..\Web\ItemTemplates\CloudService\NETFramework4\Web Role\Python\CloudServiceBottleWebRole",
-    "..\Django\ItemTemplates\CloudService\NETFramework4\Web Role\Python\CloudServiceDjangoWebRole",
-    "..\Web\ItemTemplates\CloudService\NETFramework4\Web Role\Python\CloudServiceEmptyWebRole",
-    "..\Web\ItemTemplates\CloudService\NETFramework4\Web Role\Python\CloudServiceFlaskWebRole",
     "..\Web\ItemTemplates\Python\AzureCSWebRole",
     "..\Web\ProjectTemplates\Python\WebRoleBottle",
     "..\Django\ProjectTemplates\Python\WebRoleDjango",
@@ -19,7 +15,6 @@ $web_role_targets = @(
 ) | %{ gi $_ }
 
 $worker_role_targets = @(
-    "..\Web\ItemTemplates\CloudService\NETFramework4\Worker Role\Python\CloudServiceWorkerRole",
     "..\Web\ItemTemplates\Python\AzureCSWorkerRole",
     "..\Web\ProjectTemplates\Python\WorkerRoleProject"
 ) | %{ gi $_ }

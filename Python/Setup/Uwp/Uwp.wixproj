@@ -21,6 +21,7 @@
   </ItemGroup>
   <ItemGroup>
     <LinkerBindInputPaths Include="$(LayoutOutputPath)\Microsoft.PythonTools.Uwp" />
+    <LinkerBindInputPaths Include="$(BuildRoot)\Python\Templates\Uwp" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="..\MergeModule.wxi">
