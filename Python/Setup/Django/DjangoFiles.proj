@@ -27,14 +27,25 @@
                    PythonProjectBig.ico" />
 
     <!-- Templates -->
-    <ItemTemplate Include="ItemTemplates\Python\DjangoNewAppFiles14.zip" />
-    <WebProjectTemplate Include="ProjectTemplates\Python\Web\DjangoProject.zip;
-                                 ProjectTemplates\Python\Web\StarterDjangoProject.zip" />
-    
-    <File Include="ItemTemplates\CloudService\NETFramework4\Web Role\Python\CloudServiceDjangoWebRole.zip">
-      <InstallDirectory>ItemTemplates_CloudService_WebRole</InstallDirectory>
+    <ItemTemplate Include="$(BuildRoot)Python\Templates\Django\ItemTemplates\Python\DjangoNewAppFiles14\*">
+      <TemplateName>DjangoNewAppFiles14</TemplateName>
+    </ItemTemplate>
+    <ItemTemplate Include="$(BuildRoot)Python\Templates\Django\ItemTemplates\Python\DjangoNewAppFiles19\*">
+      <TemplateName>DjangoNewAppFiles19</TemplateName>
+    </ItemTemplate>
+    <WebProjectTemplate Include="$(BuildRoot)Python\Templates\Django\ProjectTemplates\Python\Web\DjangoProject\*">
+      <TemplateName>DjangoProject</TemplateName>
+    </WebProjectTemplate>
+    <WebProjectTemplate Include="$(BuildRoot)Python\Templates\Django\ProjectTemplates\Python\Web\StarterDjangoProject\*">
+      <TemplateName>StarterDjangoProject</TemplateName>
+    </WebProjectTemplate>
+
+    <File Include="$(BuildRoot)Python\Templates\Django\ItemTemplates\CloudService\NETFramework4\Web Role\Python\CloudServiceDjangoWebRole\*">
+      <InstallDirectory>ItemTemplates_CloudService_WebRole_Django</InstallDirectory>
     </File>
-    <WebProjectTemplate Include="ProjectTemplates\Python\Web\DjangoWebRole.zip" />
+    <WebProjectTemplate Include="$(BuildRoot)Python\Templates\Django\ProjectTemplates\Python\Web\DjangoWebRole\*">
+      <TemplateName>DjangoWebRole</TemplateName>
+    </WebProjectTemplate>
 
     <!-- Targets -->
     <MSBuildFile Include="Microsoft.PythonTools.Django.targets" />

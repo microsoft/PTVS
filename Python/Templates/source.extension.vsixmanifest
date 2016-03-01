@@ -1,0 +1,25 @@
+<PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
+  <Metadata>
+    <Identity Id="6970B230-8BA1-4BB5-8EB9-4BDB894D55B0" Version="3.0" Language="en-US" Publisher="Microsoft Corporation" />
+    <DisplayName>PTVSTemplates</DisplayName>
+    <Description xml:space="preserve">Provides templates for Python projects and items.</Description>
+    <MoreInfo>http://aka.ms/ptvs</MoreInfo>
+    <GettingStartedGuide>http://aka.ms/ptvstutorial</GettingStartedGuide>
+    <Icon>PythonProject.ico</Icon>
+    <PreviewImage>PythonProjectBig.ico</PreviewImage>
+  </Metadata>
+  <!-- Version="14.0" specifies the minimum (not the maximum) version, and the
+       Id specifications are minimums; any SKU equal or 'higher' will accept
+       them. -->
+  <Installation InstalledByMsi="true">
+    <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="14.0" />
+    <InstallationTarget Id="Microsoft.VisualStudio.IntegratedShell" Version="14.0" />
+    <InstallationTarget Id="Microsoft.VisualStudio.WDExpress" Version="14.0" />
+    <InstallationTarget Id="Microsoft.VisualStudio.VWDExpress" Version="14.0" />
+  </Installation>
+  <Dependencies />
+  <Assets>
+    <Asset Type="Microsoft.VisualStudio.ProjectTemplate" Path="ProjectTemplates" />
+    <Asset Type="Microsoft.VisualStudio.ItemTemplate" Path="ItemTemplates" />
+  </Assets>
+</PackageManifest>

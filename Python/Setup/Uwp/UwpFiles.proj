@@ -35,9 +35,9 @@
                    PythonProjectBig.ico" />
 
     <!-- Templates -->
-    <File Include="ProjectTemplates\Python\Windows IoT Core\BackgroundService.zip">
-        <InstallDirectory>UwpProjectTemplates</InstallDirectory>
-    </File>
+    <ProjectTemplate Include="$(BuildRoot)Python\Templates\Uwp\ProjectTemplates\Python\Windows IoT Core\BackgroundService*">
+      <TemplateName>UwpProjectTemplates_BackgroundService</TemplateName>
+    </ProjectTemplate>
     
   </ItemGroup>
 
