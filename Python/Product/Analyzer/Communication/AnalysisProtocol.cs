@@ -199,7 +199,7 @@ namespace Microsoft.PythonTools.Analysis.Communication {
         public sealed class FileUpdate {
             public FileUpdateKind kind;
             public int bufferId, version;
-            public ChangeInfo[] changes;
+            public VersionChanges[] versions;
             public string content;
         }
 
@@ -238,6 +238,10 @@ namespace Microsoft.PythonTools.Analysis.Communication {
 #endif
         }
 
+        public sealed class VersionChanges {
+            public ChangeInfo[] changes;
+        }
+
         public sealed class ChangeInfo {
             public string newText;
             public int start;
@@ -263,6 +267,40 @@ namespace Microsoft.PythonTools.Analysis.Communication {
 
         public sealed class RemoveImportsResponse : Response {
             public ChangeInfo[] changes;
+        }
+
+        public sealed class ExtractMethodRequest : Request<ExtractMethodResponse> {
+            public const string Command = "extractMethod";
+
+            public int fileId, bufferId, startIndex, endIndex;
+            public int indentSize;
+            public string name;
+            public string[] parameters;
+            public bool convertTabsToSpaces;
+            public string newLine;
+            public bool shouldExpandSelection;
+            public int? scope;
+
+            public override string command => Command;
+        }
+
+        public sealed class ExtractMethodResponse : Response {
+            public string cannotExtractMsg;
+            public ChangeInfo[] changes;
+            /// <summary>
+            /// available scopes the user can retarget to
+            /// </summary>
+            public ScopeInfo[] scopes;
+            public bool wasExpanded;
+            public int? startIndex, endIndex;
+            public string methodBody;
+            public string[] variables;
+        }
+
+        public class ScopeInfo {
+            public string type, name;
+            public int id;
+            public string[] variables;
         }
 
         public class EnqueueFileResponse : Response {

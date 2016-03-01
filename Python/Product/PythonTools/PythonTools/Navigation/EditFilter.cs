@@ -805,8 +805,8 @@ namespace Microsoft.PythonTools.Language {
             }
         }
 
-        private bool ExtractMethod() {
-            return new MethodExtractor(_serviceProvider, _textView).ExtractMethod(new ExtractMethodUserInput(_serviceProvider));
+        private void ExtractMethod() {
+            new MethodExtractor(_serviceProvider, _textView).ExtractMethod(new ExtractMethodUserInput(_serviceProvider)).DoNotWait();
         }
 
         private void FormatCode(SnapshotSpan span, bool selectResult) {

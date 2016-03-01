@@ -17,10 +17,13 @@
 using System;
 using System.Windows;
 using System.Windows.Interop;
+using Microsoft.PythonTools.Analysis.Communication;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.PythonTools.Refactoring {
+    using AP = AnalysisProtocol;
+
     class ExtractMethodUserInput : IExtractMethodInput {
         private readonly IServiceProvider _serviceProvider;
 

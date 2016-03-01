@@ -293,51 +293,57 @@ namespace Microsoft.PythonTools.Intellisense {
             ProjectFileInfo entry = _currentProjEntry;
 
             List<AP.FileUpdate> updates = new List<AP.FileUpdate>();
-            for (int i = 0; i < snapshots.Length; i++) {
-                var snapshot = snapshots[i];
-                var bufferInfo = bufferInfos[i];
+            lock (this) {
+                for (int i = 0; i < snapshots.Length; i++) {
+                    var snapshot = snapshots[i];
+                    var bufferInfo = bufferInfos[i];
 
-                if (snapshot.TextBuffer.Properties.ContainsProperty(PythonReplEvaluator.InputBeforeReset) ||
-                    snapshot.IsReplBufferWithCommand()) {
-                    continue;
-                }
-
-                var lastSent = GetLastSentSnapshot(bufferInfo.Buffer);
-                if (lastSent == null || lastSent.TextBuffer != snapshot.TextBuffer) {
-                    // First time parsing from a live buffer, send the entire
-                    // file and set our initial snapshot.  We'll roll forward
-                    // to new snapshots when we receive the errors event.  This
-                    // just makes sure that the content is in sync.
-                    updates.Add(
-                        new AP.FileUpdate() {
-                            content = snapshot.GetText(),
-                            version = snapshot.Version.VersionNumber,
-                            bufferId = bufferInfo.Id,
-                            kind = AP.FileUpdateKind.reset
-                        }
-                    );
-                } else {
-                    List<AP.ChangeInfo> changes = new List<AP.ChangeInfo>();
-                    for (var curVersion = lastSent.Version;
-                        curVersion != snapshot.Version;
-                        curVersion = curVersion.Next) {
-                        changes.AddRange(GetChanges(curVersion));
+                    if (snapshot.TextBuffer.Properties.ContainsProperty(PythonReplEvaluator.InputBeforeReset) ||
+                        snapshot.IsReplBufferWithCommand()) {
+                        continue;
                     }
 
-                    updates.Add(
-                        new AP.FileUpdate() {
-                            changes = changes.ToArray(),
-                            version = snapshot.Version.VersionNumber,
-                            bufferId = bufferInfo.Id,
-                            kind = AP.FileUpdateKind.changes
+                    var lastSent = GetLastSentSnapshot(bufferInfo.Buffer);
+                    if (lastSent == null || lastSent.TextBuffer != snapshot.TextBuffer) {
+                        // First time parsing from a live buffer, send the entire
+                        // file and set our initial snapshot.  We'll roll forward
+                        // to new snapshots when we receive the errors event.  This
+                        // just makes sure that the content is in sync.
+                        updates.Add(
+                            new AP.FileUpdate() {
+                                content = snapshot.GetText(),
+                                version = snapshot.Version.VersionNumber,
+                                bufferId = bufferInfo.Id,
+                                kind = AP.FileUpdateKind.reset
+                            }
+                        );
+                    } else {
+                        List<AP.VersionChanges> versions = new List<AnalysisProtocol.VersionChanges>();
+                        for (var curVersion = lastSent.Version;
+                            curVersion != snapshot.Version;
+                            curVersion = curVersion.Next) {
+                            versions.Add(
+                                new AP.VersionChanges() {
+                                    changes = GetChanges(curVersion)
+                                }
+                            );
                         }
-                    );
-                }
 
-                Debug.WriteLine("Added parse request {0}", snapshot.Version.VersionNumber);
-                entry.AnalysisCookie = new SnapshotCookie(snapshot);  // TODO: What about multiple snapshots?
-                SetLastSentSnapshot(snapshot);
-                SentSnapshot(snapshot);
+                        updates.Add(
+                            new AP.FileUpdate() {
+                                versions = versions.ToArray(),
+                                version = snapshot.Version.VersionNumber,
+                                bufferId = bufferInfo.Id,
+                                kind = AP.FileUpdateKind.changes
+                            }
+                        );
+                    }
+
+                    Debug.WriteLine("Added parse request {0}", snapshot.Version.VersionNumber);
+                    entry.AnalysisCookie = new SnapshotCookie(snapshot);  // TODO: What about multiple snapshots?
+                    SetLastSentSnapshot(snapshot);
+                    SentSnapshot(snapshot);
+                }
             }
 
             var res = await _parser._conn.SendRequestAsync(

@@ -22,6 +22,7 @@ using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.PythonTools.Intellisense {
     using Repl;
+    using VisualStudio.Text.Editor.OptionsExtensionMethods;
     using AP = AnalysisProtocol;
 
     public sealed class VsProjectAnalyzer : IDisposable {
@@ -146,6 +147,28 @@ namespace Microsoft.PythonTools.Intellisense {
             return (await _conn.SendRequestAsync(new AP.AvailableImportsRequest() {
                 name = name
             }, cancel)).imports;
+        }
+
+        internal async Task<AP.ExtractMethodResponse> ExtractMethod(ProjectFileInfo projectFile, ITextView view, string name, string[] parameters, int? targetScope = null) {
+            ITextBuffer buffer = projectFile.BufferParser.Buffers.Last();
+            var bufferId = projectFile.BufferParser.GetBufferId(buffer);
+
+            await projectFile.BufferParser.EnsureCodeSynced(buffer);
+
+            var res = await _conn.SendRequestAsync(new AP.ExtractMethodRequest() {
+                fileId = projectFile.FileId,
+                bufferId = bufferId,
+                indentSize = view.Options.GetIndentSize(),
+                convertTabsToSpaces = view.Options.IsConvertTabsToSpacesEnabled(),
+                newLine = view.Options.GetNewLineCharacter(),
+                startIndex = view.Selection.Start.Position,
+                endIndex = view.Selection.End.Position,
+                name = name,
+                scope = targetScope,
+                shouldExpandSelection = true
+                
+            });
+            return res;
         }
 
         internal async Task<AP.ChangeInfo[]> AddImport(ProjectFileInfo projectFile, string fromModule, string name, string newLine) {
@@ -572,7 +595,6 @@ namespace Microsoft.PythonTools.Intellisense {
 
                     // race with another vesion being parsed, we should get called again when
                     // we get notified of another new parse tree
-                    Debug.Assert(bufferTags.version > lastParsed.Version.VersionNumber);
                 }
 
             }
@@ -968,42 +990,6 @@ namespace Microsoft.PythonTools.Intellisense {
 #if FALSE
                 return _pyAnalyzer != null ? _pyAnalyzer.Interpreter : null;
 #endif
-            }
-        }
-
-        internal PythonAst ParseSnapshot(ITextSnapshot snapshot) {
-            return null;
-#if FALSE
-            using (var parser = Parser.CreateParser(
-                new SnapshotSpanSourceCodeReader(
-                    new SnapshotSpan(snapshot, 0, snapshot.Length)
-                ),
-                Project.LanguageVersion,
-                new ParserOptions() { Verbatim = true, BindReferences = true }
-            )) {
-                return ParseOneFile(null, parser);
-            }
-#endif
-        }
-
-        internal ITextSnapshot GetOpenSnapshot(ProjectFileInfo entry) {
-            if (entry == null) {
-                return null;
-            }
-
-            lock (_openFiles) {
-                var item = _openFiles.FirstOrDefault(kv => kv.Value == entry);
-                if (item.Value == null) {
-                    return null;
-                }
-                var document = item.Key.Document;
-                if (document == null) {
-                    return null;
-                }
-
-                var textBuffer = document.TextBuffer;
-                // TextBuffer may be null if we are racing with file close
-                return textBuffer != null ? textBuffer.CurrentSnapshot : null;
             }
         }
 

@@ -30,8 +30,11 @@ namespace Microsoft.PythonTools.Refactoring {
         private readonly int _indentSize;
         private readonly bool _insertTabs;
         private readonly string _newline;
+        private readonly string _name;
+        private readonly string[] _parameters;
+        private readonly ScopeStatement _targetScope;
 
-        public ExtractedMethodCreator(PythonAst ast, ScopeStatement[] scopes, HashSet<PythonVariable> inputVariables, HashSet<PythonVariable> outputVariables, SelectionTarget target, int indentSize, bool insertTabs, string newline) {
+        public ExtractedMethodCreator(PythonAst ast, ScopeStatement[] scopes, HashSet<PythonVariable> inputVariables, HashSet<PythonVariable> outputVariables, SelectionTarget target, int indentSize, bool insertTabs, string newline, string name, string[] parameters, ScopeStatement targetScope) {
             _ast = ast;
             _scopes = scopes;
             _inputVars = new List<PythonVariable>(inputVariables);
@@ -42,17 +45,20 @@ namespace Microsoft.PythonTools.Refactoring {
             _indentSize = indentSize;
             _insertTabs = insertTabs;
             _newline = newline;
+            _name = name;
+            _parameters = parameters;
+            _targetScope = targetScope;
         }
 
         private static int CompareVariables(PythonVariable left, PythonVariable right) {
             return String.Compare(left.Name, right.Name);
         }
 
-        public ExtractMethodResult GetExtractionResult(ExtractMethodRequest info) {
+        public ExtractMethodResult GetExtractionResult() {
             bool isStaticMethod = false, isClassMethod = false;
             var parameters = new List<Parameter>();
             string selfParam = null;
-            if (info.TargetScope is ClassDefinition) {
+            if (_targetScope is ClassDefinition) {
                 var fromScope = _scopes[_scopes.Length - 1] as FunctionDefinition;
                 Debug.Assert(fromScope != null);  // we don't allow extracting from classes, so we have to be coming from a function
                 if (fromScope != null) {
@@ -78,7 +84,7 @@ namespace Microsoft.PythonTools.Refactoring {
                 }
             }
 
-            foreach (var param in info.Parameters) {
+            foreach (var param in _parameters) {
                 var newParam = new Parameter(param, ParameterKind.Normal);
                 if (parameters.Count > 0) {
                     newParam.AddPreceedingWhiteSpace(_ast, " ");
@@ -89,7 +95,7 @@ namespace Microsoft.PythonTools.Refactoring {
             // include any non-closed over parameters as well...
             foreach (var input in _inputVars) {
                 var variableScope = input.Scope;
-                var parentScope = info.TargetScope;
+                var parentScope = _targetScope;
 
                 // are these variables a child of the target scope so we can close over them?
                 while (parentScope != null && parentScope != variableScope) {
@@ -149,7 +155,7 @@ namespace Microsoft.PythonTools.Refactoring {
                 decorators = new DecoratorStatement(new[] { new NameExpression("classmethod") });
             }
 
-            var res = new FunctionDefinition(new NameExpression(info.Name), parameters.ToArray(), body, decorators);
+            var res = new FunctionDefinition(new NameExpression(_name), parameters.ToArray(), body, decorators);
             res.IsCoroutine = isCoroutine;
             
             StringBuilder newCall = new StringBuilder();
@@ -158,7 +164,7 @@ namespace Microsoft.PythonTools.Refactoring {
 
             // fix up indentation...
             for (int curScope = 0; curScope < _scopes.Length; curScope++) {
-                if (_scopes[curScope] == info.TargetScope) {
+                if (_scopes[curScope] == _targetScope) {
                     // this is our target indentation level.
                     var indentationLevel = _scopes[curScope].Body.GetIndentationLevel(_ast);
                     var lines = method.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
@@ -227,12 +233,12 @@ namespace Microsoft.PythonTools.Refactoring {
                 newCall.Append("await ");
             }
 
-            if (info.TargetScope is ClassDefinition) {
+            if (_targetScope is ClassDefinition) {
                 var fromScope = _scopes[_scopes.Length - 1] as FunctionDefinition;
                 Debug.Assert(fromScope != null);  // we don't allow extracting from classes, so we have to be coming from a function
 
                 if (isStaticMethod) {
-                    newCall.Append(info.TargetScope.Name);
+                    newCall.Append(_targetScope.Name);
                     newCall.Append('.');
                 } else if (fromScope != null && fromScope.Parameters.Count > 0) {
                     newCall.Append(fromScope.Parameters[0].Name);
@@ -240,7 +246,7 @@ namespace Microsoft.PythonTools.Refactoring {
                 }
             }
 
-            newCall.Append(info.Name);
+            newCall.Append(_name);
             newCall.Append('(');
 
             comma = "";

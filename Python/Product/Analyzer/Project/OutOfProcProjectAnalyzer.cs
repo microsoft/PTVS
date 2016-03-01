@@ -161,10 +161,18 @@ namespace Microsoft.PythonTools.Intellisense {
                 case AP.AvailableImportsRequest.Command: return AvailableImports((AP.AvailableImportsRequest)request);
                 case AP.FormatCodeRequest.Command: return FormatCode((AP.FormatCodeRequest)request);
                 case AP.RemoveImportsRequest.Command: return RemoveImports((AP.RemoveImportsRequest)request);
+                case AP.ExtractMethodRequest.Command: return ExtractMethod((AP.ExtractMethodRequest)request);
                 default:
                     throw new InvalidOperationException("Unknown command");
             }
 
+        }
+
+        private Response ExtractMethod(AP.ExtractMethodRequest request) {
+            var projectFile = _projectFiles[request.fileId] as IPythonProjectEntry;
+            var ast = GetVerbatimAst(projectFile, request.bufferId);
+
+            return new MethodExtractor(ast, projectFile.GetCurrentCode(request.bufferId).ToString()).ExtractMethod(request);
         }
 
         private Response RemoveImports(AP.RemoveImportsRequest request) {
@@ -1027,11 +1035,15 @@ namespace Microsoft.PythonTools.Intellisense {
                                 entry.SetCurrentCode(curCode = new StringBuilder(), update.bufferId);
                             }
 
-                            // TODO: THis doesn't handle multiple changes properly as the
-                            // offsets change as we apply them
-                            foreach (var change in update.changes) {
-                                curCode.Remove(change.start, change.length);
-                                curCode.Insert(change.start, change.newText);
+                            foreach (var version in update.versions) {
+                                int delta = 0;
+
+                                foreach (var change in version.changes) {
+                                    curCode.Remove(change.start + delta, change.length);
+                                    curCode.Insert(change.start + delta, change.newText);
+
+                                    delta += change.newText.Length - change.length;
+                                }
                             }
 
                             var newCodeStr = curCode.ToString();

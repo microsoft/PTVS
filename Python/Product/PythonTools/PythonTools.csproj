@@ -595,7 +595,6 @@
     <Compile Include="PythonTools\Refactoring\RenameVariableRequest.cs" />
     <Compile Include="PythonTools\Refactoring\RenameVariableUserInput.cs" />
     <Compile Include="PythonTools\Refactoring\IRenameVariableInput.cs" />
-    <Compile Include="PythonTools\Refactoring\ExtractedMethodCreator.cs" />
     <Compile Include="PythonTools\Refactoring\ExtractMethodDialog.xaml.cs">
       <DependentUpon>ExtractMethodDialog.xaml</DependentUpon>
     </Compile>

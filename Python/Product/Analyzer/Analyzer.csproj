@@ -67,10 +67,15 @@
     <Compile Include="Project\AnalysisPriority.cs" />
     <Compile Include="Project\AnalysisQueue.cs" />
     <Compile Include="Project\AnalysisSynchronizationContext.cs" />
+    <Compile Include="Project\AssignmentWalker.cs" />
     <Compile Include="Project\CompletionOptions.cs" />
     <Compile Include="Project\EnclosingNodeWalker.cs" />
+    <Compile Include="Project\ExtractedMethodCreator.cs" />
+    <Compile Include="Project\ExtractMethodResult.cs" />
+    <Compile Include="Project\FlowChecker.cs" />
     <Compile Include="Project\ImportRemover.cs" />
     <Compile Include="Project\LinePreservingCodeReplacer.cs" />
+    <Compile Include="Project\MethodExtractor.cs" />
     <Compile Include="Project\OutOfProcProjectAnalyzer.cs" />
     <Compile Include="Project\ProjectEntryExtensions.cs" />
     <Compile Include="Project\ProjectEntryMap.cs" />
