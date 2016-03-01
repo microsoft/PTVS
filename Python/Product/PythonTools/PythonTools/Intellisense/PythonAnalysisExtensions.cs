@@ -54,7 +54,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// 
         /// New in v1.1.
         /// </summary>        
-        public static MissingImportAnalysis GetMissingImports(this ITextSnapshot snapshot, IServiceProvider serviceProvider, ITrackingSpan span) {
+        public static Task<MissingImportAnalysis> GetMissingImports(this ITextSnapshot snapshot, IServiceProvider serviceProvider, ITrackingSpan span) {
             return VsProjectAnalyzer.GetMissingImports(serviceProvider, snapshot, span);
         }
     }

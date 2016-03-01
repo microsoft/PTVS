@@ -61,6 +61,21 @@ namespace Microsoft.PythonTools.Analysis.Communication {
             public TaskItem[] tasks;
         }
 
+        public sealed class FormatCodeRequest : Request<FormatCodeResponse> {
+            public const string Command = "formatCode";
+
+            public int fileId, bufferId, startIndex, endIndex;
+            public string newLine;
+            public CodeFormattingOptions options;
+
+            public override string command => Command;
+        }
+
+        public sealed class FormatCodeResponse : Response {
+            public ChangeInfo[] changes;
+
+            public int startIndex, endIndex;
+        }
 
         public struct CodeSpan {
             public int start, length;
@@ -138,6 +153,49 @@ namespace Microsoft.PythonTools.Analysis.Communication {
             changes
         }
 
+        public sealed class AddImportRequest : Request<AddImportResponse> {
+            public const string Command = "addImport";
+
+            public string fromModule, name, newLine;
+            public int fileId, bufferId;
+
+            public override string command => Command;
+        }
+
+        public sealed class AddImportResponse : Response {
+            public ChangeInfo[] changes;
+        }
+
+        public sealed class IsMissingImportRequest : Request<IsMissingImportResponse> {
+            public const string Command = "isMissingImport";
+
+            public string text;
+            public int index, line, column, fileId, bufferId;
+
+            public override string command => Command;
+        }
+
+        public sealed class IsMissingImportResponse : Response {
+            public bool isMissing;
+        }
+
+        public sealed class AvailableImportsRequest : Request<AvailableImportsResponse> {
+            public const string Command = "availableImports";
+
+            public string name;
+
+            public override string command => Command;
+        }
+
+        public sealed class AvailableImportsResponse : Response {
+            public ImportInfo[] imports;
+        }
+
+        public sealed class ImportInfo {
+            public string fromName, importName;
+
+        }
+
         public sealed class FileUpdate {
             public FileUpdateKind kind;
             public int bufferId, version;
@@ -184,6 +242,14 @@ namespace Microsoft.PythonTools.Analysis.Communication {
             public string newText;
             public int start;
             public int length;
+
+            public static ChangeInfo FromBounds(string text, int start, int end) {
+                return new ChangeInfo() {
+                    newText = text,
+                    start = start,
+                    length = end - start
+                };
+            }
         }
 
         public class EnqueueFileResponse : Response {

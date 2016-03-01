@@ -35,6 +35,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly Dictionary<BufferParser, ProjectFileInfo> _openFiles = new Dictionary<BufferParser, ProjectFileInfo>();
         private readonly bool _implicitProject;
         private readonly IPythonInterpreterFactory _interpreterFactory;
+
         private readonly ConcurrentDictionary<string, ProjectFileInfo> _projectFiles;
         private readonly ConcurrentDictionary<int, ProjectFileInfo> _projectFilesById;
 
@@ -105,6 +106,47 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             ).DoNotWait();
             CommentTaskTokensChanged(null, EventArgs.Empty);
+        }
+
+        internal async Task<AP.FormatCodeResponse> FormatCode(SnapshotSpan span, string newLine, CodeFormattingOptions options) {
+            var fileInfo = span.Snapshot.TextBuffer.GetProjectEntry();
+            var buffer = span.Snapshot.TextBuffer;
+
+            await fileInfo.BufferParser.EnsureCodeSynced(buffer);
+
+            return await _conn.SendRequestAsync(
+                new AP.FormatCodeRequest() {
+                    fileId = fileInfo.FileId,
+                    bufferId = fileInfo.BufferParser.GetBufferId(buffer),
+                    startIndex = span.Start,
+                    endIndex = span.End,
+                    options = options,
+                    newLine = newLine
+                }
+            );
+        }
+
+        internal async Task<AP.ImportInfo[]> FindNameInAllModules(string name, CancellationToken cancel = default(CancellationToken)) {
+            return (await _conn.SendRequestAsync(new AP.AvailableImportsRequest() {
+                name = name
+            }, cancel)).imports;
+        }
+
+        internal async Task<AP.ChangeInfo[]> AddImport(ProjectFileInfo projectFile, string fromModule, string name, string newLine) {
+            ITextBuffer buffer = projectFile.BufferParser.Buffers.Last();
+            var bufferId = projectFile.BufferParser.GetBufferId(buffer);
+            
+            var res = await _conn.SendRequestAsync(
+                new AP.AddImportRequest() {
+                    fromModule = fromModule,
+                    name = name,
+                    fileId = projectFile.FileId,
+                    bufferId = bufferId,
+                    newLine = newLine
+                }
+            );
+
+            return res.changes;
         }
 
         private Connection StartConnection(IPythonInterpreterFactory factory, string libAnalyzer) {
@@ -768,7 +810,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        internal static MissingImportAnalysis GetMissingImports(IServiceProvider serviceProvider, ITextSnapshot snapshot, ITrackingSpan span) {
+        internal static async Task<MissingImportAnalysis> GetMissingImports(IServiceProvider serviceProvider, ITextSnapshot snapshot, ITrackingSpan span) {
             ReverseExpressionParser parser = new ReverseExpressionParser(snapshot, snapshot.TextBuffer, span);
             var loc = span.GetSpan(snapshot.Version);
             int dummy;
@@ -778,6 +820,44 @@ namespace Microsoft.PythonTools.Intellisense {
             var exprRange = parser.GetExpressionRange(0, out dummy, out dummyPoint, out lastKeywordArg, out isParameterName);
             if (exprRange == null || isParameterName) {
                 return MissingImportAnalysis.Empty;
+            }
+
+
+            ProjectFileInfo entry;
+            if (!snapshot.TextBuffer.TryGetPythonProjectEntry(out entry)) {
+                return MissingImportAnalysis.Empty;
+            }
+
+            var text = exprRange.Value.GetText();
+            if (string.IsNullOrEmpty(text)) {
+                return MissingImportAnalysis.Empty;
+            }
+
+            var analyzer = entry.ProjectState;
+            var index = (parser.GetStatementRange() ?? span.GetSpan(snapshot)).Start.Position;
+
+            var location = TranslateIndex(
+                index,
+                snapshot,
+                entry
+            );
+
+            var res = await analyzer._conn.SendRequestAsync(
+                new AP.IsMissingImportRequest() {
+                    fileId = entry.FileId,
+                    text = text,
+                    index = location.Index,
+                    line = location.Line,
+                    column = location.Column
+                }
+            );
+
+            if (res.isMissing) {
+                var applicableSpan = parser.Snapshot.CreateTrackingSpan(
+                    exprRange.Value.Span,
+                    SpanTrackingMode.EdgeExclusive
+                );
+                return new MissingImportAnalysis(text, analyzer, applicableSpan);
             }
 
             // if we have type information don't offer to add imports

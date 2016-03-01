@@ -82,6 +82,7 @@ namespace Microsoft.PythonTools.Cdp {
 
             T res;
             try {
+                Debug.WriteLine("Sending request {0}", seq);
                 await SendMessage(
                     new RequestMessage() {
                         command = r.Request.command,
@@ -111,7 +112,7 @@ namespace Microsoft.PythonTools.Cdp {
         /// <param name="eventValue">The event value to be sent.</param>
         public Task SendEventAsync(Event eventValue) {
             int seq = Interlocked.Increment(ref _seq);
-
+            Debug.WriteLine("Sending event {0}", seq);
             return SendMessage(
                 new EventMessage() {
                     @event = eventValue.name,
@@ -151,7 +152,7 @@ namespace Microsoft.PythonTools.Cdp {
 
                     switch (type) {
                         case PacketType.Request: await ProcessRequest(packet, seq); break;
-                        case PacketType.Response: await ProcessResponse(packet, seq); break;
+                        case PacketType.Response: ProcessResponse(packet); break;
                         case PacketType.Event: ProcessEvent(packet); break;
                         default:
                             await WriteError("Bad packet type: " + type ?? "<null>").ConfigureAwait(false);
@@ -187,23 +188,24 @@ namespace Microsoft.PythonTools.Cdp {
             }
         }
 
-        private async Task ProcessResponse(JObject packet, int? seq) {
+        private void ProcessResponse(JObject packet) {
             var body = packet["body"];
 
             var reqSeq = packet["request_seq"].ToObject<int?>();
+
+            Debug.WriteLine("Received response {0}", reqSeq);
+
             RequestInfo r;
-            bool found = false;
             lock (_cacheLock) {
+                // We might not find the entry in the request cache if the CancellationSource
+                // passed into SendRequestAsync was signaled before the request
+                // was completed.  That's okay, there's no one waiting on the 
+                // response anymore.
                 if (_requestCache.TryGetValue(reqSeq.Value, out r)) {
-                    found = true;
                     r.message = packet["message"].ToObject<string>();
                     r.success = packet["success"].ToObject<bool>();
                     r.SetResponse(body);
                 }
-            }
-
-            if (!found) {
-                await WriteError("Response to unknown sequence: " + seq.Value).ConfigureAwait(false);
             }
         }
 
@@ -294,6 +296,8 @@ namespace Microsoft.PythonTools.Cdp {
         }
 
         private async Task SendResponseAsync(int sequence, string command, bool success, string message, Response response) {
+            int newSeq = Interlocked.Increment(ref _seq);
+            Debug.WriteLine("Sending response {0}", newSeq);
             await SendMessage(
                 new ResponseMessage() {
                     request_seq = sequence,
@@ -301,7 +305,7 @@ namespace Microsoft.PythonTools.Cdp {
                     message = message,
                     command = command,
                     body = response,
-                    seq = Interlocked.Increment(ref _seq),
+                    seq = newSeq,
                     type = PacketType.Response
                 }
             ).ConfigureAwait(false);

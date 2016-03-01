@@ -174,9 +174,9 @@ namespace Microsoft.PythonTools.Analysis {
                 if (defScope == null) {
                     variables = _unit.ProjectState.BuiltinModule.GetDefinitions(name.Name)
                         .SelectMany(ToVariables);
+                } else {
+                    variables = GetVariablesInScope(name, defScope).Distinct();
                 }
-
-                variables = GetVariablesInScope(name, defScope).Distinct();
             } else {
                 MemberExpression member = expr as MemberExpression;
                 if (member != null && !string.IsNullOrEmpty(member.Name)) {

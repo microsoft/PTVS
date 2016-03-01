@@ -31,11 +31,10 @@ using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
-
+using Microsoft.PythonTools.Refactoring;
+using Microsoft.PythonTools.Analysis.Project;
 
 namespace Microsoft.PythonTools.Intellisense {
-    using Analysis.Project;
-    using static AnalysisProtocol;
     using AP = AnalysisProtocol;
 
     /// <summary>
@@ -157,11 +156,219 @@ namespace Microsoft.PythonTools.Intellisense {
                 case AP.NavigationRequest.Command: return GetNavigations((AP.NavigationRequest)request);
                 case AP.FileUpdateRequest.Command: return UpdateContent((AP.FileUpdateRequest)request);
                 case AP.UnresolvedImportsRequest.Command: return GetUnresolvedImports((AP.UnresolvedImportsRequest)request);
+                case AP.AddImportRequest.Command: return AddImportRequest((AP.AddImportRequest)request);
+                case AP.IsMissingImportRequest.Command: return IsMissingImport((AP.IsMissingImportRequest)request);
+                case AP.AvailableImportsRequest.Command: return AvailableImports((AP.AvailableImportsRequest)request);
+                case AP.FormatCodeRequest.Command: return FormatCode((AP.FormatCodeRequest)request);
                 default:
                     throw new InvalidOperationException("Unknown command");
             }
 
         }
+
+        private Response FormatCode(AP.FormatCodeRequest request) {
+            var projectFile = _projectFiles[request.fileId] as IPythonProjectEntry;
+            var ast = GetVerbatimAst(projectFile, request.bufferId);
+
+            var code = projectFile.GetCurrentCode(request.bufferId).ToString();
+
+            var walker = new EnclosingNodeWalker(ast, request.startIndex, request.endIndex);
+            ast.Walk(walker);
+
+            if (walker.Target == null ||
+                !walker.Target.IsValidSelection /*||
+                (walker.Target is SuiteTarget && request.startIndex == request.endIndex && selectResult)*/) {
+                return new AP.FormatCodeResponse() {
+                    changes = new AnalysisProtocol.ChangeInfo[0]
+                };
+            }
+
+            var body = walker.Target.GetNode(ast);
+
+            // remove any leading comments before round tripping, not selecting them
+            // gives a nicer overall experience, otherwise we have a selection to the
+            // previous line which only covers white space.
+            body.SetLeadingWhiteSpace(ast, body.GetIndentationLevel(ast));
+
+            var selectedCode = code.Substring(
+                walker.Target.StartIncludingIndentation,
+                walker.Target.End - walker.Target.StartIncludingIndentation
+            );
+
+            return new AP.FormatCodeResponse() {
+                startIndex = walker.Target.StartIncludingIndentation,
+                endIndex = walker.Target.End,
+                changes = selectedCode.ReplaceByLines(
+                    body.ToCodeString(ast, request.options),
+                    request.newLine
+                )
+            };
+        }
+
+        private Response AvailableImports(AP.AvailableImportsRequest request) {
+            return new AP.AvailableImportsResponse() {
+                imports = _pyAnalyzer.FindNameInAllModules(request.name)
+                    .Select(
+                        x => new AP.ImportInfo() {
+                            importName = x.ImportName,
+                            fromName = x.FromName
+                        }
+                    )
+                    .ToArray()
+            };
+        }
+
+        private Response IsMissingImport(AP.IsMissingImportRequest request) {
+            var entry = _projectFiles[request.fileId] as IPythonProjectEntry;
+            var analysis = entry.Analysis;
+
+            var location = new SourceLocation(request.index, request.line, request.column);
+            var nameExpr = GetFirstNameExpression(
+                analysis.GetAstFromText(
+                    request.text, 
+                    location
+                ).Body
+            );
+
+            if (nameExpr != null && !IsImplicitlyDefinedName(nameExpr)) {
+                var name = nameExpr.Name;
+                var hasVariables = analysis.GetVariables(name, location).Any(IsDefinition);
+                var hasValues = analysis.GetValues(name, location).Any();
+
+                // if we have type information or an assignment to the variable we won't offer 
+                // an import smart tag.
+                if (!hasValues && !hasVariables) {
+                    return new AP.IsMissingImportResponse() {
+                        isMissing = true
+                    };
+                }
+            }
+
+            return new AP.IsMissingImportResponse() {
+                isMissing = false
+            };
+        }
+
+        private Response AddImportRequest(AP.AddImportRequest request) {
+            var projectFile = _projectFiles[request.fileId] as IPythonProjectEntry;
+            string name = request.name;
+            string fromModule = request.fromModule;
+
+            PythonAst curAst = GetVerbatimAst(projectFile, request.bufferId);
+
+            var suiteBody = curAst.Body as SuiteStatement;
+            int start = 0;
+            if (suiteBody != null) {
+                foreach (var statement in suiteBody.Statements) {
+                    if (IsDocString(statement as ExpressionStatement)) {
+                        // doc string, import comes after this...
+                        start = statement.EndIndex;
+                        continue;
+                    }
+
+                    FromImportStatement fromImport;
+
+                    if (statement is ImportStatement) {
+                        // we insert after this
+                        start = statement.EndIndex;
+                    } else if ((fromImport = (statement as FromImportStatement)) != null) {
+                        // we might update this, we might insert after
+                        if (fromModule != "__future__" && fromImport.Root.MakeString() == fromModule) {
+                            // update the existing from ... import statement to include the new name.
+                            return new AP.AddImportResponse() {
+                                changes = new[] { UpdateFromImport(curAst, fromImport, name) }
+                            };
+                        }
+
+                        start = statement.EndIndex;
+                    }
+
+                    break;
+                }
+            }
+
+            string newText = MakeImportCode(fromModule, name);
+            if (start == 0) {
+                // we're adding it at the beginning of the file, we need a new line
+                // after the import statement
+                newText += request.newLine;
+            } else {
+                // we're adding it after the end of a statement, we need a newline after 
+                // the statement we're appending after.
+                newText = request.newLine + newText;
+            }
+
+            return new AP.AddImportResponse() {
+                changes = new[] {
+                    new AP.ChangeInfo() {
+                        start = start,
+                        length = 0,
+                        newText = newText
+                    }
+                }
+            };
+        }        
+
+        private PythonAst GetVerbatimAst(IPythonProjectEntry projectFile, int bufferId) {
+            ParserOptions options = new ParserOptions { BindReferences = true, Verbatim = true };
+
+            var parser = Parser.CreateParser(
+                new StringReader(projectFile.GetCurrentCode(bufferId).ToString()), 
+                Project.LanguageVersion, 
+                options
+            );
+
+            return parser.ParseFile();
+        }
+
+        public static string MakeImportCode(string fromModule, string name) {
+            if (string.IsNullOrEmpty(fromModule)) {
+                return string.Format("import {0}", name);
+            } else {
+                return string.Format("from {0} import {1}", fromModule, name);
+            }
+        }
+        
+        private static AP.ChangeInfo UpdateFromImport(
+            PythonAst curAst,
+            FromImportStatement fromImport,
+            string name
+        ) {
+            NameExpression[] names = new NameExpression[fromImport.Names.Count + 1];
+            NameExpression[] asNames = fromImport.AsNames == null ? null : new NameExpression[fromImport.AsNames.Count + 1];
+            NameExpression newName = new NameExpression(name);
+            for (int i = 0; i < fromImport.Names.Count; i++) {
+                names[i] = fromImport.Names[i];
+            }
+            names[fromImport.Names.Count] = newName;
+
+            if (asNames != null) {
+                for (int i = 0; i < fromImport.AsNames.Count; i++) {
+                    asNames[i] = fromImport.AsNames[i];
+                }
+            }
+
+            var newImport = new FromImportStatement((ModuleName)fromImport.Root, names, asNames, fromImport.IsFromFuture, fromImport.ForceAbsolute);
+            curAst.CopyAttributes(fromImport, newImport);
+
+            var newCode = newImport.ToCodeString(curAst);
+
+            var span = fromImport.GetSpan(curAst);
+            int leadingWhiteSpaceLength = (fromImport.GetLeadingWhiteSpace(curAst) ?? "").Length;
+            return new AP.ChangeInfo() {
+                start = span.Start.Index - leadingWhiteSpaceLength,
+                length = span.Length + leadingWhiteSpaceLength,
+                newText = newCode
+            };
+        }
+
+        private static bool IsDocString(ExpressionStatement exprStmt) {
+            ConstantExpression constExpr;
+            return exprStmt != null &&
+                    (constExpr = exprStmt.Expression as ConstantExpression) != null &&
+                    (constExpr.Value is string || constExpr.Value is AsciiString);
+        }
+
         private Response GetUnresolvedImports(AP.UnresolvedImportsRequest request) {
             var entry = _projectFiles[request.fileId] as IPythonProjectEntry;
             if (entry == null ||
@@ -210,7 +417,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         class ImportStatementWalker : PythonWalker {
-            public readonly List<UnresolvedImport> Imports = new List<UnresolvedImport>();
+            public readonly List<AP.UnresolvedImport> Imports = new List<AP.UnresolvedImport>();
 
             readonly IPythonProjectEntry _entry;
             readonly PythonAnalyzer _analyzer;
@@ -230,9 +437,9 @@ namespace Microsoft.PythonTools.Intellisense {
                 return base.Walk(node);
             }
 
-            private UnresolvedImport MakeUnresolvedImport(string name, Node spanNode) {
+            private AP.UnresolvedImport MakeUnresolvedImport(string name, Node spanNode) {
                 var span = spanNode.GetSpan(_ast);
-                return new UnresolvedImport() {
+                return new AP.UnresolvedImport() {
                     name = name,
                     startLine = span.Start.Line,
                     startColumn = span.Start.Column,
@@ -786,7 +993,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        private Response UpdateContent(FileUpdateRequest request) {
+        private Response UpdateContent(AP.FileUpdateRequest request) {
             var entry = _projectFiles[request.fileId];
 
             SortedDictionary<int, CodeInfo> codeByBuffer = new SortedDictionary<int, CodeInfo>();
@@ -802,6 +1009,8 @@ namespace Microsoft.PythonTools.Intellisense {
                                 entry.SetCurrentCode(curCode = new StringBuilder(), update.bufferId);
                             }
 
+                            // TODO: THis doesn't handle multiple changes properly as the
+                            // offsets change as we apply them
                             foreach (var change in update.changes) {
                                 curCode.Remove(change.start, change.length);
                                 curCode.Insert(change.start, change.newText);
@@ -825,7 +1034,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         );
 #if DEBUG
                         newCode[update.bufferId] = update.content;
-#endif                        
+#endif
                         break;
                     default:
                         throw new InvalidOperationException("unsupported update kind");
@@ -1061,7 +1270,7 @@ namespace Microsoft.PythonTools.Intellisense {
             if (projEntry != null) {
                 var fileId = ProjectEntryMap.GetId(projEntry);
 
-                _connection.SendEventAsync(new AnalysisCompleteEvent() { fileId = fileId });
+                _connection.SendEventAsync(new AP.AnalysisCompleteEvent() { fileId = fileId });
             }
         }
 
@@ -1079,64 +1288,6 @@ namespace Microsoft.PythonTools.Intellisense {
             return null;
         }
 
-#if PORT
-        internal static MissingImportAnalysis GetMissingImports(IServiceProvider serviceProvider, ITextSnapshot snapshot, ITrackingSpan span) {
-            ReverseExpressionParser parser = new ReverseExpressionParser(snapshot, snapshot.TextBuffer, span);
-            var loc = span.GetSpan(snapshot.Version);
-            int dummy;
-            SnapshotPoint? dummyPoint;
-            string lastKeywordArg;
-            bool isParameterName;
-            var exprRange = parser.GetExpressionRange(0, out dummy, out dummyPoint, out lastKeywordArg, out isParameterName);
-            if (exprRange == null || isParameterName) {
-                return MissingImportAnalysis.Empty;
-            }
-
-            IPythonProjectEntry entry;
-            ModuleAnalysis analysis;
-            if (!snapshot.TextBuffer.TryGetPythonProjectEntry(out entry) ||
-                entry == null ||
-                (analysis = entry.Analysis) == null) {
-                return MissingImportAnalysis.Empty;
-            }
-
-            var text = exprRange.Value.GetText();
-            if (string.IsNullOrEmpty(text)) {
-                return MissingImportAnalysis.Empty;
-            }
-
-            var analyzer = analysis.ProjectState;
-            var index = (parser.GetStatementRange() ?? span.GetSpan(snapshot)).Start.Position;
-
-            var location = TranslateIndex(
-                index,
-                snapshot,
-                analysis
-            );
-            var nameExpr = GetFirstNameExpression(analysis.GetAstFromText(text, location).Body);
-
-            if (nameExpr != null && !IsImplicitlyDefinedName(nameExpr)) {
-                var name = nameExpr.Name;
-                lock (snapshot.TextBuffer.GetAnalyzer(serviceProvider)) {
-                    var hasVariables = analysis.GetVariables(name, location).Any(IsDefinition);
-                    var hasValues = analysis.GetValues(name, location).Any();
-
-                    // if we have type information or an assignment to the variable we won't offer 
-                    // an import smart tag.
-                    if (!hasValues && !hasVariables) {
-                        var applicableSpan = parser.Snapshot.CreateTrackingSpan(
-                            exprRange.Value.Span,
-                            SpanTrackingMode.EdgeExclusive
-                        );
-                        return new MissingImportAnalysis(name, analysis.ProjectState, applicableSpan);
-                    }
-                }
-            }
-
-            // if we have type information don't offer to add imports
-            return MissingImportAnalysis.Empty;
-        }
-#endif
         private static NameExpression GetFirstNameExpression(Statement stmt) {
             return GetFirstNameExpression(Statement.GetExpression(stmt));
         }
@@ -1324,7 +1475,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 new AP.FileParsedEvent() {
                     fileId = ProjectEntryMap.GetId(entry),
                     buffers = parseResults.Select(
-                        x => new BufferParseInfo() {
+                        x => new AP.BufferParseInfo() {
                             bufferId = x.Key,
                             version = x.Value.Version,
                             errors = x.Value.Errors.Errors.Select(MakeError).ToArray(),
@@ -1402,7 +1553,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        #region Implementation Details
+#region Implementation Details
 
         private static Stopwatch _stopwatch = MakeStopWatch();
 
@@ -1453,7 +1604,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 _parameters = parameters;
             }
 
-        #region IOverloadResult Members
+#region IOverloadResult Members
 
             public string Name {
                 get { return _name; }
@@ -1467,7 +1618,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 get { return _parameters; }
             }
 
-        #endregion
+#endregion
         }
 
         internal bool ShouldEvaluateForCompletion(string source) {
@@ -1625,7 +1776,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 _analyzer = analyzer;
             }
 
-            #region IAnalyzable Members
+#region IAnalyzable Members
 
             public void Analyze(CancellationToken cancel) {
                 if (cancel.IsCancellationRequested) {
@@ -1635,7 +1786,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 AnalyzeDirectoryWorker(_dir, true, _onFileAnalyzed, cancel);
             }
 
-            #endregion
+#endregion
 
             private void AnalyzeDirectoryWorker(string dir, bool addDir, Action<IProjectEntry> onFileAnalyzed, CancellationToken cancel) {
                 if (_analyzer._pyAnalyzer == null) {
@@ -1706,7 +1857,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 _analyzer = analyzer;
             }
 
-            #region IAnalyzable Members
+#region IAnalyzable Members
 
             public void Analyze(CancellationToken cancel) {
                 if (cancel.IsCancellationRequested) {
@@ -1716,7 +1867,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 _analyzer.AnalyzeZipArchiveWorker(_zipFileName, _onFileAnalyzed, cancel);
             }
 
-            #endregion
+#endregion
         }
 
 
@@ -1978,9 +2129,9 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        #endregion
+#endregion
 
-        #region IDisposable Members
+#region IDisposable Members
 
         public void Dispose() {
             foreach (var pathAndEntry in _projectFiles) {
@@ -2001,7 +2152,7 @@ namespace Microsoft.PythonTools.Intellisense {
             _queueActivityEvent.Dispose();
         }
 
-        #endregion
+#endregion
 
         internal void RemoveReference(ProjectAssemblyReference reference) {
             var interp = Interpreter as IPythonInterpreterWithProjectReferences;

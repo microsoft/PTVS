@@ -44,15 +44,6 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         /// <summary>
-        /// True if this was defined in the module or false if this was defined in another module
-        /// but imported in the module that we're getting members from.
-        /// </summary>
-        [Obsolete("Only defined names are returned")]
-        public bool IsDefinedInModule {
-            get { return true; }
-        }
-
-        /// <summary>
         /// The name of the member or module that can be imported.
         /// </summary>
         public string ImportName {

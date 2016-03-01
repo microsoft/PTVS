@@ -22,21 +22,24 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Media;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Analysis.Communication;
 using Microsoft.VisualStudio.Imaging.Interop;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
 
 namespace Microsoft.PythonTools.Intellisense {
+    using AP = AnalysisProtocol;
+
     class PythonSuggestedImportAction : ISuggestedAction, IComparable<PythonSuggestedImportAction> {
         private readonly PythonSuggestedActionsSource _source;
         private readonly string _name;
         private readonly string _fromModule;
         private readonly ITextBuffer _buffer;
 
-        public PythonSuggestedImportAction(PythonSuggestedActionsSource source, ITextBuffer buffer, ExportedMemberInfo import) {
+        public PythonSuggestedImportAction(PythonSuggestedActionsSource source, ITextBuffer buffer, AP.ImportInfo import) {
             _source = source;
-            _fromModule = import.FromName;
-            _name = import.ImportName;
+            _fromModule = import.fromName;
+            _name = import.importName;
             _buffer = buffer;
         }
 
@@ -56,8 +59,16 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public string DisplayText {
             get {
-                return MissingImportAnalysis.MakeImportCode(_fromModule, _name)
+                return MakeImportCode(_fromModule, _name)
                     .Replace("_", "__");
+            }
+        }
+
+        private static string MakeImportCode(string fromModule, string name) {
+            if (string.IsNullOrEmpty(fromModule)) {
+                return string.Format("import {0}", name);
+            } else {
+                return string.Format("from {0} import {1}", fromModule, name);
             }
         }
 

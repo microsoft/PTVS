@@ -15,11 +15,15 @@
 // permissions and limitations under the License.
 
 using System;
+using Microsoft.PythonTools.Analysis.Communication;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 
 namespace Microsoft.PythonTools.Refactoring {
+    using VisualStudio.Text.Editor.OptionsExtensionMethods;
+    using AP = AnalysisProtocol;
+
     class CodeFormatter {
         private readonly ITextView _view;
         private readonly CodeFormattingOptions _format;
@@ -31,11 +35,15 @@ namespace Microsoft.PythonTools.Refactoring {
             _serviceProvider = serviceProvider;
         }
 
-        public void FormatCode(SnapshotSpan span, bool selectResult) {
+        public async void FormatCode(SnapshotSpan span, bool selectResult) {
             var snapshot = _view.TextBuffer.CurrentSnapshot;
 
-            var ast = _view.GetAnalyzer(_serviceProvider).ParseSnapshot(snapshot);
+            var analyzer = _view.GetAnalyzer(_serviceProvider);
 
+            var res = await analyzer.FormatCode(span, _view.Options.GetNewLineCharacter(), _format);
+            AP.ChangeInfo[] changes = res.changes;
+
+            /*
             var walker = new EnclosingNodeWalker(ast, span.Start, span.End);
             ast.Walk(walker);
 
@@ -44,26 +52,25 @@ namespace Microsoft.PythonTools.Refactoring {
                 (walker.Target is SuiteTarget && _view.Selection.IsEmpty && selectResult)) {
                 return;
             }
-
-            var body = walker.Target.GetNode(ast);
-
-            // remove any leading comments before round tripping, not selecting them
-            // gives a nicer overall experience, otherwise we have a selection to the
-            // previous line which only covers white space.
-            body.SetLeadingWhiteSpace(ast, body.GetIndentationLevel(ast));
-
+            */
             ITrackingSpan selectionSpan = null;
             if (selectResult) {
                 selectionSpan = _view.TextBuffer.CurrentSnapshot.CreateTrackingSpan(
-                    Span.FromBounds(walker.Target.StartIncludingIndentation, walker.Target.End), 
+                    Span.FromBounds(res.startIndex, res.endIndex), 
                     SpanTrackingMode.EdgeInclusive
                 );
             }
 
-            _view.ReplaceByLines(
-                body.ToCodeString(ast, _format),
-                Span.FromBounds(walker.Target.StartIncludingIndentation, walker.Target.End)
-            );
+            using (var edit = _view.TextBuffer.CreateEdit()) {
+                foreach (var change in changes) {
+                    edit.Replace(
+                        change.start,
+                        change.length,
+                        change.newText
+                    );
+                }
+                edit.Apply();
+            }
 
             if (selectResult) {
                 _view.Selection.Select(selectionSpan.GetSpan(_view.TextBuffer.CurrentSnapshot), false);

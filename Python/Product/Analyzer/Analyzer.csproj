@@ -68,10 +68,13 @@
     <Compile Include="Project\AnalysisQueue.cs" />
     <Compile Include="Project\AnalysisSynchronizationContext.cs" />
     <Compile Include="Project\CompletionOptions.cs" />
+    <Compile Include="Project\EnclosingNodeWalker.cs" />
+    <Compile Include="Project\LinePreservingCodeReplacer.cs" />
     <Compile Include="Project\OutOfProcProjectAnalyzer.cs" />
     <Compile Include="Project\ProjectEntryExtensions.cs" />
     <Compile Include="Project\ProjectEntryMap.cs" />
     <Compile Include="Project\ReverseExpressionParser.cs" />
+    <Compile Include="Project\SelectionTarget.cs" />
     <Compile Include="Project\Span.cs" />
     <Compile Include="Project\VersionCookie.cs" />
     <Compile Include="PyLibAnalyzer.cs" />
@@ -125,9 +128,7 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Project\Text\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="..\ProjectAfter.settings" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
