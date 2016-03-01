@@ -2,7 +2,7 @@
 <Vsix xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Version="1.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2010">
   <Identifier Id="8706DC58-B4CC-4C79-937F-B7BAC9D5EC71">
     <Name>Python Tools for Visual Studio - Machine Learning</Name>
-    <Author>Microsoft</Author>
+    <Author>Microsoft Corporation</Author>
     <Version>3.0</Version>
     <Description xml:space="preserve">Provides templates and support for machine learning projects written with Python.</Description>
     <Locale>1033</Locale>
