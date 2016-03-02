@@ -17,7 +17,7 @@
 using System.Collections.Generic;
 using Microsoft.PythonTools.Parsing.Ast;
 
-namespace Microsoft.PythonTools.Refactoring {
+namespace Microsoft.PythonTools.Intellisense {
     abstract class SelectionTarget {
         private readonly ScopeStatement[] _parents;
         private readonly Dictionary<ScopeStatement, int> _insertLocations;

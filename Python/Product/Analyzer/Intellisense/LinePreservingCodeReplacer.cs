@@ -16,10 +16,8 @@
 
 using System;
 using System.Collections.Generic;
-using Microsoft.PythonTools.Analysis.Communication;
-using Microsoft.PythonTools.Parsing;
 
-namespace Microsoft.PythonTools.Refactoring {
+namespace Microsoft.PythonTools.Intellisense {
     using AP = AnalysisProtocol;
 
     /// <summary>

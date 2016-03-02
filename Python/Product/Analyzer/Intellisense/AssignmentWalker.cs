@@ -16,7 +16,7 @@
 
 using Microsoft.PythonTools.Parsing.Ast;
 
-namespace Microsoft.PythonTools.Refactoring {
+namespace Microsoft.PythonTools.Intellisense {
 
     /// <summary>
     /// A walker which handles all nodes which can result in assignments and

@@ -14,11 +14,9 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.PythonTools.Analysis.Communication;
-using Microsoft.PythonTools.Parsing.Ast;
+using Microsoft.PythonTools.Intellisense;
 
 namespace Microsoft.PythonTools.Refactoring {
-    using AP = AnalysisProtocol;
     /// <summary>
     /// Encapsulates all of the possible knobs which can be flipped when extracting a method.
     /// </summary>

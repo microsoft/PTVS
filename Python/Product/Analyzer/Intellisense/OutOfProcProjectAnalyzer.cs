@@ -21,20 +21,17 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Analysis.Communication;
-using Microsoft.PythonTools.Analysis.Project;
 using Microsoft.PythonTools.Cdp;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
-using Microsoft.PythonTools.Refactoring;
 
 namespace Microsoft.PythonTools.Intellisense {
-    using System.Text.RegularExpressions;
     using AP = AnalysisProtocol;
 
     /// <summary>
@@ -515,7 +512,7 @@ namespace Microsoft.PythonTools.Intellisense {
             var versions = cookie as VersionCookie;
             var imports = new List<AP.BufferUnresolvedImports>();
             if (versions != null) {
-                foreach (var version in versions.ParsedVersions) {
+                foreach (var version in versions.Buffers) {
                     if (version.Value.Ast != null) {
                         var walker = new ImportStatementWalker(
                             version.Value.Ast,
@@ -643,7 +640,7 @@ namespace Microsoft.PythonTools.Intellisense {
             List<AP.BufferOutliningTags> buffers = new List<AP.BufferOutliningTags>();
             if (versions != null) {
 
-                foreach (var version in versions.ParsedVersions) {
+                foreach (var version in versions.Buffers) {
                     if (version.Value.Ast != null) {
                         var walker = new OutliningWalker(version.Value.Ast);
 
@@ -678,7 +675,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var versions = cookie as VersionCookie;
             if (versions != null) {
-                foreach (var version in versions.ParsedVersions) {
+                foreach (var version in versions.Buffers) {
                     if (version.Value.Ast == null) {
                         continue;
                     }

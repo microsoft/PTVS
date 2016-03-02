@@ -15,7 +15,7 @@
 // permissions and limitations under the License.
 
 
-namespace Microsoft.PythonTools.Refactoring {
+namespace Microsoft.PythonTools.Intellisense {
     struct ExtractMethodResult {
         public readonly string Method;
         public readonly string Call;

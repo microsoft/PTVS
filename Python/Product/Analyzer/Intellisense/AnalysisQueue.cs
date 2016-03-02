@@ -55,7 +55,7 @@ namespace Microsoft.PythonTools.Intellisense {
             _workThread.Name = "Python Analysis Queue";
             _workThread.Priority = ThreadPriority.BelowNormal;
             _workThread.IsBackground = true;
-            
+
             // start the thread, wait for our synchronization context to be created
             using (AutoResetEvent threadStarted = new AutoResetEvent(false)) {
                 _workThread.Start(threadStarted);
@@ -143,7 +143,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-#region IDisposable Members
+        #region IDisposable Members
 
         public void Dispose() {
             Stop();
@@ -151,7 +151,7 @@ namespace Microsoft.PythonTools.Intellisense {
             _cancel.Dispose();
         }
 
-#endregion
+        #endregion
 
         private IAnalyzable GetNextItem(out AnalysisPriority priority) {
             for (int i = PriorityCount - 1; i >= 0; i--) {
@@ -205,7 +205,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         if (ex.IsCriticalException() || System.Diagnostics.Debugger.IsAttached) {
                             throw;
                         }
-                        
+
                         //ex.ReportUnhandledException(null, GetType());
                         _cancel.Cancel();
                     }
@@ -232,14 +232,14 @@ namespace Microsoft.PythonTools.Intellisense {
                 _queue = queue;
             }
 
-#region IAnalyzable Members
+            #region IAnalyzable Members
 
             public void Analyze(CancellationToken cancel) {
                 _queue._enqueuedGroups.Remove(_project);
                 _project.AnalyzeQueuedEntries(cancel);
             }
 
-#endregion
+            #endregion
         }
     }
 }

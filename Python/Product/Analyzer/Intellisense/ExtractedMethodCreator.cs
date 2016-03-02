@@ -21,7 +21,7 @@ using System.Text;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
-namespace Microsoft.PythonTools.Refactoring {
+namespace Microsoft.PythonTools.Intellisense {
     class ExtractedMethodCreator {
         private readonly PythonAst _ast;
         private readonly ScopeStatement[] _scopes;

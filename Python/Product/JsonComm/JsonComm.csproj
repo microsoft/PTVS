@@ -55,12 +55,10 @@
     <Compile Include="Event.cs" />
     <Compile Include="EventReceivedEventArgs.cs" />
     <Compile Include="FailedRequestException.cs" />
-    <Compile Include="JsonCreationConverter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Request.cs" />
     <Compile Include="RequestArgs.cs" />
     <Compile Include="Response.cs" />
-    <Compile Include="Test.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

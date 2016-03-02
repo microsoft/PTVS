@@ -87,7 +87,7 @@ using Microsoft.PythonTools.Parsing.Ast;
  *  00 .. may not be initialized
  */
 
-namespace Microsoft.PythonTools.Refactoring {
+namespace Microsoft.PythonTools.Intellisense {
     class FlowChecker : PythonWalker {
         private BitArray _bits;
         private Stack<BitArray> _loops;

@@ -17,12 +17,10 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using Microsoft.PythonTools.Analysis.Communication;
+using System.Linq;
 using Microsoft.PythonTools.Parsing.Ast;
 
-namespace Microsoft.PythonTools.Refactoring {
-    using System.Linq;
-    using Intellisense;
+namespace Microsoft.PythonTools.Intellisense {
     using AP = AnalysisProtocol;
 
     class MethodExtractor {

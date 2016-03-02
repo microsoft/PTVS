@@ -64,10 +64,6 @@ namespace Microsoft.VisualStudioTools.Navigation {
             get { return _library; }
         }
 
-#if FALSE
-        protected abstract LibraryNode CreateLibraryNode(LibraryNode parent, IScopeNode subItem, string namePrefix, IVsHierarchy hierarchy, uint itemid);
-#endif
-
         public virtual LibraryNode CreateFileLibraryNode(LibraryNode parent, HierarchyNode hierarchy, string name, string filename) {
             return new LibraryNode(null, name, filename, LibraryNodeType.Package | LibraryNodeType.Classes);
         }
@@ -99,7 +95,7 @@ namespace Microsoft.VisualStudioTools.Navigation {
             _runningDocTableCookie = 0;
         }
 
-#region ILibraryManager Members
+        #region ILibraryManager Members
 
         public void RegisterHierarchy(IVsHierarchy hierarchy) {
             if ((null == hierarchy) || _hierarchies.ContainsKey(hierarchy)) {
@@ -172,9 +168,9 @@ namespace Microsoft.VisualStudioTools.Navigation {
             _documents[document].OnFileChanged += (sender, args) => onIdle(args.TextBuffer);
         }
 
-#endregion
+        #endregion
 
-#region Library Member Production
+        #region Library Member Production
 
         /// <summary>
         /// Overridden in the base class to receive notifications of when a file should
@@ -216,7 +212,6 @@ namespace Microsoft.VisualStudioTools.Navigation {
                 // finer grained and only update the changed nodes.  But then we
                 // need to make sure we're not mutating lists which are handed out.
 
-                //CreateModuleTree(module, scope, task.FileName + ":", task.ModuleID);
                 if (null != task.ModuleID) {
                     LibraryNode previousItem = null;
                     lock (_files) {
@@ -237,29 +232,10 @@ namespace Microsoft.VisualStudioTools.Navigation {
                 // we're shutting down and can't get the project
             }
         }
-#if FALSE
-        private void CreateModuleTree(LibraryNode current, IScopeNode scope, string namePrefix, ModuleId moduleId) {
-            if ((null == scope) || (null == scope.NestedScopes)) {
-                return;
-            }
 
-            foreach (IScopeNode subItem in scope.NestedScopes) {
-                LibraryNode newNode = CreateLibraryNode(current, subItem, namePrefix, moduleId.Hierarchy, moduleId.ItemID);
-                string newNamePrefix = namePrefix;
+        #endregion
 
-                current.AddNode(newNode);
-                if ((newNode.NodeType & LibraryNodeType.Classes) != LibraryNodeType.None) {
-                    newNamePrefix = namePrefix + newNode.Name + ".";
-                }
-
-                // Now use recursion to get the other types.
-                CreateModuleTree(newNode, subItem, newNamePrefix, moduleId);
-            }
-        }
-#endif
-#endregion
-
-#region Hierarchy Events
+        #region Hierarchy Events
 
         private void OnNewFile(object sender, HierarchyEventArgs args) {
             IVsHierarchy hierarchy = sender as IVsHierarchy;
@@ -334,9 +310,9 @@ namespace Microsoft.VisualStudioTools.Navigation {
             return ErrorHandler.Succeeded(hr) && (bool)val;
         }
 
-#endregion
+        #endregion
 
-#region IVsRunningDocTableEvents Members
+        #region IVsRunningDocTableEvents Members
 
         public int OnAfterAttributeChange(uint docCookie, uint grfAttribs) {
             if ((grfAttribs & (uint)(__VSRDTATTRIB.RDTA_MkDocument)) == (uint)__VSRDTATTRIB.RDTA_MkDocument) {
@@ -450,7 +426,7 @@ namespace Microsoft.VisualStudioTools.Navigation {
             return VSConstants.S_OK;
         }
 
-#endregion
+        #endregion
 
         public void OnIdle(IOleComponentManager compMgr) {
             foreach (TextLineEventListener listener in _documents.Values) {
@@ -462,7 +438,7 @@ namespace Microsoft.VisualStudioTools.Navigation {
             }
         }
 
-#region IDisposable Members
+        #region IDisposable Members
 
         public void Dispose() {
             // Dispose all the listeners.
@@ -489,7 +465,7 @@ namespace Microsoft.VisualStudioTools.Navigation {
             UnregisterRDTEvents();
         }
 
-#endregion
+        #endregion
 
         class HierarchyInfo {
             public readonly HierarchyListener Listener;

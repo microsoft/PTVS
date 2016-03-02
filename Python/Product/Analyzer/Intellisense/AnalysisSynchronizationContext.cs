@@ -14,9 +14,9 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.Threading;
 using Microsoft.PythonTools.Analysis;
-using System;
 
 namespace Microsoft.PythonTools.Intellisense {
     /// <summary>

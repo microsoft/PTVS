@@ -17,7 +17,6 @@
 using System.Collections.Generic;
 using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Parsing.Ast;
-using Microsoft.PythonTools.Refactoring;
 
 namespace Microsoft.PythonTools.Intellisense {
 

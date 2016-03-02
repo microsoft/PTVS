@@ -15,16 +15,13 @@
 // permissions and limitations under the License.
 
 using System;
-using Microsoft.PythonTools.Analysis.Communication;
-using Microsoft.PythonTools.Refactoring;
+using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Commands {
-    using AP = AnalysisProtocol;
-
     /// <summary>
     /// Provides the command to send selected text from a buffer to the remote REPL window.
     /// </summary>
