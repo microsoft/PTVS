@@ -70,6 +70,7 @@ typedef PyGILState_STATE PyGILState_EnsureFunc(void);
 typedef void PyGILState_ReleaseFunc(PyGILState_STATE);
 typedef PyObject* PyInt_FromSize_t(size_t ival);
 typedef PyThreadState *PyThreadState_NewFunc(PyInterpreterState *interp);
+typedef PyThreadState *PyThreadState_UncheckedGetFunc();
 
 class PyObjectHolder;
 PyObject* GetPyObjectPointerNoDebugInfo(bool isDebug, PyObject* object);
@@ -138,7 +139,6 @@ public:
     }
 
     PyObjectHolder* NewThreadFunction;
-    PyThreadState** CurrentThread;
 
     HMODULE Interpreter;
     PyGILState_EnsureFunc* PyGILState_Ensure;
@@ -177,20 +177,34 @@ public:
         return ThreadState_Swap != nullptr;
     }
 
-    bool EnsureCurrentThread() {
-        if (CurrentThread == nullptr) {
-            auto curPythonThread = (PyThreadState**)(void*)GetProcAddress(
-                Interpreter, "_PyThreadState_Current");
-            CurrentThread = curPythonThread;
+    PyThreadState *GetCurrentThread() {
+        if (Thread_UncheckedGet) {
+            return Thread_UncheckedGet();
+        }
+        if (CurrentThread) {
+            return *CurrentThread;
         }
 
-        return CurrentThread != nullptr;
+        Thread_UncheckedGet =(PyThreadState_UncheckedGetFunc*)GetProcAddress(
+            Interpreter, "_PyThreadState_UncheckedGet");
+        if (Thread_UncheckedGet) {
+            return Thread_UncheckedGet();
+        }
+        CurrentThread = (PyThreadState**)(void*)GetProcAddress(
+            Interpreter, "_PyThreadState_Current");
+        if (CurrentThread) {
+            return *CurrentThread;
+        }
+
+        return nullptr;
     }
 
 private:
     PythonVersion Version;
     PyObject_CallFunctionObjArgs* Call;
     bool IsDebug;
+    PyThreadState_UncheckedGetFunc *Thread_UncheckedGet;
+    PyThreadState** CurrentThread;
 };
 
 DWORD _interpreterCount = 0;
@@ -803,6 +817,7 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
         // found initialized Python runtime, gather and check the APIs we need for a successful attach...
         auto addPendingCall = (Py_AddPendingCall*)GetProcAddress(module, "Py_AddPendingCall");
         auto curPythonThread = (PyThreadState**)(void*)GetProcAddress(module, "_PyThreadState_Current");
+        auto getCurrentThread = (PyThreadState_UncheckedGetFunc*)GetProcAddress(module, "_PyThreadState_UncheckedGet");
         auto interpHead = (PyInterpreterState_Head*)GetProcAddress(module, "PyInterpreterState_Head");
         auto gilEnsure = (PyGILState_Ensure*)GetProcAddress(module, "PyGILState_Ensure");
         auto gilRelease = (PyGILState_Release*)GetProcAddress(module, "PyGILState_Release");
@@ -857,13 +872,14 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
         auto pyGilStateRelease = (PyGILState_ReleaseFunc*)GetProcAddress(module, "PyGILState_Release");
         auto PyCFrame_Type = (PyTypeObject*)GetProcAddress(module, "PyCFrame_Type");
 
-        if (addPendingCall == nullptr || curPythonThread == nullptr || interpHead == nullptr || gilEnsure == nullptr || gilRelease == nullptr || threadHead == nullptr ||
+        if (addPendingCall == nullptr || interpHead == nullptr || gilEnsure == nullptr || gilRelease == nullptr || threadHead == nullptr ||
             initThreads == nullptr || releaseLock == nullptr || threadsInited == nullptr || threadNext == nullptr || threadSwap == nullptr ||
             pyDictNew == nullptr || pyCompileString == nullptr || pyEvalCode == nullptr || getDictItem == nullptr || call == nullptr ||
             getBuiltins == nullptr || dictSetItem == nullptr || intFromLong == nullptr || pyErrRestore == nullptr || pyErrFetch == nullptr ||
             errOccurred == nullptr || pyImportMod == nullptr || pyGetAttr == nullptr || pyNone == nullptr || pySetAttr == nullptr || boolFromLong == nullptr ||
             getThreadTls == nullptr || setThreadTls == nullptr || delThreadTls == nullptr || releaseLock == nullptr ||
-            pyGilStateEnsure == nullptr || pyGilStateRelease == nullptr) {
+            pyGilStateEnsure == nullptr || pyGilStateRelease == nullptr ||
+            (curPythonThread == nullptr && getCurrentThread == nullptr)) {
                 // we're missing some APIs, we cannot attach.
                 connInfo.ReportError(ConnError_PythonNotFound);
                 return false;
@@ -949,7 +965,7 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
                 SuspendThreads(suspendedThreads, addPendingCall, threadsInited);
 
                 if (!threadsInited()) {
-                    if (*curPythonThread == nullptr) {
+                    if ((getCurrentThread && !getCurrentThread()) || (curPythonThread && !*curPythonThread)) {
                         // no threads are currently running, it is safe to initialize multi threading.
                         PyGILState_STATE gilState;
                         if (version >= PythonVersion_34) {
@@ -1114,7 +1130,12 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
         unordered_set<PyThreadState*> seenThreads;
         {
             // find what index is holding onto the thread state...
-            auto curPyThread = *curPythonThread;
+            PyThreadState *curPyThread = nullptr;
+            if (getCurrentThread) {
+                curPyThread = getCurrentThread();
+            } else if (curPythonThread) {
+                curPyThread = *curPythonThread;
+            }
             int threadStateIndex = -1;
             for (int i = 0; i < 100000; i++) {
                 void* value = getThreadTls(i);
@@ -1318,9 +1339,8 @@ int TraceGeneral(int interpreterId, PyObject *obj, PyFrameObject *frame, int wha
     }
 
     auto call = curInterpreter->GetCall();
-    if (call != nullptr && curInterpreter->EnsureCurrentThread()) {
-        auto curThread = *curInterpreter->CurrentThread;
-
+    auto curThread = curInterpreter->GetCurrentThread();
+    if (call && curThread) {
         bool isDebug = new_thread->_isDebug;
 
         _ASSERTE(curInterpreter->SetTrace != nullptr);
@@ -1457,12 +1477,9 @@ PyGILState_STATE MyGilEnsureGeneral(DWORD interpreterId) {
     // we now hold the global interpreter lock
 
     if (res == PyGILState_UNLOCKED) {
-        if (curInterpreter->EnsureCurrentThread()) {
-            auto thread = *curInterpreter->CurrentThread;
-
-            if (thread != nullptr && curInterpreter->EnsureSetTrace()) {
-                SetInitialTraceFunc(interpreterId, thread);
-            }
+        auto thread = curInterpreter->GetCurrentThread();
+        if (thread && curInterpreter->EnsureSetTrace()) {
+            SetInitialTraceFunc(interpreterId, thread);
         }
     }
 
