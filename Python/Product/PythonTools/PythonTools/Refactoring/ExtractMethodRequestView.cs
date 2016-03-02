@@ -22,13 +22,11 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Media;
 using Microsoft.PythonTools.Analysis.Communication;
-using Microsoft.PythonTools.Parsing.Ast;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.PythonTools.Refactoring {
-    using Infrastructure;
-    using static AnalysisProtocol;
     using AP = AnalysisProtocol;
 
     /// <summary>
@@ -381,9 +379,9 @@ namespace Microsoft.PythonTools.Refactoring {
     }
 
     class ScopeWrapper {
-        public readonly ScopeInfo Scope;
+        public readonly AP.ScopeInfo Scope;
 
-        public ScopeWrapper(ScopeInfo scope) {
+        public ScopeWrapper(AP.ScopeInfo scope) {
             Scope = scope;
         }
 

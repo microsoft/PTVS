@@ -18,25 +18,17 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.IO;
-using System.IO.Compression;
 using System.Linq;
 using System.Threading;
-using System.Windows;
-using System.Windows.Threading;
-using Microsoft.PythonTools.Analysis;
+using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis.Communication;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Editor;
 
 namespace Microsoft.PythonTools.Intellisense {
-    using System.Threading.Tasks;
-    using Infrastructure;
     using AP = AnalysisProtocol;
-
-    using ProjectFileEntry = ProjectFileInfo;
 
     [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",
         Justification = "ownership is unclear")]
@@ -45,7 +37,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly Timer _timer;
         private IList<ITextBuffer> _buffers;
         private bool _parsing, _requeue, _textChange;
-        internal ProjectFileEntry _currentProjEntry;
+        internal ProjectFileInfo _currentProjEntry;
         private ITextDocument _document;
         public int AttachedViews;
         /// <summary>
@@ -63,7 +55,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private const int ReparseDelay = 1000;      // delay in MS before we re-parse a buffer w/ non-line changes.
 
-        public BufferParser(ProjectFileEntry initialProjectEntry, VsProjectAnalyzer parser, ITextBuffer buffer) {
+        public BufferParser(ProjectFileInfo initialProjectEntry, VsProjectAnalyzer parser, ITextBuffer buffer) {
             _parser = parser;
             _timer = new Timer(ReparseTimer, null, Timeout.Infinite, Timeout.Infinite);
             _buffers = new[] { buffer };
@@ -212,7 +204,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 _document.EncodingChanged -= EncodingChanged;
                 _document = null;
             }
-            subjectBuffer.Properties.RemoveProperty(typeof(ProjectFileEntry));
+            subjectBuffer.Properties.RemoveProperty(typeof(ProjectFileInfo));
             subjectBuffer.Properties.RemoveProperty(typeof(BufferParser));
             subjectBuffer.ChangedLowPriority -= BufferChangedLowPriority;
         }
@@ -220,7 +212,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private void InitBuffer(ITextBuffer buffer, int id = 0) {
             buffer.Properties.AddProperty(typeof(BufferParser), this);
             buffer.ChangedLowPriority += BufferChangedLowPriority;
-            buffer.Properties.AddProperty(typeof(ProjectFileEntry), _currentProjEntry);
+            buffer.Properties.AddProperty(typeof(ProjectFileInfo), _currentProjEntry);
 
             lock (this) {
                 var bufferInfo = new BufferInfo(buffer, id);

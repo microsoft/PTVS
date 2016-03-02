@@ -998,19 +998,19 @@ namespace Microsoft.PythonTools.Language {
                             prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
                             return VSConstants.S_OK;
 
-                        //case VSConstants.VSStd2KCmdID.OUTLN_STOP_HIDING_ALL:
-                        //    tagger = _textView.GetOutliningTagger();
-                        //    if (tagger != null && tagger.Enabled) {
-                        //        prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
-                        //    }
-                        //    return VSConstants.S_OK;
+                        case VSConstants.VSStd2KCmdID.OUTLN_STOP_HIDING_ALL:
+                            tagger = _textView.GetOutliningTagger();
+                            if (tagger != null && tagger.Enabled) {
+                                prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
+                            }
+                            return VSConstants.S_OK;
 
-                        //case VSConstants.VSStd2KCmdID.OUTLN_START_AUTOHIDING:
-                        //    tagger = _textView.GetOutliningTagger();
-                        //    if (tagger != null && !tagger.Enabled) {
-                        //        prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
-                        //    }
-                        //    return VSConstants.S_OK;
+                        case VSConstants.VSStd2KCmdID.OUTLN_START_AUTOHIDING:
+                            tagger = _textView.GetOutliningTagger();
+                            if (tagger != null && !tagger.Enabled) {
+                                prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
+                            }
+                            return VSConstants.S_OK;
 
                         case VSConstants.VSStd2KCmdID.COMMENT_BLOCK:
                         case VSConstants.VSStd2KCmdID.COMMENTBLOCK:

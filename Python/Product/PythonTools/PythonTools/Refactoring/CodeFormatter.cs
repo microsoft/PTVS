@@ -19,9 +19,9 @@ using Microsoft.PythonTools.Analysis.Communication;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
+using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
 
 namespace Microsoft.PythonTools.Refactoring {
-    using VisualStudio.Text.Editor.OptionsExtensionMethods;
     using AP = AnalysisProtocol;
 
     class CodeFormatter {

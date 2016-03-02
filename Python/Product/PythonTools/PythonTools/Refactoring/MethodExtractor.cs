@@ -15,17 +15,13 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis.Communication;
-using Microsoft.PythonTools.Parsing.Ast;
+using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
-using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
 
 namespace Microsoft.PythonTools.Refactoring {
-    using Intellisense;
     using AP = AnalysisProtocol;
     class MethodExtractor {
         private readonly ITextView _view;
