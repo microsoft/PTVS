@@ -34,6 +34,7 @@ using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.PythonTools.Refactoring;
 
 namespace Microsoft.PythonTools.Intellisense {
+    using System.Text.RegularExpressions;
     using AP = AnalysisProtocol;
 
     /// <summary>
@@ -162,6 +163,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 case AP.RemoveImportsRequest.Command: return RemoveImports((AP.RemoveImportsRequest)request);
                 case AP.ExtractMethodRequest.Command: return ExtractMethod((AP.ExtractMethodRequest)request);
                 case AP.AnalysisStatusRequest.Command: return AnalysisStatus();
+                case AP.OverridesCompletionRequest.Command: return GetOverrides((AP.OverridesCompletionRequest)request);
                 default:
                     throw new InvalidOperationException("Unknown command");
             }
@@ -188,7 +190,7 @@ namespace Microsoft.PythonTools.Intellisense {
             );
 
             return new MethodExtractor(
-                ast, 
+                ast,
                 code
             ).ExtractMethod(request, version);
         }
@@ -218,8 +220,8 @@ namespace Microsoft.PythonTools.Intellisense {
             int version;
             string code;
             var ast = projectFile.GetVerbatimAstAndCode(
-                Project.LanguageVersion, 
-                request.bufferId, 
+                Project.LanguageVersion,
+                request.bufferId,
                 out version,
                 out code
             );
@@ -276,7 +278,7 @@ namespace Microsoft.PythonTools.Intellisense {
             var location = new SourceLocation(request.index, request.line, request.column);
             var nameExpr = GetFirstNameExpression(
                 analysis.GetAstFromText(
-                    request.text, 
+                    request.text,
                     location
                 ).Body
             );
@@ -360,7 +362,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 },
                 version = version
             };
-        }        
+        }
 
         public static string MakeImportCode(string fromModule, string name) {
             if (string.IsNullOrEmpty(fromModule)) {
@@ -369,7 +371,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 return string.Format("from {0} import {1}", fromModule, name);
             }
         }
-        
+
         private static AP.ChangeInfo UpdateFromImport(
             PythonAst curAst,
             FromImportStatement fromImport,
@@ -435,8 +437,8 @@ namespace Microsoft.PythonTools.Intellisense {
                 foreach (var version in versions.ParsedVersions) {
                     if (version.Value.Ast != null) {
                         var walker = new ImportStatementWalker(
-                            version.Value.Ast, 
-                            entry, 
+                            version.Value.Ast,
+                            entry,
                             analyzer
                         );
 
@@ -1034,6 +1036,78 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
+        private Response GetOverrides(AP.OverridesCompletionRequest request) {
+            var projectFile = _projectFiles[request.fileId] as IPythonProjectEntry;
+            var analysis = projectFile.Analysis;
+            
+            var location = new SourceLocation(request.index, request.line, request.column);
+
+            var cls = analysis.GetDefinitionTree(location).LastOrDefault(member => member.MemberType == PythonMemberType.Class);
+            var members = analysis.GetOverrideable(location).ToArray();
+
+            return new AP.OverridesCompletionResponse() {
+                overrides = members
+                    .Select(member => new AP.Override() {
+                        name = member.Name,
+                        doc = member.Documentation,
+                        completion = MakeCompletionString(request, member, cls.Name)
+                    }).ToArray()
+            };
+        }
+
+        private static readonly Regex ValidParameterName = new Regex(@"^(\*|\*\*)?[a-z_][a-z0-9_]*", RegexOptions.IgnoreCase | RegexOptions.Singleline);
+
+        private static string GetSafeParameterName(ParameterResult result, int index) {
+            if (!string.IsNullOrEmpty(result.DefaultValue)) {
+                return GetSafeArgumentName(result, index) + " = " + result.DefaultValue;
+            }
+            return GetSafeArgumentName(result, index);
+        }
+
+        private static string GetSafeArgumentName(ParameterResult result, int index) {
+            var match = ValidParameterName.Match(result.Name);
+
+            if (match.Success) {
+                return match.Value;
+            } else if (result.Name.StartsWith("**")) {
+                return "**kwargs";
+            } else if (result.Name.StartsWith("*")) {
+                return "*args";
+            } else {
+                return "arg" + index.ToString();
+            }
+        }
+
+        private string MakeCompletionString(AP.OverridesCompletionRequest request, IOverloadResult result, string className) {
+            var sb = new StringBuilder();
+
+            sb.AppendLine(result.Name + "(" + string.Join(", ", result.Parameters.Select((p, i) => GetSafeParameterName(p, i))) + "):");
+
+            sb.Append(request.indentation);
+
+            if (result.Parameters.Length > 0) {
+                var parameterString = string.Join(", ", result.Parameters.Skip(1).Select((p, i) => GetSafeArgumentName(p, i + 1)));
+
+                if (InterpreterFactory.GetLanguageVersion().Is3x()) {
+                    sb.AppendFormat("return super().{0}({1})",
+                        result.Name,
+                        parameterString);
+                } else if (!string.IsNullOrEmpty(className)) {
+                    sb.AppendFormat("return super({0}, {1}).{2}({3})",
+                        className,
+                        result.Parameters.First().Name,
+                        result.Name,
+                        parameterString);
+                } else {
+                    sb.Append("pass");
+                }
+            } else {
+                sb.Append("pass");
+            }
+
+            return sb.ToString();
+        }
+
         private Response UpdateContent(AP.FileUpdateRequest request) {
             var entry = _projectFiles[request.fileId];
 
@@ -1409,7 +1483,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         class ParseResult {
-            public readonly PythonAst Ast; 
+            public readonly PythonAst Ast;
             public readonly CollectingErrorSink Errors;
             public readonly List<AP.TaskItem> Tasks;
             public readonly int Version;
@@ -1441,9 +1515,9 @@ namespace Microsoft.PythonTools.Intellisense {
                     using (var parser = buffer.Value.CreateParser(Project.LanguageVersion, options)) {
                         var ast = ParseOneFile(parser);
                         parseResults[buffer.Key] = new ParseResult(
-                            ast, 
-                            errorSink, 
-                            tasks, 
+                            ast,
+                            errorSink,
+                            tasks,
                             buffer.Value.Version
                         );
                     }
@@ -1461,7 +1535,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     _analysisQueue.Enqueue(pyEntry, AnalysisPriority.Normal);
                 }
             } else if ((externalEntry = entry as IExternalProjectEntry) != null) {
-                foreach(var keyValue in buffers) { 
+                foreach (var keyValue in buffers) {
                     externalEntry.ParseContent(keyValue.Value.GetReader(), null);
                     _analysisQueue.Enqueue(entry, AnalysisPriority.Normal);
                 }
@@ -1582,7 +1656,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-#region Implementation Details
+        #region Implementation Details
 
         private static Stopwatch _stopwatch = MakeStopWatch();
 
@@ -1633,7 +1707,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 _parameters = parameters;
             }
 
-#region IOverloadResult Members
+        #region IOverloadResult Members
 
             public string Name {
                 get { return _name; }
@@ -1647,7 +1721,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 get { return _parameters; }
             }
 
-#endregion
+        #endregion
         }
 
         internal bool ShouldEvaluateForCompletion(string source) {
@@ -1806,7 +1880,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 _analyzer = analyzer;
             }
 
-#region IAnalyzable Members
+            #region IAnalyzable Members
 
             public void Analyze(CancellationToken cancel) {
                 if (cancel.IsCancellationRequested) {
@@ -1816,7 +1890,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 AnalyzeDirectoryWorker(_dir, true, _onFileAnalyzed, cancel);
             }
 
-#endregion
+            #endregion
 
             private void AnalyzeDirectoryWorker(string dir, bool addDir, Action<IProjectEntry> onFileAnalyzed, CancellationToken cancel) {
                 if (_analyzer._pyAnalyzer == null) {
@@ -1887,7 +1961,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 _analyzer = analyzer;
             }
 
-#region IAnalyzable Members
+            #region IAnalyzable Members
 
             public void Analyze(CancellationToken cancel) {
                 if (cancel.IsCancellationRequested) {
@@ -1897,7 +1971,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 _analyzer.AnalyzeZipArchiveWorker(_zipFileName, _onFileAnalyzed, cancel);
             }
 
-#endregion
+            #endregion
         }
 
 
@@ -2079,7 +2153,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         }
                         using (var reader = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete)) {
                             ParseFile(
-                                projEntry, 
+                                projEntry,
                                 new Dictionary<int, CodeInfo> {
                                     { 0, new StreamCodeInfo(0, reader) }
                                 }
@@ -2159,9 +2233,9 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-#endregion
+        #endregion
 
-#region IDisposable Members
+        #region IDisposable Members
 
         public void Dispose() {
             foreach (var pathAndEntry in _projectFiles) {
@@ -2182,7 +2256,7 @@ namespace Microsoft.PythonTools.Intellisense {
             _queueActivityEvent.Dispose();
         }
 
-#endregion
+        #endregion
 
         internal void RemoveReference(ProjectAssemblyReference reference) {
             var interp = Interpreter as IPythonInterpreterWithProjectReferences;

@@ -542,6 +542,21 @@ namespace Microsoft.PythonTools.Intellisense {
             ApplyChanges(changes, file, file.BufferParser.GetBufferId(buffer), fromVersion);
         }
 
+        internal async Task<AP.OverridesCompletionResponse> GetOverrideCompletions(ProjectFileInfo file, ITextBuffer buffer, SourceLocation location, string indentation) {
+            var res = await _conn.SendRequestAsync(
+                new AP.OverridesCompletionRequest() {
+                    fileId = file.FileId,
+                    bufferId = file.BufferParser.GetBufferId(buffer),
+                    column = location.Column,
+                    index = location.Index,
+                    line = location.Line,
+                    indentation = indentation
+                }
+            ).ConfigureAwait(false);
+
+            return res;
+        }
+
         internal static void ApplyChanges(AP.ChangeInfo[] changes, ProjectFileInfo file, int bufferId, int fromVersion) {
             var buffer = file.BufferParser.GetBuffer(bufferId);
             var lastParsedVersion = file.BufferParser.GetLastParsedSnapshot(bufferId).Version;
