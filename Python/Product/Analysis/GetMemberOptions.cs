@@ -50,6 +50,11 @@ namespace Microsoft.PythonTools.Analysis {
         /// level members via ModuleAnalysis.GetAllAvailableMembersByIndex.
         /// </summary>
         IncludeExpressionKeywords = 0x08,
+
+        /// <summary>
+        /// Exclude built-in members when getting all members
+        /// </summary>
+        ExcludeBuiltins = 0x10
     }
 
     internal static class GetMemberOptionsExtensions {

@@ -15,10 +15,14 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Language;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools.Navigation;
@@ -27,9 +31,101 @@ using Microsoft.VisualStudioTools.Project;
 namespace Microsoft.PythonTools.Navigation {
     class PythonFileLibraryNode : LibraryNode {
         private readonly HierarchyNode _hierarchy;
-        public PythonFileLibraryNode(LibraryNode parent, HierarchyNode hierarchy, string name, string filename, LibraryNodeType libraryNodeType)
-            : base(parent, name, filename, libraryNodeType) {
+        public PythonFileLibraryNode(LibraryNode parent, HierarchyNode hierarchy, string name, string filename)
+            : base(parent, name, filename, LibraryNodeType.Package | LibraryNodeType.Classes, children : new PythonFileChildren((PythonFileNode)hierarchy)) {
                 _hierarchy = hierarchy;
+        }
+
+        class PythonFileChildren : IList<LibraryNode> {
+            private readonly PythonFileNode _hierarchy;
+            private LibraryNode[] _children;
+
+            public PythonFileChildren(PythonFileNode hierarchy) {
+                _hierarchy = hierarchy;
+                
+            }
+
+            public void EnsureChildren() {
+                if (_children == null) {
+                    var projEntry = _hierarchy.GetProjectEntry();
+                    var members = projEntry.GetAllAvailableMembers(new SourceLocation(0, 1, 1), GetMemberOptions.ExcludeBuiltins);
+                    List<LibraryNode> children = new List<LibraryNode>();
+                    foreach (var member in members) {
+                        
+                        var node = new PythonLibraryNode(null, member.Name, _hierarchy.ProjectMgr, _hierarchy.ID, member.MemberType);
+                        children.Add(node);
+                    }
+                    _children = children.ToArray();
+                }
+            }
+
+            public LibraryNode this[int index] {
+                get {
+                    EnsureChildren();
+                    return _children[index];
+                }
+
+                set {
+                    throw new NotImplementedException();
+                }
+            }
+
+            public int Count {
+                get {
+                    EnsureChildren();
+                    return _children.Length;
+                }
+            }
+
+            public bool IsReadOnly {
+                get {
+                    return true;
+                }
+            }
+
+            public void Add(LibraryNode item) {
+                throw new NotImplementedException();
+            }
+
+            public void Clear() {
+                throw new NotImplementedException();
+            }
+
+            public bool Contains(LibraryNode item) {
+                EnsureChildren();
+                return _children.Contains(item);
+            }
+
+            public void CopyTo(LibraryNode[] array, int arrayIndex) {
+                EnsureChildren();
+                _children.CopyTo(array, arrayIndex);
+            }
+
+            public IEnumerator<LibraryNode> GetEnumerator() {
+                EnsureChildren();
+                return ((IEnumerable<LibraryNode>)_children).GetEnumerator();
+            }
+
+            public int IndexOf(LibraryNode item) {
+                EnsureChildren();
+                return Array.IndexOf(_children, item);
+            }
+
+            public void Insert(int index, LibraryNode item) {
+                throw new NotImplementedException();
+            }
+
+            public bool Remove(LibraryNode item) {
+                throw new NotImplementedException();
+            }
+
+            public void RemoveAt(int index) {
+                throw new NotImplementedException();
+            }
+
+            IEnumerator IEnumerable.GetEnumerator() {
+                return _children.GetEnumerator();
+            }
         }
 
         public override VSTREEDISPLAYDATA DisplayData {
@@ -70,22 +166,18 @@ namespace Microsoft.PythonTools.Navigation {
         public override IVsSimpleObjectList2 DoSearch(VSOBSEARCHCRITERIA2 criteria) {
             var node = _hierarchy as PythonFileNode;
             if(node != null) {
-#if FALSE
-                var analysis = node.GetProjectEntry() as IPythonProjectEntry;
+                var analysis = node.GetProjectEntry();
 
                 if (analysis != null) {
-                    var exprAnalysis = new ExpressionAnalysis(
-                        ((PythonProjectNode)node.ProjectMgr).GetAnalyzer(),
+                    string expr = criteria.szName.Substring(criteria.szName.LastIndexOf(':') + 1);
+                    var exprAnalysis = VsProjectAnalyzer.AnalyzeExpression(
+                        analysis,
                         criteria.szName.Substring(criteria.szName.LastIndexOf(':') + 1),
-                        analysis.Analysis,
-                        0,
-                        null,
-                        null
-                    );
-
-                    return EditFilter.GetFindRefLocations(_hierarchy.ProjectMgr.Site, exprAnalysis);
+                        new Parsing.SourceLocation(0, 1, 1)
+                    ).Result;
+                    
+                    return EditFilter.GetFindRefLocations(_hierarchy.ProjectMgr.Site, expr, exprAnalysis.References);
                 }
-#endif
             }
 
             return null;

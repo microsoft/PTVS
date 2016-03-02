@@ -35,15 +35,15 @@ namespace Microsoft.VisualStudioTools.Navigation {
         private readonly IVsHierarchy _ownerHierarchy;
         private readonly uint _fileId;
         private readonly TextSpan _sourceSpan;
-        private readonly IScopeNode _scope;
         private string _fileMoniker;
 
-        protected CommonLibraryNode(LibraryNode parent, IScopeNode scope, string namePrefix, IVsHierarchy hierarchy, uint itemId) :
-            base(parent, GetLibraryNodeName(scope, namePrefix), namePrefix + scope.Name, scope.NodeType) {
+        protected CommonLibraryNode(LibraryNode parent, string name, string fullName, IVsHierarchy hierarchy, uint itemId, LibraryNodeType type) :
+            base(parent, name, fullName, type) {
             _ownerHierarchy = hierarchy;
             _fileId = itemId;
 
             // Now check if we have all the information to navigate to the source location.
+#if FALSE
             if ((null != _ownerHierarchy) && (VSConstants.VSITEMID_NIL != _fileId)) {
                 if ((SourceLocation.Invalid != scope.Start) && (SourceLocation.Invalid != scope.End)) {
                     _sourceSpan = new TextSpan();
@@ -58,15 +58,10 @@ namespace Microsoft.VisualStudioTools.Navigation {
                     CanGoToSource = true;
                 }
             }
-            _scope = scope;
+#endif
+     
         }
-
-        internal IScopeNode ScopeNode {
-            get {
-                return _scope;
-            }
-        }
-
+      
         public TextSpan SourceSpan {
             get {
                 return _sourceSpan;
@@ -88,7 +83,6 @@ namespace Microsoft.VisualStudioTools.Navigation {
 
         protected CommonLibraryNode(CommonLibraryNode node, string newFullName) :
             base(node, newFullName) {
-            _scope = node._scope;
             _fileId = node._fileId;
             _ownerHierarchy = node._ownerHierarchy;
             _fileMoniker = node._fileMoniker;

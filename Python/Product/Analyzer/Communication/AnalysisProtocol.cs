@@ -386,12 +386,32 @@ namespace Microsoft.PythonTools.Analysis.Communication {
             public Reference[] variables;
         }
 
-        public class AnalysisCompleteEvent : Event {
-            public const string Name = "analysisComplete";
+        public class FileAnalysisCompleteEvent : Event {
+            public const string Name = "fileAnalysisComplete";
             public int fileId;
 
             public override string name => Name;
         }
+
+        /// <summary>
+        /// Signals all files are analyzed
+        /// </summary>
+        public class AnalysisCompleteEvent : Event {
+            public const string Name = "analysisComplete";
+
+            public override string name => Name;
+        }
+
+        public sealed class AnalysisStatusRequest : Request<AnalysisStatusResponse> {
+            public const string Command = "analysisStatus";
+
+            public override string command => Command;
+        }
+
+        public sealed class AnalysisStatusResponse : Response {
+            public int itemsLeft;
+        }
+
 
         public class CompletionsResponse : Response {
             public Completion[] completions;

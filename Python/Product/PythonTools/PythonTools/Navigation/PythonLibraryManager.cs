@@ -47,13 +47,14 @@ namespace Microsoft.PythonTools.Navigation {
             : base(package) {
             _package = package;
         }
-
+#if FALSE
         protected override LibraryNode CreateLibraryNode(LibraryNode parent, IScopeNode subItem, string namePrefix, IVsHierarchy hierarchy, uint itemid) {
             return new PythonLibraryNode(parent, subItem, namePrefix, hierarchy, itemid);            
         }
+#endif
 
-        public override LibraryNode CreateFileLibraryNode(LibraryNode parent, HierarchyNode hierarchy, string name, string filename, LibraryNodeType libraryNodeType) {
-            return new PythonFileLibraryNode(parent, hierarchy, hierarchy.Caption, filename, libraryNodeType);
+        public override LibraryNode CreateFileLibraryNode(LibraryNode parent, HierarchyNode hierarchy, string name, string filename) {
+            return new PythonFileLibraryNode(parent, hierarchy, hierarchy.Caption, filename);
         }
 
         protected override void OnNewFile(LibraryTask task) {
@@ -74,13 +75,11 @@ namespace Microsoft.PythonTools.Navigation {
                 // in the future we can use the analysis to include type information in the
                 // object browser (for example we could include base type information with
                 // links elsewhere in the object browser).
-#if FALSE
-                item.OnNewAnalysis += (sender, args) => {
-                    _package.GetUIThread().InvokeAsync(() => FileParsed(task, new AstScopeNode(item.Tree, item)))
+                item.AnalysisComplete += (sender, args) => {
+                    _package.GetUIThread().InvokeAsync(() => FileParsed(task, null /*new AstScopeNode(item.Tree, item)*/))
                         .HandleAllExceptions(_package, GetType())
                         .DoNotWait();
                 };
-#endif
             }
         }
     }

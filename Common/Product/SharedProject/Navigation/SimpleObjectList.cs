@@ -31,14 +31,18 @@ namespace Microsoft.VisualStudioTools.Navigation {
     /// list is changing over time it should be thrown away and a new list should be placed in the parent.
     /// </summary>
     class SimpleObjectList<T> : IVsSimpleObjectList2 where T : ISimpleObject {
-        private readonly List<T> _children;
+        private readonly IList<T> _children;
         private uint _updateCount;
 
         public SimpleObjectList() {
             _children = new List<T>();
         }
 
-        public List<T> Children {
+        public SimpleObjectList(IList<T> children) {
+            _children = children ?? new List<T>();
+        }
+
+        public IList<T> Children {
             get {
                 return _children;
             }

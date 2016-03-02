@@ -103,7 +103,7 @@ namespace Microsoft.PythonTools.Intellisense {
 #endif
 
             _analysisQueue = new AnalysisQueue(this);
-            _analysisQueue.AnalysisStarted += AnalysisQueue_AnalysisStarted;
+            _analysisQueue.AnalysisComplete += AnalysisQueue_Complete;
             _allFactories = allFactories;
             _options = new AP.OptionsChangedEvent() {
                 implicitProject = false,
@@ -162,10 +162,19 @@ namespace Microsoft.PythonTools.Intellisense {
                 case AP.FormatCodeRequest.Command: return FormatCode((AP.FormatCodeRequest)request);
                 case AP.RemoveImportsRequest.Command: return RemoveImports((AP.RemoveImportsRequest)request);
                 case AP.ExtractMethodRequest.Command: return ExtractMethod((AP.ExtractMethodRequest)request);
+                case AP.AnalysisStatusRequest.Command: return AnalysisStatus();
                 default:
                     throw new InvalidOperationException("Unknown command");
             }
 
+        }
+
+        private Response AnalysisStatus() {
+            QueueActivityEvent.WaitOne(100);
+
+            return new AP.AnalysisStatusResponse() {
+                itemsLeft = ParsePending + _analysisQueue.AnalysisPending
+            };
         }
 
         private Response ExtractMethod(AP.ExtractMethodRequest request) {
@@ -1105,11 +1114,8 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        private void AnalysisQueue_AnalysisStarted(object sender, EventArgs e) {
-            var evt = AnalysisStarted;
-            if (evt != null) {
-                evt(this, e);
-            }
+        private void AnalysisQueue_Complete(object sender, EventArgs e) {
+            _connection?.SendEventAsync(new AP.AnalysisCompleteEvent());
         }
 
         internal static string GetZipFileName(IProjectEntry entry) {
@@ -1300,7 +1306,7 @@ namespace Microsoft.PythonTools.Intellisense {
             if (projEntry != null) {
                 var fileId = ProjectEntryMap.GetId(projEntry);
 
-                _connection.SendEventAsync(new AP.AnalysisCompleteEvent() { fileId = fileId });
+                _connection.SendEventAsync(new AP.FileAnalysisCompleteEvent() { fileId = fileId });
             }
         }
 
@@ -1356,8 +1362,6 @@ namespace Microsoft.PythonTools.Intellisense {
                 return IsParsing || _analysisQueue.IsAnalyzing;
             }
         }
-
-        internal event EventHandler AnalysisStarted;
 
         internal void WaitForCompleteAnalysis(Func<int, bool> itemsLeftUpdated) {
             if (IsAnalyzing) {
@@ -2172,7 +2176,7 @@ namespace Microsoft.PythonTools.Intellisense {
 #endif
             }
 
-            _analysisQueue.AnalysisStarted -= AnalysisQueue_AnalysisStarted;
+            _analysisQueue.AnalysisComplete -= AnalysisQueue_Complete;
             _analysisQueue.Dispose();
             if (_pyAnalyzer != null) {
                 _pyAnalyzer.Interpreter.ModuleNamesChanged -= OnModulesChanged;

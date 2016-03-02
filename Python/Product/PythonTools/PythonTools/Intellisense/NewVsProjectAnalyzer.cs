@@ -40,12 +40,12 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly ConcurrentDictionary<string, ProjectFileInfo> _projectFiles;
         private readonly ConcurrentDictionary<int, ProjectFileInfo> _projectFilesById;
 
-
         internal readonly HashSet<ProjectFileInfo> _hasParseErrors = new HashSet<ProjectFileInfo>();
         internal readonly object _hasParseErrorsLock = new object();
 
         private const string ParserTaskMoniker = "Parser";
         internal const string UnresolvedImportMoniker = "UnresolvedImport";
+        internal bool _analysisComplete;
 
         private Process _analysisProcess;
         private TaskProvider _taskProvider;
@@ -57,7 +57,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly IServiceProvider _serviceProvider;
 
         internal Task ReloadTask;
-        internal int _analysisPending;
+        internal int _parsePending;
 
 
         internal VsProjectAnalyzer(
@@ -242,10 +242,12 @@ namespace Microsoft.PythonTools.Intellisense {
             Debug.WriteLine(String.Format("Event received: {0}", e.Event.name));
 
             switch (e.Event.name) {
-                case AP.AnalysisCompleteEvent.Name:
+                case AP.FileAnalysisCompleteEvent.Name:
                     OnAnalysisComplete(e);
                     break;
                 case AP.FileParsedEvent.Name:
+                    Interlocked.Decrement(ref _parsePending);
+
                     var parsed = (AP.FileParsedEvent)e.Event;
                     ProjectFileInfo projFile;
                     if (_projectFilesById.TryGetValue(parsed.fileId, out projFile)) {
@@ -258,7 +260,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private void OnAnalysisComplete(EventReceivedEventArgs e) {
-            var analysisComplete = (AP.AnalysisCompleteEvent)e.Event;
+            var analysisComplete = (AP.FileAnalysisCompleteEvent)e.Event;
             ProjectFileInfo info;
             if (_projectFilesById.TryGetValue(analysisComplete.fileId, out info)) {
                 info.OnAnalysisComplete();
@@ -451,6 +453,9 @@ namespace Microsoft.PythonTools.Intellisense {
 
             ProjectFileInfo entry;
             if (!_projectFiles.TryGetValue(path, out entry)) {
+                _analysisComplete = false;
+                Interlocked.Increment(ref _parsePending);
+
                 var res = await _conn.SendRequestAsync(
                     new AP.AddFileRequest() {
                         path = path
@@ -708,6 +713,27 @@ namespace Microsoft.PythonTools.Intellisense {
             return new AnalysisVariable(type, location);
         }
 
+        internal static async Task<ExpressionAnalysis> AnalyzeExpression(ProjectFileInfo file, string expr, SourceLocation location) {
+            var req = new AP.AnalyzeExpressionRequest() {
+                expr = expr,
+                column = location.Column,
+                index = location.Index,
+                line = location.Line,
+                fileId = file.FileId
+            };
+
+            var definitions = await file.ProjectState._conn.SendRequestAsync(req);
+
+            return new ExpressionAnalysis(
+                file.ProjectState,
+                expr,
+                null,
+                definitions.variables.Select(file.ProjectState.ToAnalysisVariable).ToArray(),
+                definitions.privatePrefix,
+                definitions.memberName
+            );
+        }
+
         internal static async Task<ExpressionAnalysis> AnalyzeExpression(ITextSnapshot snapshot, SnapshotPoint point) {
             var analysis = GetApplicableExpression(snapshot, point);
 
@@ -937,10 +963,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal bool IsAnalyzing {
             get {
-                return false;
-#if FALSE
-                return _queue.IsParsing || _analysisQueue.IsAnalyzing;
-#endif
+                
+                return _parsePending > 0 || !_analysisComplete;
             }
         }
 
@@ -951,19 +975,16 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        internal void WaitForCompleteAnalysis(Func<int, bool> itemsLeftUpdated) {
-            /*if (IsAnalyzing) {
+        internal async void WaitForCompleteAnalysis(Func<int, bool> itemsLeftUpdated) {
+            if (IsAnalyzing) {
                 while (IsAnalyzing) {
-                    QueueActivityEvent.WaitOne(100);
+                    var res = await _conn.SendRequestAsync(new AP.AnalysisStatusRequest()).ConfigureAwait(false);
 
-                    int itemsLeft = _queue.ParsePending + _analysisQueue.AnalysisPending;
-
-                    if (!itemsLeftUpdated(itemsLeft)) {
+                    if (!itemsLeftUpdated(res.itemsLeft)) {
                         break;
                     }
                 }
-            } else */
-            {
+            } else {
                 itemsLeftUpdated(0);
             }
         }
@@ -1314,12 +1335,6 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal async Task StopAnalyzingDirectory(string directory) {
             await _conn.SendRequestAsync(new AP.RemoveDirectoryRequest() { dir = directory }).ConfigureAwait(false);
-        }
-
-        internal void Cancel() {
-#if FALSE
-            _analysisQueue.Stop();
-#endif
         }
 
         internal async void UnloadFile(ProjectFileInfo entry) {

@@ -399,7 +399,9 @@ namespace Microsoft.PythonTools.Language {
             internal SymbolList(string description, StandardGlyphGroup glyphGroup, IEnumerable<SimpleLocationInfo> locations) {
                 _name = description;
                 _glyphGroup = glyphGroup;
-                Children.AddRange(locations);
+                foreach (var location in locations) {
+                    Children.Add(location);
+                }
             }
 
             public override uint CategoryField(LIB_CATEGORY lIB_CATEGORY) {
@@ -541,10 +543,10 @@ namespace Microsoft.PythonTools.Language {
         }
 
         class NodeEnumerator<T> : IVsEnumNavInfoNodes where T : IVsNavInfoNode {
-            private readonly List<T> _locations;
+            private readonly IList<T> _locations;
             private IEnumerator<T> _locationEnum;
 
-            public NodeEnumerator(List<T> locations) {
+            public NodeEnumerator(IList<T> locations) {
                 _locations = locations;
                 Reset();
             }
@@ -631,7 +633,7 @@ namespace Microsoft.PythonTools.Language {
                     case VSConstants.VSStd97CmdID.FindReferences: FindAllReferences(); return VSConstants.S_OK;
                 }
             } else if (pguidCmdGroup == CommonConstants.Std2KCmdGroupGuid) {
-                //OutliningTaggerProvider.OutliningTagger tagger;
+                OutliningTaggerProvider.OutliningTagger tagger;
                 switch ((VSConstants.VSStd2KCmdID)nCmdID) {
                     case VSConstants.VSStd2KCmdID.FORMATDOCUMENT:
                         FormatCode(new SnapshotSpan(_textView.TextBuffer.CurrentSnapshot, 0, _textView.TextBuffer.CurrentSnapshot.Length), false);
@@ -671,7 +673,6 @@ namespace Microsoft.PythonTools.Language {
                             return VSConstants.S_OK;
                         }
                         break;
-#if FALSE
                     case VSConstants.VSStd2KCmdID.OUTLN_STOP_HIDING_ALL:
                         tagger = _textView.GetOutliningTagger();
                         if (tagger != null) {
@@ -687,7 +688,6 @@ namespace Microsoft.PythonTools.Language {
                         }
                         // let VS get the event as well
                         break;
-#endif
                     case VSConstants.VSStd2KCmdID.COMMENT_BLOCK:
                     case VSConstants.VSStd2KCmdID.COMMENTBLOCK:
                         if (_textView.CommentOrUncommentBlock(comment: true)) {

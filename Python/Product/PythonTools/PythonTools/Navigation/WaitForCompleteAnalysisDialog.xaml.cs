@@ -32,18 +32,14 @@ namespace Microsoft.PythonTools.Navigation {
             _analyzer = analyzer;
             InitializeComponent();
 
-            new Thread(AnalysisComplete).Start();
+            _analyzer.WaitForCompleteAnalysis(UpdateItemsRemaining);
         }
 
         private void _cancelButton_Click(object sender, RoutedEventArgs e) {
             this.DialogResult = false;
             this.Close();
         }
-
-        private void AnalysisComplete() {
-            _analyzer.WaitForCompleteAnalysis(UpdateItemsRemaining);
-        }
-
+        
         private bool UpdateItemsRemaining(int itemsLeft) {
             if (itemsLeft == 0) {
                 Dispatcher.Invoke((Action)(() => {

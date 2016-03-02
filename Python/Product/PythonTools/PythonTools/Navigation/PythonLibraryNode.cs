@@ -16,6 +16,7 @@
 
 using System;
 using System.Text;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Language.Intellisense;
@@ -25,9 +26,12 @@ using Microsoft.VisualStudioTools.Navigation;
 
 namespace Microsoft.PythonTools.Navigation {
     internal class PythonLibraryNode : CommonLibraryNode {
+        private readonly PythonMemberType _type;
         
-        public PythonLibraryNode(LibraryNode parent, IScopeNode scope, string namePrefix, IVsHierarchy hierarchy, uint itemId)
-            : base(parent, scope, namePrefix, hierarchy, itemId) { }
+        public PythonLibraryNode(LibraryNode parent, string name, IVsHierarchy hierarchy, uint itemId, PythonMemberType memberType)
+            : base(parent, name, name, hierarchy, itemId, LibraryNodeType.Classes) {
+            _type = memberType;
+        }
 
         protected PythonLibraryNode(PythonLibraryNode node) : base(node) { }
 
@@ -43,17 +47,23 @@ namespace Microsoft.PythonTools.Navigation {
 
         public override StandardGlyphGroup GlyphType {
             get {
-                if (ScopeNode is FunctionScopeNode) {
-                    return StandardGlyphGroup.GlyphGroupMethod;
-                } else if (ScopeNode is AssignmentScopeNode) {
-                    return StandardGlyphGroup.GlyphGroupField;
-                }
-
-                return StandardGlyphGroup.GlyphGroupClass;
+                switch (_type) {
+                    case PythonMemberType.Class:
+                        return StandardGlyphGroup.GlyphGroupClass;
+                    case PythonMemberType.Method:
+                    case PythonMemberType.Function:
+                        return StandardGlyphGroup.GlyphGroupMethod;
+                    case PythonMemberType.Field:
+                    case PythonMemberType.Instance:
+                        return StandardGlyphGroup.GlyphGroupField;
+                    default:
+                        return StandardGlyphGroup.GlyphGroupUnknown;
+                }                
             }
         }
 
         public override string GetTextRepresentation(VSTREETEXTOPTIONS options) {
+#if FALSE
             FunctionScopeNode funcScope = ScopeNode as FunctionScopeNode;
             if (funcScope != null) {
                 StringBuilder sb = new StringBuilder();
@@ -62,12 +72,13 @@ namespace Microsoft.PythonTools.Navigation {
                 });
                 return sb.ToString();
             }
-
+#endif
             return Name;
         }
 
         public override void FillDescription(_VSOBJDESCOPTIONS flags, IVsObjectBrowserDescription3 description) {
             description.ClearDescriptionText();
+#if FALSE
             FunctionScopeNode funcScope = ScopeNode as FunctionScopeNode;
             if (funcScope != null) {
                 description.AddDescriptionText3("def ", VSOBDESCRIPTIONSECTION.OBDS_MISC, null);
@@ -93,6 +104,7 @@ namespace Microsoft.PythonTools.Navigation {
                     }
                 }
             }
+#endif
         }
 
         private static void FillClassDescription(IVsObjectBrowserDescription3 description, ClassScopeNode classScope) {
@@ -143,7 +155,7 @@ namespace Microsoft.PythonTools.Navigation {
         }
 
         private void GetFunctionDescription(FunctionDefinition def, Action<string, VSOBDESCRIPTIONSECTION, IVsNavInfo> addDescription) {
-            addDescription(ScopeNode.Name, VSOBDESCRIPTIONSECTION.OBDS_NAME, null);
+            addDescription(Name, VSOBDESCRIPTIONSECTION.OBDS_NAME, null);
             addDescription("(", VSOBDESCRIPTIONSECTION.OBDS_MISC, null);
 
             for (int i = 0; i < def.Parameters.Count; i++) {

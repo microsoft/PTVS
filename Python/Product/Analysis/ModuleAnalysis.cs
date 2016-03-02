@@ -561,8 +561,10 @@ namespace Microsoft.PythonTools.Analysis {
             var result = new Dictionary<string, IEnumerable<AnalysisValue>>();
 
             // collect builtins
-            foreach (var variable in ProjectState.BuiltinModule.GetAllMembers(ProjectState._defaultContext)) {
-                result[variable.Key] = new List<AnalysisValue>(variable.Value);
+            if (!options.HasFlag(GetMemberOptions.ExcludeBuiltins)) {
+                foreach (var variable in ProjectState.BuiltinModule.GetAllMembers(ProjectState._defaultContext)) {
+                    result[variable.Key] = new List<AnalysisValue>(variable.Value);
+                }
             }
 
             // collect variables from user defined scopes

@@ -252,7 +252,6 @@ namespace Microsoft.PythonTools.Intellisense {
             BufferInfo[] bufferInfos;
             lock (this) {
                 if (_parsing) {
-                    Interlocked.Decrement(ref _parser._analysisPending);
                     return;
                 }
 
@@ -267,7 +266,6 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             ParseBuffers(snapshots, bufferInfos).Wait();
-            Interlocked.Decrement(ref _parser._analysisPending);
 
             lock (this) {
                 _parsing = false;
@@ -346,6 +344,9 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             }
 
+            _parser._analysisComplete = false;
+            Interlocked.Increment(ref _parser._parsePending);
+
             var res = await _parser._conn.SendRequestAsync(
                 new AP.FileUpdateRequest() {
                     fileId = entry.FileId,
@@ -422,7 +423,6 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private void RequeueWorker() {
-            Interlocked.Increment(ref _parser._analysisPending);
             ThreadPool.QueueUserWorkItem(ReparseWorker);
         }
 

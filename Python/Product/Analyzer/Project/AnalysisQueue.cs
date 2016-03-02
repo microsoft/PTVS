@@ -211,6 +211,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     }
                 } else {
                     _isAnalyzing = false;
+                    AnalysisComplete?.Invoke(this, EventArgs.Empty);
                     WaitHandle.SignalAndWait(
                         _analyzer.QueueActivityEvent,
                         _workEvent
@@ -219,6 +220,8 @@ namespace Microsoft.PythonTools.Intellisense {
             }
             _isAnalyzing = false;
         }
+
+        public event EventHandler AnalysisComplete;
 
         sealed class GroupAnalysis : IAnalyzable {
             private readonly IGroupableAnalysisProject _project;
