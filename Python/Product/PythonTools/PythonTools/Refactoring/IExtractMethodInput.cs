@@ -14,11 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.PythonTools.Analysis.Communication;
-
 namespace Microsoft.PythonTools.Refactoring {
-    using AP = AnalysisProtocol;
-
     /// <summary>
     /// Provides inputs/UI to the extract method refactoring.  Enables driving of the refactoring programmatically
     /// or via UI.
@@ -32,9 +28,9 @@ namespace Microsoft.PythonTools.Refactoring {
         /// <summary>
         /// Returns null or an ExtractMethodRequest instance which specifies the options for extracting the method.
         /// </summary>
-        /// <param name="extractMethodResponse"></param>
+        /// <param name="creator"></param>
         /// <returns></returns>
-        ExtractMethodRequest GetExtractionInfo(ExtractedMethodCreator extractMethodResponse);
+        ExtractMethodRequest GetExtractionInfo(ExtractedMethodCreator creator);
 
         /// <summary>
         /// Reports that we cannot extract the method and provides a specific reason why the extraction failed.

@@ -257,6 +257,32 @@ namespace Microsoft.PythonTools.Analysis.Communication {
             }
         }
 
+        public sealed class LocationNameRequest : Request<LocationNameResponse> {
+            public const string Command = "locationName";
+
+            public int fileId, bufferId, line, column;
+
+            public override string command => Command;
+        }
+
+        public sealed class LocationNameResponse : Response {
+            public string name;
+            public int lineOffset;
+        }
+
+
+        public sealed class ProximityExpressionsRequest : Request<ProximityExpressionsResponse> {
+            public const string Command = "proximityExpressions";
+
+            public int fileId, bufferId, line, column, lineCount;
+
+            public override string command => Command;
+        }
+
+        public sealed class ProximityExpressionsResponse : Response {
+            public string[] names;
+        }
+
         public sealed class OverridesCompletionRequest : Request<OverridesCompletionResponse> {
             public const string Command = "overrides";
 

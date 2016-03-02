@@ -277,7 +277,6 @@
     <Compile Include="MissingInterpreterException.cs" />
     <Compile Include="PythonTools\Repl\IInteractiveEvaluatorProvider.cs" />
     <Compile Include="PythonTools\Repl\InteractiveRoleAttribute.cs" />
-    <Compile Include="PythonTools\Debugger\ProximityExpressionWalker.cs" />
     <Compile Include="PythonTools\Repl\ReplOutputClassificationFormatDefinitions.cs" />
     <Compile Include="PythonTools\Repl\ReplOutputClassifier.cs" />
     <Compile Include="PythonTools\Repl\ReplOutputClassifierProvider.cs" />

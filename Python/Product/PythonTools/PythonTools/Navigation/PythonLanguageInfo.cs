@@ -93,57 +93,13 @@ namespace Microsoft.PythonTools.Navigation {
             var model = _serviceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
             var service = model.GetService<IVsEditorAdaptersFactoryService>();
             var buffer = service.GetDataBuffer(pBuffer);
-#if FALSE
-            PyprojEntry;
-            if (buffer.TryGetPythonProjectEntry(out projEntry)) {
-                var tree = projEntry.Tree;
-                var name = FindNodeInTree(tree, tree.Body as SuiteStatement, iLine);
-                if (name != null) {
-                    pbstrName = projEntry.Analysis.ModuleName + "." + name;
-                    piLineOffset = iCol;
-                } else {
-                    pbstrName = projEntry.Analysis.ModuleName;
-                    piLineOffset = iCol;
-                }
-                return VSConstants.S_OK;
-            }
-#endif
-            
-            pbstrName = "";
-            piLineOffset = iCol;
+
+            var projFile = buffer.GetProjectEntry();
+            var location = projFile.ProjectState.GetNameOfLocation(projFile, buffer, iLine, iCol).Result;
+            pbstrName = location.name;
+            piLineOffset = location.lineOffset;
+
             return VSConstants.S_OK;
-        }
-
-        private static string FindNodeInTree(PythonAst tree, SuiteStatement statement, int line) {
-            if (statement != null) {
-                foreach (var node in statement.Statements) {
-                    FunctionDefinition funcDef = node as FunctionDefinition;
-                    if (funcDef != null) {
-                        var span = funcDef.GetSpan(tree);
-                        if (span.Start.Line <= line && line <= span.End.Line) {
-                            var res = FindNodeInTree(tree, funcDef.Body as SuiteStatement, line);
-                            if (res != null) {
-                                return funcDef.Name + "." + res;
-                            }
-                            return funcDef.Name;
-                        }
-                        continue;
-                    }
-
-                    ClassDefinition classDef = node as ClassDefinition;
-                    if (classDef != null) {
-                        var span = classDef.GetSpan(tree);
-                        if (span.Start.Line <= line && line <= span.End.Line) {
-                            var res = FindNodeInTree(tree, classDef.Body as SuiteStatement, line);
-                            if (res != null) {
-                                return classDef.Name + "." + res;
-                            }
-                            return classDef.Name;
-                        }
-                    }
-                }
-            }
-            return null;
         }
 
         /// <summary>
@@ -157,22 +113,12 @@ namespace Microsoft.PythonTools.Navigation {
             var model = _serviceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
             var service = model.GetService<IVsEditorAdaptersFactoryService>();
             var buffer = service.GetDataBuffer(pBuffer);
-#if FALSE
-            IPythonProjectEntry projEntry;
-            if (buffer.TryGetPythonProjectEntry(out projEntry)) {
-                int startLine = Math.Max(iLine - cLines + 1, 0);
-                if (startLine <= iLine) {
-                    var ast = projEntry.Tree;
-                    var walker = new ProximityExpressionWalker(ast, startLine, iLine);
-                    ast.Walk(walker);
-                    var exprs = walker.GetExpressions();
-                    ppEnum = new EnumBSTR(exprs.ToArray());
-                    return VSConstants.S_OK;
-                }
-            }
-#endif
-            ppEnum = null;
-            return VSConstants.E_FAIL;
+
+
+            var projFile = buffer.GetProjectEntry();
+            var names = projFile.ProjectState.GetProximityExpressions(projFile, buffer, iLine, iCol, cLines).Result;
+            ppEnum = new EnumBSTR(names);
+            return VSConstants.S_OK;
         }
 
         public int IsMappedLocation(IVsTextBuffer pBuffer, int iLine, int iCol) {

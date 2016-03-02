@@ -110,6 +110,29 @@ namespace Microsoft.PythonTools.Intellisense {
             CommentTaskTokensChanged(null, EventArgs.Empty);
         }
 
+        internal async Task<AP.LocationNameResponse> GetNameOfLocation(ProjectFileInfo projFile, ITextBuffer buffer, int line, int column) {
+            return await _conn.SendRequestAsync(
+                new AP.LocationNameRequest() {
+                    fileId = projFile.FileId,
+                    bufferId = projFile.BufferParser.GetBufferId(buffer),
+                    line = line,
+                    column = column
+                }
+            ).ConfigureAwait(false);
+        }
+
+        internal async Task<string[]> GetProximityExpressions(ProjectFileInfo projFile, ITextBuffer buffer, int line, int column, int lineCount) {
+            return (await _conn.SendRequestAsync(
+                new AP.ProximityExpressionsRequest() {
+                    fileId = projFile.FileId,
+                    bufferId = projFile.BufferParser.GetBufferId(buffer),
+                    line = line,
+                    column = column,
+                    lineCount = lineCount
+                }
+            ).ConfigureAwait(false)).names;
+        }
+
         internal async Task FormatCode(SnapshotSpan span, ITextView view, CodeFormattingOptions options, bool selectResult) {
             var fileInfo = span.Snapshot.TextBuffer.GetProjectEntry();
             var buffer = span.Snapshot.TextBuffer;

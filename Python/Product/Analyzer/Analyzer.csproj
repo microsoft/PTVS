@@ -79,6 +79,7 @@
     <Compile Include="Project\OutOfProcProjectAnalyzer.cs" />
     <Compile Include="Project\ProjectEntryExtensions.cs" />
     <Compile Include="Project\ProjectEntryMap.cs" />
+    <Compile Include="Project\ProximityExpressionWalker.cs" />
     <Compile Include="Project\SelectionTarget.cs" />
     <Compile Include="Project\VersionCookie.cs" />
     <Compile Include="PyLibAnalyzer.cs" />

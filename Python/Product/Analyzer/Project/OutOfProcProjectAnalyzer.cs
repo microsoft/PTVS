@@ -136,39 +136,120 @@ namespace Microsoft.PythonTools.Intellisense {
             _options = options;
         }
 
-        private async Task<Response> RequestHandler(RequestArgs requestArgs) {
-            await Task.FromResult((object)null);
+        private Task<Response> RequestHandler(RequestArgs requestArgs) {
+            Response response;
             var command = requestArgs.Command;
             var request = requestArgs.Request;
 
             switch (command) {
-                case AP.UnloadFileRequest.Command: return UnloadFile((AP.UnloadFileRequest)request);
-                case AP.AddFileRequest.Command: return AnalyzeFile((AP.AddFileRequest)request);
+                case AP.UnloadFileRequest.Command: response = UnloadFile((AP.UnloadFileRequest)request); break;
+                case AP.AddFileRequest.Command: response = AnalyzeFile((AP.AddFileRequest)request); break;
 
-                case AP.TopLevelCompletionsRequest.Command: return GetTopLevelCompletions(request);
-                case AP.CompletionsRequest.Command: return GetCompletions(request);
-                case AP.GetModulesRequest.Command: return GetModules(request);
-                case AP.GetModuleMembers.Command: return GeModuleMembers(request);
-                case AP.SignaturesRequest.Command: return GetSignatures((AP.SignaturesRequest)request);
-                case AP.QuickInfoRequest.Command: return GetQuickInfo((AP.QuickInfoRequest)request);
-                case AP.AnalyzeExpressionRequest.Command: return AnalyzeExpression((AP.AnalyzeExpressionRequest)request);
-                case AP.OutlingRegionsRequest.Command: return GetOutliningRegions((AP.OutlingRegionsRequest)request);
-                case AP.NavigationRequest.Command: return GetNavigations((AP.NavigationRequest)request);
-                case AP.FileUpdateRequest.Command: return UpdateContent((AP.FileUpdateRequest)request);
-                case AP.UnresolvedImportsRequest.Command: return GetUnresolvedImports((AP.UnresolvedImportsRequest)request);
-                case AP.AddImportRequest.Command: return AddImportRequest((AP.AddImportRequest)request);
-                case AP.IsMissingImportRequest.Command: return IsMissingImport((AP.IsMissingImportRequest)request);
-                case AP.AvailableImportsRequest.Command: return AvailableImports((AP.AvailableImportsRequest)request);
-                case AP.FormatCodeRequest.Command: return FormatCode((AP.FormatCodeRequest)request);
-                case AP.RemoveImportsRequest.Command: return RemoveImports((AP.RemoveImportsRequest)request);
-                case AP.ExtractMethodRequest.Command: return ExtractMethod((AP.ExtractMethodRequest)request);
-                case AP.AnalysisStatusRequest.Command: return AnalysisStatus();
-                case AP.OverridesCompletionRequest.Command: return GetOverrides((AP.OverridesCompletionRequest)request);
+                case AP.TopLevelCompletionsRequest.Command: response = GetTopLevelCompletions(request); break;
+                case AP.CompletionsRequest.Command: response = GetCompletions(request); break;
+                case AP.GetModulesRequest.Command: response = GetModules(request); break;
+                case AP.GetModuleMembers.Command: response = GeModuleMembers(request); break;
+                case AP.SignaturesRequest.Command: response = GetSignatures((AP.SignaturesRequest)request); break;
+                case AP.QuickInfoRequest.Command: response = GetQuickInfo((AP.QuickInfoRequest)request); break;
+                case AP.AnalyzeExpressionRequest.Command: response = AnalyzeExpression((AP.AnalyzeExpressionRequest)request); break;
+                case AP.OutlingRegionsRequest.Command: response = GetOutliningRegions((AP.OutlingRegionsRequest)request); break;
+                case AP.NavigationRequest.Command: response = GetNavigations((AP.NavigationRequest)request); break;
+                case AP.FileUpdateRequest.Command: response = UpdateContent((AP.FileUpdateRequest)request); break;
+                case AP.UnresolvedImportsRequest.Command: response = GetUnresolvedImports((AP.UnresolvedImportsRequest)request); break;
+                case AP.AddImportRequest.Command: response = AddImportRequest((AP.AddImportRequest)request); break;
+                case AP.IsMissingImportRequest.Command: response = IsMissingImport((AP.IsMissingImportRequest)request); break;
+                case AP.AvailableImportsRequest.Command: response = AvailableImports((AP.AvailableImportsRequest)request); break;
+                case AP.FormatCodeRequest.Command: response = FormatCode((AP.FormatCodeRequest)request); break;
+                case AP.RemoveImportsRequest.Command: response = RemoveImports((AP.RemoveImportsRequest)request); break;
+                case AP.ExtractMethodRequest.Command: response = ExtractMethod((AP.ExtractMethodRequest)request); break;
+                case AP.AnalysisStatusRequest.Command: response = AnalysisStatus(); break;
+                case AP.OverridesCompletionRequest.Command: response = GetOverrides((AP.OverridesCompletionRequest)request); break;
+                case AP.LocationNameRequest.Command: response = GetLocationName((AP.LocationNameRequest)request); break;
+                case AP.ProximityExpressionsRequest.Command: response = GetProximityExpressions((AP.ProximityExpressionsRequest)request); break;
                 default:
                     throw new InvalidOperationException("Unknown command");
             }
 
+            return Task.FromResult(response);
         }
+
+        private Response GetProximityExpressions(AP.ProximityExpressionsRequest request) {
+            var projEntry = _projectFiles[request.fileId] as IPythonProjectEntry;
+
+            string[] res = Array.Empty<string>();
+            if (projEntry != null) {
+                PythonAst tree = projEntry.Tree;
+                if (tree != null) {
+                    int startLine = Math.Max(request.line - request.lineCount + 1, 0);
+                    if (startLine <= request.line) {
+                        var walker = new ProximityExpressionWalker(tree, startLine, request.line);
+                        tree.Walk(walker);
+                        res = walker.GetExpressions().ToArray();
+                    }
+                }
+            }
+            return new AP.ProximityExpressionsResponse() {
+                names = res
+            };
+        }
+
+        private Response GetLocationName(AP.LocationNameRequest request) {
+            var projEntry = _projectFiles[request.fileId] as IPythonProjectEntry;
+
+            string name = "";
+            int column = 0;
+            if (projEntry != null) {
+                PythonAst tree = projEntry.Tree;
+                if (tree != null) {
+                    string foundName = FindNodeInTree(tree, tree.Body as SuiteStatement, request.line);
+                    if (foundName != null) {
+                        name = projEntry.Analysis.ModuleName + "." + foundName;
+                        column = request.column;
+                    } else {
+                        name = projEntry.Analysis.ModuleName;
+                        column = request.column;
+                    }
+                }
+            }
+
+            return new AP.LocationNameResponse() {
+                name = name,
+                lineOffset = column
+            };
+        }
+
+        private static string FindNodeInTree(PythonAst tree, SuiteStatement statement, int line) {
+            if (statement != null) {
+                foreach (var node in statement.Statements) {
+                    FunctionDefinition funcDef = node as FunctionDefinition;
+                    if (funcDef != null) {
+                        var span = funcDef.GetSpan(tree);
+                        if (span.Start.Line <= line && line <= span.End.Line) {
+                            var res = FindNodeInTree(tree, funcDef.Body as SuiteStatement, line);
+                            if (res != null) {
+                                return funcDef.Name + "." + res;
+                            }
+                            return funcDef.Name;
+                        }
+                        continue;
+                    }
+
+                    ClassDefinition classDef = node as ClassDefinition;
+                    if (classDef != null) {
+                        var span = classDef.GetSpan(tree);
+                        if (span.Start.Line <= line && line <= span.End.Line) {
+                            var res = FindNodeInTree(tree, classDef.Body as SuiteStatement, line);
+                            if (res != null) {
+                                return classDef.Name + "." + res;
+                            }
+                            return classDef.Name;
+                        }
+                    }
+                }
+            }
+            return null;
+        }
+
 
         private Response AnalysisStatus() {
             QueueActivityEvent.WaitOne(100);
@@ -1039,7 +1120,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private Response GetOverrides(AP.OverridesCompletionRequest request) {
             var projectFile = _projectFiles[request.fileId] as IPythonProjectEntry;
             var analysis = projectFile.Analysis;
-            
+
             var location = new SourceLocation(request.index, request.line, request.column);
 
             var cls = analysis.GetDefinitionTree(location).LastOrDefault(member => member.MemberType == PythonMemberType.Class);
