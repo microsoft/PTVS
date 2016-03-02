@@ -15,7 +15,6 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -26,13 +25,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Analysis.Communication;
+using Microsoft.PythonTools.Analysis.Project;
 using Microsoft.PythonTools.Cdp;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.PythonTools.Refactoring;
-using Microsoft.PythonTools.Analysis.Project;
 
 namespace Microsoft.PythonTools.Intellisense {
     using AP = AnalysisProtocol;
