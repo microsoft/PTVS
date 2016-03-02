@@ -114,13 +114,13 @@ namespace Microsoft.PythonTools.Intellisense {
         public void Invoke(CancellationToken cancellationToken) {
             Debug.Assert(!string.IsNullOrEmpty(_name));
 
-            MissingImportAnalysis.AddImport(
-                _source._provider,
-                _buffer,
-                _source._view,
+            VsProjectAnalyzer.AddImport(
+                _buffer.GetPythonProjectEntry(),
                 _fromModule,
-                _name
-            );
+                _name,
+                _source._view,
+                _buffer
+            ).Wait();
         }
 
         public bool TryGetTelemetryId(out Guid telemetryId) {

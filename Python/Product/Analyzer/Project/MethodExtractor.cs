@@ -34,7 +34,7 @@ namespace Microsoft.PythonTools.Refactoring {
             _ast = ast;
         }
 
-        public AP.ExtractMethodResponse ExtractMethod(AP.ExtractMethodRequest input) {
+        public AP.ExtractMethodResponse ExtractMethod(AP.ExtractMethodRequest input, int version) {
             // tighten up the selection so that we don't expand into any enclosing nodes because we overlap w/ their white space...
             var selectionStart = input.startIndex;
             while (selectionStart < _code.Length &&
@@ -224,7 +224,8 @@ namespace Microsoft.PythonTools.Refactoring {
                 scopes = scopes.ToArray(),
                 wasExpanded = expanded,
                 startIndex = walker.Target.StartIncludingIndentation,
-                endIndex = walker.Target.End
+                endIndex = walker.Target.End,
+                version = version
             };
         }
 

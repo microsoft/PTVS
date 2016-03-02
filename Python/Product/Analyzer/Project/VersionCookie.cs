@@ -7,10 +7,10 @@ using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Project {
     sealed class VersionCookie : IAnalysisCookie {
-        public readonly Dictionary<int, VersionInfo> Versions;
+        public readonly Dictionary<int, VersionInfo> ParsedVersions;
 
         public VersionCookie(Dictionary<int, VersionInfo> versions) {
-            Versions = versions;
+            ParsedVersions = versions;
         }
     }
 

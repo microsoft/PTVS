@@ -110,25 +110,41 @@ namespace Microsoft.PythonTools.Intellisense {
             CommentTaskTokensChanged(null, EventArgs.Empty);
         }
 
-        internal async Task<AP.FormatCodeResponse> FormatCode(SnapshotSpan span, string newLine, CodeFormattingOptions options) {
+        internal async Task FormatCode(SnapshotSpan span, ITextView view, CodeFormattingOptions options, bool selectResult) {
             var fileInfo = span.Snapshot.TextBuffer.GetProjectEntry();
             var buffer = span.Snapshot.TextBuffer;
 
             await fileInfo.BufferParser.EnsureCodeSynced(buffer);
 
-            return await _conn.SendRequestAsync(
+            var bufferId = fileInfo.BufferParser.GetBufferId(buffer);
+
+            var res = await _conn.SendRequestAsync(
                 new AP.FormatCodeRequest() {
                     fileId = fileInfo.FileId,
                     bufferId = fileInfo.BufferParser.GetBufferId(buffer),
                     startIndex = span.Start,
                     endIndex = span.End,
                     options = options,
-                    newLine = newLine
+                    newLine = view.Options.GetNewLineCharacter()
                 }
             );
+
+            ITrackingSpan selectionSpan = null;
+            if (selectResult) {
+                selectionSpan = view.TextBuffer.CurrentSnapshot.CreateTrackingSpan(
+                    Span.FromBounds(res.startIndex, res.endIndex),
+                    SpanTrackingMode.EdgeInclusive
+                );
+            }
+
+            ApplyChanges(res.changes, fileInfo, bufferId, res.version);
+
+            if (selectResult) {
+                view.Selection.Select(selectionSpan.GetSpan(view.TextBuffer.CurrentSnapshot), false);
+            }
         }
 
-        internal async Task<AP.ChangeInfo[]> RemoveImports(ITextBuffer buffer, bool allScopes) {
+        internal async Task RemoveImports(ITextBuffer buffer, bool allScopes) {
             var fileInfo = buffer.GetProjectEntry();
             await fileInfo.BufferParser.EnsureCodeSynced(buffer);
 
@@ -140,7 +156,12 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             );
 
-            return res.changes;
+            ApplyChanges(
+                res.changes,
+                fileInfo,
+                fileInfo.BufferParser.GetBufferId(buffer),
+                res.version
+            );
         }
 
         internal async Task<AP.ImportInfo[]> FindNameInAllModules(string name, CancellationToken cancel = default(CancellationToken)) {
@@ -171,7 +192,7 @@ namespace Microsoft.PythonTools.Intellisense {
             return res;
         }
 
-        internal async Task<AP.ChangeInfo[]> AddImport(ProjectFileInfo projectFile, string fromModule, string name, string newLine) {
+        internal async Task<AP.AddImportResponse> AddImport(ProjectFileInfo projectFile, string fromModule, string name, string newLine) {
             ITextBuffer buffer = projectFile.BufferParser.Buffers.Last();
             var bufferId = projectFile.BufferParser.GetBufferId(buffer);
 
@@ -183,9 +204,9 @@ namespace Microsoft.PythonTools.Intellisense {
                     bufferId = bufferId,
                     newLine = newLine
                 }
-            );
+            ).ConfigureAwait(false);
 
-            return res.changes;
+            return res;
         }
 
         private Connection StartConnection(IPythonInterpreterFactory factory, string libAnalyzer) {
@@ -514,6 +535,37 @@ namespace Microsoft.PythonTools.Intellisense {
                 Text = text;
                 Span = span;
                 Location = location;
+            }
+        }
+
+        internal static void ApplyChanges(AP.ChangeInfo[] changes, ProjectFileInfo file, ITextBuffer buffer, int fromVersion) {
+            ApplyChanges(changes, file, file.BufferParser.GetBufferId(buffer), fromVersion);
+        }
+
+        internal static void ApplyChanges(AP.ChangeInfo[] changes, ProjectFileInfo file, int bufferId, int fromVersion) {
+            var buffer = file.BufferParser.GetBuffer(bufferId);
+            var lastParsedVersion = file.BufferParser.GetLastParsedSnapshot(bufferId).Version;
+
+            Debug.Assert(fromVersion >= lastParsedVersion.VersionNumber);
+
+            while (lastParsedVersion.VersionNumber != fromVersion) {
+                lastParsedVersion = lastParsedVersion.Next;
+            }
+
+            var currentSnapshot = buffer.CurrentSnapshot;
+
+            using (var edit = buffer.CreateEdit()) {
+                foreach (var change in changes) {
+                    var span = Tracking.TrackSpanForwardInTime(
+                        SpanTrackingMode.EdgeInclusive,
+                        new Span(change.start, change.length),
+                        lastParsedVersion,
+                        currentSnapshot.Version
+                    );
+
+                    edit.Replace(span, change.newText);
+                }
+                edit.Apply();
             }
         }
 
@@ -886,7 +938,6 @@ namespace Microsoft.PythonTools.Intellisense {
                 return MissingImportAnalysis.Empty;
             }
 
-
             ProjectFileInfo entry;
             if (!snapshot.TextBuffer.TryGetPythonProjectEntry(out entry)) {
                 return MissingImportAnalysis.Empty;
@@ -906,17 +957,9 @@ namespace Microsoft.PythonTools.Intellisense {
                 entry
             );
 
-            var res = await analyzer._conn.SendRequestAsync(
-                new AP.IsMissingImportRequest() {
-                    fileId = entry.FileId,
-                    text = text,
-                    index = location.Index,
-                    line = location.Line,
-                    column = location.Column
-                }
-            );
+            var isMissing = await analyzer.IsMissingImport(entry, text, location);
 
-            if (res.isMissing) {
+            if (isMissing) {
                 var applicableSpan = parser.Snapshot.CreateTrackingSpan(
                     exprRange.Value.Span,
                     SpanTrackingMode.EdgeExclusive
@@ -926,6 +969,34 @@ namespace Microsoft.PythonTools.Intellisense {
 
             // if we have type information don't offer to add imports
             return MissingImportAnalysis.Empty;
+        }
+
+        public static async Task AddImport(ProjectFileInfo projectFile, string fromModule, string name, ITextView view, ITextBuffer buffer) {
+            var changes = await projectFile.ProjectState.AddImport(
+                projectFile, 
+                fromModule, 
+                name, 
+                view.Options.GetNewLineCharacter()
+            );
+
+            ApplyChanges(
+                changes.changes,
+                projectFile,
+                projectFile.BufferParser.GetBufferId(buffer),
+                changes.version
+            );
+        }
+
+        internal async Task<bool> IsMissingImport(ProjectFileInfo entry, string text, SourceLocation location) {
+            return (await _conn.SendRequestAsync(
+                new AP.IsMissingImportRequest() {
+                    fileId = entry.FileId,
+                    text = text,
+                    index = location.Index,
+                    line = location.Line,
+                    column = location.Column
+                }
+            ).ConfigureAwait(false)).isMissing;
         }
 
         private static NameExpression GetFirstNameExpression(Statement stmt) {

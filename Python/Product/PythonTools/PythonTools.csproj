@@ -420,7 +420,6 @@
     <Compile Include="PythonTools\Commands\SendToDefiningModuleCommand.cs" />
     <Compile Include="PythonTools\Commands\SendToReplCommand.cs" />
     <Compile Include="PythonTools\Commands\StartScriptCommand.cs" />
-    <Compile Include="PythonTools\Intellisense\AnalysisSynchronizationContext.cs" />
     <Compile Include="PythonTools\Intellisense\CompletionControl.xaml.cs">
       <DependentUpon>CompletionControl.xaml</DependentUpon>
     </Compile>
@@ -484,7 +483,6 @@
     <Compile Include="PythonTools\Project\PythonProjectReferenceNode.cs" />
     <Compile Include="PythonTools\Project\PythonReferenceContainerNode.cs" />
     <Compile Include="PythonTools\ProvidePythonInterpreterFactoryProviderAttribute.cs" />
-    <Compile Include="PythonTools\Refactoring\CodeFormatter.cs" />
     <Compile Include="PythonTools\Refactoring\EnclosingNodeWalker.cs" />
     <Compile Include="PythonTools\Refactoring\ExtractMethodRequestView.cs" />
     <Compile Include="PythonTools\Refactoring\LinePreservingCodeReplacer.cs" />
@@ -553,7 +551,6 @@
     <Compile Include="PythonTools\ProvidePythonExecutionModeAttribute.cs" />
     <Compile Include="PythonTools\Editor\AutoIndent.cs" />
     <Compile Include="PythonTools\Intellisense\AnalysisPriority.cs" />
-    <Compile Include="PythonTools\Intellisense\AnalysisQueue.cs" />
     <Compile Include="PythonTools\Intellisense\MonitoredBufferResult.cs" />
     <Compile Include="PythonTools\Intellisense\BufferParser.cs" />
     <Compile Include="PythonTools\ISnapshotTextReader.cs" />
@@ -621,7 +618,6 @@
     <Compile Include="PythonTools\Intellisense\CompletionAnalysis.cs" />
     <Compile Include="PythonTools\Intellisense\CompletionSource.cs" />
     <Compile Include="PythonTools\Intellisense\CompletionSourceProvider.cs" />
-    <Compile Include="PythonTools\Intellisense\ExpressionAnalysis.cs" />
     <Compile Include="PythonTools\Intellisense\FromImportCompletionAnalysis.cs" />
     <Compile Include="PythonTools\Intellisense\ImportCompletionAnalysis.cs" />
     <Compile Include="PythonTools\Intellisense\NormalCompletionAnalysis.cs" />

@@ -79,13 +79,12 @@ namespace Microsoft.PythonTools.Refactoring {
                 info.TargetScope?.Scope.id
             );
 
-            using (var edit = _view.TextBuffer.CreateEdit()) {
-                foreach (var change in extract.changes) {
-
-                    edit.Replace(change.start, change.length, change.newText);
-                }
-                edit.Apply();
-            }
+            VsProjectAnalyzer.ApplyChanges(
+                extract.changes,
+                projectFile,
+                _view.TextBuffer,
+                extract.version
+            );
 
             return true;
         }

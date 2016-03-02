@@ -73,8 +73,8 @@ namespace Microsoft.PythonTools.Analysis.Communication {
 
         public sealed class FormatCodeResponse : Response {
             public ChangeInfo[] changes;
-
-            public int startIndex, endIndex;
+            
+            public int startIndex, endIndex, version;
         }
 
         public struct CodeSpan {
@@ -164,6 +164,7 @@ namespace Microsoft.PythonTools.Analysis.Communication {
 
         public sealed class AddImportResponse : Response {
             public ChangeInfo[] changes;
+            public int version;
         }
 
         public sealed class IsMissingImportRequest : Request<IsMissingImportResponse> {
@@ -267,6 +268,7 @@ namespace Microsoft.PythonTools.Analysis.Communication {
 
         public sealed class RemoveImportsResponse : Response {
             public ChangeInfo[] changes;
+            public int version;
         }
 
         public sealed class ExtractMethodRequest : Request<ExtractMethodResponse> {
@@ -293,6 +295,7 @@ namespace Microsoft.PythonTools.Analysis.Communication {
             public ScopeInfo[] scopes;
             public bool wasExpanded;
             public int? startIndex, endIndex;
+            public int version;
             public string methodBody;
             public string[] variables;
         }
@@ -345,7 +348,7 @@ namespace Microsoft.PythonTools.Analysis.Communication {
         public class CompletionsRequest : Request<CompletionsResponse> {
             public const string Command = "completions";
 
-            public int fileId;
+            public int fileId, bufferId;
             public string text;
             public int location, column;
             public GetMemberOptions options;

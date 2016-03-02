@@ -239,30 +239,6 @@ namespace Microsoft.PythonTools {
                 .Where(p => p != null);
         }
 
-        public static IModuleContext GetModuleContext(this ITextBuffer buffer, IServiceProvider serviceProvider) {
-            if (buffer == null) {
-                return null;
-            }
-
-            var analyzer = buffer.GetAnalyzer(serviceProvider);
-            if (analyzer == null) {
-                return null;
-            }
-
-            var path = buffer.GetFilePath();
-            if (string.IsNullOrEmpty(path)) {
-                return null;
-            }
-
-            var entry = analyzer.GetEntryFromFile(path);
-            if (entry == null) {
-                return null;
-            }
-
-            throw new NotImplementedException();
-            //return entry.AnalysisContext;
-        }
-
         internal static PythonProjectNode GetPythonProject(this IVsProject project) {
             return ((IVsHierarchy)project).GetProject().GetCommonProject() as PythonProjectNode;
         }

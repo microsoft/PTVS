@@ -80,23 +80,5 @@ namespace Microsoft.PythonTools.Intellisense {
                 return _span;
             }
         }
-
-        public static async void AddImport(
-            IServiceProvider serviceProvider,
-            ITextBuffer buffer,
-            ITextView view,
-            string fromModule,
-            string name
-        ) {
-            var analyzer = buffer.GetAnalyzer(serviceProvider);
-            var projectFile = buffer.GetPythonProjectEntry();
-            var changes = await analyzer.AddImport(projectFile, fromModule, name, view.Options.GetNewLineCharacter());
-            using (var edit = buffer.CreateEdit()) {
-                foreach (var change in changes) {
-                    edit.Replace(change.start, change.length, change.newText);
-                }
-                edit.Apply();
-            }
-        }
     }
 }

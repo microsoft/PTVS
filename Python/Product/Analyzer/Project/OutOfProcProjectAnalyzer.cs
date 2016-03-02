@@ -178,40 +178,56 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private Response ExtractMethod(AP.ExtractMethodRequest request) {
             var projectFile = _projectFiles[request.fileId] as IPythonProjectEntry;
-            var ast = GetVerbatimAst(projectFile, request.bufferId);
+            int version;
+            string code;
+            var ast = projectFile.GetVerbatimAstAndCode(
+                Project.LanguageVersion,
+                request.bufferId,
+                out version,
+                out code
+            );
 
-            return new MethodExtractor(ast, projectFile.GetCurrentCode(request.bufferId).ToString()).ExtractMethod(request);
+            return new MethodExtractor(
+                ast, 
+                code
+            ).ExtractMethod(request, version);
         }
 
         private Response RemoveImports(AP.RemoveImportsRequest request) {
             var projectFile = _projectFiles[request.fileId] as IPythonProjectEntry;
-            var ast = GetVerbatimAst(projectFile, request.bufferId);
-
-            var remover = new ImportRemover(
-                ast, 
-                projectFile.GetCurrentCode(request.bufferId).ToString(), 
-                request.allScopes,
-                request.index
-
+            int version;
+            string code;
+            var ast = projectFile.GetVerbatimAstAndCode(
+                Project.LanguageVersion,
+                request.bufferId,
+                out version,
+                out code
             );
 
+            var remover = new ImportRemover(ast, code, request.allScopes, request.index);
+
             return new AP.RemoveImportsResponse() {
-                changes = remover.RemoveImports()
+                changes = remover.RemoveImports(),
+                version = version
             };
         }
 
         private Response FormatCode(AP.FormatCodeRequest request) {
             var projectFile = _projectFiles[request.fileId] as IPythonProjectEntry;
-            var ast = GetVerbatimAst(projectFile, request.bufferId);
 
-            var code = projectFile.GetCurrentCode(request.bufferId).ToString();
+            int version;
+            string code;
+            var ast = projectFile.GetVerbatimAstAndCode(
+                Project.LanguageVersion, 
+                request.bufferId, 
+                out version,
+                out code
+            );
 
             var walker = new EnclosingNodeWalker(ast, request.startIndex, request.endIndex);
             ast.Walk(walker);
 
-            if (walker.Target == null ||
-                !walker.Target.IsValidSelection /*||
-                (walker.Target is SuiteTarget && request.startIndex == request.endIndex && selectResult)*/) {
+            if (walker.Target == null || !walker.Target.IsValidSelection) {
                 return new AP.FormatCodeResponse() {
                     changes = new AnalysisProtocol.ChangeInfo[0]
                 };
@@ -232,6 +248,7 @@ namespace Microsoft.PythonTools.Intellisense {
             return new AP.FormatCodeResponse() {
                 startIndex = walker.Target.StartIncludingIndentation,
                 endIndex = walker.Target.End,
+                version = version,
                 changes = selectedCode.ReplaceByLines(
                     body.ToCodeString(ast, request.options),
                     request.newLine
@@ -288,7 +305,8 @@ namespace Microsoft.PythonTools.Intellisense {
             string name = request.name;
             string fromModule = request.fromModule;
 
-            PythonAst curAst = GetVerbatimAst(projectFile, request.bufferId);
+            int version;
+            PythonAst curAst = projectFile.GetVerbatimAst(Project.LanguageVersion, request.bufferId, out version);
 
             var suiteBody = curAst.Body as SuiteStatement;
             int start = 0;
@@ -339,21 +357,10 @@ namespace Microsoft.PythonTools.Intellisense {
                         length = 0,
                         newText = newText
                     }
-                }
+                },
+                version = version
             };
         }        
-
-        private PythonAst GetVerbatimAst(IPythonProjectEntry projectFile, int bufferId) {
-            ParserOptions options = new ParserOptions { BindReferences = true, Verbatim = true };
-
-            var parser = Parser.CreateParser(
-                new StringReader(projectFile.GetCurrentCode(bufferId).ToString()), 
-                Project.LanguageVersion, 
-                options
-            );
-
-            return parser.ParseFile();
-        }
 
         public static string MakeImportCode(string fromModule, string name) {
             if (string.IsNullOrEmpty(fromModule)) {
@@ -425,7 +432,7 @@ namespace Microsoft.PythonTools.Intellisense {
             var versions = cookie as VersionCookie;
             var imports = new List<AP.BufferUnresolvedImports>();
             if (versions != null) {
-                foreach (var version in versions.Versions) {
+                foreach (var version in versions.ParsedVersions) {
                     if (version.Value.Ast != null) {
                         var walker = new ImportStatementWalker(
                             version.Value.Ast, 
@@ -553,7 +560,7 @@ namespace Microsoft.PythonTools.Intellisense {
             List<AP.BufferOutliningTags> buffers = new List<AP.BufferOutliningTags>();
             if (versions != null) {
 
-                foreach (var version in versions.Versions) {
+                foreach (var version in versions.ParsedVersions) {
                     if (version.Value.Ast != null) {
                         var walker = new OutliningWalker(version.Value.Ast);
 
@@ -588,7 +595,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var versions = cookie as VersionCookie;
             if (versions != null) {
-                foreach (var version in versions.Versions) {
+                foreach (var version in versions.ParsedVersions) {
                     if (version.Value.Ast == null) {
                         continue;
                     }
@@ -1038,23 +1045,12 @@ namespace Microsoft.PythonTools.Intellisense {
                 switch (update.kind) {
                     case AP.FileUpdateKind.changes:
                         if (entry != null) {
-                            var curCode = entry.GetCurrentCode(update.bufferId);
-                            if (curCode == null) {
-                                entry.SetCurrentCode(curCode = new StringBuilder(), update.bufferId);
-                            }
+                            var newCodeStr = entry.UpdateCode(
+                                update.versions,
+                                update.bufferId,
+                                update.version
+                            );
 
-                            foreach (var version in update.versions) {
-                                int delta = 0;
-
-                                foreach (var change in version.changes) {
-                                    curCode.Remove(change.start + delta, change.length);
-                                    curCode.Insert(change.start + delta, change.newText);
-
-                                    delta += change.newText.Length - change.length;
-                                }
-                            }
-
-                            var newCodeStr = curCode.ToString();
                             codeByBuffer[update.bufferId] = new TextCodeInfo(
                                 update.version,
                                 new StringReader(newCodeStr)
@@ -1065,7 +1061,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         }
                         break;
                     case AP.FileUpdateKind.reset:
-                        entry.SetCurrentCode(new StringBuilder(update.content), update.bufferId);
+                        entry.SetCurrentCode(update.content, update.bufferId, update.version);
                         codeByBuffer[update.bufferId] = new TextCodeInfo(
                             update.version,
                             new StringReader(update.content)
@@ -1750,7 +1746,8 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 #endif
         private AP.CompletionsResponse GetNormalCompletions(IProjectEntry projectEntry, AP.CompletionsRequest request /*IServiceProvider serviceProvider, ITextSnapshot snapshot, ITrackingSpan applicableSpan, ITrackingPoint point, CompletionOptions options*/) {
-            var code = projectEntry.GetCurrentCode();
+            int version;
+            var code = projectEntry.GetCurrentCode(request.bufferId, out version);
 
             if (IsSpaceCompletion(code, request.location) && !request.forceCompletions) {
                 return new AP.CompletionsResponse() {
@@ -1774,7 +1771,7 @@ namespace Microsoft.PythonTools.Intellisense {
             };
         }
 
-        private bool IsSpaceCompletion(StringBuilder text, int location) {
+        private bool IsSpaceCompletion(string text, int location) {
             if (location > 0 && location < text.Length - 1) {
                 return text[location - 1] == ' ';
             }

@@ -125,6 +125,12 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
+        internal ITextBuffer GetBuffer(int bufferId) {
+            lock (this) {
+                return _bufferIdMapping[bufferId].Buffer;
+            }
+        }
+
         private BufferInfo GetBufferInfo(ITextBuffer buffer) {
             lock (this) {
                 return _bufferInfo[buffer];
@@ -308,6 +314,11 @@ namespace Microsoft.PythonTools.Intellisense {
                             }
                         );
                     } else {
+                        if (lastSent.Version == snapshot.Version) {
+                            // this snapshot is up to date...
+                            continue;
+                        }
+
                         List<AP.VersionChanges> versions = new List<AnalysisProtocol.VersionChanges>();
                         for (var curVersion = lastSent.Version;
                             curVersion != snapshot.Version;
@@ -336,27 +347,29 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             }
 
-            _parser._analysisComplete = false;
-            Interlocked.Increment(ref _parser._parsePending);
+            if (updates.Count != 0) {
+                _parser._analysisComplete = false;
+                Interlocked.Increment(ref _parser._parsePending);
 
-            var res = await _parser._conn.SendRequestAsync(
-                new AP.FileUpdateRequest() {
-                    fileId = entry.FileId,
-                    updates = updates.ToArray()
-                }
-            );
+                var res = await _parser._conn.SendRequestAsync(
+                    new AP.FileUpdateRequest() {
+                        fileId = entry.FileId,
+                        updates = updates.ToArray()
+                    }
+                );
 
 #if DEBUG
-            for (int i = 0; i < bufferInfos.Length; i++) {
-                var snapshot = snapshots[i];
-                var buffer = bufferInfos[i];
+                for (int i = 0; i < bufferInfos.Length; i++) {
+                    var snapshot = snapshots[i];
+                    var buffer = bufferInfos[i];
 
-                string newCode;
-                if (res.newCode.TryGetValue(buffer.Id, out newCode)) {
-                    Debug.Assert(newCode == snapshot.GetText());
+                    string newCode;
+                    if (res.newCode.TryGetValue(buffer.Id, out newCode)) {
+                        Debug.Assert(newCode == snapshot.GetText());
+                    }
                 }
-            }
 #endif
+            }
         }
 
         private static AP.ChangeInfo[] GetChanges(ITextVersion curVersion) {

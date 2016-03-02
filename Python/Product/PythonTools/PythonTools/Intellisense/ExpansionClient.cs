@@ -16,14 +16,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Editor.Core;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
@@ -69,24 +65,6 @@ namespace Microsoft.PythonTools.Intellisense {
             _sessionEnded = true;
             _selectionStart = _selectionEnd = null;
             return VSConstants.S_OK;
-        }
-
-        class ImportWalker : PythonWalker {
-            public readonly HashSet<string> Imports = new HashSet<string>();
-            
-            public override bool Walk(ImportStatement node) {
-                for (int i = 0; i < node.Names.Count; i++) {
-                    // if it's an asname we don't understand it
-                    if (node.Names[i] == null) {
-                        // bad import...
-                        continue;
-                    }
-                    if (node.AsNames[i] == null) { 
-                        Imports.Add(node.Names[i].MakeString());
-                    }
-                }
-                return base.Walk(node);
-            }
         }
 
         public int FormatSpan(IVsTextLines pBuffer, TextSpan[] ts) {
@@ -136,6 +114,9 @@ namespace Microsoft.PythonTools.Intellisense {
 
             // get the indentation of where we're inserting the code...
             string baseIndentation = GetBaseIndentation(ts);
+            int startPosition;
+            pBuffer.GetPositionOfLineIndex(ts[0].iStartLine, ts[0].iStartIndex, out startPosition);
+            var insertTrackingPoint = _textView.TextBuffer.CurrentSnapshot.CreateTrackingPoint(startPosition, PointTrackingMode.Positive);
 
             TextSpan? endSpan = null;
             using (var edit = _textView.TextBuffer.CreateEdit()) {
@@ -184,8 +165,6 @@ namespace Microsoft.PythonTools.Intellisense {
                             String.IsNullOrWhiteSpace(_textView.TextBuffer.CurrentSnapshot.GetText(selectedSpan))) {
                             // we require a statement here and the user hasn't selected any code to surround,
                             // so we insert a pass statement (and we'll select it after the completion is done)
-                            int startPosition;
-                            pBuffer.GetPositionOfLineIndex(ts[0].iStartLine, ts[0].iStartIndex, out startPosition);
                             edit.Replace(new Span(startPosition + selectedIndex, end - start), "pass");
 
                             // Surround With can be invoked with no selection, but on a line with some text.
@@ -226,38 +205,41 @@ namespace Microsoft.PythonTools.Intellisense {
             if (endSpan != null) {
                 _session.SetEndSpan(endSpan.Value);
             }
-
+            
             // add any missing imports...
-            AddMissingImports(importList);
+            AddMissingImports(
+                importList,
+                insertTrackingPoint.GetPoint(_textView.TextBuffer.CurrentSnapshot)
+            ).Wait();
 
             return hr;
         }
 
-        private void AddMissingImports(List<string> importList) {
+        private async Task AddMissingImports(List<string> importList, SnapshotPoint point) {
             if (importList.Count > 0) {
                 var projEntry = _textView.TextBuffer.GetPythonProjectEntry();
                 if (projEntry != null) {
-#if FALSE
-                    PythonAst ast;
-                    IAnalysisCookie cookie;
-                    projEntry.GetTreeAndCookie(out ast, out cookie);
-                    if (ast != null) {
-                        var walker = new ImportWalker();
-                        ast.Walk(walker);
+                    foreach (var import in importList) {
+                        var isMissing = await projEntry.ProjectState.IsMissingImport(
+                            projEntry,
+                            import,
+                            new SourceLocation(
+                                point.Position,
+                                point.Position - point.GetContainingLine().Start + 1,
+                                point.GetContainingLine().LineNumber
+                            )
+                        );
 
-                        foreach (var import in importList) {
-                            if (!walker.Imports.Contains(import)) {
-                                MissingImportAnalysis.AddImport(
-                                    _serviceProvider,
-                                    _textView.TextBuffer,
-                                    _textView,
-                                    null,
-                                    import
-                                );
-                            }
+                        if (isMissing) {
+                            await VsProjectAnalyzer.AddImport(
+                                projEntry,
+                                null,
+                                import,
+                                _textView,
+                                _textView.TextBuffer
+                            );
                         }
                     }
-#endif
                 }
             }
         }

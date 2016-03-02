@@ -41,13 +41,7 @@ namespace Microsoft.PythonTools.Commands {
             var view = CommonPackage.GetActiveTextView(_serviceProvider);
             var analyzer = view.GetAnalyzer(_serviceProvider);
 
-            AP.ChangeInfo[] changes = await analyzer.RemoveImports(view.TextBuffer, _allScopes);
-            using (var edit = view.TextBuffer.CreateEdit()) {
-                foreach (var change in changes) {
-                    edit.Replace(change.start, change.length, change.newText);
-                }
-                edit.Apply();
-            }
+            await analyzer.RemoveImports(view.TextBuffer, _allScopes);
         }
 
         public override int? EditFilterQueryStatus(ref VisualStudio.OLE.Interop.OLECMD cmd, IntPtr pCmdText) {

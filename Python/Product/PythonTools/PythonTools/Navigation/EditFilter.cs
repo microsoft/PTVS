@@ -809,10 +809,13 @@ namespace Microsoft.PythonTools.Language {
             new MethodExtractor(_serviceProvider, _textView).ExtractMethod(new ExtractMethodUserInput(_serviceProvider)).DoNotWait();
         }
 
-        private void FormatCode(SnapshotSpan span, bool selectResult) {
+        private async void FormatCode(SnapshotSpan span, bool selectResult) {
+            var analyzer = _textView.GetAnalyzer(_serviceProvider);
+
             var options = _pyService.GetCodeFormattingOptions();
             options.NewLineFormat = _textView.Options.GetNewLineCharacter();
-            new CodeFormatter(_serviceProvider, _textView, options).FormatCode(span, selectResult);
+
+            await analyzer.FormatCode(span, _textView, options, selectResult);
         }
 
         internal void RefactorRename() {
@@ -985,7 +988,7 @@ namespace Microsoft.PythonTools.Language {
                     }
                 }
             } else if (pguidCmdGroup == CommonConstants.Std2KCmdGroupGuid) {
-                //OutliningTaggerProvider.OutliningTagger tagger;
+                OutliningTaggerProvider.OutliningTagger tagger;
                 for (int i = 0; i < cCmds; i++) {
                     switch ((VSConstants.VSStd2KCmdID)prgCmds[i].cmdID) {
                         case VSConstants.VSStd2KCmdID.FORMATDOCUMENT:
