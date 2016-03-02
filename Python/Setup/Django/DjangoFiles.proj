@@ -29,9 +29,11 @@
     <!-- Templates -->
     <ItemTemplate Include="$(BuildRoot)Python\Templates\Django\ItemTemplates\Python\DjangoNewAppFiles14\*">
       <TemplateName>DjangoNewAppFiles14</TemplateName>
+      <IncludeInWD>false</IncludeInWD>
     </ItemTemplate>
     <ItemTemplate Include="$(BuildRoot)Python\Templates\Django\ItemTemplates\Python\DjangoNewAppFiles19\*">
       <TemplateName>DjangoNewAppFiles19</TemplateName>
+      <IncludeInWD>false</IncludeInWD>
     </ItemTemplate>
     <WebProjectTemplate Include="$(BuildRoot)Python\Templates\Django\ProjectTemplates\Python\Web\DjangoProject\*">
       <TemplateName>DjangoProject</TemplateName>
@@ -42,6 +44,7 @@
 
     <File Include="$(BuildRoot)Python\Templates\Django\ItemTemplates\CloudService\NETFramework4\Web Role\Python\CloudServiceDjangoWebRole\*">
       <InstallDirectory>ItemTemplates_CloudService_WebRole_Django</InstallDirectory>
+      <IncludeInWD>false</IncludeInWD>
     </File>
     <WebProjectTemplate Include="$(BuildRoot)Python\Templates\Django\ProjectTemplates\Python\Web\DjangoWebRole\*">
       <TemplateName>DjangoWebRole</TemplateName>
