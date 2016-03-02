@@ -265,7 +265,6 @@
     <Compile Include="PythonTools\Intellisense\NavigationInfo.cs" />
     <Compile Include="PythonTools\Intellisense\FileCookie.cs" />
     <Compile Include="PythonTools\Intellisense\IIntellisenseCookie.cs" />
-    <Compile Include="PythonTools\Intellisense\NewVsProjectAnalyzer.cs" />
     <Compile Include="PythonTools\Intellisense\ProjectFileInfo.cs" />
     <Compile Include="PythonTools\Intellisense\QuickInfo.cs" />
     <Compile Include="PythonTools\Refactoring\SelectionTarget.cs" />
