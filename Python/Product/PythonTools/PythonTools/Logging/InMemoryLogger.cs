@@ -31,6 +31,7 @@ namespace Microsoft.PythonTools.Logging {
         private int _configuredInterpreters;
         private int _debugLaunchCount, _normalLaunchCount;
         private List<PackageInstallDetails> _packageInstalls = new List<PackageInstallDetails>();
+        private List<string> _abnormalAnalysisExits = new List<string>();
 
         #region IPythonToolsLogger Members
 
@@ -54,6 +55,9 @@ namespace Microsoft.PythonTools.Logging {
                     if (packageInstallDetails != null) {
                         _packageInstalls.Add(packageInstallDetails);
                     }
+                    break;
+                case PythonLogEvent.AnalysisExitedAbnormally:
+                    _abnormalAnalysisExits.Add(argument.ToString());
                     break;
             }
         }
@@ -79,6 +83,14 @@ namespace Microsoft.PythonTools.Logging {
                 res.AppendLine("  Failed Installations");
                 foreach (PackageInstallDetails pd in _packageInstalls.Where(p => p.InstallResult != 0)) {
                     res.AppendLine("    " + pd.ToString());
+                }
+            }
+
+            if (_abnormalAnalysisExits.Count > 0) {
+                res.AppendFormat("Abnormal analysis exits ({0}):", _abnormalAnalysisExits.Count);
+                res.AppendLine();
+                foreach (var abnormalExit in _abnormalAnalysisExits) {
+                    res.AppendLine(abnormalExit);
                 }
             }
 

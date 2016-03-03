@@ -106,7 +106,7 @@ namespace Microsoft.PythonTools.Language {
             var caret = _textView.GetCaretPosition();
             if (caret != null) {
 
-                var defs = await VsProjectAnalyzer.AnalyzeExpression(
+                var defs = await ProjectAnalyzer.AnalyzeExpression(
                     _textView.TextBuffer.CurrentSnapshot,
                     caret.Value
                 );
@@ -184,7 +184,7 @@ namespace Microsoft.PythonTools.Language {
 
             var caret = _textView.GetCaretPosition();
             if (caret != null) {
-                var references = await VsProjectAnalyzer.AnalyzeExpression(
+                var references = await ProjectAnalyzer.AnalyzeExpression(
                     _textView.TextBuffer.CurrentSnapshot,
                     caret.Value
                 );

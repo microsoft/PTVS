@@ -47,8 +47,8 @@ namespace Microsoft.PythonTools.Navigation {
 
             public void EnsureChildren() {
                 if (_children == null) {
-                    var projEntry = _hierarchy.GetProjectEntry();
-                    var members = projEntry.GetAllAvailableMembers(new SourceLocation(0, 1, 1), GetMemberOptions.ExcludeBuiltins);
+                    var analysis = _hierarchy.GetAnalysisEntry();
+                    var members = analysis.Analyzer.GetAllAvailableMembers(analysis, new SourceLocation(0, 1, 1), GetMemberOptions.ExcludeBuiltins);
                     List<LibraryNode> children = new List<LibraryNode>();
                     foreach (var member in members) {
                         
@@ -166,11 +166,11 @@ namespace Microsoft.PythonTools.Navigation {
         public override IVsSimpleObjectList2 DoSearch(VSOBSEARCHCRITERIA2 criteria) {
             var node = _hierarchy as PythonFileNode;
             if(node != null) {
-                var analysis = node.GetProjectEntry();
+                var analysis = node.GetAnalysisEntry();
 
                 if (analysis != null) {
                     string expr = criteria.szName.Substring(criteria.szName.LastIndexOf(':') + 1);
-                    var exprAnalysis = VsProjectAnalyzer.AnalyzeExpression(
+                    var exprAnalysis = ProjectAnalyzer.AnalyzeExpression(
                         analysis,
                         criteria.szName.Substring(criteria.szName.LastIndexOf(':') + 1),
                         new Parsing.SourceLocation(0, 1, 1)

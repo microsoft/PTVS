@@ -46,42 +46,18 @@ namespace Microsoft.PythonTools {
         private readonly PythonAnalysisClassifierProvider _provider;
         private readonly ITextBuffer _buffer;
         private LocationTracker _spanTranslator;
-        private ProjectFileInfo _entry;
 
         internal PythonAnalysisClassifier(PythonAnalysisClassifierProvider provider, ITextBuffer buffer) {
-            buffer.Changed += BufferChanged;
             buffer.ContentTypeChanged += BufferContentTypeChanged;
 
             _provider = provider;
             _buffer = buffer;
-            EnsureAnalysis();
+            _buffer.RegisterForNewAnalysis(OnNewAnalysis);
         }
-
-        public void NewVersion() {
-            var newEntry = _buffer.GetPythonProjectEntry();
-            var oldEntry = Interlocked.Exchange(ref _entry, newEntry);
-            if (oldEntry != null && oldEntry != newEntry) {
-                oldEntry.AnalysisComplete -= OnNewAnalysis;
-            }
-            if (newEntry != null) {
-                newEntry.AnalysisComplete += OnNewAnalysis;
-                if (newEntry.IsAnalyzed) {
-                    // Ensure we get classifications if we've already been
-                    // analyzed
-                    OnNewAnalysis(_entry, EventArgs.Empty);
-                }
-            }
-        }
-
-        private void EnsureAnalysis() {
-            if (_entry == null) {
-                NewVersion();
-            }
-        }
-
-        private async void OnNewAnalysis(object sender, EventArgs e) {
-            var entry = sender as ProjectFileInfo;
-            if (entry == null || entry != _entry || !entry.IsAnalyzed) {
+        
+        private async void OnNewAnalysis() {
+            var entry = _buffer.GetAnalysisEntry();
+            if (entry == null ||  !entry.IsAnalyzed) {
                 Debug.Fail("Project entry does not match expectation");
                 return;
             }
@@ -89,11 +65,16 @@ namespace Microsoft.PythonTools {
             var pyService = _provider._serviceProvider.GetPythonToolsService();
             var options = pyService != null ? pyService.AdvancedOptions : null;
             if (options == null || options.ColorNames == false) {
+                bool raise = false;
                 lock (_spanCacheLock) {
                     if (_spanCache != null) {
                         _spanCache = null;
-                        OnNewClassifications(_buffer.CurrentSnapshot);
+                        raise = true;
                     }
+                }
+
+                if (raise) {
+                    OnNewClassifications(_buffer.CurrentSnapshot);
                 }
                 return;
             }
@@ -104,22 +85,24 @@ namespace Microsoft.PythonTools {
                 options.ColorNamesWithAnalysis
             );
 
-            // sort the spans by starting position so we can use binary search when handing them out
-            Array.Sort(
-                classifications.classifications,
-                (x, y) => x.start - y.start
-            );
-
-            lock (_spanCacheLock) {
-                _spanCache = classifications.classifications;
-                _spanTranslator = new LocationTracker(
-                    _buffer.GetPythonProjectEntry(),
-                    _buffer,
-                    classifications.version
+            if (classifications != null) {
+                // sort the spans by starting position so we can use binary search when handing them out
+                Array.Sort(
+                    classifications.classifications,
+                    (x, y) => x.start - y.start
                 );
-            }
 
-            OnNewClassifications(_buffer.CurrentSnapshot);
+                lock (_spanCacheLock) {
+                    _spanCache = classifications.classifications;
+                    _spanTranslator = new LocationTracker(
+                        _buffer.GetPythonProjectEntry(),
+                        _buffer,
+                        classifications.version
+                    );
+                }
+
+                OnNewClassifications(_buffer.CurrentSnapshot);
+            }
         }
 
         private void OnNewClassifications(ITextSnapshot snapshot) {
@@ -155,8 +138,6 @@ namespace Microsoft.PythonTools {
         }
 
         public IList<ClassificationSpan> GetClassificationSpans(SnapshotSpan span) {
-            EnsureAnalysis();
-
             var classifications = new List<ClassificationSpan>();
             var snapshot = span.Snapshot;
 
@@ -175,7 +156,7 @@ namespace Microsoft.PythonTools {
             // starting position in the old buffer)
             var start = spanTranslator.TranslateBack(span.Start);
             var end = spanTranslator.TranslateBack(span.End);
-            var startIndex = Array.BinarySearch(spans, start.Position, IndexComparer.Instance);
+            var startIndex = Array.BinarySearch(spans, start, IndexComparer.Instance);
             if (startIndex < 0) {
                 startIndex = ~startIndex - 1;
                 if (startIndex < 0) {
@@ -232,17 +213,9 @@ namespace Microsoft.PythonTools {
 
         private void BufferContentTypeChanged(object sender, ContentTypeChangedEventArgs e) {
             _spanCache = null;
-            _buffer.Changed -= BufferChanged;
             _buffer.ContentTypeChanged -= BufferContentTypeChanged;
-            if (_entry != null) {
-                _entry.AnalysisComplete -= OnNewAnalysis;
-                _entry = null;
-            }
             _buffer.Properties.RemoveProperty(typeof(PythonAnalysisClassifier));
-        }
-
-        private void BufferChanged(object sender, TextContentChangedEventArgs e) {
-            EnsureAnalysis();
+            _buffer.UnregisterForNewAnalysis(OnNewAnalysis);
         }
 
         #endregion

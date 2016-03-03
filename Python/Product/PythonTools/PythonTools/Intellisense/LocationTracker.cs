@@ -36,7 +36,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// The tracker will translate positions from the specified version to the current
         /// snapshot in VS.  Requests can be made to track either forwards or backwards.
         /// </summary>
-        public LocationTracker(ProjectFileInfo file, ITextBuffer buffer, int fromVersion) {
+        public LocationTracker(AnalysisEntry file, ITextBuffer buffer, int fromVersion) {
             var lastAnalysisVersion = file.BufferParser.GetAnalysisVersion(buffer);
 
             // We always hold onto the last version that we've successfully analyzed, as that's
@@ -59,7 +59,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        public LocationTracker(ProjectFileInfo file, int bufferId, int fromVersion) :
+        public LocationTracker(AnalysisEntry file, int bufferId, int fromVersion) :
             this(file, file.BufferParser.GetBuffer(bufferId), fromVersion) {
         }
 
@@ -99,15 +99,12 @@ namespace Microsoft.PythonTools.Intellisense {
         /// Translates a position back in time from the current position inside of VS to a 
         /// version from the out of proc analysis version.
         /// </summary>
-        public SnapshotPoint TranslateBack(int position) {
-            return new SnapshotPoint(
-                _buffer.CurrentSnapshot,
-                Tracking.TrackPositionBackwardInTime(
-                    PointTrackingMode.Positive,
-                    position,
-                    _buffer.CurrentSnapshot.Version,
-                    _lastParsedVersion
-                )
+        public int TranslateBack(int position) {
+            return Tracking.TrackPositionBackwardInTime(
+                PointTrackingMode.Positive,
+                position,
+                _buffer.CurrentSnapshot.Version,
+                _lastParsedVersion
             );
         }
     }

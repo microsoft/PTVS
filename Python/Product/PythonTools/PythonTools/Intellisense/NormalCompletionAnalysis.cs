@@ -29,10 +29,10 @@ using Microsoft.VisualStudio.Text;
 namespace Microsoft.PythonTools.Intellisense {
     internal class NormalCompletionAnalysis : CompletionAnalysis {
         private readonly ITextSnapshot _snapshot;
-        private readonly VsProjectAnalyzer _analyzer;
+        private readonly ProjectAnalyzer _analyzer;
         private readonly IServiceProvider _serviceProvider;
 
-        internal NormalCompletionAnalysis(VsProjectAnalyzer analyzer, ITextSnapshot snapshot, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options, IServiceProvider serviceProvider)
+        internal NormalCompletionAnalysis(ProjectAnalyzer analyzer, ITextSnapshot snapshot, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options, IServiceProvider serviceProvider)
             : base(span, textBuffer, options) {
             _snapshot = snapshot;
             _analyzer = analyzer;
@@ -100,13 +100,13 @@ namespace Microsoft.PythonTools.Intellisense {
             } else if (string.IsNullOrEmpty(text)) {
                 if (analysis != null) {
                     lock (_analyzer) {
-                        var location = VsProjectAnalyzer.TranslateIndex(
+                        var location = ProjectAnalyzer.TranslateIndex(
                             statementRange.Start.Position,
                             statementRange.Snapshot,
                             analysis
                         );
                         var parameters = Enumerable.Empty<MemberResult>();
-                        var sigs = VsProjectAnalyzer.GetSignatures(_serviceProvider, _snapshot, Span).Result;
+                        var sigs = ProjectAnalyzer.GetSignatures(_serviceProvider, _snapshot, Span).Result;
                         if (sigs.Signatures.Any()) {
                             parameters = sigs.Signatures
                                 .SelectMany(s => s.Parameters)
@@ -114,7 +114,7 @@ namespace Microsoft.PythonTools.Intellisense {
                                 .Distinct()
                                 .Select(n => new MemberResult(n, PythonMemberType.Field));
                         }
-                        members = analysis.GetAllAvailableMembers(location, _options.MemberOptions)
+                        members = analysis.Analyzer.GetAllAvailableMembers(analysis, location, _options.MemberOptions)
                             .Union(parameters, CompletionComparer.MemberEquality);
                     }
                 }
@@ -125,13 +125,13 @@ namespace Microsoft.PythonTools.Intellisense {
             } else {
                 if (analysis != null && (pyReplEval == null || !pyReplEval.LiveCompletionsOnly)) {
                     lock (_analyzer) {
-                        var location = VsProjectAnalyzer.TranslateIndex(
+                        var location = ProjectAnalyzer.TranslateIndex(
                             statementRange.Start.Position,
                             statementRange.Snapshot,
                             analysis
                         );
 
-                        members = analysis.GetMembers(text, location, _options.MemberOptions);
+                        members = analysis.Analyzer.GetMembers(analysis, text, location, _options.MemberOptions).Result;
                     }
                 }
 

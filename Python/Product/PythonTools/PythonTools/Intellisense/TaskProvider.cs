@@ -195,12 +195,12 @@ namespace Microsoft.PythonTools.Intellisense {
     }
 
     struct EntryKey : IEquatable<EntryKey> {
-        public ProjectFileInfo Entry;
+        public AnalysisEntry Entry;
         public string Moniker;
 
         public static readonly EntryKey Empty = new EntryKey(null, null);
 
-        public EntryKey(ProjectFileInfo entry, string moniker) {
+        public EntryKey(AnalysisEntry entry, string moniker) {
             Entry = entry;
             Moniker = moniker;
         }
@@ -238,15 +238,15 @@ namespace Microsoft.PythonTools.Intellisense {
             return new ClearMessage(EntryKey.Empty);
         }
 
-        public static WorkerMessage Clear(ProjectFileInfo entry, string moniker) {
+        public static WorkerMessage Clear(AnalysisEntry entry, string moniker) {
             return new ClearMessage(new EntryKey(entry, moniker));
         }
 
-        public static WorkerMessage Replace(ProjectFileInfo entry, string moniker, List<TaskProviderItem> items) {
+        public static WorkerMessage Replace(AnalysisEntry entry, string moniker, List<TaskProviderItem> items) {
             return new ReplaceMessage(new EntryKey(entry, moniker), items);
         }
 
-        public static WorkerMessage Append(ProjectFileInfo entry, string moniker, List<TaskProviderItem> items) {
+        public static WorkerMessage Append(AnalysisEntry entry, string moniker, List<TaskProviderItem> items) {
             return new AppendMessage(new EntryKey(entry, moniker), items);
         }
 
@@ -439,14 +439,14 @@ namespace Microsoft.PythonTools.Intellisense {
         /// <summary>
         /// Replaces the items for the specified entry.
         /// </summary>
-        public void ReplaceItems(ProjectFileInfo entry, string moniker, List<TaskProviderItem> items) {
+        public void ReplaceItems(AnalysisEntry entry, string moniker, List<TaskProviderItem> items) {
             SendMessage(WorkerMessage.Replace(entry, moniker, items));
         }
 
         /// <summary>
         /// Adds items to the specified entry's existing items.
         /// </summary>
-        public void AddItems(ProjectFileInfo entry, string moniker, List<TaskProviderItem> items) {
+        public void AddItems(AnalysisEntry entry, string moniker, List<TaskProviderItem> items) {
             SendMessage(WorkerMessage.Append(entry, moniker, items));
         }
 
@@ -460,7 +460,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// <summary>
         /// Removes all items for the specified entry.
         /// </summary>
-        public void Clear(ProjectFileInfo entry, string moniker) {
+        public void Clear(AnalysisEntry entry, string moniker) {
             SendMessage(WorkerMessage.Clear(entry, moniker));
         }
 
@@ -481,7 +481,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// Adds the buffer to be tracked for reporting squiggles and error list entries
         /// for the given project entry and moniker for the error source.
         /// </summary>
-        public void AddBufferForErrorSource(ProjectFileInfo entry, string moniker, ITextBuffer buffer) {
+        public void AddBufferForErrorSource(AnalysisEntry entry, string moniker, ITextBuffer buffer) {
             lock (_errorSources) {
                 var key = new EntryKey(entry, moniker);
                 HashSet<ITextBuffer> buffers;
@@ -496,7 +496,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// Removes the buffer from tracking for reporting squiggles and error list entries
         /// for the given project entry and moniker for the error source.
         /// </summary>
-        public void RemoveBufferForErrorSource(ProjectFileInfo entry, string moniker, ITextBuffer buffer) {
+        public void RemoveBufferForErrorSource(AnalysisEntry entry, string moniker, ITextBuffer buffer) {
             lock (_errorSources) {
                 var key = new EntryKey(entry, moniker);
                 HashSet<ITextBuffer> buffers;
@@ -510,7 +510,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// Clears all tracked buffers for the given project entry and moniker for
         /// the error source.
         /// </summary>
-        public void ClearErrorSource(ProjectFileInfo entry, string moniker) {
+        public void ClearErrorSource(AnalysisEntry entry, string moniker) {
             lock (_errorSources) {
                 _errorSources.Remove(new EntryKey(entry, moniker));
             }

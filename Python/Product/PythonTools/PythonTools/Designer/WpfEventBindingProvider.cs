@@ -53,7 +53,7 @@ namespace Microsoft.PythonTools.Designer {
 
         public override bool CreateMethod(EventDescription eventDescription, string methodName, string initialStatements) {
             // build the new method handler
-            var fileInfo = _pythonFileNode.GetProjectEntry();
+            var fileInfo = _pythonFileNode.GetAnalysisEntry();
             var insertPoint = fileInfo.Analyzer.GetInsertionPoint(
                 fileInfo,
                 _pythonFileNode.GetTextBuffer(),
@@ -125,7 +125,7 @@ namespace Microsoft.PythonTools.Designer {
         }
 
         public override IEnumerable<string> GetCompatibleMethods(EventDescription eventDescription) {
-            var fileInfo = _pythonFileNode.GetProjectEntry();
+            var fileInfo = _pythonFileNode.GetAnalysisEntry();
             return fileInfo.Analyzer.FindMethods(
                 fileInfo,
                 _pythonFileNode.GetTextBuffer(),
@@ -139,7 +139,7 @@ namespace Microsoft.PythonTools.Designer {
         }
 
         public override bool IsExistingMethodName(EventDescription eventDescription, string methodName) {
-            var fileInfo = _pythonFileNode.GetProjectEntry();
+            var fileInfo = _pythonFileNode.GetAnalysisEntry();
 
             var methods = fileInfo.Analyzer.FindMethods(
                 fileInfo,
@@ -152,7 +152,7 @@ namespace Microsoft.PythonTools.Designer {
         }
 
         private AP.MethodInfoResponse FindMethod(string methodName) {
-            var fileInfo = _pythonFileNode.GetProjectEntry();
+            var fileInfo = _pythonFileNode.GetAnalysisEntry();
             return fileInfo.Analyzer.GetMethodInfo(
                 fileInfo,
                 _pythonFileNode.GetTextBuffer(),

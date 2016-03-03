@@ -29,7 +29,7 @@ namespace Microsoft.PythonTools {
     /// <summary>
     /// Provides classification based upon the DLR TokenCategory enum.
     /// </summary>
-    internal sealed class PythonClassifier : IClassifier, IDisposable {
+    internal sealed class PythonClassifier : IClassifier {
         private readonly TokenCache _tokenCache;
         private readonly PythonClassifierProvider _provider;
         private readonly ITextBuffer _buffer;
@@ -46,28 +46,28 @@ namespace Microsoft.PythonTools {
             _provider = provider;
             _buffer = buffer;
 
+            _buffer.RegisterForNewAnalysisEntry(NewAnalysisEntry);
+
             var analyzer = _buffer.GetAnalyzer(provider._serviceProvider);
             Debug.Assert(analyzer != null);
             _version = analyzer.InterpreterFactory.GetLanguageVersion();
         }
 
-        void IDisposable.Dispose() {
-            _buffer.Changed -= BufferChanged;
-            _buffer.ContentTypeChanged -= BufferContentTypeChanged;
-        }
-
-        internal void NewVersion() {
-            _tokenCache.Clear();
-
+        private void NewAnalysisEntry() {
             var analyzer = _buffer.GetAnalyzer(_provider._serviceProvider);
-            Debug.Assert(analyzer != null);
-            _version = analyzer.InterpreterFactory.GetLanguageVersion();
+            var newVersion = _version;
+            if (newVersion != _version) {
+                _tokenCache.Clear();
 
-            var changed = ClassificationChanged;
-            if (changed != null) {
-                var snapshot = _buffer.CurrentSnapshot;
+                Debug.Assert(analyzer != null);
+                _version = analyzer.InterpreterFactory.GetLanguageVersion();
 
-                changed(this, new ClassificationChangedEventArgs(new SnapshotSpan(snapshot, 0, snapshot.Length)));
+                var changed = ClassificationChanged;
+                if (changed != null) {
+                    var snapshot = _buffer.CurrentSnapshot;
+
+                    changed(this, new ClassificationChangedEventArgs(new SnapshotSpan(snapshot, 0, snapshot.Length)));
+                }
             }
         }
 
@@ -82,7 +82,6 @@ namespace Microsoft.PythonTools {
         public IList<ClassificationSpan> GetClassificationSpans(SnapshotSpan span) {
             var classifications = new List<ClassificationSpan>();
             var snapshot = span.Snapshot;
-
 
             if (span.Length > 0) {
                 // don't add classifications for REPL commands.
@@ -126,6 +125,7 @@ namespace Microsoft.PythonTools {
             _buffer.Changed -= BufferChanged;
             _buffer.ContentTypeChanged -= BufferContentTypeChanged;
             _buffer.Properties.RemoveProperty(typeof(PythonClassifier));
+            _buffer.UnregisterForNewAnalysisEntry(NewAnalysisEntry);
         }
 
         private void BufferChanged(object sender, TextContentChangedEventArgs e) {

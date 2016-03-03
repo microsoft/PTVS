@@ -1264,7 +1264,7 @@ namespace Microsoft.PythonTools.Repl {
 
             string startupFilename, startupDir, extraArgs = null;
             _serviceProvider.GetUIThread().Invoke(() => {
-                VsProjectAnalyzer analyzer;
+                ProjectAnalyzer analyzer;
                 if (PythonToolsPackage.TryGetStartupFileAndDirectory(_serviceProvider, out startupFilename, out startupDir, out analyzer)) {
                     var startupProj = PythonToolsPackage.GetStartupProject(_serviceProvider);
                     if (startupProj != null) {

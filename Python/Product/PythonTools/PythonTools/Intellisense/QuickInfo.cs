@@ -34,11 +34,11 @@ namespace Microsoft.PythonTools.Intellisense {
         public readonly string Text;
         public readonly ITrackingSpan Span;
         public readonly AnalysisVariable[] References;
-        public readonly VsProjectAnalyzer Analyzer;
+        public readonly ProjectAnalyzer Analyzer;
         public readonly string PrivatePrefix;
         public readonly string MemberName;
 
-        public ExpressionAnalysis(VsProjectAnalyzer analyzer, string text, ITrackingSpan span, AnalysisVariable[] references, string privatePrefix, string memberName) {
+        public ExpressionAnalysis(ProjectAnalyzer analyzer, string text, ITrackingSpan span, AnalysisVariable[] references, string privatePrefix, string memberName) {
             Analyzer = analyzer;
             Span = span;
             Text = text;
@@ -71,11 +71,11 @@ namespace Microsoft.PythonTools.Intellisense {
     }
 
     public sealed class AnalysisLocation {
-        public readonly ProjectFileInfo File;
+        public readonly AnalysisEntry File;
         public readonly int Line, Column;
         private static readonly IEqualityComparer<AnalysisLocation> _fullComparer = new FullLocationComparer();
 
-        public AnalysisLocation(ProjectFileInfo file, int line, int column) {
+        public AnalysisLocation(AnalysisEntry file, int line, int column) {
             File = file;
             Line = line;
             Column = column;
@@ -88,7 +88,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal void GotoSource(IServiceProvider serviceProvider) {
-            string zipFileName = VsProjectAnalyzer.GetZipFileName(File);
+            string zipFileName = ProjectAnalyzer.GetZipFileName(File);
             if (zipFileName == null) {
                 PythonToolsPackage.NavigateTo(
                     serviceProvider,

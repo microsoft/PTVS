@@ -247,27 +247,27 @@ namespace Microsoft.PythonTools {
             return project.GetCommonProject() as PythonProjectNode;
         }
         
-        internal static bool TryGetProjectEntry(this ITextBuffer buffer, out ProjectFileInfo entry) {
-            return buffer.Properties.TryGetProperty<ProjectFileInfo>(typeof(ProjectFileInfo), out entry);
+        internal static bool TryGetAnalysisEntry(this ITextBuffer buffer, out AnalysisEntry entry) {
+            return buffer.Properties.TryGetProperty<AnalysisEntry>(typeof(AnalysisEntry), out entry);
         }
 
-        internal static bool TryGetPythonProjectEntry(this ITextBuffer buffer, out ProjectFileInfo entry) {
-            ProjectFileInfo e;
-            if (buffer.TryGetProjectEntry(out e) && (entry = e as ProjectFileInfo) != null) {
+        internal static bool TryGetPythonProjectEntry(this ITextBuffer buffer, out AnalysisEntry entry) {
+            AnalysisEntry e;
+            if (buffer.TryGetAnalysisEntry(out e) && (entry = e as AnalysisEntry) != null) {
                 return true;
             }
             entry = null;
             return false;
         }
 
-        internal static ProjectFileInfo GetProjectEntry(this ITextBuffer buffer) {
-            ProjectFileInfo res;
-            buffer.TryGetProjectEntry(out res);
+        internal static AnalysisEntry GetAnalysisEntry(this ITextBuffer buffer) {
+            AnalysisEntry res;
+            buffer.TryGetAnalysisEntry(out res);
             return res;
         }
 
-        internal static ProjectFileInfo GetPythonProjectEntry(this ITextBuffer buffer) {
-            ProjectFileInfo res;
+        internal static AnalysisEntry GetPythonProjectEntry(this ITextBuffer buffer) {
+            AnalysisEntry res;
             buffer.TryGetPythonProjectEntry(out res);
             return res;
         }
@@ -291,7 +291,7 @@ namespace Microsoft.PythonTools {
             return null;
         }
 
-        internal static VsProjectAnalyzer GetAnalyzer(this ITextView textView, IServiceProvider serviceProvider) {
+        internal static ProjectAnalyzer GetAnalyzer(this ITextView textView, IServiceProvider serviceProvider) {
             PythonReplEvaluator evaluator;
             if (textView.Properties.TryGetProperty<PythonReplEvaluator>(typeof(PythonReplEvaluator), out evaluator)) {
                 return evaluator.ReplAnalyzer;
@@ -404,7 +404,7 @@ namespace Microsoft.PythonTools {
             throw new InvalidOperationException();
         }
 
-        internal static VsProjectAnalyzer GetAnalyzer(this ITextBuffer buffer, IServiceProvider serviceProvider) {
+        internal static ProjectAnalyzer GetAnalyzer(this ITextBuffer buffer, IServiceProvider serviceProvider) {
             PythonProjectNode pyProj;
             if (!buffer.Properties.TryGetProperty<PythonProjectNode>(typeof(PythonProjectNode), out pyProj)) {
                 pyProj = buffer.GetProject(serviceProvider);
@@ -417,9 +417,9 @@ namespace Microsoft.PythonTools {
                 return pyProj.GetAnalyzer();
             }
 
-            VsProjectAnalyzer analyzer;
+            ProjectAnalyzer analyzer;
             // exists for tests where we don't run in VS and for the existing changes preview
-            if (buffer.Properties.TryGetProperty<VsProjectAnalyzer>(typeof(VsProjectAnalyzer), out analyzer)) {
+            if (buffer.Properties.TryGetProperty<ProjectAnalyzer>(typeof(ProjectAnalyzer), out analyzer)) {
                 return analyzer;
             }
 

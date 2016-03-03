@@ -94,7 +94,7 @@ namespace Microsoft.PythonTools.Navigation {
             var service = model.GetService<IVsEditorAdaptersFactoryService>();
             var buffer = service.GetDataBuffer(pBuffer);
 
-            var projFile = buffer.GetProjectEntry();
+            var projFile = buffer.GetAnalysisEntry();
             var location = projFile.Analyzer.GetNameOfLocation(projFile, buffer, iLine, iCol).Result;
             pbstrName = location.name;
             piLineOffset = location.lineOffset;
@@ -115,7 +115,7 @@ namespace Microsoft.PythonTools.Navigation {
             var buffer = service.GetDataBuffer(pBuffer);
 
 
-            var projFile = buffer.GetProjectEntry();
+            var projFile = buffer.GetAnalysisEntry();
             var names = projFile.Analyzer.GetProximityExpressions(projFile, buffer, iLine, iCol, cLines).Result;
             ppEnum = new EnumBSTR(names);
             return VSConstants.S_OK;

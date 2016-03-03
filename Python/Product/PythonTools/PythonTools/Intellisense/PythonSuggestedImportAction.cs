@@ -112,7 +112,7 @@ namespace Microsoft.PythonTools.Intellisense {
         public void Invoke(CancellationToken cancellationToken) {
             Debug.Assert(!string.IsNullOrEmpty(_name));
 
-            VsProjectAnalyzer.AddImport(
+            ProjectAnalyzer.AddImport(
                 _buffer.GetPythonProjectEntry(),
                 _fromModule,
                 _name,

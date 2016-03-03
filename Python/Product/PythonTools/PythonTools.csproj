@@ -262,11 +262,12 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="PythonTools\Intellisense\AbnormalAnalysisExitEventArgs.cs" />
     <Compile Include="PythonTools\Intellisense\LocationTracker.cs" />
     <Compile Include="PythonTools\Intellisense\NavigationInfo.cs" />
     <Compile Include="PythonTools\Intellisense\FileCookie.cs" />
     <Compile Include="PythonTools\Intellisense\IIntellisenseCookie.cs" />
-    <Compile Include="PythonTools\Intellisense\ProjectFileInfo.cs" />
+    <Compile Include="PythonTools\Intellisense\AnalysisEntry.cs" />
     <Compile Include="PythonTools\Intellisense\QuickInfo.cs" />
     <Compile Include="PythonTools\Refactoring\SelectionTarget.cs" />
     <Compile Include="PythonTools\Repl\IMultipleScopeEvaluator.cs" />
@@ -622,7 +623,7 @@
     <Compile Include="PythonTools\Intellisense\ImportCompletionAnalysis.cs" />
     <Compile Include="PythonTools\Intellisense\NormalCompletionAnalysis.cs" />
     <Compile Include="PythonTools\Intellisense\PythonAnalysisExtensions.cs" />
-    <Compile Include="PythonTools\Intellisense\VsProjectAnalyzer.cs" />
+    <Compile Include="PythonTools\Intellisense\ProjectAnalyzer.cs" />
     <Compile Include="PythonTools\Intellisense\PythonParameter.cs" />
     <Compile Include="PythonTools\Intellisense\PythonSignature.cs" />
     <Compile Include="PythonTools\Intellisense\QuickInfoSource.cs" />

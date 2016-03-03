@@ -78,7 +78,7 @@ namespace Microsoft.PythonTools.Refactoring {
                 info.TargetScope?.Scope.id
             );
 
-            VsProjectAnalyzer.ApplyChanges(
+            ProjectAnalyzer.ApplyChanges(
                 extract.changes,
                 projectFile,
                 _view.TextBuffer,
@@ -90,12 +90,12 @@ namespace Microsoft.PythonTools.Refactoring {
     }
 
     class ExtractedMethodCreator {
-        private readonly VsProjectAnalyzer _analyzer;
-        private readonly ProjectFileInfo _projectFile;
+        private readonly ProjectAnalyzer _analyzer;
+        private readonly AnalysisEntry _projectFile;
         private readonly ITextView _view;
         public AP.ExtractMethodResponse LastExtraction;
 
-        public ExtractedMethodCreator(VsProjectAnalyzer analyzer, ProjectFileInfo file, ITextView view, AP.ExtractMethodResponse initialExtraction) {
+        public ExtractedMethodCreator(ProjectAnalyzer analyzer, AnalysisEntry file, ITextView view, AP.ExtractMethodResponse initialExtraction) {
             _analyzer = analyzer;
             _projectFile = file;
             _view = view;

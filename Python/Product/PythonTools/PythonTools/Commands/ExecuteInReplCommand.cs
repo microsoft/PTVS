@@ -40,7 +40,7 @@ namespace Microsoft.PythonTools.Commands {
             _serviceProvider = serviceProvider;
         }
 
-        internal static IVsInteractiveWindow/*!*/ EnsureReplWindow(IServiceProvider serviceProvider, VsProjectAnalyzer analyzer, PythonProjectNode project) {
+        internal static IVsInteractiveWindow/*!*/ EnsureReplWindow(IServiceProvider serviceProvider, ProjectAnalyzer analyzer, PythonProjectNode project) {
             return EnsureReplWindow(serviceProvider, analyzer.InterpreterFactory, project);
         }
 
@@ -122,7 +122,7 @@ namespace Microsoft.PythonTools.Commands {
             var pyProj = CommonPackage.GetStartupProject(_serviceProvider) as PythonProjectNode;
             var textView = CommonPackage.GetActiveTextView(_serviceProvider);
 
-            VsProjectAnalyzer analyzer;
+            ProjectAnalyzer analyzer;
             string filename, dir = null;
 
             if (pyProj != null) {

@@ -61,7 +61,7 @@ namespace Microsoft.PythonTools.Navigation {
             if (IsNonMemberItem(task.ModuleID.Hierarchy, task.ModuleID.ItemID)) {
                 return;
             }
-            ProjectFileInfo item;
+            AnalysisEntry item;
             if (task.TextBuffer == null || !task.TextBuffer.TryGetPythonProjectEntry(out item)) {
                 item = task.ModuleID.Hierarchy
                     .GetProject()

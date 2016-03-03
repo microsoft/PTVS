@@ -33,14 +33,14 @@ namespace Microsoft.PythonTools.Intellisense {
         /// Gets a list of signatures available for the expression at the provided location in the snapshot.
         /// </summary>
         internal static SignatureAnalysis GetSignatures(this ITextSnapshot snapshot, IServiceProvider serviceProvider, ITrackingSpan span) {
-            return VsProjectAnalyzer.GetSignatures(serviceProvider, snapshot, span).Result;
+            return ProjectAnalyzer.GetSignatures(serviceProvider, snapshot, span).Result;
         }
 
         /// <summary>
         /// Gets a CompletionAnalysis providing a list of possible members the user can dot through.
         /// </summary>
         public static CompletionAnalysis GetCompletions(this ITextSnapshot snapshot, IServiceProvider serviceProvider, ITrackingSpan span, ITrackingPoint point, CompletionOptions options) {
-            return VsProjectAnalyzer.GetCompletions(serviceProvider, snapshot, span, point, options);
+            return ProjectAnalyzer.GetCompletions(serviceProvider, snapshot, span, point, options);
         }
 
         /*public static string GetQuickInfo(this ITextSnapshot snapshot, IServiceProvider serviceProvider, ITrackingSpan span, out ITrackingSpan applicableTo) {
@@ -55,7 +55,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// New in v1.1.
         /// </summary>        
         public static Task<MissingImportAnalysis> GetMissingImports(this ITextSnapshot snapshot, IServiceProvider serviceProvider, ITrackingSpan span) {
-            return VsProjectAnalyzer.GetMissingImports(serviceProvider, snapshot, span);
+            return ProjectAnalyzer.GetMissingImports(serviceProvider, snapshot, span);
         }
     }
 }

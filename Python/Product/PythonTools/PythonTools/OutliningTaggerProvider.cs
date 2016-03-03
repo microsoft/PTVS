@@ -94,7 +94,7 @@ namespace Microsoft.PythonTools {
             #region ITagger<IOutliningRegionTag> Members
 
             public IEnumerable<ITagSpan<IOutliningRegionTag>> GetTags(NormalizedSnapshotSpanCollection spans) {
-                ProjectFileInfo entry;
+                AnalysisEntry entry;
                 if (_enabled && _buffer.TryGetPythonProjectEntry(out entry)) {
                     if (!_eventHooked) {
                         entry.ParseComplete += OnNewParseTree;
@@ -108,7 +108,7 @@ namespace Microsoft.PythonTools {
             }
 
             private async void OnNewParseTree(object sender, EventArgs e) {
-                ProjectFileInfo entry;
+                AnalysisEntry entry;
                 if (_buffer.TryGetPythonProjectEntry(out entry)) {
                     var snapshot = _buffer.CurrentSnapshot;
 

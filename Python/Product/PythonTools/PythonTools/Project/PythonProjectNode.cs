@@ -33,8 +33,8 @@ using Microsoft.PythonTools.Commands;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Logging;
 using Microsoft.PythonTools.Navigation;
-using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Azure;
 using Microsoft.VisualStudio.Imaging;
@@ -64,8 +64,8 @@ namespace Microsoft.PythonTools.Project {
         private static readonly object _searchPathEntryKey = new { Name = "SearchPathEntry" };
 
         private object _designerContext;
-        private VsProjectAnalyzer _analyzer;
-        private readonly HashSet<ProjectFileInfo> _warnOnLaunchFiles = new HashSet<ProjectFileInfo>();
+        private ProjectAnalyzer _analyzer;
+        private readonly HashSet<AnalysisEntry> _warnOnLaunchFiles = new HashSet<AnalysisEntry>();
         private PythonDebugPropertyPage _debugPropPage;
         private CommonSearchPathContainerNode _searchPathContainer;
         private InterpretersContainerNode _interpretersContainer;
@@ -188,13 +188,13 @@ namespace Microsoft.PythonTools.Project {
             get { return PythonConstants.IssueTrackerUrl; }
         }
 
-        private static string GetSearchPathEntry(ProjectFileInfo entry) {
+        private static string GetSearchPathEntry(AnalysisEntry entry) {
             object result;
             entry.Properties.TryGetValue(_searchPathEntryKey, out result);
             return (string)result;
         }
 
-        private static void SetSearchPathEntry(ProjectFileInfo entry, string value) {
+        private static void SetSearchPathEntry(AnalysisEntry entry, string value) {
             entry.Properties[_searchPathEntryKey] = value;
         }
 
@@ -737,7 +737,7 @@ namespace Microsoft.PythonTools.Project {
             return GetAnalyzer().Project;
         }
         */
-        VsProjectAnalyzer IPythonProject.GetProjectAnalyzer() {
+        ProjectAnalyzer IPythonProject.GetProjectAnalyzer() {
             return GetAnalyzer();
         }
 
@@ -824,7 +824,7 @@ namespace Microsoft.PythonTools.Project {
             return GetAnalyzer().Interpreter;
         }
 
-        public VsProjectAnalyzer GetAnalyzer() {
+        public ProjectAnalyzer GetAnalyzer() {
             if (IsClosed) {
                 Debug.Fail("GetAnalyzer() called on closed project");
                 var service = (PythonToolsService)PythonToolsPackage.GetGlobalService(typeof(PythonToolsService));
@@ -839,7 +839,7 @@ namespace Microsoft.PythonTools.Project {
             return _analyzer;
         }
 
-        private VsProjectAnalyzer CreateAnalyzer() {
+        private ProjectAnalyzer CreateAnalyzer() {
             // check to see if we should share our analyzer with another project in the same solution.  This enables
             // refactoring, find all refs, and intellisense across projects.
             var vsSolution = (IVsSolution)GetService(typeof(SVsSolution));
@@ -872,30 +872,45 @@ namespace Microsoft.PythonTools.Project {
             var model = Site.GetComponentModel();
             var interpreterService = model.GetService<IInterpreterOptionsService>();
             var factory = GetInterpreterFactory();
-            var res = new VsProjectAnalyzer(
+            var res = new ProjectAnalyzer(
                 Site,
                 factory.CreateInterpreter(),
                 factory,
                 interpreterService.Interpreters.ToArray(),
                 false
             );
+            res.AbnormalAnalysisExit += AnalysisProcessExited;
 
             HookErrorsAndWarnings(res);
             return res;
         }
 
-        private void HookErrorsAndWarnings(VsProjectAnalyzer res) {
+        private void AnalysisProcessExited(object sender, AbnormalAnalysisExitEventArgs e) {
+            StringBuilder msg = new StringBuilder();
+            msg.AppendFormat("Exit Code: {0}", e.ExitCode);
+            msg.AppendLine();
+            msg.AppendLine(" ------ STD ERR ------ ");
+            msg.AppendLine(e.StdErr);
+            msg.AppendLine(" ------ END STD ERR ------ ");
+            Site.GetPythonToolsService().Logger.LogEvent(
+                PythonLogEvent.AnalysisExitedAbnormally,
+                msg.ToString()
+            );
+            ReanalyzeProject();
+        }
+
+        private void HookErrorsAndWarnings(ProjectAnalyzer res) {
             res.ShouldWarnOnLaunchChanged += OnShouldWarnOnLaunchChanged;
         }
 
-        private void UnHookErrorsAndWarnings(VsProjectAnalyzer res) {
+        private void UnHookErrorsAndWarnings(ProjectAnalyzer res) {
             res.ShouldWarnOnLaunchChanged -= OnShouldWarnOnLaunchChanged;
             _warnOnLaunchFiles.Clear();
         }
 
         private void OnShouldWarnOnLaunchChanged(object sender, EntryEventArgs e) {
             if (_diskNodes.ContainsKey(e.Entry.Path ?? "")) {
-                if (((VsProjectAnalyzer)sender).ShouldWarnOnLaunch(e.Entry)) {
+                if (((ProjectAnalyzer)sender).ShouldWarnOnLaunch(e.Entry)) {
                     _warnOnLaunchFiles.Add(e.Entry);
                 } else {
                     _warnOnLaunchFiles.Remove(e.Entry);
@@ -965,10 +980,6 @@ namespace Microsoft.PythonTools.Project {
             Site.GetUIThread().InvokeAsync(ReanalyzeProject).DoNotWait();
         }
 
-        private void CommentTaskTokensChanged(object sender, EventArgs e) {
-            ReanalyzeProject();
-        }
-
         private void ReanalyzeProject() {
             if (IsClosing || IsClosed) {
                 // This deferred event is no longer important.
@@ -1034,7 +1045,7 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        private async void Reanalyze(VsProjectAnalyzer newAnalyzer) {
+        private async void Reanalyze(ProjectAnalyzer newAnalyzer) {
             foreach (var child in AllVisibleDescendants.OfType<FileNode>()) {
                 await newAnalyzer.AnalyzeFile(child.Url);
             }

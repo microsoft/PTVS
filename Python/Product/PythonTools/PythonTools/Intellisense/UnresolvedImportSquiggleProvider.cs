@@ -40,16 +40,16 @@ namespace Microsoft.PythonTools.Intellisense {
             _taskProvider = taskProvider;
         }
 
-        public void ListenForNextNewAnalysis(ProjectFileInfo entry) {
+        public void ListenForNextNewAnalysis(AnalysisEntry entry) {
             if (entry != null && !string.IsNullOrEmpty(entry.Path)) {
                 entry.AnalysisComplete += OnNewAnalysis;
             }
         }
 
-        public void StopListening(ProjectFileInfo entry) {
+        public void StopListening(AnalysisEntry entry) {
             if (entry != null) {
                 entry.AnalysisComplete -= OnNewAnalysis;
-                _taskProvider.Clear(entry, VsProjectAnalyzer.UnresolvedImportMoniker);
+                _taskProvider.Clear(entry, ProjectAnalyzer.UnresolvedImportMoniker);
             }
         }
 
@@ -60,7 +60,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     return;
                 }
 
-                ProjectFileInfo entry = sender as ProjectFileInfo;
+                AnalysisEntry entry = sender as AnalysisEntry;
                 var missingImports = await entry.Analyzer.GetMissingImports(entry);
                 
                 foreach (var buffer in missingImports) {
@@ -75,7 +75,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
                         _taskProvider.ReplaceItems(
                             entry,
-                            VsProjectAnalyzer.UnresolvedImportMoniker,
+                            ProjectAnalyzer.UnresolvedImportMoniker,
                             buffer.unresolved.Select(t => f.FromUnresolvedImport(
                                 _serviceProvider,
                                 entry.Analyzer.InterpreterFactory as IPythonInterpreterFactoryWithDatabase,
@@ -87,7 +87,7 @@ namespace Microsoft.PythonTools.Intellisense {
                             )).ToList()
                         );
                     } else {
-                        _taskProvider.Clear(entry, VsProjectAnalyzer.UnresolvedImportMoniker);
+                        _taskProvider.Clear(entry, ProjectAnalyzer.UnresolvedImportMoniker);
                     }
                 }
             }

@@ -32,11 +32,11 @@ namespace Microsoft.PythonTools.Intellisense {
     [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",
         Justification = "ownership is unclear")]
     class BufferParser {
-        internal VsProjectAnalyzer _parser;
+        internal ProjectAnalyzer _parser;
         private readonly Timer _timer;
         private IList<ITextBuffer> _buffers;
         private bool _parsing, _requeue, _textChange;
-        internal ProjectFileInfo _currentProjEntry;
+        internal AnalysisEntry _currentProjEntry;
         private ITextDocument _document;
         public int AttachedViews;
         /// <summary>
@@ -54,7 +54,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private const int ReparseDelay = 1000;      // delay in MS before we re-parse a buffer w/ non-line changes.
 
-        public BufferParser(ProjectFileInfo initialProjectEntry, VsProjectAnalyzer parser, ITextBuffer buffer) {
+        public BufferParser(AnalysisEntry initialProjectEntry, ProjectAnalyzer parser, ITextBuffer buffer) {
             _parser = parser;
             _timer = new Timer(ReparseTimer, null, Timeout.Infinite, Timeout.Infinite);
             _buffers = new[] { buffer };
@@ -207,12 +207,12 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        private void UninitBuffer(ITextBuffer subjectBuffer) {
+        internal void UninitBuffer(ITextBuffer subjectBuffer) {
             if (_document != null) {
                 _document.EncodingChanged -= EncodingChanged;
                 _document = null;
             }
-            subjectBuffer.Properties.RemoveProperty(typeof(ProjectFileInfo));
+            subjectBuffer.Properties.RemoveProperty(typeof(AnalysisEntry));
             subjectBuffer.Properties.RemoveProperty(typeof(BufferParser));
             subjectBuffer.ChangedLowPriority -= BufferChangedLowPriority;
         }
@@ -220,7 +220,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private void InitBuffer(ITextBuffer buffer, int id = 0) {
             buffer.Properties.AddProperty(typeof(BufferParser), this);
             buffer.ChangedLowPriority += BufferChangedLowPriority;
-            buffer.Properties.AddProperty(typeof(ProjectFileInfo), _currentProjEntry);
+            buffer.Properties.AddProperty(typeof(AnalysisEntry), _currentProjEntry);
 
             lock (this) {
                 var bufferInfo = new BufferInfo(buffer, id);
@@ -288,7 +288,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private async Task ParseBuffers(ITextSnapshot[] snapshots, BufferInfo[] bufferInfos) {
             var indentationSeverity = _parser.PyService.GeneralOptions.IndentationInconsistencySeverity;
-            ProjectFileInfo entry = _currentProjEntry;
+            AnalysisEntry entry = _currentProjEntry;
 
             List<AP.FileUpdate> updates = new List<AP.FileUpdate>();
             lock (this) {
@@ -352,7 +352,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 _parser._analysisComplete = false;
                 Interlocked.Increment(ref _parser._parsePending);
 
-                var res = await _parser._conn.SendRequestAsync(
+                var res = await _parser.SendRequestAsync(
                     new AP.FileUpdateRequest() {
                         fileId = entry.FileId,
                         updates = updates.ToArray()
@@ -473,6 +473,72 @@ namespace Microsoft.PythonTools.Intellisense {
             get {
                 return _document;
             }
+        }
+    }
+
+    static class BufferParserExtensions {
+        private static object _newAnalysisKey = new object(), _newAnalysisEntryKey = new object();
+
+        /// <summary>
+        /// Registers for when a new analysis is available for the text buffer.  This mechanism
+        /// is suitable for handlers which have no clear cut way to disconnect from the text
+        /// buffer (e.g. classifiers).  This attachs the event to the active buffer so that the 
+        /// classifier and buffer go away when the buffer is closed.  Hooking to the project
+        /// entry would result in keeping the classifier alive, which will keep the buffer alive,
+        /// and the classifier would continue to receive new analysis events.
+        /// </summary>
+        public static void RegisterForNewAnalysis(this ITextBuffer buffer, Action handler) {
+            HashSet<Action> actions;
+            if (!buffer.Properties.TryGetProperty(_newAnalysisKey, out actions)) {
+                buffer.Properties[_newAnalysisKey] = actions = new HashSet<Action>();
+            }
+            actions.Add(handler);
+        }
+
+        public static void UnregisterForNewAnalysis(this ITextBuffer buffer, Action handler) {
+            HashSet<Action> actions;
+            if (buffer.Properties.TryGetProperty(_newAnalysisKey, out actions)) {
+                actions.Remove(handler);
+            }
+        }
+
+        /// <summary>
+        /// Registers for when a new analysis entry is available for the text buffer.  This mechanism
+        /// is suitable for handlers which have no clear cut way to disconnect from the text
+        /// buffer (e.g. classifiers).  This attachs the event to the active buffer so that the 
+        /// classifier and buffer go away when the buffer is closed.  Hooking to the project
+        /// entry would result in keeping the classifier alive, which will keep the buffer alive,
+        /// and the classifier would continue to receive new analysis events.
+        /// </summary>
+        public static void RegisterForNewAnalysisEntry(this ITextBuffer buffer, Action handler) {
+            HashSet<Action> actions;
+            if (!buffer.Properties.TryGetProperty(_newAnalysisEntryKey, out actions)) {
+                buffer.Properties[_newAnalysisEntryKey] = actions = new HashSet<Action>();
+            }
+            actions.Add(handler);
+        }
+
+        public static void UnregisterForNewAnalysisEntry(this ITextBuffer buffer, Action handler) {
+            HashSet<Action> actions;
+            if (buffer.Properties.TryGetProperty(_newAnalysisEntryKey, out actions)) {
+                actions.Remove(handler);
+            }
+        }
+
+        public static IEnumerable<Action> GetNewAnalysisRegistrations(this ITextBuffer buffer) {
+            HashSet<Action> actions;
+            if (buffer.Properties.TryGetProperty(_newAnalysisKey, out actions)) {
+                return actions;
+            }
+            return Array.Empty<Action>();
+        }
+
+        public static IEnumerable<Action> GetNewAnalysisEntryRegistrations(this ITextBuffer buffer) {
+            HashSet<Action> actions;
+            if (buffer.Properties.TryGetProperty(_newAnalysisEntryKey, out actions)) {
+                return actions;
+            }
+            return Array.Empty<Action>();
         }
     }
 }

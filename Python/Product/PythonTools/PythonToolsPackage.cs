@@ -468,7 +468,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
         /// <summary>
         /// The analyzer which is used for loose files.
         /// </summary>
-        internal VsProjectAnalyzer DefaultAnalyzer {
+        internal ProjectAnalyzer DefaultAnalyzer {
             get {
                 return _pyService.DefaultAnalyzer;
             }
@@ -670,7 +670,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             return replCommands;
         }
 
-        internal static bool TryGetStartupFileAndDirectory(System.IServiceProvider serviceProvider, out string filename, out string dir, out VsProjectAnalyzer analyzer) {
+        internal static bool TryGetStartupFileAndDirectory(System.IServiceProvider serviceProvider, out string filename, out string dir, out ProjectAnalyzer analyzer) {
             var startupProject = GetStartupProject(serviceProvider);
             if (startupProject != null) {
                 filename = startupProject.GetStartupFile();

@@ -57,7 +57,7 @@ namespace Microsoft.PythonTools.Navigation {
     /// the drop down to remove grayed out elements.
     /// </summary>
     class DropDownBarClient : IVsDropdownBarClient {
-        private ProjectFileInfo _projectEntry;                      // project entry which gets updated with new ASTs for us to inspect.
+        private AnalysisEntry _projectEntry;                      // project entry which gets updated with new ASTs for us to inspect.
         private readonly Dispatcher _dispatcher;                        // current dispatcher so we can get back to our thread
         private IWpfTextView _textView;                                 // text view we're drop downs for
         private IVsDropdownBar _dropDownBar;                            // drop down bar - used to refresh when changes occur
@@ -69,7 +69,7 @@ namespace Microsoft.PythonTools.Navigation {
         private const int NavigationLevels = 2;
         private int[] _curSelection = new int[NavigationLevels];
 
-        public DropDownBarClient(IServiceProvider serviceProvider, IWpfTextView textView, ProjectFileInfo pythonProjectEntry) {
+        public DropDownBarClient(IServiceProvider serviceProvider, IWpfTextView textView, AnalysisEntry pythonProjectEntry) {
             Utilities.ArgumentNotNull("serviceProvider", serviceProvider);
             Utilities.ArgumentNotNull("textView", textView);
             Utilities.ArgumentNotNull("pythonProjectEntry", pythonProjectEntry);
@@ -78,11 +78,17 @@ namespace Microsoft.PythonTools.Navigation {
             _projectEntry = pythonProjectEntry;
             _projectEntry.ParseComplete += ParserOnNewParseTree;
             _textView = textView;
+            _textView.TextBuffer.RegisterForNewAnalysisEntry(OnNewAnalysisEntry);
             _dispatcher = Dispatcher.CurrentDispatcher;
             _textView.Caret.PositionChanged += CaretPositionChanged;
             for (int i = 0; i < NavigationLevels; i++) {
                 _curSelection[i] = -1;
             }
+        }
+
+        private void OnNewAnalysisEntry() {
+            _projectEntry = _textView.TextBuffer.GetAnalysisEntry();
+            _projectEntry.ParseComplete += ParserOnNewParseTree;
         }
 
         internal int Register(IVsDropdownBarManager manager) {
@@ -513,11 +519,5 @@ namespace Microsoft.PythonTools.Navigation {
         }
 
         #endregion
-
-        internal void UpdateProjectEntry(ProjectFileInfo newEntry) {
-            _projectEntry.ParseComplete -= ParserOnNewParseTree;
-            _projectEntry = newEntry;
-            _projectEntry.ParseComplete += ParserOnNewParseTree;
-        }
     }
 }

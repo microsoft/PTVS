@@ -566,7 +566,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             public Severity indentation_inconsistency_severity;
             public bool implicitProject;
-            public int crossModuleAnalysisLimit;
+            public int? crossModuleAnalysisLimit;
 
             public override string name => Name;
         }

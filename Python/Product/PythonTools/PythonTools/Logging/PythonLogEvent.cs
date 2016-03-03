@@ -46,7 +46,11 @@ namespace Microsoft.PythonTools.Logging {
         /// <summary>
         /// Logs package installs
         /// </summary>
-        PackageInstalled
+        PackageInstalled,
+        /// <summary>
+        /// The analysis process exited abnormally for some reason...
+        /// </summary>
+        AnalysisExitedAbnormally
 
     }
 }

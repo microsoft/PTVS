@@ -98,7 +98,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
             var pt = e.TextPosition.GetPoint(EditorExtensions.IsPythonContent, PositionAffinity.Successor);
             if (pt != null) {
-                var quickInfo = await VsProjectAnalyzer.GetQuickInfo(
+                var quickInfo = await ProjectAnalyzer.GetQuickInfo(
                     _textView.TextBuffer.CurrentSnapshot,
                     pt.Value                    
                 );
@@ -140,7 +140,7 @@ namespace Microsoft.PythonTools.Intellisense {
         public void PropagateAnalyzer(ITextBuffer subjectBuffer) {
             PythonReplEvaluator replEvaluator;
             if (_textView.Properties.TryGetProperty<PythonReplEvaluator>(typeof(PythonReplEvaluator), out replEvaluator)) {
-                subjectBuffer.Properties.AddProperty(typeof(VsProjectAnalyzer), replEvaluator.ReplAnalyzer);
+                subjectBuffer.Properties.AddProperty(typeof(ProjectAnalyzer), replEvaluator.ReplAnalyzer);
             }
         }
 

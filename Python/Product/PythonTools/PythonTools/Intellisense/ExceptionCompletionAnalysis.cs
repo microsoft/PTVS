@@ -67,13 +67,13 @@ namespace Microsoft.PythonTools.Intellisense {
                 return null;
             }
 
-            var index = VsProjectAnalyzer.TranslateIndex(
+            var index = ProjectAnalyzer.TranslateIndex(
                 Span.GetEndPoint(TextBuffer.CurrentSnapshot).Position,
                 TextBuffer.CurrentSnapshot,
                 analysis
             );
 
-            var completions = analysis.GetAllAvailableMembers(index, GetMemberOptions.None)
+            var completions = analysis.Analyzer.GetAllAvailableMembers(analysis, index, GetMemberOptions.None)
                 .Where(IsExceptionType)
                 .Select(member => PythonCompletion(glyphService, member))
                 .OrderBy(completion => completion.DisplayText);

@@ -39,7 +39,7 @@ namespace Microsoft.PythonTools.Repl {
     internal class PythonReplEvaluator : BasePythonReplEvaluator {
         private IPythonInterpreterFactory _interpreter;
         private readonly IInterpreterOptionsService _interpreterService;
-        private VsProjectAnalyzer _replAnalyzer;
+        private ProjectAnalyzer _replAnalyzer;
         private bool _ownsAnalyzer, _enableAttach, _supportsMultipleCompleteStatementInputs;
 
         public PythonReplEvaluator(IPythonInterpreterFactory interpreter, IServiceProvider serviceProvider, IInterpreterOptionsService interpreterService = null)
@@ -121,10 +121,10 @@ namespace Microsoft.PythonTools.Repl {
             }
         }
 
-        internal VsProjectAnalyzer ReplAnalyzer {
+        internal ProjectAnalyzer ReplAnalyzer {
             get {
                 if (_replAnalyzer == null && Interpreter != null && _interpreterService != null) {
-                    _replAnalyzer = new VsProjectAnalyzer(_serviceProvider, Interpreter, _interpreterService.Interpreters.ToArray());
+                    _replAnalyzer = new ProjectAnalyzer(_serviceProvider, Interpreter, _interpreterService.Interpreters.ToArray());
                     _ownsAnalyzer = true;
                 }
                 return _replAnalyzer;
@@ -377,7 +377,7 @@ namespace Microsoft.PythonTools.Repl {
             get;
         }
 
-        public abstract VsProjectAnalyzer ProjectAnalyzer {
+        public abstract ProjectAnalyzer ProjectAnalyzer {
             get;
         }
 
@@ -420,7 +420,7 @@ namespace Microsoft.PythonTools.Repl {
         internal string _startupScript;
         internal string _searchPaths;
         internal string _interpreterArguments;
-        internal VsProjectAnalyzer _projectAnalyzer;
+        internal ProjectAnalyzer _projectAnalyzer;
         internal bool _useInterpreterPrompts;
         internal string _executionMode;
         internal bool _liveCompletionsOnly;
@@ -490,7 +490,7 @@ namespace Microsoft.PythonTools.Repl {
             get { return _interpreterArguments ?? ""; }
         }
 
-        public override VsProjectAnalyzer ProjectAnalyzer {
+        public override ProjectAnalyzer ProjectAnalyzer {
             get { return _projectAnalyzer; }
         }
 
@@ -602,7 +602,7 @@ namespace Microsoft.PythonTools.Repl {
             }
         }
 
-        public override VsProjectAnalyzer ProjectAnalyzer {
+        public override ProjectAnalyzer ProjectAnalyzer {
             get {
                 var startupProj = PythonToolsPackage.GetStartupProject(_serviceProvider);
                 if (startupProj != null) {

@@ -82,7 +82,7 @@ namespace Microsoft.PythonTools.Project {
             return null;
         }
 
-        VsProjectAnalyzer IPythonProject.GetProjectAnalyzer() {
+        ProjectAnalyzer IPythonProject.GetProjectAnalyzer() {
             return _serviceProvider.GetPythonToolsService().DefaultAnalyzer;
         }
 

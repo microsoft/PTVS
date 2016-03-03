@@ -100,8 +100,8 @@ namespace Microsoft.PythonTools.Intellisense {
             return result;
         }
 
-        internal ProjectFileInfo GetAnalysisEntry() {
-            ProjectFileInfo entry;
+        internal AnalysisEntry GetAnalysisEntry() {
+            AnalysisEntry entry;
             if (TextBuffer.TryGetPythonProjectEntry(out entry) && entry != null) {
                 //Debug.Assert(
                 //    entry.Analysis != null,
@@ -142,8 +142,8 @@ namespace Microsoft.PythonTools.Intellisense {
             var modules = Enumerable.Empty<MemberResult>();
             if (analysis != null && (pyReplEval == null || !pyReplEval.LiveCompletionsOnly)) {
                 modules = modules.Concat(package.Length > 0 ? 
-                    analysis.GetModuleMembers(package, !modulesOnly) :
-                    analysis.GetModules(true).Distinct(CompletionComparer.MemberEquality)
+                    analysis.Analyzer.GetModuleMembers(analysis, package, !modulesOnly) :
+                    analysis.Analyzer.GetModules(analysis, true).Distinct(CompletionComparer.MemberEquality)
                 );
             }
             if (replScopes != null) {
