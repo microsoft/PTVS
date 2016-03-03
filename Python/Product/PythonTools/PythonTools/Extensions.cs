@@ -248,7 +248,7 @@ namespace Microsoft.PythonTools {
         }
         
         internal static void GotoSource(this LocationInfo location, IServiceProvider serviceProvider) {
-            string zipFileName = null;// VsProjectAnalyzer.GetZipFileName(location.ProjectEntry);
+            string zipFileName = null; // VsProjectAnalyzer.GetZipFileName(location.ProjectEntry);
             if (zipFileName == null) {
                 PythonToolsPackage.NavigateTo(
                     serviceProvider,

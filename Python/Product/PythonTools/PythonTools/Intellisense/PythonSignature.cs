@@ -18,8 +18,6 @@ using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
-using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Analysis.Communication;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
 

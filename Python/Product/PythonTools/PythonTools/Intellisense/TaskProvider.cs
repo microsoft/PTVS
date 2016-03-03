@@ -15,7 +15,6 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -24,7 +23,6 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
@@ -34,19 +32,17 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.VisualStudio.Text.Tagging;
 using Microsoft.VisualStudioTools;
-using Microsoft.PythonTools.Analysis.Communication;
 
 namespace Microsoft.PythonTools.Intellisense {
     using AP = AnalysisProtocol;
 
     class TaskProviderItem {
         private readonly string _message;
-        private readonly ITrackingSpan _span;
         private readonly SourceSpan _rawSpan;
         private readonly VSTASKPRIORITY _priority;
         private readonly VSTASKCATEGORY _category;
         private readonly bool _squiggle;
-        private readonly ITextSnapshot _snapshot;
+        private readonly VsProjectAnalyzer.SpanTranslator _spanTranslator;
         private readonly IServiceProvider _serviceProvider;
 
         internal TaskProviderItem(
@@ -56,13 +52,12 @@ namespace Microsoft.PythonTools.Intellisense {
             VSTASKPRIORITY priority,
             VSTASKCATEGORY category,
             bool squiggle,
-            ITextSnapshot snapshot
+            VsProjectAnalyzer.SpanTranslator spanTranslator
         ) {
             _serviceProvider = serviceProvider;
             _message = message;
             _rawSpan = rawSpan;
-            _snapshot = snapshot;
-            _span = snapshot != null ? CreateSpan(snapshot, rawSpan) : null;
+            _spanTranslator = spanTranslator;
             _rawSpan = rawSpan;
             _priority = priority;
             _category = category;
@@ -88,7 +83,7 @@ namespace Microsoft.PythonTools.Intellisense {
         
         public bool IsValid {
             get {
-                if (!_squiggle || _snapshot == null || _span == null || string.IsNullOrEmpty(ErrorType)) {
+                if (!_squiggle || _spanTranslator == null || string.IsNullOrEmpty(ErrorType)) {
                     return false;
                 }
                 return true;
@@ -96,12 +91,25 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public void CreateSquiggleSpan(SimpleTagger<ErrorTag> tagger) {
-            tagger.CreateTagSpan(_span, new ErrorTag(ErrorType, _message));
+            SnapshotSpan target = _spanTranslator.TranslateForward(
+                new Span(_rawSpan.Start.Index, _rawSpan.Length)
+            );
+
+            var tagSpan = _spanTranslator.TextBuffer.CurrentSnapshot.CreateTrackingSpan(
+                target.Start,
+                target.Length,
+                SpanTrackingMode.EdgeInclusive
+            );
+
+            tagger.CreateTagSpan(tagSpan, new ErrorTag(ErrorType, _message));
         }
 
-        public ITextSnapshot Snapshot {
+        public ITextBuffer TextBuffer {
             get {
-                return _snapshot;
+                if (_spanTranslator != null) {
+                    return _spanTranslator.TextBuffer;
+                }
+                return null;
             }
         }
 
@@ -131,10 +139,10 @@ namespace Microsoft.PythonTools.Intellisense {
     }
 
     sealed class TaskProviderItemFactory {
-        private readonly ITextSnapshot _snapshot;
+        private readonly VsProjectAnalyzer.SpanTranslator _spanTranslator;
 
-        public TaskProviderItemFactory(ITextSnapshot snapshot) {
-            _snapshot = snapshot;
+        public TaskProviderItemFactory(VsProjectAnalyzer.SpanTranslator spanTranslator) {
+            _spanTranslator = spanTranslator;
         }
 
         #region Factory Functions
@@ -148,7 +156,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 priority,
                 category,
                 true,
-                _snapshot
+                _spanTranslator
             );
         }
 
@@ -179,7 +187,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 VSTASKPRIORITY.TP_NORMAL,
                 VSTASKCATEGORY.CAT_BUILDCOMPILE,
                 true,
-                _snapshot
+                _spanTranslator
             );
         }
 
@@ -621,8 +629,8 @@ namespace Microsoft.PythonTools.Intellisense {
                             foreach (var item in items) {
                                 if (item.IsValid) {
                                     List<TaskProviderItem> itemList;
-                                    if (!bufferToErrorList.TryGetValue(item.Snapshot.TextBuffer, out itemList)) {
-                                        bufferToErrorList[item.Snapshot.TextBuffer] = itemList = new List<TaskProviderItem>();
+                                    if (!bufferToErrorList.TryGetValue(item.TextBuffer, out itemList)) {
+                                        bufferToErrorList[item.TextBuffer] = itemList = new List<TaskProviderItem>();
                                     }
 
                                     itemList.Add(item);

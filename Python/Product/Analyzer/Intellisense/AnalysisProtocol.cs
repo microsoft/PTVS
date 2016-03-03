@@ -43,6 +43,25 @@ namespace Microsoft.PythonTools.Intellisense {
             return all;
         }
 
+        public sealed class AnalysisClassificationsRequest : Request<AnalysisClassificationsResponse> {
+            public const string Command = "analysisClassify";
+
+            public int fileId, bufferId;
+            public bool colorNames;
+
+            public override string command => Command;
+        }
+
+        public sealed class AnalysisClassificationsResponse : Response {
+            public AnalysisClassification[] classifications;
+
+            public int version;
+        }
+
+        public sealed class AnalysisClassification {
+            public int start, length;
+            public string type;
+        }
 
         public class QuickInfoRequest : Request<QuickInfoResponse> {
             public const string Command = "quickInfo";
@@ -451,8 +470,15 @@ namespace Microsoft.PythonTools.Intellisense {
             public const string Name = "fileAnalysisComplete";
             public int fileId;
 
+            public BufferVersion[] versions;
+
             public override string name => Name;
         }
+
+        public sealed class BufferVersion {
+            public int bufferId, version;
+        }
+
 
         /// <summary>
         /// Signals all files are analyzed

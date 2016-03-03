@@ -1,3 +1,19 @@
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
+
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -7,22 +23,21 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Analysis.Communication;
 using Microsoft.PythonTools.Cdp;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Navigation;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
+using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.Language.Intellisense;
+using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
-using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
 
 namespace Microsoft.PythonTools.Intellisense {
-    using Repl;
-    using VisualStudio.Text.Editor.OptionsExtensionMethods;
     using AP = AnalysisProtocol;
 
     public sealed class VsProjectAnalyzer : IDisposable {
@@ -108,6 +123,16 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             ).DoNotWait();
             CommentTaskTokensChanged(null, EventArgs.Empty);
+        }
+
+        internal async Task<AP.AnalysisClassificationsResponse> GetAnalysisClassifications(ProjectFileInfo projFile, ITextBuffer buffer, bool colorNames) {
+            return await _conn.SendRequestAsync(
+                new AP.AnalysisClassificationsRequest() {
+                    fileId = projFile.FileId,
+                    bufferId = projFile.BufferParser.GetBufferId(buffer),
+                    colorNames = colorNames
+                }
+            ).ConfigureAwait(false);
         }
 
         internal async Task<AP.LocationNameResponse> GetNameOfLocation(ProjectFileInfo projFile, ITextBuffer buffer, int line, int column) {
@@ -308,6 +333,9 @@ namespace Microsoft.PythonTools.Intellisense {
             ProjectFileInfo info;
             if (_projectFilesById.TryGetValue(analysisComplete.fileId, out info)) {
                 info.OnAnalysisComplete();
+                foreach (var version in analysisComplete.versions) {
+                    info.BufferParser?.Analyzed(version.bufferId, version.version);
+                }
             }
         }
 
@@ -580,62 +608,123 @@ namespace Microsoft.PythonTools.Intellisense {
             return res;
         }
 
-        internal static void ApplyChanges(AP.ChangeInfo[] changes, ProjectFileInfo file, int bufferId, int fromVersion) {
-            var buffer = file.BufferParser.GetBuffer(bufferId);
-            var lastParsedVersion = file.BufferParser.GetLastParsedSnapshot(bufferId).Version;
+        /// <summary>
+        /// Translates spans in a versioned response from the out of proc analysis.
+        /// 
+        /// Responses which need to operator on buffers (for editing, classification, etc...)
+        /// will return a version which is what the results are based upon.  A SpanTranslator
+        /// will translate from the version which is potentially old to the current
+        /// version of the buffer.
+        /// </summary>
+        internal class SpanTranslator {
+            private readonly ITextVersion _lastParsedVersion;
+            private readonly ITextBuffer _buffer;
 
-            Debug.Assert(fromVersion >= lastParsedVersion.VersionNumber);
+            public SpanTranslator(ProjectFileInfo file, ITextBuffer buffer, int fromVersion) {
+                var lastParsedVersion = file.BufferParser.GetAnalysisVersion(buffer);
 
-            while (lastParsedVersion.VersionNumber != fromVersion) {
-                lastParsedVersion = lastParsedVersion.Next;
+                Debug.Assert(fromVersion >= lastParsedVersion.VersionNumber);
+
+                while (lastParsedVersion.VersionNumber != fromVersion) {
+                    lastParsedVersion = lastParsedVersion.Next;
+                }
+                _lastParsedVersion = lastParsedVersion;
+                _buffer = buffer;
             }
 
-            var currentSnapshot = buffer.CurrentSnapshot;
+            public ITextBuffer TextBuffer {
+                get {
+                    return _buffer;
+                }
+            }
+
+            public SpanTranslator(ProjectFileInfo file, int bufferId, int fromVersion) :
+                this(file, file.BufferParser.GetBuffer(bufferId), fromVersion) {
+            }
+
+            public SnapshotSpan TranslateForward(Span from) {
+                return new SnapshotSpan(
+                    _buffer.CurrentSnapshot,
+                    Tracking.TrackSpanForwardInTime(
+                        SpanTrackingMode.EdgeInclusive,
+                        new Span(from.Start, from.Length),
+                        _lastParsedVersion,
+                        _buffer.CurrentSnapshot.Version
+                    )
+                );
+            }
+
+            public SnapshotPoint TranslateForward(int position) {
+                return new SnapshotPoint(
+                    _buffer.CurrentSnapshot,
+                    Tracking.TrackPositionForwardInTime(
+                        PointTrackingMode.Positive,
+                        position,
+                        _lastParsedVersion,
+                        _buffer.CurrentSnapshot.Version
+                    )
+                );
+            }
+
+            public SnapshotPoint TranslateBack(int position) {
+                return new SnapshotPoint(
+                    _buffer.CurrentSnapshot,
+                    Tracking.TrackPositionBackwardInTime(
+                        PointTrackingMode.Positive,
+                        position,
+                        _buffer.CurrentSnapshot.Version,
+                        _lastParsedVersion
+                    )
+                );
+            }
+        }
+
+        internal static void ApplyChanges(AP.ChangeInfo[] changes, ProjectFileInfo file, int bufferId, int fromVersion) {
+            var buffer = file.BufferParser.GetBuffer(bufferId);
+            var translator = new SpanTranslator(file, bufferId, fromVersion);
 
             using (var edit = buffer.CreateEdit()) {
                 foreach (var change in changes) {
-                    var span = Tracking.TrackSpanForwardInTime(
-                        SpanTrackingMode.EdgeInclusive,
-                        new Span(change.start, change.length),
-                        lastParsedVersion,
-                        currentSnapshot.Version
+                    edit.Replace(
+                        translator.TranslateForward(new Span(change.start, change.length)), 
+                        change.newText
                     );
-
-                    edit.Replace(span, change.newText);
                 }
                 edit.Apply();
             }
         }
 
-        internal async Task<NavigationInfo> GetNavigations(ITextSnapshot snapshot) {
+        internal async Task<NavigationInfo> GetNavigations(ITextBuffer textBuffer) {
             ProjectFileInfo entry;
-            if (snapshot.TextBuffer.TryGetPythonProjectEntry(out entry)) {
+            if (textBuffer.TryGetPythonProjectEntry(out entry)) {
                 var navigations = await _conn.SendRequestAsync(
                     new AP.NavigationRequest() {
                         fileId = entry.FileId
                     }
                 );
-                foreach (var buffer in navigations.buffers) {
-                    var lastParsed = entry.BufferParser.GetLastParsedSnapshot(buffer.bufferId);
-                    if (lastParsed.Version.VersionNumber == buffer.version) {
-                        return new NavigationInfo(
-                            null,
-                            NavigationKind.None,
-                            new Span(),
-                            ConvertNavigations(snapshot, lastParsed, buffer.navigations)
-                        );
-                    }
 
-                    // race with another vesion being parsed, we should get called again when
-                    // we get notified of another new parse tree
-                    Debug.Assert(buffer.version > lastParsed.Version.VersionNumber);
+                List<NavigationInfo> bufferNavs = new List<NavigationInfo>();
+                foreach (var buffer in navigations.buffers) {
+                    SpanTranslator translator = new SpanTranslator(
+                        entry,
+                        buffer.bufferId,
+                        buffer.version
+                    );
+                    bufferNavs.AddRange(ConvertNavigations(textBuffer.CurrentSnapshot, translator, buffer.navigations));
                 }
+
+                return new NavigationInfo(
+                    null,
+                    NavigationKind.None,
+                    new SnapshotSpan(),
+                    bufferNavs.ToArray()
+                );
             }
 
-            return new NavigationInfo(null, NavigationKind.None, new Span(), Array.Empty<NavigationInfo>());
+            return new NavigationInfo(null, NavigationKind.None, new SnapshotSpan(), Array.Empty<NavigationInfo>());
         }
 
-        private NavigationInfo[] ConvertNavigations(ITextSnapshot currentSnapshot, ITextSnapshot lastParsedSnapshot, AP.Navigation[] navigations) {
+        private NavigationInfo[] ConvertNavigations(ITextSnapshot snapshot, SpanTranslator translator, AP.Navigation[] navigations) {
             if (navigations == null) {
                 return null;
             }
@@ -643,19 +732,14 @@ namespace Microsoft.PythonTools.Intellisense {
             List<NavigationInfo> res = new List<NavigationInfo>();
             foreach (var nav in navigations) {
                 // translate the span from the version we last parsed to the current version
-                var span = Tracking.TrackSpanForwardInTime(
-                    SpanTrackingMode.EdgeInclusive,
-                    Span.FromBounds(nav.startIndex, nav.endIndex),
-                    lastParsedSnapshot.Version,
-                    currentSnapshot.Version
-                );
+                var span = translator.TranslateForward(Span.FromBounds(nav.startIndex, nav.endIndex));
 
                 res.Add(
                     new NavigationInfo(
                         nav.name,
                         GetNavigationKind(nav.type),
-                        span,
-                        ConvertNavigations(currentSnapshot, lastParsedSnapshot, nav.children)
+                        new SnapshotSpan(snapshot, span),
+                        ConvertNavigations(snapshot, translator, nav.children)
                     )
                 );
             }
@@ -675,6 +759,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal async Task<IEnumerable<OutliningTaggerProvider.TagSpan>> GetOutliningTags(ITextSnapshot snapshot) {
             ProjectFileInfo entry;
+            var res = Enumerable.Empty<OutliningTaggerProvider.TagSpan>();
             if (snapshot.TextBuffer.TryGetPythonProjectEntry(out entry)) {
                 var outliningTags = await _conn.SendRequestAsync(
                     new AP.OutlingRegionsRequest() {
@@ -683,37 +768,27 @@ namespace Microsoft.PythonTools.Intellisense {
                 );
 
                 foreach (var bufferTags in outliningTags.buffers) {
-                    var lastParsed = entry.BufferParser.GetLastParsedSnapshot(bufferTags.bufferId);
-                    if (lastParsed.Version.VersionNumber == bufferTags.version) {
-                        return ConvertOutliningTags(snapshot, lastParsed, bufferTags);
-                    }
+                    var translator = new SpanTranslator(
+                        entry,
+                        bufferTags.bufferId,
+                        bufferTags.version
+                    );
 
-                    // race with another vesion being parsed, we should get called again when
-                    // we get notified of another new parse tree
+                    res = res.Concat(ConvertOutliningTags(snapshot, translator, bufferTags));
                 }
-
             }
-            return Enumerable.Empty<OutliningTaggerProvider.TagSpan>();
+
+            return res;
         }
 
-        private static IEnumerable<OutliningTaggerProvider.TagSpan> ConvertOutliningTags(ITextSnapshot currentSnapshot, ITextSnapshot lastParsedSnapshot, AP.BufferOutliningTags outliningTags) {
+        private static IEnumerable<OutliningTaggerProvider.TagSpan> ConvertOutliningTags(ITextSnapshot currentSnapshot, SpanTranslator translator, AP.BufferOutliningTags outliningTags) {
             foreach (var tag in outliningTags.tags) {
                 // translate the span from the version we last parsed to the current version
-                var span = Tracking.TrackSpanForwardInTime(
-                    SpanTrackingMode.EdgeInclusive,
-                    Span.FromBounds(tag.startIndex, tag.endIndex),
-                    lastParsedSnapshot.Version,
-                    currentSnapshot.Version
-                );
+                var span = translator.TranslateForward(Span.FromBounds(tag.startIndex, tag.endIndex));
 
                 int headerIndex = tag.headerIndex;
                 if (tag.headerIndex != -1) {
-                    headerIndex = Tracking.TrackPositionForwardInTime(
-                        PointTrackingMode.Positive,
-                        headerIndex,
-                        lastParsedSnapshot.Version,
-                        currentSnapshot.Version
-                    );
+                    headerIndex = translator.TranslateForward(headerIndex);
                 }
 
                 yield return OutliningTaggerProvider.OutliningTagger.GetTagSpan(
@@ -1134,27 +1209,18 @@ namespace Microsoft.PythonTools.Intellisense {
                 Debug.WriteLine("Received updated parse {0} {1}", parsedEvent.fileId, buffer.version);
 
                 var bufferParser = entry.BufferParser;
-                ITextSnapshot snapshot = null;
+                SpanTranslator translator = null;
                 if (bufferParser != null) {
-                    snapshot = bufferParser.SnapshotParsed(buffer.bufferId, buffer.version);
-                    var lastParsed = bufferParser.GetLastParsedSnapshot(buffer.bufferId);
-
-                    if (lastParsed != null &&
-                        snapshot.Version.VersionNumber < lastParsed.Version.VersionNumber) {
+                    if (bufferParser.IsOldSnapshot(buffer.bufferId, buffer.version)) {
                         // ignore receiving responses out of order...
-                        Debug.WriteLine("Ignoring out of order parse {0} {1}",
-                            snapshot.Version.VersionNumber,
-                            lastParsed.Version.VersionNumber
-                        );
+                        Debug.WriteLine("Ignoring out of order parse {0}", buffer.version);
                         return;
                     }
-
-                    Debug.Assert(snapshot.Version.VersionNumber == buffer.version);
-                    entry.BufferParser.SetLastParsedSnapshot(snapshot);
+                    translator = new SpanTranslator(entry, buffer.bufferId, buffer.version);
                 }
 
                 // Update the parser warnings/errors.
-                var factory = new TaskProviderItemFactory(snapshot);
+                var factory = new TaskProviderItemFactory(translator);
                 if (buffer.errors.Any() || buffer.warnings.Any() || buffer.tasks.Any()) {
                     var warningItems = buffer.warnings.Select(er => factory.FromErrorResult(
                         _serviceProvider,
@@ -1176,7 +1242,7 @@ namespace Microsoft.PythonTools.Intellisense {
                             GetPriority(x.priority),
                             GetCategory(x.category),
                             x.squiggle,
-                            snapshot
+                            translator
                         )
                     );
 

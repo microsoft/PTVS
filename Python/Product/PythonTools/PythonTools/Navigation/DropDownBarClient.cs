@@ -475,7 +475,7 @@ namespace Microsoft.PythonTools.Navigation {
             var dropDownBar = _dropDownBar;
             if (dropDownBar != null) {
 
-                var navigations = await _projectEntry.ProjectState.GetNavigations(_textView.TextBuffer.CurrentSnapshot);
+                var navigations = await _projectEntry.ProjectState.GetNavigations(_textView.TextBuffer);
                 lock (_navigationsLock) {
                     _navigations = navigations;
                     for (int i = 0; i < _curSelection.Length; i++) {

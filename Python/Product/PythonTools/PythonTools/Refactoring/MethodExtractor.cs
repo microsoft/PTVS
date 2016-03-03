@@ -16,7 +16,6 @@
 
 using System;
 using System.Threading.Tasks;
-using Microsoft.PythonTools.Analysis.Communication;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;

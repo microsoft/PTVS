@@ -17,8 +17,6 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Analysis.Communication;
-using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio.Text;
 
 namespace Microsoft.PythonTools.Intellisense {

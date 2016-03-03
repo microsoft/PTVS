@@ -29,6 +29,9 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 
 namespace Microsoft.PythonTools {
+    using System.Collections;
+    using AP = AnalysisProtocol;
+
     struct CachedClassification {
         public ITrackingSpan Span;
         public string Classification;
@@ -43,10 +46,11 @@ namespace Microsoft.PythonTools {
     /// Provides classification based upon the AST and analysis.
     /// </summary>
     internal class PythonAnalysisClassifier : IClassifier {
-        private List<List<CachedClassification>> _spanCache;
+        private AP.AnalysisClassification[] _spanCache;
         private readonly object _spanCacheLock = new object();
         private readonly PythonAnalysisClassifierProvider _provider;
         private readonly ITextBuffer _buffer;
+        private VsProjectAnalyzer.SpanTranslator _spanTranslator;
         private ProjectFileInfo _entry;
 
         internal PythonAnalysisClassifier(PythonAnalysisClassifierProvider provider, ITextBuffer buffer) {
@@ -80,7 +84,7 @@ namespace Microsoft.PythonTools {
             }
         }
 
-        private void OnNewAnalysis(object sender, EventArgs e) {
+        private async void OnNewAnalysis(object sender, EventArgs e) {
             var entry = sender as ProjectFileInfo;
             if (entry == null || entry != _entry || !entry.IsAnalyzed) {
                 Debug.Fail("Project entry does not match expectation");
@@ -99,35 +103,28 @@ namespace Microsoft.PythonTools {
                 return;
             }
 
-#if FALSE
-            PythonAst tree;
-            IAnalysisCookie cookie;
-            entry.GetTreeAndCookie(out tree, out cookie);
-            var sCookie = cookie as SnapshotCookie;
-            var snapshot = sCookie != null ? sCookie.Snapshot : null;
-            if (tree == null || snapshot == null) {
-                return;
-            }
+            var classifications = await entry.ProjectState.GetAnalysisClassifications(
+                entry,
+                _buffer,
+                options.ColorNamesWithAnalysis
+            );
 
-
-            var moduleAnalysis = options.ColorNamesWithAnalysis ? entry.Analysis : null;
-
-            var walker = new ClassifierWalker(tree, moduleAnalysis, snapshot, Provider.CategoryMap);
-            tree.Walk(walker);
-            var newCache = walker.Spans;
+            // sort the spans by starting position so we can use binary search when handing them out
+            Array.Sort(
+                classifications.classifications,
+                (x, y) => x.start - y.start
+            );
 
             lock (_spanCacheLock) {
-                if (snapshot == snapshot.TextBuffer.CurrentSnapshot) {
-                    // Ensure we have not raced with another update
-                    _spanCache = newCache;
-                } else {
-                    snapshot = null;
-                }
+                _spanCache = classifications.classifications;
+                _spanTranslator = new VsProjectAnalyzer.SpanTranslator(
+                    _buffer.GetPythonProjectEntry(),
+                    _buffer,
+                    classifications.version
+                );
             }
-            if (snapshot != null) {
-                OnNewClassifications(snapshot);
-            }
-#endif
+
+            OnNewClassifications(_buffer.CurrentSnapshot);
         }
 
         private void OnNewClassifications(ITextSnapshot snapshot) {
@@ -139,42 +136,95 @@ namespace Microsoft.PythonTools {
 
         public event EventHandler<ClassificationChangedEventArgs> ClassificationChanged;
 
+        class IndexComparer : IComparer {
+            public static readonly IndexComparer Instance = new IndexComparer();
+
+            public int Compare(object x, object y) {
+                int xValue = GetStart(x), yValue = GetStart(y);
+
+                return xValue - yValue;
+            }
+
+            private static int GetStart(object value) {
+                int indexValue;
+
+                AP.AnalysisClassification xClass = value as AP.AnalysisClassification;
+                if (xClass != null) {
+                    indexValue = xClass.start;
+                } else {
+                    indexValue = (int)value;
+                }
+
+                return indexValue;
+            }
+        }
+
         public IList<ClassificationSpan> GetClassificationSpans(SnapshotSpan span) {
             EnsureAnalysis();
-            
+
             var classifications = new List<ClassificationSpan>();
             var snapshot = span.Snapshot;
-            var spans = _spanCache;
+
+            AP.AnalysisClassification[] spans;
+            VsProjectAnalyzer.SpanTranslator spanTranslator;
+            lock (_spanCacheLock) {
+                spans = _spanCache;
+                spanTranslator = _spanTranslator;
+            }
 
             if (span.Length <= 0 || span.Snapshot.IsReplBufferWithCommand() || spans == null) {
                 return classifications;
             }
 
+            // find where in the spans we should start scanning from (they're sorted by
+            // starting position in the old buffer)
+            var start = spanTranslator.TranslateBack(span.Start);
+            var end = spanTranslator.TranslateBack(span.End);
+            var startIndex = Array.BinarySearch(spans, start.Position, IndexComparer.Instance);
+            if (startIndex < 0) {
+                startIndex = ~startIndex - 1;
+                if (startIndex < 0) {
+                    startIndex = 0;
+                }
+            }
 
-            var firstLine = 0; // span.Start.GetContainingLine().LineNumber;
-            var lastLine = int.MaxValue; // span.End.GetContainingLine().LineNumber;
-            for (int line = firstLine; line <= lastLine && line < spans.Count; ++line) {
-                var lineSpan = spans[line];
-                if (lineSpan != null) {
-                    foreach (var cc in lineSpan) {
-                        if (cc.Span.TextBuffer != snapshot.TextBuffer) {
-                            continue;
-                        }
-                        var cs = cc.Span.GetSpan(snapshot);
-                        if (!cs.IntersectsWith(span)) {
-                            continue;
-                        }
+            for (int i = startIndex; i < spans.Length; i++) {
+                if (spans[i].start > end) {
+                    // we're past the span our caller is interested in, stop scanning...
+                    break;
+                }
 
-                        IClassificationType classification;
-                        if (_provider.CategoryMap.TryGetValue(cc.Classification, out classification)) {
-                            Debug.Assert(classification != null, "Did not find " + cc.Classification);
-                            classifications.Add(new ClassificationSpan(cc.Span.GetSpan(snapshot), classification));
-                        }
-                    }
+                var classification = spans[i];
+                var cs = spanTranslator.TranslateForward(new Span(classification.start, classification.length));
+
+                string typeName = ToVsClassificationName(classification);
+
+                IClassificationType classificationType;
+                if (typeName != null &&
+                    _provider.CategoryMap.TryGetValue(typeName, out classificationType)) {
+                    classifications.Add(
+                        new ClassificationSpan(
+                            new SnapshotSpan(snapshot, cs),
+                            classificationType
+                        )
+                    );
                 }
             }
 
             return classifications;
+        }
+
+        private static string ToVsClassificationName(AP.AnalysisClassification classification) {
+            string typeName = null;
+            switch (classification.type) {
+                case "keyword": typeName = PredefinedClassificationTypeNames.Keyword; break;
+                case "class": typeName = PythonPredefinedClassificationTypeNames.Class; break;
+                case "function": typeName = PythonPredefinedClassificationTypeNames.Function; break;
+                case "module": typeName = PythonPredefinedClassificationTypeNames.Module; break;
+                case "parameter": typeName = PythonPredefinedClassificationTypeNames.Parameter; break;
+            }
+
+            return typeName;
         }
 
         public PythonAnalysisClassifierProvider Provider {
@@ -183,7 +233,7 @@ namespace Microsoft.PythonTools {
             }
         }
 
-#region Private Members
+        #region Private Members
 
         private void BufferContentTypeChanged(object sender, ContentTypeChangedEventArgs e) {
             _spanCache = null;
@@ -200,7 +250,7 @@ namespace Microsoft.PythonTools {
             EnsureAnalysis();
         }
 
-#endregion
+        #endregion
     }
 
     internal static partial class ClassifierExtensions {
@@ -210,357 +260,6 @@ namespace Microsoft.PythonTools {
                 return res;
             }
             return null;
-        }
-    }
-
-    class ClassifierWalker : PythonWalker {
-        class StackData {
-            public readonly string Name;
-            public readonly HashSet<string> Parameters;
-            public readonly HashSet<string> Functions;
-            public readonly HashSet<string> Types;
-            public readonly HashSet<string> Modules;
-            public readonly List<Tuple<string, Span>> Names;
-            public readonly StackData Previous;
-
-            public StackData(string name, StackData previous) {
-                Name = name;
-                Previous = previous;
-                Parameters = new HashSet<string>();
-                Functions = new HashSet<string>();
-                Types = new HashSet<string>();
-                Modules = new HashSet<string>();
-                Names = new List<Tuple<string, Span>>();
-            }
-
-            public IEnumerable<StackData> EnumerateTowardsGlobal {
-                get {
-                    for (var sd = this; sd != null; sd = sd.Previous) {
-                        yield return sd;
-                    }
-                }
-            }
-        }
-        
-        private readonly PythonAst _ast;
-        private readonly ModuleAnalysis _analysis;
-        private readonly ITextSnapshot _snapshot;
-        private readonly Dictionary<string, IClassificationType> _formatMap;
-        private StackData _head;
-        public readonly List<List<CachedClassification>> Spans;
-
-        public ClassifierWalker(PythonAst ast, ModuleAnalysis analysis, ITextSnapshot snapshot, Dictionary<string, IClassificationType> formatMap) {
-            _ast = ast;
-            _analysis = analysis;
-            _snapshot = snapshot;
-            _formatMap = formatMap;
-            Spans = new List<List<CachedClassification>>();
-        }
-
-        private void AddSpan(Tuple<string, Span> node, string type) {
-            int lineNo;
-            try {
-                lineNo = _snapshot.GetLineNumberFromPosition(node.Item2.Start);
-            } catch (ArgumentException) {
-                return;
-            }
-            var existing = lineNo < Spans.Count ? Spans[lineNo] : null;
-            if (existing == null) {
-                while (lineNo >= Spans.Count) {
-                    Spans.Add(null);
-                }
-                Spans[lineNo] = existing = new List<CachedClassification>();
-            }
-            existing.Add(new CachedClassification(
-                _snapshot.CreateTrackingSpan(node.Item2, SpanTrackingMode.EdgeExclusive),
-                type
-            ));
-        }
-
-        private void BeginScope(string name = null) {
-            if (_head != null) {
-                if (name == null) {
-                    name = _head.Name;
-                } else if (_head.Name != null) {
-                    name = _head.Name + "." + name;
-                }
-            }
-            _head = new StackData(name, _head);
-        }
-
-        private void AddParameter(Parameter node) {
-            Debug.Assert(_head != null);
-            _head.Parameters.Add(node.Name);
-            _head.Names.Add(Tuple.Create(node.Name, new Span(node.StartIndex, node.Name.Length)));
-        }
-
-        private void AddParameter(Node node) {
-            NameExpression name;
-            TupleExpression tuple;
-            Debug.Assert(_head != null);
-            if ((name = node as NameExpression) != null) {
-                _head.Parameters.Add(name.Name);
-            } else if ((tuple = node as TupleExpression) != null) {
-                foreach (var expr in tuple.Items) {
-                    AddParameter(expr);
-                }
-            } else {
-                Trace.TraceWarning("Unable to find parameter in {0}", node);
-            }
-        }
-
-        public override bool Walk(NameExpression node) {
-            _head.Names.Add(Tuple.Create(node.Name, Span.FromBounds(node.StartIndex, node.EndIndex)));
-            return base.Walk(node);
-        }
-
-        private static string GetFullName(MemberExpression expr) {
-            var ne = expr.Target as NameExpression;
-            if (ne != null) {
-                return ne.Name + "." + expr.Name ?? string.Empty;
-            }
-            var me = expr.Target as MemberExpression;
-            if (me != null) {
-                var baseName = GetFullName(me);
-                if (baseName == null) {
-                    return null;
-                }
-                return baseName + "." + expr.Name ?? string.Empty;
-            }
-            return null;
-        }
-
-        public override bool Walk(MemberExpression node) {
-            var fullname = GetFullName(node);
-            if (fullname != null) {
-                _head.Names.Add(Tuple.Create(fullname, Span.FromBounds(node.NameHeader, node.EndIndex)));
-            }
-            return base.Walk(node);
-        }
-
-        public override bool Walk(DottedName node) {
-            string totalName = "";
-            foreach (var name in node.Names) {
-                _head.Names.Add(Tuple.Create(totalName + name.Name, Span.FromBounds(name.StartIndex, name.EndIndex)));
-                totalName += name.Name + ".";
-            }
-            return base.Walk(node);
-        }
-
-        private string ClassifyName(Tuple<string, Span> node) {
-            var name = node.Item1;
-            foreach (var sd in _head.EnumerateTowardsGlobal) {
-                if (sd.Parameters.Contains(name)) {
-                    return PythonPredefinedClassificationTypeNames.Parameter;
-                } else if (sd.Functions.Contains(name)) {
-                    return PythonPredefinedClassificationTypeNames.Function;
-                } else if (sd.Types.Contains(name)) {
-                    return PythonPredefinedClassificationTypeNames.Class;
-                } else if (sd.Modules.Contains(name)) {
-                    return PythonPredefinedClassificationTypeNames.Module;
-                }
-            }
-
-            if (_analysis != null) {
-                var memberType = PythonMemberType.Unknown;
-                lock (_analysis) {
-                    memberType = _analysis
-                        .GetValuesByIndex(name, node.Item2.Start)
-                        .Select(v => v.MemberType)
-                        .DefaultIfEmpty(PythonMemberType.Unknown)
-                        .Aggregate((a, b) => a == b ? a : PythonMemberType.Unknown);
-                }
-
-                if (memberType == PythonMemberType.Module) {
-                    return PythonPredefinedClassificationTypeNames.Module;
-                } else if (memberType == PythonMemberType.Class) {
-                    return PythonPredefinedClassificationTypeNames.Class;
-                } else if (memberType == PythonMemberType.Function || memberType == PythonMemberType.Method) {
-                    return PythonPredefinedClassificationTypeNames.Function;
-                }
-            }
-
-            return null;
-        }
-
-        private void EndScope(bool mergeNames) {
-            var sd = _head;
-            foreach (var node in sd.Names) {
-                var classificationName = ClassifyName(node);
-                if (classificationName != null) {
-                    AddSpan(node, classificationName);
-                    if (mergeNames && sd.Previous != null) {
-                        if (classificationName == PythonPredefinedClassificationTypeNames.Module) {
-                            sd.Previous.Modules.Add(sd.Name + "." + node.Item1);
-                        } else if (classificationName == PythonPredefinedClassificationTypeNames.Class) {
-                            sd.Previous.Types.Add(sd.Name + "." + node.Item1);
-                        } else if (classificationName == PythonPredefinedClassificationTypeNames.Function) {
-                            sd.Previous.Functions.Add(sd.Name + "." + node.Item1);
-                        }
-                    }
-                }
-            }
-            _head = sd.Previous;
-        }
-
-        public override bool Walk(PythonAst node) {
-            Debug.Assert(_head == null);
-            _head = new StackData(string.Empty, null);
-            return base.Walk(node);
-        }
-
-        public override void PostWalk(PythonAst node) {
-            EndScope(false);
-            Debug.Assert(_head == null);
-            base.PostWalk(node);
-        }
-
-        public override bool Walk(ClassDefinition node) {
-            Debug.Assert(_head != null);
-            _head.Types.Add(node.NameExpression.Name);
-            node.NameExpression.Walk(this);
-            BeginScope(node.NameExpression.Name);
-            return base.Walk(node);
-        }
-
-        public override bool Walk(FunctionDefinition node) {
-            if (node.IsCoroutine) {
-                AddSpan(Tuple.Create("", new Span(node.StartIndex, 5)), PredefinedClassificationTypeNames.Keyword);
-            }
-
-            Debug.Assert(_head != null);
-            _head.Functions.Add(node.NameExpression.Name);
-            node.NameExpression.Walk(this);
-            BeginScope();
-            return base.Walk(node);
-        }
-
-        public override bool Walk(DictionaryComprehension node) {
-            BeginScope();
-            return base.Walk(node);
-        }
-
-        public override bool Walk(ListComprehension node) {
-            BeginScope();
-            return base.Walk(node);
-        }
-
-        public override bool Walk(GeneratorExpression node) {
-            BeginScope();
-            return base.Walk(node);
-        }
-
-        public override bool Walk(ComprehensionFor node) {
-            AddParameter(node.Left);
-            return base.Walk(node);
-        }
-
-        public override bool Walk(Parameter node) {
-            AddParameter(node);
-            return base.Walk(node);
-        }
-
-        public override bool Walk(ImportStatement node) {
-            Debug.Assert(_head != null);
-            if (node.AsNames != null) {
-                foreach (var name in node.AsNames) {
-                    if (name != null && !string.IsNullOrEmpty(name.Name)) {
-                        _head.Modules.Add(name.Name);
-                        _head.Names.Add(Tuple.Create(name.Name, Span.FromBounds(name.StartIndex, name.EndIndex)));
-                    }
-                }
-            }
-            if (node.Names != null) {
-                for (int i = 0; i < node.Names.Count; ++i) {
-                    var dottedName = node.Names[i];
-                    var hasAsName = (node.AsNames != null && node.AsNames.Count > i) ? node.AsNames[i] != null : false;
-                    foreach (var name in dottedName.Names) {
-                        if (name != null && !string.IsNullOrEmpty(name.Name)) {
-                            if (!hasAsName) {
-                                _head.Modules.Add(name.Name);
-                                _head.Names.Add(Tuple.Create(name.Name, Span.FromBounds(name.StartIndex, name.EndIndex)));
-                            } else {
-                                // Only want to highlight this instance of the
-                                // name, since it isn't going to be bound in the
-                                // rest of the module.
-                                AddSpan(Tuple.Create(name.Name, Span.FromBounds(name.StartIndex, name.EndIndex)), PythonPredefinedClassificationTypeNames.Module);
-                            }
-                        }
-                    }
-                }
-            }
-            return base.Walk(node);
-        }
-
-        public override bool Walk(FromImportStatement node) {
-            Debug.Assert(_head != null);
-            if (node.Root != null) {
-                foreach (var name in node.Root.Names) {
-                    if (name != null && !string.IsNullOrEmpty(name.Name)) {
-                        AddSpan(Tuple.Create(name.Name, Span.FromBounds(name.StartIndex, name.EndIndex)), PythonPredefinedClassificationTypeNames.Module);
-                    }
-                }
-            }
-            if (node.Names != null) {
-                foreach (var name in node.Names) {
-                    if (name != null && !string.IsNullOrEmpty(name.Name)) {
-                        _head.Names.Add(Tuple.Create(name.Name, Span.FromBounds(name.StartIndex, name.EndIndex)));
-                    }
-                }
-            }
-            return base.Walk(node);
-        }
-
-
-
-        public override void PostWalk(ClassDefinition node) {
-            EndScope(true);
-            Debug.Assert(_head != null);
-            base.PostWalk(node);
-        }
-
-        public override void PostWalk(FunctionDefinition node) {
-            EndScope(false);
-            Debug.Assert(_head != null);
-            base.PostWalk(node);
-        }
-
-        public override void PostWalk(DictionaryComprehension node) {
-            EndScope(false);
-            Debug.Assert(_head != null);
-            base.PostWalk(node);
-        }
-
-        public override void PostWalk(ListComprehension node) {
-            EndScope(false);
-            Debug.Assert(_head != null);
-            base.PostWalk(node);
-        }
-
-        public override void PostWalk(GeneratorExpression node) {
-            EndScope(false);
-            Debug.Assert(_head != null);
-            base.PostWalk(node);
-        }
-
-
-        public override bool Walk(AwaitExpression node) {
-            AddSpan(Tuple.Create("", new Span(node.StartIndex, 5)), PredefinedClassificationTypeNames.Keyword);
-            return base.Walk(node);
-        }
-
-        public override bool Walk(ForStatement node) {
-            if (node.IsAsync) {
-                AddSpan(Tuple.Create("", new Span(node.StartIndex, 5)), PredefinedClassificationTypeNames.Keyword);
-            }
-            return base.Walk(node);
-        }
-
-        public override bool Walk(WithStatement node) {
-            if (node.IsAsync) {
-                AddSpan(Tuple.Create("", new Span(node.StartIndex, 5)), PredefinedClassificationTypeNames.Keyword);
-            }
-            return base.Walk(node);
         }
     }
 }

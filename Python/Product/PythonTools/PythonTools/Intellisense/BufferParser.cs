@@ -21,7 +21,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.PythonTools.Analysis.Communication;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Repl;
@@ -73,37 +72,58 @@ namespace Microsoft.PythonTools.Intellisense {
         class BufferInfo {
             public readonly ITextBuffer Buffer;
             public readonly int Id;
-            private readonly Dictionary<int, ITextSnapshot> _parsedSnapshots = new Dictionary<int, ITextSnapshot>();
-            public ITextSnapshot LastSentSnapshot, LastParsedSnapshot;
+            /// <summary>
+            /// The last version analyzed.  This is the oldest version we expect to receive
+            /// spans relative to.  We'll roll this forward whenever we receive a new analysis
+            /// event.
+            /// </summary>
+            internal ITextVersion _analysisVersion;
+            public ITextSnapshot LastSentSnapshot;
+            internal int LastParsedVersion;
 
             public BufferInfo(ITextBuffer buffer, int id) {
                 Buffer = buffer;
                 Id = id;
-            }
-
-            public void PushSnapshot(ITextSnapshot snapshot) {
-                _parsedSnapshots[snapshot.Version.VersionNumber] = snapshot;
-            }
-
-            public ITextSnapshot PopSnapshot(int version) {
-                var res = _parsedSnapshots[version];
-                _parsedSnapshots.Remove(version);
-                return res;
+                _analysisVersion = buffer.CurrentSnapshot.Version;
             }
         }
 
-        internal void SentSnapshot(ITextSnapshot snapshot) {
+        /// <summary>
+        /// Gets the last version ID for which we've received an analysis
+        /// for this buffer.
+        /// </summary>
+        public ITextVersion GetAnalysisVersion(ITextBuffer buffer) {
             lock (this) {
-                var bufferInfo = _bufferInfo[snapshot.TextBuffer];
-                
-                bufferInfo.PushSnapshot(snapshot);
-                bufferInfo.LastSentSnapshot = snapshot;
+                return _bufferInfo[buffer]._analysisVersion;
             }
         }
 
-        internal ITextSnapshot SnapshotParsed(int bufferId, int version) {
+        /// <summary>
+        /// Indicates that the specified buffer ID has been analyzed with this version.
+        /// </summary>
+        public void Analyzed(int bufferId, int version) {
             lock (this) {
-                return _bufferIdMapping[bufferId].PopSnapshot(version);
+                var bufferInfo = _bufferIdMapping[bufferId];
+
+                while (bufferInfo._analysisVersion.Next != null &&
+                    bufferInfo._analysisVersion.VersionNumber < version) {
+
+                    bufferInfo._analysisVersion = bufferInfo._analysisVersion.Next;
+                }
+            }
+        }
+
+        internal bool IsOldSnapshot(int bufferId, int version) {
+            lock(this) {
+                var bufferInfo = _bufferIdMapping[bufferId];
+
+                var oldVersion = bufferInfo.LastParsedVersion;
+
+                if (oldVersion < version) {
+                    bufferInfo.LastParsedVersion = version;
+                    return false;
+                }
+                return true;
             }
         }
 
@@ -134,24 +154,6 @@ namespace Microsoft.PythonTools.Intellisense {
         private BufferInfo GetBufferInfo(ITextBuffer buffer) {
             lock (this) {
                 return _bufferInfo[buffer];
-            }
-        }
-
-        internal ITextSnapshot GetLastParsedSnapshot(ITextBuffer buffer) {
-            lock (this) {
-                return _bufferInfo[buffer].LastParsedSnapshot;
-            }
-        }
-
-        internal ITextSnapshot GetLastParsedSnapshot(int buffer) {
-            lock (this) {
-                return _bufferIdMapping[buffer].LastParsedSnapshot;
-            }
-        }
-
-        internal void SetLastParsedSnapshot(ITextSnapshot snapshot) {
-            lock (this) {
-                _bufferInfo[snapshot.TextBuffer].LastParsedSnapshot = snapshot;
             }
         }
 
@@ -343,7 +345,6 @@ namespace Microsoft.PythonTools.Intellisense {
                     Debug.WriteLine("Added parse request {0}", snapshot.Version.VersionNumber);
                     entry.AnalysisCookie = new SnapshotCookie(snapshot);  // TODO: What about multiple snapshots?
                     SetLastSentSnapshot(snapshot);
-                    SentSnapshot(snapshot);
                 }
             }
 

@@ -19,11 +19,11 @@ using Microsoft.VisualStudio.Text;
 namespace Microsoft.PythonTools.Intellisense {
     class NavigationInfo {
         public readonly string Name;
-        public readonly Span Span;
+        public readonly SnapshotSpan Span;
         public readonly NavigationInfo[] Children;
-        public readonly NavigationKind Kind;
+        public readonly NavigationKind Kind;        
 
-        public NavigationInfo(string name, NavigationKind kind, Span span, NavigationInfo[] children) {
+        public NavigationInfo(string name, NavigationKind kind, SnapshotSpan span, NavigationInfo[] children) {
             Name = name;
             Kind = kind;
             Span = span;

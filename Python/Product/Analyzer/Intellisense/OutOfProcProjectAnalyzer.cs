@@ -141,7 +141,6 @@ namespace Microsoft.PythonTools.Intellisense {
             switch (command) {
                 case AP.UnloadFileRequest.Command: response = UnloadFile((AP.UnloadFileRequest)request); break;
                 case AP.AddFileRequest.Command: response = AnalyzeFile((AP.AddFileRequest)request); break;
-
                 case AP.TopLevelCompletionsRequest.Command: response = GetTopLevelCompletions(request); break;
                 case AP.CompletionsRequest.Command: response = GetCompletions(request); break;
                 case AP.GetModulesRequest.Command: response = GetModules(request); break;
@@ -163,11 +162,39 @@ namespace Microsoft.PythonTools.Intellisense {
                 case AP.OverridesCompletionRequest.Command: response = GetOverrides((AP.OverridesCompletionRequest)request); break;
                 case AP.LocationNameRequest.Command: response = GetLocationName((AP.LocationNameRequest)request); break;
                 case AP.ProximityExpressionsRequest.Command: response = GetProximityExpressions((AP.ProximityExpressionsRequest)request); break;
+                case AP.AnalysisClassificationsRequest.Command: response = GetAnalysisClassifications((AP.AnalysisClassificationsRequest)request); break;
                 default:
                     throw new InvalidOperationException("Unknown command");
             }
 
             return Task.FromResult(response);
+        }
+
+        private Response GetAnalysisClassifications(AP.AnalysisClassificationsRequest request) {
+            var projEntry = _projectFiles[request.fileId] as IPythonProjectEntry;
+
+            PythonAst ast;
+            IAnalysisCookie cookie;
+            projEntry.GetTreeAndCookie(out ast, out cookie);
+            VersionCookie verCookie = cookie as VersionCookie;
+            int version = 0;
+            AP.AnalysisClassification[] classifications = Array.Empty<AP.AnalysisClassification>();
+            if (verCookie != null) {
+                var bufferAst = verCookie.Buffers[request.bufferId].Ast;
+                version = verCookie.Buffers[request.bufferId].Version;
+
+                var moduleAnalysis = request.colorNames ? projEntry.Analysis : null;
+
+                var walker = new ClassifierWalker(bufferAst, moduleAnalysis);
+                bufferAst.Walk(walker);
+
+                classifications = walker.Spans.ToArray();
+            }
+
+            return new AP.AnalysisClassificationsResponse() {
+                version = version,
+                classifications = classifications
+            };
         }
 
         private Response GetProximityExpressions(AP.ProximityExpressionsRequest request) {
@@ -1449,11 +1476,19 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private void OnNewAnalysis(object sender, EventArgs e) {
-            var projEntry = sender as IProjectEntry;
+            var projEntry = sender as IPythonProjectEntry;
             if (projEntry != null) {
                 var fileId = ProjectEntryMap.GetId(projEntry);
+                PythonAst dummy;
+                IAnalysisCookie cookieTmp;
+                projEntry.GetTreeAndCookie(out dummy, out cookieTmp);
+                var cookie = (VersionCookie)cookieTmp;
 
-                _connection.SendEventAsync(new AP.FileAnalysisCompleteEvent() { fileId = fileId });
+                var versions = cookie.Buffers.Select(x => new AP.BufferVersion() {
+                    bufferId = x.Key,
+                    version = x.Value.Version
+                }).ToArray();
+                _connection.SendEventAsync(new AP.FileAnalysisCompleteEvent() { fileId = fileId, versions = versions });
             }
         }
 

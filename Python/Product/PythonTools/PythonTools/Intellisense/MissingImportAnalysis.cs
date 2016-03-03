@@ -15,19 +15,10 @@
 // permissions and limitations under the License.
 
 using System.Collections.Generic;
-using Microsoft.PythonTools.Analysis;
-using Microsoft.VisualStudio.Text;
-using System.Threading.Tasks;
-using System.Threading;
-using System;
-using Microsoft.PythonTools.Parsing.Ast;
-using Microsoft.PythonTools.Parsing;
-using Microsoft.VisualStudio.Language.StandardClassification;
-using Microsoft.VisualStudio.Text.Classification;
-using Microsoft.VisualStudio.Text.Editor;
-using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
 using System.Linq;
-using Microsoft.PythonTools.Analysis.Communication;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.VisualStudio.Text;
 
 namespace Microsoft.PythonTools.Intellisense {
     using AP = AnalysisProtocol;

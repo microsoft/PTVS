@@ -62,10 +62,16 @@ namespace Microsoft.PythonTools.Intellisense {
 
                 ProjectFileInfo entry = sender as ProjectFileInfo;
                 var missingImports = await entry.ProjectState.GetMissingImports(entry);
-
+                
                 foreach (var buffer in missingImports) {
-                    if (missingImports.Any()) {
-                        var f = new TaskProviderItemFactory(entry.BufferParser.GetLastParsedSnapshot(buffer.bufferId));
+                    if (buffer.unresolved.Any()) {
+                        var translator = new VsProjectAnalyzer.SpanTranslator(
+                            entry,
+                            buffer.bufferId,
+                            buffer.version
+                        );
+
+                        var f = new TaskProviderItemFactory(translator);
 
                         _taskProvider.ReplaceItems(
                             entry,

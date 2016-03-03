@@ -19,6 +19,7 @@ using Newtonsoft.Json;
 
 namespace Microsoft.PythonTools.Cdp {
     public class Event {
+
         [JsonIgnore]
         public virtual string name => null;
     }
