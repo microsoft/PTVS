@@ -23,32 +23,29 @@ namespace Microsoft.PythonTools.Intellisense {
     public sealed class ProjectFileInfo {
         public readonly int _fileId;
         public readonly string _path;
-        public readonly VsProjectAnalyzer ProjectState;
+        public readonly VsProjectAnalyzer Analyzer;
         public IIntellisenseCookie AnalysisCookie;
-
-        private readonly Dictionary<object, object> _properties = new Dictionary<object, object>();
         internal BufferParser BufferParser;
+        private readonly Dictionary<object, object> _properties = new Dictionary<object, object>();
+        public event EventHandler AnalysisComplete;
+        internal event EventHandler ParseComplete;
 
         public ProjectFileInfo(VsProjectAnalyzer analyzer, string path, int fileId) {
-            ProjectState = analyzer;
+            Analyzer = analyzer;
             _path = path;
             _fileId = fileId;
         }
-
-        public event EventHandler AnalysisComplete;
 
         internal void OnAnalysisComplete() {
             IsAnalyzed = true;
             AnalysisComplete?.Invoke(this, EventArgs.Empty);
         }
 
-        internal event EventHandler ParseComplete;
-
         internal void OnParseComplete() {
             ParseComplete?.Invoke(this, EventArgs.Empty);
         }
 
-        public string FilePath => _path;
+        public string Path => _path;
 
         public int FileId => _fileId;
 
@@ -57,27 +54,27 @@ namespace Microsoft.PythonTools.Intellisense {
         public Dictionary<object, object> Properties => _properties;
 
         public IEnumerable<MemberResult> GetAllAvailableMembers(SourceLocation location, GetMemberOptions options) {
-            return ProjectState.GetAllAvailableMembers(this, location, options);
+            return Analyzer.GetAllAvailableMembers(this, location, options);
         }
 
         public IEnumerable<MemberResult> GetMembers(string text, SourceLocation location, GetMemberOptions options) {
-            return ProjectState.GetMembers(this, text, location, options);
+            return Analyzer.GetMembers(this, text, location, options);
         }
 
-        public IEnumerable<MemberResult> GetModuleMembers(string[] package, bool v) {
-            return ProjectState.GetModuleMembers(this, package, v);
+        public IEnumerable<MemberResult> GetModuleMembers(string[] package, bool includeMembers) {
+            return Analyzer.GetModuleMembers(this, package, includeMembers);
         }
 
-        public IEnumerable<MemberResult> GetModules(bool v) {
-            return ProjectState.GetModules(this, v);
+        public IEnumerable<MemberResult> GetModules(bool topLevelOnly) {
+            return Analyzer.GetModules(this, topLevelOnly);
         }
 
         internal IEnumerable<IAnalysisVariable> GetVariables(string expr, SourceLocation translatedLocation) {
-            return ProjectState.GetVariables(this, expr, translatedLocation);
+            return Analyzer.GetVariables(this, expr, translatedLocation);
         }
 
         internal IEnumerable<AnalysisValue> GetValues(string expr, SourceLocation translatedLocation) {
-            return ProjectState.GetValues(this, expr, translatedLocation);
+            return Analyzer.GetValues(this, expr, translatedLocation);
         }
 
         internal string GetLine(int line) {

@@ -112,7 +112,7 @@ namespace Microsoft.PythonTools {
                 if (_buffer.TryGetPythonProjectEntry(out entry)) {
                     var snapshot = _buffer.CurrentSnapshot;
 
-                    _tags = (await entry.ProjectState.GetOutliningTags(snapshot))
+                    _tags = (await entry.Analyzer.GetOutliningTags(snapshot))
                             .Concat(ProcessRegionTags(snapshot))
                             .ToArray();
 

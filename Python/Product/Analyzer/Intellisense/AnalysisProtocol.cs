@@ -52,6 +52,57 @@ namespace Microsoft.PythonTools.Intellisense {
             public override string command => Command;
         }
 
+        /// <summary>
+        /// Gets a location where a method can safely be inserted into a top level class
+        /// </summary>
+        public sealed class MethodInsertionLocationRequest : Request<MethodInsertionLocationResponse> {
+            public const string Command = "methodInsertion";
+
+            public int fileId, bufferId;
+            public string className;
+
+            public override string command => Command;
+        }
+
+        public sealed class MethodInsertionLocationResponse : Response {
+            public int location, indentation;
+            public int version;
+        }
+
+        public sealed class MethodInfoRequest : Request<MethodInfoResponse> {
+            public const string Command = "methodInfo";
+
+            public int fileId, bufferId;
+            public string className;
+            public string methodName;
+
+            public override string command => Command;
+        }
+
+        public sealed class MethodInfoResponse : Response {
+            public int start, end;
+            public int version;
+            public bool found;
+        }
+
+        public sealed class FindMethodsRequest : Request<FindMethodsResponse> {
+            public const string Command = "findMethods";
+
+            public int fileId, bufferId;
+            public string className;
+
+            /// <summary>
+            /// Optional filter of the number of parameters
+            /// </summary>
+            public int? paramCount;
+
+            public override string command => Command;
+        }
+
+        public sealed class FindMethodsResponse : Response {
+            public string[] names;
+        }
+
         public sealed class AnalysisClassificationsResponse : Response {
             public AnalysisClassification[] classifications;
 

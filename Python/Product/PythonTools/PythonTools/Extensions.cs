@@ -247,18 +247,6 @@ namespace Microsoft.PythonTools {
             return project.GetCommonProject() as PythonProjectNode;
         }
         
-        internal static void GotoSource(this LocationInfo location, IServiceProvider serviceProvider) {
-            string zipFileName = null; // VsProjectAnalyzer.GetZipFileName(location.ProjectEntry);
-            if (zipFileName == null) {
-                PythonToolsPackage.NavigateTo(
-                    serviceProvider,
-                    location.FilePath,
-                    Guid.Empty,
-                    location.Line - 1,
-                    location.Column - 1);
-            }
-        }
-
         internal static bool TryGetProjectEntry(this ITextBuffer buffer, out ProjectFileInfo entry) {
             return buffer.Properties.TryGetProperty<ProjectFileInfo>(typeof(ProjectFileInfo), out entry);
         }

@@ -50,6 +50,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private readonly Dictionary<BufferParser, ProjectFileInfo> _openFiles = new Dictionary<BufferParser, ProjectFileInfo>();
         private readonly bool _implicitProject;
+
         private readonly IPythonInterpreterFactory _interpreterFactory;
 
         private readonly ConcurrentDictionary<string, ProjectFileInfo> _projectFiles;
@@ -63,7 +64,7 @@ namespace Microsoft.PythonTools.Intellisense {
         internal bool _analysisComplete;
 
         private Process _analysisProcess;
-        private TaskProvider _taskProvider;
+        private TaskProvider _taskProvider;        
 
         private int _userCount;
 
@@ -125,6 +126,43 @@ namespace Microsoft.PythonTools.Intellisense {
             CommentTaskTokensChanged(null, EventArgs.Empty);
         }
 
+        internal async Task<string[]> FindMethods(ProjectFileInfo fileInfo, ITextBuffer textBuffer, string className, int? paramCount) {
+            return (await _conn.SendRequestAsync(
+                new AP.FindMethodsRequest() {
+                    fileId = fileInfo.FileId,
+                    bufferId = fileInfo.BufferParser.GetBufferId(textBuffer),
+                    className = className,
+                    paramCount = paramCount
+                }
+            ).ConfigureAwait(false)).names;
+        }
+
+        internal async Task<AP.MethodInsertionLocationResponse> GetInsertionPoint(ProjectFileInfo fileInfo, ITextBuffer textBuffer, string className) {
+            try {
+                return await _conn.SendRequestAsync(
+                    new AP.MethodInsertionLocationRequest() {
+                        fileId = fileInfo.FileId,
+                        bufferId = fileInfo.BufferParser.GetBufferId(textBuffer),
+                        className = className
+                    }
+                ).ConfigureAwait(false);
+            } catch (FailedRequestException) {
+                return null;
+            }
+        }
+
+        internal async Task<AP.MethodInfoResponse> GetMethodInfo(ProjectFileInfo fileInfo, ITextBuffer textBuffer, string className, string methodName) {
+            return await _conn.SendRequestAsync(
+                new AP.MethodInfoRequest() {
+                    fileId = fileInfo.FileId,
+                    bufferId = fileInfo.BufferParser.GetBufferId(textBuffer),
+                    className = className,
+                    methodName = methodName
+                }
+            ).ConfigureAwait(false);
+        }
+
+
         internal async Task<AP.AnalysisClassificationsResponse> GetAnalysisClassifications(ProjectFileInfo projFile, ITextBuffer buffer, bool colorNames) {
             return await _conn.SendRequestAsync(
                 new AP.AnalysisClassificationsRequest() {
@@ -145,6 +183,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             ).ConfigureAwait(false);
         }
+
 
         internal async Task<string[]> GetProximityExpressions(ProjectFileInfo projFile, ITextBuffer buffer, int line, int column, int lineCount) {
             return (await _conn.SendRequestAsync(
@@ -608,80 +647,9 @@ namespace Microsoft.PythonTools.Intellisense {
             return res;
         }
 
-        /// <summary>
-        /// Translates spans in a versioned response from the out of proc analysis.
-        /// 
-        /// Responses which need to operator on buffers (for editing, classification, etc...)
-        /// will return a version which is what the results are based upon.  A SpanTranslator
-        /// will translate from the version which is potentially old to the current
-        /// version of the buffer.
-        /// </summary>
-        internal class SpanTranslator {
-            private readonly ITextVersion _lastParsedVersion;
-            private readonly ITextBuffer _buffer;
-
-            public SpanTranslator(ProjectFileInfo file, ITextBuffer buffer, int fromVersion) {
-                var lastParsedVersion = file.BufferParser.GetAnalysisVersion(buffer);
-
-                Debug.Assert(fromVersion >= lastParsedVersion.VersionNumber);
-
-                while (lastParsedVersion.VersionNumber != fromVersion) {
-                    lastParsedVersion = lastParsedVersion.Next;
-                }
-                _lastParsedVersion = lastParsedVersion;
-                _buffer = buffer;
-            }
-
-            public ITextBuffer TextBuffer {
-                get {
-                    return _buffer;
-                }
-            }
-
-            public SpanTranslator(ProjectFileInfo file, int bufferId, int fromVersion) :
-                this(file, file.BufferParser.GetBuffer(bufferId), fromVersion) {
-            }
-
-            public SnapshotSpan TranslateForward(Span from) {
-                return new SnapshotSpan(
-                    _buffer.CurrentSnapshot,
-                    Tracking.TrackSpanForwardInTime(
-                        SpanTrackingMode.EdgeInclusive,
-                        new Span(from.Start, from.Length),
-                        _lastParsedVersion,
-                        _buffer.CurrentSnapshot.Version
-                    )
-                );
-            }
-
-            public SnapshotPoint TranslateForward(int position) {
-                return new SnapshotPoint(
-                    _buffer.CurrentSnapshot,
-                    Tracking.TrackPositionForwardInTime(
-                        PointTrackingMode.Positive,
-                        position,
-                        _lastParsedVersion,
-                        _buffer.CurrentSnapshot.Version
-                    )
-                );
-            }
-
-            public SnapshotPoint TranslateBack(int position) {
-                return new SnapshotPoint(
-                    _buffer.CurrentSnapshot,
-                    Tracking.TrackPositionBackwardInTime(
-                        PointTrackingMode.Positive,
-                        position,
-                        _buffer.CurrentSnapshot.Version,
-                        _lastParsedVersion
-                    )
-                );
-            }
-        }
-
         internal static void ApplyChanges(AP.ChangeInfo[] changes, ProjectFileInfo file, int bufferId, int fromVersion) {
             var buffer = file.BufferParser.GetBuffer(bufferId);
-            var translator = new SpanTranslator(file, bufferId, fromVersion);
+            var translator = new LocationTracker(file, bufferId, fromVersion);
 
             using (var edit = buffer.CreateEdit()) {
                 foreach (var change in changes) {
@@ -705,7 +673,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
                 List<NavigationInfo> bufferNavs = new List<NavigationInfo>();
                 foreach (var buffer in navigations.buffers) {
-                    SpanTranslator translator = new SpanTranslator(
+                    LocationTracker translator = new LocationTracker(
                         entry,
                         buffer.bufferId,
                         buffer.version
@@ -724,7 +692,7 @@ namespace Microsoft.PythonTools.Intellisense {
             return new NavigationInfo(null, NavigationKind.None, new SnapshotSpan(), Array.Empty<NavigationInfo>());
         }
 
-        private NavigationInfo[] ConvertNavigations(ITextSnapshot snapshot, SpanTranslator translator, AP.Navigation[] navigations) {
+        private NavigationInfo[] ConvertNavigations(ITextSnapshot snapshot, LocationTracker translator, AP.Navigation[] navigations) {
             if (navigations == null) {
                 return null;
             }
@@ -768,7 +736,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 );
 
                 foreach (var bufferTags in outliningTags.buffers) {
-                    var translator = new SpanTranslator(
+                    var translator = new LocationTracker(
                         entry,
                         bufferTags.bufferId,
                         bufferTags.version
@@ -781,7 +749,7 @@ namespace Microsoft.PythonTools.Intellisense {
             return res;
         }
 
-        private static IEnumerable<OutliningTaggerProvider.TagSpan> ConvertOutliningTags(ITextSnapshot currentSnapshot, SpanTranslator translator, AP.BufferOutliningTags outliningTags) {
+        private static IEnumerable<OutliningTaggerProvider.TagSpan> ConvertOutliningTags(ITextSnapshot currentSnapshot, LocationTracker translator, AP.BufferOutliningTags outliningTags) {
             foreach (var tag in outliningTags.tags) {
                 // translate the span from the version we last parsed to the current version
                 var span = translator.TranslateForward(Span.FromBounds(tag.startIndex, tag.endIndex));
@@ -852,7 +820,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 };
 
                 return new QuickInfo(
-                    (await analysis.File.ProjectState._conn.SendRequestAsync(req)).text,
+                    (await analysis.File.Analyzer._conn.SendRequestAsync(req)).text,
                     analysis.Span
                 );
             }
@@ -887,13 +855,13 @@ namespace Microsoft.PythonTools.Intellisense {
                 fileId = file.FileId
             };
 
-            var definitions = await file.ProjectState._conn.SendRequestAsync(req);
+            var definitions = await file.Analyzer._conn.SendRequestAsync(req);
 
             return new ExpressionAnalysis(
-                file.ProjectState,
+                file.Analyzer,
                 expr,
                 null,
-                definitions.variables.Select(file.ProjectState.ToAnalysisVariable).ToArray(),
+                definitions.variables.Select(file.Analyzer.ToAnalysisVariable).ToArray(),
                 definitions.privatePrefix,
                 definitions.memberName
             );
@@ -912,13 +880,13 @@ namespace Microsoft.PythonTools.Intellisense {
                     fileId = analysis.File.FileId
                 };
 
-                var definitions = await analysis.File.ProjectState._conn.SendRequestAsync(req);
+                var definitions = await analysis.File.Analyzer._conn.SendRequestAsync(req);
 
                 return new ExpressionAnalysis(
-                    analysis.File.ProjectState,
+                    analysis.File.Analyzer,
                     analysis.Text,
                     analysis.Span,
-                    definitions.variables.Select(analysis.File.ProjectState.ToAnalysisVariable).ToArray(),
+                    definitions.variables.Select(analysis.File.Analyzer.ToAnalysisVariable).ToArray(),
                     definitions.privatePrefix,
                     definitions.memberName
                 );
@@ -1061,7 +1029,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 return MissingImportAnalysis.Empty;
             }
 
-            var analyzer = entry.ProjectState;
+            var analyzer = entry.Analyzer;
             var index = (parser.GetStatementRange() ?? span.GetSpan(snapshot)).Start.Position;
 
             var location = TranslateIndex(
@@ -1085,7 +1053,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public static async Task AddImport(ProjectFileInfo projectFile, string fromModule, string name, ITextView view, ITextBuffer buffer) {
-            var changes = await projectFile.ProjectState.AddImport(
+            var changes = await projectFile.Analyzer.AddImport(
                 projectFile, 
                 fromModule, 
                 name, 
@@ -1209,14 +1177,14 @@ namespace Microsoft.PythonTools.Intellisense {
                 Debug.WriteLine("Received updated parse {0} {1}", parsedEvent.fileId, buffer.version);
 
                 var bufferParser = entry.BufferParser;
-                SpanTranslator translator = null;
+                LocationTracker translator = null;
                 if (bufferParser != null) {
                     if (bufferParser.IsOldSnapshot(buffer.bufferId, buffer.version)) {
                         // ignore receiving responses out of order...
                         Debug.WriteLine("Ignoring out of order parse {0}", buffer.version);
                         return;
                     }
-                    translator = new SpanTranslator(entry, buffer.bufferId, buffer.version);
+                    translator = new LocationTracker(entry, buffer.bufferId, buffer.version);
                 }
 
                 // Update the parser warnings/errors.
@@ -1616,10 +1584,10 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        internal IEnumerable<MemberResult> GetModules(ProjectFileInfo file, bool v) {
-            // TODO: Deal with this v option
+        internal IEnumerable<MemberResult> GetModules(ProjectFileInfo file, bool topLevelOnly) {
             var members = _conn.SendRequestAsync(new AP.GetModulesRequest() {
                 fileId = file.FileId,
+                topLevelOnly = topLevelOnly
             }).Result;
 
 
@@ -1628,12 +1596,12 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        internal IEnumerable<MemberResult> GetModuleMembers(ProjectFileInfo file, string[] package, bool v) {
+        internal IEnumerable<MemberResult> GetModuleMembers(ProjectFileInfo file, string[] package, bool includeMembers) {
             var members = _conn.SendRequestAsync(new AP.GetModuleMembers() {
                 fileId = file.FileId,
-                package = package
+                package = package,
+                includeMembers = includeMembers
             }).Result;
-
 
             foreach (var member in members.completions) {
                 yield return ToMemberResult(member);

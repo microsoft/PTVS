@@ -57,7 +57,7 @@ namespace Microsoft.PythonTools.Intellisense {
             var snapshot = TextBuffer.CurrentSnapshot;
             var pos = VsProjectAnalyzer.TranslateIndex(startPos, snapshot, analysis);
 
-            var completions = analysis.ProjectState.GetOverrideCompletions(
+            var completions = analysis.Analyzer.GetOverrideCompletions(
                 analysis,
                 TextBuffer,
                 pos,

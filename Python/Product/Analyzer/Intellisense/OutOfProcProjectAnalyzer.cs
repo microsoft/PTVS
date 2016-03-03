@@ -35,17 +35,15 @@ namespace Microsoft.PythonTools.Intellisense {
     using AP = AnalysisProtocol;
 
     /// <summary>
-    /// Performs centralized parsing and analysis of Python source code within Visual Studio.
+    /// Performs centralized parsing and analysis of Python source code for a remotely running process.
     /// 
     /// This class is responsible for maintaining the up-to-date analysis of the active files being worked
-    /// on inside of a Visual Studio project.  
+    /// on inside of a single proejct.  
     /// 
     /// This class is built upon the core PythonAnalyzer class which provides basic analysis services.  This class
     /// maintains the thread safety invarients of working with that class, handles parsing of files as they're
-    /// updated via interfacing w/ the Visual Studio editor APIs, and supports adding additional files to the 
+    /// updated via interfacing w/ the remote process editor APIs, and supports adding additional files to the 
     /// analysis.
-    /// 
-    /// New in 1.5.
     /// </summary>
     sealed class OutOfProcProjectAnalyzer : IDisposable {
         // For entries that were loaded from a .zip file, IProjectEntry.Properties[_zipFileName] contains the full path to that archive.
@@ -163,11 +161,140 @@ namespace Microsoft.PythonTools.Intellisense {
                 case AP.LocationNameRequest.Command: response = GetLocationName((AP.LocationNameRequest)request); break;
                 case AP.ProximityExpressionsRequest.Command: response = GetProximityExpressions((AP.ProximityExpressionsRequest)request); break;
                 case AP.AnalysisClassificationsRequest.Command: response = GetAnalysisClassifications((AP.AnalysisClassificationsRequest)request); break;
+                case AP.MethodInsertionLocationRequest.Command: response = GetMethodInsertionLocation((AP.MethodInsertionLocationRequest)request); break;
+                case AP.MethodInfoRequest.Command: response = GetMethodInfo((AP.MethodInfoRequest)request); break;
+                case AP.FindMethodsRequest.Command: response = FindMethods((AP.FindMethodsRequest)request); break;
                 default:
                     throw new InvalidOperationException("Unknown command");
             }
 
             return Task.FromResult(response);
+        }
+
+        private Response FindMethods(AP.FindMethodsRequest request) {
+            var analysis = _projectFiles[request.fileId] as IPythonProjectEntry;
+
+            List<string> names = new List<string>();
+            if (analysis != null) {
+                int version;
+                string code;
+                var ast = analysis.GetVerbatimAstAndCode(
+                    Project.LanguageVersion,
+                    request.bufferId,
+                    out version,
+                    out code
+                );
+
+                foreach (var classDef in FindClassDef(request.className, ast)) { 
+                    SuiteStatement suite = classDef.Body as SuiteStatement;
+                    if (suite != null) {
+                        foreach (var methodCandidate in suite.Statements) {
+                            FunctionDefinition funcDef = methodCandidate as FunctionDefinition;
+                            if (funcDef != null) {
+                                if (request.paramCount != null && request.paramCount != funcDef.Parameters.Count) {
+                                    continue;
+                                }
+
+                                names.Add(funcDef.Name);
+                            }
+                        }
+                    }
+                }
+            }
+
+            return new AP.FindMethodsResponse() {
+                names = names.ToArray()
+            };
+        }
+
+        private Response GetMethodInsertionLocation(AP.MethodInsertionLocationRequest request) {
+            var analysis = _projectFiles[request.fileId] as IPythonProjectEntry;
+
+            if (analysis != null) {
+                int version;
+                string code;
+                var ast = analysis.GetVerbatimAstAndCode(
+                    Project.LanguageVersion,
+                    request.bufferId,
+                    out version,
+                    out code
+                );
+
+                foreach (var classDef in FindClassDef(request.className, ast)) {
+                    int end = classDef.Body.EndIndex;
+                    // insert after the newline at the end of the last statement of the class def
+                    if (code[end] == '\r') {
+                        if (end + 1 < code.Length &&
+                            code[end + 1] == '\n') {
+                            end += 2;
+                        } else {
+                            end++;
+                        }
+                    } else if (code[end] == '\n') {
+                        end++;
+                    }
+
+                    return new AP.MethodInsertionLocationResponse() {
+                        indentation = classDef.Body.GetStart(ast).Column - 1,
+                        location = end,
+                        version = version
+                    };
+                }
+
+                throw new InvalidOperationException("Failed to find class definition");
+            }
+
+            throw new InvalidOperationException("Analysis not available");
+        }
+
+        private static IEnumerable<ClassDefinition> FindClassDef(string name, PythonAst ast) {
+            var suiteStmt = ast.Body as SuiteStatement;
+            foreach (var stmt in suiteStmt.Statements) {
+                var classDef = stmt as ClassDefinition;
+                if (classDef != null &&
+                    (classDef.Name == name || name == null)) {
+                    yield return classDef;
+                }
+            }
+        }
+
+        private Response GetMethodInfo(AP.MethodInfoRequest request) {
+            var analysis = _projectFiles[request.fileId] as IPythonProjectEntry;
+
+            if (analysis != null) {
+                int version;
+                string code;
+                var ast = analysis.GetVerbatimAstAndCode(
+                    Project.LanguageVersion,
+                    request.bufferId,
+                    out version,
+                    out code
+                );
+
+                foreach (var classDef in FindClassDef(request.className, ast)) {
+                    SuiteStatement suite = classDef.Body as SuiteStatement;
+
+                    if (suite != null) {
+                        foreach (var methodCandidate in suite.Statements) {
+                            FunctionDefinition funcDef = methodCandidate as FunctionDefinition;
+                            if (funcDef != null) {
+                                if (funcDef.Name == request.methodName) {
+                                    return new AP.MethodInfoResponse() {
+                                        start = funcDef.StartIndex,
+                                        end = funcDef.EndIndex,
+                                        version = version,
+                                        found = true
+                                    };
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            return new AP.MethodInfoResponse() {
+                found = false
+            };
         }
 
         private Response GetAnalysisClassifications(AP.AnalysisClassificationsRequest request) {

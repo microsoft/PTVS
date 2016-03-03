@@ -42,7 +42,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly VSTASKPRIORITY _priority;
         private readonly VSTASKCATEGORY _category;
         private readonly bool _squiggle;
-        private readonly VsProjectAnalyzer.SpanTranslator _spanTranslator;
+        private readonly LocationTracker _spanTranslator;
         private readonly IServiceProvider _serviceProvider;
 
         internal TaskProviderItem(
@@ -52,7 +52,7 @@ namespace Microsoft.PythonTools.Intellisense {
             VSTASKPRIORITY priority,
             VSTASKCATEGORY category,
             bool squiggle,
-            VsProjectAnalyzer.SpanTranslator spanTranslator
+            LocationTracker spanTranslator
         ) {
             _serviceProvider = serviceProvider;
             _message = message;
@@ -118,7 +118,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 _serviceProvider,
                 _rawSpan,
                 _message,
-                (key.Entry != null ? key.Entry.FilePath : null) ?? string.Empty
+                (key.Entry != null ? key.Entry.Path : null) ?? string.Empty
             ) {
                 Priority = _priority,
                 Category = _category
@@ -139,9 +139,9 @@ namespace Microsoft.PythonTools.Intellisense {
     }
 
     sealed class TaskProviderItemFactory {
-        private readonly VsProjectAnalyzer.SpanTranslator _spanTranslator;
+        private readonly LocationTracker _spanTranslator;
 
-        public TaskProviderItemFactory(VsProjectAnalyzer.SpanTranslator spanTranslator) {
+        public TaskProviderItemFactory(LocationTracker spanTranslator) {
             _spanTranslator = spanTranslator;
         }
 
@@ -696,7 +696,7 @@ namespace Microsoft.PythonTools.Intellisense {
         public int EnumTaskItems(out IVsEnumTaskItems ppenum) {
             lock (_itemsLock) {
                 ppenum = new TaskEnum(_items
-                    .Where(x => x.Key.Entry.FilePath != null)   // don't report REPL window errors in the error list, you can't naviagate to them
+                    .Where(x => x.Key.Entry.Path != null)   // don't report REPL window errors in the error list, you can't naviagate to them
                     .SelectMany(kv => kv.Value.Select(i => i.ToErrorTaskItem(kv.Key)))
                     .ToArray()
                 );

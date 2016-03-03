@@ -83,11 +83,21 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public string FilePath {
             get {
-                return File.FilePath;
+                return File.Path;
             }
         }
 
         internal void GotoSource(IServiceProvider serviceProvider) {
+            string zipFileName = VsProjectAnalyzer.GetZipFileName(File);
+            if (zipFileName == null) {
+                PythonToolsPackage.NavigateTo(
+                    serviceProvider,
+                    File.Path,
+                    Guid.Empty,
+                    Line - 1,
+                    Column - 1
+                );
+            }
         }
 
 

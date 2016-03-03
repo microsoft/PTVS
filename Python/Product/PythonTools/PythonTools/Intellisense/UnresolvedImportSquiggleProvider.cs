@@ -41,7 +41,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public void ListenForNextNewAnalysis(ProjectFileInfo entry) {
-            if (entry != null && !string.IsNullOrEmpty(entry.FilePath)) {
+            if (entry != null && !string.IsNullOrEmpty(entry.Path)) {
                 entry.AnalysisComplete += OnNewAnalysis;
             }
         }
@@ -61,11 +61,11 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
 
                 ProjectFileInfo entry = sender as ProjectFileInfo;
-                var missingImports = await entry.ProjectState.GetMissingImports(entry);
+                var missingImports = await entry.Analyzer.GetMissingImports(entry);
                 
                 foreach (var buffer in missingImports) {
                     if (buffer.unresolved.Any()) {
-                        var translator = new VsProjectAnalyzer.SpanTranslator(
+                        var translator = new LocationTracker(
                             entry,
                             buffer.bufferId,
                             buffer.version
@@ -78,7 +78,7 @@ namespace Microsoft.PythonTools.Intellisense {
                             VsProjectAnalyzer.UnresolvedImportMoniker,
                             buffer.unresolved.Select(t => f.FromUnresolvedImport(
                                 _serviceProvider,
-                                entry.ProjectState.InterpreterFactory as IPythonInterpreterFactoryWithDatabase,
+                                entry.Analyzer.InterpreterFactory as IPythonInterpreterFactoryWithDatabase,
                                 t.name,
                                 new SourceSpan(
                                     new SourceLocation(t.startIndex, t.startLine, t.startColumn),

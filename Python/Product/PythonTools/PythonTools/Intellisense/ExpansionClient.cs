@@ -220,7 +220,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 var projEntry = _textView.TextBuffer.GetPythonProjectEntry();
                 if (projEntry != null) {
                     foreach (var import in importList) {
-                        var isMissing = await projEntry.ProjectState.IsMissingImport(
+                        var isMissing = await projEntry.Analyzer.IsMissingImport(
                             projEntry,
                             import,
                             new SourceLocation(

@@ -18,13 +18,15 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
 using Microsoft.Windows.Design.Host;
 
 namespace Microsoft.PythonTools.Designer {
+    using AP = AnalysisProtocol;
+
     class WpfEventBindingProvider : EventBindingProvider {
         private Project.PythonFileNode _pythonFileNode;
 
@@ -51,69 +53,41 @@ namespace Microsoft.PythonTools.Designer {
 
         public override bool CreateMethod(EventDescription eventDescription, string methodName, string initialStatements) {
             // build the new method handler
-            var view = _pythonFileNode.GetTextView();
-            var textBuffer = _pythonFileNode.GetTextBuffer();
-            PythonAst ast;
-            var classDef = GetClassForEvents(out ast);
-            if (classDef != null) {
-                int end = classDef.Body.EndIndex;
-                
-                // insert after the newline at the end of the last statement of the class def
-                if (textBuffer.CurrentSnapshot[end] == '\r') {
-                    if (end + 1 < textBuffer.CurrentSnapshot.Length &&
-                        textBuffer.CurrentSnapshot[end + 1] == '\n') {
-                        end += 2;
-                    } else {
-                        end++;
-                    }
-                } else if (textBuffer.CurrentSnapshot[end] == '\n') {
-                    end++;
-                }
+            var fileInfo = _pythonFileNode.GetProjectEntry();
+            var insertPoint = fileInfo.Analyzer.GetInsertionPoint(
+                fileInfo,
+                _pythonFileNode.GetTextBuffer(),
+                null
+            ).Result;
+
+            if (insertPoint != null) {
+                var view = _pythonFileNode.GetTextView();
+                var textBuffer = _pythonFileNode.GetTextBuffer();
+                var translator = new LocationTracker(
+                    fileInfo,
+                    textBuffer,
+                    insertPoint.version
+                );
+
 
                 using (var edit = textBuffer.CreateEdit()) {
                     var text = BuildMethod(
                         eventDescription,
                         methodName,
-                        new string(' ', classDef.Body.GetStart(ast).Column - 1),
+                        new string(' ', insertPoint.indentation),
                         view.Options.IsConvertTabsToSpacesEnabled() ?
                             view.Options.GetIndentSize() :
                             -1);
 
-                    edit.Insert(end, text);
+                    edit.Insert(translator.TranslateForward(insertPoint.location), text);
                     edit.Apply();
                     return true;
                 }
             }
 
-
             return false;
         }
 
-        private ClassDefinition GetClassForEvents() {
-            PythonAst ast;
-            return GetClassForEvents(out ast);
-        }
-
-        private ClassDefinition GetClassForEvents(out PythonAst ast) {
-            ast = null;
-#if FALSE
-            var analysis = _pythonFileNode.GetProjectEntry() as IPythonProjectEntry;
-
-            if (analysis != null) {
-                // TODO: Wait for up to date analysis
-                ast = analysis.WaitForCurrentTree();
-                var suiteStmt = ast.Body as SuiteStatement;
-                foreach (var stmt in suiteStmt.Statements) {
-                    var classDef = stmt as ClassDefinition;
-                    // TODO: Make sure this is the right class
-                    if (classDef != null) {
-                        return classDef;
-                    }
-                }
-            }
-#endif
-            return null;
-        }
 
         private static string BuildMethod(EventDescription eventDescription, string methodName, string indentation, int tabSize) {
             StringBuilder text = new StringBuilder();
@@ -151,27 +125,13 @@ namespace Microsoft.PythonTools.Designer {
         }
 
         public override IEnumerable<string> GetCompatibleMethods(EventDescription eventDescription) {
-            var classDef = GetClassForEvents();
-            SuiteStatement suite = classDef.Body as SuiteStatement;
-
-            if (suite != null) {
-                int requiredParamCount = eventDescription.Parameters.Count() + 1;
-                foreach (var methodCandidate in suite.Statements) {
-                    FunctionDefinition funcDef = methodCandidate as FunctionDefinition;
-                    if (funcDef != null) {
-                        // Given that event handlers can be given any arbitrary 
-                        // name, it is important to not rely on the default naming 
-                        // to detect compatible methods.  Instead we look at the 
-                        // event parameters. We don't have param types in Python, 
-                        // so really the only thing that can be done is look at 
-                        // the method parameter count, which should be one more than
-                        // the event parameter count (to account for the self param).
-                        if (funcDef.Parameters.Count == requiredParamCount) {
-                            yield return funcDef.Name;
-                        }
-                    }
-                }
-            }
+            var fileInfo = _pythonFileNode.GetProjectEntry();
+            return fileInfo.Analyzer.FindMethods(
+                fileInfo,
+                _pythonFileNode.GetTextBuffer(),
+                null,
+                eventDescription.Parameters.Count() + 1
+            ).Result;
         }
 
         public override IEnumerable<string> GetMethodHandlers(EventDescription eventDescription, string objectName) {
@@ -179,30 +139,31 @@ namespace Microsoft.PythonTools.Designer {
         }
 
         public override bool IsExistingMethodName(EventDescription eventDescription, string methodName) {
-            return FindMethod(methodName) != null;
+            var fileInfo = _pythonFileNode.GetProjectEntry();
+
+            var methods = fileInfo.Analyzer.FindMethods(
+                fileInfo,
+                _pythonFileNode.GetTextBuffer(),
+                null,
+                null
+            ).Result;
+
+            return methods.Contains(methodName);
         }
 
-        private FunctionDefinition FindMethod(string methodName) {
-            var classDef = GetClassForEvents();
-            SuiteStatement suite = classDef.Body as SuiteStatement;
-
-            if (suite != null) {
-                foreach (var methodCandidate in suite.Statements) {
-                    FunctionDefinition funcDef = methodCandidate as FunctionDefinition;
-                    if (funcDef != null) {
-                        if (funcDef.Name == methodName) {
-                            return funcDef;
-                        }
-                    }
-                }
-            }
-
-            return null;
+        private AP.MethodInfoResponse FindMethod(string methodName) {
+            var fileInfo = _pythonFileNode.GetProjectEntry();
+            return fileInfo.Analyzer.GetMethodInfo(
+                fileInfo,
+                _pythonFileNode.GetTextBuffer(),
+                null,
+                methodName
+            ).Result;
         }
 
         public override bool RemoveEventHandler(EventDescription eventDescription, string objectName, string methodName) {
             var method = FindMethod(methodName);
-            if (method != null) {
+            if (method.found) {
                 var view = _pythonFileNode.GetTextView();
                 var textBuffer = _pythonFileNode.GetTextBuffer();
 
@@ -210,7 +171,7 @@ namespace Microsoft.PythonTools.Designer {
                 // present so that adding a handler and then removing it leaves the buffer unchanged.
 
                 using (var edit = textBuffer.CreateEdit()) {
-                    int start = method.StartIndex - 1;
+                    int start = method.start - 1;
 
                     // eat the newline we insert before the method
                     while (start >= 0) {
@@ -236,9 +197,9 @@ namespace Microsoft.PythonTools.Designer {
                         start--;
                     }
 
-                    
+
                     // eat the newline we insert at the end of the method
-                    int end = method.EndIndex;                    
+                    int end = method.end;
                     while (end < edit.Snapshot.Length) {
                         if (edit.Snapshot[end] == '\n') {
                             end++;
@@ -281,9 +242,9 @@ namespace Microsoft.PythonTools.Designer {
 
         public override bool ShowMethod(EventDescription eventDescription, string methodName) {
             var method = FindMethod(methodName);
-            if (method != null) {
+            if (method.found) {
                 var view = _pythonFileNode.GetTextView();
-                view.Caret.MoveTo(new VisualStudio.Text.SnapshotPoint(view.TextSnapshot, method.StartIndex));
+                view.Caret.MoveTo(new SnapshotPoint(view.TextSnapshot, method.start));
                 view.Caret.EnsureVisible();
                 return true;
             }

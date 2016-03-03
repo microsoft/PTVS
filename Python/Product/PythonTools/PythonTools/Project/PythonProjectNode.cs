@@ -894,7 +894,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private void OnShouldWarnOnLaunchChanged(object sender, EntryEventArgs e) {
-            if (_diskNodes.ContainsKey(e.Entry.FilePath ?? "")) {
+            if (_diskNodes.ContainsKey(e.Entry.Path ?? "")) {
                 if (((VsProjectAnalyzer)sender).ShouldWarnOnLaunch(e.Entry)) {
                     _warnOnLaunchFiles.Add(e.Entry);
                 } else {

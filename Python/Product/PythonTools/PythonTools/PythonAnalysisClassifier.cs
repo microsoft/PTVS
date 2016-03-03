@@ -15,21 +15,16 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
-using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 
 namespace Microsoft.PythonTools {
-    using System.Collections;
     using AP = AnalysisProtocol;
 
     struct CachedClassification {
@@ -50,7 +45,7 @@ namespace Microsoft.PythonTools {
         private readonly object _spanCacheLock = new object();
         private readonly PythonAnalysisClassifierProvider _provider;
         private readonly ITextBuffer _buffer;
-        private VsProjectAnalyzer.SpanTranslator _spanTranslator;
+        private LocationTracker _spanTranslator;
         private ProjectFileInfo _entry;
 
         internal PythonAnalysisClassifier(PythonAnalysisClassifierProvider provider, ITextBuffer buffer) {
@@ -103,7 +98,7 @@ namespace Microsoft.PythonTools {
                 return;
             }
 
-            var classifications = await entry.ProjectState.GetAnalysisClassifications(
+            var classifications = await entry.Analyzer.GetAnalysisClassifications(
                 entry,
                 _buffer,
                 options.ColorNamesWithAnalysis
@@ -117,7 +112,7 @@ namespace Microsoft.PythonTools {
 
             lock (_spanCacheLock) {
                 _spanCache = classifications.classifications;
-                _spanTranslator = new VsProjectAnalyzer.SpanTranslator(
+                _spanTranslator = new LocationTracker(
                     _buffer.GetPythonProjectEntry(),
                     _buffer,
                     classifications.version
@@ -166,7 +161,7 @@ namespace Microsoft.PythonTools {
             var snapshot = span.Snapshot;
 
             AP.AnalysisClassification[] spans;
-            VsProjectAnalyzer.SpanTranslator spanTranslator;
+            LocationTracker spanTranslator;
             lock (_spanCacheLock) {
                 spans = _spanCache;
                 spanTranslator = _spanTranslator;
