@@ -989,6 +989,10 @@ namespace Microsoft.PythonTools.Intellisense {
         private static CompletionAnalysis GetNormalCompletionContext(IServiceProvider serviceProvider, ITextSnapshot snapshot, ITrackingSpan applicableSpan, ITrackingPoint point, CompletionOptions options) {
             var span = applicableSpan.GetSpan(snapshot);
 
+            if (IsSpaceCompletion(snapshot, point) && !IntellisenseController.ForceCompletions) {
+                return CompletionAnalysis.EmptyCompletionContext;
+            }
+
             var parser = new ReverseExpressionParser(snapshot, snapshot.TextBuffer, applicableSpan);
             if (parser.IsInGrouping()) {
                 options = options.Clone();
@@ -1005,7 +1009,13 @@ namespace Microsoft.PythonTools.Intellisense {
             );
         }
 
-
+        private static bool IsSpaceCompletion(ITextSnapshot snapshot, ITrackingPoint loc) {
+            var pos = loc.GetPosition(snapshot);
+            if (pos > 0) {
+                return snapshot.GetText(pos - 1, 1) == " ";
+            }
+            return false;
+        }
 
         private static Stopwatch MakeStopWatch() {
             var res = new Stopwatch();
