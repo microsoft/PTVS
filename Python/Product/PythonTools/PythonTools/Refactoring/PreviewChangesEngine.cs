@@ -31,12 +31,12 @@ namespace Microsoft.PythonTools.Refactoring {
         private readonly RenameVariableRequest _renameReq;
         private readonly PreviewList _list;
         internal readonly IRenameVariableInput _input;
-        internal readonly ProjectAnalyzer _analyzer;
+        internal readonly VsProjectAnalyzer _analyzer;
         private readonly string _originalName, _privatePrefix;
         private readonly IEnumerable<AnalysisVariable> _variables;
         internal readonly IServiceProvider _serviceProvider;
 
-        public PreviewChangesEngine(IServiceProvider serviceProvider, IRenameVariableInput input, string expr, RenameVariableRequest request, string originalName, string privatePrefix, ProjectAnalyzer analyzer, IEnumerable<AnalysisVariable> variables) {
+        public PreviewChangesEngine(IServiceProvider serviceProvider, IRenameVariableInput input, string expr, RenameVariableRequest request, string originalName, string privatePrefix, VsProjectAnalyzer analyzer, IEnumerable<AnalysisVariable> variables) {
             _serviceProvider = serviceProvider;
             _expr = expr;
             _analyzer = analyzer;

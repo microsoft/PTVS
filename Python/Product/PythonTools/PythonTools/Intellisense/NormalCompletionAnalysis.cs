@@ -29,10 +29,10 @@ using Microsoft.VisualStudio.Text;
 namespace Microsoft.PythonTools.Intellisense {
     internal class NormalCompletionAnalysis : CompletionAnalysis {
         private readonly ITextSnapshot _snapshot;
-        private readonly ProjectAnalyzer _analyzer;
+        private readonly VsProjectAnalyzer _analyzer;
         private readonly IServiceProvider _serviceProvider;
 
-        internal NormalCompletionAnalysis(ProjectAnalyzer analyzer, ITextSnapshot snapshot, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options, IServiceProvider serviceProvider)
+        internal NormalCompletionAnalysis(VsProjectAnalyzer analyzer, ITextSnapshot snapshot, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options, IServiceProvider serviceProvider)
             : base(span, textBuffer, options) {
             _snapshot = snapshot;
             _analyzer = analyzer;
@@ -100,13 +100,13 @@ namespace Microsoft.PythonTools.Intellisense {
             } else if (string.IsNullOrEmpty(text)) {
                 if (analysis != null) {
                     lock (_analyzer) {
-                        var location = ProjectAnalyzer.TranslateIndex(
+                        var location = VsProjectAnalyzer.TranslateIndex(
                             statementRange.Start.Position,
                             statementRange.Snapshot,
                             analysis
                         );
                         var parameters = Enumerable.Empty<MemberResult>();
-                        var sigs = ProjectAnalyzer.GetSignatures(_serviceProvider, _snapshot, Span).Result;
+                        var sigs = VsProjectAnalyzer.GetSignatures(_serviceProvider, _snapshot, Span).Result;
                         if (sigs.Signatures.Any()) {
                             parameters = sigs.Signatures
                                 .SelectMany(s => s.Parameters)
@@ -125,7 +125,7 @@ namespace Microsoft.PythonTools.Intellisense {
             } else {
                 if (analysis != null && (pyReplEval == null || !pyReplEval.LiveCompletionsOnly)) {
                     lock (_analyzer) {
-                        var location = ProjectAnalyzer.TranslateIndex(
+                        var location = VsProjectAnalyzer.TranslateIndex(
                             statementRange.Start.Position,
                             statementRange.Snapshot,
                             analysis

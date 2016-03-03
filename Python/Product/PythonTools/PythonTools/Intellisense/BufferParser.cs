@@ -32,7 +32,7 @@ namespace Microsoft.PythonTools.Intellisense {
     [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",
         Justification = "ownership is unclear")]
     class BufferParser {
-        internal ProjectAnalyzer _parser;
+        internal VsProjectAnalyzer _parser;
         private readonly Timer _timer;
         private IList<ITextBuffer> _buffers;
         private bool _parsing, _requeue, _textChange;
@@ -54,7 +54,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private const int ReparseDelay = 1000;      // delay in MS before we re-parse a buffer w/ non-line changes.
 
-        public BufferParser(AnalysisEntry initialProjectEntry, ProjectAnalyzer parser, ITextBuffer buffer) {
+        public BufferParser(AnalysisEntry initialProjectEntry, VsProjectAnalyzer parser, ITextBuffer buffer) {
             _parser = parser;
             _timer = new Timer(ReparseTimer, null, Timeout.Infinite, Timeout.Infinite);
             _buffers = new[] { buffer };

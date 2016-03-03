@@ -351,9 +351,9 @@ namespace Microsoft.PythonTools.Project {
                 }
             }
 
-            var interp = project.GetProjectAnalyzer().Interpreter as IPythonInterpreterWithProjectReferences2;
+            var interp = project.GetProjectAnalyzer();
             if (interp != null) {
-                foreach (var r in interp.GetReferences()) {
+                foreach (var r in interp.GetReferences().Result) {
                     if (r.Kind == ProjectReferenceKind.ExtensionModule) {
                         string absPath;
                         try {

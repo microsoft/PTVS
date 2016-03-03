@@ -64,7 +64,7 @@ namespace Microsoft.PythonTools.Project {
         private static readonly object _searchPathEntryKey = new { Name = "SearchPathEntry" };
 
         private object _designerContext;
-        private ProjectAnalyzer _analyzer;
+        private VsProjectAnalyzer _analyzer;
         private readonly HashSet<AnalysisEntry> _warnOnLaunchFiles = new HashSet<AnalysisEntry>();
         private PythonDebugPropertyPage _debugPropPage;
         private CommonSearchPathContainerNode _searchPathContainer;
@@ -737,7 +737,7 @@ namespace Microsoft.PythonTools.Project {
             return GetAnalyzer().Project;
         }
         */
-        ProjectAnalyzer IPythonProject.GetProjectAnalyzer() {
+        VsProjectAnalyzer IPythonProject.GetProjectAnalyzer() {
             return GetAnalyzer();
         }
 
@@ -820,11 +820,7 @@ namespace Microsoft.PythonTools.Project {
             return VSConstants.S_OK;
         }
 
-        public IPythonInterpreter GetInterpreter() {
-            return GetAnalyzer().Interpreter;
-        }
-
-        public ProjectAnalyzer GetAnalyzer() {
+        public VsProjectAnalyzer GetAnalyzer() {
             if (IsClosed) {
                 Debug.Fail("GetAnalyzer() called on closed project");
                 var service = (PythonToolsService)PythonToolsPackage.GetGlobalService(typeof(PythonToolsService));
@@ -839,7 +835,7 @@ namespace Microsoft.PythonTools.Project {
             return _analyzer;
         }
 
-        private ProjectAnalyzer CreateAnalyzer() {
+        private VsProjectAnalyzer CreateAnalyzer() {
             // check to see if we should share our analyzer with another project in the same solution.  This enables
             // refactoring, find all refs, and intellisense across projects.
             var vsSolution = (IVsSolution)GetService(typeof(SVsSolution));
@@ -872,7 +868,7 @@ namespace Microsoft.PythonTools.Project {
             var model = Site.GetComponentModel();
             var interpreterService = model.GetService<IInterpreterOptionsService>();
             var factory = GetInterpreterFactory();
-            var res = new ProjectAnalyzer(
+            var res = new VsProjectAnalyzer(
                 Site,
                 factory.CreateInterpreter(),
                 factory,
@@ -899,18 +895,18 @@ namespace Microsoft.PythonTools.Project {
             ReanalyzeProject();
         }
 
-        private void HookErrorsAndWarnings(ProjectAnalyzer res) {
+        private void HookErrorsAndWarnings(VsProjectAnalyzer res) {
             res.ShouldWarnOnLaunchChanged += OnShouldWarnOnLaunchChanged;
         }
 
-        private void UnHookErrorsAndWarnings(ProjectAnalyzer res) {
+        private void UnHookErrorsAndWarnings(VsProjectAnalyzer res) {
             res.ShouldWarnOnLaunchChanged -= OnShouldWarnOnLaunchChanged;
             _warnOnLaunchFiles.Clear();
         }
 
         private void OnShouldWarnOnLaunchChanged(object sender, EntryEventArgs e) {
             if (_diskNodes.ContainsKey(e.Entry.Path ?? "")) {
-                if (((ProjectAnalyzer)sender).ShouldWarnOnLaunch(e.Entry)) {
+                if (((VsProjectAnalyzer)sender).ShouldWarnOnLaunch(e.Entry)) {
                     _warnOnLaunchFiles.Add(e.Entry);
                 } else {
                     _warnOnLaunchFiles.Remove(e.Entry);
@@ -1045,13 +1041,13 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        private async void Reanalyze(ProjectAnalyzer newAnalyzer) {
+        private async void Reanalyze(VsProjectAnalyzer newAnalyzer) {
             foreach (var child in AllVisibleDescendants.OfType<FileNode>()) {
                 await newAnalyzer.AnalyzeFile(child.Url);
             }
 
             var references = GetReferenceContainer();
-            var interp = newAnalyzer.Interpreter as IPythonInterpreterWithProjectReferences;
+            var interp = newAnalyzer;
             if (references != null && interp != null) {
                 foreach (var child in GetReferenceContainer().EnumReferences()) {
                     var pyd = child as PythonExtensionReferenceNode;
@@ -1067,13 +1063,13 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public override ReferenceNode CreateReferenceNodeForFile(string filename) {
-            var interp = this.GetInterpreter() as IPythonInterpreterWithProjectReferences;
+            var interp = GetAnalyzer();
             if (interp == null) {
                 return null;
             }
 
             var cancelSource = new CancellationTokenSource();
-            var task = interp.AddReferenceAsync(new ProjectReference(filename, ProjectReferenceKind.ExtensionModule), cancelSource.Token);
+            var task = interp.AddReference(new ProjectReference(filename, ProjectReferenceKind.ExtensionModule), cancelSource.Token);
 
             // try to complete synchronously w/o flashing the dialog...
             if (!task.Wait(100)) {

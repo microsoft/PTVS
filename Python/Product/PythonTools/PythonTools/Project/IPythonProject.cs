@@ -111,7 +111,7 @@ namespace Microsoft.PythonTools.Project {
         /// 
         /// New in 2.0.
         /// </summary>
-        ProjectAnalyzer GetProjectAnalyzer();
+        VsProjectAnalyzer GetProjectAnalyzer();
 
         /// <summary>
         /// Raised when the analyzer for the project has changed.

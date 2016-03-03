@@ -28,7 +28,7 @@ namespace Microsoft.PythonTools.Intellisense {
     public sealed class AnalysisEntry {
         private readonly int _fileId;
         private readonly string _path;
-        public readonly ProjectAnalyzer _analyzer;
+        public readonly VsProjectAnalyzer _analyzer;
         private readonly Dictionary<object, object> _properties = new Dictionary<object, object>();
 
         internal IIntellisenseCookie _cookie;
@@ -43,7 +43,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// </summary>
         public event EventHandler ParseComplete;
 
-        public AnalysisEntry(ProjectAnalyzer analyzer, string path, int fileId) {
+        public AnalysisEntry(VsProjectAnalyzer analyzer, string path, int fileId) {
             _analyzer = analyzer;
             _path = path;
             _fileId = fileId;
@@ -64,7 +64,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        public ProjectAnalyzer Analyzer => _analyzer;
+        public VsProjectAnalyzer Analyzer => _analyzer;
 
         public IIntellisenseCookie AnalysisCookie {
             get { return _cookie; }

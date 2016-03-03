@@ -32,7 +32,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private IParameter _currentParameter;
         private readonly AP.Signature _overload;
 
-        public PythonSignature(ProjectAnalyzer analyzer, ITrackingSpan span, AP.Signature overload, int paramIndex, string lastKeywordArg = null) {
+        public PythonSignature(VsProjectAnalyzer analyzer, ITrackingSpan span, AP.Signature overload, int paramIndex, string lastKeywordArg = null) {
             _span = span;
             _overload = overload;
             if (lastKeywordArg != null) {

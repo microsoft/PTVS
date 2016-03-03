@@ -67,7 +67,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 return null;
             }
 
-            var index = ProjectAnalyzer.TranslateIndex(
+            var index = VsProjectAnalyzer.TranslateIndex(
                 Span.GetEndPoint(TextBuffer.CurrentSnapshot).Position,
                 TextBuffer.CurrentSnapshot,
                 analysis

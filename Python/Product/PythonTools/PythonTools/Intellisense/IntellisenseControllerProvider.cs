@@ -54,8 +54,8 @@ namespace Microsoft.PythonTools.Intellisense {
             PythonService = serviceProvider.GetPythonToolsService();
         }
 
-        readonly Dictionary<ITextView, Tuple<BufferParser, ProjectAnalyzer>> _hookedCloseEvents =
-            new Dictionary<ITextView, Tuple<BufferParser, ProjectAnalyzer>>();
+        readonly Dictionary<ITextView, Tuple<BufferParser, VsProjectAnalyzer>> _hookedCloseEvents =
+            new Dictionary<ITextView, Tuple<BufferParser, VsProjectAnalyzer>>();
 
         public IIntellisenseController TryCreateIntellisenseController(ITextView textView, IList<ITextBuffer> subjectBuffers) {
             IntellisenseController controller;
@@ -85,7 +85,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private void TextView_Closed(object sender, EventArgs e) {
             var textView = sender as ITextView;
-            Tuple<BufferParser, ProjectAnalyzer> tuple;
+            Tuple<BufferParser, VsProjectAnalyzer> tuple;
             if (textView == null || !_hookedCloseEvents.TryGetValue(textView, out tuple)) {
                 return;
             }

@@ -33,14 +33,14 @@ namespace Microsoft.PythonTools.Intellisense {
         internal static MissingImportAnalysis Empty = new MissingImportAnalysis();
         private readonly ITrackingSpan _span;
         private readonly string _name;
-        private readonly ProjectAnalyzer _analyzer;
+        private readonly VsProjectAnalyzer _analyzer;
         private IEnumerable<AP.ImportInfo> _imports;
 
         private MissingImportAnalysis() {
             _imports = Enumerable.Empty<AP.ImportInfo>();
         }
 
-        internal MissingImportAnalysis(string name, ProjectAnalyzer state, ITrackingSpan span) {
+        internal MissingImportAnalysis(string name, VsProjectAnalyzer state, ITrackingSpan span) {
             _span = span;
             _name = name;
             _analyzer = state;

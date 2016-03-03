@@ -49,7 +49,7 @@ namespace Microsoft.PythonTools.Intellisense {
         public void StopListening(AnalysisEntry entry) {
             if (entry != null) {
                 entry.AnalysisComplete -= OnNewAnalysis;
-                _taskProvider.Clear(entry, ProjectAnalyzer.UnresolvedImportMoniker);
+                _taskProvider.Clear(entry, VsProjectAnalyzer.UnresolvedImportMoniker);
             }
         }
 
@@ -75,7 +75,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
                         _taskProvider.ReplaceItems(
                             entry,
-                            ProjectAnalyzer.UnresolvedImportMoniker,
+                            VsProjectAnalyzer.UnresolvedImportMoniker,
                             buffer.unresolved.Select(t => f.FromUnresolvedImport(
                                 _serviceProvider,
                                 entry.Analyzer.InterpreterFactory as IPythonInterpreterFactoryWithDatabase,
@@ -87,7 +87,7 @@ namespace Microsoft.PythonTools.Intellisense {
                             )).ToList()
                         );
                     } else {
-                        _taskProvider.Clear(entry, ProjectAnalyzer.UnresolvedImportMoniker);
+                        _taskProvider.Clear(entry, VsProjectAnalyzer.UnresolvedImportMoniker);
                     }
                 }
             }

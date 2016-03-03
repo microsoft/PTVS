@@ -21,6 +21,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
@@ -52,24 +53,24 @@ namespace Microsoft.PythonTools.Project {
             _fileChangeListener.FileChangedOnDisk += FileChangedOnDisk;
             solutionEvents.ProjectLoaded += PythonProjectReferenceNode_ProjectLoaded;
             InitializeFileChangeListener();
-            AddAnalyzedAssembly(((PythonProjectNode)ProjectMgr).GetInterpreter() as IPythonInterpreterWithProjectReferences).DoNotWait();
+            AddAnalyzedAssembly(((PythonProjectNode)ProjectMgr).GetAnalyzer()).DoNotWait();
         }
 
         private void EventListener_BuildCompleted(object sender, EventArgs e) {
             InitializeFileChangeListener();
-            AddAnalyzedAssembly(((PythonProjectNode)ProjectMgr).GetInterpreter() as IPythonInterpreterWithProjectReferences).DoNotWait();
+            AddAnalyzedAssembly(((PythonProjectNode)ProjectMgr).GetAnalyzer()).DoNotWait();
             ProjectMgr.OnInvalidateItems(Parent);
         }
 
         private void PythonProjectReferenceNode_ProjectLoaded(object sender, ProjectEventArgs e) {
             InitializeFileChangeListener();
-            AddAnalyzedAssembly(((PythonProjectNode)ProjectMgr).GetInterpreter() as IPythonInterpreterWithProjectReferences).DoNotWait();
+            AddAnalyzedAssembly(((PythonProjectNode)ProjectMgr).GetAnalyzer()).DoNotWait();
             ProjectMgr.OnInvalidateItems(Parent);
         }
 
         private void EventListener_AfterActiveSolutionConfigurationChange(object sender, EventArgs e) {
             InitializeFileChangeListener();
-            AddAnalyzedAssembly(((PythonProjectNode)ProjectMgr).GetInterpreter() as IPythonInterpreterWithProjectReferences).DoNotWait();
+            AddAnalyzedAssembly(((PythonProjectNode)ProjectMgr).GetAnalyzer()).DoNotWait();
             ProjectMgr.OnInvalidateItems(Parent);
         }
 
@@ -87,7 +88,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private void FileChangedOnDisk(object sender, FileChangedOnDiskEventArgs e) {
-            var interp = ((PythonProjectNode)ProjectMgr).GetInterpreter() as IPythonInterpreterWithProjectReferences;
+            var interp = ((PythonProjectNode)ProjectMgr).GetAnalyzer();
             // remove the reference to whatever we are currently observing
             RemoveAnalyzedAssembly(interp);
 
@@ -97,16 +98,16 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        private void RemoveAnalyzedAssembly(IPythonInterpreterWithProjectReferences interp) {
+        private void RemoveAnalyzedAssembly(VsProjectAnalyzer interp) {
             if (interp != null) {
                 if (_curReference != null) {
-                    interp.RemoveReference(_curReference);
+                    interp.RemoveReference(_curReference).Wait();
                     _curReference = null;
                 }
             }
         }
 
-        internal async Task AddAnalyzedAssembly(IPythonInterpreterWithProjectReferences interp) {
+        internal async Task AddAnalyzedAssembly(VsProjectAnalyzer interp) {
             if (interp != null) {
                 var asmName = AssemblyName;
                 string outFile;
@@ -136,7 +137,7 @@ namespace Microsoft.PythonTools.Project {
 
                 if (_curReference != null) {
                     try {
-                        await interp.AddReferenceAsync(_curReference);
+                        await interp.AddReference(_curReference);
                     } catch (Exception) {
                         _failedToAnalyze = true;
                     }

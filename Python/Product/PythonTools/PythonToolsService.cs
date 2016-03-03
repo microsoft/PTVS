@@ -49,7 +49,7 @@ namespace Microsoft.PythonTools {
         private LanguagePreferences _langPrefs;
         private IPythonToolsOptionsService _optionsService;
         internal readonly IInterpreterOptionsService _interpreterOptionsService;
-        private ProjectAnalyzer _analyzer;
+        private VsProjectAnalyzer _analyzer;
         private readonly PythonToolsLogger _logger;
         private readonly AdvancedEditorOptions _advancedOptions;
         private readonly DebuggerOptions _debuggerOptions;
@@ -199,10 +199,10 @@ namespace Microsoft.PythonTools {
             }
         }
 
-        private ProjectAnalyzer CreateAnalyzer() {
+        private VsProjectAnalyzer CreateAnalyzer() {
             var defaultFactory = _interpreterOptionsService.DefaultInterpreter;
             EnsureCompletionDb(defaultFactory);
-            return new ProjectAnalyzer(
+            return new VsProjectAnalyzer(
                 _container,
                 defaultFactory.CreateInterpreter(),
                 defaultFactory,
@@ -225,7 +225,7 @@ namespace Microsoft.PythonTools {
 
         #region Public API
 
-        public ProjectAnalyzer DefaultAnalyzer {
+        public VsProjectAnalyzer DefaultAnalyzer {
             get {
                 if (_analyzer == null) {
                     _analyzer = _container.GetUIThread().Invoke(() => CreateAnalyzer());

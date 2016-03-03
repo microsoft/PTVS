@@ -17,6 +17,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
@@ -28,12 +29,12 @@ namespace Microsoft.PythonTools.Project {
 
         public PythonAssemblyReferenceNode(PythonProjectNode root, ProjectElement element)
             : base(root, element) {
-            AnalyzeReference(root.GetInterpreter() as IPythonInterpreterWithProjectReferences);
+            AnalyzeReference(root.GetAnalyzer());
         }
 
         public PythonAssemblyReferenceNode(PythonProjectNode root, string assemblyPath)
             : base(root, assemblyPath) {
-            AnalyzeReference(root.GetInterpreter() as IPythonInterpreterWithProjectReferences);
+            AnalyzeReference(root.GetAnalyzer());
         }
 
         protected override void OnAssemblyReferenceChangedOnDisk(object sender, FileChangedOnDiskEventArgs e) {
@@ -43,20 +44,20 @@ namespace Microsoft.PythonTools.Project {
             if (analyzer != null && PathUtils.IsSamePath(e.FileName, Url)) {
                 if ((e.FileChangeFlag & (_VSFILECHANGEFLAGS.VSFILECHG_Attr | _VSFILECHANGEFLAGS.VSFILECHG_Size | _VSFILECHANGEFLAGS.VSFILECHG_Time | _VSFILECHANGEFLAGS.VSFILECHG_Add)) != 0) {
                     // file was modified, unload and reload the extension module from our database.
-                    analyzer.RemoveReference(new ProjectAssemblyReference(AssemblyName, Url));
+                    analyzer.RemoveReference(new ProjectAssemblyReference(AssemblyName, Url)).Wait();
 
-                    AnalyzeReference(analyzer.Interpreter as IPythonInterpreterWithProjectReferences);
+                    AnalyzeReference(analyzer);
                 } else if ((e.FileChangeFlag & _VSFILECHANGEFLAGS.VSFILECHG_Del) != 0) {
                     // file was deleted, unload from our extension database
-                    analyzer.RemoveReference(new ProjectAssemblyReference(AssemblyName, Url));
+                    analyzer.RemoveReference(new ProjectAssemblyReference(AssemblyName, Url)).Wait();
                 }
             }
         }
 
-        private void AnalyzeReference(IPythonInterpreterWithProjectReferences interp) {
+        private void AnalyzeReference(VsProjectAnalyzer interp) {
             if (interp != null) {
                 _failedToAnalyze = false;
-                var task = interp.AddReferenceAsync(new ProjectAssemblyReference(AssemblyName, Url));
+                var task = interp.AddReference(new ProjectAssemblyReference(AssemblyName, Url));
 
                 // check if we get an exception, and if so mark ourselves as a dangling reference.
                 task.ContinueWith(new TaskFailureHandler(TaskScheduler.FromCurrentSynchronizationContext(), this).HandleAddRefFailure);
@@ -73,9 +74,9 @@ namespace Microsoft.PythonTools.Project {
 
         public override void Remove(bool removeFromStorage) {
             base.Remove(removeFromStorage);
-            var interp = ((PythonProjectNode)ProjectMgr).GetInterpreter() as IPythonInterpreterWithProjectReferences;
+            var interp = ((PythonProjectNode)ProjectMgr).GetAnalyzer();
             if (interp != null) {
-                interp.RemoveReference(new ProjectAssemblyReference(AssemblyName, Url));
+                interp.RemoveReference(new ProjectAssemblyReference(AssemblyName, Url)).Wait();
             }
         }
 

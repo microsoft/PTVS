@@ -170,7 +170,7 @@ namespace Microsoft.PythonTools.Navigation {
 
                 if (analysis != null) {
                     string expr = criteria.szName.Substring(criteria.szName.LastIndexOf(':') + 1);
-                    var exprAnalysis = ProjectAnalyzer.AnalyzeExpression(
+                    var exprAnalysis = VsProjectAnalyzer.AnalyzeExpression(
                         analysis,
                         criteria.szName.Substring(criteria.szName.LastIndexOf(':') + 1),
                         new Parsing.SourceLocation(0, 1, 1)

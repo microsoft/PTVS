@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Cdp;
 using Microsoft.PythonTools.Interpreter;
@@ -41,6 +42,82 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             }
             return all;
+        }
+
+        public sealed class GetReferencesRequest : Request<GetReferencesResponse> {
+            public const string Command = "getReferences";
+
+            public override string command => Command;
+        }
+
+        public sealed class GetReferencesResponse : Response {
+            public ProjectReference[] references;
+        }
+
+        public sealed class ProjectReference {
+            public string name, kind, assemblyName;
+
+            public static ProjectReference Convert(Microsoft.PythonTools.Interpreter.ProjectReference reference) {
+                return new ProjectReference() {
+                    name = reference.Name,
+                    kind = GetReferenceKind(reference.Kind),
+                    assemblyName = GetReferenceAssembly(reference)
+                };
+            }
+
+            public static Microsoft.PythonTools.Interpreter.ProjectReference Convert(ProjectReference reference) {
+                switch (reference.kind) {
+                    case "extension":
+                        return new Microsoft.PythonTools.Interpreter.ProjectReference(
+                            reference.name,
+                            ProjectReferenceKind.ExtensionModule
+                        );
+                    case "assembly":
+                        return new ProjectAssemblyReference(
+                            new AssemblyName(reference.assemblyName),
+                            reference.name
+                        );
+                    default:
+                        throw new InvalidOperationException("Unsupported reference type " + reference.kind);
+                }
+            }
+
+            private static string GetReferenceAssembly(Microsoft.PythonTools.Interpreter.ProjectReference reference) {
+                switch (reference.Kind) {
+                    case ProjectReferenceKind.Assembly:
+                        return ((ProjectAssemblyReference)reference).AssemblyName.FullName;
+                    default: return null;
+                }
+            }
+
+            public static string GetReferenceKind(ProjectReferenceKind kind) {
+                switch (kind) {
+                    case ProjectReferenceKind.Assembly: return "assembly";
+                    case ProjectReferenceKind.ExtensionModule: return "extension";
+                    default: return null;
+                }
+            }
+
+        }
+
+        public sealed class AddReferenceRequest : Request<AddReferenceResponse> {
+            public const string Command = "addReference";
+            public ProjectReference reference;
+
+            public override string command => Command;
+        }
+
+        public sealed class AddReferenceResponse : Response {
+        }
+
+        public sealed class RemoveReferenceRequest : Request<RemoveReferenceResponse> {
+            public const string Command = "removeReference";
+            public ProjectReference reference;
+
+            public override string command => Command;
+        }
+
+        public sealed class RemoveReferenceResponse : Response {
         }
 
         public sealed class AnalysisClassificationsRequest : Request<AnalysisClassificationsResponse> {
@@ -514,7 +591,7 @@ namespace Microsoft.PythonTools.Intellisense {
         public class Parameter {
             public string name, defaultValue, doc, type;
             public bool optional;
-            public Reference[] variables;
+            public AnalysisReference[] variables;
         }
 
         public class FileAnalysisCompleteEvent : Event {
@@ -598,7 +675,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
 
 
-        public class Reference {
+        public class AnalysisReference {
             public string kind; // definition, reference, value
             public string expr;
             public string file;
@@ -617,7 +694,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public sealed class AnalyzeExpressionResponse : Response {
-            public Reference[] variables;
+            public AnalysisReference[] variables;
             /// <summary>
             /// The private prefix for the member if defined inside a class with name mangling.
             /// </summary>

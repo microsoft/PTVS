@@ -32,6 +32,7 @@ using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Intellisense {
+    using System.Reflection;
     using AP = AnalysisProtocol;
 
     /// <summary>
@@ -164,11 +165,60 @@ namespace Microsoft.PythonTools.Intellisense {
                 case AP.MethodInsertionLocationRequest.Command: response = GetMethodInsertionLocation((AP.MethodInsertionLocationRequest)request); break;
                 case AP.MethodInfoRequest.Command: response = GetMethodInfo((AP.MethodInfoRequest)request); break;
                 case AP.FindMethodsRequest.Command: response = FindMethods((AP.FindMethodsRequest)request); break;
+                case AP.AddReferenceRequest.Command: response = AddReference((AP.AddReferenceRequest)request); break;
+                case AP.RemoveReferenceRequest.Command: response = RemoveReference((AP.RemoveReferenceRequest)request); break;
+                case AP.GetReferencesRequest.Command: response = GetReferences((AP.GetReferencesRequest)request); break;
                 default:
                     throw new InvalidOperationException("Unknown command");
             }
 
             return Task.FromResult(response);
+        }
+
+        private Response GetReferences(AP.GetReferencesRequest request) {
+            var interp = Interpreter as IPythonInterpreterWithProjectReferences2;
+            AP.ProjectReference[] references = Array.Empty<AP.ProjectReference>();
+            if (interp != null) {
+                references = interp.GetReferences().Select(AP.ProjectReference.Convert).ToArray();
+            }
+            return new AP.GetReferencesResponse() {
+                references = references
+            };
+        }
+
+        private Response RemoveReference(AP.RemoveReferenceRequest request) {
+            var interp = Interpreter as IPythonInterpreterWithProjectReferences;
+            if (interp != null) {
+                interp.RemoveReference(AP.ProjectReference.Convert(request.reference));
+            }
+            return new AP.RemoveReferenceResponse();
+        }
+
+        private Response AddReference(AP.AddReferenceRequest request) {
+            var interp = Interpreter as IPythonInterpreterWithProjectReferences;
+            if (interp != null) {
+                interp.AddReferenceAsync(AP.ProjectReference.Convert(request.reference)).Wait();
+            }
+            return new AP.AddReferenceResponse();
+        }
+
+        private static ProjectReference GetAssemblyReference(string kind, string name, string assemblyName) {
+            ProjectReference reference;
+            switch (kind) {
+                case "assembly":
+                    reference = new ProjectAssemblyReference(
+                        new AssemblyName(assemblyName),
+                        name
+                    );
+                    break;
+                case "extension":
+                    reference = new ProjectReference(name, ProjectReferenceKind.ExtensionModule);
+                    break;
+                default:
+                    throw new InvalidOperationException("Unsupported reference type: " + kind);
+            }
+
+            return reference;
         }
 
         private Response FindMethods(AP.FindMethodsRequest request) {
@@ -916,7 +966,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private Response AnalyzeExpression(AP.AnalyzeExpressionRequest request) {
             var pyEntry = _projectFiles[request.fileId] as IPythonProjectEntry;
-            AP.Reference[] references;
+            AP.AnalysisReference[] references;
             string privatePrefix = null;
             string memberName = null;
             if (pyEntry.Analysis != null) {
@@ -943,7 +993,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 privatePrefix = variables.Ast.PrivatePrefix;
                 references = variables.Select(MakeReference).ToArray();
             } else {
-                references = new AP.Reference[0];
+                references = new AP.AnalysisReference[0];
             }
 
             return new AP.AnalyzeExpressionResponse() {
@@ -953,8 +1003,8 @@ namespace Microsoft.PythonTools.Intellisense {
             };
         }
 
-        private AP.Reference MakeReference(IAnalysisVariable arg) {
-            return new AP.Reference() {
+        private AP.AnalysisReference MakeReference(IAnalysisVariable arg) {
+            return new AP.AnalysisReference() {
                 column = arg.Location.Column,
                 line = arg.Location.Line,
                 kind = GetVariableType(arg.Type),
@@ -1133,7 +1183,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             return new AP.CompletionsResponse() {
                 completions = ToCompletions(_pyAnalyzer.GetModuleMembers(
-                    null, // TODO: ModuleContext
+                    _projectFiles[getModuleMembers.fileId].AnalysisContext,
                     getModuleMembers.package,
                     getModuleMembers.includeMembers
                 ))
@@ -1448,11 +1498,10 @@ namespace Microsoft.PythonTools.Intellisense {
             await _pyAnalyzer.ReloadModulesAsync();
 
             // re-analyze all of the modules when we get a new set of modules loaded...
-            foreach (var nameAndEntry in _projectFiles) {
-                EnqueueFile(nameAndEntry.Value, nameAndEntry.Key);
+            foreach (var entry in _pyAnalyzer.ModulesByFilename) {
+                _analysisQueue.Enqueue(entry.Value.ProjectEntry, AnalysisPriority.Normal);
             }
         }
-
 
 #if PORT
         private IProjectEntry CreateProjectEntry(ITextBuffer buffer, IAnalysisCookie analysisCookie) {

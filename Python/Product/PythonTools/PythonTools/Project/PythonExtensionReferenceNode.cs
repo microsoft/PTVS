@@ -21,6 +21,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -44,18 +45,18 @@ namespace Microsoft.PythonTools.Project {
             Utilities.ArgumentNotNullOrEmpty("filename", filename);
             _filename = PathUtils.GetAbsoluteFilePath(root.ProjectHome, filename);
 
-            AnalyzeReference(root.GetInterpreter() as IPythonInterpreterWithProjectReferences);
+            AnalyzeReference(root.GetAnalyzer());
             InitializeFileChangeEvents();
         }
 
-        internal void AnalyzeReference(IPythonInterpreterWithProjectReferences interp) {
+        internal void AnalyzeReference(VsProjectAnalyzer interp) {
             if (interp == null) {
                 _failedToAnalyze = true;
                 return;
             }
 
             _failedToAnalyze = false;
-            var task = interp.AddReferenceAsync(new ProjectReference(_filename, ProjectReferenceKind.ExtensionModule));
+            var task = interp.AddReference(new ProjectReference(_filename, ProjectReferenceKind.ExtensionModule));
 
             // check if we get an exception, and if so mark ourselves as a dangling reference.
             task.ContinueWith(new TaskFailureHandler(TaskScheduler.FromCurrentSynchronizationContext(), this).HandleAddRefFailure);
@@ -204,16 +205,16 @@ namespace Microsoft.PythonTools.Project {
                 return;
             }
 
-            var interp = ((PythonProjectNode)ProjectMgr).GetInterpreter() as IPythonInterpreterWithProjectReferences;
+            var interp = ((PythonProjectNode)ProjectMgr).GetAnalyzer();
             if (interp != null && PathUtils.IsSamePath(e.FileName, _filename)) {
                 if ((e.FileChangeFlag & (_VSFILECHANGEFLAGS.VSFILECHG_Attr | _VSFILECHANGEFLAGS.VSFILECHG_Size | _VSFILECHANGEFLAGS.VSFILECHG_Time | _VSFILECHANGEFLAGS.VSFILECHG_Add)) != 0) {
                     // file was modified, unload and reload the extension module from our database.
-                    interp.RemoveReference(new ProjectReference(_filename, ProjectReferenceKind.ExtensionModule));
+                    interp.RemoveReference(new ProjectReference(_filename, ProjectReferenceKind.ExtensionModule)).Wait();
 
                     AnalyzeReference(interp);
                 } else if ((e.FileChangeFlag & _VSFILECHANGEFLAGS.VSFILECHG_Del) != 0) {
                     // file was deleted, unload from our extension database
-                    interp.RemoveReference(new ProjectReference(_filename, ProjectReferenceKind.ExtensionModule));
+                    interp.RemoveReference(new ProjectReference(_filename, ProjectReferenceKind.ExtensionModule)).Wait();
                     ProjectMgr.OnInvalidateItems(Parent);
                 }
             }
@@ -227,9 +228,9 @@ namespace Microsoft.PythonTools.Project {
                 return;
             }
 
-            var interp = ((PythonProjectNode)ProjectMgr).GetInterpreter() as IPythonInterpreterWithProjectReferences;
+            var interp = ((PythonProjectNode)ProjectMgr).GetAnalyzer();
             if (interp != null) {
-                interp.RemoveReference(new ProjectReference(_filename, ProjectReferenceKind.ExtensionModule));
+                interp.RemoveReference(new ProjectReference(_filename, ProjectReferenceKind.ExtensionModule)).Wait();
             }
             ItemNode.RemoveFromProjectFile();
             base.Remove(removeFromStorage);
