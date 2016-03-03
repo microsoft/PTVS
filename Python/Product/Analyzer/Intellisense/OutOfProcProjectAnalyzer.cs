@@ -1022,7 +1022,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private static string GetVariableType(VariableType type) {
             switch (type) {
                 case VariableType.Definition: return "definition";
-                case VariableType.Reference: return "AP.Reference";
+                case VariableType.Reference: return "reference";
                 case VariableType.Value: return "value";
             }
             return null;

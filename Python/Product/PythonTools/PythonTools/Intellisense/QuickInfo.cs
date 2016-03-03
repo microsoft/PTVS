@@ -70,7 +70,7 @@ namespace Microsoft.PythonTools.Intellisense {
         #endregion
     }
 
-    public sealed class AnalysisLocation {
+    public sealed class AnalysisLocation : IEquatable<AnalysisLocation> {
         public readonly AnalysisEntry File;
         public readonly int Line, Column;
         private static readonly IEqualityComparer<AnalysisLocation> _fullComparer = new FullLocationComparer();
@@ -102,7 +102,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
 
         public override bool Equals(object obj) {
-            LocationInfo other = obj as LocationInfo;
+            AnalysisLocation other = obj as AnalysisLocation;
             if (other != null) {
                 return Equals(other);
             }
