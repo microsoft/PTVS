@@ -393,16 +393,6 @@ namespace Microsoft.PythonTools.Intellisense {
             return entry;
         }
 
-        internal IEnumerable<KeyValuePair<string, AnalysisEntry>> LoadedFiles {
-            get {
-                return _projectFiles;
-            }
-        }
-
-        private void QueueDirectoryAnalysis(string path) {
-            AnalyzeDirectory(PathUtils.NormalizeDirectoryPath(Path.GetDirectoryName(path))).DoNotWait();
-        }
-
 
         internal async Task<AnalysisEntry> AnalyzeFile(string path, string addingFromDirectory = null) {
             if (_conn == null) {
@@ -426,100 +416,14 @@ namespace Microsoft.PythonTools.Intellisense {
             return null;
         }
 
-        class ApplicableExpression {
-            public readonly string Text;
-            public readonly AnalysisEntry File;
-            public readonly ITrackingSpan Span;
-            public readonly SourceLocation Location;
-
-            public ApplicableExpression(AnalysisEntry file, string text, ITrackingSpan span, SourceLocation location) {
-                File = file;
-                Text = text;
-                Span = span;
-                Location = location;
+        internal IEnumerable<KeyValuePair<string, AnalysisEntry>> LoadedFiles {
+            get {
+                return _projectFiles;
             }
         }
 
-        internal static void ApplyChanges(AP.ChangeInfo[] changes, AnalysisEntry file, ITextBuffer buffer, int fromVersion) {
-            ApplyChanges(changes, file, file.BufferParser.GetBufferId(buffer), fromVersion);
-        }
-
-        private static ApplicableExpression GetApplicableExpression(ITextSnapshot snapshot, SnapshotPoint point) {
-            var buffer = snapshot.TextBuffer;
-            var span = snapshot.CreateTrackingSpan(
-                point.Position == snapshot.Length ?
-                    new Span(point.Position, 0) :
-                    new Span(point.Position, 1),
-                SpanTrackingMode.EdgeInclusive
-            );
-
-            ReverseExpressionParser parser = new ReverseExpressionParser(snapshot, buffer, span);
-
-            var exprRange = parser.GetExpressionRange(false);
-            if (exprRange != null) {
-                string text = exprRange.Value.GetText();
-
-                var applicableTo = parser.Snapshot.CreateTrackingSpan(
-                    exprRange.Value.Span,
-                    SpanTrackingMode.EdgeExclusive
-                );
-
-                AnalysisEntry entry;
-                if (buffer.TryGetPythonProjectEntry(out entry) && text.Length > 0) {
-                    var loc = parser.Span.GetSpan(parser.Snapshot.Version);
-                    var lineNo = parser.Snapshot.GetLineNumberFromPosition(loc.Start);
-
-                    var location = TranslateIndex(loc.Start, parser.Snapshot, entry);
-                    return new ApplicableExpression(
-                        entry,
-                        text,
-                        applicableTo,
-                        location
-                    );
-                }
-            }
-
-            return null;
-        }
-
-        internal static async Task<QuickInfo> GetQuickInfo(ITextSnapshot snapshot, SnapshotPoint point) {
-            var analysis = GetApplicableExpression(snapshot, point);
-
-            if (analysis != null) {
-                var location = analysis.Location;
-                var req = new AP.QuickInfoRequest() {
-                    expr = analysis.Text,
-                    column = location.Column,
-                    index = location.Index,
-                    line = location.Line,
-                    fileId = analysis.File.FileId
-                };
-
-                return new QuickInfo(
-                    (await analysis.File.Analyzer.SendRequestAsync(req)).text,
-                    analysis.Span
-                );
-            }
-
-            return null;
-        }
-
-        internal AnalysisVariable ToAnalysisVariable(AP.AnalysisReference arg) {
-            VariableType type = VariableType.None;
-            switch (arg.kind) {
-                case "definition": type = VariableType.Definition; break;
-                case "reference": type = VariableType.Reference; break;
-                case "value": type = VariableType.Value; break;
-            }
-
-            AnalysisEntry projectFile;
-            _projectFiles.TryGetValue(arg.file, out projectFile);
-            var location = new AnalysisLocation(
-                projectFile,
-                arg.line,
-                arg.column
-            );
-            return new AnalysisVariable(type, location);
+        private void QueueDirectoryAnalysis(string path) {
+            AnalyzeDirectory(PathUtils.NormalizeDirectoryPath(Path.GetDirectoryName(path))).DoNotWait();
         }
 
         internal static async Task<ExpressionAnalysis> AnalyzeExpression(AnalysisEntry file, string expr, SourceLocation location) {
@@ -566,6 +470,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     definitions.privatePrefix,
                     definitions.memberName
                 );
+
             }
 
             return null;
@@ -760,7 +665,7 @@ namespace Microsoft.PythonTools.Intellisense {
             return GetFirstNameExpression(Statement.GetExpression(stmt));
         }
 
-        private static NameExpression GetFirstNameExpression(Microsoft.PythonTools.Parsing.Ast.Expression expr) {
+        private static NameExpression GetFirstNameExpression(Expression expr) {
             NameExpression nameExpr;
             CallExpression callExpr;
             MemberExpression membExpr;
@@ -793,13 +698,6 @@ namespace Microsoft.PythonTools.Intellisense {
             get {
 
                 return _parsePending > 0 || !_analysisComplete;
-            }
-        }
-
-        internal event EventHandler AnalysisStarted {
-            add {
-            }
-            remove {
             }
         }
 
@@ -1646,5 +1544,102 @@ namespace Microsoft.PythonTools.Intellisense {
                 edit.Apply();
             }
         }
+
+        internal static async Task<QuickInfo> GetQuickInfo(ITextSnapshot snapshot, SnapshotPoint point) {
+            var analysis = GetApplicableExpression(snapshot, point);
+
+            if (analysis != null) {
+                var location = analysis.Location;
+                var req = new AP.QuickInfoRequest() {
+                    expr = analysis.Text,
+                    column = location.Column,
+                    index = location.Index,
+                    line = location.Line,
+                    fileId = analysis.File.FileId
+                };
+
+                return new QuickInfo(
+                    (await analysis.File.Analyzer.SendRequestAsync(req)).text,
+                    analysis.Span
+                );
+            }
+
+            return null;
+        }
+
+        internal AnalysisVariable ToAnalysisVariable(AP.AnalysisReference arg) {
+            VariableType type = VariableType.None;
+            switch (arg.kind) {
+                case "definition": type = VariableType.Definition; break;
+                case "reference": type = VariableType.Reference; break;
+                case "value": type = VariableType.Value; break;
+            }
+
+            AnalysisEntry projectFile;
+            _projectFiles.TryGetValue(arg.file, out projectFile);
+            var location = new AnalysisLocation(
+                projectFile,
+                arg.line,
+                arg.column
+            );
+            return new AnalysisVariable(type, location);
+        }
+
+        class ApplicableExpression {
+            public readonly string Text;
+            public readonly AnalysisEntry File;
+            public readonly ITrackingSpan Span;
+            public readonly SourceLocation Location;
+
+            public ApplicableExpression(AnalysisEntry file, string text, ITrackingSpan span, SourceLocation location) {
+                File = file;
+                Text = text;
+                Span = span;
+                Location = location;
+            }
+        }
+
+        internal static void ApplyChanges(AP.ChangeInfo[] changes, AnalysisEntry file, ITextBuffer buffer, int fromVersion) {
+            ApplyChanges(changes, file, file.BufferParser.GetBufferId(buffer), fromVersion);
+        }
+
+        private static ApplicableExpression GetApplicableExpression(ITextSnapshot snapshot, SnapshotPoint point) {
+            var buffer = snapshot.TextBuffer;
+            var span = snapshot.CreateTrackingSpan(
+                point.Position == snapshot.Length ?
+                    new Span(point.Position, 0) :
+                    new Span(point.Position, 1),
+                SpanTrackingMode.EdgeInclusive
+            );
+
+            ReverseExpressionParser parser = new ReverseExpressionParser(snapshot, buffer, span);
+
+            var exprRange = parser.GetExpressionRange(false);
+            if (exprRange != null) {
+                string text = exprRange.Value.GetText();
+
+                var applicableTo = parser.Snapshot.CreateTrackingSpan(
+                    exprRange.Value.Span,
+                    SpanTrackingMode.EdgeExclusive
+                );
+
+                AnalysisEntry entry;
+                if (buffer.TryGetPythonProjectEntry(out entry) && text.Length > 0) {
+                    var loc = parser.Span.GetSpan(parser.Snapshot.Version);
+                    var lineNo = parser.Snapshot.GetLineNumberFromPosition(loc.Start);
+
+                    var location = TranslateIndex(loc.Start, parser.Snapshot, entry);
+                    return new ApplicableExpression(
+                        entry,
+                        text,
+                        applicableTo,
+                        location
+                    );
+                }
+            }
+
+            return null;
+        }
+
     }
 }
